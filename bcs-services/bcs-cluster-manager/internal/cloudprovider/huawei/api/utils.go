@@ -75,7 +75,8 @@ func GetClusterKubeConfig(client *CceClient, clusterId string) (string, error) {
 	req := model.CreateKubernetesClusterCertRequest{
 		ClusterId: clusterId, // 集群ID，可在CCE管理控制台中查看
 		Body: &model.CertDuration{
-			Duration: int32(-1), // 集群证书有效时间，单位为天，最小值为1，最大值为10950(30*365，1年固定计365天，忽略闰年影响)；若填-1则为最大值30年。
+			// 集群证书有效时间,单位为天,最小值为1,最大值为10950(30*365,1年固定计365天，忽略闰年影响);若填-1则为最大值30年
+			Duration: int32(-1),
 		},
 	}
 
@@ -98,7 +99,8 @@ func GetRegionZone(region string) string {
 }
 
 // GenerateCreateNodePoolRequest get cce nodepool request
-func GenerateCreateNodePoolRequest(group *proto.NodeGroup, cluster *proto.Cluster) (*model.CreateNodePoolRequest, error) {
+func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
+	cluster *proto.Cluster) (*model.CreateNodePoolRequest, error) {
 	var (
 		initialNodeCount int32 = 0
 		clusterId              = cluster.SystemID
@@ -213,7 +215,7 @@ func Crypt(password string) (string, error) {
 	return base64.RawStdEncoding.EncodeToString([]byte(str)), nil
 }
 
-// GenerateModifyClusterNodePoolInput get cce update nodepool input
+// GenerateModifyClusterNodePoolInput get cce update node pool input
 func GenerateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string,
 	oldNodePool *model.ShowNodePoolResponse) *model.UpdateNodePoolRequest {
 	// cce nodePool名称以小写字母开头，由小写字母、数字、中划线(-)组成，长度范围1-50位，且不能以中划线(-)结尾

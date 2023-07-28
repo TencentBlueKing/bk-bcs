@@ -16,6 +16,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"strings"
 	"time"
 
@@ -42,7 +43,11 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -91,8 +96,8 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudNodeGroupID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudNodeGroupID[%s] api err, %s", nodeGroupID,
-			err.Error())
+		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudNodeGroupID[%s] api err, %s",
+			nodeGroupID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -131,7 +136,11 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -156,7 +165,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	defer cancel()
 
 	rsp := &model.ShowNodePoolResponse{}
-	err = cloudprovider.LoopDoFunc(ctx, func() error {
+	err = loop.LoopDoFunc(ctx, func() error {
 		req := &model.ShowNodePoolRequest{
 			ClusterId:  cluster.SystemID,
 			NodepoolId: group.CloudNodeGroupID,
@@ -176,12 +185,12 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 				taskID, group.CloudNodeGroupID, rsp.Status.Phase.Value())
 			return nil
 		case rsp.Status.Phase.Value() == "":
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		default:
 			return nil
 		}
 
-	}, cloudprovider.LoopInterval(5*time.Second))
+	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: GetClusterNodePool failed: %v", taskID, err)
 		retErr := fmt.Errorf("GetClusterNodePool failed, %s", err.Error())

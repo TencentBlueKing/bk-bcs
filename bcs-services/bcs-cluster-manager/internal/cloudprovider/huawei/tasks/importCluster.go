@@ -45,7 +45,10 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
 	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -106,7 +109,10 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
 	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())

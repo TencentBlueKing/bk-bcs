@@ -47,7 +47,7 @@ func NewEcsClient(opt *cloudprovider.CommonOption) (*EcsClient, error) {
 	}, nil
 }
 
-// ListEcsDetails 批量获取云服务器详情
+// ListEcsDetails batch get ecs server detail
 func (e *EcsClient) ListEcsDetails(serverIds []string) ([]*model.ServerDetail, error) {
 	servers := make([]*model.ServerDetail, 0)
 	for _, v := range serverIds {

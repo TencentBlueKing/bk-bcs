@@ -34,8 +34,33 @@ func init() {
 	})
 }
 
-// CloudValidate qcloud validate management implementation
+// CloudValidate huawei validate management implementation
 type CloudValidate struct {
+}
+
+// AddNodesToClusterValidate add nodes to cluster validate
+func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
+// DeleteNodesFromClusterValidate delete nodes from cluster validate
+func (c *CloudValidate) DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest,
+	opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
+// ListKeyPairsValidate list key pairs validate
+func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, account *proto.Account) error {
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListKeyPairsValidate request lost valid region info", cloudName)
+	}
+
+	return nil
+}
+
+// ListInstancesValidate list instances validate
+func (c *CloudValidate) ListInstancesValidate(req *proto.ListCloudInstancesRequest, account *proto.Account) error {
+	return nil
 }
 
 // ImportClusterValidate check importCluster operation

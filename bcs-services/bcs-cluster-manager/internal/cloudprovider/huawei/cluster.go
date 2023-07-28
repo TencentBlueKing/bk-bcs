@@ -26,16 +26,28 @@ func init() {
 	cloudprovider.InitClusterManager("huawei", &Cluster{})
 }
 
-// Cluster blueking kubernetes cluster management implementation
+// Cluster kubernetes cluster management implementation
 type Cluster struct {
 }
 
-// CreateCluster create kubenretes cluster according cloudprovider
+// CreateVirtualCluster create virtual cluster
+func (c *Cluster) CreateVirtualCluster(cls *proto.Cluster,
+	opt *cloudprovider.CreateVirtualClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteVirtualCluster delete virtual cluster
+func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
+	opt *cloudprovider.DeleteVirtualClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// CreateCluster create kubernetes cluster according cloud provider
 func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// ImportCluster import cluster according cloudprovider
+// ImportCluster import cluster according cloud provider
 func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
 	// call cce interface to create cluster
 	if cls == nil {
@@ -127,11 +139,12 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
 func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool,
 	error) {
-	if cls == nil || opt == nil {
-		return true, nil
-	}
+	return false, cloudprovider.ErrCloudNotImplemented
+}
 
-	return true, nil
+// EnableExternalNodeSupport enable cluster support external node
+func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovider.EnableExternalNodeOption) error {
+	return nil
 }
 
 // ListOsImage list image os

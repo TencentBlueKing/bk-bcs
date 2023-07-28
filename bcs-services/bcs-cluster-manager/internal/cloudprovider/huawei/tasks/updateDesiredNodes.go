@@ -16,6 +16,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"strconv"
 	"strings"
 	"time"
@@ -46,18 +47,24 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	desiredNodes := step.Params[cloudprovider.ScalingKey.String()]
+	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	nodeNum, _ := strconv.Atoi(desiredNodes)
 	operator := step.Params[cloudprovider.OperatorKey.String()]
 
-	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 || len(operator) == 0 {
+	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 ||
+		len(desiredNodes) == 0 || len(operator) == 0 {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask check parameters failed")
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask GetClusterDependBasicInfo failed")
@@ -105,11 +112,11 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 	}
 
 	var nodePool *model.ShowNodePoolResponse
-	err = cloudprovider.LoopDoFunc(context.Background(), func() error {
+	err = loop.LoopDoFunc(context.Background(), func() error {
 		nodePool, err = client.GetClusterNodePool(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
 
 		if *nodePool.Status.CurrentNode == nodeNum && nodePool.Status.Phase.Value() == "" {
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		} else if nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().ERROR.Value() ||
 			nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().SOLD_OUT.Value() {
 			return fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: %v", taskID, nodePool.Status.Phase.Value())
@@ -117,7 +124,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 
 		blog.Infof("taskID[%s] operation %s still running", taskID, nodePool.Status.Phase.Value())
 		return nil
-	}, cloudprovider.LoopInterval(3*time.Second))
+	}, loop.LoopInterval(3*time.Second))
 
 	if err != nil {
 		return fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: %v", taskID, err)
@@ -162,7 +169,8 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 	// remove existed instanceID
 	var newInstances []model.Node
 	for _, n := range successInstances {
-		if existNode, _ := cloudprovider.GetStorageModel().GetNode(ctx, *n.Metadata.Uid); existNode != nil && existNode.InnerIP != "" {
+		if existNode, _ := cloudprovider.GetStorageModel().GetNode(ctx, *n.Metadata.Uid); existNode != nil &&
+			existNode.InnerIP != "" {
 			continue
 		}
 		newInstances = append(newInstances, n)
@@ -204,7 +212,7 @@ func transInstancesToNode(ctx context.Context, instances []model.Node, info *clo
 		blog.Infof("ApplyInstanceMachinesTask[%s]: call transInstancesToNode successful. node: %#v", node)
 		blog.Infof("ApplyInstanceMachinesTask[%s]: call transInstancesToNode successful. node.server: %#v", *v.Status)
 
-		err = cloudprovider.SaveNodeInfoToDB(&node)
+		err = cloudprovider.SaveNodeInfoToDB(ctx, &node, false)
 		if err != nil {
 			blog.Errorf("transInstancesToNode[%s] SaveNodeInfoToDB[%s] failed: %v", taskID, node.InnerIP, err)
 		}

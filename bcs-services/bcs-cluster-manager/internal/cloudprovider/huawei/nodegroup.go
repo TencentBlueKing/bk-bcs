@@ -85,37 +85,37 @@ func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node
 }
 
 // UpdateNodeGroup update specified nodegroup configuration
-func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
+func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup,
+	opt *cloudprovider.UpdateNodeGroupOption) (*proto.Task, error) {
 	_, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), group.Provider, group.ClusterID)
 	if err != nil {
 		blog.Errorf("get cluster %s failed, %s", group.ClusterID, err.Error())
-		return err
+		return nil, err
 	}
 
-	cceCli, err := api.NewCceClient(opt)
+	cceCli, err := api.NewCceClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("UpdateNodeGroup[%s]: get cce client failed, %s", err.Error())
-		return err
+		return nil, err
 	}
 
 	//获取节点池信息
 	rsp, err := cceCli.GetClusterNodePool(cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
 		blog.Errorf("GetClusterNodePool[%s]: get cluster nodePool failed, %s", err.Error())
-		return err
+		return nil, err
 	}
 
 	_, err = cceCli.UpdateNodePool(api.GenerateModifyClusterNodePoolInput(group, cluster.SystemID, rsp))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 // GetNodesInGroup get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode,
-	error) {
+func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node, error) {
 	if group.ClusterID == "" || group.NodeGroupID == "" {
 		blog.Errorf("nodegroup id or cluster id is empty")
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
@@ -138,9 +138,9 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 		return nil, err
 	}
 
-	groupNodes := make([]*proto.NodeGroupNode, 0)
+	groupNodes := make([]*proto.Node, 0)
 	for _, v := range nodes {
-		node := &proto.NodeGroupNode{NodeID: *v.Metadata.Uid}
+		node := &proto.Node{NodeID: *v.Metadata.Uid}
 
 		if *v.Status.PrivateIPv6IP != "" {
 			node.InnerIP = *v.Status.PrivateIPv6IP
@@ -168,6 +168,12 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 	}
 
 	return groupNodes, nil
+}
+
+// GetNodesInGroupV2 get all nodes belong to NodeGroup
+func (ng *NodeGroup) GetNodesInGroupV2(group *proto.NodeGroup,
+	opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // MoveNodesToGroup add cluster nodes to NodeGroup
@@ -322,7 +328,7 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 		)
 		return nil, err
 	}
-	task, err := mgr.BuildSwitchAutoScalingOptionStatusTask(scalingOption, enable, opt)
+	task, err := mgr.BuildSwitchAsOptionStatusTask(scalingOption, enable, opt)
 	if err != nil {
 		blog.Errorf("build SwitchAutoScalingOptionStatus task for cluster %s with cloudprovider %s failed, %s",
 			scalingOption.ClusterID, cloudName, err.Error(),
@@ -330,4 +336,21 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 		return nil, err
 	}
 	return task, nil
+}
+
+// AddExternalNodeToCluster add external to cluster
+func (ng *NodeGroup) AddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.AddExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteExternalNodeFromCluster remove external node from cluster
+func (ng *NodeGroup) DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.DeleteExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetExternalNodeScript get nodegroup external node script
+func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, error) {
+	return "", cloudprovider.ErrCloudNotImplemented
 }

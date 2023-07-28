@@ -129,6 +129,7 @@ func (cli *CceClient) CreateClusterNodePool(req *model.CreateNodePoolRequest) (*
 	return rsp, nil
 }
 
+// GetClusterNodePool get cluster node pool
 func (cli *CceClient) GetClusterNodePool(clusterId, nodePoolId string) (*model.ShowNodePoolResponse, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
@@ -200,7 +201,7 @@ func (cli *CceClient) UpdateDesiredNodes(clusterId, nodePoolId string, nodeCount
 	return rsp, nil
 }
 
-// RemoveNodePoolNodes remove nodepool nodes
+// RemoveNodePoolNodes remove node pool nodes
 func (cli *CceClient) RemoveNodePoolNodes(clusterId string, nodeIds []string, password string) error {
 	if len(nodeIds) == 0 {
 		return nil
@@ -235,7 +236,7 @@ func (cli *CceClient) RemoveNodePoolNodes(clusterId string, nodeIds []string, pa
 	return err
 }
 
-// CleanNodePoolNodes 删除节点池节点
+// CleanNodePoolNodes delete node pool nodes
 func (cli *CceClient) CleanNodePoolNodes(clusterId string, nodeIds []string) error {
 	if len(nodeIds) == 0 {
 		return nil
