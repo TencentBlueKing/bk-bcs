@@ -74,7 +74,6 @@ func (s *Service) GetReleasedCI(ctx context.Context, req *pbcs.GetReleasedCIReq)
 	}, nil
 }
 
-
 // GetReleasedHook get released hook from cache.
 func (s *Service) GetReleasedHook(ctx context.Context, req *pbcs.GetReleasedHookReq) (*pbcs.JsonRawResp, error) {
 	if req.BizId <= 0 || req.ReleaseId <= 0 {

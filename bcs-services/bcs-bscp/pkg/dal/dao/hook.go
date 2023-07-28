@@ -143,7 +143,7 @@ func (dao *hookDao) ListHookReferences(kit *kit.Kit, opt *types.ListHookReferenc
 		Where(rh.HookID.Eq(opt.HookID), rh.BizID.Eq(opt.BizID)).
 		Order(rh.ID.Desc()).
 		ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
-		
+
 	for i := range details {
 		if details[i].ReleaseID == 0 {
 			details[i].ReleaseName = "未命名版本"

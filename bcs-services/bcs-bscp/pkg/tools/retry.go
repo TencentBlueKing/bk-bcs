@@ -28,10 +28,10 @@ var (
 
 // NewRetryPolicy create a new retry policy.
 // Note:
-// 1. immuneCount is the count which the sleep time is constant at: retryCount * sleepRangeMS[0] * time.Millisecond.
-// 2. if the retry times > immuneCount, then the sleep time will be the value calculated bellow in milliseconds.
-//    sleepTime = sleepRangeMS[0] + randomValueBetween(sleepRangeMS[0], sleepRangeMS[1])
-// 3. both immuneCount and sleepRangeMS value should all be > 0, if not, the default value will be used.
+//  1. immuneCount is the count which the sleep time is constant at: retryCount * sleepRangeMS[0] * time.Millisecond.
+//  2. if the retry times > immuneCount, then the sleep time will be the value calculated bellow in milliseconds.
+//     sleepTime = sleepRangeMS[0] + randomValueBetween(sleepRangeMS[0], sleepRangeMS[1])
+//  3. both immuneCount and sleepRangeMS value should all be > 0, if not, the default value will be used.
 func NewRetryPolicy(immuneCount uint, sleepRangeMS [2]uint) *RetryPolicy {
 	immune := immuneCount
 	if immune == 0 {

@@ -101,7 +101,7 @@ func (h Hook) ValidateDelete() error {
 type HookSpec struct {
 	Name string `json:"name" gorm:"column:name"`
 	// Type is the hook type of hook
-	Type       ScriptType `json:"type" gorm:"column:type"`
+	Type ScriptType `json:"type" gorm:"column:type"`
 	// Tag
 	Tag  string `json:"tag" gorm:"column:tag"`
 	Memo string `json:"memo" gorm:"column:memo"`
