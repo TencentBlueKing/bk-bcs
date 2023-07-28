@@ -873,7 +873,7 @@ paths:
           userVerifiedRequired: true
         disabledStages: [ ]
 
-  /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{release_id}:
+  /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}:
     get:
       operationId: get_hook_revision
       description: 获取hook版本
@@ -889,7 +889,7 @@ paths:
         backend:
           type: HTTP
           method: put
-          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{release_id}
+          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}
           matchSubpath: false
           timeout: 0
           upstreams: { }
@@ -913,7 +913,7 @@ paths:
         backend:
           type: HTTP
           method: put
-          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{release_id}
+          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}
           matchSubpath: false
           timeout: 0
           upstreams: { }
@@ -937,7 +937,7 @@ paths:
         backend:
           type: HTTP
           method: delete
-          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{release_id}
+          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}
           matchSubpath: false
           timeout: 0
           upstreams: { }
@@ -995,7 +995,7 @@ paths:
           userVerifiedRequired: true
         disabledStages: [ ]
 
-  /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{release_id}/publish:
+  /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}/publish:
     put:
       operationId: publish_hook_revision
       description: 上线hook版本
@@ -1011,7 +1011,7 @@ paths:
         backend:
           type: HTTP
           method: put
-          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{release_id}/publish
+          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_revisions/{revision_id}/publish
           matchSubpath: false
           timeout: 0
           upstreams: { }
@@ -1570,7 +1570,7 @@ paths:
       operationId: update_config_hook
       description: 更新配置脚本
       tags:
-        - 配置脚本管理
+        - hook脚本管理
       responses:
         default:
           description: ''
@@ -1595,7 +1595,7 @@ paths:
       operationId: get_release_hook
       description: 获取版本前后置脚本
       tags:
-        - 配置脚本管理
+        - hook脚本管理
       responses:
         default:
           description: ''

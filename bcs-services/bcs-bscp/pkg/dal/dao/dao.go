@@ -69,7 +69,8 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		return nil, fmt.Errorf("init sharding failed, err: %v", err)
 	}
 
-	adminDB, err := gorm.Open(mysql.Open(sharding.URI(opt.AdminDatabase)), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	adminDB, err := gorm.Open(mysql.Open(sharding.URI(opt.AdminDatabase)),
+		&gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 	if err != nil {
 		return nil, err
 	}

@@ -73,10 +73,10 @@ type ReleasedHooksCache struct {
 
 // ReleasedHookCache is the release hook info which will be stored in cache.
 type ReleasedHookCache struct {
-	HookID         uint32 `db:"hook_id" json:"hook_id"`
-	hookRevisionID uint32 `db:"hook_revision_id" json:"hook_revision_id"`
-	Content        string `db:"content" json:"content"`
-	Type           string `db:"type" json:"type"`
+	HookID         uint32           `db:"hook_id" json:"hook_id"`
+	HookRevisionID uint32           `db:"hook_revision_id" json:"hook_revision_id"`
+	Content        string           `db:"content" json:"content"`
+	Type           table.ScriptType `db:"type" json:"type"`
 }
 
 // CommitSpecCache cache struct.

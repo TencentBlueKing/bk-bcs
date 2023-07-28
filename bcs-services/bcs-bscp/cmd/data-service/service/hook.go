@@ -335,7 +335,7 @@ func (s *Service) GetReleaseHook(ctx context.Context, req *pbds.GetReleaseHookRe
 			HookName:         preHook.HookName,
 			HookRevisionId:   preHook.HookRevisionID,
 			HookRevisionName: preHook.HookRevisionName,
-			Type:             preHook.HookType.String(),
+			Type:             preHook.ScriptType.String(),
 			Content:          preHook.Content,
 		}
 	}
@@ -345,7 +345,7 @@ func (s *Service) GetReleaseHook(ctx context.Context, req *pbds.GetReleaseHookRe
 			HookName:         postHook.HookName,
 			HookRevisionId:   postHook.HookRevisionID,
 			HookRevisionName: postHook.HookRevisionName,
-			Type:             postHook.HookType.String(),
+			Type:             postHook.ScriptType.String(),
 			Content:          postHook.Content,
 		}
 	}

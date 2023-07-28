@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"gorm.io/gorm"
-	
+
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"

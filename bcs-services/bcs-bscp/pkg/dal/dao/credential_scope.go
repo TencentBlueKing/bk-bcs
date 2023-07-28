@@ -116,7 +116,7 @@ func (dao *credentialScopeDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *ta
 	}
 
 	m := tx.CredentialScope
-	
+
 	// 更新操作, 获取当前记录做审计
 	oldOne, err := tx.CredentialScope.WithContext(kit.Ctx).Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
