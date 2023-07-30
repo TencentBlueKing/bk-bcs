@@ -24,25 +24,31 @@ import (
 
 func (b *backend) pathKvEncrypt() *framework.Path {
 	return &framework.Path{
-		Pattern: "apps/" + framework.GenericNameRegex("app_id") + "/kvs/" + framework.GenericNameRegex("name") + "/encrypt",
+		Pattern: "apps/" + framework.GenericNameRegex("app_id") + "/kvs/" +
+			framework.GenericNameRegex("name") + "/encrypt",
 		Fields: map[string]*framework.FieldSchema{
 			"app_id": {
-				Type: framework.TypeString,
+				Type:        framework.TypeString,
+				Description: "Service ID",
 			},
 			"name": {
-				Type: framework.TypeString,
+				Type:        framework.TypeString,
+				Description: "kv stores the key name, unique under each service",
 			},
 			"algorithm": {
-				Type: framework.TypeString,
+				Type:        framework.TypeString,
+				Description: "Encryption algorithm : rsa,sm2",
 			},
 			"key_name": {
-				Type: framework.TypeString,
+				Type:        framework.TypeString,
+				Description: "Specifies the name of the encryption public key",
 			},
 		},
 
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.CreateOperation: &framework.PathOperation{
-				Callback: b.pathEncryptWrite,
+				Callback:    b.pathEncryptWrite,
+				Description: "kv is obtained encrypted",
 			},
 		},
 	}
@@ -51,23 +57,21 @@ func (b *backend) pathKvEncrypt() *framework.Path {
 func (b *backend) pathEncryptWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
-	if appID == "" {
-		return logical.ErrorResponse("invalid app id"), nil
+	if err := b.ValidateAppID(appID); err != nil {
+		return nil, err
 	}
 	name := d.Get("name").(string)
-	if name == "" {
-		return logical.ErrorResponse("invalid name"), nil
+	if err := b.ValidateAppID(name); err != nil {
+		return nil, err
 	}
-
-	algorithm := d.Get("algorithm").(string)
-	keyName := d.Get("key_name").(string)
-
 	kv, err := b.getKvStorage(ctx, req.Storage, appID, name)
 	if err != nil {
 		return nil, err
 	}
 
-	key, err := b.GetKeyStorage(ctx, req.Storage, appID, keyName, algorithm)
+	algorithm := d.Get("algorithm").(string)
+	keyName := d.Get("key_name").(string)
+	key, err := b.GetPkiStorage(ctx, req.Storage, appID, keyName, algorithm)
 	if err != nil {
 		return nil, err
 	}
@@ -75,13 +79,21 @@ func (b *backend) pathEncryptWrite(ctx context.Context, req *logical.Request, d 
 	var ciphertext string
 	switch algorithm {
 	case string(RSAEncryption):
-		ciphertextByte, e := tools.EncryptRSAWithPublicKey([]byte(key.Key), []byte(kv.Value))
+		publicKey, e := tools.RSAPublicKeyFromPEM([]byte(key.Key))
+		if e != nil {
+			return nil, e
+		}
+		ciphertextByte, e := tools.RSAEncryptWithPublicKey(publicKey, []byte(kv.Value))
 		if e != nil {
 			return nil, e
 		}
 		ciphertext = string(ciphertextByte)
 	case string(SM2Encryption):
-		ciphertextByte, e := tools.EncryptSM2([]byte(kv.Value), []byte(key.Key))
+		publicKey, e := tools.SM2PublicKeyFromPEM([]byte(kv.Value))
+		if e != nil {
+			return nil, e
+		}
+		ciphertextByte, e := tools.SM2EncryptWithPublicKey(publicKey, []byte(key.Key))
 		if e != nil {
 			return nil, e
 		}

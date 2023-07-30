@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -26,34 +27,39 @@ func (b *backend) pathKvs() *framework.Path {
 		Pattern: "apps/" + framework.GenericNameRegex("app_id") + "/kvs/" + framework.GenericNameRegex("name"),
 		Fields: map[string]*framework.FieldSchema{
 			"app_id": {
-				Type: framework.TypeString,
+				Type:        framework.TypeString,
+				Description: "Service ID",
 			},
 			"name": {
-				Type: framework.TypeString,
+				Type:        framework.TypeString,
+				Description: "kv stores the key name, unique under each service",
 			},
 			"value": {
-				Type: framework.TypeString,
-			},
-			"algorithm": {
-				Type: framework.TypeString,
-			},
-			"pki_name": {
-				Type: framework.TypeString,
+				Type:        framework.TypeString,
+				Description: "kv stored key values, it is recommended to upload the format through base64 encoding",
 			},
 		},
 
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.CreateOperation: &framework.PathOperation{
-				Callback: b.pathKvWrite,
+				Callback:    b.pathKvWrite,
+				Description: "Create kv",
 			},
 			logical.UpdateOperation: &framework.PathOperation{
-				Callback: b.pathKvWrite,
+				Callback:    b.pathKvWrite,
+				Description: "Updated kv",
 			},
 			logical.ReadOperation: &framework.PathOperation{
-				Callback: b.handleKvRead,
+				Callback:    b.pathKvRead,
+				Description: "Read the key value from the key name",
 			},
 			logical.DeleteOperation: &framework.PathOperation{
-				Callback: b.handleKvDelete,
+				Callback:    b.pathKvDelete,
+				Description: "Please exercise caution when deleting kv. Data deletion cannot be restored",
+			},
+			logical.ListOperation: &framework.PathOperation{
+				Callback:    b.pathKvList,
+				Description: "Get a list of kv under the service",
 			},
 		},
 
@@ -61,66 +67,94 @@ func (b *backend) pathKvs() *framework.Path {
 	}
 }
 
+func (b *backend) ValidateAppID(appID string) error {
+	if appID == "" {
+		return errors.New("invalid app_id")
+	}
+	return nil
+}
+
+func (b *backend) ValidateName(name string) error {
+	if name == "" {
+		return errors.New("invalid name")
+	}
+	return nil
+}
+
 func (b *backend) pathKvExistenceCheck(ctx context.Context, req *logical.Request, d *framework.FieldData) (bool, error) {
 
 	appID := d.Get("app_id").(string)
 	name := d.Get("name").(string)
 
-	path := fmt.Sprintf("apps/%s/kvs/%s", appID, name)
-
-	entry, err := req.Storage.Get(ctx, path)
+	entry, err := b.getKvStorage(ctx, req.Storage, appID, name)
 	if err != nil {
 		return false, err
 	}
 	return entry != nil, nil
+}
 
+func (b *backend) pathKvList(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	appID := d.Get("app_id").(string)
+	if err := b.ValidateAppID(appID); err != nil {
+		return nil, err
+	}
+
+	path := fmt.Sprintf("apps/%s/kvs/", appID)
+	entrys, err := req.Storage.List(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+
+	kvs := make(map[string]interface{})
+	for _, entry := range entrys {
+		kv, e := b.getKvStorage(ctx, req.Storage, appID, entry)
+		if e != nil {
+			return nil, e
+		}
+		kvs[kv.Name] = kv.Value
+	}
+
+	return &logical.Response{
+		Data: kvs,
+	}, nil
 }
 
 func (b *backend) pathKvWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
+	if err := b.ValidateAppID(appID); err != nil {
+		return nil, err
+	}
 	name := d.Get("name").(string)
+	if err := b.ValidateName(appID); err != nil {
+		return nil, err
+	}
 	value := d.Get("value").(string)
-
-	path := fmt.Sprintf("apps/%s/kvs/%s", appID, name)
 
 	kv := &kvStorage{
 		AppID: appID,
 		Name:  name,
 		Value: value,
 	}
-
-	kvByte, err := json.Marshal(kv)
+	err := b.SaveKvStorage(ctx, req.Storage, kv)
 	if err != nil {
 		return nil, err
 	}
 
-	entry := &logical.StorageEntry{
-		Key:      path,
-		Value:    kvByte,
-		SealWrap: false,
-	}
-	err = req.Storage.Put(ctx, entry)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := &logical.Response{}
-	return resp, nil
+	return nil, nil
 
 }
 
-func (b *backend) handleKvRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathKvRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
-	if appID == "" {
-		return logical.ErrorResponse("invalid app id"), nil
+	if err := b.ValidateAppID(appID); err != nil {
+		return nil, err
 	}
 	name := d.Get("name").(string)
-	if name == "" {
-		return logical.ErrorResponse("invalid name"), nil
+	if err := b.ValidateName(name); err != nil {
+		return nil, err
 	}
-
 	kv, err := b.getKvStorage(ctx, req.Storage, appID, name)
 	if err != nil {
 		return nil, err
@@ -136,6 +170,7 @@ func (b *backend) handleKvRead(ctx context.Context, req *logical.Request, d *fra
 
 }
 
+// getKvStorage get Kv Storage
 func (b *backend) getKvStorage(ctx context.Context, s logical.Storage, appID, name string) (*kvStorage, error) {
 
 	path := fmt.Sprintf("apps/%s/kvs/%s", appID, name)
@@ -144,11 +179,9 @@ func (b *backend) getKvStorage(ctx context.Context, s logical.Storage, appID, na
 	if err != nil {
 		return nil, err
 	}
-
 	if entry == nil {
-		return nil, nil
+		return nil, errors.New("received an empty entry")
 	}
-
 	kv := new(kvStorage)
 	err = entry.DecodeJSON(kv)
 	if err != nil {
@@ -159,29 +192,39 @@ func (b *backend) getKvStorage(ctx context.Context, s logical.Storage, appID, na
 
 }
 
-func (b *backend) handleKvList(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	appID := d.Get("app_id").(string)
-	key := d.Get("key").(string)
+// SaveKvStorage save Kv Storage
+func (b *backend) SaveKvStorage(ctx context.Context, s logical.Storage, kv *kvStorage) error {
 
-	path := fmt.Sprintf("apps/%s/kvs/%s", appID, key)
+	path := fmt.Sprintf("apps/%s/kvs/%s", kv.AppID, kv.Name)
 
-	_, err := req.Storage.List(ctx, path)
+	kvJson, err := json.Marshal(kv)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return nil, nil
+	entry := &logical.StorageEntry{
+		Key:   path,
+		Value: kvJson,
+	}
+
+	err = s.Put(ctx, entry)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
-func (b *backend) handleKvDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathKvDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
-	if appID == "" {
-		return logical.ErrorResponse("invalid app id"), nil
+	if err := b.ValidateAppID(appID); err != nil {
+		return nil, err
 	}
 	name := d.Get("name").(string)
-	if name == "" {
-		return logical.ErrorResponse("invalid name"), nil
+	if err := b.ValidateName(name); err != nil {
+		return nil, err
 	}
 
 	path := fmt.Sprintf("apps/%s/kvs/%s", appID, name)
