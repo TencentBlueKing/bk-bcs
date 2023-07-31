@@ -136,6 +136,7 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 func (u *UserManager) initRouters(ws *restful.WebService) {
 	ws.Filter(middleware.RequestIDFilter)
 	ws.Filter(middleware.TracingFilter)
+	ws.Filter(middleware.LoggingFilter)
 	v1http.InitV1Routers(ws, u.permService)
 	// register pull resource API
 }

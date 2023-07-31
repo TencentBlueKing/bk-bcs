@@ -14,7 +14,6 @@
 package iam
 
 import (
-	"context"
 	"strings"
 
 	"github.com/TencentBlueKing/iam-go-sdk/resource"
@@ -55,7 +54,7 @@ func (p ClusterProvider) ListInstance(req resource.Request) resource.Response {
 			Message: "parent id is empty",
 		}
 	}
-	result, err := component.GetClustersByProjectID(context.Background(), filter.Parent.ID)
+	result, err := component.GetClustersByProjectID(req.Context, filter.Parent.ID)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,
@@ -123,7 +122,7 @@ func (p ClusterProvider) SearchInstance(req resource.Request) resource.Response 
 			Message: "parent id is empty",
 		}
 	}
-	clusters, err := component.GetClustersByProjectID(context.Background(), filter.Parent.ID)
+	clusters, err := component.GetClustersByProjectID(req.Context, filter.Parent.ID)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,
