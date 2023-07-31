@@ -1,4 +1,3 @@
 # don't commit the service binary to vcs
 bcs-webconsole
 etc/*dev*
-console/manager/parserCmd.go
