@@ -14,11 +14,19 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"testing"
 
 	"github.com/hashicorp/vault/sdk/logical"
+
+	"bscp.io/pkg/tools"
 )
 
+// 创建kv
+// 生成rsa密钥对
+// 生成sm密钥对
+// 获取rsa加密密文
+// 获取sm2加密密文
 func TestKvEncryptRsa(t *testing.T) {
 
 	// 1.上传 kv
@@ -27,6 +35,8 @@ func TestKvEncryptRsa(t *testing.T) {
 	b, storage := createBackendWithStorage(t)
 
 	kvPath := "apps/1/kvs/1"
+	pkiPath := "apps/1/pkis/1"
+	kvEncrypt := "apps/1/kvs/1/encrypt"
 
 	req := &logical.Request{
 		Path:      kvPath,
@@ -42,36 +52,108 @@ func TestKvEncryptRsa(t *testing.T) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
 
-	// 2.上传公钥
-	keyPath := "apps/1/keys/2"
-
+	// 2.生成rsa
 	req = &logical.Request{
 		Operation: logical.CreateOperation,
-		Path:      keyPath,
+		Path:      pkiPath,
 		Storage:   storage,
 		Data: map[string]interface{}{
-			"type": "RSA",
-			//"public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxnuITzBfSs+5yDEhOTt5\n9kZtDQB0DLsyaKRp3NqBp9f8Uu0uQVSuW5yQRSu7Ned6qiiMvpNFODSAKoBk6LgH\noZbU2xJQlRAAj75npjHJtda65ANURjjuX165zRRrirpZg5KFvJ5m5nx+XKxme514\nv8Rf2dhL0dIjzK45Ew4+DDQhbZ84KywAMkHhL+jN00zJsDQ2npkV7/n2bVx/1mLa\n/aL0fjpUqQ6WwaRshIamD+zYx11+G5NF+E1yInx5bQOOGAKbm+UILpltYLjZi7gR\nEwnJkL3K9S4WUmj0oD7Ivczk8qZwGuAQFovGFK5DG1OuQ0j/BXHCzK+7C3+l+pB7\nuwIDAQAB\n-----END PUBLIC KEY-----",
+			"algorithm": "rsa",
 		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
+	privateKeyRsaPEM, ok := resp.Data["private_key"].(string)
+	if !ok {
+		t.Fatalf("获取rsa私钥失败")
+	}
+	privateKeyRsa, err := tools.RSAPrivateKeyFromPEM([]byte(privateKeyRsaPEM))
+	if err != nil {
+		t.Fatalf("解析rsa私钥失败")
+	}
 
-	kvEncrypt := "apps/1/kvs/1/encrypt"
+	// 3.生成sm2
+	req = &logical.Request{
+		Operation: logical.CreateOperation,
+		Path:      pkiPath,
+		Storage:   storage,
+		Data: map[string]interface{}{
+			"algorithm": "sm2",
+		},
+	}
+	resp, err = b.HandleRequest(context.Background(), req)
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+	privateKeySm2PEM, ok := resp.Data["private_key"].(string)
+	if !ok {
+		t.Fatalf("获取sm2私钥失败")
+	}
+	privateKeySm2, err := tools.SM2PrivateKeyFromPEM([]byte(privateKeySm2PEM))
+	if err != nil {
+		t.Fatalf("解析sm2私钥失败")
+	}
+
+	// rsa 加密
 	req = &logical.Request{
 		Operation: logical.CreateOperation,
 		Path:      kvEncrypt,
 		Storage:   storage,
 		Data: map[string]interface{}{
-			"algorithm": "RSA",
-			"key_name":  "2",
+			"algorithm": "rsa",
+			"key_name":  "1",
 		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+	ciphertextBase64, ok := resp.Data["ciphertext"].(string)
+	if !ok {
+		t.Fatalf("获取rsa密文失败")
+	}
+	ciphertext, err := base64.StdEncoding.DecodeString(ciphertextBase64)
+	if err != nil {
+		t.Fatalf("err:%v ", err)
+	}
+	value, err := tools.RSADecryptWithPrivateKey(privateKeyRsa, ciphertext)
+	if err != nil {
+		t.Fatalf("err : %v", err)
+	}
+	if string(value) != "MQ==" {
+		t.Fatalf("解密rsa失败")
+	}
+
+	// sm2 加密
+	req = &logical.Request{
+		Operation: logical.CreateOperation,
+		Path:      kvEncrypt,
+		Storage:   storage,
+		Data: map[string]interface{}{
+			"algorithm": "sm2",
+			"key_name":  "1",
+		},
+	}
+	resp, err = b.HandleRequest(context.Background(), req)
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+	ciphertextBase64, ok = resp.Data["ciphertext"].(string)
+	if !ok {
+		t.Fatalf("获取sm2密文失败")
+	}
+	ciphertext, err = base64.StdEncoding.DecodeString(ciphertextBase64)
+	if err != nil {
+		t.Fatalf("err:%v ", err)
+	}
+	value, err = tools.SM2DecryptWithPrivateKey(privateKeySm2, ciphertext)
+	if err != nil {
+		t.Fatalf("err : %v", err)
+	}
+	if string(value) != "MQ==" {
+		t.Fatalf("解密sm2失败")
 	}
 
 }

@@ -89,11 +89,11 @@ func (b *backend) pathEncryptWrite(ctx context.Context, req *logical.Request, d 
 		}
 		ciphertext = string(ciphertextByte)
 	case string(SM2Encryption):
-		publicKey, e := tools.SM2PublicKeyFromPEM([]byte(kv.Value))
+		publicKey, e := tools.SM2PublicKeyFromPEM([]byte(key.Key))
 		if e != nil {
 			return nil, e
 		}
-		ciphertextByte, e := tools.SM2EncryptWithPublicKey(publicKey, []byte(key.Key))
+		ciphertextByte, e := tools.SM2EncryptWithPublicKey(publicKey, []byte(kv.Value))
 		if e != nil {
 			return nil, e
 		}
