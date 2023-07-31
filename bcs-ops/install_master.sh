@@ -78,10 +78,10 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   fi
 else
   kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
-  || utils::log "FATAL" "failed to join master ${LAN_IP}"
+  || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
   if [ ${ENABLE_APISERVER_HA} == "true" ]; then
     [ -z ${VIP} ] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
-    "${ROOT_DIR}"/system/config_bc.s_dns -u "${LAN_IP}" k8s-api.bcs.local
+    "${ROOT_DIR}"/system/config_bcs_dns -u "${LAN_IP}" k8s-api.bcs.local
     systemctl restart kubelet.service
     if [ ${APISERVER_HA_MODE} == "kube-vip" ]; then
       "${ROOT_DIR}"/k8s/operate_kube_vip apply

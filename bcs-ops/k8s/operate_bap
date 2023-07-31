@@ -177,7 +177,7 @@ spec:
             - mountPath: /lib/modules
               name: lib-modules
               readOnly: true
-            - mountPath: /root/.bcs
+            - mountPath: "${PERSIST_DIR}"
               name: bcs-config
       terminationGracePeriodSeconds: 30
       restartPolicy: Always
@@ -192,7 +192,7 @@ spec:
             type: ""
           name: lib-modules
         - hostPath:
-            path: /root/.bcs
+            path: "${PERSIST_DIR}"
           name: bcs-config
 EOF
 utils::log "OK" "${action} bcs-apiserver-proxy success"

@@ -72,7 +72,7 @@ init_bap_rule() {
         utils::log "ERROR" "docker client: docker is not found"
       fi
       docker run -v ${PROXY_TOOL_PATH}:/tmp --rm --entrypoint /bin/cp "${bap_image}" \
-        -f /data/bcs/bcs-apiserver-proxy/apiserver-proxy-tools /tmp/ || utils::log "ERROR" "pull helm image failed"
+        -f /data/bcs/bcs-apiserver-proxy/apiserver-proxy-tools /tmp/ || utils::log "ERROR" "pull ${bap_image} image failed"
       ;;
     "containerd")
       if ! command -v ctr &>/dev/null; then
@@ -84,7 +84,7 @@ init_bap_rule() {
           utils::log "ERROR" "containerd fail to run ${bap_image}"
         fi
       else
-        utils::log "ERROR" "pull helm image failed"
+        utils::log "ERROR" "pull ${bap_image} image failed"
       fi
       ;;
     *)
