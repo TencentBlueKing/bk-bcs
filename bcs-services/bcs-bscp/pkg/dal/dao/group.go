@@ -199,8 +199,8 @@ func (dao *groupDao) ListAppGroups(kit *kit.Kit, bizID, appID uint32) ([]*table.
 
 	subQuery := gabQ.Select(gabM.GroupID).Where(gabM.BizID.Eq(bizID), gabM.AppID.Eq(appID))
 	return groupQ.
-		Where(groupM.BizID.Eq(bizID)).
-		Where(groupQ.Columns(groupM.ID).In(subQuery)).Or(groupM.Public.Is(true)).
+		Where(groupM.BizID.Eq(bizID)).Where(
+		groupQ.Where(groupQ.Columns(groupM.ID).In(subQuery)).Or(groupM.Public.Is(true))).
 		Find()
 }
 
