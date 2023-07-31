@@ -14,15 +14,14 @@
 package app
 
 import (
-	// pprof
-	_ "net/http/pprof"
-
 	"context"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
+	// pprof
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"path"
@@ -71,6 +70,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/envx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/grpcGateway"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -475,8 +475,8 @@ func (hm *HelmManager) initHTTPService() error {
 	if len(hm.opt.IPv6Address) > 0 {
 		addresses = append(addresses, hm.opt.IPv6Address)
 	}
-	hm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.HTTPPort)), "", mux)
-
+	hm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.HTTPPort)), "",
+		grpcGateway.GRPCHandlerFunc(grpc.NewServer(), mux))
 	go func() {
 		var err error
 		blog.Infof("start http gateway server on address %+v", addresses)
