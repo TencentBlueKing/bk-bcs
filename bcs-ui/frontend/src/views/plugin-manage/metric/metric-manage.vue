@@ -1,19 +1,21 @@
 <template>
-  <BcsContent :title="$t('Metric管理')" hide-back>
+  <BcsContent :title="$t('plugin.metric.title')" hide-back>
     <Row>
       <template #left>
         <bk-button
           icon="plus"
           theme="primary"
           @click="showSideslider = true">
-          {{ $t('新建Metric') }}
+          {{ $t('plugin.metric.action.create') }}
         </bk-button>
-        <bk-button :disabled="!selections.length" @click="handleBatchDelete">{{ $t('批量删除') }}</bk-button>
+        <bk-button
+          :disabled="!selections.length"
+          @click="handleBatchDelete">{{ $t('generic.button.batchDelete') }}</bk-button>
       </template>
       <template #right>
         <ClusterSelectComb
           :cluster-id.sync="clusterID"
-          :placeholder="$t('输入名称搜索')"
+          :placeholder="$t('generic.placeholder.searchName')"
           :search.sync="searchValue"
           :cluster-type="['independent', 'managed', 'virtual']"
           @refresh="getTableData" />
@@ -28,14 +30,14 @@
       @page-limit-change="pageSizeChange"
       @selection-change="handleSelectionChange">
       <bk-table-column type="selection" width="50"></bk-table-column>
-      <bk-table-column prop="metadata.name" :label="$t('名称')"></bk-table-column>
-      <bk-table-column prop="metadata.namespace" :label="$t('命名空间')"></bk-table-column>
+      <bk-table-column prop="metadata.name" :label="$t('generic.label.name')"></bk-table-column>
+      <bk-table-column prop="metadata.namespace" :label="$t('k8s.namespace')"></bk-table-column>
       <bk-table-column label="Service">
         <template #default="{ row }">
           {{getServiceName(row) || '--'}}
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('Metric路径')">
+      <bk-table-column :label="$t('plugin.metric.endpoints.path')">
         <template #default="{ row }">
           <template v-if="row._endpoints.path.length">
             <div v-for="item, index in row._endpoints.path" :key="index" class="overflow-hidden">
@@ -45,7 +47,7 @@
           <span v-else>--</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('端口')">
+      <bk-table-column :label="$t('deploy.helm.port')">
         <template #default="{ row }">
           <template v-if="row._endpoints.port.length">
             <div v-for="item, index in row._endpoints.port" :key="index" class="overflow-hidden">
@@ -55,7 +57,7 @@
           <span v-else>--</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('周期(s)')" width="120">
+      <bk-table-column :label="$t('plugin.metric.label.interval')" width="120">
         <template #default="{ row }">
           <template v-if="row._endpoints.interval.length">
             <div v-for="item, index in row._endpoints.interval" :key="index" class="overflow-hidden">
@@ -65,22 +67,22 @@
           <span v-else>--</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('操作')" width="120">
+      <bk-table-column :label="$t('generic.label.action')" width="140">
         <template #default="{ row }">
           <span
             v-bk-tooltips="{
               disabled: getServiceName(row),
-              content: $t('Service对象不存在'),
+              content: $t('plugin.metric.serviceNotFound'),
               placement: 'left'
             }">
             <bk-button
               text
               :disabled="!getServiceName(row)"
               @click="handleUpdateMetric(row)">
-              {{ $t('更新') }}
+              {{ $t('generic.button.update') }}
             </bk-button>
           </span>
-          <bk-button text class="ml10" @click="handleDeleteMetric(row)">{{ $t('删除') }}</bk-button>
+          <bk-button text class="ml10" @click="handleDeleteMetric(row)">{{ $t('generic.button.delete') }}</bk-button>
         </template>
       </bk-table-column>
       <template #empty>
@@ -91,8 +93,8 @@
     <bk-sideslider
       :is-show.sync="showSideslider"
       :title="curOperateRow.metadata
-        ? $t('编辑 {name}', { name: curOperateRow.metadata && curOperateRow.metadata.name })
-        : $t('新建Metric')"
+        ? $t('plugin.metric.edit', { name: curOperateRow.metadata && curOperateRow.metadata.name })
+        : $t('plugin.metric.action.create')"
       :width="800"
       :before-close="handleBeforeClose"
       quick-close
@@ -193,7 +195,7 @@ const handleBatchDelete = async () => {
     type: 'warning',
     clsName: 'custom-info-confirm',
     title: $i18n.t(
-      '确定删除 {name} 等 {count} 个Metric',
+      'plugin.metric.multidelete',
       { name: selections.value[0]?.metadata?.name, count: selections.value.length },
     ),
     defaultInfo: true,
@@ -217,7 +219,7 @@ const handleDeleteMetric = (row) => {
   $bkInfo({
     type: 'warning',
     clsName: 'custom-info-confirm',
-    title: $i18n.t('确定删除Metric {name}', { name: row.metadata?.name }),
+    title: $i18n.t('plugin.metric.delete', { name: row.metadata?.name }),
     defaultInfo: true,
     confirmFn: async () => {
       const result = await handleDeleteServiceMonitor({

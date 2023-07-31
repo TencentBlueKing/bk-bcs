@@ -72,7 +72,7 @@ export default defineComponent({
       curErrMsg.value = '';
       if (required.value && !value.value && event === 'blur') {
         // 必填项校验
-        curErrMsg.value = $i18n.t('必填项');
+        curErrMsg.value = $i18n.t('generic.validate.required');
         return false;
       };
       if (!rules.value.length || !value.value) return true;

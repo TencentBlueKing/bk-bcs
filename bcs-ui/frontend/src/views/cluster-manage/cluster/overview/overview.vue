@@ -5,7 +5,7 @@
       <!--CPU使用率-->
       <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
         <div class="flex justify-between">
-          <span class="text-[14px] font-bold">{{ $t('CPU使用率') }}</span>
+          <span class="text-[14px] font-bold">{{ $t('metrics.cpuUsage') }}</span>
           <div>
             <div class="flex justify-end">
               <span class="text-[32px]">
@@ -30,7 +30,7 @@
       <!-- 内存使用率 -->
       <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
         <div class="flex justify-between">
-          <span class="text-[14px] font-bold">{{ $t('内存使用率') }}</span>
+          <span class="text-[14px] font-bold">{{ $t('metrics.memUsage') }}</span>
           <div>
             <div class="flex justify-end">
               <span class="text-[32px]">
@@ -55,7 +55,7 @@
       <!-- 磁盘容量(虚拟集群不展示磁盘信息) -->
       <div class="flex-1 p-[20px] h-[360px]" v-if="curCluster.clusterType !== 'virtual'">
         <div class="flex justify-between">
-          <span class="text-[14px] font-bold">{{ $t('磁盘容量') }}</span>
+          <span class="text-[14px] font-bold">{{ $t('metrics.diskUsage') }}</span>
           <div>
             <div class="flex justify-end">
               <span class="text-[32px]">
@@ -83,19 +83,19 @@
       <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">
-            {{ $t('CPU装箱率') }}
+            {{ $t('metrics.cpuRequestUsage.text') }}
             <bk-popover theme="light">
               <span class="text-[#C4C6CC] relative top-[-1px]">
                 <i class="bcs-icon bcs-icon-info-circle-shape"></i>
               </span>
               <template #content>
                 <i18n
-                  path="集群CPU装箱率 = 集群所有Pod CPU Request之和 / 集群所有节点CPU总核数（不包含Master节点），集群CPU装箱率越接近集群CPU使用率，集群CPU资源利用率越高 {0}">
+                  path="metrics.cpuRequestUsage.clusterDesc">
                   <bk-link
                     theme="primary"
                     target="_blank"
                     href="https://kubernetes.io/zh-cn/docs/concepts/configuration/manage-resources-containers/">
-                    <span class="text-[12px]"> {{ $t('了解更多') }}</span>
+                    <span class="text-[12px]"> {{ $t('generic.button.learnMore') }}</span>
                   </bk-link>
                 </i18n>
               </template>
@@ -126,19 +126,19 @@
       <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">
-            {{ $t('内存装箱率') }}
+            {{ $t('metrics.memRequestUsage.text') }}
             <bk-popover theme="light">
               <span class="text-[#C4C6CC] relative top-[-1px]">
                 <i class="bcs-icon bcs-icon-info-circle-shape"></i>
               </span>
               <template #content>
                 <i18n
-                  path="集群内存装箱率 = 集群所有Pod 内存 Request之和 / 集群所有节点内存总大小（不包含Master节点），集群内存装箱率越接近集群内存使用率，集群内存资源利用率越高 {0}">
+                  path="metrics.memRequestUsage.clusterDesc">
                   <bk-link
                     theme="primary"
                     target="_blank"
                     href="https://kubernetes.io/zh-cn/docs/concepts/configuration/manage-resources-containers/">
-                    <span class="text-[12px]"> {{ $t('了解更多') }}</span>
+                    <span class="text-[12px]"> {{ $t('generic.button.learnMore') }}</span>
                   </bk-link>
                 </i18n>
               </template>
@@ -173,7 +173,7 @@
       <!-- 磁盘IO(虚拟集群不展示磁盘信息) -->
       <div class="flex-1 p-[20px] h-[360px]" v-if="curCluster.clusterType !== 'virtual'">
         <div class="flex justify-between">
-          <span class="text-[14px] font-bold">{{ $t('磁盘IO') }}</span>
+          <span class="text-[14px] font-bold">{{ $t('metrics.diskIOUsage') }}</span>
           <div>
             <div class="flex justify-end">
               <span class="text-[32px]">

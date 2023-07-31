@@ -15,10 +15,10 @@
       <div style="margin: -20px;" v-bkloading="{ isLoading: ccHostLoading }">
         <div class="biz-cluster-create-table-header">
           <div class="left" style="height: 60px;">
-            {{$t('选择服务器')}}
+            {{$t('generic.ipSelector.action.selectHost')}}
             <span
               class="remain-tip"
-              v-if="remainCount">{{$t('已选择{remainCount}个节点', { remainCount: remainCount })}}</span>
+              v-if="remainCount">{{$t('generic.ipSelector.selected.text2', { remainCount: remainCount })}}</span>
           </div>
         </div>
         <div style="min-height: 443px;">
@@ -34,10 +34,10 @@
                       v-model="isCheckCurPageAll" @click="toggleCheckCurPage">
                   </label>
                 </th>
-                <th style="width: 160px;">{{$t('主机名/IP')}}</th>
-                <th style="width: 220px;">{{$t('状态')}}</th>
-                <th style="width: 120px;">{{$t('容器数量')}}</th>
-                <th style="width: 200px;">{{$t('Pod数量')}}</th>
+                <th style="width: 160px;">{{$t('generic.ipSelector.label.hostAndIp')}}</th>
+                <th style="width: 220px;">{{$t('generic.label.status')}}</th>
+                <th style="width: 120px;">{{$t('dashboard.workload.container.counts')}}</th>
+                <th style="width: 200px;">{{$t('cluster.nodeList.label.podCounts')}}</th>
               </tr>
             </thead>
             <tbody>
@@ -69,7 +69,7 @@
                 <tr>
                   <td colspan="7" style="top: 0;">
                     <div class="bk-message-box no-data">
-                      <p class="message empty-message">{{$t('您在当前业务下没有主机资源，请联系业务运维')}}</p>
+                      <p class="message empty-message">{{$t('bcs.msg.emptyHostResource')}}</p>
                     </div>
                   </td>
                 </tr>
@@ -94,10 +94,10 @@
           <bk-button
             type="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
             @click="chooseServer">
-            {{$t('确定')}}
+            {{$t('generic.button.confirm')}}
           </bk-button>
           <bk-button type="button" @click="hiseChooseServer">
-            {{$t('取消')}}
+            {{$t('generic.button.cancel')}}
           </bk-button>
         </div>
       </div>
@@ -199,16 +199,16 @@ export default {
              */
     getHostStatus(status) {
       const statusMap = {
-        INITIALIZATION: this.$t('初始化中'),
-        RUNNING: this.$t('正常'),
-        NOTREADY: this.$t('不正常'),
-        REMOVABLE: this.$t('不可调度'),
-        DELETING: this.$t('删除中'),
-        'ADD-FAILURE': this.$t('上架失败'),
-        'REMOVE-FAILURE': this.$t('下架失败'),
-        UNKNOWN: this.$t('未知状态'),
+        INITIALIZATION: this.$t('generic.status.initializing'),
+        RUNNING: this.$t('generic.status.ready'),
+        NOTREADY: this.$t('generic.status.notReady'),
+        REMOVABLE: this.$t('generic.status.removable'),
+        DELETING: this.$t('generic.status.deleting'),
+        'ADD-FAILURE': this.$t('cluster.nodeList.status.addNodeFailed'),
+        'REMOVE-FAILURE': this.$t('cluster.nodeList.status.deleteNodeFailed'),
+        UNKNOWN: this.$t('generic.status.unknown1'),
       };
-      return statusMap[status] || this.$t('不正常');
+      return statusMap[status] || this.$t('generic.status.notReady');
     },
 
     /**
@@ -246,7 +246,7 @@ export default {
       if (!len) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择服务器'),
+          message: this.$t('generic.ipSelector.validate.emptyHost'),
         });
         return;
       }

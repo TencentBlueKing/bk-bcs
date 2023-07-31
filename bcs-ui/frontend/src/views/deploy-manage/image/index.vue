@@ -1,6 +1,6 @@
 <template>
   <BcsContent
-    :title="$t('镜像')"
+    :title="$t('k8s.image')"
     :tabs="tabs"
     :active-tab="$route.name || ''"
     hide-back
@@ -21,11 +21,11 @@ export default defineComponent({
     const tabs = ref([
       {
         name: 'projectImage',
-        displayName: $i18n.t('项目镜像'),
+        displayName: $i18n.t('deploy.image.projectImage'),
       },
       {
         name: 'imageLibrary',
-        displayName: $i18n.t('公共镜像'),
+        displayName: $i18n.t('deploy.image.publicImage'),
       },
     ]);
     const handleTabChange = (item) => {

@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-[600px]">
     <bcs-table :data="tableData">
-      <bcs-table-column :label="$t('资源配比(CPU/内存)')">
+      <bcs-table-column :label="$t('cluster.create.label.quotaAllocation')">
         <template #default="{ row }">
           <bcs-select :clearable="false" v-model="row.proportion" class="bg-[#fff]">
             <bcs-option
@@ -13,17 +13,17 @@
           </bcs-select>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('系数')" width="120">
+      <bcs-table-column :label="$t('cluster.create.label.coefficient')" width="120">
         <template #default="{ row }">
           <bcs-input type="number" :min="1" :max="1000" :precision="0" v-model="row.coefficient"></bcs-input>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('CPU配额(核)')" width="130" align="right">
+      <bcs-table-column :label="$t('cluster.create.label.cpuQuota')" width="130" align="right">
         <template #default="{ row }">
           {{ getCpuQuota(row) }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('内存配额(GiB)')" width="130" align="right">
+      <bcs-table-column :label="$t('cluster.create.label.memQuota')" width="130" align="right">
         <template #default="{ row }">
           {{ getMemQuota(row) }}
         </template>
@@ -56,9 +56,9 @@
     <div
       class="bcs-border mt-[-1px]
       flex items-center text-[#313238] text-[12px] font-bold h-[42px] bg-[#F0F1F5] px-[16px]">
-      <div class="flex-1">{{ $t('总计') }}</div>
+      <div class="flex-1">{{ $t('generic.label.totalCount') }}</div>
       <div :class="['px-[15px]', { 'text-[#ea3636]': totalCpuAndMem.cpu < 40 }]">
-        {{ $t('{0} 核', [totalCpuAndMem.cpu]) }}
+        {{ $t('units.cores', [totalCpuAndMem.cpu]) }}
       </div>
       <div
         :class="[

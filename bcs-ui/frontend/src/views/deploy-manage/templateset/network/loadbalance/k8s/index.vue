@@ -2,17 +2,17 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header hide-back title="LoadBalancer" :desc="$t('K8S官方维护的ingress-nginx')" />
+    <Header hide-back title="LoadBalancers" :desc="$t('deploy.templateset.officialIngressNginx')" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading }">
       <div class="biz-panel-header">
         <div class="left">
           <bk-button type="primary" icon="plus" @click.stop.prevent="createLoadBlance">
-            {{$t('新建LoadBalancer')}}
+            {{$t('deploy.templateset.newLoadBalancer')}}
           </bk-button>
         </div>
         <div class="right">
           <ClusterSelectComb
-            :placeholder="$t('输入集群名称搜索')"
+            :placeholder="$t('deploy.templateset.searchClusterName')"
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
             @search-change="searchLoadBalance"
@@ -28,41 +28,41 @@
             v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
             @page-limit-change="handlePageLimitChange"
             @page-change="handlePageChange">
-            <bk-table-column :label="$t('所属集群')" min-width="150">
+            <bk-table-column :label="$t('generic.label.cluster1')" min-width="150">
               <template slot-scope="props">
                 <bcs-popover :content="props.row.cluster_id" placement="top">
                   <div class="cluster-name">{{props.row.cluster_name}}</div>
                 </bcs-popover>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('命名空间')" min-width="150">
+            <bk-table-column :label="$t('k8s.namespace')" min-width="150">
               <template slot-scope="props">
                 {{props.row.namespace_name || '--'}}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('Chart名称及版本')" min-width="150">
+            <bk-table-column :label="$t('deploy.templateset.chartNameAndVersion')" min-width="150">
               <template slot-scope="props">
                 <div class="chart-info" v-if="props.row.chart">
-                  <p>{{$t('名称')}}：{{props.row.chart.name || '--'}}</p>
-                  <p>{{$t('版本')}}：{{props.row.chart.version || '--'}}</p>
+                  <p>{{$t('generic.label.name')}}：{{props.row.chart.name || '--'}}</p>
+                  <p>{{$t('generic.label.version')}}：{{props.row.chart.version || '--'}}</p>
                 </div>
                 <template v-else>--</template>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('更新时间')" min-width="150">
+            <bk-table-column :label="$t('cluster.labels.updatedAt')" min-width="150">
               <template slot-scope="props">
                 {{formatDate(props.row.updated)}}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('更新人')" min-width="150">
+            <bk-table-column :label="$t('generic.label.updator')" min-width="150">
               <template slot-scope="props">
                 {{props.row.updator}}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('操作')" min-width="150">
+            <bk-table-column :label="$t('generic.label.action')" min-width="150">
               <template slot-scope="props">
-                <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="editLoadBalance(props.row)">{{$t('更新')}}</a>
-                <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeLoadBalance(props.row)">{{$t('删除')}}</a>
+                <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="editLoadBalance(props.row)">{{$t('generic.button.update')}}</a>
+                <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeLoadBalance(props.row)">{{$t('generic.button.delete')}}</a>
               </template>
             </bk-table-column>
             <template #empty>
@@ -83,12 +83,12 @@
         <div class="bk-form bk-form-vertical mb20">
           <div class="bk-form-item is-required">
             <div class="bk-form-content">
-              <label class="bk-label">{{$t('所属集群')}}：</label>
+              <label class="bk-label">{{$t('generic.label.cluster1')}}：</label>
               <div class="bk-form-content">
                 <bk-selector
                   style="width: 100%;"
                   :field-type="'cluster'"
-                  :placeholder="$t('请选择')"
+                  :placeholder="$t('generic.placeholder.select')"
                   :setting-key="'cluster_id'"
                   :display-key="'longName'"
                   :is-link="true"
@@ -102,14 +102,14 @@
 
           <div class="bk-form-item is-required mt15">
             <div class="head">
-              <label class="bk-label">{{$t('节点IP')}}：</label>
-              <bk-button type="primary" size="small" @click="showNodeSelector">{{$t('添加节点')}}</bk-button>
+              <label class="bk-label">{{$t('deploy.templateset.nodeIP')}}：</label>
+              <bk-button type="primary" size="small" @click="showNodeSelector">{{$t('cluster.nodeList.create.text')}}</bk-button>
             </div>
             <table class="bk-table biz-data-table has-table-bordered" style="border-bottom: none;">
               <thead>
                 <tr>
                   <th>IP</th>
-                  <th style="width: 160px;">{{$t('操作')}}</th>
+                  <th style="width: 160px;">{{$t('generic.label.action')}}</th>
                 </tr>
               </thead>
               <tbody>
@@ -119,7 +119,7 @@
                       {{node.inner_ip}}
                     </td>
                     <td>
-                      <a href="javascript:void(0);" class="bk-text-button" @click="removeNode(index)">{{$t('删除')}}</a>
+                      <a href="javascript:void(0);" class="bk-text-button" @click="removeNode(index)">{{$t('generic.button.delete')}}</a>
                     </td>
                   </tr>
                 </template>
@@ -137,15 +137,15 @@
           <div class="bk-form-item">
             <div class="bk-form-content">
               <label class="bk-label">
-                {{$t('选择版本')}}：
-                <bcs-popover :content="$t('选择chart:blueking-nginx-ingress对应的版本')" placement="right">
+                {{$t('deploy.templateset.selectVersion')}}：
+                <bcs-popover :content="$t('deploy.templateset.selectChartVersion')" placement="right">
                   <i class="bcs-icon bcs-icon-question-circle"></i>
                 </bcs-popover>
               </label>
               <div class="bk-form-content">
                 <bk-selector
                   style="width: 100%; z-index: 1113;"
-                  :placeholder="$t('请选择')"
+                  :placeholder="$t('generic.placeholder.select')"
                   :setting-key="'id'"
                   :display-key="'version'"
                   :is-link="true"
@@ -157,7 +157,7 @@
           </div>
 
           <div class="bk-form-item mt15">
-            <label class="bk-label">{{$t('Values内容')}}：</label>
+            <label class="bk-label">{{$t('deploy.templateset.valuesContent')}}：</label>
             <div class="bk-form-content">
               <CodeEditor
                 lang="yaml"
@@ -171,8 +171,8 @@
           </div>
 
           <div class="bk-form-item mt25">
-            <bk-button type="primary" :loading="isDataSaveing" @click="saveLoadBalance">{{$t('保存')}}</bk-button>
-            <bk-button :disabled="isDataSaveing" @click="hideLoadBalanceSlider">{{$t('取消')}}</bk-button>
+            <bk-button type="primary" :loading="isDataSaveing" @click="saveLoadBalance">{{$t('generic.button.save')}}</bk-button>
+            <bk-button :disabled="isDataSaveing" @click="hideLoadBalanceSlider">{{$t('generic.button.cancel')}}</bk-button>
           </div>
         </div>
       </div>
@@ -351,7 +351,7 @@ export default {
       if (!this.curLoadBalance.cluster_id) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择所属集群'),
+          message: this.$t('deploy.templateset.selectCluster'),
         });
         return false;
       }
@@ -404,7 +404,7 @@ export default {
         node_list: [],
         values: '',
       };
-      this.loadBalanceSlider.title = this.$t('新建LoadBalancer');
+      this.loadBalanceSlider.title = this.$t('deploy.templateset.newLoadBalancer');
       this.loadBalanceSlider.isShow = true;
 
       try {
@@ -425,7 +425,7 @@ export default {
              * @param  {number} index 索引
              */
     async editLoadBalance(loadBalance) {
-      this.loadBalanceSlider.title = this.$t('编辑LoadBalancer');
+      this.loadBalanceSlider.title = this.$t('deploy.templateset.editLoadBalancer');
       this.loadBalanceSlider.isShow = true;
       const { projectId } = this;
       const projectKind = this.curProject.kind;
@@ -529,11 +529,11 @@ export default {
       const projectKind = this.curProject.kind;
       const loadBalanceId = loadBalance.id;
       this.$bkInfo({
-        title: this.$t('确认删除'),
+        title: this.$t('generic.title.confirmDelete'),
         clsName: 'biz-remove-dialog',
         content: this.$createElement('p', {
           class: 'biz-confirm-desc',
-        }, this.$t('确定要删除LoadBalancer')),
+        }, this.$t('deploy.templateset.confirmDeleteLoadBalancer')),
         async confirmFn() {
           self.isPageLoading = true;
 
@@ -545,7 +545,7 @@ export default {
             });
             self.$bkMessage({
               theme: 'success',
-              message: self.$t('删除成功'),
+              message: self.$t('generic.msg.success.delete'),
             });
             self.getLoadBalanceList();
           } catch (e) {
@@ -717,7 +717,7 @@ export default {
       if (!data.cluster_id) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择所属集群'),
+          message: this.$t('deploy.templateset.selectCluster'),
           delay: 5000,
         });
         return false;
@@ -726,7 +726,7 @@ export default {
       if (!data.namespace_id) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择命名空间'),
+          message: this.$t('dashboard.ns.validate.emptyNs'),
           delay: 5000,
         });
         return false;
@@ -735,7 +735,7 @@ export default {
       if (data.protocols.http.isUse && !data.protocols.http.port) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入http端口'),
+          message: this.$t('deploy.templateset.enterHttpPort'),
           delay: 5000,
         });
         return false;
@@ -744,7 +744,7 @@ export default {
       if (data.protocols.https.isUse && !data.protocols.https.port) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入https端口'),
+          message: this.$t('deploy.templateset.enterHttpsPort'),
           delay: 5000,
         });
         return false;
@@ -753,7 +753,7 @@ export default {
       if (data.ip_info === '{}') {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请添加节点'),
+          message: this.$t('deploy.templateset.addNode'),
           delay: 5000,
         });
         return false;
@@ -771,7 +771,7 @@ export default {
       if (!data.cluster_id) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择所属集群'),
+          message: this.$t('deploy.templateset.selectCluster'),
           delay: 2000,
         });
         return false;
@@ -780,7 +780,7 @@ export default {
       if (!data.node_list || !data.node_list.length) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择节点IP'),
+          message: this.$t('deploy.templateset.selectNodeIP'),
           delay: 2000,
         });
         return false;
@@ -789,7 +789,7 @@ export default {
       if (!this.curLoadBalanceChartId || !this.chartVersionList.find(item => item.id === this.curLoadBalanceChartId)) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择版本'),
+          message: this.$t('deploy.templateset.selectVer'),
           delay: 2000,
         });
         return false;
@@ -800,7 +800,7 @@ export default {
       if (!values) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请填写Values内容'),
+          message: this.$t('deploy.templateset.enterValuesContent'),
           delay: 2000,
         });
         return false;
@@ -811,7 +811,7 @@ export default {
       } catch (err) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入合法的YAML'),
+          message: this.$t('deploy.templateset.enterValidYAML'),
         });
         return false;
       }
@@ -935,7 +935,7 @@ export default {
         this.searchScope = data.cluster_id;
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('数据保存成功'),
+          message: this.$t('generic.msg.success.save1'),
         });
         this.getLoadBalanceList();
         this.hideLoadBalanceSlider();
@@ -975,7 +975,7 @@ export default {
 
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('数据保存成功'),
+          message: this.$t('generic.msg.success.save1'),
         });
         this.getLoadBalanceList();
         this.hideLoadBalanceSlider();

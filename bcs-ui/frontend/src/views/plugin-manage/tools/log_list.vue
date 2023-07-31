@@ -1,13 +1,13 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header :title="$t('日志采集规则')" :desc="$t('集群名称: {name}', { name: clusterName })"></Header>
+    <Header :title="$t('plugin.tools.bklogconfig')" :desc="$t('plugin.tools.cluster', { name: clusterName })"></Header>
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button icon="plus" type="primary" @click.stop.prevent="createLoadBlance">
-              <span>{{$t('新建规则')}}</span>
+              <span>{{$t('plugin.tools.create')}}</span>
             </bk-button>
           </div>
           <div class="right search-wrapper">
@@ -15,7 +15,7 @@
               <bk-selector
                 style="width: 135px;"
                 :searchable="true"
-                :placeholder="$t('命名空间')"
+                :placeholder="$t('k8s.namespace')"
                 :selected.sync="searchParams.namespace"
                 :list="nameSpaceList"
                 :setting-key="'name'"
@@ -26,7 +26,7 @@
             <div class="left">
               <bk-selector
                 style="width: 135px;"
-                :placeholder="$t('应用类型')"
+                :placeholder="$t('plugin.tools.appType')"
                 :selected.sync="searchParams.workload_type"
                 :list="appTypes"
                 :setting-key="'id'"
@@ -37,13 +37,13 @@
             <div class="left">
               <bkbcs-input
                 style="width: 135px;"
-                :placeholder="$t('应用名')"
+                :placeholder="$t('plugin.tools._appName')"
                 :value.sync="searchParams.workload_name">
               </bkbcs-input>
             </div>
             <div class="left">
-              <bk-button type="primary" :title="$t('查询')" icon="search" @click="handleSearch">
-                {{$t('查询')}}
+              <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleSearch">
+                {{$t('generic.button.query')}}
               </bk-button>
             </div>
           </div>
@@ -59,31 +59,31 @@
               :pagination="pageConf"
               @page-change="handlePageChange"
               @page-limit-change="handlePageSizeChange">
-              <bk-table-column :label="$t('名称')" prop="name" :show-overflow-tooltip="true" min-width="250">
+              <bk-table-column :label="$t('generic.label.name')" prop="name" :show-overflow-tooltip="true" min-width="250">
                 <template slot-scope="{ row }">
                   <a href="javascript: void(0)" class="bk-text-button biz-table-title biz-resource-title" @click.stop.prevent="editCrdInstance(row, true)">{{row.name || '--'}}</a>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="`${$t('集群')} / ${$t('命名空间')}`" min-width="220">
+              <bk-table-column :label="`${$t('generic.label.cluster')} / ${$t('k8s.namespace')}`" min-width="220">
                 <template slot-scope="{ row }">
-                  <p>{{$t('所属集群')}}：{{clusterName}}</p>
-                  <p>{{$t('命名空间')}}：{{(row.namespace === 'default' && row.config_type === 'default' && row.log_source_type === 'all_containers') ? $t('所有') : row.namespace}}</p>
+                  <p>{{$t('generic.label.cluster1')}}：{{clusterName}}</p>
+                  <p>{{$t('k8s.namespace')}}：{{(row.namespace === 'default' && row.config_type === 'default' && row.log_source_type === 'all_containers') ? $t('plugin.tools.all') : row.namespace}}</p>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('日志源')" min-width="100">
+              <bk-table-column :label="$t('plugin.tools.logSRC')" min-width="100">
                 <template slot-scope="{ row }">
                   {{logSource[row.log_source_type]}}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('选择器')" min-width="250">
+              <bk-table-column :label="$t('k8s.selector')" min-width="250">
                 <template slot-scope="{ row }">
                   <template v-if="row.log_source_type === 'selected_containers'">
-                    <p>{{$t('类型')}}：{{row.crd_data.workload.type}}</p>
-                    <p>{{$t('名称')}}：{{row.crd_data.workload.name || '--'}}</p>
+                    <p>{{$t('generic.label.kind')}}：{{row.crd_data.workload.type}}</p>
+                    <p>{{$t('generic.label.name')}}：{{row.crd_data.workload.name || '--'}}</p>
                   </template>
                   <template v-else-if="row.log_source_type === 'selected_labels'">
                     <div class="data-item mt5" v-if="Object.keys(row.selector.match_labels).length">
-                      <p class="key mb5">{{$t('匹配标签')}}：</p>
+                      <p class="key mb5">{{$t('plugin.tools.matchLables')}}：</p>
                       <p class="value">
                         <ul class="key-list">
                           <!-- eslint-disable vue/no-use-v-if-with-v-for -->
@@ -95,7 +95,7 @@
                       </p>
                     </div>
                     <div class="data-item" v-if="row.selector.match_expressions.length">
-                      <p class="key mb5">{{$t('匹配表达式')}}：</p>
+                      <p class="key mb5">{{$t('plugin.tools.matchPattern')}}：</p>
                       <p class="value">
                         <ul class="key-list">
                           <li class="mb5" v-for="(expression, expressIndex) of row.selector.match_expressions" :key="expressIndex" v-if="expressIndex <= 3">
@@ -112,7 +112,7 @@
                   </template>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('日志信息')" min-width="200">
+              <bk-table-column :label="$t('plugin.tools.log')" min-width="200">
                 <template slot-scope="{ row }">
                   <template v-if="row.log_source_type === 'selected_containers'">
                     <bcs-popover placement="top" :delay="500">
@@ -137,21 +137,21 @@
                   </template>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('操作记录')" width="260">
+              <bk-table-column :label="$t('projects.operateAudit.record')" width="260">
                 <template slot-scope="{ row }">
-                  <p>{{$t('更新人')}}：{{row.operator || '--'}}</p>
-                  <p>{{$t('更新时间')}}：{{row.updated || '--'}}</p>
+                  <p>{{$t('generic.label.updator')}}：{{row.operator || '--'}}</p>
+                  <p>{{$t('cluster.labels.updatedAt')}}：{{row.updated || '--'}}</p>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('状态')" min-width="100">
+              <bk-table-column :label="$t('generic.label.status')" min-width="100">
                 <template slot-scope="{ row }">
-                  {{row.bind_success ? $t('正常') : $t('异常')}}
+                  {{row.bind_success ? $t('generic.status.ready') : $t('generic.status.error')}}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('操作')" width="150">
+              <bk-table-column :label="$t('generic.label.action')" width="150">
                 <template slot-scope="{ row }">
-                  <a href="javascript:void(0);" class="bk-text-button" @click="editCrdInstance(row)">{{$t('更新')}}</a>
-                  <a href="javascript:void(0);" class="bk-text-button" @click="removeCrdInstance(row)">{{$t('删除')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click="editCrdInstance(row)">{{$t('generic.button.update')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click="removeCrdInstance(row)">{{$t('generic.button.delete')}}</a>
                 </template>
               </bk-table-column>
             </bk-table>
@@ -169,10 +169,10 @@
             <div class="bk-form-item">
               <div class="bk-form-content">
                 <div class="bk-form-inline-item is-required" style="width: 346px;">
-                  <label class="bk-label">{{$t('名称')}}：</label>
+                  <label class="bk-label">{{$t('generic.label.name')}}：</label>
                   <div class="bk-form-content">
                     <bkbcs-input
-                      :placeholder="$t('请输入')"
+                      :placeholder="$t('generic.placeholder.input')"
                       :value.sync="curCrdInstanceName"
                       :disabled="true">
                     </bkbcs-input>
@@ -184,10 +184,10 @@
             <div class="bk-form-item">
               <div class="bk-form-content">
                 <div class="bk-form-inline-item is-required" style="width: 352px;">
-                  <label class="bk-label">{{$t('所属集群')}}：</label>
+                  <label class="bk-label">{{$t('generic.label.cluster1')}}：</label>
                   <div class="bk-form-content">
                     <bk-selector
-                      :placeholder="$t('请输入')"
+                      :placeholder="$t('generic.placeholder.input')"
                       :setting-key="'cluster_id'"
                       :display-key="'name'"
                       :selected.sync="clusterId"
@@ -198,16 +198,16 @@
                 </div>
 
                 <div :class="['bk-form-inline-item', { 'is-required': curCrdInstance.log_source_type !== 'all_containers' }]" style="width: 352px; margin-left: 25px;">
-                  <label class="bk-label">{{$t('命名空间')}}：<span class="biz-tip fn" v-if="curCrdInstance.log_source_type === 'all_containers'">({{$t('不选择表示所有命名空间')}})</span></label>
+                  <label class="bk-label">{{$t('k8s.namespace')}}：<span class="biz-tip fn" v-if="curCrdInstance.log_source_type === 'all_containers'">({{$t('plugin.tools.allNS')}})</span></label>
                   <div class="bk-form-content">
                     <bkbcs-input
                       v-if="curCrdInstance.id && curCrdInstance.namespace === 'default' && curCrdInstance.config_type === 'default' && curCrdInstance.log_source_type === 'all_containers'"
-                      :value="$t('所有')"
+                      :value="$t('plugin.tools.all')"
                       disabled />
                     <bk-selector
                       v-else
                       :searchable="true"
-                      :placeholder="$t('请选择')"
+                      :placeholder="$t('generic.placeholder.select')"
                       :selected.sync="curCrdInstance.namespace"
                       :setting-key="'name'"
                       :list="nameSpaceList"
@@ -220,12 +220,12 @@
             </div>
 
             <div class="bk-form-item is-required mb5">
-              <label class="bk-label">{{$t('日志源')}}：</label>
+              <label class="bk-label">{{$t('plugin.tools.logSRC')}}：</label>
               <div class="bk-form-content">
                 <bk-radio-group v-model="curCrdInstance.log_source_type">
-                  <bk-radio :value="'selected_containers'" :disabled="curCrdInstance.id">{{$t('指定容器')}}</bk-radio>
-                  <bk-radio :value="'all_containers'" :disabled="curCrdInstance.id">{{$t('所有容器')}}</bk-radio>
-                  <bk-radio :value="'selected_labels'" :disabled="curCrdInstance.id">{{$t('指定标签')}}</bk-radio>
+                  <bk-radio :value="'selected_containers'" :disabled="curCrdInstance.id">{{$t('plugin.tools.container')}}</bk-radio>
+                  <bk-radio :value="'all_containers'" :disabled="curCrdInstance.id">{{$t('plugin.tools.allContainers')}}</bk-radio>
+                  <bk-radio :value="'selected_labels'" :disabled="curCrdInstance.id">{{$t('plugin.tools.label')}}</bk-radio>
                 </bk-radio-group>
               </div>
             </div>
@@ -234,11 +234,11 @@
               <div class="bk-form-content log-flex mb15">
                 <div class="bk-form-inline-item">
                   <div class="log-form">
-                    <div class="label">{{$t('标准输出')}}：</div>
+                    <div class="label">{{$t('logCollector.label.collectorType.stdout')}}：</div>
                     <div class="content" style="width: 223px; margin-right: 32px;">
                       <bk-checkbox name="cluster-classify-checkbox" v-model="curCrdInstance.default_conf.stdout" true-value="true" false-value="false">
-                        {{$t('是否采集')}}
-                        <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.right="$t('如果不勾选，将不采集此容器的标准输出')"></i>
+                        {{$t('plugin.tools.enabled')}}
+                        <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.right="$t('plugin.tools.stdoutTips')"></i>
                       </bk-checkbox>
                     </div>
                   </div>
@@ -246,19 +246,19 @@
 
                 <div class="bk-form-inline-item">
                   <div class="log-form">
-                    <div class="label" style="width: 108px;">{{$t('标准采集ID')}}：</div>
+                    <div class="label" style="width: 108px;">{{$t('plugin.tools.stdoutDataid')}}：</div>
                     <div class="content">
                       <bkbcs-input
                         style="width: 80px;"
                         type="number"
                         :min="0"
-                        :placeholder="$t('请输入')"
+                        :placeholder="$t('generic.placeholder.input')"
                         :value.sync="curCrdInstance.default_conf.std_data_id"
                         :disabled="!curCrdInstance.default_conf.is_std_custom">
                       </bkbcs-input>
                       <bk-checkbox class="ml5" name="cluster-classify-checkbox" v-model="curCrdInstance.default_conf.is_std_custom">
-                        {{$t('是否自定义')}}
-                        <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('采集id对应数据平台的data id，不勾选平台将分配默认的data id进行日志的清洗和入库。如果有特别的清洗和计算要求，用户可以填写自己的data id') }"></i>
+                        {{$t('plugin.tools.custom')}}
+                        <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('plugin.tools.dataIdDesc') }"></i>
                       </bk-checkbox>
                     </div>
                   </div>
@@ -268,9 +268,9 @@
               <div class="bk-form-content log-flex">
                 <div class="bk-form-inline-item">
                   <div class="log-form" style="width: 345px;">
-                    <div class="label">{{$t('文件路径')}}：</div>
+                    <div class="label">{{$t('plugin.tools.path')}}：</div>
                     <div class="content log-path-wrapper" style="width: 223px;">
-                      <textarea class="bk-form-textarea" v-model="curCrdInstance.default_conf.log_paths_str" style="width: 223px;" :placeholder="$t('多个以;分隔')"></textarea>
+                      <textarea class="bk-form-textarea" v-model="curCrdInstance.default_conf.log_paths_str" style="width: 223px;" :placeholder="$t('plugin.tools.delimiter')"></textarea>
 
                       <bcs-popover placement="top" :delay="500">
                         <i class="path-tip bcs-icon bcs-icon-question-circle"></i>
@@ -287,19 +287,19 @@
 
                 <div class="bk-form-inline-item">
                   <div class="log-form">
-                    <div class="label" style="width: 110px;">{{$t('文件采集ID')}}：</div>
+                    <div class="label" style="width: 110px;">{{$t('plugin.tools.fileDataid')}}：</div>
                     <div class="content">
                       <bkbcs-input
                         style="width: 80px;"
                         type="number"
                         :min="0"
-                        :placeholder="$t('请输入')"
+                        :placeholder="$t('generic.placeholder.input')"
                         :value.sync="curCrdInstance.default_conf.file_data_id"
                         :disabled="!curCrdInstance.default_conf.is_file_custom">
                       </bkbcs-input>
                       <bk-checkbox class="ml5" name="cluster-classify-checkbox" v-model="curCrdInstance.default_conf.is_file_custom">
-                        {{$t('是否自定义')}}
-                        <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('采集id对应数据平台的data id，不勾选平台将分配默认的data id进行日志的清洗和入库。如果有特别的清洗和计算要求，用户可以填写自己的data id') }"></i>
+                        {{$t('plugin.tools.custom')}}
+                        <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('plugin.tools.dataIdDesc') }"></i>
                       </bk-checkbox>
                     </div>
                   </div>
@@ -312,11 +312,11 @@
                 <div class="bk-form-content log-flex mb15">
                   <div class="bk-form-inline-item" style="margin-right: 32px;">
                     <div class="log-form no-flex">
-                      <div class="label">{{$t('应用类型')}}：</div>
+                      <div class="label">{{$t('plugin.tools.appType')}}：</div>
                       <div class="content">
                         <bk-selector
                           style="width: 330px;"
-                          :placeholder="$t('应用类型')"
+                          :placeholder="$t('plugin.tools.appType')"
                           :selected.sync="curCrdInstance.workload.type"
                           :list="appTypes"
                           :setting-key="'id'"
@@ -330,11 +330,11 @@
 
                   <div class="bk-form-inline-item">
                     <div class="log-form no-flex">
-                      <div class="label">{{$t('应用名称')}}：</div>
+                      <div class="label">{{$t('plugin.tools.appName')}}：</div>
                       <div class="content">
                         <bkbcs-input
                           style="width: 333px;"
-                          :placeholder="$t('请输入应用名称，支持正则匹配')"
+                          :placeholder="$t('plugin.tools.inputName')"
                           :value.sync="curCrdInstance.workload.name"
                           :disabled="curCrdInstance.id">
                         </bkbcs-input>
@@ -348,17 +348,17 @@
               <div class="bk-form-item">
                 <div class="bk-form-content log-flex mb10">
                   <div class="log-form no-flex">
-                    <div class="label">{{$t('采集路径')}}：</div>
+                    <div class="label">{{$t('plugin.tools.collectionPath')}}：</div>
                     <div class="content">
                       <section class="log-inner-wrapper mb10" v-for="(containerConf, index) of curCrdInstance.workload.container_confs" :key="index">
                         <div class="bk-form-content log-flex mb10">
                           <div class="bk-form-inline-item">
                             <div class="log-form">
-                              <div class="label">{{$t('容器名')}}：</div>
+                              <div class="label">{{$t('plugin.tools.containerName')}}：</div>
                               <div class="content">
                                 <bkbcs-input
                                   style="width: 223px;"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   :value.sync="containerConf.name">
                                 </bkbcs-input>
                               </div>
@@ -369,11 +369,11 @@
                         <div class="bk-form-content log-flex mb10">
                           <div class="bk-form-inline-item">
                             <div class="log-form">
-                              <div class="label">{{$t('标准输出')}}：</div>
+                              <div class="label">{{$t('logCollector.label.collectorType.stdout')}}：</div>
                               <div class="content" style="width: 223px; margin-right: 32px;">
                                 <bk-checkbox name="cluster-classify-checkbox" v-model="containerConf.stdout" true-value="true" false-value="false">
-                                  {{$t('是否采集')}}
-                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.right="$t('如果不勾选，将不采集此容器的标准输出')"></i>
+                                  {{$t('plugin.tools.enabled')}}
+                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.right="$t('plugin.tools.stdoutTips')"></i>
                                 </bk-checkbox>
                               </div>
                             </div>
@@ -381,19 +381,19 @@
 
                           <div class="bk-form-inline-item">
                             <div class="log-form">
-                              <div class="label" style="width: 108px;">{{$t('标准采集ID')}}：</div>
+                              <div class="label" style="width: 108px;">{{$t('plugin.tools.stdoutDataid')}}：</div>
                               <div class="content">
                                 <bkbcs-input
                                   style="width: 80px;"
                                   type="number"
                                   :min="0"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   :value.sync="containerConf.std_data_id"
                                   :disabled="!containerConf.is_std_custom">
                                 </bkbcs-input>
                                 <bk-checkbox class="ml5" name="cluster-classify-checkbox" v-model="containerConf.is_std_custom">
-                                  {{$t('是否自定义')}}
-                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('采集id对应数据平台的data id，不勾选平台将分配默认的data id进行日志的清洗和入库。如果有特别的清洗和计算要求，用户可以填写自己的data id') }"></i>
+                                  {{$t('plugin.tools.custom')}}
+                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('plugin.tools.dataIdDesc') }"></i>
                                 </bk-checkbox>
                               </div>
                             </div>
@@ -403,9 +403,9 @@
                         <div class="bk-form-content log-flex">
                           <div class="bk-form-inline-item">
                             <div class="log-form" style="width: 345px;">
-                              <div class="label">{{$t('文件路径')}}：</div>
+                              <div class="label">{{$t('plugin.tools.path')}}：</div>
                               <div class="content log-path-wrapper" style="width: 223px;">
-                                <textarea class="bk-form-textarea" v-model="containerConf.log_paths_str" style="width: 223px;" :placeholder="$t('多个以;分隔')"></textarea>
+                                <textarea class="bk-form-textarea" v-model="containerConf.log_paths_str" style="width: 223px;" :placeholder="$t('plugin.tools.delimiter')"></textarea>
 
                                 <bcs-popover placement="top" :delay="500">
                                   <i class="path-tip bcs-icon bcs-icon-question-circle"></i>
@@ -422,19 +422,19 @@
 
                           <div class="bk-form-inline-item">
                             <div class="log-form">
-                              <div class="label" style="width: 110px;">{{$t('文件采集ID')}}：</div>
+                              <div class="label" style="width: 110px;">{{$t('plugin.tools.fileDataid')}}：</div>
                               <div class="content">
                                 <bkbcs-input
                                   style="width: 80px;"
                                   type="number"
                                   :min="0"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   :value.sync="containerConf.file_data_id"
                                   :disabled="!containerConf.is_file_custom">
                                 </bkbcs-input>
                                 <bk-checkbox class="ml5" name="cluster-classify-checkbox" v-model="containerConf.is_file_custom">
-                                  {{$t('是否自定义')}}
-                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('采集id对应数据平台的data id，不勾选平台将分配默认的data id进行日志的清洗和入库。如果有特别的清洗和计算要求，用户可以填写自己的data id') }"></i>
+                                  {{$t('plugin.tools.custom')}}
+                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('plugin.tools.dataIdDesc') }"></i>
                                 </bk-checkbox>
                               </div>
                             </div>
@@ -446,7 +446,7 @@
 
                       <bk-button class="log-block-btn mt10" @click="addContainerConf">
                         <i class="bcs-icon bcs-icon-plus"></i>
-                        {{$t('点击增加')}}
+                        {{$t('plugin.tools.clickToAdd')}}
                       </bk-button>
                     </div>
                   </div>
@@ -458,7 +458,7 @@
               <div class="bk-form-item">
                 <div class="bk-form-content log-flex mb10">
                   <div class="log-form no-flex">
-                    <div class="label tl" style="width: 300px;">{{$t('匹配标签(labels)')}}：</div>
+                    <div class="label tl" style="width: 300px;">{{$t('plugin.tools.labels')}}：</div>
                     <div class="content">
                       <bk-keyer
                         :key-input-width="265"
@@ -477,7 +477,7 @@
               <div class="bk-form-item">
                 <div class="bk-form-content log-flex mb10">
                   <div class="log-form no-flex">
-                    <div class="label tl" style="width: 300px;">{{$t('匹配表达式(expressions)')}}：</div>
+                    <div class="label tl" style="width: 300px;">{{$t('plugin.tools.expressions')}}：</div>
                     <div class="content">
                       <bk-expression
                         :key-list.sync="curCrdInstance.selector.match_expressions_list"
@@ -493,17 +493,17 @@
               <div class="bk-form-item">
                 <div class="bk-form-content log-flex mb10">
                   <div class="log-form no-flex">
-                    <div class="label">{{$t('采集路径')}}：</div>
+                    <div class="label">{{$t('plugin.tools.collectionPath')}}：</div>
                     <div class="content">
                       <section class="log-inner-wrapper mb10">
                         <div class="bk-form-content log-flex mb10">
                           <div class="bk-form-inline-item">
                             <div class="log-form">
-                              <div class="label">{{$t('标准输出')}}：</div>
+                              <div class="label">{{$t('logCollector.label.collectorType.stdout')}}：</div>
                               <div class="content" style="width: 223px; margin-right: 32px;">
                                 <bk-checkbox name="cluster-classify-checkbox" v-model="curCrdInstance.selector.stdout" true-value="true" false-value="false">
-                                  {{$t('是否采集')}}
-                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.right="$t('如果不勾选，将不采集此容器的标准输出')"></i>
+                                  {{$t('plugin.tools.enabled')}}
+                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.right="$t('plugin.tools.stdoutTips')"></i>
                                 </bk-checkbox>
                               </div>
                             </div>
@@ -511,19 +511,19 @@
 
                           <div class="bk-form-inline-item">
                             <div class="log-form">
-                              <div class="label" style="width: 108px;">{{$t('标准采集ID')}}：</div>
+                              <div class="label" style="width: 108px;">{{$t('plugin.tools.stdoutDataid')}}：</div>
                               <div class="content">
                                 <bkbcs-input
                                   style="width: 80px;"
                                   type="number"
                                   :min="0"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   :value.sync="curCrdInstance.selector.std_data_id"
                                   :disabled="!curCrdInstance.selector.is_std_custom">
                                 </bkbcs-input>
                                 <bk-checkbox class="ml5" name="cluster-classify-checkbox" v-model="curCrdInstance.selector.is_std_custom">
-                                  {{$t('是否自定义')}}
-                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('采集id对应数据平台的data id，不勾选平台将分配默认的data id进行日志的清洗和入库。如果有特别的清洗和计算要求，用户可以填写自己的data id') }"></i>
+                                  {{$t('plugin.tools.custom')}}
+                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('plugin.tools.dataIdDesc') }"></i>
                                 </bk-checkbox>
                               </div>
                             </div>
@@ -533,9 +533,9 @@
                         <div class="bk-form-content log-flex">
                           <div class="bk-form-inline-item">
                             <div class="log-form" style="width: 345px;">
-                              <div class="label">{{$t('文件路径')}}：</div>
+                              <div class="label">{{$t('plugin.tools.path')}}：</div>
                               <div class="content log-path-wrapper" style="width: 223px;">
-                                <textarea class="bk-form-textarea" v-model="curCrdInstance.selector.log_paths_str" style="width: 223px;" :placeholder="$t('多个以;分隔')"></textarea>
+                                <textarea class="bk-form-textarea" v-model="curCrdInstance.selector.log_paths_str" style="width: 223px;" :placeholder="$t('plugin.tools.delimiter')"></textarea>
 
                                 <bcs-popover placement="top" :delay="500">
                                   <i class="path-tip bcs-icon bcs-icon-question-circle"></i>
@@ -552,19 +552,19 @@
 
                           <div class="bk-form-inline-item">
                             <div class="log-form">
-                              <div class="label" style="width: 110px;">{{$t('文件采集ID')}}：</div>
+                              <div class="label" style="width: 110px;">{{$t('plugin.tools.fileDataid')}}：</div>
                               <div class="content">
                                 <bkbcs-input
                                   style="width: 80px;"
                                   type="number"
                                   :min="0"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   :value.sync="curCrdInstance.selector.file_data_id"
                                   :disabled="!curCrdInstance.selector.is_file_custom">
                                 </bkbcs-input>
                                 <bk-checkbox class="ml5" name="cluster-classify-checkbox" v-model="curCrdInstance.selector.is_file_custom">
-                                  {{$t('是否自定义')}}
-                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('采集id对应数据平台的data id，不勾选平台将分配默认的data id进行日志的清洗和入库。如果有特别的清洗和计算要求，用户可以填写自己的data id') }"></i>
+                                  {{$t('plugin.tools.custom')}}
+                                  <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.left="{ width: 400, content: $t('plugin.tools.dataIdDesc') }"></i>
                                 </bk-checkbox>
                               </div>
                             </div>
@@ -579,7 +579,7 @@
 
             <template>
               <div class="bk-form-item mt5" style="overflow: hidden;">
-                <label class="bk-label">{{$t('附加日志标签')}}：</label>
+                <label class="bk-label">{{$t('logCollector.label.extraLabels')}}：</label>
               </div>
 
               <div class="log-wrapper">
@@ -590,22 +590,22 @@
                 </bk-keyer>
                 <div class="mt10 mb10">
                   <bk-checkbox class="mr20" v-model="curCrdInstance.auto_add_pod_labels" name="cluster-classify-checkbox" true-value="true" false-value="false">
-                    {{$t('是否自动添加Pod中的labels')}}
+                    {{$t('plugin.tools.podLabels')}}
                   </bk-checkbox>
                 </div>
 
                 <div>
                   <bk-checkbox v-model="curCrdInstance.package_collection" name="cluster-classify-checkbox" true-value="true" false-value="false">
-                    {{$t('是否打包上报')}}
-                    <i class="path-tip bcs-icon bcs-icon-question-circle" v-bk-tooltips.right="{ width: 400, content: $t('若单日志文件打印速度超过10条/秒，可以考虑开启日志打包上报功能以节约带宽并在一定程度上降低日志采集组件的资源占用') }"></i>
+                    {{$t('plugin.tools.pack')}}
+                    <i class="path-tip bcs-icon bcs-icon-question-circle" v-bk-tooltips.right="{ width: 400, content: $t('plugin.tools.logDesc') }"></i>
                   </bk-checkbox>
                 </div>
               </div>
             </template>
 
             <div class="bk-form-item mt15">
-              <bk-button type="primary" :loading="isDataSaveing" @click.stop.prevent="saveCrdInstance">{{curCrdInstance.id ? $t('更新') : $t('创建')}}</bk-button>
-              <bk-button @click.stop.prevent="hideCrdInstanceSlider" :disabled="isDataSaveing">{{$t('取消')}}</bk-button>
+              <bk-button type="primary" :loading="isDataSaveing" @click.stop.prevent="saveCrdInstance">{{curCrdInstance.id ? $t('generic.button.update') : $t('generic.button.create')}}</bk-button>
+              <bk-button @click.stop.prevent="hideCrdInstanceSlider" :disabled="isDataSaveing">{{$t('generic.button.cancel')}}</bk-button>
             </div>
           </div>
         </div>
@@ -618,80 +618,80 @@
         :width="700">
         <div class="p30" slot="content">
           <p class="data-title">
-            {{$t('基础信息')}}
+            {{$t('generic.title.basicInfo')}}
           </p>
           <div class="biz-metadata-box vertical mb20">
             <div class="data-item">
-              <p class="key">{{$t('所属集群')}}：</p>
+              <p class="key">{{$t('generic.label.cluster1')}}：</p>
               <p class="value">{{clusterName || '--'}}</p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('命名空间')}}：</p>
-              <p class="value">{{curCrdInstance.namespace === 'default' ? $t('所有') : curCrdInstance.namespace}}</p>
+              <p class="key">{{$t('k8s.namespace')}}：</p>
+              <p class="value">{{curCrdInstance.namespace === 'default' ? $t('plugin.tools.all') : curCrdInstance.namespace}}</p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('规则名称')}}：</p>
+              <p class="key">{{$t('plugin.tools.ruleName')}}：</p>
               <p class="value">{{curCrdInstance.name || '--'}}</p>
             </div>
           </div>
           <p class="data-title">
-            {{$t('日志源信息')}}
+            {{$t('plugin.tools.dsInfo')}}
           </p>
 
           <div class="biz-metadata-box vertical mb0">
             <div class="data-item">
-              <p class="key">{{$t('日志源类型')}}：</p>
+              <p class="key">{{$t('plugin.tools.dsType')}}：</p>
               <p class="value">{{logSource[curCrdInstance.log_source_type]}}</p>
             </div>
             <template v-if="curCrdInstance.log_source_type === 'selected_containers'">
               <div class="data-item">
-                <p class="key">{{$t('应用类型')}}：</p>
+                <p class="key">{{$t('plugin.tools.appType')}}：</p>
                 <p class="value">{{curCrdInstance.workload.type || '--'}}</p>
               </div>
               <div class="data-item">
-                <p class="key">{{$t('应用名称')}}：</p>
+                <p class="key">{{$t('plugin.tools.appName')}}：</p>
                 <p class="value">{{curCrdInstance.workload.name || '--'}}</p>
               </div>
 
               <div class="data-item">
-                <p class="key">{{$t('采集路径')}}：</p>
+                <p class="key">{{$t('plugin.tools.collectionPath')}}：</p>
                 <div class="value">
                 </div>
               </div>
             </template>
             <!-- <template v-else-if="curCrdInstance.log_source_type === 'all_containers'">
               <div class="data-item">
-                <p class="key">{{$t('是否采集')}}：</p>
-                <p class="value">{{curCrdInstance.default_conf.stdout === 'true' ? $t('是') : $t('否')}}</p>
+                <p class="key">{{$t('plugin.tools.enabled')}}：</p>
+                <p class="value">{{curCrdInstance.default_conf.stdout === 'true' ? $t('units.boolean.true') : $t('units.boolean.false')}}</p>
               </div>
               <div class="data-item">
-                <p class="key">{{$t('标准采集ID')}}：</p>
-                <p class="value">{{curCrdInstance.default_conf.std_data_id || '--'}} ({{curCrdInstance.default_conf.is_std_custom ? '自定义' : '默认'}})</p>
+                <p class="key">{{$t('plugin.tools.stdoutDataid')}}：</p>
+                <p class="value">{{curCrdInstance.default_conf.std_data_id || '--'}} ({{curCrdInstance.default_conf.is_std_custom ? 'generic.label.custom' : 'plugin.tools.default'}})</p>
               </div>
               <div class="data-item">
-                <p class="key">{{$t('文件采集ID')}}：</p>
-                <p class="value">{{curCrdInstance.default_conf.file_data_id || '--'}} ({{curCrdInstance.default_conf.is_file_custom ? '自定义' : '默认'}})</p>
+                <p class="key">{{$t('plugin.tools.fileDataid')}}：</p>
+                <p class="value">{{curCrdInstance.default_conf.file_data_id || '--'}} ({{curCrdInstance.default_conf.is_file_custom ? 'generic.label.custom' : 'plugin.tools.default'}})</p>
               </div>
               <div class="data-item">
-                <p class="key">{{$t('文件路径')}}：</p>
+                <p class="key">{{$t('plugin.tools.path')}}：</p>
                 <p class="value">{{curCrdInstance.default_conf.log_paths_str || '--'}}</p>
               </div>
             </template> -->
             <template v-else-if="curCrdInstance.log_source_type === 'selected_labels'">
               <div class="data-item">
-                <p class="key">{{$t('是否采集')}}：</p>
-                <p class="value">{{curCrdInstance.selector.stdout === 'true' ? $t('是') : $t('否')}}</p>
+                <p class="key">{{$t('plugin.tools.enabled')}}：</p>
+                <p class="value">{{curCrdInstance.selector.stdout === 'true' ? $t('units.boolean.true') : $t('units.boolean.false')}}</p>
               </div>
               <div class="data-item">
-                <p class="key">{{$t('标准采集ID')}}：</p>
-                <p class="value">{{curCrdInstance.selector.std_data_id || '--'}} ({{curCrdInstance.selector.is_std_custom ? '自定义' : '默认'}})</p>
+                <p class="key">{{$t('plugin.tools.stdoutDataid')}}：</p>
+                <p class="value">{{curCrdInstance.selector.std_data_id || '--'}} ({{curCrdInstance.selector.is_std_custom ? 'generic.label.custom' : 'plugin.tools.default'}})</p>
               </div>
               <div class="data-item">
-                <p class="key">{{$t('文件采集ID')}}：</p>
-                <p class="value">{{curCrdInstance.selector.file_data_id || '--'}} ({{curCrdInstance.selector.is_file_custom ? '自定义' : '默认'}})</p>
+                <p class="key">{{$t('plugin.tools.fileDataid')}}：</p>
+                <p class="value">{{curCrdInstance.selector.file_data_id || '--'}} ({{curCrdInstance.selector.is_file_custom ? 'generic.label.custom' : 'plugin.tools.default'}})</p>
               </div>
               <div class="data-item">
-                <p class="key">{{$t('匹配标签')}}：</p>
+                <p class="key">{{$t('plugin.tools.matchLables')}}：</p>
                 <p class="value">
                   <ul class="key-list" v-if="Object.keys(curCrdInstance.selector.match_labels).length">
                     <li v-for="(label, index) of curCrdInstance.selector.match_labels_list" :key="index">
@@ -703,7 +703,7 @@
                 </p>
               </div>
               <div class="data-item">
-                <p class="key">{{$t('匹配表达式')}}：</p>
+                <p class="key">{{$t('plugin.tools.matchPattern')}}：</p>
                 <p class="value">
                   <ul class="key-list" v-if="curCrdInstance.selector.match_expressions.length">
                     <li v-for="(expression, index) of curCrdInstance.selector.match_expressions" :key="index">
@@ -716,7 +716,7 @@
                 </p>
               </div>
               <div class="data-item">
-                <p class="key">{{$t('文件路径')}}：</p>
+                <p class="key">{{$t('plugin.tools.path')}}：</p>
                 <p class="value">{{curCrdInstance.selector.log_paths_str || '--'}}</p>
               </div>
             </template>
@@ -726,9 +726,9 @@
             <table class="bk-table bk-log-table">
               <thead>
                 <tr>
-                  <th style="width: 130px;">{{$t('容器名')}}</th>
-                  <th style="width: 200px;">{{$t('标准输出')}}</th>
-                  <th>{{$t('文件路径')}}</th>
+                  <th style="width: 130px;">{{$t('plugin.tools.containerName')}}</th>
+                  <th style="width: 200px;">{{$t('logCollector.label.collectorType.stdout')}}</th>
+                  <th>{{$t('plugin.tools.path')}}</th>
                 </tr>
               </thead>
               <tbody>
@@ -737,13 +737,13 @@
                     {{containerConf.name || '--'}}
                   </td>
                   <td>
-                    {{$t('采集ID')}}：{{containerConf.std_data_id || '--'}} ({{containerConf.is_std_custom ? $t('自定义') : $t('默认')}})<br />
-                    {{$t('是否采集')}}：{{containerConf.stdout === 'true' ? $t('是') : $t('否')}}
+                    {{$t('plugin.tools.dataID')}}：{{containerConf.std_data_id || '--'}} ({{containerConf.is_std_custom ? $t('generic.label.custom') : $t('plugin.tools.default')}})<br />
+                    {{$t('plugin.tools.enabled')}}：{{containerConf.stdout === 'true' ? $t('units.boolean.true') : $t('units.boolean.false')}}
                   </td>
                   <td>
-                    <p>{{$t('采集ID')}}：{{containerConf.file_data_id || '--'}} ({{containerConf.is_file_custom ? $t('自定义') : $t('默认')}})</p>
+                    <p>{{$t('plugin.tools.dataID')}}：{{containerConf.file_data_id || '--'}} ({{containerConf.is_file_custom ? $t('generic.label.custom') : $t('plugin.tools.default')}})</p>
                     <div class="log-key-value">
-                      <div style="width: 38px;">{{$t('路径')}}：</div>
+                      <div style="width: 38px;">{{$t('deploy.templateset.path')}}：</div>
                       <ul class="log-path-list" v-if="containerConf.log_paths.length">
                         <li v-for="path of containerConf.log_paths" :key="path" v-if="path">{{path}}</li>
                       </ul>
@@ -755,22 +755,22 @@
             </table>
           </div>
           <bk-table :data="[{}]" size="medium" v-else-if="curCrdInstance.log_source_type === 'all_containers'">
-            <bk-table-column width="100" :label="$t('容器名')">
-              <template #default>{{ $t('所有容器') }}</template>
+            <bk-table-column width="100" :label="$t('plugin.tools.containerName')">
+              <template #default>{{ $t('plugin.tools.allContainers') }}</template>
             </bk-table-column>
-            <bk-table-column :label="$t('标准输出')">
+            <bk-table-column :label="$t('logCollector.label.collectorType.stdout')">
               <template #default>
                 <div class="flex flex-col">
-                  <div>{{ `${$t('采集ID')}: ${curCrdInstance.default_conf.std_data_id || '--'}(${curCrdInstance.default_conf.is_std_custom ? $t('自定义') : $t('默认')})` }}</div>
-                  <div>{{ `${$t('是否采集')}: ${curCrdInstance.default_conf.stdout === 'true' ? $t('是') : $t('否')}` }}</div>
+                  <div>{{ `${$t('plugin.tools.dataID')}: ${curCrdInstance.default_conf.std_data_id || '--'}(${curCrdInstance.default_conf.is_std_custom ? $t('generic.label.custom') : $t('plugin.tools.default')})` }}</div>
+                  <div>{{ `${$t('plugin.tools.enabled')}: ${curCrdInstance.default_conf.stdout === 'true' ? $t('units.boolean.true') : $t('units.boolean.false')}` }}</div>
                 </div>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('文件路径')">
+            <bk-table-column :label="$t('plugin.tools.path')">
               <template #default>
                 <div class="flex flex-col">
-                  <div>{{ `${$t('采集ID')}: ${curCrdInstance.default_conf.file_data_id || '--'}(${curCrdInstance.default_conf.is_file_custom ? $t('自定义') : $t('默认')})` }}</div>
-                  <div>{{ `${$t('路径')}: ${curCrdInstance.default_conf.log_paths_str || '--'}` }}</div>
+                  <div>{{ `${$t('plugin.tools.dataID')}: ${curCrdInstance.default_conf.file_data_id || '--'}(${curCrdInstance.default_conf.is_file_custom ? $t('generic.label.custom') : $t('plugin.tools.default')})` }}</div>
+                  <div>{{ `${$t('deploy.templateset.path')}: ${curCrdInstance.default_conf.log_paths_str || '--'}` }}</div>
                 </div>
               </template>
             </bk-table-column>
@@ -812,7 +812,7 @@ export default {
         show: true,
       },
       crdInstanceSlider: {
-        title: this.$t('新建规则'),
+        title: this.$t('plugin.tools.create'),
         isShow: false,
       },
       searchParams: {
@@ -870,9 +870,9 @@ export default {
       ],
 
       logSource: {
-        selected_containers: this.$t('指定容器'),
-        selected_labels: this.$t('指定标签'),
-        all_containers: this.$t('所有容器'),
+        selected_containers: this.$t('plugin.tools.container'),
+        selected_labels: this.$t('plugin.tools.label'),
+        all_containers: this.$t('plugin.tools.allContainers'),
       },
       curCrdInstance: {
         // 'crd_kind': 'BcsLogConfig',
@@ -1172,7 +1172,7 @@ export default {
         },
       };
 
-      this.crdInstanceSlider.title = this.$t('新建规则');
+      this.crdInstanceSlider.title = this.$t('plugin.tools.create');
       this.crdInstanceSlider.isShow = true;
     },
 
@@ -1294,7 +1294,7 @@ export default {
           this.detailSliderConf.title = `${this.curCrdInstance.name}`;
           this.detailSliderConf.isShow = true;
         } else {
-          this.crdInstanceSlider.title = this.$t('编辑规则');
+          this.crdInstanceSlider.title = this.$t('plugin.tools.editRule');
           this.crdInstanceSlider.isShow = true;
         }
       } catch (e) {
@@ -1317,18 +1317,18 @@ export default {
       const crdId = crdInstance.id;
 
       this.$bkInfo({
-        title: this.$t('确认删除'),
+        title: this.$t('generic.title.confirmDelete'),
         clsName: 'biz-remove-dialog',
         content: this.$createElement('p', {
           class: 'biz-confirm-desc',
-        }, `${this.$t('确定要删除')}【${crdInstance.name}】？`),
+        }, `${this.$t('plugin.tools.confirmDelete')}【${crdInstance.name}】？`),
         async confirmFn() {
           self.isPageLoading = true;
           try {
             await self.$store.dispatch('crdcontroller/deleteCrdInstance', { projectId, clusterId, crdKind, crdId });
             self.$bkMessage({
               theme: 'success',
-              message: self.$t('删除成功'),
+              message: self.$t('generic.msg.success.delete'),
             });
             self.getCrdInstanceList();
           } catch (e) {
@@ -1514,7 +1514,7 @@ export default {
       if (params.log_source_type !== 'all_containers' && !params.namespace) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择命名空间'),
+          message: this.$t('dashboard.ns.validate.emptyNs'),
           delay: 5000,
         });
         return false;
@@ -1524,7 +1524,7 @@ export default {
         if (!params.workload.type) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('请选择应用类型'),
+            message: this.$t('plugin.tools.selectAppType'),
           });
           return false;
         }
@@ -1532,7 +1532,7 @@ export default {
         if (!params.workload.name) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('请输入应用名称'),
+            message: this.$t('deploy.templateset.validate.name'),
           });
           return false;
         }
@@ -1543,7 +1543,7 @@ export default {
         } catch (e) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('应用名称不合法'),
+            message: this.$t('plugin.tools.appNameError'),
           });
           return false;
         }
@@ -1552,7 +1552,7 @@ export default {
           if (!conf.name) {
             this.$bkMessage({
               theme: 'error',
-              message: this.$t('请输入容器名'),
+              message: this.$t('plugin.tools.enterContainerName'),
             });
             return false;
           }
@@ -1560,7 +1560,7 @@ export default {
           if (!conf.std_data_id) {
             this.$bkMessage({
               theme: 'error',
-              message: this.$t('请输入标准采集ID'),
+              message: this.$t('plugin.tools.stdinDataID'),
             });
             return false;
           }
@@ -1568,7 +1568,7 @@ export default {
           if (!conf.file_data_id) {
             this.$bkMessage({
               theme: 'error',
-              message: this.$t('请输入文件采集ID'),
+              message: this.$t('plugin.tools.fileDataID'),
             });
             return false;
           }
@@ -1577,14 +1577,14 @@ export default {
         if (!params.default_conf.std_data_id) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('请输入标准采集ID'),
+            message: this.$t('plugin.tools.stdinDataID'),
           });
           return false;
         }
         if (!params.default_conf.file_data_id) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('请输入文件采集ID'),
+            message: this.$t('plugin.tools.fileDataID'),
           });
           return false;
         }
@@ -1593,14 +1593,14 @@ export default {
         if (!params.selector.hasOwnProperty('match_labels') && !params.selector.hasOwnProperty('match_expressions')) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('匹配标签和匹配表达式不能同时为空'),
+            message: this.$t('plugin.tools.emptyTips'),
           });
           return false;
         }
         if (!params.selector.std_data_id) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('请输入标准采集ID'),
+            message: this.$t('plugin.tools.stdinDataID'),
           });
           return false;
         }
@@ -1608,7 +1608,7 @@ export default {
         if (!params.selector.file_data_id) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('请输入文件采集ID'),
+            message: this.$t('plugin.tools.fileDataID'),
           });
           return false;
         }
@@ -1616,7 +1616,7 @@ export default {
         if (!params.selector.log_paths.length) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('请输入文件路径'),
+            message: this.$t('plugin.tools.filePath'),
           });
           return false;
         }
@@ -1745,7 +1745,7 @@ export default {
 
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('规则创建成功'),
+          message: this.$t('plugin.tools.success'),
         });
         this.getCrdInstanceList();
         this.hideCrdInstanceSlider();
@@ -1772,7 +1772,7 @@ export default {
 
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('规则更新成功'),
+          message: this.$t('plugin.tools.upgraded'),
         });
 
         this.hideCrdInstanceSlider();

@@ -12,7 +12,7 @@
         <span
           class="title-desc cursor-pointer"
           @click="handleGoHome">
-          {{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}
+          {{ $INTERNAL ? $t('bcs.TKEx.title') : $t('bcs.intro.title') }}
         </span>
       </template>
       <template #header>
@@ -56,9 +56,9 @@
           </span>
           <template #content>
             <ul>
-              <li class="bcs-dropdown-item" @click="handleGotoHelp">{{ $t('产品文档') }}</li>
-              <li class="bcs-dropdown-item" @click="handleShowSystemLog">{{ $t('版本日志') }}</li>
-              <li class="bcs-dropdown-item" @click="handleShowFeatures">{{ $t('功能特性') }}</li>
+              <li class="bcs-dropdown-item" @click="handleGotoHelp">{{ $t('blueking.docs') }}</li>
+              <li class="bcs-dropdown-item" @click="handleShowSystemLog">{{ $t('blueking.releaseNotes') }}</li>
+              <li class="bcs-dropdown-item" @click="handleShowFeatures">{{ $t('blueking.features') }}</li>
             </ul>
           </template>
         </PopoverSelector>
@@ -70,8 +70,8 @@
           </span>
           <template #content>
             <ul>
-              <li class="bcs-dropdown-item" @click="handleGotoUserToken">{{ $t('个人密钥') }}</li>
-              <li class="bcs-dropdown-item" @click="handleLogout">{{ $t('退出登录') }}</li>
+              <li class="bcs-dropdown-item" @click="handleGotoUserToken">{{ $t('blueking.apiToken') }}</li>
+              <li class="bcs-dropdown-item" @click="handleLogout">{{ $t('blueking.signOut') }}</li>
             </ul>
           </template>
         </PopoverSelector>
@@ -90,7 +90,7 @@
     <!-- 产品特性 -->
     <bcs-dialog
       v-model="showFeatures"
-      :title="$t('产品功能特性')"
+      :title="$t('blueking.features1')"
       :show-footer="false"
       width="480">
       <BcsMd :code="releaseData.feature.content" />

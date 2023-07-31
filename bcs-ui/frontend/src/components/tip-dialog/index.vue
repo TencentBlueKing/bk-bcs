@@ -48,7 +48,7 @@
           </template>
           <template v-else>
             <div class="dialog-action">
-              <bk-popover :content="$t('请确认以上内容，才可操作')" placement="top">
+              <bk-popover :content="$t('generic.confirmDialog.tips.confirm')" placement="top">
                 <a
                   href="javascript:void(0)"
                   class="bk-button bk-primary bk-button-large dialog-btn disabled">{{confirmBtnTextRender}}</a>
@@ -162,12 +162,12 @@ export default {
       item.isNeedCheck = item.isChecked;
     });
     this.noticeList = JSON.parse(JSON.stringify(this.checkList));
-    this.titleRender = this.title || this.$t('提示');
-    this.subTitleRender = this.subTitle || this.$t('提示');
-    this.confirmBtnTextRender = this.confirmBtnText || this.$t('确定');
-    this.confirmingBtnTextRender = this.confirmingBtnText || this.$t('执行中...');
-    this.cancelBtnTextRender = this.cancelBtnText || this.$t('取消');
-    this.cancelingBtnTextRender = this.cancelingBtnText || this.$t('取消中');
+    this.titleRender = this.title || this.$t('generic.msg.info.tips');
+    this.subTitleRender = this.subTitle || this.$t('generic.msg.info.tips');
+    this.confirmBtnTextRender = this.confirmBtnText || this.$t('generic.button.confirm');
+    this.confirmingBtnTextRender = this.confirmingBtnText || this.$t('generic.status.doing');
+    this.cancelBtnTextRender = this.cancelBtnText || this.$t('generic.button.cancel');
+    this.cancelingBtnTextRender = this.cancelingBtnText || this.$t('generic.status.undoing');
   },
   methods: {
     show() {

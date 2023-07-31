@@ -1,6 +1,6 @@
 <template>
     <div class="biz-content">
-        <Header hide-back :title="$t('Metric管理')" :desc="$t('支持 Prometheus 格式的 Metric')"/>
+        <Header hide-back :title="$t('plugin.metric.title')" :desc="$t('plugin.metric.tips.promtheus')"/>
         <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
             <div v-show="!isInitLoading">
                 <div class="biz-lock-box" v-if="updateMsg">
@@ -8,23 +8,23 @@
                         <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                         <strong class="desc">{{updateMsg}}</strong>
                         <div class="action">
-                            <a class="bk-text-button metric-query" href="javascript:void(0)" @click="doUpdate">{{$t('升级')}}</a>
+                            <a class="bk-text-button metric-query" href="javascript:void(0)" @click="doUpdate">{{$t('plugin.metric.action.upgrade')}}</a>
                         </div>
                     </div>
                 </div>
                 <div class="biz-panel-header biz-metric-manage-create">
                     <div class="left">
-                        <bk-button type="primary" :title="$t('新建Metric')" icon="plus" @click="showCreateMetric">
-                            {{$t('新建Metric')}}
+                        <bk-button type="primary" :title="$t('plugin.metric.action.create')" icon="plus" @click="showCreateMetric">
+                            {{$t('plugin.metric.action.create')}}
                         </bk-button>
                         <bk-button class="bk-button" @click="batchDel">
-                            <span>{{$t('批量删除')}}</span>
+                            <span>{{$t('generic.button.batchDelete')}}</span>
                         </bk-button>
                     </div>
                     <div class="right">
                         <ClusterSelectComb 
                             :cluster-id.sync="searchClusterId"
-                            :placeholder="$t('输入名称，按Enter搜索')"
+                            :placeholder="$t('plugin.metric.search')"
                             :search.sync="searchKeyWord"
                             cluster-type="all"
                             @cluster-change="searchMetricByCluster"
@@ -79,10 +79,10 @@
                                             </bcs-popover>
                                         </template>
                                     </bk-table-column>
-                                    <bk-table-column :label="$t('状态')" prop="health" width="150">
+                                    <bk-table-column :label="$t('generic.label.status')" prop="health" width="150">
                                         <template slot-scope="scope">
-                                            <bk-tag type="filled" v-if="scope.row.health === 'up'" theme="success">{{$t('正常')}}</bk-tag>
-                                            <bk-tag type="filled" v-else theme="danger">{{$t('异常')}}</bk-tag>
+                                            <bk-tag type="filled" v-if="scope.row.health === 'up'" theme="success">{{$t('generic.status.ready')}}</bk-tag>
+                                            <bk-tag type="filled" v-else theme="danger">{{$t('generic.status.error')}}</bk-tag>
                                         </template>
                                     </bk-table-column>
                                     <bk-table-column label="Labels" prop="name" width="250">
@@ -105,22 +105,22 @@
                                             </div>
                                         </template>
                                     </bk-table-column>
-                                    <bk-table-column :label="$t('最后请求时间')" prop="lastScrapeDiffStr" :show-overflow-tooltip="true">
+                                    <bk-table-column :label="$t('plugin.metric.lastTime')" prop="lastScrapeDiffStr" :show-overflow-tooltip="true">
                                         <template slot-scope="scope">
                                             <template v-if="scope.row.lastScrapeDiffStr === '--'">
                                                 --
                                             </template>
                                             <template v-else>
-                                                {{ lastScrapeDiffStr(row) }}{{$t('前')}}
+                                                {{ lastScrapeDiffStr(row) }}{{$t('plugin.metric.last')}}
                                             </template>
                                         </template>
                                     </bk-table-column>
-                                    <bk-table-column :label="$t('请求耗时')" prop="name">
+                                    <bk-table-column :label="$t('plugin.metric.reqTime')" prop="name">
                                         <template slot-scope="scope">
                                             {{ scope.row.lastScrapeDuration * 1000 }}ms
                                         </template>
                                     </bk-table-column>
-                                    <bk-table-column :label="$t('错误信息')" prop="name" :show-overflow-tooltip="true">
+                                    <bk-table-column :label="$t('plugin.metric.errorMsg')" prop="name" :show-overflow-tooltip="true">
                                         <template slot-scope="scope">
                                             {{ scope.row.lastError || '--' }}
                                         </template>
@@ -128,7 +128,7 @@
                                 </bk-table>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('名称')" prop="name" :show-overflow-tooltip="true" :min-width="200">
+                        <bk-table-column :label="$t('generic.label.name')" prop="name" :show-overflow-tooltip="true" :min-width="200">
                             <template slot-scope="{ row }">
                                 {{row.name || '--'}}
                             </template>
@@ -143,34 +143,34 @@
                                 </div>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('命名空间')" prop="namespace" :min-width="120" />
+                        <bk-table-column :label="$t('k8s.namespace')" prop="namespace" :min-width="120" />
                         <bk-table-column label="Service" prop="service" :min-width="120">
                             <template slot-scope="{ row }">
                                 {{row.service_name || '--'}}
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('Metric路径')" :show-overflow-tooltip="true" prop="path" :min-width="150">
+                        <bk-table-column :label="$t('plugin.metric.endpoints.path')" :show-overflow-tooltip="true" prop="path" :min-width="150">
                             <template slot-scope="{ row }">
                                 <template v-for="(endpoint, endpointIndex) in row.spec.endpoints">
                                     <div :key="endpointIndex" style="overflow: hidden;">{{endpoint.path || '--'}}</div>
                                 </template>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('端口')" prop="port" :min-width="120">
+                        <bk-table-column :label="$t('deploy.helm.port')" prop="port" :min-width="120">
                             <template slot-scope="{ row }">
                                 <template v-for="(endpoint, endpointIndex) in row.spec.endpoints">
                                     <div :key="endpointIndex" style="overflow: hidden;">{{endpoint.port || '80'}}</div>
                                 </template>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('周期(s)')" prop="interval" :min-width="90">
+                        <bk-table-column :label="$t('plugin.metric.label.interval')" prop="interval" :min-width="90">
                             <template slot-scope="{ row }">
                                 <div class="flex flex-col">
                                     <div v-for="(endpoint, endpointIndex) in row.spec.endpoints" :key="endpointIndex">{{endpoint.interval || '--'}}</div>
                                 </div>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('操作')" prop="permissions" width="200">
+                        <bk-table-column :label="$t('generic.label.action')" prop="permissions" width="200">
                             <template slot-scope="{ row }">
                                 <div class="act">
                                     <div v-bk-tooltips.left="{
@@ -193,15 +193,15 @@
                                                 }
                                             }"
                                             @click="showEditMetric(row)"
-                                        >{{$t('更新')}}</bk-button>
+                                        >{{$t('generic.button.update')}}</bk-button>
                                     </div>
-                                    <div v-bk-tooltips="{ content: $t('无指标信息'), disabled: !!row.targetData.graph_url }">
+                                    <div v-bk-tooltips="{ content: $t('plugin.metric.metricsNotFound'), disabled: !!row.targetData.graph_url }">
                                         <bk-button
                                             text
                                             class="mr10"
                                             :disabled="!row.targetData.graph_url"
                                             @click="go(row)"
-                                        >{{$t('指标查询')}}</bk-button>
+                                        >{{$t('plugin.metric.metrics')}}</bk-button>
                                     </div>
                                     <div v-bk-tooltips="{
                                         content: row.delMsg,
@@ -222,7 +222,7 @@
                                                 }
                                             }"
                                             @click="deleteMetric(row)"
-                                        >{{$t('删除')}}</bk-button>
+                                        >{{$t('generic.button.delete')}}</bk-button>
                                     </div>
                                 </div>
                             </template>
@@ -262,30 +262,30 @@
             :quick-close="false">
             <template slot="content" style="padding: 0 20px;">
                 <div class="title">
-                    {{$t('升级')}}
+                    {{$t('plugin.metric.action.upgrade')}}
                 </div>
                 <div class="info">
                     &nbsp;
                 </div>
                 <div style="color: red;">
-                    {{$t('升级大约需要 1~2 分钟，请勿重复提交；升级过程中 Prometheus 服务将会重启，数据无损失')}}
+                    {{$t('plugin.metric.upgradeTips')}}
                 </div>
             </template>
             <div slot="footer">
                 <div class="bk-dialog-outer">
                     <bk-button type="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
                         @click="updateConfirm">
-                        {{$t('确定')}}
+                        {{$t('generic.button.confirm')}}
                     </bk-button>
                     <bk-button type="button" @click="updateCancel">
-                        {{$t('取消')}}
+                        {{$t('generic.button.cancel')}}
                     </bk-button>
                 </div>
             </div>
         </bk-dialog>
 
         <bk-dialog
-            :title="$t('确认删除')"
+            :title="$t('generic.title.confirmDelete')"
             :is-show.sync="batchDelDialogConf.isShow"
             :width="360"
             :ext-cls="'export-strategy-dialog'"
@@ -299,19 +299,19 @@
                 <div class="bk-dialog-outer">
                     <template v-if="batchDelDialogConf.isDeleting">
                         <bk-button type="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary is-disabled">
-                            {{$t('删除中...')}}
+                            {{$t('generic.status.deleting')}}
                         </bk-button>
                         <bk-button type="button" class="bk-dialog-btn bk-dialog-btn-cancel is-disabled">
-                            {{$t('取消')}}
+                            {{$t('generic.button.cancel')}}
                         </bk-button>
                     </template>
                     <template v-else>
                         <bk-button type="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
                             @click="batchDelConfirm">
-                            {{$t('确定')}}
+                            {{$t('generic.button.confirm')}}
                         </bk-button>
                         <bk-button type="button" @click="hideBatchDelDialog">
-                            {{$t('取消')}}
+                            {{$t('generic.button.cancel')}}
                         </bk-button>
                     </template>
                 </div>
@@ -414,10 +414,10 @@
                                     timeDiff.get('minute'),
                                     timeDiff.get('second')
                                 ]
-                                item.lastScrapeDiffStr = (arr[0] !== 0 ? (arr[0] + this.$t('天')) : '')
-                                    + (arr[1] !== 0 ? (arr[1] + this.$t('小时')) : '')
-                                    + (arr[2] !== 0 ? (arr[2] + this.$t('分')) : '')
-                                    + (arr[3] !== 0 ? (arr[3] + this.$t('秒')) : '')
+                                item.lastScrapeDiffStr = (arr[0] !== 0 ? (arr[0] + this.$t('units.suffix.days')) : '')
+                                    + (arr[1] !== 0 ? (arr[1] + this.$t('plugin.metric.hours')) : '')
+                                    + (arr[2] !== 0 ? (arr[2] + this.$t('plugin.metric.mins')) : '')
+                                    + (arr[3] !== 0 ? (arr[3] + this.$t('units.suffix.seconds')) : '')
                                 newLastScrapeDiffStr = item.lastScrapeDiffStr
                             }
                         })
@@ -425,9 +425,9 @@
                         const curTimestamp = new Date().getTime()
                         const createTimestamp = new Date(Date.parse(row.metadata.creationTimestamp)).getTime()
                         if (curTimestamp - createTimestamp > 120000) {
-                            row.emptyMsg = this.$t('无数据（请检查 Service 是否有关联的 Endpoints)')
+                            row.emptyMsg = this.$t('plugin.metric.noData2')
                         } else {
-                            row.emptyMsg = this.$t('无数据（新建 Metric 需要1~2分钟生效，请刷新），通过计算创建时间和当前时间判断')
+                            row.emptyMsg = this.$t('plugin.metric.noData1')
                         }
                     }
                     row.expanding = false
@@ -565,10 +565,10 @@
                             && service.resourceName === item.metadata.service_name
                         )
                         item.editMsg = !item.canEdit
-                            ? (item.is_system ? this.$t('系统指标无法修改') : this.$t('service对象不存在'))
+                            ? (item.is_system ? this.$t('plugin.metric.notEdited') : this.$t('plugin.metric._serviceNotFound'))
                             : ''
                         item.canDel = !item.is_system
-                        item.delMsg = item.canDel ? '' : this.$t('系统指标无法删除')
+                        item.delMsg = item.canDel ? '' : this.$t('plugin.metric.notDeleted')
                         item.targetData = Object.assign({}, this.targets[item.instance_id] || {})
                         item.targetData.targets = item.targetData.targets ? item.targetData.targets.sort((pre, next) => {
                             if (pre.health === next.health) {
@@ -786,12 +786,12 @@
                     this.bkMessageInstance && this.bkMessageInstance.close()
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('还未选择Metric')
+                        message: this.$t('plugin.metric.unselected')
                     })
                     return
                 }
 
-                this.batchDelDialogConf.content = this.$t('确定删除所选的{len}个Metric？', { len: this.checkedNodeList.length })
+                this.batchDelDialogConf.content = this.$t('plugin.metric.multidelete1', { len: this.checkedNodeList.length })
                 this.batchDelDialogConf.isShow = true
             },
 
@@ -829,7 +829,7 @@
                     this.bkMessageInstance = this.$bkMessage({
                         theme: 'success',
                         delay: 1000,
-                        message: this.$t('删除Metric成功')
+                        message: this.$t('plugin.metric.deleted')
                     })
                     this.checkedNodeList.splice(0, this.checkedNodeList.length, ...[])
 
@@ -863,7 +863,7 @@
                 this.hideCreateMetric()
                 this.$bkMessage({
                     theme: 'success',
-                    message: this.$t('创建成功')
+                    message: this.$t('generic.msg.success.create')
                 })
                 setTimeout(async () => {
                     await this.refresh()
@@ -906,11 +906,11 @@
             async deleteMetric (metric) {
                 const me = this
                 me.$bkInfo({
-                    title: this.$t('确认删除'),
+                    title: this.$t('generic.title.confirmDelete'),
                     clsName: 'biz-remove-dialog',
                     content: me.$createElement('p', {
                         class: 'biz-confirm-desc'
-                    }, `${this.$t('确定要删除Metric')}【${metric.name}】？`),
+                    }, `${this.$t('plugin.metric._delete')}【${metric.name}】？`),
                     async confirmFn () {
                         try {
                             await me.$store.dispatch('metric/deleteServiceMonitor', {
@@ -923,7 +923,7 @@
                             await me.refresh()
                             me.$bkMessage({
                                 theme: 'success',
-                                message: me.$t('删除成功')
+                                message: me.$t('generic.msg.success.delete')
                             })
                         } catch (e) {
                             console.error(e)
@@ -977,7 +977,7 @@
             renderSelectionHeader () {
                 if (this.curPageData.filter(node => node.canDel).length === 0) {
                     return this.curPageData.length ?  
-                            <bcs-popover content={this.$t('当前页全是系统命名空间')} placement="left" transfer={true} delay={300}>
+                            <bcs-popover content={this.$t('plugin.metric.systemNS')} placement="left" transfer={true} delay={300}>
                                 <bk-checkbox name="check-strategy" disabled={true} />
                             </bcs-popover>
                             : null

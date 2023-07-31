@@ -5,33 +5,33 @@
     :desc="`(${curCluster.clusterID})`"
     v-bkloading="{ isLoading, opacity: 1 }">
     <bcs-tab :label-height="42" :active.sync="activeTabName" :validate-active="false" @tab-change="handleTabChange">
-      <bcs-tab-panel name="overview" :label="$t('集群总览')" render-directive="if">
+      <bcs-tab-panel name="overview" :label="$t('cluster.detail.title.overview')" render-directive="if">
         <Overview :cluster-id="clusterId" />
       </bcs-tab-panel>
-      <bcs-tab-panel name="info" :label="$t('基本信息')" render-directive="if">
+      <bcs-tab-panel name="info" :label="$t('generic.title.basicInfo1')" render-directive="if">
         <Info :cluster-id="clusterId" />
       </bcs-tab-panel>
-      <bcs-tab-panel name="quota" :label="$t('配额管理')" render-directive="if" v-if="curCluster.clusterType === 'virtual'">
+      <bcs-tab-panel name="quota" :label="$t('cluster.detail.title.quota')" render-directive="if" v-if="curCluster.clusterType === 'virtual'">
         <VClusterQuota :cluster-id="clusterId" />
       </bcs-tab-panel>
       <template v-else>
-        <bcs-tab-panel name="network" :label="$t('网络配置')" render-directive="if">
+        <bcs-tab-panel name="network" :label="$t('cluster.detail.title.network')" render-directive="if">
           <Network :cluster-id="clusterId" />
         </bcs-tab-panel>
-        <bcs-tab-panel name="master" :label="$t('Master配置')" render-directive="if">
+        <bcs-tab-panel name="master" :label="$t('cluster.detail.title.master')" render-directive="if">
           <Master :cluster-id="clusterId" />
         </bcs-tab-panel>
-        <bcs-tab-panel name="node" :label="$t('节点列表')" render-directive="if">
+        <bcs-tab-panel name="node" :label="$t('cluster.detail.title.nodeList')" render-directive="if">
           <Node class="pb-[20px]" :cluster-id="clusterId" hide-cluster-select from-cluster />
         </bcs-tab-panel>
         <bcs-tab-panel
           name="autoscaler"
-          :label="$t('弹性扩缩容')"
+          :label="$t('cluster.detail.title.autoScaler')"
           render-directive="if"
           ref="autoScalerTabRef"
           v-if="showAutoScaler">
           <template #label>
-            {{ $t('弹性扩缩容') }}
+            {{ $t('cluster.detail.title.autoScaler') }}
             <bk-tag theme="danger">NEW</bk-tag>
           </template>
           <AutoScaler :cluster-id="clusterId" />

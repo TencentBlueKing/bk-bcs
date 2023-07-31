@@ -33,10 +33,11 @@ import zhCN from 'text-loader?modules!./zh-CN.yaml';
 
 Vue.use(VueI18n);
 
-const validateTranslation = (yamlData, lang) => {
-  const data = yamljs.load(yamlData);
+const validateTranslation = (data, lang) => {
   Object.keys(data).forEach((key) => {
-    if (!data[key]) {
+    if (typeof data[key] === 'object') {
+      validateTranslation(data[key], lang);
+    } else if (!data[key]) {
       console.warn(`un-translation '${key}', ${lang}`);
     }
   });
@@ -44,8 +45,8 @@ const validateTranslation = (yamlData, lang) => {
 };
 
 const modules = {
-  'en-US': validateTranslation(enUS, 'en-US'),
-  'zh-CN': validateTranslation(zhCN, 'zh-CN'),
+  'en-US': validateTranslation(yamljs.load(enUS), 'en-US'),
+  'zh-CN': validateTranslation(yamljs.load(zhCN), 'zh-CN'),
 };
 
 const messages = {

@@ -64,7 +64,7 @@ export default defineComponent({
       isLoading.value = true;
       await getUserInfo();
       isLoading.value = false;
-      document.title = $i18n.t('容器管理平台 | 腾讯蓝鲸智云');
+      document.title = $i18n.t('bcs.title');
     });
 
     return {

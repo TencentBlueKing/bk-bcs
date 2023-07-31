@@ -1218,10 +1218,10 @@
         value: function created() {
           this.checkType.list = [{
             id: 'current',
-            label: this.$t('本页全选'),
+            label: this.$t('cluster.nodeList.button.selectPage'),
           }, {
             id: 'all',
-            label: this.$t('跨页全选'),
+            label: this.$t('cluster.nodeList.button.selectAcrossPage'),
           }];
         },
       }, {
@@ -2351,7 +2351,7 @@
         },
         expression: 'accurate',
       },
-    }, [_vm._v(_vm._s(_vm.$t('精确')))]) : _vm._e()], 1), _vm._t('tab'), _c('IpSelectorTable', {
+    }, [_vm._v(_vm._s(_vm.$t('generic.ipSelector.action.accurateSearch')))]) : _vm._e()], 1), _vm._t('tab'), _c('IpSelectorTable', {
       ref: 'table',
       staticClass: 'ip-list-table mt10',
       attrs: {
@@ -2558,13 +2558,13 @@
       value: function created() {
         this.ipTab.list = [{
           id: 'inner',
-          name: this.$t('内网IP'),
+          name: this.$t('generic.ipSelector.label.innerIp'),
         }, {
           id: 'outer',
-          name: this.$t('外网IP'),
+          name: this.$t('generic.ipSelector.label.outerIp'),
         }, {
           id: 'other',
-          name: this.$t('其他IP'),
+          name: this.$t('generic.ipSelector.label.otherIp'),
         }];
       },
     }, {
@@ -2872,7 +2872,7 @@
     }, [_c('bcs-input', {
       staticClass: 'ip-text',
       attrs: {
-        placeholder: _vm.$t('多个IP以回车为分隔符'),
+        placeholder: _vm.$t('generic.ipSelector.placeholder.searchIp2'),
         type: 'textarea',
       },
       on: {
@@ -2892,7 +2892,7 @@
       },
     }), _vm.errList.length ? _c('div', {
       staticClass: 'err-tips',
-    }, [_vm._v(_vm._s(_vm.$t('IP格式有误或不存在，检查后重试！')))]) : _vm._e(), _c('bk-button', {
+    }, [_vm._v(_vm._s(_vm.$t('generic.ipSelector.tips.ipError')))]) : _vm._e(), _c('bk-button', {
       staticClass: 'ip-parse',
       attrs: {
         theme: 'primary',
@@ -2901,7 +2901,7 @@
       on: {
         click: _vm.handleParseIp,
       },
-    }, [_vm._v(`\n      ${_vm._s(_vm.$t('点击解析'))}\n    `)])], 1), _c('div', {
+    }, [_vm._v(`\n      ${_vm._s(_vm.$t('generic.ipSelector.button.parseIp'))}\n    `)])], 1), _c('div', {
       staticClass: 'custom-input-right ml20',
     }, [_c('IpListTable', {
       ref: 'table',
@@ -3707,7 +3707,7 @@
       },
     }, [_vm.searchData.length ? [_c('div', {
       staticClass: 'result-title',
-    }, [_c('span', [_vm._v(_vm._s(_vm.$t('搜索结果')))]), _c('bk-button', {
+    }, [_c('span', [_vm._v(_vm._s(_vm.$t('generic.ipSelector.title.searchResult')))]), _c('bk-button', {
       staticClass: 'select-all',
       attrs: {
         text: '',
@@ -3715,7 +3715,7 @@
       on: {
         click: _vm.handleCheckOrClearAll,
       },
-    }, [_vm._v(`\n          ${_vm._s(_vm.searchData.length === _vm.selections.length ? _vm.$t('取消全选') : _vm.$t('全选'))}\n        `)])], 1), _c('bk-virtual-scroll', {
+    }, [_vm._v(`\n          ${_vm._s(_vm.searchData.length === _vm.selections.length ? _vm.$t('generic.button.cancelSelectAll') : _vm.$t('generic.button.selectAll'))}\n        `)])], 1), _c('bk-virtual-scroll', {
       style: {
         height: `${_vm.height}px`,
       },
@@ -3764,7 +3764,7 @@
         expression: '{ isLoading }',
       }],
       staticClass: 'result-empty',
-    }, [_vm._v(`\n      ${_vm._s(_vm.$t('无数据'))}\n    `)])], 2)], 1);
+    }, [_vm._v(`\n      ${_vm._s(_vm.$t('generic.msg.empty.noData1'))}\n    `)])], 2)], 1);
   };
 
   const __vue_staticRenderFns__$6 = [];
@@ -4017,12 +4017,12 @@
     }, {
       key: 'handleSelectionChange',
       value: function handleSelectionChange() {
-        this.emptyText = !!this.selections.length ? this.$t('查无数据') : this.$t('请选择');
+        this.emptyText = !!this.selections.length ? this.$t('generic.msg.empty.noData2') : this.$t('generic.placeholder.select');
       },
     }, {
       key: 'created',
       value: function created() {
-        this.emptyText = this.$t('请选择');
+        this.emptyText = this.$t('generic.placeholder.select');
         this.handleGetDefaultData();
       },
     }, {
@@ -4431,7 +4431,7 @@
     }, [_c('TopoSearch', {
       attrs: {
         'search-method': _vm.searchTreeMethod,
-        placeholder: _vm.$t('搜索拓扑节点'),
+        placeholder: _vm.$t('generic.ipSelector.placeholder.searchTopo'),
         'result-width': _vm.resultWidth,
         options: _vm.searchDataOptions,
         'default-selection-ids': _vm.defaultSelectionIds,
@@ -5449,7 +5449,7 @@
       },
     }, [_c('span', {
       staticClass: 'empty-text',
-    }, [_vm._v(_vm._s(_vm.$t('请在左侧勾选IP或者节点')))])])]], 2), _c('div', {
+    }, [_vm._v(_vm._s(_vm.$t('generic.ipSelector.selected.emptyMsg')))])])]], 2), _c('div', {
       staticClass: 'drag',
       on: {
         mousedown: _vm.handleMouseDown,
@@ -5811,7 +5811,7 @@
         name: 'bk-tooltips',
         rawName: 'v-bk-tooltips',
         value: {
-          content: _vm.$t('点击展开'),
+          content: _vm.$t('generic.ipSelector.action.expandSelectedPanel'),
           showOnInit: true,
           placements: ['left'],
           delay: 300,

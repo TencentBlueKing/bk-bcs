@@ -1,10 +1,10 @@
 <template>
   <!-- 容器服务未开通时引导界面 -->
   <section class="bcs-unregistry">
-    <header class="header">{{ $t('开通容器服务') }}</header>
+    <header class="header">{{ $t('bcs.registry.text') }}</header>
     <main class="main">
       <div class="form-item">
-        <div class="form-item-label">{{ $t('业务编排类型') }}</div>
+        <div class="form-item-label">{{ $t('bcs.registry.label.projectKind.text') }}</div>
         <div class="form-item-content kind">
           <div
             v-for="item in kindList"
@@ -21,11 +21,11 @@
         </div>
       </div>
       <div class="form-item mt30">
-        <div class="form-item-label">{{ $t('关联CMDB业务') }}</div>
+        <div class="form-item-label">{{ $t('bcs.registry.label.business.text') }}</div>
         <div class="form-item-content cc-list">
           <bcs-select
             class="cc-selector"
-            :placeholder="$t('请选择关联业务')"
+            :placeholder="$t('bcs.registry.label.business.placeholder')"
             v-model="ccKey"
             searchable>
             <bcs-option
@@ -37,17 +37,17 @@
           </bcs-select>
         </div>
         <div class="form-item-tips" v-if="!ccList.length && $INTERNAL">
-          {{ $t('请联系需要关联的CMDB业务的运维') }}
+          {{ $t('bcs.registry.label.business.emptyMsg') }}
           <bk-link
             theme="primary"
             :href="iamDocLink"
             target="_blank">
-            {{ $t('申请权限') }}
+            {{ $t('iam.button.apply2') }}
           </bk-link>
         </div>
       </div>
       <div class="form-item enable-bcs">
-        <bk-button theme="primary" :disabled="!enableBtn" @click="updateProject">{{ $t('启用容器服务') }}</bk-button>
+        <bk-button theme="primary" :disabled="!enableBtn" @click="updateProject">{{ $t('bcs.registry.text') }}</bk-button>
       </div>
       <div class="form-item guide" v-if="$INTERNAL">
         <div
@@ -100,30 +100,30 @@ export default {
       {
         id: 'k8s',
         name: 'K8S',
-        desc: this.$t('k8s容器编排引擎'),
+        desc: this.$t('bcs.registry.label.projectKind.k8s'),
       },
     ];
     this.guideList = [
       {
         id: 'binding',
         iconColor: '#4540DC',
-        desc: this.$t('开启容器服务时，请首先在”蓝鲸配置平台“查看业务'),
+        desc: this.$t('bcs.registry.button.bindBusiness.desc'),
         link: this.ccDocLink,
-        linkText: this.$t('前往绑定业务'),
+        linkText: this.$t('bcs.registry.button.bindBusiness.text'),
       },
       {
         id: 'auth',
         iconColor: '#FFB200',
-        desc: this.$t('开启容器服务时，若没有查看业务权限，去“权限中心”申请权限'),
+        desc: this.$t('bcs.registry.button.applyPerm.desc'),
         link: this.iamDocLink,
-        linkText: this.$t('申请权限'),
+        linkText: this.$t('iam.button.apply2'),
       },
       {
         id: 'wiki',
         iconColor: '#66EFE3',
-        desc: this.$t('如果遇到更多问题，需要了解详细信息，请前往iwiki查看'),
+        desc: this.$t('bcs.registry.button.docs.desc'),
         link: this.PROJECT_CONFIG.quickStart,
-        linkText: this.$t('前往iwiki查看'),
+        linkText: this.$t('blueking.docs'),
       },
     ];
   },

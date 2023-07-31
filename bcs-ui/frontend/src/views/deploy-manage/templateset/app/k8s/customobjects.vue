@@ -6,26 +6,26 @@
         <div class="biz-panel-header biz-event-query-query" style="padding-right: 0;">
           <div class="left !w-[260px]">
             <ClusterSelect
-              :placeholder="$t('请选择集群')"
+              :placeholder="$t('deploy.templateset.cluster')"
               :value="selectedClusterId"
               @change="handleChangeCluster" />
           </div>
           <div class="left" style="width: 290px;">
             <bk-selector
-              :placeholder="$t('请选择CRD')"
+              :placeholder="$t('dashboard.validate.selectCRD')"
               :searchable="true"
               :setting-key="'name'"
               :display-key="'name'"
               :selected.sync="selectedCRD"
               :list="crdList"
               :is-loading="crdLoading"
-              :search-placeholder="$t('输入CRD搜索')"
+              :search-placeholder="$t('deploy.templateset.crd')"
               @item-selected="handleChangeCRD">
             </bk-selector>
           </div>
           <div class="left" v-if="isNamespaceScope">
             <bk-selector
-              :placeholder="$t('请选择命名空间')"
+              :placeholder="$t('dashboard.ns.validate.emptyNs')"
               :searchable="true"
               :allow-clear="true"
               :setting-key="'name'"
@@ -33,17 +33,17 @@
               :selected.sync="selectedNamespaceName"
               :list="namespaceList"
               :is-loading="namespaceLoading"
-              :search-placeholder="$t('输入命名空间搜索')"
+              :search-placeholder="$t('deploy.templateset.searchNs')"
               @item-selected="handleChangeNamespace"
               @clear="handleClearNamespace">
             </bk-selector>
           </div>
           <div class="left">
-            <bk-input v-model="searchKey" clearable :placeholder="$t('输入名称搜索')" @clear="clearSearch" />
+            <bk-input v-model="searchKey" clearable :placeholder="$t('generic.placeholder.searchName')" @clear="clearSearch" />
           </div>
           <div class="left" style="width: auto;">
-            <bk-button type="primary" :title="$t('查询')" icon="search" @click="handleClick">
-              {{$t('查询')}}
+            <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleClick">
+              {{$t('generic.button.query')}}
             </bk-button>
           </div>
         </div>
@@ -74,9 +74,9 @@
                   </div>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('操作')" width="150">
+              <bk-table-column :label="$t('generic.label.action')" width="150">
                 <template slot-scope="{ row }">
-                  <a href="javascript:void(0);" class="bk-text-button" @click.stop="del(row, index)">{{$t('删除')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click.stop="del(row, index)">{{$t('generic.button.delete')}}</a>
                 </template>
               </bk-table-column>
               <template #empty>
@@ -128,15 +128,15 @@ export default {
       },
       defaultColumnMap: {
         name: {
-          label: this.$t('名称'),
+          label: this.$t('generic.label.name'),
           minWidth: 150,
         },
         cluster_id: {
-          label: this.$t('集群'),
+          label: this.$t('generic.label.cluster'),
           minWidth: 140,
         },
         namespace: {
-          label: this.$t('命名空间'),
+          label: this.$t('k8s.namespace'),
           minWidth: 100,
         },
       },
@@ -419,7 +419,7 @@ export default {
         this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择CRD'),
+          message: this.$t('dashboard.validate.selectCRD'),
         });
         return;
       }
@@ -464,13 +464,13 @@ export default {
       };
 
       const contexts = [
-        // me.$createElement('h5', titleStyle, me.$t('确定要删除？')),
-        me.$createElement('p', itemStyle, `${me.$t('名称')}：${item.name}`),
-        me.$createElement('p', itemStyle, `${me.$t('所属集群')}：${item.cluster_id}`),
-        me.$createElement('p', itemStyle, `${me.$t('命名空间')}：${item.namespace}`),
+        // me.$createElement('h5', titleStyle, me.$t('deploy.templateset.delete')),
+        me.$createElement('p', itemStyle, `${me.$t('generic.label.name')}：${item.name}`),
+        me.$createElement('p', itemStyle, `${me.$t('generic.label.cluster1')}：${item.cluster_id}`),
+        me.$createElement('p', itemStyle, `${me.$t('k8s.namespace')}：${item.namespace}`),
       ];
       me.$bkInfo({
-        title: me.$t('确认删除'),
+        title: me.$t('generic.title.confirmDelete'),
         confirmLoading: true,
         clsName: 'biz-remove-dialog',
         content: me.$createElement('div', { class: 'biz-confirm-desc', style: boxStyle }, contexts),
@@ -488,7 +488,7 @@ export default {
             me.bkMessageInstance?.close();
             me.bkMessageInstance = me.$bkMessage({
               theme: 'success',
-              message: me.$t('删除成功'),
+              message: me.$t('generic.msg.success.delete'),
               delay: 1000,
             });
             await me.fetchData();

@@ -158,7 +158,7 @@ export default function useDetail(options: IDetailOptions) {
     $bkInfo({
       type: 'warning',
       clsName: 'custom-info-confirm',
-      title: $i18n.t('确认删除当前资源'),
+      title: $i18n.t('dashboard.title.confirmDelete'),
       subTitle: `${kind} ${name}`,
       defaultInfo: true,
       confirmFn: async () => {
@@ -182,7 +182,7 @@ export default function useDetail(options: IDetailOptions) {
         }
         result && $bkMessage({
           theme: 'success',
-          message: $i18n.t('删除成功'),
+          message: $i18n.t('generic.msg.success.delete'),
         });
         $router.back();
       },

@@ -20,7 +20,7 @@
             @click="handleTabChange(index)">
             <div class="title">{{ log.version }}</div>
             <div class="date">{{ log.date }}</div>
-            <div v-if="index === 0" class="new-flag">{{ $t('当前版本') }}</div>
+            <div v-if="index === 0" class="new-flag">{{ $t('generic.title.curVersion') }}</div>
           </div>
         </div>
       </div>

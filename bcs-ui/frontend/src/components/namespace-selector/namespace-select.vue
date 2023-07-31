@@ -6,7 +6,7 @@
     :searchable="searchable"
     :disabled="disabled"
     :loading="namespaceLoading || loading"
-    :placeholder="$t('请选择命名空间')"
+    :placeholder="$t('dashboard.ns.validate.emptyNs')"
     @change="handleNamespaceChange">
     <bcs-option
       v-for="option in nsList"

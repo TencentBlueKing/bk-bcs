@@ -2,7 +2,7 @@
   <div class="cursor-default">
     <div class="cluster-view">
       <span :class="['cluster-view-type', { 'shared': isSharedCluster }]">
-        {{ isSharedCluster ? $t('共享') : $t('专用') }}
+        {{ isSharedCluster ? $t('bcs.cluster.publicIcon') : $t('bcs.cluster.privateIcon') }}
       </span>
       <span class="flex flex-1 flex-col ml-[10px]">
         <span

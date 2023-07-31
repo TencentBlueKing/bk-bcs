@@ -35,12 +35,12 @@ export default defineComponent({
   setup(props) {
     const { metrics, colors, clusterId } = toRefs(props);
     const metricMap = {
-      cpu_usage: $i18n.t('CPU使用率'),
-      disk_usage: $i18n.t('磁盘使用率'),
-      memory_usage: $i18n.t('内存使用率'),
-      cpu_request_usage: $i18n.t('CPU装箱率'),
-      memory_request_usage: $i18n.t('内存装箱率'),
-      diskio_usage: $i18n.t('磁盘IO'),
+      cpu_usage: $i18n.t('metrics.cpuUsage'),
+      disk_usage: $i18n.t('metrics.diskUsage'),
+      memory_usage: $i18n.t('metrics.memUsage'),
+      cpu_request_usage: $i18n.t('metrics.cpuRequestUsage.text'),
+      memory_request_usage: $i18n.t('metrics.memRequestUsage.text'),
+      diskio_usage: $i18n.t('metrics.diskIOUsage'),
     };
     const options = ref<any>({
       tooltip: {

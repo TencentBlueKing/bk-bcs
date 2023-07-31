@@ -265,7 +265,7 @@ export function useVCluster() {
     const result = await createVCluster(params).catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('任务下发成功'),
+      message: $i18n.t('generic.msg.success.deliveryTask'),
     });
     return result;
   }

@@ -50,7 +50,7 @@ export default defineComponent({
       : `status-icon-result status-${color.value}-result`));
     const statusText = computed(() => {
       if (hideText.value) return '';
-      return statusTextMap.value[status.value] || status.value || $i18n.t('未知状态');
+      return statusTextMap.value[status.value] || status.value || $i18n.t('generic.status.unknown1');
     });
 
     return {

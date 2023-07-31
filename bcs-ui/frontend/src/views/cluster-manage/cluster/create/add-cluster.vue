@@ -1,38 +1,38 @@
 <!-- eslint-disable max-len -->
 <template>
-  <BcsContent :title="$t('添加集群')">
+  <BcsContent :title="$t('cluster.button.addCluster')">
     <bcs-tab :label-height="42" :active.sync="activeTabName">
       <!-- 基本信息 -->
       <bcs-tab-panel :name="steps[0].name">
         <template #label>
-          <StepTabLabel :title="$t('基本信息')" :step-num="1" :active="activeTabName === steps[0].name" />
+          <StepTabLabel :title="$t('generic.title.basicInfo1')" :step-num="1" :active="activeTabName === steps[0].name" />
         </template>
         <bk-form :ref="steps[0].formRef" :model="basicInfo" :rules="basicInfoRules">
-          <!-- <bk-form-item :label="$t('集群类型')">
+          <!-- <bk-form-item :label="$t('cluster.labels.clusterType')">
             {{ type || '--' }}
           </bk-form-item> -->
-          <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
+          <bk-form-item :label="$t('cluster.labels.name')" property="clusterName" error-display-type="normal" required>
             <bk-input
               :maxlength="64"
-              :placeholder="$t('请输入集群名称，不超过64个字符')"
+              :placeholder="$t('cluster.create.validate.name')"
               class="max-w-[600px]"
               v-model.trim="basicInfo.clusterName">
             </bk-input>
           </bk-form-item>
-          <bk-form-item :label="$t('集群环境')" property="environment" error-display-type="normal" required>
+          <bk-form-item :label="$t('cluster.labels.env')" property="environment" error-display-type="normal" required>
             <bk-radio-group v-model="basicInfo.environment">
               <bk-radio value="stag" v-if="runEnv === 'dev'">
                 UAT
               </bk-radio>
               <bk-radio :disabled="runEnv === 'dev'" value="debug">
-                {{ $t('测试环境') }}
+                {{ $t('cluster.env.debug') }}
               </bk-radio>
               <bk-radio :disabled="runEnv === 'dev'" value="prod">
-                {{ $t('正式环境') }}
+                {{ $t('cluster.env.prod') }}
               </bk-radio>
             </bk-radio-group>
           </bk-form-item>
-          <bk-form-item :label="$t('集群版本')" property="clusterBasicSettings.version" error-display-type="normal" required>
+          <bk-form-item :label="$t('cluster.create.label.clusterVersion')" property="clusterBasicSettings.version" error-display-type="normal" required>
             <bcs-select
               class="max-w-[600px]"
               :loading="templateLoading"
@@ -42,7 +42,7 @@
               <bcs-option v-for="item in versionList" :key="item" :id="item" :name="item"></bcs-option>
             </bcs-select>
           </bk-form-item>
-          <bk-form-item :label="$t('描述')">
+          <bk-form-item :label="$t('cluster.create.label.desc')">
             <bk-input maxlength="100" class="max-w-[600px]" v-model="basicInfo.description" type="textarea"></bk-input>
           </bk-form-item>
         </bk-form>
@@ -51,13 +51,13 @@
       <bcs-tab-panel :name="steps[1].name" :disabled="steps[1].disabled">
         <template #label>
           <StepTabLabel
-            :title="$t('网络配置')"
+            :title="$t('cluster.detail.title.network')"
             :step-num="2"
             :active="activeTabName === steps[1].name"
             :disabled="steps[1].disabled" />
         </template>
         <bk-form :ref="steps[1].formRef" :model="networkConfig" :rules="networkConfigRules">
-          <bk-form-item :label="$t('所属区域')" property="region" error-display-type="normal" required>
+          <bk-form-item :label="$t('cluster.create.label.region')" property="region" error-display-type="normal" required>
             <bcs-select
               class="max-w-[600px]"
               v-model="networkConfig.region"
@@ -69,32 +69,32 @@
                 :key="item.region" :id="item.region" :name="item.regionName"></bcs-option>
             </bcs-select>
           </bk-form-item>
-          <bk-form-item :label="$t('网络模式')" property="networkType" error-display-type="normal" required>
+          <bk-form-item :label="$t('cluster.create.label.networkMode.text')" property="networkType" error-display-type="normal" required>
             <bk-radio-group v-model="networkConfig.networkType">
               <bk-radio value="overlay">
-                {{ $t('全局路由模式') }}
+                {{ $t('cluster.create.label.networkMode.overlay.text') }}
                 <span
                   class="ml5 text-[#C4C6CC]"
                   v-bk-tooltips="{
-                    content: $t('全局路由网络模式是TKE基于底层私有网络（VPC）的全局路由能力，实现了容器网络和VPC互访的路由策略，类似云原生的Overlay网络模式')
+                    content: $t('cluster.create.label.networkMode.overlay.desc')
                   }">
                   <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                 </span>
               </bk-radio>
               <!-- todo 暂不支持vpc网络 -->
               <bk-radio disabled value="vpc-cni">
-                {{ $t('全局路由与 VPC-CNI 混合模式') }}
+                {{ $t('cluster.create.label.networkMode.vpc-cni.text') }}
                 <span
                   class="ml5 text-[#C4C6CC]"
                   v-bk-tooltips="{
-                    content: $t('集群同时支持全局路由模式与VPC-CNI模式，VPC-CNI 网络模式是 TKE 基于 CNI 和 VPC 弹性网卡实现的容器网络能力，VPC-CNI网络模式类似云原生的Underlay网络模式，如需使用请联系蓝鲸容器助手协助')
+                    content: $t('cluster.create.label.networkMode.vpc-cni.desc')
                   }">
                   <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                 </span>
               </bk-radio>
             </bk-radio-group>
           </bk-form-item>
-          <bk-form-item :label="$t('所属VPC')" property="vpcID" error-display-type="normal" required>
+          <bk-form-item :label="$t('cluster.create.label.vpc.text')" property="vpcID" error-display-type="normal" required>
             <bcs-select
               class="max-w-[600px]"
               v-model="networkConfig.vpcID"
@@ -113,7 +113,7 @@
                   : item.availableIPNum < 2048
                 "
                 v-bk-tooltips="{
-                  content: $t('可用容器网络IP数量不足'),
+                  content: $t('cluster.create.label.vpc.deficiencyIpNumTips'),
                   disabled: basicInfo.environment === 'prod'
                     ? item.availableIPNum >= 4096
                     : item.availableIPNum >= 2048
@@ -124,19 +124,19 @@
                     <span class="vpc-id">{{`(${item.vpcID})`}}</span>
                   </span>
                   <span class="text-[#979ba5]">
-                    {{ $t('可用IP数量: {0}', [item.availableIPNum]) }}
+                    {{ $t('cluster.create.label.vpc.availableIpNum', [item.availableIPNum]) }}
                   </span>
                 </div>
               </bcs-option>
             </bcs-select>
             <div class="text-[12px] text-[#979BA5]" v-if="curVpc">
-              <i18n path="可用容器网络 IP {num} 个">
+              <i18n path="cluster.create.label.vpc.availableIpNum2">
                 <span place="num" class="text-[#313238]">{{ curVpc.availableIPNum }}</span>
               </i18n>
             </div>
           </bk-form-item>
           <bk-form-item
-            :label="$t('全局路由网络分配')"
+            :label="$t('cluster.create.label.networkSetting.text')"
             property="networkSettings"
             error-display-type="normal"
             required>
@@ -146,8 +146,8 @@
                 <div class="flex-1 mr-[16px]">
                   <span
                     class="bcs-border-tips"
-                    v-bk-tooltips="$t('集群内总的全局路由容器网络可用IP数量，IP数量 = 集群内Service数量上限 + 单节点Pod数量上限 * 节点数量')">
-                    {{ $t('IP数量') }}
+                    v-bk-tooltips="$t('cluster.create.label.networkSetting.cidrStep.desc')">
+                    {{ $t('cluster.create.label.networkSetting.cidrStep.text') }}
                   </span>
                   <bcs-select class="bg-[#fff]" v-model="networkConfig.networkSettings.cidrStep" :clearable="false">
                     <bcs-option
@@ -161,8 +161,8 @@
                 <div class="flex-1 mr-[16px]">
                   <span
                     class="bcs-border-tips"
-                    v-bk-tooltips="$t('集群Service可用IP数量上限，分配后将无法调整，请谨慎评估后再填写')">
-                    {{ $t('集群内Service数量上限') }}
+                    v-bk-tooltips="$t('cluster.create.label.networkSetting.maxServiceNum.desc')">
+                    {{ $t('cluster.create.label.networkSetting.maxServiceNum.text') }}
                   </span>
                   <bcs-select class="bg-[#fff]" v-model="networkConfig.networkSettings.maxServiceNum" :clearable="false">
                     <bcs-option
@@ -176,8 +176,8 @@
                 <div class="flex-1">
                   <span
                     class="bcs-border-tips"
-                    v-bk-tooltips="$t('单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写')">
-                    {{ $t('单节点Pod数量上限') }}
+                    v-bk-tooltips="$t('cluster.create.label.networkSetting.maxNodePodNum.desc')">
+                    {{ $t('cluster.create.label.networkSetting.maxNodePodNum.text') }}
                   </span>
                   <bcs-select class="bg-[#fff]" v-model="networkConfig.networkSettings.maxNodePodNum" :clearable="false">
                     <bcs-option v-for="item in nodePodNumList" :key="item" :id="item" :name="item"></bcs-option>
@@ -188,16 +188,16 @@
               <div class="flex flex-col mt-[10px] text-[#979BA5]">
                 <i18n
                   class="leading-[20px]"
-                  path="容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点">
+                  path="cluster.create.label.networkSetting.article1">
                   <span place="count" class="text-[#313238]">{{ maxNodeCount }}</span>
                 </i18n>
                 <i18n
                   class="leading-[20px]"
-                  path="当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点">
+                  path="cluster.create.label.networkSetting.article2">
                   <span place="count" class="text-[#313238]">{{ maxCapacityCount }}</span>
                 </i18n>
                 <div class="leading-[20px]">
-                  {{$t('集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限')}}
+                  {{$t('cluster.create.label.networkSetting.article3')}}
                 </div>
               </div>
             </div>
@@ -208,13 +208,13 @@
       <bcs-tab-panel :name="steps[2].name" :disabled="steps[2].disabled">
         <template #label>
           <StepTabLabel
-            :title="$t('Master配置')"
+            :title="$t('cluster.detail.title.master')"
             :step-num="3"
             :active="activeTabName === steps[2].name"
             :disabled="steps[2].disabled" />
         </template>
         <bk-form :ref="steps[2].formRef" :model="masterConfig" :rules="masterConfigRules">
-          <bk-form-item :label="$t('集群模式')">
+          <bk-form-item :label="$t('cluster.create.label.manageType.text')">
             <div class="bk-button-group">
               <bk-button
                 :class="['min-w-[136px]', { 'is-selected': manageType === 'MANAGED_CLUSTER' }]"
@@ -223,27 +223,27 @@
                   <span class="flex text-[16px] text-[#f85356]">
                     <i class="bcs-icon bcs-icon-hot"></i>
                   </span>
-                  <span class="ml-[8px]">{{ $t('托管集群') }}</span>
+                  <span class="ml-[8px]">{{ $t('bcs.cluster.managed') }}</span>
                 </div>
               </bk-button>
               <bk-button
                 :class="['min-w-[136px]', { 'is-selected': manageType === 'INDEPENDENT_CLUSTER' }]"
                 @click="handleChangeManageType('INDEPENDENT_CLUSTER')">
-                {{ $t('独立集群') }}
+                {{ $t('bcs.cluster.selfDeployed') }}
               </bk-button>
             </div>
             <div class="text-[12px]">
               <span
                 v-if="manageType === 'MANAGED_CLUSTER'">
-                {{ $t('Kubernetes 集群的 Master 和 Etcd 会由 TKE 团队集中管理和维护，集群管理员不需要关心集群 Master 的管理和维护。') }}
+                {{ $t('cluster.create.label.manageType.managed.desc') }}
               </span>
               <span
                 v-else-if="manageType === 'INDEPENDENT_CLUSTER'">
-                {{ $t('使用申请或已存在 CVM 资源作为 Master 节点所需资源，仅支持节点数量为 3 台与 5 台。') }}
+                {{ $t('cluster.create.label.manageType.independent.desc') }}
               </span>
             </div>
           </bk-form-item>
-          <bk-form-item key="level" :label="$t('集群规格')" v-if="manageType === 'MANAGED_CLUSTER'">
+          <bk-form-item key="level" :label="$t('cluster.create.label.manageType.managed.clusterLevel.text')" v-if="manageType === 'MANAGED_CLUSTER'">
             <div class="bk-button-group">
               <bk-button
                 :class="['min-w-[48px]', { 'is-selected': item.level === masterConfig.clusterBasicSettings.clusterLevel }]"
@@ -254,17 +254,17 @@
               </bk-button>
               <bk-checkbox disabled :value="true" class="ml-[24px]">
                 <span class="flex items-center">
-                  <span class="text-[12px]">{{ $t('自动升配') }}</span>
+                  <span class="text-[12px]">{{ $t('cluster.create.label.manageType.managed.automatic.text') }}</span>
                   <span
                     class="ml5"
-                    v-bk-tooltips="{ content: $t('已开启自动升配功能，当集群资源超过当前规格设定阈值时，会自动升级到下一个等级。') }">
+                    v-bk-tooltips="{ content: $t('cluster.create.label.manageType.managed.automatic.tips') }">
                     <i class="bcs-icon bcs-icon-question-circle"></i>
                   </span>
                 </span>
               </bk-checkbox>
             </div>
             <div class="text-[12px] leading-[20px] mt-[4px]">
-              <i18n path="当前集群规格最多管理 {nodes} 个节点，{pods} 个 Pod，{service} 个 ConfigMap，{crd} 个 CRD">
+              <i18n path="cluster.create.label.manageType.managed.clusterLevel.desc">
                 <span place="nodes" class="text-[#313238]">{{ curClusterScale.level.split('L')[1] }}</span>
                 <span place="pods" class="text-[#313238]">{{ curClusterScale.scale.maxNodePodNum }}</span>
                 <span place="service" class="text-[#313238]">{{ curClusterScale.scale.maxServiceNum }}</span>
@@ -279,7 +279,7 @@
                 :cloud-id="basicInfo.provider"
                 :disabled-ip-list="nodesConfig.nodes.map(item => ({
                   ip: item.bk_host_innerip,
-                  tips: $t('当前IP已经被添加为节点')
+                  tips: $t('cluster.create.validate.ipExitInNode')
                 }))"
                 :region-list="regionList"
                 :vpc="curVpc"
@@ -293,7 +293,7 @@
       <bcs-tab-panel :name="steps[3].name" :disabled="steps[3].disabled">
         <template #label>
           <StepTabLabel
-            :title="$t('添加节点')"
+            :title="$t('cluster.nodeList.create.text')"
             :step-num="4"
             :active="activeTabName === steps[3].name"
             :disabled="steps[3].disabled" />
@@ -301,12 +301,12 @@
         <bk-alert type="info">
           <template #title>
             <template v-if="manageType === 'MANAGED_CLUSTER'">
-              <div>{{ $t('创建托管集群必须添加至少一个节点，以运行必要的服务') }}</div>
+              <div>{{ $t('cluster.create.msg.managedClusterInfo') }}</div>
             </template>
             <template v-else-if="manageType === 'INDEPENDENT_CLUSTER'">
-              <div>{{ $t('独立集群可选择在创建集群后再按需添加节点') }}</div>
+              <div>{{ $t('cluster.create.msg.independentClusterInfo.text') }}</div>
               <bk-checkbox v-model="skipAddNodes" class="text-[12px] mt5">
-                <span class="text-[12px]">{{ $t('跳过，后续添加') }}</span>
+                <span class="text-[12px]">{{ $t('cluster.create.msg.independentClusterInfo.skip') }}</span>
               </bk-checkbox>
             </template>
           </template>
@@ -319,14 +319,14 @@
               :disabled="manageType === 'INDEPENDENT_CLUSTER' && skipAddNodes"
               :disabled-ip-list="masterConfig.master.map(item => ({
                 ip: item.bk_host_innerip,
-                tips: $t('当前IP已经被添加为Master')
+                tips: $t('cluster.create.validate.ipExitInMaster')
               }))"
               :region-list="regionList"
               :vpc="curVpc"
               v-model="nodesConfig.nodes"
               @change="validateNodes" />
           </bk-form-item>
-          <bk-form-item :label="$t('节点初始化模板')">
+          <bk-form-item :label="$t('cluster.create.label.initNodeTemplate')">
             <TemplateSelector
               v-model="nodesConfig.nodeTemplateID"
               :disabled="manageType === 'INDEPENDENT_CLUSTER' && skipAddNodes"
@@ -336,25 +336,25 @@
       </bcs-tab-panel>
     </bcs-tab>
     <div class="mt-[24px]">
-      <bk-button v-if="activeTabName !== steps[0].name" @click="preStep">{{ $t('上一步') }}</bk-button>
+      <bk-button v-if="activeTabName !== steps[0].name" @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
       <bk-button
         theme="primary"
         class="ml10"
         v-if="activeTabName === steps[steps.length - 1].name"
         @click="handleShowConfirmDialog">
-        {{ $t('创建集群') }}
+        {{ $t('cluster.create.button.createCluster') }}
       </bk-button>
-      <bk-button theme="primary" class="ml10" v-else @click="nextStep">{{ $t('下一步') }}</bk-button>
-      <bk-button class="ml10" @click="handleCancel">{{ $t('取消') }}</bk-button>
+      <bk-button theme="primary" class="ml10" v-else @click="nextStep">{{ $t('generic.button.next') }}</bk-button>
+      <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </div>
     <ConfirmDialog
       v-model="showConfirmDialog"
       :width="800"
-      :title="$t('确定创建集群')"
-      :sub-title="$t('请确认以下配置:')"
+      :title="$t('cluster.create.button.confirmCreateCluster.text')"
+      :sub-title="$t('generic.subTitle.confirmConfig')"
       :tips="confirmTips"
-      :ok-text="$t('确定创建')"
-      :cancel-text="$t('我再想想')"
+      :ok-text="$t('cluster.create.button.confirmCreate')"
+      :cancel-text="$t('cluster.create.button.cancel')"
       theme="primary"
       :confirm="handleCreateCluster" />
   </BcsContent>
@@ -408,21 +408,21 @@ export default defineComponent({
       clusterName: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       environment: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       'clusterBasicSettings.version': [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
@@ -442,27 +442,27 @@ export default defineComponent({
       region: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       networkType: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       vpcID: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       networkSettings: [
         {
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
           validator: () => Object.keys(networkConfig.value.networkSettings)
             .every(key => !!networkConfig.value.networkSettings[key]),
@@ -484,7 +484,7 @@ export default defineComponent({
     // 动态 i18n 问题，这里使用computed
     const masterConfigRules = computed(() => ({
       master: [{
-        message: $i18n.t('仅支持 3 台与 5 台'),
+        message: $i18n.t('cluster.create.validate.masterNum'),
         trigger: 'custom',
         validator: () => masterConfig.value.master.length && [3, 5].includes(masterConfig.value.master.length),
       }, {
@@ -504,7 +504,7 @@ export default defineComponent({
     // 动态 i18n 问题，这里使用computed
     const nodesConfigRules = computed(() => ({
       nodes: [{
-        message: $i18n.t('必填项'),
+        message: $i18n.t('generic.validate.required'),
         trigger: 'custom',
         validator: () => manageType.value === 'INDEPENDENT_CLUSTER' || !!nodesConfig.value.nodes.length,
       }, {
@@ -679,13 +679,13 @@ export default defineComponent({
     const confirmTips = computed(() => {
       const maxNodePodNum = Number(networkConfig.value?.networkSettings?.maxNodePodNum || 0);
       const clusterTips = [
-        $i18n.t('该集群创建后单个节点最大允许创建 {num} 个pod（TKE内部需占用3个IP），创建后不允许调整，请慎重确认', {
+        $i18n.t('cluster.create.button.confirmCreateCluster.doc.article1', {
           num: maxNodePodNum - 3,
         }),
-        $i18n.t('为了保证集群环境标准化，创建集群会格式化数据盘/dev/vdb，盘内数据将被清除，请确认该数据盘内没有放置业务数据'),
+        $i18n.t('cluster.create.button.confirmCreateCluster.doc.article2'),
       ];
       const nodesTips = [
-        $i18n.t('为了保证集群环境标准化，此操作会对 {ip} 等 {num} 个IP进行操作系统重装初始化和安装容器服务相关组件等操作', {
+        $i18n.t('cluster.create.button.confirmCreateCluster.doc.article3', {
           ip: nodesConfig.value.nodes[0]?.bk_host_innerip,
           num: nodesConfig.value.nodes.length,
         }),
@@ -742,7 +742,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('任务下发成功'),
+          message: $i18n.t('generic.msg.success.deliveryTask'),
         });
         $router.push({ name: 'clusterMain' });
       }

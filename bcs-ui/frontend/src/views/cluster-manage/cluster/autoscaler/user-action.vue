@@ -2,18 +2,18 @@
   <div v-bkloading="{ isLoading: bkSopsLoading }">
     <template v-if="!bkSopsTemplateID">
       <template v-if="script">
-        <p class="text-[12px] text-[#313238] mb-[10px]">{{$t('Bash脚本内容')}}</p>
+        <p class="text-[12px] text-[#313238] mb-[10px]">{{$t('cluster.ca.nodePool.detail.title.bashContent')}}</p>
         <pre class="px-[16px] py-[8px] bg-[#F4F4F7] rounded-sm text-[12px]">{{script}}</pre>
       </template>
       <bcs-exception type="empty" scene="part" v-else> </bcs-exception>
     </template>
     <template v-else>
-      <p class="text-[12px] text-[#313238] mb-[10px]">{{$t('标准运维模板名称')}}</p>
+      <p class="text-[12px] text-[#313238] mb-[10px]">{{$t('cluster.ca.nodePool.detail.title.sopsName')}}</p>
       <div class="text-[12px] mb-[12px]">{{bkSopsTemplateName}}</div>
-      <p class="text-[12px] text-[#313238] mb-[10px]">{{$t('标准运维模板参数')}}</p>
+      <p class="text-[12px] text-[#313238] mb-[10px]">{{$t('cluster.ca.nodePool.detail.title.sopsParams')}}</p>
       <bcs-table :data="sopsParamsData">
-        <bcs-table-column :label="$t('参数名')" prop="key"></bcs-table-column>
-        <bcs-table-column :label="$t('值')" prop="value">
+        <bcs-table-column :label="$t('cluster.ca.nodePool.detail.label.params')" prop="key"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.value')" prop="value">
           <template #default="{ row }">
             {{row.value || '--'}}
           </template>

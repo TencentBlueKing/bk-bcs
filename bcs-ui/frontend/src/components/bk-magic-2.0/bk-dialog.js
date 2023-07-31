@@ -40,11 +40,11 @@ export default {
     },
     confirm: {
       type: String,
-      default: window.i18n.t('确定'),
+      default: window.i18n.t('generic.button.confirm'),
     },
     cancel: {
       type: String,
-      default: window.i18n.t('取消'),
+      default: window.i18n.t('generic.button.cancel'),
     },
     maskClose: {
       type: Boolean,

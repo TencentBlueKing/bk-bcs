@@ -97,7 +97,7 @@ export default {
       if (!data.length) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择要删除的Service'),
+          message: this.$t('deploy.templateset.msg.selectDeleteService'),
         });
         return false;
       }
@@ -124,7 +124,7 @@ export default {
 
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('删除成功'),
+          message: this.$t('generic.msg.success.delete'),
         });
         this.initPageConf();
         this.getServiceList();

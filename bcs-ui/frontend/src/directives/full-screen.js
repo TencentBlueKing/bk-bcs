@@ -58,7 +58,7 @@ export default {
               el[tool].style.position = 'fixed';
             });
             el.classList.add('bcs-full-screen');
-            messageInfo(window.i18n.t('按Esc即可退出全屏模式'));
+            messageInfo(window.i18n.t('generic.button.fullScreen.msg'));
           } else {
             target.className = 'bcs-icon bcs-icon-full-screen';
             tools.forEach((tool) => {
@@ -72,7 +72,7 @@ export default {
         icon: 'bcs-icon bcs-icon-copy',
         handler: () => {
           copyText(bind.value?.content);
-          messageInfo(window.i18n.t('复制成功'));
+          messageInfo(window.i18n.t('generic.msg.success.copy'));
         },
       },
     };

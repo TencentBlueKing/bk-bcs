@@ -1,13 +1,13 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header title="Polaris" :desc="`(${$t('集群名称: {name}', { name: clusterName })})`"></Header>
+    <Header title="Polaris" :desc="`(${$t('plugin.tools.cluster', { name: clusterName })})`"></Header>
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button icon="plus" type="primary" @click.stop.prevent="createPolarisRules">
-              <span>{{$t('新建规则')}}</span>
+              <span>{{$t('plugin.tools.create')}}</span>
             </bk-button>
           </div>
           <div class="right search-wrapper">
@@ -15,7 +15,7 @@
               <bk-selector
                 style="width: 180px;"
                 :searchable="true"
-                :placeholder="$t('Polaris命名空间')"
+                :placeholder="$t('plugin.tools.polarisNS')"
                 :selected.sync="searchParams.polaris_ns"
                 :list="polarisNameSpaceList"
                 :setting-key="'name'"
@@ -25,13 +25,13 @@
               <bkbcs-input
                 style="width: 180px;"
                 class="ml-[5px]"
-                :placeholder="$t('Polaris服务名')"
+                :placeholder="$t('plugin.tools.polarisSvcName')"
                 :value.sync="searchParams.polaris_name">
               </bkbcs-input>
             </div>
             <div class="left">
-              <bk-button type="primary" :title="$t('查询')" icon="search" @click="handleSearch">
-                {{$t('查询')}}
+              <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleSearch">
+                {{$t('generic.button.query')}}
               </bk-button>
             </div>
           </div>
@@ -46,41 +46,41 @@
               :pagination="pageConf"
               @page-change="handlePageChange"
               @page-limit-change="handlePageSizeChange">
-              <bk-table-column :label="$t('规则名')" prop="name" :show-overflow-tooltip="true" min-width="120">
+              <bk-table-column :label="$t('plugin.tools._ruleName')" prop="name" :show-overflow-tooltip="true" min-width="120">
                 <template slot-scope="{ row }">
                   <p class="polaris-cell-item">{{ row.name }}</p>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('集群/命名空间')" min-width="220">
+              <bk-table-column :label="$t('plugin.tools.cluster_ns')" min-width="220">
                 <template slot-scope="{ row }">
                   <div>
-                    <p class="polaris-cell-item" style="padding-bottom: 5px;" :title="clusterName">{{ $t('所属集群') }}：{{ clusterName }}</p>
-                    <p class="polaris-cell-item" :title="row.namespace">{{ $t('命名空间') }}：{{ row.namespace }}</p>
+                    <p class="polaris-cell-item" style="padding-bottom: 5px;" :title="clusterName">{{ $t('generic.label.cluster1') }}：{{ clusterName }}</p>
+                    <p class="polaris-cell-item" :title="row.namespace">{{ $t('k8s.namespace') }}：{{ row.namespace }}</p>
                   </div>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('Polaris信息')" min-width="180" :show-overflow-tooltip="true">
+              <bk-table-column :label="$t('plugin.tools.polarisInfo')" min-width="180" :show-overflow-tooltip="true">
                 <template slot-scope="{ row }">
                   <div>
                     <p class="polaris-cell-item" style="padding-bottom: 5px;">
-                      <span class="label">{{ $t('名称') }}：</span>
+                      <span class="label">{{ $t('generic.label.name') }}：</span>
                       <span>{{ row.crd_data.polaris.name }}</span>
                     </p>
                     <p class="polaris-cell-item">
-                      <span class="label">{{ $t('命名空间') }}：</span>
+                      <span class="label">{{ $t('k8s.namespace') }}：</span>
                       <span>{{ row.crd_data.polaris.namespace }}</span>
                     </p>
                   </div>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('关联Service')" min-width="160" :show-overflow-tooltip="true">
+              <bk-table-column :label="$t('deploy.templateset.service')" min-width="160" :show-overflow-tooltip="true">
                 <template slot-scope="{ row }">
                   <div v-for="(service, index) in row.crd_data.services" :key="index" style="padding: 5px 0;">
                     <span style="display: inline-block; position: relative; bottom: 37px;">-</span>
                     <span style="display: inline-block;">
                       <p class="polaris-cell-item">name: {{ service.name }}</p>
                       <p class="polaris-cell-item">port: <span style="padding-left: 8px;">{{ service.port }}</span></p>
-                      <p class="polaris-cell-item">direct: {{ service.direct === 'true' ? `${$t('是')}` : `${$t('否')}` }}</p>
+                      <p class="polaris-cell-item">direct: {{ service.direct === 'true' ? `${$t('units.boolean.true')}` : `${$t('units.boolean.false')}` }}</p>
                     </span>
                   </div>
                 </template>
@@ -95,26 +95,26 @@
                   <div v-else>--</div>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('状态')" width="270">
+              <bk-table-column :label="$t('generic.label.status')" width="270">
                 <template slot-scope="{ row }">
                   <div v-if="row.status && row.status.syncStatus" style="padding: 5px 0;">
-                    <p class="polaris-cell-item" style="padding-bottom: 5px;" :title="row.status.syncStatus.state">{{ $t('同步状态') }}：{{ row.status.syncStatus.state || '--' }}</p>
-                    <p class="polaris-cell-item" style="padding-bottom: 5px;" :title="row.status.syncStatus.lastSyncLatencyomitempty">{{ $t('同步耗时') }}：{{ row.status.syncStatus.lastSyncLatencyomitempty || '--' }}</p>
-                    <p class="polaris-cell-item" :title="row.status.syncStatus.lastSyncTime">{{ $t('最后同步时间') }}：{{ row.status.syncStatus.lastSyncTime || '--' }}</p>
+                    <p class="polaris-cell-item" style="padding-bottom: 5px;" :title="row.status.syncStatus.state">{{ $t('plugin.tools.syncStatus') }}：{{ row.status.syncStatus.state || '--' }}</p>
+                    <p class="polaris-cell-item" style="padding-bottom: 5px;" :title="row.status.syncStatus.lastSyncLatencyomitempty">{{ $t('plugin.tools.syncTime') }}：{{ row.status.syncStatus.lastSyncLatencyomitempty || '--' }}</p>
+                    <p class="polaris-cell-item" :title="row.status.syncStatus.lastSyncTime">{{ $t('plugin.tools.lastSyncTime') }}：{{ row.status.syncStatus.lastSyncTime || '--' }}</p>
                   </div>
                   <div v-else>--</div>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('操作记录')" min-width="240">
+              <bk-table-column :label="$t('projects.operateAudit.record')" min-width="240">
                 <template slot-scope="{ row }">
-                  <p class="polaris-cell-item" style="padding-bottom: 5px;">{{ $t('更新人') }}：<span style="padding-left: 14px;">{{ row.operator || '--' }}</span></p>
-                  <p class="polaris-cell-item" :title="row.updated">{{ $t('更新时间') }}：{{row.updated || '--'}}</p>
+                  <p class="polaris-cell-item" style="padding-bottom: 5px;">{{ $t('generic.label.updator') }}：<span style="padding-left: 14px;">{{ row.operator || '--' }}</span></p>
+                  <p class="polaris-cell-item" :title="row.updated">{{ $t('cluster.labels.updatedAt') }}：{{row.updated || '--'}}</p>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('操作')" min-width="140">
+              <bk-table-column :label="$t('generic.label.action')" min-width="140">
                 <template slot-scope="{ row }">
-                  <a href="javascript:void(0);" class="bk-text-button" @click="editCrdInstance(row)">{{$t('更新')}}</a>
-                  <a href="javascript:void(0);" class="bk-text-button" @click="removeCrdInstance(row)">{{$t('删除')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click="editCrdInstance(row)">{{$t('generic.button.update')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click="removeCrdInstance(row)">{{$t('generic.button.delete')}}</a>
                 </template>
               </bk-table-column>
             </bk-table>
@@ -134,10 +134,10 @@
           <div class="bk-form-item">
             <div class="bk-form-content">
               <div class="bk-form-inline-item is-required" style="width: 320px;">
-                <label class="bk-label">{{$t('规则名')}}：</label>
+                <label class="bk-label">{{$t('plugin.tools._ruleName')}}：</label>
                 <div class="bk-form-content">
                   <bkbcs-input
-                    :placeholder="$t('请输入')"
+                    :placeholder="$t('generic.placeholder.input')"
                     :disabled="isReadonly"
                     :value.sync="curCrdInstance.name">
                   </bkbcs-input>
@@ -149,11 +149,11 @@
           <!-- <div class="bk-form-item">
             <div class="bk-form-content">
               <div class="bk-form-inline-item" style="width: 320px;">
-                <label class="bk-label">{{$t('描述')}}：</label>
+                <label class="bk-label">{{$t('cluster.create.label.desc')}}：</label>
                 <div class="bk-form-content">
                   <bk-input
                     type="textarea"
-                    :placeholder="$t('请输入')"
+                    :placeholder="$t('generic.placeholder.input')"
                     :disabled="isReadonly"
                     v-model="curCrdInstance.description">
                   </bk-input>
@@ -165,7 +165,7 @@
           <div class="bk-form-item">
             <div class="bk-form-content">
               <div class="bk-form-inline-item is-required" style="width: 320px;">
-                <label class="bk-label">{{$t('所属集群')}}：</label>
+                <label class="bk-label">{{$t('generic.label.cluster1')}}：</label>
                 <div class="bk-form-content">
                   <bkbcs-input
                     :value.sync="clusterName"
@@ -175,11 +175,11 @@
               </div>
 
               <div class="bk-form-inline-item is-required" style="width: 320px; margin-left: 35px;">
-                <label class="bk-label">{{$t('命名空间')}}：</label>
+                <label class="bk-label">{{$t('k8s.namespace')}}：</label>
                 <div class="bk-form-content">
                   <bk-selector
                     :searchable="true"
-                    :placeholder="$t('请选择')"
+                    :placeholder="$t('generic.placeholder.select')"
                     :disabled="isReadonly"
                     :selected.sync="curCrdInstance.namespace"
                     :list="nameSpaceList">
@@ -190,27 +190,27 @@
           </div>
 
           <div class="bk-form-item">
-            <label class="bk-label">{{$t('Polaris信息')}}：</label>
+            <label class="bk-label">{{$t('plugin.tools.polarisInfo')}}：</label>
           </div>
           <div class="bk-form-item">
             <div class="bk-form-content">
               <div class="polaris-wrapper polaris-info">
                 <div class="bk-form-inline-item is-required" style="width: 299px;">
-                  <label class="bk-label">{{$t('名称')}}：</label>
+                  <label class="bk-label">{{$t('generic.label.name')}}：</label>
                   <div class="bk-form-content">
                     <bkbcs-input
                       :value.sync="curCrdInstance.polaris.name"
                       :disabled="isReadonly"
-                      :placeholder="$t('允许数字、英文字母、.、-、_, 限制128个字符')">
+                      :placeholder="$t('plugin.tools.allowNumLettersSymbols')">
                     </bkbcs-input>
                   </div>
                 </div>
                 <div class="bk-form-inline-item is-required" style="width: 320px; margin-left: 35px;">
-                  <label class="bk-label">{{$t('命名空间')}}：</label>
+                  <label class="bk-label">{{$t('k8s.namespace')}}：</label>
                   <div class="bk-form-content">
                     <bk-selector
                       :searchable="true"
-                      :placeholder="$t('请选择')"
+                      :placeholder="$t('generic.placeholder.select')"
                       :selected.sync="curCrdInstance.polaris.namespace"
                       :disabled="isReadonly"
                       :list="polarisNameSpaceList">
@@ -219,7 +219,7 @@
                 </div>
                 <div class="bk-form-inline-item" style="width: 299px; margin-top: 30px; margin-right: 35px;">
                   <bk-checkbox v-model="isTokenExist" :disabled="isReadonly" name="cluster-classify-checkbox">
-                    {{$t('Polaris服务是否已存在')}}
+                    {{$t('plugin.tools.polaris')}}
                   </bk-checkbox>
                 </div>
                 <div v-if="isTokenExist" class="bk-form-inline-item" style="width: 350px; margin-top: 10px; height: 64px;">
@@ -227,11 +227,11 @@
                   <div class="bk-form-content token">
                     <bkbcs-input
                       class="basic-input"
-                      :placeholder="$t('请输入')"
+                      :placeholder="$t('generic.placeholder.input')"
                       :disabled="isReadonly"
                       :value.sync="curCrdInstance.polaris.token">
                     </bkbcs-input>
-                    <i class="bcs-icon bcs-icon-question-circle token-icon ml10" v-bk-tooltips.top="$t('如服务已存在则必填，若不存在平台会自动申请服务并创建')" />
+                    <i class="bcs-icon bcs-icon-question-circle token-icon ml10" v-bk-tooltips.top="$t('plugin.tools.createSvc')" />
                   </div>
                 </div>
               </div>
@@ -239,26 +239,26 @@
           </div>
 
           <div class="bk-form-item">
-            <label class="bk-label">{{$t('关联Service')}}：</label>
+            <label class="bk-label">{{$t('deploy.templateset.service')}}：</label>
           </div>
           <div class="bk-form-item">
             <div class="bk-form-content">
               <div class="polaris-wrapper">
                 <section class="polaris-inner-wrapper mb10" v-for="(service, index) in curCrdInstance.services" :key="index">
                   <div class="bk-form-inline-item is-required" style="width: 284px;">
-                    <label class="bk-label">{{$t('服务名')}}：</label>
+                    <label class="bk-label">{{$t('plugin.tools._serviceName')}}：</label>
                     <div class="bk-form-content">
                       <bkbcs-input
-                        :placeholder="$t('请输入')"
+                        :placeholder="$t('generic.placeholder.input')"
                         :value.sync="service.name">
                       </bkbcs-input>
                     </div>
                   </div>
                   <div class="bk-form-inline-item is-required" style="width: 319px; margin-left: 35px;">
-                    <label class="bk-label">{{$t('端口')}}：</label>
+                    <label class="bk-label">{{$t('deploy.helm.port')}}：</label>
                     <div class="bk-form-content">
                       <bkbcs-input
-                        :placeholder="$t('请输入')"
+                        :placeholder="$t('generic.placeholder.input')"
                         :value.sync="service.port">
                       </bkbcs-input>
                     </div>
@@ -266,16 +266,16 @@
                   <div class="bk-form-inline-item is-required" style="width: 284px; margin-top: 30px;">
                     <div class="bk-form-content">
                       <bk-checkbox v-model="service.direct" name="cluster-classify-checkbox">
-                        {{$t('是否直连Pod')}}
+                        {{$t('plugin.tools.pod')}}
                       </bk-checkbox>
-                      <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.top="$t('NodePort模式不勾选')" />
+                      <i class="bcs-icon bcs-icon-question-circle" v-bk-tooltips.top="$t('plugin.tools.nodePort')" />
                     </div>
                   </div>
                   <div class="bk-form-inline-item is-required" style="width: 319px; margin-top: 10px; margin-left: 35px;">
-                    <label class="bk-label">{{$t('权重')}}：</label>
+                    <label class="bk-label">{{$t('plugin.tools.weight')}}：</label>
                     <div class="bk-form-content">
                       <bkbcs-input
-                        :placeholder="$t('请输入')"
+                        :placeholder="$t('generic.placeholder.input')"
                         :value.sync="service.weight">
                       </bkbcs-input>
                     </div>
@@ -286,15 +286,15 @@
 
                 <bk-button class="polaris-block-btn mt10" @click="addServiceMap">
                   <i class="bcs-icon bcs-icon-plus"></i>
-                  {{$t('点击增加')}}
+                  {{$t('plugin.tools.clickToAdd')}}
                 </bk-button>
               </div>
             </div>
           </div>
 
           <div class="bk-form-item mt25">
-            <bk-button type="primary" :loading="isDataSaveing" @click.stop.prevent="saveCrdInstance">{{curCrdInstance.crd_id ? $t('更新') : $t('创建')}}</bk-button>
-            <bk-button @click.stop.prevent="hideCrdInstanceSlider" :disabled="isDataSaveing">{{$t('取消')}}</bk-button>
+            <bk-button type="primary" :loading="isDataSaveing" @click.stop.prevent="saveCrdInstance">{{curCrdInstance.crd_id ? $t('generic.button.update') : $t('generic.button.create')}}</bk-button>
+            <bk-button @click.stop.prevent="hideCrdInstanceSlider" :disabled="isDataSaveing">{{$t('generic.button.cancel')}}</bk-button>
           </div>
         </div>
       </div>
@@ -366,7 +366,7 @@ export default defineComponent({
       ],
       curPageData: [],
       crdInstanceSlider: {
-        title: $i18n.t('新建'),
+        title: $i18n.t('plugin.tools.add'),
         isShow: false,
       },
       curCrdInstance: {
@@ -393,7 +393,7 @@ export default defineComponent({
       appTypes: [
         {
           id: 'polaris_name',
-          name: $i18n.t('Polaris服务名'),
+          name: $i18n.t('plugin.tools.polarisSvcName'),
         },
       ],
     });
@@ -437,7 +437,7 @@ export default defineComponent({
           weight: '',
         }],
       };
-      state.crdInstanceSlider.title = $i18n.t('新建');
+      state.crdInstanceSlider.title = $i18n.t('plugin.tools.add');
       state.isTokenExist = false;
       state.isReadonly = false;
       state.crdInstanceSlider.isShow = true;
@@ -617,7 +617,7 @@ export default defineComponent({
 
       $bkMessage({
         theme: 'success',
-        message: $i18n.t('数据保存成功'),
+        message: $i18n.t('generic.msg.success.save1'),
       });
       getCrdInstanceList();
       hideCrdInstanceSlider();
@@ -657,7 +657,7 @@ export default defineComponent({
       });
       state.curCrdInstance = res.data.crd_data;
       state.curCrdInstance.crd_id = crdId;
-      state.crdInstanceSlider.title = $i18n.t('编辑');
+      state.crdInstanceSlider.title = $i18n.t('generic.button.edit');
       reset();
     };
 
@@ -671,9 +671,9 @@ export default defineComponent({
       const crdId = crdInstance.id;
 
       $bkInfo({
-        title: $i18n.t('确认删除'),
+        title: $i18n.t('generic.title.confirmDelete'),
         clsName: 'biz-remove-dialog',
-        content: `${$i18n.t('确定要删除')}【${crdInstance.name}】？`,
+        content: `${$i18n.t('plugin.tools.confirmDelete')}【${crdInstance.name}】？`,
         async confirmFn() {
           state.isPageLoading = true;
           const res = await $store.dispatch('crdcontroller/deleteCrdInstance', { projectId, clusterId, crdKind, crdId }).catch(() => false);
@@ -683,7 +683,7 @@ export default defineComponent({
 
           $bkMessage({
             theme: 'success',
-            message: $i18n.t('删除成功'),
+            message: $i18n.t('generic.msg.success.delete'),
           });
           getCrdInstanceList();
         },
@@ -698,7 +698,7 @@ export default defineComponent({
       if (!state.curCrdInstance.name) {
         $bkMessage({
           theme: 'error',
-          message: $i18n.t('请输入规则名'),
+          message: $i18n.t('plugin.tools.rule'),
           delay: 5000,
         });
         return false;
@@ -707,7 +707,7 @@ export default defineComponent({
       if (state.curCrdInstance.name.length > 63) {
         $bkMessage({
           theme: 'error',
-          message: $i18n.t('规则名必须小于等于63字符'),
+          message: $i18n.t('plugin.tools.ruleRegex'),
           delay: 5000,
         });
         return false;
@@ -716,7 +716,7 @@ export default defineComponent({
       if (!/^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$/.test(state.curCrdInstance.name)) {
         $bkMessage({
           theme: 'error',
-          message: $i18n.t('规则名以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字'),
+          message: $i18n.t('plugin.tools.ruleCharacterCriteria'),
           delay: 5000,
         });
         return false;
@@ -725,7 +725,7 @@ export default defineComponent({
       if (state.curCrdInstance.namespace === '') {
         $bkMessage({
           theme: 'error',
-          message: $i18n.t('请选择命名空间'),
+          message: $i18n.t('dashboard.ns.validate.emptyNs'),
         });
         return false;
       }
@@ -733,7 +733,7 @@ export default defineComponent({
       if (!state.curCrdInstance.polaris.name) {
         $bkMessage({
           theme: 'error',
-          message: $i18n.t('请输入Polaris信息名'),
+          message: $i18n.t('plugin.tools.enterPolarisInfoName'),
           delay: 5000,
         });
         return false;
@@ -742,7 +742,7 @@ export default defineComponent({
       if (state.curCrdInstance.polaris.name && !/^[\w-.:]{1,128}$/.test(state.curCrdInstance.polaris.name)) {
         $bkMessage({
           theme: 'error',
-          message: $i18n.t('Polaris信息名只允许数字、英文字母、.、-、_, 限制128个字符'),
+          message: $i18n.t('plugin.tools.polarisInfoNameCriteria'),
           delay: 5000,
         });
         return false;
@@ -751,7 +751,7 @@ export default defineComponent({
       if (!state.curCrdInstance.polaris.namespace) {
         $bkMessage({
           theme: 'error',
-          message: $i18n.t('请选择Polaris命名空间'),
+          message: $i18n.t('plugin.tools.selectPolarisNamespace'),
           delay: 5000,
         });
         return false;
@@ -763,7 +763,7 @@ export default defineComponent({
           if (!i.name) {
             $bkMessage({
               theme: 'error',
-              message: $i18n.t('请输入关联Sercice服务名'),
+              message: $i18n.t('plugin.tools.inputSvcName'),
               delay: 5000,
             });
             status = false;
@@ -771,7 +771,7 @@ export default defineComponent({
           if (!i.port) {
             $bkMessage({
               theme: 'error',
-              message: $i18n.t('请输入关联Sercice的端口(整数类型)'),
+              message: $i18n.t('plugin.tools.portInt'),
               delay: 5000,
             });
             status = false;
@@ -779,7 +779,7 @@ export default defineComponent({
           if (i.port && i.port < 0) {
             $bkMessage({
               theme: 'error',
-              message: $i18n.t('关联Sercice的端口不能为负数'),
+              message: $i18n.t('plugin.tools.portNoNegative'),
               delay: 5000,
             });
             status = false;
@@ -787,7 +787,7 @@ export default defineComponent({
           if (!i.weight) {
             $bkMessage({
               theme: 'error',
-              message: $i18n.t('请输入关联Sercice的权重(整数类型)'),
+              message: $i18n.t('plugin.tools.weightInt'),
               delay: 5000,
             });
             status = false;
@@ -795,7 +795,7 @@ export default defineComponent({
           if (i.port && i.weight < 0) {
             $bkMessage({
               theme: 'error',
-              message: $i18n.t('关联Sercice的权重不能为负数'),
+              message: $i18n.t('plugin.tools.weightNoNegative'),
               delay: 5000,
             });
             status = false;

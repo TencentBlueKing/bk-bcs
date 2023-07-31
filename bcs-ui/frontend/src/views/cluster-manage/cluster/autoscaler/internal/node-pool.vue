@@ -2,7 +2,7 @@
   <BcsContent>
     <template #header>
       <HeaderNav :list="navList">
-        <bcs-steps style="max-width: 360px" :steps="steps" :cur-step="curStep"></bcs-steps>
+        <bcs-steps style="max-width: 380px" :steps="steps" :cur-step="curStep"></bcs-steps>
       </HeaderNav>
     </template>
     <div v-bkloading="{ isLoading }" class="node-pool">
@@ -72,7 +72,7 @@ export default defineComponent({
           },
         },
         {
-          title: $i18n.t('新建节点规格'),
+          title: $i18n.t('cluster.ca.button.createNodePool'),
           link: null,
         },
       ];
@@ -80,11 +80,11 @@ export default defineComponent({
     });
     const steps = ref([
       {
-        title: $i18n.t('节点配置'),
+        title: $i18n.t('cluster.ca.nodePool.title.nodeConfig'),
         icon: 1,
       },
       {
-        title: $i18n.t('初始化配置'),
+        title: $i18n.t('cluster.ca.nodePool.title.initConfig'),
         icon: 2,
       },
     ]);
