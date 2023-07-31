@@ -31,6 +31,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -41,7 +42,7 @@ import (
 // End-of-Transmission character ctrl-d
 const EndOfTransmission = "\u0004"
 
-var cmdParser = ansi.NewCmdParse()
+var cmdParser = audit.NewCmdParse()
 
 type wsMessage struct {
 	msgType int
@@ -147,18 +148,8 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 
 	_, ss, _ := ansi.Decode(inputMsg)
 	cmdParser.Cmd = ss
-	//解析键盘输入事件
-	go ansi.ReceivedCmdOutChan(cmdParser)
-	//日志记录
-	go recordCmd(cmdParser, r)
+	cmdParser.InputSlice = append(cmdParser.InputSlice, ss)
 	return inputMsg, nil
-}
-
-func recordCmd(c *ansi.CmdParse, r *RemoteStreamConn) {
-	for cmd := range c.RecordChan {
-		logger.Infof("UserName=%s  SessionID=%s  Command=%s",
-			r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, cmd)
-	}
 }
 
 // Read : executor 回调读取 web 端的输入, 主动断开链接逻辑
@@ -194,25 +185,20 @@ func (r *RemoteStreamConn) Write(p []byte) (int, error) {
 	if e != nil {
 		logger.Error("decode output error:", e)
 	}
+	//TODO:历史命令问题,可能解析问题导致
 	if strings.ReplaceAll(string(ss.Code), "\b", "") == "" {
 		rex := regexp.MustCompile("\\x1b\\[\\d+P")
 		l := rex.Split(string(out), -1)
 		ss.Code = ansi.Name(l[len(l)-1])
 	}
+	//时序性问题不可避免
 	cmdParser.CmdResult[cmdParser.Cmd] = ss
-	//排除无效输入信号
-	resultMap := make(map[*ansi.S][]*ansi.S)
-	if ss.Code != "\a" {
-		res := resultMap[cmdParser.Cmd]
-		res = append(res, ss)
-		resultMap[cmdParser.Cmd] = res
-	}
-	cmdParser.InOutMap = append(cmdParser.InOutMap, resultMap)
-	delete(resultMap, (*ansi.S)(nil))
-	for k, _ := range resultMap {
-		if k.Code == InputLineBreaker {
-			cmdParser.CmdOutput <- cmdParser.InOutMap
-			cmdParser.InOutMap = make([]map[*ansi.S][]*ansi.S, 0)
+
+	if cmdParser.Cmd != nil && cmdParser.Cmd.Code == "\r" {
+		cmd := audit.ResolveInOut(cmdParser)
+		if cmd != "" {
+			logger.Infof("UserName=%s  SessionID=%s  Command=%s",
+				r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, cmd)
 		}
 	}
 

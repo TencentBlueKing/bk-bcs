@@ -160,5 +160,3 @@ replace (
 	github.com/go-micro/plugins/v4/server/http => github.com/ifooth/go-micro-plugins/v4/server/http v0.0.0-20230207124152-a253b0517244
 	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
 )
-
-replace github.com/pborman/ansi v1.0.0 => github.com/jonesyang12/ansi v0.0.0-20230720115138-79e31feea02d
