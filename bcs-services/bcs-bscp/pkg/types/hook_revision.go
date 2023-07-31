@@ -69,11 +69,13 @@ type ListHookRevisionsWithReferDetail struct {
 
 // ListHookRevisionReferencesDetail defines the response details.
 type ListHookRevisionReferencesDetail struct {
-	AppID       uint32 `gorm:"column:app_id" json:"app_id"`
-	AppName     string `gorm:"column:app_name" json:"app_name"`
-	ReleaseID   uint32 `gorm:"column:release_id" json:"release_id"`
-	ReleaseName string `gorm:"column:release_name" json:"release_name"`
-	HookType    string `gorm:"column:hook_type" json:"hook_type"`
+	RevisionID   uint32 `gorm:"column:revision_id" json:"revision_id"`
+	RevisionName string `gorm:"column:revision_name" json:"revision_name"`
+	AppID        uint32 `gorm:"column:app_id" json:"app_id"`
+	AppName      string `gorm:"column:app_name" json:"app_name"`
+	ReleaseID    uint32 `gorm:"column:release_id" json:"release_id"`
+	ReleaseName  string `gorm:"column:release_name" json:"release_name"`
+	HookType     string `gorm:"column:hook_type" json:"hook_type"`
 }
 
 // GetByPubStateOption defines options to get hr by State

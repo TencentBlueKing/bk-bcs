@@ -123,12 +123,13 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 		return nil, err
 	}
 
-	details := make([]*pbcs.ListHooksResp_ListHooksData, 0, len(rp.Details))
+	details := make([]*pbcs.ListHooksResp_Detail, 0, len(rp.Details))
 	for _, detail := range rp.Details {
-		details = append(details, &pbcs.ListHooksResp_ListHooksData{
-			Hook:          detail.Hook,
-			BoundNum:      detail.BoundNum,
-			ConfirmDelete: detail.ConfirmDelete,
+		details = append(details, &pbcs.ListHooksResp_Detail{
+			Hook:                detail.Hook,
+			BoundNum:            detail.BoundNum,
+			ConfirmDelete:       detail.ConfirmDelete,
+			PublishedRevisionId: detail.PublishedRevisionId,
 		})
 	}
 
