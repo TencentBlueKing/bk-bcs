@@ -38,16 +38,17 @@ var ActionPermissions = map[string]string{
 	"HelmManager.GetChartRelease":    project.CanViewProjectOperation,
 
 	// Release
-	"HelmManager.ListReleaseV1":      project.CanViewProjectOperation,
-	"HelmManager.GetReleaseDetailV1": namespace.CanViewNamespaceScopedResourceOperation,
-	"HelmManager.InstallReleaseV1":   namespace.CanCreateNamespaceScopedResourceOperation,
-	"HelmManager.UninstallReleaseV1": namespace.CanDeleteNamespaceScopedResourceOperation,
-	"HelmManager.UpgradeReleaseV1":   namespace.CanUpdateNamespaceScopedResourceOperation,
-	"HelmManager.RollbackReleaseV1":  namespace.CanUpdateNamespaceScopedResourceOperation,
-	"HelmManager.ReleasePreview":     project.CanViewProjectOperation,
-	"HelmManager.GetReleaseHistory":  namespace.CanViewNamespaceScopedResourceOperation,
-	"HelmManager.GetReleaseStatus":   project.CanViewProjectOperation,
-	"HelmManager.GetReleasePods":     project.CanViewProjectOperation,
+	"HelmManager.ListReleaseV1":        project.CanViewProjectOperation,
+	"HelmManager.GetReleaseDetailV1":   namespace.CanViewNamespaceScopedResourceOperation,
+	"HelmManager.InstallReleaseV1":     namespace.CanCreateNamespaceScopedResourceOperation,
+	"HelmManager.UninstallReleaseV1":   namespace.CanDeleteNamespaceScopedResourceOperation,
+	"HelmManager.UpgradeReleaseV1":     namespace.CanUpdateNamespaceScopedResourceOperation,
+	"HelmManager.RollbackReleaseV1":    namespace.CanUpdateNamespaceScopedResourceOperation,
+	"HelmManager.ReleasePreview":       project.CanViewProjectOperation,
+	"HelmManager.GetReleaseHistory":    namespace.CanViewNamespaceScopedResourceOperation,
+	"HelmManager.GetReleaseStatus":     project.CanViewProjectOperation,
+	"HelmManager.GetReleasePods":       project.CanViewProjectOperation,
+	"HelmManager.ImportClusterRelease": project.CanViewProjectOperation,
 
 	// Addons
 	"ClusterAddons.ListAddons":      project.CanViewProjectOperation,

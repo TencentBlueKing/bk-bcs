@@ -628,6 +628,68 @@
         ]
       }
     },
+    "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/import": {
+      "post": {
+        "summary": "导出 cluster releases",
+        "description": "导出 cluster releases",
+        "operationId": "HelmManager_ImportClusterRelease",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerImportClusterReleaseResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "查询目标namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "查询目标name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerImportClusterReleaseReq"
+            }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
     "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods": {
       "get": {
         "summary": "获取 release pods",
@@ -2575,6 +2637,77 @@
       },
       "description": "查询指定版本的chart包详细信息的返回",
       "title": "GetVersionDetailV1Resp"
+    },
+    "helmmanagerImportClusterReleaseReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目代码",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "查询目标namespace",
+          "title": "namespace"
+        },
+        "name": {
+          "type": "string",
+          "description": "查询目标name",
+          "title": "name"
+        },
+        "repoName": {
+          "type": "string",
+          "description": "仓库名称",
+          "title": "repoName"
+        },
+        "chartName": {
+          "type": "string",
+          "description": "chart名称",
+          "title": "chartName"
+        }
+      },
+      "description": "导出 cluster releases 请求参数",
+      "title": "ImportClusterReleaseReq"
+    },
+    "helmmanagerImportClusterReleaseResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "requestID",
+          "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "导出 cluster releases 的返回",
+      "title": "ImportClusterReleaseResp"
     },
     "helmmanagerInstallAddonsReq": {
       "type": "object",

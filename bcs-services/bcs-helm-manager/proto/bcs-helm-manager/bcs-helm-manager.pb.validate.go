@@ -5557,6 +5557,313 @@ var _ interface {
 	ErrorName() string
 } = GetChartReleaseRespValidationError{}
 
+// Validate checks the field values on ImportClusterReleaseReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ImportClusterReleaseReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ImportClusterReleaseReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ImportClusterReleaseReqMultiError, or nil if none found.
+func (m *ImportClusterReleaseReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ImportClusterReleaseReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := ImportClusterReleaseReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := ImportClusterReleaseReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
+		err := ImportClusterReleaseReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetName()) < 1 {
+		err := ImportClusterReleaseReqValidationError{
+			field:  "Name",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetRepoName()); l < 1 || l > 64 {
+		err := ImportClusterReleaseReqValidationError{
+			field:  "RepoName",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetChartName()) < 1 {
+		err := ImportClusterReleaseReqValidationError{
+			field:  "ChartName",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ImportClusterReleaseReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ImportClusterReleaseReqMultiError is an error wrapping multiple validation
+// errors returned by ImportClusterReleaseReq.ValidateAll() if the designated
+// constraints aren't met.
+type ImportClusterReleaseReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ImportClusterReleaseReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ImportClusterReleaseReqMultiError) AllErrors() []error { return m }
+
+// ImportClusterReleaseReqValidationError is the validation error returned by
+// ImportClusterReleaseReq.Validate if the designated constraints aren't met.
+type ImportClusterReleaseReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImportClusterReleaseReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImportClusterReleaseReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImportClusterReleaseReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImportClusterReleaseReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImportClusterReleaseReqValidationError) ErrorName() string {
+	return "ImportClusterReleaseReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ImportClusterReleaseReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImportClusterReleaseReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImportClusterReleaseReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImportClusterReleaseReqValidationError{}
+
+// Validate checks the field values on ImportClusterReleaseResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ImportClusterReleaseResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ImportClusterReleaseResp with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ImportClusterReleaseRespMultiError, or nil if none found.
+func (m *ImportClusterReleaseResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ImportClusterReleaseResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ImportClusterReleaseRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ImportClusterReleaseRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ImportClusterReleaseRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ImportClusterReleaseRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// ImportClusterReleaseRespMultiError is an error wrapping multiple validation
+// errors returned by ImportClusterReleaseResp.ValidateAll() if the designated
+// constraints aren't met.
+type ImportClusterReleaseRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ImportClusterReleaseRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ImportClusterReleaseRespMultiError) AllErrors() []error { return m }
+
+// ImportClusterReleaseRespValidationError is the validation error returned by
+// ImportClusterReleaseResp.Validate if the designated constraints aren't met.
+type ImportClusterReleaseRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImportClusterReleaseRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImportClusterReleaseRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImportClusterReleaseRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImportClusterReleaseRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImportClusterReleaseRespValidationError) ErrorName() string {
+	return "ImportClusterReleaseRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ImportClusterReleaseRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImportClusterReleaseResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImportClusterReleaseRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImportClusterReleaseRespValidationError{}
+
 // Validate checks the field values on ReleaseListData with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
