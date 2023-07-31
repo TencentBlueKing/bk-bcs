@@ -34,6 +34,7 @@ var ActionPermissions = map[string]string{
 	"HelmManager.DeleteChart":        project.CanEditProjectOperation,
 	"HelmManager.DeleteChartVersion": project.CanEditProjectOperation,
 	"HelmManager.DownloadChart":      project.CanViewProjectOperation,
+	"HelmManager.UploadChart":        project.CanViewProjectOperation,
 	"HelmManager.GetChartRelease":    project.CanViewProjectOperation,
 
 	// Release

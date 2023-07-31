@@ -51,6 +51,8 @@ const (
 	ErrHelmManagerAuthFailed
 	// ErrHelmManagerRequestComponentFailed xxx
 	ErrHelmManagerRequestComponentFailed
+	// ErrHelmManagerUploadChartFailed xxx
+	ErrHelmManagerUploadChartFailed
 	// NoPermissionErr auth faile
 	NoPermissionErr = 40403
 )

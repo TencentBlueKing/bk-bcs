@@ -162,6 +162,16 @@ service HelmManager {
             summary: "下载chart"
         };
     }
+    rpc UploadChart(UploadChartReq) returns (UploadChartResp) {
+        option (google.api.http) = {
+            post: "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/version/{version}/upload"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "上传自定义版本的chart"
+            summary: "上传chart"
+        };
+    }
     rpc GetChartRelease(GetChartReleaseReq) returns (GetChartReleaseResp) {
         option (google.api.http) = {
             post: "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/releases"
@@ -1379,6 +1389,66 @@ message DownloadChartReq {
         title: "version",
         description: "chart版本"
     }, (validate.rules).string = {min_len : 1}];
+}
+
+message UploadChartReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "UploadChartReq"
+            description : "上传 Chart 自定义版本请求参数"
+        }
+    };
+
+    optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectCode",
+        description: "项目代码"
+    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    optional string repoName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "repoName",
+        description: "仓库名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional bytes file = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "file",
+        description: "file 上传文件"
+    }];
+    optional string version = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "version",
+        description: "chart版本"
+    }];
+    optional bool force = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "force",
+        description: "是否强制上传"
+    }];
+}
+
+message UploadChartResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "UploadChartResp"
+            description : "上传 Chart 的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    optional string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "requestID",
+        description: "requestID"
+    }];
+    optional WebAnnotations web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message GetChartReleaseReq {
