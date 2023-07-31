@@ -71,7 +71,7 @@ function LoginTicketAuthentication:injected_user_info(credential, jwt_str, conf,
 end
 
 function LoginTicketAuthentication:get_jwt(credential, conf)
-    return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:session_id:", true, bklogin.get_username_for_ticket)
+    return jwt:get_jwt_from_redis(credential, conf, nil,  "bcs_auth:session_id:", true, bklogin.get_username_for_ticket)
 end
 ------------ LoginTicketAuthentication end ------------
 
@@ -288,7 +288,7 @@ function APIGWAuthentication:get_jwt(credential, conf)
     if credential.token_type == TOKEN_TYPE_BCS then
         return TokenAuthentication:get_jwt(credential, conf)
     end
-    return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:apigw:", true, APIGWAuthentication.get_userinfo)
+    return jwt:get_jwt_from_redis(credential, conf, nil, "bcs_auth:apigw:", true, APIGWAuthentication.get_userinfo)
 end
 ------------ APIGWAuthentication end ------------
 
