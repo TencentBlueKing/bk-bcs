@@ -80,7 +80,7 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	}
 	businessName := ""
 	if projectInfo.BusinessID != "" && projectInfo.BusinessID != "0" {
-		business, err := cmdb.GetBusinessByID(projectInfo.BusinessID)
+		business, err := cmdb.GetBusinessByID(projectInfo.BusinessID, true)
 		if err != nil {
 			return errorx.NewRequestCMDBErr(err.Error())
 		}
