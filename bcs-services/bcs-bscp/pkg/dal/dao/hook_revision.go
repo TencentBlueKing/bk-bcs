@@ -45,7 +45,7 @@ type HookRevision interface {
 	// GetByPubState hook revision by State
 	GetByPubState(kit *kit.Kit, opt *types.GetByPubStateOption) (*table.HookRevision, error)
 	// DeleteByHookIDWithTx  delete revision revision with transaction
-	DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *table.HookRevision) error
+	DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, hookID, bizID uint32) error
 	// UpdatePubStateWithTx update hookRevision State instance with transaction.
 	UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *table.HookRevision) error
 	// Update one HookRevision's info.
@@ -329,29 +329,13 @@ func (dao *hookRevisionDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *tabl
 }
 
 // DeleteByHookIDWithTx  delete revision revision with transaction
-func (dao *hookRevisionDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *table.HookRevision) error {
+func (dao *hookRevisionDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, hookID, bizID uint32) error {
 
-	// 参数校验
-	if err := hr.ValidateDeleteByHookID(); err != nil {
-		return err
-	}
-
-	// 删除操作, 获取当前记录做审计
 	m := tx.HookRevision
 	q := tx.HookRevision.WithContext(kit.Ctx)
 
-	oldOne, err := q.Where(m.HookID.Eq(hr.Attachment.HookID), m.BizID.Eq(hr.Attachment.BizID)).Take()
-	if err != nil {
-		return err
-	}
-	ad := dao.auditDao.DecoratorV2(kit, hr.Attachment.BizID).PrepareDelete(oldOne)
-
-	if _, e := q.Where(m.BizID.Eq(hr.Attachment.BizID), m.HookID.Eq(hr.Attachment.HookID)).Delete(hr); e != nil {
+	if _, e := q.Where(m.BizID.Eq(bizID), m.HookID.Eq(hookID)).Delete(); e != nil {
 		return e
-	}
-
-	if e := ad.Do(tx.Query); e != nil {
-		return err
 	}
 
 	return nil

@@ -167,14 +167,8 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 		tx.Rollback()
 		return nil, err
 	}
-	// 3. delete hook revision
-	revision := &table.HookRevision{
-		Attachment: &table.HookRevisionAttachment{
-			BizID:  req.BizId,
-			HookID: req.HookId,
-		},
-	}
-	if err := s.dao.HookRevision().DeleteByHookIDWithTx(kt, tx, revision); err != nil {
+	// 3. delete all hook revisions by hook id
+	if err := s.dao.HookRevision().DeleteByHookIDWithTx(kt, tx, req.HookId, req.BizId); err != nil {
 		logs.Errorf("delete hook revision failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
