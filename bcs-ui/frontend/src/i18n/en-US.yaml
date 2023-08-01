@@ -234,20 +234,20 @@ generic:
       '403': No permission operation
       '404': Page does not exist
     success:
-      ok: Operation Successful
-      copy: Copy Successfully
-      delete: Successfully delete
-      update: update completed
-      modify: Successfully modified
-      cordon: Successful dispatch
-      deliveryTask: Task submitted successfully
-      create: Successful creation
-      test: Test success
-      import: Import Success
-      save: Save successfully
-      save1: The data is saved successfully
+      ok: Done
+      copy: Copied
+      delete: Deleted
+      update: Updated
+      modify: Modified
+      cordon: Done
+      deliveryTask: Task submitted
+      create: Created
+      test: Tested
+      import: Imported
+      save: Saved
+      save1: Saved
       copyIP: '{number} IP addresses copied'
-      edit: Edit
+      edit: Editd
     empty:
       noData: No data
       noData1: No data
@@ -482,7 +482,7 @@ generic:
         removeAll: Remove everything
         copyIp:
           text: Copy IP
-          msg: 'Successful copy {number}'
+          msg: '{number} IP addresses copied'
     label:
       innerIp: "Private\_IP"
       outerIp: Public IP
@@ -519,7 +519,7 @@ generic:
         models or contact BK assistant (blue whale assistant)
       emptyCvm: Please select a model
     msg:
-      submit: The host application is successfully submitted
+      submit: Host application submitted successfully.
       path: >-
         The size of the data disk / number of CPU cores is greater than 50, and
         the application server has a manual approval process for operation
@@ -645,8 +645,7 @@ cluster:
       cloudProvider:
         title: Cloud Provider
         subTitle: >-
-          Unified management of multi-cloud provider clusters, reducing business
-          management costs
+          Unified management of multi-cloud provider clusters
         desc: >-
           Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
           Google Cloud
@@ -1231,7 +1230,7 @@ cluster:
         label:
           name: Node name
         msg:
-          drainSuccess: Pod migration successfully
+          drainSuccess: POD Migration Successful
         action:
           delete:
             text: Delete node
@@ -1552,7 +1551,7 @@ deploy:
     delete: Are you sure to delete it?
     confirmTemplate: 'Confirm to cancel the {tmplAppName} instantiation?'
     input: Please Enter Content
-    success: Scale Success
+    success: Successful
     pathMsg: >-
       This operation is equivalent to Kubectl Patch GameStateFulset {name} -n
       {namespace} --Type = json -p = {content in text}
@@ -2247,7 +2246,7 @@ deploy:
     responsiblePerson: Operator
     updateService: Update Service
     clusterIPPortMapping: 'ClusterIP is not None, please setting your port mapping'
-    newCL5Success: Create CL5 Success
+    newCL5Success: CL5 created successfully
     usageRefArticle: 'Please View "{article}" for detail'
     confirmDeleteServiceWithName: 'Confirm delete Service ['
     createFromTemplateOrHelmConfigMap: Please create a ConfigMap through a TemplateSet or Helm
@@ -2365,7 +2364,7 @@ plugin:
     notEdited: System indicators cannot be modified
     notDeleted: System indicators cannot be deleted
     unselected: I haven't chosen Metric
-    deleted: Delete Metric success
+    deleted: Metric deleted successfully
     systemNS: The current page is all system name space
     serviceNotFound: The service object does not exist
     _serviceNotFound: The service object does not exist
@@ -2421,7 +2420,7 @@ plugin:
       "OK" to update
     confirmUpgrade: Confirm update
     noChages: There is no change in the content of this update
-    submit: The configuration has been successfully issued
+    submit: Configuration submitted successfully 
     addPattern: Add Expression
     icon: Icon
     deployed: Deployed
@@ -2488,8 +2487,8 @@ plugin:
     fileDataID: Please enter the file collection ID
     emptyTips: Matching labels and matching expressions cannot be empty at the same time
     filePath: Please enter the file path
-    success: Rules successfully
-    upgraded: Rule update success
+    success: Rule created successfully
+    upgraded: Rule updated successfully
     polarisNS: Polaris naming space
     polarisSvcName: Polaris service name
     cluster_ns: Clusters/Namespaces
@@ -2611,11 +2610,11 @@ dashboard:
     msg:
       undoSuccess: Undo success
     quota:
-      cpuUsageRatio: '{used} core / {Total} core (used / total)'
-      usageRatio: '{used} / {total} (use / total)'
+      cpuUsageRatio: '{used} core(s) / {total} core(s) (used/total)'
+      usageRatio: '{used} / {total} (used/total)'
     tips:
-      notEnabledNamespaceQuota: Not opening the name space quota
-      notEnabledNamespace: 'No'
+      notEnabledNamespaceQuota: ResourceQuota not enabled
+      notEnabledNamespace: ResourceQuota not enabled
       totalCpuLimitsQuota: All container CPU LIMITs total / CPU quotas
       totalMemoryLimitsQuota: All container memory Limits total / memory quota
     validate:
@@ -2715,7 +2714,7 @@ dashboard:
         contentUnchanged: The content has not changed
         contentUnchangedOrInvalidFormat: The content has not changed or the format is wrong
       msg:
-        copyExampleSuccess: Copy example success
+        copyExampleSuccess: Copied
         confirmResetEditStatus: Confirm to reset the editing state
         replaceConflictWarning: >-
           The replace operation will be performed. If multiple people edit at
