@@ -62,7 +62,7 @@
     privilege: [{
       required: true,
       message: '文件权限 不能为空',
-      trigger: 'blur'
+      trigger: 'change'
     }],
     path: [
       {

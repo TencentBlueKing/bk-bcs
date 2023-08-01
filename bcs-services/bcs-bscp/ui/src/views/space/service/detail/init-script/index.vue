@@ -71,7 +71,7 @@
       all: true
     }
     const res = await getScriptList(spaceId.value, params)
-    const list = (<IScriptItem[]>res.details).filter(item => item.published_revision_id).map(item => {
+    const list = (<IScriptItem[]>res.details).map(item => {
       return { id: item.hook.id, versionId: item.published_revision_id, name: item.hook.spec.name, type: item.hook.spec.type }
     })
     scriptsData.value = [{ id: 0, versionId: 0, name: '<不使用脚本>', type: '' }, ...list]
@@ -100,6 +100,12 @@
     const res = await getScriptVersionDetail(spaceId.value, scriptId, versionId)
     previewConfig.value.content = res.spec.content
     contentLoading.value = false
+  }
+
+  const handleScriptOptionClick = (id: number, versionId: number, e: Event) => {
+    if (id && !versionId) {
+      e.stopPropagation()
+    }
   }
 
   const handleSelectScript = (id: number, type: string) => {
@@ -162,11 +168,24 @@
           <div class="select-wrapper">
             <bk-select
               v-model="formData.pre.id"
+              :popover-options="{ theme: 'light bk-select-popover script-select-popover' }"
               :clearable="false"
               :disabled="viewMode"
               :loading="scriptsLoading"
               @change="handleSelectScript($event, 'pre')">
-              <bk-option v-for="script in scriptsData" :key="script.id" :value="script.id" :label="script.name"></bk-option>
+              <bk-option
+                v-for="script in scriptsData"
+                :class="['script-option-item', { disabled: script.id && !script.versionId }]"
+                :key="script.id"
+                :value="script.id"
+                :label="script.name">
+                <div
+                  v-bk-tooltips="{ disabled: script.id && script.versionId, content: '该脚本未上线' }"
+                  class="option-wrapper"
+                  @click="handleScriptOptionClick(script.id, script.versionId, $event)">
+                  {{ script.name }}
+                </div>
+              </bk-option>
             </bk-select>
             <bk-button
               class="preview-button"
@@ -182,11 +201,24 @@
           <div class="select-wrapper">
             <bk-select
               v-model="formData.post.id"
+              :popover-options="{ theme: 'light bk-select-popover script-select-popover' }"
               :clearable="false"
               :disabled="viewMode"
               :loading="scriptsLoading"
               @change="handleSelectScript($event, 'post')">
-              <bk-option v-for="script in scriptsData" :key="script.id" :value="script.id" :label="script.name"></bk-option>
+              <bk-option
+                v-for="script in scriptsData"
+                :class="['script-option-item', { disabled: script.id && !script.versionId }]"
+                :key="script.id"
+                :value="script.id"
+                :label="script.name">
+                <div
+                  v-bk-tooltips="{ disabled: script.id && script.versionId, content: '该脚本未上线' }"
+                  class="option-wrapper"
+                  @click="handleScriptOptionClick(script.id, script.versionId, $event)">
+                  {{ script.name }}
+                </div>
+              </bk-option>
             </bk-select>
             <bk-button
               class="preview-button"
@@ -253,6 +285,22 @@
     height: 100%;
     .content-wrapper {
       height: calc(100% - 40px);
+    }
+  }
+</style>
+<style lang="scss">
+  .script-select-popover.bk-popover.bk-select-popover .bk-select-content-wrapper {
+    .bk-select-option.script-option-item {
+      padding: 0;
+      &.disabled {
+        cursor: not-allowed;
+        .option-wrapper {
+          color: #dcdee5 !important;
+        }
+      }
+      .option-wrapper {
+        padding: 0 12px;
+      }
     }
   }
 </style>
