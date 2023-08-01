@@ -53,7 +53,7 @@
       return
     }
     listLoading.value = true
-    pagination.value.current = 1
+    pagination.value.current = current
     await loadCredentialList()
     listLoading.value = false
   }
@@ -303,7 +303,11 @@
           @limit-change="handlePageLimitChange" />
       </bk-loading>
     </div>
-    <AssociateConfigItems :show="isAssociateSliderShow" :id="currentCredential" @close="handleAssociateSliderClose" />
+    <AssociateConfigItems
+      :show="isAssociateSliderShow"
+      :id="currentCredential"
+      @close="handleAssociateSliderClose"
+      @refresh="refreshListWithLoading(pagination.current)" />
   </section>
 </template>
 <style lang="scss" scoped>
