@@ -16,6 +16,7 @@ package manager
 import (
 	"context"
 	"encoding/base64"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -23,12 +24,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/pborman/ansi"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -38,6 +41,8 @@ import (
 // EndOfTransmission xxx
 // End-of-Transmission character ctrl-d
 const EndOfTransmission = "\u0004"
+
+var cmdParser = audit.NewCmdParse()
 
 type wsMessage struct {
 	msgType int
@@ -140,6 +145,10 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, nil
 	}
+
+	_, ss, _ := ansi.Decode(inputMsg)
+	cmdParser.Cmd = ss
+	cmdParser.InputSlice = append(cmdParser.InputSlice, ss)
 	return inputMsg, nil
 }
 
@@ -170,6 +179,27 @@ func (r *RemoteStreamConn) Write(p []byte) (int, error) {
 	outputMsg, err := r.bindMgr.HandleOutputMsg(msg)
 	if err != nil {
 		return 0, nil
+	}
+	//输入输出映射,用于查找历史命令
+	out, ss, e := ansi.Decode(outputMsg)
+	if e != nil {
+		logger.Error("decode output error:", e)
+	}
+	//TODO:历史命令问题,可能解析问题导致
+	if strings.ReplaceAll(string(ss.Code), "\b", "") == "" {
+		rex := regexp.MustCompile("\\x1b\\[\\d+P")
+		l := rex.Split(string(out), -1)
+		ss.Code = ansi.Name(l[len(l)-1])
+	}
+	//时序性问题不可避免
+	cmdParser.CmdResult[cmdParser.Cmd] = ss
+
+	if cmdParser.Cmd != nil && cmdParser.Cmd.Code == "\r" {
+		cmd := audit.ResolveInOut(cmdParser)
+		if cmd != "" {
+			logger.Infof("UserName=%s  SessionID=%s  Command=%s",
+				r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, cmd)
+		}
 	}
 
 	output := []byte(base64.StdEncoding.EncodeToString(outputMsg))
