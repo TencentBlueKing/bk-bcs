@@ -275,7 +275,7 @@
                     @click="handleCreateVersionClick(data.hook_revision.spec.content)">
                     复制并新建
                   </bk-button>
-                  <bk-button v-if="data.hook_revision.spec.state === 'not_deployed'" text theme="primary" @click="handleDelClick(data)">删除</bk-button>
+                  <bk-button v-if="data.hook_revision.spec.state === 'not_deployed'" text theme="primary" :disabled="pagination.count <= 1" @click="handleDelClick(data)">删除</bk-button>
               </div>
               </template>
             </VersionListFullTable>
