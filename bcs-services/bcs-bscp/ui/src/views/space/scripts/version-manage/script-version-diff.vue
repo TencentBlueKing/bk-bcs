@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { onMounted, ref } from 'vue'
-  import { IScriptVersion } from '../../../../../types/script'
+  import { IScriptVersion, IScriptVersionListItem } from '../../../../../types/script'
   import { getScriptVersionList } from '../../../../api/script'
   import DiffText from '../../../../components/diff/text.vue'
 
@@ -14,7 +14,7 @@
 
   const emits = defineEmits(['update:show'])
 
-  const selectedVersion = ref(0)
+  const selectedVersion = ref()
   const versionList = ref<IScriptVersion[]>([])
   const versionListLoading = ref(false)
   const baseContent = ref('')
@@ -31,7 +31,7 @@
       all: true
     }
     const res = await getScriptVersionList(props.spaceId, props.scriptId, params)
-    versionList.value = res.details.filter((item: IScriptVersion) => item.id !== props.crtVersion.id)
+    versionList.value = (<IScriptVersionListItem[]>res.details).filter(item => item.hook_revision.id !== props.crtVersion.id).map(item => item.hook_revision)
     versionListLoading.value = false
   }
 
@@ -43,7 +43,7 @@
   }
 
   const handleClose = () => {
-    selectedVersion.value = 0
+    selectedVersion.value = undefined
     versionList.value = []
     emits('update:show', false)
   }

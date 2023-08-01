@@ -86,33 +86,35 @@ func (dao *hookDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) (
 func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOption) (
 	[]*types.ListHooksWithReferDetail, int64, error) {
 
-	m := dao.genQ.Hook
+	h := dao.genQ.Hook
+	hr := dao.genQ.HookRevision
 	rh := dao.genQ.ReleasedHook
-	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID)).Order(m.ID.Desc())
+	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(opt.BizID)).Order(h.ID.Desc())
 
 	if opt.Name != "" {
-		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.Name)))
+		q = q.Where(h.Name.Like(fmt.Sprintf("%%%s%%", opt.Name)))
 	}
 	if opt.Tag != "" {
-		q = q.Where(m.Tag.Eq(opt.Tag))
+		q = q.Where(h.Tag.Eq(opt.Tag))
 	} else {
 		if opt.NotTag {
-			q = q.Where(m.Tag.Eq(""))
+			q = q.Where(h.Tag.Eq(""))
 		}
 	}
 
 	details := make([]*types.ListHooksWithReferDetail, 0)
 
-	q = q.Select(m.ALL, rh.ID.Count().As("refer_count"), rh.ReleaseID.Min().Eq(0).As("refer_editing_release")).
-		LeftJoin(rh, m.ID.EqCol(rh.HookID)).
-		Group(m.ID)
+	q = q.Select(h.ALL, rh.ID.Count().As("refer_count"), rh.ReleaseID.Min().Eq(0).As("refer_editing_release"),
+		hr.ID.Max().As("published_revision_id")).
+		LeftJoin(rh, h.ID.EqCol(rh.HookID)).
+		LeftJoin(hr, h.ID.EqCol(hr.HookID), hr.State.Eq(table.HookRevisionStatusDeployed.String())).
+		Group(h.ID)
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
 		if err := q.Scan(&details); err != nil {
 			return nil, 0, err
 		}
 		return details, int64(len(details)), nil
-
 	}
 
 	count, err := q.ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())

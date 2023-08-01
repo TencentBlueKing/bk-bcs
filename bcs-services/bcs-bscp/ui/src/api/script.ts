@@ -39,7 +39,7 @@ export const getScriptDetail = (biz_id: string, id: number) => {
  * @returns 
  */
 export const getScriptVersionDetail = (biz_id: string, id: number, release_id: number) => {
-  return http.get(`/config/biz/${biz_id}/hooks/${id}/hook_releases/${release_id}`).then(res => res.data);
+  return http.get(`/config/biz/${biz_id}/hooks/${id}/hook_revisions/${release_id}`).then(res => res.data);
 }
 
 /**
@@ -49,7 +49,7 @@ export const getScriptVersionDetail = (biz_id: string, id: number, release_id: n
  * @returns 
  */
 export const deleteScript = (biz_id: string, id: number) => {
-  return http.delete(`/config/biz/${biz_id}/hooks/${id}`).then(res => res.data);
+  return http.delete(`/config/biz/${biz_id}/hooks/${id}`, { params: { force: true }}).then(res => res.data);
 }
 
 /**
@@ -70,7 +70,7 @@ export const getScriptTagList = (biz_id: string) => {
  * @returns 
  */
 export const getScriptVersionList = (biz_id: string, hook_id: number, params: { start: number; limit?: number; searchKey?: string; }) => {
-  return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases`, { params }).then(res => res.data);
+  return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/hook_revisions`, { params }).then(res => res.data);
 }
 
 /**
@@ -80,8 +80,8 @@ export const getScriptVersionList = (biz_id: string, hook_id: number, params: { 
  * @param params 查询参数
  * @returns 
  */
-export const createScriptVersion = (biz_id: string, hook_id: number, params: { name: string; memo: string; content: string; }) => {
-  return http.post(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases`, params).then(res => res.data);
+export const createScriptVersion = (biz_id: string, hook_id: number, params: { memo: string; content: string; }) => {
+  return http.post(`/config/biz/${biz_id}/hooks/${hook_id}/hook_revisions`, params).then(res => res.data);
 }
 
 /**
@@ -92,7 +92,7 @@ export const createScriptVersion = (biz_id: string, hook_id: number, params: { n
  * @returns 
  */
 export const updateScriptVersion = (biz_id: string, hook_id: number, release_id: number, params: { name: string; memo: string; content: string; }) => {
-  return http.put(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases/${release_id}`, params).then(res => res.data);
+  return http.put(`/config/biz/${biz_id}/hooks/${hook_id}/hook_revisions/${release_id}`, params).then(res => res.data);
 }
 
 /**
@@ -103,7 +103,7 @@ export const updateScriptVersion = (biz_id: string, hook_id: number, release_id:
  * @returns 
  */
 export const deleteScriptVersion = (biz_id: string, hook_id: number, release_id: number) => {
-  return http.delete(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases/${release_id}`).then(res => res.data);
+  return http.delete(`/config/biz/${biz_id}/hooks/${hook_id}/hook_revisions/${release_id}`, { params: { force: true }}).then(res => res.data);
 }
 
 /**
@@ -114,7 +114,7 @@ export const deleteScriptVersion = (biz_id: string, hook_id: number, release_id:
  * @returns 
  */
 export const publishVersion = (biz_id: string, hook_id: number, release_id: number) => {
-  return http.put(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases/${release_id}/publish`).then(res => res.data);
+  return http.put(`/config/biz/${biz_id}/hooks/${hook_id}/hook_revisions/${release_id}/publish`).then(res => res.data);
 }
 
 /**
@@ -128,17 +128,29 @@ export const getScriptCiteList = (biz_id: string, hook_id: number, params: IScri
   return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/references`, { params }).then(res => res.data);
 }
 
-// 获取服务初始化脚本
-export const getConfigInitScript = (biz_id: string, app_id: number) => {
-  return http.get(`/config/biz/${biz_id}/apps/${app_id}/config_hooks`)
+/**
+ * 获取脚本某个版本被引用列表
+ * @param biz_id 空间ID
+ * @param hook_id 脚本ID
+ * @param version_id 版本ID
+ * @param params 查询参数
+ * @returns 
+ */
+export const getScriptVersionCiteList = (biz_id: string, hook_id: number, version_id: number, params: IScriptCiteQuery) => {
+  return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/hook_revisions/${version_id}/references`, { params }).then(res => res.data);
 }
 
-// 配置服务初始化脚本
-export const createConfigInitScript = (biz_id: string, app_id: number) => {
-  return http.post(`/config/biz/${biz_id}/apps/${app_id}/config_hooks`)
-}
+// // 获取配置项版本下的初始化脚本配置
+// export const getConfigScript = (biz_id: string, app_id: number, release_id: number) => {
+//   return http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/hooks`)
+// }
 
-// 更新服务初始化脚本
-export const updateConfigInitScript = (biz_id: string, app_id: number) => {
-  return http.post(`/config/biz/${biz_id}/apps/${app_id}/config_hooks`)
-}
+// // 配置服务初始化脚本
+// export const createConfigInitScript = (biz_id: string, app_id: number) => {
+//   return http.post(`/config/biz/${biz_id}/apps/${app_id}/config_hooks`)
+// }
+
+// // 更新服务初始化脚本
+// export const updateConfigInitScript = (biz_id: string, app_id: number) => {
+//   return http.post(`/config/biz/${biz_id}/apps/${app_id}/config_hooks`)
+// }

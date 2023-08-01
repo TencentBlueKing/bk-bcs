@@ -126,12 +126,13 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 		return nil, err
 	}
 
-	result := []*pbds.ListHooksResp_ListHooksData{}
+	result := []*pbds.ListHooksResp_Detail{}
 	for _, detail := range details {
-		result = append(result, &pbds.ListHooksResp_ListHooksData{
-			Hook:          pbhook.PbHook(detail.Hook),
-			BoundNum:      uint32(detail.ReferCount),
-			ConfirmDelete: detail.BoundEditingRelease,
+		result = append(result, &pbds.ListHooksResp_Detail{
+			Hook:                pbhook.PbHook(detail.Hook),
+			BoundNum:            uint32(detail.ReferCount),
+			ConfirmDelete:       detail.BoundEditingRelease,
+			PublishedRevisionId: detail.PublishedRevisionID,
 		})
 	}
 
