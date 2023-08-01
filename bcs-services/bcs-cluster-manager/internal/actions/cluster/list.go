@@ -782,8 +782,8 @@ func (la *ListMastersInClusterAction) appendNodeAgent() {
 	if len(hosts) == 0 {
 		return
 	}
-	_, err := gseClient.GetAgentStatus(&gse.GetAgentStatusReqV2{
-		AgentIDList: nil,
+	_, err := gseClient.GetAgentStatusV1(&gse.GetAgentStatusReq{
+		Hosts: hosts,
 	})
 	if err != nil {
 		blog.Warnf("GetAgentStatus for %s failed, %s", utils.ToJSONString(hosts), err.Error())

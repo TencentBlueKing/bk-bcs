@@ -106,6 +106,10 @@ func (sopStep *BkSopsStepAction) BuildBkSopsStepAction(task *proto.Task, cluster
 				taskName = pluginName
 			}
 
+			if plugin.Params == nil || len(plugin.Params) == 0 {
+				continue
+			}
+
 			stepName := cloudprovider.BKSOPTask + "-" + utils.RandomString(8)
 			step, err := GenerateBKopsStep(taskName, stepName, cluster, plugin, info)
 			if err != nil {

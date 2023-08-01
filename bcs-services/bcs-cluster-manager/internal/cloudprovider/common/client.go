@@ -36,10 +36,6 @@ type Options struct {
 	AppSecret  string
 	BKUserName string
 	Debug      bool
-
-	TaskStatusURL string
-	StartTaskURL  string
-	CreateTaskURL string
 }
 
 // AuthInfo auth info
@@ -78,12 +74,6 @@ func NewClient(options Options) (*Client, error) {
 		serverDebug: options.Debug,
 	}
 
-	c.urls = DependURLs{
-		createTaskURL: options.CreateTaskURL,
-		startTaskURL:  options.StartTaskURL,
-		getTaskStatus: options.TaskStatusURL,
-	}
-
 	return c, nil
 }
 
@@ -94,8 +84,6 @@ type Client struct {
 	appSecret   string
 	bkUserName  string
 	serverDebug bool
-
-	urls DependURLs
 }
 
 // DependURLs depend bkops urls
@@ -131,16 +119,10 @@ func (c *Client) CreateBkOpsTask(url string, paras *CreateTaskPathParas,
 		return nil, ErrServerNotInit
 	}
 
-	if url == "" {
-		url = c.urls.createTaskURL
-	}
-
 	var (
-		reqURL   string
+		reqURL   = fmt.Sprintf("/create_task/%s/%s/", paras.TemplateID, paras.BkBizID)
 		respData = &CreateTaskResponse{}
 	)
-
-	reqURL = fmt.Sprintf(url, paras.TemplateID, paras.BkBizID)
 
 	userAuth, err := c.generateGateWayAuth(paras.Operator)
 	if err != nil {
@@ -154,7 +136,7 @@ func (c *Client) CreateBkOpsTask(url string, paras *CreateTaskPathParas,
 
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
-		Post(reqURL).
+		Post(c.server+reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", userAuth).
@@ -182,18 +164,12 @@ func (c *Client) StartBkOpsTask(url string, paras *TaskPathParas,
 		return nil, ErrServerNotInit
 	}
 
-	if url == "" {
-		url = c.urls.startTaskURL
-	}
-
 	var (
-		reqURL   string
+		reqURL   = fmt.Sprintf("/start_task/%s/%s/", paras.TaskID, paras.BkBizID)
 		respData = &StartTaskResponse{}
 	)
 
-	reqURL = fmt.Sprintf(url, paras.TaskID, paras.BkBizID)
 	request.Scope = string(CmdbBizScope)
-
 	userAuth, err := c.generateGateWayAuth(paras.Operator)
 	if err != nil {
 		return nil, fmt.Errorf("bksops StartBkOpsTask generateGateWayAuth failed: %v", err)
@@ -201,7 +177,7 @@ func (c *Client) StartBkOpsTask(url string, paras *TaskPathParas,
 
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
-		Post(reqURL).
+		Post(c.server+reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", userAuth).
@@ -230,25 +206,20 @@ func (c *Client) GetTaskStatus(url string, paras *TaskPathParas,
 		return nil, ErrServerNotInit
 	}
 
-	if url == "" {
-		url = c.urls.getTaskStatus
-	}
-
 	userAuth, err := c.generateGateWayAuth(paras.Operator)
 	if err != nil {
 		return nil, fmt.Errorf("bksops StartBkOpsTask generateGateWayAuth failed: %v", err)
 	}
 
 	var (
-		reqURL   string
+		reqURL   = fmt.Sprintf("/get_task_status/%s/%s/", paras.TaskID, paras.BkBizID)
 		respData = &TaskStatusResponse{}
 	)
 
-	reqURL = fmt.Sprintf(url, paras.TaskID, paras.BkBizID)
 	request.Scope = string(CmdbBizScope)
-	agent := gorequest.New().Timeout(defaultTimeOut).Get(reqURL)
-
-	_, _, errs := agent.
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Get(c.server+reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", userAuth).
@@ -312,6 +283,43 @@ func (c *Client) GetBusinessTemplateList(path *TemplateListPathPara,
 	blog.Infof("call api GetBusinessTemplateList with url(%s) successfully", url)
 
 	return resp.Data, nil
+}
+
+// GetUserProjectDetailInfo get user project detailed info
+func (c *Client) GetUserProjectDetailInfo(bizID string) (*ProjectInfo, error) {
+	var (
+		_   = "GetUserProjectDetailInfo"
+		url = fmt.Sprintf("/get_user_project_detail/%s/", bizID)
+	)
+
+	userAuth, err := c.generateGateWayAuth(c.bkUserName)
+	if err != nil {
+		return nil, fmt.Errorf("bksops GetUserProjectDetailInfo generateGateWayAuth failed: %v", err)
+	}
+
+	resp := &UserProjectResponse{}
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Get(c.server+url).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		SetDebug(c.serverDebug).
+		EndStruct(&resp)
+	if len(errs) > 0 {
+		blog.Errorf("call api GetUserProjectDetailInfo failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !resp.Result {
+		blog.Errorf("call api GetUserProjectDetailInfo failed: %v", resp.Message)
+		return nil, fmt.Errorf(resp.Message)
+	}
+
+	// successfully request
+	blog.Infof("call api GetUserProjectDetailInfo with url(%s) successfully", url)
+
+	return &resp.Data, nil
 }
 
 // GetBusinessTemplateInfo 查询业务下的模板详情

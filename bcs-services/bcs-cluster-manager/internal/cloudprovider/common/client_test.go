@@ -28,10 +28,6 @@ func getClient() *Client {
 		BKUserName: "xxx",
 		AppSecret:  "xxx",
 		Debug:      true,
-
-		CreateTaskURL: "xxx",
-		TaskStatusURL: "xxx",
-		StartTaskURL:  "xxx",
 	})
 	if err != nil {
 		return nil
@@ -123,7 +119,7 @@ func TestClient_GetBusinessTemplateList(t *testing.T) {
 	}
 
 	path := &TemplateListPathPara{
-		BkBizID:  "3",
+		BkBizID:  "100148",
 		Operator: "",
 	}
 	req := &TemplateRequest{}
@@ -139,6 +135,20 @@ func TestClient_GetBusinessTemplateList(t *testing.T) {
 	}
 }
 
+func TestClient_GetUserProjectDetailInfo(t *testing.T) {
+	cli := getClient()
+	if cli == nil {
+		t.Fatal("client nil")
+	}
+
+	p, err := cli.GetUserProjectDetailInfo("106")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(p)
+}
+
 func TestClient_GetBusinessTemplateInfo(t *testing.T) {
 	cli := getClient()
 	if cli == nil {
@@ -146,9 +156,9 @@ func TestClient_GetBusinessTemplateInfo(t *testing.T) {
 	}
 
 	path := &TemplateDetailPathPara{
-		BkBizID:    "3",
-		TemplateID: "3",
-		Operator:   "xxx",
+		BkBizID:    "xx",
+		TemplateID: "xx",
+		Operator:   "",
 	}
 	req := &TemplateRequest{}
 

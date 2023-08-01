@@ -163,6 +163,11 @@ const (
 	// ClusterManager xxx
 	ClusterManager = "bcs-cluster-manager"
 
+	// Biz business
+	Biz = "biz"
+	// BizSet business set
+	BizSet = "biz_set"
+	
 	// Prod prod env
 	Prod = "prod"
 	// Debug debug env

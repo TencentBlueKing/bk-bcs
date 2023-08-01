@@ -93,6 +93,11 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetInnerTemplateValues",
 	"ClusterManager.DebugBkSopsTask",
 	"ClusterManager.Health",
+
+	"ClusterManager.GetBatchCustomSetting",
+	"ClusterManager.GetBizTopologyHost",
+	"ClusterManager.GetTopologyNodes",
+	"ClusterManager.GetScopeHostCheck",
 }
 
 // ActionPermissions action 对应权限中心的权限
@@ -125,6 +130,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DrainNode":              cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateNodeLabels":       cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateNodeTaints":       cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateNodeAnnotations":  cluster.CanManageClusterOperation,
 
 	// federation cluster
 	"ClusterManager.InitFederationCluster": "",

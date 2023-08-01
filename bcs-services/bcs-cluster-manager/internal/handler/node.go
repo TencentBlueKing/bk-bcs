@@ -87,6 +87,22 @@ func (cm *ClusterManager) DrainNode(ctx context.Context,
 	return nil
 }
 
+// UpdateNodeAnnotations implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateNodeAnnotations(ctx context.Context,
+	req *cmproto.UpdateNodeAnnotationsRequest, resp *cmproto.UpdateNodeAnnotationsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := node.NewUpdateNodeAnnotationsAction(cm.model, cm.kubeOp)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateNodeAnnotations", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateNodeAnnotations, req %v, resp %v", reqID, utils.ToJSONString(req),
+		utils.ToJSONString(resp))
+	return nil
+}
+
 // UpdateNodeLabels implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) UpdateNodeLabels(ctx context.Context,
 	req *cmproto.UpdateNodeLabelsRequest, resp *cmproto.UpdateNodeLabelsResponse) error {

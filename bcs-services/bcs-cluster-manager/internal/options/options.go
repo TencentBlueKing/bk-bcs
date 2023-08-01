@@ -91,9 +91,6 @@ type BKOpsConfig struct {
 	AppSecret     string `json:"appSecret"`
 	BkUserName    string `json:"bkUserName"`
 	Debug         bool   `json:"debug"`
-	CreateTaskURL string `json:"createTaskURL"`
-	TaskStatusURL string `json:"taskStatusURL"`
-	StartTaskURL  string `json:"startTaskURL"`
 	TemplateURL   string `json:"templateURL"`
 	FrontURL      string `json:"frontURL"`
 }

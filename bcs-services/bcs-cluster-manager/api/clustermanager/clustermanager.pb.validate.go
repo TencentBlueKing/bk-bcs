@@ -25989,6 +25989,254 @@ var _ interface {
 	ErrorName() string
 } = DrainNodeResponseValidationError{}
 
+// Validate checks the field values on NodeAnnotation with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *NodeAnnotation) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if len(m.GetNodeName()) < 1 {
+		return NodeAnnotationValidationError{
+			field:  "NodeName",
+			reason: "value length must be at least 1 bytes",
+		}
+	}
+
+	// no validation rules for Annotations
+
+	return nil
+}
+
+// NodeAnnotationValidationError is the validation error returned by
+// NodeAnnotation.Validate if the designated constraints aren't met.
+type NodeAnnotationValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodeAnnotationValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodeAnnotationValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodeAnnotationValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodeAnnotationValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodeAnnotationValidationError) ErrorName() string { return "NodeAnnotationValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodeAnnotationValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNodeAnnotation.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodeAnnotationValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodeAnnotationValidationError{}
+
+// Validate checks the field values on UpdateNodeAnnotationsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateNodeAnnotationsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if len(m.GetClusterID()) < 1 {
+		return UpdateNodeAnnotationsRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at least 1 bytes",
+		}
+	}
+
+	for idx, item := range m.GetNodes() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateNodeAnnotationsRequestValidationError{
+					field:  fmt.Sprintf("Nodes[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// UpdateNodeAnnotationsRequestValidationError is the validation error returned
+// by UpdateNodeAnnotationsRequest.Validate if the designated constraints
+// aren't met.
+type UpdateNodeAnnotationsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateNodeAnnotationsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateNodeAnnotationsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateNodeAnnotationsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateNodeAnnotationsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateNodeAnnotationsRequestValidationError) ErrorName() string {
+	return "UpdateNodeAnnotationsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateNodeAnnotationsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateNodeAnnotationsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateNodeAnnotationsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateNodeAnnotationsRequestValidationError{}
+
+// Validate checks the field values on UpdateNodeAnnotationsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateNodeAnnotationsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNodeAnnotationsResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateNodeAnnotationsResponseValidationError is the validation error
+// returned by UpdateNodeAnnotationsResponse.Validate if the designated
+// constraints aren't met.
+type UpdateNodeAnnotationsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateNodeAnnotationsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateNodeAnnotationsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateNodeAnnotationsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateNodeAnnotationsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateNodeAnnotationsResponseValidationError) ErrorName() string {
+	return "UpdateNodeAnnotationsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateNodeAnnotationsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateNodeAnnotationsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateNodeAnnotationsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateNodeAnnotationsResponseValidationError{}
+
 // Validate checks the field values on NodeLabel with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
 func (m *NodeLabel) Validate() error {
@@ -27626,6 +27874,8 @@ func (m *TemplateInfo) Validate() error {
 	// no validation rules for Creator
 
 	// no validation rules for Editor
+
+	// no validation rules for ProjectID
 
 	return nil
 }
@@ -29744,3 +29994,1068 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = MapStructValidationError{}
+
+// Validate checks the field values on GetBatchCustomSettingRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetBatchCustomSettingRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ScopeType
+
+	// no validation rules for ScopeId
+
+	return nil
+}
+
+// GetBatchCustomSettingRequestValidationError is the validation error returned
+// by GetBatchCustomSettingRequest.Validate if the designated constraints
+// aren't met.
+type GetBatchCustomSettingRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBatchCustomSettingRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBatchCustomSettingRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBatchCustomSettingRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBatchCustomSettingRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBatchCustomSettingRequestValidationError) ErrorName() string {
+	return "GetBatchCustomSettingRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetBatchCustomSettingRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBatchCustomSettingRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBatchCustomSettingRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBatchCustomSettingRequestValidationError{}
+
+// Validate checks the field values on GetBatchCustomSettingResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetBatchCustomSettingResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Success
+
+	// no validation rules for ErrorMsg
+
+	// no validation rules for RequestId
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetBatchCustomSettingResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetBatchCustomSettingResponseValidationError is the validation error
+// returned by GetBatchCustomSettingResponse.Validate if the designated
+// constraints aren't met.
+type GetBatchCustomSettingResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBatchCustomSettingResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBatchCustomSettingResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBatchCustomSettingResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBatchCustomSettingResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBatchCustomSettingResponseValidationError) ErrorName() string {
+	return "GetBatchCustomSettingResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetBatchCustomSettingResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBatchCustomSettingResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBatchCustomSettingResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBatchCustomSettingResponseValidationError{}
+
+// Validate checks the field values on ScopeInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *ScopeInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ScopeType
+
+	// no validation rules for ScopeId
+
+	return nil
+}
+
+// ScopeInfoValidationError is the validation error returned by
+// ScopeInfo.Validate if the designated constraints aren't met.
+type ScopeInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ScopeInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ScopeInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ScopeInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ScopeInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ScopeInfoValidationError) ErrorName() string { return "ScopeInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ScopeInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sScopeInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ScopeInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ScopeInfoValidationError{}
+
+// Validate checks the field values on GetBizTopologyHostRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetBizTopologyHostRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ScopeType
+
+	// no validation rules for ScopeId
+
+	// no validation rules for AllScope
+
+	for idx, item := range m.GetScopeList() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetBizTopologyHostRequestValidationError{
+					field:  fmt.Sprintf("ScopeList[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// GetBizTopologyHostRequestValidationError is the validation error returned by
+// GetBizTopologyHostRequest.Validate if the designated constraints aren't met.
+type GetBizTopologyHostRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBizTopologyHostRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBizTopologyHostRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBizTopologyHostRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBizTopologyHostRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBizTopologyHostRequestValidationError) ErrorName() string {
+	return "GetBizTopologyHostRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetBizTopologyHostRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBizTopologyHostRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBizTopologyHostRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBizTopologyHostRequestValidationError{}
+
+// Validate checks the field values on GetBizTopologyHostResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetBizTopologyHostResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Success
+
+	// no validation rules for ErrorMsg
+
+	// no validation rules for RequestId
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetBizTopologyHostResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetBizTopologyHostResponseValidationError is the validation error returned
+// by GetBizTopologyHostResponse.Validate if the designated constraints aren't met.
+type GetBizTopologyHostResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBizTopologyHostResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBizTopologyHostResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBizTopologyHostResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBizTopologyHostResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBizTopologyHostResponseValidationError) ErrorName() string {
+	return "GetBizTopologyHostResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetBizTopologyHostResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBizTopologyHostResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBizTopologyHostResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBizTopologyHostResponseValidationError{}
+
+// Validate checks the field values on NodeData with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *NodeData) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ObjectId
+
+	// no validation rules for InstanceId
+
+	return nil
+}
+
+// NodeDataValidationError is the validation error returned by
+// NodeData.Validate if the designated constraints aren't met.
+type NodeDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodeDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodeDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodeDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodeDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodeDataValidationError) ErrorName() string { return "NodeDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodeDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNodeData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodeDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodeDataValidationError{}
+
+// Validate checks the field values on GetTopologyNodesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetTopologyNodesRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ScopeType
+
+	// no validation rules for ScopeId
+
+	if len(m.GetNodeList()) < 1 {
+		return GetTopologyNodesRequestValidationError{
+			field:  "NodeList",
+			reason: "value must contain at least 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetNodeList() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetTopologyNodesRequestValidationError{
+					field:  fmt.Sprintf("NodeList[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for SearchContent
+
+	if v, ok := interface{}(m.GetAlive()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetTopologyNodesRequestValidationError{
+				field:  "Alive",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Start
+
+	// no validation rules for PageSize
+
+	return nil
+}
+
+// GetTopologyNodesRequestValidationError is the validation error returned by
+// GetTopologyNodesRequest.Validate if the designated constraints aren't met.
+type GetTopologyNodesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTopologyNodesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTopologyNodesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTopologyNodesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTopologyNodesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTopologyNodesRequestValidationError) ErrorName() string {
+	return "GetTopologyNodesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetTopologyNodesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTopologyNodesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTopologyNodesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTopologyNodesRequestValidationError{}
+
+// Validate checks the field values on GetTopologyNodesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetTopologyNodesResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Success
+
+	// no validation rules for ErrorMsg
+
+	// no validation rules for RequestId
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetTopologyNodesResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetTopologyNodesResponseValidationError is the validation error returned by
+// GetTopologyNodesResponse.Validate if the designated constraints aren't met.
+type GetTopologyNodesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTopologyNodesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTopologyNodesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTopologyNodesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTopologyNodesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTopologyNodesResponseValidationError) ErrorName() string {
+	return "GetTopologyNodesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetTopologyNodesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTopologyNodesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTopologyNodesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTopologyNodesResponseValidationError{}
+
+// Validate checks the field values on GetTopologyNodesData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetTopologyNodesData) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Start
+
+	// no validation rules for PageSize
+
+	// no validation rules for Total
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetTopologyNodesDataValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// GetTopologyNodesDataValidationError is the validation error returned by
+// GetTopologyNodesData.Validate if the designated constraints aren't met.
+type GetTopologyNodesDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTopologyNodesDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTopologyNodesDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTopologyNodesDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTopologyNodesDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTopologyNodesDataValidationError) ErrorName() string {
+	return "GetTopologyNodesDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetTopologyNodesDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTopologyNodesData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTopologyNodesDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTopologyNodesDataValidationError{}
+
+// Validate checks the field values on HostData with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *HostData) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for HostId
+
+	// no validation rules for Ip
+
+	// no validation rules for Ipv6
+
+	// no validation rules for HostName
+
+	// no validation rules for Alive
+
+	// no validation rules for OsName
+
+	if v, ok := interface{}(m.GetCloudArea()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return HostDataValidationError{
+				field:  "CloudArea",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// HostDataValidationError is the validation error returned by
+// HostData.Validate if the designated constraints aren't met.
+type HostDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e HostDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e HostDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e HostDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e HostDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e HostDataValidationError) ErrorName() string { return "HostDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e HostDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sHostData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = HostDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = HostDataValidationError{}
+
+// Validate checks the field values on HostCloudArea with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *HostCloudArea) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Id
+
+	// no validation rules for Name
+
+	return nil
+}
+
+// HostCloudAreaValidationError is the validation error returned by
+// HostCloudArea.Validate if the designated constraints aren't met.
+type HostCloudAreaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e HostCloudAreaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e HostCloudAreaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e HostCloudAreaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e HostCloudAreaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e HostCloudAreaValidationError) ErrorName() string { return "HostCloudAreaValidationError" }
+
+// Error satisfies the builtin error interface
+func (e HostCloudAreaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sHostCloudArea.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = HostCloudAreaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = HostCloudAreaValidationError{}
+
+// Validate checks the field values on GetScopeHostCheckRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetScopeHostCheckRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ScopeType
+
+	// no validation rules for ScopeId
+
+	return nil
+}
+
+// GetScopeHostCheckRequestValidationError is the validation error returned by
+// GetScopeHostCheckRequest.Validate if the designated constraints aren't met.
+type GetScopeHostCheckRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetScopeHostCheckRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetScopeHostCheckRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetScopeHostCheckRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetScopeHostCheckRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetScopeHostCheckRequestValidationError) ErrorName() string {
+	return "GetScopeHostCheckRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetScopeHostCheckRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetScopeHostCheckRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetScopeHostCheckRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetScopeHostCheckRequestValidationError{}
+
+// Validate checks the field values on GetScopeHostCheckResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetScopeHostCheckResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Success
+
+	// no validation rules for ErrorMsg
+
+	// no validation rules for RequestId
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetScopeHostCheckResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// GetScopeHostCheckResponseValidationError is the validation error returned by
+// GetScopeHostCheckResponse.Validate if the designated constraints aren't met.
+type GetScopeHostCheckResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetScopeHostCheckResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetScopeHostCheckResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetScopeHostCheckResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetScopeHostCheckResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetScopeHostCheckResponseValidationError) ErrorName() string {
+	return "GetScopeHostCheckResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetScopeHostCheckResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetScopeHostCheckResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetScopeHostCheckResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetScopeHostCheckResponseValidationError{}

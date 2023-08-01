@@ -137,12 +137,71 @@ func TestClient_GetCloudTags(t *testing.T) {
 	t.Log(tags)
 }
 
-func TestClient_ListTopology(t *testing.T) {
+func TestClient_SearchBizInstTopo(t *testing.T) {
 	cli := getNewClient()
-	topo, err := cli.ListTopology(1, false)
+
+	topos, err := cli.SearchBizInstTopo(100148)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log(topo)
+	t.Log(topos[0])
+}
+
+func TestClient_GetBizInternalModule(t *testing.T) {
+	cli := getNewClient()
+
+	internalModule, err := cli.GetBizInternalModule(100148)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(internalModule)
+}
+
+func TestClient_ListTopology(t *testing.T) {
+	cli := getNewClient()
+
+	topoData, err := cli.ListTopology(100148, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(topoData)
+}
+
+func TestClient_FindHostTopoRelation(t *testing.T) {
+	cli := getNewClient()
+
+	cnt, data, err := cli.FindHostTopoRelation(100148, Page{
+		Start: 0,
+		Limit: 200,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(cnt)
+	t.Log(data)
+}
+
+func TestClient_FetchAllHostTopoRelationsByBizID(t *testing.T) {
+	cli := getNewClient()
+
+	data, err := cli.FetchAllHostTopoRelationsByBizID(100148)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(data)
+}
+
+func TestClient_SearchCloudAreaByCloudID(t *testing.T) {
+	cli := getNewClient()
+
+	data, err := cli.SearchCloudAreaByCloudID(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(data)
 }

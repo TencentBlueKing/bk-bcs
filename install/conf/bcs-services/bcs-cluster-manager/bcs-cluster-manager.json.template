@@ -35,9 +35,6 @@
         "appSecret": "${bcsAppSecret}",
         "debug": ${debug},
         "bkUserName": "${bcsBkUserName}",
-        "createTaskURL": "${bcsCreateTaskURL}",
-        "taskStatusURL": "${bcsTaskStatusURL}",
-        "startTaskURL": "${bcsStartTaskURL}",
         "templateURL": "${bcsSopsTemplateURL}",
         "frontURL": "${bcsSopsFrontURL}"
     },

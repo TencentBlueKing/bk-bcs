@@ -216,6 +216,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.UpdateNodeAnnotations",
+			Path:    []string{"/clustermanager/v1/node/annotations"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.UpdateNodeTaints",
 			Path:    []string{"/clustermanager/v1/node/taints"},
 			Method:  []string{"PUT"},
@@ -718,6 +725,34 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.GetBatchCustomSetting",
+			Path:    []string{"/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetBizTopologyHost",
+			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetTopologyNodes",
+			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetScopeHostCheck",
+			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.CreateCloudModuleFlag",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules"},
 			Method:  []string{"POST"},
@@ -784,6 +819,7 @@ type ClusterManagerService interface {
 	UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error)
 	DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error)
 	UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error)
+	UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, opts ...client.CallOption) (*UpdateNodeAnnotationsResponse, error)
 	UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...client.CallOption) (*UpdateNodeTaintsResponse, error)
 	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
@@ -877,6 +913,15 @@ type ClusterManagerService interface {
 	GetBkSopsTemplateInfo(ctx context.Context, in *GetBkSopsTemplateInfoRequest, opts ...client.CallOption) (*GetBkSopsTemplateInfoResponse, error)
 	GetInnerTemplateValues(ctx context.Context, in *GetInnerTemplateValuesRequest, opts ...client.CallOption) (*GetInnerTemplateValuesResponse, error)
 	DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, opts ...client.CallOption) (*DebugBkSopsTaskResponse, error)
+	// IP selector interface
+	// 批量获取多个配置项, 返回配置项内容map
+	GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, opts ...client.CallOption) (*GetBatchCustomSettingResponse, error)
+	// 批量获取含各节点主机数量的拓扑树
+	GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, opts ...client.CallOption) (*GetBizTopologyHostResponse, error)
+	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机信息(当前仅支持业务拓扑节点)
+	GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, opts ...client.CallOption) (*GetTopologyNodesResponse, error)
+	// 根据用户手动输入的IP/IPv6/主机名/hostId等关键字信息获取真实存在的机器信息
+	GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, opts ...client.CallOption) (*GetScopeHostCheckResponse, error)
 	// Cloud module flag management
 	CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, opts ...client.CallOption) (*CreateCloudModuleFlagResponse, error)
 	UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, opts ...client.CallOption) (*UpdateCloudModuleFlagResponse, error)
@@ -1151,6 +1196,16 @@ func (c *clusterManagerService) DrainNode(ctx context.Context, in *DrainNodeRequ
 func (c *clusterManagerService) UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeLabels", in)
 	out := new(UpdateNodeLabelsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, opts ...client.CallOption) (*UpdateNodeAnnotationsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeAnnotations", in)
+	out := new(UpdateNodeAnnotationsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1928,6 +1983,46 @@ func (c *clusterManagerService) DebugBkSopsTask(ctx context.Context, in *DebugBk
 	return out, nil
 }
 
+func (c *clusterManagerService) GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, opts ...client.CallOption) (*GetBatchCustomSettingResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetBatchCustomSetting", in)
+	out := new(GetBatchCustomSettingResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, opts ...client.CallOption) (*GetBizTopologyHostResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetBizTopologyHost", in)
+	out := new(GetBizTopologyHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, opts ...client.CallOption) (*GetTopologyNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetTopologyNodes", in)
+	out := new(GetTopologyNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, opts ...client.CallOption) (*GetScopeHostCheckResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetScopeHostCheck", in)
+	out := new(GetScopeHostCheckResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, opts ...client.CallOption) (*CreateCloudModuleFlagResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CreateCloudModuleFlag", in)
 	out := new(CreateCloudModuleFlagResponse)
@@ -2009,6 +2104,7 @@ type ClusterManagerHandler interface {
 	UnCordonNode(context.Context, *UnCordonNodeRequest, *UnCordonNodeResponse) error
 	DrainNode(context.Context, *DrainNodeRequest, *DrainNodeResponse) error
 	UpdateNodeLabels(context.Context, *UpdateNodeLabelsRequest, *UpdateNodeLabelsResponse) error
+	UpdateNodeAnnotations(context.Context, *UpdateNodeAnnotationsRequest, *UpdateNodeAnnotationsResponse) error
 	UpdateNodeTaints(context.Context, *UpdateNodeTaintsRequest, *UpdateNodeTaintsResponse) error
 	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
@@ -2102,6 +2198,15 @@ type ClusterManagerHandler interface {
 	GetBkSopsTemplateInfo(context.Context, *GetBkSopsTemplateInfoRequest, *GetBkSopsTemplateInfoResponse) error
 	GetInnerTemplateValues(context.Context, *GetInnerTemplateValuesRequest, *GetInnerTemplateValuesResponse) error
 	DebugBkSopsTask(context.Context, *DebugBkSopsTaskRequest, *DebugBkSopsTaskResponse) error
+	// IP selector interface
+	// 批量获取多个配置项, 返回配置项内容map
+	GetBatchCustomSetting(context.Context, *GetBatchCustomSettingRequest, *GetBatchCustomSettingResponse) error
+	// 批量获取含各节点主机数量的拓扑树
+	GetBizTopologyHost(context.Context, *GetBizTopologyHostRequest, *GetBizTopologyHostResponse) error
+	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机信息(当前仅支持业务拓扑节点)
+	GetTopologyNodes(context.Context, *GetTopologyNodesRequest, *GetTopologyNodesResponse) error
+	// 根据用户手动输入的IP/IPv6/主机名/hostId等关键字信息获取真实存在的机器信息
+	GetScopeHostCheck(context.Context, *GetScopeHostCheckRequest, *GetScopeHostCheckResponse) error
 	// Cloud module flag management
 	CreateCloudModuleFlag(context.Context, *CreateCloudModuleFlagRequest, *CreateCloudModuleFlagResponse) error
 	UpdateCloudModuleFlag(context.Context, *UpdateCloudModuleFlagRequest, *UpdateCloudModuleFlagResponse) error
@@ -2139,6 +2244,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error
 		DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error
 		UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error
+		UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, out *UpdateNodeAnnotationsResponse) error
 		UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
@@ -2216,6 +2322,10 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetBkSopsTemplateInfo(ctx context.Context, in *GetBkSopsTemplateInfoRequest, out *GetBkSopsTemplateInfoResponse) error
 		GetInnerTemplateValues(ctx context.Context, in *GetInnerTemplateValuesRequest, out *GetInnerTemplateValuesResponse) error
 		DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, out *DebugBkSopsTaskResponse) error
+		GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, out *GetBatchCustomSettingResponse) error
+		GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, out *GetBizTopologyHostResponse) error
+		GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, out *GetTopologyNodesResponse) error
+		GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, out *GetScopeHostCheckResponse) error
 		CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, out *CreateCloudModuleFlagResponse) error
 		UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, out *UpdateCloudModuleFlagResponse) error
 		DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, out *DeleteCloudModuleFlagResponse) error
@@ -2395,6 +2505,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNodeLabels",
 		Path:    []string{"/clustermanager/v1/node/labels"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateNodeAnnotations",
+		Path:    []string{"/clustermanager/v1/node/annotations"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
@@ -2902,6 +3019,34 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetBatchCustomSetting",
+		Path:    []string{"/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetBizTopologyHost",
+		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetTopologyNodes",
+		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetScopeHostCheck",
+		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateCloudModuleFlag",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules"},
 		Method:  []string{"POST"},
@@ -3043,6 +3188,10 @@ func (h *clusterManagerHandler) DrainNode(ctx context.Context, in *DrainNodeRequ
 
 func (h *clusterManagerHandler) UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error {
 	return h.ClusterManagerHandler.UpdateNodeLabels(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, out *UpdateNodeAnnotationsResponse) error {
+	return h.ClusterManagerHandler.UpdateNodeAnnotations(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error {
@@ -3351,6 +3500,22 @@ func (h *clusterManagerHandler) GetInnerTemplateValues(ctx context.Context, in *
 
 func (h *clusterManagerHandler) DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, out *DebugBkSopsTaskResponse) error {
 	return h.ClusterManagerHandler.DebugBkSopsTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, out *GetBatchCustomSettingResponse) error {
+	return h.ClusterManagerHandler.GetBatchCustomSetting(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, out *GetBizTopologyHostResponse) error {
+	return h.ClusterManagerHandler.GetBizTopologyHost(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, out *GetTopologyNodesResponse) error {
+	return h.ClusterManagerHandler.GetTopologyNodes(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, out *GetScopeHostCheckResponse) error {
+	return h.ClusterManagerHandler.GetScopeHostCheck(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, out *CreateCloudModuleFlagResponse) error {

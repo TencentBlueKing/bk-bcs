@@ -243,3 +243,23 @@ type ConstantValue struct {
 	// CustomType source_type=custom 时有效，自定义变量类型， 取值范围 input: 输入框，textarea: 文本框，datetime: 日期时间，int: 整数
 	CustomType string `json:"custom_type"`
 }
+
+// UserProjectResponse project info
+type UserProjectResponse struct {
+	Result  bool        `json:"result"`
+	Message string      `json:"message"`
+	Data    ProjectInfo `json:"data"`
+}
+
+// ProjectInfo project
+type ProjectInfo struct {
+	ProjectId       int    `json:"project_id"`
+	ProjectName     string `json:"project_name"`
+	BkBizId         int    `json:"bk_biz_id"`
+	FromCmdb        bool   `json:"from_cmdb"`
+	BkBizName       string `json:"bk_biz_name"`
+	BkBizDeveloper  string `json:"bk_biz_developer"`
+	BkBizMaintainer string `json:"bk_biz_maintainer"`
+	BkBizTester     string `json:"bk_biz_tester"`
+	BkBizProductor  string `json:"bk_biz_productor"`
+}

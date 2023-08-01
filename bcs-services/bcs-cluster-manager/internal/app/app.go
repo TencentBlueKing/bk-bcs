@@ -419,9 +419,6 @@ func (cm *ClusterManager) initBKOpsClient() error {
 		AppSecret:     cm.opt.BKOps.AppSecret,
 		BKUserName:    cm.opt.BKOps.BkUserName,
 		Debug:         cm.opt.BKOps.Debug,
-		CreateTaskURL: cm.opt.BKOps.CreateTaskURL,
-		TaskStatusURL: cm.opt.BKOps.TaskStatusURL,
-		StartTaskURL:  cm.opt.BKOps.StartTaskURL,
 	})
 	if err != nil {
 		blog.Errorf("initBKOpsClient failed: %v", err)
