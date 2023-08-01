@@ -117,3 +117,12 @@ func (hm *HelmManager) GetReleasePods(ctx context.Context,
 	action := actionRelease.NewGetReleasePodsAction(hm.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }
+
+// ImportClusterRelease provide the actions to import cluster releases
+func (hm *HelmManager) ImportClusterRelease(ctx context.Context,
+	req *helmmanager.ImportClusterReleaseReq, resp *helmmanager.ImportClusterReleaseResp) error {
+
+	defer recorder(ctx, "ImportClusterRelease", req, nil)()
+	action := actionRelease.NewImportClusterReleaseAction(hm.model, hm.releaseHandler)
+	return action.Handle(ctx, req, resp)
+}

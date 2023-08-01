@@ -126,6 +126,13 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "HelmManager.UploadChart",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/version/{version}/upload"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "HelmManager.GetChartRelease",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/releases"},
 			Method:  []string{"POST"},
@@ -203,6 +210,13 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "HelmManager.ImportClusterRelease",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/import"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -225,6 +239,7 @@ type HelmManagerService interface {
 	DeleteChart(ctx context.Context, in *DeleteChartReq, opts ...client.CallOption) (*DeleteChartResp, error)
 	DeleteChartVersion(ctx context.Context, in *DeleteChartVersionReq, opts ...client.CallOption) (*DeleteChartVersionResp, error)
 	DownloadChart(ctx context.Context, in *DownloadChartReq, opts ...client.CallOption) (*httpbody.HttpBody, error)
+	UploadChart(ctx context.Context, in *UploadChartReq, opts ...client.CallOption) (*UploadChartResp, error)
 	GetChartRelease(ctx context.Context, in *GetChartReleaseReq, opts ...client.CallOption) (*GetChartReleaseResp, error)
 	//* release service
 	ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error)
@@ -238,6 +253,7 @@ type HelmManagerService interface {
 	GetReleaseManifest(ctx context.Context, in *GetReleaseManifestReq, opts ...client.CallOption) (*GetReleaseManifestResp, error)
 	GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, opts ...client.CallOption) (*CommonListResp, error)
 	GetReleasePods(ctx context.Context, in *GetReleasePodsReq, opts ...client.CallOption) (*CommonListResp, error)
+	ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, opts ...client.CallOption) (*ImportClusterReleaseResp, error)
 }
 
 type helmManagerService struct {
@@ -382,6 +398,16 @@ func (c *helmManagerService) DownloadChart(ctx context.Context, in *DownloadChar
 	return out, nil
 }
 
+func (c *helmManagerService) UploadChart(ctx context.Context, in *UploadChartReq, opts ...client.CallOption) (*UploadChartResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.UploadChart", in)
+	out := new(UploadChartResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *helmManagerService) GetChartRelease(ctx context.Context, in *GetChartReleaseReq, opts ...client.CallOption) (*GetChartReleaseResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.GetChartRelease", in)
 	out := new(GetChartReleaseResp)
@@ -502,6 +528,16 @@ func (c *helmManagerService) GetReleasePods(ctx context.Context, in *GetReleaseP
 	return out, nil
 }
 
+func (c *helmManagerService) ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, opts ...client.CallOption) (*ImportClusterReleaseResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.ImportClusterRelease", in)
+	out := new(ImportClusterReleaseResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for HelmManager service
 
 type HelmManagerHandler interface {
@@ -521,6 +557,7 @@ type HelmManagerHandler interface {
 	DeleteChart(context.Context, *DeleteChartReq, *DeleteChartResp) error
 	DeleteChartVersion(context.Context, *DeleteChartVersionReq, *DeleteChartVersionResp) error
 	DownloadChart(context.Context, *DownloadChartReq, *httpbody.HttpBody) error
+	UploadChart(context.Context, *UploadChartReq, *UploadChartResp) error
 	GetChartRelease(context.Context, *GetChartReleaseReq, *GetChartReleaseResp) error
 	//* release service
 	ListReleaseV1(context.Context, *ListReleaseV1Req, *ListReleaseV1Resp) error
@@ -534,6 +571,7 @@ type HelmManagerHandler interface {
 	GetReleaseManifest(context.Context, *GetReleaseManifestReq, *GetReleaseManifestResp) error
 	GetReleaseStatus(context.Context, *GetReleaseStatusReq, *CommonListResp) error
 	GetReleasePods(context.Context, *GetReleasePodsReq, *CommonListResp) error
+	ImportClusterRelease(context.Context, *ImportClusterReleaseReq, *ImportClusterReleaseResp) error
 }
 
 func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts ...server.HandlerOption) error {
@@ -551,6 +589,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		DeleteChart(ctx context.Context, in *DeleteChartReq, out *DeleteChartResp) error
 		DeleteChartVersion(ctx context.Context, in *DeleteChartVersionReq, out *DeleteChartVersionResp) error
 		DownloadChart(ctx context.Context, in *DownloadChartReq, out *httpbody.HttpBody) error
+		UploadChart(ctx context.Context, in *UploadChartReq, out *UploadChartResp) error
 		GetChartRelease(ctx context.Context, in *GetChartReleaseReq, out *GetChartReleaseResp) error
 		ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error
 		GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, out *GetReleaseDetailV1Resp) error
@@ -563,6 +602,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		GetReleaseManifest(ctx context.Context, in *GetReleaseManifestReq, out *GetReleaseManifestResp) error
 		GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, out *CommonListResp) error
 		GetReleasePods(ctx context.Context, in *GetReleasePodsReq, out *CommonListResp) error
+		ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, out *ImportClusterReleaseResp) error
 	}
 	type HelmManager struct {
 		helmManager
@@ -652,6 +692,13 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.UploadChart",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/version/{version}/upload"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.GetChartRelease",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/releases"},
 		Method:  []string{"POST"},
@@ -729,6 +776,13 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.ImportClusterRelease",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/import"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&HelmManager{h}, opts...))
 }
 
@@ -788,6 +842,10 @@ func (h *helmManagerHandler) DownloadChart(ctx context.Context, in *DownloadChar
 	return h.HelmManagerHandler.DownloadChart(ctx, in, out)
 }
 
+func (h *helmManagerHandler) UploadChart(ctx context.Context, in *UploadChartReq, out *UploadChartResp) error {
+	return h.HelmManagerHandler.UploadChart(ctx, in, out)
+}
+
 func (h *helmManagerHandler) GetChartRelease(ctx context.Context, in *GetChartReleaseReq, out *GetChartReleaseResp) error {
 	return h.HelmManagerHandler.GetChartRelease(ctx, in, out)
 }
@@ -834,6 +892,10 @@ func (h *helmManagerHandler) GetReleaseStatus(ctx context.Context, in *GetReleas
 
 func (h *helmManagerHandler) GetReleasePods(ctx context.Context, in *GetReleasePodsReq, out *CommonListResp) error {
 	return h.HelmManagerHandler.GetReleasePods(ctx, in, out)
+}
+
+func (h *helmManagerHandler) ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, out *ImportClusterReleaseResp) error {
+	return h.HelmManagerHandler.ImportClusterRelease(ctx, in, out)
 }
 
 // Api Endpoints for ClusterAddons service
