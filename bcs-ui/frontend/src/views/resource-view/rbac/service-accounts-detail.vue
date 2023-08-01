@@ -1,11 +1,11 @@
 <template>
   <div class="detail p30">
     <div class="detail-title">
-      {{ $t('基础信息') }}
+      {{ $t('generic.title.basicInfo') }}
     </div>
     <div class="detail-content basic-info">
       <div class="basic-info-item">
-        <label>{{ $t('命名空间') }}</label>
+        <label>{{ $t('k8s.namespace') }}</label>
         <span>{{ data.metadata.namespace }}</span>
       </div>
       <div class="basic-info-item">
@@ -13,11 +13,11 @@
         <span class="bcs-ellipsis">{{ data.metadata.uid }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('创建时间') }}</label>
+        <label>{{ $t('cluster.labels.createdAt') }}</label>
         <span>{{ extData.createTime }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('存在时间') }}</label>
+        <label>{{ $t('k8s.age') }}</label>
         <span>{{ extData.age }}</span>
       </div>
     </div>
@@ -28,7 +28,7 @@
             <bk-table-column label="name" prop="name"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="event" :label="$t('事件')">
+        <bcs-tab-panel name="event" :label="$t('generic.label.event')">
           <EventQueryTableVue
             hide-cluster-and-namespace
             :kinds="data.kind"

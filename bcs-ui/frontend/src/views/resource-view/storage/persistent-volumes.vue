@@ -11,18 +11,18 @@
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('名称')" prop="metadata.name" sortable></bk-table-column>
+        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable></bk-table-column>
         <bk-table-column label="Capacity">
           <template #default="{ row }">
             <span>{{ row.spec.capacity.storage || 'null' }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column label="Access Modes">
+        <bk-table-column label="Access modes">
           <template #default="{ row }">
             <span>{{ handleGetExtData(row.metadata.uid, 'accessModes').join(', ') || '--' }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column label="Reclaim Policy">
+        <bk-table-column label="Reclaim policy">
           <template #default="{ row }">
             <span>{{ row.spec.persistentVolumeReclaimPolicy || '--' }}</span>
           </template>
@@ -58,10 +58,10 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
-        <!-- <bk-table-column :label="$t('操作')" :resizable="false" width="150">
+        <!-- <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="150">
                     <template #default="{ row }">
-                        <bk-button text @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
-                        <bk-button class="ml10" text @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
+                        <bk-button text @click="handleUpdateResource(row)">{{ $t('generic.button.update') }}</bk-button>
+                        <bk-button class="ml10" text @click="handleDeleteResource(row)">{{ $t('generic.button.delete') }}</bk-button>
                     </template>
                 </bk-table-column> -->
         <template #empty>

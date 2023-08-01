@@ -41,7 +41,7 @@
     </div>
     <div :class="['biz-var-panel', { 'show': isVarPanelShow }]" v-clickoutside="hidePanel">
       <div class="var-panel-header">
-        <bcs-popover :content="isVarPanelShow ? $t('关闭') : $t('查看可用变量')" placement="left" v-if="!isVarPanelShow">
+        <bcs-popover :content="isVarPanelShow ? $t('generic.button.close') : $t('deploy.templateset.viewAvailableVars')" placement="left" v-if="!isVarPanelShow">
           <button class="var-panel-trigger" @click.stop.prevent="togglePanel">
             <i class="bcs-icon bcs-icon-angle-left"></i>
           </button>
@@ -49,39 +49,13 @@
         <button class="var-panel-trigger" @click.stop.prevent="togglePanel" v-else>
           <i class="bcs-icon bcs-icon-angle-left"></i>
         </button>
-        <strong class="var-panel-title" v-show="isVarPanelShow">{{$t('可用变量')}}<span class="f12">（{{$t('模板集中引入方式')}}：{{varUserWay}}）</span></strong>
+        <strong class="var-panel-title" v-show="isVarPanelShow">{{$t('deploy.templateset.availableVars')}}<span class="f12">（{{$t('deploy.templateset.templateImportMethod')}}：{{varUserWay}}）</span></strong>
       </div>
       <div class="var-panel-list" v-show="isVarPanelShow">
-        <!-- <bk-table
-                    :border="true"
-                    :out-border="false"
-                    :data="varList">
-                    <bk-table-column :label="$t('变量名')" :show-overflow-tooltip="false" min-width="200">
-                        <template slot-scope="props">
-                            <bcs-popover :content="props.row.name" placement="right">
-                                <span class="var-name">{{props.row.name}}</span>
-                            </bcs-popover>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column :label="$t('KEY')" :show-overflow-tooltip="true" min-width="200">
-                        <template slot-scope="props">
-                            <bcs-popover :content="props.row.key" placement="right">
-                                <span class="var-key">{{props.row.key}}</span>
-                            </bcs-popover>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column :label="$t('操作')" :show-overflow-tooltip="true">
-                        <template slot-scope="props">
-                            <bk-button class="var-copy-btn" :data-clipboard-text="`{{${props.row.key}}}`" type="default">
-                                <i class="bcs-icon bcs-icon-clipboard"></i>
-                            </bk-button>
-                        </template>
-                    </bk-table-column>
-                </bk-table> -->
         <table class="bk-table biz-var-table">
           <thead>
             <tr>
-              <th>{{$t('变量名')}}</th>
+              <th>{{$t('cluster.nodeTemplate.variable.label.var.text')}}</th>
               <th style="width: 230px;">KEY</th>
               <th style="width: 60px;"></th>
             </tr>
@@ -136,7 +110,7 @@ export default {
   data() {
     return {
       activeRoute: this.$route.name,
-      varUserWay: `{{${this.$t('变量')}KEY}}`,
+      varUserWay: `{{${this.$t('generic.label.var')}KEY}}`,
       isVarPanelShow: false,
       runEnv: window.RUN_ENV,
     };
@@ -254,7 +228,7 @@ export default {
       this.clipboardInstance.on('success', () => {
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('复制成功'),
+          message: this.$t('generic.msg.success.copy'),
         });
         this.isVarPanelShow = false;
       });

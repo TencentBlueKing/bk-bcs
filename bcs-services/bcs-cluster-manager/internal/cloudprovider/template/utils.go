@@ -232,7 +232,7 @@ func getInitClusterIPs(clusterID string) (string, error) {
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
 	nodes, err := k8sOperator.ListClusterNodes(context.Background(), clusterID)
 	if err != nil {
-		blog.Errorf("getInitClusterIPs[%s] failed: %v", err)
+		blog.Errorf("getInitClusterIPs[%s] failed: %v", clusterID, err)
 		return "", err
 	}
 

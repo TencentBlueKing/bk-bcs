@@ -1,81 +1,78 @@
 <template>
   <div>
     <bk-form class="bcs-small-form px-[60px] py-[24px]" v-bkloading="{ isLoading }">
-      <!-- <bk-form-item :label="$t('添加方式')">
-      {{ clusterData.clusterCategory === 'importer' ? $t('导入集群') : $t('创建集群') }}
-    </bk-form-item> -->
-      <DescList :title="$t('集群信息')">
-        <bk-form-item :label="$t('集群ID')">
+      <DescList :title="$t('cluster.title.clusterInfo')">
+        <bk-form-item :label="$t('cluster.labels.clusterId')">
           {{ clusterData.clusterID }}
         </bk-form-item>
-        <bk-form-item :label="$t('集群名称')">
+        <bk-form-item :label="$t('cluster.labels.name')">
           <EditFormItem
             :maxlength="64"
             :value="clusterData.clusterName"
-            :placeholder="$t('请输入集群名称，不超过64个字符')"
+            :placeholder="$t('cluster.create.validate.name')"
             class="w-[300px]"
             @save="handleClusterNameChange" />
         </bk-form-item>
-        <bk-form-item :label="$t('集群类型')">
+        <bk-form-item :label="$t('cluster.labels.clusterType')">
           {{ clusterType }}
         </bk-form-item>
-        <bk-form-item :label="$t('集群版本')">
+        <bk-form-item :label="$t('cluster.create.label.clusterVersion')">
           {{ clusterVersion }}
         </bk-form-item>
         <bk-form-item
-          :label="$t('TKE集群ID')"
+          :label="$t('cluster.detail.label.tkeID')"
           v-if="clusterData.providerType === 'tke' && clusterData.clusterType !== 'virtual'">
           {{ clusterData.systemID || '--' }}
         </bk-form-item>
-        <bk-form-item :label="$t('集群描述')">
+        <bk-form-item :label="$t('cluster.create.label.desc1')">
           <EditFormItem
             :maxlength="100"
             type="textarea"
             :value="clusterData.description"
-            :placeholder="$t('请输入集群描述')"
+            :placeholder="$t('cluster.placeholder.desc')"
             class="w-[300px]"
             @save="handleClusterDescChange" />
         </bk-form-item>
       </DescList>
-      <DescList :title="$t('集群配置')">
+      <DescList :title="$t('cluster.title.clusterConfig')">
         <template v-if="clusterData.clusterType !== 'virtual'">
-          <bk-form-item :label="$t('运行时组件')">
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')">
             {{ containerRuntime }}
           </bk-form-item>
-          <bk-form-item :label="$t('运行时版本')">
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.runtimeVersion.title')">
             {{ runtimeVersion }}
           </bk-form-item>
         </template>
         <bk-form-item label="KubeConfig">
-          <bcs-button text class="text-[12px]" @click="handleGotoToken">{{ $t('查看详情') }}</bcs-button>
+          <bcs-button text class="text-[12px]" @click="handleGotoToken">{{ $t('cluster.nodeTemplate.sops.status.running.detailBtn') }}</bcs-button>
         </bk-form-item>
-        <bk-form-item :label="$t('集群变量')" v-if="$INTERNAL">
-          <LoadingIcon v-if="varLoading">{{ $t('加载中') }}...</LoadingIcon>
+        <bk-form-item :label="$t('deploy.variable.clusterEnv')" v-if="$INTERNAL">
+          <LoadingIcon v-if="varLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
           <template v-else>
             <bcs-button
               text
               v-if="variableList.length"
               class="text-[12px]"
               @click="handleShowVarSideslider">
-              {{ `${variableList.length} ${$t('个')}` }}
+              {{ `${variableList.length} ${$t('units.suffix.units')}` }}
             </bcs-button>
             <span v-else>--</span>
           </template>
         </bk-form-item>
       </DescList>
-      <DescList :title="$t('集群环境')">
-        <bk-form-item :label="$t('所属地域')">
+      <DescList :title="$t('cluster.labels.env')">
+        <bk-form-item :label="$t('cluster.labels.region')">
           {{ region }}
         </bk-form-item>
-        <bk-form-item :label="$t('Kubernetes 提供商')">
+        <bk-form-item :label="$t('cluster.labels.Kubernetes')">
           {{ clusterProvider || '--' }}
         </bk-form-item>
-        <bk-form-item :label="$t('集群环境')">
+        <bk-form-item :label="$t('cluster.labels.env')">
           {{ CLUSTER_ENV[clusterData.environment] }}
         </bk-form-item>
       </DescList>
-      <DescList :title="$t('状态和记录')">
-        <bk-form-item :label="$t('状态')">
+      <DescList :title="$t('cluster.title.StatusAndRecord')">
+        <bk-form-item :label="$t('generic.label.status')">
           <StatusIcon
             :status-color-map="{
               'CREATE-FAILURE': 'red',
@@ -84,31 +81,31 @@
               RUNNING: 'green'
             }"
             :status-text-map="{
-              INITIALIZATION: $t('正在初始化中，请稍等···'),
-              DELETING: $t('正在删除中，请稍等···'),
-              'CREATE-FAILURE': $t('创建失败，请重试'),
-              'DELETE-FAILURE': $t('删除失败，请重试'),
-              'IMPORT-FAILURE': $t('导入失败'),
-              RUNNING: $t('正常')
+              INITIALIZATION: $t('generic.status.initializing'),
+              DELETING: $t('generic.status.deleting'),
+              'CREATE-FAILURE': $t('generic.status.createFailed'),
+              'DELETE-FAILURE': $t('generic.status.deleteFailed'),
+              'IMPORT-FAILURE': $t('cluster.status.importFailed'),
+              RUNNING: $t('generic.status.ready')
             }"
             :status="clusterData.status"
             :pending="['INITIALIZATION', 'DELETING'].includes(clusterData.status)"
             v-if="clusterData.status" />
           <span v-else>--</span>
         </bk-form-item>
-        <bk-form-item :label="$t('创建人')">
+        <bk-form-item :label="$t('generic.label.createdBy')">
           {{ clusterData.creator || '--' }}
         </bk-form-item>
-        <bk-form-item :label="$t('创建时间')">
+        <bk-form-item :label="$t('cluster.labels.createdAt')">
           {{ clusterData.createTime || '--' }}
         </bk-form-item>
-        <bk-form-item :label="$t('更新时间')">
+        <bk-form-item :label="$t('cluster.labels.updatedAt')">
           {{ clusterData.updateTime || '--' }}
         </bk-form-item>
       </DescList>
       <bk-sideslider
         :is-show.sync="showVariableInfo"
-        :title="`${$t('设置变量')} ( ${clusterId} )`"
+        :title="`${$t('cluster.title.setClusterVar')} ( ${clusterId} )`"
         :width="680"
         :before-close="handleBeforeClose"
         quick-close
@@ -125,8 +122,6 @@
           </div>
         </template>
       </bk-sideslider>
-    <!-- <bk-form-item :label="$t('集群添加方式')"></bk-form-item>
-    <bk-form-item :label="$t('调度引擎')"></bk-form-item> -->
     </bk-form>
   </div>
 </template>
@@ -192,7 +187,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('保存成功'),
+          message: $i18n.t('generic.msg.success.save'),
         });
         showVariableInfo.value = false;
       }
@@ -216,7 +211,7 @@ export default defineComponent({
     });
     const clusterType = computed(() => {
       if (clusterData.value.clusterType === 'virtual') return 'vCluster';
-      return clusterData.value.manageType === 'INDEPENDENT_CLUSTER' ? $i18n.t('独立集群') : $i18n.t('托管集群');
+      return clusterData.value.manageType === 'INDEPENDENT_CLUSTER' ? $i18n.t('bcs.cluster.selfDeployed') : $i18n.t('bcs.cluster.managed');
     });
     // 修改集群信息
     const handleModifyCluster = async (params  = {}) => {
@@ -227,7 +222,7 @@ export default defineComponent({
       });
       result && $bkMessage({
         theme: 'success',
-        message: $i18n.t('修改成功'),
+        message: $i18n.t('generic.msg.success.modify'),
       });
       await Promise.all([
         getClusterList(),

@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -26,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	intercommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
@@ -318,6 +320,15 @@ func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, 
 	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
 		req.OsName = &group.LaunchTemplate.ImageInfo.ImageID
 	}
+
+	kubeletParas := cutils.GetKubeletParas(group.NodeTemplate)
+	if paras, ok := kubeletParas[intercommon.Kubelet]; ok {
+		if req.ExtraArgs == nil {
+			req.ExtraArgs = &tke.InstanceExtraArgs{}
+		}
+		req.ExtraArgs.Kubelet = common.StringPtrs(strings.Split(paras, ";"))
+	}
+
 	return req
 }
 

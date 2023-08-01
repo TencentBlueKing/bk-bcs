@@ -229,7 +229,7 @@ func (ch *chartHandler) uploadChart(_ context.Context, option repo.UploadOption)
 				"directory dir, %s", err)
 		}
 		defer func(path string) {
-			err := os.RemoveAll(path)
+			err = os.RemoveAll(path)
 			if err != nil {
 				blog.Errorf("failed to remove temporary directory, %s: %s",
 					path, err.Error())

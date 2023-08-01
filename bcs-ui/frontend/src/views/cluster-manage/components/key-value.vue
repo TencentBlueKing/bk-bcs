@@ -4,13 +4,13 @@
       class="add-btn" v-if="!labels.length"
       @click="handleAddLabel(0)">
       <i class="bk-icon icon-plus-circle-shape mr5"></i>
-      {{$t('添加')}}
+      {{$t('generic.button.add')}}
     </span>
     <div class="key-value" v-for="(item, index) in labels" :key="index">
       <Validate class="w-[100%]" :value="item.key" :rules="keyRules">
         <bcs-input
           v-model="item.key"
-          :placeholder="$t('键')"
+          :placeholder="$t('generic.label.key')"
           @change="handleLabelKeyChange">
         </bcs-input>
       </Validate>
@@ -18,7 +18,7 @@
       <Validate class="w-[100%]" :value="item.value" :rules="valueRules">
         <bcs-input
           v-model="item.value"
-          :placeholder="$t('值')"
+          :placeholder="$t('generic.label.value')"
           @change="handleLabelValueChange">
         </bcs-input>
       </Validate>
@@ -63,7 +63,7 @@ export default defineComponent({
       type: Array as PropType<Array<any>>,
       default: () => [
         {
-          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          message: $i18n.t('generic.validate.labelKey'),
           validator: '^[A-Za-z0-9._/-]+$',
         },
       ],
@@ -72,7 +72,7 @@ export default defineComponent({
       type: Array as PropType<Array<any>>,
       default: () => [
         {
-          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          message: $i18n.t('generic.validate.labelKey'),
           validator: '^[A-Za-z0-9._/-]+$',
         },
       ],

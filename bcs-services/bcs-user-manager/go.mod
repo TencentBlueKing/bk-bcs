@@ -2,6 +2,8 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager
 
 go 1.20
 
+replace github.com/TencentBlueKing/iam-go-sdk => github.com/adevjoe/iam-go-sdk v0.1.4
+
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230718124617-d89a291003e4

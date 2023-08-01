@@ -1,9 +1,9 @@
 <template>
   <bcs-exception type="empty" scene="page">
-    <div class="flex justify-center text-[24px]">{{ $t('暂无集群') }}</div>
-    <div class="mt-[16px] text-[14px] text-[#979BA5]">{{ $t('推荐使用共享集群。如有需要也可添加新的集群') }}</div>
+    <div class="flex justify-center text-[24px]">{{ $t('cluster.msg.emptyCluster') }}</div>
+    <div class="mt-[16px] text-[14px] text-[#979BA5]">{{ $t('cluster.msg.emptyClusterGuide') }}</div>
     <div class="flex justify-center mt-[24px]">
-      <bk-button class="min-w-[116px]" theme="primary" @click="handleGotoResourceView">{{ $t('使用共享集群') }}</bk-button>
+      <bk-button class="min-w-[116px]" theme="primary" @click="handleGotoResourceView">{{ $t('cluster.button.useSharedCluster') }}</bk-button>
       <bk-button
         class="min-w-[116px]"
         v-authority="{
@@ -14,14 +14,14 @@
             project_id: curProject.project_id
           }
         }"
-        @click="handleCreateCluster">{{ $t('添加集群') }}</bk-button>
+        @click="handleCreateCluster">{{ $t('cluster.button.addCluster') }}</bk-button>
     </div>
     <div class="flex justify-center mt-[16px]">
       <bk-button text @click="handleGotoDoc">
         <span class="relative top-[-1px]">
           <i class="bcs-icon bcs-icon-question-circle"></i>
         </span>
-        {{ $t('游戏接入指南') }}
+        {{ $t('generic.button.gameGuide') }}
       </bk-button>
     </div>
   </bcs-exception>

@@ -73,12 +73,12 @@ export function catchErrorHandler(err, ctx) {
     if (!err.code || err.code === 404) {
       ctx.exceptionCode = {
         code: '404',
-        msg: window.i18n.t('当前访问的页面不存在'),
+        msg: window.i18n.t('generic.msg.warning.404'),
       };
     } else if (err.code === 403) {
       ctx.exceptionCode = {
         code: '403',
-        msg: window.i18n.t('Sorry，您的权限不足!'),
+        msg: window.i18n.t('generic.msg.warning.403'),
       };
     } else {
       console.error(err);

@@ -2,7 +2,7 @@
 <template>
   <bk-form class="node-pool-info" :model="nodePoolInfo" :rules="nodePoolInfoRules" ref="formRef">
     <bk-form-item
-      :label="$t('节点配额')"
+      :label="$t('cluster.ca.nodePool.label.nodeQuota')"
       property="maxSize"
       error-display-type="normal">
       <bk-input
@@ -15,11 +15,11 @@
       </bk-input>
     </bk-form-item>
     <bk-form-item
-      :label="$t('是否启用节点规格')"
-      :desc="$t('节点规格启用后Autoscaler组件将会根据扩容算法使用该节点规格资源，开启Autoscaler组件后必须要开启至少一个节点规格')">
+      :label="$t('cluster.ca.nodePool.create.enableAutoscale.title')"
+      :desc="$t('cluster.ca.nodePool.create.enableAutoscale.tips')">
       <bk-checkbox v-model="nodePoolInfo.enableAutoscale" :disabled="isEdit"></bk-checkbox>
     </bk-form-item>
-    <bk-form-item :label="$t('标签')" property="labels" error-display-type="normal">
+    <bk-form-item :label="$t('k8s.label')" property="labels" error-display-type="normal">
       <KeyValue
         class="max-w-[420px]"
         :min-item="0"
@@ -27,12 +27,12 @@
         v-model="nodePoolInfo.nodeTemplate.labels">
       </KeyValue>
     </bk-form-item>
-    <bk-form-item :label="$t('污点')" property="taints" error-display-type="normal">
+    <bk-form-item :label="$t('k8s.taint')" property="taints" error-display-type="normal">
       <span
         class="add-key-value-items" v-if="!nodePoolInfo.nodeTemplate.taints.length"
         @click="handleAddTaints">
         <i class="bk-icon icon-plus-circle-shape mr5"></i>
-        {{$t('添加')}}
+        {{$t('generic.button.add')}}
       </span>
       <Taints
         class="taints"
@@ -42,7 +42,7 @@
         v-else>
       </Taints>
     </bk-form-item>
-    <bk-form-item :label="$t('注解')" property="annotations" error-display-type="normal">
+    <bk-form-item :label="$t('k8s.annotation')" property="annotations" error-display-type="normal">
       <KeyValue
         class="max-w-[420px]"
         :min-item="0"
@@ -51,39 +51,39 @@
       </KeyValue>
     </bk-form-item>
     <bk-form-item
-      :label="$t('实例创建策略')"
-      :desc="$t('首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点规格指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效')">
+      :label="$t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.title')"
+      :desc="$t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.desc')">
       <bk-radio-group v-model="nodePoolInfo.autoScaling.multiZoneSubnetPolicy">
         <span class="inline-block">
-          <bk-radio value="PRIORITY">{{$t('首选可用区（子网）优先')}}</bk-radio>
-          <bk-radio value="EQUALITY">{{$t('多可用区（子网）打散')}}</bk-radio>
+          <bk-radio value="PRIORITY">{{$t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.priority')}}</bk-radio>
+          <bk-radio value="EQUALITY">{{$t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.equality')}}</bk-radio>
         </span>
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item
-      :label="$t('重试策略')"
-      :desc="$t('快速重试 ：立即重试，在较短时间内快速重试，连续失败超过一定次数（5次）后不再重试，<br/>间隔递增重试 ：间隔递增重试，随着连续失败次数的增加，重试间隔逐渐增大，重试间隔从秒级到1天不等，<br/>不重试：不进行重试，直到再次收到用户调用或者告警信息后才会重试')">
+      :label="$t('cluster.ca.nodePool.create.retryPolicy.title')"
+      :desc="$t('cluster.ca.nodePool.create.retryPolicy.desc')">
       <bk-radio-group v-model="nodePoolInfo.autoScaling.retryPolicy">
         <span class="inline-block">
-          <bk-radio value="IMMEDIATE_RETRY">{{$t('快速重试')}}</bk-radio>
-          <bk-radio value="INCREMENTAL_INTERVALS">{{$t('间隔递增重试')}}</bk-radio>
-          <bk-radio value="NO_RETRY">{{$t('不重试')}}</bk-radio>
+          <bk-radio value="IMMEDIATE_RETRY">{{$t('cluster.ca.nodePool.create.retryPolicy.immediate_retry')}}</bk-radio>
+          <bk-radio value="INCREMENTAL_INTERVALS">{{$t('cluster.ca.nodePool.create.retryPolicy.incremental_intervals')}}</bk-radio>
+          <bk-radio value="NO_RETRY">{{$t('cluster.ca.nodePool.create.retryPolicy.no_retry')}}</bk-radio>
         </span>
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item
-      :label="$t('扩缩容模式')"
-      :desc="$t('释放模式：缩容时自动释放Cluster AutoScaler判断的空余节点， 扩容时自动创建新的CVM节点加入到伸缩组<br/>关机模式：扩容时优先对已关机的节点执行开机操作，节点数依旧不满足要求时再创建新的CVM节点')">
+      :label="$t('cluster.ca.nodePool.create.scalingMode.title')"
+      :desc="$t('cluster.ca.nodePool.create.scalingMode.desc')">
       <bk-radio-group v-model="nodePoolInfo.autoScaling.scalingMode">
         <span class="inline-block">
-          <bk-radio value="CLASSIC_SCALING">{{$t('释放模式')}}</bk-radio>
-          <bk-radio value="WAKE_UP_STOPPED_SCALING">{{$t('关机模式')}}</bk-radio>
+          <bk-radio value="CLASSIC_SCALING">{{$t('cluster.ca.nodePool.create.scalingMode.classic_scaling')}}</bk-radio>
+          <bk-radio value="WAKE_UP_STOPPED_SCALING">{{$t('cluster.ca.nodePool.create.scalingMode.wake_up_stopped_scaling')}}</bk-radio>
         </span>
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item
-      :label="$t('云区域')"
-      :desc="$t('Cluster Autoscaler组件在扩容节点时会使用节点管理API自动安装gse_agent，以保证监控、日志、标准运维的正常使用，这里的云区域是指节点管理安装gse_agent时指定的云区域，默认为“直连区域”')">
+      :label="$t('cluster.ca.nodePool.create.cloudArea.title')"
+      :desc="$t('cluster.ca.nodePool.create.cloudArea.desc')">
       <bcs-select
         :clearable="false"
         :loading="cloudLoading"
@@ -161,13 +161,13 @@ export default defineComponent({
     const nodePoolInfoRules = ref({
       labels: [
         {
-          message: $i18n.t('标签值不能为空'),
+          message: $i18n.t('generic.validate.labelValueEmpty'),
           trigger: 'custom',
           // eslint-disable-next-line max-len
           validator: () => Object.keys(nodePoolInfo.value.nodeTemplate.labels).every(key => !!nodePoolInfo.value.nodeTemplate.labels[key]),
         },
         {
-          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          message: $i18n.t('generic.validate.labelKey'),
           trigger: 'custom',
           validator: () => {
             const keys = Object.keys(nodePoolInfo.value.nodeTemplate.labels);
@@ -178,12 +178,12 @@ export default defineComponent({
       ],
       taints: [
         {
-          message: $i18n.t('taints不能有空字段'),
+          message: $i18n.t('generic.validate.required1'),
           trigger: 'custom',
           validator: () => nodePoolInfo.value.nodeTemplate.taints.every(item => item.key && item.value && item.effect),
         },
         {
-          message: $i18n.t('重复键'),
+          message: $i18n.t('generic.validate.repeatKey'),
           trigger: 'custom',
           validator: () => {
             const data = nodePoolInfo.value.nodeTemplate.taints.reduce((pre, item) => {
@@ -197,7 +197,7 @@ export default defineComponent({
           },
         },
         {
-          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          message: $i18n.t('generic.validate.labelKey'),
           trigger: 'custom',
           validator: () => (nodePoolInfo.value.nodeTemplate.taints as any[])
             .every(item => /^[A-Za-z0-9._/-]+$/.test(item.key) && /^[A-Za-z0-9._/-]+$/.test(item.value)),
@@ -205,13 +205,13 @@ export default defineComponent({
       ],
       annotations: [
         {
-          message: $i18n.t('注解值不能为空'),
+          message: $i18n.t('generic.validate.annotationValueEmpty'),
           trigger: 'custom',
           validator: () => Object.keys(nodePoolInfo.value.nodeTemplate.annotations)
             .every(key => !!nodePoolInfo.value.nodeTemplate.annotations[key]),
         },
         {
-          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          message: $i18n.t('generic.validate.labelKey'),
           trigger: 'custom',
           validator: () => {
             const keys = Object.keys(nodePoolInfo.value.nodeTemplate.annotations);
@@ -223,7 +223,7 @@ export default defineComponent({
       // 'nodeTemplate.module.scaleOutModuleID': [
       //   {
       //     required: true,
-      //     message: $i18n.t('必填项'),
+      //     message: $i18n.t('generic.validate.required'),
       //     trigger: 'blur',
       //   },
       // ],

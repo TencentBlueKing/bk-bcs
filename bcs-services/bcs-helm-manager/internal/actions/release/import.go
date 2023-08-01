@@ -30,7 +30,8 @@ import (
 )
 
 // NewImportClusterReleaseAction return a new NewImportClusterReleaseAction instance
-func NewImportClusterReleaseAction(model store.HelmManagerModel, releaseHandler release.Handler) *ImportClusterReleaseAction {
+func NewImportClusterReleaseAction(model store.HelmManagerModel,
+	releaseHandler release.Handler) *ImportClusterReleaseAction {
 	return &ImportClusterReleaseAction{
 		model:          model,
 		releaseHandler: releaseHandler,

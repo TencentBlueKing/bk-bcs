@@ -1,22 +1,27 @@
 <template>
-  <bk-form class="log-form" :rules="formDataRules" :model="formData" ref="formRef">
-    <bk-form-item :label="$t('规则名称')" property="name" error-display-type="normal" required v-if="!isEdit">
+  <bk-form class="log-form" :label-width="labelWidth" :rules="formDataRules" :model="formData" ref="formRef">
+    <bk-form-item
+      :label="$t('plugin.tools.ruleName')"
+      property="name"
+      error-display-type="normal"
+      required
+      v-if="!isEdit">
       <bcs-input v-model="formData.name"></bcs-input>
     </bk-form-item>
-    <bk-form-item :label="$t('配置信息')">
+    <bk-form-item :label="$t('logCollector.label.configInfo')">
       <div class="border border-[#DCDEE5] border-solid p-[16px] bg-[#FAFBFD]">
         <div class="border border-[#EAEBF0] border-solid px-[12px] py-[12px] bg-[#fff] rounded-sm">
           <Row class="mb-[6px] px-[12px]">
             <template #left>
-              <span class="font-bold">{{ $t('选择容器范围') }}</span>
-              <span class="ml-[12px]">
+              <span class="font-bold">{{ $t('logCollector.title.selectRange.text') }}</span>
+              <span class="ml-[12px] flex-1 bcs-ellipsis">
                 <i class="bk-icon icon-info-circle text-[#979BA5] text-[14px]"></i>
-                <span class="ml-[4px]">{{ $t('所有选择范围可相互叠加并作用，如果选择所有命名空间，至少添加一种范围') }}</span>
+                <span class="ml-[4px]">{{ $t('logCollector.title.selectRange.desc') }}</span>
               </span>
             </template>
           </Row>
           <bk-form-item
-            :label="$t('命名空间')"
+            :label="$t('k8s.namespace')"
             property="namespaces"
             error-display-type="normal"
             class="vertical-form-item px-[12px]"
@@ -29,7 +34,7 @@
               multiple
               :disabled="fromOldRule"
               @selected="handleNsChange">
-              <bcs-option key="all" id="" :name="$t('所有')" v-if="!curCluster.is_shared"></bcs-option>
+              <bcs-option key="all" id="" :name="$t('plugin.tools.all')" v-if="!curCluster.is_shared"></bcs-option>
               <bcs-option
                 v-for="option in namespaceList"
                 :key="option.name"
@@ -41,13 +46,14 @@
           <LogPanel
             v-if="configRangeMap['label']"
             :disabled="fromOldRule"
-            :title="$t('按标签选择')"
-            :desc="$t('如果添加多个标签，只会采集Pod上同时存在多个标签的容器日志')"
+            :title="$t('logCollector.button.addRange.label.text')"
+            :desc="$t('logCollector.button.addRange.label.tips')"
             @delete="handleDeleteRange('label')">
             <bk-form-item
               :label-width="0.1"
               property="match_labels"
-              error-display-type="normal">
+              error-display-type="normal"
+              class="hide-form-label">
               <KeyValue
                 :value="formData.rule.config.label_selector.match_labels"
                 :disabled="fromOldRule"
@@ -56,12 +62,12 @@
           </LogPanel>
           <LogPanel
             :disabled="fromOldRule"
-            :title="$t('按工作负载选择')"
+            :title="$t('logCollector.button.addRange.workload')"
             v-if="configRangeMap['workload']"
             @delete="handleDeleteRange('workload')">
             <div class="flex items-center">
               <div class="w-[200px] flex">
-                <span class="bcs-form-prefix bg-[#f5f7fa]">{{$t('应用类型')}}</span>
+                <span class="bcs-form-prefix bg-[#f5f7fa]">{{$t('plugin.tools.appType')}}</span>
                 <bcs-select
                   class="flex-1 bg-[#fff]"
                   :clearable="false"
@@ -70,7 +76,7 @@
                 </bcs-select>
               </div>
               <div class="flex-1 flex">
-                <span class="bcs-form-prefix bg-[#f5f7fa] ml-[12px]">{{$t('应用名称')}}</span>
+                <span class="bcs-form-prefix bg-[#f5f7fa] ml-[12px]">{{$t('plugin.tools.appName')}}</span>
                 <bcs-select
                   class="flex-1"
                   allow-create
@@ -88,7 +94,7 @@
           </LogPanel>
           <LogPanel
             :disabled="fromOldRule"
-            :title="$t('按容器名称选择')"
+            :title="$t('logCollector.button.addRange.container')"
             v-if="configRangeMap['container']"
             @delete="handleDeleteRange('container')">
             <bcs-tag-input
@@ -110,7 +116,7 @@
               :disabled="fromOldRule"
               outline
               icon="plus">
-              {{ $t('添加范围') }}
+              {{ $t('logCollector.button.addRange.text') }}
             </bcs-button>
             <template #content>
               <li
@@ -125,25 +131,25 @@
           <p
             class="text-[#EA3636] px-[12px] mt-[8px] flex items-center h-[20px]"
             v-if="hasNoConfig">
-            {{ $t('所有选择范围可相互叠加并作用，如果选择所有命名空间，至少添加一种范围') }}
+            {{ $t('logCollector.title.selectRange.desc') }}
           </p>
         </div>
         <bk-form-item
-          :label="$t('采集对象')"
+          :label="$t('logCollector.label.collectorType.text')"
           property="collectorType"
           error-display-type="normal"
           class="vertical-form-item !mt-[16px]"
           required>
           <bcs-checkbox :disabled="fromOldRule" v-model="isContainerFile">
-            <span class="text-[12px]">{{ $t('容器内文件') }}</span>
+            <span class="text-[12px]">{{ $t('logCollector.label.collectorType.file') }}</span>
           </bcs-checkbox>
           <bcs-checkbox :disabled="fromOldRule" class="ml-[24px]" v-model="formData.rule.config.enable_stdout">
-            <span class="text-[12px]">{{ $t('标准输出') }}</span>
+            <span class="text-[12px]">{{ $t('logCollector.label.collectorType.stdout') }}</span>
           </bcs-checkbox>
         </bk-form-item>
         <bk-form-item
-          :label="$t('日志路径')"
-          :desc="$t('只支持星号（*）、问号（?）两种通配符')"
+          :label="$t('logCollector.label.logPath.text')"
+          :desc="$t('logCollector.label.logPath.tips')"
           property="paths"
           error-display-type="normal"
           class="vertical-form-item !mt-[16px]"
@@ -159,13 +165,14 @@
               @click="handleAddPath"></i>
             <i
               :class="[
-                { '!cursor-not-allowed !text-[#EAEBF0]': (formData.rule.config.paths && formData.rule.config.paths.length === 1) || fromOldRule },
+                { '!cursor-not-allowed !text-[#EAEBF0]':
+                  (formData.rule.config.paths && formData.rule.config.paths.length === 1) || fromOldRule },
                 'text-[16px] text-[#C4C6CC] bk-icon icon-minus-circle-shape ml-[10px] cursor-pointer'
               ]"
               @click="handleDeletePath(index)"></i>
           </div>
         </bk-form-item>
-        <bk-form-item :label="$t('日志字符集')" class="vertical-form-item !mt-[8px]" required>
+        <bk-form-item :label="$t('logCollector.label.encoding')" class="vertical-form-item !mt-[8px]" required>
           <bcs-select
             :clearable="false"
             :disabled="fromOldRule"
@@ -176,13 +183,22 @@
           </bcs-select>
         </bk-form-item>
         <bk-form-item
-          :label="$t('过滤内容')"
+          :label="$t('logCollector.label.matchContent.text')"
           class="vertical-form-item !mt-[16px]"
-          :desc="$t('为减少传输和存储成本，可以过滤掉部分内容，默认不开启过滤')">
+          :desc="$t('logCollector.label.matchContent.tips')">
           <bk-radio-group v-model="formData.rule.config.conditions.type">
-            <bk-radio :disabled="fromOldRule" value="" class="text-[12px]">{{ $t('不过滤') }}</bk-radio>
-            <bk-radio :disabled="fromOldRule" value="match" class="text-[12px]">{{ $t('字符串过滤') }}</bk-radio>
-            <bk-radio :disabled="fromOldRule" value="separator" class="text-[12px]">{{ $t('分隔符过滤') }}</bk-radio>
+            <bk-radio
+              :disabled="fromOldRule"
+              value=""
+              class="text-[12px]">{{ $t('logCollector.label.matchContent.none') }}</bk-radio>
+            <bk-radio
+              :disabled="fromOldRule"
+              value="match"
+              class="text-[12px]">{{ $t('logCollector.label.matchContent.match.text') }}</bk-radio>
+            <bk-radio
+              :disabled="fromOldRule"
+              value="separator"
+              class="text-[12px]">{{ $t('logCollector.label.matchContent.separator.text') }}</bk-radio>
           </bk-radio-group>
           <div class="flex mt-[10px]" v-if="formData.rule.config.conditions.type === 'match'">
             <bcs-select
@@ -190,14 +206,14 @@
               :clearable="false"
               :disabled="fromOldRule"
               v-model="formData.rule.config.conditions.match_type">
-              <bcs-option id="include" :name="$t('include(保留匹配字符串)')"></bcs-option>
+              <bcs-option id="include" :name="$t('logCollector.label.matchContent.match.include')"></bcs-option>
               <bcs-option
                 v-bk-tooltips="{
                   placement: 'left',
-                  content: $t('功能开发中，暂不开放')
+                  content: $t('generic.msg.info.development1')
                 }"
                 id="exclude"
-                :name="$t('exclude(过滤匹配字符串)')"
+                :name="$t('logCollector.label.matchContent.match.exclude')"
                 disabled>
               </bcs-option>
             </bcs-select>
@@ -226,7 +242,7 @@
               </bcs-option>
             </bcs-select>
             <div class="flex items-center py-[4px] h-[28px] text-[#aeb0b7]">
-              {{ $t('复杂的过滤条件（超过5个）会影响机器性能') }}
+              {{ $t('logCollector.label.matchContent.separator.desc') }}
             </div>
             <bk-form-item :label-width="0.1" property="type" error-display-type="normal">
               <SeparatorConfig
@@ -238,7 +254,7 @@
       </div>
     </bk-form-item>
     <bk-form-item
-      :label="$t('附加日志标签')"
+      :label="$t('logCollector.label.extraLabels')"
       property="extra_labels"
       error-display-type="normal">
       <KeyValue
@@ -246,10 +262,10 @@
         :disabled="fromOldRule"
         @change="handleExtraLabelChange" />
       <bcs-checkbox :disabled="fromOldRule" v-model="formData.rule.add_pod_label">
-        <span class="text-[12px]">{{ $t('是否自动添加 Pod 中的 labels') }}</span>
+        <span class="text-[12px]">{{ $t('logCollector.label.addPodLabel') }}</span>
       </bcs-checkbox>
     </bk-form-item>
-    <bk-form-item :label="$t('备注')">
+    <bk-form-item :label="$t('generic.label.memo')">
       <bcs-input
         :disabled="fromOldRule"
         type="textarea"
@@ -261,7 +277,7 @@
   </bk-form>
 </template>
 <script setup lang="ts">
-import { PropType, computed, onBeforeMount, ref, watch } from 'vue';
+import { PropType, computed, onBeforeMount, onMounted, ref, watch } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
 import Row from '@/components/layout/Row.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
@@ -273,6 +289,7 @@ import { ENCODE_LIST } from '@/common/constant';
 import { cloneDeep, isEqual } from 'lodash';
 import { useCluster } from '@/composables/use-app';
 import KeyValue from './key-value.vue';
+import useFormLabel from '@/composables/use-form-label';
 
 const props = defineProps({
   clusterId: {
@@ -336,18 +353,18 @@ const formDataRules = ref({
   name: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
     {
-      message: $i18n.t('仅支持英文, 数字和下划线, 且长度5~30字符'),
+      message: $i18n.t('logCollector.validate.name'),
       trigger: 'blur',
       validator: v => v.length >= 5 && v.length <= 30 && /^[A-Za-z0-9_]+$/.test(v),
     },
   ],
   namespaces: [
     {
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
       validator: () => {
         if (curCluster.value.is_shared) {
@@ -360,19 +377,19 @@ const formDataRules = ref({
   ],
   collectorType: [
     {
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
       validator: () => isContainerFile.value || formData.value.rule.config.enable_stdout,
     },
   ],
   paths: [
     {
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
       validator: () => !!formData.value.rule.config.paths.filter(item => !!item).length,
     },
     {
-      message: $i18n.t('仅支持绝对路径'),
+      message: $i18n.t('logCollector.validate.logPath'),
       trigger: 'blur',
       validator: () => {
         const regex = new RegExp('^\\/.*$');
@@ -383,7 +400,7 @@ const formDataRules = ref({
   // 过滤内容
   type: [
     {
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'custom',
       validator: () => {
         if (props.fromOldRule) return true;
@@ -400,7 +417,7 @@ const formDataRules = ref({
   ],
   match_labels: [
     {
-      message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+      message: $i18n.t('generic.validate.labelKey'),
       trigger: 'custom',
       validator: () => {
         const regex = /^[A-Za-z0-9._/-]+$/;
@@ -413,7 +430,7 @@ const formDataRules = ref({
   // 额外标签
   extra_labels: [
     {
-      message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+      message: $i18n.t('generic.validate.labelKey'),
       trigger: 'custom',
       validator: () => {
         const regex = /^[A-Za-z0-9._/-]+$/;
@@ -462,17 +479,17 @@ const handleSetFormData = () => {
   configRangeList.value = [
     {
       id: 'label',
-      title: $i18n.t('按标签选择'),
+      title: $i18n.t('logCollector.button.addRange.label.text'),
       hasAdd: !!formData.value.rule?.config?.label_selector?.match_labels?.length,
     },
     {
       id: 'workload',
-      title: $i18n.t('按工作负载选择'),
+      title: $i18n.t('logCollector.button.addRange.workload'),
       hasAdd: !!formData.value.rule?.config?.container?.workload_type,
     },
     {
       id: 'container',
-      title: $i18n.t('按容器名称选择'),
+      title: $i18n.t('logCollector.button.addRange.container'),
       hasAdd: !!containerName.value.length,
     },
   ];
@@ -530,17 +547,17 @@ const handleNsChange = (nsList) => {
 const configRangeList = ref([
   {
     id: 'label',
-    title: $i18n.t('按标签选择'),
+    title: $i18n.t('logCollector.button.addRange.label.text'),
     hasAdd: !!formData.value.rule?.config?.label_selector?.match_labels?.length,
   },
   {
     id: 'workload',
-    title: $i18n.t('按工作负载选择'),
+    title: $i18n.t('logCollector.button.addRange.workload'),
     hasAdd: !!formData.value.rule?.config?.container?.workload_type,
   },
   {
     id: 'container',
-    title: $i18n.t('按容器名选择'),
+    title: $i18n.t('logCollector.button.addRange.container'),
     hasAdd: !!containerName.value.length,
   },
 ]);
@@ -559,7 +576,7 @@ const handleAddRange = (item) => {
   popoverSelectRef.value?.hide();
   setTimeout(() => {
     // hack 设置工作负载组件的placeholder
-    workloadNameRef.value?.$refs?.createInput?.setAttribute('placeholder', $i18n.t('请输入应用名称, 支持正则表达式'));
+    workloadNameRef.value?.$refs?.createInput?.setAttribute('placeholder', $i18n.t('logCollector.placeholder.workloadName'));
   }, 0);
 };
 // 删除添加范围
@@ -634,19 +651,19 @@ const handleDeletePath = (index: number) => {
 const separatorList = ref([
   {
     id: '|',
-    name: $i18n.t('竖线(|)'),
+    name: $i18n.t('logCollector.label.matchContent.separator.vertical'),
   },
   {
     id: ',',
-    name: $i18n.t('逗号(,)'),
+    name: $i18n.t('logCollector.label.matchContent.separator.comma'),
   },
   {
     id: '`',
-    name: $i18n.t('反引号(`)'),
+    name: $i18n.t('logCollector.label.matchContent.separator.quote'),
   },
   {
     id: ';',
-    name: $i18n.t('分号(;)'),
+    name: $i18n.t('logCollector.label.matchContent.separator.semicolon'),
   },
 ]);
 
@@ -658,6 +675,11 @@ const handleExtraLabelChange = (data) => {
 onBeforeMount(() => {
   handleSetFormData();
   getNamespaceData({ clusterId: props.clusterId });
+});
+
+const { labelWidth, initFormLabelWidth } = useFormLabel();
+onMounted(() => {
+  initFormLabelWidth(formRef.value);
 });
 
 defineExpose({
@@ -684,5 +706,8 @@ defineExpose({
   .bk-form-content {
     margin-left: 0px !important;
   }
+}
+>>> .hide-form-label .bk-form-content {
+  margin-left: 0px !important;
 }
 </style>

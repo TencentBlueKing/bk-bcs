@@ -69,7 +69,7 @@ export interface IRuleData {
   rule: {
     add_pod_label: boolean
     extra_labels: {key: string, value: string}[]
-    data_info: {
+    data_info?: {
       file_bkdata_data_id: number
       std_bkdata_data_id: number
     }

@@ -91,6 +91,15 @@ func (hm *HelmManager) GetReleaseHistory(ctx context.Context,
 	return action.Handle(ctx, req, resp)
 }
 
+// GetReleaseManifest provide the actions to do get release manifest
+func (hm *HelmManager) GetReleaseManifest(ctx context.Context,
+	req *helmmanager.GetReleaseManifestReq, resp *helmmanager.GetReleaseManifestResp) error {
+
+	defer recorder(ctx, "GetReleaseManifest", req, resp)()
+	action := actionRelease.NewGetReleaseManifestAction(hm.releaseHandler)
+	return action.Handle(ctx, req, resp)
+}
+
 // GetReleaseStatus provide the actions to do get release status
 func (hm *HelmManager) GetReleaseStatus(ctx context.Context,
 	req *helmmanager.GetReleaseStatusReq, resp *helmmanager.CommonListResp) error {

@@ -54,7 +54,7 @@
       <div class="bk-dialog-outer">
         <template>
           <bk-button type="button" @click="hide">
-            {{$t('关闭')}}
+            {{$t('generic.button.close')}}
           </bk-button>
         </template>
       </div>

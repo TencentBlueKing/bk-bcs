@@ -9022,6 +9022,339 @@ var _ interface {
 	ErrorName() string
 } = ReleaseHistoryValidationError{}
 
+// Validate checks the field values on GetReleaseManifestReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetReleaseManifestReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetReleaseManifestReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetReleaseManifestReqMultiError, or nil if none found.
+func (m *GetReleaseManifestReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetReleaseManifestReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetName()) < 1 {
+		err := GetReleaseManifestReqValidationError{
+			field:  "Name",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
+		err := GetReleaseManifestReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := GetReleaseManifestReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetReleaseManifestReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Revision
+
+	if len(errors) > 0 {
+		return GetReleaseManifestReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetReleaseManifestReqMultiError is an error wrapping multiple validation
+// errors returned by GetReleaseManifestReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetReleaseManifestReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetReleaseManifestReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetReleaseManifestReqMultiError) AllErrors() []error { return m }
+
+// GetReleaseManifestReqValidationError is the validation error returned by
+// GetReleaseManifestReq.Validate if the designated constraints aren't met.
+type GetReleaseManifestReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetReleaseManifestReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetReleaseManifestReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetReleaseManifestReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetReleaseManifestReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetReleaseManifestReqValidationError) ErrorName() string {
+	return "GetReleaseManifestReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetReleaseManifestReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetReleaseManifestReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetReleaseManifestReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetReleaseManifestReqValidationError{}
+
+// Validate checks the field values on GetReleaseManifestResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetReleaseManifestResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetReleaseManifestResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetReleaseManifestRespMultiError, or nil if none found.
+func (m *GetReleaseManifestResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetReleaseManifestResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	{
+		sorted_keys := make([]string, len(m.GetData()))
+		i := 0
+		for key := range m.GetData() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetData()[key]
+			_ = val
+
+			// no validation rules for Data[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, GetReleaseManifestRespValidationError{
+							field:  fmt.Sprintf("Data[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, GetReleaseManifestRespValidationError{
+							field:  fmt.Sprintf("Data[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return GetReleaseManifestRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetReleaseManifestRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetReleaseManifestRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetReleaseManifestRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetReleaseManifestRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetReleaseManifestRespMultiError is an error wrapping multiple validation
+// errors returned by GetReleaseManifestResp.ValidateAll() if the designated
+// constraints aren't met.
+type GetReleaseManifestRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetReleaseManifestRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetReleaseManifestRespMultiError) AllErrors() []error { return m }
+
+// GetReleaseManifestRespValidationError is the validation error returned by
+// GetReleaseManifestResp.Validate if the designated constraints aren't met.
+type GetReleaseManifestRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetReleaseManifestRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetReleaseManifestRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetReleaseManifestRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetReleaseManifestRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetReleaseManifestRespValidationError) ErrorName() string {
+	return "GetReleaseManifestRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetReleaseManifestRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetReleaseManifestResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetReleaseManifestRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetReleaseManifestRespValidationError{}
+
 // Validate checks the field values on GetReleaseStatusReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

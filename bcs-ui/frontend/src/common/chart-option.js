@@ -562,8 +562,8 @@ export const nodeOverview = {
         } else {
           ret = `
                         <div>${moment(params[0].value[0]).format('YYYY-MM-DD HH:mm:ss')}</div>
-                        <div>${window.i18n.t('总大小')}：${(params[0].value[1] / 1024 / 1024 / 1024).toFixed(2)}GB</div>
-                        <div>${window.i18n.t('已使用')}：${(params[1].value[1] / 1024 / 1024 / 1024).toFixed(2)}GB</div>
+                        <div>${window.i18n.t('metrics.pod.memUsage.total')}：${(params[0].value[1] / 1024 / 1024 / 1024).toFixed(2)}GB</div>
+                        <div>${window.i18n.t('metrics.pod.memUsage.used')}：${(params[1].value[1] / 1024 / 1024 / 1024).toFixed(2)}GB</div>
                     `;
         }
 
@@ -726,7 +726,7 @@ export const nodeOverview = {
         } else {
           ret = `<div>${moment(params[0].value[0]).format('YYYY-MM-DD HH:mm:ss')}</div>`;
           params.forEach((item) => {
-            ret += `<div>${item.seriesName}${item.value[2] === 'sent' ? window.i18n.t('发送') : window.i18n.t('接收')}：${(item.value[1] || 0).toFixed(2)}KB/s</div>`;
+            ret += `<div>${item.seriesName}${item.value[2] === 'sent' ? window.i18n.t('metrics.pod.network.send') : window.i18n.t('metrics.pod.network.recv')}：${(item.value[1] || 0).toFixed(2)}KB/s</div>`;
           });
         }
 
@@ -891,7 +891,7 @@ export const nodeOverview = {
         } else {
           ret = `<div>${moment(params[0].value[0]).format('YYYY-MM-DD HH:mm:ss')}</div>`;
           params.forEach((item) => {
-            ret += `<div>${item.seriesName}${item.value[2] === 'read' ? window.i18n.t('读') : window.i18n.t('写')}：${(item.value[1] || 0).toFixed(2)}KB/s</div>`;
+            ret += `<div>${item.seriesName}${item.value[2] === 'read' ? window.i18n.t('metrics.pod.disk.read') : window.i18n.t('metrics.pod.disk.write')}：${(item.value[1] || 0).toFixed(2)}KB/s</div>`;
           });
         }
 
@@ -1165,7 +1165,7 @@ export const containerDetailChart = {
                         + `${containerName}</div>`
                         + '</div>';
           params.forEach((item) => {
-            ret += `<div>${window.i18n.t('内存已使用')}：`
+            ret += `<div>${window.i18n.t('metrics.pod.memUsage.used')}：`
                             + `<span style="font-weight: 700; color: #3a84ff;">${(item.value[1]).toFixed(2)}MB</span>`
                             + '</div>';
           });
@@ -1427,7 +1427,7 @@ export const containerDetailChart = {
                         + `${containerName}</div>`
                         + '</div>';
           params.forEach((item) => {
-            ret += `<div>${item.value[2] === 'tx' ? window.i18n.t('发送') : window.i18n.t('接收')}：`
+            ret += `<div>${item.value[2] === 'tx' ? window.i18n.t('metrics.pod.network.send') : window.i18n.t('metrics.pod.network.recv')}：`
                             + `<span style="font-weight: 700; color: #30d873;">${(item.value[1]).toFixed(2)}Bytes/s</span>`
                             + '</div>';
           });
@@ -1573,10 +1573,10 @@ export const containerDetailChart = {
                         + '</div>';
           params.forEach((item) => {
             console.error(item);
-            ret += `<div>${window.i18n.t('读')}：`
+            ret += `<div>${window.i18n.t('metrics.pod.disk.read')}：`
                             + `<span style="font-weight: 700; color: #30d873;">${(item.value[1]).toFixed(2)}Bytes/s</span>`
                             + '</div>';
-            ret += `<div>${window.i18n.t('写')}：`
+            ret += `<div>${window.i18n.t('metrics.pod.disk.write')}：`
                             + `<span style="font-weight: 700; color: #30d873;">${(item.value[2]).toFixed(2)}Bytes/s</span>`
                             + '</div>';
           });

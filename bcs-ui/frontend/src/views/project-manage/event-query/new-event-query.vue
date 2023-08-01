@@ -1,5 +1,5 @@
 <template>
-  <BcsContent :title="$t('事件查询')" hide-back>
+  <BcsContent :title="$t('projects.eventQuery.title')" hide-back>
     <EventQueryTable :namespace="namespace" :cluster-id="clusterId"></EventQueryTable>
   </BcsContent>
 </template>

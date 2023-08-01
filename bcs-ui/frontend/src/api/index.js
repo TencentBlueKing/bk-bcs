@@ -204,9 +204,9 @@ function handleReject(error, config) {
 
       return;
     } if (status === 500) {
-      message = window.i18n.t('系统出现异常');
+      message = window.i18n.t('generic.msg.error.system');
     } else if (status === 403) {
-      message = window.i18n.t('无权限操作');
+      message = window.i18n.t('generic.msg.warning.403');
     } else if ([4005, 40300].includes(data?.code)) {
       bus.$emit('show-apply-perm-modal', data?.data);
     } else if (data?.code === 40403) {
@@ -223,7 +223,7 @@ function handleReject(error, config) {
       messageError(message);
     }
   } else if (error.message === 'Network Error') {
-    messageError(window.i18n.t('网络错误'));
+    messageError(window.i18n.t('generic.msg.error.network'));
   } else if (error.message && config.globalError) {
     messageError(error.message);
   }

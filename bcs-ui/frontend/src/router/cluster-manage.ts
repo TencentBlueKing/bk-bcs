@@ -44,7 +44,7 @@ export default [
     component: ClusterCreate,
     meta: {
       menuId: 'CLUSTER',
-      title: window.i18n.t('添加集群'),
+      title: window.i18n.t('cluster.button.addCluster'),
     },
   },
   // 创建集群
@@ -62,7 +62,7 @@ export default [
     component: CreateCluster,
     meta: {
       menuId: 'CLUSTER',
-      title: window.i18n.t('添加集群'),
+      title: window.i18n.t('cluster.button.addCluster'),
     },
   },
   // 创建VCluster集群
@@ -83,7 +83,7 @@ export default [
     props: true,
     meta: {
       menuId: 'CLUSTER',
-      title: window.i18n.t('导入集群'),
+      title: window.i18n.t('cluster.create.title.import'),
     },
   },
   // 集群详情
@@ -160,7 +160,7 @@ export default [
     name: 'nodeMain',
     component: Node,
     meta: {
-      title: window.i18n.t('节点列表'),
+      title: window.i18n.t('nav.nodeList'),
       hideBack: true,
     },
   },
@@ -177,7 +177,7 @@ export default [
     name: 'addNodeTemplate',
     component: EditNodeTemplate,
     meta: {
-      title: window.i18n.t('新建节点模板'),
+      title: window.i18n.t('cluster.nodeTemplate.title.create'),
       menuId: 'NODETEMPLATE',
     },
   },
@@ -187,7 +187,7 @@ export default [
     props: true,
     component: EditNodeTemplate,
     meta: {
-      title: window.i18n.t('编辑节点模板'),
+      title: window.i18n.t('cluster.nodeTemplate.title.update'),
       menuId: 'NODETEMPLATE',
     },
   },
@@ -197,7 +197,7 @@ export default [
     props: true,
     component: AddClusterNode,
     meta: {
-      title: window.i18n.t('添加节点'),
+      title: window.i18n.t('cluster.nodeList.create.text'),
       menuId: 'CLUSTER',
     },
   },

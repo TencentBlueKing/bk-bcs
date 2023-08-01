@@ -180,8 +180,10 @@ function _M:get_jwt_from_redis(credential, conf, ctx, key_prefix, create_if_null
             if data["result"] then
                 userinfo = data["data"]["bk_username"]
             end
-            ctx.var["bk_login_code"] = data["code"]
-            ctx.var["bk_login_message"] = data["message"]
+            if ctx ~= nil then
+                ctx.var["bk_login_code"] = data["code"]
+                ctx.var["bk_login_message"] = data["message"]
+            end
         else
             userinfo = get_userinfo_handler(credential, conf.bk_login_host)
         end

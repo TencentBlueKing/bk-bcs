@@ -24,15 +24,15 @@ var (
 	sharedClusterOpenPolicy = []string{"view", "use", "cluster_view", "cluster_manage", "cluster_use"}
 )
 
-// CommonResp common resp
-type CommonResp struct {
+// CommonGateWayResp common resp
+type CommonGateWayResp struct {
 	Code      string `json:"code"`
 	Message   string `json:"message"`
 	RequestID string `json:"request_id"`
 }
 
-// AccessRequest request
-type AccessRequest struct {
+// AccessGateWayRequest request
+type AccessGateWayRequest struct {
 	AppCode    string `json:"app_code"`
 	AppSecret  string `json:"app_secret"`
 	IDProvider string `json:"id_provider"`
@@ -40,9 +40,31 @@ type AccessRequest struct {
 	Env        string `json:"env_name"`
 }
 
-// AccessTokenResp response
-type AccessTokenResp struct {
-	CommonResp
+// AccessTokenGateWayResp response
+type AccessTokenGateWayResp struct {
+	CommonGateWayResp
+	Data *AccessTokenInfo `json:"data"`
+}
+
+// AccessSsmRequest request
+type AccessSsmRequest struct {
+	AppCode    string `json:"app_code"`
+	AppSecret  string `json:"app_secret"`
+	IDProvider string `json:"id_provider"`
+	GrantType  string `json:"grant_type"`
+	Env        string `json:"env"`
+}
+
+// CommonSsmResp common resp
+type CommonSsmResp struct {
+	Code      uint   `json:"code"`
+	Message   string `json:"message"`
+	RequestID string `json:"request_id"`
+}
+
+// AccessTokenSsmResp response
+type AccessTokenSsmResp struct {
+	CommonSsmResp
 	Data *AccessTokenInfo `json:"data"`
 }
 
@@ -51,54 +73,6 @@ type AccessTokenInfo struct {
 	AccessToken  string `json:"access_token"`
 	ExpiresIn    uint32 `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
-}
-
-// ResourceRequest request
-type ResourceRequest struct {
-	ProjectID    string `json:"project_id"`
-	ServiceCode  string `json:"service_code"`
-	ResourceCode string `json:"resource_code"`
-	ResourceName string `json:"resource_name"`
-	ResourceType string `json:"resource_type"`
-	Creator      string `json:"creator"`
-}
-
-// VerifyRequest verify user permission
-type VerifyRequest struct {
-	ProjectID    string `json:"project_id"`
-	ServiceCode  string `json:"service_code"`
-	PolicyCode   string `json:"policy_code"`
-	ResourceCode string `json:"resource_code"`
-	ResourceType string `json:"resource_type"`
-	UserID       string `json:"user_id"`
-}
-
-// PermRequest perm request
-type PermRequest struct {
-	ProjectID       string                `json:"project_id"`
-	ServiceCode     string                `json:"service_code"`
-	PolicyList      []*PolicyResourceType `json:"policy_resource_type_list"`
-	UserID          string                `json:"user_id"`
-	IsExactResource int                   `json:"is_exact_resource"`
-}
-
-// PolicyResourceType policy/resource
-type PolicyResourceType struct {
-	PolicyCode   string `json:"policy_code"`
-	ResourceType string `json:"resource_type"`
-}
-
-// PermResp response
-type PermResp struct {
-	CommonResp
-	Data []PermList `json:"data"`
-}
-
-// PermList resource/perm
-type PermList struct {
-	PolicyCode       string   `json:"policy_code"`
-	ResourceCodeList []string `json:"resource_code_list"`
-	ResourceType     string   `json:"resource_type"`
 }
 
 // GetV3SharedClusterPerm get sharedCluster perm policy

@@ -1,16 +1,16 @@
 <template>
   <bk-exception :type="type">
-    <span>{{$t('该操作需要以下权限')}}</span>
+    <span>{{$t('iam.title.perms')}}</span>
     <bk-table :data="tableData" class="mt25" v-bkloading="{ isLoading }">
-      <bk-table-column :label="$t('系统')" prop="system" min-width="150">
-        {{ $t('容器管理平台') }}
+      <bk-table-column :label="$t('iam.label.system')" prop="system" min-width="150">
+        {{ $t('bcs.name') }}
       </bk-table-column>
-      <bk-table-column :label="$t('需要申请的权限')" prop="auth" min-width="220">
+      <bk-table-column :label="$t('iam.label.action')" prop="auth" min-width="220">
         <template #default="{ row }">
           {{ actionsMap[row.action_id] || '--' }}
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('关联的资源实例')" prop="resource" min-width="220">
+      <bk-table-column :label="$t('iam.label.resource')" prop="resource" min-width="220">
         <template #default="{ row }">
           {{ row.resource_name || '--' }}
         </template>
@@ -21,7 +21,7 @@
       class="mt25"
       :disabled="!href"
       @click="handleGotoIAM"
-    >{{$t('去申请')}}</bk-button>
+    >{{$t('iam.button.apply')}}</bk-button>
   </bk-exception>
 </template>
 <script lang="ts">

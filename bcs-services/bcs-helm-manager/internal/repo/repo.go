@@ -323,6 +323,7 @@ type ListOption struct {
 	Size        int64
 }
 
+// UploadOption 定义了上传 Chart 的参数
 type UploadOption struct {
 	ProjectCode string
 	RepoName    string

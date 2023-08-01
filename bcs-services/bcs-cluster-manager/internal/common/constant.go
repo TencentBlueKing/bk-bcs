@@ -99,6 +99,10 @@ const (
 	Etcd = "Etcd"
 	// Kubelet cluster kubelet key
 	Kubelet = "kubelet"
+	// RootDir kubelet root-dir para
+	RootDir = "root-dir"
+	// RootDirValue kubelet root-dir value
+	RootDirValue = "/data/bcs/service/kubelet"
 )
 
 // DefaultClusterConfig cluster default service config
@@ -192,7 +196,7 @@ const (
 	// DockerRuntimeVersion runtime version
 	DockerRuntimeVersion = "19.3"
 
-	// ContainerdContainerRuntime runtime
+	// ContainerdRuntime runtime
 	ContainerdRuntime = "containerd"
 	// ContainerdRuntimeVersion runtime version
 	ContainerdRuntimeVersion = "1.4.3"
@@ -326,11 +330,11 @@ const (
 	BcsErrClusterManagerTaskDoneErr = bcscommon.BCSErrClusterManager + 30
 	// BcsErrClusterManagerSyncCloudErr cloud config error
 	BcsErrClusterManagerSyncCloudErr = bcscommon.BCSErrClusterManager + 31
-	// BcsErrClusterManagerSyncCloudErr cloud config error
+	// BcsErrClusterManagerCheckKubeErr cloud config error
 	BcsErrClusterManagerCheckKubeErr = bcscommon.BCSErrClusterManager + 32
 	// BcsErrClusterManagerCheckCloudClusterResourceErr cloud/cluster resource error
 	BcsErrClusterManagerCheckCloudClusterResourceErr = bcscommon.BCSErrClusterManager + 33
-	// BcsErrClusterManagerCheckCloudClusterResourceErr cloud/cluster resource error
+	// BcsErrClusterManagerBkSopsInterfaceErr cloud/cluster resource error
 	BcsErrClusterManagerBkSopsInterfaceErr = bcscommon.BCSErrClusterManager + 34
 	// BcsErrClusterManagerDecodeBase64ScriptErr base64 error
 	BcsErrClusterManagerDecodeBase64ScriptErr = bcscommon.BCSErrClusterManager + 35
@@ -366,11 +370,11 @@ var StagClusterENV = "stag"
 const (
 	// ImageProvider 镜像提供方
 	ImageProvider = "IMAGE_PROVIDER"
-	// 公共镜像
+	// PublicImageProvider 公共镜像
 	PublicImageProvider = "PUBLIC_IMAGE"
-	// 私有镜像
+	// PrivateImageProvider 私有镜像
 	PrivateImageProvider = "PRIVATE_IMAGE"
-	// 市场镜像
+	// MarketImageProvider 市场镜像
 	MarketImageProvider = "MARKET_IMAGE"
 )
 

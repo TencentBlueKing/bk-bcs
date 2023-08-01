@@ -45,7 +45,7 @@ export default function useMetric() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('创建成功'),
+      message: $i18n.t('generic.msg.success.create'),
     });
     return result;
   };
@@ -58,7 +58,7 @@ export default function useMetric() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('修改成功'),
+      message: $i18n.t('generic.msg.success.modify'),
     });
     return result;
   };
@@ -71,7 +71,7 @@ export default function useMetric() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('删除成功'),
+      message: $i18n.t('generic.msg.success.delete'),
     });
     return result;
   };
@@ -86,7 +86,7 @@ export default function useMetric() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('删除成功'),
+      message: $i18n.t('generic.msg.success.delete'),
     });
     return result;
   };

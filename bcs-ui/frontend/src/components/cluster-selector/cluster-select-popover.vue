@@ -5,7 +5,7 @@
       clearable
       right-icon="bk-icon icon-search"
       v-model="keyword"
-      :placeholder="$t('输入集群名或ID搜索')">
+      :placeholder="$t('cluster.placeholder.searchCluster')">
     </bcs-input>
     <bcs-exception
       type="empty"

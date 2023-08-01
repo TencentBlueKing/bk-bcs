@@ -51,6 +51,9 @@ func createRequestFromMultiPart(r *http.Request) (*http.Request, error) {
 	force := r.FormValue("force")
 	// 将字符串 "true" 转换为 bool 类型
 	isForce, err := strconv.ParseBool(force)
+	if err != nil {
+		return nil, err
+	}
 	param := map[string]interface{}{
 		"force": isForce,
 		"file":  content,

@@ -1,26 +1,29 @@
 <template>
-  <LayoutContent hide-back :title="$tc('变量管理')">
+  <LayoutContent hide-back :title="$tc('deploy.variable.env')">
     <template #header-right>
-      <bcs-button text @click="showSideslider = true">{{$t('如何从文件导入变量？')}}</bcs-button>
+      <bcs-button text @click="showSideslider = true">{{$t('deploy.variable.import')}}</bcs-button>
     </template>
     <LayoutRow class="mb15">
       <template #left>
-        <bcs-button icon="plus" theme="primary" @click="handleAddVariable">{{$t('新增变量')}}</bcs-button>
+        <bcs-button icon="plus" theme="primary" @click="handleAddVariable">{{$t('deploy.variable.add')}}</bcs-button>
         <bcs-button class="ml10" :loading="fileLoading">
-          {{$t('文件导入')}}
+          {{$t('cluster.create.button.fileImport')}}
           <input type="file" accept=".json" class="file-input" @change="handleFileChange" />
         </bcs-button>
-        <bcs-button class="ml10" :disabled="!selections.length" @click="handleBatchDelete">{{$t('批量删除')}}</bcs-button>
+        <bcs-button
+          class="ml10"
+          :disabled="!selections.length"
+          @click="handleBatchDelete">{{$t('generic.button.batchDelete')}}</bcs-button>
       </template>
       <template #right>
         <bcs-select class="mw200" :clearable="false" :placeholder="' '" v-model="scope">
-          <bcs-option id="" :name="$t('全部')"></bcs-option>
+          <bcs-option id="" :name="$t('generic.label.total')"></bcs-option>
           <bcs-option v-for="item in scopeList" :key="item.id" :id="item.id" :name="item.name"></bcs-option>
         </bcs-select>
         <bcs-input
           right-icon="bk-icon icon-search"
           class="ml5 mw320"
-          :placeholder="$t('输入Key搜索')"
+          :placeholder="$t('deploy.variable.search')"
           clearable
           v-model="searchKey">
         </bcs-input>
@@ -34,57 +37,63 @@
       @page-limit-change="handlePageLimitChange"
       @selection-change="handleSelectionChange">
       <bcs-table-column type="selection" width="60" :selectable="selectable"></bcs-table-column>
-      <bcs-table-column :label="$t('变量名称')" prop="name" width="200"></bcs-table-column>
-      <bcs-table-column label="KEY" prop="key"></bcs-table-column>
-      <bcs-table-column :label="$t('默认值')" prop="defaultValue">
+      <bcs-table-column :label="$t('deploy.variable.envName')" prop="name" width="200"></bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.key')" prop="key"></bcs-table-column>
+      <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.defaultValue')" prop="defaultValue">
         <template #default="{ row }">
           {{row.defaultValue || '--'}}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('描述')" prop="desc">
+      <bcs-table-column :label="$t('cluster.create.label.desc')" prop="desc">
         <template #default="{ row }">
           {{row.desc || '--'}}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('类型')" prop="categoryName" width="120">
+      <bcs-table-column :label="$t('generic.label.kind')" prop="categoryName" width="120">
         <template #default="{ row }">
           {{row.categoryName || '--'}}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('作用范围')" prop="scopeName" width="140">
+      <bcs-table-column :label="$t('deploy.variable.scope')" prop="scopeName" width="140">
         <template #default="{ row }">
           {{row.scopeName || '--'}}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('操作')" width="160">
+      <bcs-table-column :label="$t('generic.label.action')" width="160">
         <template #default="{ row }">
           <span
             class="mr10"
             v-bk-tooltips="{
-              content: $t('系统内置变量'),
+              content: $t('deploy.variable.systemEnv'),
               disabled: row.category !== 'sys'
             }">
             <bcs-button
               text
               :disabled="row.category === 'sys' || row.scope === 'global'"
               @click="handleSetVariable(row)">
-              {{$t('设置')}}
+              {{$t('deploy.variable.set')}}
             </bcs-button>
           </span>
           <span
             class="mr10"
             v-bk-tooltips="{
-              content: $t('系统内置变量'),
+              content: $t('deploy.variable.systemEnv'),
               disabled: row.category !== 'sys'
             }">
-            <bcs-button text :disabled="row.category === 'sys'" @click="handleEdit(row)">{{$t('编辑')}}</bcs-button>
+            <bcs-button
+              text
+              :disabled="row.category === 'sys'"
+              @click="handleEdit(row)">{{$t('generic.button.edit')}}</bcs-button>
           </span>
           <span
             v-bk-tooltips="{
-              content: $t('系统内置变量'),
+              content: $t('deploy.variable.systemEnv'),
               disabled: row.category !== 'sys'
             }">
-            <bcs-button text :disabled="row.category === 'sys'" @click="handleDelete(row)">{{$t('删除')}}</bcs-button>
+            <bcs-button
+              text
+              :disabled="row.category === 'sys'"
+              @click="handleDelete(row)">{{$t('generic.button.delete')}}</bcs-button>
           </span>
         </template>
       </bcs-table-column>
@@ -96,7 +105,7 @@
     <bcs-dialog
       width="640"
       v-model="showCreateOrEdit"
-      :title="currentRow ? $t('编辑变量') : $t('新增变量')"
+      :title="currentRow ? $t('deploy.variable.edit') : $t('deploy.variable.add')"
       :auto-close="false"
       header-position="left"
       :mask-close="false"
@@ -108,7 +117,7 @@
         :model="formData"
         :rules="formRules"
         ref="formRef">
-        <BkFormItem :label="$t('作用域范围')">
+        <BkFormItem :label="$t('deploy.variable._scope')">
           <bk-radio-group v-model="formData.scope">
             <bk-radio
               v-for="item in scopeList"
@@ -119,16 +128,16 @@
             </bk-radio>
           </bk-radio-group>
         </BkFormItem>
-        <BkFormItem :label="$t('名称')" property="name" required>
+        <BkFormItem :label="$t('generic.label.name')" property="name" required>
           <bcs-input v-model="formData.name"></bcs-input>
         </BkFormItem>
-        <BkFormItem :label="$t('KEY')" property="key" required>
+        <BkFormItem :label="$t('generic.label.key')" property="key" required>
           <bcs-input v-model="formData.key" :disabled="!!currentRow"></bcs-input>
         </BkFormItem>
-        <BkFormItem :label="$t('默认值')">
+        <BkFormItem :label="$t('cluster.nodeTemplate.kubelet.label.defaultValue')">
           <bcs-input v-model="formData.default"></bcs-input>
         </BkFormItem>
-        <BkFormItem :label="$t('描述')">
+        <BkFormItem :label="$t('cluster.create.label.desc')">
           <bcs-input v-model="formData.desc" type="textarea" maxlength="255"></bcs-input>
         </BkFormItem>
       </BkForm>
@@ -138,15 +147,15 @@
       :is-show.sync="showSideslider"
       quick-close
       :width="800"
-      :title="$t('如何从文件导入变量？')">
+      :title="$t('deploy.variable.import')">
       <template #content>
         <div class="p20">
           <bcs-alert type="info" class="mb10">
             <template #title>
-              <p>{{$t('按上面的模板创建你的json文件，选择“文件导入”操作')}}</p>
-              <p>{{$t('scope值含义，global表示全局变量，cluster表示集群变量，namespace表示命名空间变量')}}</p>
-              <p>{{$t('cluster和namespace变量需要提供vars关键字，cluster变量的vars需要包含集群ID cluster_id和变量值 value')}}</p>
-              <p>{{$t('namespace变量的vars需要包含集群ID cluster_id、命名空间名称 namespace 和变量值 value')}}</p>
+              <p>{{$t('deploy.variable.importTips')}}</p>
+              <p>{{$t('deploy.variable.scopeTips')}}</p>
+              <p>{{$t('deploy.variable.clusterTips')}}</p>
+              <p>{{$t('deploy.variable.nsTips')}}</p>
             </template>
           </bcs-alert>
           <div class="code-wrapper">
@@ -172,7 +181,7 @@
           <template #right>
             <bcs-button text class="switch-mode-btn" @click="mode = mode === 'form' ? 'json' : 'form'">
               <i class="bcs-icon bcs-icon-qiehuan"></i>
-              {{mode === 'form' ? $t('切换为文本模式') : $t('切换为表单模式')}}
+              {{mode === 'form' ? $t('deploy.variable.toYAML') : $t('deploy.variable.toForm')}}
             </bcs-button>
           </template>
         </LayoutRow>
@@ -180,13 +189,13 @@
       <template #content>
         <div class="slider-wrapper p20" v-bkloading="{ isLoading: setSliderLoading }">
           <bcs-table :data="setData" class="slider-wrapper-table" v-if="mode === 'form'">
-            <bcs-table-column :label="$t('所属集群')" prop="clusterName"></bcs-table-column>
+            <bcs-table-column :label="$t('generic.label.cluster1')" prop="clusterName"></bcs-table-column>
             <bcs-table-column
-              :label="$t('所属命名空间')"
+              :label="$t('deploy.variable.namespace')"
               prop="namespace"
               v-if="currentRow && currentRow.scope === 'namespace'">
             </bcs-table-column>
-            <bcs-table-column :label="$t('值')">
+            <bcs-table-column :label="$t('generic.label.value')">
               <template #default="{ row }">
                 <bcs-input v-model="row.value" @change="setChanged(true)"></bcs-input>
               </template>
@@ -199,8 +208,11 @@
             </CodeEditor>
           </div>
           <div class="mt15">
-            <bcs-button theme="primary" :disabled="!currentRow" @click="handleSave">{{$t('保存')}}</bcs-button>
-            <bcs-button @click="showSetSlider = false">{{$t('取消')}}</bcs-button>
+            <bcs-button
+              theme="primary"
+              :disabled="!currentRow"
+              @click="handleSave">{{$t('generic.button.save')}}</bcs-button>
+            <bcs-button @click="showSetSlider = false">{{$t('generic.button.cancel')}}</bcs-button>
           </div>
         </div>
       </template>
@@ -237,15 +249,15 @@ export default defineComponent({
     const scopeList = ref([
       {
         id: 'global',
-        name: $i18n.t('全局变量'),
+        name: $i18n.t('deploy.variable.globalEnv'),
       },
       {
         id: 'cluster',
-        name: $i18n.t('集群变量'),
+        name: $i18n.t('deploy.variable.clusterEnv'),
       },
       {
         id: 'namespace',
-        name: $i18n.t('命名空间变量'),
+        name: $i18n.t('deploy.variable.namespaceEnv'),
       },
     ]);
     const searchKey = useDebouncedRef<string>('', 360);
@@ -308,28 +320,28 @@ export default defineComponent({
       name: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
         {
           validator(val) {
             return val.length <= 32;
           },
-          message: $i18n.t('请输入32个字符以内的变量名称'),
+          message: $i18n.t('deploy.variable.regex.env'),
           trigger: 'blur',
         },
       ],
       key: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
         {
           validator(val) {
             return /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(val);
           },
-          message: $i18n.t('只能包含字母、数字和下划线，且以字母开头，最大长度为64个字符'),
+          message: $i18n.t('deploy.variable.regex.name'),
           trigger: 'blur',
         },
       ],
@@ -355,7 +367,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('导入成功'),
+              message: $i18n.t('generic.msg.success.import'),
             });
             getVariableDefinitions(params.value);
           }
@@ -405,7 +417,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('操作成功'),
+          message: $i18n.t('generic.msg.success.ok'),
         });
         getVariableDefinitions(params.value);
         showCreateOrEdit.value = false;
@@ -415,8 +427,8 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认删除节点'),
-        subTitle: $i18n.t('确认删除变量 {name}', { name: row.name }),
+        title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
+        subTitle: $i18n.t('deploy.variable.deleteVar', { name: row.name }),
         defaultInfo: true,
         confirmFn: async () => {
           const result =  await handleDeleteDefinitions({
@@ -425,7 +437,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('删除成功'),
+              message: $i18n.t('generic.msg.success.delete'),
             });
             pagination.value.current = 1;
             getVariableDefinitions(params.value);
@@ -437,9 +449,9 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认删除节点'),
+        title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
         subTitle: $i18n.t(
-          '确认删除 {name} 等 {count} 个变量',
+          'deploy.variable.multiDeleteVar',
           {
             name: selections.value[0]?.name,
             count: selections.value.length,
@@ -453,7 +465,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('删除成功'),
+              message: $i18n.t('generic.msg.success.delete'),
             });
             pagination.value.current = 1;
             getVariableDefinitions(params.value);
@@ -513,7 +525,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('设置成功'),
+          message: $i18n.t('deploy.variable.success'),
         });
         getVariableDefinitions(params.value);
         showSetSlider.value = false;

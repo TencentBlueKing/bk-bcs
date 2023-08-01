@@ -55,15 +55,15 @@ export default defineComponent({
       type: Array as PropType<ITimeRange[]>,
       default: () => [
         {
-          name: window.i18n.t('1小时'),
+          name: window.i18n.t('units.time.1h'),
           range: 60 * 60 * 1000,
         },
         {
-          name: window.i18n.t('24小时'),
+          name: window.i18n.t('units.time.24h'),
           range: 60 * 24 * 60 * 1000,
         },
         {
-          name: window.i18n.t('近7天'),
+          name: window.i18n.t('units.time.lastDays'),
           range: 7 * 24 * 60 * 60 * 1000,
         },
       ],
@@ -112,19 +112,19 @@ export default defineComponent({
     const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
 
     const metricMap = {
-      cpu_usage: $i18n.t('CPU使用率'),
-      disk_usage: $i18n.t('磁盘使用率'),
-      memory_usage: $i18n.t('内存使用率'),
-      cpu_request_usage: $i18n.t('CPU装箱率'),
-      memory_request_usage: $i18n.t('内存装箱率'),
-      diskio_usage: $i18n.t('磁盘IO'),
-      network_receive: $i18n.t('入流量'),
-      network_transmit: $i18n.t('出流量'),
+      cpu_usage: $i18n.t('metrics.cpuUsage'),
+      disk_usage: $i18n.t('metrics.diskUsage'),
+      memory_usage: $i18n.t('metrics.memUsage'),
+      cpu_request_usage: $i18n.t('metrics.cpuRequestUsage.text'),
+      memory_request_usage: $i18n.t('metrics.memRequestUsage.text'),
+      diskio_usage: $i18n.t('metrics.diskIOUsage'),
+      network_receive: $i18n.t('metrics.network.receive'),
+      network_transmit: $i18n.t('metrics.network.transmit'),
     };
     const state = reactive({
       isDropdownShow: false,
       activeTime: {
-        name: $i18n.t('1小时'),
+        name: $i18n.t('units.time.1h'),
         range: 60 * 60 * 1000,
       },
       isLoading: false,

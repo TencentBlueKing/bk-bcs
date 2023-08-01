@@ -304,6 +304,11 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 	httpServerClient := &httpsvr.HttpServerClient{
 		Mgr:       mgr,
 		NodeCache: nodeCache,
+		Ops:       op,
+	}
+	// aga supporter can only be init when use
+	if op.Cloud == constant.CloudAWS {
+		httpServerClient.AgaSupporter = aws.NewAgaSupporter()
 	}
 	httpsvr.InitRouters(ws, httpServerClient)
 

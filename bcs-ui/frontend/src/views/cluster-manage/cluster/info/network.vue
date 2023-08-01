@@ -1,19 +1,19 @@
 <template>
   <bk-form class="bcs-small-form px-[60px] py-[24px]" :label-width="160" v-bkloading="{ isLoading }">
-    <bk-form-item :label="$t('所属地域')">
+    <bk-form-item :label="$t('cluster.labels.region')">
       {{ clusterData.region || '--' }}
     </bk-form-item>
-    <bk-form-item :label="$t('网络类型')">{{ clusterData.networkType || '--' }}</bk-form-item>
-    <bk-form-item :label="$t('容器网络')">{{ cidr }}</bk-form-item>
+    <bk-form-item :label="$t('cluster.labels.networkType')">{{ clusterData.networkType || '--' }}</bk-form-item>
+    <bk-form-item :label="$t('cluster.labels.cidr')">{{ cidr }}</bk-form-item>
     <bk-form-item label="VPC">
       {{ clusterData.vpcID || '--' }}
     </bk-form-item>
     <bk-form-item label="IPVS">
       {{ IPVS }}
     </bk-form-item>
-    <bk-form-item :label="$t('IP数量')">{{ cidrStep }}</bk-form-item>
-    <bk-form-item :label="$t('集群内Service数量上限')">{{ maxServiceNum }}</bk-form-item>
-    <bk-form-item :label="$t('单节点Pod数量上限')">{{ maxNodePodNum }}</bk-form-item>
+    <bk-form-item :label="$t('cluster.create.label.networkSetting.cidrStep.text')">{{ cidrStep }}</bk-form-item>
+    <bk-form-item :label="$t('cluster.create.label.networkSetting.maxServiceNum.text')">{{ maxServiceNum }}</bk-form-item>
+    <bk-form-item :label="$t('cluster.create.label.networkSetting.maxNodePodNum.text')">{{ maxNodePodNum }}</bk-form-item>
   </bk-form>
 </template>
 <script lang="ts">

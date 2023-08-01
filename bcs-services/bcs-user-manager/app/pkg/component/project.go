@@ -135,11 +135,19 @@ func GetCachedNamespace(ctx context.Context, clusterID, nsID string) (*Namespace
 	}
 
 	// get cluster namespaces
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	cluster, err := GetClusterByClusterID(ctx, clusterID)
 	if err != nil {
 		return nil, err
 	}
-	nss, err := GetClusterNamespaces(ctx, cluster.ProjectID, clusterID)
+	project, err := GetProject(ctx, cluster.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	// 解决共享集群问题
+	nss, err := GetClusterNamespaces(ctx, project.ProjectCode, clusterID)
 	if err != nil {
 		return nil, err
 	}

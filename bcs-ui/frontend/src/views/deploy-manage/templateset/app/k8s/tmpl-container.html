@@ -9,7 +9,7 @@
         <div class="biz-app-instance-wrapper" v-bkloading="{isLoading: contentLoading}">
             <div class="biz-app-instance-header">
                 <div class="header-item">
-                    <div class="key-label">{{$t('主机名称：')}}</div>
+                    <div class="key-label">{{$t('deploy.templateset.hostname')}}</div>
                     <bcs-popover :delay="500" placement="bottom-start">
                         <div class="value-label">{{containerInfo.host_name || '--'}}</div>
                         <template slot="content">
@@ -18,7 +18,7 @@
                     </bcs-popover>
                 </div>
                 <div class="header-item">
-                    <div class="key-label">{{$t('主机IP：')}}</div>
+                    <div class="key-label">{{$t('deploy.templateset.hostIP')}}</div>
                     <bcs-popover :delay="500" placement="bottom">
                         <div class="value-label">{{containerInfo.host_ip || '--'}}</div>
                         <template slot="content">
@@ -27,7 +27,7 @@
                     </bcs-popover>
                 </div>
                 <div class="header-item">
-                    <div class="key-label">{{$t('容器IP：')}}</div>
+                    <div class="key-label">{{$t('deploy.templateset.containerIP：')}}</div>
                     <bcs-popover :delay="500" placement="bottom">
                         <div class="value-label">{{containerInfo.container_ip || '--'}}</div>
                         <template slot="content">
@@ -36,7 +36,7 @@
                     </bcs-popover>
                 </div>
                 <div class="header-item">
-                    <div class="key-label">{{$t('容器ID：')}}</div>
+                    <div class="key-label">{{$t('deploy.templateset.containerID：')}}</div>
                     <bcs-popover :delay="500" placement="bottom">
                         <div class="value-label">{{containerInfo.container_id || '--'}}</div>
                         <template slot="content">
@@ -45,7 +45,7 @@
                     </bcs-popover>
                 </div>
                 <div class="header-item">
-                    <div class="key-label">{{$t('镜像：')}}</div>
+                    <div class="key-label">{{$t('deploy.templateset.image')}}</div>
                     <bcs-popover :delay="500" placement="bottom">
                         <div class="value-label">{{containerInfo.image || '--'}}</div>
                         <template slot="content">
@@ -54,7 +54,7 @@
                     </bcs-popover>
                 </div>
                 <div class="header-item">
-                    <div class="key-label">{{$t('网络模式：')}}</div>
+                    <div class="key-label">{{$t('deploy.templateset.network')}}</div>
                     <bcs-popover :delay="500" placement="bottom">
                         <div class="value-label">{{containerInfo.network_mode || '--'}}</div>
                         <template slot="content">
@@ -69,7 +69,7 @@
                     <div class="part top-left">
                         <div class="info">
                             <div class="left">
-                                {{$t('CPU使用率')}}
+                                {{$t('metrics.cpuUsage')}}
                             </div>
                             <div class="right">
                                 <bk-dropdown-menu :align="'right'" ref="cpuDropdown" style="z-index: 101;">
@@ -81,13 +81,13 @@
                                     </div>
                                     <ul class="bk-dropdown-list" slot="dropdown-content">
                                         <li>
-                                            <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu', '1')">{{$t('1小时')}}</a>
+                                            <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu', '1')">{{$t('units.time.1h')}}</a>
                                         </li>
                                         <li>
-                                            <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu', '2')">{{$t('24小时')}}</a>
+                                            <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu', '2')">{{$t('units.time.24h')}}</a>
                                         </li>
                                         <li>
-                                            <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu', '3')">{{$t('近7天')}}</a>
+                                            <a href="javascript:;" @click.stop="toggleRange('cpuDropdown', 'cpuToggleRangeStr', 'cpu', '3')">{{$t('units.time.lastDays')}}</a>
                                         </li>
                                     </ul>
                                 </bk-dropdown-menu>
@@ -97,7 +97,7 @@
                     </div>
                     <div class="part top-left">
                         <div class="info">
-                            <div class="left">{{$t('内存使用量')}}</div>
+                            <div class="left">{{$t('metrics.memUsage1')}}</div>
                             <div class="right">
                                 <bk-dropdown-menu :align="'right'" ref="memoryDropdown" style="z-index: 101;">
                                     <div style="cursor: pointer;" slot="dropdown-trigger">
@@ -108,13 +108,13 @@
                                     </div>
                                     <ul class="bk-dropdown-list" slot="dropdown-content">
                                         <li>
-                                            <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '1')">{{$t('1小时')}}</a>
+                                            <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '1')">{{$t('units.time.1h')}}</a>
                                         </li>
                                         <li>
-                                            <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '2')">{{$t('24小时')}}</a>
+                                            <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '2')">{{$t('units.time.24h')}}</a>
                                         </li>
                                         <li>
-                                            <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '3')">{{$t('近7天')}}</a>
+                                            <a href="javascript:;" @click.stop="toggleRange('memoryDropdown', 'memToggleRangeStr', 'mem', '3')">{{$t('units.time.lastDays')}}</a>
                                         </li>
                                     </ul>
                                 </bk-dropdown-menu>
@@ -124,7 +124,7 @@
                     </div>
                     <div class="part top-right">
                         <div class="info">
-                            <div class="left">{{$t('磁盘IO总量')}}</div>
+                            <div class="left">{{$t('metrics.diskIOUsage1')}}</div>
                             <div class="right">
                                 <bk-dropdown-menu :align="'right'" ref="diskDropdownContainer" style="z-index: 101;">
                                     <div style="cursor: pointer;" slot="dropdown-trigger">
@@ -135,13 +135,13 @@
                                     </div>
                                     <ul class="bk-dropdown-list" slot="dropdown-content">
                                         <li>
-                                            <a href="javascript:;" @click.stop="toggleRange('diskDropdownContainer', 'diskToggleRangeStr', 'disk', '1')">{{$t('1小时')}}</a>
+                                            <a href="javascript:;" @click.stop="toggleRange('diskDropdownContainer', 'diskToggleRangeStr', 'disk', '1')">{{$t('units.time.1h')}}</a>
                                         </li>
                                         <li>
-                                            <a href="javascript:;" @click.stop="toggleRange('diskDropdownContainer', 'diskToggleRangeStr', 'disk', '2')">{{$t('24小时')}}</a>
+                                            <a href="javascript:;" @click.stop="toggleRange('diskDropdownContainer', 'diskToggleRangeStr', 'disk', '2')">{{$t('units.time.24h')}}</a>
                                         </li>
                                         <li>
-                                            <a href="javascript:;" @click.stop="toggleRange('diskDropdownContainer', 'diskToggleRangeStr', 'disk', '3')">{{$t('近7天')}}</a>
+                                            <a href="javascript:;" @click.stop="toggleRange('diskDropdownContainer', 'diskToggleRangeStr', 'disk', '3')">{{$t('units.time.lastDays')}}</a>
                                         </li>
                                     </ul>
                                 </bk-dropdown-menu>
@@ -154,7 +154,7 @@
 
             <div class="biz-app-container-table-wrapper">
                 <bk-tab :type="'fill'" :active-name="tabActiveName" class="biz-tab-container" @tab-changed="tabChanged">
-                    <bk-tab-panel name="ports" :title="$t('端口映射')">
+                    <bk-tab-panel name="ports" :title="$t('dashboard.network.portmapping')">
                         <table class="bk-table has-table-hover biz-table biz-app-container-ports-table">
                             <thead>
                                 <tr>
@@ -193,7 +193,7 @@
                                     <tr>
                                         <td colspan="4">
                                             <div class="bk-message-box no-data">
-                                                <p class="message empty-message">{{$t('该应用的网络模式无需端口映射')}}</p>
+                                                <p class="message empty-message">{{$t('deploy.templateset.noportmapping')}}</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -201,7 +201,7 @@
                             </tbody>
                         </table>
                     </bk-tab-panel>
-                    <bk-tab-panel name="commands" :title="$t('命令')">
+                    <bk-tab-panel name="commands" :title="$t('dashboard.workload.container.command')">
                         <table class="bk-table has-table-hover biz-table biz-app-container-commands-table">
                             <thead>
                                 <tr>
@@ -244,7 +244,7 @@
                             </tbody>
                         </table>
                     </bk-tab-panel>
-                    <bk-tab-panel name="volumes" :title="$t('挂载卷')">
+                    <bk-tab-panel name="volumes" :title="$t('k8s.volume')">
                         <table class="bk-table has-table-hover biz-table biz-app-container-volumes-table">
                             <thead>
                                 <tr>
@@ -289,7 +289,7 @@
                             </tbody>
                         </table>
                     </bk-tab-panel>
-                    <bk-tab-panel name="env_args" :title="$t('环境变量')">
+                    <bk-tab-panel name="env_args" :title="$t('dashboard.workload.container.env')">
                         <table class="bk-table has-table-hover biz-table biz-app-container-env-table" v-bkloading="{isLoading: envTabLoading}">
                             <thead>
                                 <tr>
@@ -332,7 +332,7 @@
                             </tbody>
                         </table>
                     </bk-tab-panel>
-                    <bk-tab-panel name="labels" :title="$t('标签')">
+                    <bk-tab-panel name="labels" :title="$t('k8s.label')">
                         <table class="bk-table has-table-hover biz-table biz-app-container-label-table">
                             <thead>
                                 <tr>
@@ -375,7 +375,7 @@
                             </tbody>
                         </table>
                     </bk-tab-panel>
-                    <bk-tab-panel name="resources" :title="$t('资源限制')">
+                    <bk-tab-panel name="resources" :title="$t('dashboard.workload.container.limits')">
                         <table class="bk-table has-table-hover biz-table biz-app-container-resource-table">
                             <thead>
                                 <tr>

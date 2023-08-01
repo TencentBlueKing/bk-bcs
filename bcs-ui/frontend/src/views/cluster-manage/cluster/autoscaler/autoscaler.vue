@@ -5,9 +5,9 @@
     <section class="autoscaler">
       <div class="group-header">
         <div>
-          <span class="group-header-title">{{$t('Cluster Autoscaler配置')}}</span>
+          <span class="group-header-title">{{$t('cluster.ca.title.caConfig')}}</span>
           <span class="switch-autoscaler">
-            {{$t('Cluster Autoscaler')}}
+            {{$t('cluster.ca.name')}}
             <bcs-switcher
               size="small"
               v-model="autoscalerData.enableAutoscale"
@@ -19,29 +19,29 @@
         <bcs-button
           theme="primary"
           :disabled="autoscalerData.status === 'UPDATING'"
-          @click="handleEditAutoScaler">{{$t('编辑配置')}}</bcs-button>
+          @click="handleEditAutoScaler">{{$t('cluster.ca.button.edit')}}</bcs-button>
       </div>
       <div v-bkloading="{ isLoading: configLoading }">
-        <LayoutGroup :title="$t('基本配置')" class="mb10">
+        <LayoutGroup :title="$t('cluster.ca.basic.title')" class="mb10">
           <AutoScalerFormItem
             :list="basicScalerConfig"
             :autoscaler-data="autoscalerData">
           </AutoScalerFormItem>
         </LayoutGroup>
-        <LayoutGroup :title="$t('扩缩容暂停配置')" class="mb10">
+        <LayoutGroup :title="$t('cluster.ca.unreadyConfig.title')" class="mb10">
           <i18n
-            path="NotReady节点数大于 {0} 个且超过集群总节点数 {1} 时暂停自动扩缩容"
+            path="cluster.ca.unreadyConfig.path"
             class="text-[#979BA5] leading-[32px]">
             <span place="0" class="text-[#313238]">{{ autoscalerData.okTotalUnreadyCount }}</span>
             <span place="1" class="text-[#313238]">{{ autoscalerData.maxTotalUnreadyPercentage }}%</span>
           </i18n>
           <span
             class="ml-[5px] text-[16px] text-[#979ba5]"
-            v-bk-tooltips="$t('自动扩缩容保护机制，如果NotReady节点数量或比例过大，自动扩容上来的节点也有可能会是NotReady状态，导致业务成本增加，当NotReady节点数不符合暂停触发条件时自动恢复自动扩缩容')">
+            v-bk-tooltips="$t('cluster.ca.unreadyConfig.desc')">
             <i class="bk-icon icon-info-circle"></i>
           </span>
         </LayoutGroup>
-        <LayoutGroup :title="$t('自动扩容配置')" class="mb10">
+        <LayoutGroup :title="$t('cluster.ca.autoScalerConfig.title')" class="mb10">
           <AutoScalerFormItem
             :list="autoScalerConfig"
             :autoscaler-data="autoscalerData">
@@ -51,10 +51,10 @@
                 style="border-bottom: 1px dashed #699DF4;"
                 v-if="['bufferResourceCpuRatio', 'bufferResourceMemRatio'].includes(data.prop)"
                 v-bk-tooltips="data.prop === 'bufferResourceCpuRatio'
-                  ? `${Number((overview.cpu_usage.request || 0)).toFixed(2)}${$t('核')} / ${Number(Math.ceil(overview.cpu_usage.total) || 0).toFixed(2)}${$t('核')}`
+                  ? `${Number((overview.cpu_usage.request || 0)).toFixed(2)}${$t('units.suffix.cores')} / ${Number(Math.ceil(overview.cpu_usage.total) || 0).toFixed(2)}${$t('units.suffix.cores')}`
                   : `${formatBytes(overview.memory_usage.request_bytes || 0, 2)} / ${formatBytes(overview.memory_usage.total_bytes || 0, 2)}`">
                 {{
-                  $t('( 当前使用率 {val} % )', {
+                  $t('cluster.ca.metric.curUsagePath', {
                     val: data.prop === 'bufferResourceCpuRatio'
                       ? conversionPercentUsed(overview.cpu_usage.request, overview.cpu_usage.total)
                       : conversionPercentUsed(overview.memory_usage.request_bytes, overview.memory_usage.total_bytes)
@@ -67,26 +67,26 @@
         <LayoutGroup collapsible class="mb15" :expanded="!!autoscalerData.isScaleDownEnable">
           <template #title>
             <span class="flex items-center">
-              <span>{{$t('自动缩容配置')}}</span>
+              <span>{{$t('cluster.ca.autoScalerDownConfig.title')}}</span>
               <span class="flex items-center ml-[8px]" @click.stop>
                 <span
                   :class="['px-[8px] inline-block leading-[20px] text-[#979BA5]', {
                     '!text-[#2DCB56] bg-[#F2FFF4]': autoscalerData.isScaleDownEnable && autoscalerData.enableAutoscale
                   }]">
-                  {{ autoscalerData.isScaleDownEnable && autoscalerData.enableAutoscale ? $t('已开启') : $t('已关闭') }}
+                  {{ autoscalerData.isScaleDownEnable && autoscalerData.enableAutoscale ? $t('cluster.ca.status.on') : $t('cluster.ca.status.off') }}
                 </span>
                 <bcs-divider direction="vertical" class="!mr-[10px]"></bcs-divider>
                 <span
                   v-bk-tooltips="{
                     disabled: autoscalerData.enableAutoscale,
-                    content: $t('集群自动扩缩容已关闭，无法单独开启自动缩容配置')
+                    content: $t('cluster.ca.tips.cannotEnableScalerDownConfig')
                   }">
                   <bk-button
                     text
                     class="text-[12px]"
                     :disabled="autoscalerData.status === 'UPDATING' || !autoscalerData.enableAutoscale"
                     @click="handleChangeScalerDown">
-                    {{ autoscalerData.isScaleDownEnable && autoscalerData.enableAutoscale ? $t('关闭') : $t('开启') }}
+                    {{ autoscalerData.isScaleDownEnable && autoscalerData.enableAutoscale ? $t('generic.button.close') : $t('generic.button.on') }}
                   </bk-button>
                 </span>
               </span>
@@ -100,26 +100,26 @@
         <LayoutGroup collapsible class="mb15" :expanded="isPodsPriorityEnable">
           <template #title>
             <span class="flex items-center">
-              <span>{{$t('低优先级 Pod 配置')}}</span>
+              <span>{{$t('cluster.ca.podsPriorityConfig.title')}}</span>
               <span class="flex items-center ml-[8px]" @click.stop>
                 <span
                   :class="['px-[8px] inline-block leading-[20px] text-[#979BA5]', {
                     '!text-[#2DCB56] bg-[#F2FFF4]': isPodsPriorityEnable && autoscalerData.enableAutoscale
                   }]">
-                  {{ isPodsPriorityEnable && autoscalerData.enableAutoscale ? $t('已开启') : $t('已关闭') }}
+                  {{ isPodsPriorityEnable && autoscalerData.enableAutoscale ? $t('cluster.ca.status.on') : $t('cluster.ca.status.off') }}
                 </span>
                 <bcs-divider direction="vertical" class="!mr-[10px]"></bcs-divider>
                 <span
                   v-bk-tooltips="{
                     disabled: autoscalerData.enableAutoscale,
-                    content: $t('集群自动扩缩容已关闭，无法单独开启低优先级 Pod 配置')
+                    content: $t('cluster.ca.tips.cannotEnablePodsPriorityConfig')
                   }">
                   <bk-button
                     text
                     class="text-[12px]"
                     :disabled="autoscalerData.status === 'UPDATING' || !autoscalerData.enableAutoscale"
                     @click="handleTogglePodsPriorityDialog">
-                    {{ isPodsPriorityEnable && autoscalerData.enableAutoscale ? $t('关闭') : $t('开启') }}
+                    {{ isPodsPriorityEnable && autoscalerData.enableAutoscale ? $t('generic.button.close') : $t('generic.button.on') }}
                   </bk-button>
                 </span>
               </span>
@@ -128,8 +128,8 @@
           <AutoScalerFormItem
             :list="[{
               prop: 'expendablePodsPriorityCutoff',
-              name: $t('Pod 优先级阈值'),
-              desc: $t('当优先级低于此值的 pod，pending不会触发扩容，缩容时会直接kill，不会等待优雅退出时间'),
+              name: $t('cluster.ca.podsPriorityConfig.expendablePodsPriorityCutoff.title'),
+              desc: $t('cluster.ca.podsPriorityConfig.expendablePodsPriorityCutoff.desc'),
             }]"
             :autoscaler-data="autoscalerData" />
         </LayoutGroup>
@@ -138,10 +138,10 @@
     <!-- 节点规格配置 -->
     <section class="nodepool">
       <div class="group-header">
-        <div class="group-header-title">{{$t('节点规格管理')}}</div>
+        <div class="group-header-title">{{$t('cluster.ca.title.nodePoolManage')}}</div>
         <div class="flex">
-          <bcs-button theme="primary" icon="plus" @click="handleCreatePool">{{$t('新建节点规格')}}</bcs-button>
-          <bcs-button class="ml5" @click="handleShowRecord({})">{{$t('扩缩容记录')}}</bcs-button>
+          <bcs-button theme="primary" icon="plus" @click="handleCreatePool">{{$t('cluster.ca.button.createNodePool')}}</bcs-button>
+          <bcs-button class="ml5" @click="handleShowRecord({})">{{$t('cluster.ca.button.record')}}</bcs-button>
         </div>
       </div>
       <bcs-table
@@ -150,19 +150,19 @@
         v-bkloading="{ isLoading: nodepoolLoading }"
         @page-change="pageChange"
         @page-limit-change="pageSizeChange">
-        <bcs-table-column :label="$t('节点规格 ID (名称)')" min-width="200" show-overflow-tooltip>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nameAndID')" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="bk-primary bk-button-normal bk-button-text" @click="handleGotoDetail(row)">
               <span class="bcs-ellipsis">{{`${row.nodeGroupID}（${row.name}）`}}</span>
             </div>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('节点配额')" align="right" width="120">
+        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nodeQuota')" align="right" width="120">
           <template #default="{ row }">
             {{ row.autoScaling.maxSize }}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('节点数量')" align="right" width="120">
+        <bcs-table-column :label="$t('cluster.ca.nodePool.label.nodeCounts')" align="right" width="120">
           <template #default="{ row }">
             <bcs-button
               text
@@ -172,34 +172,34 @@
             </bcs-button>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('机型')">
+        <bcs-table-column :label="$t('generic.ipSelector.label.serverModel')">
           <template #default="{ row }">
             {{ row.launchTemplate.instanceType }}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('操作系统')" show-overflow-tooltip>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.label.system')" show-overflow-tooltip>
           <template #default>{{clusterOS}}</template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('节点规格状态')">
+        <bcs-table-column :label="$t('cluster.ca.nodePool.label.status')">
           <template #default="{ row }">
             <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(row.status)">
               {{ statusTextMap[row.status] }}
             </LoadingIcon>
             <StatusIcon status="unknown" v-else-if="!row.enableAutoscale && row.status === 'RUNNING'">
-              {{$t('已关闭')}}
+              {{$t('cluster.ca.status.off')}}
             </StatusIcon>
             <StatusIcon
               :status="row.status"
               :status-color-map="statusColorMap"
               v-else>
-              {{ statusTextMap[row.status] || $t('未知') }}
+              {{ statusTextMap[row.status] || $t('generic.status.unknown') }}
             </StatusIcon>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('操作')" width="170">
+        <bcs-table-column :label="$t('generic.label.action')" width="170">
           <template #default="{ row }">
             <div class="operate">
-              <bcs-button text @click="handleShowRecord(row)">{{$t('扩缩容记录')}}</bcs-button>
+              <bcs-button text @click="handleShowRecord(row)">{{$t('cluster.ca.button.record')}}</bcs-button>
               <bcs-popover
                 placement="bottom"
                 theme="light dropdown"
@@ -217,23 +217,23 @@
                           || ['CREATING', 'DELETING', 'UPDATING'].includes(row.status)
                       }]"
                       v-bk-tooltips="{
-                        content: $t('Cluster Autoscaler 需要至少一个节点规格开启，请停用 Cluster Autoscaler 后再关闭'),
+                        content: $t('cluster.ca.tips.noEnableNodePool'),
                         disabled: !(row.enableAutoscale && disabledAutoscaler)
                       }"
                       @click="handleToggleNodeScaler(row)">
-                      {{row.enableAutoscale ? $t('关闭节点规格') : $t('启用节点规格')}}
+                      {{row.enableAutoscale ? $t('cluster.ca.nodePool.action.off') : $t('cluster.ca.nodePool.action.on')}}
                     </li>
-                    <li class="dropdown-item" @click="handleEditPool(row)">{{$t('编辑节点规格')}}</li>
+                    <li class="dropdown-item" @click="handleEditPool(row)">{{$t('cluster.ca.nodePool.action.edit')}}</li>
                     <li
                       :class="['dropdown-item', { disabled: disabledDelete || !!row.autoScaling.desiredSize }]"
                       v-bk-tooltips="{
                         content: !!row.autoScaling.desiredSize
-                          ? $t('请删除节点后再删除节点规格')
-                          : $t('Cluster Autoscaler 需要至少一个节点规格，请停用 Cluster Autoscaler 后再删除'),
+                          ? $t('cluster.ca.tips.notEmptyNodes')
+                          : $t('cluster.ca.tips.needMoreThanOneNodePoolOn'),
                         disabled: !(disabledDelete || !!row.autoScaling.desiredSize),
                         placements: 'left'
                       }"
-                      @click="handleDeletePool(row)">{{$t('删除节点规格')}}</li>
+                      @click="handleDeletePool(row)">{{$t('cluster.ca.nodePool.action.delete.text')}}</li>
                   </ul>
                 </div>
               </bcs-popover>
@@ -246,16 +246,16 @@
     <bcs-dialog
       theme="primary"
       header-position="left"
-      :title="$t('管理节点数量')"
+      :title="$t('cluster.ca.nodePool.nodes.title')"
       :width="700"
       v-model="showNodeManage"
       @cancel="handleNodeManageCancel">
-      <bcs-alert type="info" :title="$t('注意：若节点规格已开启自动伸缩， 则数量将会随集群负载自动调整')"></bcs-alert>
+      <bcs-alert type="info" :title="$t('cluster.ca.nodePool.nodes.desc')"></bcs-alert>
       <bcs-form class="form-content mt15" :label-width="100">
-        <bcs-form-item class="form-content-item" :label="$t('节点规格名称')">
+        <bcs-form-item class="form-content-item" :label="$t('cluster.ca.nodePool.label.name')">
           <span>{{ currentOperateRow.name }}</span>
         </bcs-form-item>
-        <bcs-form-item class="form-content-item" :label="$t('节点配额')">
+        <bcs-form-item class="form-content-item" :label="$t('cluster.ca.nodePool.label.nodeQuota')">
           <span>
             {{
               currentOperateRow.autoScaling
@@ -264,7 +264,7 @@
             }}
           </span>
         </bcs-form-item>
-        <bcs-form-item class="form-content-item" :label="$t('节点数量')">
+        <bcs-form-item class="form-content-item" :label="$t('cluster.ca.nodePool.label.nodeCounts')">
           <span>
             {{
               currentOperateRow.autoScaling
@@ -281,8 +281,8 @@
         :pagination="nodePagination"
         @page-change="nodePageChange"
         @page-limit-change="nodePageSizeChange">
-        <bcs-table-column :label="$t('节点名称')" prop="innerIP"></bcs-table-column>
-        <bcs-table-column :label="$t('状态')">
+        <bcs-table-column :label="$t('cluster.ca.nodePool.nodes.label.name')" prop="innerIP"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.status')">
           <template #default="{ row }">
             <LoadingIcon v-if="['DELETING', 'INITIALIZATION'].includes(row.status)">
               {{ nodeStatusMap[row.status] }}
@@ -295,14 +295,14 @@
             </StatusIcon>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('操作')" width="120">
+        <bcs-table-column :label="$t('generic.label.action')" width="120">
           <template #default="{ row }">
             <div class="operate">
               <bcs-button
                 text
                 :disabled="['DELETING', 'INITIALIZATION'].includes(row.status)"
                 @click="handleToggleCordon(row)">
-                {{row.unSchedulable ? $t('允许调度') : $t('停止调度')}}
+                {{row.unSchedulable ? $t('generic.button.uncordon.text') : $t('generic.button.cordon.text')}}
               </bcs-button>
               <bcs-popover
                 placement="bottom"
@@ -317,15 +317,15 @@
                 </span>
                 <div slot="content">
                   <ul>
-                    <li class="dropdown-item" @click="handleNodeDrain(row)">{{$t('pod驱逐')}}</li>
+                    <li class="dropdown-item" @click="handleNodeDrain(row)">{{$t('generic.button.drain.text')}}</li>
                     <li
                       :class="['dropdown-item', { disabled: !row.unSchedulable }]"
                       v-bk-tooltips="{
-                        content: $t('请先停止调度'),
+                        content: $t('cluster.ca.nodePool.nodes.action.delete.tips'),
                         disabled: row.unSchedulable
                       }"
                       @click="handleDeleteNodeGroupNode(row)"
-                    >{{$t('删除节点')}}</li>
+                    >{{$t('cluster.ca.nodePool.nodes.action.delete.text')}}</li>
                   </ul>
                 </div>
               </bcs-popover>
@@ -338,7 +338,7 @@
     <bcs-dialog
       theme="primary"
       header-position="left"
-      :title="$t('扩缩容记录')"
+      :title="$t('cluster.ca.button.record')"
       :width="1200"
       v-model="showRecord"
       @cancel="handleRecordCancel">
@@ -371,7 +371,7 @@
               :data="row.task ? row.task.stepSequence : []"
               :outer-border="false"
               :header-cell-style="{ background: '#fff', borderRight: 'none' }">
-              <bcs-table-column :label="$t('步骤名称')" width="150" show-overflow-tooltip>
+              <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.stepName')" width="150" show-overflow-tooltip>
                 <template #default="{ row: key }">
                   <div class="flex items-center">
                     <span class="bcs-ellipsis">{{ row.task.steps[key].taskName }}</span>
@@ -382,23 +382,23 @@
                   </div>
                 </template>
               </bcs-table-column>
-              <bcs-table-column :label="$t('步骤信息')" show-overflow-tooltip>
+              <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.stepMsg')" show-overflow-tooltip>
                 <template #default="{ row: key }">
                   {{ row.task.steps[key].message || '--' }}
                 </template>
               </bcs-table-column>
-              <bcs-table-column :label="$t('开始时间')" width="180" show-overflow-tooltip>
+              <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.startTime')" width="180" show-overflow-tooltip>
                 <template #default="{ row: key }">
                   {{ row.task.steps[key].start }}
                 </template>
               </bcs-table-column>
-              <bcs-table-column :label="$t('结束时间')" width="180" show-overflow-tooltip>
+              <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.endTime')" width="180" show-overflow-tooltip>
                 <template #default="{ row: key }">
                   {{ row.task.steps[key].end }}
                 </template>
               </bcs-table-column>
               <!-- 设置宽度为了保持和外面表格对齐 -->
-              <bcs-table-column :label="$t('状态')" width="240">
+              <bcs-table-column :label="$t('generic.label.status')" width="240">
                 <template #default="{ row: key }">
                   <LoadingIcon v-if="['RUNNING'].includes(row.task.steps[key].status)">
                     {{ taskStatusMap[row.task.steps[key].status] }}
@@ -415,7 +415,7 @@
           </template>
         </bcs-table-column>
         <bcs-table-column
-          :label="$t('事件类型')"
+          :label="$t('cluster.ca.nodePool.records.label.eventType')"
           width="150"
           prop="taskType"
           column-key="taskType"
@@ -427,9 +427,9 @@
             {{row.task ? row.task.taskName : '--'}}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('事件信息')" prop="message" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.eventMsg')" prop="message" show-overflow-tooltip></bcs-table-column>
         <bcs-table-column
-          :label="$t('节点规格')"
+          :label="$t('cluster.ca.nodePool.text')"
           prop="resourceID"
           :filtered-value="filterValues.resourceID"
           :filters="filters.resourceID"
@@ -439,14 +439,14 @@
           :key="JSON.stringify(filterValues.resourceID)"
           show-overflow-tooltip>
         </bcs-table-column>
-        <bcs-table-column :label="$t('开始时间')" width="180" prop="createTime" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column :label="$t('结束时间')" width="180" show-overflow-tooltip>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.startTime')" width="180" prop="createTime" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.endTime')" width="180" show-overflow-tooltip>
           <template #default="{ row }">
             {{row.task ? row.task.end : '--'}}
           </template>
         </bcs-table-column>
         <bcs-table-column
-          :label="$t('状态')"
+          :label="$t('generic.label.status')"
           width="150"
           prop="status"
           column-key="status"
@@ -468,16 +468,16 @@
             <span v-else>--</span>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('操作')" width="120">
+        <bcs-table-column :label="$t('generic.label.action')" width="120">
           <template #default="{ row }">
             <!-- <bcs-button
               text
               :disabled="!(row.task && taskStatusColorMap[row.task.status] === 'red')"
-              @click="handleRetryTask(row)">{{$t('重试')}}</bcs-button> -->
+              @click="handleRetryTask(row)">{{$t('cluster.ca.nodePool.records.action.retry')}}</bcs-button> -->
             <bcs-button
               text
               :disabled="!(row.task && row.task.nodeIPList && row.task.nodeIPList.length)"
-              @click="handleShowIPList(row)">{{$t('IP列表')}}</bcs-button>
+              @click="handleShowIPList(row)">{{$t('cluster.ca.nodePool.records.action.ipList')}}</bcs-button>
           </template>
         </bcs-table-column>
       </bcs-table>
@@ -486,7 +486,7 @@
     <bcs-dialog
       theme="primary"
       header-position="left"
-      :title="$t('IP列表')"
+      :title="$t('cluster.ca.nodePool.records.action.ipList')"
       v-model="showIPList">
       <bk-table
         :key="ipTableKey"
@@ -500,20 +500,20 @@
     <bcs-dialog
       theme="primary"
       header-position="left"
-      :title="$t('开启低优先级 Pod 配置')"
+      :title="$t('cluster.ca.podsPriorityConfig.expendablePodsPriorityCutoff.on')"
       :width="480"
       :loading="podsPriorityLoading"
       v-model="showPodsPriorityDialog"
       @confirm="handleSetPodsPriority">
       <div class="flex items-start">
         <i class="bk-icon icon-info-circle mr-[8px] relative top-[2px]"></i>
-        <i18n path="低优先级Pod配置提示语" class="text-[12px]">
-          <span class="text-[#FF9C01] font-bold">{{ $t('低于') }}</span>
-          <span>{{ $t('以下') }}</span>
+        <i18n path="cluster.ca.podsPriorityConfig.path" class="text-[12px]">
+          <span class="text-[#FF9C01] font-bold">{{ $t('units.op.le') }}</span>
+          <span>{{ $t('cluster.ca.podsPriorityConfig.expendablePodsPriorityCutoff.list') }}</span>
         </i18n>
       </div>
       <div class="flex items-center mt-[20px] ml-[22px]">
-        <span class="mr-[20px]">{{ $t('Pod 优先级阈值') }}</span>
+        <span class="mr-[20px]">{{ $t('cluster.ca.podsPriorityConfig.expendablePodsPriorityCutoff.title') }}</span>
         <bcs-input
           class="w-[74px]"
           type="number"
@@ -560,112 +560,103 @@ export default defineComponent({
     const basicScalerConfig = ref([
       {
         prop: 'status',
-        name: $i18n.t('状态'),
+        name: $i18n.t('generic.label.status'),
       },
       {
         prop: 'scanInterval',
-        name: $i18n.t('扩缩容检测时间间隔'),
-        unit: $i18n.t('秒'),
+        name: $i18n.t('cluster.ca.basic.scanInterval.label'),
+        unit: $i18n.t('units.suffix.seconds'),
       },
       {
         prop: 'scaleOutModuleName',
-        name: $i18n.t('扩容后转移模块'),
-        desc: $i18n.t('扩容节点后节点转移到关联业务的CMDB模块'),
+        name: $i18n.t('cluster.ca.basic.module.label'),
+        desc: $i18n.t('cluster.ca.basic.module.desc'),
       },
     ]);
     const autoScalerConfig = ref([
       {
         prop: 'expander',
-        name: $i18n.t('扩容算法'),
+        name: $i18n.t('cluster.ca.autoScalerConfig.expander.title'),
         isBasicProp: true,
-        desc: $i18n.t('random：在有多个节点规格时，随机选择节点规格<br/>least-waste：在有多个节点规格时，以最小浪费原则选择，选择有最少可用资源的节点规格<br/>most-pods：在有多个节点规格时，选择容量最大（可以创建最多Pod）的节点规格'),
+        desc: $i18n.t('cluster.ca.autoScalerConfig.expander.desc'),
       },
       {
         prop: 'bufferResourceCpuRatio',
-        name: $i18n.t('触发扩容资源阈值 (CPU)'),
+        name: $i18n.t('cluster.ca.autoScalerConfig.bufferResourceCpuRatio.title'),
         isBasicProp: true,
         unit: '%',
-        desc: $i18n.t('集群整体CPU资源(Request)使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值'),
+        desc: $i18n.t('cluster.ca.autoScalerConfig.bufferResourceCpuRatio.desc'),
       },
       {
         prop: 'bufferResourceMemRatio',
-        name: $i18n.t('触发扩容资源阈值 (内存)'),
+        name: $i18n.t('cluster.ca.autoScalerConfig.bufferResourceMemRatio.title'),
         isBasicProp: true,
         unit: '%',
-        desc: $i18n.t('集群整体内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值'),
+        desc: $i18n.t('cluster.ca.autoScalerConfig.bufferResourceMemRatio.desc'),
       },
       {
         prop: 'bufferResourceRatio',
-        name: $i18n.t('触发扩容资源阈值 (Pods)'),
+        name: $i18n.t('cluster.ca.autoScalerConfig.bufferResourceRatio.title'),
         unit: '%',
-        desc: $i18n.t('集群整体内存资源Pod数量使用率超过该阈值触发扩容, 无论CPU / 内存资源使用率是否达到阈值'),
+        desc: $i18n.t('cluster.ca.autoScalerConfig.bufferResourceRatio.desc'),
       },
       {
         prop: 'maxNodeProvisionTime',
-        name: $i18n.t('等待节点提供最长时间'),
-        unit: $i18n.t('秒'),
-        desc: $i18n.t('如果节点规格在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败'),
+        name: $i18n.t('cluster.ca.autoScalerConfig.maxNodeProvisionTime.title'),
+        unit: $i18n.t('units.suffix.seconds'),
+        desc: $i18n.t('cluster.ca.autoScalerConfig.maxNodeProvisionTime.desc'),
       },
-      // {
-      //   prop: 'scaleUpFromZero',
-      //   name: $i18n.t('(没有ready节点时) 允许自动扩容'),
-      // },
     ]);
     const autoScalerDownConfig = ref([
       {
         prop: 'scaleDownUtilizationThreahold',
-        name: $i18n.t('触发缩容资源阈值 (CPU/内存)'),
+        name: $i18n.t('cluster.ca.autoScalerDownConfig.scaleDownUtilizationThreahold.title'),
         isBasicProp: true,
         unit: '%',
-        desc: $i18n.t('取整范围0% ~ 80%，节点的CPU和内存资源(Request)必须同时低于设定阈值后会驱逐该节点上的Pod执行缩容流程，如果只考虑缩容空节点，可以把此值设置为0'),
+        desc: $i18n.t('cluster.ca.autoScalerDownConfig.scaleDownUtilizationThreahold.desc'),
       },
       {
         prop: 'scaleDownUnneededTime',
-        name: $i18n.t('节点连续空闲'),
+        name: $i18n.t('cluster.ca.autoScalerDownConfig.scaleDownUnneededTime.title'),
         isBasicProp: true,
-        unit: $i18n.t('秒'),
-        desc: $i18n.t('节点从第一次被标记空闲状态到设定时间内一直处于空闲状态才会被缩容，防止节点资源使用率短时间内波动造成频繁扩缩容操作'),
-        suffix: $i18n.t('后执行缩容'),
+        unit: $i18n.t('units.suffix.seconds'),
+        desc: $i18n.t('cluster.ca.autoScalerDownConfig.scaleDownUnneededTime.desc'),
+        suffix: $i18n.t('cluster.ca.autoScalerDownConfig.scaleDownUnneededTime.suffix'),
       },
       {
         prop: 'maxGracefulTerminationSec',
-        name: $i18n.t('等待 Pod 退出最长时间'),
+        name: $i18n.t('cluster.ca.autoScalerDownConfig.maxGracefulTerminationSec.title'),
         isBasicProp: true,
-        unit: $i18n.t('秒'),
-        desc: $i18n.t('缩容节点时，等待 pod 停止的最长时间（不会遵守 terminationGracefulPeriodSecond，超时强杀）'),
+        unit: $i18n.t('units.suffix.seconds'),
+        desc: $i18n.t('cluster.ca.autoScalerDownConfig.maxGracefulTerminationSec.desc'),
       },
       {
         prop: 'scaleDownDelayAfterAdd',
-        name: $i18n.t('扩容后判断缩容时间间隔'),
-        unit: $i18n.t('秒'),
-        desc: $i18n.t('扩容节点后多久才继续缩容判断，如果业务自定义初始化任务所需时间比较长，需要适当上调此值'),
+        name: $i18n.t('cluster.ca.autoScalerDownConfig.scaleDownDelayAfterAdd.title'),
+        unit: $i18n.t('units.suffix.seconds'),
+        desc: $i18n.t('cluster.ca.autoScalerDownConfig.scaleDownDelayAfterAdd.desc'),
       },
       {
         prop: 'scaleDownDelayAfterDelete',
-        name: $i18n.t('连续两次缩容时间间隔'),
-        unit: $i18n.t('秒'),
-        desc: $i18n.t('缩容节点后多久再继续缩容节点，默认设置为0，代表与扩缩容检测时间间隔设置的值相同'),
+        name: $i18n.t('cluster.ca.autoScalerDownConfig.scaleDownDelayAfterDelete.title'),
+        unit: $i18n.t('units.suffix.seconds'),
+        desc: $i18n.t('cluster.ca.autoScalerDownConfig.scaleDownDelayAfterDelete.desc'),
       },
-      // {
-      //   prop: 'scaleDownDelayAfterFailure',
-      //   name: $i18n.t('缩容失败后重试时间间隔'),
-      //   unit: $i18n.t('秒'),
-      // },
       {
         prop: 'scaleDownUnreadyTime',
-        name: $i18n.t('NotReady节点缩容等待时间'),
-        unit: $i18n.t('秒'),
+        name: $i18n.t('cluster.ca.autoScalerDownConfig.scaleDownUnreadyTime.title'),
+        unit: $i18n.t('units.suffix.seconds'),
       },
       {
         prop: 'maxEmptyBulkDelete',
-        name: $i18n.t('单次缩容最大节点数'),
-        unit: $i18n.t('个'),
+        name: $i18n.t('cluster.ca.autoScalerDownConfig.maxEmptyBulkDelete.title'),
+        unit: $i18n.t('units.suffix.units'),
       },
       {
         prop: 'skipNodesWithLocalStorage',
-        name: $i18n.t('允许缩容已使用本地存储的节点'),
+        name: $i18n.t('cluster.ca.autoScalerDownConfig.skipNodesWithLocalStorage.title'),
         invert: true,
-        desc: $i18n.t('如果设置为 “是”，则表示已使用本地存储的节点将允许被缩容，例如已使用过empryDir / HostPath的节点将允许被缩容'),
+        desc: $i18n.t('cluster.ca.autoScalerDownConfig.skipNodesWithLocalStorage.desc'),
       },
     ]);
     const { _INTERNAL_ } = useConfig();
@@ -698,9 +689,9 @@ export default defineComponent({
         $bkInfo({
           type: 'warning',
           clsName: 'custom-info-confirm',
-          title: $i18n.t('弹性伸缩需要配置扩容后转移模块'),
+          title: $i18n.t('cluster.ca.tips.noModule'),
           defaultInfo: true,
-          okText: $i18n.t('编辑配置'),
+          okText: $i18n.t('cluster.ca.button.edit'),
           confirmFn: () => {
             handleEditAutoScaler();
           },
@@ -716,10 +707,10 @@ export default defineComponent({
           type: 'warning',
           clsName: 'custom-info-confirm',
           title: !nodepoolList.value.length
-            ? $i18n.t('没有检测到可用节点规格，请先创建节点规格')
-            : $i18n.t('请至少启用 1 个节点规格的自动扩缩容功能或创建新的节点规格'),
+            ? $i18n.t('cluster.ca.tips.emptyNodePool')
+            : $i18n.t('cluster.ca.tips.notEnableAnyNodePool'),
           defaultInfo: true,
-          okText: $i18n.t('立即新建'),
+          okText: $i18n.t('cluster.ca.button.create'),
           confirmFn: () => {
             handleCreatePool();
           },
@@ -739,7 +730,7 @@ export default defineComponent({
         if (result) {
           $bkMessage({
             theme: 'success',
-            message: $i18n.t('操作成功'),
+            message: $i18n.t('generic.msg.success.ok'),
           });
           handleGetAutoScalerConfig();
           resolve(true);
@@ -755,7 +746,7 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: value ? $i18n.t('确定开启自动缩容配置') : $i18n.t('确定关闭自动缩容配置'),
+        title: value ? $i18n.t('cluster.ca.title.confirmOnScalerDownConfig') : $i18n.t('cluster.ca.title.confirmOffScalerDownConfig'),
         defaultInfo: true,
         confirmFn: async () => {
           configLoading.value = true;
@@ -769,7 +760,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('更新成功'),
+              message: $i18n.t('generic.msg.success.update'),
             });
             handleGetAutoScalerConfig();
             resolve(true);
@@ -811,7 +802,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('修改成功'),
+          message: $i18n.t('generic.msg.success.modify'),
         });
         handleGetAutoScalerConfig();
         showPodsPriorityDialog.value = false;
@@ -820,14 +811,14 @@ export default defineComponent({
     };
 
     const statusTextMap = { // 节点规格状态
-      RUNNING: $i18n.t('正常'),
-      CREATING: $i18n.t('创建中'),
-      DELETING: $i18n.t('删除中'),
-      UPDATING: $i18n.t('更新中'),
-      DELETED: $i18n.t('已删除'),
-      'CREATE-FAILURE': $i18n.t('创建失败'),
-      'UPDATE-FAILURE': $i18n.t('更新失败'),
-      'DELETE-FAILURE': $i18n.t('删除失败'),
+      RUNNING: $i18n.t('generic.status.ready'),
+      CREATING: $i18n.t('generic.status.creating'),
+      DELETING: $i18n.t('generic.status.deleting'),
+      UPDATING: $i18n.t('generic.status.updating'),
+      DELETED: $i18n.t('generic.status.deleted'),
+      'CREATE-FAILURE': $i18n.t('generic.status.createFailed'),
+      'UPDATE-FAILURE': $i18n.t('generic.status.updateFailed'),
+      'DELETE-FAILURE': $i18n.t('generic.status.deleteFailed'),
     };
     const statusColorMap = {
       RUNNING: 'green',
@@ -925,7 +916,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('操作成功'),
+          message: $i18n.t('generic.msg.success.ok'),
         });
         await handleGetNodePoolList();
       }
@@ -944,7 +935,7 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确定删除节点规格 {name} ', { name: `${row.nodeGroupID}（${row.name}）` }),
+        title: $i18n.t('cluster.ca.nodePool.action.delete.title', { name: `${row.nodeGroupID}（${row.name}）` }),
         defaultInfo: true,
         confirmFn: async () => {
           const result = await $store.dispatch('clustermanager/deleteNodeGroup', {
@@ -954,7 +945,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('操作成功'),
+              message: $i18n.t('generic.msg.success.ok'),
             });
             handleGetNodePoolList();
           }
@@ -963,17 +954,17 @@ export default defineComponent({
     };
     // 节点规格节点数量管理
     const nodeStatusMap = {
-      INITIALIZATION: $i18n.t('初始化中'),
-      RUNNING: $i18n.t('正常'),
-      DELETING: $i18n.t('删除中'),
-      DELETED: $i18n.t('已删除'),
-      'DELETE-FAILURE': $i18n.t('删除失败'),
-      'ADD-FAILURE': $i18n.t('扩容节点失败'),
-      'REMOVE-FAILURE': $i18n.t('缩容节点失败'),
-      REMOVABLE: $i18n.t('不可调度'),
-      NOTREADY: $i18n.t('不正常'),
-      UNKNOWN: $i18n.t('未知状态'),
-      'REMOVE-CA-FAILURE': $i18n.t('缩容成功, 下架失败'),
+      INITIALIZATION: $i18n.t('generic.status.initializing'),
+      RUNNING: $i18n.t('generic.status.ready'),
+      DELETING: $i18n.t('generic.status.deleting'),
+      DELETED: $i18n.t('generic.status.deleted'),
+      'DELETE-FAILURE': $i18n.t('generic.status.deleteFailed'),
+      'ADD-FAILURE': $i18n.t('cluster.ca.nodePool.nodes.status.scaleFailed'),
+      'REMOVE-FAILURE': $i18n.t('cluster.ca.nodePool.nodes.status.downFailed'),
+      REMOVABLE: $i18n.t('generic.status.removable'),
+      NOTREADY: $i18n.t('generic.status.notReady'),
+      UNKNOWN: $i18n.t('generic.status.unknown1'),
+      'REMOVE-CA-FAILURE': $i18n.t('cluster.ca.nodePool.nodes.status.removeFailed'),
     };
     const nodeColorMap = {
       RUNNING: 'green',
@@ -1030,8 +1021,8 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认Pod驱逐'),
-        subTitle: $i18n.t('确认要对节点 {ip} 上的Pod进行驱逐', { ip: row.innerIP }),
+        title: $i18n.t('generic.button.drain.title'),
+        subTitle: $i18n.t('generic.button.drain.subTitle', { ip: row.innerIP }),
         defaultInfo: true,
         confirmFn: async () => {
           // POD迁移
@@ -1044,7 +1035,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('POD迁移成功'),
+              message: $i18n.t('cluster.ca.nodePool.nodes.msg.drainSuccess'),
             });
             await getNodeList();
           }
@@ -1058,8 +1049,8 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认删除节点'),
-        subTitle: $i18n.t('确认删除节点 {ip}', { ip: row.innerIP }),
+        title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
+        subTitle: $i18n.t('cluster.ca.nodePool.nodes.action.delete.subTitle', { ip: row.innerIP }),
         defaultInfo: true,
         confirmFn: async () => {
           // 删除节点组节点
@@ -1073,7 +1064,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('操作成功'),
+              message: $i18n.t('generic.msg.success.ok'),
             });
             await Promise.all([
               handleGetNodePoolList(),
@@ -1106,7 +1097,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('调度成功'),
+          message: $i18n.t('generic.msg.success.cordon'),
         });
         await getNodeList();
       }
@@ -1115,43 +1106,43 @@ export default defineComponent({
 
     // 扩缩容记录
     const taskStatusMap = {
-      INITIALIZING: $i18n.t('初始化中'),
-      RUNNING: $i18n.t('执行中'),
-      SUCCESS: $i18n.t('执行成功'),
-      FAILURE: $i18n.t('执行失败'),
-      TIMEOUT: $i18n.t('执行超时'),
-      FORCETERMINATE: $i18n.t('强制终止'),
-      NOTSTARTED: $i18n.t('未启动'),
+      INITIALIZING: $i18n.t('generic.status.initializing'),
+      RUNNING: $i18n.t('generic.status.doing'),
+      SUCCESS: $i18n.t('generic.status.taskSuccess'),
+      FAILURE: $i18n.t('generic.status.taskFailed'),
+      TIMEOUT: $i18n.t('generic.status.taskTimeout'),
+      FORCETERMINATE: $i18n.t('generic.status.taskKill'),
+      NOTSTARTED: $i18n.t('generic.status.taskNotEnable'),
     };
     const taskTypeMap = {
-      CreateNodeGroup: $i18n.t('创建节点规格'),
-      UpdateNodeGroup: $i18n.t('更新节点规格'),
-      DeleteNodeGroup: $i18n.t('删除节点规格'),
-      SwitchNodeGroupAutoScaling: $i18n.t('开启/关闭节点规格'),
-      UpdateNodeGroupDesiredNode: $i18n.t('扩容节点规格'),
-      CleanNodeGroupNodes: $i18n.t('缩容节点规格'),
+      CreateNodeGroup: $i18n.t('cluster.ca.nodePool.records.taskType.create'),
+      UpdateNodeGroup: $i18n.t('cluster.ca.nodePool.records.taskType.update'),
+      DeleteNodeGroup: $i18n.t('cluster.ca.nodePool.action.delete.text'),
+      SwitchNodeGroupAutoScaling: $i18n.t('cluster.ca.nodePool.records.taskType.enable'),
+      UpdateNodeGroupDesiredNode: $i18n.t('cluster.ca.nodePool.records.taskType.scale'),
+      CleanNodeGroupNodes: $i18n.t('cluster.ca.nodePool.records.taskType.down'),
     };
     const filters = computed(() => ({
       taskType: Object.keys(taskTypeMap).map(key => ({ text: taskTypeMap[key], value: key })),
       status: [
         {
-          text: $i18n.t('初始化中'),
+          text: $i18n.t('generic.status.initializing'),
           value: 'INITIALIZING',
         },
         {
-          text: $i18n.t('执行中'),
+          text: $i18n.t('generic.status.doing'),
           value: 'RUNNING',
         },
         {
-          text: $i18n.t('执行成功'),
+          text: $i18n.t('generic.status.taskSuccess'),
           value: 'SUCCESS',
         },
         {
-          text: $i18n.t('执行失败'),
+          text: $i18n.t('generic.status.taskFailed'),
           value: 'FAILURE',
         },
         {
-          text: $i18n.t('执行超时'),
+          text: $i18n.t('generic.status.taskTimeout'),
           value: 'TIMEOUT',
         },
       ],
@@ -1180,7 +1171,7 @@ export default defineComponent({
     };
     const shortcuts = ref([
       {
-        text: $i18n.t('今天'),
+        text: $i18n.t('units.time.today'),
         value() {
           const end = new Date();
           const start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
@@ -1188,7 +1179,7 @@ export default defineComponent({
         },
       },
       {
-        text: $i18n.t('近7天'),
+        text: $i18n.t('units.time.lastDays'),
         value() {
           const end = new Date();
           const start = new Date();
@@ -1197,7 +1188,7 @@ export default defineComponent({
         },
       },
       {
-        text: $i18n.t('近15天'),
+        text: $i18n.t('units.time.last15Days'),
         value() {
           const end = new Date();
           const start = new Date();
@@ -1206,7 +1197,7 @@ export default defineComponent({
         },
       },
       {
-        text: $i18n.t('近30天'),
+        text: $i18n.t('units.time.last30Days'),
         value() {
           const end = new Date();
           const start = new Date();

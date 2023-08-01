@@ -133,6 +133,7 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		group.NodeTemplate.ScaleInPreScript = utils.Base64Encode(group.NodeTemplate.ScaleInPreScript)
 		group.NodeTemplate.ScaleInPostScript = utils.Base64Encode(group.NodeTemplate.ScaleInPostScript)
 	}
+
 	return group
 }
 

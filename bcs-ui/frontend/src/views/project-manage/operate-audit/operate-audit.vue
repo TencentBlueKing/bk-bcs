@@ -1,13 +1,13 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header hide-back :title="$t('操作记录')" />
+    <Header hide-back :title="$t('projects.operateAudit.record')" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header biz-operate-audit-query">
           <div class="left">
             <bk-selector
-              :placeholder="$t('操作对象类型')"
+              :placeholder="$t('projects.operateAudit.opObjType')"
               :selected.sync="resourceTypeIndex"
               :list="resourceTypeList"
               :setting-key="'id'"
@@ -18,7 +18,7 @@
           </div>
           <div class="left">
             <bk-selector
-              :placeholder="$t('操作类型')"
+              :placeholder="$t('projects.operateAudit.opType')"
               :selected.sync="activityTypeIndex"
               :list="activityTypeList"
               :setting-key="'id'"
@@ -29,7 +29,7 @@
           </div>
           <div class="left">
             <bk-selector
-              :placeholder="$t('状态')"
+              :placeholder="$t('generic.label.status')"
               :selected.sync="activityStatusIndex"
               :list="activityStatusList"
               :setting-key="'id'"
@@ -40,7 +40,7 @@
           </div>
           <div class="left range-picker">
             <bk-date-picker
-              :placeholder="$t('选择日期')"
+              :placeholder="$t('generic.placeholder.searchDate')"
               :shortcuts="shortcuts"
               :type="'datetimerange'"
               :placement="'bottom-end'"
@@ -48,8 +48,8 @@
             </bk-date-picker>
           </div>
           <div class="left">
-            <bk-button type="primary" :title="$t('查询')" icon="search" @click="handleClick">
-              {{$t('查询')}}
+            <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleClick">
+              {{$t('generic.button.query')}}
             </bk-button>
           </div>
         </div>
@@ -61,26 +61,26 @@
           size="medium"
           @page-change="pageChange"
           @page-limit-change="changePageSize">
-          <bk-table-column :label="$t('时间')" prop="activityTime"></bk-table-column>
-          <bk-table-column :label="$t('操作类型')" prop="activityType"></bk-table-column>
-          <bk-table-column :label="$t('对象及类型')">
+          <bk-table-column :label="$t('generic.label.time')" prop="activityTime"></bk-table-column>
+          <bk-table-column :label="$t('projects.operateAudit.opType')" prop="activityType"></bk-table-column>
+          <bk-table-column :label="$t('projects.operateAudit.objType')">
             <template slot-scope="{ row }">
               <p class="extra-info lh20" :title="row.extra.resourceType || '--'">
-                <span>{{$t('类型：')}}</span>{{row.extra.resourceType || '--'}}
+                <span>{{$t('generic.label.type1')}}</span>{{row.extra.resourceType || '--'}}
               </p>
               <p class="extra-info lh20" :title="row.extra.resource || '--'">
-                <span>{{$t('对象：')}}</span>{{row.extra.resource || '--'}}
+                <span>{{$t('projects.operateAudit.obj')}}</span>{{row.extra.resource || '--'}}
               </p>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('状态')">
+          <bk-table-column :label="$t('generic.label.status')">
             <template slot-scope="{ row }">
               <i class="bk-icon" :class="row.activity_status === 'completed' || row.activity_status === 'succeed' ? 'success icon-check-circle' : 'fail icon-close-circle'"></i>
               {{row.activityStatus}}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('发起者')" prop="user"></bk-table-column>
-          <bk-table-column :label="$t('描述')" prop="description" :show-overflow-tooltip="true" min-width="160"></bk-table-column>
+          <bk-table-column :label="$t('projects.operateAudit.operator')" prop="user"></bk-table-column>
+          <bk-table-column :label="$t('cluster.create.label.desc')" prop="description" :show-overflow-tooltip="true" min-width="160"></bk-table-column>
           <template #empty>
             <BcsEmptyTableStatus :type="searchEmpty ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
           </template>
@@ -99,19 +99,19 @@ export default {
   data() {
     // 操作类型下拉框 list
     const activityTypeList = [
-      { id: 'all', name: this.$t('全部') },
-      { id: 'note', name: this.$t('注意') },
-      { id: 'add', name: this.$t('创建') },
-      { id: 'modify', name: this.$t('更新') },
-      { id: 'delete', name: this.$t('删除') },
-      { id: 'begin', name: this.$t('开始') },
-      { id: 'end', name: this.$t('结束') },
-      { id: 'start', name: this.$t('启动') },
-      { id: 'pause', name: this.$t('暂停') },
-      { id: 'carryon', name: this.$t('继续') },
-      { id: 'stop', name: this.$t('停止') },
-      { id: 'restart', name: this.$t('重启') },
-      { id: 'query', name: this.$t('查询') },
+      { id: 'all', name: this.$t('generic.label.total') },
+      { id: 'note', name: this.$t('projects.operateAudit.note') },
+      { id: 'add', name: this.$t('generic.button.create') },
+      { id: 'modify', name: this.$t('generic.button.update') },
+      { id: 'delete', name: this.$t('generic.button.delete') },
+      { id: 'begin', name: this.$t('projects.operateAudit.begin') },
+      { id: 'end', name: this.$t('projects.operateAudit.end') },
+      { id: 'start', name: this.$t('projects.operateAudit.start') },
+      { id: 'pause', name: this.$t('projects.operateAudit.pause') },
+      { id: 'carryon', name: this.$t('projects.operateAudit.continue') },
+      { id: 'stop', name: this.$t('projects.operateAudit.stop') },
+      { id: 'restart', name: this.$t('projects.operateAudit.restart') },
+      { id: 'query', name: this.$t('generic.button.query') },
     ];
     // 操作类型 map
     const activityTypeMap = {};
@@ -121,13 +121,13 @@ export default {
 
     // 状态下拉框 list
     const activityStatusList = [
-      { id: 'all', name: this.$t('全部') },
-      { id: 'unknown', name: this.$t('未知') },
-      { id: 'completed', name: this.$t('完成') },
-      { id: 'error', name: this.$t('错误') },
-      { id: 'busy', name: this.$t('处理中') },
-      { id: 'succeed', name: this.$t('成功') },
-      { id: 'failed', name: this.$t('失败') },
+      { id: 'all', name: this.$t('generic.label.total') },
+      { id: 'unknown', name: this.$t('generic.status.unknown') },
+      { id: 'completed', name: this.$t('generic.status.done') },
+      { id: 'error', name: this.$t('projects.operateAudit.error') },
+      { id: 'busy', name: this.$t('projects.operateAudit.doing') },
+      { id: 'succeed', name: this.$t('generic.status.success') },
+      { id: 'failed', name: this.$t('generic.status.failed') },
     ];
     // 操作状态 map
     const activityStatusMap = {};
@@ -196,7 +196,7 @@ export default {
       bkMessageInstance: null,
       shortcuts: [
         {
-          text: this.$t('今天'),
+          text: this.$t('units.time.today'),
           value() {
             const end = new Date();
             const start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
@@ -204,7 +204,7 @@ export default {
           },
         },
         {
-          text: this.$t('近7天'),
+          text: this.$t('units.time.lastDays'),
           value() {
             const end = new Date();
             const start = new Date();
@@ -213,7 +213,7 @@ export default {
           },
         },
         {
-          text: this.$t('近15天'),
+          text: this.$t('units.time.last15Days'),
           value() {
             const end = new Date();
             const start = new Date();
@@ -222,7 +222,7 @@ export default {
           },
         },
         {
-          text: this.$t('近30天'),
+          text: this.$t('units.time.last30Days'),
           value() {
             const end = new Date();
             const start = new Date();
@@ -295,7 +295,7 @@ export default {
             name: this.resourceTypeMap[key],
           });
         });
-        this.resourceTypeList.unshift({ id: 'all', name: this.$t('全部') });
+        this.resourceTypeList.unshift({ id: 'all', name: this.$t('generic.label.total') });
       } catch (e) {
       }
     },

@@ -6,7 +6,7 @@
         <template v-if="varList.length">
           <bkbcs-input
             type="text"
-            :placeholder="keyPlaceholder || $t('键')"
+            :placeholder="keyPlaceholder || $t('generic.label.key')"
             :style="{ width: `${keyInputWidth}px` }"
             :value.sync="keyItem.key"
             :list="varList"
@@ -18,7 +18,7 @@
           <input
             type="text"
             class="bk-form-input"
-            :placeholder="keyPlaceholder || $t('键')"
+            :placeholder="keyPlaceholder || $t('generic.label.key')"
             :style="{ width: `${keyInputWidth}px` }"
             v-model="keyItem.key"
             @input="valueChange"
@@ -29,7 +29,7 @@
         <div class="operator">
           <bk-selector
             style="width: 132px;"
-            :placeholder="$t('请选择')"
+            :placeholder="$t('generic.placeholder.select')"
             :setting-key="'id'"
             :display-key="'name'"
             :selected.sync="keyItem.operator"
@@ -42,7 +42,7 @@
           <template v-if="varList.length">
             <bkbcs-input
               type="text"
-              :placeholder="valuePlaceholder || $t('值')"
+              :placeholder="valuePlaceholder || $t('generic.label.value')"
               :style="{ width: `${valueInputWidth}px` }"
               :value.sync="keyItem.values"
               :list="varList"
@@ -55,7 +55,7 @@
             <input
               type="text"
               class="bk-form-input"
-              :placeholder="valuePlaceholder || $t('值')"
+              :placeholder="valuePlaceholder || $t('generic.label.value')"
               :style="{ width: `${valueInputWidth}px` }"
               v-model="keyItem.values"
               @input="valueChange"
@@ -78,7 +78,7 @@
     <div v-else class="expression-action">
       <bk-button class="bk-button bk-button-small" @click.stop.prevent="addKey">
         <span class="bcs-icon bcs-icon-plus f13 vm"></span>
-        <span class="text ml0">{{$t('添加表达式')}}</span>
+        <span class="text ml0">{{$t('plugin.tools.addPattern')}}</span>
       </bk-button>
     </div>
     <slot>
