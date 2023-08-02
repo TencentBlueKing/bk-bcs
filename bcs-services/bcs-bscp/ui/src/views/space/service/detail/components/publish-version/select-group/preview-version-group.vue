@@ -1,8 +1,8 @@
 <script setup lang="ts">
   import { ref } from 'vue'
   import { Del, AngleDown, AngleRight } from 'bkui-vue/lib/icon'
-  import { IGroupPreviewItem } from '../../../../../../../../../../types/group'
-  import RuleTag from '../../../../../../../groups/components/rule-tag.vue';
+  import { IGroupPreviewItem } from '../../../../../../../../types/group'
+  import RuleTag from '../../../../../groups/components/rule-tag.vue';
 
   const props = defineProps<{
     allowPreviewDelete: boolean;
