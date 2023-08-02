@@ -146,7 +146,7 @@ import ProjectConfig from '@/views/project-manage/project/project-config.vue';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
 import TaskList from '@/views/cluster-manage/components/task-list.vue';
 import Header from '@/components/layout/Header.vue';
-import ClusterGuide from './cluster-guide.vue';
+import ClusterGuide from '@/views/app/cluster-guide.vue';
 import Row from '@/components/layout/Row.vue';
 import ListMode from './cluster-list.vue';
 import CardMode from './cluster-card.vue';

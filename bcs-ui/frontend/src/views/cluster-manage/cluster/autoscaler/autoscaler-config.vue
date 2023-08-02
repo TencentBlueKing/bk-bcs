@@ -223,11 +223,10 @@
         <i18n path="cluster.ca.podsPriorityConfig.path" class="text-[14px]">
           <span>{{ $t('units.op.le') }}</span>
           <bcs-input
-            class="w-[74px] px-[5px]"
+            class="w-[100px] px-[5px]"
             type="number"
             :min="-2147483648"
             :max="-1"
-            :show-controls="false"
             v-model="autoscalerData.expendablePodsPriorityCutoff">
           </bcs-input>
         </i18n>

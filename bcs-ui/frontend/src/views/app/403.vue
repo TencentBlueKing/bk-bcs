@@ -50,7 +50,7 @@ export default defineComponent({
     },
     // 接口返回的权限数据
     perms: {
-      type: Object as PropType<{
+      type: [Object, String] as PropType<{
         action_list: Array<{
           action_id: string
           resource_type: string
@@ -103,7 +103,9 @@ export default defineComponent({
     onBeforeMount(async () => {
       if (props.perms) {
         // 已经返回权限信息
-        const { apply_url, action_list } = props.perms;
+        const { apply_url, action_list } = typeof props.perms === 'string'
+          ? JSON.parse(props.perms)
+          : props.perms;
         handleSetPermsData(apply_url, action_list.map(item => ({
           ...item,
           resource_name: props.resourceName,

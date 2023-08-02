@@ -515,14 +515,13 @@
       <div class="flex items-center mt-[20px] ml-[22px]">
         <span class="mr-[20px]">{{ $t('cluster.ca.podsPriorityConfig.expendablePodsPriorityCutoff.title') }}</span>
         <bcs-input
-          class="w-[74px]"
+          class="w-[100px]"
           type="number"
-          :min="-2147483648"
+          :min="-2147483647"
           :max="-1"
-          :show-controls="false"
           v-model="curPodsPriority">
         </bcs-input>
-        <span class="text-[#979BA5] ml-[8px]">(-2147483648 - -1)</span>
+        <span class="text-[#979BA5] ml-[8px]">(-2147483647 ~ -1)</span>
       </div>
     </bcs-dialog>
   </div>
@@ -701,7 +700,10 @@ export default defineComponent({
           },
         });
       } else if (!autoscalerData.value.enableAutoscale
-                        && (!nodepoolList.value.length || nodepoolList.value.every(item => !item.enableAutoscale))) {
+        && (!nodepoolList.value.length
+        || nodepoolList.value.every(item => !item.enableAutoscale)
+        || nodepoolList.value.every(item => item.status !== 'RUNNING')
+        )) {
         // 开启时前置判断是否存在节点规格 或 节点规格都是未开启状态时，要提示至少开启一个
         $bkInfo({
           type: 'warning',
@@ -783,7 +785,7 @@ export default defineComponent({
     const handleTogglePodsPriorityDialog = () => {
       if (!isPodsPriorityEnable.value) {
         // 开启
-        curPodsPriority.value = autoscalerData.value?.expendablePodsPriorityCutoff;
+        curPodsPriority.value = -10;// 开启时默认设置为 -10
         showPodsPriorityDialog.value = true;
       } else {
         // 关闭

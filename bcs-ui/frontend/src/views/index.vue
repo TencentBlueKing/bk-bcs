@@ -91,8 +91,11 @@ export default defineComponent({
           name: '403',
           query: {
             resourceName: projectCode,
-            perms: web_annotations.perms,
+            perms: JSON.stringify(web_annotations.perms),
             fromRoute: window.location.href,
+          },
+          params: {
+            projectCode,
           },
         });
         return false;

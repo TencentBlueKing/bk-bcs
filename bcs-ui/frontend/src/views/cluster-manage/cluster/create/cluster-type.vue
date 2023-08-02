@@ -88,7 +88,7 @@ export default defineComponent({
         subTitle: $i18n.t('cluster.create.type.k8s.subTitle'),
         desc: $i18n.t('cluster.create.type.k8s.desc'),
         type: 'k8s',
-        disabled: _INTERNAL_.value,
+        disabled: !flagsMap.value.k8s,
       },
     ]);
     const importList = computed(() => [
@@ -105,7 +105,7 @@ export default defineComponent({
         title: $i18n.t('cluster.create.type.cloudProvider.title'),
         subTitle: $i18n.t('cluster.create.type.cloudProvider.subTitle'),
         desc: $i18n.t('cluster.create.type.cloudProvider.desc'),
-        type: 'cloud',
+        type: 'import-cloud',
         disabled: _INTERNAL_.value,
       },
     ]);

@@ -28,19 +28,19 @@
       v-bkloading="{ isLoading: loading }"
       @page-change="pageChange"
       @page-limit-change="pageSizeChange">
-      <bcs-table-column label="ID" width="220">
+      <bcs-table-column label="ID" width="220" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.account.accountID }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.name')">
+      <bcs-table-column :label="$t('generic.label.name')" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.account.accountName }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('cluster.create.label.desc')">
+      <bcs-table-column :label="$t('cluster.create.label.desc')" show-overflow-tooltip>
         <template #default="{ row }">
-          {{ row.account.desc }}
+          {{ row.account.desc || '--' }}
         </template>
       </bcs-table-column>
       <bcs-table-column label="SecretID" show-overflow-tooltip>
@@ -53,12 +53,12 @@
           {{ row.account.account.secretKey }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('projects.cloudToken.cluster')">
+      <bcs-table-column :label="$t('projects.cloudToken.cluster')" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.clusters.join(',') || '--' }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('cluster.labels.createdAt')">
+      <bcs-table-column :label="$t('cluster.labels.createdAt')" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.account.updateTime }}
         </template>

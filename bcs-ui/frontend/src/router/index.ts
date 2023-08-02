@@ -59,7 +59,7 @@ const router = new VueRouter({
     },
     // 403和user-token路由优先级比 ${SITE_URL}/:projectCode 高
     {
-      path: `${SITE_URL}/403`,
+      path: `${SITE_URL}/:projectCode/403`,
       name: '403',
       props: route => ({ ...route.params, ...route.query }),
       component: Forbidden,
@@ -75,7 +75,7 @@ const router = new VueRouter({
       component: ProjectList,
       meta: {
         menuId: 'PROJECT_LIST',
-      }
+      },
     },
     {
       path: `${SITE_URL}/:projectCode`,

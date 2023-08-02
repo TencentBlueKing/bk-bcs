@@ -93,7 +93,7 @@ export default defineComponent({
 
     const projectList = ref<IProject[]>([]);
     const perms = ref<Record<string, IProjectPerm>>({});
-    const projectName = computed(() => $store.state.curProject?.name);
+    const projectName = computed(() => $store.state.curProject?.name || $router.currentRoute?.params?.projectCode);
     const projectCodeMap = computed(() => projectList.value.reduce((pre, item) => {
       pre[item.projectCode] = item;
       return pre;

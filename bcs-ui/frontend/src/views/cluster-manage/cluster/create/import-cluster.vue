@@ -409,7 +409,7 @@ export default defineComponent({
           theme: 'success',
           message: $i18n.t('generic.msg.success.import'),
         });
-        $router.push({ name: 'home' });
+        $router.push({ name: 'clusterMain' });
       }
     };
     const handleGotoCloudToken = () => {

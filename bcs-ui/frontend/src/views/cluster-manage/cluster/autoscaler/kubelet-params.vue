@@ -49,7 +49,11 @@
               @enter="handleEditBlur"
             ></InputType>
             <template v-else>
-              <span>{{kubeletParams[row.flagName] || '--'}}</span>
+              <span>{{
+                readonly
+                  ? (kubeletParams[row.flagName] || row.defaultValue || '--')
+                  : (kubeletParams[row.flagName] || '--')
+              }}</span>
               <i
                 class="bcs-icon bcs-icon-edit2 ml5"
                 v-show="activeKubeletFlagName === row.flagName"

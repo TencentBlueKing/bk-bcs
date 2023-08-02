@@ -207,11 +207,9 @@
             v-else-if="cluster.status === 'IMPORT-FAILURE'">
             <img class="w-[220px] h-[100px]" :src="maintain" />
             <p class="mt-[6px]">{{ statusTextMap[cluster.status] }}</p>
-            <bk-button
-              text
-              class="text-[12px] mt-[4px]">
-            <!-- 导入失败目前只能删了, 重新导入 -->
-            </bk-button>
+            <div class="mt-[4px]">
+              <bk-button class="text-[12px]" text @click="handleShowClusterLog(cluster)">{{$t('查看日志')}}</bk-button>
+            </div>
           </div>
           <!-- 正常 -->
           <template v-else-if="cluster.status === 'RUNNING'">
