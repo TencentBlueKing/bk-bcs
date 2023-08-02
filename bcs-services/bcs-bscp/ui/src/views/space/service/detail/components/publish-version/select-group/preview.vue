@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue';
-  import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../../../types/group'
+  import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../types/group'
   import PreviewVersionGroup from './preview-version-group.vue';
 
   // 将分组按照版本聚合

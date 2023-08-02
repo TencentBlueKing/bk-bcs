@@ -95,6 +95,7 @@
     }
   }
 
+  // 获取脚本预览内容
   const getPreviewContent = async (scriptId: number, versionId: number) => {
     contentLoading.value = true
     const res = await getScriptVersionDetail(spaceId.value, scriptId, versionId)
@@ -102,12 +103,14 @@
     contentLoading.value = false
   }
 
+  // 处理option中disabled状态的点击事件
   const handleScriptOptionClick = (id: number, versionId: number, e: Event) => {
     if (id && !versionId) {
       e.stopPropagation()
     }
   }
 
+  // 选择脚本
   const handleSelectScript = (id: number, type: string) => {
     const script = scriptsData.value.find(item => item.id === id)
     if (script) {
@@ -116,6 +119,9 @@
       } else {
         formData.value.post.versionId = script.versionId
       }
+    }
+    if (id === 0) {
+      previewConfig.value.open = false
     }
     if (previewConfig.value.open) {
       handleOpenPreview(type)

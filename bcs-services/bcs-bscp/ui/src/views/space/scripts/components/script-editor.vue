@@ -86,6 +86,7 @@
         <slot name="preContent" :fullscreen="isOpenFullScreen"></slot>
         <CodeEditor
           :model-value="props.modelValue"
+          :lf-eol="true"
           :editable="props.editable"
           :language="props.language"
           @change="emits('update:modelValue', $event)" />

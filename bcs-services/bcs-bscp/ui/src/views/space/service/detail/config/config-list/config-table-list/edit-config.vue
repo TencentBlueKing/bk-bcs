@@ -5,8 +5,8 @@
   import { getConfigItemDetail, getConfigContent, updateServiceConfigItem } from '../../../../../../../api/config'
   import { IFileConfigContentSummary } from '../../../../../../../../types/config'
   import { IAppEditParams } from '../../../../../../../../types/app'
-  
   import { useConfigStore } from '../../../../../../../store/config'
+  import useModalCloseConfirmation from '../../../../../../../utils/hooks/user-modal-close-confirmation'
 
   const { versionData } = storeToRefs(useConfigStore())
 
@@ -36,6 +36,7 @@
   const configDetailLoading = ref(true)
   const config = ref<IAppEditParams>(getDefaultConfig())
   const content = ref<string|IFileConfigContentSummary>('')
+  const isFormChange = ref(false)
 
   const editable = computed(() => {
     return versionData.value.id === 0
@@ -75,6 +76,14 @@
     }
   }
 
+  const handleBeforeClose = async () => {
+    if (isFormChange.value) {
+      const result = await useModalCloseConfirmation()
+      return result
+    }
+    return true
+  }
+
   const submitConfig = (data: IAppEditParams) => {
     return updateServiceConfigItem(data)
   }
@@ -88,7 +97,8 @@
       width="640"
       :title="`${editable ? '编辑' : '查看'}配置项`"
       :is-show="props.show"
-      :before-close="close">
+      :before-close="handleBeforeClose"
+      @closed="close">
         <bk-loading :loading="configDetailLoading" style="height: 100%;">
           <ConfigForm
             v-if="!configDetailLoading"
@@ -98,6 +108,7 @@
             :bk-biz-id="props.bkBizId"
             :app-id="props.appId"
             :submit-fn="submitConfig"
+            @change="isFormChange = true"
             @confirm="$emit('confirm')"
             @cancel="close" />
         </bk-loading>

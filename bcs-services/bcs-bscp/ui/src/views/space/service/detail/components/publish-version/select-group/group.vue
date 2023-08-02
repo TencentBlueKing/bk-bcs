@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { IGroupToPublish } from '../../../../../../../../../../types/group'
-  import { IConfigVersion } from '../../../../../../../../../../types/config'
+  import { IGroupToPublish } from '../../../../../../../../types/group'
+  import { IConfigVersion } from '../../../../../../../../types/config'
   import GroupTree from './tree.vue'
 
   const props = withDefaults(defineProps<{

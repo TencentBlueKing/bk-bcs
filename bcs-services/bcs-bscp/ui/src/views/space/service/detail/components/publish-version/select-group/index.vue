@@ -1,12 +1,12 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { useGlobalStore } from '../../../../../../../../../store/global'
-  import { useServiceStore } from '../../../../../../../../../store/service'
-  import { IConfigVersion } from '../../../../../../../../../../types/config'
-  import { getServiceGroupList } from '../../../../../../../../../api/group'
-  import { getConfigVersionList } from '../../../../../../../../../api/config'
-  import { IGroupToPublish, IGroupItemInService } from '../../../../../../../../../../types/group'
+  import { useGlobalStore } from '../../../../../../../store/global'
+  import { useServiceStore } from '../../../../../../../store/service'
+  import { IConfigVersion } from '../../../../../../../../types/config'
+  import { getServiceGroupList } from '../../../../../../../api/group'
+  import { getConfigVersionList } from '../../../../../../../api/config'
+  import { IGroupToPublish, IGroupItemInService } from '../../../../../../../../types/group'
   import Group from './group.vue'
   import Preview from './preview.vue'
 

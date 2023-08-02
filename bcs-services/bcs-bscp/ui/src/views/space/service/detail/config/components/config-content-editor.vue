@@ -79,7 +79,7 @@
 </template>
 <style lang="scss" scoped>
 .config-content-editor {
-  height: 440px;
+  height: 640px;
   &.fullscreen {
     position: fixed;
     top: 0;
