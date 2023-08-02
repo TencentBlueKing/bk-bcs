@@ -98,7 +98,7 @@ init_bap_rule() {
   ${PROXY_TOOL_PATH}/bcs-apiserver-proxy -cmd init -vs ${VIP}:${VS_PORT} -rs ${LAN_IP}:6443 \
   -scheduler ${LVS_SCHEDULER} -toolPath ${PROXY_TOOL_PATH}/bcs-apiserver-proxy
   "${ROOT_DIR}"/system/config_bcs_dns -u "${VIP}" k8s-api.bcs.local
-  systemctl restart kubelet.service
+  k8s::restart_kubelet
 }
 
 "${ROOT_DIR}"/system/config_envfile.sh -c init
@@ -107,7 +107,7 @@ init_bap_rule() {
 "${ROOT_DIR}"/k8s/install_k8s_tools
 "${ROOT_DIR}"/k8s/render_kubeadm
 
-source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/functions/k8s.sh" "${ROOT_DIR}/env/bcs.env")
 for file in "${source_files[@]}"; do
   safe_source "$file"
 done

@@ -47,7 +47,7 @@ safe_source() {
 "${ROOT_DIR}"/k8s/install_k8s_tools
 "${ROOT_DIR}"/k8s/render_kubeadm
 
-source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/functions/k8s.sh" "${ROOT_DIR}/env/bcs.env")
 for file in "${source_files[@]}"; do
   safe_source "$file"
 done
@@ -82,7 +82,7 @@ else
   if [ ${ENABLE_APISERVER_HA} == "true" ]; then
     [ -z ${VIP} ] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
     "${ROOT_DIR}"/system/config_bcs_dns -u "${LAN_IP}" k8s-api.bcs.local
-    systemctl restart kubelet.service
+    k8s::restart_kubelet
     if [ ${APISERVER_HA_MODE} == "kube-vip" ]; then
       "${ROOT_DIR}"/k8s/operate_kube_vip apply
     fi

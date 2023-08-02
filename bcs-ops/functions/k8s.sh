@@ -72,3 +72,25 @@ k8s::add_vip_to_cert() {
   rm -f ${kubeadm_config_file}
   utils::log "OK" "added ${vip} to apiserver cert"
 }
+
+#######################################
+# restart kubelet service
+# Return:
+# restart kubelet service success - return 0
+# restart kubelet service fail - return 1
+#######################################
+k8s::restart_kubelet() {
+  if systemctl restart kubelet.service &>/dev/null; then
+    utils::log "INFO" "kubelet service restarted"
+    utils::log "INFO" "checking kubelet service status..."
+    sleep 10
+    if systemctl is-active kubelet.service -q; then
+      utils::log "OK" "kubelet service is active now"
+      return 0
+    fi
+    utils::log "ERROR" "kubelet service is inactive"
+    return 1
+  fi
+  utils::log "ERROR" "restart kubelet service failed"
+  return 1
+}
