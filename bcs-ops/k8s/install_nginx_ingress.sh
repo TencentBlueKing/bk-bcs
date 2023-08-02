@@ -16,16 +16,17 @@ set -euo pipefail
 trap "utils::on_ERR;" ERR
 
 NGINX_INGRESS_VER=${NGINX_INGRESS_VER:-"4.2.5"}
+NGINX_INGRESS_URL=${NGINX_INGRESS_VER:-"https://kubernetes.github.io/ingress-nginx"}
+
 TIMEOUT=180s
 NAMESPACE=ingress-nginx
 SELF_DIR=$(dirname "$(readlink -f "$0")")
 ROOT_DIR="${SELF_DIR}/.."
 
 
-
 check_dependency() {
     if ! command -v $1 &>/dev/null; then
-        echo "Error: $1 is not installed. Please install it and try again."
+        echo "Error: $1 not found. Please install it and try again."
         exit 1
     fi
 }
@@ -35,10 +36,18 @@ install_nginx_ingress() {
     local ver=$NGINX_INGRESS_VER
     local namespace=$NAMESPACE
     
-    helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    helm repo add ingress-nginx $NGINX_INGRESS_URL
     helm repo update
     helm install ingress-nginx ingress-nginx/ingress-nginx  --version $ver -n $namespace
     
+}
+
+check_k8s_status() {
+    if ! kubectl cluster-info 2>/dev/null; then
+        utils::log "FATAL" "fail to get k8s cluster info"
+    fi
+    return 0
+
 }
 
 
@@ -48,6 +57,8 @@ main {
     check_dependency kubectl
     # 检查helm是否安装
     check_dependency helm
+    # 检查集群状态
+    check_k8s_status
 
     install_nginx_ingress 
 
