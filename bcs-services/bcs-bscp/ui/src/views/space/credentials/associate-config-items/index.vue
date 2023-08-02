@@ -79,6 +79,7 @@ const handleClose = () => {
     title="关联配置项"
     width="400"
     :is-show="props.show"
+    :quick-close="!isRuleEdit"
     @closed="handleClose">
     <section class="associate-config-items">
       <div :class="['rules-wrapper', { 'edit-mode': isRuleEdit }]">

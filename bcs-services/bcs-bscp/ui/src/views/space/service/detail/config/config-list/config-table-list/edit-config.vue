@@ -88,6 +88,7 @@
       width="640"
       :title="`${editable ? '编辑' : '查看'}配置项`"
       :is-show="props.show"
+      :quick-close="!editable"
       :before-close="close">
         <bk-loading :loading="configDetailLoading" style="height: 100%;">
           <ConfigForm

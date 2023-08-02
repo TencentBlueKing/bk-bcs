@@ -51,6 +51,7 @@
       width="640"
       title="新增配置文件"
       :is-show="slideShow"
+      :quick-close="false"
       :before-close="close">
       <ConfigForm
         :config="setting"

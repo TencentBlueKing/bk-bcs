@@ -107,6 +107,7 @@
   <bk-sideslider
     width="640"
     :is-show="props.show"
+    :quick-close="false"
     :title="t('新建服务')"
     :before-close="handleClose">
     <div class="create-app-form">
