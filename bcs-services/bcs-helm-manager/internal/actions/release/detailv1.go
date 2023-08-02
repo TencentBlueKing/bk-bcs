@@ -18,9 +18,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"helm.sh/helm/v3/pkg/storage/driver"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
@@ -118,16 +118,16 @@ func (g *GetReleaseDetailV1Action) mergeRelease(detail *helmmanager.ReleaseDetai
 	t := time.Unix(rl.UpdateTime, 0).Format(common.TimeFormat)
 	if t >= detail.GetUpdateTime() {
 		detail.Values = rl.Values
-		detail.ChartVersion = &rl.ChartVersion
+		detail.ChartVersion = rl.ChartVersion
 		detail.UpdateTime = common.GetStringP(time.Unix(rl.UpdateTime, 0).Format(common.TimeFormat))
-		detail.Status = &rl.Status
-		detail.Message = &rl.Message
+		detail.Status = rl.Status
+		detail.Message = rl.Message
 	}
 	detail.Args = rl.Args
-	detail.ValueFile = &rl.ValueFile
-	detail.CreateBy = &rl.CreateBy
-	detail.UpdateBy = &rl.UpdateBy
-	detail.Repo = &rl.Repo
+	detail.ValueFile = rl.ValueFile
+	detail.CreateBy = rl.CreateBy
+	detail.UpdateBy = rl.UpdateBy
+	detail.Repo = rl.Repo
 	return detail
 }
 
@@ -144,8 +144,8 @@ func filterArgs(args []string) []string {
 func (g *GetReleaseDetailV1Action) setResp(err common.HelmManagerError, message string, r *helmmanager.ReleaseDetail) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	g.resp.Code = &code
-	g.resp.Message = &msg
+	g.resp.Code = code
+	g.resp.Message = msg
 	g.resp.Result = err.OK()
 	g.resp.Data = r
 }

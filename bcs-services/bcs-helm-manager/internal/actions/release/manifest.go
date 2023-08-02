@@ -97,8 +97,8 @@ func (g *GetReleaseManifestAction) setResp(err common.HelmManagerError, message 
 	r map[string]*helmmanager.FileContent) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	g.resp.Code = &code
-	g.resp.Message = &msg
+	g.resp.Code = code
+	g.resp.Message = msg
 	g.resp.Result = err.OK()
 	g.resp.Data = r
 }

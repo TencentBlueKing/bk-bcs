@@ -47,14 +47,14 @@ func (a AddonsSlice) FindByName(name string) *Addons {
 // ToAddonsProto trans addons to proto struct
 func (a Addons) ToAddonsProto() *helmmanager.Addons {
 	return &helmmanager.Addons{
-		Name:             &a.Name,
-		ChartName:        &a.ChartName,
-		Description:      &a.Description,
-		DocsLink:         &a.DocsLink,
+		Name:             a.Name,
+		ChartName:        a.ChartName,
+		Description:      a.Description,
+		DocsLink:         a.DocsLink,
 		Version:          common.GetStringP(""),
 		CurrentVersion:   common.GetStringP(""),
-		Namespace:        &a.Namespace,
-		DefaultValues:    &a.DefaultValues,
+		Namespace:        a.Namespace,
+		DefaultValues:    a.DefaultValues,
 		CurrentValues:    common.GetStringP(""),
 		Status:           common.GetStringP(""),
 		Message:          common.GetStringP(""),

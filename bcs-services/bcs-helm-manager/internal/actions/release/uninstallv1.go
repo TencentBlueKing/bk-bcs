@@ -17,10 +17,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
@@ -143,7 +143,7 @@ func (u *UninstallReleaseV1Action) saveDB() error {
 func (u *UninstallReleaseV1Action) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	u.resp.Code = &code
-	u.resp.Message = &msg
+	u.resp.Code = code
+	u.resp.Message = msg
 	u.resp.Result = err.OK()
 }

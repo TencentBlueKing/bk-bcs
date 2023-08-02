@@ -19,61 +19,64 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/server"
 
-	clusterClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	clusterClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/cluster"
 	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 )
 
 // ParseProjectIDWrapper parse projectID from req
-func ParseProjectIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
-	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-		body := req.Body()
-		b, err := json.Marshal(body)
-		if err != nil {
-			return fmt.Errorf("ParseProjectIDWrapper error: %s", err)
-		}
+func ParseProjectIDWrapper() server.HandlerWrapper {
+	return func(fn server.HandlerFunc) server.HandlerFunc {
+		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
+			body := req.Body()
+			b, err := json.Marshal(body)
+			if err != nil {
+				return fmt.Errorf("ParseProjectIDWrapper error: %s", err)
+			}
 
-		type bodyStruct struct {
-			ProjectCode string `json:"projectCode,omitempty"`
-			ProjectID   string `json:"projectID,omitempty"`
-			ClusterID   string `json:"clusterID,omitempty"`
-		}
-		project := &bodyStruct{}
-		err = json.Unmarshal(b, project)
-		if err != nil {
-			return fmt.Errorf("ParseProjectIDWrapper error: %s", err)
-		}
-		if len(project.ProjectCode) == 0 {
-			project.ProjectCode = project.ProjectID
-		}
+			type bodyStruct struct {
+				ProjectCode string `json:"projectCode,omitempty"`
+				ProjectID   string `json:"projectID,omitempty"`
+				ClusterID   string `json:"clusterID,omitempty"`
+			}
+			project := &bodyStruct{}
+			err = json.Unmarshal(b, project)
+			if err != nil {
+				return fmt.Errorf("ParseProjectIDWrapper error: %s", err)
+			}
+			if len(project.ProjectCode) == 0 {
+				project.ProjectCode = project.ProjectID
+			}
 
-		if len(project.ProjectCode) == 0 {
-			blog.Warn("ParseProjectIDWrapper error: projectCode is empty")
+			if len(project.ProjectCode) == 0 {
+				blog.Warn("ParseProjectIDWrapper error: projectCode is empty")
+				return fn(ctx, req, rsp)
+			}
+
+			pj, err := projectClient.GetProjectInfo(ctx, project.ProjectCode)
+			if err != nil {
+				return fmt.Errorf("ParseProjectIDWrapper get projectID error, projectCode: %s, err: %s",
+					project.ProjectCode, err.Error())
+			}
+
+			// check cluster
+			if project.ClusterID != "" {
+				cls, err := clusterClient.GetClusterInfo(ctx, project.ClusterID)
+				if err != nil {
+					return fmt.Errorf("get cluster error, clusterID: %s, err: %s",
+						project.ClusterID, err.Error())
+				}
+				if !cls.IsShared && cls.ProjectID != pj.ProjectID {
+					return fmt.Errorf("cluster is invalid")
+				}
+			}
+
+			ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ProjectID)
+			ctx = context.WithValue(ctx, contextx.ProjectCodeContextKey, pj.ProjectCode)
 			return fn(ctx, req, rsp)
 		}
-		pj, err := projectClient.GetProjectByCode(project.ProjectCode)
-		if err != nil {
-			return fmt.Errorf("ParseProjectIDWrapper get projectID error, projectCode: %s, err: %s",
-				project.ProjectCode, err.Error())
-		}
-
-		// check cluster
-		if project.ClusterID != "" {
-			cls, err := clusterClient.GetCluster(project.ClusterID)
-			if err != nil {
-				return fmt.Errorf("get cluster error, clusterID: %s, err: %s",
-					project.ClusterID, err.Error())
-			}
-			if !cls.IsShared && cls.ProjectID != pj.ProjectID {
-				return fmt.Errorf("cluster is invalid")
-			}
-		}
-
-		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ProjectID)
-		ctx = context.WithValue(ctx, contextx.ProjectCodeContextKey, pj.ProjectCode)
-		return fn(ctx, req, rsp)
 	}
 }

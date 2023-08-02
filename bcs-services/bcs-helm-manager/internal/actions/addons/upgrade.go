@@ -17,10 +17,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
@@ -147,10 +147,10 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName string) 
 		u.createBy = old.CreateBy
 		u.updateBy = createBy
 		if u.req.GetVersion() == "" {
-			u.req.Version = &old.ChartVersion
+			u.req.Version = old.ChartVersion
 		}
 		if u.req.GetValues() == "" && len(old.Values) > 0 {
-			u.req.Values = &old.Values[len(old.Values)-1]
+			u.req.Values = old.Values[len(old.Values)-1]
 		}
 		rl := entity.M{
 			entity.FieldKeyRepoName:     common.PublicRepoName,
@@ -172,7 +172,7 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName string) 
 func (u *UpgradeAddonsAction) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	u.resp.Code = &code
-	u.resp.Message = &msg
+	u.resp.Code = code
+	u.resp.Message = msg
 	u.resp.Result = err.OK()
 }

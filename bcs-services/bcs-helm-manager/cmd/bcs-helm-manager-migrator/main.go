@@ -23,6 +23,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-micro/plugins/v4/config/encoder/yaml"
+	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
+	microCfg "go-micro.dev/v4/config"
+	"go-micro.dev/v4/config/reader"
+	microJson "go-micro.dev/v4/config/reader/json"
+	"go-micro.dev/v4/config/source/env"
+	microFile "go-micro.dev/v4/config/source/file"
+	microFlg "go-micro.dev/v4/config/source/flag"
+	microRgt "go-micro.dev/v4/registry"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	helmrelease "helm.sh/helm/v3/pkg/release"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
@@ -31,19 +44,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	microCfg "github.com/micro/go-micro/v2/config"
-	"github.com/micro/go-micro/v2/config/encoder/yaml"
-	"github.com/micro/go-micro/v2/config/reader"
-	microJson "github.com/micro/go-micro/v2/config/reader/json"
-	"github.com/micro/go-micro/v2/config/source/env"
-	microFile "github.com/micro/go-micro/v2/config/source/file"
-	microFlg "github.com/micro/go-micro/v2/config/source/flag"
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
-	helmrelease "helm.sh/helm/v3/pkg/release"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
@@ -411,7 +411,7 @@ func (r *release) toEntity() (*entity.Release, error) {
 
 // get project code from project
 func (r *release) getProjectCode() string {
-	p, err := project.GetProjectByCode(r.ProjectID)
+	p, err := project.GetProjectInfo(context.TODO(), r.ProjectID)
 	if err != nil {
 		blog.Errorf("get project for %s error, %s", r.ProjectID, err.Error())
 		return ""
@@ -504,5 +504,6 @@ func initRegistry() error {
 	if err := reg.Init(); err != nil {
 		return err
 	}
-	return project.NewClient(tlsConfig, reg)
+	fmt.Println(tlsConfig)
+	return nil
 }

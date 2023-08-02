@@ -67,7 +67,7 @@ func (u *UpdateRepositoryAction) Handle(ctx context.Context,
 			RemoteURL: u.req.RemoteURL,
 			Username:  u.req.Username,
 			Password:  u.req.Password,
-			UpdateBy:  &username,
+			UpdateBy:  username,
 		}))
 }
 
@@ -93,8 +93,8 @@ func (u *UpdateRepositoryAction) update(projectCode, name string, m entity.M) er
 func (u *UpdateRepositoryAction) setResp(err common.HelmManagerError, message string, r *helmmanager.Repository) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	u.resp.Code = &code
-	u.resp.Message = &msg
+	u.resp.Code = code
+	u.resp.Message = msg
 	u.resp.Result = err.OK()
 	u.resp.Data = r
 }

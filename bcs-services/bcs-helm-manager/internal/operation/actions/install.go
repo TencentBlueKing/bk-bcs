@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"

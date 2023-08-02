@@ -18,13 +18,13 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/pkg"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/pkg/client"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"

@@ -59,6 +59,10 @@ const (
 	NoPermissionErr = 40403
 )
 
+const (
+	General = 1
+)
+
 // Int32 return HelmManagerError's code value
 func (hme HelmManagerError) Int32() uint32 {
 	return uint32(hme)
@@ -88,9 +92,9 @@ func (hme HelmManagerError) GenError() error {
 }
 
 // OK check if ResourceManagerError is success
-func (hme HelmManagerError) OK() *bool {
+func (hme HelmManagerError) OK() bool {
 	ok := hme == ErrHelmManagerSuccess
-	return &ok
+	return ok
 }
 
 var errorCodeMapping = map[HelmManagerError]string{

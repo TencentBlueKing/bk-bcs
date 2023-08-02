@@ -17,21 +17,20 @@ package wrapper
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/micro/go-micro/v2/metadata"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/metadata"
+	"go-micro.dev/v4/server"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // RequestLogWarpper log request
-func RequestLogWarpper(fn server.HandlerFunc) server.HandlerFunc {
-	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-		// get metadata
-		md, _ := metadata.FromContext(ctx)
-		ctx = context.WithValue(ctx, contextx.LangContectKey, i18n.GetLangFromCookies(md))
-		blog.Infof("receive %s, metadata: %v, req: %v", req.Method(), md, req.Body())
-		return fn(ctx, req, rsp)
+func RequestLogWarpper() server.HandlerWrapper {
+	return func(fn server.HandlerFunc) server.HandlerFunc {
+		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
+			// get metadata
+			md, _ := metadata.FromContext(ctx)
+			blog.Infof("receive %s, metadata: %v, req: %v", req.Method(), md, req.Body())
+			return fn(ctx, req, rsp)
+		}
 	}
 }

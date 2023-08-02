@@ -23,7 +23,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/spf13/pflag"
 	yaml3 "gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
@@ -36,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
@@ -101,9 +101,11 @@ func (g *group) getClient(clusterID string) Client {
 	if !ok {
 		flags := genericclioptions.NewConfigFlags(false)
 		apiserver := options.GlobalOptions.Release.APIServer
-		flags.APIServer = common.GetStringP(fmt.Sprintf(bcsAPIGWK8SBaseURI, apiserver, clusterID))
-		flags.BearerToken = common.GetStringP(options.GlobalOptions.Release.Token)
-		flags.Insecure = common.GetBoolP(true)
+		apiServer := common.GetStringP(fmt.Sprintf(bcsAPIGWK8SBaseURI, apiserver, clusterID))
+		flags.APIServer = &apiServer
+		flags.BearerToken = &options.GlobalOptions.Release.Token
+		insecure := true
+		flags.Insecure = &insecure
 
 		c = &client{
 			group:     g,
@@ -385,8 +387,9 @@ func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags 
 	flags.APIServer = c.cf.APIServer
 	flags.BearerToken = c.cf.BearerToken
 	flags.Insecure = c.cf.Insecure
-	flags.Namespace = common.GetStringP(namespace)
-	flags.Timeout = common.GetStringP(defaultTimeout)
+	flags.Namespace = &namespace
+	timeout := defaultTimeout
+	flags.Timeout = &timeout
 	return flags
 }
 
@@ -394,11 +397,12 @@ func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags 
 // 兼容旧版本，注入 bcs 变量
 func (c *client) getVarValue(projectCode, namespace string) (*release.File, error) {
 	// get project info
-	project, err := projectClient.GetProjectByCode(projectCode)
+	// 改成http调用
+	project, err := projectClient.GetProjectInfo(context.TODO(), projectCode)
 	if err != nil {
 		return nil, err
 	}
-	variables, err := projectClient.GetVariable(projectCode, c.clusterID, namespace)
+	variables, err := projectClient.GetVariable(context.TODO(), projectCode, c.clusterID, namespace)
 	if err != nil {
 		blog.Infof("get vars failed: %s", err.Error())
 	}

@@ -19,20 +19,20 @@ import (
 	"errors"
 	"regexp"
 
+	jwtGo "github.com/golang-jwt/jwt/v4"
+	"go-micro.dev/v4/server"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
-	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-	jwtGo "github.com/golang-jwt/jwt/v4"
-	"github.com/micro/go-micro/v2/server"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
-	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/cluster"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/middleware"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
 )
 
 // JWTClientConfig jwt client config

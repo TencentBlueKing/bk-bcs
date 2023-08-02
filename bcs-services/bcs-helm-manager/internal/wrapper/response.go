@@ -18,30 +18,32 @@ import (
 	"context"
 	"reflect"
 
-	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-	"github.com/micro/go-micro/v2/metadata"
-	"github.com/micro/go-micro/v2/server"
+	"go-micro.dev/v4/metadata"
+	"go-micro.dev/v4/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
 )
 
 // ResponseWrapper 处理返回
-func ResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
-	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-		requestID := getRequestID(ctx)
-		ctx = context.WithValue(ctx, contextx.RequestIDContextKey, requestID)
-		err = fn(ctx, req, rsp)
-		return renderResponse(rsp, requestID, err)
+func ResponseWrapper() server.HandlerWrapper {
+	return func(fn server.HandlerFunc) server.HandlerFunc {
+		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
+			requestID := getRequestID(ctx)
+			ctx = context.WithValue(ctx, contextx.RequestIDContextKey, requestID)
+			err = fn(ctx, req, rsp)
+			return renderResponse(rsp, requestID, err)
+		}
 	}
 }
 
 func renderResponse(rsp interface{}, requestID string, err error) error {
 	v := reflect.ValueOf(rsp)
 	if v.Elem().FieldByName("RequestID") != (reflect.Value{}) {
-		v.Elem().FieldByName("RequestID").Set(reflect.ValueOf(&requestID))
+		v.Elem().FieldByName("RequestID").Set(reflect.ValueOf(requestID))
 	}
 	if err == nil {
 		return nil
@@ -51,10 +53,10 @@ func renderResponse(rsp interface{}, requestID string, err error) error {
 		errCode := uint32(common.NoPermissionErr)
 		errMsg := err.(*authutils.PermDeniedError).Error()
 		if v.Elem().FieldByName("Code") != (reflect.Value{}) {
-			v.Elem().FieldByName("Code").Set(reflect.ValueOf(&errCode))
+			v.Elem().FieldByName("Code").Set(reflect.ValueOf(errCode))
 		}
 		if v.Elem().FieldByName("Message") != (reflect.Value{}) {
-			v.Elem().FieldByName("Message").Set(reflect.ValueOf(&errMsg))
+			v.Elem().FieldByName("Message").Set(reflect.ValueOf(errMsg))
 		}
 		if v.Elem().FieldByName("WebAnnotations").IsValid() {
 			perms := &proto.WebAnnotations{}

@@ -16,10 +16,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/spf13/cobra"
 )
 
 var uninstallCMD = &cobra.Command{
@@ -39,9 +39,9 @@ func Uninstall(cmd *cobra.Command, args []string) {
 	}
 
 	req := &helmmanager.UninstallReleaseV1Req{}
-	req.ProjectCode = &flagProject
-	req.ClusterID = &flagCluster
-	req.Namespace = &flagNamespace
+	req.ProjectCode = flagProject
+	req.ClusterID = flagCluster
+	req.Namespace = flagNamespace
 	req.Name = common.GetStringP(args[0])
 
 	c := newClientWithConfiguration()

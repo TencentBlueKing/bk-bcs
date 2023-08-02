@@ -71,7 +71,7 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 	if err != nil {
 		blog.Errorf("get addons latest version failed, %s", err.Error())
 	}
-	clusterAddons.Version = &version
+	clusterAddons.Version = version
 
 	// get current status
 	rl, err := g.model.GetRelease(ctx, g.req.GetClusterID(), addons.Namespace, addons.Name)
@@ -84,14 +84,14 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
 		return nil
 	}
-	clusterAddons.CurrentVersion = &rl.ChartVersion
-	clusterAddons.Status = &rl.Status
-	clusterAddons.Message = &rl.Message
+	clusterAddons.CurrentVersion = rl.ChartVersion
+	clusterAddons.Status = rl.Status
+	clusterAddons.Message = rl.Message
 	if len(rl.Values) > 0 {
-		clusterAddons.CurrentValues = &rl.Values[len(rl.Values)-1]
+		clusterAddons.CurrentValues = rl.Values[len(rl.Values)-1]
 	}
 	if version == "" {
-		clusterAddons.Version = &version
+		clusterAddons.Version = version
 	}
 
 	g.setResp(common.ErrHelmManagerSuccess, "ok", clusterAddons)
@@ -124,8 +124,8 @@ func (g *GetAddonsDetailAction) getLatestVersion(ctx context.Context, chartName 
 func (g *GetAddonsDetailAction) setResp(err common.HelmManagerError, message string, r *helmmanager.Addons) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	g.resp.Code = &code
-	g.resp.Message = &msg
+	g.resp.Code = code
+	g.resp.Message = msg
 	g.resp.Result = err.OK()
 	g.resp.Data = r
 }

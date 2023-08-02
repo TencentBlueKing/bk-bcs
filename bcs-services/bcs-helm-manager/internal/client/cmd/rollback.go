@@ -49,10 +49,10 @@ func Rollback(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	req.ProjectCode = &flagProject
+	req.ProjectCode = flagProject
 	req.Name = common.GetStringP(args[0])
-	req.Namespace = &flagNamespace
-	req.ClusterID = &flagCluster
+	req.Namespace = flagNamespace
+	req.ClusterID = flagCluster
 	req.Revision = common.GetUint32P(uint32(revision))
 
 	c := newClientWithConfiguration()

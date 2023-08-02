@@ -16,10 +16,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -54,7 +54,7 @@ func DeleteRepository(cmd *cobra.Command, args []string) {
 	}
 
 	req := &helmmanager.DeleteRepositoryReq{
-		ProjectCode: &flagProject,
+		ProjectCode: flagProject,
 		Name:        common.GetStringP(args[0]),
 	}
 
@@ -91,8 +91,8 @@ func DeleteChart(cmd *cobra.Command, args []string) {
 		flagRepository = flagProject
 	}
 	req := &helmmanager.DeleteChartReq{
-		ProjectCode: &flagProject,
-		RepoName:    &flagRepository,
+		ProjectCode: flagProject,
+		RepoName:    flagRepository,
 		Name:        common.GetStringP(args[0]),
 	}
 
@@ -119,8 +119,8 @@ func DeleteChartVersion(cmd *cobra.Command, args []string) {
 		flagRepository = flagProject
 	}
 	req := &helmmanager.DeleteChartVersionReq{
-		ProjectCode: &flagProject,
-		RepoName:    &flagRepository,
+		ProjectCode: flagProject,
+		RepoName:    flagRepository,
 		Name:        common.GetStringP(args[0]),
 		Version:     common.GetStringP(args[1]),
 	}

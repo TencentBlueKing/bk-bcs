@@ -16,11 +16,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	_struct "github.com/golang/protobuf/ptypes/struct"
 	"google.golang.org/protobuf/types/known/structpb"
 	"helm.sh/helm/v3/pkg/storage/driver"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
@@ -106,8 +106,8 @@ func (g *GetReleaseStatusAction) setResp(err common.HelmManagerError, message st
 	r *_struct.ListValue) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	g.resp.Code = &code
-	g.resp.Message = &msg
+	g.resp.Code = code
+	g.resp.Message = msg
 	g.resp.Result = err.OK()
 	g.resp.Data = r
 }

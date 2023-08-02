@@ -17,13 +17,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
+	clusterClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -98,7 +98,7 @@ func (i *InstallReleaseV1Action) install() error {
 		return fmt.Errorf("db error, %s", err.Error())
 	}
 
-	cls, err := clustermanager.GetCluster(i.req.GetClusterID())
+	cls, err := clusterClient.GetClusterInfo(i.ctx, i.req.GetClusterID())
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (i *InstallReleaseV1Action) saveDB() error {
 func (i *InstallReleaseV1Action) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	i.resp.Code = &code
-	i.resp.Message = &msg
+	i.resp.Code = code
+	i.resp.Message = msg
 	i.resp.Result = err.OK()
 }

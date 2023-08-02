@@ -19,7 +19,6 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -123,8 +122,8 @@ func (g *GetVersionDetailV1Action) getDetail() (*helmmanager.ChartDetail, error)
 func (g *GetVersionDetailV1Action) setResp(err common.HelmManagerError, message string, r *helmmanager.ChartDetail) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	g.resp.Code = &code
-	g.resp.Message = &msg
+	g.resp.Code = code
+	g.resp.Message = msg
 	g.resp.Result = err.OK()
 	g.resp.Data = r
 }
@@ -212,8 +211,8 @@ func (g *GetChartDetailV1Action) getDetail() (*helmmanager.Chart, error) {
 func (g *GetChartDetailV1Action) setResp(err common.HelmManagerError, message string, r *helmmanager.Chart) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	g.resp.Code = &code
-	g.resp.Message = &msg
+	g.resp.Code = code
+	g.resp.Message = msg
 	g.resp.Result = err.OK()
 	g.resp.Data = r
 }

@@ -17,10 +17,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
@@ -152,7 +152,7 @@ func (r *RollbackReleaseV1Action) saveDB() error {
 func (r *RollbackReleaseV1Action) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	r.resp.Code = &code
-	r.resp.Message = &msg
+	r.resp.Code = code
+	r.resp.Message = msg
 	r.resp.Result = err.OK()
 }

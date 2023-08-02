@@ -17,13 +17,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
+	clusterClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -89,7 +89,7 @@ func (u *UpgradeReleaseV1Action) upgrade() error {
 	if err := u.saveDB(); err != nil {
 		return fmt.Errorf("db error, %s", err.Error())
 	}
-	cls, err := clustermanager.GetCluster(u.req.GetClusterID())
+	cls, err := clusterClient.GetClusterInfo(u.ctx, u.req.GetClusterID())
 	if err != nil {
 		return err
 	}
@@ -160,13 +160,13 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 		u.createBy = old.CreateBy
 		u.updateBy = createBy
 		if u.req.GetRepository() == "" {
-			u.req.Repository = &old.Repo
+			u.req.Repository = old.Repo
 		}
 		if u.req.GetChart() == "" {
-			u.req.Chart = &old.ChartName
+			u.req.Chart = old.ChartName
 		}
 		if u.req.GetVersion() == "" {
-			u.req.Version = &old.ChartVersion
+			u.req.Version = old.ChartVersion
 		}
 		rl := entity.M{
 			entity.FieldKeyRepoName:     u.req.GetRepository(),
@@ -190,7 +190,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 func (u *UpgradeReleaseV1Action) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	u.resp.Code = &code
-	u.resp.Message = &msg
+	u.resp.Code = code
+	u.resp.Message = msg
 	u.resp.Result = err.OK()
 }

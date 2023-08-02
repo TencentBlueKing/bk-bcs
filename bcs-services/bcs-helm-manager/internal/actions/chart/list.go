@@ -18,7 +18,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -119,10 +118,10 @@ func (l *ListChartActionV1) list() error {
 
 func (l *ListChartActionV1) getCondition() *operator.Condition {
 	cond := make(operator.M)
-	if l.req.ProjectCode != nil {
+	if l.req.ProjectCode != "" {
 		cond.Update(entity.FieldKeyProjectID, contextx.GetProjectCodeFromCtx(l.ctx))
 	}
-	if l.req.RepoName != nil {
+	if l.req.RepoName != "" {
 		cond.Update(entity.FieldKeyName, l.req.GetRepoName())
 	}
 
@@ -145,8 +144,8 @@ func (l *ListChartActionV1) getOption() repo.ListOption {
 func (l *ListChartActionV1) setResp(err common.HelmManagerError, message string, r *helmmanager.ChartListData) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	l.resp.Code = &code
-	l.resp.Message = &msg
+	l.resp.Code = code
+	l.resp.Message = msg
 	l.resp.Result = err.OK()
 	l.resp.Data = r
 }

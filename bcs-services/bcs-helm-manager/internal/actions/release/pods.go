@@ -16,12 +16,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	_struct "github.com/golang/protobuf/ptypes/struct"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/resource"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -114,8 +114,8 @@ func (g *GetReleasePodsAction) setResp(err common.HelmManagerError, message stri
 	r *_struct.ListValue) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	g.resp.Code = &code
-	g.resp.Message = &msg
+	g.resp.Code = code
+	g.resp.Message = msg
 	g.resp.Result = err.OK()
 	g.resp.Data = r
 }

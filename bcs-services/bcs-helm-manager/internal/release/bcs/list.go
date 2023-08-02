@@ -15,10 +15,10 @@ package bcs
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	rspb "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/releaseutil"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 )

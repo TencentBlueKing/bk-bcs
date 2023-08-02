@@ -16,9 +16,9 @@ import (
 	"context"
 	"sort"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"helm.sh/helm/v3/pkg/chartutil"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 )

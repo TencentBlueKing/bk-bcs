@@ -16,9 +16,9 @@ import (
 	"os"
 	"strconv"
 
-	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
 	"github.com/olekukonko/tablewriter"
+
+	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 // PrintReleaseInTable print release data in table format

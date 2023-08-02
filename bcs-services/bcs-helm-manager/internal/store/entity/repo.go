@@ -99,59 +99,59 @@ func (r *Repository) LoadFromProto(repository *helmmanager.Repository) M {
 	}
 	m := make(M)
 
-	if repository.ProjectCode != nil {
+	if repository.ProjectCode != "" {
 		r.ProjectID = repository.GetProjectCode()
 		m[FieldKeyProjectID] = r.ProjectID
 	}
-	if repository.Name != nil {
+	if repository.Name != "" {
 		r.Name = repository.GetName()
 		m[FieldKeyName] = r.Name
 	}
-	if repository.DisplayName != nil {
+	if repository.DisplayName != "" {
 		r.DisplayName = repository.GetDisplayName()
 		m[FieldKeyDisplayName] = r.Name
 	}
-	if repository.Public != nil {
+	if repository.Public != false {
 		r.Public = repository.GetPublic()
 		m[FieldKeyPublic] = r.Name
 	}
-	if repository.Type != nil {
+	if repository.Type != "" {
 		r.Type = repository.GetType()
 		m[FieldKeyType] = r.Type
 	}
-	if repository.Remote != nil {
+	if repository.Remote != false {
 		r.Remote = repository.GetRemote()
 		m[FieldKeyRemote] = r.Remote
 	}
-	if repository.RemoteURL != nil {
+	if repository.RemoteURL != "" {
 		r.RemoteURL = repository.GetRemoteURL()
 		m[FieldKeyRemoteURL] = r.RemoteURL
 	}
-	if repository.RemoteUsername != nil {
+	if repository.RemoteUsername != "" {
 		r.RemoteUsername = repository.GetRemoteUsername()
 		m[FieldKeyRemoteUsername] = r.RemoteUsername
 	}
-	if repository.RemotePassword != nil {
+	if repository.RemotePassword != "" {
 		r.RemotePassword = repository.GetRemotePassword()
 		m[FieldKeyRemotePassword] = r.RemotePassword
 	}
-	if repository.RepoURL != nil {
+	if repository.RepoURL != "" {
 		r.RepoURL = repository.GetRepoURL()
 		m[FieldKeyRepoURL] = r.RepoURL
 	}
-	if repository.Username != nil {
+	if repository.Username != "" {
 		r.Username = repository.GetUsername()
 		m[FieldKeyUsername] = r.Username
 	}
-	if repository.Password != nil {
+	if repository.Password != "" {
 		r.Password = repository.GetPassword()
 		m[FieldKeyPassword] = r.Password
 	}
-	if repository.CreateBy != nil {
+	if repository.CreateBy != "" {
 		r.CreateBy = repository.GetCreateBy()
 		m[FieldKeyCreateBy] = r.CreateBy
 	}
-	if repository.UpdateBy != nil {
+	if repository.UpdateBy != "" {
 		r.UpdateBy = repository.GetUpdateBy()
 		m[FieldKeyUpdateBy] = r.UpdateBy
 	}

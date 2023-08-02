@@ -17,10 +17,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"gopkg.in/yaml.v2"
 	helmrelease "helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/releaseutil"
 	"helm.sh/helm/v3/pkg/storage/driver"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -158,11 +160,34 @@ func (r *ReleasePreviewAction) generateReleasePreview(oldRelease,
 	return preview, nil
 }
 
+func (r *ReleasePreviewAction) generateFileContents(manifest string) (map[string]*helmmanager.FileContent, error) {
+	files := make(map[string]*helmmanager.FileContent, 0)
+	manifests := releaseutil.SplitManifests(manifest)
+	for i := range manifests {
+		content := manifests[i]
+		var entry releaseutil.SimpleHead
+		if err := yaml.Unmarshal([]byte(content), &entry); err != nil {
+			blog.Errorf("YAML parse error, %s", err)
+			return nil, err
+		}
+		if entry.Metadata == nil {
+			continue
+		}
+		path := fmt.Sprintf("%s/%s", entry.Kind, entry.Metadata.Name)
+		files[path] = &helmmanager.FileContent{
+			Name:    entry.Metadata.Name,
+			Path:    path,
+			Content: content,
+		}
+	}
+	return files, nil
+}
+
 func (r *ReleasePreviewAction) setResp(err common.HelmManagerError, message string, rp *helmmanager.ReleasePreview) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	r.resp.Code = &code
-	r.resp.Message = &msg
+	r.resp.Code = code
+	r.resp.Message = msg
 	r.resp.Result = err.OK()
 	r.resp.Data = rp
 }

@@ -75,7 +75,6 @@ func (l *ListRepositoryAction) list() error {
 		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
 		return nil
 	}
-
 	r := make([]*helmmanager.Repository, 0, len(origin))
 	for _, item := range origin {
 		r = append(r, item.Transfer2Proto(l.ctx))
@@ -107,8 +106,8 @@ func (l *ListRepositoryAction) getOption() *utils.ListOption {
 func (l *ListRepositoryAction) setResp(err common.HelmManagerError, message string, r []*helmmanager.Repository) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	l.resp.Code = &code
-	l.resp.Message = &msg
+	l.resp.Code = code
+	l.resp.Message = msg
 	l.resp.Result = err.OK()
 	l.resp.Data = r
 }

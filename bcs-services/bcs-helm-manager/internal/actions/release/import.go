@@ -131,7 +131,7 @@ func (l *ImportClusterReleaseAction) getDetail() (*release.Release, error) {
 func (l *ImportClusterReleaseAction) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	l.resp.Code = &code
-	l.resp.Message = &msg
+	l.resp.Code = code
+	l.resp.Message = msg
 	l.resp.Result = err.OK()
 }

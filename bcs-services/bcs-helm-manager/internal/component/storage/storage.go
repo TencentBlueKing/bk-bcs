@@ -16,8 +16,8 @@ import (
 	"crypto/tls"
 	"net/url"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
+	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 )
 

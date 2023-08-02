@@ -16,7 +16,6 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -103,8 +102,8 @@ func (d *DeleteChartAction) deleteChart() error {
 func (d *DeleteChartAction) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	d.resp.Code = &code
-	d.resp.Message = &msg
+	d.resp.Code = code
+	d.resp.Message = msg
 	d.resp.Result = err.OK()
 }
 
@@ -189,7 +188,7 @@ func (d *DeleteChartVersionAction) deleteChartVersion() error {
 func (d *DeleteChartVersionAction) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	d.resp.Code = &code
-	d.resp.Message = &msg
+	d.resp.Code = code
+	d.resp.Message = msg
 	d.resp.Result = err.OK()
 }

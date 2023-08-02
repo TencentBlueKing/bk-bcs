@@ -81,7 +81,7 @@ func (d *DeleteRepositoryAction) delete(projectCode, name string) error {
 func (d *DeleteRepositoryAction) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	d.resp.Code = &code
-	d.resp.Message = &msg
+	d.resp.Code = code
+	d.resp.Message = msg
 	d.resp.Result = err.OK()
 }

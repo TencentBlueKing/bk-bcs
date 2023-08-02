@@ -83,10 +83,10 @@ func (ct *chart) Versions(ctx context.Context, req *helmmanager.ListChartVersion
 
 func (ct *chart) listChartVersionQuery(req *helmmanager.ListChartVersionV1Req) url.Values {
 	query := url.Values{}
-	if req.Page != nil {
+	if req.Page != 0 {
 		query.Set("page", strconv.FormatInt(int64(req.GetPage()), 10))
 	}
-	if req.Size != nil {
+	if req.Size != 0 {
 		query.Set("size", strconv.FormatInt(int64(req.GetSize()), 10))
 	}
 	return query
@@ -291,10 +291,10 @@ func (ct *chart) List(ctx context.Context, req *helmmanager.ListChartV1Req) (*he
 
 func (ct *chart) listChartQuery(req *helmmanager.ListChartV1Req) url.Values {
 	query := url.Values{}
-	if req.Page != nil {
+	if req.Page != 0 {
 		query.Set("page", strconv.FormatInt(int64(req.GetPage()), 10))
 	}
-	if req.Size != nil {
+	if req.Size != 0 {
 		query.Set("size", strconv.FormatInt(int64(req.GetSize()), 10))
 	}
 	return query

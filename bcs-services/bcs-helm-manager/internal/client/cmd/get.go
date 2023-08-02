@@ -17,11 +17,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -79,7 +79,7 @@ var (
 // GetRepository provide the actions to do getRepositoryCMD
 func GetRepository(cmd *cobra.Command, args []string) {
 	req := &helmmanager.ListRepositoryReq{}
-	req.ProjectCode = &flagProject
+	req.ProjectCode = flagProject
 
 	c := newClientWithConfiguration()
 	r, err := c.Repository().List(cmd.Context(), req)
@@ -105,11 +105,11 @@ func GetChart(cmd *cobra.Command, args []string) {
 	req := &helmmanager.ListChartV1Req{}
 	req.Page = common.GetUint32P(1)
 	req.Size = common.GetUint32P(10000)
-	req.ProjectCode = &flagProject
+	req.ProjectCode = flagProject
 	if flagRepository == "" {
-		flagRepository = *req.ProjectCode
+		flagRepository = req.ProjectCode
 	}
-	req.RepoName = &flagRepository
+	req.RepoName = flagRepository
 	c := newClientWithConfiguration()
 	r, err := c.Chart().List(cmd.Context(), req)
 	if err != nil {
@@ -126,12 +126,12 @@ func GetChart(cmd *cobra.Command, args []string) {
 // GetChartDetail provide the actions to get chart
 func GetChartDetail(ctx context.Context, chartName string) {
 	req := &helmmanager.GetChartDetailV1Req{}
-	req.ProjectCode = &flagProject
+	req.ProjectCode = flagProject
 	if flagRepository == "" {
-		flagRepository = *req.ProjectCode
+		flagRepository = req.ProjectCode
 	}
-	req.RepoName = &flagRepository
-	req.Name = &chartName
+	req.RepoName = flagRepository
+	req.Name = chartName
 
 	c := newClientWithConfiguration()
 	r, err := c.Chart().GetChartDetail(ctx, req)
@@ -163,11 +163,11 @@ func GetChartVersion(cmd *cobra.Command, args []string) {
 	req := &helmmanager.ListChartVersionV1Req{}
 	req.Page = common.GetUint32P(1)
 	req.Size = common.GetUint32P(10000)
-	req.ProjectCode = &flagProject
+	req.ProjectCode = flagProject
 	if flagRepository == "" {
-		flagRepository = *req.ProjectCode
+		flagRepository = req.ProjectCode
 	}
-	req.RepoName = &flagRepository
+	req.RepoName = flagRepository
 	req.Name = common.GetStringP(args[0])
 
 	c := newClientWithConfiguration()
@@ -187,13 +187,13 @@ func GetChartVersion(cmd *cobra.Command, args []string) {
 // GetVersionDetail provide the actions to do getVersionDetailCMD
 func GetVersionDetail(ctx context.Context, chartName, version string) {
 	req := &helmmanager.GetVersionDetailV1Req{}
-	req.ProjectCode = &flagProject
+	req.ProjectCode = flagProject
 	if flagRepository == "" {
-		flagRepository = *req.ProjectCode
+		flagRepository = req.ProjectCode
 	}
-	req.RepoName = &flagRepository
-	req.Name = &chartName
-	req.Version = &version
+	req.RepoName = flagRepository
+	req.Name = chartName
+	req.Version = version
 
 	c := newClientWithConfiguration()
 	r, err := c.Chart().GetVersionDetail(ctx, req)
@@ -216,8 +216,8 @@ func GetRelease(cmd *cobra.Command, args []string) {
 		return
 	}
 	req := &helmmanager.ListReleaseV1Req{
-		ProjectCode: &flagProject,
-		ClusterID:   &flagCluster,
+		ProjectCode: flagProject,
+		ClusterID:   flagCluster,
 		Page:        common.GetUint32P(1),
 		Size:        common.GetUint32P(10000),
 	}
@@ -227,7 +227,7 @@ func GetRelease(cmd *cobra.Command, args []string) {
 	if flagAllNamespace {
 		req.Namespace = common.GetStringP("")
 	} else {
-		req.Namespace = &flagNamespace
+		req.Namespace = flagNamespace
 	}
 
 	c := newClientWithConfiguration()
@@ -247,10 +247,10 @@ func GetRelease(cmd *cobra.Command, args []string) {
 // GetReleaseDetail provide the action to do getReleaseDetailCMD
 func GetReleaseDetail(ctx context.Context, name string) {
 	req := &helmmanager.GetReleaseDetailV1Req{}
-	req.ProjectCode = &flagProject
-	req.ClusterID = &flagCluster
-	req.Namespace = &flagNamespace
-	req.Name = &name
+	req.ProjectCode = flagProject
+	req.ClusterID = flagCluster
+	req.Namespace = flagNamespace
+	req.Name = name
 
 	c := newClientWithConfiguration()
 	r, err := c.Release().GetReleaseDetail(ctx, req)

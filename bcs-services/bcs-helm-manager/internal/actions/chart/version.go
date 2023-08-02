@@ -16,7 +16,6 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -125,8 +124,8 @@ func (l *ListChartVersionV1Action) setResp(
 	err common.HelmManagerError, message string, r *helmmanager.ChartVersionListData) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	l.resp.Code = &code
-	l.resp.Message = &msg
+	l.resp.Code = code
+	l.resp.Message = msg
 	l.resp.Result = err.OK()
 	l.resp.Data = r
 }

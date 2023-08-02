@@ -17,7 +17,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
@@ -84,13 +83,13 @@ func (l *GetChartReleaseAction) list() ([]*helmmanager.Release, error) {
 
 func (l *GetChartReleaseAction) getCondition() *operator.Condition {
 	cond := make(operator.M)
-	if l.req.ProjectCode != nil {
+	if l.req.ProjectCode != "" {
 		cond.Update(entity.FieldKeyProjectCode, contextx.GetProjectCodeFromCtx(l.ctx))
 	}
-	if l.req.RepoName != nil {
+	if l.req.RepoName != "" {
 		cond.Update(entity.FieldKeyRepoName, l.req.GetRepoName())
 	}
-	if l.req.Name != nil {
+	if l.req.Name != "" {
 		cond.Update(entity.FieldKeyChartName, l.req.GetName())
 	}
 
@@ -107,8 +106,8 @@ func (l *GetChartReleaseAction) getCondition() *operator.Condition {
 func (l *GetChartReleaseAction) setResp(err common.HelmManagerError, message string, r []*helmmanager.Release) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	l.resp.Code = &code
-	l.resp.Message = &msg
+	l.resp.Code = code
+	l.resp.Message = msg
 	l.resp.Result = err.OK()
 	l.resp.Data = r
 }

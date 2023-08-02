@@ -19,7 +19,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
@@ -84,7 +83,7 @@ func (c *CreateRepositoryAction) Handle(ctx context.Context,
 		RepoURL:        c.req.RepoURL,
 		Username:       c.req.Username,
 		Password:       c.req.Password,
-		CreateBy:       &username,
+		CreateBy:       username,
 	})
 }
 
@@ -207,8 +206,8 @@ func (c *CreateRepositoryAction) createPublicRepoIfNotExist(data *helmmanager.Re
 func (c *CreateRepositoryAction) setResp(err common.HelmManagerError, message string, r *helmmanager.Repository) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	c.resp.Code = &code
-	c.resp.Message = &msg
+	c.resp.Code = code
+	c.resp.Message = msg
 	c.resp.Result = err.OK()
 	c.resp.Data = r
 }

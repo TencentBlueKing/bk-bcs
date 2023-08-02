@@ -132,18 +132,39 @@ type CredentialScope struct {
 
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
-	Etcd        EtcdOption    `json:"etcd" yaml:"etcd"`
-	BcsLog      LogConfig     `json:"log" yaml:"log"`
-	Swagger     SwaggerConfig `json:"swagger" yaml:"swagger"`
-	Mongo       MongoConfig   `json:"mongo" yaml:"mongo"`
-	Repo        RepoConfig    `json:"repo" yaml:"repo"`
-	Release     ReleaseConfig `json:"release" yaml:"release"`
-	IAM         IAMConfig     `json:"iam" yaml:"iam"`
-	JWT         JWTConfig     `json:"jwt" yaml:"jwt"`
-	Credentials []Credential  `json:"credentials" yaml:"credentials"`
-	Debug       bool          `json:"debug" yaml:"debug"`
-	TLS         TLS           `json:"tls" yaml:"tls"`
+	Etcd        EtcdOption        `json:"etcd" yaml:"etcd"`
+	BcsLog      LogConfig         `json:"log" yaml:"log"`
+	Swagger     SwaggerConfig     `json:"swagger" yaml:"swagger"`
+	Mongo       MongoConfig       `json:"mongo" yaml:"mongo"`
+	Repo        RepoConfig        `json:"repo" yaml:"repo"`
+	Release     ReleaseConfig     `json:"release" yaml:"release"`
+	IAM         IAMConfig         `json:"iam" yaml:"iam"`
+	JWT         JWTConfig         `json:"jwt" yaml:"jwt"`
+	Credentials []Credential      `json:"credentials" yaml:"credentials"`
+	Debug       bool              `json:"debug" yaml:"debug"`
+	TLS         TLS               `json:"tls" yaml:"tls"`
+	Log         LogConf           `yaml:"log"`
+	BCSAPIGW    BCSAPIGatewayConf `yaml:"bcsApiGW"`
 	ServerConfig
+}
+
+// LogConf 日志配置
+type LogConf struct {
+	Level         string `yaml:"level" usage:"日志级别"`
+	FlushInterval int    `yaml:"flushInterval" usage:"刷新数据的间隔"`
+	AutoCreateDir bool   `yaml:"autoCreateDir" usage:"是否自动创建日志目录"`
+	Path          string `yaml:"path" usage:"日志文件的绝对路径，如 /tmp/logs"`
+	Name          string `yaml:"name" usage:"日志文件的名称，如 cr.log"`
+	Size          int    `yaml:"size" usage:"文件的大小，单位 MB"`
+	Age           int    `yaml:"age" usage:"日志的保存时间，单位天"`
+	Backups       int    `yaml:"backups" usage:"历史文件保留数量"`
+}
+
+// BCSAPIGatewayConf 容器服务网关配置
+type BCSAPIGatewayConf struct {
+	Host                 string `yaml:"host" usage:"容器服务网关 Host"`
+	AuthToken            string `yaml:"authToken" usage:"网关 AuthToken"`
+	ReadAuthTokenFromEnv bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
 }
 
 // GlobalOptions global helm manager options
