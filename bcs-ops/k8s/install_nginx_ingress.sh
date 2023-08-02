@@ -23,6 +23,22 @@ NAMESPACE=ingress-nginx
 SELF_DIR=$(dirname "$(readlink -f "$0")")
 ROOT_DIR="${SELF_DIR}/.."
 
+safe_source() {
+  local source_file=$1
+  if [[ -f ${source_file} ]]; then
+    #shellcheck source=/dev/null
+    source "${source_file}"
+  else
+    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    exit 1
+  fi
+}
+
+# 加载公共函数变量
+source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+for file in "${source_files[@]}"; do
+  safe_source "$file"
+done
 
 check_dependency() {
     if ! command -v $1 &>/dev/null; then
@@ -76,3 +92,4 @@ main {
 main 
 
 exit $?
+
