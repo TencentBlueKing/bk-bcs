@@ -5,6 +5,7 @@ all:
 	@cd config-server && make
 	@cd feed-server && make
 	@cd cache-service && make
+	@cd vault-server && make
 
 clean:
 	@cd core && make clean
