@@ -13,6 +13,13 @@
 #######################################
 
 set -euo pipefail
+
+#######################################
+# install localpv chart
+# Arguments:
+# $1: mount_dir, default /mnt/blueking
+#######################################
+
 VERSION="v2.4.0"
 PROGRAM="$(basename "$0")"
 
@@ -47,7 +54,7 @@ safe_source() {
 }
 
 install_localpv() {
-  local namespace="bk-system"
+  local namespace="bk-system" mount_path="$1"
   kubectl get ns "$namespace" || kubectl create ns $namespace
 
   # ToDo helm chart offline install
@@ -59,13 +66,13 @@ install_localpv() {
       return 1
     fi
 
-	utils::log "INFO" "installing localpv"
+    utils::log "INFO" "installing localpv"
     cat <<EOF | helm upgrade --install provisioner mirrors/provisioner -n $namespace --version ${VERSION} --debug -f - || utils::log "FATAL" "helm upgrade localpv failed"
 daemonset:
   image: ${BK_PUBLIC_REPO}/k8s.gcr.io/sig-storage/local-volume-provisioner:${VERSION}
 classes:
 - name: local-storage
-  hostDir: /mnt/blueking
+  hostDir: $mount_path
   volumeMode: Filesystem
   storageClass:
     # create and set storage class as default
@@ -84,6 +91,6 @@ main() {
   for file in "${source_files[@]}"; do
     safe_source "$file"
   done
-  install_localpv
+  install_localpv "$1"
 }
-main
+main "${1:-/mnt/blueking}"

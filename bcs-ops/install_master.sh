@@ -68,6 +68,7 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
     /etc/kubernetes/admin.conf "$HOME/.kube/config"
   "${ROOT_DIR}"/k8s/install_cni.sh
   "${ROOT_DIR}"/k8s/operate_metrics_server apply
+  "${ROOT_DIR}"/k8s/install_helm
   "${ROOT_DIR}"/k8s/render_k8s_joincmd
 else
   kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11
