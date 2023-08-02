@@ -16,7 +16,7 @@ set -euo pipefail
 trap "utils::on_ERR;" ERR
 
 NGINX_INGRESS_VER=${NGINX_INGRESS_VER:-"4.2.5"}
-NGINX_INGRESS_URL=${NGINX_INGRESS_VER:-"https://kubernetes.github.io/ingress-nginx"}
+NGINX_INGRESS_URL=${NGINX_INGRESS_URL:-"https://kubernetes.github.io/ingress-nginx"}
 
 TIMEOUT=180s
 NAMESPACE=ingress-nginx
