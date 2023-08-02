@@ -16,6 +16,7 @@ package aws
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -34,27 +35,43 @@ func init() {
 	})
 }
 
-// CloudValidate qcloud validate management implementation
+// CloudValidate aws validate management implementation
 type CloudValidate struct {
 }
 
 // ImportClusterValidate check importCluster operation
 func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *cloudprovider.CommonOption) error {
-	// call cloud interface to check cluster
+	// call aws interface to check cluster
 	if c == nil || req == nil {
 		return fmt.Errorf("%s ImportClusterValidate request is empty", cloudName)
 	}
 
-	if opt == nil || opt.Account == nil {
+	if opt == nil {
 		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
 	}
 
-	if opt.Account.SecretID == "" || opt.Account.SecretKey == "" {
-		return fmt.Errorf("%s ImportClusterValidate request lost valid crendential info", cloudName)
+	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return fmt.Errorf("%s ImportClusterValidate opt lost valid crendential info", cloudName)
 	}
 
 	if req.CloudMode.CloudID == "" && req.CloudMode.KubeConfig == "" {
 		return fmt.Errorf("%s ImportClusterValidate cluster cloudID & kubeConfig empty", cloudName)
+	}
+
+	if req.CloudMode.CloudID != "" {
+		cli, err := api.NewEksClient(opt)
+		if err != nil {
+			return fmt.Errorf("%s ImportClusterValidate getEksClient failed: %v", cloudName, err)
+		}
+
+		_, err = cli.GetEksCluster(req.CloudMode.CloudID)
+		if err != nil {
+			return fmt.Errorf("%s ImportClusterValidate GetEksCluster[%s] failed: %v", cloudName,
+				req.CloudMode.CloudID, err)
+		}
+		blog.Infof("%s ImportClusterValidate CloudMode CloudID[%s] success", cloudName, req.CloudMode.CloudID)
+
+		return nil
 	}
 
 	if req.CloudMode.KubeConfig != "" {
@@ -85,25 +102,47 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 
 // ImportCloudAccountValidate create cloudAccount account validation
 func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error {
+	// call aws interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ImportCloudAccountValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid crendential info", cloudName)
+	}
+
 	return nil
 }
 
 // GetCloudRegionZonesValidate xxx
 func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest,
 	account *proto.Account) error {
+	// call aws interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid region info", cloudName)
+	}
+
 	return nil
 }
 
 // ListCloudRegionClusterValidate xxx
 func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest,
 	account *proto.Account) error {
-	// call cloud interface to check account
+	// call aws interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListCloudRegionClusterValidate request is empty", cloudName)
 	}
 
-	if account.SecretID == "" || account.SecretKey == "" {
-		return fmt.Errorf("%s ImportClusterValidate request lost valid crendential info", cloudName)
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(req.Region) == 0 {
@@ -115,12 +154,41 @@ func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegio
 
 // ListCloudSubnetsValidate xxx
 func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error {
+	// call aws interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid region info", cloudName)
+	}
+	if len(req.VpcID) == 0 {
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid vpcID info", cloudName)
+	}
+
 	return nil
 }
 
 // ListSecurityGroupsValidate xxx
 func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest,
 	account *proto.Account) error {
+	// call aws interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid region info", cloudName)
+	}
+
 	return nil
 }
 
@@ -141,17 +209,51 @@ func (c *CloudValidate) ListInstancesValidate(req *proto.ListCloudInstancesReque
 // ListInstanceTypeValidate xxx
 func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest,
 	account *proto.Account) error {
+	// call aws interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid region info", cloudName)
+	}
+
 	return nil
 }
 
 // ListCloudOsImageValidate xxx
 func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error {
+	// call aws interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s ListCloudOsImageValidate request is empty", cloudName)
+	}
+
+	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid region info", cloudName)
+	}
+
 	return nil
 }
 
 // CreateNodeGroupValidate xxx
 func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest,
 	opt *cloudprovider.CommonOption) error {
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid region info", cloudName)
+	}
+
+	if req.NodeRole == "" {
+		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid nodeRole info", cloudName)
+	}
+
 	return nil
 }
 

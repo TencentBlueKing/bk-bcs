@@ -14,8 +14,14 @@
 package aws
 
 import (
+	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eks"
 )
 
 func init() {
@@ -29,32 +35,105 @@ type NodeGroup struct {
 // CreateNodeGroup create nodegroup by cloudprovider api, only create NodeGroup entity
 func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (*proto.Task,
 	error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when CreateNodeGroup %s failed, %s",
+			cloudName, group.Name, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildCreateNodeGroupTask(group, opt)
+	if err != nil {
+		blog.Errorf("build CreateNodeGroup task for cluster %s with cloudprovider %s failed, %s",
+			group.ClusterID, cloudName, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
 }
 
 // DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
 // will be released. Task is backgroup automatic task
 func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when DeleteNodeGroup %s failed, %s",
+			cloudName, group.Name, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildDeleteNodeGroupTask(group, nodes, opt)
+	if err != nil {
+		blog.Errorf("build DeleteNodeGroup task for cluster %s with cloudprovider %s failed, %s",
+			group.ClusterID, cloudName, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
 }
 
 // UpdateNodeGroup update specified nodegroup configuration
 func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup,
 	opt *cloudprovider.UpdateNodeGroupOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	_, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), group.Provider, group.ClusterID)
+	if err != nil {
+		blog.Errorf("get cluster %s failed, %s", group.ClusterID, err.Error())
+		return nil, err
+	}
+
+	eksCli, err := api.NewEksClient(&opt.CommonOption)
+	if err != nil {
+		blog.Errorf("create eks client failed, err: %s", err.Error())
+		return nil, err
+	}
+
+	if group.NodeGroupID == "" || group.ClusterID == "" {
+		blog.Errorf("nodegroup id or cluster id is empty")
+		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
+	}
+
+	_, err = eksCli.UpdateNodegroupConfig(ng.generateUpdateNodegroupConfigInput(group, cluster.SystemID))
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup,
+	cluster string) *eks.UpdateNodegroupConfigInput {
+	input := &eks.UpdateNodegroupConfigInput{
+		ClusterName:   &cluster,
+		NodegroupName: &group.CloudNodeGroupID,
+		Labels: &eks.UpdateLabelsPayload{
+			AddOrUpdateLabels: aws.StringMap(group.Labels),
+		},
+	}
+	if group.AutoScaling != nil {
+		input.ScalingConfig = &eks.NodegroupScalingConfig{
+			MaxSize: aws.Int64(int64(group.AutoScaling.MaxSize)),
+			MinSize: aws.Int64(int64(group.AutoScaling.MinSize)),
+		}
+	}
+	if group.NodeTemplate != nil && group.NodeTemplate.Taints != nil {
+		input.Taints = &eks.UpdateTaintsPayload{
+			AddOrUpdateTaints: api.MapToAwsTaints(group.NodeTemplate.Taints),
+		}
+	}
+
+	return input
 }
 
 // GetNodesInGroup get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node,
-	error) {
+func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// GetNodesInGroupV2 get all nodes belong to NodeGroup
 func (ng *NodeGroup) GetNodesInGroupV2(group *proto.NodeGroup,
 	opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	//TODO implement me
+	panic("implement me")
 }
 
 // MoveNodesToGroup add cluster nodes to NodeGroup

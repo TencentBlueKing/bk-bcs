@@ -2832,6 +2832,10 @@ message NodeGroup {
     title: "area",
     description: "节点所在云区域信息(用户不指定, 则使用默认云区域)"
   }];
+  string nodeRole = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeRole",
+    description: "创建eks节点池时指定的iam角色名称"
+  }];
 }
 
 message CloudArea {
@@ -3155,6 +3159,10 @@ message LaunchConfiguration {
   KeyInfo keyPair = 20 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "keyPair",
     description: "节点私钥信息, 与密码2选一，2者均设置优先密钥"
+  }];
+  string sshKey = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sshKey",
+    description: "用于ssh登录实例的密钥或密钥名称。"
   }];
 }
 
@@ -7103,6 +7111,10 @@ message CreateNodeGroupRequest {
   bool onlyCreateInfo = 25 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "onlyCreateInfo",
     description: "onlyCreateInfo仅录入数据,不执行流程"
+  }];
+  string nodeRole = 26[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeRole",
+    description: "创建eks节点池时指定的iam角色名称"
   }];
 }
 

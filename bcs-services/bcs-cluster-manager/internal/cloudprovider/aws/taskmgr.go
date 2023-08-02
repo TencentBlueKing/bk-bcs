@@ -15,6 +15,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"sync"
 	"time"
 
@@ -40,6 +41,10 @@ func newtask() *Task {
 	// import task
 	task.works[importClusterNodesStep.StepMethod] = tasks.ImportClusterNodesTask
 	task.works[registerClusterKubeConfigStep.StepMethod] = tasks.RegisterClusterKubeConfigTask
+
+	// create nodeGroup task
+	task.works[createCloudNodeGroupStep.StepMethod] = tasks.CreateCloudNodeGroupTask
+	task.works[checkCloudNodeGroupStatusStep.StepMethod] = tasks.CheckCloudNodeGroupStatusTask
 
 	return task
 }
@@ -108,6 +113,10 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 		ForceTerminate: false,
 	}
 
+	// generate taskName
+	taskName := fmt.Sprintf(importClusterTaskTemplate, cls.ClusterID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
 	// setting all steps details
 	importCluster := &ImportClusterTaskOption{Cluster: cls}
 	// step1: import cluster registerKubeConfigStep
@@ -147,7 +156,55 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 // BuildCreateNodeGroupTask build create node group task
 func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (
 	*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.CreateNodeGroup),
+		TaskName:       cloudprovider.CreateNodeGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(createNodeGroupTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams["taskName"] = taskName
+
+	// setting all steps details
+	createNodeGroup := &CreateNodeGroupTaskOption{Group: group}
+	// step1. call gke create node group
+	createNodeGroup.BuildCreateCloudNodeGroupStep(task)
+	// step2. wait gke create node group complete
+	createNodeGroup.BuildCheckCloudNodeGroupStatusStep(task)
+	// step3. ensure autoscaler in cluster
+	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask task StepSequence empty")
+	}
+
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CreateNodeGroupJob.String()
+
+	return task, nil
 }
 
 // BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
@@ -163,7 +220,51 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 // @param group: need to delete
 func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.DeleteNodeGroup),
+		TaskName:       cloudprovider.DeleteNodeGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(deleteNodeGroupTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	deleteNodeGroup := &DeleteNodeGroupTaskOption{Group: group}
+	// step1. call gke delete node group
+	deleteNodeGroup.BuildDeleteNodeGroupStep(task)
+	// step2: update autoscaler component
+	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.DeleteNodeGroupJob.String()
+	return task, nil
 }
 
 // BuildMoveNodesToGroupTask build move nodes to group task

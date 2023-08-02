@@ -66,7 +66,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 		return err
 	}
 
-	kubeConfig, err := api.GetClusterKubeConfig(client.Session, cluster)
+	kubeConfig, err := api.GetClusterKubeConfig(opt.Common, cluster)
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo GetClusterKubeConfig failed: %v", err)
 	}

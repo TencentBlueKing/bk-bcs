@@ -23,6 +23,17 @@ var (
 	cloudName = "aws"
 )
 
+// awsCloud taskName
+const (
+	// importClusterTaskTemplate bk-sops add task template
+	importClusterTaskTemplate = "aws-import cluster: %s"
+
+	// createNodeGroupTaskTemplate bk-sops add task template
+	createNodeGroupTaskTemplate = "aws-create node group: %s/%s"
+	// deleteNodeGroupTaskTemplate bk-sops add task template
+	deleteNodeGroupTaskTemplate = "aws-delete node group: %s/%s"
+)
+
 // tasks
 var (
 	// import cluster task
@@ -33,6 +44,22 @@ var (
 	registerClusterKubeConfigStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName),
 		StepName:   "注册集群kubeConfig认证",
+	}
+
+	// create nodeGroup task
+	createCloudNodeGroupStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CreateCloudNodeGroupTask", cloudName),
+		StepName:   "创建云节点组",
+	}
+	checkCloudNodeGroupStatusStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckCloudNodeGroupStatusTask", cloudName),
+		StepName:   "检测云节点组状态",
+	}
+
+	// delete nodeGroup task
+	deleteNodeGroupStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-DeleteNodeGroupTask", cloudName),
+		StepName:   "删除云节点组",
 	}
 )
 
@@ -59,4 +86,50 @@ func (ic *ImportClusterTaskOption) BuildImportClusterNodesStep(task *proto.Task)
 
 	task.Steps[importClusterNodesStep.StepMethod] = importNodesStep
 	task.StepSequence = append(task.StepSequence, importClusterNodesStep.StepMethod)
+}
+
+// CreateNodeGroupTaskOption 创建节点组
+type CreateNodeGroupTaskOption struct {
+	Group *proto.NodeGroup
+}
+
+// BuildCreateCloudNodeGroupStep 通过云接口创建节点组
+func (cn *CreateNodeGroupTaskOption) BuildCreateCloudNodeGroupStep(task *proto.Task) {
+	createStep := cloudprovider.InitTaskStep(createCloudNodeGroupStep)
+
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Group.ClusterID
+	createStep.Params[cloudprovider.NodeGroupIDKey.String()] = cn.Group.NodeGroupID
+	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Group.Provider
+
+	task.Steps[createCloudNodeGroupStep.StepMethod] = createStep
+	task.StepSequence = append(task.StepSequence, createCloudNodeGroupStep.StepMethod)
+}
+
+// BuildCheckCloudNodeGroupStatusStep 检测节点组状态
+func (cn *CreateNodeGroupTaskOption) BuildCheckCloudNodeGroupStatusStep(task *proto.Task) {
+	checkStep := cloudprovider.InitTaskStep(checkCloudNodeGroupStatusStep)
+
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Group.ClusterID
+	checkStep.Params[cloudprovider.NodeGroupIDKey.String()] = cn.Group.NodeGroupID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = cn.Group.Provider
+
+	task.Steps[checkCloudNodeGroupStatusStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkCloudNodeGroupStatusStep.StepMethod)
+}
+
+// DeleteNodeGroupTaskOption 删除节点组
+type DeleteNodeGroupTaskOption struct {
+	Group *proto.NodeGroup
+}
+
+// BuildDeleteNodeGroupStep 删除云节点组
+func (dn *DeleteNodeGroupTaskOption) BuildDeleteNodeGroupStep(task *proto.Task) {
+	deleteStep := cloudprovider.InitTaskStep(deleteNodeGroupStep)
+
+	deleteStep.Params[cloudprovider.ClusterIDKey.String()] = dn.Group.ClusterID
+	deleteStep.Params[cloudprovider.NodeGroupIDKey.String()] = dn.Group.NodeGroupID
+	deleteStep.Params[cloudprovider.CloudIDKey.String()] = dn.Group.Provider
+
+	task.Steps[deleteNodeGroupStep.StepMethod] = deleteStep
+	task.StepSequence = append(task.StepSequence, deleteNodeGroupStep.StepMethod)
 }
