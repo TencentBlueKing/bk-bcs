@@ -91,6 +91,15 @@ func (hm *HelmManager) GetReleaseHistory(ctx context.Context,
 	return action.Handle(ctx, req, resp)
 }
 
+// GetReleaseManifest provide the actions to do get release manifest
+func (hm *HelmManager) GetReleaseManifest(ctx context.Context,
+	req *helmmanager.GetReleaseManifestReq, resp *helmmanager.GetReleaseManifestResp) error {
+
+	defer recorder(ctx, "GetReleaseManifest", req, resp)()
+	action := actionRelease.NewGetReleaseManifestAction(hm.releaseHandler)
+	return action.Handle(ctx, req, resp)
+}
+
 // GetReleaseStatus provide the actions to do get release status
 func (hm *HelmManager) GetReleaseStatus(ctx context.Context,
 	req *helmmanager.GetReleaseStatusReq, resp *helmmanager.CommonListResp) error {
@@ -106,5 +115,14 @@ func (hm *HelmManager) GetReleasePods(ctx context.Context,
 
 	defer recorder(ctx, "GetReleasePods", req, resp)()
 	action := actionRelease.NewGetReleasePodsAction(hm.releaseHandler)
+	return action.Handle(ctx, req, resp)
+}
+
+// ImportClusterRelease provide the actions to import cluster releases
+func (hm *HelmManager) ImportClusterRelease(ctx context.Context,
+	req *helmmanager.ImportClusterReleaseReq, resp *helmmanager.ImportClusterReleaseResp) error {
+
+	defer recorder(ctx, "ImportClusterRelease", req, nil)()
+	action := actionRelease.NewImportClusterReleaseAction(hm.model, hm.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }

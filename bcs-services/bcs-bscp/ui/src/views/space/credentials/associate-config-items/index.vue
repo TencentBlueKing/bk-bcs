@@ -15,7 +15,7 @@ const props = defineProps<{
   id: number
 }>()
 
-const emits = defineEmits(['close'])
+const emits = defineEmits(['close', 'refresh'])
 
 const loading = ref(true)
 const rules = ref<ICredentialRule[]>([])
@@ -59,6 +59,7 @@ const handleSave = async() => {
       alter_scope: []
     }
     handleClose()
+    emits('refresh')
   } catch (e) {
     console.error(e)
   } finally {

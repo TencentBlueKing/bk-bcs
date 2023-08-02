@@ -165,7 +165,11 @@
         </bk-input>
       </div>
       <bk-table :border="['outer']" :data="scriptsData">
-        <bk-table-column label="脚本名称" prop="hook.spec.name"></bk-table-column>
+        <bk-table-column label="脚本名称">
+          <template #default="{ row }">
+            <div v-if="row.hook" class="hook-name" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">{{ row.hook.spec.name }}</div>
+          </template>
+        </bk-table-column>
         <bk-table-column label="脚本语言" prop="hook.spec.type" width="120"></bk-table-column>
         <bk-table-column label="分类标签">
           <template #default="{ row }">
@@ -187,7 +191,7 @@
         <bk-table-column label="操作">
           <template #default="{ row }" width="180">
             <div class="action-btns">
-              <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button>
+              <!-- <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button> -->
               <bk-button text theme="primary" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">版本管理</bk-button>
               <bk-button text theme="primary" @click="handleDeleteScript(row)">删除</bk-button>
             </div>
@@ -309,6 +313,10 @@
     .bk-button {
       margin-right: 8px;
     }
+  }
+  .hook-name {
+    color: #348aff;
+    cursor: pointer;
   }
   .table-list-pagination {
     padding: 12px;

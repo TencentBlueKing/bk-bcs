@@ -8,16 +8,16 @@
     width="500"
     @value-change="handleDialogValueChange">
     <bk-form>
-      <bk-form-item :label="$t('英文缩写')" required>
+      <bk-form-item :label="$t('projects.project.en')" required>
         <span>{{ curProject.projectCode }}</span>
       </bk-form-item>
-      <bk-form-item :label="$t('编排类型')" required>
+      <bk-form-item :label="$t('projects.project.mode')" required>
         <bk-radio-group v-model="kind">
           <bk-radio value="k8s" disabled>K8S</bk-radio>
           <!-- <bk-radio value="mesos" disabled v-if="$INTERNAL">Mesos</bk-radio> -->
         </bk-radio-group>
       </bk-form-item>
-      <bk-form-item :label="$t('关联CMDB业务')" required>
+      <bk-form-item :label="$t('bcs.registry.label.business.text')" required>
         <div class="config-cmdb">
           <bcs-select
             v-if="ccList.length && !isHasCluster"
@@ -33,8 +33,8 @@
               :name="item.name">
             </bcs-option>
           </bcs-select>
-          <bcs-input :value="curProject.cc_app_name" disabled v-else></bcs-input>
-          <span class="ml5" v-bk-tooltips="$t('关联业务后，您可以从对应的业务下选择机器，搭建容器集群')">
+          <bcs-input :value="curProject.businessID" disabled v-else></bcs-input>
+          <span class="ml5" v-bk-tooltips="$t('projects.project.hostMsg')">
             <i class="bcs-icon bcs-icon-info-circle"></i>
           </span>
         </div>
@@ -42,16 +42,16 @@
     </bk-form>
     <template #footer>
       <div class="dialog-footer">
-        <span v-bk-tooltips="{ content: $t('该项目下已有集群信息，如需更改绑定业务信息，请先删除已有集群'), disabled: !isHasCluster }">
+        <span v-bk-tooltips="{ content: $t('projects.project.bizTips'), disabled: !isHasCluster }">
           <bk-button
             theme="primary"
             :disabled="isHasCluster || !ccList.length"
             :loading="saveLoading"
             @click="handleConfirm">
-            {{ $t('保存') }}
+            {{ $t('generic.button.save') }}
           </bk-button>
         </span>
-        <bk-button class="ml10" @click="handleCancel">{{ $t('取消') }}</bk-button>
+        <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
       </div>
     </template>
   </bcs-dialog>
@@ -78,7 +78,7 @@ export default defineComponent({
   setup(props, ctx) {
     const { updateProject, getBusinessList } = useProject();
     const curProject = computed(() => $store.state.curProject);
-    const title = computed(() => `${$i18n.t('项目')}【${curProject.value.project_name}】`);
+    const title = computed(() => `${$i18n.t('projects.project.label.project')}【${curProject.value.project_name}】`);
     const isHasCluster = computed(() => $store.state.cluster.clusterList.length > 0);
 
     const loading = ref(false);

@@ -6,14 +6,14 @@
         <div class="biz-panel-header biz-event-query-query" style="padding-right: 0;">
           <div class="left !w-[260px]">
             <ClusterSelect
-              :placeholder="$t('请选择集群')"
+              :placeholder="$t('deploy.templateset.cluster')"
               cluster-type="all"
               :value="selectedClusterId"
               @change="handleChangeCluster" />
           </div>
           <div class="left">
             <bk-selector
-              :placeholder="$t('请选择命名空间')"
+              :placeholder="$t('dashboard.ns.validate.emptyNs')"
               :searchable="true"
               :allow-clear="true"
               :setting-key="'name'"
@@ -21,7 +21,7 @@
               :selected.sync="selectedNamespaceName"
               :list="namespaceList"
               :is-loading="namespaceLoading"
-              :search-placeholder="$t('输入命名空间搜索')"
+              :search-placeholder="$t('deploy.templateset.searchNs')"
               @item-selected="handleChangeNamespace"
               @clear="handleClearNamespace">
             </bk-selector>
@@ -29,14 +29,14 @@
           <div class="left">
             <bk-input
               v-model="searchKey"
-              style="width: 240px;" clearable :placeholder="$t('输入名称搜索')" @clear="clearSearch" />
+              style="width: 240px;" clearable :placeholder="$t('generic.placeholder.searchName')" @clear="clearSearch" />
           </div>
           <div class="left">
-            <bk-button type="primary" :title="$t('查询')" icon="search" @click="handleClick">
-              {{$t('查询')}}
+            <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleClick">
+              {{$t('generic.button.query')}}
             </bk-button>
             <button class="bk-button" @click="batchDel">
-              <span>{{$t('批量删除')}}</span>
+              <span>{{$t('generic.button.batchDelete')}}</span>
             </button>
           </div>
         </div>
@@ -68,11 +68,11 @@
                   </div>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('操作')" width="200">
+              <bk-table-column :label="$t('generic.label.action')" width="200">
                 <template slot-scope="{ row }">
-                  <a href="javascript:void(0);" class="bk-text-button" @click.stop="update(row, index)">{{$t('更新')}}</a>
-                  <a href="javascript:void(0);" class="bk-text-button" @click.stop="scale(row, index)">{{$t('扩缩容')}}</a>
-                  <a href="javascript:void(0);" class="bk-text-button" @click.stop="del(row, index)">{{$t('删除')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click.stop="update(row, index)">{{$t('generic.button.update')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click.stop="scale(row, index)">{{$t('deploy.templateset.scale')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click.stop="del(row, index)">{{$t('generic.button.delete')}}</a>
                 </template>
               </bk-table-column>
               <template #empty>
@@ -123,18 +123,18 @@
         <div class="bk-dialog-outer">
           <template v-if="batchDelDialogConf.isDeleting">
             <bk-button theme="primary">
-              {{$t('删除中...')}}
+              {{$t('generic.status.deleting')}}
             </bk-button>
             <bk-button>
-              {{$t('取消')}}
+              {{$t('generic.button.cancel')}}
             </bk-button>
           </template>
           <template v-else>
             <bk-button theme="primary" @click="batchDelConfirm">
-              {{$t('确定')}}
+              {{$t('generic.button.confirm')}}
             </bk-button>
             <bk-button @click="hideBatchDelDialog">
-              {{$t('取消')}}
+              {{$t('generic.button.cancel')}}
             </bk-button>
           </template>
         </div>
@@ -175,15 +175,15 @@ export default {
       },
       defaultColumnMap: {
         name: {
-          label: this.$t('名称'),
+          label: this.$t('generic.label.name'),
           minWidth: 150,
         },
         cluster_id: {
-          label: this.$t('集群'),
+          label: this.$t('generic.label.cluster'),
           minWidth: 140,
         },
         namespace: {
-          label: this.$t('命名空间'),
+          label: this.$t('k8s.namespace'),
           minWidth: 100,
         },
       },
@@ -506,15 +506,15 @@ export default {
       };
 
       const contexts = [
-        // me.$createElement('h5', titleStyle, me.$t('确定要删除？')),
-        me.$createElement('p', itemStyle, `${me.$t('名称')}：${item.name}`),
-        me.$createElement('p', itemStyle, `${me.$t('所属集群')}：${item.cluster_id}`),
+        // me.$createElement('h5', titleStyle, me.$t('deploy.templateset.delete')),
+        me.$createElement('p', itemStyle, `${me.$t('generic.label.name')}：${item.name}`),
+        me.$createElement('p', itemStyle, `${me.$t('generic.label.cluster1')}：${item.cluster_id}`),
       ];
       if (item.namespace) {
-        contexts.push(me.$createElement('p', itemStyle, `${me.$t('命名空间')}：${item.namespace}`));
+        contexts.push(me.$createElement('p', itemStyle, `${me.$t('k8s.namespace')}：${item.namespace}`));
       }
       me.$bkInfo({
-        title: me.$t('确认删除'),
+        title: me.$t('generic.title.confirmDelete'),
         clsName: 'biz-remove-dialog',
         confirmLoading: true,
         content: me.$createElement('div', { class: 'biz-confirm-desc', style: boxStyle }, contexts),
@@ -533,7 +533,7 @@ export default {
             me.bkMessageInstance?.close();
             me.bkMessageInstance = me.$bkMessage({
               theme: 'success',
-              message: me.$t('删除成功'),
+              message: me.$t('generic.msg.success.delete'),
               delay: 1000,
             });
             await me.fetchData();
@@ -673,7 +673,7 @@ export default {
         this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('还未选择GameDeployments'),
+          message: this.$t('deploy.templateset.unselectedGameDeployments'),
         });
         return;
       }
@@ -688,7 +688,7 @@ export default {
         this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('批量删除功能只支持选中单个命名空间'),
+          message: this.$t('deploy.templateset.oneNS'),
           delay: 1000,
         });
         return;
@@ -736,7 +736,7 @@ export default {
         this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'success',
-          message: this.$t('删除成功'),
+          message: this.$t('generic.msg.success.delete'),
           delay: 1000,
         });
         this.checkedNodeList.splice(0, this.checkedNodeList.length, ...[]);

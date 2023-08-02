@@ -2,28 +2,28 @@
   <div class="choose-node-template bcs-content-wrapper">
     <bk-form>
       <FormGroup :allow-toggle="false" class="choose-node">
-        <bk-form-item :label="$t('选择节点')">
-          <bcs-button theme="primary" icon="plus" @click="handleAddNode">{{$t('添加节点')}}</bcs-button>
+        <bk-form-item :label="$t('cluster.nodeList.label.selectNode')">
+          <bcs-button theme="primary" icon="plus" @click="handleAddNode">{{$t('cluster.nodeList.create.text')}}</bcs-button>
           <bcs-table class="mt15" :data="ipList">
-            <bcs-table-column type="index" :label="$t('序号')" width="60"></bcs-table-column>
-            <bcs-table-column :label="$t('内网IP')" prop="bk_host_innerip" width="120"></bcs-table-column>
-            <bcs-table-column :label="$t('Agent状态')" width="100">
+            <bcs-table-column type="index" :label="$t('cluster.nodeList.label.index')" width="60"></bcs-table-column>
+            <bcs-table-column :label="$t('generic.ipSelector.label.innerIp')" prop="bk_host_innerip" width="120"></bcs-table-column>
+            <bcs-table-column :label="$t('generic.ipSelector.label.agentStatus')" width="100">
               <template #default="{ row }">
                 <StatusIcon :status="String(row.agent_alive)" :status-color-map="statusColorMap">
-                  {{row.agent_alive ? $t('正常') : $t('异常')}}
+                  {{row.agent_alive ? $t('generic.status.ready') : $t('generic.status.error')}}
                 </StatusIcon>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('机房')" prop="idc_unit_name"></bcs-table-column>
-            <bcs-table-column :label="$t('机型')" prop="svr_device_class"></bcs-table-column>
-            <bcs-table-column :label="$t('操作')" width="100">
+            <bcs-table-column :label="$t('generic.ipSelector.label.idc')" prop="idc_unit_name"></bcs-table-column>
+            <bcs-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="svr_device_class"></bcs-table-column>
+            <bcs-table-column :label="$t('generic.label.action')" width="100">
               <template #default="{ row }">
-                <bk-button text @click="handleRemoveIp(row)">{{$t('移除')}}</bk-button>
+                <bk-button text @click="handleRemoveIp(row)">{{$t('cluster.create.button.remove')}}</bk-button>
               </template>
             </bcs-table-column>
           </bcs-table>
         </bk-form-item>
-        <bk-form-item :label="$t('节点初始化模板')" v-if="$INTERNAL">
+        <bk-form-item :label="$t('cluster.create.label.initNodeTemplate')" v-if="$INTERNAL">
           <TemplateSelector
             :is-tke-cluster="isTkeCluster"
             :cluster-id="clusterId"
@@ -32,24 +32,24 @@
       </FormGroup>
     </bk-form>
     <div class="mt25">
-      <span v-bk-tooltips="{ content: $t('请选择节点'), disabled: ipList.length }">
+      <span v-bk-tooltips="{ content: $t('cluster.nodeList.tips.selectNode'), disabled: ipList.length }">
         <bk-button
           class="mw88"
           theme="primary"
           :disabled="!ipList.length"
           @click="handleShowConfirmDialog">
-          {{$t('确定')}}
+          {{$t('generic.button.confirm')}}
         </bk-button>
       </span>
-      <bk-button class="mw88 ml10" @click="handleCancel">{{$t('取消')}}</bk-button>
+      <bk-button class="mw88 ml10" @click="handleCancel">{{$t('generic.button.cancel')}}</bk-button>
     </div>
     <ConfirmDialog
       v-model="showConfirmDialog"
-      :title="$t('确定添加节点')"
-      :sub-title="$t('请确认以下配置:')"
+      :title="$t('cluster.nodeList.title.confirmAddNode')"
+      :sub-title="$t('generic.subTitle.confirmConfig')"
       :tips="checkList"
-      :ok-text="$t('确定添加')"
-      :cancel-text="$t('取消')"
+      :ok-text="$t('cluster.nodeList.create.button.confirmAdd.text')"
+      :cancel-text="$t('generic.button.cancel')"
       :confirm="handleConfirm"
       theme="primary">
     </ConfirmDialog>
@@ -111,11 +111,11 @@ export default defineComponent({
     };
     const { addNode } = useNode();
     const checkList = computed(() => [
-      $i18n.t('请确认是否对 {ip} 等 {num} 个IP进行操作系统初始化和安装容器服务相关组件操作', {
+      $i18n.t('cluster.nodeList.create.button.confirmAdd.article1', {
         ip: ipList.value[0]?.bk_host_innerip,
         num: ipList.value.length,
       }),
-      $i18n.t('为了保证集群环境标准化，添加节点会格式化数据盘/dev/vdb，盘内数据将被清除，请确认该数据盘内没有放置业务数据'),
+      $i18n.t('cluster.nodeList.create.button.confirmAdd.article2'),
     ]);
     const currentTemplate = ref<Record<string, string>>({});
     const handleTemplateChange = (item) => {
@@ -127,7 +127,7 @@ export default defineComponent({
         ? $bkInfo({
           type: 'warning',
           clsName: 'custom-info-confirm',
-          title: $i18n.t('确定使用节点模板 {name}', { name: currentTemplate.value.name }),
+          title: $i18n.t('cluster.nodeList.title.confirmUseTemplate', { name: currentTemplate.value.name }),
           defaultInfo: true,
           confirmFn: () => {
             showConfirmDialog.value = true;

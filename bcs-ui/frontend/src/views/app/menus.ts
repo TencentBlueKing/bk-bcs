@@ -237,7 +237,7 @@ const menus: IMenu[] = [
         icon: 'bcs-icon-templateset',
         children: [
           {
-            title: $i18n.t('模板集列表'),
+            title: $i18n.t('deploy.templateset.list'),
             route: 'templateset',
             id: 'TEMPLATESET',
           },
@@ -309,23 +309,6 @@ const menus: IMenu[] = [
         route: 'variable',
         id: 'VARIABLE',
       },
-      // {
-      //   title: $i18n.t('仓库'),
-      //   id: 'REPO',
-      //   icon: 'bcs-icon-ck-store',
-      //   children: [
-      //     {
-      //       title: $i18n.t('镜像'),
-      //       id: 'IMAGE',
-      //       route: 'depotMain',
-      //     },
-      //     {
-      //       title: 'Charts',
-      //       id: 'CHARTLIST',
-      //       route: 'chartList',
-      //     },
-      //   ],
-      // },
     ],
   },
   {
@@ -345,7 +328,7 @@ const menus: IMenu[] = [
         route: 'operateAudit',
       },
       // {
-      //   title: $i18n.t('云凭证管理'),
+      //   title: $i18n.t('iam.actionMap.cloud_account_manage'),
       //   id: 'CLOUDTOKEN',
       //   icon: 'bcs-icon-yunpingzhengguanli',
       //   children: [
@@ -393,7 +376,7 @@ const menus: IMenu[] = [
         route: 'logCrdcontroller',
       },
       // {
-      //   title: $i18n.t('日志采集'),
+      //   title: $i18n.t('nav.log'),
       //   id: 'NEW_LOG',
       //   icon: 'bcs-icon-log-collection',
       //   route: 'newLogController',

@@ -7,7 +7,7 @@
     :disabled="disabled"
     :popover-min-width="320"
     :remote-method="remoteMethod"
-    :search-placeholder="$t('输入集群名或ID搜索')"
+    :search-placeholder="$t('cluster.placeholder.searchCluster')"
     :size="size"
     @change="handleClusterChange">
     <bcs-option-group

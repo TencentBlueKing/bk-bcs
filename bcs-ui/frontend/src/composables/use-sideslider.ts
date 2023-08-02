@@ -19,11 +19,11 @@ export default function useSideslider(data: Ref<any> = ref(''), config: IConfig 
       return;
     };
     $bkInfo({
-      title: $i18n.t('确认离开当前页?'),
-      subTitle: $i18n.t('离开将会导致未保存信息丢失'),
+      title: $i18n.t('generic.msg.info.exitTips.text'),
+      subTitle: $i18n.t('generic.msg.info.exitTips.subTitle'),
       clsName: 'custom-info-confirm default-info',
-      okText: $i18n.t('离开'),
-      cancelText: $i18n.t('取消'),
+      okText: $i18n.t('generic.button.exit'),
+      cancelText: $i18n.t('generic.button.cancel'),
       confirmFn() {
         resolve(true);
       },

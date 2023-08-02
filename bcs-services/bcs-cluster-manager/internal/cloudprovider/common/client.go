@@ -247,7 +247,7 @@ func (c *Client) GetTaskStatus(url string, paras *TaskPathParas,
 	reqURL = fmt.Sprintf(url, paras.TaskID, paras.BkBizID)
 	request.Scope = string(CmdbBizScope)
 	agent := gorequest.New().Timeout(defaultTimeOut).Get(reqURL)
-	
+
 	_, _, errs := agent.
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").

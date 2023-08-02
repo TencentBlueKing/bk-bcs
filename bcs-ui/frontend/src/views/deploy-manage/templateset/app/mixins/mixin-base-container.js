@@ -79,9 +79,9 @@ export default {
       bkMessageInstance: null,
       exceptionCode: null,
       envTabLoading: true,
-      cpuToggleRangeStr: this.$t('1小时'),
-      memToggleRangeStr: this.$t('1小时'),
-      diskToggleRangeStr: this.$t('1小时'),
+      cpuToggleRangeStr: this.$t('units.time.1h'),
+      memToggleRangeStr: this.$t('units.time.1h'),
+      diskToggleRangeStr: this.$t('units.time.1h'),
     };
   },
   computed: {
@@ -204,49 +204,49 @@ export default {
         this.resourceList.splice(0, this.resourceList.length, ...resourceList);
 
         this.$refs.containerCpuLine && this.$refs.containerCpuLine.showLoading({
-          text: this.$t('正在加载'),
+          text: this.$t('deploy.templateset.loading'),
           color: '#30d878',
           maskColor: 'rgba(255, 255, 255, 0.8)',
         });
         this.$refs.containerMemLine && this.$refs.containerMemLine.showLoading({
-          text: this.$t('正在加载'),
+          text: this.$t('deploy.templateset.loading'),
           color: '#30d878',
           maskColor: 'rgba(255, 255, 255, 0.8)',
         });
         this.$refs.containerNetLine && this.$refs.containerNetLine.showLoading({
-          text: this.$t('正在加载'),
+          text: this.$t('deploy.templateset.loading'),
           color: '#30d878',
           maskColor: 'rgba(255, 255, 255, 0.8)',
         });
         this.$refs.containerDiskLine && this.$refs.containerDiskLine.showLoading({
-          text: this.$t('正在加载'),
+          text: this.$t('deploy.templateset.loading'),
           color: '#30d878',
           maskColor: 'rgba(255, 255, 255, 0.8)',
         });
 
         let cpuRange = '1';
-        if (this.cpuToggleRangeStr === this.$t('24小时')) {
+        if (this.cpuToggleRangeStr === this.$t('units.time.24h')) {
           cpuRange = '2';
         }
-        if (this.cpuToggleRangeStr === this.$t('近7天')) {
+        if (this.cpuToggleRangeStr === this.$t('units.time.lastDays')) {
           cpuRange = '3';
         }
         this.fetchContainerCpuUsage(cpuRange);
 
         let memRange = '1';
-        if (this.memToggleRangeStr === this.$t('24小时')) {
+        if (this.memToggleRangeStr === this.$t('units.time.24h')) {
           memRange = '2';
         }
-        if (this.memToggleRangeStr === this.$t('近7天')) {
+        if (this.memToggleRangeStr === this.$t('units.time.lastDays')) {
           memRange = '3';
         }
         this.fetchContainerMemUsage(memRange);
 
         let diskRange = '1';
-        if (this.diskToggleRangeStr === this.$t('24小时')) {
+        if (this.diskToggleRangeStr === this.$t('units.time.24h')) {
           diskRange = '2';
         }
-        if (this.diskToggleRangeStr === this.$t('近7天')) {
+        if (this.diskToggleRangeStr === this.$t('units.time.lastDays')) {
           diskRange = '3';
         }
         this.fetchContainerDisk(diskRange);
@@ -710,8 +710,8 @@ export default {
         });
       });
 
-      const labelWrite = this.$t('磁盘写数据');
-      const labelRead = this.$t('磁盘读数据');
+      const labelWrite = this.$t('deploy.templateset.diskWriteData');
+      const labelRead = this.$t('deploy.templateset.diskReadData');
       chartNode.mergeOptions({
         tooltip: {
           formatter(params, ticket, callback) {
@@ -1012,18 +1012,18 @@ export default {
         emptyData.push(0);
       });
 
-      charOpts.legend.data.push(this.$t('发送'));
-      charOpts.legend.data.push(this.$t('接收'));
+      charOpts.legend.data.push(this.$t('metrics.pod.network.send'));
+      charOpts.legend.data.push(this.$t('metrics.pod.network.recv'));
 
       charOpts.series.push(
         {
           type: 'line',
-          name: this.$t('发送'),
+          name: this.$t('metrics.pod.network.send'),
           data: txbyteData,
         },
         {
           type: 'line',
-          name: this.$t('接收'),
+          name: this.$t('metrics.pod.network.recv'),
           data: rxbyteData,
         },
       );
@@ -1229,11 +1229,11 @@ export default {
          */
     toggleRange(dropdownRef, toggleRangeStr, idx, range) {
       if (range === '1') {
-        this[toggleRangeStr] = this.$t('1小时');
+        this[toggleRangeStr] = this.$t('units.time.1h');
       } else if (range === '2') {
-        this[toggleRangeStr] = this.$t('24小时');
+        this[toggleRangeStr] = this.$t('units.time.24h');
       } else if (range === '3') {
-        this[toggleRangeStr] = this.$t('近7天');
+        this[toggleRangeStr] = this.$t('units.time.lastDays');
       }
 
       this.$refs[dropdownRef].hide();
@@ -1253,7 +1253,7 @@ export default {
         hook = 'fetchContainerDisk';
       }
       ref && ref.showLoading({
-        text: this.$t('正在加载中...'),
+        text: this.$t('generic.status.loading'),
         color: '#30d878',
         maskColor: 'rgba(255, 255, 255, 0.8)',
       });

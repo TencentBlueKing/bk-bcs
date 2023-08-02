@@ -3,7 +3,7 @@
     :value="value"
     theme="primary"
     :mask-close="false"
-    :title="isEdit ? $t('编辑项目') : $t('新建项目')"
+    :title="isEdit ? $t('projects.project.edit') : $t('projects.project.create')"
     width="860"
     :loading="loading"
     :auto-close="false"
@@ -11,27 +11,27 @@
     @value-change="handleChange"
     @confirm="handleConfirm">
     <bk-form :label-width="labelWidth" :model="formData" :rules="rules" ref="bkFormRef">
-      <bk-form-item :label="$t('项目名称')" property="name" error-display-type="normal" required>
+      <bk-form-item :label="$t('projects.project.name')" property="name" error-display-type="normal" required>
         <bk-input
           :maxlength="64"
           class="create-input"
-          :placeholder="$t('请输入2-64字符的项目名称')"
+          :placeholder="$t('projects.validate.projectName2')"
           v-model="formData.name">
         </bk-input>
       </bk-form-item>
-      <bk-form-item :label="$t('项目英文名')" property="projectCode" error-display-type="normal" required>
+      <bk-form-item :label="$t('projects.project.engName')" property="projectCode" error-display-type="normal" required>
         <bk-input
           class="create-input"
           :maxlength="32"
-          :placeholder="$t('请输入2-32字符的小写字母、数字、中划线，以小写字母开头')"
+          :placeholder="$t('projects.validate.projectName1')"
           :disabled="isEdit"
           v-model="formData.projectCode">
         </bk-input>
       </bk-form-item>
-      <bk-form-item :label="$t('项目说明')" property="description" error-display-type="normal" required>
+      <bk-form-item :label="$t('projects.project.intro')" property="description" error-display-type="normal" required>
         <bk-input
           class="create-input"
-          :placeholder="$t('请输入项目描述')"
+          :placeholder="$t('projects.project.desc')"
           type="textarea"
           :rows="3"
           :maxlength="100"
@@ -80,11 +80,11 @@ export default defineComponent({
       name: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
         {
-          message: $i18n.t('项目名称校验提示语'),
+          message: $i18n.t('projects.validate.projectName'),
           trigger: 'blur',
           validator(value) {
             return /^[\w\W]{2,64}$/g.test(value) && !SPECIAL_REGEXP.test(value);
@@ -94,11 +94,11 @@ export default defineComponent({
       projectCode: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
         {
-          message: $i18n.t('请输入2-32字符的小写字母、数字、中划线，以小写字母开头'),
+          message: $i18n.t('projects.validate.projectName1'),
           trigger: 'blur',
           validator(value) {
             return /^[a-z][a-z0-9-]{1,31}$/g.test(value);
@@ -108,7 +108,7 @@ export default defineComponent({
       description: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
@@ -166,7 +166,7 @@ export default defineComponent({
       loading.value = false;
       if (result) {
         $bkMessage({
-          message: isEdit.value ? $i18n.t('编辑成功') : $i18n.t('创建成功'),
+          message: isEdit.value ? $i18n.t('generic.msg.success.edit') : $i18n.t('generic.msg.success.create'),
           theme: 'success',
         });
         handleChange(false);

@@ -8,7 +8,7 @@
         v-for="cluster in clusterList"
         :key="cluster.clusterID">
         <!-- todo指标过载 -->
-        <!-- <div v-bk-tooltips="{ content: $t('集群指标过载') }">!</div> -->
+        <!-- <div v-bk-tooltips="{ content: $t('cluster.tips.highMetricData') }">!</div> -->
         <Row class="h-[75px] header-border-bottom">
           <template #left>
             <!-- 集群信息 -->
@@ -27,10 +27,10 @@
                   {{cluster.clusterID || '--'}}
                 </span>
                 <bcs-tag theme="warning" v-if="['stag', 'debug'].includes(cluster.environment)">
-                  {{cluster.environment === 'stag' ? 'UAT' : $t('测试')}}
+                  {{cluster.environment === 'stag' ? 'UAT' : $t('cluster.tag.debug')}}
                 </bcs-tag>
                 <bcs-tag theme="info" v-else-if="cluster.environment === 'prod'">
-                  {{$t('正式')}}
+                  {{$t('cluster.tag.prod')}}
                 </bcs-tag>
               </div>
             </div>
@@ -46,23 +46,23 @@
                 <i class="text-[24px] bcs-icon bcs-icon-more"></i>
               </span>
               <ul slot="content" class="bg-[#fff]">
-                <li class="bcs-dropdown-item" @click="handleGotoClusterOverview(cluster)">{{$t('集群总览')}}</li>
-                <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(cluster, 'info')">{{$t('基本信息')}}</li>
+                <li class="bcs-dropdown-item" @click="handleGotoClusterOverview(cluster)">{{$t('cluster.detail.title.overview')}}</li>
+                <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(cluster, 'info')">{{$t('generic.title.basicInfo1')}}</li>
                 <!-- vCluster集群 -->
                 <template v-if="cluster.clusterType === 'virtual'">
                   <li
                     class="bcs-dropdown-item"
                     @click="handleGotoClusterDetail(cluster, 'quota')">
-                    {{ $t('配额管理') }}
+                    {{ $t('cluster.detail.title.quota') }}
                   </li>
                 </template>
                 <!-- 其他集群 -->
                 <template v-else>
-                  <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(cluster, 'network')">{{$t('网络配置')}}</li>
+                  <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(cluster, 'network')">{{$t('cluster.detail.title.network')}}</li>
                   <li
                     class="bcs-dropdown-item"
                     @click="handleGotoClusterDetail(cluster, 'master')">
-                    {{$t('Master配置')}}
+                    {{$t('cluster.detail.title.master')}}
                   </li>
                   <li
                     class="bcs-dropdown-item"
@@ -80,7 +80,7 @@
                     key="nodeList"
                     :disabled="cluster.clusterCategory === 'importer'"
                     @click="handleGotoClusterNode(cluster)">
-                    {{$t('节点列表')}}
+                    {{$t('cluster.detail.title.nodeList')}}
                   </li>
                   <li
                     class="bcs-dropdown-item"
@@ -100,7 +100,7 @@
                       }
                     }"
                     @click="handleGotoClusterCA(cluster)">
-                    {{$t('弹性扩缩容')}}
+                    {{$t('cluster.detail.title.autoScaler')}}
                   </li>
                 </template>
                 <li class="bcs-dropdown-item" @click="handleGotoToken">KubeConfig</li>
@@ -122,7 +122,7 @@
                   }"
                   @click="handleDeleteCluster(cluster)"
                   v-if="cluster.clusterType === 'virtual' || cluster.clusterCategory === 'importer'">
-                  {{$t('删除')}}
+                  {{$t('generic.button.delete')}}
                 </li>
                 <!-- 其他集群删除 -->
                 <li
@@ -143,13 +143,13 @@
                     }
                   }"
                   v-bk-tooltips="{
-                    content: $t('集群下存在节点，无法删除'),
+                    content: $t('cluster.validate.exitNodes'),
                     disabled: !clusterNodesMap[cluster.clusterID] || clusterNodesMap[cluster.clusterID].length === 0,
                     placement: 'right'
                   }"
                   @click="handleDeleteCluster(cluster)"
                   v-else>
-                  {{$t('删除')}}
+                  {{$t('generic.button.delete')}}
                 </li>
               </ul>
             </PopoverSelector>
@@ -163,7 +163,7 @@
               </span>
               <ul slot="content" class="bg-[#fff]">
                 <li class="bcs-dropdown-item" @click="handleDeleteCluster(cluster)">
-                  {{$t('删除')}}
+                  {{$t('generic.button.delete')}}
                 </li>
               </ul>
             </PopoverSelector>
@@ -187,7 +187,7 @@
               text
               class="text-[12px] mt-[4px]"
               @click="handleShowClusterLog(cluster)">
-              {{$t('查看日志')}}
+              {{$t('generic.button.log')}}
             </bk-button>
           </div>
           <!-- 失败 -->
@@ -197,8 +197,8 @@
             <img class="w-[220px] h-[100px]" :src="maintain" />
             <p class="mt-[6px]">{{ statusTextMap[cluster.status] }}</p>
             <div class="mt-[4px]">
-              <bk-button class="text-[12px] mr-[5px]" text @click="handleRetry(cluster)">{{ $t('重试') }}</bk-button>|
-              <bk-button class="text-[12px]" text @click="handleShowClusterLog(cluster)">{{$t('查看日志')}}</bk-button>
+              <bk-button class="text-[12px] mr-[5px]" text @click="handleRetry(cluster)">{{ $t('cluster.ca.nodePool.records.action.retry') }}</bk-button>|
+              <bk-button class="text-[12px]" text @click="handleShowClusterLog(cluster)">{{$t('generic.button.log')}}</bk-button>
             </div>
           </div>
           <!-- 导入失败 -->
@@ -251,7 +251,7 @@
           <!-- 未知状态 -->
           <div class="flex flex-col items-center" v-else>
             <img class="w-[220px] h-[100px]" :src="maintain" />
-            <p class="mt-[6px]">{{ statusTextMap[cluster.status] || $t('未知集群状态') }}</p>
+            <p class="mt-[6px]">{{ statusTextMap[cluster.status] || $t('cluster.status.unknown') }}</p>
             <bk-button
               text
               class="text-[12px] mt-[4px]">
@@ -316,17 +316,17 @@ export default defineComponent({
     const clusterMetricList = [
       {
         metric: 'cpu_usage',
-        title: $i18n.t('CPU使用率'),
+        title: $i18n.t('metrics.cpuUsage'),
         color: '#9dcaff',
       },
       {
         metric: 'memory_usage',
-        title: $i18n.t('内存使用率'),
+        title: $i18n.t('metrics.memUsage'),
         color: '#97ebbb',
       },
       {
         metric: 'disk_usage',
-        title: $i18n.t('磁盘使用率'),
+        title: $i18n.t('metrics.diskUsage'),
         color: '#ffd97f',
       },
     ];

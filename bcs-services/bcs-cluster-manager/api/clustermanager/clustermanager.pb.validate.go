@@ -40364,6 +40364,8 @@ func (m *Subnet) validate(all bool) error {
 
 	// no validation rules for AvailableIPAddressCount
 
+	// no validation rules for ZoneName
+
 	if len(errors) > 0 {
 		return SubnetMultiError(errors)
 	}

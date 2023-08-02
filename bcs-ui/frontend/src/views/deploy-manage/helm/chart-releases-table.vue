@@ -1,13 +1,13 @@
 <template>
   <div>
-    <bcs-alert type="warning" :title="$t('您需要先删除以下所有Release, 再进行删除操作')" class="mb-[10px]"></bcs-alert>
+    <bcs-alert type="warning" :title="$t('deploy.helm.deleteWarning')" class="mb-[10px]"></bcs-alert>
     <bcs-table :data="data">
-      <bcs-table-column :label="$t('所属集群')" prop="clusterID"></bcs-table-column>
-      <bcs-table-column :label="$t('命名空间')" prop="namespace"></bcs-table-column>
-      <bcs-table-column :label="$t('名称')" prop="name"></bcs-table-column>
-      <!-- <bcs-table-column :label="$t('操作')" width="80">
+      <bcs-table-column :label="$t('generic.label.cluster1')" prop="clusterID"></bcs-table-column>
+      <bcs-table-column :label="$t('k8s.namespace')" prop="namespace"></bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.name')" prop="name"></bcs-table-column>
+      <!-- <bcs-table-column :label="$t('generic.label.action')" width="80">
         <template #default="{ row }">
-          <bcs-button text @click="handleGotoChartRelease(row)">{{$t('查看')}}</bcs-button>
+          <bcs-button text @click="handleGotoChartRelease(row)">{{$t('generic.button.view')}}</bcs-button>
         </template>
       </bcs-table-column> -->
     </bcs-table>

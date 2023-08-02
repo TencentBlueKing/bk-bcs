@@ -2,11 +2,11 @@
   <div class="detail p30">
     <!-- 基础信息 -->
     <div class="detail-title">
-      {{ $t('基础信息') }}
+      {{ $t('generic.title.basicInfo') }}
     </div>
     <div class="detail-content basic-info">
       <div class="basic-info-item">
-        <label>{{ $t('命名空间') }}</label>
+        <label>{{ $t('k8s.namespace') }}</label>
         <span>{{ data.metadata.namespace }}</span>
       </div>
       <div class="basic-info-item">
@@ -50,34 +50,34 @@
         </template>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('CLB 使用方式') }}</label>
-        <span>{{ extData.clbUseType === 'useExists' ? $t('使用已有') : $t('自动创建') }}</span>
+        <label>{{ $t('dashboard.network.clbUsage') }}</label>
+        <span>{{ extData.clbUseType === 'useExists' ? $t('dashboard.network.usingExisting') : $t('dashboard.network.autoCreate') }}</span>
       </div>
       <div class="basic-info-item">
         <label>CLB ID</label>
         <span>{{ extData.clbID || '--' }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{$t('内网子网 ID')}}</label>
+        <label>{{$t('dashboard.network.privateSubnetID')}}</label>
         <span>{{ extData.subnetID || '--' }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('创建时间') }}</label>
+        <label>{{ $t('cluster.labels.createdAt') }}</label>
         <span>{{ extData.createTime }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('存在时间') }}</label>
+        <label>{{ $t('k8s.age') }}</label>
         <span>{{ extData.age }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('最大会话时间') }}</label>
+        <label>{{ $t('dashboard.network.maxSessionTime') }}</label>
         <span>{{ extData.stickyTime ? `${extData.stickyTime} s` : '--' }}</span>
       </div>
     </div>
     <!-- 配置、标签、注解 -->
     <bcs-tab class="mt20" type="card" :label-height="42">
-      <bcs-tab-panel name="config" :label="$t('配置')">
-        <p class="detail-title">{{ $t('端口映射') }}（spec.ports）</p>
+      <bcs-tab-panel name="config" :label="$t('dashboard.network.config')">
+        <p class="detail-title">{{ $t('dashboard.network.portmapping') }}（spec.ports）</p>
         <bk-table :data="data.spec.ports">
           <bk-table-column label="Name" prop="name">
             <template #default="{ row }">
@@ -94,25 +94,25 @@
           </bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="selector" :label="$t('选择器')">
+      <bcs-tab-panel name="selector" :label="$t('k8s.selector')">
         <bk-table :data="handleTransformObjToArr(data.spec.selector)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="label" :label="$t('标签')">
+      <bcs-tab-panel name="label" :label="$t('k8s.label')">
         <bk-table :data="handleTransformObjToArr(data.metadata.labels)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="annotations" :label="$t('注解')">
+      <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')">
         <bk-table :data="handleTransformObjToArr(data.metadata.annotations)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="event" :label="$t('事件')">
+      <bcs-tab-panel name="event" :label="$t('generic.label.event')">
         <EventQueryTableVue
           hide-cluster-and-namespace
           :kinds="data.kind"

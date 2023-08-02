@@ -11,8 +11,8 @@ export const VALUE_REGEXP = '^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$';
 // 集群环境
 export const CLUSTER_ENV = {
   stag: 'UAT',
-  debug: $i18n.t('测试'),
-  prod: $i18n.t('正式'),
+  debug: $i18n.t('cluster.tag.debug'),
+  prod: $i18n.t('cluster.tag.prod'),
 };
 
 export const LOG_COLLECTOR = 'bk-log-collector';

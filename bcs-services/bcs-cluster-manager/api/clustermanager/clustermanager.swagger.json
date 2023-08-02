@@ -13056,6 +13056,11 @@
           "format": "uint64",
           "description": "剩余 IP 数",
           "title": "availableIPAddressCount"
+        },
+        "zoneName": {
+          "type": "string",
+          "description": "子网所在可用区",
+          "title": "zoneName"
         }
       },
       "description": "子网信息",

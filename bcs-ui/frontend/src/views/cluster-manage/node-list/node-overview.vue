@@ -19,7 +19,7 @@
     <div class="grid grid-cols-2 grid-rows-2 bcs-border mt-[20px] bg-[#fff]">
       <Metric
         class="bcs-border-right bcs-border-bottom"
-        :title="$t('CPU使用率/装箱率')"
+        :title="$t('cluster.nodeList.metric.cpuUsageAndRequestUsage')"
         :metric="['cpu_usage', 'cpu_request_usage']"
         :params="{ $nodeIP: nodeName, $clusterId: clusterId }"
         :colors="['#3a84ff', '#30d878']"
@@ -27,7 +27,7 @@
       </Metric>
       <Metric
         class="bcs-border-bottom"
-        :title="$t('内存使用率/装箱率')"
+        :title="$t('cluster.nodeList.metric.memUsageAndRequestUsage')"
         :metric="['memory_usage', 'memory_request_usage']"
         :params="{ $nodeIP: nodeName, $clusterId: clusterId }"
         :colors="['#853cff', '#3ede78']"
@@ -35,7 +35,7 @@
       </Metric>
       <Metric
         class="bcs-border-right"
-        :title="$t('网络')"
+        :title="$t('k8s.networking')"
         :metric="['network_receive', 'network_transmit']"
         :params="{ $nodeIP: nodeName, $clusterId: clusterId }"
         :colors="['#3ede78', '#853cff']"
@@ -43,7 +43,7 @@
         category="nodes">
       </Metric>
       <Metric
-        :title="$t('磁盘容量/IO使用率')"
+        :title="$t('cluster.nodeList.metric.diskIOAndUsage')"
         :metric="['disk_usage', 'diskio_usage']"
         :params="{ $nodeIP: nodeName, $clusterId: clusterId }"
         :colors="['#853cff', '#30d878']"
@@ -55,7 +55,7 @@
       <bcs-tab-panel name="pod" label="Pods">
         <Row class="mb-[20px]">
           <template #right>
-            <span class="bcs-form-prefix bg-[#f5f7fa]">{{$t('命名空间')}}</span>
+            <span class="bcs-form-prefix bg-[#f5f7fa]">{{$t('k8s.namespace')}}</span>
             <bcs-select
               class="w-[200px]"
               v-model="namespaceValue"
@@ -63,7 +63,7 @@
               searchable
               clearable
               :placeholder="' '">
-              <bcs-option key="all" id="" :name="$t('全部命名空间')"></bcs-option>
+              <bcs-option key="all" id="" :name="$t('cluster.nodeList.detail.label.selectAllNs')"></bcs-option>
               <bcs-option
                 v-for="option in namespaceList"
                 :key="option.name"
@@ -76,7 +76,7 @@
               clearable
               v-model="searchValue"
               right-icon="bk-icon icon-search"
-              :placeholder="$t('输入名称、IP搜索')">
+              :placeholder="$t('generic.placeholder.searchPod')">
             </bk-input>
           </template>
         </Row>
@@ -87,7 +87,7 @@
           @page-change="pageChange"
           @page-limit-change="pageSizeChange"
           @sort-change="handleSortChange">
-          <bk-table-column :label="$t('名称')" min-width="130" sortable fixed="left">
+          <bk-table-column :label="$t('generic.label.name')" min-width="130" sortable fixed="left">
             <template #default="{ row }">
               <bk-button
                 class="bcs-button-ellipsis"
@@ -108,12 +108,12 @@
               </bk-button>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('命名空间')" min-width="100" sortable>
+          <bk-table-column :label="$t('k8s.namespace')" min-width="100" sortable>
             <template #default="{ row }">
               <span>{{ row.namespace }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('镜像')" min-width="200" :show-overflow-tooltip="false">
+          <bk-table-column :label="$t('k8s.image')" min-width="200" :show-overflow-tooltip="false">
             <template #default="{ row }">
               <span v-bk-tooltips.top="(row.images || []).join('<br />')">
                 {{ (row.images || []).join(', ') }}
@@ -150,12 +150,12 @@
               <span>{{row.age || '--'}}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('编辑模式')" width="100">
+          <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
             <template #default="{ row }">
-              <span>{{row.editModel === 'form' ? $t('表单') : 'YAML'}}</span>
+              <span>{{row.editModel === 'form' ? $t('generic.label.editMode.form') : 'YAML'}}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('操作')" width="180" fixed="right">
+          <bk-table-column :label="$t('generic.label.action')" width="180" fixed="right">
             <template #default="{ row }">
               <bk-button
                 text
@@ -171,7 +171,7 @@
                   }
                 }"
                 @click="handleShowLog(row)">
-                {{ $t('日志') }}
+                {{ $t('generic.button.log1') }}
               </bk-button>
               <bk-button
                 class="ml10"
@@ -188,7 +188,7 @@
                   }
                 }"
                 @click="handleUpdateResource(row)">
-                {{ $t('更新') }}
+                {{ $t('generic.button.update') }}
               </bk-button>
               <bk-button
                 class="ml10"
@@ -205,7 +205,7 @@
                   }
                 }"
                 @click="handleDeleteResource(row)">
-                {{ $t('删除') }}
+                {{ $t('generic.button.delete') }}
               </bk-button>
             </template>
           </bk-table-column>
@@ -216,7 +216,7 @@
           </template>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="event" :label="$t('事件')">
+      <bcs-tab-panel name="event" :label="$t('generic.label.event')">
         <EventQueryTable
           class="min-h-[360px]"
           hide-cluster-and-namespace
@@ -284,25 +284,25 @@ export default defineComponent({
         prop: 'cpu_count',
       },
       {
-        label: $i18n.t('内存'),
+        label: $i18n.t('generic.label.mem'),
         prop: 'memory',
         format: formatBytes,
       },
       {
-        label: $i18n.t('存储'),
+        label: $i18n.t('generic.label.storage'),
         prop: 'disk',
         format: formatBytes,
       },
       {
-        label: $i18n.t('内核'),
+        label: $i18n.t('cluster.nodeList.detail.label.kernel'),
         prop: 'release',
       },
       {
-        label: $i18n.t('运行时'),
+        label: $i18n.t('cluster.nodeList.detail.label.runtime'),
         prop: 'container_runtime_version',
       },
       {
-        label: $i18n.t('操作系统'),
+        label: $i18n.t('cluster.ca.nodePool.label.system'),
         prop: 'sysname',
       },
     ]);
@@ -404,7 +404,7 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认删除当前资源'),
+        title: $i18n.t('dashboard.title.confirmDelete'),
         subTitle: `Pod ${name}`,
         defaultInfo: true,
         confirmFn: async () => {
@@ -417,7 +417,7 @@ export default defineComponent({
           });
           result && $bkMessage({
             theme: 'success',
-            message: $i18n.t('删除成功'),
+            message: $i18n.t('generic.msg.success.delete'),
           });
           handleGetPodsData();
         },

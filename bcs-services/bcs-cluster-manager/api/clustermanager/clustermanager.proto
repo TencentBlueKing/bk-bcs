@@ -10009,6 +10009,10 @@ message Subnet {
     title : "availableIPAddressCount",
     description : "剩余 IP 数"
   }];
+  string zoneName = 8 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "zoneName",
+    description : "子网所在可用区"
+  }];
 }
 
 message ListCloudSecurityGroupsRequest {

@@ -2,12 +2,12 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header hide-back :title="$t('HPA管理')" />
+    <Header hide-back :title="$t('deploy.templateset.HPAManagement')" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading }">
       <div class="biz-panel-header">
         <div class="left">
           <bk-button @click.stop.prevent="removeHPAs">
-            <span>{{$t('批量删除')}}</span>
+            <span>{{$t('generic.button.batchDelete')}}</span>
           </bk-button>
         </div>
         <div class="right">
@@ -29,30 +29,30 @@
           @select="handlePageSelect"
           @select-all="handlePageSelectAll">
           <bk-table-column type="selection" width="60" :selectable="rowSelectable" />
-          <bk-table-column :label="$t('名称')" prop="name" min-width="100">
+          <bk-table-column :label="$t('generic.label.name')" prop="name" min-width="100">
             <template slot-scope="{ row }">
               {{row.name}}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('集群')" prop="cluster_name" min-width="100">
+          <bk-table-column :label="$t('generic.label.cluster')" prop="cluster_name" min-width="100">
             <template slot-scope="{ row }">
               {{row.cluster_name}}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('命名空间')" prop="namespace" :show-overflow-tooltip="true" min-width="150" />
-          <bk-table-column :label="$t('Metric(当前/目标)')" prop="current_metrics_display" :show-overflow-tooltip="true" min-width="150">
+          <bk-table-column :label="$t('k8s.namespace')" prop="namespace" :show-overflow-tooltip="true" min-width="150" />
+          <bk-table-column :label="$t('deploy.templateset.metricCurrentTarget')" prop="current_metrics_display" :show-overflow-tooltip="true" min-width="150">
           </bk-table-column>
           <bk-table-column width="30">
             <template slot-scope="{ row }">
               <i class="bcs-icon bcs-icon-info-circle" style="color: #ffb400;" v-if="row.needShowConditions" @click="showConditions(row, index)"></i>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('实例数(当前/范围)')" prop="replicas" min-width="150">
+          <bk-table-column :label="$t('deploy.templateset.instanceNumCurrentRange')" prop="replicas" min-width="150">
             <template slot-scope="{ row }">
               {{ row.current_replicas }} / {{ row.min_replicas }}-{{ row.max_replicas }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('关联资源')" :show-overflow-tooltip="true" prop="deployment" min-width="150">
+          <bk-table-column :label="$t('deploy.templateset.associatedResources')" :show-overflow-tooltip="true" prop="deployment" min-width="150">
             <template slot-scope="{ row }">
               <bk-button
                 :disabled="!['Deployment', 'StatefulSet'].includes(row.ref_kind)"
@@ -62,25 +62,25 @@
               </bk-button>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('来源')" prop="source_type">
+          <bk-table-column :label="$t('deploy.templateset.sources')" prop="source_type">
             <template slot-scope="{ row }">
               {{ row.source_type || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('创建时间')" prop="create_time" min-width="100">
+          <bk-table-column :label="$t('cluster.labels.createdAt')" prop="create_time" min-width="100">
             <template slot-scope="{ row }">
               {{ row.create_time || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('创建人')" prop="creator" min-width="100">
+          <bk-table-column :label="$t('generic.label.createdBy')" prop="creator" min-width="100">
             <template slot-scope="{ row }">
               {{row.creator || '--'}}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('操作')" prop="permissions">
+          <bk-table-column :label="$t('generic.label.action')" prop="permissions">
             <template slot-scope="{ row }">
               <div>
-                <a href="javascript:void(0);" :class="['bk-text-button']" @click="removeHPA(row)">{{$t('删除')}}</a>
+                <a href="javascript:void(0);" :class="['bk-text-button']" @click="removeHPA(row)">{{$t('generic.button.delete')}}</a>
               </div>
             </template>
           </bk-table-column>
@@ -95,12 +95,12 @@
         :width="430"
         :has-header="false"
         :quick-close="false"
-        :title="$t('确认删除')"
+        :title="$t('generic.title.confirmDelete')"
         @confirm="deleteHPAs(batchDialogConfig.data)"
         @cancel="batchDialogConfig.isShow = false">
         <template slot="content">
           <div class="biz-batch-wrapper">
-            <p class="batch-title">{{$t('确定要删除以下')}} HPA？</p>
+            <p class="batch-title">{{$t('deploy.templateset.confirmDeleteFollowing')}} HPA？</p>
             <ul class="batch-list">
               <li v-for="(item, index) of batchDialogConfig.list" :key="index">{{item}}</li>
             </ul>
@@ -398,7 +398,7 @@ export default {
       if (!data.length) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择要删除的HPA！'),
+          message: this.$t('deploy.templateset.selectHPAToDelete'),
         });
         return false;
       }
@@ -417,11 +417,11 @@ export default {
       const self = this;
 
       this.$bkInfo({
-        title: this.$t('确认删除'),
+        title: this.$t('generic.title.confirmDelete'),
         clsName: 'biz-remove-dialog',
         content: this.$createElement('p', {
           class: 'biz-confirm-desc',
-        }, `${this.$t('确定要删除HPA')}【${HPA.name}】？`),
+        }, `${this.$t('deploy.templateset.confirmDeleteHPA')}【${HPA.name}】？`),
         async confirmFn() {
           self.deleteHPA(HPA);
         },
@@ -445,7 +445,7 @@ export default {
 
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('删除成功'),
+          message: this.$t('generic.msg.success.delete'),
         });
         this.initPageConf();
         this.getHPAList();
@@ -485,7 +485,7 @@ export default {
 
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('删除成功'),
+          message: this.$t('generic.msg.success.delete'),
         });
         this.initPageConf();
         this.getHPAList();

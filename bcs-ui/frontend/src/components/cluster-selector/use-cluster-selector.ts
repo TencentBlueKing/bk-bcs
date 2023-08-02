@@ -57,17 +57,17 @@ export default function useClusterSelector(
     {
       type: 'managed',
       list: [],
-      title: $i18n.t('托管集群'),
+      title: $i18n.t('bcs.cluster.managed'),
     },
     {
       type: 'independent',
       list: [],
-      title: $i18n.t('独立集群'),
+      title: $i18n.t('bcs.cluster.selfDeployed'),
     },
     {
       type: 'shared',
       list: [],
-      title: $i18n.t('共享集群'),
+      title: $i18n.t('bcs.cluster.share'),
     },
   ])
     .filter(item => !!item.list.length));

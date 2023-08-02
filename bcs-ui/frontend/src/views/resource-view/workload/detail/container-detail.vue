@@ -6,11 +6,11 @@
           <span class="name mr20">{{ detail && detail.containerName }}</span>
           <div class="basic-wrapper">
             <div class="basic-item">
-              <span class="label">{{ $t('主机IP') }}</span>
+              <span class="label">{{ $t('dashboard.workload.container.hostIP') }}</span>
               <span class="value">{{ detail && detail.hostIP || '--' }}</span>
             </div>
             <div class="basic-item">
-              <span class="label">{{ $t('容器IP') }}</span>
+              <span class="label">{{ $t('dashboard.workload.container.containerIP') }}</span>
               <span class="value">{{ detail && detail.containerIP || '--' }}</span>
             </div>
           </div>
@@ -18,19 +18,19 @@
       </div>
       <div class="workload-main-info">
         <div class="info-item">
-          <span class="label">{{ $t('主机名称') }}</span>
+          <span class="label">{{ $t('cluster.labels.hostName') }}</span>
           <span class="value" v-bk-overflow-tips>{{ detail && detail.hostName }}</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('容器ID') }}</span>
+          <span class="label">{{ $t('dashboard.workload.container.containerID') }}</span>
           <span class="value" v-bk-overflow-tips>{{ detail && detail.containerID }}</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('镜像') }}</span>
+          <span class="label">{{ $t('k8s.image') }}</span>
           <span class="value" v-bk-overflow-tips>{{ detail && detail.image }}</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('网络模式') }}</span>
+          <span class="label">{{ $t('cluster.create.label.networkMode.text') }}</span>
           <span class="value">{{ detail && detail.networkMode }}</span>
         </div>
       </div>
@@ -38,7 +38,7 @@
     <div class="workload-detail-body">
       <div class="workload-metric">
         <Metric
-          :title="$t('CPU使用率')"
+          :title="$t('metrics.cpuUsage')"
           :metric="['cpu_usage', 'cpu_limit']"
           :params="params"
           category="containers"
@@ -46,27 +46,27 @@
           :series="[{ }, { areaStyle: null }]">
         </Metric>
         <Metric
-          :title="$t('内存使用量')"
+          :title="$t('metrics.memUsage1')"
           :metric="['memory_used', 'memory_limit']"
           :params="params"
           unit="byte"
           category="containers"
           :colors="['#3a84ff', '#ff5656']"
-          :desc="$t('container_memory_working_set_bytes，limit限制时oom判断依据')"
+          :desc="$t('dashboard.workload.tips.containerMemoryWorkingSetBytesOom')"
           :series="[{ }, { areaStyle: null }]">
         </Metric>
         <Metric
-          :title="$t('磁盘IO总量')"
+          :title="$t('metrics.diskIOUsage1')"
           :metric="['disk_read_total', 'disk_write_total']"
           :params="params"
           category="containers"
           unit="byte"
           :colors="['#853cff', '#30d878']"
-          :suffix="[$t('读'), $t('写')]">
+          :suffix="[$t('metrics.pod.disk.read'), $t('metrics.pod.disk.write')]">
         </Metric>
       </div>
       <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
-        <bcs-tab-panel name="ports" :label="$t('端口映射')">
+        <bcs-tab-panel name="ports" :label="$t('dashboard.network.portmapping')">
           <bk-table :data="ports">
             <bk-table-column label="Name" prop="name">
               <template #default="{ row }">
@@ -82,7 +82,7 @@
             <bk-table-column label="Protocol" prop="protocol"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="command" :label="$t('命令')">
+        <bcs-tab-panel name="command" :label="$t('dashboard.workload.container.command')">
           <bk-table :data="command">
             <bk-table-column label="Command" prop="command">
               <template #default="{ row }">
@@ -96,7 +96,7 @@
             </bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="volumes" :label="$t('挂载卷')">
+        <bcs-tab-panel name="volumes" :label="$t('k8s.volume')">
           <bk-table :data="volumes">
             <bk-table-column label="Host Path" prop="name"></bk-table-column>
             <bk-table-column label="Mount Path" prop="mountPath"></bk-table-column>
@@ -107,19 +107,19 @@
             </bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="env" :label="$t('环境变量')">
+        <bcs-tab-panel name="env" :label="$t('dashboard.workload.container.env')">
           <bk-table :data="envs" v-bkloading="{ isLoading: envsTableLoading }">
             <bk-table-column label="Key" prop="name"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="label" :label="$t('标签')">
+        <bcs-tab-panel name="label" :label="$t('k8s.label')">
           <bk-table :data="labels">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="val"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="resources" :label="$t('资源限制')">
+        <bcs-tab-panel name="resources" :label="$t('dashboard.workload.container.limits')">
           <bk-table :data="resources">
             <bk-table-column label="Cpu">
               <template #default="{ row }">

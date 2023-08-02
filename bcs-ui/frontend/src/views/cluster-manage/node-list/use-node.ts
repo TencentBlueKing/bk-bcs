@@ -83,7 +83,7 @@ export default function useNode() {
     });
     result && $bkMessage({
       theme: 'success',
-      message: window.i18n.t('任务下发成功'),
+      message: window.i18n.t('generic.msg.success.deliveryTask'),
     });
     return result;
   };
@@ -132,7 +132,7 @@ export default function useNode() {
     }).catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: window.i18n.t('停止调度成功'),
+      message: window.i18n.t('cluster.nodeList.msg.unCordonOK'),
     });
     return result;
   };
@@ -149,7 +149,7 @@ export default function useNode() {
     }).catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: window.i18n.t('允许调度成功'),
+      message: window.i18n.t('cluster.nodeList.msg.cordonOK'),
     });
     return result;
   };
@@ -167,7 +167,7 @@ export default function useNode() {
     if (data?.fail?.length) {
       $bkInfo({
         type: 'error',
-        title: window.i18n.t('以下调度节点失败'),
+        title: window.i18n.t('cluster.nodeList.title.failedCordonData'),
         defaultInfo: true,
         clsName: 'custom-info-confirm',
         subTitle: data.fail.map(item => `${item.nodeName}(${item.message})`).join(', '),
@@ -175,7 +175,7 @@ export default function useNode() {
     } else if (data && !data.fail?.length) {
       $bkMessage({
         theme: 'success',
-        message: window.i18n.t('Pod驱逐成功'),
+        message: window.i18n.t('cluster.nodeList.msg.drainOK'),
       });
     }
     return data && !data.fail?.length;
@@ -193,7 +193,7 @@ export default function useNode() {
     });
     result && $bkMessage({
       theme: 'success',
-      message: window.i18n.t('任务下发成功'),
+      message: window.i18n.t('generic.msg.success.deliveryTask'),
     });
     return result;
   };

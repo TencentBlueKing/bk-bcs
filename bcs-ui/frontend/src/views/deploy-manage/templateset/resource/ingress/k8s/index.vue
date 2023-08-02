@@ -2,7 +2,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header hide-back title="Ingresses" :desc="$t('请通过模板集或Helm创建Ingress')" />
+    <Header hide-back title="Ingresses" :desc="$t('deploy.templateset.createFromTemplateOrHelmIngress')" />
     <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading }">
       <div class="biz-panel-header">
         <div class="left">
@@ -10,12 +10,12 @@
             class="bk-button bk-default"
             v-if="curPageData.length"
             @click.stop.prevent="removeIngresses">
-            <span>{{$t('批量删除')}}</span>
+            <span>{{$t('generic.button.batchDelete')}}</span>
           </bk-button>
         </div>
         <div class="right">
           <ClusterSelectComb
-            :placeholder="$t('输入名称或命名空间，按Enter搜索')"
+            :placeholder="$t('deploy.templateset.searchNameOrNamespaceEnter')"
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
             cluster-type="all"
@@ -36,7 +36,7 @@
             @select="handlePageSelect"
             @select-all="handlePageSelectAll">
             <bk-table-column type="selection" width="60" :selectable="rowSelectable"></bk-table-column>
-            <bk-table-column :label="$t('名称')" :show-overflow-tooltip="true" min-width="200">
+            <bk-table-column :label="$t('generic.label.name')" :show-overflow-tooltip="true" min-width="200">
               <template slot-scope="props">
                 <a
                   href="javascript: void(0)"
@@ -57,39 +57,39 @@
                 >{{props.row.resourceName}}</a>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('所属集群')" min-width="150">
+            <bk-table-column :label="$t('generic.label.cluster1')" min-width="150">
               <template slot-scope="props">
                 <bcs-popover :content="props.row.cluster_id || '--'" placement="top">
                   <p class="biz-text-wrapper">{{curCluster ? curCluster.clusterName : '--'}}</p>
                 </bcs-popover>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('命名空间')" min-width="130">
+            <bk-table-column :label="$t('k8s.namespace')" min-width="130">
               <template slot-scope="props">
                 {{props.row.namespace}}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('来源')" min-width="130">
+            <bk-table-column :label="$t('deploy.templateset.sources')" min-width="130">
               <template slot-scope="props">
                 {{props.row.source_type ? props.row.source_type : '--'}}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('创建时间')" min-width="160">
+            <bk-table-column :label="$t('cluster.labels.createdAt')" min-width="160">
               <template slot-scope="props">
                 {{props.row.createTime ? formatDate(props.row.createTime) : '--'}}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('更新时间')" min-width="160">
+            <bk-table-column :label="$t('cluster.labels.updatedAt')" min-width="160">
               <template slot-scope="props">
                 {{props.row.updateTime ? formatDate(props.row.updateTime) : '--'}}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('更新人')" min-width="100">
+            <bk-table-column :label="$t('generic.label.updator')" min-width="100">
               <template slot-scope="props">
                 {{props.row.updator || '--'}}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('操作')" width="150">
+            <bk-table-column :label="$t('generic.label.action')" width="150">
               <template slot-scope="props">
                 <a
                   v-if="props.row.can_update"
@@ -108,9 +108,9 @@
                     }
                   }"
                   @click="showIngressEditDialog(props.row)"
-                >{{$t('更新')}}</a>
+                >{{$t('generic.button.update')}}</a>
                 <bcs-popover :content="props.row.can_update_msg" v-else placement="left">
-                  <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('更新')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('generic.button.update')}}</a>
                 </bcs-popover>
                 <a
                   v-if="props.row.can_delete"
@@ -128,9 +128,9 @@
                   }"
                   @click.stop="removeIngress(props.row)"
                   class="bk-text-button ml10"
-                >{{$t('删除')}}</a>
-                <bcs-popover :content="props.row.can_delete_msg || $t('不可删除')" v-else placement="left">
-                  <span class="bk-text-button is-disabled ml10">{{$t('删除')}}</span>
+                >{{$t('generic.button.delete')}}</a>
+                <bcs-popover :content="props.row.can_delete_msg || $t('deploy.templateset.cannotDelete')" v-else placement="left">
+                  <span class="bk-text-button is-disabled ml10">{{$t('generic.button.delete')}}</span>
                 </bcs-popover>
               </template>
             </bk-table-column>
@@ -148,11 +148,11 @@
         :title="ingressSlider.title"
         :width="800">
         <div class="pt20 pr30 pb20 pl30" slot="content">
-          <label class="biz-title">{{$t('主机列表')}}（spec.tls）</label>
+          <label class="biz-title">{{$t('deploy.templateset.hostList')}}（spec.tls）</label>
           <table class="bk-table biz-data-table has-table-bordered biz-special-bk-table">
             <thead>
               <tr>
-                <th style="width: 270px;">{{$t('主机名')}}</th>
+                <th style="width: 270px;">{{$t('deploy.templateset.hostName')}}</th>
                 <th>SecretName</th>
               </tr>
             </thead>
@@ -171,14 +171,14 @@
             </tbody>
           </table>
 
-          <label class="biz-title">{{$t('规则')}}（spec.rules）</label>
+          <label class="biz-title">{{$t('generic.label.rule')}}（spec.rules）</label>
           <table class="bk-table biz-data-table has-table-bordered biz-special-bk-table">
             <thead>
               <tr>
-                <th style="width: 200px;">{{$t('主机名')}}</th>
-                <th style="width: 150px;">{{$t('路径')}}</th>
-                <th>{{$t('服务名称')}}</th>
-                <th style="width: 100px;">{{$t('服务端口')}}</th>
+                <th style="width: 200px;">{{$t('deploy.templateset.hostName')}}</th>
+                <th style="width: 150px;">{{$t('deploy.templateset.path')}}</th>
+                <th>{{$t('deploy.templateset.serviceName')}}</th>
+                <th style="width: 100px;">{{$t('deploy.templateset.servicePort')}}</th>
               </tr>
             </thead>
             <tbody>
@@ -199,7 +199,7 @@
           </table>
 
           <div class="actions">
-            <bk-button class="show-labels-btn bk-button bk-button-small bk-primary">{{$t('显示标签')}}</bk-button>
+            <bk-button class="show-labels-btn bk-button bk-button-small bk-primary">{{$t('deploy.templateset.displayLabel')}}</bk-button>
           </div>
 
           <div class="point-box">
@@ -229,7 +229,7 @@
               <div class="bk-form-item">
                 <div class="bk-form-content" style="margin-left: 0;">
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 130px;">{{$t('名称')}}：</label>
+                    <label class="bk-label" style="width: 130px;">{{$t('generic.label.name')}}：</label>
                     <div class="bk-form-content" style="margin-left: 130px;">
                       <bk-input
                         :disabled="true"
@@ -245,10 +245,10 @@
               <div class="bk-form-item">
                 <div class="bk-form-content" style="margin-left: 130px;">
                   <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isTlsPanelShow }]" @click.stop.prevent="toggleTlsPanel">
-                    {{$t('TLS设置')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
+                    {{$t('deploy.templateset.TLSsettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
                   </button>
                   <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isPanelShow }]" @click.stop.prevent="togglePanel">
-                    {{$t('更多设置')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
+                    {{$t('deploy.templateset.moreSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
                   </button>
                 </div>
               </div>
@@ -264,7 +264,7 @@
                               <td>
                                 <bkbcs-input
                                   type="text"
-                                  :placeholder="$t('主机名，多个用英文逗号分隔')"
+                                  :placeholder="$t('deploy.templateset.hostnamesCommaSeparated')"
                                   style="width: 310px;"
                                   :value.sync="computer.hosts"
                                   :list="varList"
@@ -274,7 +274,7 @@
                               <td>
                                 <bkbcs-input
                                   type="text"
-                                  :placeholder="$t('请输入证书')"
+                                  :placeholder="$t('deploy.templateset.enterCertificate')"
                                   style="width: 350px;"
                                   :value.sync="computer.secretName"
                                 >
@@ -300,12 +300,12 @@
               <div class="bk-form-item mt0" v-show="isPanelShow">
                 <div class="bk-form-content" style="margin-left: 130px;">
                   <bk-tab :type="'fill'" :active-name="'remark'" :size="'small'">
-                    <bk-tab-panel name="remark" :title="$t('注解')">
+                    <bk-tab-panel name="remark" :title="$t('k8s.annotation')">
                       <div class="biz-tab-wrapper m20">
                         <bk-keyer :key-list.sync="curRemarkList" :var-list="varList" ref="remarkKeyer"></bk-keyer>
                       </div>
                     </bk-tab-panel>
-                    <bk-tab-panel name="label" :title="$t('标签')">
+                    <bk-tab-panel name="label" :title="$t('k8s.label')">
                       <div class="biz-tab-wrapper m20">
                         <bk-keyer :key-list.sync="curLabelList" :var-list="varList" ref="labelKeyer"></bk-keyer>
                       </div>
@@ -319,11 +319,11 @@
                 <div class="bk-button-group">
                   <div class="item" v-for="(rule, index) in curEditedIngress.config.spec.rules" :key="index">
                     <bk-button :class="['bk-button bk-default is-outline', { 'is-selected': curRuleIndex === index }]" @click.stop="setCurRule(rule, index)">
-                      {{rule.host || $t('未命名')}}
+                      {{rule.host || $t('deploy.templateset.unnamed')}}
                     </bk-button>
                     <span class="bcs-icon bcs-icon-close-circle" @click.stop="removeRule(index)" v-if="curEditedIngress.config.spec.rules.length > 1"></span>
                   </div>
-                  <bcs-popover ref="containerTooltip" :content="$t('添加Rule')" placement="top">
+                  <bcs-popover ref="containerTooltip" :content="$t('deploy.templateset.addRule')" placement="top">
                     <bk-button type="button" class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addLocalRule">
                       <i class="bcs-icon bcs-icon-plus"></i>
                     </bk-button>
@@ -333,16 +333,16 @@
 
               <div class="bk-form biz-configuration-form pb15">
                 <div class="biz-span">
-                  <span class="title">{{$t('基础信息')}}</span>
+                  <span class="title">{{$t('generic.title.basicInfo')}}</span>
                 </div>
                 <div class="bk-form-item is-required">
-                  <label class="bk-label" style="width: 130px;">{{$t('虚拟主机名')}}：</label>
+                  <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.virtualHostName')}}：</label>
                   <div class="bk-form-content" style="margin-left: 130px;">
-                    <bk-input :placeholder="$t('请输入')" style="width: 310px;" v-model="curRule.host" name="ruleName" />
+                    <bk-input :placeholder="$t('generic.placeholder.input')" style="width: 310px;" v-model="curRule.host" name="ruleName" />
                   </div>
                 </div>
                 <div class="bk-form-item">
-                  <label class="bk-label" style="width: 130px;">{{$t('路径组')}}：</label>
+                  <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.pathGroup')}}：</label>
                   <div class="bk-form-content" style="margin-left: 130px;">
                     <table class="biz-simple-table">
                       <tbody>
@@ -350,7 +350,7 @@
                           <td>
                             <bkbcs-input
                               type="text"
-                              :placeholder="$t('路径')"
+                              :placeholder="$t('deploy.templateset.path')"
                               style="width: 310px;"
                               :value.sync="pathRule.path"
                               :list="varList"
@@ -363,7 +363,7 @@
                           <td>
                             <bk-selector
                               style="width: 180px;"
-                              :placeholder="$t('Service名称')"
+                              :placeholder="$t('deploy.templateset._serviceName')"
                               :setting-key="'_name'"
                               :display-key="'_name'"
                               :selected.sync="pathRule.backend.serviceName"
@@ -374,7 +374,7 @@
                           <td>
                             <bk-selector
                               style="width: 180px;"
-                              :placeholder="$t('端口')"
+                              :placeholder="$t('deploy.helm.port')"
                               :setting-key="'_id'"
                               :display-key="'_name'"
                               :selected.sync="pathRule.backend.servicePort"
@@ -392,14 +392,14 @@
                         </tr>
                       </tbody>
                     </table>
-                    <p class="biz-tip">{{$t('提示：同一个虚拟主机名可以有多个路径')}}</p>
+                    <p class="biz-tip">{{$t('deploy.templateset.sameHostnameMultiplePathsHint')}}</p>
                   </div>
                 </div>
               </div>
 
               <div class="bk-form-item mt25" style="margin-left: 130px;">
-                <bk-button type="primary" :loading="isDetailSaving" @click.stop.prevent="saveIngressDetail">{{$t('保存并更新')}}</bk-button>
-                <bk-button :loading="isDetailSaving" @click.stop.prevent="handleCancelUpdate">{{$t('取消')}}</bk-button>
+                <bk-button type="primary" :loading="isDetailSaving" @click.stop.prevent="saveIngressDetail">{{$t('deploy.templateset.saveAndUpdate')}}</bk-button>
+                <bk-button :loading="isDetailSaving" @click.stop.prevent="handleCancelUpdate">{{$t('generic.button.cancel')}}</bk-button>
               </div>
 
             </div>
@@ -408,7 +408,7 @@
       </bk-sideslider>
 
       <bk-dialog
-        :title="$t('确认删除')"
+        :title="$t('generic.title.confirmDelete')"
         :header-position="'left'"
         :is-show="batchDialogConfig.isShow"
         :width="600"
@@ -418,7 +418,7 @@
         @cancel="batchDialogConfig.isShow = false">
         <template slot="content">
           <div class="biz-batch-wrapper">
-            <p class="batch-title mt10 f14">{{$t('确定要删除以下Ingress？')}}</p>
+            <p class="batch-title mt10 f14">{{$t('deploy.templateset.confirmDeleteIngress')}}</p>
             <ul class="batch-list">
               <li v-for="(item, index) of batchDialogConfig.list" :key="index">{{item}}</li>
             </ul>
@@ -625,7 +625,7 @@ export default {
       if (!data.length) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择要删除的Ingress'),
+          message: this.$t('deploy.templateset.selectIngressToDelete'),
         });
         return false;
       }
@@ -650,7 +650,7 @@ export default {
         await this.$store.dispatch('resource/deleteIngresses', { projectId, data });
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('删除成功'),
+          message: this.$t('generic.msg.success.delete'),
         });
         // 稍晚一点加载数据，接口不一定立即清除
         setTimeout(() => {
@@ -678,11 +678,11 @@ export default {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       me.$bkInfo({
-        title: me.$t('确认删除'),
+        title: me.$t('generic.title.confirmDelete'),
         clsName: 'biz-remove-dialog max-size',
         content: me.$createElement('p', {
           class: 'biz-confirm-desc',
-        }, `${this.$t('确定要删除Ingress')}【${ingress.cluster_id} / ${ingress.namespace} / ${ingress.name}】？`),
+        }, `${this.$t('deploy.templateset.confirmRemoveIngress')}【${ingress.cluster_id} / ${ingress.namespace} / ${ingress.name}】？`),
         confirmFn() {
           me.deleteIngress(ingress);
         },
@@ -711,7 +711,7 @@ export default {
         });
         me.$bkMessage({
           theme: 'success',
-          message: this.$t('删除成功'),
+          message: this.$t('generic.msg.success.delete'),
         });
 
         // 稍晚一点加载数据，接口不一定立即清除
@@ -1044,19 +1044,19 @@ export default {
       for (const rule of ingress.config.spec.rules) {
         // 检查rule
         if (!rule.host) {
-          megPrefix += this.$t('规则：');
+          megPrefix += this.$t('deploy.templateset.ruleLabel');
           this.$bkMessage({
             theme: 'error',
-            message: megPrefix + this.$t('主机名不能为空'),
+            message: megPrefix + this.$t('deploy.templateset.hostnameNotEmpty'),
           });
           return false;
         }
 
         if (!nameReg.test(rule.host)) {
-          megPrefix += this.$t('规则主机名：');
+          megPrefix += this.$t('deploy.templateset.ruleHostname');
           this.$bkMessage({
             theme: 'error',
-            message: megPrefix + this.$t('名称错误，只能包含：小写字母、数字、连字符(-)，首字母必须是字母'),
+            message: megPrefix + this.$t('deploy.templateset.nameErrorAlphanumericDash'),
             delay: 8000,
           });
           return false;
@@ -1066,40 +1066,40 @@ export default {
 
         for (const path of paths) {
           if (!path.path) {
-            megPrefix += this.$t('{host}中路径组：', { host: rule.host });
+            megPrefix += this.$t('deploy.templateset.pathGroupInHost', { host: rule.host });
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('请填写路径！'),
+              message: megPrefix + this.$t('deploy.templateset.enterPath'),
               delay: 8000,
             });
             return false;
           }
 
           if (path.path && !pathReg.test(path.path)) {
-            megPrefix += this.$t('{host}中路径组：', { host: rule.host });
+            megPrefix += this.$t('deploy.templateset.pathGroupInHost', { host: rule.host });
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('路径不正确'),
+              message: megPrefix + this.$t('deploy.templateset.pathIncorrect'),
               delay: 8000,
             });
             return false;
           }
 
           if (!path.backend.serviceName) {
-            megPrefix += this.$t('{host}中路径组：', { host: rule.host });
+            megPrefix += this.$t('deploy.templateset.pathGroupInHost', { host: rule.host });
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('请关联服务！'),
+              message: megPrefix + this.$t('deploy.templateset.associateService'),
               delay: 8000,
             });
             return false;
           }
 
           if (!path.backend.servicePort) {
-            megPrefix += this.$t('{host}中路径组：', { host: rule.host });
+            megPrefix += this.$t('deploy.templateset.pathGroupInHost', { host: rule.host });
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('请关联服务端口！'),
+              message: megPrefix + this.$t('deploy.templateset._associateServicePort'),
               delay: 8000,
             });
             return false;
@@ -1107,10 +1107,10 @@ export default {
 
           // eslint-disable-next-line no-prototype-builtins
           if (path.backend.serviceName && !this.linkServices.hasOwnProperty(path.backend.serviceName)) {
-            megPrefix += this.$t('{host}中路径组：', { host: rule.host });
+            megPrefix += this.$t('deploy.templateset.pathGroupInHost', { host: rule.host });
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('关联的Service【{serviceName}】不存在，请重新绑定', { serviceName: path.backend.serviceName }),
+              message: megPrefix + this.$t('deploy.templateset.associatedServiceNotExist', { serviceName: path.backend.serviceName }),
               delay: 8000,
             });
             return false;
@@ -1170,7 +1170,7 @@ export default {
 
           this.$bkMessage({
             theme: 'success',
-            message: this.$t('保存成功'),
+            message: this.$t('generic.msg.success.save'),
             hasCloseIcon: true,
             delay: 3000,
           });

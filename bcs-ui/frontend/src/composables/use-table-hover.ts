@@ -15,7 +15,7 @@ export default function useTableHover() {
     copyText(value);
     $bkMessage({
       theme: 'success',
-      message: $i18n.t('复制成功'),
+      message: $i18n.t('generic.msg.success.copy'),
     });
   };
 

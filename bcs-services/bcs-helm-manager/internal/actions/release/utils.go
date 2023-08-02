@@ -14,9 +14,14 @@ package release
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v2"
+	"helm.sh/helm/v3/pkg/releaseutil"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -114,4 +119,29 @@ func removeCustomAnnotations(manifest string) *string {
 	// Join the filtered lines into a single string
 	result := strings.Join(filteredLines, "\n")
 	return &result
+}
+
+// generateFileContents generate file contents
+func generateFileContents(manifest string) (map[string]*helmmanager.FileContent, error) {
+	files := make(map[string]*helmmanager.FileContent, 0)
+	// split manifest
+	manifests := releaseutil.SplitManifests(manifest)
+	for i := range manifests {
+		content := manifests[i]
+		var entry releaseutil.SimpleHead
+		if err := yaml.Unmarshal([]byte(content), &entry); err != nil {
+			blog.Errorf("YAML parse error, %s", err)
+			return nil, err
+		}
+		if entry.Metadata == nil {
+			continue
+		}
+		path := fmt.Sprintf("%s/%s", entry.Kind, entry.Metadata.Name)
+		files[path] = &helmmanager.FileContent{
+			Name:    &entry.Metadata.Name,
+			Path:    &path,
+			Content: &content,
+		}
+	}
+	return files, nil
 }

@@ -103,10 +103,7 @@ function init(el: IElement, binding: DirectiveBinding, vNode: VNode) {
         }).catch(() => ({}));
 
       if (data?.perms?.[$actionId]) {
-        messageInfo({
-          theme: 'warning',
-          message: $i18n.t('当前操作有权限，请刷新界面'),
-        });
+        messageInfo($i18n.t('generic.msg.info.refreshAuth'));
       }
       return {
         perms: {

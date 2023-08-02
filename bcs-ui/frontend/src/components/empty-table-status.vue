@@ -4,9 +4,9 @@
     <template v-if="type === 'search-empty'">
       <i18n
         tag="div"
-        path="可以尝试 调整关键词 或{action}"
+        path="generic.msg.empty.searchEmpty.subTitle"
         class="mt-[8px] text-[12px] text-[#979BA5]">
-        <button place="action" class="bk-text-button" @click="handleClear">{{$t('清空筛选条件')}}</button>
+        <button place="action" class="bk-text-button" @click="handleClear">{{$t('generic.button.clearSearch')}}</button>
       </i18n>
     </template>
   </bcs-exception>
@@ -25,8 +25,8 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const typeMap = ref({
-      empty: $i18n.t('暂无数据'),
-      'search-empty': $i18n.t('搜索结果为空'),
+      empty: $i18n.t('generic.msg.empty.noData'),
+      'search-empty': $i18n.t('generic.msg.empty.searchEmpty.text'),
     });
     const handleClear = () => {
       ctx.emit('clear');

@@ -34,8 +34,6 @@ const (
 	ClbListenerProtocolTCP = 2
 	// ClbListenerProtocolUDP clb listener udp protocol
 	ClbListenerProtocolUDP = 3
-	// DefaultTencentCloudClbDomain default domain for tencent cloud clb
-	DefaultTencentCloudClbDomain = "clb.tencentcloudapi.com"
 	// DefaultTencentCloudClbV2Domain default domain for tencent cloud clb
 	DefaultTencentCloudClbV2Domain = "lb.api.qcloud.com"
 

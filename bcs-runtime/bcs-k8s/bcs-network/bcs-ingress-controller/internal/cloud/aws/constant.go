@@ -17,6 +17,10 @@ const (
 	SystemNameInMetricAWS = "aws"
 	// HandlerNameInMetricAWSSDK handler name in metric for aws sdk
 	HandlerNameInMetricAWSSDK = "sdk"
+	// HandlerNameInMetricAWSSDKEC2 handler name in metric for aws sdk ec2
+	HandlerNameInMetricAWSSDKEC2 = "sdk-ec2"
+	// HandlerNameInMetricAWSSDKAGA handler name in metric for aws sdk global accelerator
+	HandlerNameInMetricAWSSDKAGA = "sdk-aga"
 
 	// ElbProtocolHTTP elb http protocol
 	ElbProtocolHTTP = "HTTP"

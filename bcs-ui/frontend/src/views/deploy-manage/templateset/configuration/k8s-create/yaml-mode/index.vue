@@ -6,7 +6,7 @@
                 <span v-show="!isEditName">{{curTemplate.name}}</span>
                 <input
                     type="text"
-                    :placeholder="$t('30个以内的字符')"
+                    :placeholder="$t('deploy.templateset.charLimit30')"
                     maxlength="30"
                     class="bk-form-input"
                     v-model="editTemplate.name"
@@ -26,7 +26,7 @@
                 <span v-show="!isEditDesc">{{curTemplate.desc}}</span>
                 <input
                     type="text"
-                    :placeholder="$t('50个以内的字符')"
+                    :placeholder="$t('deploy.templateset.charLimit50')"
                     maxlength="50"
                     class="bk-form-input"
                     v-model="editTemplate.desc"
@@ -48,15 +48,15 @@
                                     <div class="lock-wrapper warning">
                                         <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                                         <strong class="desc">
-                                            {{$t('您已经对此模板集加锁，只有解锁后，其他用户才可操作此模板集。')}}
+                                            {{$t('deploy.templateset.templateSetLocked')}}
                                             <span v-if="lateShowVersionName">
-                                                （{{$t('当前版本号')}}：{{lateShowVersionName}}
+                                                （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
                                                 <bcs-popover
                                                     :delay="300"
                                                     :content="displayVersionNotes || '--'"
                                                     style="padding-left: 6px;"
                                                     placement="bottom">
-                                                    <span style="color: #3a84ff;">{{$t('版本说明')}}</span>
+                                                    <span style="color: #3a84ff;">{{$t('deploy.templateset.versionDescription')}}</span>
                                                 </bcs-popover>）
                                             </span>
                                         </strong>
@@ -74,20 +74,20 @@
                                     <div class="lock-wrapper warning">
                                         <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                                         <strong class="desc">
-                                            {{$t('{locker}正在操作，您如需编辑请联系{locker}解锁。', templateLockStatus)}}
+                                            {{$t('deploy.templateset.msg.multiOperator', templateLockStatus)}}
                                             <span v-if="lateShowVersionName">
-                                                （{{$t('当前版本号')}}：{{lateShowVersionName}}
+                                                （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
                                                 <bcs-popover
                                                     :delay="300"
                                                     :content="displayVersionNotes || '--'"
                                                     style="padding-left: 6px;"
                                                     placement="bottom">
-                                                    <span style="color: #3a84ff;">{{$t('版本说明')}}</span>
+                                                    <span style="color: #3a84ff;">{{$t('deploy.templateset.versionDescription')}}</span>
                                                 </bcs-popover>）
                                             </span>
                                         </strong>
                                         <div class="action">
-                                            <a href="javascript: void(0);" class="bk-text-button" @click="reloadTemplateLockStatus">{{$t('点击刷新')}}</a>
+                                            <a href="javascript: void(0);" class="bk-text-button" @click="reloadTemplateLockStatus">{{$t('deploy.templateset.clickRefresh')}}</a>
                                         </div>
                                     </div>
                                 </div>
@@ -98,15 +98,15 @@
                                 <div class="lock-wrapper">
                                     <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                                     <strong class="desc">
-                                        {{$t('为避免多成员同时编辑，引起内容或版本冲突，建议在编辑时，开启保护功能。')}}
+                                        {{$t('deploy.templateset.protectionWhileEditing')}}
                                         <span v-if="lateShowVersionName">
-                                            （{{$t('当前版本号')}}：{{lateShowVersionName}}
+                                            （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
                                             <bcs-popover
                                                 :delay="300"
                                                 :content="displayVersionNotes || '--'"
                                                 style="padding-left: 6px;"
                                                 placement="bottom">
-                                                <span style="color: #3a84ff;">{{$t('版本说明')}}</span>
+                                                <span style="color: #3a84ff;">{{$t('deploy.templateset.versionDescription')}}</span>
                                             </bcs-popover>）
                                         </span>
                                     </strong>
@@ -123,7 +123,7 @@
 
                     <!-- 如果模板集没有加锁或者当前用户是加锁者才可以操作 -->
                     <template v-if="templateLockStatus.isLocked && !templateLockStatus.isCurLocker">
-                        <bk-button type="primary" disabled>{{$t('保存')}}</bk-button>
+                        <bk-button type="primary" disabled>{{$t('generic.button.save')}}</bk-button>
                     </template>
                     <template v-else>
                         <bk-button type="primary"
@@ -137,7 +137,7 @@
                                 }
                             }"
                             @click="handleSaveTemplate"
-                        >{{$t('保存')}}</bk-button>
+                        >{{$t('generic.button.save')}}</bk-button>
                     </template>
 
                     <bk-button :disabled="templateId === 0"
@@ -152,7 +152,7 @@
                             }
                         }"
                         @click="createInstance">
-                        {{$t('实例化')}}
+                        {{$t('deploy.templateset.tempalte')}}
                     </bk-button>
 
                     <bk-button :disabled="!allVersionList.length"
@@ -167,13 +167,13 @@
                             }
                         }"
                         @click="showVersionPanel"
-                    >{{$t('版本列表')}}</bk-button>
+                    >{{$t('deploy.templateset.versionList')}}</bk-button>
                 </div>
             </template>
         </Header>
         <div class="bcs-content-wrapper">
             <p class="biz-tip m20 mb15">
-                {{$t('YAML中资源所属的命名空间不需要用户指定，由平台根据用户实例化时的选择自动生成')}}
+                {{$t('deploy.templateset.namespaceAutogenerated')}}
             </p>
 
             <section class="biz-yaml-content" v-bkloading="{ isLoading: isYamlTemplateLoading || isTemplateLocking, opacity: 0.3 }">
@@ -187,10 +187,10 @@
                         <div class="biz-yaml-resources">
                             <ul class="yaml-tab">
                                 <li :class="{ 'active': tabName === 'default' }" @click="handleToggleTab('default')">
-                                    {{$t('常用Manifest')}}
+                                    {{$t('deploy.templateset.commonManifest')}}
                                 </li>
                                 <li :class="{ 'active': tabName === 'custom' }" @click="handleToggleTab('custom')">
-                                    {{$t('自定义Manifest')}}
+                                    {{$t('deploy.templateset.customManifest')}}
                                 </li>
                             </ul>
 
@@ -231,21 +231,21 @@
                                 v-if="curTreeNode.value.content !== curTreeNode.value.originContent || useEditorDiff"
                                 class="biz-template-btn"
                                 @click="toggleCompare">
-                                {{ useEditorDiff ? $t('返回编辑') : $t('修改对比') }}
+                                {{ useEditorDiff ? $t('deploy.templateset.returnToEdit') : $t('deploy.templateset.diffModification') }}
                             </button>
                             <button class="biz-template-btn primary" :key="fileImportIndex" v-bk-tooltips="{ width: 400, content: zipTooltipText }">
                                 <i class="bcs-icon bcs-icon-upload"></i>
-                                {{$t('导入')}}
+                                {{$t('generic.button.import')}}
                                 <input ref="fileInput" type="file" name="upload" class="file-input" accept="application/zip,application/x-zip,application/x-zip-compressed" @change="handleFileInput(false)">
                             </button>
                             <template v-if="canTemplateExport">
-                                <button class="biz-template-btn" v-bk-tooltips="$t('请先保存模板集版本再导出')" @click.stop.prevent="handleExport(curTemplate)"><i class="bcs-icon bcs-icon-download"></i>{{$t('导出')}}</button>
+                                <button class="biz-template-btn" v-bk-tooltips="$t('deploy.templateset.saveTemplateSetBeforeExport')" @click.stop.prevent="handleExport(curTemplate)"><i class="bcs-icon bcs-icon-download"></i>{{$t('deploy.templateset.export')}}</button>
                             </template>
                             <template v-else>
-                                <button class="biz-template-btn disabled" v-bk-tooltips="$t('请先保存模板集版本再导出')"><i class="bcs-icon bcs-icon-download"></i>{{$t('导出')}}</button>
+                                <button class="biz-template-btn disabled" v-bk-tooltips="$t('deploy.templateset.saveTemplateSetBeforeExport')"><i class="bcs-icon bcs-icon-download"></i>{{$t('deploy.templateset.export')}}</button>
                             </template>
-                            <button class="biz-template-btn" @click.stop.prevent="handleToggleVarPanel">{{$t('变量列表')}}</button>
-                            <!-- <button class="biz-template-btn" @click.stop.prevent="handleToggleImagePanel">{{$t('镜像查询')}}</button> -->
+                            <button class="biz-template-btn" @click.stop.prevent="handleToggleVarPanel">{{$t('deploy.templateset.variableList')}}</button>
+                            <!-- <button class="biz-template-btn" @click.stop.prevent="handleToggleImagePanel">{{$t('deploy.templateset.imageSearch')}}</button> -->
                         </div>
                     </div>
                     <div class="yaml-content">
@@ -268,25 +268,25 @@
                             <div class="biz-editor-tip" v-if="!isYamlTemplateLoading">
                                 <i class="bcs-icon bcs-icon-edit2"></i>
                                 <p>
-                                    {{$t('你可以通过+号新建K8S资源yaml文件，也可以通过上方的')}}
+                                    {{$t('deploy.templateset.addK8sResourceYaml')}}
                                     <a :key="fileImportIndex" href="javascript: void(0);" style="color: #aaa; text-decoration: underline;">
-                                        {{$t('导入按钮')}}
+                                        {{$t('deploy.templateset.importButton')}}
                                         <input ref="fileInputClone" type="file" name="upload" class="file-input" accept="application/zip,application/x-zip,application/x-zip-compressed" @change="handleFileInput(true)">
                                     </a>
-                                    {{$t('导入zip包')}}
+                                    {{$t('deploy.templateset.importZip')}}
                                 </p>
                             </div>
                         </template>
 
                         <div :class="['biz-var-panel', { 'show': isVarPanelShow }]" v-clickoutside="hideVarPanel">
                             <div class="var-panel-header">
-                                <strong class="var-panel-title">{{$t('可用变量')}}<span class="f12">（{{$t('模板集中引入方式')}}：{{varUserWay}}）</span></strong>
+                                <strong class="var-panel-title">{{$t('deploy.templateset.availableVars')}}<span class="f12">（{{$t('deploy.templateset.templateImportMethod')}}：{{varUserWay}}）</span></strong>
                             </div>
                             <div class="var-panel-list">
                                 <table class="bk-table biz-var-table">
                                     <thead>
                                         <tr>
-                                            <th>{{$t('变量名')}}</th>
+                                            <th>{{$t('cluster.nodeTemplate.variable.label.var.text')}}</th>
                                             <th style="width: 230px;">KEY</th>
                                             <th style="width: 43px;"></th>
                                         </tr>
@@ -333,7 +333,7 @@
                                     <bkbcs-input
                                         style="width: 240px;"
                                         type="text"
-                                        :placeholder="$t('选择镜像')"
+                                        :placeholder="$t('deploy.templateset.chooseImage')"
                                         :display-key="'_name'"
                                         :setting-key="'_id'"
                                         :search-key="'_name'"
@@ -362,7 +362,7 @@
                                 <div class="bk-dropdown-box mb20" style="width: 4;">
                                     <bkbcs-input
                                         type="text"
-                                        :placeholder="$t('版本号')"
+                                        :placeholder="$t('deploy.templateset.versionNumber')"
                                         :display-key="'_name'"
                                         :setting-key="'_id'"
                                         :search-key="'_name'"
@@ -378,11 +378,11 @@
 
                                 <div class="image-box" v-show="image">
                                     <input type="text" class="bk-form-input" readonly :value="image" style="width: 482px;">
-                                    <bk-button class="bk-button bk-primary image-copy-btn" :data-clipboard-text="`${image}`">{{$t('复制')}}</bk-button>
+                                    <bk-button class="bk-button bk-primary image-copy-btn" :data-clipboard-text="`${image}`">{{$t('cluster.nodeList.button.copy.text')}}</bk-button>
                                 </div>
                             </div>
                             <p class="biz-tip">
-                                {{$t('使用指南：请将镜像复制后填入所使用的YAML中')}}
+                                {{$t('deploy.templateset.imageUsageGuideline')}}
                             </p>
                         </div>
                     </div>
@@ -399,31 +399,31 @@
             @cancel="hideVersionBox">
             <template slot="content">
                 <div class="version-box">
-                    <p class="title">{{$t('保存修改到')}}：</p>
+                    <p class="title">{{$t('deploy.templateset.saveChangesTo')}}：</p>
                     <ul :class="['version-list', { 'is-en': isEn }]">
                         <template v-if="!isNewVersion">
                             <li class="item mb10">
                                 <label class="bk-form-radio label-item">
                                     <input type="radio" name="save-version-way" :class="{ 'is-checked': saveVersionWay === 'cur' }" value="cur" v-model="saveVersionWay">
-                                    <i class="bk-radio-text" style="display: inline-block; min-width: 70px;">{{$t('当前版本号')}}：{{lateShowVersionName}}</i>
+                                    <i class="bk-radio-text" style="display: inline-block; min-width: 70px;">{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}</i>
                                 </label>
                             </li>
 
                             <li class="item mb10">
                                 <label class="bk-form-radio label-item" style="margin-right: 0;">
                                     <input type="radio" name="save-version-way" :class="{ 'is-checked': saveVersionWay === 'new' }" value="new" v-model="saveVersionWay">
-                                    <i class="bk-radio-text" style="display: inline-block; min-width: 70px;">{{$t('新版本')}}：</i>
-                                    <bkbcs-input :placeholder="$t('请输入版本号')" @focus="saveVersionWay = 'new'" style="width: 176px; flex: 1;" v-model="versionKeyword" />
+                                    <i class="bk-radio-text" style="display: inline-block; min-width: 70px;">{{$t('deploy.templateset.newVersion')}}：</i>
+                                    <bkbcs-input :placeholder="$t('deploy.templateset.enterVersionNumber')" @focus="saveVersionWay = 'new'" style="width: 176px; flex: 1;" v-model="versionKeyword" />
                                 </label>
                             </li>
 
                             <li class="item" v-if="withoutCurVersionList.length">
                                 <label class="bk-form-radio label-item" style="margin-right: 0;">
                                     <input type="radio" name="save-version-way" :class="{ 'is-checked': saveVersionWay === 'old' }" value="old" v-model="saveVersionWay">
-                                    <i class="bk-radio-text" style="display: inline-block; min-width: 70px; letter-spacing: 0;">{{$t('其它版本')}}：</i>
+                                    <i class="bk-radio-text" style="display: inline-block; min-width: 70px; letter-spacing: 0;">{{$t('deploy.templateset.otherVersions')}}：</i>
                                     <bk-selector
                                         style="width: 176px;"
-                                        :placeholder="$t('请选择版本号')"
+                                        :placeholder="$t('deploy.templateset.selectVersionNumber')"
                                         :setting-key="'show_version_id'"
                                         :selected.sync="selectedVersion"
                                         :list="withoutCurVersionList"
@@ -435,15 +435,15 @@
                         <template v-else>
                             <li class="item">
                                 <label class="bk-form-radio label-item" style="margin-right: 0;">
-                                    <i class="bk-radio-text" style="display: inline-block; width: 70px; letter-spacing: 0;">{{$t('新版本')}}：</i>
-                                    <bkbcs-input :placeholder="$t('请输入版本号')" @focus="saveVersionWay = 'new'" style="width: 203px; flex: 1;" v-model="versionKeyword" />
+                                    <i class="bk-radio-text" style="display: inline-block; width: 70px; letter-spacing: 0;">{{$t('deploy.templateset.newVersion')}}：</i>
+                                    <bkbcs-input :placeholder="$t('deploy.templateset.enterVersionNumber')" @focus="saveVersionWay = 'new'" style="width: 203px; flex: 1;" v-model="versionKeyword" />
                                 </label>
                             </li>
                         </template>
                         <li class="item">
                             <label :class="['notes', 'label-item', { 'new-item': isNewVersion }]" style="margin-right: 0;">
-                                <i :class="['notes-text', { 'is-en-text': isEn, 'is-new': isNewVersion }]" :style="{ 'letter-spacing': 0, 'padding-left': isNewVersion ? 0 : '26px' }">{{$t('版本说明')}}：</i>
-                                <bk-input type="textarea" class="notes-input" :style="{ width: isNewVersion ? '203px' : '176px' }" :placeholder="$t('请输入版本说明')" v-model="curVersionNotes" />
+                                <i :class="['notes-text', { 'is-en-text': isEn, 'is-new': isNewVersion }]" :style="{ 'letter-spacing': 0, 'padding-left': isNewVersion ? 0 : '26px' }">{{$t('deploy.templateset.versionDescription')}}：</i>
+                                <bk-input type="textarea" class="notes-input" :style="{ width: isNewVersion ? '203px' : '176px' }" :placeholder="$t('deploy.templateset.enterVersionDescription')" v-model="curVersionNotes" />
                             </label>
                         </li>
                     </ul>
@@ -453,16 +453,16 @@
                 <div class="bk-dialog-outer">
                     <template v-if="!canVersionSave">
                         <bk-button type="primary" disabled>
-                            {{$t('确定')}}
+                            {{$t('generic.button.confirm')}}
                         </bk-button>
                     </template>
                     <template v-else>
                         <bk-button type="primary" :loading="isTemplateSaving" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary" @click="saveYamlTemplate">
-                            {{$t('确定')}}
+                            {{$t('generic.button.confirm')}}
                         </bk-button>
                     </template>
                     <bk-button type="button" :disabled="isTemplateSaving" class="bk-dialog-btn bk-dialog-btn-cancel" @click="hideVersionBox">
-                        {{$t('取消')}}
+                        {{$t('generic.button.cancel')}}
                     </bk-button>
                 </div>
             </div>
@@ -477,10 +477,10 @@
                 <table class="bk-table biz-data-table has-table-bordered">
                     <thead>
                         <tr>
-                            <th>{{$t('版本号')}}</th>
-                            <th>{{$t('更新时间')}}</th>
-                            <th>{{$t('最后更新人')}}</th>
-                            <th style="width: 138px;">{{$t('操作')}}</th>
+                            <th>{{$t('deploy.templateset.versionNumber')}}</th>
+                            <th>{{$t('cluster.labels.updatedAt')}}</th>
+                            <th>{{$t('deploy.templateset.lastUpdatedBy')}}</th>
+                            <th style="width: 138px;">{{$t('generic.label.action')}}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -489,7 +489,7 @@
                                 <td>
                                     <p>
                                         <span>{{versionData.name}}</span>
-                                        <span v-if="versionData.show_version_id === curShowVersionId">{{$t('(当前)')}}</span>
+                                        <span v-if="versionData.show_version_id === curShowVersionId">{{$t('deploy.templateset.current')}}</span>
                                     </p>
 
                                     <bcs-popover
@@ -497,14 +497,14 @@
                                         :delay="300"
                                         :content="versionData.comment"
                                         placement="right">
-                                        <span style="color: #3a84ff; font-size: 12px;">{{$t('版本说明')}}</span>
+                                        <span style="color: #3a84ff; font-size: 12px;">{{$t('deploy.templateset.versionDescription')}}</span>
                                     </bcs-popover>
                                 </td>
                                 <td>{{versionData.updated}}</td>
                                 <td>{{versionData.updator}}</td>
                                 <td>
-                                    <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="getTemplateByVersion(versionData.show_version_id)">{{$t('加载')}}</a>
-                                    <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="exportTemplateByVersion(versionData.show_version_id)">{{$t('导出')}}</a>
+                                    <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="getTemplateByVersion(versionData.show_version_id)">{{$t('deploy.templateset.load')}}</a>
+                                    <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="exportTemplateByVersion(versionData.show_version_id)">{{$t('deploy.templateset.export')}}</a>
                                 </td>
                             </tr>
                         </template>
@@ -536,10 +536,10 @@
                 <div class="bk-form bk-form-vertical">
                     <div class="bk-form-item">
                         <label class="bk-label">
-                            <span>{{nodeDialogConf.action === 'addCatalog' ? $t('目录') : $t('文件')}}{{$t('名称')}}：</span>
+                            <span>{{nodeDialogConf.action === 'addCatalog' ? $t('deploy.templateset.directory') : $t('deploy.templateset.file')}}{{$t('generic.label.name')}}：</span>
                         </label>
                         <div class="bk-form-content mb10">
-                            <bkbcs-input v-model="nodeDialogConf.name" :placeholder="$t('请输入名称')" ref="newFileInputer" @enter="addNode"></bkbcs-input>
+                            <bkbcs-input v-model="nodeDialogConf.name" :placeholder="$t('deploy.templateset.validate.name1')" ref="newFileInputer" @enter="addNode"></bkbcs-input>
                         </div>
                     </div>
                 </div>
@@ -558,7 +558,7 @@
                 <div class="bk-form bk-form-vertical">
                     <div class="bk-form-item">
                         <label class="bk-label">
-                            <span>{{$t('文件名称')}}：</span>
+                            <span>{{$t('deploy.templateset.fileName')}}：</span>
                         </label>
                         <div class="bk-form-content mb10">
                             <bkbcs-input v-model="fileDialogConf.fileName" ref="renameInputer" @enter="updateNode"></bkbcs-input>
@@ -626,7 +626,7 @@
                 selectedVersion: '',
                 versionSidePanel: {
                     isShow: false,
-                    title: this.$t('版本列表')
+                    title: this.$t('deploy.templateset.versionList')
                 },
                 fileNameReg: /^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$/,
                 renderTimer: 0,
@@ -636,7 +636,7 @@
                 imageName: '',
                 imageVersion: '',
                 image: '',
-                varUserWay: this.$t('{{变量KEY}}'),
+                varUserWay: this.$t('deploy.templateset._variableKey'),
                 editorConfig: {
                     width: '100%',
                     height: '100%',
@@ -699,7 +699,7 @@
                     isShow: false,
                     fileName: ''
                 },
-                zipTooltipText: this.$t('请选择zip压缩包导入，包中的文件名以.yaml结尾。其中的yaml文件(非常用Manifest目录下的文件)将会统一导入到自定义Manifest分类下。注意：同名文件会被覆盖'),
+                zipTooltipText: this.$t('deploy.templateset.selectZipToImport'),
                 curVersionNotes: '',
                 displayVersionNotes: '--',
                 webAnnotations: { perms: {} }
@@ -845,7 +845,7 @@
                 this.clipboardVarInstance.on('success', e => {
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('复制成功')
+                        message: this.$t('generic.msg.success.copy')
                     })
                     this.isVarPanelShow = false
                 })
@@ -859,7 +859,7 @@
                 this.clipboardImageInstance.on('success', e => {
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('复制成功')
+                        message: this.$t('generic.msg.success.copy')
                     })
                     this.isImagePanelShow = false
                 })
@@ -938,12 +938,12 @@
 
             if (isEdited) {
                 this.$bkInfo({
-                    title: this.$t('确认离开'),
+                    title: this.$t('deploy.templateset.confirmExit'),
                     content: this.$createElement('p', {
                         style: {
                             textAlign: 'left'
                         }
-                    }, this.$t('模板编辑的内容未保存，确认要离开？')),
+                    }, this.$t('deploy.templateset.unsavedTemplateWarning')),
                     confirmFn () {
                         next(true)
                     }
@@ -1153,8 +1153,8 @@
              */
             createNewTemplate () {
                 const params = JSON.parse(JSON.stringify(this.yamlTemplateJson))
-                params.name = this.$t('模板集_') + (+new Date())
-                params.desc = this.$t('模板集描述')
+                params.name = this.$t('deploy.templateset.templateSetPrefix') + (+new Date())
+                params.desc = this.$t('deploy.templateset.templateSetDescription')
 
                 // 如果是从表单模板集导出过来
                 if (this.$route.query.action === 'export' && localStorage['cloneTemplateSet']) {
@@ -1268,7 +1268,7 @@
                         this.updateTemplateBaseInfo(data)
                         this.$bkMessage({
                             theme: 'success',
-                            message: this.$t('模板集基础信息保存成功')
+                            message: this.$t('deploy.templateset.templateSetInfoSaved')
                         })
                     } catch (e) {
                         catchErrorHandler(e, this)
@@ -1358,7 +1358,7 @@
                     } else {
                         this.$bkMessage({
                             theme: 'error',
-                            message: this.$t('请输入资源文件名称')
+                            message: this.$t('deploy.templateset.enterResourceFileName')
                         })
                     }
                     return false
@@ -1367,7 +1367,7 @@
                 if (!nameReg.test(name)) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('文件名称错误，只能包含：小写字母、数字、点(.)、连字符(-)，必须是字母开头，长度小于64个字符'),
+                        message: this.$t('deploy.templateset.fileNameError'),
                         delay: 8000
                     })
                     return false
@@ -1396,7 +1396,7 @@
                     } else {
                         this.$bkMessage({
                             theme: 'error',
-                            message: this.$t('文件名称不能重复'),
+                            message: this.$t('deploy.templateset.fileNameNotDuplicate'),
                             delay: 8000
                         })
                         return false
@@ -1472,8 +1472,8 @@
             handleRemoveFile (resource, file, index) {
                 const self = this
                 this.$bkInfo({
-                    title: this.$t('确认删除'),
-                    content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('删除')} ${resource.resource_name}：${file.name}`),
+                    title: this.$t('generic.title.confirmDelete'),
+                    content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('generic.button.delete')} ${resource.resource_name}：${file.name}`),
                     confirmFn () {
                         self.removeLocalFile(resource, file, index)
                     }
@@ -1537,7 +1537,7 @@
                 if (!nameReg.test(versionName)) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('请填写1至45个字符（由字母、数字、下划线以及 - 或 . 组成）')
+                        message: this.$t('deploy.templateset.compositionAlphaNumSymbols')
                     })
                     return false
                 }
@@ -1546,7 +1546,7 @@
                     if (item.name === versionName) {
                         this.$bkMessage({
                             theme: 'error',
-                            message: this.$t('版本{versionKeyword}已经存在', {
+                            message: this.$t('deploy.templateset.ersionExists', {
                                 versionKeyword: this.versionKeyword
                             })
                         })
@@ -1565,7 +1565,7 @@
                 if (!template.name) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('请输入模板集名称')
+                        message: this.$t('deploy.templateset.enterTemplateSetName')
                     })
                     return false
                 }
@@ -1573,7 +1573,7 @@
                 if (!template.desc) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('请输入模板集描述')
+                        message: this.$t('deploy.templateset.enterTemplateSetDesc')
                     })
                     return false
                 }
@@ -1585,7 +1585,7 @@
                         if (!file.name) {
                             this.$bkMessage({
                                 theme: 'error',
-                                message: this.$t('请输入资源文件名称')
+                                message: this.$t('deploy.templateset.enterResourceFileName')
                             })
                             return false
                         }
@@ -1593,7 +1593,7 @@
                         if (!file.content) {
                             this.$bkMessage({
                                 theme: 'error',
-                                message: `${file.name}：${this.$t('请输入资源文件内容')}`
+                                message: `${file.name}：${this.$t('deploy.templateset.enterResourceFileContent')}`
                             })
                             return false
                         }
@@ -1605,7 +1605,7 @@
                                 if (i !== 0 && (!content || /^[\s\t\n\r]+$/.test(content))) {
                                     this.$bkMessage({
                                         theme: 'error',
-                                        message: `${file.name}：${this.$t('请输入合法的YAML')}`
+                                        message: `${file.name}：${this.$t('deploy.templateset.enterValidYAML')}`
                                     })
                                     return false
                                 }
@@ -1616,7 +1616,7 @@
                             this.$bkMessage({
                                 theme: 'error',
                                 delay: 10000,
-                                message: `${file.name}：${this.$t('请输入合法的YAML')}：${err.message}`
+                                message: `${file.name}：${this.$t('deploy.templateset.enterValidYAML')}：${err.message}`
                             })
                             return false
                         }
@@ -1794,7 +1794,7 @@
                     if (e.message && e.message.indexOf('file name is duplicated') > -1) {
                         this.$bkMessage({
                             theme: 'error',
-                            message: this.$t('文件名称不能重复')
+                            message: this.$t('deploy.templateset.fileNameNotDuplicate')
                         })
                     } else {
                         catchErrorHandler(e, this)
@@ -1823,14 +1823,14 @@
 
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('保存成功')
+                        message: this.$t('generic.msg.success.save')
                     })
                 } catch (e) {
                     this.isTemplateSaving = false
                     if (e.message && e.message.indexOf('file name is duplicated') > -1) {
                         this.$bkMessage({
                             theme: 'error',
-                            message: this.$t('文件名称不能重复')
+                            message: this.$t('deploy.templateset.fileNameNotDuplicate')
                         })
                     } else {
                         catchErrorHandler(e, this)
@@ -2134,7 +2134,7 @@
                     } catch (e) {
                         this.$bkMessage({
                             theme: 'error',
-                            message: this.$t('请选择合适的压缩包')
+                            message: this.$t('deploy.templateset.selectAppropriateZip')
                         })
                     }
                 }
@@ -2184,7 +2184,7 @@
 
                                     self.$bkMessage({
                                         theme: 'success',
-                                        message: self.$t('导入成功')
+                                        message: self.$t('generic.msg.success.import')
                                     })
                                 }
                             }
@@ -2351,7 +2351,7 @@
                     await this.$store.dispatch('k8sTemplate/lockTemplateset', { projectId, templateId })
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('加锁成功')
+                        message: this.$t('deploy.templateset.lockSuccess')
                     })
                     this.reloadTemplateLockStatus()
                 } catch (res) {
@@ -2375,7 +2375,7 @@
                 if (!this.templateLockStatus.isCurLocker) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('{locker}正在操作，您如需编辑请联系{locker}解锁！', this.templateLockStatus)
+                        message: this.$t('deploy.templateset.msg.multiOperator', this.templateLockStatus)
                     })
                     return false
                 }
@@ -2384,7 +2384,7 @@
                     await this.$store.dispatch('k8sTemplate/unlockTemplateset', { projectId, templateId })
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('解锁成功')
+                        message: this.$t('deploy.templateset.unlockSuccess')
                     })
                     this.reloadTemplateLockStatus()
                 } catch (res) {
@@ -2430,8 +2430,8 @@
                         <div class="actions">
                             <span class="bcs-icon bcs-icon-more" onClick={this.preventEvent}></span>
                             <div class="menulist">
-                                <div class="menu-item" onClick={() => this.handleRenameNode(node, 'file') }>{ this.$t('重命名') }</div>
-                                <div class="menu-item" onClick={() => this.handleRemoveNode(node, 'default') }>{ this.$t('删除') }</div>
+                                <div class="menu-item" onClick={() => this.handleRenameNode(node, 'file') }>{ this.$t('deploy.templateset.rename') }</div>
+                                <div class="menu-item" onClick={() => this.handleRemoveNode(node, 'default') }>{ this.$t('generic.button.delete') }</div>
                             </div>
                         </div>
                     </div>
@@ -2464,8 +2464,8 @@
                         <div class="actions" onClick={this.preventEvent}>
                             <span class="bcs-icon bcs-icon-more" onClick={this.preventEvent}></span>
                             <div class="menulist">
-                                <div class="menu-item" onClick={() => this.handleRenameNode(node, 'file') }>{ this.$t('重命名') }</div>
-                                <div class="menu-item" onClick={() => this.handleRemoveNode(node, 'custom') }>{ this.$t('删除') }</div>
+                                <div class="menu-item" onClick={() => this.handleRenameNode(node, 'file') }>{ this.$t('deploy.templateset.rename') }</div>
+                                <div class="menu-item" onClick={() => this.handleRemoveNode(node, 'custom') }>{ this.$t('generic.button.delete') }</div>
                             </div>
                         </div>
                     </div>
@@ -2476,8 +2476,8 @@
                             <div class="actions" onClick={this.preventEvent}>
                                 <span class="bcs-icon bcs-icon-more" onClick={this.preventEvent}></span>
                                 <div class="menulist">
-                                    <div class="menu-item" onClick={() => this.handleAddCatalog(node, 'custom') }>{ this.$t('新增目录') }</div>
-                                    <div class="menu-item" onClick={() => this.handleAddNode(node, 'custom') }>{ this.$t('新增文件') }</div>
+                                    <div class="menu-item" onClick={() => this.handleAddCatalog(node, 'custom') }>{ this.$t('deploy.templateset.addDirectory') }</div>
+                                    <div class="menu-item" onClick={() => this.handleAddNode(node, 'custom') }>{ this.$t('deploy.templateset.addFile') }</div>
                                 </div>
                             </div>
                         </div>
@@ -2487,10 +2487,10 @@
                             <div class="actions" onClick={this.preventEvent}>
                                 <span class="bcs-icon bcs-icon-more" onClick={this.preventEvent}></span>
                                 <div class="menulist">
-                                    <div class="menu-item" onClick={() => this.handleAddCatalog(node, 'custom') }>{ this.$t('新增目录') }</div>
-                                    <div class="menu-item" onClick={() => this.handleAddNode(node, 'custom') }>{ this.$t('新增文件') }</div>
-                                    <div class="menu-item" onClick={() => this.handleRenameNode(node, 'catalog') }>{ this.$t('重命名') }</div>
-                                    <div class="menu-item" onClick={() => this.handleRemoveNode(node, 'custom') }>{ this.$t('删除') }</div>
+                                    <div class="menu-item" onClick={() => this.handleAddCatalog(node, 'custom') }>{ this.$t('deploy.templateset.addDirectory') }</div>
+                                    <div class="menu-item" onClick={() => this.handleAddNode(node, 'custom') }>{ this.$t('deploy.templateset.addFile') }</div>
+                                    <div class="menu-item" onClick={() => this.handleRenameNode(node, 'catalog') }>{ this.$t('deploy.templateset.rename') }</div>
+                                    <div class="menu-item" onClick={() => this.handleRemoveNode(node, 'custom') }>{ this.$t('generic.button.delete') }</div>
                                 </div>
                             </div>
                         </div>
@@ -2501,8 +2501,8 @@
                         <div class="actions" onClick={this.preventEvent}>
                             <span class="bcs-icon bcs-icon-more" onClick={this.preventEvent}></span>
                             <div class="menulist">
-                                <div class="menu-item" onClick={() => this.handleAddCatalog(node, 'custom') }>{ this.$t('新增目录') }</div>
-                                <div class="menu-item" onClick={() => this.handleAddNode(node, 'custom') }>{ this.$t('新增文件') }</div>
+                                <div class="menu-item" onClick={() => this.handleAddCatalog(node, 'custom') }>{ this.$t('deploy.templateset.addDirectory') }</div>
+                                <div class="menu-item" onClick={() => this.handleAddNode(node, 'custom') }>{ this.$t('deploy.templateset.addFile') }</div>
                             </div>
                         </div>
                     </div>
@@ -2544,7 +2544,7 @@
                 if (!name) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('名称不能为空')
+                        message: this.$t('deploy.templateset.nameNotEmpty')
                     })
                     return false
                 }
@@ -2552,14 +2552,14 @@
                 if (node) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('名称不能重复')
+                        message: this.$t('deploy.templateset.nameNotDuplicate')
                     })
                     return false
                 }
                 if (!this.fileNameReg.test(name)) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母')
+                        message: this.$t('generic.validate.kindName')
                     })
                     return false
                 }
@@ -2582,7 +2582,7 @@
                     if (!name.endsWith('.yaml') && !name.endsWith('.yml')) {
                         this.$bkMessage({
                             theme: 'error',
-                            message: this.$t('文件名称后缀以yaml、yml结尾')
+                            message: this.$t('deploy.templateset.filenameYamlExt')
                         })
                         return false
                     }
@@ -2647,7 +2647,7 @@
                 if (!fileName) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('请输入文件名称')
+                        message: this.$t('deploy.templateset.enterInputFileName')
                     })
                     return false
                 }
@@ -2655,7 +2655,7 @@
                 if (!this.fileNameReg.test(fileName)) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('文件名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母')
+                        message: this.$t('generic.validate.fileName')
                     })
                     return false
                 }
@@ -2664,7 +2664,7 @@
                     if (!fileName.endsWith('.yaml') && !fileName.endsWith('.yml')) {
                         this.$bkMessage({
                             theme: 'error',
-                            message: this.$t('文件名称后缀以yaml、yml结尾')
+                            message: this.$t('deploy.templateset.filenameYamlExt')
                         })
                         return false
                     }
@@ -2674,7 +2674,7 @@
                 if (file) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('名称不能重复')
+                        message: this.$t('deploy.templateset.nameNotDuplicate')
                     })
                     return false
                 }
@@ -2726,8 +2726,8 @@
                 const self = this
                 const tree = type === 'default' ? this.$refs.defaultTree : this.$refs.customTree
                 this.$bkInfo({
-                    title: this.$t('确认删除'),
-                    content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('删除')} ${node.name}`),
+                    title: this.$t('generic.title.confirmDelete'),
+                    content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('generic.button.delete')} ${node.name}`),
                     confirmFn () {
                         self.pathList = []
                         self.getAbsolutePath(node)

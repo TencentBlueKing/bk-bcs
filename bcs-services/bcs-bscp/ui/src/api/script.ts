@@ -49,7 +49,7 @@ export const getScriptVersionDetail = (biz_id: string, id: number, release_id: n
  * @returns 
  */
 export const deleteScript = (biz_id: string, id: number) => {
-  return http.delete(`/config/biz/${biz_id}/hooks/${id}`).then(res => res.data);
+  return http.delete(`/config/biz/${biz_id}/hooks/${id}`, { params: { force: true }}).then(res => res.data);
 }
 
 /**
@@ -103,7 +103,7 @@ export const updateScriptVersion = (biz_id: string, hook_id: number, release_id:
  * @returns 
  */
 export const deleteScriptVersion = (biz_id: string, hook_id: number, release_id: number) => {
-  return http.delete(`/config/biz/${biz_id}/hooks/${hook_id}/hook_revisions/${release_id}`).then(res => res.data);
+  return http.delete(`/config/biz/${biz_id}/hooks/${hook_id}/hook_revisions/${release_id}`, { params: { force: true }}).then(res => res.data);
 }
 
 /**

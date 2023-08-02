@@ -61,7 +61,7 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context, req *pbds.UpdateCr
 			},
 			Attachment: &table.CredentialScopeAttachment{
 				BizID:        req.BizId,
-				CredentialId: updated.Id,
+				CredentialId: req.CredentialId,
 			},
 			Revision: &table.Revision{
 				Reviser: kt.User,
