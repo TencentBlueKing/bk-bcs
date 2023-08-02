@@ -130,6 +130,14 @@ type CredentialScope struct {
 	Namespace   string `json:"namespace" yaml:"namespace"`
 }
 
+// TracingConf 链路追踪配置
+type TracingConf struct {
+	Enabled       bool              `yaml:"enabled" usage:"enable trace"`
+	Endpoint      string            `yaml:"endpoint" usage:"Collector service endpoint"`
+	Token         string            `yaml:"token" usage:"token for collector service"`
+	ResourceAttrs map[string]string `yaml:"resourceAttrs" usage:"attributes of traced service"`
+}
+
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
 	Etcd        EtcdOption        `json:"etcd" yaml:"etcd"`
@@ -145,6 +153,7 @@ type HelmManagerOptions struct {
 	TLS         TLS               `json:"tls" yaml:"tls"`
 	Log         LogConf           `yaml:"log"`
 	BCSAPIGW    BCSAPIGatewayConf `yaml:"bcsApiGW"`
+	Tracing     TracingConf       `yaml:"tracing"`
 	ServerConfig
 }
 

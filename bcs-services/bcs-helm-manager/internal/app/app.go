@@ -58,6 +58,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	traceWrapper "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro/v4"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/cluster"
@@ -365,6 +366,10 @@ func (hm *HelmManager) initMicro() error {
 		server.RegisterInterval(25*time.Second),
 		server.Context(hm.ctx),
 		microGrpc.MaxMsgSize(10*1024*1024),
+		server.WrapHandler(
+			// 链路追踪
+			traceWrapper.NewTracingWrapper(),
+		),
 		server.WrapHandler(
 			// 记录请求
 			wrapper.RequestLogWarpper(),

@@ -13,6 +13,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 
 	microYaml "github.com/go-micro/plugins/v4/config/encoder/yaml"
@@ -27,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/tracing"
 )
 
 var (
@@ -82,6 +84,19 @@ func main() {
 	// 初始化 I18N 相关配置
 	if err = i18n.InitMsgMap(); err != nil {
 		blog.Fatalf("init i18n message map failed %s", err.Error())
+	}
+
+	// 初始化 Tracer
+	shutdown, traceErr := tracing.InitTracing(&opt.Tracing)
+	if traceErr != nil {
+		blog.Infof("init tracing failed %s", traceErr.Error())
+	}
+	if shutdown != nil {
+		defer func() {
+			if err = shutdown(context.Background()); err != nil {
+				blog.Infof("failed to shutdown TracerProvider: %s", err.Error())
+			}
+		}()
 	}
 
 	blog.InitLogs(commonConf.LogConfig{
