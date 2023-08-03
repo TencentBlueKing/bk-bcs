@@ -23,6 +23,7 @@ const backendHelp = `
 bcs-bscp-vault-plugin provides secure kv storage, key storage; Support multiple encryption algorithms for secure credential acquisition
 `
 
+// Factory factory for backend
 func Factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend, error) {
 	b, err := Backend(ctx, conf)
 	if err != nil {
@@ -39,6 +40,7 @@ type backend struct {
 	*framework.Backend
 }
 
+// Backend new backend
 func Backend(ctx context.Context, conf *logical.BackendConfig) (*backend, error) {
 
 	b := &backend{}

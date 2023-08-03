@@ -168,7 +168,7 @@ func DataService() DataServiceSetting {
 	return *s
 }
 
-// DataService return data service Setting.
+// VaultServer return vault service Setting.
 func VaultServer() VaultServerSetting {
 	rt.lock.Lock()
 	defer rt.lock.Unlock()
