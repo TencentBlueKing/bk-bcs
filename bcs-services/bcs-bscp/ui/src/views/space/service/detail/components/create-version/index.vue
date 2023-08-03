@@ -1,18 +1,19 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { onMounted, ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import {  assign } from 'lodash'
 	import BkMessage from 'bkui-vue/lib/message';
-  import { GET_UNNAMED_VERSION_DATE } from '../../../../../../../../constants/config'
-  import { useConfigStore } from '../../../../../../../../store/config'
-  import { createVersion } from '../../../../../../../../api/config'
+  import { GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config'
+  import { IConfigListQueryParams } from '../../../../../../../types/config'
+  import { useConfigStore } from '../../../../../../store/config'
+  import { getConfigList, createVersion } from '../../../../../../api/config'
+
 
   const { versionData } = storeToRefs(useConfigStore())
 
   const props = defineProps<{
     bkBizId: string,
-    appId: number,
-    configCount: number
+    appId: number
   }>()
 
   const emits = defineEmits(['confirm'])
@@ -22,6 +23,8 @@
     name: '',
     memo: '',
   })
+  const configCount = ref(0)
+  const loading = ref(false)
   const isPublish= ref(false)
   const pending = ref(false)
   const formRef = ref()
@@ -43,6 +46,34 @@
         message: '最大长度100个字符'
       }
     ],
+  }
+
+  watch(() => versionData.value.id, val => {
+    if (val === 0) {
+      getconfigsCountData()
+    }
+  })
+
+  onMounted(() => {
+    if (versionData.value.id === 0) {
+      getconfigsCountData()
+    }
+  })
+
+  const getconfigsCountData = async () => {
+    loading.value = true
+    try {
+      const params: IConfigListQueryParams = {
+        start: 0,
+        limit: 1
+      }
+      const res = await getConfigList(props.bkBizId, props.appId, params)
+      configCount.value = res.count
+    } catch (e) {
+      console.error(e)
+    } finally {
+      loading.value = false
+    }
   }
 
   const handleCreateDialogOpen = () => {
@@ -81,7 +112,8 @@
     v-if="versionData.id === 0"
     class="trigger-button"
     theme="primary"
-    :disabled="props.configCount === 0"
+    :loading="loading"
+    :disabled="configCount === 0"
     @click="handleCreateDialogOpen">
     生成版本
   </bk-button>

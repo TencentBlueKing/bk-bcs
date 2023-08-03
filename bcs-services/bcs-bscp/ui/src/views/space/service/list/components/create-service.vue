@@ -6,6 +6,7 @@
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../../store/global'
   import { createApp } from "../../../../../api";
+  import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation'
 
   const router = useRouter()
   const { t } = useI18n()
@@ -57,6 +58,7 @@
   }
   const formRef = ref()
   const pending = ref(false)
+  const isFormChange = ref(false)
 
   watch(() => props.show, (val) => {
     if (val) {
@@ -91,7 +93,7 @@
           emits('reload')
         }
       } as any);
-      handleClose()
+      close()
     } catch (e) {
       console.error(e)
     } finally {
@@ -99,7 +101,15 @@
     }
   };
 
-  const handleClose = () => {
+  const handleBeforeClose = async () => {
+    if (isFormChange.value) {
+      const result = await useModalCloseConfirmation()
+      return result
+    }
+    return true
+  }
+
+  const close = () => {
     emits('update:show', false)
   }
 </script>
@@ -108,20 +118,22 @@
     width="640"
     :is-show="props.show"
     :title="t('新建服务')"
-    :before-close="handleClose">
+    :before-close="handleBeforeClose"
+    @closed="close">
     <div class="create-app-form">
       <bk-form form-type="vertical" ref="formRef" :model="formData" :rules="rules">
         <bk-form-item :label="t('服务名称')" property="name" required>
           <bk-input
             placeholder="请输入2~32字符，只允许英文、数字、下划线、中划线且必须以英文、数字开头和结尾"
             v-model="formData.name"
-          ></bk-input>
+            @change="isFormChange = true" />
         </bk-form-item>
         <bk-form-item :label="t('服务描述')" property="memo">
           <bk-input
             placeholder="请输入"
             type="textarea"
-            v-model="formData.memo" />
+            v-model="formData.memo"
+            @change="isFormChange = true" />
         </bk-form-item>
       </bk-form>
     </div>
@@ -133,7 +145,7 @@
           @click="handleCreateConfirm">
           {{ t("提交") }}
         </bk-button>
-        <bk-button @click="handleClose">{{ t("取消") }}</bk-button>
+        <bk-button @click="close">{{ t("取消") }}</bk-button>
       </div>
     </template>
   </bk-sideslider>

@@ -1,9 +1,8 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue'
-  import { InfoBox } from "bkui-vue/lib";
-  import { publishVersion } from '../../../../../../../../api/config'
-  import { IGroupToPublish } from '../../../../../../../../../types/group';
-  import RuleTag from '../../../../../../groups/components/rule-tag.vue'
+  import { publishVersion } from '../../../../../../api/config'
+  import { IGroupToPublish } from '../../../../../../../types/group';
+  import RuleTag from '../../../../groups/components/rule-tag.vue'
 
   interface IFormData {
     groups: number[];

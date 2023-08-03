@@ -35,7 +35,7 @@
     editable: true
   })
 
-  const emit = defineEmits(['confirm', 'cancel'])
+  const emits = defineEmits(['confirm', 'cancel', 'change'])
 
   const localVal = ref({ ...props.config })
   const privilegeInputVal = ref('')
@@ -100,6 +100,17 @@
       stringContent.value = props.content as string
     }
   }, { immediate: true })
+
+  watch([
+    () => localVal.value,
+    () => stringContent.value,
+    () => fileContent.value
+  ], () => {
+    console.log('change')
+    emits('change')
+  }, {
+    deep: true
+  })
 
   // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
   const handlePrivilegeInputBlur = () => {
@@ -174,7 +185,7 @@
       if (typeof props.submitFn === 'function') {
         await props.submitFn(params)
       }
-      emit('confirm')
+      emits('confirm')
       cancel()
     } catch (e) {
       console.error(e)
@@ -218,7 +229,7 @@
   }
 
   const cancel = () => {
-    emit('cancel')
+    emits('cancel')
   }
 
 </script>

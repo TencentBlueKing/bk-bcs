@@ -95,7 +95,7 @@
         <bk-input
           v-model="rule.content"
           class="rule-input"
-          placeholder="服务名称/文件路径，支持通配符，如：myservice/*"
+          placeholder="请填写"
           :disabled="rule.type === 'del'"
           @blur="handleRuleContentChange(index)">
           <template #suffix>
@@ -123,6 +123,7 @@
           </template>
         </div>
       </div>
+      <p class="tips">可填写服务名称/文件路径，支持通配符，如：myservice/*</p>
     </div>
     <!-- <div class="preview-btn">预览匹配结果</div> -->
   </div>
@@ -186,6 +187,12 @@
         }
       }
     }
+  }
+  .tips {
+    margin: 8px 0 0;
+    line-height: 20px;
+    color: #979ba5;
+    font-size: 12px;
   }
   .preview-btn {
     margin-top: 16px;

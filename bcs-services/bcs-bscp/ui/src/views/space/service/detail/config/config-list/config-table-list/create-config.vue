@@ -3,7 +3,7 @@
   import ConfigForm from './config-form.vue'
   import { createServiceConfigItem } from '../../../../../../../api/config'
   import { IAppEditParams } from '../../../../../../../../types/app'
-
+  import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation'
 
   const getDefaultConfig = () => {
     return {
@@ -29,10 +29,19 @@
   const slideShow = ref(false)
   const setting = ref(getDefaultConfig())
   const content = ref('')
+  const isFormChange = ref(false)
 
   const handleCreateConfig = () => {
     slideShow.value = true
     setting.value = getDefaultConfig()
+  }
+
+  const handleBeforeClose = async () => {
+    if (isFormChange.value) {
+      const result = await useModalCloseConfirmation()
+      return result
+    }
+    return true
   }
 
   const submitConfig = (params: IAppEditParams) => {
@@ -51,7 +60,8 @@
       width="640"
       title="新增配置文件"
       :is-show="slideShow"
-      :before-close="close">
+      :before-close="handleBeforeClose"
+      @closed="close">
       <ConfigForm
         :config="setting"
         :content="content"
@@ -59,6 +69,7 @@
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         :submit-fn="submitConfig"
+        @change="isFormChange = true"
         @confirm="$emit('confirm')"
         @cancel="close" />
     </bk-sideslider>
