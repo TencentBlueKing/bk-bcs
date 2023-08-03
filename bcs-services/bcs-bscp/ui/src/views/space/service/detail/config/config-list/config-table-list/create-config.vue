@@ -3,7 +3,7 @@
   import ConfigForm from './config-form.vue'
   import { createServiceConfigItem } from '../../../../../../../api/config'
   import { IAppEditParams } from '../../../../../../../../types/app'
-  import useModalCloseConfirmation from '../../../../../../../utils/hooks/user-modal-close-confirmation'
+  import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation'
 
   const getDefaultConfig = () => {
     return {
@@ -79,4 +79,4 @@
   :deep(.bk-modal-content) {
     height: 100%;
   }
-</style>
+</style>../../../../../../../utils/hooks/use-modal-close-confirmation

@@ -6,7 +6,7 @@
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../../store/global'
   import { createApp } from "../../../../../api";
-  import useModalCloseConfirmation from '../../../../../utils/hooks/user-modal-close-confirmation'
+  import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation'
 
   const router = useRouter()
   const { t } = useI18n()
@@ -167,3 +167,4 @@
   }
 }
 </style>
+../../../../../utils/hooks/use-modal-close-confirmation

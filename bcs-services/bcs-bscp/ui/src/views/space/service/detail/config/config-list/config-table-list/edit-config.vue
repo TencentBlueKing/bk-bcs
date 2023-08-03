@@ -6,7 +6,7 @@
   import { IFileConfigContentSummary } from '../../../../../../../../types/config'
   import { IAppEditParams } from '../../../../../../../../types/app'
   import { useConfigStore } from '../../../../../../../store/config'
-  import useModalCloseConfirmation from '../../../../../../../utils/hooks/user-modal-close-confirmation'
+  import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation'
 
   const { versionData } = storeToRefs(useConfigStore())
 
@@ -119,3 +119,4 @@
     height: 100%;
   }
 </style>
+../../../../../../../utils/hooks/use-modal-close-confirmation
