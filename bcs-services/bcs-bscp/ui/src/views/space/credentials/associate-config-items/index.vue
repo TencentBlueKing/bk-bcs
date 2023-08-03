@@ -140,4 +140,3 @@ const handleClose = () => {
     }
   }
 </style>
-../../../../utils/hooks/use-modal-close-confirmation
