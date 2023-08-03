@@ -69,7 +69,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 			Name:    tools.GenerateRevisionName(),
 			Content: req.Spec.Content,
 			Memo:    req.Spec.Memo,
-			State:   table.HookRevisionStatusNotDeployed,
+			State:   table.HookRevisionStatusDeployed,
 		},
 		Attachment: &table.HookRevisionAttachment{
 			BizID:  req.Attachment.BizId,

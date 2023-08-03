@@ -27,6 +27,9 @@ import (
 type ReleasedHook interface {
 	// UpsertWithTx upserts the released hook with transaction.
 	UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, rh *table.ReleasedHook) error
+	// UpdateHookRevisionByReleaseIDWithTx updates the hook's revision info by release id with transaction.
+	UpdateHookRevisionByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+		bizID, releaseID, hookID uint32, hookRevision *table.HookRevision) error
 	// Get gets the released hook.
 	Get(kit *kit.Kit, bizID, appID, releaseID uint32, tp table.HookType) (*table.ReleasedHook, error)
 	// GetByReleaseID gets the pre hook and post hook by release id.
@@ -148,6 +151,30 @@ func (dao *releasedHookDao) UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, rh *tabl
 		rh.ID = id
 		return m.WithContext(kit.Ctx).Create(rh)
 	}
+	return err
+}
+
+// UpdateHookRevisionByReleaseIDWithTx updates the hook's revision info by release id with transaction.
+func (dao *releasedHookDao) UpdateHookRevisionByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	bizID, releaseID, hookID uint32, hookRevision *table.HookRevision) error {
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	if hookID == 0 {
+		return errf.New(errf.InvalidParameter, "hookID is 0")
+	}
+	if hookRevision == nil {
+		return errf.New(errf.InvalidParameter, "hookRevision is nil")
+	}
+	m := tx.ReleasedHook
+	_, err := m.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.ReleaseID.Eq(releaseID), m.HookID.Eq(hookID)).
+		Updates(table.ReleasedHook{
+			HookRevisionID:   hookRevision.ID,
+			HookRevisionName: hookRevision.Spec.Name,
+			Content:          base64.StdEncoding.EncodeToString([]byte(hookRevision.Spec.Content)),
+			Reviser:          hookRevision.Revision.Reviser,
+		})
 	return err
 }
 
