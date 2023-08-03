@@ -338,3 +338,15 @@ func (v1 *V1VaultPluginHandler) initHandler(w http.ResponseWriter, r *http.Reque
 	resp.Response(w, SuccessHttpCode)
 	return
 }
+
+// GET /api/v1/secrets/annotation？project={project}
+func (v1 *V1VaultPluginHandler) getSecretAnnotationHandler(w http.ResponseWriter, r *http.Request) {
+	resp := &SecretResponse{}
+	project := mux.Vars(r)["project"]
+
+	anno := v1.Opts.Secret.GetSecretAnnotation(project)
+
+	resp.Data = anno
+	resp.Response(w, SuccessHttpCode)
+	return
+}

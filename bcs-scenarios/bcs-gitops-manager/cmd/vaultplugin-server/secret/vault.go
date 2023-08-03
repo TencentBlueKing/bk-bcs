@@ -185,6 +185,11 @@ func (m *VaultSecretManager) InitProject(project string) error {
 	return nil
 }
 
+// GetSecretAnnotation get init secret info for gitops-manager
+func (m *VaultSecretManager) GetSecretAnnotation(project string) string {
+	return common.GetVaultSecForProAnno(project)
+}
+
 // GetSecret interface for get secret
 func (m *VaultSecretManager) GetSecret(ctx context.Context, req *SecretRequest) (map[string]interface{}, error) {
 	var sec *vault.KVSecret

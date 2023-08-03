@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/handler"
@@ -74,7 +75,7 @@ func (s *ServerProxy) ProxySecretRequest(req *http.Request) *handler.SecretRespo
 // InitSecretRequest hard code path and method for initSecret
 func (s *ServerProxy) InitSecretRequest(project string) error {
 	realPath := "/api/v1/secrets/init"
-	method := "POST"
+	method := http.MethodPost
 	fullPath := fmt.Sprintf("http://%s:%s%s?project=%s", s.option.Address, s.option.Port, realPath, project)
 
 	rbody, err := s.send(context.TODO(), fullPath, method, nil, nil, nil)
@@ -95,6 +96,35 @@ func (s *ServerProxy) InitSecretRequest(project string) error {
 	return nil
 }
 
+// GetInitSecretRequest hard code path and method for initSecret
+func (s *ServerProxy) GetInitSecretRequest(project string) (string, error) {
+	realPath := "/api/v1/secrets/annotation"
+	method := http.MethodGet
+	fullPath := fmt.Sprintf("http://%s:%s%s?project=%s", s.option.Address, s.option.Port, realPath, project)
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancel()
+	rbody, err := s.send(ctx, fullPath, method, nil, nil, nil)
+	if err != nil {
+		return "", errors.Wrapf(err, "send request when GetInitSecretRequest")
+	}
+
+	response := &handler.SecretResponse{}
+	err = json.Unmarshal(rbody, response)
+	if err != nil {
+		return "", errors.Wrapf(err, "error unmarshal resp when GetInitSecretRequest")
+	}
+	if response.Code != handler.SuccessHttpCode {
+		return "", fmt.Errorf(response.Message)
+	}
+
+	if str, ok := response.Data.(string); ok {
+		return str, nil
+	}
+
+	return "", fmt.Errorf("response.Data.(string) error, data is not str [%s]", response.Data)
+}
+
 func (s *ServerProxy) send(ctx context.Context, fullPath, method string, queryParams map[string]string, body io.ReadCloser,
 	header map[string][]string) ([]byte, error) {
 	var req *http.Request
@@ -106,7 +136,7 @@ func (s *ServerProxy) send(ctx context.Context, fullPath, method string, queryPa
 		req, err = http.NewRequestWithContext(ctx, method, fullPath, nil)
 	}
 	if err != nil {
-		return nil, errors.Wrapf(err, "create http request failed when ProxySecretRequest")
+		return nil, errors.Wrapf(err, "create http request failed when proxy send")
 	}
 
 	for k, v := range header {
@@ -123,13 +153,13 @@ func (s *ServerProxy) send(ctx context.Context, fullPath, method string, queryPa
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "http request failed when ProxySecretRequest")
+		return nil, errors.Wrap(err, "http request failed when proxy send")
 	}
 	defer resp.Body.Close()
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "read response body failed when ProxySecretRequest")
+		return nil, errors.Wrap(err, "read response body failed when proxy send")
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.Errorf("http response code not 200 but %d, resp: %s",

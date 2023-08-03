@@ -23,7 +23,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
-	vaultcommon "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
@@ -88,6 +87,14 @@ func (e *BcsGitopsHandler) StartupProject(ctx context.Context, req *pb.ProjectSy
 	}
 	// save to AppProject
 	destPro = defaultAppProject(e.option.AdminNamespace, project)
+	// add secret info annotation
+	secretAnnotation, err := e.option.SecretClient.GetInitSecretRequest(project.Name)
+	if err != nil {
+		blog.Errorf("[getErr]sync secret info to pro annotations [%s] failed: %s", project.ProjectCode, err.Error())
+	} else {
+		destPro.ObjectMeta.Annotations[common.SecretKey] = secretAnnotation
+	}
+
 	if err := e.option.Storage.CreateProject(ctx, destPro); err != nil {
 		return e.startProjectResult(resp, failedCode, "",
 			errors.Wrapf(err, "create project '%s' to storage failed", project.ProjectCode))
@@ -118,7 +125,6 @@ func defaultAppProject(ns string, project *bcsproject.Project) *v1alpha1.AppProj
 				common.ProjectAliaName:      project.Name,
 				common.ProjectIDKey:         project.ProjectID,
 				common.ProjectBusinessIDKey: project.BusinessID,
-				common.SecretKey:            vaultcommon.GetVaultSecForProAnno(project.Name),
 			},
 		},
 		Spec: v1alpha1.AppProjectSpec{
