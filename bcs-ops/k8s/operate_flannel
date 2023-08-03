@@ -32,7 +32,7 @@ Usage:
       [ apply ]
       [ delete ]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {
@@ -320,7 +320,7 @@ spec:
           path: /run/xtables.lock
           type: FileOrCreate
 EOF
-utils::log "OK" "flannel installed"
+utils::log "OK" "${action} flannel success"
 }
 
 main() {

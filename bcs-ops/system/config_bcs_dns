@@ -41,7 +41,7 @@ Usage:
 	  [ -l --list , show bcs dns entry]
 
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {

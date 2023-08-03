@@ -34,7 +34,7 @@ Usage:
       [ ${PROJECTS[*]} ]
       [ clean ]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {
