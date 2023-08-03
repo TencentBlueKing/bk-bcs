@@ -52,6 +52,16 @@ func TestCreateKv(t *testing.T) {
 
 	req = &logical.Request{
 		Path:      kvPath,
+		Operation: logical.ListOperation,
+		Storage:   storage,
+	}
+	resp, err = b.HandleRequest(context.Background(), req)
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+
+	req = &logical.Request{
+		Path:      kvPath,
 		Operation: logical.UpdateOperation,
 		Data: map[string]interface{}{
 			"value": "YWJj",

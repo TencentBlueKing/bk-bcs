@@ -14,38 +14,15 @@ package service
 
 import (
 	"context"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"testing"
 
 	"github.com/hashicorp/vault/sdk/logical"
+
+	"bscp.io/pkg/tools"
 )
 
-func IsValidRSAPublicKey(publicKeyStr string) bool {
-	// 将字符串格式的公钥解码为PEM数据
-	block, _ := pem.Decode([]byte(publicKeyStr))
-	if block == nil || block.Type != "RSA PUBLIC KEY" {
-		// 解码失败或者类型不匹配，公钥不合法
-		return false
-	}
+func TestName(t *testing.T) {
 
-	// 解析PEM数据中的公钥
-	publicKey, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		// 解析失败，公钥不合法
-		return false
-	}
-
-	// 判断公钥是否为RSA公钥
-	_, ok := publicKey.(*rsa.PublicKey)
-	if !ok {
-		// 不是RSA公钥，公钥不合法
-		return false
-	}
-
-	// 公钥合法
-	return true
 }
 
 // 上传RSA密钥
@@ -54,21 +31,25 @@ func IsValidRSAPublicKey(publicKeyStr string) bool {
 // 更新这个公钥
 // 获取公钥
 // 删除公钥
-func Test_case1(t *testing.T) {
+func TestPkiRsa(t *testing.T) {
 
 	var resp *logical.Response
 	var err error
 	b, s := createBackendWithStorage(t)
 
-	path := "apps/1/keys/2"
+	key1 := "-----BEGIN RSA PUBLIC KEY-----\nMIGJAoGBAMfmy5Zz8Y7NE+uEHrfOwN1FaT0INVIFWJH5IWCihOAJRElMX6zVAr2j\nKxSaiQVQzf5SDYj1xDLlaBk2D+Ygl2DAR5C7sCULjSX8Ok4TnVMS/puZQLctBTSP\nixSoDGTejm7JUU2zZdBBRWw2q7+D+UoERqEXLCTTyFT8a1wcM/11AgMBAAE=\n-----END RSA PUBLIC KEY-----"
+
+	key2 := "-----BEGIN RSA PUBLIC KEY-----\nMIGJAoGBALT0avOadBoMLYEdwR6fHGVcKo7zZ7f+y77f1KA9xxsDG4LOxLlEqgK3\nC1LdAjguz7C0TA5ayEhv9uojs6nfVQc/5dw2ZVoqpYiNguZBFcsMHb+Oqgi9qhHq\n7ZWH5KyzfVmZkDYWTARQeHp0tNah8I/6Ha1DQ0peTHvX9YbDsuipAgMBAAE=\n-----END RSA PUBLIC KEY-----\n"
+
+	path := "apps/1/pkis/2"
 
 	req := &logical.Request{
 		Operation: logical.CreateOperation,
 		Path:      path,
 		Storage:   s,
 		Data: map[string]interface{}{
-			"type":       "RSA",
-			"public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxnuITzBfSs+5yDEhOTt5\n9kZtDQB0DLsyaKRp3NqBp9f8Uu0uQVSuW5yQRSu7Ned6qiiMvpNFODSAKoBk6LgH\noZbU2xJQlRAAj75npjHJtda65ANURjjuX165zRRrirpZg5KFvJ5m5nx+XKxme514\nv8Rf2dhL0dIjzK45Ew4+DDQhbZ84KywAMkHhL+jN00zJsDQ2npkV7/n2bVx/1mLa\n/aL0fjpUqQ6WwaRshIamD+zYx11+G5NF+E1yInx5bQOOGAKbm+UILpltYLjZi7gR\nEwnJkL3K9S4WUmj0oD7Ivczk8qZwGuAQFovGFK5DG1OuQ0j/BXHCzK+7C3+l+pB7\nuwIDAQAB\n-----END PUBLIC KEY-----",
+			"algorithm": "rsa",
+			"pub_key":   key1,
 		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
@@ -80,10 +61,16 @@ func Test_case1(t *testing.T) {
 		Operation: logical.ReadOperation,
 		Path:      path,
 		Storage:   s,
+		Data: map[string]interface{}{
+			"algorithm": "rsa",
+		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+	if resp.Data["pub_key"] != key1 {
+		t.Fatalf("获取公钥的错误")
 	}
 
 	req = &logical.Request{
@@ -91,8 +78,8 @@ func Test_case1(t *testing.T) {
 		Path:      path,
 		Storage:   s,
 		Data: map[string]interface{}{
-			"type":       "RSA",
-			"public_key": "-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAmEF5sO5QjJFKbQwGALAp\n8dDwzkc4poilF2NmzxxmUFL8PYYArH72YerZwSTV9frE3RoeusVp1qHji4oGkTbF\nYSKLnYApHGhluJTY4/IqrPHtj4vdaGlpbd3W7Ww1IJU8DOkarP37d+EwXhPGk0Y9\nJmVrccs1OFlX/cY9j15ZHXsXubehnSNHYO/CWg7T3AkquWFJupaeDRyv2mjuvfOM\nMxVW7DR/VD3iYwOYPC7GstX6st/u1vASAgrFlyu6mpv4tvdOxZFaD76DUpzKHQLx\nhy7GVWgLCvSbRu6N6LE8+YnypWOIwtt62a9VcpPsKdfvSbDbLYtRQ2PfLLRlLZrb\nUZEQjv5mSagM3wGNsbYSGVK5ppd4Yyr/Y54QvInCdyUJ3zt5M0VsytsRg+anv1gv\nfEZ0l3a7B0dJcZwTmZiXjcOWg9Zly497sgfUFM6EQwFBRx6dWBCZeqlf0fmAxZ2D\ncCYPQZ9JwugvfrIsI/1fG29s7zJ9XNtmj6fOFBVJTM+7wRkgTBbbxqIlzaP6hBic\n/iTj+Wj4HWQpRlFOFl34LSORFWWP0FMTz+oQo+cjUfcdVy9u9SKxWCXdNynP2fVX\nRTYEQApfUQdw4iMF+qnqDfInTXE4lmef35AyYco4bYc4yR3VPMuQivbXPiGyEVAr\nTMbd5EvZgiqVwpFdW5kBFCsCAwEAAQ==\n-----END PUBLIC KEY-----\n",
+			"algorithm": "rsa",
+			"pub_key":   key2,
 		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
@@ -104,16 +91,25 @@ func Test_case1(t *testing.T) {
 		Operation: logical.ReadOperation,
 		Path:      path,
 		Storage:   s,
+		Data: map[string]interface{}{
+			"algorithm": "rsa",
+		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+	if resp.Data["pub_key"] != key2 {
+		t.Fatalf("获取公钥的错误")
 	}
 
 	req = &logical.Request{
 		Operation: logical.DeleteOperation,
 		Path:      path,
 		Storage:   s,
+		Data: map[string]interface{}{
+			"algorithm": "rsa",
+		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
@@ -122,22 +118,43 @@ func Test_case1(t *testing.T) {
 
 }
 
-// 生成RSA密钥
-func Test_case2(t *testing.T) {
+// 生成SM2密钥
+func TestPkiSM2(t *testing.T) {
+
 	var resp *logical.Response
 	var err error
 	b, s := createBackendWithStorage(t)
 
-	path := "apps/1/keys/2"
+	privateKey, err := tools.GenerateSM2KeyPair(b.GetRandomReader())
+	if err != nil {
+		t.Fatalf("err:%v ", err)
+	}
+	key1Byte, err := tools.SM2PublicKeyToPEM(&privateKey.PublicKey)
+	if err != nil {
+		t.Fatalf("err:%v ", err)
+	}
+
+	privateKey2, err := tools.GenerateSM2KeyPair(b.GetRandomReader())
+	if err != nil {
+		t.Fatalf("err:%v ", err)
+	}
+	key2Byte, err := tools.SM2PublicKeyToPEM(&privateKey2.PublicKey)
+	if err != nil {
+		t.Fatalf("err:%v ", err)
+	}
+
+	key1 := string(key1Byte)
+	key2 := string(key2Byte)
+
+	path := "apps/1/pkis/2"
 
 	req := &logical.Request{
 		Operation: logical.CreateOperation,
 		Path:      path,
 		Storage:   s,
 		Data: map[string]interface{}{
-			"type":       "RSA",
-			"public_key": "",
-			"length":     "2048",
+			"algorithm": "sm2",
+			"pub_key":   key1,
 		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
@@ -149,10 +166,16 @@ func Test_case2(t *testing.T) {
 		Operation: logical.ReadOperation,
 		Path:      path,
 		Storage:   s,
+		Data: map[string]interface{}{
+			"algorithm": "sm2",
+		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+	if resp.Data["pub_key"] != key1 {
+		t.Fatalf("获取公钥的错误")
 	}
 
 	req = &logical.Request{
@@ -160,8 +183,8 @@ func Test_case2(t *testing.T) {
 		Path:      path,
 		Storage:   s,
 		Data: map[string]interface{}{
-			"type":       "RSA",
-			"public_key": "-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAmEF5sO5QjJFKbQwGALAp\n8dDwzkc4poilF2NmzxxmUFL8PYYArH72YerZwSTV9frE3RoeusVp1qHji4oGkTbF\nYSKLnYApHGhluJTY4/IqrPHtj4vdaGlpbd3W7Ww1IJU8DOkarP37d+EwXhPGk0Y9\nJmVrccs1OFlX/cY9j15ZHXsXubehnSNHYO/CWg7T3AkquWFJupaeDRyv2mjuvfOM\nMxVW7DR/VD3iYwOYPC7GstX6st/u1vASAgrFlyu6mpv4tvdOxZFaD76DUpzKHQLx\nhy7GVWgLCvSbRu6N6LE8+YnypWOIwtt62a9VcpPsKdfvSbDbLYtRQ2PfLLRlLZrb\nUZEQjv5mSagM3wGNsbYSGVK5ppd4Yyr/Y54QvInCdyUJ3zt5M0VsytsRg+anv1gv\nfEZ0l3a7B0dJcZwTmZiXjcOWg9Zly497sgfUFM6EQwFBRx6dWBCZeqlf0fmAxZ2D\ncCYPQZ9JwugvfrIsI/1fG29s7zJ9XNtmj6fOFBVJTM+7wRkgTBbbxqIlzaP6hBic\n/iTj+Wj4HWQpRlFOFl34LSORFWWP0FMTz+oQo+cjUfcdVy9u9SKxWCXdNynP2fVX\nRTYEQApfUQdw4iMF+qnqDfInTXE4lmef35AyYco4bYc4yR3VPMuQivbXPiGyEVAr\nTMbd5EvZgiqVwpFdW5kBFCsCAwEAAQ==\n-----END PUBLIC KEY-----\n",
+			"algorithm": "sm2",
+			"pub_key":   key2,
 		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
@@ -173,21 +196,29 @@ func Test_case2(t *testing.T) {
 		Operation: logical.ReadOperation,
 		Path:      path,
 		Storage:   s,
+		Data: map[string]interface{}{
+			"algorithm": "sm2",
+		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+	if resp.Data["pub_key"] != key2 {
+		t.Fatalf("获取公钥的错误")
 	}
 
 	req = &logical.Request{
 		Operation: logical.DeleteOperation,
 		Path:      path,
 		Storage:   s,
+		Data: map[string]interface{}{
+			"algorithm": "sm2",
+		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
-}
 
-// 上传
+}
