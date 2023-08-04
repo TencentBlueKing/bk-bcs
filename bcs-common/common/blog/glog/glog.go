@@ -423,13 +423,8 @@ func init() {
 	logging.stderrThreshold = errorLog
 	logging.toStderr = false
 	logging.alsoToStderr = false
-	if err := logging.vmodule.Set(""); err != nil {
-		fmt.Println(err.Error())
-	}
-	if err := logging.traceLocation.Set(""); err != nil {
-		fmt.Println(err.Error())
-	}
-
+	_ = logging.vmodule.Set("")       // nolint
+	_ = logging.traceLocation.Set("") // nolint
 	logging.setVState(0, nil, false)
 	go logging.flushDaemon()
 }
