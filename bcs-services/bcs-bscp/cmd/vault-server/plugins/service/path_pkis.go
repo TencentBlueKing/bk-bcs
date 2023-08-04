@@ -65,11 +65,11 @@ func (b *backend) pathKeys() *framework.Path {
 				Description: "Update public key",
 			},
 			logical.ReadOperation: &framework.PathOperation{
-				Callback:    b.pathKeysRead,
+				Callback:    b.pathPkiRead,
 				Description: "Get a public key",
 			},
 			logical.DeleteOperation: &framework.PathOperation{
-				Callback:    b.pathKeysDelete,
+				Callback:    b.pathPkiDelete,
 				Description: "Delete a public key",
 			},
 		},
@@ -259,7 +259,7 @@ func (b *backend) pathPkiWrite(ctx context.Context, req *logical.Request, d *fra
 	return resp, nil
 }
 
-func (b *backend) pathKeysRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathPkiRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
 	if err := b.ValidateAppID(appID); err != nil {
@@ -290,7 +290,7 @@ func (b *backend) pathKeysRead(ctx context.Context, req *logical.Request, d *fra
 
 }
 
-func (b *backend) pathKeysDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathPkiDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
 	if err := b.ValidateAppID(appID); err != nil {
