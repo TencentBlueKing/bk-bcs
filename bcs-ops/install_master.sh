@@ -69,22 +69,22 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   "${ROOT_DIR}"/k8s/operate_metrics_server apply
   "${ROOT_DIR}"/k8s/install_helm
   "${ROOT_DIR}"/k8s/render_k8s_joincmd
-  if [ ${ENABLE_APISERVER_HA} == "true" ]; then
-    [ -z ${VIP} ] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
-    if [ ${APISERVER_HA_MODE} == "kube-vip" ]; then
+  if [[ ${ENABLE_APISERVER_HA} == "true" ]]; then
+    [[ -z ${VIP} ]] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
+    if [[ ${APISERVER_HA_MODE} == "kube-vip" ]]; then
       "${ROOT_DIR}"/k8s/operate_kube_vip apply
-    elif [ ${APISERVER_HA_MODE} == "bcs-apiserver-proxy" ]; then
+    elif [[ ${APISERVER_HA_MODE} == "bcs-apiserver-proxy" ]]; then
       "${ROOT_DIR}"/k8s/operate_bap apply
     fi
   fi
 else
   kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
   || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
-  if [ ${ENABLE_APISERVER_HA} == "true" ]; then
-    [ -z ${VIP} ] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
+  if [[ ${ENABLE_APISERVER_HA} == "true" ]]; then
+    [[ -z ${VIP} ]] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
     "${ROOT_DIR}"/system/config_bcs_dns -u "${LAN_IP}" k8s-api.bcs.local
     k8s::restart_kubelet
-    if [ ${APISERVER_HA_MODE} == "kube-vip" ]; then
+    if [[ ${APISERVER_HA_MODE} == "kube-vip" ]]; then
       "${ROOT_DIR}"/k8s/operate_kube_vip apply
     fi
   fi
