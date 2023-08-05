@@ -26,6 +26,7 @@
     <div class="config-actions">
       <bk-button theme="primary" class="create-config-btn">添加配置项</bk-button>
       <bk-button>批量添加至</bk-button>
+      <bk-button>批量删除</bk-button>
     </div>
     <div class="config-search">
       <bk-input placeholder="配置项名称/路径/描述/创建人/更新人">

@@ -45,11 +45,11 @@
 <template>
   <div class="package-list-comp">
     <div class="search-wrapper">
-      <div class="create-btn">
+      <div class="create-btn" v-bk-tooltips="'新建模板套餐'">
         <Plus />
       </div>
       <div class="search-input">
-        <bk-input>
+        <bk-input placeholder="搜索模板套餐">
           <template #suffix>
             <Search class="search-icon" />
           </template>
@@ -101,6 +101,7 @@
 <style lang="scss" scoped>
   .package-list-comp {
     padding-top: 12px;
+    height: calc(100% - 58px);
     .search-wrapper {
       display: flex;
       align-items: center;
@@ -132,7 +133,12 @@
       color: #979ba5;
     }
     .package-list {
-      margin-top: 16px;
+      padding-top: 16px;
+      height: calc(100% - 104px);
+    }
+    .other-package-list {
+      padding-top: 8px;
+      border-top: 1px solid #dcdee5;
     }
     .package-item {
       padding: 8px 16px;

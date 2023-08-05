@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import SpaceSelector from './components/space-selector.vue';
+  import SpaceSelector from './components/space/selector.vue';
   import PackageList from './components/package-list.vue';
   import PackageDetail from './components/package-detail/index.vue';
 
@@ -48,8 +48,8 @@
     height: calc(100% - 38px);
   }
   .side-menu-area {
-    flex: 0 0 240px;
     padding: 16px 0;
+    width: 240px;
     height: 100%;
     background: #ffffff;
     box-shadow: 1px 0 0 0 #dcdee5;
