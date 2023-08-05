@@ -2,8 +2,6 @@
   import SpaceSelector from './components/space/selector.vue';
   import PackageList from './components/package-list.vue';
   import PackageDetail from './components/package-detail/index.vue';
-
-
 </script>
 <template>
   <div class="templates-page">
