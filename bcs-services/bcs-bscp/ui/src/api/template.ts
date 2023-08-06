@@ -1,5 +1,6 @@
 import http from "../request"
 import { ICommonQuery } from '../../types/index'
+import { ITemplatePackageEditParams } from '../../types/template'
 
 /**
  * 获取模板空间列表
@@ -40,6 +41,52 @@ export const updateTemplateSpace = (biz_id: string, id: number, params: { memo: 
  */
 export const deleteTemplateSpace = (biz_id: string, id: number) => {
   return http.delete(`/config/biz/${biz_id}/template_spaces/${id}`);
+}
+
+/**
+ * 创建模板套餐
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @param params 创建模板套餐参数
+ * @returns
+ */
+export const createTemplatePackage = (biz_id: string, template_space_id: number, params: ITemplatePackageEditParams) => {
+  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets`, params).then(res => res.data);
+}
+
+/**
+ * 编辑模板套餐
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @param template_set_id 模板套餐ID
+ * @param params 编辑模板套餐参数
+ * @returns
+ */
+export const updateTemplatePackage = (biz_id: string, template_space_id: number, template_set_id: number, params: ITemplatePackageEditParams) => {
+  return http.put(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}`, params).then(res => res.data);
+}
+
+/**
+ * 克隆模板套餐
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @param template_set_id 模板套餐ID
+ * @param params 编辑模板套餐参数
+ * @returns
+ */
+export const cloneTemplatePackage = (biz_id: string, template_space_id: number, template_set_id: number, params: ITemplatePackageEditParams) => {
+  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}/clone`, params).then(res => res.data);
+}
+
+/**
+ * 删除模板套餐
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @param template_set_id 模板套餐ID
+ * @returns
+ */
+export const deleteTemplatePackage = (biz_id: string, template_space_id: number, template_set_id: number) => {
+  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}`).then(res => res.data);
 }
 
 /**

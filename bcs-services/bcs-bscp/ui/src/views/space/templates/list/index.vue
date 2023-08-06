@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import SpaceSelector from './components/space/selector.vue';
-  import PackageList from './components/package-list.vue';
+  import PackageList from './components/package-list/list.vue';
   import PackageDetail from './components/package-detail/index.vue';
 </script>
 <template>

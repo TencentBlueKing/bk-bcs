@@ -38,6 +38,17 @@ export interface ITemplatePackageItem {
   }
 }
 
+// 模板套餐编辑参数
+export interface ITemplatePackageEditParams {
+  template_set_id?: number;
+  name: string;
+  memo: string;
+  template_ids?: number[];
+  public: boolean;
+  bound_apps: number[];
+  force?: boolean;
+}
+
 // 模板套餐下配置项列表单条数据
 export interface ITemplateConfigItem {
   id: number;
