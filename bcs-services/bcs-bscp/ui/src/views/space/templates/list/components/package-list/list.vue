@@ -44,7 +44,8 @@
     loading.value = true
     const params = {
       start: 0,
-      limit: 100
+      limit: 1000,
+      // all: true
     }
     const res = await getTemplatePackageList(spaceId.value, currentTemplateSpace.value, params)
     list.value = res.details

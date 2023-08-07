@@ -42,8 +42,7 @@
     formRef.value.validate().then(async() => {
       try {
         pending.value = true
-        const params = Object.assign({}, data.value)
-        await createTemplatePackage(spaceId.value, props.templateSpaceId, params)
+        await createTemplatePackage(spaceId.value, props.templateSpaceId, data.value)
         close()
         emits('created')
         Message({

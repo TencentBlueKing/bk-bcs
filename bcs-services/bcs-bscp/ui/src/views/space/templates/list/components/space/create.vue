@@ -23,6 +23,9 @@
 
   watch(() => props.show, val => {
     isShow.value = val
+    if (val) {
+      localVal.value = { name: '', memo: '' }
+    }
   })
 
   const handleCreate = () => {
@@ -46,7 +49,6 @@
 
   const handleClose = () => {
     emits('update:show', false)
-    localVal.value = { name: '', memo: '' }
   }
 
 </script>

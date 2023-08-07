@@ -4,7 +4,7 @@
   import { Message } from 'bkui-vue/lib'
   import { useGlobalStore } from '../../../../../../store/global'
   import { ITemplatePackageEditParams, ITemplatePackageItem } from '../../../../../../../types/template'
-  import { cloneTemplatePackage } from '../../../../../../api/template'
+  import { createTemplatePackage } from '../../../../../../api/template'
   import useModalCloseConfirmation from '../../../../../../utils/hooks/use-modal-close-confirmation'
   import PackageForm from './package-form.vue'
 
@@ -24,6 +24,7 @@
     name: '',
     memo: '',
     public: true,
+    template_ids: [],
     bound_apps: []
   })
   const isFormChange = ref(false)
@@ -36,8 +37,9 @@
       name,
       memo,
       public: isPublic,
-      bound_apps } = props.pkg.spec
-    data.value = { name, memo, public: isPublic, bound_apps }
+      bound_apps,
+      template_ids } = props.pkg.spec
+    data.value = { name, memo, public: isPublic, bound_apps, template_ids }
   })
 
   const handleChange = (formData: ITemplatePackageEditParams) => {
@@ -49,7 +51,7 @@
     formRef.value.validate().then(async() => {
       try {
         pending.value = true
-        await cloneTemplatePackage(spaceId.value, props.templateSpaceId, props.pkg.id, data.value)
+        await createTemplatePackage(spaceId.value, props.templateSpaceId, data.value)
         close()
         emits('created')
         Message({

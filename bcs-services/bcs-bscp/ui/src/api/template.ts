@@ -67,18 +67,6 @@ export const updateTemplatePackage = (biz_id: string, template_space_id: number,
 }
 
 /**
- * 克隆模板套餐
- * @param biz_id 业务ID
- * @param template_space_id 模板空间ID
- * @param template_set_id 模板套餐ID
- * @param params 编辑模板套餐参数
- * @returns
- */
-export const cloneTemplatePackage = (biz_id: string, template_space_id: number, template_set_id: number, params: ITemplatePackageEditParams) => {
-  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}/clone`, params).then(res => res.data);
-}
-
-/**
  * 删除模板套餐
  * @param biz_id 业务ID
  * @param template_space_id 模板空间ID
@@ -108,4 +96,28 @@ export const getTemplatePackageList = (biz_id: string, template_space_id: string
 */
 export const getPackageConfigList = (biz_id: string, template_space_id: string, params: ICommonQuery) => {
   return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, { params }).then(res => res.data);
+}
+
+/**
+ * 获取当前模板套餐被未命名版本引用的服务引用列表
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @param template_set_id 模板套餐Id
+ * @param params 查询参数
+ * @returns
+ */
+export const getUnNamedVersionAppsBoundByPackage = (biz_id: string, template_space_id: number, template_set_id: number, params: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}/bound_unnamed_app_details`, { params }).then(res => res.data);
+}
+
+/**
+ * 获取当前模板套餐被已生成版本引用的服务引用列表
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @param template_set_id 模板套餐Id
+ * @param params 查询参数
+ * @returns
+ */
+export const getReleasedVersionAppsBoundByPackage = (biz_id: string, template_space_id: number, template_set_id: number, params: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}/bound_unnamed_app_details`, { params }).then(res => res.data);
 }

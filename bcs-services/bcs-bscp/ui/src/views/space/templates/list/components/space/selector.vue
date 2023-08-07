@@ -49,7 +49,7 @@
     loading.value = true
     const params: ICommonQuery = {
       start: 0,
-      limit: 100
+      limit: 1000
       // all: true
     }
     const res = await getTemplateSpaceList(spaceId.value, params)
