@@ -61,23 +61,31 @@ func (b *backend) pathKvEncrypt() *framework.Path {
 			},
 		},
 
-		ExistenceCheck: b.pathKvEncryptExistenceCheck,
+		ExistenceCheck: b.pathEncryptExistenceCheck,
 	}
 }
 
-func (b *backend) pathKvEncryptExistenceCheck(ctx context.Context, req *logical.Request, d *framework.FieldData) (bool, error) {
+func (b *backend) pathEncryptExistenceCheck(ctx context.Context, req *logical.Request, d *framework.FieldData) (bool, error) {
 
 	appID := d.Get("app_id").(string)
 	name := d.Get("name").(string)
 	algorithm := d.Get("algorithm").(string)
 
-	path := fmt.Sprintf("apps/%s/pkis/%s/%s", appID, name, algorithm)
-	entry, err := req.Storage.Get(ctx, path)
+	pkiPath := fmt.Sprintf("apps/%s/pkis/%s/%s", appID, name, algorithm)
+	entry, err := req.Storage.Get(ctx, pkiPath)
 	if err != nil {
 		return false, err
 	}
+	if entry == nil {
+		return false, nil
+	}
 
-	return entry == nil, nil
+	kvPath := fmt.Sprintf("apps/%s/kvs/%s", appID, name)
+	entry, err = req.Storage.Get(ctx, kvPath)
+	if err != nil {
+		return false, err
+	}
+	return entry != nil, nil
 
 }
 

@@ -87,13 +87,11 @@ func (b *backend) pathKvExistenceCheck(ctx context.Context, req *logical.Request
 	name := d.Get("name").(string)
 
 	path := fmt.Sprintf("apps/%s/kvs/%s", appID, name)
-
 	entry, err := req.Storage.Get(ctx, path)
 	if err != nil {
 		return false, err
 	}
-
-	return entry == nil, nil
+	return entry != nil, nil
 }
 
 func (b *backend) pathKvList(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
