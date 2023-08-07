@@ -98,6 +98,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetBizTopologyHost",
 	"ClusterManager.GetTopologyNodes",
 	"ClusterManager.GetScopeHostCheck",
+	"ClusterManager.GetCloudAccountType",
 }
 
 // ActionPermissions action 对应权限中心的权限

@@ -223,7 +223,7 @@ func TestNodeManager_DescribeImages(t *testing.T) {
 func TestListKeyPairs(t *testing.T) {
 	defaultCommonOption.Region = regions.Nanjing
 
-	pairs, err := nodeManager.ListKeyPairs(nil, defaultCommonOption)
+	pairs, err := nodeManager.ListKeyPairs(defaultCommonOption)
 	if err != nil {
 		t.Fatal(err)
 	}

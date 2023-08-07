@@ -197,3 +197,22 @@ func (c *VPCClient) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*prot
 
 	return result, nil
 }
+
+// GetCloudNetworkAccountType 查询用户网络类型
+func (c *VPCClient) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
+	vpcCli, err := NewVPCClient(opt)
+	if err != nil {
+		blog.Errorf("create VPC client failed: %v", err)
+		return nil, err
+	}
+
+	req := vpc.NewDescribeNetworkAccountTypeRequest()
+
+	resp, err := vpcCli.vpc.DescribeNetworkAccountType(req)
+	if err != nil {
+		blog.Errorf("DescribeNetworkAccountType failed: %v", err)
+		return nil, err
+	}
+
+	return &proto.CloudAccountType{Type: *resp.Response.NetworkAccountType}, nil
+}

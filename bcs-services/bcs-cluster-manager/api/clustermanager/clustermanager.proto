@@ -987,6 +987,15 @@ service ClusterManager {
       summary : "查询Node列表"
     };
   }
+  rpc GetCloudAccountType(GetCloudAccountTypeRequest) returns (GetCloudAccountTypeResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/accounttype"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据AKSK查询云账号类型"
+      summary : "查询云账号类型"
+    };
+  }
 
   // Operation logs
   rpc ListOperationLogs(ListOperationLogsRequest) returns (ListOperationLogsResponse) {
@@ -9858,6 +9867,62 @@ message CloudNode {
   bool cloudRegionNode=13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudRegionNode",
     description: "是否是该云的某个地域节点"
+  }];
+}
+
+message GetCloudAccountTypeRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetCloudAccountTypeRequest"
+      description : "查询云账号类型"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID, 通过指定的云账号信息获取"
+  }];
+}
+
+message GetCloudAccountTypeResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetCloudAccountTypeResponse"
+      description : "查询云账号类型返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  CloudAccountType data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取节点列表信息"
+  }];
+}
+
+message CloudAccountType {
+  string type=1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "type",
+      description : "云账号类型(用户账号的网络类型，STANDARD为标准用户，LEGACY为传统用户)"
   }];
 }
 

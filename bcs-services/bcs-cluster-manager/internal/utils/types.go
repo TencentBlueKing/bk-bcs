@@ -85,3 +85,11 @@ const (
 	// BCSSystem namespace
 	BCSSystem = "bcs-system"
 )
+
+// cloud account type
+const (
+	// STANDARD 标准用户
+	STANDARD = "STANDARD"
+	// LEGACY 传统用户
+	LEGACY = "LEGACY"
+)
