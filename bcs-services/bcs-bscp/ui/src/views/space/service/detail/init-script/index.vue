@@ -2,12 +2,14 @@
   import { ref, computed, onMounted, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import BkMessage from 'bkui-vue/lib/message';
+  import { AngleRight } from 'bkui-vue/lib/icon';
   import { IScriptItem } from '../../../../../../types/script'
   import { useGlobalStore } from '../../../../../store/global'
   import { useConfigStore } from '../../../../../store/config'
   import { getScriptList, getScriptVersionDetail } from '../../../../../api/script'
   import { getConfigScript, getDefaultConfigScriptData, updateConfigInitScript } from '../../../../../api/config'
   import ScriptEditor from '../../../scripts/components/script-editor.vue'
+  import ScriptSelector from './script-selector.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const { versionData } = storeToRefs(useConfigStore())
@@ -103,21 +105,16 @@
     contentLoading.value = false
   }
 
-  // 处理option中disabled状态的点击事件
-  const handleScriptOptionClick = (id: number, versionId: number, e: Event) => {
-    if (id && !versionId) {
-      e.stopPropagation()
-    }
-  }
-
   // 选择脚本
   const handleSelectScript = (id: number, type: string) => {
     const script = scriptsData.value.find(item => item.id === id)
     if (script) {
       if (type === 'pre') {
         formData.value.pre.versionId = script.versionId
+        formData.value.pre.id = id
       } else {
         formData.value.post.versionId = script.versionId
+        formData.value.post.id = id
       }
     }
     if (id === 0) {
@@ -172,27 +169,14 @@
       <bk-form form-type="vertical">
         <bk-form-item label="前置脚本">
           <div class="select-wrapper">
-            <bk-select
-              v-model="formData.pre.id"
-              :popover-options="{ theme: 'light bk-select-popover script-select-popover' }"
-              :clearable="false"
+            <ScriptSelector
+              type="pre"
+              :id="formData.pre.id"
               :disabled="viewMode"
               :loading="scriptsLoading"
-              @change="handleSelectScript($event, 'pre')">
-              <bk-option
-                v-for="script in scriptsData"
-                :class="['script-option-item', { disabled: script.id && !script.versionId }]"
-                :key="script.id"
-                :value="script.id"
-                :label="script.name">
-                <div
-                  v-bk-tooltips="{ disabled: script.id && script.versionId, content: '该脚本未上线' }"
-                  class="option-wrapper"
-                  @click="handleScriptOptionClick(script.id, script.versionId, $event)">
-                  {{ script.name }}
-                </div>
-              </bk-option>
-            </bk-select>
+              :list="scriptsData"
+              @change="handleSelectScript"
+              @refresh="getScripts" />
             <bk-button
               class="preview-button"
               text
@@ -205,27 +189,14 @@
         </bk-form-item>
         <bk-form-item label="后置脚本">
           <div class="select-wrapper">
-            <bk-select
-              v-model="formData.post.id"
-              :popover-options="{ theme: 'light bk-select-popover script-select-popover' }"
-              :clearable="false"
+            <ScriptSelector
+              type="post"
+              :id="formData.post.id"
               :disabled="viewMode"
               :loading="scriptsLoading"
-              @change="handleSelectScript($event, 'post')">
-              <bk-option
-                v-for="script in scriptsData"
-                :class="['script-option-item', { disabled: script.id && !script.versionId }]"
-                :key="script.id"
-                :value="script.id"
-                :label="script.name">
-                <div
-                  v-bk-tooltips="{ disabled: script.id && script.versionId, content: '该脚本未上线' }"
-                  class="option-wrapper"
-                  @click="handleScriptOptionClick(script.id, script.versionId, $event)">
-                  {{ script.name }}
-                </div>
-              </bk-option>
-            </bk-select>
+              :list="scriptsData"
+              @change="handleSelectScript"
+              @refresh="getScripts" />
             <bk-button
               class="preview-button"
               text
@@ -250,7 +221,12 @@
     <bk-loading v-if="previewConfig.open" class="preview-area" :loading="contentLoading">
       <ScriptEditor :model-value="previewConfig.content" :editable="false" :upload-icon="false" :language="previewConfig.type">
         <template #header>
-          <div class="script-preview-title">{{ `脚本预览 - ${previewConfig.name}` }}</div>
+          <div class="script-preview-title">
+            <div class="close-area" @click="previewConfig.open = false">
+              <AngleRight class="arrow-icon" />
+            </div>
+            <div class="title">{{ `脚本预览 - ${previewConfig.name}` }}</div>
+          </div>
         </template>
       </ScriptEditor>
     </bk-loading>
@@ -280,33 +256,35 @@
     height: 100%;
   }
   .script-preview-title {
-    padding: 0 24px;
-    line-height: 40px;
-    color: #c4c6cc;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    padding-right: 24px;
+    width: 100%;
+    height: 40px;
+    .close-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 100%;
+      background: #63656e;
+      color: #ffffff;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .title {
+      padding: 0 5px;
+      line-height: 40px;
+      color: #c4c6cc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
   :deep(.script-editor) {
     height: 100%;
     .content-wrapper {
       height: calc(100% - 40px);
-    }
-  }
-</style>
-<style lang="scss">
-  .script-select-popover.bk-popover.bk-select-popover .bk-select-content-wrapper {
-    .bk-select-option.script-option-item {
-      padding: 0;
-      &.disabled {
-        cursor: not-allowed;
-        .option-wrapper {
-          color: #dcdee5 !important;
-        }
-      }
-      .option-wrapper {
-        padding: 0 12px;
-      }
     }
   }
 </style>
