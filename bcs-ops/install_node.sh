@@ -121,10 +121,10 @@ kubeadm --config="${ROOT_DIR}/kubeadm-config" config images pull \
   || utils::log "FATAL" "fail to pull k8s image"
 
 kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11
-if [ ${ENABLE_APISERVER_HA} == "true" ]; then
-  if [ ${APISERVER_HA_MODE} == "bcs-apiserver-proxy" ]; then
+if [[ "${ENABLE_APISERVER_HA}" == "true" ]]; then
+  if [[ "${APISERVER_HA_MODE}" == "bcs-apiserver-proxy" ]]; then
     init_bap_rule
-  elif
+  else
     "${ROOT_DIR}"/system/config_bcs_dns -u "${VIP}" k8s-api.bcs.local
     systemctl restart kubelet.service
   fi
