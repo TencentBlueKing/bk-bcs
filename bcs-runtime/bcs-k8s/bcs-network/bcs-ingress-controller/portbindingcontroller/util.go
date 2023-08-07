@@ -49,8 +49,8 @@ func isPortBindingExpired(portBinding *networkextensionv1.PortBinding) (bool, er
 }
 
 // check for pod annotation
-func checkPortPoolAnnotationForPod(pod *k8scorev1.Pod) bool {
-	_, ok := pod.Annotations[constant.AnnotationForPortPool]
+func checkPortPoolAnnotation(annotations map[string]string) bool {
+	_, ok := annotations[constant.AnnotationForPortPool]
 	return ok
 }
 
