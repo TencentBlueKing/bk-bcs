@@ -1,0 +1,329 @@
+#! /bin/bash
+
+#######################################
+# Tencent is pleased to support the open source community by making Blueking Container Service available.
+# Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+# http://opensource.org/licenses/MIT
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#######################################
+
+set -euo pipefail
+# apply or delete flannel
+
+PROGRAM="$(basename "$0")"
+SELF_DIR=$(dirname "$(readlink -f "$0")")
+ROOT_DIR="${SELF_DIR}/.."
+
+readonly PROGRAM SELF_DIR ROOT_DIR
+
+usage_and_exit() {
+  cat <<EOF
+Usage:
+    $PROGRAM
+      [ -h --help -?  show usage ]
+      [ -v -V --version show script version]
+      [ backup: get etcd snapshot]
+      [ restore: restore specified etcd member to specified dir from snapshot]
+      [ restore_all: restore all etcd member to specific dir from snapshot]
+      [ new: start a new etcd cluster, edit from default kubeadmin etcd.yaml]
+    eg: ./$0 backup  etcd_host cacert cert key back_file
+    eg: ./$0 restore back_file data_dir member_name member_peer initial_cluster
+    eg: ./$0 restore_all back_file data_dir initial_cluster
+    eg: ./$0 new name data_dir peer_port service_port metric_port initial_cluster cacert cert key
+
+    other info:
+      Snapshot restores a fresh cluster, thus cannot join the existing cluster unless all other members are restored from same snapshot file.
+EOF
+  exit 1
+}
+
+version() {
+  echo "$PROGRAM version v0.0.1"
+}
+
+safe_source() {
+  local source_file=$1
+  if [[ -f ${source_file} ]]; then
+    #shellcheck source=/dev/null
+    source "${source_file}"
+  else
+    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    exit 1
+  fi
+}
+
+#######################################
+# check_etcd_status check etcd endpoint health
+# Globals:
+#   None
+# Arguments:
+#   endpoint
+#   cacert
+#   cert
+#   key
+#######################################
+check_etcd_status() {
+  if [[ $# -ne 4 ]];then
+    utils::log "FATAL" "wrong variable num"
+  fi
+
+  local endpoint cacert cert key
+  endpoint=${1}
+  cacert=${2}
+  cert=${3}
+  key=${4}
+
+  if [[ ! -f ${cacert} ]] || [[ ! -f ${cert} ]] || [[ ! -f ${key} ]]; then
+    utils::log "FATAL" "specified pem file not exist"
+  fi
+
+  if ! command -v etcdctl &>/dev/null; then
+    # try get etcdctl from etcd container
+    case "${CRI_TYPE,,}" in
+      "docker")
+        container_id=$(docker ps | awk '/etcd/&&!/pause/{print $1;exit}')
+        if ! docker cp ${container_id}:/usr/local/bin/etcdctl /usr/local/bin/;then
+          utils::log "FATAL" "can not cp etcdctl command"
+        fi
+        ;;
+      "containerd")
+        mkdir /tmp/container_mount
+        container_id=$(ctr -n k8s.io containers ls|awk '/etcd/&&!/pause/{print $1;exit}')
+        if [[ -n "${container_id}" ]];then
+          if ! ctr -n k8s.io snapshot mounts /tmp/container_mount ${container_id} |bash -s;then
+            utils::log "FATAL" "can not mount etcd container"
+          fi
+          if ! cp /tmp/container_mount/usr/local/bin/etcdctl /usr/local/bin/;then
+            utils::log "FATAL" "can not cp etcdctl command"
+          fi
+        fi
+        umount /tmp/container_mount || job_fail "umount /tmp/container_mount failed"
+        ;;
+      *)
+        utils::log "FATAL" "can not cp etcdctl command"
+        ;;
+    esac
+
+    chmod 111 /usr/local/bin/etcdctl
+  fi
+
+  if ! command -v etcdctl &>/dev/null; then
+    utils::log "FATAL" "can not find etcdctl command"
+  fi
+  export ETCDCTL_API=3
+
+  if ! etcdctl --endpoints https://${endpoint}:2379 --cacert ${cacert} --cert ${cert} --key ${key} endpoint health; then
+    utils::log "FATAL" "etcd endpoint is not healthy"
+  fi
+
+  utils::log "OK" "etcd endpoint is healthy"
+  return 0
+}
+
+#######################################
+# restore_etcd restore etcd data dir from snapshot
+# Globals:
+#   None
+# Arguments:
+#   backup_file
+#   data_dir
+#   member_name
+#   member_peer
+#   initial_cluster
+#######################################
+restore_etcd(){
+  if [[ $# -ne 5 ]];then
+    utils::log "FATAL" "wrong variable num"
+  fi
+
+  local backup_file data_dir member_name member_peer initial_cluster
+  backup_file=${1}
+  data_dir=${2}
+  member_name=${3}
+  member_peer=${4}
+  initial_cluster=${5}
+  etcdctl snapshot restore ${backup_file} --data-dir ${data_dir} --initial-advertise-peer-urls ${member_peer} --initial-cluster ${initial_cluster} --name ${member_name} > /dev/null
+  utils::log "OK" "restore etcd snapshot success"
+  utils::log "OK" "$(ls -l ${data_dir})"
+  utils::log "OK" "you can boot your etcd instance with this etcd data dir"
+}
+
+#######################################
+# new_etcd start a new etcd cluster, edit from default kubeadmin etcd.yaml
+# Globals:
+#   None
+# Arguments:
+#   name
+#   data_dir
+#   peer_port
+#   service_port
+#   metric_port
+#   initial_cluster
+#   cacert
+#   cert
+#   key
+#######################################
+new_etcd(){
+  if [[ $# -ne 9 ]];then
+    utils::log "FATAL" "wrong variable num"
+  fi
+  local name data_dir peer_port service_port metric_port initial_cluster cacert cert key
+  name=${1}
+  data_dir=${2}
+  peer_port=${3}
+  service_port=${4}
+  metric_port=${5}
+  initial_cluster=${6}
+  cacert=${7}
+  cert=${8}
+  key=${9}
+
+  cp /etc/kubernetes/manifests/etcd.yaml /tmp/etcd-${name}.yaml
+  sed -i "s|--initial-cluster=.*|--initial-cluster=${initial_cluster}|g" /tmp/etcd-${name}.yaml
+  sed -i "s|/data/bcs/lib/etcd|${data_dir}|g" /tmp/etcd-${name}.yaml
+  sed -i "s/:2379/:${service_port}/g" /tmp/etcd-${name}.yaml
+  sed -i "s/:2380/:${peer_port}/g" /tmp/etcd-${name}.yaml
+  sed -i "s/:2381/:${metric_port}/g" /tmp/etcd-${name}.yaml
+  sed -i "s/: 2381/: ${metric_port}/g" /tmp/etcd-${name}.yaml
+  sed -i "s/initial-cluster-state=existing/initial-cluster-state=new/g" /tmp/etcd-${name}.yaml
+
+  sed -i "s/name: etcd/name: etcd-${name}/g" /tmp/etcd-${name}.yaml
+  sed -i "s/component: etcd/component: etcd-${name}/g" /tmp/etcd-${name}.yaml
+  mkdir ${data_dir}
+
+  cp /tmp/etcd-${name}.yaml /etc/kubernetes/manifests/
+  sleep 30
+  check_etcd_status https://127.0.0.1:${service_port} ${cacert} ${cert} ${key}
+}
+
+#######################################
+# restore_all_etcd restore all etcd members' data dir set in param initial_cluster from snapshot
+# Globals:
+#   None
+# Arguments:
+#   backup_file
+#   data_dir
+#   initial_cluster
+#######################################
+restore_all_etcd(){
+  if [[ $# -ne 3 ]];then
+    utils::log "FATAL" "wrong variable num"
+  fi
+
+  local backup_file data_dir initial_cluster
+  backup_file=${1}
+  data_dir=${2}
+  initial_cluster=${3}
+
+  for cluster_string in ${initial_cluster//,/ };do
+    peer_name=$(echo ${cluster_string}|awk -F'='  '{ print $1 } ')
+    peer=$(echo ${cluster_string}|awk -F'='  '{ print $2 } ')
+    etcdctl snapshot restore ${backup_file} --data-dir ${data_dir}/${peer_name} --initial-advertise-peer-urls ${peer} --initial-cluster ${initial_cluster} --name ${peer_name} > /dev/null
+    utils::log "OK" "restore etcd snapshot as ${peer_name} success"
+  done
+  utils::log "OK" "$(ls -l ${data_dir})"
+  utils::log "OK" "you can boot your etcd instances with these etcd data dirs"
+}
+
+#######################################
+# backup_etcd backup etcd
+# Globals:
+#   None
+# Arguments:
+#   endpoint
+#   cacert
+#   cert
+#   key
+#   backup_file
+#######################################
+backup_etcd() {
+  if [[ $# -ne 5 ]];then
+    echo "eg: ./$0 backup  etcd_host cacert cert key back_file"
+    utils::log "FATAL" "wrong variable num"
+  fi
+
+  local endpoint cacert cert key backup_file
+  endpoint=${1}
+  cacert=${2}
+  cert=${3}
+  key=${4}
+  backup_file=${5}
+
+  check_etcd_status "$@"
+  export ETCDCTL_API=3;
+  if ! etcdctl --endpoints https://${endpoint}:2379 --cacert ${cacert} --cert ${cert} --key ${key} snapshot save ${backup_file} 2>/dev/null; then
+    utils::log "FATAL" "failed to get etcd snapshot"
+  fi
+
+  if ! etcdctl --endpoints https://${endpoint}:2379 --cacert ${cacert} --cert ${cert} --key ${key} member list >${backup_file}_clusterinfo 2>/dev/null; then
+    utils::log "FATAL" "failed to get etcd cluster info"
+  fi
+
+  utils::log "OK" "get etcd back success"
+}
+
+main() {
+  local source_files
+  source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+  for file in "${source_files[@]}"; do
+    safe_source "$file"
+  done
+
+  (($# == 0)) && usage_and_exit 1
+
+  while (($# > 0)); do
+    case "$1" in
+      --help | -h | '-?')
+        usage_and_exit 0
+        ;;
+      --version | -v | -V)
+        version
+        exit 0
+        ;;
+      check)
+        shift
+        check_etcd_status "$@"
+        break
+        ;;
+      backup)
+        shift
+        backup_etcd "$@"
+        break
+        ;;
+      restore)
+        shift
+        restore_etcd "$@"
+        break
+        ;;
+      restore_all)
+        shift
+        restore_all_etcd "$@"
+        break
+        ;;
+      new)
+        shift
+        new_etcd "$@"
+        break
+        ;;
+      -*)
+        # ToDo: Unified standard error code
+        export ERR_CODE=1
+        utils::log "ERROR" "unkown para: $1"
+        ;;
+      *)
+        export ERR_CODE=1
+        utils::log "ERROR" "unkown command: $1"
+        break
+        ;;
+    esac
+    shift
+  done
+
+}
+
+main "$@"
