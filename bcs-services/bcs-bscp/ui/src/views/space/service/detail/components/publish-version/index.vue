@@ -74,25 +74,27 @@
 <template>
     <section class="create-version">
         <bk-button v-if="versionData.status.publish_status === 'not_released'" class="trigger-button" theme="primary" @click="handleOpenSelectGroupPanel">上线版本</bk-button>
-        <VersionLayout v-if="openSelectGroupPanel">
-            <template #header>
-                <section class="header-wrapper">
-                    <span class="header-name" @click="handlePanelClose">
-                        <ArrowsLeft class="arrow-left" />
-                        <span class="service-name">{{ appData.spec.name }}</span>
-                    </span>
-                    <AngleRight class="arrow-right" />
-                    上线版本：{{ versionData.spec.name }}
-                </section>
-            </template>
-            <select-group :groups="groups" @openPreviewVersionDiff="openPreviewVersionDiff" @change="groups = $event"></select-group>
-            <template #footer>
-                <section class="actions-wrapper">
-                    <bk-button class="publish-btn" theme="primary" @click="isDiffSliderShow = true">对比并上线</bk-button>
-                    <bk-button @click="handlePanelClose">取消</bk-button>
-                </section>
-            </template>
-        </VersionLayout>
+        <Teleport to="body">
+          <VersionLayout v-if="openSelectGroupPanel">
+              <template #header>
+                  <section class="header-wrapper">
+                      <span class="header-name" @click="handlePanelClose">
+                          <ArrowsLeft class="arrow-left" />
+                          <span class="service-name">{{ appData.spec.name }}</span>
+                      </span>
+                      <AngleRight class="arrow-right" />
+                      上线版本：{{ versionData.spec.name }}
+                  </section>
+              </template>
+              <select-group :groups="groups" @openPreviewVersionDiff="openPreviewVersionDiff" @change="groups = $event"></select-group>
+              <template #footer>
+                  <section class="actions-wrapper">
+                      <bk-button class="publish-btn" theme="primary" @click="isDiffSliderShow = true">对比并上线</bk-button>
+                      <bk-button @click="handlePanelClose">取消</bk-button>
+                  </section>
+              </template>
+          </VersionLayout>
+        </Teleport>
         <ConfirmDialog
             v-model:show="isConfirmDialogShow"
             :bk-biz-id="props.bkBizId"
