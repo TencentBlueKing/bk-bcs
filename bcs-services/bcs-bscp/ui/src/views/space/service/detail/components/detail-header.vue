@@ -24,7 +24,7 @@
 
   const tabs = ref([
     { name: 'config', label: '配置管理', routeName: 'service-config' },
-    { name: 'script', label: '初始化脚本', routeName: 'init-script' },
+    { name: 'script', label: '前/后置脚本', routeName: 'init-script' },
   ])
 
   
