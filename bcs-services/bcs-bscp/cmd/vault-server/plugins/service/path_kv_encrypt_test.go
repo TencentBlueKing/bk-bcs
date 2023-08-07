@@ -74,28 +74,6 @@ func TestKvEncryptRsa(t *testing.T) {
 		t.Fatalf("解析rsa私钥失败")
 	}
 
-	// 3.生成sm2
-	req = &logical.Request{
-		Operation: logical.CreateOperation,
-		Path:      pkiPath,
-		Storage:   storage,
-		Data: map[string]interface{}{
-			"algorithm": "sm2",
-		},
-	}
-	resp, err = b.HandleRequest(context.Background(), req)
-	if err != nil || (resp != nil && resp.IsError()) {
-		t.Fatalf("err:%v resp:%#v", err, resp)
-	}
-	privateKeySm2PEM, ok := resp.Data["private_key"].(string)
-	if !ok {
-		t.Fatalf("获取sm2私钥失败")
-	}
-	privateKeySm2, err := tools.SM2PrivateKeyFromPEM([]byte(privateKeySm2PEM))
-	if err != nil {
-		t.Fatalf("解析sm2私钥失败")
-	}
-
 	// rsa 加密
 	req = &logical.Request{
 		Operation: logical.CreateOperation,
@@ -126,6 +104,55 @@ func TestKvEncryptRsa(t *testing.T) {
 		t.Fatalf("解密rsa失败")
 	}
 
+}
+
+func TestKvEncryptSm2(t *testing.T) {
+
+	// 1.上传 kv
+	var resp *logical.Response
+	var err error
+	b, storage := createBackendWithStorage(t)
+
+	kvPath := "apps/1/kvs/1"
+	pkiPath := "apps/1/pkis/1"
+	kvEncrypt := "apps/1/kvs/1/encrypt"
+
+	req := &logical.Request{
+		Path:      kvPath,
+		Operation: logical.CreateOperation,
+		Data: map[string]interface{}{
+			"value": "MQ==",
+		},
+		Storage: storage,
+	}
+
+	resp, err = b.HandleRequest(context.Background(), req)
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+
+	// 2.生成sm2
+	req = &logical.Request{
+		Operation: logical.CreateOperation,
+		Path:      pkiPath,
+		Storage:   storage,
+		Data: map[string]interface{}{
+			"algorithm": "sm2",
+		},
+	}
+	resp, err = b.HandleRequest(context.Background(), req)
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+	privateKeySm2PEM, ok := resp.Data["private_key"].(string)
+	if !ok {
+		t.Fatalf("获取sm2私钥失败")
+	}
+	privateKeySm2, err := tools.SM2PrivateKeyFromPEM([]byte(privateKeySm2PEM))
+	if err != nil {
+		t.Fatalf("解析sm2私钥失败")
+	}
+
 	// sm2 加密
 	req = &logical.Request{
 		Operation: logical.CreateOperation,
@@ -140,15 +167,15 @@ func TestKvEncryptRsa(t *testing.T) {
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
-	ciphertextBase64, ok = resp.Data["ciphertext"].(string)
+	ciphertextBase64, ok := resp.Data["ciphertext"].(string)
 	if !ok {
 		t.Fatalf("获取sm2密文失败")
 	}
-	ciphertext, err = base64.StdEncoding.DecodeString(ciphertextBase64)
+	ciphertext, err := base64.StdEncoding.DecodeString(ciphertextBase64)
 	if err != nil {
 		t.Fatalf("err:%v ", err)
 	}
-	value, err = tools.SM2DecryptWithPrivateKey(privateKeySm2, ciphertext)
+	value, err := tools.SM2DecryptWithPrivateKey(privateKeySm2, ciphertext)
 	if err != nil {
 		t.Fatalf("err : %v", err)
 	}

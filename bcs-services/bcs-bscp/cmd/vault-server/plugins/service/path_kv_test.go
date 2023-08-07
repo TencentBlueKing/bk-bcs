@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
-func TestCreateKv(t *testing.T) {
+func Test_Kv(t *testing.T) {
 	var resp *logical.Response
 	var err error
 	b, storage := createBackendWithStorage(t)
 
-	kvPath := "apps/1/kvs/2"
+	kvPath := "apps/1/kvs/1"
 
 	req := &logical.Request{
 		Path:      kvPath,
@@ -92,40 +92,6 @@ func TestCreateKv(t *testing.T) {
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
-	}
-
-	println(" -> pass")
-
-}
-
-func TestReadKv(t *testing.T) {
-	var resp *logical.Response
-	var err error
-	b, storage := createBackendWithStorage(t)
-
-	req := &logical.Request{
-		Path:      "apps/1/kv/key_1",
-		Operation: logical.CreateOperation,
-		Data: map[string]interface{}{
-			"value": "MQ==",
-		},
-		Storage: storage,
-	}
-
-	resp, err = b.HandleRequest(context.Background(), req)
-	if err != nil || (resp != nil && !resp.Data["result"].(bool)) {
-		t.Fatalf("bad: err: %v\nresp: %#v", err, resp)
-	}
-
-	req = &logical.Request{
-		Path:      "biz_id/1/apps/1/scenes/1/kv/key_1",
-		Operation: logical.ReadOperation,
-		Storage:   storage,
-	}
-
-	resp, err = b.HandleRequest(context.Background(), req)
-	if err != nil {
-		t.Fatalf("bad: err: %v\nresp: %#v", err, resp)
 	}
 
 	println(" -> pass")

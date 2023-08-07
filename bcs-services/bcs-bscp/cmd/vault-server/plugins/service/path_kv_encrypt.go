@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
@@ -50,8 +51,34 @@ func (b *backend) pathKvEncrypt() *framework.Path {
 				Callback:    b.pathEncryptWrite,
 				Description: "kv is obtained encrypted",
 			},
+			logical.UpdateOperation: &framework.PathOperation{
+				Callback:    b.pathEncryptWrite,
+				Description: "kv is obtained encrypted",
+			},
+			logical.ReadOperation: &framework.PathOperation{
+				Callback:    b.pathEncryptWrite,
+				Description: "kv is obtained encrypted",
+			},
 		},
+
+		ExistenceCheck: b.pathKvEncryptExistenceCheck,
 	}
+}
+
+func (b *backend) pathKvEncryptExistenceCheck(ctx context.Context, req *logical.Request, d *framework.FieldData) (bool, error) {
+
+	appID := d.Get("app_id").(string)
+	name := d.Get("name").(string)
+	algorithm := d.Get("algorithm").(string)
+
+	path := fmt.Sprintf("apps/%s/pkis/%s/%s", appID, name, algorithm)
+	entry, err := req.Storage.Get(ctx, path)
+	if err != nil {
+		return false, err
+	}
+
+	return entry == nil, nil
+
 }
 
 func (b *backend) pathEncryptWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
