@@ -17,8 +17,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/vault/sdk/logical"
-
-	"bscp.io/pkg/tools"
 )
 
 // 上传RSA密钥
@@ -121,16 +119,8 @@ func TestPkiSM2(t *testing.T) {
 	var err error
 	b, s := createBackendWithStorage(t)
 
-	privateKey, err := tools.GenerateSM2KeyPair(b.GetRandomReader())
-	if err != nil {
-		t.Fatalf("err:%v ", err)
-	}
-	keyByte, err := tools.SM2PublicKeyToPEM(&privateKey.PublicKey)
-	if err != nil {
-		t.Fatalf("err:%v ", err)
-	}
-
-	key := string(keyByte)
+	key1 := "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEShifZVIvzOIwaFgPEwsd174D5np6\n7B78u37va+rEMfxZJHPvvGw5zyqVA74+zXzwSD2BtVwTf5LQxIB42io2pQ==\n-----END PUBLIC KEY-----"
+	key2 := "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEATwWX6WEpQIFxipM1s8Qp8F/yAGA\nbPP/1dphzANQOtMkK54L2bkubXaxuCwIN9xBp3vZxNj7sT16yS+swjOunQ==\n-----END PUBLIC KEY-----\n"
 
 	path := "apps/1/pkis/2"
 
@@ -140,7 +130,7 @@ func TestPkiSM2(t *testing.T) {
 		Storage:   s,
 		Data: map[string]interface{}{
 			"algorithm": "sm2",
-			"pub_key":   key,
+			"pub_key":   key1,
 		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
@@ -160,19 +150,9 @@ func TestPkiSM2(t *testing.T) {
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
-	if resp.Data["pub_key"] != key {
+	if resp.Data["pub_key"] != key1 {
 		t.Fatalf("获取公钥的错误")
 	}
-
-	privateKey, err = tools.GenerateSM2KeyPair(b.GetRandomReader())
-	if err != nil {
-		t.Fatalf("err:%v ", err)
-	}
-	keyByte, err = tools.SM2PublicKeyToPEM(&privateKey.PublicKey)
-	if err != nil {
-		t.Fatalf("err:%v ", err)
-	}
-	key = string(keyByte)
 
 	req = &logical.Request{
 		Operation: logical.UpdateOperation,
@@ -180,7 +160,7 @@ func TestPkiSM2(t *testing.T) {
 		Storage:   s,
 		Data: map[string]interface{}{
 			"algorithm": "sm2",
-			"pub_key":   key,
+			"pub_key":   key2,
 		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
@@ -200,7 +180,7 @@ func TestPkiSM2(t *testing.T) {
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
-	if resp.Data["pub_key"] != key {
+	if resp.Data["pub_key"] != key2 {
 		t.Fatalf("获取公钥的错误")
 	}
 
