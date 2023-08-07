@@ -644,8 +644,7 @@ cluster:
           clusters.
       cloudProvider:
         title: Cloud Provider
-        subTitle: >-
-          Unified management of multi-cloud provider clusters
+        subTitle: Unified management of multi-cloud provider clusters
         desc: >-
           Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
           Google Cloud
@@ -2420,7 +2419,7 @@ plugin:
       "OK" to update
     confirmUpgrade: Confirm update
     noChages: There is no change in the content of this update
-    submit: Configuration submitted successfully 
+    submit: Configuration submitted successfully
     addPattern: Add Expression
     icon: Icon
     deployed: Deployed

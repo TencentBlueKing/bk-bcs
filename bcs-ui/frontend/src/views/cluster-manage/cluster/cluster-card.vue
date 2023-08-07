@@ -46,8 +46,12 @@
                 <i class="text-[24px] bcs-icon bcs-icon-more"></i>
               </span>
               <ul slot="content" class="bg-[#fff]">
-                <li class="bcs-dropdown-item" @click="handleGotoClusterOverview(cluster)">{{$t('cluster.detail.title.overview')}}</li>
-                <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(cluster, 'info')">{{$t('generic.title.basicInfo1')}}</li>
+                <li
+                  class="bcs-dropdown-item"
+                  @click="handleGotoClusterOverview(cluster)">{{$t('cluster.detail.title.overview')}}</li>
+                <li
+                  class="bcs-dropdown-item"
+                  @click="handleGotoClusterDetail(cluster, 'info')">{{$t('generic.title.basicInfo1')}}</li>
                 <!-- vCluster集群 -->
                 <template v-if="cluster.clusterType === 'virtual'">
                   <li
@@ -58,7 +62,9 @@
                 </template>
                 <!-- 其他集群 -->
                 <template v-else>
-                  <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(cluster, 'network')">{{$t('cluster.detail.title.network')}}</li>
+                  <li
+                    class="bcs-dropdown-item"
+                    @click="handleGotoClusterDetail(cluster, 'network')">{{$t('cluster.detail.title.network')}}</li>
                   <li
                     class="bcs-dropdown-item"
                     @click="handleGotoClusterDetail(cluster, 'master')">
@@ -197,8 +203,14 @@
             <img class="w-[220px] h-[100px]" :src="maintain" />
             <p class="mt-[6px]">{{ statusTextMap[cluster.status] }}</p>
             <div class="mt-[4px]">
-              <bk-button class="text-[12px] mr-[5px]" text @click="handleRetry(cluster)">{{ $t('cluster.ca.nodePool.records.action.retry') }}</bk-button>|
-              <bk-button class="text-[12px]" text @click="handleShowClusterLog(cluster)">{{$t('generic.button.log')}}</bk-button>
+              <bk-button
+                class="text-[12px] mr-[5px]"
+                text
+                @click="handleRetry(cluster)">{{ $t('cluster.ca.nodePool.records.action.retry') }}</bk-button>|
+              <bk-button
+                class="text-[12px]"
+                text
+                @click="handleShowClusterLog(cluster)">{{$t('generic.button.log')}}</bk-button>
             </div>
           </div>
           <!-- 导入失败 -->
@@ -208,7 +220,10 @@
             <img class="w-[220px] h-[100px]" :src="maintain" />
             <p class="mt-[6px]">{{ statusTextMap[cluster.status] }}</p>
             <div class="mt-[4px]">
-              <bk-button class="text-[12px]" text @click="handleShowClusterLog(cluster)">{{$t('查看日志')}}</bk-button>
+              <bk-button
+                class="text-[12px]"
+                text
+                @click="handleShowClusterLog(cluster)">{{$t('generic.button.log')}}</bk-button>
             </div>
           </div>
           <!-- 正常 -->
