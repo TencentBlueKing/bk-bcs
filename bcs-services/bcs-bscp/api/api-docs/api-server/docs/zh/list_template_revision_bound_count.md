@@ -62,6 +62,6 @@
 | 参数名称                | 参数类型 | 描述                           |
 | ----------------------- | -------- | ------------------------------ |
 | template_id             | uint32   | 模版ID                         |
-| bound_unnamed_app_count | uint32   | 模版版本被未命名服务引用的数量 |
-| bound_named_app_count   | uint32   | 模版版本被已命名服务引用的数量 |
+| bound_unnamed_app_count | uint32   | 模版版本被未命名版本服务引用的数量 |
+| bound_named_app_count   | uint32   | 模版版本被已命名版本服务引用的数量 |
 

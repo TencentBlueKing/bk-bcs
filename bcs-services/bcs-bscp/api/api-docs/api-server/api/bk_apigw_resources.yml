@@ -1661,7 +1661,7 @@ paths:
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details:
     get:
       operationId: list_template_bound_unnamed_app_detail
-      description: 查询模版被未命名服务引用详情
+      description: 查询模版被未命名版本服务引用详情
       tags:
         - 模版引用关系
       responses:
@@ -1685,7 +1685,7 @@ paths:
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details:
     get:
       operationId: list_template_bound_named_app_detail
-      description: 查询模版被已命名服务引用详情
+      description: 查询模版被已命名版本服务引用详情
       tags:
         - 模版引用关系
       responses:
@@ -1733,7 +1733,7 @@ paths:
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details:
     get:
       operationId: list_template_revision_bound_unnamed_app_detail
-      description: 查询模版版本被未命名服务引用详情
+      description: 查询模版版本被未命名版本服务引用详情
       tags:
         - 模版引用关系
       responses:
@@ -1757,7 +1757,7 @@ paths:
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details:
     get:
       operationId: list_template_revision_bound_named_app_detail
-      description: 查询模版版本被已命名服务引用详情
+      description: 查询模版版本被已命名版本服务引用详情
       tags:
         - 模版引用关系
       responses:
@@ -1781,7 +1781,7 @@ paths:
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details:
     get:
       operationId: list_template_set_bound_unnamed_app_detail
-      description: 查询模版套餐被未命名服务引用详情
+      description: 查询模版套餐被未命名版本服务引用详情
       tags:
         - 模版引用关系
       responses:
@@ -1805,7 +1805,7 @@ paths:
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details:
     get:
       operationId: list_template_set_bound_named_app_detail
-      description: 查询模版套餐被已命名服务引用详情
+      description: 查询模版套餐被已命名版本服务引用详情
       tags:
         - 模版引用关系
       responses:
