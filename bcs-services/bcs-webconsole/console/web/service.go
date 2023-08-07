@@ -15,6 +15,8 @@ package web
 
 import (
 	"fmt"
+	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"net/http"
 	"net/url"
 	"path"
@@ -38,7 +40,7 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 // RegisterRoute xxx
 func (s service) RegisterRoute(router gin.IRoutes) {
-	web := router.Use(route.WebAuthRequired())
+	web := router.Use(route.WebAuthRequired(), gintrace.Middleware(tracing.ServiceName))
 
 	// 跳转 URL
 	web.GET("/user/perm_request/", metrics.RequestCollect("UserPermRequestRedirect"), route.APIAuthRequired(),

@@ -17,6 +17,8 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"io"
 	"net/http"
 	"net/url"
@@ -58,7 +60,7 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 // RegisterRoute xxx
 func (s service) RegisterRoute(router gin.IRoutes) {
-	api := router.Use(route.APIAuthRequired())
+	api := router.Use(route.APIAuthRequired(), gintrace.Middleware(tracing.ServiceName))
 
 	// 用户登入态鉴权, session鉴权
 	api.GET("/api/projects/:projectId/clusters/:clusterId/session/",
