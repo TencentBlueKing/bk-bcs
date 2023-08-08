@@ -15,16 +15,16 @@ package web
 
 import (
 	"fmt"
-	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"net/http"
 	"net/url"
 	"path"
 
+	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 	"github.com/gin-gonic/gin"
 )

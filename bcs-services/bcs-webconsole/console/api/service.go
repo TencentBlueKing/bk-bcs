@@ -17,8 +17,6 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
-	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"io"
 	"net/http"
 	"net/url"
@@ -27,10 +25,11 @@ import (
 	"strings"
 	"time"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -38,6 +37,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
