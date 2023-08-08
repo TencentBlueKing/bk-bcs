@@ -254,11 +254,26 @@
             </div>
           </template>
           <span class="inline-flex mt15">
-            <bk-checkbox
-              :disabled="isEdit"
-              v-model="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
-              {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
-            </bk-checkbox>
+            <bk-popover theme="light" :disabled="accountType !== 'LEGACY'">
+              <bk-checkbox
+                :disabled="isEdit || accountType === 'LEGACY'"
+                v-model="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
+                {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
+              </bk-checkbox>
+              <template #content>
+                <i18n
+                  path="cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.tips1">
+                  <bk-link
+                    theme="primary"
+                    target="_blank"
+                    href="https://cloud.tencent.com/document/product/1199/49090">
+                    <span class="text-[12px] ml-[4px] relative top-[-1px]">
+                      {{ $t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.accountLink') }}
+                    </span>
+                  </bk-link>
+                </i18n>
+              </template>
+            </bk-popover>
           </span>
           <div class="panel" v-if="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
             <div class="panel-item">
@@ -435,7 +450,7 @@ import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 import usePage from '@/composables/use-page';
 import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
-import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
+import { useClusterInfo, useCloud } from '@/views/cluster-manage/cluster/use-cluster';
 import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 import { cloudsZones } from '@/api/modules/cluster-manager';
 import TextTips from '@/components/layout/TextTips.vue';
@@ -964,6 +979,8 @@ export default defineComponent({
       clusterDetailLoading.value = false;
     };
 
+    const { accountType, getCloudAccountType } = useCloud();
+
     onMounted(async () => {
       await handleGetClusterDetail(); // 优选获取集群详情信息
       handleGetOsImage();
@@ -972,6 +989,10 @@ export default defineComponent({
       handleGetZoneList();
       handleGetSubnets();
       handleGetKeyPairs();
+      getCloudAccountType({
+        $cloudId: cluster.value.provider,
+        accountID: cluster.value.cloudAccountID,
+      });
     });
 
     return {
@@ -1027,6 +1048,7 @@ export default defineComponent({
       handleLoginTypeChange,
       handleGetKeyPairs,
       handleCreateKeyPair,
+      accountType,
     };
   },
 });

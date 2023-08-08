@@ -553,6 +553,7 @@ cluster:
     maxNodePodNum: Pod IP  数量
     region: 所属地域
     clusterType: 集群类型
+    cloudClusterID: 云集群ID
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
@@ -869,6 +870,8 @@ cluster:
           publicIPAssigned:
             text: 分配免费公网IP
             tips: 内部上云环境禁用公网IP，如需提供公网服务请使用腾讯云负载均衡（CLB）
+            tips1: '此腾讯云账户为传统账户类型（带宽非上移），暂不支持分配免费公网IP，详情请见{0}'
+            accountLink: 帐户类型说明
             chargeMode:
               text: 计费方式
               traffic_postpaid_by_hour: 按使用流量计费
