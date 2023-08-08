@@ -37,7 +37,7 @@ Usage:
         dump: print bcs.env file.
         clean: clean bcs.env file ]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {
@@ -109,6 +109,24 @@ init_env() {
   BKREPO_URL=${BKREPO_URL:-}
   BK_RELEASE_REPO=${BK_RELEASE_REPO:-"hub.bktencent.com/blueking"}
   # HELM_MIRROR https://hub.bktencent.com/chartrepo/mirrors
+
+  # apiserver HA
+  ENABLE_APISERVER_HA=${ENABLE_APISERVER_HA:-"false"}
+  APISERVER_HA_MODE=${APISERVER_HA_MODE:-"bcs-apiserver-proxy"}
+  VIP=${VIP:-}
+  ## bcs apiserver proxy
+  APISERVER_PROXY_VERSION=${APISERVER_PROXY_VERSION:-"v1.28.0"}
+  PROXY_TOOL_PATH=${PROXY_TOOL_PATH:-"/usr/bin"}
+  VS_PORT=${VS_PORT:-"6443"}
+  LVS_SCHEDULER=${LVS_SCHEDULER:-"rr"}
+  PERSIST_DIR=${PERSIST_DIR:-"/root/.bcs"}
+  MANAGER_INTERVAL=${MANAGER_INTERVAL:-"10"}
+  LOG_LEVEL=${LOG_LEVEL:-"3"}
+  DEBUG_MODE=${DEBUG_MODE:-"true"}
+  ## kube-vip
+  KUBE_VIP_VERSION=${KUBE_VIP_VERSION:-"v0.5.12"}
+  BIND_INTERFACE=${BIND_INTERFACE:-}
+  VIP_CIDR=${VIP_CIDR:-"32"}
 }
 
 source_cluster_env() {
@@ -179,6 +197,7 @@ now is ${K8S_IPv6_STATUS}"
 
 render_env() {
   utils::log "INFO" "RENDERING bcs env file"
+  [ -d "${ROOT_DIR}/env" ] || install -dv "${ROOT_DIR}/env"
   cat >"${BCS_ENV_FILE}" <<EOF
 # bcs config begin
 ## HOST
@@ -247,6 +266,24 @@ BK_PUBLIC_REPO="${BK_PUBLIC_REPO}"
 ## helm
 BKREPO_URL="${BKREPO_URL}"
 BK_RELEASE_REPO="${BK_RELEASE_REPO}"
+
+
+# apiserver HA
+ENABLE_APISERVER_HA="${ENABLE_APISERVER_HA}"
+APISERVER_HA_MODE="${APISERVER_HA_MODE}"
+VIP="${VIP}"
+## bcs apiserver proxy
+APISERVER_PROXY_VERSION="${APISERVER_PROXY_VERSION}"
+VS_PORT="${VS_PORT}"
+LVS_SCHEDULER="${LVS_SCHEDULER}"
+PERSIST_DIR="${PERSIST_DIR}"
+MANAGER_INTERVAL="${MANAGER_INTERVAL}"
+LOG_LEVEL="${LOG_LEVEL}"
+DEBUG_MODE="${DEBUG_MODE}"
+## kube-vip
+KUBE_VIP_VERSION="${KUBE_VIP_VERSION}"
+BIND_INTERFACE="${BIND_INTERFACE}"
+VIP_CIDR="${VIP_CIDR}"
 # bcs config end
 EOF
 }

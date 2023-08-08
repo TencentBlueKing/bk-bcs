@@ -557,7 +557,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/biz/{biz_id}/apps/{app_id}/publish:
     post:

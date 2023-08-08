@@ -44,6 +44,7 @@
       height: calc(100% - 132px);
       :deep(.list-wrapper) {
         height: calc(100% - 50px);
+        overflow: auto;
       }
     }
     .scripts-menu {

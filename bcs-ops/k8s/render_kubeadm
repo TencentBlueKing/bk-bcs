@@ -34,7 +34,7 @@ Usage:
         dump: print bcs.env file.
         clean: clean bcs.env file ]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {
@@ -45,7 +45,7 @@ render_cluster() {
   local image_registry config_file=$1
   if [[ -n ${BK_PUBLIC_REPO:-} ]]; then
     # ToDo: registry.k8s.io replace k8s.gcr.io
-    image_registry=${BK_PUBLIC_REPO}/k8s.gcr.io
+    image_registry=${BK_PUBLIC_REPO}/registry.k8s.io
   else
     image_registry="registry.k8s.io"
   fi

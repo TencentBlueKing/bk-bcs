@@ -59,3 +59,12 @@ url("../assets/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .icon-block-shape:before {
 	content: "\e10d";
 }
+.icon-empty:before {
+	content: "\e10e";
+}
+.icon-folder:before {
+	content: "\e10f";
+}
+.icon-setting:before {
+	content: "\e110";
+}

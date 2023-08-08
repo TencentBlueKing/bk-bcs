@@ -41,7 +41,6 @@
     } else {
       let list: IGroupToPublish[] = []
       if (props.disabled.length > 0) {
-        debugger
         list = props.groupList.filter(group => !props.disabled.includes(group.id))
       }
       handleSelectGroup(list)

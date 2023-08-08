@@ -50,6 +50,13 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 		tx.Rollback()
 		return nil, err
 	}
+	// validate config items count.
+	if err := s.dao.ConfigItem().ValidateAppCINumber(grpcKit, tx, req.ConfigItemAttachment.BizId,
+		req.ConfigItemAttachment.AppId); err != nil {
+		logs.Errorf("validate config items count failed, err: %v, rid: %s", err, grpcKit.Rid)
+		tx.Rollback()
+		return nil, err
+	}
 	// 2. create content.
 	content := &table.Content{
 		Spec: req.ContentSpec.ContentSpec(),
@@ -139,6 +146,12 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		return nil, err
 	}
 	if err := s.doBatchDeleteConfigItems(grpcKit, tx, toDelete, req.BizId, req.AppId); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	// validate config items count.
+	if err := s.dao.ConfigItem().ValidateAppCINumber(grpcKit, tx, req.BizId, req.AppId); err != nil {
+		logs.Errorf("validate config items count failed, err: %v, rid: %s", err, grpcKit.Rid)
 		tx.Rollback()
 		return nil, err
 	}
