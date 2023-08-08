@@ -158,7 +158,7 @@ func (m *BKMonitor) GetClusterPodUsed(ctx context.Context, projectID, clusterID 
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	// 获取pod使用率
 	promql :=
-		`sum (kubelet_running_pods{cluster_id="%<clusterId>s", %<provider>s})`
+		`sum (kubelet_running_pods{%<cluster>s, node=~"%<node>s", %<provider>s})`
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
 
@@ -166,7 +166,7 @@ func (m *BKMonitor) GetClusterPodUsed(ctx context.Context, projectID, clusterID 
 func (m *BKMonitor) GetClusterPodTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	// 获取集群中最大可用pod数
-	nodes, err := k8sclient.GetClusterNodeList(ctx, clusterID)
+	nodes, err := k8sclient.GetClusterNodeList(ctx, clusterID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +175,26 @@ func (m *BKMonitor) GetClusterPodTotal(ctx context.Context, projectID, clusterID
 		pod += node.Status.Allocatable.Pods().Value()
 	}
 	return base.GetSameSeries(start, end, step, float64(pod), nil), nil
+}
+
+// GetClusterPodUsage 获取集群pod使用率
+func (m *BKMonitor) GetClusterPodUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	usedSeries, err := m.GetClusterPodUsed(ctx, projectID, clusterID, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes, err := k8sclient.GetClusterNodeList(ctx, clusterID, true)
+	if err != nil {
+		return nil, err
+	}
+	var pod int64
+	for _, node := range nodes {
+		pod += node.Status.Allocatable.Pods().Value()
+	}
+
+	return base.DivideSeriesByValue(usedSeries, float64(pod)), nil
 }
 
 // GetClusterCPURequest 获取CPU Rquest

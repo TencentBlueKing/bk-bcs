@@ -225,3 +225,9 @@ func (m *VCluster) GetClusterPodTotal(ctx context.Context, projectID, clusterID 
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
+
+// GetClusterPodUsage 获取集群pod使用率
+func (m *VCluster) GetClusterPodUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
