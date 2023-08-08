@@ -320,7 +320,7 @@ spec:
           path: /run/xtables.lock
           type: FileOrCreate
 EOF
-utils::log "OK" "${action} flannel success"
+  utils::log "OK" "${action} flannel success"
 }
 
 main() {
