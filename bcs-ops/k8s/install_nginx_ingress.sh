@@ -41,55 +41,51 @@ for file in "${source_files[@]}"; do
 done
 
 check_dependency() {
-    if ! command -v $1 &>/dev/null; then
-        echo "Error: $1 not found. Please install it and try again."
-        exit 1
-    fi
+  if ! command -v "$1" &>/dev/null; then
+    echo "Error: $1 not found. Please install it and try again."
+    exit 1
+  fi
 }
 
-
 install_nginx_ingress() {
-    local ver=$NGINX_INGRESS_VER
-    local namespace=$NAMESPACE
-    
-    helm repo add ingress-nginx $NGINX_INGRESS_URL
-    helm repo update
-    helm install ingress-nginx ingress-nginx/ingress-nginx  --version $ver -n $namespace
-    
+  local ver=$NGINX_INGRESS_VER
+  local namespace=$NAMESPACE
+
+  helm repo add ingress-nginx "$NGINX_INGRESS_URL"
+  helm repo update
+  helm install ingress-nginx ingress-nginx/ingress-nginx --version "$ver" -n $namespace
+
 }
 
 check_k8s_status() {
-    if ! kubectl cluster-info 2>/dev/null; then
-        utils::log "FATAL" "fail to get k8s cluster info"
-    fi
-    return 0
+  if ! kubectl cluster-info 2>/dev/null; then
+    utils::log "FATAL" "fail to get k8s cluster info"
+  fi
+  return 0
 
 }
 
+main() {
 
-main {
+  # 检查kubectl是否安装
+  check_dependency kubectl
+  # 检查helm是否安装
+  check_dependency helm
+  # 检查集群状态
+  check_k8s_status
 
-    # 检查kubectl是否安装
-    check_dependency kubectl
-    # 检查helm是否安装
-    check_dependency helm
-    # 检查集群状态
-    check_k8s_status
+  install_nginx_ingress
 
-    install_nginx_ingress 
+  echo "waiting Nginx Ingress to be install..."
+  kubectl wait --namespace $NAMESPACE --for=condition=ready pod \
+    --selector=app.kubernetes.io/component=controller --timeout=$TIMEOUT
 
-    echo "waiting Nginx Ingress to be install..."
-    kubectl wait --namespace $NAMESPACE --for=condition=ready pod \
-        --selector=app.kubernetes.io/component=controller --timeout=$TIMEOUT
-
-    # 显示部署结果
-    echo "Deploy Nginx Ingress sucess, detail:"
-    kubectl get svc -n $NAMESPACE
+  # 显示部署结果
+  echo "Deploy Nginx Ingress sucess, detail:"
+  kubectl get svc -n $NAMESPACE
 
 }
 
-
-main 
+main
 
 exit $?
-

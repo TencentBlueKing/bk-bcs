@@ -185,12 +185,12 @@ $(
     case "${cri_type}" in
       "containerd")
         cat <<CRI_EOF
-  criSocket: "unix:///run/containerd/containerd.sock"
+  criSocket: "/run/containerd/containerd.sock"
 CRI_EOF
         ;;
       "docker")
         cat <<CRI_EOF
-  criSocket: "unix:///var/run/dockershim.sock"
+  criSocket: "/var/run/dockershim.sock"
 CRI_EOF
         ;;
     esac

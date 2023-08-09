@@ -30,12 +30,12 @@ safe_source() {
 
 # 修改kube-proxy配置,添加vip白名单防止kube-proxy删除自定义的ipvs规则，并重启kube-proxy所有pod
 exclude_cidr_kube_proxy() {
-  if ! kubectl get cm -n kube-system kube-proxy -oyaml |grep -q "${VIP}"; then
-    kubectl get cm -n kube-system kube-proxy -oyaml | \
-    sed -e "s/      excludeCIDRs: null/      excludeCIDRs:/" \
-    -e "s/      excludeCIDRs:/      excludeCIDRs:\n      - ${VIP}\/32/" -e '/resourceVersion/d'| \
-    kubectl apply -f - \
-    || utils::log "ERROR" "failed to add excludeCIDRs for kube-proxy"
+  if ! kubectl get cm -n kube-system kube-proxy -oyaml | grep -q "${VIP}"; then
+    kubectl get cm -n kube-system kube-proxy -oyaml \
+      | sed -e "s/      excludeCIDRs: null/      excludeCIDRs:/" \
+        -e "s/      excludeCIDRs:/      excludeCIDRs:\n      - ${VIP}\/32/" -e '/resourceVersion/d' \
+      | kubectl apply -f - \
+      || utils::log "ERROR" "failed to add excludeCIDRs for kube-proxy"
     kubectl rollout restart daemonset -n kube-system kube-proxy
     utils::log "INFO" "excluded cidr ${VIP}/32 for kube-proxy success"
   else
@@ -67,15 +67,15 @@ check_k8s_status() {
 
 op_bap() {
   check_k8s_status
-    action=$1
-    if [[ -z ${BK_PUBLIC_REPO} ]]; then
-      utils::log "ERROR" "${action} bcs-apiserver-proxy failed, empty BK_PUBLIC_REPO"
-    else
-      bap_image="${BK_PUBLIC_REPO}/blueking/bcs-apiserver-proxy:${APISERVER_PROXY_VERSION}"
-    fi
+  action=$1
+  if [[ -z ${BK_PUBLIC_REPO} ]]; then
+    utils::log "ERROR" "${action} bcs-apiserver-proxy failed, empty BK_PUBLIC_REPO"
+  else
+    bap_image="${BK_PUBLIC_REPO}/blueking/bcs-apiserver-proxy:${APISERVER_PROXY_VERSION}"
+  fi
 
-    utils::log "INFO" "${action}ing bcs-apiserver-proxy"
-    cat <<EOF | kubectl "${action}" -f -
+  utils::log "INFO" "${action}ing bcs-apiserver-proxy"
+  cat <<EOF | kubectl "${action}" -f -
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -195,7 +195,7 @@ spec:
             path: "${PERSIST_DIR}"
           name: bcs-config
 EOF
-utils::log "OK" "${action} bcs-apiserver-proxy success"
+  utils::log "OK" "${action} bcs-apiserver-proxy success"
 }
 
 main() {

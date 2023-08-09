@@ -164,7 +164,7 @@ main() {
         project="$1"
         utils::check_op "${op_type}" "${project}"
         "${op_type}_${project}"
-		utils::log "OK" "command complete ${project}"
+        utils::log "OK" "command complete ${project}"
         break
         ;;
     esac

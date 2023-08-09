@@ -159,11 +159,11 @@ done
 case "${expression}" in
   a)
     variable="…"
-    some_command "${variable}" "${other_expr}" 
+    some_command "${variable}" "${other_expr}"
     ;;
   absolute)
     actions="relative"
-    another_command "${actions}" "${other_expr}" 
+    another_command "${actions}" "${other_expr}"
     ;;
   *) error "Unexpected option ${flag}" ;;
 esac
@@ -211,3 +211,19 @@ fi
 
 * [google Shell Style Guide](https://google.github.io/styleguide/shellguide.html)
 
+## 推荐 vscode 开发环境
+1. 安装 [ShellCheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck) 插件。忽略错误：在对应行上方添加 `#shellcheck`。
+	> 应尽可能满足 `shellsheck` 的要求，而不是大段忽略
+	```bash
+	# 未找到 source 文件路径而报错
+	#shellcheck source=/dev/null
+
+	# 忽略某个错误
+	#shellcheck disable=2086
+	```
+
+2. 安装 [shfmt](https://github.com/mvdan/sh) 工具，使用 `shfmt` 格式化脚本。可以搭配 [shell-format](https://marketplace.visualstudio.com/items?itemName=foxundermoon.shell-format) 插件使用。
+	> shfmt 无法对 `maxline` 做限制
+	```bash
+	shfmt -w -i 2 -ci -bn "<filename>"
+	```
