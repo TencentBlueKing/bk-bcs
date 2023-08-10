@@ -5,6 +5,7 @@ all:
 	@cd feed-server && make
 	@cd auth-server && make
 	@cd cache-service && make
+	@cd vault-server && make
 
 server:
 	@cd api-server && make package
