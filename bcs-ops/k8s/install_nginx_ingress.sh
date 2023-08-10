@@ -16,7 +16,6 @@ set -euo pipefail
 trap "utils::on_ERR;" ERR
 
 NGINX_INGRESS_VER=${NGINX_INGRESS_VER:-"4.2.5"}
-NGINX_INGRESS_URL=${NGINX_INGRESS_URL:-"https://kubernetes.github.io/ingress-nginx"}
 
 TIMEOUT=180s
 NAMESPACE=ingress-nginx
@@ -35,7 +34,7 @@ safe_source() {
 }
 
 # 加载公共函数变量
-source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/functions/k8s.sh" "${ROOT_DIR}/env/bcs.env")
 for file in "${source_files[@]}"; do
   safe_source "$file"
 done
@@ -50,11 +49,54 @@ check_dependency() {
 install_nginx_ingress() {
   local ver=$NGINX_INGRESS_VER
   local namespace=$NAMESPACE
+  if [[ -n ${BCS_OFFLINE:-} ]]; then
+    true
+  else
+    [[ -n ${BKREPO_URL:-} ]] || utils::log "FAIL" "missing bkrepo url ${BKREPO_URL}"
+    if ! k8s::safe_add_helmrepo blueking "${BKREPO_URL}"; then
+      utils::log "WARNING" "something wrong with helm, skip install ingress-nginx"
+      return 1
+    fi
 
-  helm repo add ingress-nginx "$NGINX_INGRESS_URL"
-  helm repo update
-  helm install ingress-nginx ingress-nginx/ingress-nginx --version "$ver" -n $namespace
-
+    utils::log "INFO" "installing ingress-nginx"
+    cat <<EOF | helm upgrade --install ingress-nginx blueking/ingress-nginx --version "$ver" -n $namespace --debug -f -
+controller:
+  metrics:
+    enabled: true
+  image:
+    registry: ${BK_PUBLIC_REPO}/registry.k8s.io
+    digest: ""
+  config:
+    # log format is consistent with the filebeat collection configuration
+    log-format-upstream: '\$remote_addr - \$remote_user [\$time_local] "\$request" \$status \$body_bytes_sent "\$http_referer" "\$http_user_agent" \$request_length \$request_time [\$proxy_upstream_name] [\$proxy_alternative_upstream_name] \$upstream_addr \$upstream_response_length \$upstream_response_time \$upstream_status \$req_id'
+    # The number of requests that can be handled by a long connection maintained by nginx and the client, the default is 100
+    # ref: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#keep-alive-requests
+    keep-alive-requests: "10000"
+    # The maximum number of idle connections between nginx and upstream to maintain a long connection, the default is 32
+    # ref: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#upstream-keepalive-connections
+    upstream-keepalive-connections: "200"
+    # The maximum number of connections that each worker process can open, the default is 16384.
+    # ref: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#max-worker-connections
+    max-worker-connections: "65536"
+    # upload file need
+    proxy-body-size: "2G"
+    proxy-read-timeout: "600"
+  service:
+    type: NodePort
+    nodePorts:
+      http: 32080
+      https: 32443
+  hostNetwork: false
+  ingressClassResource:
+      enabled: true
+      default: true
+  admissionWebhooks:
+    patch:
+      image:
+        registry: ${BK_PUBLIC_REPO}/registry.k8s.io
+        digest: ""
+EOF
+  fi
 }
 
 check_k8s_status() {

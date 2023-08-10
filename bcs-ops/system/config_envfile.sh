@@ -94,6 +94,9 @@ init_env() {
   ## if BCS_CP_WORKER==0, then untaint master
   BCS_CP_WORKER=${BCS_CP_WORKER:-0}
 
+  # csi
+  K8S_CSI=${K8S_CSI:-"localpv"}
+
   # mirror
   ## yum_mirror
   MIRROR_URL=${MIRROR_URL:-"https://mirrors.tencent.com"}
@@ -106,9 +109,7 @@ init_env() {
   BK_PUBLIC_REPO=${BK_PUBLIC_REPO:-"hub.bktencent.com"}
 
   # helm
-  BKREPO_URL=${BKREPO_URL:-}
-  BK_RELEASE_REPO=${BK_RELEASE_REPO:-"hub.bktencent.com/blueking"}
-  # HELM_MIRROR https://hub.bktencent.com/chartrepo/mirrors
+  BKREPO_URL=${BKREPO_URL:-"https://hub.bktencent.com/chartrepo"}
 
   # apiserver HA
   ENABLE_APISERVER_HA=${ENABLE_APISERVER_HA:-"false"}
@@ -254,6 +255,9 @@ K8S_CNI="${K8S_CNI}"
 K8S_EXTRA_ARGS="${K8S_EXTRA_ARGS}"
 BCS_CP_WORKER="${BCS_CP_WORKER}"
 
+# csi
+K8S_CSI="${K8S_CSI}"
+
 ## yum_mirror
 MIRROR_URL="${MIRROR_URL}"
 MIRROR_IP="${MIRROR_IP}"
@@ -265,7 +269,6 @@ BK_PUBLIC_REPO="${BK_PUBLIC_REPO}"
 
 ## helm
 BKREPO_URL="${BKREPO_URL}"
-BK_RELEASE_REPO="${BK_RELEASE_REPO}"
 
 
 # apiserver HA
@@ -274,6 +277,7 @@ APISERVER_HA_MODE="${APISERVER_HA_MODE}"
 VIP="${VIP}"
 ## bcs apiserver proxy
 APISERVER_PROXY_VERSION="${APISERVER_PROXY_VERSION}"
+PROXY_TOOL_PATH="${PROXY_TOOL_PATH}"
 VS_PORT="${VS_PORT}"
 LVS_SCHEDULER="${LVS_SCHEDULER}"
 PERSIST_DIR="${PERSIST_DIR}"
@@ -378,7 +382,7 @@ main() {
         init_env
         ;;
       *)
-        utils::log "ERROR" "unkonw para: $1"
+        utils::log "ERROR" "unkown para: $1"
         ;;
     esac
     shift
