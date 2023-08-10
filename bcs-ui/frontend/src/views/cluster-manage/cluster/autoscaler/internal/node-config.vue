@@ -54,7 +54,9 @@
             </bcs-select>
           </div>
         </bk-form-item>
-        <bk-form-item :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.title')">
+        <bk-form-item
+          :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.title')"
+          :desc="isEdit ? $t('cluster.ca.nodePool.create.instanceTypeConfig.desc') : ''">
           <div class="mb15" style="display: flex;">
             <div class="prefix-select">
               <span :class="['prefix', { disabled: isEdit }]">CPU</span>

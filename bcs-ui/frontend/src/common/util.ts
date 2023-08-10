@@ -660,3 +660,18 @@ export function compareVersion(v1, v2) {
 
   return 0;
 }
+
+/**
+ * 生成随机数
+ * @param {Number} n
+ * @param str,默认26位字母及数字
+ */
+export const random = (n, str = 'abcdefghijklmnopqrstuvwxyz0123456789') => {
+  // 生成n位长度的字符串
+  // const str = 'abcdefghijklmnopqrstuvwxyz0123456789' // 可以作为常量放到random外面
+  let result = '';
+  for (let i = 0; i < n; i++) {
+    result += str[parseInt(String(Math.random() * str.length), 10)];
+  }
+  return result;
+};

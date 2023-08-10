@@ -852,6 +852,7 @@ cluster:
           selected: 指定可用区
         instanceTypeConfig:
           title: 机型配置
+          desc: 节点规格不支持修改机型配置，如果需其它机型配置请创建新的节点规格
           status:
             soldOut: 售罄
             sell: 售卖

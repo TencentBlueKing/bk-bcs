@@ -1043,6 +1043,7 @@ cluster:
           selected: Specified available zone
         instanceTypeConfig:
           title: Model configuration
+          desc: Cannot be modified. If you need to change, create new node pool
           status:
             soldOut: Sold out
             sell: Sell
