@@ -29,7 +29,7 @@ type ProjectProvider struct {
 }
 
 func init() {
-	dispatcher.RegisterProvider("project", ProjectProvider{})
+	dispatcher.RegisterProvider(Project, ProjectProvider{})
 }
 
 // ListAttr implements the list_attr
@@ -60,7 +60,7 @@ func (p ProjectProvider) ListInstance(req resource.Request) resource.Response {
 	}
 	results := make([]interface{}, 0)
 	for _, r := range result.Results {
-		ins := Instance{r.ProjectID, r.Name, nil}
+		ins := Instance{r.ProjectID, combineNameID(r.Name, r.ProjectCode), nil}
 		results = append(results, ins)
 	}
 	return resource.Response{
@@ -94,7 +94,7 @@ func (p ProjectProvider) FetchInstanceInfo(req resource.Request) resource.Respon
 				blog.Log(ctx).Errorf("get project %s failed, err %s", id, err.Error())
 				return
 			}
-			nsChan <- Instance{p.ProjectID, p.Name, []string{p.Creator, p.Updater}}
+			nsChan <- Instance{p.ProjectID, combineNameID(p.Name, p.ProjectCode), []string{p.Creator, p.Updater}}
 		}(v)
 	}
 	wg.Wait()
@@ -131,7 +131,7 @@ func (p ProjectProvider) SearchInstance(req resource.Request) resource.Response 
 	}
 	results := make([]interface{}, 0)
 	for _, r := range result.Results {
-		ins := Instance{r.ProjectID, r.Name, nil}
+		ins := Instance{r.ProjectID, combineNameID(r.Name, r.ProjectCode), nil}
 		results = append(results, ins)
 	}
 	return resource.Response{

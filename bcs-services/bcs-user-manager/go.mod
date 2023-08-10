@@ -6,9 +6,9 @@ replace github.com/TencentBlueKing/iam-go-sdk => github.com/adevjoe/iam-go-sdk v
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230718124617-d89a291003e4
-	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230718124617-d89a291003e4
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230718124617-d89a291003e4
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230808080908-7c46cf1bd956
+	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230808080908-7c46cf1bd956
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230808080908-7c46cf1bd956
 	github.com/TencentBlueKing/iam-go-sdk v0.1.3
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/avast/retry-go v3.0.0+incompatible

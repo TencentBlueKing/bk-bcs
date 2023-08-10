@@ -97,7 +97,8 @@ func QueryProjects(ctx context.Context, limit, offset int, params map[string]str
 
 // Namespace ns
 type Namespace struct {
-	Name string `json:"name"`
+	Name     string   `json:"name"`
+	Managers []string `json:"managers"`
 }
 
 // GetClusterNamespaces get cluster namespaces

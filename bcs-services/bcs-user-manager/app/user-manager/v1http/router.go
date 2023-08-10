@@ -39,7 +39,8 @@ func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient)
 	initPermissionRouters(ws, service)
 	initTokenRouters(ws)
 	initExtraTokenRouters(ws, service)
-	initIAMProviderRouters(ws, service)
+	initIAMProviderRouters(ws)
+	initUserPermsRouters(ws)
 }
 
 // initUsersRouters init users api routers
@@ -111,6 +112,12 @@ func initTkeRouters(ws *restful.WebService) {
 }
 
 // initIAMProviderRouters init iam provider api routers
-func initIAMProviderRouters(ws *restful.WebService, service *permission.PermVerifyClient) {
+func initIAMProviderRouters(ws *restful.WebService) {
 	ws.Route(auth.BKIAMAuthFunc(ws.POST("/v1/iam-provider/resources")).To(iam.ResourceDispatch))
+}
+
+// initUserPermsRouters init user perms api routers
+func initUserPermsRouters(ws *restful.WebService) {
+	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/iam/user_perms")).To(iam.GetPerms))
+	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/iam/user_perms/actions/{action_id}")).To(iam.GetPermByActionID))
 }

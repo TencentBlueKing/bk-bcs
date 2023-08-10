@@ -26,7 +26,7 @@ type ClusterProvider struct {
 }
 
 func init() {
-	dispatcher.RegisterProvider("cluster", ClusterProvider{})
+	dispatcher.RegisterProvider(Cluster, ClusterProvider{})
 }
 
 // ListAttr implements the list_attr
@@ -63,7 +63,7 @@ func (p ClusterProvider) ListInstance(req resource.Request) resource.Response {
 	}
 	results := make([]interface{}, 0)
 	for _, r := range result {
-		ins := Instance{r.ClusterID, r.ClusterName, nil}
+		ins := Instance{r.ClusterID, combineNameID(r.ClusterName, r.ClusterID), nil}
 		results = append(results, ins)
 	}
 	return resource.Response{
@@ -97,7 +97,8 @@ func (p ClusterProvider) FetchInstanceInfo(req resource.Request) resource.Respon
 		if !ok {
 			continue
 		}
-		results = append(results, Instance{cls.ClusterID, cls.ClusterName, []string{cls.Creator}})
+		results = append(results, Instance{cls.ClusterID, combineNameID(cls.ClusterID, cls.ClusterName),
+			[]string{cls.Creator, cls.Updater}})
 	}
 	return resource.Response{
 		Code: 0,
@@ -131,10 +132,12 @@ func (p ClusterProvider) SearchInstance(req resource.Request) resource.Response 
 	}
 	results := make([]interface{}, 0)
 	for _, r := range clusters {
-		if filter.Keyword != "" && !strings.Contains(r.ClusterName, filter.Keyword) {
+		// 模糊搜索集群 ID 和集群名称
+		if filter.Keyword != "" && !strings.Contains(r.ClusterName, filter.Keyword) &&
+			!strings.Contains(r.ClusterID, filter.Keyword) {
 			continue
 		}
-		ins := Instance{r.ClusterID, r.ClusterName, nil}
+		ins := Instance{r.ClusterID, combineNameID(r.ClusterName, r.ClusterID), nil}
 		results = append(results, ins)
 	}
 	return resource.Response{

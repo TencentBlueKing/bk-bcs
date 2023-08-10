@@ -32,7 +32,7 @@ type NamespaceProvider struct {
 }
 
 func init() {
-	dispatcher.RegisterProvider("namespace", NamespaceProvider{})
+	dispatcher.RegisterProvider(Namespace, NamespaceProvider{})
 }
 
 // ListAttr implements the list_attr
@@ -120,7 +120,7 @@ func (p NamespaceProvider) FetchInstanceInfo(req resource.Request) resource.Resp
 				blog.Log(ctx).Errorf("get namespace %s in cluster %s failed, err %s", nsID, clusterID, err.Error())
 				return
 			}
-			nsChan <- Instance{nsID, ns.Name, nil}
+			nsChan <- Instance{nsID, ns.Name, ns.Managers}
 		}(v)
 	}
 	wg.Wait()

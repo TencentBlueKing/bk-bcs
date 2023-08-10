@@ -26,7 +26,7 @@ type CloudAccountProvider struct {
 }
 
 func init() {
-	dispatcher.RegisterProvider("cloud_account", CloudAccountProvider{})
+	dispatcher.RegisterProvider(CloudAccount, CloudAccountProvider{})
 }
 
 // ListAttr implements the list_attr
