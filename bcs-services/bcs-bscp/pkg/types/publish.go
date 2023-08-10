@@ -46,7 +46,11 @@ func (ps PublishOption) Validate() error {
 	}
 
 	if !ps.All && len(ps.Groups) == 0 {
-		return errf.New(errf.InvalidParameter, "groups is not set")
+		return errf.New(errf.InvalidParameter, "groups can not be empty when gray publish")
+	}
+
+	if ps.All && len(ps.Groups) > 0 {
+		return errf.New(errf.InvalidParameter, "groups can not be set when full publish")
 	}
 
 	if ps.Revision == nil {
