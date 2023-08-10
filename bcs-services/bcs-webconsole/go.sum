@@ -92,8 +92,8 @@ github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMx
 github.com/Shopify/toxiproxy/v2 v2.1.6-0.20210914104332-15ea381dcdae/go.mod h1:/cvHQkZ1fst0EmZnA5dFtiQdWCNCFYzb+uE2vqVgvx0=
 github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19 h1:lg8XAEHyVY20A7HkJM7kpGLWk6l9LfuiBUECx/zv0v4=
 github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19/go.mod h1:hZLe0jx9sdjvGpEcAxOvE7eMA5ga5uQcfHa2dd0KaHc=
-github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230612113959-ee7959290ae2 h1:ZA/KKg7K+LZsZjZ+ML2AERnCV3m9lDw2wDiZepvKkk0=
-github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230612113959-ee7959290ae2/go.mod h1:Oswz2fWQcjF3sZ1+9uLQR5srW01bqJVk3Ip5HiO1+N8=
+github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230802065941-49e19e258f38 h1:xPD5V8jInnhhzq04OZQa1nJo12G8LI2FlouCIzdBpHk=
+github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230802065941-49e19e258f38/go.mod h1:Oswz2fWQcjF3sZ1+9uLQR5srW01bqJVk3Ip5HiO1+N8=
 github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220926153300-4e631deaebe4 h1:YreyMa5Og7I3im42ZqmBKkX0oq9YK/0lA6IMdFMjZYM=
 github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220926153300-4e631deaebe4/go.mod h1:DhIPUV8rDHlOiWtcwnT3hqxoh5lqPmupTvaZMhSK2E4=
 github.com/TencentBlueKing/iam-go-sdk v0.0.8 h1:7EkG18XDXSL88HaLr3V+V2Nw25Ndt4yH4xDrqwmapy8=

@@ -43,15 +43,12 @@ import (
 	"go-micro.dev/v4/util/cmd"
 	"golang.org/x/sync/errgroup"
 	yaml2 "gopkg.in/yaml.v3"
-	"k8s.io/klog/v2"
 
-	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/web"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
@@ -156,19 +153,6 @@ func (c *WebConsoleManager) Init() error {
 		return err
 	}
 
-	//初始化 Tracer
-	shutdown, err := tracing.InitTracing(config.G.Tracing)
-	if err != nil {
-		klog.Info(err.Error())
-	}
-	if shutdown != nil {
-		defer func() {
-			if err := shutdown(context.Background()); err != nil {
-				klog.Infof("failed to shutdown TracerProvider: %s", err.Error())
-			}
-		}()
-	}
-
 	return nil
 }
 
@@ -242,7 +226,6 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 		AllowAllOrigins: true,
 	}))
 	router.Use(i18n.Localize())
-	router.Use(gintrace.Middleware(tracing.ServiceName))
 
 	// 注册模板和静态资源
 	router.SetHTMLTemplate(web.WebTemplate())
