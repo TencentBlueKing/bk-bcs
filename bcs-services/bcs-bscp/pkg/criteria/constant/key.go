@@ -57,9 +57,9 @@ const (
 // default resource
 const (
 	// DefaultTmplSpaceName is default template space name
-	DefaultTmplSpaceName = "默认空间"
+	DefaultTmplSpaceName = "default_space"
 	// DefaultTmplSpaceMemo is default template space memo
-	DefaultTmplSpaceMemo = "这是默认空间"
+	DefaultTmplSpaceMemo = "this is default space"
 	// DefaultTmplSetName is default template set name
 	DefaultTmplSetName = "默认套餐"
 	// DefaultTmplSetMemo is default template set memo
