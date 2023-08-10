@@ -33,8 +33,8 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplat
 
 	// validate input param
 	idsLen := len(req.TemplateIds)
-	if idsLen == 0 || idsLen > 500 {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
+	if idsLen > 500 {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [0,500]",
 			idsLen)
 	}
 

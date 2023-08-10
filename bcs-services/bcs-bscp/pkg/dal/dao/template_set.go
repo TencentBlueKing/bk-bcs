@@ -346,6 +346,11 @@ func (dao *templateSetDao) validateAttachmentExist(kit *kit.Kit, am *table.Templ
 
 // validateTemplatesExist validate if all templates resource exists before operating template set
 func (dao *templateSetDao) validateTemplatesExist(kit *kit.Kit, templateIDs []uint32) error {
+	// allow template ids to be empty
+	if len(templateIDs) == 0 {
+		return nil
+	}
+
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
 	var existIDs []uint32
