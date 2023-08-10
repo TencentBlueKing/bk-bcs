@@ -29,6 +29,7 @@ type Configuration struct {
 	Tracing      *TracingConf                 `yaml:"tracing"`
 	FrontendConf *FrontendConf                `yaml:"frontend_conf"`
 	FeatureFlags map[string]FeatureFlagOption `yaml:"feature_flags"`
+	Etcd         *EtcdConf                    `yaml:"etcd"`
 }
 
 // init 初始化
@@ -62,8 +63,13 @@ func newConfiguration() (*Configuration, error) {
 	c.IAM = &IAMConf{}
 	c.FrontendConf = defaultFrontendConf()
 
+	// 链路追踪初始化
 	c.Tracing = &TracingConf{}
 	c.Tracing.Init()
+
+	// etcdc初始化
+	c.Etcd = &EtcdConf{}
+	c.Etcd.Init()
 	return c, nil
 }
 
@@ -93,6 +99,42 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	if err := yaml.Unmarshal(content, c); err != nil {
 		return err
 	}
+
+	// 添加环境变量
+	if c.Base.AppCode == "" {
+		c.Base.AppCode = BK_APP_CODE
+	}
+	if c.Base.AppSecret == "" {
+		c.Base.AppSecret = BK_APP_SECRET
+	}
+	if c.Base.SystemID == "" {
+		c.Base.SystemID = BK_SYSTEM_ID
+	}
+	if c.Base.BKUsername == "" {
+		c.Base.BKUsername = BK_USERNAME
+	}
+	if c.Base.Domain == "" {
+		c.Base.Domain = BK_DOMAIN
+	}
+
+	// bcs env
+	if c.BCS.Token == "" {
+		c.BCS.Token = BCS_APIGW_TOKEN
+	}
+	if c.BCS.JWTPubKey == "" {
+		c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
+	}
+
+	// iam env
+	if c.IAM.GatewayServer == "" {
+		c.IAM.GatewayServer = BKIAM_GATEWAY_SERVER
+	}
+
+	// etcd env
+	if c.Etcd.Endpoints == "" {
+		c.Etcd.Endpoints = BCS_ETCD_HOST
+	}
+
 	if err := c.init(); err != nil {
 		return err
 	}

@@ -59,7 +59,7 @@ _yum_docker() {
   yum makecache fast
 
   local pkg_pat pkg_ver
-  pkg_pat="$(sed -e 's/-ce-/\\\\.ce.*/g' 's/-/.*/g' \
+  pkg_pat="$(sed -e 's/-ce-/\\\\.ce.*/g' -e 's/-/.*/g' \
     <<<"${DOCKER_VER}").*el"
   pkg_ver=$(yum list --showduplicates 'docker-ce' \
     | awk '/'"$pkg_pat"'/{last=$2} END{sub(/.*:/,"",last);print last}')
@@ -162,7 +162,7 @@ main() {
     true
   fi
 
-  if ! docker run -rm "${test_img_url}"; then
+  if ! docker run --rm "${test_img_url}"; then
     utils::log "ERROR" "Count not get docker to run ${test_img_url}"
   fi
 
