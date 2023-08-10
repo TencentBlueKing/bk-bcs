@@ -545,6 +545,43 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 	return cli.DescribeOsImages(provider, opt)
 }
 
+// CheckClusterEndpointStatus check cluster endpoint status
+func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
+	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return false, fmt.Errorf("qcloud CheckClusterEndpointStatus lost authoration")
+	}
+
+	client, err := api.NewTkeClient(&opt.CommonOption)
+	if err != nil {
+		return false, err
+	}
+
+	status, err := client.GetClusterEndpointStatus(clusterID, isExtranet)
+	if err != nil {
+		return false, err
+	}
+
+	if !status.Created() {
+		return false, nil
+	}
+
+	blog.Infof("cluster endpoint status: %s", status)
+
+	kubeConfig, err := client.GetTKEClusterKubeConfig(clusterID, isExtranet)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = cloudprovider.GetCRDByKubeConfig(kubeConfig)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func getClusterCidrAvailableIPNum(cls *proto.Cluster) (uint32, error) {
 	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
 	if err != nil {

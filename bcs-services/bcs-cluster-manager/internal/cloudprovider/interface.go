@@ -290,6 +290,8 @@ type ClusterManager interface {
 	EnableExternalNodeSupport(cls *proto.Cluster, opt *EnableExternalNodeOption) error
 	// ListOsImage get osimage list
 	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
+	// CheckClusterEndpointStatus check cluster endpoint status
+	CheckClusterEndpointStatus(clusterID string, isExtranet bool, opt *CheckEndpointStatusOption) (bool, error)
 }
 
 // NodeGroupManager cloud interface for nodegroup management

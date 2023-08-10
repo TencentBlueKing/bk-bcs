@@ -146,3 +146,9 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// CheckClusterEndpointStatus check cluster endpoint status
+func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
+	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
+	return false, cloudprovider.ErrCloudNotImplemented
+}
