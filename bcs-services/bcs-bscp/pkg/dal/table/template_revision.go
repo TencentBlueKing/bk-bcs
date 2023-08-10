@@ -130,6 +130,10 @@ func (t *TemplateRevisionSpec) ValidateCreate() error {
 		return err
 	}
 
+	if err := t.ContentSpec.Validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
