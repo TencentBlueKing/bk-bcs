@@ -16,13 +16,14 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/criteria/constant"
 	"gorm.io/datatypes"
 	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
+	dtypes "bscp.io/pkg/dal/types"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
@@ -52,6 +53,8 @@ type TemplateSet interface {
 	DeleteTmplFromTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error
 	// ListAppTmplSets list all the template sets of the app.
 	ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
+	// ListAllTemplateIDs list all template ids of all template sets in one template space.
+	ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error)
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -329,6 +332,33 @@ func (dao *templateSetDao) ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([
 		Where(m.Public.Is(true)).
 		Or(rawgen.Cond(datatypes.JSONArrayQuery("bound_apps").Contains(appID))...).
 		Find()
+}
+
+// ListAllTemplateIDs list all template ids of all template sets in one template space.
+func (dao *templateSetDao) ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	var result []dtypes.Uint32Slice
+	if err := q.Select(m.TemplateIDs).
+		Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).
+		Pluck(m.TemplateIDs, &result); err != nil {
+		return nil, err
+	}
+
+	idMap := make(map[uint32]struct{})
+	for _, ids := range result {
+		for _, id := range ids {
+			idMap[id] = struct{}{}
+		}
+	}
+
+	ids := make([]uint32, 0, len(idMap))
+	for id := range idMap {
+		ids = append(ids, id)
+	}
+
+	return ids, nil
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template

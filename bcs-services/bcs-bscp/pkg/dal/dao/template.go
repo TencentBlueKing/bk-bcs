@@ -45,6 +45,8 @@ type Template interface {
 	GetByID(kit *kit.Kit, bizID, templateID uint32) (*table.Template, error)
 	// ListByIDs list templates by template ids.
 	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.Template, error)
+	// ListAllIDs list all template ids.
+	ListAllIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error)
 }
 
 var _ Template = new(templateDao)
@@ -277,6 +279,21 @@ func (dao *templateDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.Template
 	}
 
 	return result, nil
+}
+
+// ListAllIDs list all template ids.
+func (dao *templateDao) ListAllIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error) {
+	m := dao.genQ.Template
+	q := dao.genQ.Template.WithContext(kit.Ctx)
+
+	var templateIDs []uint32
+	if err := q.Select(m.ID).
+		Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).
+		Pluck(m.ID, &templateIDs); err != nil {
+		return nil, err
+	}
+
+	return templateIDs, nil
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template

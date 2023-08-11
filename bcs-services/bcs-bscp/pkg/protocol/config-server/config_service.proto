@@ -271,6 +271,16 @@ service Config {
             body : "*"
         };
     }
+    rpc ListTemplatesNotBound(ListTemplatesNotBoundReq) returns (ListTemplatesNotBoundResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/list_not_bound"
+        };
+    }
+    rpc ListTemplatesOfTemplateSet(ListTemplatesOfTemplateSetReq) returns (ListTemplatesOfTemplateSetResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/templates"
+        };
+    }
 
     rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateTemplateRevisionResp) {
         option (google.api.http) = {
@@ -1076,6 +1086,35 @@ message ListTemplatesByIDsReq {
 
 message ListTemplatesByIDsResp {
     repeated pbtemplate.Template details = 1;
+}
+
+message ListTemplatesNotBoundReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    string search_key        = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+    bool   all               = 6;
+}
+
+message ListTemplatesNotBoundResp {
+    uint32                       count   = 1;
+    repeated pbtemplate.Template details = 2;
+}
+
+message ListTemplatesOfTemplateSetReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+    string search_key        = 4;
+    uint32 start             = 5;
+    uint32 limit             = 6;
+    bool   all               = 7;
+}
+
+message ListTemplatesOfTemplateSetResp {
+    uint32                       count   = 1;
+    repeated pbtemplate.Template details = 2;
 }
 
 message CreateTemplateRevisionReq {
