@@ -178,13 +178,10 @@ func (r *Request) Body(body interface{}) *Request {
 			r.body = []byte("")
 			return r
 		}
-		break
 	case reflect.String:
 		r.body = []byte(body.(string))
 		return r
-
 	case reflect.Struct:
-		break
 
 	default:
 		r.err = errors.New("body should be one of interface, map, pointer or slice value")
@@ -463,7 +460,7 @@ func ridFromContext(ctx context.Context) string {
 	}
 	rid := ctx.Value(constant.RidKey)
 	ridValue, ok := rid.(string)
-	if ok == true {
+	if ok {
 		return ridValue
 	}
 	return ""

@@ -103,8 +103,6 @@ func WriteResp(w http.ResponseWriter, resp interface{}) {
 		logs.ErrorDepthf(1, "write resp to ResponseWriter failed, err: %v", err)
 		return
 	}
-
-	return
 }
 
 // OKResponse is a http standard response

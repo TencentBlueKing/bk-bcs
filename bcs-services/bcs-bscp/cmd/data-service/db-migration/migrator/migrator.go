@@ -215,7 +215,7 @@ func (m *Migrator) MigrationStatus() error {
 		if mg.done {
 			fmt.Printf("Migration %s completed\n", mg.Name)
 		} else {
-			fmt.Println(fmt.Sprintf("Migration %s pending", mg.Name))
+			fmt.Printf("Migration %s pending\n", mg.Name)
 		}
 	}
 

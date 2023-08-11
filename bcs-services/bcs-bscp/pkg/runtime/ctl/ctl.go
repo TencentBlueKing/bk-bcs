@@ -156,5 +156,4 @@ func (b *Ctl) httpHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	rest.WriteResp(w, &rest.Response{Code: errf.OK, Data: data})
-	return
 }

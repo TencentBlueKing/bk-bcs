@@ -88,10 +88,11 @@ func InitLogger(logConfig LogConfig) {
 		// The default glog flush interval is 5 seconds, which is frighteningly long.
 		go func() {
 			d := time.Duration(5 * time.Second)
-			tick := time.Tick(d)
+			ticker := time.NewTicker(d)
+			defer ticker.Stop()
 
 			for {
-				<-tick
+				<-ticker.C
 				glog.Flush()
 			}
 		}()

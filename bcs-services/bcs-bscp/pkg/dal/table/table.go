@@ -48,9 +48,7 @@ type Columns struct {
 // Columns returns all the db columns
 func (col Columns) Columns() []string {
 	copied := make([]string, len(col.columns))
-	for idx := range col.columns {
-		copied[idx] = col.columns[idx]
-	}
+	copy(copied, col.columns)
 	return copied
 }
 
