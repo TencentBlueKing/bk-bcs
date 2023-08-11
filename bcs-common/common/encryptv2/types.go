@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package encrypt
+package encryptv2
 
 import (
 	"errors"
@@ -23,7 +23,7 @@ type Config struct {
 	Algorithm Algorithm   `json:"algorithm"`
 	Sm4       *Sm4Conf    `json:"sm4"`
 	AesGcm    *AesGcmConf `json:"aes_gcm"`
-	PriKey    string      `json:"priKey"`
+	Normal    *NormalConf `json:"normal"`
 }
 
 // Validate Config
@@ -42,7 +42,7 @@ func (conf Config) Validate() error {
 			return errors.New("aes-gcm config is not set")
 		}
 	case Normal:
-		// allow priKey is empty && not encrypt
+		// allow priKey & compileKey is empty && not encrypt && only base64 encoding
 	default:
 		return fmt.Errorf("crypto algorithm %s is invalid", conf.Algorithm)
 	}
@@ -74,4 +74,10 @@ type Sm4Conf struct {
 type AesGcmConf struct {
 	Key   string `json:"key"`
 	Nonce string `json:"nonce"`
+}
+
+// NormalConf define normal algorithm configuration
+type NormalConf struct {
+	CompileKey string `json:"compileKey"`
+	PriKey     string `json:"priKey"`
 }

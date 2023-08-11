@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package encrypt
+package encryptv2
 
 import (
 	"encoding/base64"
@@ -46,7 +46,7 @@ func NewCrypto(conf *Config) (Cryptor, error) {
 	case AesGcm:
 		bkCrypto, err = bkcrypto.NewAesGcm([]byte(conf.AesGcm.Key), []byte(conf.AesGcm.Nonce))
 	case Normal:
-		bkCrypto, err = NewCommonCrypto(conf.PriKey)
+		bkCrypto, err = NewCommonCrypto(conf.Normal)
 	default:
 		return nil, fmt.Errorf("crypto algorithm %s is invalid", conf.Algorithm)
 	}
@@ -99,19 +99,27 @@ func (c *bcsBkCrypto) Decrypt(ciphertext string) (string, error) {
 
 // commonCrypto bcs default crypto
 type commonCrypto struct {
-	priKey string
+	compileKey string
+	priKey     string
 }
 
 // NewCommonCrypto bcs crypto from common
-func NewCommonCrypto(key string) (bkcrypto.Crypto, error) {
+func NewCommonCrypto(normal *NormalConf) (bkcrypto.Crypto, error) {
 	return &commonCrypto{
-		priKey: key,
+		compileKey: normal.CompileKey,
+		priKey:     normal.PriKey,
 	}, nil
 }
 
 // Encrypt plaintext
 func (c *commonCrypto) Encrypt(plaintext []byte) ([]byte, error) {
-	ciphertext, err := DesEncryptToBaseV2(plaintext, c.priKey)
+	ciphertext, err := DesEncryptToBaseV2(plaintext, func() string {
+		if len(c.compileKey) != 0 {
+			return c.compileKey
+		}
+
+		return c.priKey
+	}())
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +129,13 @@ func (c *commonCrypto) Encrypt(plaintext []byte) ([]byte, error) {
 
 // Decrypt ciphertext
 func (c *commonCrypto) Decrypt(ciphertext []byte) ([]byte, error) {
-	plaintext, err := DesDecryptFromBaseV2(ciphertext, c.priKey)
+	plaintext, err := DesDecryptFromBaseV2(ciphertext, func() string {
+		if len(c.compileKey) != 0 {
+			return c.compileKey
+		}
+
+		return c.priKey
+	}())
 	if err != nil {
 		return nil, err
 	}

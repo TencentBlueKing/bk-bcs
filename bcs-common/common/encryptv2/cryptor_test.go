@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package encrypt
+package encryptv2
 
 import (
 	"testing"
@@ -28,7 +28,10 @@ func normalCryptor(t *testing.T) {
 	cfg := &Config{
 		Enabled:   true,
 		Algorithm: Normal,
-		PriKey:    "",
+		Normal: &NormalConf{
+			CompileKey: "",
+			PriKey:     "",
+		},
 	}
 	cry, _ := NewCrypto(cfg)
 	a, _ := cry.Encrypt("xxx")
