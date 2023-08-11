@@ -67,7 +67,7 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 func (s *Service) ListTemplateRevisions(ctx context.Context, req *pbds.ListTemplateRevisionsReq) (*pbds.ListTemplateRevisionsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}

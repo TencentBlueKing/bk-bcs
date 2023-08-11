@@ -114,6 +114,8 @@ type BasePage struct {
 	// Order is the direction when do sort operation.
 	// it works only when the Sort is set.
 	Order Order `json:"order"`
+	// All defines whether query all the resources at once.
+	All bool `json:"all"`
 }
 
 // Offset 偏移量
@@ -180,7 +182,8 @@ func (bp BasePage) Validate(opt ...*PageOption) (err error) {
 		if bp.Start < 0 || bp.Limit < 0 {
 			return errors.New("page.start >= 0, page.limit value should >= 0")
 		}
-	} else {
+	} else if !bp.All {
+		// only validate when not query all the resources
 		// if the user is not allowed to query with unlimited limit, then
 		// 1. limit should >=1
 		// 2. validate whether the limit is larger than the max limit value

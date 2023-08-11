@@ -132,9 +132,10 @@ func (s *Service) ListTemplateVariables(ctx context.Context, req *pbcs.ListTempl
 
 	r := &pbds.ListTemplateVariablesReq{
 		BizId:     grpcKit.BizID,
-		Start:     req.Start,
 		SearchKey: req.SearchKey,
+		Start:     req.Start,
 		Limit:     req.Limit,
+		All:       req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateVariables(grpcKit.RpcCtx(), r)

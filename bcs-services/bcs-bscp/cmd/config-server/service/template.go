@@ -158,6 +158,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 		SearchKey:       req.SearchKey,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		All:             req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplates(grpcKit.RpcCtx(), r)

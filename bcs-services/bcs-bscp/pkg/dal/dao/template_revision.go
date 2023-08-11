@@ -127,14 +127,16 @@ func (dao *templateRevisionDao) List(kit *kit.Kit, bizID, templateID uint32, sea
 		conds = append(conds, q.Where(m.RevisionName.Regexp("(?i)"+searchKey)).Or(m.RevisionMemo.Regexp("(?i)"+searchKey)))
 	}
 
-	result, count, err := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID)).
-		Where(conds...).
-		FindByPage(opt.Offset(), opt.LimitInt())
-	if err != nil {
-		return nil, 0, err
+	d := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID)).Where(conds...)
+	if opt.All {
+		result, err := d.Find()
+		if err != nil {
+			return nil, 0, err
+		}
+		return result, int64(len(result)), err
 	}
 
-	return result, count, nil
+	return d.FindByPage(opt.Offset(), opt.LimitInt())
 }
 
 // Delete one template revision instance.

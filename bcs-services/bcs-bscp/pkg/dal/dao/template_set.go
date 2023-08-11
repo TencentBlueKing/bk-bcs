@@ -187,14 +187,16 @@ func (dao *templateSetDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, sea
 		conds = append(conds, q.Where(m.Name.Regexp("(?i)"+searchKey)).Or(m.Memo.Regexp("(?i)"+searchKey)))
 	}
 
-	result, count, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).
-		Where(conds...).
-		FindByPage(opt.Offset(), opt.LimitInt())
-	if err != nil {
-		return nil, 0, err
+	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...)
+	if opt.All {
+		result, err := d.Find()
+		if err != nil {
+			return nil, 0, err
+		}
+		return result, int64(len(result)), err
 	}
 
-	return result, count, nil
+	return d.FindByPage(opt.Offset(), opt.LimitInt())
 }
 
 // Delete one template set instance.

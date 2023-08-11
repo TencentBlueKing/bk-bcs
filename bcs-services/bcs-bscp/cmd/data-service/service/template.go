@@ -98,7 +98,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq) (*pbds.ListTemplatesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
