@@ -121,7 +121,7 @@ func (a *AgaSupporter) ListCustomRoutingByDefinition(region, instanceID, destAdd
 		return nil, err
 	}
 
-	portMappingResp, err := a.listCustomRoutingPortMappingsByDestination(sess, subnetID, destAddress)
+	portMappingResp, err := a.listCustomRoutingPortMappingsByDest(sess, subnetID, destAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -174,9 +174,9 @@ func (a *AgaSupporter) getSubnetIDOfInstance(sess *session.Session, instanceID s
 	return aws.StringValue(subnetID), nil
 }
 
-func (a *AgaSupporter) listCustomRoutingPortMappingsByDestination(sess *session.Session, subnetID,
-	IPAddress string) (*globalaccelerator.ListCustomRoutingPortMappingsByDestinationOutput, error) {
-	blog.V(4).Infof("ListCustomRoutingByDefinition req[subnetID='%s', IPAddr='%s']", subnetID, IPAddress)
+func (a *AgaSupporter) listCustomRoutingPortMappingsByDest(sess *session.Session, subnetID,
+	ipAddress string) (*globalaccelerator.ListCustomRoutingPortMappingsByDestinationOutput, error) {
+	blog.V(4).Infof("ListCustomRoutingByDefinition req[subnetID='%s', IPAddr='%s']", subnetID, ipAddress)
 	svc := globalaccelerator.New(sess)
 	startTime := time.Now()
 
@@ -189,19 +189,19 @@ func (a *AgaSupporter) listCustomRoutingPortMappingsByDestination(sess *session.
 	}
 	input := &globalaccelerator.ListCustomRoutingPortMappingsByDestinationInput{
 		EndpointId:         aws.String(subnetID),
-		DestinationAddress: aws.String(IPAddress),
+		DestinationAddress: aws.String(ipAddress),
 	}
 
 	result, err := svc.ListCustomRoutingPortMappingsByDestination(input)
 	if err != nil {
 		mf(metrics.LibCallStatusErr)
-		blog.Errorf("ListCustomRoutingByDefinition req[subnetID='%s', IPAddr='%s'] failed: %s", err.Error())
+		blog.Errorf("ListCustomRoutingByDefinition req[subnetID='%s', IPAddr='%s'] failed: %s", subnetID, err.Error())
 		return nil, errors.Wrapf(err, "ListCustomRoutingByDefinition req[subnetID='%s', IPAddr='%s'] failed", subnetID,
-			IPAddress)
+			ipAddress)
 	}
 	mf(metrics.LibCallStatusOK)
 	blog.V(4).Infof("ListCustomRoutingByDefinition req[subnetID='%s', IPAddr='%s'] success, resp: %s", subnetID,
-		IPAddress, common.ToJsonString(result))
+		ipAddress, common.ToJsonString(result))
 	return result, nil
 }
 
@@ -232,7 +232,7 @@ func (a *AgaSupporter) describeAccelerator(sess *session.Session,
 }
 
 func (a *AgaSupporter) mergeCustomRouting(sess *session.Session, portMappingResp *globalaccelerator.
-ListCustomRoutingPortMappingsByDestinationOutput) ([]*AgaMappingInfo, error) {
+	ListCustomRoutingPortMappingsByDestinationOutput) ([]*AgaMappingInfo, error) {
 	agaMappingInfoList := make([]*AgaMappingInfo, 0)
 	mappings := make(map[string][]portPair)
 
@@ -280,8 +280,8 @@ func (a *AgaSupporter) splitPortMappings(portPairs []portPair) []*portMapping {
 
 	portMappings := make([]*portMapping, 0)
 
-	var cloudStartPort int64 = 0
-	var localStartPort int64 = 0
+	var cloudStartPort int64
+	var localStartPort int64
 	for i := 0; i < len(portPairs); i++ {
 		if cloudStartPort == 0 {
 			cloudStartPort = portPairs[i].CloudPort
