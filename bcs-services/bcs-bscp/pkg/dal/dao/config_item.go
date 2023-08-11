@@ -264,11 +264,6 @@ func (dao *configItemDao) Delete(kit *kit.Kit, ci *table.ConfigItem) error {
 		if err = ad.Do(tx); err != nil {
 			return err
 		}
-		// decrease the config item lock count after the deletion
-		lock := lockKey.ConfigItem(ci.Attachment.BizID, ci.Attachment.AppID)
-		if err = dao.lock.DecreaseCount(kit, tx, lock, 1); err != nil {
-			return err
-		}
 		return nil
 	}
 	if err = dao.genQ.Transaction(deleteTx); err != nil {
@@ -303,17 +298,11 @@ func (dao *configItemDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.
 	}
 	ad := dao.auditDao.DecoratorV2(kit, ci.Attachment.BizID).PrepareDelete(oldOne)
 
-	result, err := q.Where(m.ID.Eq(ci.ID), m.BizID.Eq(ci.Attachment.BizID)).Delete()
+	_, err = q.Where(m.ID.Eq(ci.ID), m.BizID.Eq(ci.Attachment.BizID)).Delete()
 	if err != nil {
 		return err
 	}
 	if err = ad.Do(tx.Query); err != nil {
-		return err
-	}
-
-	// decrease the config item lock count after the deletion
-	lock := lockKey.ConfigItem(ci.Attachment.BizID, ci.Attachment.AppID)
-	if err := dao.lock.DecreaseCount(kit, tx.Query, lock, uint32(result.RowsAffected)); err != nil {
 		return err
 	}
 
@@ -324,17 +313,8 @@ func (dao *configItemDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.
 func (dao *configItemDao) BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32, bizID, appID uint32) error {
 	m := dao.genQ.ConfigItem
 	q := tx.ConfigItem.WithContext(kit.Ctx)
-	result, err := q.Where(m.ID.In(ids...), m.BizID.Eq(bizID), m.AppID.Eq(appID)).Delete()
-	if err != nil {
-		return err
-	}
-
-	// decrease the config item lock count after the deletion
-	lock := lockKey.ConfigItem(bizID, appID)
-	if err := dao.lock.DecreaseCount(kit, tx.Query, lock, uint32(result.RowsAffected)); err != nil {
-		return err
-	}
-	return nil
+	_, err := q.Where(m.ID.In(ids...), m.BizID.Eq(bizID), m.AppID.Eq(appID)).Delete()
+	return err
 }
 
 // validateAttachmentResExist validate if attachment resource exists before creating config item.
