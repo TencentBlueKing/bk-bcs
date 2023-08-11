@@ -52,7 +52,7 @@ func (g *gateway) setFilter(next http.Handler) http.Handler {
 			module = paths[4]
 		} else {
 			logs.Errorf("received url path length not conform to the regulations, path: %s", r.URL.Path)
-			fmt.Fprintf(w, errf.New(http.StatusNotFound, "Not Found").Error())
+			fmt.Fprint(w, errf.New(http.StatusNotFound, "Not Found").Error())
 			return
 		}
 

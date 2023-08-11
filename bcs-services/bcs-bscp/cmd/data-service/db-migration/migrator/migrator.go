@@ -213,7 +213,7 @@ func (m *Migrator) MigrationStatus() error {
 		mg := m.Migrations[v]
 
 		if mg.done {
-			fmt.Println(fmt.Sprintf("Migration %s completed", mg.Name))
+			fmt.Printf("Migration %s completed\n", mg.Name)
 		} else {
 			fmt.Println(fmt.Sprintf("Migration %s pending", mg.Name))
 		}

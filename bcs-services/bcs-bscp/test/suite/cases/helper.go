@@ -47,9 +47,9 @@ func RandString(n int) string {
 
 	str := strings.Builder{}
 	length := len(chars)
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < n; i++ {
-		str.WriteString(chars[rand.Intn(length)])
+		str.WriteString(chars[r.Intn(length)])
 	}
 
 	return str.String()

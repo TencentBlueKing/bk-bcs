@@ -17,7 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"bscp.io/pkg/criteria/constant"
@@ -108,7 +108,7 @@ func (b *Ctl) httpHandler(w http.ResponseWriter, req *http.Request) {
 			rawParams[key] = json.RawMessage(value[0])
 		}
 	} else {
-		body, err := ioutil.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 		if err != nil {
 			rest.WriteResp(w, rest.NewBaseResp(errf.InvalidParameter, "read body failed, err: "+err.Error()))
 			return

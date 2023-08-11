@@ -22,6 +22,7 @@ import (
 	"bscp.io/pkg/types"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Client cache service client
@@ -31,7 +32,7 @@ type Client struct {
 
 // NewCacheClient get a new cache client
 func NewCacheClient(host string) (*Client, error) {
-	conn, err := grpc.Dial(host, grpc.WithInsecure())
+	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}

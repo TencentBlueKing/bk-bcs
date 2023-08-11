@@ -75,11 +75,7 @@ type VersionFormat string
 
 // Debug show the version if enable debug.
 func Debug() bool {
-	if DEBUG == "true" {
-		return true
-	}
-
-	return false
+	return DEBUG == "true"
 }
 
 // ShowVersion shows the version info.

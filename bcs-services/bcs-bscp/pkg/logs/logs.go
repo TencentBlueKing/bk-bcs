@@ -23,7 +23,6 @@ import (
 	"bscp.io/pkg/version"
 
 	"github.com/go-redis/redis/v8"
-	etcd3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc/grpclog"
 )
 
@@ -84,7 +83,6 @@ func InitLogger(logConfig LogConfig) {
 
 		// access other service log.
 		redis.SetLogger(newLogger(redisPrefix))
-		etcd3.SetLogger(newLogger(etcdPrefix))
 		grpclog.SetLoggerV2(newLogger(grpcPrefix))
 
 		// The default glog flush interval is 5 seconds, which is frighteningly long.

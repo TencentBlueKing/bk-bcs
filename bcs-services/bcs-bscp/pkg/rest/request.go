@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -349,7 +348,7 @@ func (r *Request) Do() *Result {
 			}
 
 			if r.ctx != nil {
-				req.WithContext(r.ctx)
+				req = req.WithContext(r.ctx)
 			}
 
 			req.Header = cloneHeader(r.headers)
@@ -401,7 +400,7 @@ func (r *Request) Do() *Result {
 
 			var body []byte
 			if resp.Body != nil {
-				data, err := ioutil.ReadAll(resp.Body)
+				data, err := io.ReadAll(resp.Body)
 				if err != nil {
 					if err == io.ErrUnexpectedEOF {
 						// retry now

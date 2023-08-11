@@ -16,7 +16,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -68,7 +67,7 @@ func (r *BaseResp) WriteResp(w http.ResponseWriter, data interface{}) {
 }
 
 func unmarshal(body io.ReadCloser, data interface{}) error {
-	bodyByte, err := ioutil.ReadAll(body)
+	bodyByte, err := io.ReadAll(body)
 	if err != nil {
 		return err
 	}
