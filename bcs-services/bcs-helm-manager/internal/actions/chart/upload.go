@@ -85,7 +85,7 @@ func (d *UploadChartAction) uploadChart() (string, error) {
 	tmp, err := generateChartPackage(data)
 	defer func(path string) {
 		// 删除临时文件
-		err := os.RemoveAll(path)
+		err = os.RemoveAll(path)
 		if err != nil {
 			blog.Errorf("failed to remove temporary file, %s: %s",
 				path, err.Error())
@@ -149,7 +149,7 @@ func generateChartPackage(content []byte) (tmp *os.File, err error) {
 	_, err = tmp.Write(content)
 	defer func(tmp *os.File) {
 		// 关闭文件
-		err := tmp.Close()
+		err = tmp.Close()
 		if err != nil {
 			blog.Errorf("failed closes the File, %s: %s",
 				tmp.Name(), err.Error())

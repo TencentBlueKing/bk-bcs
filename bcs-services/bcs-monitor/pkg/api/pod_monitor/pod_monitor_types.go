@@ -11,7 +11,7 @@
  *
  */
 
-package pod_monitor
+package podmonitor
 
 // SampleLimitMax xxx
 const SampleLimitMax = 100000

@@ -11,7 +11,7 @@
  *
  */
 
-package pod_monitor
+package podmonitor
 
 import (
 	"errors"

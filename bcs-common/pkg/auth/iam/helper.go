@@ -115,8 +115,8 @@ func (pr PermissionRequest) MakeRequestMultiActionResources(actions []string,
 	return iam.NewMultiActionRequest(pr.SystemID, subject, multiAction, iamNodes)
 }
 
-// MakeRequestMultiActionsWithoutResources make request for multi actions and no resource
-func (pr PermissionRequest) MakeRequestMultiActionsWithoutResources(actions []string) iam.MultiActionRequest {
+// MakeReqMultiActionsWithoutRes make request for multi actions and no resource
+func (pr PermissionRequest) MakeReqMultiActionsWithoutRes(actions []string) iam.MultiActionRequest {
 	subject := iam.Subject{
 		Type: "user",
 		ID:   pr.UserName,

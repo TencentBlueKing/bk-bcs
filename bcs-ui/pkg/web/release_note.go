@@ -135,7 +135,8 @@ func (s *WebServer) initReleaseNote() error {
 			}
 
 			// get file contents
-			c, err := s.embedWebServer.RootFS().ReadFile(path.Join(changelogPath+"/"+fn, e.Name()))
+			var c []byte
+			c, err = s.embedWebServer.RootFS().ReadFile(path.Join(changelogPath+"/"+fn, e.Name()))
 			if err != nil {
 				return err
 			}

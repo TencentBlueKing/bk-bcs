@@ -33,7 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/logrule"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod_monitor"
+	podmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod_monitor"
 	service_monitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/servicemonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/telemetry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -225,19 +225,19 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 			rest.RestHandlerFunc(service_monitor.BatchDeleteServiceMonitor))
 
 		route.GET("/namespaces/:namespace/pod_monitors",
-			rest.RestHandlerFunc(pod_monitor.ListPodMonitors))
+			rest.RestHandlerFunc(podmonitor.ListPodMonitors))
 		route.GET("/namespaces/:namespace/pod_monitors/:name",
-			rest.RestHandlerFunc(pod_monitor.GetPodMonitor))
+			rest.RestHandlerFunc(podmonitor.GetPodMonitor))
 		route.POST("/namespaces/:namespace/pod_monitors",
-			rest.RestHandlerFunc(pod_monitor.CreatePodMonitor))
+			rest.RestHandlerFunc(podmonitor.CreatePodMonitor))
 		route.PUT("/namespaces/:namespace/pod_monitors/:name",
-			rest.RestHandlerFunc(pod_monitor.UpdatePodMonitor))
+			rest.RestHandlerFunc(podmonitor.UpdatePodMonitor))
 		route.DELETE("/namespaces/:namespace/pod_monitors/:name",
-			rest.RestHandlerFunc(pod_monitor.DeletePodMonitor))
+			rest.RestHandlerFunc(podmonitor.DeletePodMonitor))
 		route.GET("/pod_monitors",
-			rest.RestHandlerFunc(pod_monitor.ListPodMonitors))
+			rest.RestHandlerFunc(podmonitor.ListPodMonitors))
 		route.POST("/pod_monitors/batchdelete",
-			rest.RestHandlerFunc(pod_monitor.BatchDeletePodMonitor))
+			rest.RestHandlerFunc(podmonitor.BatchDeletePodMonitor))
 	}
 }
 
