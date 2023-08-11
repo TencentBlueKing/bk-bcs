@@ -503,6 +503,14 @@ SUPPORT_MESOS = os.environ.get("BKAPP_SUPPORT_MESOS", "false")
 # 首选域名列表
 PREFERRED_DOMAINS = os.environ.get('PREFERRED_DOMAINS', '')
 
+# otel 头部支持
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "Traceparent",
+)
+
 try:
     from .base_ext import *  # noqa
 except ImportError as e:
