@@ -33,7 +33,7 @@ func init() {
 
 // mig20230625152115GormAddAppTemplateRelatedUp for up migration
 func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
-	// AppTemplateBindings : 记录未命名服务版本与模版套餐及模版版本的绑定情况
+	// AppTemplateBindings : 记录未命名版本服务版本与模版套餐及模版版本的绑定情况
 	type AppTemplateBindings struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 

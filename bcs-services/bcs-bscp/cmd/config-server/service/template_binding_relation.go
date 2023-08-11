@@ -164,6 +164,7 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 		TemplateId:      req.TemplateId,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		All:             req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateBoundUnnamedAppDetails(grpcKit.RpcCtx(), r)
@@ -197,6 +198,7 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 		TemplateId:      req.TemplateId,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		All:             req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateBoundNamedAppDetails(grpcKit.RpcCtx(), r)
@@ -230,6 +232,7 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 		TemplateId:      req.TemplateId,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		All:             req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateBoundTemplateSetDetails(grpcKit.RpcCtx(), r)
@@ -264,6 +267,7 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 		TemplateRevisionId: req.TemplateRevisionId,
 		Start:              req.Start,
 		Limit:              req.Limit,
+		All:                req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateRevisionBoundUnnamedAppDetails(grpcKit.RpcCtx(), r)
@@ -298,6 +302,7 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 		TemplateRevisionId: req.TemplateRevisionId,
 		Start:              req.Start,
 		Limit:              req.Limit,
+		All:                req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateRevisionBoundNamedAppDetails(grpcKit.RpcCtx(), r)
@@ -331,6 +336,7 @@ func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
 		TemplateSetId:   req.TemplateSetId,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		All:             req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateSetBoundUnnamedAppDetails(grpcKit.RpcCtx(), r)
@@ -364,6 +370,7 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 		TemplateSetId:   req.TemplateSetId,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		All:             req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateSetBoundNamedAppDetails(grpcKit.RpcCtx(), r)

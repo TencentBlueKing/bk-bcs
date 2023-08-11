@@ -100,6 +100,8 @@ service Data {
     rpc DeleteTemplate(DeleteTemplateReq) returns (pbbase.EmptyResp) {}
     rpc AddTemplateToTemplateSets(AddTemplateToTemplateSetsReq) returns (pbbase.EmptyResp) {}
     rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {}
+    rpc ListTemplatesNotBound(ListTemplatesNotBoundReq) returns (ListTemplatesNotBoundResp) {}
+    rpc ListTemplatesOfTemplateSet(ListTemplatesOfTemplateSetReq) returns (ListTemplatesOfTemplateSetResp) {}
 
     // template release related interface.
     rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateResp) {}
@@ -556,6 +558,7 @@ message ListTemplateSpacesReq {
     string search_key = 2;
     uint32 start      = 3;
     uint32 limit      = 4;
+    bool   all        = 5;
 }
 
 message ListTemplateSpacesResp {
@@ -603,6 +606,7 @@ message ListTemplatesReq {
     string search_key        = 3;
     uint32 start             = 4;
     uint32 limit             = 5;
+    bool   all               = 6;
 }
 
 message ListTemplatesResp {
@@ -637,6 +641,35 @@ message  ListTemplatesByIDsResp {
     repeated pbtemplate.Template details = 1;
 }
 
+message ListTemplatesNotBoundReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    string search_key        = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+    bool   all               = 6;
+}
+
+message ListTemplatesNotBoundResp {
+    uint32                       count   = 1;
+    repeated pbtemplate.Template details = 2;
+}
+
+message ListTemplatesOfTemplateSetReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+    string search_key        = 4;
+    uint32 start             = 5;
+    uint32 limit             = 6;
+    bool   all               = 7;
+}
+
+message ListTemplatesOfTemplateSetResp {
+    uint32                       count   = 1;
+    repeated pbtemplate.Template details = 2;
+}
+
 message CreateTemplateRevisionReq {
     pbtr.TemplateRevisionAttachment attachment = 1;
     pbtr.TemplateRevisionSpec       spec       = 2;
@@ -649,6 +682,7 @@ message ListTemplateRevisionsReq {
     string search_key        = 4;
     uint32 start             = 5;
     uint32 limit             = 6;
+    bool   all               = 7;
 }
 
 message ListTemplateRevisionsResp {
@@ -680,6 +714,7 @@ message ListTemplateSetsReq {
     string search_key        = 3;
     uint32 start             = 4;
     uint32 limit             = 5;
+    bool   all               = 6;
 }
 
 message ListTemplateSetsResp {
@@ -782,6 +817,7 @@ message ListTemplateBoundUnnamedAppDetailsReq {
     uint32 template_id       = 3;
     uint32 start             = 4;
     uint32 limit             = 5;
+    bool   all               = 6;
 }
 
 message ListTemplateBoundUnnamedAppDetailsResp {
@@ -795,6 +831,7 @@ message ListTemplateBoundNamedAppDetailsReq {
     uint32 template_id       = 3;
     uint32 start             = 4;
     uint32 limit             = 5;
+    bool   all               = 6;
 }
 
 message ListTemplateBoundNamedAppDetailsResp {
@@ -808,6 +845,7 @@ message ListTemplateBoundTemplateSetDetailsReq {
     uint32 template_id       = 3;
     uint32 start             = 4;
     uint32 limit             = 5;
+    bool   all               = 6;
 }
 
 message ListTemplateBoundTemplateSetDetailsResp {
@@ -822,6 +860,7 @@ message ListTemplateRevisionBoundUnnamedAppDetailsReq {
     uint32 template_revision_id = 4;
     uint32 start                = 5;
     uint32 limit                = 6;
+    bool   all                  = 7;
 }
 
 message ListTemplateRevisionBoundUnnamedAppDetailsResp {
@@ -836,6 +875,7 @@ message ListTemplateRevisionBoundNamedAppDetailsReq {
     uint32 template_revision_id = 4;
     uint32 start                = 5;
     uint32 limit                = 6;
+    bool   all                  = 7;
 }
 
 message ListTemplateRevisionBoundNamedAppDetailsResp {
@@ -849,6 +889,7 @@ message ListTemplateSetBoundUnnamedAppDetailsReq {
     uint32 template_set_id   = 3;
     uint32 start             = 4;
     uint32 limit             = 5;
+    bool   all               = 6;
 }
 
 message ListTemplateSetBoundUnnamedAppDetailsResp {
@@ -862,6 +903,7 @@ message ListTemplateSetBoundNamedAppDetailsReq {
     uint32 template_set_id   = 3;
     uint32 start             = 4;
     uint32 limit             = 5;
+    bool   all               = 6;
 }
 
 message ListTemplateSetBoundNamedAppDetailsResp {
@@ -879,6 +921,7 @@ message ListTemplateVariablesReq {
     string search_key = 2;
     uint32 start      = 3;
     uint32 limit      = 4;
+    bool   all        = 5;
 }
 
 message ListTemplateVariablesResp {

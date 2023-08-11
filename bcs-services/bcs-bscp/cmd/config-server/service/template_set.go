@@ -33,8 +33,8 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplat
 
 	// validate input param
 	idsLen := len(req.TemplateIds)
-	if idsLen == 0 || idsLen > 500 {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
+	if idsLen > 500 {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [0,500]",
 			idsLen)
 	}
 
@@ -145,6 +145,7 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbcs.ListTemplateSe
 		SearchKey:       req.SearchKey,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		All:             req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateSets(grpcKit.RpcCtx(), r)

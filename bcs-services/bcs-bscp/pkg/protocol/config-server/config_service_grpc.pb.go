@@ -65,6 +65,8 @@ const (
 	Config_ListTemplates_FullMethodName                              = "/pbcs.Config/ListTemplates"
 	Config_AddTemplateToTemplateSets_FullMethodName                  = "/pbcs.Config/AddTemplateToTemplateSets"
 	Config_ListTemplatesByIDs_FullMethodName                         = "/pbcs.Config/ListTemplatesByIDs"
+	Config_ListTemplatesNotBound_FullMethodName                      = "/pbcs.Config/ListTemplatesNotBound"
+	Config_ListTemplatesOfTemplateSet_FullMethodName                 = "/pbcs.Config/ListTemplatesOfTemplateSet"
 	Config_CreateTemplateRevision_FullMethodName                     = "/pbcs.Config/CreateTemplateRevision"
 	Config_ListTemplateRevisions_FullMethodName                      = "/pbcs.Config/ListTemplateRevisions"
 	Config_DeleteTemplateRevision_FullMethodName                     = "/pbcs.Config/DeleteTemplateRevision"
@@ -160,6 +162,8 @@ type ConfigClient interface {
 	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
 	AddTemplateToTemplateSets(ctx context.Context, in *AddTemplateToTemplateSetsReq, opts ...grpc.CallOption) (*AddTemplateToTemplateSetsResp, error)
 	ListTemplatesByIDs(ctx context.Context, in *ListTemplatesByIDsReq, opts ...grpc.CallOption) (*ListTemplatesByIDsResp, error)
+	ListTemplatesNotBound(ctx context.Context, in *ListTemplatesNotBoundReq, opts ...grpc.CallOption) (*ListTemplatesNotBoundResp, error)
+	ListTemplatesOfTemplateSet(ctx context.Context, in *ListTemplatesOfTemplateSetReq, opts ...grpc.CallOption) (*ListTemplatesOfTemplateSetResp, error)
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	DeleteTemplateRevision(ctx context.Context, in *DeleteTemplateRevisionReq, opts ...grpc.CallOption) (*DeleteTemplateRevisionResp, error)
@@ -599,6 +603,24 @@ func (c *configClient) ListTemplatesByIDs(ctx context.Context, in *ListTemplates
 	return out, nil
 }
 
+func (c *configClient) ListTemplatesNotBound(ctx context.Context, in *ListTemplatesNotBoundReq, opts ...grpc.CallOption) (*ListTemplatesNotBoundResp, error) {
+	out := new(ListTemplatesNotBoundResp)
+	err := c.cc.Invoke(ctx, Config_ListTemplatesNotBound_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListTemplatesOfTemplateSet(ctx context.Context, in *ListTemplatesOfTemplateSetReq, opts ...grpc.CallOption) (*ListTemplatesOfTemplateSetResp, error) {
+	out := new(ListTemplatesOfTemplateSetResp)
+	err := c.cc.Invoke(ctx, Config_ListTemplatesOfTemplateSet_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error) {
 	out := new(CreateTemplateRevisionResp)
 	err := c.cc.Invoke(ctx, Config_CreateTemplateRevision_FullMethodName, in, out, opts...)
@@ -1028,6 +1050,8 @@ type ConfigServer interface {
 	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
 	AddTemplateToTemplateSets(context.Context, *AddTemplateToTemplateSetsReq) (*AddTemplateToTemplateSetsResp, error)
 	ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error)
+	ListTemplatesNotBound(context.Context, *ListTemplatesNotBoundReq) (*ListTemplatesNotBoundResp, error)
+	ListTemplatesOfTemplateSet(context.Context, *ListTemplatesOfTemplateSetReq) (*ListTemplatesOfTemplateSetResp, error)
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	DeleteTemplateRevision(context.Context, *DeleteTemplateRevisionReq) (*DeleteTemplateRevisionResp, error)
@@ -1204,6 +1228,12 @@ func (UnimplementedConfigServer) AddTemplateToTemplateSets(context.Context, *Add
 }
 func (UnimplementedConfigServer) ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplatesByIDs not implemented")
+}
+func (UnimplementedConfigServer) ListTemplatesNotBound(context.Context, *ListTemplatesNotBoundReq) (*ListTemplatesNotBoundResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplatesNotBound not implemented")
+}
+func (UnimplementedConfigServer) ListTemplatesOfTemplateSet(context.Context, *ListTemplatesOfTemplateSetReq) (*ListTemplatesOfTemplateSetResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplatesOfTemplateSet not implemented")
 }
 func (UnimplementedConfigServer) CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateRevision not implemented")
@@ -2113,6 +2143,42 @@ func _Config_ListTemplatesByIDs_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListTemplatesByIDs(ctx, req.(*ListTemplatesByIDsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListTemplatesNotBound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplatesNotBoundReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListTemplatesNotBound(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListTemplatesNotBound_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListTemplatesNotBound(ctx, req.(*ListTemplatesNotBoundReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListTemplatesOfTemplateSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplatesOfTemplateSetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListTemplatesOfTemplateSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListTemplatesOfTemplateSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListTemplatesOfTemplateSet(ctx, req.(*ListTemplatesOfTemplateSetReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3051,6 +3117,14 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplatesByIDs",
 			Handler:    _Config_ListTemplatesByIDs_Handler,
+		},
+		{
+			MethodName: "ListTemplatesNotBound",
+			Handler:    _Config_ListTemplatesNotBound_Handler,
+		},
+		{
+			MethodName: "ListTemplatesOfTemplateSet",
+			Handler:    _Config_ListTemplatesOfTemplateSet_Handler,
 		},
 		{
 			MethodName: "CreateTemplateRevision",

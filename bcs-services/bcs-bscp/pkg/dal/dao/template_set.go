@@ -16,13 +16,14 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/criteria/constant"
 	"gorm.io/datatypes"
 	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
+	dtypes "bscp.io/pkg/dal/types"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
@@ -52,6 +53,8 @@ type TemplateSet interface {
 	DeleteTmplFromTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error
 	// ListAppTmplSets list all the template sets of the app.
 	ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
+	// ListAllTemplateIDs list all template ids of all template sets in one template space.
+	ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error)
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -187,14 +190,16 @@ func (dao *templateSetDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, sea
 		conds = append(conds, q.Where(m.Name.Regexp("(?i)"+searchKey)).Or(m.Memo.Regexp("(?i)"+searchKey)))
 	}
 
-	result, count, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).
-		Where(conds...).
-		FindByPage(opt.Offset(), opt.LimitInt())
-	if err != nil {
-		return nil, 0, err
+	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...)
+	if opt.All {
+		result, err := d.Find()
+		if err != nil {
+			return nil, 0, err
+		}
+		return result, int64(len(result)), err
 	}
 
-	return result, count, nil
+	return d.FindByPage(opt.Offset(), opt.LimitInt())
 }
 
 // Delete one template set instance.
@@ -329,6 +334,33 @@ func (dao *templateSetDao) ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([
 		Find()
 }
 
+// ListAllTemplateIDs list all template ids of all template sets in one template space.
+func (dao *templateSetDao) ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	var result []dtypes.Uint32Slice
+	if err := q.Select(m.TemplateIDs).
+		Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).
+		Pluck(m.TemplateIDs, &result); err != nil {
+		return nil, err
+	}
+
+	idMap := make(map[uint32]struct{})
+	for _, ids := range result {
+		for _, id := range ids {
+			idMap[id] = struct{}{}
+		}
+	}
+
+	ids := make([]uint32, 0, len(idMap))
+	for id := range idMap {
+		ids = append(ids, id)
+	}
+
+	return ids, nil
+}
+
 // validateAttachmentExist validate if attachment resource exists before operating template
 func (dao *templateSetDao) validateAttachmentExist(kit *kit.Kit, am *table.TemplateSetAttachment) error {
 	m := dao.genQ.TemplateSpace
@@ -346,6 +378,11 @@ func (dao *templateSetDao) validateAttachmentExist(kit *kit.Kit, am *table.Templ
 
 // validateTemplatesExist validate if all templates resource exists before operating template set
 func (dao *templateSetDao) validateTemplatesExist(kit *kit.Kit, templateIDs []uint32) error {
+	// allow template ids to be empty
+	if len(templateIDs) == 0 {
+		return nil
+	}
+
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
 	var existIDs []uint32

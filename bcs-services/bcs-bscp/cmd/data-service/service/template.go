@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"bscp.io/pkg/dal/table"
@@ -24,6 +25,7 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbtemplate "bscp.io/pkg/protocol/core/template"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -98,7 +100,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq) (*pbds.ListTemplatesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
@@ -106,7 +108,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq)
 	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, req.SearchKey, opt)
 
 	if err != nil {
-		logs.Errorf("list template failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list templates failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -252,4 +254,121 @@ func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbds.ListTemplate
 		Details: pbtemplate.PbTemplates(details),
 	}
 	return resp, nil
+}
+
+// ListTemplatesNotBound list templates not bound.
+// 先获取所有模版ID列表，再获取该空间下所有套餐的template_ids字段进行合并，做差集得到目标ID列表，根据这批ID获取对应的详情，做逻辑分页和搜索
+func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTemplatesNotBoundReq) (
+	*pbds.ListTemplatesNotBoundResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	idsAll, err := s.dao.Template().ListAllIDs(kt, req.BizId, req.TemplateSpaceId)
+	if err != nil {
+		logs.Errorf("list templates not bound failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	idsBound, err := s.dao.TemplateSet().ListAllTemplateIDs(kt, req.BizId, req.TemplateSpaceId)
+	if err != nil {
+		logs.Errorf("list templates not bound failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	ids := tools.SliceDiff(idsAll, idsBound)
+	templates, err := s.dao.Template().ListByIDs(kt, ids)
+	details := pbtemplate.PbTemplates(templates)
+
+	// search by logic
+	if req.SearchKey != "" {
+		newDetails := make([]*pbtemplate.Template, 0)
+		for _, detail := range details {
+			if strings.Contains(detail.Spec.Name, req.SearchKey) ||
+				strings.Contains(detail.Spec.Path, req.SearchKey) ||
+				strings.Contains(detail.Spec.Memo, req.SearchKey) {
+				newDetails = append(newDetails, detail)
+			}
+		}
+		details = newDetails
+	}
+
+	if req.All {
+		// return all data
+		return &pbds.ListTemplatesNotBoundResp{
+			Count:   uint32(len(details)),
+			Details: details,
+		}, nil
+	}
+
+	// page by logic
+	if req.Start >= uint32(len(details)) {
+		details = details[:0]
+	} else if req.Start+req.Limit > uint32(len(details)) {
+		details = details[req.Start:]
+	} else {
+		details = details[req.Start : req.Start+req.Limit]
+	}
+
+	return &pbds.ListTemplatesNotBoundResp{
+		Count:   uint32(len(details)),
+		Details: details,
+	}, nil
+}
+
+// ListTemplatesOfTemplateSet list templates of template set.
+// 获取到该套餐的template_ids字段，根据这批ID获取对应的详情，做逻辑分页和搜索
+func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbds.ListTemplatesOfTemplateSetReq) (
+	*pbds.ListTemplatesOfTemplateSetResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplateSetExist(kt, req.TemplateSetId); err != nil {
+		return nil, err
+	}
+
+	templateSets, err := s.dao.TemplateSet().ListByIDs(kt, []uint32{req.TemplateSetId})
+	if err != nil {
+		logs.Errorf("list templates of template set failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	templates, err := s.dao.Template().ListByIDs(kt, templateSets[0].Spec.TemplateIDs)
+	if err != nil {
+		logs.Errorf("list templates of template set failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	details := pbtemplate.PbTemplates(templates)
+
+	// search by logic
+	if req.SearchKey != "" {
+		newDetails := make([]*pbtemplate.Template, 0)
+		for _, detail := range details {
+			if strings.Contains(detail.Spec.Name, req.SearchKey) ||
+				strings.Contains(detail.Spec.Path, req.SearchKey) ||
+				strings.Contains(detail.Spec.Memo, req.SearchKey) {
+				newDetails = append(newDetails, detail)
+			}
+		}
+		details = newDetails
+	}
+
+	if req.All {
+		// return all data
+		return &pbds.ListTemplatesOfTemplateSetResp{
+			Count:   uint32(len(details)),
+			Details: details,
+		}, nil
+	}
+
+	// page by logic
+	if req.Start >= uint32(len(details)) {
+		details = details[:0]
+	} else if req.Start+req.Limit > uint32(len(details)) {
+		details = details[req.Start:]
+	} else {
+		details = details[req.Start : req.Start+req.Limit]
+	}
+
+	return &pbds.ListTemplatesOfTemplateSetResp{
+		Count:   uint32(len(details)),
+		Details: details,
+	}, nil
 }

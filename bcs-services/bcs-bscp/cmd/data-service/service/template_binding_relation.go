@@ -223,11 +223,6 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 		return nil, err
 	}
 
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
-		return nil, err
-	}
-
 	relations, err := s.dao.TemplateBindingRelation().
 		ListTemplateBoundUnnamedAppDetails(kt, req.BizId, req.TemplateId)
 	if err != nil {
@@ -237,7 +232,7 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 
 	// get template revision details of the template
 	tmplRevisions, _, err := s.dao.TemplateRevision().
-		List(kt, req.BizId, req.TemplateId, "", &types.BasePage{Start: 0, Limit: types.DefaultMaxPageLimit})
+		List(kt, req.BizId, req.TemplateId, "", &types.BasePage{All: true})
 	if err != nil {
 		logs.Errorf("list template bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -277,6 +272,14 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 		}
 	}
 
+	if req.All {
+		// return all data
+		return &pbds.ListTemplateBoundUnnamedAppDetailsResp{
+			Count:   uint32(len(details)),
+			Details: details,
+		}, nil
+	}
+
 	// page by logic
 	if req.Start >= uint32(len(details)) {
 		details = details[:0]
@@ -303,11 +306,6 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 		return nil, err
 	}
 
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
-		return nil, err
-	}
-
 	relations, err := s.dao.TemplateBindingRelation().
 		ListTemplateBoundNamedAppDetails(kt, req.BizId, req.TemplateId)
 	if err != nil {
@@ -317,7 +315,7 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 
 	// get template revision details of the template
 	tmplRevisions, _, err := s.dao.TemplateRevision().
-		List(kt, req.BizId, req.TemplateId, "", &types.BasePage{Start: 0, Limit: types.DefaultMaxPageLimit})
+		List(kt, req.BizId, req.TemplateId, "", &types.BasePage{All: true})
 	if err != nil {
 		logs.Errorf("list template bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -370,6 +368,14 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 		}
 	}
 
+	if req.All {
+		// return all data
+		return &pbds.ListTemplateBoundNamedAppDetailsResp{
+			Count:   uint32(len(details)),
+			Details: details,
+		}, nil
+	}
+
 	// page by logic
 	if req.Start >= uint32(len(details)) {
 		details = details[:0]
@@ -393,11 +399,6 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
-		return nil, err
-	}
-
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
 
@@ -428,6 +429,14 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 		})
 	}
 
+	if req.All {
+		// return all data
+		return &pbds.ListTemplateBoundTemplateSetDetailsResp{
+			Count:   uint32(len(details)),
+			Details: details,
+		}, nil
+	}
+
 	// page by logic
 	if req.Start >= uint32(len(details)) {
 		details = details[:0]
@@ -451,11 +460,6 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateRevisionExist(kt, req.TemplateRevisionId); err != nil {
-		return nil, err
-	}
-
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
 
@@ -486,6 +490,14 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 		})
 	}
 
+	if req.All {
+		// return all data
+		return &pbds.ListTemplateRevisionBoundUnnamedAppDetailsResp{
+			Count:   uint32(len(details)),
+			Details: details,
+		}, nil
+	}
+
 	// page by logic
 	if req.Start >= uint32(len(details)) {
 		details = details[:0]
@@ -509,11 +521,6 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateRevisionExist(kt, req.TemplateRevisionId); err != nil {
-		return nil, err
-	}
-
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
 
@@ -561,6 +568,14 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 		})
 	}
 
+	if req.All {
+		// return all data
+		return &pbds.ListTemplateRevisionBoundNamedAppDetailsResp{
+			Count:   uint32(len(details)),
+			Details: details,
+		}, nil
+	}
+
 	// page by logic
 	if req.Start >= uint32(len(details)) {
 		details = details[:0]
@@ -584,11 +599,6 @@ func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateSetExist(kt, req.TemplateSetId); err != nil {
-		return nil, err
-	}
-
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
 
@@ -619,6 +629,14 @@ func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
 		})
 	}
 
+	if req.All {
+		// return all data
+		return &pbds.ListTemplateSetBoundUnnamedAppDetailsResp{
+			Count:   uint32(len(details)),
+			Details: details,
+		}, nil
+	}
+
 	// page by logic
 	if req.Start >= uint32(len(details)) {
 		details = details[:0]
@@ -642,11 +660,6 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateSetExist(kt, req.TemplateSetId); err != nil {
-		return nil, err
-	}
-
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
 
@@ -692,6 +705,14 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 			ReleaseId:   r.ReleaseID,
 			ReleaseName: releaseMap[r.ReleaseID].Spec.Name,
 		})
+	}
+
+	if req.All {
+		// return all data
+		return &pbds.ListTemplateSetBoundNamedAppDetailsResp{
+			Count:   uint32(len(details)),
+			Details: details,
+		}, nil
 	}
 
 	// page by logic

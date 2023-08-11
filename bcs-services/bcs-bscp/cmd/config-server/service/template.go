@@ -158,6 +158,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 		SearchKey:       req.SearchKey,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		All:             req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplates(grpcKit.RpcCtx(), r)
@@ -240,6 +241,75 @@ func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplate
 	}
 
 	resp = &pbcs.ListTemplatesByIDsResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListTemplatesNotBound list templates not bound
+func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTemplatesNotBoundReq) (*pbcs.
+	ListTemplatesNotBoundResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListTemplatesNotBoundResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListTemplatesNotBoundReq{
+		BizId:           grpcKit.BizID,
+		TemplateSpaceId: req.TemplateSpaceId,
+		SearchKey:       req.SearchKey,
+		Start:           req.Start,
+		Limit:           req.Limit,
+		All:             req.All,
+	}
+
+	rp, err := s.client.DS.ListTemplatesNotBound(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list templates not bound failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListTemplatesNotBoundResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListTemplatesOfTemplateSet list templates of template set
+func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.ListTemplatesOfTemplateSetReq) (*pbcs.
+	ListTemplatesOfTemplateSetResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListTemplatesOfTemplateSetResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListTemplatesOfTemplateSetReq{
+		BizId:           grpcKit.BizID,
+		TemplateSpaceId: req.TemplateSpaceId,
+		TemplateSetId:   req.TemplateSetId,
+		SearchKey:       req.SearchKey,
+		Start:           req.Start,
+		Limit:           req.Limit,
+		All:             req.All,
+	}
+
+	rp, err := s.client.DS.ListTemplatesOfTemplateSet(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list templates of template set failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListTemplatesOfTemplateSetResp{
+		Count:   rp.Count,
 		Details: rp.Details,
 	}
 	return resp, nil
