@@ -74,10 +74,12 @@ func (n *NamespaceManager) SyncNamespaceItsmStatus() {
 		return
 	}
 	for _, ticket := range tickets {
-		if ticket.CurrentStatus == "FINISHED" || ticket.CurrentStatus == "TERMINATED" {
+		if ticket.CurrentStatus == "FINISHED" ||
+			ticket.CurrentStatus == "TERMINATED" ||
+			ticket.CurrentStatus == "REVOKED" {
 			namespace, ok := nsMap[ticket.SN]
 			if !ok {
-				logging.Error("namespace ticket %s doesn't exits in db")
+				logging.Error("namespace ticket %s doesn't exits in db", ticket.SN)
 				return
 			}
 			err := n.model.DeleteNamespace(n.ctx, namespace.ProjectCode, namespace.ClusterID, namespace.Name)

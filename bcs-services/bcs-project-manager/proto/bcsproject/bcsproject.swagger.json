@@ -2946,6 +2946,14 @@
           "type": "string",
           "description": "itsm 单据类型: create, update, delete",
           "title": "itsmTicketType"
+        },
+        "managers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "命名空间管理员",
+          "title": "managers"
         }
       }
     },
