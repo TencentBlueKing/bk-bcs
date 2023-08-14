@@ -27,6 +27,7 @@
   const openSelectGroupPanel = ref(false)
   const isDiffSliderShow = ref(false)
   const isConfirmDialogShow = ref(false)
+  const groupType = ref('select')
   const groups = ref<IGroupToPublish[]>([])
   const baseVersionId = ref(0)
 
@@ -62,6 +63,7 @@
   }
 
   const handlePanelClose = () => {
+    groupType.value ='select'
     openSelectGroupPanel.value = false
     groups.value = []
   }
@@ -86,7 +88,12 @@
                       上线版本：{{ versionData.spec.name }}
                   </section>
               </template>
-              <select-group :groups="groups" @openPreviewVersionDiff="openPreviewVersionDiff" @change="groups = $event"></select-group>
+              <select-group
+                :group-type="groupType"
+                :groups="groups"
+                @openPreviewVersionDiff="openPreviewVersionDiff"
+                @groupTypeChange="groupType = $event"
+                @change="groups = $event" />
               <template #footer>
                   <section class="actions-wrapper">
                       <bk-button class="publish-btn" theme="primary" @click="isDiffSliderShow = true">对比并上线</bk-button>
@@ -100,6 +107,7 @@
             :bk-biz-id="props.bkBizId"
             :app-id="props.appId"
             :release-id="versionData.id"
+            :group-type="groupType"
             :groups="groups"
             @confirm="handleConfirm"/>
         <VersionDiff

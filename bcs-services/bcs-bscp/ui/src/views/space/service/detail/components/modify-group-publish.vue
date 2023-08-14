@@ -27,6 +27,7 @@
   const openSelectGroupPanel = ref(false)
   const isDiffSliderShow = ref(false)
   const isConfirmDialogShow = ref(false)
+  const groupType = ref('select')
   const groups = ref<IGroupToPublish[]>([])
   const baseVersionId = ref(0)
 
@@ -82,6 +83,7 @@
 
   // 关闭选择分组面板
   const handlePanelClose = () => {
+    groupType.value = 'select'
     openSelectGroupPanel.value = false
     groups.value = []
   }
@@ -103,9 +105,11 @@
                   </section>
               </template>
               <select-group
+                :group-type="groupType"
                 :groups="groups"
                 :disabled="currentSelectedGroups"
                 @openPreviewVersionDiff="openPreviewVersionDiff"
+                @groupTypeChange="groupType = $event"
                 @change="groups = $event">
               </select-group>
               <template #footer>
@@ -121,6 +125,7 @@
             :bk-biz-id="props.bkBizId"
             :app-id="props.appId"
             :release-id="versionData.id"
+            :group-type="groupType"
             :groups="groups"
             @confirm="handleConfirm"/>
         <VersionDiff

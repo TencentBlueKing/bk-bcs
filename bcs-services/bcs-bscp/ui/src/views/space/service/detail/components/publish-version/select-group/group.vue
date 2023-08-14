@@ -10,6 +10,7 @@
     versionListLoading: boolean;
     versionList: IConfigVersion[];
     disabled?: number[];
+    groupType: string;
     value: IGroupToPublish[];
   }>(), {
     groupList: () => [],
@@ -18,9 +19,9 @@
     value: () => []
   })
 
-  const emits = defineEmits(['togglePreviewDelete', 'change'])
+  const emits = defineEmits(['groupTypeChange', 'change'])
 
-  const type = ref('select')
+  const type = ref(props.groupType)
 
   // 选择上线的分组，排除分组需要做取反操作
   const selectedGroup = computed(() => {
@@ -45,7 +46,7 @@
       }
       handleSelectGroup(list)
     }
-    emits('togglePreviewDelete', val === 'select')
+    emits('groupTypeChange', val)
   }
 
   const handleSelectGroup = (val: IGroupToPublish[]) => {

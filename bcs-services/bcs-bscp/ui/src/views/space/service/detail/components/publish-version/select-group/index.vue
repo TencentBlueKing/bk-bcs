@@ -14,17 +14,19 @@
   const { appData } = storeToRefs(useServiceStore())
 
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
+    groupType?: string;
     groups: IGroupToPublish[];
     disabled?: number[];
-  }>()
-  const emits = defineEmits(['openPreviewVersionDiff', 'change'])
+  }>(), {
+    groupType: 'select'
+  })
+  const emits = defineEmits(['openPreviewVersionDiff', 'groupTypeChange', 'change'])
 
   const groupListLoading = ref(true)
   const groupList = ref<IGroupToPublish[]>([])
   const versionListLoading = ref(true)
   const versionList = ref<IConfigVersion[]>([])
-  const allowPreviewDelete = ref(true)
 
   onMounted(() => {
     getAllGroupData()
@@ -44,8 +46,8 @@
     groupListLoading.value = false
   }
 
-    // 加载全量版本列表
-    const getAllVersionData = async() => {
+  // 加载全量版本列表
+  const getAllVersionData = async() => {
     versionListLoading.value = true
     const params = {
       start: 0,
@@ -69,8 +71,9 @@
           :version-list="versionList"
           :version-list-loading="versionListLoading"
           :disabled="props.disabled"
+          :group-type="groupType"
           :value="props.groups"
-          @togglePreviewDelete="allowPreviewDelete = $event"
+          @groupTypeChange="emits('groupTypeChange', $event)"
           @change="emits('change', $event)" />
       </bk-loading>
     </div>
@@ -80,7 +83,7 @@
         :group-list-loading="groupListLoading"
         :version-list="versionList"
         :version-list-loading="versionListLoading"
-        :allow-preview-delete="allowPreviewDelete"
+        :allow-preview-delete="groupType === 'select'"
         :disabled="props.disabled"
         :value="props.groups"
         @diff="emits('openPreviewVersionDiff', $event)"
