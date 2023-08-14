@@ -2,8 +2,8 @@
   import { ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue/lib'
-  import { useGlobalStore } from '../../../../../../store/global'
-  import { updateTemplateSpace } from '../../../../../../api/template'
+  import { useGlobalStore } from '../../../../../store/global'
+  import { updateTemplateSpace } from '../../../../../api/template'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 
@@ -52,7 +52,6 @@
 </script>
 <template>
   <bk-dialog
-    title="编辑空间"
     ext-cls="edit-template-space-dialog"
     confirm-text="保存"
     :width="480"

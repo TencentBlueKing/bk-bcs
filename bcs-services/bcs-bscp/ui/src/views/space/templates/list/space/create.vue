@@ -2,8 +2,8 @@
   import { ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue/lib'
-  import { useGlobalStore } from '../../../../../../store/global'
-  import { createTemplateSpace } from '../../../../../../api/template'
+  import { useGlobalStore } from '../../../../../store/global'
+  import { createTemplateSpace } from '../../../../../api/template'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 

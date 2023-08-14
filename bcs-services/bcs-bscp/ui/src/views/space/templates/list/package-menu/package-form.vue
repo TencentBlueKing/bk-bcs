@@ -2,10 +2,10 @@
   import { onMounted, ref, watch, computed } from 'vue'
   import { cloneDeep } from 'lodash'
   import { storeToRefs } from 'pinia'
-  import { useUserStore } from '../../../../../../store/user'
-  import { ITemplatePackageEditParams } from '../../../../../../../types/template'
-  import { getAppList } from '../../../../../../api/index'
-  import { IAppItem } from '../../../../../../../types/app'
+  import { useUserStore } from '../../../../../store/user'
+  import { ITemplatePackageEditParams } from '../../../../../../types/template'
+  import { getAppList } from '../../../../../api/index'
+  import { IAppItem } from '../../../../../../types/app'
 
   const { userInfo } = storeToRefs(useUserStore())
 

@@ -2,10 +2,10 @@
   import { ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue/lib'
-  import { useGlobalStore } from '../../../../../../store/global'
-  import { ITemplatePackageEditParams } from '../../../../../../../types/template'
-  import { createTemplatePackage } from '../../../../../../api/template'
-  import useModalCloseConfirmation from '../../../../../../utils/hooks/use-modal-close-confirmation'
+  import { useGlobalStore } from '../../../../../store/global'
+  import { ITemplatePackageEditParams, ITemplatePackageItem } from '../../../../../../types/template'
+  import { createTemplatePackage } from '../../../../../api/template'
+  import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation'
   import PackageForm from './package-form.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
@@ -13,6 +13,7 @@
   const props = defineProps<{
     show: boolean;
     templateSpaceId: number;
+    pkg: ITemplatePackageItem;
   }>()
 
   const emits = defineEmits(['update:show', 'created'])
@@ -23,6 +24,7 @@
     name: '',
     memo: '',
     public: true,
+    template_ids: [],
     bound_apps: []
   })
   const isFormChange = ref(false)
@@ -31,6 +33,13 @@
   watch(() => props.show, val => {
     isShow.value = val
     isFormChange.value = false
+    const {
+      name,
+      memo,
+      public: isPublic,
+      bound_apps,
+      template_ids } = props.pkg.spec
+    data.value = { name, memo, public: isPublic, bound_apps, template_ids }
   })
 
   const handleChange = (formData: ITemplatePackageEditParams) => {
@@ -38,7 +47,7 @@
     data.value = formData
   }
 
-  const handleCreate = () => {
+  const handleSave = () => {
     formRef.value.validate().then(async() => {
       try {
         pending.value = true
@@ -47,7 +56,7 @@
         emits('created')
         Message({
           theme: 'success',
-          message: '创建成功'
+          message: '克隆成功'
         })
       } catch (e) {
         console.error(e)
@@ -67,28 +76,27 @@
 
   const close = () => {
     emits('update:show', false)
-    data.value = { name: '', memo: '', public: true, bound_apps: [] }
   }
 
 </script>
 <template>
   <bk-sideslider
-    title="新建模板套餐"
+    title="克隆模板套餐"
     :width="640"
     :is-show="isShow"
     :before-close="handleBeforeClose"
     @closed="close">
-    <div class="create-package-form">
+    <div class="package-form">
       <PackageForm ref="formRef" :space-id="spaceId" :data="data" @change="handleChange" />
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" :loading="pending" @click="handleCreate">创建</bk-button>
+      <bk-button theme="primary" :loading="pending" @click="handleSave">创建</bk-button>
       <bk-button @click="close">取消</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <style lang="scss" scoped>
-  .create-package-form {
+  .package-form {
     padding: 20px 40px;
     height: calc(100vh - 101px);
   }

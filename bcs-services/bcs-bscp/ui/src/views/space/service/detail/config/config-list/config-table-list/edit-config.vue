@@ -1,28 +1,14 @@
 <script setup lang="ts">
   import { ref, watch, computed } from 'vue'
   import { storeToRefs } from 'pinia'
+  import { Message } from 'bkui-vue';
   import ConfigForm from './config-form.vue'
-  import { getConfigItemDetail, getConfigContent, updateServiceConfigItem } from '../../../../../../../api/config'
-  import { IFileConfigContentSummary } from '../../../../../../../../types/config'
-  import { IAppEditParams } from '../../../../../../../../types/app'
-  
+  import { getConfigItemDetail, updateConfigContent, getConfigContent, updateServiceConfigItem } from '../../../../../../../api/config'
+  import { getConfigEditParams } from '../../../../../../../utils/config'
+  import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config'
   import { useConfigStore } from '../../../../../../../store/config'
 
   const { versionData } = storeToRefs(useConfigStore())
-
-  const getDefaultConfig = () => {
-    return {
-      biz_id: props.bkBizId,
-      app_id: props.appId,
-      name: '',
-      path: '',
-      file_type: 'text',
-      file_mode: 'unix',
-      user: '',
-      user_group: 'root',
-      privilege: '',
-    }
-  }
 
   const props = defineProps<{
     bkBizId: string,
@@ -31,11 +17,14 @@
     show: Boolean
   }>()
 
-  const emit = defineEmits(['update:show', 'confirm'])
+  const emits = defineEmits(['update:show', 'confirm'])
 
   const configDetailLoading = ref(true)
-  const config = ref<IAppEditParams>(getDefaultConfig())
+  const configForm = ref<IConfigEditParams>(getConfigEditParams())
   const content = ref<string|IFileConfigContentSummary>('')
+  const formRef = ref()
+  const fileUploading = ref(false)
+  const pending = ref(false)
 
   const editable = computed(() => {
     return versionData.value.id === 0
@@ -59,8 +48,8 @@
         params.release_id = versionData.value.id
       }
       const detail = await getConfigItemDetail(props.bkBizId, props.configId, props.appId, params)
-      const { name, path, file_type, permission } = detail.config_item.spec
-      config.value = { id: props.configId, biz_id: props.bkBizId, app_id: props.appId, name, file_type, path, ...permission }
+      const { name, memo, path, file_type, permission } = detail.config_item.spec
+      configForm.value = { id: props.configId, name, memo, file_type, path, ...permission }
       const signature = detail.content.signature
       if (file_type === 'binary') {
         content.value = { name, signature, size: detail.content.byte_size }
@@ -75,12 +64,42 @@
     }
   }
 
-  const submitConfig = (data: IAppEditParams) => {
-    return updateServiceConfigItem(data)
+  const handleChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary|string) => {
+    configForm.value = data
+    content.value = configContent
+  }
+
+  const handleSubmit = async() => {
+    const isValid = await formRef.value.validate()
+    if (!isValid) return
+
+    try {
+      pending.value = true
+      let sign = await formRef.value.getSignature()
+      let size = 0
+      if (configForm.value.file_type === 'binary') {
+        size = Number((<IFileConfigContentSummary>content.value).size)
+      } else {
+        const stringContent = <string>content.value
+        size = new Blob([stringContent]).size
+        await updateConfigContent(props.bkBizId, props.appId, stringContent, sign)
+      }
+      const params = { ...configForm.value, ...{ sign, byte_size: size } }
+      await updateServiceConfigItem(props.configId, props.appId, props.bkBizId, params)
+      emits('confirm')
+      Message({
+        theme: 'success',
+        message: '编辑配置项成功'
+      })
+    }catch (e) {
+      console.log(e)
+    } finally {
+      pending.value = false
+    }
   }
 
   const close = () => {
-    emit('update:show', false)
+    emits('update:show', false)
   }
 </script>
 <template>
@@ -89,22 +108,46 @@
       :title="`${editable ? '编辑' : '查看'}配置项`"
       :is-show="props.show"
       :before-close="close">
-        <bk-loading :loading="configDetailLoading" style="height: 100%;">
+        <bk-loading :loading="configDetailLoading" class="config-loading-container">
           <ConfigForm
             v-if="!configDetailLoading"
-            :config="config"
+            ref="formRef"
+            class="config-form-wrapper"
+            v-model:fileUploading="fileUploading"
+            :config="configForm"
             :content="content"
             :editable="editable"
             :bk-biz-id="props.bkBizId"
             :app-id="props.appId"
-            :submit-fn="submitConfig"
-            @confirm="$emit('confirm')"
-            @cancel="close" />
+            @change="handleChange" />
         </bk-loading>
+        <section class="action-btns">
+          <bk-button
+            theme="primary"
+            :loading="pending"
+            :disabled="configDetailLoading || fileUploading"
+            @click="handleSubmit">
+            保存
+          </bk-button>
+          <bk-button @click="close">取消</bk-button>
+      </section>
     </bk-sideslider>
 </template>
 <style lang="scss" scoped>
-  :deep(.bk-modal-content) {
-    height: 100%;
+  .config-loading-container {
+    height: calc(100vh - 101px);
+    overflow: auto;
+    .config-form-wrapper {
+      padding: 20px 40px;
+      height: 100%;
+    }
+  }
+  .action-btns {
+    border-top: 1px solid #dcdee5;
+    padding: 8px 24px;
+    .bk-button {
+      margin-right: 8px;
+      min-width: 88px;
+    }
   }
 </style>

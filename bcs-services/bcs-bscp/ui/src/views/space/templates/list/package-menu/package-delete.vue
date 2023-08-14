@@ -2,10 +2,10 @@
   import { ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue/lib'
-  import { useGlobalStore } from '../../../../../../store/global'
-  import { getUnNamedVersionAppsBoundByPackage, deleteTemplatePackage } from '../../../../../../api/template'
-  import { ITemplatePackageItem } from '../../../../../../../types/template'
-  import { IAppItem } from '../../../../../../../types/app'
+  import { useGlobalStore } from '../../../../../store/global'
+  import { getUnNamedVersionAppsBoundByPackage, deleteTemplatePackage } from '../../../../../api/template'
+  import { ITemplatePackageItem } from '../../../../../../types/template'
+  import { IAppItem } from '../../../../../../types/app'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 

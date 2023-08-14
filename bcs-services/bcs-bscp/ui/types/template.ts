@@ -38,6 +38,13 @@ export interface ITemplatePackageItem {
   }
 }
 
+// 模板套餐左侧菜单单条配置项
+export interface IPackageMenuItem {
+  id: number|string;
+  name: string;
+  count: number;
+}
+
 // 模板套餐编辑参数
 export interface ITemplatePackageEditParams {
   template_set_id?: number;

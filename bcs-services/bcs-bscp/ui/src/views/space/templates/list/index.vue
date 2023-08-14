@@ -1,7 +1,27 @@
 <script lang="ts" setup>
-  import SpaceSelector from './components/space/selector.vue';
-  import PackageList from './components/package-list/list.vue';
-  import PackageDetail from './components/package-detail/index.vue';
+  import { useRoute, useRouter } from 'vue-router'
+  import { storeToRefs } from 'pinia'
+  import { useTemplateStore } from '../../../../store/template'
+  import SpaceSelector from './space/selector.vue';
+  import PackageMenu from './package-menu/menu.vue';
+  import PackageDetail from './package-detail/index.vue';
+import { onMounted } from 'vue';
+
+  const route = useRoute()
+  const templateStore = useTemplateStore()
+
+  onMounted(() => {
+    const { templateSpaceId, packageId } = route.params
+    templateStore.$patch((state) => {
+      if (templateSpaceId) {
+        state.currentTemplateSpace = Number(templateSpaceId)
+      }
+      if (packageId) {
+        state.currentPkg = /\d+/.test(<string>packageId) ? Number(packageId) : <string>packageId
+      }
+    })
+  })
+
 </script>
 <template>
   <div class="templates-page">
@@ -14,7 +34,7 @@
     <div class="main-content-container">
       <div class="side-menu-area">
         <space-selector></space-selector>
-        <package-list></package-list>
+        <package-menu></package-menu>
       </div>
       <div class="package-detail-area">
         <package-detail></package-detail>
@@ -50,11 +70,10 @@
     width: 240px;
     height: 100%;
     background: #ffffff;
-    box-shadow: 1px 0 0 0 #dcdee5;
+    border-right: 1px solid #dcdee5;
   }
   .package-detail-area {
     width: calc(100% - 240px);
-    padding: 18px 24px;
     height: 100%;
     background: #f5f7fa;
   }

@@ -1,17 +1,19 @@
 <script lang="ts" setup>
   import { ref, computed, onMounted } from 'vue';
+  import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { DownShape, Del } from 'bkui-vue/lib/icon'
   import { InfoBox, Message } from 'bkui-vue/lib'
-  import { useGlobalStore } from '../../../../../../store/global'
-  import { useTemplateStore } from '../../../../../../store/template'
-  import { ITemplateSpaceItem } from '../../../../../../../types/template'
-  import { ICommonQuery } from '../../../../../../../types/index'
-  import { getTemplateSpaceList, deleteTemplateSpace } from '../../../../../../api/template'
+  import { useGlobalStore } from '../../../../../store/global'
+  import { useTemplateStore } from '../../../../../store/template'
+  import { ITemplateSpaceItem } from '../../../../../../types/template'
+  import { ICommonQuery } from '../../../../../../types/index'
+  import { getTemplateSpaceList, deleteTemplateSpace, getTemplatesBySpaceId } from '../../../../../api/template'
 
   import Create from './create.vue'
   import Edit from './edit.vue'
 
+  const router = useRouter()
   const { spaceId } = storeToRefs(useGlobalStore())
   const templateStore = useTemplateStore()
   const { currentTemplateSpace, templateSpaceList } = storeToRefs(templateStore)
@@ -19,12 +21,10 @@
   const loading = ref(false)
   const spaceList = ref<ITemplateSpaceItem[]>([])
   const selectorOpen = ref(false)
+  const selectorRef = ref()
   const isShowCreateDialog = ref(false)
+  const templatesLoading = ref(false)
   const editingData = ref({
-    open: false,
-    data: { id: 0, name: '', memo: '' }
-  })
-  const deletingData = ref({
     open: false,
     data: { id: 0, name: '', memo: '' }
   })
@@ -40,9 +40,15 @@
 
   onMounted(async () => {
     await loadList()
-    templateStore.$patch((state) => {
-      state.currentTemplateSpace = spaceList.value[0]?.id
-    })
+    if (!currentTemplateSpace.value) {
+      const spaceId = spaceList.value[0].id
+      if (spaceId) { // url中没有模版空间id，且空间列表不为空时，默认选中第一个空间
+        setTemplateSpace(spaceId)
+        updateRouter(spaceId)
+      }
+    } else {
+      setTemplateSpace(currentTemplateSpace.value)
+    }
   })
 
   const loadList = async () => {
@@ -60,10 +66,9 @@
     loading.value = false
   }
 
-  const handleSelectSpace = (val: number) => {
-    templateStore.$patch((state) => {
-      state.currentTemplateSpace = val
-    })
+  const handleCreateOpen = () => {
+    isShowCreateDialog.value = true
+    selectorRef.value.hidePopover()
   }
 
   const handleEditOpen = (space: ITemplateSpaceItem) => {
@@ -77,42 +82,77 @@
         memo: spec.memo
       }
     }
+    selectorRef.value.hidePopover()
   }
 
-  const handleDelete = (space: ITemplateSpaceItem) => {
-    console.log('delete open: ', space)
-    InfoBox({
-      title: `确认删除【${space.spec.name}】`,
-      extCls: 'delete-space-infobox',
-      onConfirm: async () => {
-        await deleteTemplateSpace(spaceId.value, space.id)
-        loadList()
-        Message({
-          theme: 'success',
-          message: '删除成功'
-        })
-      },
-    } as any)
-    // InfoBox({
-    //   title: `未能删除【${space.spec.name}】`,
-    //   subTitle: '请先确认删除此空间下所有配置项',
-    //   infoType: 'warning',
-    //   dialogType: 'confirm',
-    //   confirmText: '我知道了',
-    // } as any)
+  const handleDelete = async(space: ITemplateSpaceItem) => {
+    templatesLoading.value = true
+    const params = {
+      start: 0,
+      limit: 1,
+      // all: true
+    }
+    const res = await getTemplatesBySpaceId(spaceId.value, space.id, params)
+    if (res.count > 0) {
+      InfoBox({
+        title: `未能删除【${space.spec.name}】`,
+        subTitle: '请先确认删除此空间下所有配置项',
+        infoType: 'warning',
+        dialogType: 'confirm',
+        confirmText: '我知道了',
+      } as any)
+    } else {
+      InfoBox({
+        title: `确认删除【${space.spec.name}】`,
+        extCls: 'delete-space-infobox',
+        onConfirm: async () => {
+          await deleteTemplateSpace(spaceId.value, space.id)
+          loadList()
+          Message({
+            theme: 'success',
+            message: '删除成功'
+          })
+        },
+      } as any)
+    }
+
+    selectorRef.value.hidePopover()
+  }
+
+  const handleSelect = (id: number) => {
+    setTemplateSpace(id)
+    setCurrentPackage()
+    updateRouter(id)
+  }
+
+  const setTemplateSpace = (id: number) => {
+    templateStore.$patch((state) => {
+      state.currentTemplateSpace = id
+    })
+  }
+
+  const setCurrentPackage = () => {
+    templateStore.$patch((state) => {
+      state.currentPkg = ''
+    })
+  }
+
+  const updateRouter = (id: number) => {
+    router.push({ name: 'templates-list', params: { templateSpaceId: id } })
   }
 
 </script>
 <template>
   <div class="space-selector">
     <bk-select
+      ref="selectorRef"
       search-placeholder="搜索空间"
       filterable
       :input-search="false"
       :model-value="currentTemplateSpace"
       :popover-options="{ theme: 'light bk-select-popover template-space-selector-popover' }"
       @toggle="selectorOpen = $event"
-      @change="handleSelectSpace">
+      @change="handleSelect">
       <template #trigger>
         <div class="select-trigger">
           <h5 class="space-name" :title="templateSpaceDetail.name">{{ templateSpaceDetail.name }}</h5>
@@ -130,7 +170,7 @@
         </div>
       </bk-option>
       <template #extension>
-        <div class="create-space-extension" @click="isShowCreateDialog = true">
+        <div class="create-space-extension" @click="handleCreateOpen">
           <i class="bk-bscp-icon icon-add"></i>
           创建空间
         </div>

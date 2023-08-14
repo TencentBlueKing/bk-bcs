@@ -76,7 +76,7 @@ const routes = [
         },
         children: [
           {
-            path: ':id?',
+            path: 'list/:templateSpaceId?/:packageId?',
             name: 'templates-list',
             meta: {
               navModule: 'templates'

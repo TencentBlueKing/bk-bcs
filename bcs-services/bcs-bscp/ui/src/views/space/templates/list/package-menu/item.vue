@@ -1,20 +1,18 @@
 <script lang="ts" setup>
   import { Ellipsis } from 'bkui-vue/lib/icon'
-  import { ITemplatePackageItem } from '../../../../../../../types/template'
+  import { IPackageMenuItem } from '../../../../../../types/template'
 
   const props = defineProps<{
-    name: string;
-    count: number;
-    currentPkg: number;
+    currentPkg: number|string;
+    pkg: IPackageMenuItem;
     hideActions?: boolean;
-    pkg?: ITemplatePackageItem
   }>()
 
-  const emits = defineEmits(['edit', 'clone', 'delete'])
+  const emits = defineEmits(['edit', 'clone', 'delete', 'select'])
 
 </script>
 <template>
-  <div :class="['package-item', { active: props.pkg && props.pkg.id === props.currentPkg }]">
+  <div :class="['package-item', { active: props.pkg.id === props.currentPkg }]" @click="emits('select', props.pkg.id)">
     <div class="pkg-wrapper">
       <div class="mark-icon">
         <slot name="icon">
@@ -22,20 +20,20 @@
         </slot>
       </div>
       <div class="text">
-        <span class="name">{{ props.name }}</span>
-        <span class="num">{{ props.count }}</span>
+        <span class="name">{{ props.pkg.name }}</span>
+        <span class="num">{{ props.pkg.count }}</span>
       </div>
       <bk-popover
-        v-if="props.pkg"
+        v-if="typeof props.pkg.id === 'number'"
         theme="light template-package-actions-popover"
         placement="bottom-end"
         :arrow="false">
         <Ellipsis class="action-more-icon" />
         <template #content>
           <div class="package-actions">
-            <div class="action-item" @click="emits('edit', props.pkg)">编辑</div>
-            <div class="action-item" @click="emits('clone', props.pkg)">克隆</div>
-            <div class="action-item" @click="emits('delete', props.pkg)">删除</div>
+            <div class="action-item" @click="emits('edit', props.pkg.id, 'edit')">编辑</div>
+            <div class="action-item" @click="emits('clone', props.pkg.id, 'clone')">克隆</div>
+            <div class="action-item" @click="emits('delete', props.pkg.id, 'delete')">删除</div>
           </div>
         </template>
       </bk-popover>

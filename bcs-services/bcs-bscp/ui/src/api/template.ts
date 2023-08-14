@@ -1,6 +1,7 @@
 import http from "../request"
 import { ICommonQuery } from '../../types/index'
 import { ITemplatePackageEditParams } from '../../types/template'
+import { IConfigEditParams } from '../../types/config'
 
 /**
  * 获取模板空间列表
@@ -88,14 +89,25 @@ export const getTemplatePackageList = (biz_id: string, template_space_id: string
   return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets`, { params }).then(res => res.data);
 }
 
-/* 获取模板套餐的配置项列表
-* @param biz_id 业务ID
-* @param template_space_id 模板空间ID
-* @param params 查询参数
-* @returns
-*/
-export const getPackageConfigList = (biz_id: string, template_space_id: string, params: ICommonQuery) => {
-  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, { params }).then(res => res.data);
+/**
+ * 获取模板空间下的全部配置项模板列表
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @returns
+ */
+export const getTemplatesBySpaceId = (biz_id: string, template_space_id: number, params: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, { params }).then(res => res.data)
+}
+
+/**
+ * 获取模板空间下未指定套餐的模板列表
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @returns
+ */
+export const getTemplatesWithNoSpecifiedPackage = (biz_id: string, template_space_id: number, params: ICommonQuery) => {
+  // @todo 暂时用空间下所有模板列表接口mock，等后台提供接口
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, { params }).then(res => res.data)
 }
 
 /**
@@ -120,4 +132,39 @@ export const getUnNamedVersionAppsBoundByPackage = (biz_id: string, template_spa
  */
 export const getReleasedVersionAppsBoundByPackage = (biz_id: string, template_space_id: number, template_set_id: number, params: ICommonQuery) => {
   return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}/bound_unnamed_app_details`, { params }).then(res => res.data);
+}
+
+/**
+ * 获取模板套餐下的配置项模板列表
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @returns
+ */
+export const getTemplatesByPackageId = (biz_id: string, template_space_id: number, template_set_id: number, params: ICommonQuery) => {
+  // @todo 暂时用空间下所有模板列表接口mock，等后台提供接口
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, { params }).then(res => res.data)
+}
+
+/**
+ * 创建模板
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param params 配置项参数
+ * @returns
+ */
+export const createTemplate = (biz_id: string, template_space_id: number, params: IConfigEditParams) => {
+  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, params)
+}
+
+
+/**
+ * 添加模版到模版套餐
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param template_set_ids 模板套餐列表
+ * @returns
+ */
+export const addTemplateToPackage = (biz_id: string, template_space_id: number, template_id: number, template_set_ids: number[]) => {
+  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/add_to_template_sets`, { template_set_ids })
 }

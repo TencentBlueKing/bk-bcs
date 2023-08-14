@@ -2,10 +2,10 @@
   import { ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue/lib'
-  import { useGlobalStore } from '../../../../../../store/global'
-  import { ITemplatePackageEditParams, ITemplatePackageItem } from '../../../../../../../types/template'
-  import { updateTemplatePackage } from '../../../../../../api/template'
-  import useModalCloseConfirmation from '../../../../../../utils/hooks/use-modal-close-confirmation'
+  import { useGlobalStore } from '../../../../../store/global'
+  import { ITemplatePackageEditParams } from '../../../../../../types/template'
+  import { createTemplatePackage } from '../../../../../api/template'
+  import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation'
   import PackageForm from './package-form.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
@@ -13,10 +13,9 @@
   const props = defineProps<{
     show: boolean;
     templateSpaceId: number;
-    pkg: ITemplatePackageItem;
   }>()
 
-  const emits = defineEmits(['update:show', 'edited'])
+  const emits = defineEmits(['update:show', 'created'])
 
   const isShow = ref(false)
   const formRef = ref()
@@ -24,22 +23,15 @@
     name: '',
     memo: '',
     public: true,
+    template_ids: [1],
     bound_apps: []
   })
-  const apps = ref<number[]>([])
   const isFormChange = ref(false)
   const pending = ref(false)
 
   watch(() => props.show, val => {
     isShow.value = val
     isFormChange.value = false
-    const {
-      name,
-      memo,
-      public: isPublic,
-      bound_apps } = props.pkg.spec
-    data.value = { name, memo, public: isPublic, bound_apps }
-    apps.value = [...bound_apps]
   })
 
   const handleChange = (formData: ITemplatePackageEditParams) => {
@@ -47,16 +39,16 @@
     data.value = formData
   }
 
-  const handleSave = () => {
+  const handleCreate = () => {
     formRef.value.validate().then(async() => {
       try {
         pending.value = true
-        await updateTemplatePackage(spaceId.value, props.templateSpaceId, props.pkg.id, data.value)
+        await createTemplatePackage(spaceId.value, props.templateSpaceId, data.value)
         close()
-        emits('edited')
+        emits('created')
         Message({
           theme: 'success',
-          message: '编辑成功'
+          message: '创建成功'
         })
       } catch (e) {
         console.error(e)
@@ -76,27 +68,28 @@
 
   const close = () => {
     emits('update:show', false)
+    data.value = { name: '', memo: '', public: true, template_ids: [1], bound_apps: [] }
   }
 
 </script>
 <template>
   <bk-sideslider
-    title="编辑模板套餐"
+    title="新建模板套餐"
     :width="640"
     :is-show="isShow"
     :before-close="handleBeforeClose"
     @closed="close">
-    <div class="package-form">
-      <PackageForm ref="formRef" :space-id="spaceId" :data="data" :apps="apps" @change="handleChange" />
+    <div class="create-package-form">
+      <PackageForm ref="formRef" :space-id="spaceId" :data="data" @change="handleChange" />
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" :loading="pending" @click="handleSave">保存</bk-button>
+      <bk-button theme="primary" :loading="pending" @click="handleCreate">创建</bk-button>
       <bk-button @click="close">取消</bk-button>
     </div>
   </bk-sideslider>
 </template>
 <style lang="scss" scoped>
-  .package-form {
+  .create-package-form {
     padding: 20px 40px;
     height: calc(100vh - 101px);
   }
