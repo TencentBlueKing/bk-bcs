@@ -1,0 +1,3 @@
+hello: "Hallo"
+world: "Welt"
+OrderPay: "Sie haben die Bestellung %d Zahlung erfolgreich abgeschlossen, bezahlter Betrag: ￥%0.2f."
