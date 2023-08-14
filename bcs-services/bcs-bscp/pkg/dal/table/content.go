@@ -121,12 +121,6 @@ func (cs ContentSpec) Validate() error {
 	if cs.Signature != strings.ToLower(cs.Signature) {
 		return errors.New("content signature should be lowercase")
 	}
-
-	// a config can not be empty.
-	if cs.ByteSize <= 0 {
-		return errors.New("invalid content byte size, should be > 0")
-	}
-
 	return nil
 }
 
