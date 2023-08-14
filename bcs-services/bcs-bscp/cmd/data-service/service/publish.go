@@ -67,17 +67,12 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 
 	// step1: validate and query group ids.
 	groupIDs := make([]uint32, 0)
-	if !req.All {
-		if len(req.Groups) == 0 {
-			return nil, fmt.Errorf("groups can't be empty when publish not all")
+	for _, name := range req.Groups {
+		group, e := s.dao.Group().GetByName(grpcKit, req.BizId, name)
+		if e != nil {
+			return nil, fmt.Errorf("group %s not exist", name)
 		}
-		for _, name := range req.Groups {
-			group, e := s.dao.Group().GetByName(grpcKit, req.BizId, name)
-			if e != nil {
-				return nil, fmt.Errorf("group %s not exist", name)
-			}
-			groupIDs = append(groupIDs, group.ID)
-		}
+		groupIDs = append(groupIDs, group.ID)
 	}
 
 	releasedCIs := make([]*table.ReleasedConfigItem, 0)
