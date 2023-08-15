@@ -271,6 +271,8 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 			}
 		}
 	}
+
+	// totalCnt is all data count
 	totalCnt := uint32(len(details))
 
 	if req.All {
@@ -368,6 +370,8 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 			}
 		}
 	}
+
+	// totalCnt is all data count
 	totalCnt := uint32(len(details))
 
 	if req.All {
@@ -430,6 +434,8 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 			TemplateSetName: tmplSetMap[id].Spec.Name,
 		})
 	}
+
+	// totalCnt is all data count
 	totalCnt := uint32(len(details))
 
 	if req.All {
@@ -492,6 +498,8 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 			AppName: appMap[id].Spec.Name,
 		})
 	}
+
+	// totalCnt is all data count
 	totalCnt := uint32(len(details))
 
 	if req.All {
@@ -571,6 +579,8 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 			ReleaseName: releaseMap[r.ReleaseID].Spec.Name,
 		})
 	}
+
+	// totalCnt is all data count
 	totalCnt := uint32(len(details))
 
 	if req.All {
@@ -633,6 +643,8 @@ func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
 			AppName: appMap[id].Spec.Name,
 		})
 	}
+
+	// totalCnt is all data count
 	totalCnt := uint32(len(details))
 
 	if req.All {
@@ -712,6 +724,8 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 			ReleaseName: releaseMap[r.ReleaseID].Spec.Name,
 		})
 	}
+
+	// totalCnt is all data count
 	totalCnt := uint32(len(details))
 
 	if req.All {
