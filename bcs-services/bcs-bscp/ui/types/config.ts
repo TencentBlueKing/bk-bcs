@@ -64,6 +64,19 @@ export interface IConfigDetail {
   }
 }
 
+// 配置项编辑表单参数
+export interface IConfigEditParams {
+  id?: number;
+  name: string;
+  memo: string;
+  file_type: string;
+  path?: string;
+  file_mode?: string;
+  user?: string;
+  user_group?: string;
+  privilege?: string;
+}
+
 // 文件配置概览内容
 export interface IFileConfigContentSummary {
   id?: number;

@@ -16,6 +16,13 @@ export interface IPagination {
   count: number;
 }
 
+export interface ICommonQuery {
+  start: number;
+  limit?: number;
+  all?: boolean;
+  search_key?: string;
+}
+
 // 权限查询参数
 export interface IPermissionQuery {
   biz_id: number|string;
