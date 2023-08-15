@@ -292,26 +292,13 @@
           key="container_count"
           v-if="isColumnRender('container_count')">
           <template #default="{ row }">
-            {{
-              nodeMetric[row.nodeName]
-                ? nodeMetric[row.nodeName].container_count || '--'
-                : '--'
-            }}
-          </template>
-        </bcs-table-column>
-        <bcs-table-column
-          :label="$t('cluster.nodeList.label.podCounts')"
-          min-width="100"
-          align="right"
-          prop="pod_count"
-          key="pod_count"
-          v-if="isColumnRender('pod_count')">
-          <template #default="{ row }">
-            {{
-              nodeMetric[row.nodeName]
-                ? nodeMetric[row.nodeName].pod_count || '--'
-                : '--'
-            }}
+            <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
+              <LoadingCell v-if="!nodeMetric[row.nodeName]" />
+              <span v-else>
+                {{nodeMetric[row.nodeName].container_count || '--'}}
+              </span>
+            </template>
+            <span v-else>--</span>
           </template>
         </bcs-table-column>
         <bcs-table-column min-width="200" :label="$t('k8s.label')" key="labels" v-if="isColumnRender('labels')">
@@ -383,7 +370,7 @@
         <bcs-table-column
           v-for="item in metricColumnConfig"
           :label="item.label"
-          :sort-method="(pre, next) => sortMethod(pre, next, item.prop)"
+          :sort-method="(pre, next) => sortMetricMethod(pre, next, item.prop)"
           :key="item.prop"
           sortable
           align="center"
@@ -391,10 +378,17 @@
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
               <LoadingCell v-if="!nodeMetric[row.nodeName]" />
-              <RingCell
-                :percent="nodeMetric[row.nodeName][item.prop]"
-                :fill-color="item.color"
-                v-if="nodeMetric[row.nodeName]" />
+              <template v-else>
+                <RingCell
+                  :percent="nodeMetric[row.nodeName][item.prop]"
+                  :fill-color="item.color"
+                  :key="row.nodeName"
+                  v-bk-tooltips="{
+                    content: nodeMetric[row.nodeName][`${item.prop}_tips`]
+                  }"
+                  v-if="nodeMetric[row.nodeName] && nodeMetric[row.nodeName][item.prop]" />
+                <span v-bk-tooltips="{ content: $t('generic.msg.error.data') }" v-else>--</span>
+              </template>
             </template>
             <template v-else>--</template>
           </template>
@@ -594,7 +588,7 @@ import useTableAcrossCheck from '../../../composables/use-table-across-check';
 import { CheckType } from '@/components/across-check.vue';
 import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 import LoadingCell from '@/views/cluster-manage/components/loading-cell.vue';
-import { copyText, padIPv6 } from '@/common/util';
+import { copyText, padIPv6, formatBytes } from '@/common/util';
 import useInterval from '@/composables/use-interval';
 import KeyValue, { IData } from '@/components/key-value.vue';
 import TaintContent from '../components/taint.vue';
@@ -610,6 +604,28 @@ import $bkMessage from '@/common/bkmagic';
 import $store from '@/store';
 import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
+
+interface IMetricData {
+  container_count: string
+  cpu_request: string
+  cpu_request_usage: string
+  cpu_total: string
+  cpu_usage: string
+  cpu_used: string
+  disk_total: string
+  disk_usage: string
+  disk_used: string
+  diskio_usage: string
+  memory_request: string
+  memory_request_usage: string
+  memory_total: string
+  memory_usage: string
+  memory_used: string
+  pod_count: string
+  pod_total: string
+}
+
+type NodeMetricType = Record<string, IMetricData>;
 
 export default defineComponent({
   name: 'NodeList',
@@ -832,6 +848,11 @@ export default defineComponent({
         label: $i18n.t('k8s.annotation'),
       },
       {
+        id: 'pod_usage',
+        label: $i18n.t('metrics.podUsage'),
+        disabled: true,
+      },
+      {
         id: 'cpu_usage',
         label: $i18n.t('metrics.cpuUsage'),
         disabled: true,
@@ -855,29 +876,46 @@ export default defineComponent({
     // 表格指标列配置
     const metricColumnConfig = ref([
       {
+        label: $i18n.t('metrics.podUsage'),
+        prop: 'pod_usage',
+        color: '#3a84ff',
+        percent: ['pod_count', 'pod_total'], // 分子和分母
+        unit: 'int',
+      },
+      {
         label: $i18n.t('metrics.cpuUsage'),
         prop: 'cpu_usage',
         color: '#3ede78',
+        percent: ['cpu_used', 'cpu_total'], // 分子和分母
+        unit: 'cpu',
       },
       {
         label: $i18n.t('metrics.memUsage'),
         prop: 'memory_usage',
         color: '#3a84ff',
+        percent: ['memory_used', 'memory_total'], // 分子和分母
+        unit: 'byte',
       },
       {
         label: $i18n.t('metrics.cpuRequestUsage.text'),
         prop: 'cpu_request_usage',
+        percent: ['cpu_request', 'cpu_total'], // 分子和分母
         color: '#3ede78',
+        unit: 'cpu',
       },
       {
         label: $i18n.t('metrics.memRequestUsage.text'),
         prop: 'memory_request_usage',
+        percent: ['memory_request', 'memory_total'], // 分子和分母
         color: '#3a84ff',
+        unit: 'byte',
       },
       {
         label: $i18n.t('metrics.diskUsage'),
         prop: 'disk_usage',
         color: '#853cff',
+        percent: ['disk_used', 'disk_total'], // 分子和分母
+        unit: 'byte',
       },
       {
         label: $i18n.t('metrics.diskIOUsage'),
@@ -885,13 +923,14 @@ export default defineComponent({
         color: '#853cff',
       },
     ]);
+
     const {
       tableSetting,
       handleSettingChange,
       isColumnRender,
     } = useTableSetting(fields);
 
-    const sortMethod = (pre, next, prop) => {
+    const sortMetricMethod = (pre, next, prop) => {
       const preNumber = parseFloat(nodeMetric.value[pre.nodeName]?.[prop] || 0);
       const nextNumber = parseFloat(nodeMetric.value[next.nodeName]?.[prop] || 0);
       if (preNumber > nextNumber) {
@@ -1538,7 +1577,40 @@ export default defineComponent({
     };
 
     // 获取节点指标
-    const nodeMetric = ref({});
+    const nodeMetric = ref<NodeMetricType>({});
+    // 格式化分子和分母 & 重新计算使用率
+    const formatMetricData = (data: IMetricData) => {
+      const newData = data;
+      metricColumnConfig.value.forEach((item) => {
+        const [prop1, prop2] = item.percent || [];
+        if (!prop1 || !prop2) return;
+
+        const numerator = data[prop1];
+        const denominator = data[prop2];
+        if (!numerator || !denominator) {
+          // 分支或分母不存在时设置使用率为空
+          newData[item.prop] = '';
+        } else {
+          let usedOfTotal = '';
+          switch (item.unit) {
+            case 'byte':
+              usedOfTotal = `${formatBytes(numerator)} / ${formatBytes(denominator)}`;
+              break;
+            case 'int':
+              usedOfTotal = `${Math.ceil(numerator)} ${$i18n.t('units.suffix.units')} / ${Math.ceil(denominator)} ${$i18n.t('units.suffix.units')}`;
+              break;
+            case 'cpu':
+              usedOfTotal = `${Number(numerator).toFixed(2)} ${$i18n.t('units.suffix.cores')} / ${Number(denominator).toFixed(2)} ${$i18n.t('units.suffix.cores')}`;
+              break;
+            default:
+              usedOfTotal = `${numerator} / ${denominator}`;
+          }
+          newData[`${item.prop}_tips`] = usedOfTotal;// hack 悬浮tips展示的分子和分母
+          newData[item.prop] = ((numerator / denominator) * 100).toFixed(2);// 重新计算百分比(接口不准确)
+        }
+      });
+      return newData;
+    };
     const handleGetNodeOverview = async () => {
       const data = curPageData.value.filter(item => !nodeMetric.value[item.nodeName]
         && ['RUNNING', 'REMOVABLE'].includes(item.status));
@@ -1549,7 +1621,7 @@ export default defineComponent({
             nodeIP: item.nodeName,
             clusterId: localClusterId.value,
           }).then((data) => {
-            set(nodeMetric.value, item.nodeName, data);
+            set(nodeMetric.value, item.nodeName, formatMetricData(data));
           }));
         }(row));
       }
@@ -1692,7 +1764,7 @@ export default defineComponent({
       handleGoOverview,
       handleCopy,
       handleSetLabel,
-      sortMethod,
+      sortMetricMethod,
       handleLabelEditCancel,
       handleLabelEditConfirm,
       handleConfirmTaintDialog,

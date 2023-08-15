@@ -41,6 +41,7 @@ export default defineComponent({
       cpu_request_usage: $i18n.t('metrics.cpuRequestUsage.text'),
       memory_request_usage: $i18n.t('metrics.memRequestUsage.text'),
       diskio_usage: $i18n.t('metrics.diskIOUsage'),
+      pod_usage: $i18n.t('metrics.podUsage'),
     };
     const options = ref<any>({
       tooltip: {

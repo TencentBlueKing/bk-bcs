@@ -180,6 +180,7 @@ metrics:
   diskUsage: 磁盘使用率
   memUsage: 内存使用率
   memUsage1: 内存使用量
+  podUsage: Pod使用率
   cpuRequestUsage:
     text: CPU装箱率
     clusterDesc: >-
@@ -211,6 +212,7 @@ generic:
     error:
       network: 网络错误
       system: 系统异常
+      data: 获取数据失败
     warning:
       '403': 无权限操作
       '404': 页面不存在

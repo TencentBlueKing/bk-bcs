@@ -14,9 +14,9 @@
               <sup class="text-[20px]">%</sup>
             </div>
             <div class="font-bold text-[#3ede78] text-[14px]">
-              {{ parseFloat(overviewData.cpu_usage.used || 0).toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage.used || '0').toFixed(2) }}
               of
-              {{ parseFloat(overviewData.cpu_usage.total || 0).toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage.total || '0').toFixed(2) }}
             </div>
           </div>
         </div>
@@ -78,7 +78,7 @@
         />
       </div>
     </div>
-    <div class="flex overflow-hidden">
+    <div class="flex overflow-hidden border-solid border-0 border-b border-[#dfe0e5]">
       <!--CPU装箱率-->
       <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
         <div class="flex justify-between">
@@ -109,9 +109,9 @@
               <sup class="text-[20px]">%</sup>
             </div>
             <div class="font-bold text-[#3ede78] text-[14px]">
-              {{ parseFloat(overviewData.cpu_usage.request || 0).toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage.request || '0').toFixed(2) }}
               of
-              {{ parseFloat(overviewData.cpu_usage.total || 0).toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage.total || '0').toFixed(2) }}
             </div>
           </div>
         </div>
@@ -197,6 +197,37 @@
         />
       </div>
     </div>
+    <div class="flex overflow-hidden">
+      <!--POD使用率-->
+      <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
+        <div class="flex justify-between">
+          <span class="text-[14px] font-bold">
+            {{ $t('metrics.podUsage') }}
+          </span>
+          <div>
+            <div class="flex justify-end">
+              <span class="text-[32px]">
+                {{ conversionPercentUsed(overviewData.pod_usage.used, overviewData.pod_usage.total) }}
+              </span>
+              <sup class="text-[20px]">%</sup>
+            </div>
+            <div class="font-bold text-[#3ede78] text-[14px]">
+              {{ overviewData.pod_usage.used || '--' }}
+              of
+              {{ overviewData.pod_usage.total || '--' }}
+            </div>
+          </div>
+        </div>
+        <ClusterOverviewChart
+          :cluster-id="clusterId"
+          class="!h-[250px]"
+          :color="['#3ede78']"
+          :metrics="['pod_usage']"
+        />
+      </div>
+      <div class="flex-1 p-[20px]"></div>
+      <div class="flex-1 p-[20px]"></div>
+    </div>
   </div>
 </template>
 <script lang="ts">
@@ -205,6 +236,19 @@ import ClusterOverviewChart from './cluster-overview-chart.vue';
 import $store from '@/store/index';
 import { useCluster, useProject } from '@/composables/use-app';
 import { formatBytes } from '@/common/util';
+
+interface IUsageData {
+  request?: string
+  total?: string
+  used?: string
+}
+
+interface IByteData {
+  request_bytes?: string
+  total_bytes?: string
+  used_bytes?: string
+}
+
 export default defineComponent({
   name: 'ClusterOverview',
   components: { ClusterOverviewChart },
@@ -221,15 +265,17 @@ export default defineComponent({
     const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value) || {});
     const { projectCode } = useProject();
     const overviewData = ref<{
-      cpu_usage: any
-      disk_usage: any
-      memory_usage: any
-      diskio_usage: any
+      cpu_usage: IUsageData
+      disk_usage: IByteData
+      memory_usage: IByteData
+      diskio_usage: IUsageData
+      pod_usage: IUsageData
     }>({
       cpu_usage: {},
       disk_usage: {},
       memory_usage: {},
       diskio_usage: {},
+      pod_usage: {},
     });
     const getClusterOverview = async () => {
       overviewData.value = await $store.dispatch('metric/clusterOverview', {
