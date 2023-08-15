@@ -86,14 +86,14 @@ check_etcd_status() {
     # try get etcdctl from etcd container
     case "${CRI_TYPE,,}" in
       "docker")
-        container_id=$(docker ps | awk '/etcd/&&!/pause/{print $1;exit}')
+        container_id=$(docker ps | awk '/etcd/&&!/pause/{print $1}'| awk 'NR==1{print $1}')
         if ! docker cp ${container_id}:/usr/local/bin/etcdctl /usr/local/bin/;then
           utils::log "FATAL" "can not cp etcdctl command"
         fi
         ;;
       "containerd")
         mkdir /tmp/container_mount
-        container_id=$(ctr -n k8s.io containers ls|awk '/etcd/&&!/pause/{print $1;exit}')
+        container_id=$(ctr -n k8s.io containers ls| awk '/etcd/&&!/pause/{print $1}'| awk 'NR==1{print $1}')
         if [[ -n "${container_id}" ]];then
           if ! ctr -n k8s.io snapshot mounts /tmp/container_mount ${container_id} |bash -s;then
             utils::log "FATAL" "can not mount etcd container"
