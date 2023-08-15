@@ -172,7 +172,7 @@ func (dao *templateSetDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.
 	}
 
 	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-		Select(m.Memo, m.Reviser, m.Public, m.BoundApps).
+		Select(m.Memo, m.Reviser, m.TemplateIDs, m.Public, m.BoundApps).
 		Updates(g); err != nil {
 		return err
 	}
