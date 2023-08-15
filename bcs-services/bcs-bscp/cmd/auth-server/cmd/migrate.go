@@ -35,7 +35,7 @@ var migrateCmd = &cobra.Command{
 }
 
 var migrateInitCmd = &cobra.Command{
-	Use:   "init",
+	Use:   "init-iam",
 	Short: "Initializes the authority center model",
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -95,7 +95,7 @@ func NewIamSys() (*sys.Sys, error) {
 func init() {
 
 	// Add "--debug" flag to all migrate sub commands
-	migrateCmd.PersistentFlags().BoolP("debug", "d", false, "whether debug gorm to print sql, default is false")
+	migrateCmd.PersistentFlags().BoolP("debug", "d", false, "whether to debug output the execution process,, default is false")
 
 	migrateCmd.AddCommand(migrateInitCmd)
 
