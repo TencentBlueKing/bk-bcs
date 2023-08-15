@@ -21,12 +21,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
 // ProjectPlugin for internal project authorization
 type ProjectPlugin struct {
 	*mux.Router
-	middleware MiddlewareInterface
+	middleware mw.MiddlewareInterface
 }
 
 // Init all project sub path handler
@@ -64,18 +65,12 @@ func (plugin *ProjectPlugin) forbidden(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /api/v1/projects
-func (plugin *ProjectPlugin) listProjectsHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *ProjectPlugin) listProjectsHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "list projects failed"),
-		}
+		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
-	return &httpResponse{
-		statusCode: statusCode,
-		obj:        projectList,
-	}
+	return mw.ReturnJSONResponse(projectList)
 }
 
 // handle path projectPermission belows:
@@ -84,14 +79,12 @@ func (plugin *ProjectPlugin) listProjectsHandler(ctx context.Context, r *http.Re
 // GET /api/v1/projects/{name}/events
 // GET /api/v1/projects/{name}/globalprojects
 // GET /api/v1/projects/{name}/syncwindows
-func (plugin *ProjectPlugin) projectViewsHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *ProjectPlugin) projectViewsHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	projectName := mux.Vars(r)["name"]
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project '%s' view permission failed", projectName),
-		}
+		return mw.ReturnErrorResponse(statusCode,
+			errors.Wrapf(err, "check project '%s' view permission failed", projectName))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }

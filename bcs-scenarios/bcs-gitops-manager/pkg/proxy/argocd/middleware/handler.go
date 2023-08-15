@@ -11,100 +11,35 @@
  *
  */
 
-package argocd
+package middleware
 
 import (
 	"context"
 	"net/http"
-	"time"
+	"reflect"
+	"runtime"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/attribute"
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/handler"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
-type httpHandler func(ctx context.Context, r *http.Request) *httpResponse
-
-type httpWrapper struct {
-	handler httpHandler
-	option  *proxy.GitOpsOptions
-	session *Session
-}
-
-type httpResponse struct {
-	isGrpc       bool
-	obj          interface{}
-	statusCode   int
-	err          error
-	notUnmarshal bool
-}
-
-type ContextKey string
-
-const (
-	ctxKeyRequestID ContextKey = "requestID"
-	ctxKeyUser      ContextKey = "user"
-)
-
-// ServeHTTP 接收请求的入口，获取请求登录态信息并设置到 context 中
-func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	// 统一获取 User 信息，并存入 context 中
-	user, err := proxy.GetJWTInfo(r, p.option.JWTDecoder)
-	if err != nil || user == nil {
-		http.Error(rw, errors.Wrapf(err, "get user info failed").Error(), http.StatusUnauthorized)
-		return
-	}
-	requestID := uuid.New().String()
-	if user.ClientID != "" {
-		blog.Infof("[requestID=%s] manager received user '%s' with client '%s' serve [%s/%s]",
-			requestID, user.GetUser(), user.ClientID, r.Method, r.URL.Path)
-	} else {
-		blog.Infof("[requestID=%s] manager received user '%s' serve [%s/%s]",
-			requestID, user.GetUser(), r.Method, r.URL.Path)
-	}
-	defer func() {
-		blog.Infof("[requestID=%s] handle request cost time: %v", requestID, time.Since(start))
-	}()
-
-	ctx := context.WithValue(r.Context(), ctxKeyRequestID, requestID)
-	ctx = context.WithValue(ctx, ctxKeyUser, user)
-	resp := p.handler(ctx, r)
-	blog.V(5).Infof("[requestID=%s] handler '%s' cost time: %v", requestID, p.handler, time.Since(start))
-	if resp == nil {
-		// 如果返回值为空，直接将请求 proxy 给 argo-cd
-		p.session.ServeHTTP(rw, r)
-		return
-	}
-	// 如果返回对象为空，直接返回错误给客户端
-	if resp.obj == nil {
-		blog.Warnf("[requestID=%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
-		http.Error(rw, resp.err.Error(), resp.statusCode)
-		return
-	}
-	if resp.isGrpc {
-		proxy.GRPCResponse(rw, resp.obj)
-	} else {
-		if resp.notUnmarshal {
-			proxy.DirectlyResponse(rw, resp.obj)
-		} else {
-			proxy.JSONResponse(rw, resp.obj)
-		}
-	}
-}
-
 // MiddlewareInterface defines the middleware interface
 type MiddlewareInterface interface {
+	Init() error
+
 	HttpWrapper(handler httpHandler) http.Handler
 
 	CheckMultiProjectsPermission(ctx context.Context, projectIDs []string,
@@ -127,42 +62,66 @@ type MiddlewareInterface interface {
 	ListRepositories(ctx context.Context, projectNames []string,
 		needCheckPermission bool) (*v1alpha1.RepositoryList, int, error)
 	ListApplications(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationList, error)
-
-	ProxySecretRequest(req *http.Request) *handler.SecretResponse
 }
 
-// MiddlewareHandler 定义 http 中间件处理对象
-type MiddlewareHandler struct {
-	session           *Session
+// handler 定义 http 中间件处理对象
+type handler struct {
 	projectPermission *project.BCSProjectPerm
 	clusterPermission *cluster.BCSClusterPerm
 	option            *proxy.GitOpsOptions
+	argoSession       *session.ArgoSession
+	secretSession     *session.SecretSession
+
+	tracer func(context.Context) error
 }
 
-// NewMiddlewareHandler create MiddlewareHandler instance
-func NewMiddlewareHandler(option *proxy.GitOpsOptions, session *Session) MiddlewareInterface {
-	return &MiddlewareHandler{
-		session:           session,
+// NewMiddlewareHandler create handler instance
+func NewMiddlewareHandler(option *proxy.GitOpsOptions, session *session.ArgoSession,
+	secretSession *session.SecretSession) MiddlewareInterface {
+	return &handler{
 		option:            option,
+		argoSession:       session,
+		secretSession:     secretSession,
 		projectPermission: project.NewBCSProjectPermClient(option.IAMClient),
 		clusterPermission: cluster.NewBCSClusterPermClient(option.IAMClient),
 	}
 }
 
-// HttpWrapper 创建 http wrapper 中间件
-func (h *MiddlewareHandler) HttpWrapper(handler httpHandler) http.Handler {
-	return &httpWrapper{
-		handler: handler,
-		option:  h.option,
-		session: h.session,
+// Init will init the tracer
+func (h *handler) Init() error {
+	opts := []trace.Option{
+		trace.OTLPEndpoint(h.option.TraceOption.Endpoint),
 	}
+	attrs := make([]attribute.KeyValue, 0)
+	attrs = append(attrs, attribute.String("bk.data.token", h.option.TraceOption.Token))
+	opts = append(opts, trace.ResourceAttrs(attrs))
+	tracer, err := trace.InitTracingProvider("bcs-gitops-manager", opts...)
+	if err != nil {
+		return errors.Wrapf(err, "init tracer failed")
+	}
+	h.tracer = tracer
+	return nil
+}
+
+// HttpWrapper 创建 http wrapper 中间件
+func (h *handler) HttpWrapper(handler httpHandler) http.Handler {
+	handlerName := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
+	hw := &httpWrapper{
+		handler:       handler,
+		handlerName:   handlerName,
+		option:        h.option,
+		argoSession:   h.argoSession,
+		secretSession: h.secretSession,
+	}
+	blog.Infof("[Trace] request handler '%s' add to otel", handlerName)
+	return otelhttp.NewHandler(hw, handlerName)
 }
 
 // CheckMultiProjectsPermission check multi projects with action
-func (h *MiddlewareHandler) CheckMultiProjectsPermission(ctx context.Context, projectIDs []string,
+func (h *handler) CheckMultiProjectsPermission(ctx context.Context, projectIDs []string,
 	actions []string) (map[string]map[string]bool, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
-	result, err := h.projectPermission.GetMultiProjectMultiActionPermission(
+	result, err := h.projectPermission.GetMultiProjectMultiActionPerm(
 		user.GetUser(), projectIDs, actions)
 	if err != nil {
 		return nil, errors.Wrapf(err, "check multi project action failed")
@@ -171,10 +130,10 @@ func (h *MiddlewareHandler) CheckMultiProjectsPermission(ctx context.Context, pr
 }
 
 // CheckMultiClustersPermission check multi clusters with action
-func (h *MiddlewareHandler) CheckMultiClustersPermission(ctx context.Context, projectID string,
+func (h *handler) CheckMultiClustersPermission(ctx context.Context, projectID string,
 	clusterIDs []string, actions []string) (map[string]map[string]bool, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
-	result, err := h.clusterPermission.GetMultiClusterMultiActionPermission(user.GetUser(), projectID,
+	result, err := h.clusterPermission.GetMultiClusterMultiActionPerm(user.GetUser(), projectID,
 		clusterIDs, actions)
 	if err != nil {
 		return nil, errors.Wrapf(err, "check multi clusters action failed")
@@ -183,7 +142,7 @@ func (h *MiddlewareHandler) CheckMultiClustersPermission(ctx context.Context, pr
 }
 
 // CheckProjectPermission 检查登录态用户对于项目的权限
-func (h *MiddlewareHandler) CheckProjectPermission(ctx context.Context, projectName string,
+func (h *handler) CheckProjectPermission(ctx context.Context, projectName string,
 	action iam.ActionID) (*v1alpha1.AppProject, int, error) {
 	// get project info and validate projectPermission
 	argoProject, err := h.option.Storage.GetProject(ctx, projectName)
@@ -203,20 +162,20 @@ func (h *MiddlewareHandler) CheckProjectPermission(ctx context.Context, projectN
 }
 
 // CheckProjectPermissionByID 检查登录态用户对于项目的权限
-func (h *MiddlewareHandler) CheckProjectPermissionByID(ctx context.Context, projectID string,
+func (h *handler) CheckProjectPermissionByID(ctx context.Context, projectID string,
 	action iam.ActionID) (int, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 	var permit bool
 	var err error
 	switch action {
 	case iam.ProjectView:
-		permit, _, err = h.projectPermission.CanViewProject(user.GetUser(), projectID)
+		permit, _, _, err = h.projectPermission.CanViewProject(user.GetUser(), projectID)
 	case iam.ProjectEdit:
-		permit, _, err = h.projectPermission.CanEditProject(user.GetUser(), projectID)
+		permit, _, _, err = h.projectPermission.CanEditProject(user.GetUser(), projectID)
 	case iam.ProjectDelete:
-		permit, _, err = h.projectPermission.CanDeleteProject(user.GetUser(), projectID)
+		permit, _, _, err = h.projectPermission.CanDeleteProject(user.GetUser(), projectID)
 	case iam.ProjectCreate:
-		permit, _, err = h.projectPermission.CanCreateProject(user.GetUser())
+		permit, _, _, err = h.projectPermission.CanCreateProject(user.GetUser())
 	default:
 		return http.StatusBadRequest, errors.Errorf("unknown iam action '%s'", action)
 	}
@@ -230,7 +189,7 @@ func (h *MiddlewareHandler) CheckProjectPermissionByID(ctx context.Context, proj
 }
 
 // CheckClusterPermission 检查登录态用户对于集群的权限
-func (h *MiddlewareHandler) CheckClusterPermission(ctx context.Context, clusterName string,
+func (h *handler) CheckClusterPermission(ctx context.Context, clusterName string,
 	action iam.ActionID) (statusCode int, err error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 	argoCluster, err := h.option.Storage.GetCluster(ctx, clusterName)
@@ -248,11 +207,11 @@ func (h *MiddlewareHandler) CheckClusterPermission(ctx context.Context, clusterN
 	var permit bool
 	switch action {
 	case iam.ClusterView:
-		permit, _, err = h.clusterPermission.CanViewCluster(user.GetUser(), projectID, argoCluster.Name)
+		permit, _, _, err = h.clusterPermission.CanViewCluster(user.GetUser(), projectID, argoCluster.Name)
 	case iam.ClusterManage:
-		permit, _, err = h.clusterPermission.CanManageCluster(user.GetUser(), projectID, argoCluster.Name)
+		permit, _, _, err = h.clusterPermission.CanManageCluster(user.GetUser(), projectID, argoCluster.Name)
 	case iam.ClusterDelete:
-		permit, _, err = h.clusterPermission.CanDeleteCluster(user.GetUser(), projectID, argoCluster.Name)
+		permit, _, _, err = h.clusterPermission.CanDeleteCluster(user.GetUser(), projectID, argoCluster.Name)
 	default:
 		return http.StatusBadRequest, errors.Errorf("unknown iam action '%s'", action)
 	}
@@ -266,7 +225,7 @@ func (h *MiddlewareHandler) CheckClusterPermission(ctx context.Context, clusterN
 }
 
 // CheckRepositoryPermission 检查登录态用户对于 Repo 仓库权限，Repo 权限与 Project 权限挂钩
-func (h *MiddlewareHandler) CheckRepositoryPermission(ctx context.Context, repoName string,
+func (h *handler) CheckRepositoryPermission(ctx context.Context, repoName string,
 	action iam.ActionID) (*v1alpha1.Repository, int, error) {
 	repo, err := h.option.Storage.GetRepository(ctx, repoName)
 	if err != nil {
@@ -282,7 +241,7 @@ func (h *MiddlewareHandler) CheckRepositoryPermission(ctx context.Context, repoN
 }
 
 // CheckApplicationPermission 检查应用的权限
-func (h *MiddlewareHandler) CheckApplicationPermission(ctx context.Context, appName string,
+func (h *handler) CheckApplicationPermission(ctx context.Context, appName string,
 	action iam.ActionID) (*v1alpha1.Application, int, error) {
 	app, err := h.option.Storage.GetApplication(ctx, appName)
 	if err != nil {
@@ -309,7 +268,7 @@ func (h *MiddlewareHandler) CheckApplicationPermission(ctx context.Context, appN
 }
 
 // ListProjects 根据用户权限列出具备权限的 Projects
-func (h *MiddlewareHandler) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error) {
+func (h *handler) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error) {
 	projectList, err := h.option.Storage.ListProjects(ctx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list projects failed")
@@ -345,7 +304,7 @@ func (h *MiddlewareHandler) ListProjects(ctx context.Context) (*v1alpha1.AppProj
 }
 
 // ListClusters 根据项目名获取用户态下可以 view 的集群列表
-func (h *MiddlewareHandler) ListClusters(ctx context.Context, projectNames []string) (
+func (h *handler) ListClusters(ctx context.Context, projectNames []string) (
 	*v1alpha1.ClusterList, int, error) {
 	clusterList, err := h.option.Storage.ListCluster(ctx)
 	if err != nil {
@@ -383,7 +342,7 @@ func (h *MiddlewareHandler) ListClusters(ctx context.Context, projectNames []str
 }
 
 // ListRepositories 根据项目名称获取用户态下可以 view 的仓库列表
-func (h *MiddlewareHandler) ListRepositories(ctx context.Context, projectNames []string,
+func (h *handler) ListRepositories(ctx context.Context, projectNames []string,
 	needCheckPermission bool) (*v1alpha1.RepositoryList, int, error) {
 	if needCheckPermission {
 		for _, name := range projectNames {
@@ -414,7 +373,7 @@ func (h *MiddlewareHandler) ListRepositories(ctx context.Context, projectNames [
 }
 
 // ListApplications 根据项目名称获取所有应用
-func (h *MiddlewareHandler) ListApplications(ctx context.Context,
+func (h *handler) ListApplications(ctx context.Context,
 	projectNames []string) (*v1alpha1.ApplicationList, error) {
 	appList := make([]v1alpha1.Application, 0)
 	for _, name := range projectNames {
@@ -427,9 +386,4 @@ func (h *MiddlewareHandler) ListApplications(ctx context.Context,
 	return &v1alpha1.ApplicationList{
 		Items: appList,
 	}, nil
-}
-
-// ProxySecretRequest secret interface
-func (h *MiddlewareHandler) ProxySecretRequest(req *http.Request) *handler.SecretResponse {
-	return h.option.SecretClient.ProxySecretRequest(req)
 }

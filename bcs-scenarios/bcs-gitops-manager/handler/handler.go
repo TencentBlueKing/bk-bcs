@@ -18,8 +18,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/controller"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
@@ -36,7 +36,7 @@ type Options struct {
 	ProjectControl controller.ProjectControl
 	JwtClient      *jwt.JWTClient
 	IamClient      iam.PermClient
-	SecretClient   *secret.ServerProxy
+	SecretClient   secretstore.SecretInterface
 }
 
 // NewGitOpsHandler create handler

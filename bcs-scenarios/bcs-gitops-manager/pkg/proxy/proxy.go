@@ -28,7 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
@@ -43,9 +42,21 @@ type GitOpsOptions struct {
 	// JWTClient for authentication
 	JWTDecoder *jwt.JWTClient
 	// IAMClient is basic client
-	IAMClient iam.PermClient
-	// Secret client
-	SecretClient *secret.ServerProxy
+	IAMClient    iam.PermClient
+	SecretOption *SecretOption
+	TraceOption  *TraceOption
+}
+
+// TraceOption defines the config of bkmonitor APM
+type TraceOption struct {
+	Endpoint string
+	Token    string
+}
+
+// SecretOption defines the config of secret
+type SecretOption struct {
+	Address string
+	Port    string
 }
 
 // Validate options

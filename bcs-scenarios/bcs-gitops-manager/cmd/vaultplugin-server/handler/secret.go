@@ -15,14 +15,15 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 
+	"github.com/gorilla/mux"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/secret"
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -74,7 +75,7 @@ func (v1 *V1VaultPluginHandler) createPutSecretHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		resp.Message = "[createPutSecret] read body failed"
 		blog.Errorf("[createPutSecret] read body failed, error: %v", err)

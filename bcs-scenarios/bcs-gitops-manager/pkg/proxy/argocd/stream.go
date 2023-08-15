@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
 // * addinational stream path, application wrapper
@@ -32,7 +33,7 @@ type StreamPlugin struct {
 	*mux.Router
 
 	appHandler *AppPlugin
-	middleware MiddlewareInterface
+	middleware mw.MiddlewareInterface
 }
 
 // Init all project sub path handler
@@ -49,14 +50,12 @@ func (plugin *StreamPlugin) Init() error {
 	return nil
 }
 
-func (plugin *StreamPlugin) projectViewHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *StreamPlugin) projectViewHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	projectName := r.URL.Query().Get("projects")
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project '%s' permission failed", projectName),
-		}
+		return mw.ReturnErrorResponse(statusCode,
+			errors.Wrapf(err, "check project '%s' permission failed", projectName))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }

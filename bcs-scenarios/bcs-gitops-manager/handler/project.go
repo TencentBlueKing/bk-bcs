@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
@@ -46,7 +46,7 @@ func (e *BcsGitopsHandler) checkStartupProjectPermission(ctx context.Context, pr
 	if err != nil {
 		return errors.Wrapf(err, "get userinfo failed")
 	}
-	permit, _, err := e.projectPermission.CanEditProject(user.GetUser(), projectID)
+	permit, _, _, err := e.projectPermission.CanEditProject(user.GetUser(), projectID)
 	if err != nil {
 		return errors.Wrapf(err, "check user '%s' can edit project '%s' failed", user.GetUser(), projectID)
 	}
@@ -88,7 +88,7 @@ func (e *BcsGitopsHandler) StartupProject(ctx context.Context, req *pb.ProjectSy
 	// save to AppProject
 	destPro = defaultAppProject(e.option.AdminNamespace, project)
 	// add secret info annotation
-	secretAnnotation, err := e.option.SecretClient.GetInitSecretRequest(project.Name)
+	secretAnnotation, err := e.option.SecretClient.GetProjectSecret(ctx, project.Name)
 	if err != nil {
 		blog.Errorf("[getErr]sync secret info to pro annotations [%s] failed: %s", project.ProjectCode, err.Error())
 	} else {
@@ -105,7 +105,7 @@ func (e *BcsGitopsHandler) StartupProject(ctx context.Context, req *pb.ProjectSy
 	}
 
 	// 完成project同步之后，需要初始化secret vault相关信息
-	if err := e.option.SecretClient.InitSecretRequest(project.ProjectCode); err != nil {
+	if err := e.option.SecretClient.InitProjectSecret(ctx, project.ProjectCode); err != nil {
 		return e.startProjectResult(resp, failedCode, "",
 			errors.Wrapf(err, "init secret project '%s' failed", project.ProjectCode))
 	}

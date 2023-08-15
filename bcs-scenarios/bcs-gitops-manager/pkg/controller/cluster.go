@@ -26,8 +26,8 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
+	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
@@ -207,7 +207,7 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 		blog.Infof("sync clusters for project [%s]%s complete, next...", appPro.Name, proID)
 
 		// sync secret init
-		if err := control.option.Secret.InitSecretRequest(appPro.Name); err != nil {
+		if err := control.option.Secret.InitProjectSecret(ctx, appPro.Name); err != nil {
 			blog.Errorf("sync secrets for project [%s]%s failed: %s", appPro.Name, proID, err.Error())
 			//continue
 		}
@@ -215,7 +215,7 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 
 		// sync secret info to pro annotations
 		//secretVal := vaultcommon.GetVaultSecForProAnno(appPro.Name)
-		secretVal, err := control.option.Secret.GetInitSecretRequest(appPro.Name)
+		secretVal, err := control.option.Secret.GetProjectSecret(ctx, appPro.Name)
 		if err != nil {
 			blog.Errorf("[getErr]sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
 			continue

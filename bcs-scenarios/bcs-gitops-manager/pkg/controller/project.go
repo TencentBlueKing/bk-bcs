@@ -21,8 +21,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
-	pm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
 )
 
 // ProjectControl for bcs project data sync
@@ -112,7 +111,7 @@ func (control *project) initClient() error {
 			control.option.APIGateway, err.Error())
 		return err
 	}
-	control.client = pm.NewBCSProjectClient(conn)
+	control.client = bcsproject.NewBCSProjectClient(conn)
 	control.conn = conn
 	blog.Infof("project conctroller init project-manager with %s successfully", control.option.APIGateway)
 	return nil
