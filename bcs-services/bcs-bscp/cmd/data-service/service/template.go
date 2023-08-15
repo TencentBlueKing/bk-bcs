@@ -336,6 +336,7 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbds.List
 		return nil, err
 	}
 	details := pbtemplate.PbTemplates(templates)
+	totalCnt := uint32(len(details))
 
 	// search by logic
 	if req.SearchKey != "" {
@@ -353,7 +354,7 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbds.List
 	if req.All {
 		// return all data
 		return &pbds.ListTemplatesOfTemplateSetResp{
-			Count:   uint32(len(details)),
+			Count:   totalCnt,
 			Details: details,
 		}, nil
 	}
@@ -368,7 +369,7 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbds.List
 	}
 
 	return &pbds.ListTemplatesOfTemplateSetResp{
-		Count:   uint32(len(details)),
+		Count:   totalCnt,
 		Details: details,
 	}, nil
 }

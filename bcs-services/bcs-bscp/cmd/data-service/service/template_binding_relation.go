@@ -271,11 +271,12 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 			}
 		}
 	}
+	totalCnt := uint32(len(details))
 
 	if req.All {
 		// return all data
 		return &pbds.ListTemplateBoundUnnamedAppDetailsResp{
-			Count:   uint32(len(details)),
+			Count:   totalCnt,
 			Details: details,
 		}, nil
 	}
@@ -290,7 +291,7 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 	}
 
 	resp := &pbds.ListTemplateBoundUnnamedAppDetailsResp{
-		Count:   uint32(len(details)),
+		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
@@ -367,11 +368,12 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 			}
 		}
 	}
+	totalCnt := uint32(len(details))
 
 	if req.All {
 		// return all data
 		return &pbds.ListTemplateBoundNamedAppDetailsResp{
-			Count:   uint32(len(details)),
+			Count:   totalCnt,
 			Details: details,
 		}, nil
 	}
@@ -386,7 +388,7 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 	}
 
 	resp := &pbds.ListTemplateBoundNamedAppDetailsResp{
-		Count:   uint32(len(details)),
+		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
@@ -428,11 +430,12 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 			TemplateSetName: tmplSetMap[id].Spec.Name,
 		})
 	}
+	totalCnt := uint32(len(details))
 
 	if req.All {
 		// return all data
 		return &pbds.ListTemplateBoundTemplateSetDetailsResp{
-			Count:   uint32(len(details)),
+			Count:   totalCnt,
 			Details: details,
 		}, nil
 	}
@@ -447,7 +450,7 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 	}
 
 	resp := &pbds.ListTemplateBoundTemplateSetDetailsResp{
-		Count:   uint32(len(details)),
+		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
@@ -489,11 +492,12 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 			AppName: appMap[id].Spec.Name,
 		})
 	}
+	totalCnt := uint32(len(details))
 
 	if req.All {
 		// return all data
 		return &pbds.ListTemplateRevisionBoundUnnamedAppDetailsResp{
-			Count:   uint32(len(details)),
+			Count:   totalCnt,
 			Details: details,
 		}, nil
 	}
@@ -508,7 +512,7 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 	}
 
 	resp := &pbds.ListTemplateRevisionBoundUnnamedAppDetailsResp{
-		Count:   uint32(len(details)),
+		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
@@ -567,11 +571,12 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 			ReleaseName: releaseMap[r.ReleaseID].Spec.Name,
 		})
 	}
+	totalCnt := uint32(len(details))
 
 	if req.All {
 		// return all data
 		return &pbds.ListTemplateRevisionBoundNamedAppDetailsResp{
-			Count:   uint32(len(details)),
+			Count:   totalCnt,
 			Details: details,
 		}, nil
 	}
@@ -586,7 +591,7 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 	}
 
 	resp := &pbds.ListTemplateRevisionBoundNamedAppDetailsResp{
-		Count:   uint32(len(details)),
+		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
@@ -628,11 +633,12 @@ func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
 			AppName: appMap[id].Spec.Name,
 		})
 	}
+	totalCnt := uint32(len(details))
 
 	if req.All {
 		// return all data
 		return &pbds.ListTemplateSetBoundUnnamedAppDetailsResp{
-			Count:   uint32(len(details)),
+			Count:   totalCnt,
 			Details: details,
 		}, nil
 	}
@@ -647,7 +653,7 @@ func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
 	}
 
 	resp := &pbds.ListTemplateSetBoundUnnamedAppDetailsResp{
-		Count:   uint32(len(details)),
+		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
@@ -706,11 +712,12 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 			ReleaseName: releaseMap[r.ReleaseID].Spec.Name,
 		})
 	}
+	totalCnt := uint32(len(details))
 
 	if req.All {
 		// return all data
 		return &pbds.ListTemplateSetBoundNamedAppDetailsResp{
-			Count:   uint32(len(details)),
+			Count:   totalCnt,
 			Details: details,
 		}, nil
 	}
@@ -725,7 +732,7 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 	}
 
 	resp := &pbds.ListTemplateSetBoundNamedAppDetailsResp{
-		Count:   uint32(len(details)),
+		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
