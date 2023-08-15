@@ -1,9 +1,10 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
+  import { RightShape } from 'bkui-vue/lib/icon';
   import { useGlobalStore } from '../../../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../../../store/template'
-  import { RightShape } from 'bkui-vue/lib/icon';
+  import { ITemplateConfigItem } from '../../../../../../../../../types/template';
   import { getTemplatesByPackageId, getTemplatesBySpaceId } from '../../../../../../../../api/template';
 
   const { spaceId } = storeToRefs(useGlobalStore())
@@ -12,12 +13,13 @@
   const props = defineProps<{
     pkg: { id: number|string; name: string; };
     open: boolean;
+    selectedConfigs: { id: number; name: string; }[]
   }>()
 
-  const emits = defineEmits(['select'])
+  const emits = defineEmits(['toggleOpen', 'update:selectedConfigs'])
 
   const loading = ref(false)
-  const configList = ref([])
+  const configList = ref<ITemplateConfigItem[]>([])
   const page = ref(1)
 
   watch(() => props.open, val => {
@@ -42,15 +44,48 @@
     configList.value = res.details
   }
 
+  const handleSelectionChange = ({ checked, isAll, row}: { checked: boolean; isAll: boolean; row: ITemplateConfigItem }) => {
+    const configs = props.selectedConfigs.slice()
+    if (isAll) {
+      if (checked) {
+        configList.value.forEach(config => {
+          if(!configs.find(item => item.id === config.id)) {
+            const { id, spec } = config
+            configs.push({ id, name: spec.name })
+          }
+        })
+      } else {
+        configList.value.forEach(config => {
+          const index = configs.findIndex(item => item.id === config.id)
+          if(index > -1) {
+            configs.splice(index, 0)
+          }
+        })
+      }
+    } else {
+      if (checked) {
+        if(!configs.find(item => item.id === row.id)) {
+          const { id, spec } = row
+          configs.push({ id, name: spec.name })
+        }
+      } else {
+        const index = configs.findIndex(item => item.id === row.id)
+        if(index > -1) {
+          configs.splice(index, 0)
+        }
+      }
+    }
+    emits('update:selectedConfigs', configs)
+  }
 
 </script>
 <template>
   <div :class="['package-config-table', {'table-open': props.open }]">
-    <div class="head-area" @click="emits('select', props.pkg.id)">
+    <div class="head-area" @click="emits('toggleOpen', props.pkg.id)">
       <RightShape class="triangle-icon" />
       <div class="title">{{ props.pkg.name }}</div>
     </div>
-    <bk-table v-show="props.open" :data="configList">
+    <bk-table v-show="props.open" :data="configList" @selection-change="handleSelectionChange">
       <bk-table-column type="selection" width="30" />
       <bk-table-column label="配置项名称" prop="spec.name"></bk-table-column>
       <bk-table-column label="配置项路径" prop="spec.path"></bk-table-column>

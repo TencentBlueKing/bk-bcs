@@ -5,7 +5,7 @@
   import { Plus, Search } from 'bkui-vue/lib/icon'
   import { useGlobalStore } from '../../../../../store/global'
   import { useTemplateStore } from '../../../../../store/template'
-  import { getTemplatePackageList } from '../../../../../api/template'
+  import { getTemplatePackageList, getTemplatesWithNoSpecifiedPackage, getTemplatesBySpaceId } from '../../../../../api/template'
   import { ITemplatePackageItem, IPackageMenuItem } from '../../../../../../types/template'
   import PackageItem from './item.vue'
   import PackageCreate from './package-create.vue'
@@ -44,8 +44,10 @@
     return { id: 'no_specified', name: '未指定套餐', count: countOfTemplatesForNoSpecifiedPackage.value }
   })
 
-  watch([() => spaceId.value, () => currentTemplateSpace.value], async([newSpaceId, newTemplateSpace]) => {
+  watch([() => spaceId.value, () => currentTemplateSpace.value], async() => {
     searchStr.value = ''
+    getCountOfAllTemplatesInSpace()
+    getCountOfTemplatesForNoSpecifiedPackage()
     await getList()
     if (!currentPkg.value) {
       if (packages.value.length > 0) {
@@ -58,6 +60,29 @@
     }
   })
 
+  const getCountOfAllTemplatesInSpace = async () => {
+    const params = {
+      start: 0,
+      limit: 1
+    }
+    const res = await getTemplatesBySpaceId(spaceId.value, currentTemplateSpace.value, params)
+    templateStore.$patch((state) => {
+      state.CountOfAllTemplatesInSpace = res.count
+    })
+  }
+
+  const getCountOfTemplatesForNoSpecifiedPackage = async () => {
+    const params = {
+      start: 0,
+      limit: 1
+    }
+    const res = await getTemplatesWithNoSpecifiedPackage(spaceId.value, currentTemplateSpace.value, params)
+    templateStore.$patch((state) => {
+      state.countOfTemplatesForNoSpecifiedPackage = res.count
+    })
+  }
+
+  // 获取套餐列表
   const getList = async () => {
     loading.value = true
     const params = {
@@ -78,7 +103,7 @@
   }
 
   const handleSearch = () => {
-    let result = []
+    let result: ITemplatePackageItem[] = []
     if (searchStr.value) {
       result = packages.value.filter(item => {
         return item.spec.name.toLowerCase().includes(searchStr.value.toLowerCase())

@@ -38,6 +38,7 @@
   const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary|string) => {
     configForm.value = data
     content.value = configContent
+    isFormChange.value = true
   }
 
   const handleCreateClick = async () => {

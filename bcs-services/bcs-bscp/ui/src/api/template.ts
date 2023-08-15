@@ -106,8 +106,7 @@ export const getTemplatesBySpaceId = (biz_id: string, template_space_id: number,
  * @returns
  */
 export const getTemplatesWithNoSpecifiedPackage = (biz_id: string, template_space_id: number, params: ICommonQuery) => {
-  // @todo 暂时用空间下所有模板列表接口mock，等后台提供接口
-  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, { params }).then(res => res.data)
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/list_not_bound`, { params }).then(res => res.data)
 }
 
 /**
@@ -141,8 +140,7 @@ export const getReleasedVersionAppsBoundByPackage = (biz_id: string, template_sp
  * @returns
  */
 export const getTemplatesByPackageId = (biz_id: string, template_space_id: number, template_set_id: number, params: ICommonQuery) => {
-  // @todo 暂时用空间下所有模板列表接口mock，等后台提供接口
-  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, { params }).then(res => res.data)
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}/templates`, { params }).then(res => res.data)
 }
 
 /**

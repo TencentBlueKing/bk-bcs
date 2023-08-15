@@ -24,7 +24,7 @@ import { Message } from 'bkui-vue'
   const pending = ref(false)
   const searchStr = ref('')
   const openedPkgTable = ref<number|string>('')
-  const selectedPkgs = ref<{ id: number; name: string; }[]>([])
+  const selectedConfigs = ref<{ id: number; name: string; }[]>([])
 
   const allPackages = computed(() => {
     const packages: { id: number|string; name: string; }[] = [{ id: 'all', name: PACKAGE_MENU_OTHER_TYPE_MAP['all'] }]
@@ -38,10 +38,10 @@ import { Message } from 'bkui-vue'
   watch(() => props.show, val => {
     isShow.value = val
     isFormChange.value = false
-    selectedPkgs.value = []
+    selectedConfigs.value = []
   })
 
-  const handleOpenTable = (id: string|number) => {
+  const handleToggleOpenTable = (id: string|number) => {
     openedPkgTable.value = openedPkgTable.value === id ? '' : id
   }
 
@@ -64,7 +64,7 @@ import { Message } from 'bkui-vue'
       const params = {
         name,
         memo,
-        template_ids: selectedPkgs.value.map(item => item.id),
+        template_ids: selectedConfigs.value.map(item => item.id),
         bound_apps,
         public: isPublic
       }
@@ -119,16 +119,17 @@ import { Message } from 'bkui-vue'
         <div class="package-tables">
           <PackageTable
             v-for="pkg in allPackages"
-            key="pkg.id"
+            v-model:selected-configs="selectedConfigs"
+            :key="pkg.id"
             :pkg="pkg"
             :open="openedPkgTable === pkg.id"
-            @select="handleOpenTable" />
+            @toggleOpen="handleToggleOpenTable" />
         </div>
       </div>
       <div class="selected-panel">
         <h5 class="title-text">已选 <span class="num">0</span> 个配置项</h5>
         <div class="selected-list">
-          <div v-for="config in selectedPkgs" class="config-item" :key="config.id">
+          <div v-for="config in selectedConfigs" class="config-item" :key="config.id">
             <div class="name" :title="config.name">{{ config.name }}</div>
             <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(config.id)" />
           </div>
@@ -140,7 +141,7 @@ import { Message } from 'bkui-vue'
             <div class="name">config.bin</div>
             <i class="bk-bscp-icon icon-reduce delete-icon"></i>
           </div>
-          <p v-if="selectedPkgs.length === 0" class="empty-tips">请先从左侧选择配置项</p>
+          <p v-if="selectedConfigs.length === 0" class="empty-tips">请先从左侧选择配置项</p>
         </div>
       </div>
     </div>
