@@ -17,6 +17,7 @@ WORKSPACE=$(shell pwd)
 
 BCS_UI_PATH=${WORKSPACE}/bcs-ui
 BCS_SERVICES_PATH=${WORKSPACE}/bcs-services
+BCS_INSTALL_PATH=${WORKSPACE}/install
 BCS_NETWORK_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-network
 BCS_COMPONENT_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-component
 BCS_MESOS_PATH=${WORKSPACE}/bcs-runtime/bcs-mesos
@@ -46,6 +47,18 @@ export SCENARIOSPACKAGE=${WORKSPACE}/${PACKAGEPATH}/bcs-scenarios
 
 # bscp 应用自定义
 export BSCP_LDFLAG=-ldflags "-X bscp.io/pkg/version.BUILDTIME=${BUILDTIME} -X bscp.io/pkg/version.GITHASH=${GITHASH}"
+
+# tongsuo related environment variables
+export TONGSUO_PATH?=$(WORKSPACE)/build/bcs.${VERSION}/tongsuo
+export IS_STATIC?=true
+
+ifeq ($(IS_STATIC),true)
+        CGO_BUILD_FLAGS= CGO_ENABLED=1 CGO_CFLAGS="-I${TONGSUO_PATH}/include -Wno-deprecated-declarations" \
+        CGO_LDFLAGS="-L${TONGSUO_PATH}/lib -lssl -lcrypto -ldl -lpthread -static-libgcc -static-libstdc++"
+else
+        CGO_BUILD_FLAGS= CGO_ENABLED=1 CGO_CFLAGS="-I${TONGSUO_PATH}/include -Wno-deprecated-declarations" \
+        CGO_LDFLAGS="-L${TONGSUO_PATH}/lib -lssl -lcrypto"
+endif
 
 # options
 default:bcs-runtime bcs-scenarios bcs-services #TODO: bcs-resources
@@ -110,6 +123,7 @@ pre:
 	go mod tidy
 	go fmt ./...
 	cd ./scripts && chmod +x vet.sh && ./vet.sh
+	cd ./scripts && chmod +x tongsuo.sh && ./tongsuo.sh
 
 api:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -262,8 +276,9 @@ detection:pre
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-network-detection ${PACKAGEPATH}/bcs-services
 	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-network-detection/bcs-network-detection ./bcs-services/bcs-network-detection/main.go
 
-tools:
-	go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
+tools:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services
+	cd ${BCS_INSTALL_PATH}/cryptool && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o  ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cryptools main.go
 
 ui:pre
 	mkdir -p ${PACKAGEPATH}/bcs-ui

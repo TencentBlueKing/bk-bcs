@@ -52,17 +52,17 @@ check_k8s_status() {
 
 op_kubevip() {
   check_k8s_status
-    action=$1
-    if [[ -z ${BK_PUBLIC_REPO} ]]; then
-      kubevip_image="ghcr.io/kube-vip/kube-vip:${KUBE_VIP_VERSION}"
-      utils::log "ERROR" "${action} kube-vip failed, empty BK_PUBLIC_REPO or KUBE_VIP_VERSION"
-    else
-      kubevip_image="${BK_PUBLIC_REPO}/kube-vip/kube-vip:${KUBE_VIP_VERSION}"
-    fi
-    utils::log "INFO" "${action}ing kube-vip"
-    case $action in
+  action=$1
+  if [[ -z ${BK_PUBLIC_REPO} ]]; then
+    kubevip_image="ghcr.io/kube-vip/kube-vip:${KUBE_VIP_VERSION}"
+    utils::log "ERROR" "${action} kube-vip failed, empty BK_PUBLIC_REPO or KUBE_VIP_VERSION"
+  else
+    kubevip_image="${BK_PUBLIC_REPO}/kube-vip/kube-vip:${KUBE_VIP_VERSION}"
+  fi
+  utils::log "INFO" "${action}ing kube-vip"
+  case $action in
     apply)
-      cat <<EOF > /etc/kubernetes/manifests/kube-vip.yaml
+      cat <<EOF >/etc/kubernetes/manifests/kube-vip.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -126,7 +126,8 @@ EOF
       ;;
     delete)
       rm -f /etc/kubernetes/manifests/kube-vip.yaml
-    esac
+      ;;
+  esac
   utils::log "OK" "${action} kube-vip success"
 }
 

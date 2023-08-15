@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
-	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230612113959-ee7959290ae2
+	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230802065941-49e19e258f38
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220926153300-4e631deaebe4
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 	github.com/dustin/go-humanize v1.0.0

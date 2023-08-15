@@ -1032,6 +1032,53 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/accounttype": {
+      "get": {
+        "summary": "查询云账号类型",
+        "description": "根据AKSK查询云账号类型",
+        "operationId": "ClusterManager_GetCloudAccountType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetCloudAccountTypeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID, 通过指定的云账号信息获取",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/clusters": {
       "get": {
         "summary": "查询cloud地域集群列表",
@@ -1124,6 +1171,13 @@
           {
             "name": "accountID",
             "description": "accountID. 导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 集群所在地域",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5908,6 +5962,16 @@
       },
       "title": "CloudAccountInfo return account relative info"
     },
+    "clustermanagerCloudAccountType": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "云账号类型(用户账号的网络类型，STANDARD为标准用户，LEGACY为传统用户)",
+          "title": "type"
+        }
+      }
+    },
     "clustermanagerCloudArea": {
       "type": "object",
       "properties": {
@@ -9684,6 +9748,39 @@
       },
       "description": "获取模板列表返回信息",
       "title": "GetBkSopsTemplateListResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerGetCloudAccountTypeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerCloudAccountType",
+          "description": "获取节点列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询云账号类型返回",
+      "title": "GetCloudAccountTypeResponse",
       "required": [
         "code",
         "message"

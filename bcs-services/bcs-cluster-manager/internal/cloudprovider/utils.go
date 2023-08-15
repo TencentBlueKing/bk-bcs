@@ -1011,11 +1011,12 @@ func GetCRDByKubeConfig(kubeConfig string) (*v1.CustomResourceDefinitionList, er
 		FileName:    "",
 		YamlContent: kubeConfig,
 	})
+
 	if err != nil {
-		return nil, fmt.Errorf("checkKubeConfig validate failed: %v", err)
+		return nil, fmt.Errorf("checkKubeConfig get kubeConfig from YAML body failed: %v", err)
 	}
 
-	// 解析 kubeconfig 字符串
+	// 解析 kubeConfig 字符串
 	cfg, err := clientcmd.NewClientConfigFromBytes([]byte(kubeConfig))
 	if err != nil {
 		return nil, err

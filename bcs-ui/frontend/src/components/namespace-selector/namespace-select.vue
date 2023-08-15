@@ -84,7 +84,7 @@ export default defineComponent({
       if (!clusterId.value) return;
       await getNamespaceData({
         clusterId: clusterId.value,
-      });
+      }, required.value);
       if (!namespaceList.value.find(item => item.name === value.value)) {
         handleNamespaceChange(required.value ? namespaceList.value[0]?.name : '');
       } else {

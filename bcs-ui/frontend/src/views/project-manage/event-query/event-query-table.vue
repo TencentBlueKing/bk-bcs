@@ -11,8 +11,8 @@
         </ClusterSelect>
         <NamespaceSelect
           :cluster-id="params.clusterId"
-          :clearable="false"
-          required
+          :clearable="nsClearable"
+          :required="nsRequired"
           :list="namespaceList"
           :loading="namespaceLoading"
           v-model="params.namespace"
@@ -67,7 +67,12 @@
         show-overflow-tooltip>
       </bcs-table-column>
       <bcs-table-column :label="$t('projects.eventQuery.level')" prop="level" width="100"></bcs-table-column>
-      <bcs-table-column :label="$t('projects.eventQuery.content')" prop="describe" min-width="100" show-overflow-tooltip></bcs-table-column>
+      <bcs-table-column
+        :label="$t('projects.eventQuery.content')"
+        prop="describe"
+        min-width="100"
+        show-overflow-tooltip>
+      </bcs-table-column>
       <template #empty>
         <BcsEmptyTableStatus :type="searchEmpty ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
       </template>
@@ -124,6 +129,14 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    nsClearable: {
+      type: Boolean,
+      default: false,
+    },
+    nsRequired: {
+      type: Boolean,
+      default: true,
+    },
   },
   setup(props) {
     const {
@@ -134,6 +147,7 @@ export default defineComponent({
       level,
       component,
       hideClusterAndNamespace,
+      nsRequired,
     } = toRefs(props);
 
     const { curClusterId, clusterList } = useCluster();
@@ -343,7 +357,7 @@ export default defineComponent({
     const handleClusterChange = async () => {
       eventLoading.value = true;
       await getNamespaceData({ clusterId: params.value.clusterId });
-      params.value.namespace = namespaceList.value[0]?.name;
+      params.value.namespace = '';
       await handleInitEventData();
       eventLoading.value = false;
     };
@@ -424,8 +438,10 @@ export default defineComponent({
     };
 
     onMounted(async () => {
-      await getNamespaceData({ clusterId: params.value.clusterId || curClusterId.value });
-      handleGetEventList();
+      eventLoading.value = true;
+      await getNamespaceData({ clusterId: params.value.clusterId || curClusterId.value }, nsRequired.value);
+      await handleGetEventList();
+      eventLoading.value = false;
     });
 
     return {

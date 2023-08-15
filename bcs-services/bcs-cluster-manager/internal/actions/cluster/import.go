@@ -495,21 +495,23 @@ func checkKubeConfig(kubeConfig string) error {
 		YamlContent: kubeConfig,
 	})
 	if err != nil {
-		return fmt.Errorf("checkKubeConfig validate failed: %v", err)
+		return fmt.Errorf("checkKubeConfig get kubeConfig from YAML body failed: %v", err)
 	}
 
 	kubeRet := base64.StdEncoding.EncodeToString([]byte(kubeConfig))
 	kubeCli, err := clusterops.NewKubeClient(kubeRet)
 	if err != nil {
-		return fmt.Errorf("checkKubeConfig validate failed: %v", err)
+		return fmt.Errorf("checkKubeConfig encode to string failed: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
 	defer cancel()
+
 	_, err = kubeCli.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("checkKubeConfig connect cluster failed: %v", err)
 	}
+
 	blog.Infof("checkKubeConfig YAMLStyle and connectCluster success")
 
 	return nil
@@ -570,8 +572,10 @@ func (ka *CheckKubeConnectAction) Handle(ctx context.Context, req *cmproto.KubeC
 	if err != nil {
 		blog.Errorf("get credential for cloud provider %s/%s failed, %s",
 			ka.cloud.CloudID, ka.cloud.CloudProvider, err.Error())
+		ka.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
+	cmOption.Region = ka.req.Region
 
 	// Create Cluster by CloudProvider, underlay cloud cluster manager interface
 	provider, err := cloudprovider.GetClusterMgr(ka.cloud.CloudProvider)
@@ -590,7 +594,7 @@ func (ka *CheckKubeConnectAction) Handle(ctx context.Context, req *cmproto.KubeC
 	}
 
 	if !ok {
-		ka.setResp(common.BcsErrClusterManagerCheckKubeConnErr, "kubeConfig failed to connect to the cluster")
+		ka.setResp(common.BcsErrClusterManagerCheckKubeConnErr, "cluster kubeConfig failed to connect to the cluster")
 		return
 	}
 

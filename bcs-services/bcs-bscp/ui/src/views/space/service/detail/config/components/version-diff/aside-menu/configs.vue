@@ -60,7 +60,7 @@
   const getConfigsOfVersion = async (releaseId?: number) => {
     const listQueryParams: IConfigListQueryParams = {
       start: 0,
-      limit: 200 // @todo 分页条数待确认
+      all: true
     }
     const listDetailQueryParams: { release_id?: number } = {}
 

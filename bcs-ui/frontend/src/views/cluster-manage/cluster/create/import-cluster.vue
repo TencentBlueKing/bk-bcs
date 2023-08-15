@@ -47,7 +47,11 @@
             </bcs-option>
           </bcs-select>
         </BkFormItem>
-        <BkFormItem :label="$t('cluster.create.label.cloudToken')" property="accountID" error-display-type="normal" required>
+        <BkFormItem
+          :label="$t('cluster.create.label.cloudToken')"
+          property="accountID"
+          error-display-type="normal"
+          required>
           <div style="display: flex;">
             <bcs-select
               :loading="accountsLoading"
@@ -104,7 +108,11 @@
             </bcs-option>
           </bcs-select>
         </BkFormItem>
-        <BkFormItem :label="$t('cluster.detail.label.tkeID')" property="cloudID" error-display-type="normal" required>
+        <BkFormItem
+          :label="$t('cluster.labels.cloudClusterID')"
+          property="cloudID"
+          error-display-type="normal"
+          required>
           <bcs-select
             class="w640" searchable
             :clearable="false"

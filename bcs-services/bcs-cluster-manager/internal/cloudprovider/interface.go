@@ -348,6 +348,8 @@ type VPCManager interface {
 	ListSubnets(vpcID string, opt *CommonOption) ([]*proto.Subnet, error)
 	// ListSecurityGroups list security groups
 	ListSecurityGroups(opt *CommonOption) ([]*proto.SecurityGroup, error)
+	// GetCloudNetworkAccountType get cloud account type
+	GetCloudNetworkAccountType(opt *CommonOption) (*proto.CloudAccountType, error)
 }
 
 // TaskManager backgroup back management

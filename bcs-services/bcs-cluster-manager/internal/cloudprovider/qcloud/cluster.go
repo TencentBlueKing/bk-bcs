@@ -15,6 +15,7 @@ package qcloud
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"sync"
 
@@ -563,18 +564,23 @@ func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 		return false, err
 	}
 
-	if !status.Created() {
-		return false, nil
-	}
-
 	blog.Infof("cluster endpoint status: %s", status)
+
+	if !status.Created() {
+		return false, fmt.Errorf("cluster endpoint status is not created")
+	}
 
 	kubeConfig, err := client.GetTKEClusterKubeConfig(clusterID, isExtranet)
 	if err != nil {
 		return false, err
 	}
 
-	_, err = cloudprovider.GetCRDByKubeConfig(kubeConfig)
+	data, err := base64.StdEncoding.DecodeString(kubeConfig)
+	if err != nil {
+		return false, fmt.Errorf("decode kube config failed: %v", err)
+	}
+
+	_, err = cloudprovider.GetCRDByKubeConfig(string(data))
 	if err != nil {
 		return false, err
 	}

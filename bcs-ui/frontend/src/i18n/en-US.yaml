@@ -606,6 +606,7 @@ cluster:
     maxNodePodNum: Number of pod ip
     region: Region
     clusterType: Cluster type
+    cloudClusterID: Cloud cluster id
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
@@ -644,8 +645,7 @@ cluster:
           clusters.
       cloudProvider:
         title: Cloud Provider
-        subTitle: >-
-          Unified management of multi-cloud provider clusters
+        subTitle: Unified management of multi-cloud provider clusters
         desc: >-
           Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
           Google Cloud
@@ -1043,6 +1043,7 @@ cluster:
           selected: Specified available zone
         instanceTypeConfig:
           title: Model configuration
+          desc: Cannot be modified. If you need to change, create new node pool
           status:
             soldOut: Sold out
             sell: Sell
@@ -1069,6 +1070,8 @@ cluster:
               traffic_postpaid_by_hour: Billing according to traffic
               bandwidth_prepaid: Putting width
             maxBandWidth: Buy broadband
+            tips1: 'This Tencent cloud account is a traditional account type (bandwidth is not shifted up), currently does not support the allocation of free public IP, for details, please see {0}'
+            accountLink: 'detail'
           diskType:
             premium: High -performance cloud hard disk
             ssd: SSD cloud hard disk
@@ -2420,7 +2423,7 @@ plugin:
       "OK" to update
     confirmUpgrade: Confirm update
     noChages: There is no change in the content of this update
-    submit: Configuration submitted successfully 
+    submit: Configuration submitted successfully
     addPattern: Add Expression
     icon: Icon
     deployed: Deployed

@@ -264,3 +264,122 @@ func (ga *GetCloudRegionZonesAction) Handle(
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }
+
+// GetCloudAccountTypeAction action for get cloud account type
+type GetCloudAccountTypeAction struct {
+	ctx   context.Context
+	model store.ClusterManagerModel
+
+	cloud       *cmproto.Cloud
+	account     *cmproto.CloudAccount
+	req         *cmproto.GetCloudAccountTypeRequest
+	resp        *cmproto.GetCloudAccountTypeResponse
+	accountType *cmproto.CloudAccountType
+}
+
+// NewGetCloudAccountTypeAction create list action for cloud account
+func NewGetCloudAccountTypeAction(model store.ClusterManagerModel) *GetCloudAccountTypeAction {
+	return &GetCloudAccountTypeAction{
+		model: model,
+	}
+}
+
+func (ga *GetCloudAccountTypeAction) getCloudAccountType() error {
+	// create vpc client with cloudProvider
+	vpcMgr, err := cloudprovider.GetVPCMgr(ga.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s VPCManager for list CloudAccountType failed, %s",
+			ga.cloud.CloudProvider, err.Error())
+		return err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ga.cloud,
+		AccountID: ga.req.AccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s list CloudAccountType failed, %s",
+			ga.cloud.CloudID, ga.cloud.CloudProvider, err.Error())
+		return err
+	}
+	cmOption.Region = defaultRegion
+
+	ga.accountType, err = vpcMgr.GetCloudNetworkAccountType(cmOption)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ga *GetCloudAccountTypeAction) setResp(code uint32, msg string) {
+	ga.resp.Code = code
+	ga.resp.Message = msg
+	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+	ga.resp.Data = ga.accountType
+}
+
+func (ga *GetCloudAccountTypeAction) validate() error {
+	err := ga.req.Validate()
+	if err != nil {
+		return err
+	}
+
+	err = ga.getRelativeData()
+	if err != nil {
+		return err
+	}
+
+	if len(ga.req.AccountID) > 0 {
+		validate, errGet := cloudprovider.GetCloudValidateMgr(ga.cloud.CloudProvider)
+		if errGet != nil {
+			return errGet
+		}
+		err = validate.ImportCloudAccountValidate(ga.account.Account)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ga *GetCloudAccountTypeAction) getRelativeData() error {
+	cloud, err := actions.GetCloudByCloudID(ga.model, ga.req.CloudID)
+	if err != nil {
+		return err
+	}
+
+	if len(ga.req.AccountID) > 0 {
+		account, errGet := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID)
+		if errGet != nil {
+			return errGet
+		}
+		ga.account = account
+	}
+
+	ga.cloud = cloud
+	return nil
+}
+
+// Handle list cloud account types
+func (ga *GetCloudAccountTypeAction) Handle(
+	ctx context.Context, req *cmproto.GetCloudAccountTypeRequest, resp *cmproto.GetCloudAccountTypeResponse) {
+	if req == nil || resp == nil {
+		blog.Errorf("get cloud account types failed, req or resp is empty")
+		return
+	}
+	ga.ctx = ctx
+	ga.req = req
+	ga.resp = resp
+
+	if err := ga.validate(); err != nil {
+		ga.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+	if err := ga.getCloudAccountType(); err != nil {
+		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
+}

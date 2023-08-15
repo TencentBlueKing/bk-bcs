@@ -43,6 +43,7 @@ var NoAuthMethod = []string{
 
 	// kubeConfig
 	"ClusterManager.CheckCloudKubeConfig",
+	"ClusterManager.CheckCloudKubeConfigConnect",
 
 	// task resource
 	"ClusterManager.RetryTask",
@@ -98,6 +99,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetBizTopologyHost",
 	"ClusterManager.GetTopologyNodes",
 	"ClusterManager.GetScopeHostCheck",
+	"ClusterManager.GetCloudAccountType",
 }
 
 // ActionPermissions action 对应权限中心的权限
@@ -178,7 +180,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetVPCCidr":     "",
 
 	// kubeconfig
-	"ClusterManager.CheckCloudKubeConfig": "",
+	"ClusterManager.CheckCloudKubeConfig":        "",
+	"ClusterManager.CheckCloudKubeConfigConnect": "",
 
 	// task
 	"ClusterManager.CreateTask": cluster.CanManageClusterOperation,

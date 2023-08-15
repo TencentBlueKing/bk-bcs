@@ -15059,6 +15059,28 @@ func (m *KubeConfigConnectReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if utf8.RuneCountInString(m.GetRegion()) > 100 {
+		err := KubeConfigConnectReqValidationError{
+			field:  "Region",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_KubeConfigConnectReq_Region_Pattern.MatchString(m.GetRegion()) {
+		err := KubeConfigConnectReqValidationError{
+			field:  "Region",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return KubeConfigConnectReqMultiError(errors)
 	}
@@ -15138,6 +15160,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = KubeConfigConnectReqValidationError{}
+
+var _KubeConfigConnectReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on KubeConfigResp with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -39909,6 +39933,363 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudNodeValidationError{}
+
+// Validate checks the field values on GetCloudAccountTypeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetCloudAccountTypeRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetCloudAccountTypeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetCloudAccountTypeRequestMultiError, or nil if none found.
+func (m *GetCloudAccountTypeRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetCloudAccountTypeRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 2 {
+		err := GetCloudAccountTypeRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 2 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Region
+
+	// no validation rules for AccountID
+
+	if len(errors) > 0 {
+		return GetCloudAccountTypeRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetCloudAccountTypeRequestMultiError is an error wrapping multiple
+// validation errors returned by GetCloudAccountTypeRequest.ValidateAll() if
+// the designated constraints aren't met.
+type GetCloudAccountTypeRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetCloudAccountTypeRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetCloudAccountTypeRequestMultiError) AllErrors() []error { return m }
+
+// GetCloudAccountTypeRequestValidationError is the validation error returned
+// by GetCloudAccountTypeRequest.Validate if the designated constraints aren't met.
+type GetCloudAccountTypeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCloudAccountTypeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCloudAccountTypeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCloudAccountTypeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCloudAccountTypeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCloudAccountTypeRequestValidationError) ErrorName() string {
+	return "GetCloudAccountTypeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetCloudAccountTypeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCloudAccountTypeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCloudAccountTypeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCloudAccountTypeRequestValidationError{}
+
+// Validate checks the field values on GetCloudAccountTypeResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetCloudAccountTypeResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetCloudAccountTypeResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetCloudAccountTypeResponseMultiError, or nil if none found.
+func (m *GetCloudAccountTypeResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetCloudAccountTypeResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetCloudAccountTypeResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetCloudAccountTypeResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetCloudAccountTypeResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetCloudAccountTypeResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetCloudAccountTypeResponseMultiError is an error wrapping multiple
+// validation errors returned by GetCloudAccountTypeResponse.ValidateAll() if
+// the designated constraints aren't met.
+type GetCloudAccountTypeResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetCloudAccountTypeResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetCloudAccountTypeResponseMultiError) AllErrors() []error { return m }
+
+// GetCloudAccountTypeResponseValidationError is the validation error returned
+// by GetCloudAccountTypeResponse.Validate if the designated constraints
+// aren't met.
+type GetCloudAccountTypeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCloudAccountTypeResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCloudAccountTypeResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCloudAccountTypeResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCloudAccountTypeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCloudAccountTypeResponseValidationError) ErrorName() string {
+	return "GetCloudAccountTypeResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetCloudAccountTypeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCloudAccountTypeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCloudAccountTypeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCloudAccountTypeResponseValidationError{}
+
+// Validate checks the field values on CloudAccountType with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *CloudAccountType) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CloudAccountType with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CloudAccountTypeMultiError, or nil if none found.
+func (m *CloudAccountType) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CloudAccountType) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Type
+
+	if len(errors) > 0 {
+		return CloudAccountTypeMultiError(errors)
+	}
+
+	return nil
+}
+
+// CloudAccountTypeMultiError is an error wrapping multiple validation errors
+// returned by CloudAccountType.ValidateAll() if the designated constraints
+// aren't met.
+type CloudAccountTypeMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CloudAccountTypeMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CloudAccountTypeMultiError) AllErrors() []error { return m }
+
+// CloudAccountTypeValidationError is the validation error returned by
+// CloudAccountType.Validate if the designated constraints aren't met.
+type CloudAccountTypeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CloudAccountTypeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CloudAccountTypeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CloudAccountTypeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CloudAccountTypeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CloudAccountTypeValidationError) ErrorName() string { return "CloudAccountTypeValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CloudAccountTypeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCloudAccountType.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CloudAccountTypeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CloudAccountTypeValidationError{}
 
 // Validate checks the field values on ListCloudOsImageRequest with the rules
 // defined in the proto definition for this message. If any rules are

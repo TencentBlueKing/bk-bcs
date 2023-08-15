@@ -30,6 +30,7 @@ import { bus } from '../common/bus';
 import CachedPromise from './cached-promise';
 import RequestQueue from './request-queue';
 import { messageError } from '../common/bkmagic';
+import { random } from '@/common/util';
 
 // axios 实例
 const axiosInstance = axios.create({
@@ -46,6 +47,7 @@ axiosInstance.interceptors.request.use((config) => {
   if (CSRFToken) {
     config.headers['X-CSRFToken'] = CSRFToken;
   }
+  config.headers.Traceparent = `00-${random(32, 'abcdef0123456789')}-${random(16, 'abcdef0123456789')}-01`;
   return config;
 }, error => Promise.reject(error));
 

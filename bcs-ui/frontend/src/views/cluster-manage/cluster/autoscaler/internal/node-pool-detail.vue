@@ -103,13 +103,13 @@
           <bk-form-item label="CPU">
             {{`${nodePoolData.launchTemplate.CPU}${$t('units.suffix.cores')}`}}
           </bk-form-item>
-          <bk-form-item label="内存">
+          <bk-form-item label="MEM">
             {{nodePoolData.launchTemplate.Mem}}G
           </bk-form-item>
-          <bk-form-item label="系统盘">
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')">
             {{systemDisk || '--'}}
           </bk-form-item>
-          <bk-form-item label="cluster.ca.nodePool.create.instanceTypeConfig.disk.data">
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')">
             <bk-button
               text
               size="small"

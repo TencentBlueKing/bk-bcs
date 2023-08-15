@@ -81,7 +81,8 @@ export interface IConfigListQueryParams {
   searchKey?: string;
   release_id?: number;
   start?: number;
-  limit?: number
+  limit?: number;
+  all?: boolean;
 }
 
 // 版本列表查询接口请求参数

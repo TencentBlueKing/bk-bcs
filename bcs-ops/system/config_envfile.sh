@@ -61,7 +61,7 @@ init_env() {
   BCS_OFFLINE=${BCS_OFFLINE:-}
 
   # cri
-  CRI_TYPE=${CRI_TYPE:-"containerd"}
+  CRI_TYPE=${CRI_TYPE:-"docker"}
   ## DOCKER
   DOCKER_VER=${DOCKER_VER:-"19.03.9"}
   DOCKER_LIB=${DOCKER_LIB:-"${BK_HOME}/lib/docker"}
@@ -76,7 +76,7 @@ init_env() {
   ETCD_LIB=${ETCD_LIB:-"${BK_HOME}/lib/etcd"}
   KUBELET_LIB=${KUBELET_LIB:-"${BK_HOME}/lib/kubelet"}
   ## K8S_VER
-  K8S_VER=${K8S_VER:-"1.24.15"}
+  K8S_VER=${K8S_VER:-"1.20.15"}
   ## K8S_CIDR
   K8S_CTRL_IP=${K8S_CTRL_IP:-"$LAN_IP"}
   K8S_SVC_CIDR=${K8S_SVC_CIDR:-"10.96.0.0/12"}
@@ -197,7 +197,7 @@ now is ${K8S_IPv6_STATUS}"
 
 render_env() {
   utils::log "INFO" "RENDERING bcs env file"
-  [ -d "${ROOT_DIR}/env" ] || install -dv "${ROOT_DIR}/env"
+  [[ -d "${ROOT_DIR}/env" ]] || install -dv "${ROOT_DIR}/env"
   cat >"${BCS_ENV_FILE}" <<EOF
 # bcs config begin
 ## HOST
@@ -224,7 +224,7 @@ CRI_EOF
       "docker")
         cat <<CRI_EOF
 DOCKER_LIB="${DOCKER_LIB}"
-DOCKER_VERSION="${DOCKER_VERSION}"
+DOCKER_VER="${DOCKER_VER}"
 DOCKER_LIVE_RESTORE="${DOCKER_LIVE_RESTORE}"
 DOCKER_BRIDGE="${DOCKER_BRIDGE}"
 CRI_EOF
