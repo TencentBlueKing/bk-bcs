@@ -72,7 +72,7 @@ func ProjectAuthorization() gin.HandlerFunc {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
 		}
-		if !cls.IsShared && cls.ProjectId != projectID {
+		if !cls.IsShared && cls.ProjectID != projectID {
 			rest.AbortWithWithForbiddenError(restContext, fmt.Errorf("cluster is invalid"))
 			return
 		}
@@ -129,7 +129,7 @@ func NsScopeAuthorization() gin.HandlerFunc {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
 		}
-		if !cls.IsShared && cls.ProjectId != projectID {
+		if !cls.IsShared && cls.ProjectID != projectID {
 			rest.AbortWithWithForbiddenError(restContext, fmt.Errorf("cluster is invalid"))
 			return
 		}
