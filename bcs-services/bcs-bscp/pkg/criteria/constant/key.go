@@ -62,6 +62,8 @@ const (
 const (
 	// DefaultTmplSpaceName is default template space name
 	DefaultTmplSpaceName = "default_space"
+	// DefaultTmplSpaceCNName is default template space chinese name
+	DefaultTmplSpaceCNName = "默认空间"
 	// DefaultTmplSpaceMemo is default template space memo
 	DefaultTmplSpaceMemo = "this is default space"
 	// DefaultTmplSetName is default template set name
