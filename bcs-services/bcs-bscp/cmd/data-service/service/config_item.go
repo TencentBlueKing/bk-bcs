@@ -145,9 +145,12 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		tx.Rollback()
 		return nil, err
 	}
-	if err := s.doBatchDeleteConfigItems(grpcKit, tx, toDelete, req.BizId, req.AppId); err != nil {
-		tx.Rollback()
-		return nil, err
+	if req.ReplaceAll {
+		// if replace all,delete config items not in batch upsert request.
+		if err := s.doBatchDeleteConfigItems(grpcKit, tx, toDelete, req.BizId, req.AppId); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 	}
 	// validate config items count.
 	if err := s.dao.ConfigItem().ValidateAppCINumber(grpcKit, tx, req.BizId, req.AppId); err != nil {
