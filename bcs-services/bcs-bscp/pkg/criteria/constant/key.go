@@ -52,6 +52,10 @@ const (
 
 	// ContentIDHeaderKey is common content sha256 id.
 	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"
+	// AppIDHeaderKey is app id.
+	AppIDHeaderKey = "X-Bscp-App-Id"
+	// TmplSpaceIDHeaderKey is template space id.
+	TmplSpaceIDHeaderKey = "X-Bscp-Template-Space-Id"
 )
 
 // default resource
