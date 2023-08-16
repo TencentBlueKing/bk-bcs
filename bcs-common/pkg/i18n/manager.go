@@ -44,12 +44,8 @@ type Options struct {
 }
 
 var (
-	// defaultDelimiters defines the default language if user does not specify in options.
-	defaultLanguage = "en"
-
 	// defaultDelimiters defines the default key variable delimiters.
 	defaultDelimiters = []string{"{{.", "}}"}
-
 	// language files folders.
 	folders = "lang"
 )
@@ -65,7 +61,7 @@ func New(options ...Options) *Manager {
 		opts = DefaultOptions()
 	}
 	if len(opts.Language) == 0 {
-		opts.Language = defaultLanguage
+		opts.Language = DefaultLanguage
 	}
 	if len(opts.Delimiters) == 0 {
 		opts.Delimiters = defaultDelimiters
@@ -88,7 +84,7 @@ func DefaultOptions() Options {
 
 	return Options{
 		Path:       path,
-		Language:   defaultLanguage,
+		Language:   DefaultLanguage,
 		Delimiters: defaultDelimiters,
 	}
 }
@@ -100,7 +96,7 @@ func (m *Manager) SetPath(path []embed.FS) {
 
 // SetLanguage sets the language for translator.
 func (m *Manager) SetLanguage(language string) {
-	m.options.Language = language
+	m.options.Language = toLanguage(language)
 	log.Infof(`SetLanguage: %s`, m.options.Language)
 }
 
