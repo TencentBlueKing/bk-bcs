@@ -58,7 +58,7 @@
         configList.value.forEach(config => {
           const index = configs.findIndex(item => item.id === config.id)
           if(index > -1) {
-            configs.splice(index, 0)
+            configs.splice(index, 1)
           }
         })
       }
@@ -71,7 +71,7 @@
       } else {
         const index = configs.findIndex(item => item.id === row.id)
         if(index > -1) {
-          configs.splice(index, 0)
+          configs.splice(index, 1)
         }
       }
     }
@@ -86,7 +86,7 @@
       <div class="title">{{ props.pkg.name }}</div>
     </div>
     <bk-table v-show="props.open" :data="configList" @selection-change="handleSelectionChange">
-      <bk-table-column type="selection" width="30" />
+      <bk-table-column type="selection" :min-width="20" :width="30" />
       <bk-table-column label="配置项名称" prop="spec.name"></bk-table-column>
       <bk-table-column label="配置项路径" prop="spec.path"></bk-table-column>
       <bk-table-column label="配置项描述" prop="spec.memo"></bk-table-column>

@@ -154,6 +154,28 @@ export const createTemplate = (biz_id: string, template_space_id: number, params
   return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, params)
 }
 
+/**
+ * 删除模板
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_ids 模板ID列表
+ * @returns
+ */
+// @todo 需要后台提供接口
+export const deleteTemplate = (biz_id: string, template_space_id: number, template_ids: number[]) => {
+  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/{template_id}`)
+}
+
+/**
+ * 根据模板id列表查询对应模板详情
+ * @param biz_id 业务ID
+ * @param ids 模板ID列表
+ * @returns
+ */
+export const getTemplatesDetailByIds = (biz_id: string, ids: number[]) => {
+  return http.post(`/config/biz/${biz_id}/templates/list_by_ids`, { ids }).then(res => res.data)
+}
+
 
 /**
  * 添加模版到模版套餐
@@ -165,4 +187,39 @@ export const createTemplate = (biz_id: string, template_space_id: number, params
  */
 export const addTemplateToPackage = (biz_id: string, template_space_id: number, template_id: number, template_set_ids: number[]) => {
   return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/add_to_template_sets`, { template_set_ids })
+}
+
+/**
+ * 创建模板版本
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @returns
+ */
+export const createTemplateVersion = (biz_id: string, template_space_id: number, template_id: number) => {
+  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions`)
+}
+
+/**
+ * 获取模板版本列表
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param params 查询参数
+ * @returns
+ */
+export const getTemplateVersionList = (biz_id: string, template_space_id: number, template_id: number, params: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions`, { params }).then(res => res.data)
+}
+
+/**
+ * 删除模板版本
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param template_revision_id 版本ID
+ * @returns
+ */
+export const deleteTemplateVersion = (biz_id: string, template_space_id: number, template_id: number, template_revision_id: number) => {
+  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions/${template_revision_id}`)
 }

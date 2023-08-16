@@ -1,14 +1,14 @@
 <script lang="ts" setup>
   import { ref, computed, watch } from 'vue'
   import { storeToRefs } from 'pinia'
+  import { Search } from 'bkui-vue/lib/icon'
+  import { Message } from 'bkui-vue'
   import { useGlobalStore } from '../../../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../../../store/template'
-  import { Search } from 'bkui-vue/lib/icon'
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation'
   import { PACKAGE_MENU_OTHER_TYPE_MAP } from '../../../../../../../../constants/template'
   import { updateTemplatePackage } from '../../../../../../../../api/template'
   import PackageTable from './package-table.vue'
-import { Message } from 'bkui-vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const { currentTemplateSpace, currentPkg, packageList } = storeToRefs(useTemplateStore())
@@ -29,8 +29,10 @@ import { Message } from 'bkui-vue'
   const allPackages = computed(() => {
     const packages: { id: number|string; name: string; }[] = [{ id: 'all', name: PACKAGE_MENU_OTHER_TYPE_MAP['all'] }]
     packageList.value.forEach(item => {
-      const { id, spec } = item
-      packages.push({ id, name: spec.name })
+      if (item.id !== currentPkg.value) {
+        const { id, spec } = item
+        packages.push({ id, name: spec.name })
+      }
     })
     return packages
   })
@@ -49,22 +51,18 @@ import { Message } from 'bkui-vue'
     console.log('delete config: ', id)
   }
 
-  const handleSelectConfig = (ids: number[]) => {
-    isFormChange.value = true
-    console.log('select config: ', ids)
-  }
-
   const handleAddConfigs = async() => {
     const pkg = packageList.value.find(item => item.id === currentPkg.value)
     if (!pkg) return
 
     try {
       pending.value = true
-      const { name, memo, public: isPublic, bound_apps } = pkg.spec
+      const { name, memo, public: isPublic, bound_apps, template_ids } = pkg.spec
+      const ids = selectedConfigs.value.map(item => item.id).concat(template_ids)
       const params = {
         name,
         memo,
-        template_ids: selectedConfigs.value.map(item => item.id),
+        template_ids: Array.from(new Set(ids)),
         bound_apps,
         public: isPublic
       }
@@ -80,7 +78,6 @@ import { Message } from 'bkui-vue'
     } finally {
       pending.value = false
     }
-
   }
 
   const handleBeforeClose = async() => {
@@ -127,19 +124,11 @@ import { Message } from 'bkui-vue'
         </div>
       </div>
       <div class="selected-panel">
-        <h5 class="title-text">已选 <span class="num">0</span> 个配置项</h5>
+        <h5 class="title-text">已选 <span class="num">{{ selectedConfigs.length }}</span> 个配置项</h5>
         <div class="selected-list">
           <div v-for="config in selectedConfigs" class="config-item" :key="config.id">
             <div class="name" :title="config.name">{{ config.name }}</div>
             <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(config.id)" />
-          </div>
-          <div class="config-item">
-            <div class="name">nginxtestnginxtestnginxtestnginxtestnginxtestnginxtest.bin</div>
-            <i class="bk-bscp-icon icon-reduce delete-icon"></i>
-          </div>
-          <div class="config-item">
-            <div class="name">config.bin</div>
-            <i class="bk-bscp-icon icon-reduce delete-icon"></i>
           </div>
           <p v-if="selectedConfigs.length === 0" class="empty-tips">请先从左侧选择配置项</p>
         </div>

@@ -1,9 +1,12 @@
 <script lang="ts" setup>
   import { ref } from 'vue';
   import { Plus } from 'bkui-vue/lib/icon';
+  import { useTemplateStore } from '../../../../../../../store/template'
   import AddFromExistingConfigs from './add-from-existing-configs/index.vue';
   import CreateNewConfig from './create-new-config/index.vue'
   import ImportConfigs from './import-configs.vue'
+
+  const templateStore = useTemplateStore()
 
   const props = defineProps<{
     showAddExistingConfigOption?: boolean;
@@ -21,6 +24,14 @@
   const handleOpenSlider = (slider: string) => {
     silders.value[slider] = true
     buttonRef.value.hide()
+  }
+
+  const handleAdded = () => {
+    // 更新左侧套餐菜单栏及套餐下配置项数量
+    templateStore.$patch(state => {
+      state.needRefreshMenuFlag = true
+    })
+    emits('added')
   }
 
 </script>
@@ -44,8 +55,8 @@
       </div>
     </template>
   </bk-popover>
-  <AddFromExistingConfigs v-model:show="silders.isAddOpen" @added="emits('added')" />
-  <CreateNewConfig v-model:show="silders.isCreateOpen" @added="emits('added')" />
+  <AddFromExistingConfigs v-model:show="silders.isAddOpen" @added="handleAdded" />
+  <CreateNewConfig v-model:show="silders.isCreateOpen" @added="handleAdded" />
   <ImportConfigs v-model:show="silders.isImportOpen" />
 </template>
 <style lang="scss" scoped>

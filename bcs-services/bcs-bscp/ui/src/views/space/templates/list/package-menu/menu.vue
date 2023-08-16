@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue';
+  import { computed, onMounted, ref, watch } from 'vue';
   import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { Plus, Search } from 'bkui-vue/lib/icon'
@@ -16,7 +16,13 @@
   const router = useRouter()
   const { spaceId } = storeToRefs(useGlobalStore())
   const templateStore = useTemplateStore()
-  const { currentTemplateSpace, currentPkg, CountOfAllTemplatesInSpace, countOfTemplatesForNoSpecifiedPackage } = storeToRefs(templateStore)
+  const {
+    currentTemplateSpace,
+    currentPkg,
+    CountOfAllTemplatesInSpace,
+    countOfTemplatesForNoSpecifiedPackage,
+    needRefreshMenuFlag
+  } = storeToRefs(templateStore)
 
   const loading = ref(false)
   const packages = ref<ITemplatePackageItem[]>([]) // 全部套餐列表
@@ -44,8 +50,31 @@
     return { id: 'no_specified', name: '未指定套餐', count: countOfTemplatesForNoSpecifiedPackage.value }
   })
 
-  watch([() => spaceId.value, () => currentTemplateSpace.value], async() => {
+  watch(() => currentTemplateSpace.value, async(val, oldVal) => {
     searchStr.value = ''
+    getMenuInitData()
+  })
+
+  watch(() => needRefreshMenuFlag.value, async(val) => {
+    if (val) {
+      await Promise.all([
+        getCountOfAllTemplatesInSpace(),
+        getCountOfTemplatesForNoSpecifiedPackage(),
+        getList()
+      ])
+      templateStore.$patch(state => {
+        state.needRefreshMenuFlag = false
+      })
+    }
+  })
+
+  onMounted(() => {
+    if (currentTemplateSpace.value) {
+      getMenuInitData()
+    }
+  })
+
+  const getMenuInitData = async() => {
     getCountOfAllTemplatesInSpace()
     getCountOfTemplatesForNoSpecifiedPackage()
     await getList()
@@ -58,8 +87,9 @@
     } else {
       setCurrentPackage(currentPkg.value)
     }
-  })
+  }
 
+  // 获取全部配置项数量
   const getCountOfAllTemplatesInSpace = async () => {
     const params = {
       start: 0,
@@ -71,6 +101,7 @@
     })
   }
 
+  // 获取未指定套餐配置项数量
   const getCountOfTemplatesForNoSpecifiedPackage = async () => {
     const params = {
       start: 0,
@@ -94,7 +125,7 @@
     packages.value = res.details
     menuList.value = res.details.map((item: ITemplatePackageItem) => {
       const { id, spec } = item
-      return { id, name: spec.name, count: item.spec.bound_apps.length }
+      return { id, name: spec.name, count: item.spec.template_ids.length }
     })
     templateStore.$patch((state) => {
       state.packageList = res.details
@@ -113,7 +144,7 @@
     }
     return result.map(item => {
       const { id, spec } = item
-      return { id, name: spec.name, count: item.spec.bound_apps.length }
+      return { id, name: spec.name, count: item.spec.template_ids.length }
     })
   }
 
