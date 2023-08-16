@@ -118,7 +118,7 @@ func main() {
 	if err = mongoDB.Ping(); err != nil {
 		blog.Fatalf("ping mongo db failed, err %s", err.Error())
 	}
-	model := store.New(mongoDB)
+	model := store.New(mongoDB, nil)
 	blog.Info("init mongo db successfully")
 
 	// init mysql
