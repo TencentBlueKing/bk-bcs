@@ -36,10 +36,13 @@ k8s::safe_add_helmrepo() {
   repo_name=$1
   repo_url=$2
   if helm repo list | grep -q "$repo_name"; then
-    echo "remove old helm repo: $repo_name"
+    utils::log "INFO" "remove old helm repo: $repo_name"
     helm repo remove "$repo_name"
   fi
-  helm repo add "$repo_name" "$repo_url"
+  if ! helm repo add "$repo_name" "$repo_url";then
+	utils::log "ERROR" "can't add helm repo $repo_name $repo_url"
+	return 1
+  fi
   helm repo list
   if ! helm repo update; then
     utils::log "ERROR" "can't update helm repo"

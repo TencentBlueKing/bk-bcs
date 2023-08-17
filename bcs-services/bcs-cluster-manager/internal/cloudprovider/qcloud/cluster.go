@@ -15,6 +15,7 @@ package qcloud
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"sync"
 
@@ -543,6 +544,48 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 	}
 
 	return cli.DescribeOsImages(provider, opt)
+}
+
+// CheckClusterEndpointStatus check cluster endpoint status
+func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
+	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return false, fmt.Errorf("qcloud CheckClusterEndpointStatus lost authoration")
+	}
+
+	client, err := api.NewTkeClient(&opt.CommonOption)
+	if err != nil {
+		return false, err
+	}
+
+	status, err := client.GetClusterEndpointStatus(clusterID, isExtranet)
+	if err != nil {
+		return false, err
+	}
+
+	blog.Infof("cluster endpoint status: %s", status)
+
+	if !status.Created() {
+		return false, fmt.Errorf("cluster endpoint status is not created")
+	}
+
+	kubeConfig, err := client.GetTKEClusterKubeConfig(clusterID, isExtranet)
+	if err != nil {
+		return false, err
+	}
+
+	data, err := base64.StdEncoding.DecodeString(kubeConfig)
+	if err != nil {
+		return false, fmt.Errorf("decode kube config failed: %v", err)
+	}
+
+	_, err = cloudprovider.GetCRDByKubeConfig(string(data))
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func getClusterCidrAvailableIPNum(cls *proto.Cluster) (uint32, error) {

@@ -465,6 +465,11 @@ type UpdateScalingOption struct {
 	CommonOption
 }
 
+// CheckEndpointStatusOption check cluster endpoint status option
+type CheckEndpointStatusOption struct {
+	CommonOption
+}
+
 // StepInfo step parameter
 type StepInfo struct {
 	StepMethod string

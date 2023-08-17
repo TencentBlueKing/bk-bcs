@@ -13,18 +13,43 @@
 
 package i18n
 
-import "context"
+import (
+	"context"
+	"strings"
+)
 
 const (
 	ctxLanguage = "I18nLanguage"
+	// DefaultLanguage  defines the default language if user does not specify in options.
+	DefaultLanguage = zh
+	// zh 中文
+	zh = "zh"
+	// en 英文
+	en = "en"
 )
+
+// 语言版本简写映射表
+var langMap = map[string]string{
+	"zh":      zh,
+	"zh-cn":   zh,
+	"zh-hans": zh,
+	"zh-hant": zh,
+	"en":      en,
+	"en-us":   en,
+	"en-gb":   en,
+	// "ru":      RU,
+	// "ru-RU":   RU,
+	// "ja":      JA,
+	// "ja-JP":   JA,
+}
 
 // WithLanguage append language setting to the context and returns a new context.
 func WithLanguage(ctx context.Context, language string) context.Context {
 	if ctx == nil {
 		ctx = context.TODO()
 	}
-	return context.WithValue(ctx, ctxLanguage, language)
+
+	return context.WithValue(ctx, ctxLanguage, toLanguage(language))
 }
 
 // LanguageFromCtx retrieves and returns language name from context.
@@ -38,4 +63,11 @@ func LanguageFromCtx(ctx context.Context) string {
 		return v.(string)
 	}
 	return ""
+}
+
+func toLanguage(language string) string {
+	if lang, ok := langMap[strings.ToLower(language)]; ok {
+		return lang
+	}
+	return DefaultLanguage
 }

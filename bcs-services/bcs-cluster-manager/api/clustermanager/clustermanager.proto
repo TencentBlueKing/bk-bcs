@@ -67,6 +67,15 @@ service ClusterManager {
       summary : "kubeConfig可用性检测"
     };
   }
+  rpc CheckCloudKubeConfigConnect(KubeConfigConnectReq) returns (KubeConfigConnectResp) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/clusters/{clusterID}/connect"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "kubeConfig访问集群内/外网状态"
+      summary : "kubeConfig内/外网访问状态"
+    };
+  }
   rpc ImportCluster(ImportClusterReq) returns (ImportClusterResp) {
     option (google.api.http) = {
       post : "/clustermanager/v1/cluster/import"
@@ -4737,7 +4746,62 @@ message KubeConfigReq {
   },(validate.rules).string = {min_len :1}];
 }
 
+message KubeConfigConnectReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "KubeConfigConnectReq"
+      description : "检测用户集群的kubeConfig访问集群内/外网是否正常"
+      required : [
+        "cloudID",
+        "clusterID"
+      ]
+    }
+  };
+  string clusterID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "云集群ID(例如: 腾讯云: cls-xxx)"
+  }];
+  bool isExtranet = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isExtranet",
+    description: "默认false 获取内网，是否获取外网访问的kubeconfig"
+  }];
+  string cloudID = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "cloudType",
+      description : "云模版ID, 集群所属云进行流程管理"
+    },(validate.rules).string = {min_len : 1, max_len : 1024}
+  ];
+  string accountID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "accountID",
+    description: "导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息"
+  },(validate.rules).string = {max_len : 1024}];
+  string region = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "region",
+      description : "集群所在地域"
+    },(validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
+}
+
 message KubeConfigResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "KubeConfigResp"
+      description : "检测kubeConfig可用性结果返回"
+      required : [ "code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message", description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", description : "返回结果"
+  }];
+}
+
+message KubeConfigConnectResp {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "KubeConfigResp"

@@ -61,13 +61,14 @@ install_localpv() {
   if [[ -n ${BCS_OFFLINE:-} ]]; then
     true
   else
-    if ! k8s::safe_add_helmrepo "mirrors" "https://hub.bktencent.com/chartrepo/mirrors"; then
+    [[ -n ${BKREPO_URL:-} ]] || utils::log "FAIL" "missing bkrepo url ${BKREPO_URL}"
+    if ! k8s::safe_add_helmrepo blueking "${BKREPO_URL}"; then
       utils::log "WARNING" "something wrong with helm, skip install localpv"
       return 1
     fi
 
     utils::log "INFO" "installing localpv"
-    cat <<EOF | helm upgrade --install provisioner mirrors/provisioner -n $namespace --version ${VERSION} --debug -f - || utils::log "FATAL" "helm upgrade localpv failed"
+    cat <<EOF | helm upgrade --install provisioner blueking/provisioner -n $namespace --version ${VERSION} --debug -f - || utils::log "FATAL" "helm upgrade localpv failed"
 daemonset:
   image: ${BK_PUBLIC_REPO}/k8s.gcr.io/sig-storage/local-volume-provisioner:${VERSION}
 classes:
@@ -87,7 +88,7 @@ EOF
 
 main() {
   local source_files
-  source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/functions/k8s.sh")
+  source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/functions/k8s.sh" "${ROOT_DIR}/env/bcs.env")
   for file in "${source_files[@]}"; do
     safe_source "$file"
   done
