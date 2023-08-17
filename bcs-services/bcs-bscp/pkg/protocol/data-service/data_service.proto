@@ -98,7 +98,7 @@ service Data {
     rpc ListTemplates(ListTemplatesReq) returns (ListTemplatesResp) {}
     rpc UpdateTemplate(UpdateTemplateReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplate(DeleteTemplateReq) returns (pbbase.EmptyResp) {}
-    rpc AddTemplateToTemplateSets(AddTemplateToTemplateSetsReq) returns (pbbase.EmptyResp) {}
+    rpc AddTemplatesToTemplateSets(AddTemplatesToTemplateSetsReq) returns (pbbase.EmptyResp) {}
     rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {}
     rpc ListTemplatesNotBound(ListTemplatesNotBoundReq) returns (ListTemplatesNotBoundResp) {}
     rpc ListTemplatesOfTemplateSet(ListTemplatesOfTemplateSetReq) returns (ListTemplatesOfTemplateSetResp) {}
@@ -626,10 +626,10 @@ message DeleteTemplateReq {
     bool                          force      = 3;
 }
 
-message AddTemplateToTemplateSetsReq {
+message AddTemplatesToTemplateSetsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
-    uint32          template_id       = 3;
+    repeated uint32 template_ids      = 3;
     repeated uint32 template_set_ids  = 4;
 }
 

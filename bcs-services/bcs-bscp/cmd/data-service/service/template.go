@@ -83,7 +83,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 
 	// 3. add current template to template sets if necessary
 	if len(req.TemplateSetIds) > 0 {
-		if err = s.dao.TemplateSet().AddTemplateToTemplateSets(kt, id, req.TemplateSetIds); err != nil {
+		if err = s.dao.TemplateSet().AddTemplateToTemplateSetsWithTx(kt, tx, id, req.TemplateSetIds); err != nil {
 			logs.Errorf("add current template to template sets failed, err: %v, rid: %s", err, kt.Rid)
 			tx.Rollback()
 			return nil, err
@@ -219,18 +219,19 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 	return new(pbbase.EmptyResp), nil
 }
 
-// AddTemplateToTemplateSets add a template to template sets.
-func (s *Service) AddTemplateToTemplateSets(ctx context.Context, req *pbds.AddTemplateToTemplateSetsReq) (*pbbase.EmptyResp, error) {
+// AddTemplatesToTemplateSets add templates to template sets.
+func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbds.AddTemplatesToTemplateSetsReq) (
+	*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
+	if err := s.dao.Validator().ValidateTemplatesExist(kt, req.TemplateIds); err != nil {
 		return nil, err
 	}
 	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.TemplateSetIds); err != nil {
 		return nil, err
 	}
 
-	if err := s.dao.TemplateSet().AddTemplateToTemplateSets(kt, req.TemplateId, req.TemplateSetIds); err != nil {
+	if err := s.dao.TemplateSet().AddTemplatesToTemplateSets(kt, req.TemplateIds, req.TemplateSetIds); err != nil {
 		logs.Errorf(" add template to template sets failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
@@ -239,9 +240,8 @@ func (s *Service) AddTemplateToTemplateSets(ctx context.Context, req *pbds.AddTe
 }
 
 // ListTemplatesByIDs list templates by ids.
-func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbds.ListTemplatesByIDsReq) (*pbds.
-	ListTemplatesByIDsResp,
-	error) {
+func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbds.ListTemplatesByIDsReq) (
+	*pbds.ListTemplatesByIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	details, err := s.dao.Template().ListByIDs(kt, req.Ids)

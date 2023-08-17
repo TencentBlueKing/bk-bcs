@@ -259,9 +259,9 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates"
         };
     }
-    rpc AddTemplateToTemplateSets(AddTemplateToTemplateSetsReq) returns (AddTemplateToTemplateSetsResp) {
+    rpc AddTemplatesToTemplateSets(AddTemplatesToTemplateSetsReq) returns (AddTemplatesToTemplateSetsResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/add_to_template_sets"
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/add_to_template_sets"
             body : "*"
         };
     }
@@ -1070,14 +1070,14 @@ message ListTemplatesResp {
     repeated pbtemplate.Template details = 2;
 }
 
-message AddTemplateToTemplateSetsReq {
+message AddTemplatesToTemplateSetsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
-    uint32          template_id       = 3;
+    repeated uint32 template_ids      = 3;
     repeated uint32 template_set_ids  = 4;
 }
 
-message AddTemplateToTemplateSetsResp {}
+message AddTemplatesToTemplateSetsResp {}
 
 message ListTemplatesByIDsReq {
     uint32          biz_id = 1;

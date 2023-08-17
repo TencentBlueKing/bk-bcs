@@ -76,7 +76,7 @@ const (
 	Data_ListTemplates_FullMethodName                              = "/pbds.Data/ListTemplates"
 	Data_UpdateTemplate_FullMethodName                             = "/pbds.Data/UpdateTemplate"
 	Data_DeleteTemplate_FullMethodName                             = "/pbds.Data/DeleteTemplate"
-	Data_AddTemplateToTemplateSets_FullMethodName                  = "/pbds.Data/AddTemplateToTemplateSets"
+	Data_AddTemplatesToTemplateSets_FullMethodName                 = "/pbds.Data/AddTemplatesToTemplateSets"
 	Data_ListTemplatesByIDs_FullMethodName                         = "/pbds.Data/ListTemplatesByIDs"
 	Data_ListTemplatesNotBound_FullMethodName                      = "/pbds.Data/ListTemplatesNotBound"
 	Data_ListTemplatesOfTemplateSet_FullMethodName                 = "/pbds.Data/ListTemplatesOfTemplateSet"
@@ -191,7 +191,7 @@ type DataClient interface {
 	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
 	UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
-	AddTemplateToTemplateSets(ctx context.Context, in *AddTemplateToTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	AddTemplatesToTemplateSets(ctx context.Context, in *AddTemplatesToTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListTemplatesByIDs(ctx context.Context, in *ListTemplatesByIDsReq, opts ...grpc.CallOption) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(ctx context.Context, in *ListTemplatesNotBoundReq, opts ...grpc.CallOption) (*ListTemplatesNotBoundResp, error)
 	ListTemplatesOfTemplateSet(ctx context.Context, in *ListTemplatesOfTemplateSetReq, opts ...grpc.CallOption) (*ListTemplatesOfTemplateSetResp, error)
@@ -703,9 +703,9 @@ func (c *dataClient) DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, 
 	return out, nil
 }
 
-func (c *dataClient) AddTemplateToTemplateSets(ctx context.Context, in *AddTemplateToTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+func (c *dataClient) AddTemplatesToTemplateSets(ctx context.Context, in *AddTemplatesToTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
-	err := c.cc.Invoke(ctx, Data_AddTemplateToTemplateSets_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Data_AddTemplatesToTemplateSets_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1208,7 +1208,7 @@ type DataServer interface {
 	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
 	UpdateTemplate(context.Context, *UpdateTemplateReq) (*base.EmptyResp, error)
 	DeleteTemplate(context.Context, *DeleteTemplateReq) (*base.EmptyResp, error)
-	AddTemplateToTemplateSets(context.Context, *AddTemplateToTemplateSetsReq) (*base.EmptyResp, error)
+	AddTemplatesToTemplateSets(context.Context, *AddTemplatesToTemplateSetsReq) (*base.EmptyResp, error)
 	ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(context.Context, *ListTemplatesNotBoundReq) (*ListTemplatesNotBoundResp, error)
 	ListTemplatesOfTemplateSet(context.Context, *ListTemplatesOfTemplateSetReq) (*ListTemplatesOfTemplateSetResp, error)
@@ -1422,8 +1422,8 @@ func (UnimplementedDataServer) UpdateTemplate(context.Context, *UpdateTemplateRe
 func (UnimplementedDataServer) DeleteTemplate(context.Context, *DeleteTemplateReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplate not implemented")
 }
-func (UnimplementedDataServer) AddTemplateToTemplateSets(context.Context, *AddTemplateToTemplateSetsReq) (*base.EmptyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddTemplateToTemplateSets not implemented")
+func (UnimplementedDataServer) AddTemplatesToTemplateSets(context.Context, *AddTemplatesToTemplateSetsReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddTemplatesToTemplateSets not implemented")
 }
 func (UnimplementedDataServer) ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplatesByIDs not implemented")
@@ -2463,20 +2463,20 @@ func _Data_DeleteTemplate_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Data_AddTemplateToTemplateSets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddTemplateToTemplateSetsReq)
+func _Data_AddTemplatesToTemplateSets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddTemplatesToTemplateSetsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataServer).AddTemplateToTemplateSets(ctx, in)
+		return srv.(DataServer).AddTemplatesToTemplateSets(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Data_AddTemplateToTemplateSets_FullMethodName,
+		FullMethod: Data_AddTemplatesToTemplateSets_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).AddTemplateToTemplateSets(ctx, req.(*AddTemplateToTemplateSetsReq))
+		return srv.(DataServer).AddTemplatesToTemplateSets(ctx, req.(*AddTemplatesToTemplateSetsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3549,8 +3549,8 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_DeleteTemplate_Handler,
 		},
 		{
-			MethodName: "AddTemplateToTemplateSets",
-			Handler:    _Data_AddTemplateToTemplateSets_Handler,
+			MethodName: "AddTemplatesToTemplateSets",
+			Handler:    _Data_AddTemplatesToTemplateSets_Handler,
 		},
 		{
 			MethodName: "ListTemplatesByIDs",

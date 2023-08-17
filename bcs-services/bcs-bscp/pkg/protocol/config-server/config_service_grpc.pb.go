@@ -63,7 +63,7 @@ const (
 	Config_DeleteTemplate_FullMethodName                             = "/pbcs.Config/DeleteTemplate"
 	Config_UpdateTemplate_FullMethodName                             = "/pbcs.Config/UpdateTemplate"
 	Config_ListTemplates_FullMethodName                              = "/pbcs.Config/ListTemplates"
-	Config_AddTemplateToTemplateSets_FullMethodName                  = "/pbcs.Config/AddTemplateToTemplateSets"
+	Config_AddTemplatesToTemplateSets_FullMethodName                 = "/pbcs.Config/AddTemplatesToTemplateSets"
 	Config_ListTemplatesByIDs_FullMethodName                         = "/pbcs.Config/ListTemplatesByIDs"
 	Config_ListTemplatesNotBound_FullMethodName                      = "/pbcs.Config/ListTemplatesNotBound"
 	Config_ListTemplatesOfTemplateSet_FullMethodName                 = "/pbcs.Config/ListTemplatesOfTemplateSet"
@@ -160,7 +160,7 @@ type ConfigClient interface {
 	DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, opts ...grpc.CallOption) (*DeleteTemplateResp, error)
 	UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*UpdateTemplateResp, error)
 	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
-	AddTemplateToTemplateSets(ctx context.Context, in *AddTemplateToTemplateSetsReq, opts ...grpc.CallOption) (*AddTemplateToTemplateSetsResp, error)
+	AddTemplatesToTemplateSets(ctx context.Context, in *AddTemplatesToTemplateSetsReq, opts ...grpc.CallOption) (*AddTemplatesToTemplateSetsResp, error)
 	ListTemplatesByIDs(ctx context.Context, in *ListTemplatesByIDsReq, opts ...grpc.CallOption) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(ctx context.Context, in *ListTemplatesNotBoundReq, opts ...grpc.CallOption) (*ListTemplatesNotBoundResp, error)
 	ListTemplatesOfTemplateSet(ctx context.Context, in *ListTemplatesOfTemplateSetReq, opts ...grpc.CallOption) (*ListTemplatesOfTemplateSetResp, error)
@@ -585,9 +585,9 @@ func (c *configClient) ListTemplates(ctx context.Context, in *ListTemplatesReq, 
 	return out, nil
 }
 
-func (c *configClient) AddTemplateToTemplateSets(ctx context.Context, in *AddTemplateToTemplateSetsReq, opts ...grpc.CallOption) (*AddTemplateToTemplateSetsResp, error) {
-	out := new(AddTemplateToTemplateSetsResp)
-	err := c.cc.Invoke(ctx, Config_AddTemplateToTemplateSets_FullMethodName, in, out, opts...)
+func (c *configClient) AddTemplatesToTemplateSets(ctx context.Context, in *AddTemplatesToTemplateSetsReq, opts ...grpc.CallOption) (*AddTemplatesToTemplateSetsResp, error) {
+	out := new(AddTemplatesToTemplateSetsResp)
+	err := c.cc.Invoke(ctx, Config_AddTemplatesToTemplateSets_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1048,7 +1048,7 @@ type ConfigServer interface {
 	DeleteTemplate(context.Context, *DeleteTemplateReq) (*DeleteTemplateResp, error)
 	UpdateTemplate(context.Context, *UpdateTemplateReq) (*UpdateTemplateResp, error)
 	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
-	AddTemplateToTemplateSets(context.Context, *AddTemplateToTemplateSetsReq) (*AddTemplateToTemplateSetsResp, error)
+	AddTemplatesToTemplateSets(context.Context, *AddTemplatesToTemplateSetsReq) (*AddTemplatesToTemplateSetsResp, error)
 	ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(context.Context, *ListTemplatesNotBoundReq) (*ListTemplatesNotBoundResp, error)
 	ListTemplatesOfTemplateSet(context.Context, *ListTemplatesOfTemplateSetReq) (*ListTemplatesOfTemplateSetResp, error)
@@ -1223,8 +1223,8 @@ func (UnimplementedConfigServer) UpdateTemplate(context.Context, *UpdateTemplate
 func (UnimplementedConfigServer) ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplates not implemented")
 }
-func (UnimplementedConfigServer) AddTemplateToTemplateSets(context.Context, *AddTemplateToTemplateSetsReq) (*AddTemplateToTemplateSetsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddTemplateToTemplateSets not implemented")
+func (UnimplementedConfigServer) AddTemplatesToTemplateSets(context.Context, *AddTemplatesToTemplateSetsReq) (*AddTemplatesToTemplateSetsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddTemplatesToTemplateSets not implemented")
 }
 func (UnimplementedConfigServer) ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplatesByIDs not implemented")
@@ -2111,20 +2111,20 @@ func _Config_ListTemplates_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_AddTemplateToTemplateSets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddTemplateToTemplateSetsReq)
+func _Config_AddTemplatesToTemplateSets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddTemplatesToTemplateSetsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConfigServer).AddTemplateToTemplateSets(ctx, in)
+		return srv.(ConfigServer).AddTemplatesToTemplateSets(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Config_AddTemplateToTemplateSets_FullMethodName,
+		FullMethod: Config_AddTemplatesToTemplateSets_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).AddTemplateToTemplateSets(ctx, req.(*AddTemplateToTemplateSetsReq))
+		return srv.(ConfigServer).AddTemplatesToTemplateSets(ctx, req.(*AddTemplatesToTemplateSetsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3111,8 +3111,8 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_ListTemplates_Handler,
 		},
 		{
-			MethodName: "AddTemplateToTemplateSets",
-			Handler:    _Config_AddTemplateToTemplateSets_Handler,
+			MethodName: "AddTemplatesToTemplateSets",
+			Handler:    _Config_AddTemplatesToTemplateSets_Handler,
 		},
 		{
 			MethodName: "ListTemplatesByIDs",
