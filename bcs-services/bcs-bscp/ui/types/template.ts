@@ -76,4 +76,33 @@ export interface ITemplateConfigItem {
   }
 }
 
+export interface ITemplateVersionItem {
+  id: number;
+  spec: {
+    revision_name: string;
+    revision_memo: string;
+    name: string;
+    path: string;
+    file_type: string;
+    file_mode: string;
+    permission: {
+      user: string;
+      user_group: string;
+      privilege: string;
+    };
+    content_spec: {
+      signature: string;
+      byte_size: number;
+    }
+  };
+  attachment: {
+    biz_id: number;
+    template_space_id: number;
+    template_id: number;
+  };
+  revision: {
+    creator: string;
+    create_at: string;
+  }
+}
 

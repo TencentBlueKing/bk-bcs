@@ -4,6 +4,7 @@
   import { useGlobalStore } from '../../../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../../../store/template'
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../../types/config'
+
   const { currentTemplateSpace, currentPkg, packageList } = storeToRefs(useTemplateStore())
 
   const props = defineProps<{

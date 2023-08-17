@@ -1,27 +1,44 @@
 <script lang="ts" setup>
+  import { ref } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../store/template'
   import { ICommonQuery } from '../../../../../../../types/index';
+  import { ITemplateConfigItem } from '../../../../../../../types/template';
   import { getTemplatesByPackageId } from '../../../../../../api/template';
   import CommonConfigTable from './common-config-table.vue'
   import AddConfigs from '../operations/add-configs/add-button.vue'
-  import BatchAddTo from '../operations/batch-add-to/add-to-button.vue'
+  import BatchAddTo from '../operations/add-to-pkgs/add-to-button.vue'
+  import BatchMoveOutFromPkg from '../operations/move-out-from-pkg/batch-move-out-button.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const { currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
+
+  const configTable = ref()
+  const selectedConfigs = ref<ITemplateConfigItem[]>([])
 
   const getConfigList = (params: ICommonQuery) => {
     console.log('Package Config List Loading')
     return getTemplatesByPackageId(spaceId.value, currentTemplateSpace.value, <number>currentPkg.value, params)
   }
 
+  const handleAdded = () => {
+    configTable.value.refreshList()
+  }
+
 </script>
 <template>
-  <CommonConfigTable :current-pkg="currentPkg" :get-config-list="getConfigList">
+  <CommonConfigTable
+    ref="configTable"
+    v-model:selectedConfigs="selectedConfigs"
+    :current-template-space="currentTemplateSpace"
+    :key="currentPkg"
+    :current-pkg="currentPkg"
+    :get-config-list="getConfigList">
     <template #tableOperations>
-      <AddConfigs :show-add-existing-config-option="true"/>
-      <BatchAddTo />
+      <AddConfigs :show-add-existing-config-option="true" @added="handleAdded" />
+      <BatchAddTo :configs="selectedConfigs" />
+      <BatchMoveOutFromPkg :configs="selectedConfigs" />
     </template>
     <template #columns>
       <bk-table-column label="所在套餐"></bk-table-column>

@@ -16,6 +16,8 @@ export const useTemplateStore = defineStore('template', () => {
   const countOfTemplatesForNoSpecifiedPackage = ref(0)
   // 当前套餐
   const currentPkg = ref<string|number>('')
+  // 标识是否需要刷新左侧套餐菜单栏是否需要刷新
+  const needRefreshMenuFlag = ref(false)
 
   return {
     templateSpaceList,
@@ -23,6 +25,7 @@ export const useTemplateStore = defineStore('template', () => {
     packageList,
     currentPkg,
     CountOfAllTemplatesInSpace,
-    countOfTemplatesForNoSpecifiedPackage
+    countOfTemplatesForNoSpecifiedPackage,
+    needRefreshMenuFlag
   }
 })
