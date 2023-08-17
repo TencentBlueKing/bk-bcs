@@ -83,7 +83,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 
 	// 3. add current template to template sets if necessary
 	if len(req.TemplateSetIds) > 0 {
-		if err = s.dao.TemplateSet().AddTemplateToTemplateSets(kt, id, req.TemplateSetIds); err != nil {
+		if err = s.dao.TemplateSet().AddTemplateToTemplateSetsWithTx(kt, tx, id, req.TemplateSetIds); err != nil {
 			logs.Errorf("add current template to template sets failed, err: %v, rid: %s", err, kt.Rid)
 			tx.Rollback()
 			return nil, err
@@ -198,7 +198,7 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 
 	// 3. delete bound template set if exists
 	if hasTmplSet {
-		if err = s.dao.TemplateSet().DeleteTmplFromTmplSetsWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+		if err = s.dao.TemplateSet().DeleteTmplFromAllTmplSetsWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
 			logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
 			tx.Rollback()
 			return nil, err
@@ -219,18 +219,104 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 	return new(pbbase.EmptyResp), nil
 }
 
-// AddTemplateToTemplateSets add a template to template sets.
-func (s *Service) AddTemplateToTemplateSets(ctx context.Context, req *pbds.AddTemplateToTemplateSetsReq) (*pbbase.EmptyResp, error) {
+// BatchDeleteTemplate delete template in batch.
+func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbds.BatchDeleteTemplateReq) (*pbbase.EmptyResp,
+	error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
+	r := &pbds.ListTemplateBoundCountsReq{
+		BizId:           req.Attachment.BizId,
+		TemplateSpaceId: req.Attachment.TemplateSpaceId,
+		TemplateIds:     req.Ids,
+	}
+	boundCnt, err := s.ListTemplateBoundCounts(ctx, r)
+	if err != nil {
+		logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	hasTmplSets, hasUnnamedApps := make(map[uint32]bool), make(map[uint32]bool)
+	for _, detail := range boundCnt.Details {
+		if detail.BoundTemplateSetCount > 0 && detail.BoundUnnamedAppCount > 0 {
+			hasTmplSets[detail.TemplateId] = true
+			hasUnnamedApps[detail.TemplateId] = true
+			if !req.Force {
+				return nil, fmt.Errorf("template id %d is bound to template set and unnamed app, please unbind first",
+					detail.TemplateId)
+			}
+		} else if detail.BoundTemplateSetCount > 0 {
+			hasTmplSets[detail.TemplateId] = true
+			if !req.Force {
+				return nil, fmt.Errorf("template id %d is bound to template set, please unbind first",
+					detail.TemplateId)
+			}
+		} else if detail.BoundUnnamedAppCount > 0 {
+			hasUnnamedApps[detail.TemplateId] = true
+			if !req.Force {
+				return nil, fmt.Errorf("template id %d is bound to unnamed app, please unbind first", detail.TemplateId)
+			}
+		}
+	}
+
+	tx := s.dao.GenQuery().Begin()
+
+	// NOTE: if consider to optimize it with batch interface, consider how to add audit record as the same time
+	for _, templateID := range req.Ids {
+		// 1. delete template
+		template := &table.Template{
+			ID:         templateID,
+			Attachment: req.Attachment.TemplateAttachment(),
+		}
+		if err = s.dao.Template().DeleteWithTx(kt, tx, template); err != nil {
+			logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
+
+		// 2. delete template revisions of current template
+		if err = s.dao.TemplateRevision().DeleteForTmplWithTx(kt, tx, req.Attachment.BizId, templateID); err != nil {
+			logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
+
+		// 3. delete bound template set if exists
+		if hasTmplSets[templateID] {
+			if err = s.dao.TemplateSet().DeleteTmplFromAllTmplSetsWithTx(kt, tx, req.Attachment.BizId, templateID); err != nil {
+				logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
+				tx.Rollback()
+				return nil, err
+			}
+		}
+
+		// 4. delete bound unnamed app if exists
+		if hasUnnamedApps[templateID] {
+			if err = s.dao.TemplateBindingRelation().DeleteTmplWithTx(kt, tx, req.Attachment.BizId, templateID); err != nil {
+				logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
+				tx.Rollback()
+				return nil, err
+			}
+		}
+	}
+
+	tx.Commit()
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// AddTemplatesToTemplateSets add templates to template sets.
+func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbds.AddTemplatesToTemplateSetsReq) (
+	*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplatesExist(kt, req.TemplateIds); err != nil {
 		return nil, err
 	}
 	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.TemplateSetIds); err != nil {
 		return nil, err
 	}
 
-	if err := s.dao.TemplateSet().AddTemplateToTemplateSets(kt, req.TemplateId, req.TemplateSetIds); err != nil {
+	if err := s.dao.TemplateSet().AddTemplatesToTemplateSets(kt, req.TemplateIds, req.TemplateSetIds); err != nil {
 		logs.Errorf(" add template to template sets failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
@@ -238,10 +324,29 @@ func (s *Service) AddTemplateToTemplateSets(ctx context.Context, req *pbds.AddTe
 	return new(pbbase.EmptyResp), nil
 }
 
+// DeleteTemplatesFromTemplateSets delete templates from template sets.
+func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbds.DeleteTemplatesFromTemplateSetsReq) (
+	*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplatesExist(kt, req.TemplateIds); err != nil {
+		return nil, err
+	}
+	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.TemplateSetIds); err != nil {
+		return nil, err
+	}
+
+	if err := s.dao.TemplateSet().DeleteTemplatesFromTemplateSets(kt, req.TemplateIds, req.TemplateSetIds); err != nil {
+		logs.Errorf(" delete template from template sets failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
 // ListTemplatesByIDs list templates by ids.
-func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbds.ListTemplatesByIDsReq) (*pbds.
-	ListTemplatesByIDsResp,
-	error) {
+func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbds.ListTemplatesByIDsReq) (
+	*pbds.ListTemplatesByIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	details, err := s.dao.Template().ListByIDs(kt, req.Ids)
@@ -291,10 +396,13 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 		details = newDetails
 	}
 
+	// totalCnt is all data count
+	totalCnt := uint32(len(details))
+
 	if req.All {
 		// return all data
 		return &pbds.ListTemplatesNotBoundResp{
-			Count:   uint32(len(details)),
+			Count:   totalCnt,
 			Details: details,
 		}, nil
 	}
@@ -309,7 +417,7 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 	}
 
 	return &pbds.ListTemplatesNotBoundResp{
-		Count:   uint32(len(details)),
+		Count:   totalCnt,
 		Details: details,
 	}, nil
 }
@@ -350,10 +458,13 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbds.List
 		details = newDetails
 	}
 
+	// totalCnt is all data count
+	totalCnt := uint32(len(details))
+
 	if req.All {
 		// return all data
 		return &pbds.ListTemplatesOfTemplateSetResp{
-			Count:   uint32(len(details)),
+			Count:   totalCnt,
 			Details: details,
 		}, nil
 	}
@@ -368,7 +479,7 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbds.List
 	}
 
 	return &pbds.ListTemplatesOfTemplateSetResp{
-		Count:   uint32(len(details)),
+		Count:   totalCnt,
 		Details: details,
 	}, nil
 }

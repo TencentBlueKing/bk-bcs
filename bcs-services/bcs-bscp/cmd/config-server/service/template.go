@@ -42,7 +42,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 
 	idsLen := len(req.TemplateSetIds)
 	if idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template revision ids is %d, it must be within the range of [1,%d]",
+		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [0,%d]",
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
@@ -113,6 +113,45 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateRe
 	return resp, nil
 }
 
+// BatchDeleteTemplate delete templates in batch
+func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDeleteTemplateReq) (*pbcs.
+	BatchDeleteTemplateResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.BatchDeleteTemplateResp)
+
+	templateIDs, err := tools.GetUint32List(req.TemplateIds)
+	if err != nil {
+		return nil, fmt.Errorf("invalid template ids, %s", err)
+	}
+	idsLen := len(templateIDs)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Delete,
+		ResourceID: templateIDs[0]}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.BatchDeleteTemplateReq{
+		Ids: templateIDs,
+		Attachment: &pbtemplate.TemplateAttachment{
+			BizId:           grpcKit.BizID,
+			TemplateSpaceId: req.TemplateSpaceId,
+		},
+		Force: req.Force,
+	}
+	if _, err := s.client.DS.BatchDeleteTemplate(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("batch delete template failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 // UpdateTemplate update a template
 func (s *Service) UpdateTemplate(ctx context.Context, req *pbcs.UpdateTemplateReq) (*pbcs.UpdateTemplateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
@@ -174,32 +213,77 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 	return resp, nil
 }
 
-// AddTemplateToTemplateSets add template to template sets
-func (s *Service) AddTemplateToTemplateSets(ctx context.Context, req *pbcs.AddTemplateToTemplateSetsReq) (
-	*pbcs.AddTemplateToTemplateSetsResp, error) {
+// AddTemplatesToTemplateSets add templates to template sets
+func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbcs.AddTemplatesToTemplateSetsReq) (
+	*pbcs.AddTemplatesToTemplateSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.AddTemplateToTemplateSetsResp)
+	resp := new(pbcs.AddTemplatesToTemplateSetsResp)
+
+	idsLen := len(req.TemplateIds)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	idsLen2 := len(req.TemplateSetIds)
+	if idsLen2 == 0 || idsLen2 > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [1,%d]",
+			idsLen2, constant.ArrayInputLenLimit)
+	}
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Update,
-		ResourceID: req.TemplateId}, BizID: grpcKit.BizID}
+		ResourceID: req.TemplateIds[0]}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
-	idsLen := len(req.TemplateSetIds)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template revision ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
-
-	r := &pbds.AddTemplateToTemplateSetsReq{
+	r := &pbds.AddTemplatesToTemplateSetsReq{
 		BizId:           req.BizId,
 		TemplateSpaceId: req.TemplateSpaceId,
-		TemplateId:      req.TemplateId,
+		TemplateIds:     req.TemplateIds,
 		TemplateSetIds:  req.TemplateSetIds,
 	}
 
-	if _, err := s.client.DS.AddTemplateToTemplateSets(grpcKit.RpcCtx(), r); err != nil {
+	if _, err := s.client.DS.AddTemplatesToTemplateSets(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("update template failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// DeleteTemplatesFromTemplateSets delete templates from template sets
+func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbcs.DeleteTemplatesFromTemplateSetsReq) (
+	*pbcs.DeleteTemplatesFromTemplateSetsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.DeleteTemplatesFromTemplateSetsResp)
+
+	idsLen := len(req.TemplateIds)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	idsLen2 := len(req.TemplateSetIds)
+	if idsLen2 == 0 || idsLen2 > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [1,%d]",
+			idsLen2, constant.ArrayInputLenLimit)
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Update,
+		ResourceID: req.TemplateIds[0]}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.DeleteTemplatesFromTemplateSetsReq{
+		BizId:           req.BizId,
+		TemplateSpaceId: req.TemplateSpaceId,
+		TemplateIds:     req.TemplateIds,
+		TemplateSetIds:  req.TemplateSetIds,
+	}
+
+	if _, err := s.client.DS.DeleteTemplatesFromTemplateSets(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("update template failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}

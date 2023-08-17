@@ -20,7 +20,6 @@ import (
 	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
-	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	dtypes "bscp.io/pkg/dal/types"
@@ -47,10 +46,14 @@ type TemplateSet interface {
 	GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID uint32, name string) (*table.TemplateSet, error)
 	// ListByIDs list template sets by template set ids.
 	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSet, error)
-	// AddTemplateToTemplateSets add a template to template sets.
-	AddTemplateToTemplateSets(kit *kit.Kit, tmplID uint32, tmplSetIDs []uint32) error
-	// DeleteTmplFromTmplSetsWithTx delete a template from template sets with transaction.
-	DeleteTmplFromTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error
+	// AddTemplatesToTemplateSets add templates to template sets.
+	AddTemplatesToTemplateSets(kit *kit.Kit, tmplIDs []uint32, tmplSetIDs []uint32) error
+	// DeleteTemplatesFromTemplateSets delete templates from template sets.
+	DeleteTemplatesFromTemplateSets(kit *kit.Kit, tmplIDs []uint32, tmplSetIDs []uint32) error
+	// AddTemplateToTemplateSetsWithTx add a template to template sets with transaction.
+	AddTemplateToTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplID uint32, tmplSetIDs []uint32) error
+	// DeleteTmplFromAllTmplSetsWithTx delete a template from all template sets with transaction.
+	DeleteTmplFromAllTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error
 	// ListAppTmplSets list all the template sets of the app.
 	ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
 	// ListAllTemplateIDs list all template ids of all template sets in one template space.
@@ -172,7 +175,7 @@ func (dao *templateSetDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.
 	}
 
 	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-		Select(m.Memo, m.Reviser, m.Public, m.BoundApps).
+		Select(m.Memo, m.Reviser, m.TemplateIDs, m.Public, m.BoundApps).
 		Updates(g); err != nil {
 		return err
 	}
@@ -216,10 +219,6 @@ func (dao *templateSetDao) Delete(kit *kit.Kit, g *table.TemplateSet) error {
 	if err != nil {
 		return err
 	}
-	// 不允许单独删除默认套餐，只能在删除模版空间时，对默认套餐进行级联删除
-	if oldOne.Spec.Name == constant.DefaultTmplSetName {
-		return errors.New("default template set can not be deleted")
-	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
 
 	// 多个使用事务处理
@@ -253,10 +252,6 @@ func (dao *templateSetDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.
 	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
 		return err
-	}
-	// 不允许单独删除默认套餐，只能在删除模版空间时，对默认套餐进行级联删除
-	if oldOne.Spec.Name == constant.DefaultTmplSetName {
-		return errors.New("default template set can not be deleted")
 	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
 	if err := ad.Do(tx.Query); err != nil {
@@ -296,10 +291,58 @@ func (dao *templateSetDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.Templ
 	return result, nil
 }
 
-// AddTemplateToTemplateSets add a template to template sets.
-func (dao *templateSetDao) AddTemplateToTemplateSets(kit *kit.Kit, tmplID uint32, tmplSetIDs []uint32) error {
-	m := dao.genQ.TemplateSet
-	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+// AddTemplatesToTemplateSets add templates to template sets.
+func (dao *templateSetDao) AddTemplatesToTemplateSets(kit *kit.Kit, tmplIDs, tmplSetIDs []uint32) error {
+	// use transaction for many operations
+	updateTx := func(tx *gen.Query) error {
+		m := tx.TemplateSet
+		q := tx.TemplateSet.WithContext(kit.Ctx)
+		for _, tmplID := range tmplIDs {
+			if _, err := q.Where(m.ID.In(tmplSetIDs...)).
+				Not(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+				Update(m.TemplateIDs, gorm.Expr("JSON_ARRAY_APPEND(template_ids, '$', ?)", tmplID)); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if err := dao.genQ.Transaction(updateTx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteTemplatesFromTemplateSets delete templates from template sets.
+func (dao *templateSetDao) DeleteTemplatesFromTemplateSets(kit *kit.Kit, tmplIDs, tmplSetIDs []uint32) error {
+	// use transaction for many operations
+	updateTx := func(tx *gen.Query) error {
+		m := tx.TemplateSet
+		q := tx.TemplateSet.WithContext(kit.Ctx)
+		for _, tmplID := range tmplIDs {
+			// subQuery get the array of template ids after delete the target template id, set it to '[]' if no records found
+			subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
+				"JSON_TABLE (template_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
+			if _, err := q.Where(m.ID.In(tmplSetIDs...)).
+				Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+				Update(m.TemplateIDs, gorm.Expr(subQuery, tmplID)); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if err := dao.genQ.Transaction(updateTx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// AddTemplateToTemplateSetsWithTx add a template to template sets with transaction.
+func (dao *templateSetDao) AddTemplateToTemplateSetsWithTx(
+	kit *kit.Kit, tx *gen.QueryTx, tmplID uint32, tmplSetIDs []uint32) error {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
 	if _, err := q.Where(m.ID.In(tmplSetIDs...)).
 		Not(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
 		Update(m.TemplateIDs, gorm.Expr("JSON_ARRAY_APPEND(template_ids, '$', ?)", tmplID)); err != nil {
@@ -308,8 +351,8 @@ func (dao *templateSetDao) AddTemplateToTemplateSets(kit *kit.Kit, tmplID uint32
 	return nil
 }
 
-// DeleteTmplFromTmplSetsWithTx delete a template from template sets with transaction.
-func (dao *templateSetDao) DeleteTmplFromTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error {
+// DeleteTmplFromAllTmplSetsWithTx delete a template from all template sets with transaction.
+func (dao *templateSetDao) DeleteTmplFromAllTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error {
 	m := tx.TemplateSet
 	q := tx.TemplateSet.WithContext(kit.Ctx)
 	// subQuery get the array of template ids after delete the target template id, set it to '[]' if no records found

@@ -129,6 +129,9 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 	if err != nil {
 		return err
 	}
+	if oldOne.Spec.Name == constant.DefaultTmplSpaceName {
+		return fmt.Errorf("can't update default template space")
+	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
 
 	// 多个使用事务处理
@@ -187,6 +190,9 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 	if err != nil {
 		return err
 	}
+	if oldOne.Spec.Name == constant.DefaultTmplSpaceName {
+		return fmt.Errorf("can't delete default template space")
+	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
 
 	// 多个使用事务处理
@@ -224,7 +230,7 @@ func (dao *templateSpaceDao) GetAllBizs(kit *kit.Kit) ([]uint32, error) {
 // CreateDefault create default template space instance together with its default template set instance
 func (dao *templateSpaceDao) CreateDefault(kit *kit.Kit, bizID uint32) (uint32, error) {
 	// if the default template space already exists, return directly
-	if tmplSpace, err := dao.GetByUniqueKey(kit, bizID, "默认空间"); err == nil {
+	if tmplSpace, err := dao.GetByUniqueKey(kit, bizID, constant.DefaultTmplSpaceName); err == nil {
 		return tmplSpace.ID, nil
 	}
 

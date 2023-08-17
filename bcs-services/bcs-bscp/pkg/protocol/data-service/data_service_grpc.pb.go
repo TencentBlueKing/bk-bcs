@@ -76,7 +76,9 @@ const (
 	Data_ListTemplates_FullMethodName                              = "/pbds.Data/ListTemplates"
 	Data_UpdateTemplate_FullMethodName                             = "/pbds.Data/UpdateTemplate"
 	Data_DeleteTemplate_FullMethodName                             = "/pbds.Data/DeleteTemplate"
-	Data_AddTemplateToTemplateSets_FullMethodName                  = "/pbds.Data/AddTemplateToTemplateSets"
+	Data_BatchDeleteTemplate_FullMethodName                        = "/pbds.Data/BatchDeleteTemplate"
+	Data_AddTemplatesToTemplateSets_FullMethodName                 = "/pbds.Data/AddTemplatesToTemplateSets"
+	Data_DeleteTemplatesFromTemplateSets_FullMethodName            = "/pbds.Data/DeleteTemplatesFromTemplateSets"
 	Data_ListTemplatesByIDs_FullMethodName                         = "/pbds.Data/ListTemplatesByIDs"
 	Data_ListTemplatesNotBound_FullMethodName                      = "/pbds.Data/ListTemplatesNotBound"
 	Data_ListTemplatesOfTemplateSet_FullMethodName                 = "/pbds.Data/ListTemplatesOfTemplateSet"
@@ -103,6 +105,7 @@ const (
 	Data_ListTemplateRevisionBoundUnnamedAppDetails_FullMethodName = "/pbds.Data/ListTemplateRevisionBoundUnnamedAppDetails"
 	Data_ListTemplateRevisionBoundNamedAppDetails_FullMethodName   = "/pbds.Data/ListTemplateRevisionBoundNamedAppDetails"
 	Data_ListTemplateSetBoundUnnamedAppDetails_FullMethodName      = "/pbds.Data/ListTemplateSetBoundUnnamedAppDetails"
+	Data_ListMultiTemplateSetBoundUnnamedAppDetails_FullMethodName = "/pbds.Data/ListMultiTemplateSetBoundUnnamedAppDetails"
 	Data_ListTemplateSetBoundNamedAppDetails_FullMethodName        = "/pbds.Data/ListTemplateSetBoundNamedAppDetails"
 	Data_CreateTemplateVariable_FullMethodName                     = "/pbds.Data/CreateTemplateVariable"
 	Data_ListTemplateVariables_FullMethodName                      = "/pbds.Data/ListTemplateVariables"
@@ -191,7 +194,9 @@ type DataClient interface {
 	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
 	UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
-	AddTemplateToTemplateSets(ctx context.Context, in *AddTemplateToTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	BatchDeleteTemplate(ctx context.Context, in *BatchDeleteTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	AddTemplatesToTemplateSets(ctx context.Context, in *AddTemplatesToTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	DeleteTemplatesFromTemplateSets(ctx context.Context, in *DeleteTemplatesFromTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListTemplatesByIDs(ctx context.Context, in *ListTemplatesByIDsReq, opts ...grpc.CallOption) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(ctx context.Context, in *ListTemplatesNotBoundReq, opts ...grpc.CallOption) (*ListTemplatesNotBoundResp, error)
 	ListTemplatesOfTemplateSet(ctx context.Context, in *ListTemplatesOfTemplateSetReq, opts ...grpc.CallOption) (*ListTemplatesOfTemplateSetResp, error)
@@ -222,6 +227,7 @@ type DataClient interface {
 	ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateRevisionBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundUnnamedAppDetailsResp, error)
 	ListTemplateRevisionBoundNamedAppDetails(ctx context.Context, in *ListTemplateRevisionBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundNamedAppDetailsResp, error)
 	ListTemplateSetBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateSetBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundUnnamedAppDetailsResp, error)
+	ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context, in *ListMultiTemplateSetBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListMultiTemplateSetBoundUnnamedAppDetailsResp, error)
 	ListTemplateSetBoundNamedAppDetails(ctx context.Context, in *ListTemplateSetBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundNamedAppDetailsResp, error)
 	// template variable related interface.
 	CreateTemplateVariable(ctx context.Context, in *CreateTemplateVariableReq, opts ...grpc.CallOption) (*CreateResp, error)
@@ -703,9 +709,27 @@ func (c *dataClient) DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, 
 	return out, nil
 }
 
-func (c *dataClient) AddTemplateToTemplateSets(ctx context.Context, in *AddTemplateToTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+func (c *dataClient) BatchDeleteTemplate(ctx context.Context, in *BatchDeleteTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
-	err := c.cc.Invoke(ctx, Data_AddTemplateToTemplateSets_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Data_BatchDeleteTemplate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) AddTemplatesToTemplateSets(ctx context.Context, in *AddTemplatesToTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_AddTemplatesToTemplateSets_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) DeleteTemplatesFromTemplateSets(ctx context.Context, in *DeleteTemplatesFromTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_DeleteTemplatesFromTemplateSets_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -940,6 +964,15 @@ func (c *dataClient) ListTemplateRevisionBoundNamedAppDetails(ctx context.Contex
 func (c *dataClient) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateSetBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundUnnamedAppDetailsResp, error) {
 	out := new(ListTemplateSetBoundUnnamedAppDetailsResp)
 	err := c.cc.Invoke(ctx, Data_ListTemplateSetBoundUnnamedAppDetails_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context, in *ListMultiTemplateSetBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListMultiTemplateSetBoundUnnamedAppDetailsResp, error) {
+	out := new(ListMultiTemplateSetBoundUnnamedAppDetailsResp)
+	err := c.cc.Invoke(ctx, Data_ListMultiTemplateSetBoundUnnamedAppDetails_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1208,7 +1241,9 @@ type DataServer interface {
 	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
 	UpdateTemplate(context.Context, *UpdateTemplateReq) (*base.EmptyResp, error)
 	DeleteTemplate(context.Context, *DeleteTemplateReq) (*base.EmptyResp, error)
-	AddTemplateToTemplateSets(context.Context, *AddTemplateToTemplateSetsReq) (*base.EmptyResp, error)
+	BatchDeleteTemplate(context.Context, *BatchDeleteTemplateReq) (*base.EmptyResp, error)
+	AddTemplatesToTemplateSets(context.Context, *AddTemplatesToTemplateSetsReq) (*base.EmptyResp, error)
+	DeleteTemplatesFromTemplateSets(context.Context, *DeleteTemplatesFromTemplateSetsReq) (*base.EmptyResp, error)
 	ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(context.Context, *ListTemplatesNotBoundReq) (*ListTemplatesNotBoundResp, error)
 	ListTemplatesOfTemplateSet(context.Context, *ListTemplatesOfTemplateSetReq) (*ListTemplatesOfTemplateSetResp, error)
@@ -1239,6 +1274,7 @@ type DataServer interface {
 	ListTemplateRevisionBoundUnnamedAppDetails(context.Context, *ListTemplateRevisionBoundUnnamedAppDetailsReq) (*ListTemplateRevisionBoundUnnamedAppDetailsResp, error)
 	ListTemplateRevisionBoundNamedAppDetails(context.Context, *ListTemplateRevisionBoundNamedAppDetailsReq) (*ListTemplateRevisionBoundNamedAppDetailsResp, error)
 	ListTemplateSetBoundUnnamedAppDetails(context.Context, *ListTemplateSetBoundUnnamedAppDetailsReq) (*ListTemplateSetBoundUnnamedAppDetailsResp, error)
+	ListMultiTemplateSetBoundUnnamedAppDetails(context.Context, *ListMultiTemplateSetBoundUnnamedAppDetailsReq) (*ListMultiTemplateSetBoundUnnamedAppDetailsResp, error)
 	ListTemplateSetBoundNamedAppDetails(context.Context, *ListTemplateSetBoundNamedAppDetailsReq) (*ListTemplateSetBoundNamedAppDetailsResp, error)
 	// template variable related interface.
 	CreateTemplateVariable(context.Context, *CreateTemplateVariableReq) (*CreateResp, error)
@@ -1422,8 +1458,14 @@ func (UnimplementedDataServer) UpdateTemplate(context.Context, *UpdateTemplateRe
 func (UnimplementedDataServer) DeleteTemplate(context.Context, *DeleteTemplateReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplate not implemented")
 }
-func (UnimplementedDataServer) AddTemplateToTemplateSets(context.Context, *AddTemplateToTemplateSetsReq) (*base.EmptyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddTemplateToTemplateSets not implemented")
+func (UnimplementedDataServer) BatchDeleteTemplate(context.Context, *BatchDeleteTemplateReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteTemplate not implemented")
+}
+func (UnimplementedDataServer) AddTemplatesToTemplateSets(context.Context, *AddTemplatesToTemplateSetsReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddTemplatesToTemplateSets not implemented")
+}
+func (UnimplementedDataServer) DeleteTemplatesFromTemplateSets(context.Context, *DeleteTemplatesFromTemplateSetsReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplatesFromTemplateSets not implemented")
 }
 func (UnimplementedDataServer) ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplatesByIDs not implemented")
@@ -1502,6 +1544,9 @@ func (UnimplementedDataServer) ListTemplateRevisionBoundNamedAppDetails(context.
 }
 func (UnimplementedDataServer) ListTemplateSetBoundUnnamedAppDetails(context.Context, *ListTemplateSetBoundUnnamedAppDetailsReq) (*ListTemplateSetBoundUnnamedAppDetailsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetBoundUnnamedAppDetails not implemented")
+}
+func (UnimplementedDataServer) ListMultiTemplateSetBoundUnnamedAppDetails(context.Context, *ListMultiTemplateSetBoundUnnamedAppDetailsReq) (*ListMultiTemplateSetBoundUnnamedAppDetailsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListMultiTemplateSetBoundUnnamedAppDetails not implemented")
 }
 func (UnimplementedDataServer) ListTemplateSetBoundNamedAppDetails(context.Context, *ListTemplateSetBoundNamedAppDetailsReq) (*ListTemplateSetBoundNamedAppDetailsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetBoundNamedAppDetails not implemented")
@@ -2463,20 +2508,56 @@ func _Data_DeleteTemplate_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Data_AddTemplateToTemplateSets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddTemplateToTemplateSetsReq)
+func _Data_BatchDeleteTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteTemplateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataServer).AddTemplateToTemplateSets(ctx, in)
+		return srv.(DataServer).BatchDeleteTemplate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Data_AddTemplateToTemplateSets_FullMethodName,
+		FullMethod: Data_BatchDeleteTemplate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).AddTemplateToTemplateSets(ctx, req.(*AddTemplateToTemplateSetsReq))
+		return srv.(DataServer).BatchDeleteTemplate(ctx, req.(*BatchDeleteTemplateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_AddTemplatesToTemplateSets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddTemplatesToTemplateSetsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).AddTemplatesToTemplateSets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_AddTemplatesToTemplateSets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).AddTemplatesToTemplateSets(ctx, req.(*AddTemplatesToTemplateSetsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_DeleteTemplatesFromTemplateSets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTemplatesFromTemplateSetsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).DeleteTemplatesFromTemplateSets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_DeleteTemplatesFromTemplateSets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).DeleteTemplatesFromTemplateSets(ctx, req.(*DeleteTemplatesFromTemplateSetsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2945,6 +3026,24 @@ func _Data_ListTemplateSetBoundUnnamedAppDetails_Handler(srv interface{}, ctx co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListTemplateSetBoundUnnamedAppDetails(ctx, req.(*ListTemplateSetBoundUnnamedAppDetailsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListMultiTemplateSetBoundUnnamedAppDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMultiTemplateSetBoundUnnamedAppDetailsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListMultiTemplateSetBoundUnnamedAppDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListMultiTemplateSetBoundUnnamedAppDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListMultiTemplateSetBoundUnnamedAppDetails(ctx, req.(*ListMultiTemplateSetBoundUnnamedAppDetailsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3549,8 +3648,16 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_DeleteTemplate_Handler,
 		},
 		{
-			MethodName: "AddTemplateToTemplateSets",
-			Handler:    _Data_AddTemplateToTemplateSets_Handler,
+			MethodName: "BatchDeleteTemplate",
+			Handler:    _Data_BatchDeleteTemplate_Handler,
+		},
+		{
+			MethodName: "AddTemplatesToTemplateSets",
+			Handler:    _Data_AddTemplatesToTemplateSets_Handler,
+		},
+		{
+			MethodName: "DeleteTemplatesFromTemplateSets",
+			Handler:    _Data_DeleteTemplatesFromTemplateSets_Handler,
 		},
 		{
 			MethodName: "ListTemplatesByIDs",
@@ -3655,6 +3762,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateSetBoundUnnamedAppDetails",
 			Handler:    _Data_ListTemplateSetBoundUnnamedAppDetails_Handler,
+		},
+		{
+			MethodName: "ListMultiTemplateSetBoundUnnamedAppDetails",
+			Handler:    _Data_ListMultiTemplateSetBoundUnnamedAppDetails_Handler,
 		},
 		{
 			MethodName: "ListTemplateSetBoundNamedAppDetails",

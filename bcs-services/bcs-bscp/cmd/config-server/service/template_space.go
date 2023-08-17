@@ -38,6 +38,10 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbcs.CreateTempl
 		return nil, err
 	}
 
+	if req.Name == constant.DefaultTmplSpaceName || req.Name == constant.DefaultTmplSpaceCNName {
+		return nil, fmt.Errorf("can't create template space %s which is created by system", req.Name)
+	}
+
 	r := &pbds.CreateTemplateSpaceReq{
 		Attachment: &pbts.TemplateSpaceAttachment{
 			BizId: grpcKit.BizID,

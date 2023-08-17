@@ -248,6 +248,11 @@ service Config {
             delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}"
         };
     }
+    rpc BatchDeleteTemplate(BatchDeleteTemplateReq) returns (BatchDeleteTemplateResp) {
+        option (google.api.http) = {
+            delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates"
+        };
+    }
     rpc UpdateTemplate(UpdateTemplateReq) returns (UpdateTemplateResp) {
         option (google.api.http) = {
             put : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}"
@@ -259,9 +264,15 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates"
         };
     }
-    rpc AddTemplateToTemplateSets(AddTemplateToTemplateSetsReq) returns (AddTemplateToTemplateSetsResp) {
+    rpc AddTemplatesToTemplateSets(AddTemplatesToTemplateSetsReq) returns (AddTemplatesToTemplateSetsResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/add_to_template_sets"
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/add_to_template_sets"
+            body : "*"
+        };
+    }
+    rpc DeleteTemplatesFromTemplateSets(DeleteTemplatesFromTemplateSetsReq) returns(DeleteTemplatesFromTemplateSetsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/delete_from_template_sets"
             body : "*"
         };
     }
@@ -414,6 +425,12 @@ service Config {
         (ListTemplateSetBoundUnnamedAppDetailsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details"
+        };
+    }
+    rpc ListMultiTemplateSetBoundUnnamedAppDetails(ListMultiTemplateSetBoundUnnamedAppDetailsReq) returns
+        (ListMultiTemplateSetBoundUnnamedAppDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_unnamed_app_details"
         };
     }
     rpc ListTemplateSetBoundNamedAppDetails(ListTemplateSetBoundNamedAppDetailsReq) returns
@@ -1056,6 +1073,15 @@ message DeleteTemplateReq {
 
 message DeleteTemplateResp {}
 
+message BatchDeleteTemplateReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    string template_ids      = 3;
+    bool   force             = 4;
+}
+
+message BatchDeleteTemplateResp {}
+
 message ListTemplatesReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
@@ -1070,14 +1096,24 @@ message ListTemplatesResp {
     repeated pbtemplate.Template details = 2;
 }
 
-message AddTemplateToTemplateSetsReq {
+message AddTemplatesToTemplateSetsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
-    uint32          template_id       = 3;
+    repeated uint32 template_ids      = 3;
     repeated uint32 template_set_ids  = 4;
 }
 
-message AddTemplateToTemplateSetsResp {}
+message AddTemplatesToTemplateSetsResp {}
+
+
+message DeleteTemplatesFromTemplateSetsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_ids      = 3;
+    repeated uint32 template_set_ids  = 4;
+}
+
+message DeleteTemplatesFromTemplateSetsResp {}
 
 message ListTemplatesByIDsReq {
     uint32          biz_id = 1;
@@ -1394,6 +1430,21 @@ message ListTemplateSetBoundUnnamedAppDetailsResp {
     uint32                                          count   = 1;
     repeated pbtbr.TemplateSetBoundUnnamedAppDetail details = 2;
 }
+
+message ListMultiTemplateSetBoundUnnamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    string template_set_ids  = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+    bool   all               = 6;
+}
+
+message ListMultiTemplateSetBoundUnnamedAppDetailsResp {
+    uint32                                               count   = 1;
+    repeated pbtbr.MultiTemplateSetBoundUnnamedAppDetail details = 2;
+}
+
 
 message ListTemplateSetBoundNamedAppDetailsReq {
     uint32 biz_id            = 1;

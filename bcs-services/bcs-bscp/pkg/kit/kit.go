@@ -119,6 +119,7 @@ type Kit struct {
 	BizID       uint32 // 对应的业务ID
 	SpaceID     string // 应用对应的SpaceID
 	SpaceTypeID string // 应用对应的SpaceTypeID
+	TmplSpaceID uint32 // 配置模版对应的TemplateSpaceID
 }
 
 // ContextWithRid NOTES

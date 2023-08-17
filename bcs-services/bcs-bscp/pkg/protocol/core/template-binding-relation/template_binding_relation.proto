@@ -14,7 +14,7 @@ message TemplateBoundCounts {
 
 // TemplateRevisionBoundCounts is template release bound counts.
 message TemplateRevisionBoundCounts {
-    uint32 template_revision_id     = 1;
+    uint32 template_revision_id    = 1;
     uint32 bound_unnamed_app_count = 2;
     uint32 bound_named_app_count   = 3;
 }
@@ -30,18 +30,18 @@ message TemplateSetBoundCounts {
 message TemplateBoundUnnamedAppDetail {
     uint32 template_revision_id   = 1;
     string template_revision_name = 2;
-    uint32 app_id                = 3;
-    string app_name              = 4;
+    uint32 app_id                 = 3;
+    string app_name               = 4;
 }
 
 // TemplateBoundNamedAppDetail is template bound named app detail.
 message TemplateBoundNamedAppDetail {
     uint32 template_revision_id   = 1;
     string template_revision_name = 2;
-    uint32 app_id                = 3;
-    string app_name              = 4;
-    uint32 release_id            = 5;
-    string release_name          = 6;
+    uint32 app_id                 = 3;
+    string app_name               = 4;
+    uint32 release_id             = 5;
+    string release_name           = 6;
 }
 
 // TemplateBoundTemplateSetDetail is template bound unnamed app detail.
@@ -68,6 +68,14 @@ message TemplateRevisionBoundNamedAppDetail {
 message TemplateSetBoundUnnamedAppDetail {
     uint32 app_id   = 1;
     string app_name = 2;
+}
+
+// MultiTemplateSetBoundUnnamedAppDetail is template set bound unnamed app detail.
+message MultiTemplateSetBoundUnnamedAppDetail {
+    uint32 template_set_id   = 1;
+    string template_set_name = 2;
+    uint32 app_id            = 3;
+    string app_name          = 4;
 }
 
 // TemplateSetBoundUnnamedAppDetail is template set bound named app detail.
