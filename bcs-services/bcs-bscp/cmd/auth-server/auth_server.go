@@ -12,23 +12,8 @@ limitations under the License.
 
 package main
 
-import (
-	"fmt"
-	"os"
-
-	"bscp.io/cmd/auth-server/app"
-	"bscp.io/cmd/auth-server/options"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/logs"
-)
+import "bscp.io/cmd/auth-server/cmd"
 
 func main() {
-	cc.InitService(cc.AuthServerName)
-
-	opts := options.InitOptions()
-	if err := app.Run(opts); err != nil {
-		fmt.Fprintf(os.Stderr, "start auth server failed, err: %v", err)
-		logs.CloseLogs()
-		os.Exit(1)
-	}
+	cmd.Execute()
 }

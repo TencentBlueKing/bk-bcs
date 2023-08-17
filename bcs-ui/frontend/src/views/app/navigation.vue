@@ -143,7 +143,10 @@ export default defineComponent({
     // path上有项目Code且项目开启了容器服务时才显示左侧菜单
     const needMenu = computed(() => {
       const { projectCode } = route.value.params;
-      return !!projectCode && route.value.fullPath.indexOf(projectCode) > -1 && !!curProject.value.kind;
+      return !!projectCode
+        && route.value.fullPath.indexOf(projectCode) > -1
+        && !!curProject.value.kind
+        && !['404', 'token'].includes(route.value.name);
     });
 
     // 当前导航

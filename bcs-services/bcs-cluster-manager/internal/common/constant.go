@@ -167,7 +167,7 @@ const (
 	Biz = "biz"
 	// BizSet business set
 	BizSet = "biz_set"
-	
+
 	// Prod prod env
 	Prod = "prod"
 	// Debug debug env
@@ -353,6 +353,8 @@ const (
 	BcsErrClusterManagerGetPermErr = bcscommon.BCSErrClusterManager + 39
 	// BcsErrClusterManagerCACleanNodesEmptyErr nodegroup clean nodes empty error
 	BcsErrClusterManagerCACleanNodesEmptyErr = bcscommon.BCSErrClusterManager + 40
+	// BcsErrClusterManagerCheckKubeConnErr cloud config error
+	BcsErrClusterManagerCheckKubeConnErr = bcscommon.BCSErrClusterManager + 41
 )
 
 // ClusterIDRange for generate clusterID range

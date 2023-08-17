@@ -195,6 +195,7 @@ metrics:
   diskUsage: Disk usage
   memUsage: Memory usage
   memUsage1: Memory usage
+  podUsage: pod Usage
   cpuRequestUsage:
     text: CPU packing rate
     clusterDesc: >-
@@ -230,6 +231,7 @@ generic:
     error:
       network: Network Error
       system: System Error
+      data: Data acquisition failure
     warning:
       '403': No permission operation
       '404': Page does not exist

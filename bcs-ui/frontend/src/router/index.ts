@@ -65,11 +65,6 @@ const router = new VueRouter({
       component: Forbidden,
     },
     {
-      path: `${SITE_URL}/user-token`,
-      name: 'token',
-      component: Token,
-    },
-    {
       path: `${SITE_URL}/projects`,
       name: 'projectManage',
       component: ProjectList,
@@ -93,6 +88,11 @@ const router = new VueRouter({
         name: 'clusterMain',
       },
       children: [
+        {
+          path: 'user-token',
+          name: 'token',
+          component: Token,
+        },
         ...ClusterManage,
         ...DeployManage,
         ...ProjectManage,

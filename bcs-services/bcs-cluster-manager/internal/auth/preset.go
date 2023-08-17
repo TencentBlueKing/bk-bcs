@@ -43,6 +43,7 @@ var NoAuthMethod = []string{
 
 	// kubeConfig
 	"ClusterManager.CheckCloudKubeConfig",
+	"ClusterManager.CheckCloudKubeConfigConnect",
 
 	// task resource
 	"ClusterManager.RetryTask",
@@ -179,7 +180,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetVPCCidr":     "",
 
 	// kubeconfig
-	"ClusterManager.CheckCloudKubeConfig": "",
+	"ClusterManager.CheckCloudKubeConfig":        "",
+	"ClusterManager.CheckCloudKubeConfigConnect": "",
 
 	// task
 	"ClusterManager.CreateTask": cluster.CanManageClusterOperation,

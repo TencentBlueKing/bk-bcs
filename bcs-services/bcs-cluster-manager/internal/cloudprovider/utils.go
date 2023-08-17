@@ -17,6 +17,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/clientcmd"
 	"strconv"
 	"strings"
 	"time"
@@ -999,4 +1003,40 @@ func CheckManagedClusterExistNode(cluster *proto.Cluster) bool {
 	}
 
 	return len(nodes) > 0
+}
+
+// GetCRDByKubeConfig get crd by kubeConfig
+func GetCRDByKubeConfig(kubeConfig string) (*v1.CustomResourceDefinitionList, error) {
+	_, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
+		FileName:    "",
+		YamlContent: kubeConfig,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("checkKubeConfig get kubeConfig from YAML body failed: %v", err)
+	}
+
+	// 解析 kubeConfig 字符串
+	cfg, err := clientcmd.NewClientConfigFromBytes([]byte(kubeConfig))
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取 Kubernetes 配置
+	config, err := cfg.ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// 使用 Kubernetes 配置创建一个 Kubernetes 客户端
+	cli, err := clientset.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取 CRD
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	defer cancel()
+
+	return cli.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
 }
