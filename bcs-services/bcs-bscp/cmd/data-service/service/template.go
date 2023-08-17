@@ -198,7 +198,7 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 
 	// 3. delete bound template set if exists
 	if hasTmplSet {
-		if err = s.dao.TemplateSet().DeleteTmplFromTmplSetsWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+		if err = s.dao.TemplateSet().DeleteTmplFromAllTmplSetsWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
 			logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
 			tx.Rollback()
 			return nil, err
@@ -233,6 +233,26 @@ func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbds.AddT
 
 	if err := s.dao.TemplateSet().AddTemplatesToTemplateSets(kt, req.TemplateIds, req.TemplateSetIds); err != nil {
 		logs.Errorf(" add template to template sets failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// DeleteTemplatesFromTemplateSets delete templates from template sets.
+func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbds.DeleteTemplatesFromTemplateSetsReq) (
+	*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplatesExist(kt, req.TemplateIds); err != nil {
+		return nil, err
+	}
+	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.TemplateSetIds); err != nil {
+		return nil, err
+	}
+
+	if err := s.dao.TemplateSet().DeleteTemplatesFromTemplateSets(kt, req.TemplateIds, req.TemplateSetIds); err != nil {
+		logs.Errorf(" delete template from template sets failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 

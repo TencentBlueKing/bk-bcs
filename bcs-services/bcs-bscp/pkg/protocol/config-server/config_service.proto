@@ -265,6 +265,12 @@ service Config {
             body : "*"
         };
     }
+    rpc DeleteTemplatesFromTemplateSets(DeleteTemplatesFromTemplateSetsReq) returns(DeleteTemplatesFromTemplateSetsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/delete_from_template_sets"
+            body : "*"
+        };
+    }
     rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/templates/list_by_ids"
@@ -1078,6 +1084,16 @@ message AddTemplatesToTemplateSetsReq {
 }
 
 message AddTemplatesToTemplateSetsResp {}
+
+
+message DeleteTemplatesFromTemplateSetsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_ids      = 3;
+    repeated uint32 template_set_ids  = 4;
+}
+
+message DeleteTemplatesFromTemplateSetsResp {}
 
 message ListTemplatesByIDsReq {
     uint32          biz_id = 1;
