@@ -29,7 +29,7 @@ func IsBKMonitorAgent(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	project, err := bcs.GetProject(c.Request.Context(), conf, cluster.ProjectId)
+	project, err := bcs.GetProject(c.Request.Context(), conf, cluster.ProjectID)
 	if err != nil {
 		return nil, err
 	}

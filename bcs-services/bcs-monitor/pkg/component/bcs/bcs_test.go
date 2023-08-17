@@ -24,5 +24,5 @@ import (
 func TestGetCluster(t *testing.T) {
 	cluster, err := GetCluster(bcstesting.GetTestClusterId())
 	assert.NoError(t, err)
-	assert.Equal(t, cluster.ProjectId, bcstesting.GetTestProjectId())
+	assert.Equal(t, cluster.ProjectID, bcstesting.GetTestProjectId())
 }
