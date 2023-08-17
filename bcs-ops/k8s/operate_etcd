@@ -68,7 +68,7 @@ safe_source() {
 #   key
 #######################################
 check_etcd_status() {
-  if [[ $# -ne 4 ]];then
+  if [[ $# -ne 4 ]]; then
     utils::log "FATAL" "wrong variable num"
   fi
 
@@ -98,7 +98,7 @@ check_etcd_status() {
           if ! ctr -n k8s.io snapshot mounts /tmp/container_mount ${container_id} |bash -s;then
             utils::log "FATAL" "can not mount etcd container"
           fi
-          if ! cp /tmp/container_mount/usr/local/bin/etcdctl /usr/local/bin/;then
+          if ! cp /tmp/container_mount/usr/local/bin/etcdctl /usr/local/bin/; then
             utils::log "FATAL" "can not cp etcdctl command"
           fi
         fi
@@ -117,7 +117,7 @@ check_etcd_status() {
   fi
   export ETCDCTL_API=3
 
-  if ! etcdctl --endpoints https://${endpoint}:2379 --cacert ${cacert} --cert ${cert} --key ${key} endpoint health; then
+  if ! etcdctl --endpoints https://"${endpoint}":2379 --cacert "${cacert}" --cert "${cert}" --key "${key}" endpoint health; then
     utils::log "FATAL" "etcd endpoint is not healthy"
   fi
 
@@ -136,8 +136,8 @@ check_etcd_status() {
 #   member_peer
 #   initial_cluster
 #######################################
-restore_etcd(){
-  if [[ $# -ne 5 ]];then
+restore_etcd() {
+  if [[ $# -ne 5 ]]; then
     utils::log "FATAL" "wrong variable num"
   fi
 
@@ -147,9 +147,9 @@ restore_etcd(){
   member_name=${3}
   member_peer=${4}
   initial_cluster=${5}
-  etcdctl snapshot restore ${backup_file} --data-dir ${data_dir} --initial-advertise-peer-urls ${member_peer} --initial-cluster ${initial_cluster} --name ${member_name} > /dev/null
+  etcdctl snapshot restore "${backup_file}" --data-dir "${data_dir}" --initial-advertise-peer-urls "${member_peer}" --initial-cluster "${initial_cluster}" --name "${member_name}" >/dev/null
   utils::log "OK" "restore etcd snapshot success"
-  utils::log "OK" "$(ls -l ${data_dir})"
+  utils::log "OK" "$(ls -l "${data_dir}")"
   utils::log "OK" "you can boot your etcd instance with this etcd data dir"
 }
 
@@ -168,8 +168,8 @@ restore_etcd(){
 #   cert
 #   key
 #######################################
-new_etcd(){
-  if [[ $# -ne 9 ]];then
+new_etcd() {
+  if [[ $# -ne 9 ]]; then
     utils::log "FATAL" "wrong variable num"
   fi
   local name data_dir peer_port service_port metric_port initial_cluster cacert cert key
@@ -183,22 +183,22 @@ new_etcd(){
   cert=${8}
   key=${9}
 
-  cp /etc/kubernetes/manifests/etcd.yaml /tmp/etcd-${name}.yaml
-  sed -i "s|--initial-cluster=.*|--initial-cluster=${initial_cluster}|g" /tmp/etcd-${name}.yaml
-  sed -i "s|/data/bcs/lib/etcd|${data_dir}|g" /tmp/etcd-${name}.yaml
-  sed -i "s/:2379/:${service_port}/g" /tmp/etcd-${name}.yaml
-  sed -i "s/:2380/:${peer_port}/g" /tmp/etcd-${name}.yaml
-  sed -i "s/:2381/:${metric_port}/g" /tmp/etcd-${name}.yaml
-  sed -i "s/: 2381/: ${metric_port}/g" /tmp/etcd-${name}.yaml
-  sed -i "s/initial-cluster-state=existing/initial-cluster-state=new/g" /tmp/etcd-${name}.yaml
+  cp /etc/kubernetes/manifests/etcd.yaml /tmp/etcd-"${name}".yaml
+  sed -i "s|--initial-cluster=.*|--initial-cluster=${initial_cluster}|g" /tmp/etcd-"${name}".yaml
+  sed -i "s|/data/bcs/lib/etcd|${data_dir}|g" /tmp/etcd-"${name}".yaml
+  sed -i "s/:2379/:${service_port}/g" /tmp/etcd-"${name}".yaml
+  sed -i "s/:2380/:${peer_port}/g" /tmp/etcd-"${name}".yaml
+  sed -i "s/:2381/:${metric_port}/g" /tmp/etcd-"${name}".yaml
+  sed -i "s/: 2381/: ${metric_port}/g" /tmp/etcd-"${name}".yaml
+  sed -i "s/initial-cluster-state=existing/initial-cluster-state=new/g" /tmp/etcd-"${name}".yaml
 
-  sed -i "s/name: etcd/name: etcd-${name}/g" /tmp/etcd-${name}.yaml
-  sed -i "s/component: etcd/component: etcd-${name}/g" /tmp/etcd-${name}.yaml
-  mkdir ${data_dir}
+  sed -i "s/name: etcd/name: etcd-${name}/g" /tmp/etcd-"${name}".yaml
+  sed -i "s/component: etcd/component: etcd-${name}/g" /tmp/etcd-"${name}".yaml
+  mkdir "${data_dir}"
 
-  cp /tmp/etcd-${name}.yaml /etc/kubernetes/manifests/
+  cp /tmp/etcd-"${name}".yaml /etc/kubernetes/manifests/
   sleep 30
-  check_etcd_status https://127.0.0.1:${service_port} ${cacert} ${cert} ${key}
+  check_etcd_status https://127.0.0.1:"${service_port}" "${cacert}" "${cert}" "${key}"
 }
 
 #######################################
@@ -210,8 +210,8 @@ new_etcd(){
 #   data_dir
 #   initial_cluster
 #######################################
-restore_all_etcd(){
-  if [[ $# -ne 3 ]];then
+restore_all_etcd() {
+  if [[ $# -ne 3 ]]; then
     utils::log "FATAL" "wrong variable num"
   fi
 
@@ -220,13 +220,13 @@ restore_all_etcd(){
   data_dir=${2}
   initial_cluster=${3}
 
-  for cluster_string in ${initial_cluster//,/ };do
-    peer_name=$(echo ${cluster_string}|awk -F'='  '{ print $1 } ')
-    peer=$(echo ${cluster_string}|awk -F'='  '{ print $2 } ')
-    etcdctl snapshot restore ${backup_file} --data-dir ${data_dir}/${peer_name} --initial-advertise-peer-urls ${peer} --initial-cluster ${initial_cluster} --name ${peer_name} > /dev/null
+  for cluster_string in ${initial_cluster//,/ }; do
+    peer_name=$(echo "${cluster_string}" | awk -F'=' '{ print $1 } ')
+    peer=$(echo "${cluster_string}" | awk -F'=' '{ print $2 } ')
+    etcdctl snapshot restore "${backup_file}" --data-dir "${data_dir}"/"${peer_name}" --initial-advertise-peer-urls "${peer}" --initial-cluster "${initial_cluster}" --name "${peer_name}" >/dev/null
     utils::log "OK" "restore etcd snapshot as ${peer_name} success"
   done
-  utils::log "OK" "$(ls -l ${data_dir})"
+  utils::log "OK" "$(ls -l "${data_dir}")"
   utils::log "OK" "you can boot your etcd instances with these etcd data dirs"
 }
 
@@ -242,7 +242,7 @@ restore_all_etcd(){
 #   backup_file
 #######################################
 backup_etcd() {
-  if [[ $# -ne 5 ]];then
+  if [[ $# -ne 5 ]]; then
     echo "eg: ./$0 backup  etcd_host cacert cert key back_file"
     utils::log "FATAL" "wrong variable num"
   fi
@@ -255,12 +255,12 @@ backup_etcd() {
   backup_file=${5}
 
   check_etcd_status "$@"
-  export ETCDCTL_API=3;
-  if ! etcdctl --endpoints https://${endpoint}:2379 --cacert ${cacert} --cert ${cert} --key ${key} snapshot save ${backup_file} 2>/dev/null; then
+  export ETCDCTL_API=3
+  if ! etcdctl --endpoints https://"${endpoint}":2379 --cacert "${cacert}" --cert "${cert}" --key "${key}" snapshot save "${backup_file}" 2>/dev/null; then
     utils::log "FATAL" "failed to get etcd snapshot"
   fi
 
-  if ! etcdctl --endpoints https://${endpoint}:2379 --cacert ${cacert} --cert ${cert} --key ${key} member list >${backup_file}_clusterinfo 2>/dev/null; then
+  if ! etcdctl --endpoints https://"${endpoint}":2379 --cacert "${cacert}" --cert "${cert}" --key "${key}" member list >"${backup_file}"_clusterinfo 2>/dev/null; then
     utils::log "FATAL" "failed to get etcd cluster info"
   fi
 

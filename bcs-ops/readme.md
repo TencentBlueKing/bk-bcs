@@ -66,3 +66,31 @@ kubectl delete node $node_name
 2. 中控机执行`./k8s/install_localpv /mnt/blueking`，localpv 会寻找节点`/mnt/blueking`下所有的挂载点，创建相应的`Persistentvolumes`资源。
 
 3. 当步骤 2 执行后，新的加入的 node 节点如果要添加`Persistentvolumes`资源，重新执行步骤 1、2，即可重启 localpv 的 pod 实现挂载。
+
+
+## 环境变量
+
+通过配置环境变量来设置集群相关的参数。在中控机创建集群前，通过 `set -a` 设置环境变量。
+
+### 示例：创建 ipv6 双栈集群
+> k8s 1.23 ipv6 特性为稳定版
+```bash
+set -a
+K8S_VER="1.23.17"
+K8S_IPv6_STATUS="DualStack"
+set +a
+./bcs-ops -i master
+```
+
+
+## IP 的获取方式
+对于裸金属服务器，ipv4 通过 `10/8` 的默认路由源地址获取，ipv6 则通过 `fd00::/8` 的默认路由源地址获取。如果有多个网卡，可以手动配置该路由的源地址来选择
+```bash
+# 如果存在则先删除
+ip route del 10/8
+ip -6 route del fd00::/8
+# 添加对应的路由
+ip route add 10/8 via <next hop> dev <interface> src <lan_ipv4>
+ip -6 route add fd00::/8 via <next hop> dev <interface> src <lan_ipv6>
+```
+> 注意：`fe80::/10` link-local 地址不能用于 k8s 的 node-ip。
