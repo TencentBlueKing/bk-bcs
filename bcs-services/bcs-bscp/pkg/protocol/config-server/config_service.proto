@@ -427,6 +427,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details"
         };
     }
+    rpc ListMultiTemplateSetBoundUnnamedAppDetails(ListMultiTemplateSetBoundUnnamedAppDetailsReq) returns
+        (ListMultiTemplateSetBoundUnnamedAppDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_unnamed_app_details"
+        };
+    }
     rpc ListTemplateSetBoundNamedAppDetails(ListTemplateSetBoundNamedAppDetailsReq) returns
         (ListTemplateSetBoundNamedAppDetailsResp) {
         option (google.api.http) = {
@@ -1424,6 +1430,21 @@ message ListTemplateSetBoundUnnamedAppDetailsResp {
     uint32                                          count   = 1;
     repeated pbtbr.TemplateSetBoundUnnamedAppDetail details = 2;
 }
+
+message ListMultiTemplateSetBoundUnnamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    string template_set_ids  = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+    bool   all               = 6;
+}
+
+message ListMultiTemplateSetBoundUnnamedAppDetailsResp {
+    uint32                                               count   = 1;
+    repeated pbtbr.MultiTemplateSetBoundUnnamedAppDetail details = 2;
+}
+
 
 message ListTemplateSetBoundNamedAppDetailsReq {
     uint32 biz_id            = 1;

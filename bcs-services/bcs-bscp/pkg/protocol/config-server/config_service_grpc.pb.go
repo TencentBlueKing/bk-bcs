@@ -92,6 +92,7 @@ const (
 	Config_ListTemplateRevisionBoundUnnamedAppDetails_FullMethodName = "/pbcs.Config/ListTemplateRevisionBoundUnnamedAppDetails"
 	Config_ListTemplateRevisionBoundNamedAppDetails_FullMethodName   = "/pbcs.Config/ListTemplateRevisionBoundNamedAppDetails"
 	Config_ListTemplateSetBoundUnnamedAppDetails_FullMethodName      = "/pbcs.Config/ListTemplateSetBoundUnnamedAppDetails"
+	Config_ListMultiTemplateSetBoundUnnamedAppDetails_FullMethodName = "/pbcs.Config/ListMultiTemplateSetBoundUnnamedAppDetails"
 	Config_ListTemplateSetBoundNamedAppDetails_FullMethodName        = "/pbcs.Config/ListTemplateSetBoundNamedAppDetails"
 	Config_CreateTemplateVariable_FullMethodName                     = "/pbcs.Config/CreateTemplateVariable"
 	Config_DeleteTemplateVariable_FullMethodName                     = "/pbcs.Config/DeleteTemplateVariable"
@@ -191,6 +192,7 @@ type ConfigClient interface {
 	ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateRevisionBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundUnnamedAppDetailsResp, error)
 	ListTemplateRevisionBoundNamedAppDetails(ctx context.Context, in *ListTemplateRevisionBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundNamedAppDetailsResp, error)
 	ListTemplateSetBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateSetBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundUnnamedAppDetailsResp, error)
+	ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context, in *ListMultiTemplateSetBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListMultiTemplateSetBoundUnnamedAppDetailsResp, error)
 	ListTemplateSetBoundNamedAppDetails(ctx context.Context, in *ListTemplateSetBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundNamedAppDetailsResp, error)
 	CreateTemplateVariable(ctx context.Context, in *CreateTemplateVariableReq, opts ...grpc.CallOption) (*CreateTemplateVariableResp, error)
 	DeleteTemplateVariable(ctx context.Context, in *DeleteTemplateVariableReq, opts ...grpc.CallOption) (*DeleteTemplateVariableResp, error)
@@ -850,6 +852,15 @@ func (c *configClient) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context
 	return out, nil
 }
 
+func (c *configClient) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context, in *ListMultiTemplateSetBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListMultiTemplateSetBoundUnnamedAppDetailsResp, error) {
+	out := new(ListMultiTemplateSetBoundUnnamedAppDetailsResp)
+	err := c.cc.Invoke(ctx, Config_ListMultiTemplateSetBoundUnnamedAppDetails_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ListTemplateSetBoundNamedAppDetails(ctx context.Context, in *ListTemplateSetBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundNamedAppDetailsResp, error) {
 	out := new(ListTemplateSetBoundNamedAppDetailsResp)
 	err := c.cc.Invoke(ctx, Config_ListTemplateSetBoundNamedAppDetails_FullMethodName, in, out, opts...)
@@ -1099,6 +1110,7 @@ type ConfigServer interface {
 	ListTemplateRevisionBoundUnnamedAppDetails(context.Context, *ListTemplateRevisionBoundUnnamedAppDetailsReq) (*ListTemplateRevisionBoundUnnamedAppDetailsResp, error)
 	ListTemplateRevisionBoundNamedAppDetails(context.Context, *ListTemplateRevisionBoundNamedAppDetailsReq) (*ListTemplateRevisionBoundNamedAppDetailsResp, error)
 	ListTemplateSetBoundUnnamedAppDetails(context.Context, *ListTemplateSetBoundUnnamedAppDetailsReq) (*ListTemplateSetBoundUnnamedAppDetailsResp, error)
+	ListMultiTemplateSetBoundUnnamedAppDetails(context.Context, *ListMultiTemplateSetBoundUnnamedAppDetailsReq) (*ListMultiTemplateSetBoundUnnamedAppDetailsResp, error)
 	ListTemplateSetBoundNamedAppDetails(context.Context, *ListTemplateSetBoundNamedAppDetailsReq) (*ListTemplateSetBoundNamedAppDetailsResp, error)
 	CreateTemplateVariable(context.Context, *CreateTemplateVariableReq) (*CreateTemplateVariableResp, error)
 	DeleteTemplateVariable(context.Context, *DeleteTemplateVariableReq) (*DeleteTemplateVariableResp, error)
@@ -1333,6 +1345,9 @@ func (UnimplementedConfigServer) ListTemplateRevisionBoundNamedAppDetails(contex
 }
 func (UnimplementedConfigServer) ListTemplateSetBoundUnnamedAppDetails(context.Context, *ListTemplateSetBoundUnnamedAppDetailsReq) (*ListTemplateSetBoundUnnamedAppDetailsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetBoundUnnamedAppDetails not implemented")
+}
+func (UnimplementedConfigServer) ListMultiTemplateSetBoundUnnamedAppDetails(context.Context, *ListMultiTemplateSetBoundUnnamedAppDetailsReq) (*ListMultiTemplateSetBoundUnnamedAppDetailsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListMultiTemplateSetBoundUnnamedAppDetails not implemented")
 }
 func (UnimplementedConfigServer) ListTemplateSetBoundNamedAppDetails(context.Context, *ListTemplateSetBoundNamedAppDetailsReq) (*ListTemplateSetBoundNamedAppDetailsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetBoundNamedAppDetails not implemented")
@@ -2663,6 +2678,24 @@ func _Config_ListTemplateSetBoundUnnamedAppDetails_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ListMultiTemplateSetBoundUnnamedAppDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMultiTemplateSetBoundUnnamedAppDetailsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListMultiTemplateSetBoundUnnamedAppDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListMultiTemplateSetBoundUnnamedAppDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListMultiTemplateSetBoundUnnamedAppDetails(ctx, req.(*ListMultiTemplateSetBoundUnnamedAppDetailsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ListTemplateSetBoundNamedAppDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateSetBoundNamedAppDetailsReq)
 	if err := dec(in); err != nil {
@@ -3291,6 +3324,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateSetBoundUnnamedAppDetails",
 			Handler:    _Config_ListTemplateSetBoundUnnamedAppDetails_Handler,
+		},
+		{
+			MethodName: "ListMultiTemplateSetBoundUnnamedAppDetails",
+			Handler:    _Config_ListMultiTemplateSetBoundUnnamedAppDetails_Handler,
 		},
 		{
 			MethodName: "ListTemplateSetBoundNamedAppDetails",

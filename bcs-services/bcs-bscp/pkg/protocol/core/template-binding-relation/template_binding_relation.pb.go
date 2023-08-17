@@ -620,6 +620,78 @@ func (x *TemplateSetBoundUnnamedAppDetail) GetAppName() string {
 	return ""
 }
 
+// MultiTemplateSetBoundUnnamedAppDetail is template set bound unnamed app detail.
+type MultiTemplateSetBoundUnnamedAppDetail struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TemplateSetId   uint32 `protobuf:"varint,1,opt,name=template_set_id,json=templateSetId,proto3" json:"template_set_id,omitempty"`
+	TemplateSetName string `protobuf:"bytes,2,opt,name=template_set_name,json=templateSetName,proto3" json:"template_set_name,omitempty"`
+	AppId           uint32 `protobuf:"varint,3,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
+	AppName         string `protobuf:"bytes,4,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
+}
+
+func (x *MultiTemplateSetBoundUnnamedAppDetail) Reset() {
+	*x = MultiTemplateSetBoundUnnamedAppDetail{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_template_binding_relation_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MultiTemplateSetBoundUnnamedAppDetail) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MultiTemplateSetBoundUnnamedAppDetail) ProtoMessage() {}
+
+func (x *MultiTemplateSetBoundUnnamedAppDetail) ProtoReflect() protoreflect.Message {
+	mi := &file_template_binding_relation_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MultiTemplateSetBoundUnnamedAppDetail.ProtoReflect.Descriptor instead.
+func (*MultiTemplateSetBoundUnnamedAppDetail) Descriptor() ([]byte, []int) {
+	return file_template_binding_relation_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *MultiTemplateSetBoundUnnamedAppDetail) GetTemplateSetId() uint32 {
+	if x != nil {
+		return x.TemplateSetId
+	}
+	return 0
+}
+
+func (x *MultiTemplateSetBoundUnnamedAppDetail) GetTemplateSetName() string {
+	if x != nil {
+		return x.TemplateSetName
+	}
+	return ""
+}
+
+func (x *MultiTemplateSetBoundUnnamedAppDetail) GetAppId() uint32 {
+	if x != nil {
+		return x.AppId
+	}
+	return 0
+}
+
+func (x *MultiTemplateSetBoundUnnamedAppDetail) GetAppName() string {
+	if x != nil {
+		return x.AppName
+	}
+	return ""
+}
+
 // TemplateSetBoundUnnamedAppDetail is template set bound named app detail.
 type TemplateSetBoundNamedAppDetail struct {
 	state         protoimpl.MessageState
@@ -635,7 +707,7 @@ type TemplateSetBoundNamedAppDetail struct {
 func (x *TemplateSetBoundNamedAppDetail) Reset() {
 	*x = TemplateSetBoundNamedAppDetail{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_template_binding_relation_proto_msgTypes[9]
+		mi := &file_template_binding_relation_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -648,7 +720,7 @@ func (x *TemplateSetBoundNamedAppDetail) String() string {
 func (*TemplateSetBoundNamedAppDetail) ProtoMessage() {}
 
 func (x *TemplateSetBoundNamedAppDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_template_binding_relation_proto_msgTypes[9]
+	mi := &file_template_binding_relation_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -661,7 +733,7 @@ func (x *TemplateSetBoundNamedAppDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TemplateSetBoundNamedAppDetail.ProtoReflect.Descriptor instead.
 func (*TemplateSetBoundNamedAppDetail) Descriptor() ([]byte, []int) {
-	return file_template_binding_relation_proto_rawDescGZIP(), []int{9}
+	return file_template_binding_relation_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *TemplateSetBoundNamedAppDetail) GetAppId() uint32 {
@@ -789,6 +861,17 @@ var file_template_binding_relation_proto_rawDesc = []byte{
 	0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x12, 0x15, 0x0a, 0x06, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x61, 0x70, 0x70, 0x49, 0x64, 0x12, 0x19, 0x0a,
 	0x08, 0x61, 0x70, 0x70, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x07, 0x61, 0x70, 0x70, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0xad, 0x01, 0x0a, 0x25, 0x4d, 0x75, 0x6c,
+	0x74, 0x69, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x42, 0x6f, 0x75,
+	0x6e, 0x64, 0x55, 0x6e, 0x6e, 0x61, 0x6d, 0x65, 0x64, 0x41, 0x70, 0x70, 0x44, 0x65, 0x74, 0x61,
+	0x69, 0x6c, 0x12, 0x26, 0x0a, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73,
+	0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0d, 0x74, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x49, 0x64, 0x12, 0x2a, 0x0a, 0x11, 0x74, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53,
+	0x65, 0x74, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x15, 0x0a, 0x06, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x61, 0x70, 0x70, 0x49, 0x64, 0x12, 0x19, 0x0a,
+	0x08, 0x61, 0x70, 0x70, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x07, 0x61, 0x70, 0x70, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x94, 0x01, 0x0a, 0x1e, 0x54, 0x65, 0x6d,
 	0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x42, 0x6f, 0x75, 0x6e, 0x64, 0x4e, 0x61, 0x6d,
 	0x65, 0x64, 0x41, 0x70, 0x70, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x12, 0x15, 0x0a, 0x06, 0x61,
@@ -818,7 +901,7 @@ func file_template_binding_relation_proto_rawDescGZIP() []byte {
 	return file_template_binding_relation_proto_rawDescData
 }
 
-var file_template_binding_relation_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_template_binding_relation_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_template_binding_relation_proto_goTypes = []interface{}{
 	(*TemplateBoundCounts)(nil),                   // 0: pbtbr.TemplateBoundCounts
 	(*TemplateRevisionBoundCounts)(nil),           // 1: pbtbr.TemplateRevisionBoundCounts
@@ -829,7 +912,8 @@ var file_template_binding_relation_proto_goTypes = []interface{}{
 	(*TemplateRevisionBoundUnnamedAppDetail)(nil), // 6: pbtbr.TemplateRevisionBoundUnnamedAppDetail
 	(*TemplateRevisionBoundNamedAppDetail)(nil),   // 7: pbtbr.TemplateRevisionBoundNamedAppDetail
 	(*TemplateSetBoundUnnamedAppDetail)(nil),      // 8: pbtbr.TemplateSetBoundUnnamedAppDetail
-	(*TemplateSetBoundNamedAppDetail)(nil),        // 9: pbtbr.TemplateSetBoundNamedAppDetail
+	(*MultiTemplateSetBoundUnnamedAppDetail)(nil), // 9: pbtbr.MultiTemplateSetBoundUnnamedAppDetail
+	(*TemplateSetBoundNamedAppDetail)(nil),        // 10: pbtbr.TemplateSetBoundNamedAppDetail
 }
 var file_template_binding_relation_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -954,6 +1038,18 @@ func file_template_binding_relation_proto_init() {
 			}
 		}
 		file_template_binding_relation_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MultiTemplateSetBoundUnnamedAppDetail); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_template_binding_relation_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*TemplateSetBoundNamedAppDetail); i {
 			case 0:
 				return &v.state
@@ -972,7 +1068,7 @@ func file_template_binding_relation_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_template_binding_relation_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

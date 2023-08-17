@@ -21,6 +21,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbtbr "bscp.io/pkg/protocol/core/template-binding-relation"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -665,6 +666,94 @@ func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
 	}
 
 	resp := &pbds.ListTemplateSetBoundUnnamedAppDetailsResp{
+		Count:   totalCnt,
+		Details: details,
+	}
+	return resp, nil
+}
+
+// ListMultiTemplateSetBoundUnnamedAppDetails list template set bound unnamed app details.
+func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context,
+	req *pbds.ListMultiTemplateSetBoundUnnamedAppDetailsReq) (
+	*pbds.ListMultiTemplateSetBoundUnnamedAppDetailsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	templateSetIDs := tools.RemoveDuplicates(req.TemplateSetIds)
+	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, templateSetIDs); err != nil {
+		return nil, err
+	}
+
+	allAppIDs := make([]uint32, 0)
+	tmplSetAppsMap := make(map[uint32][]uint32)
+	for _, templateSetID := range templateSetIDs {
+		appIDs, err := s.dao.TemplateBindingRelation().
+			ListTemplateSetBoundUnnamedAppDetails(kt, req.BizId, templateSetID)
+		if err != nil {
+			logs.Errorf("list template set bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+		tmplSetAppsMap[templateSetID] = appIDs
+		allAppIDs = append(allAppIDs, appIDs...)
+	}
+	allAppIDs = tools.RemoveDuplicates(allAppIDs)
+
+	// get app details
+	apps, err := s.dao.App().ListAppsByIDs(kt, allAppIDs)
+	if err != nil {
+		logs.Errorf("list template set bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	appMap := make(map[uint32]*table.App, len(apps))
+	for _, a := range apps {
+		appMap[a.ID] = a
+	}
+
+	// get template set details
+	tmplSets, err := s.dao.TemplateSet().ListByIDs(kt, templateSetIDs)
+	if err != nil {
+		logs.Errorf("list template set bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	tmplSetMap := make(map[uint32]*table.TemplateSet, len(tmplSets))
+	for _, t := range tmplSets {
+		tmplSetMap[t.ID] = t
+	}
+
+	// combine resp details
+	details := make([]*pbtbr.MultiTemplateSetBoundUnnamedAppDetail, 0)
+	for tmplSetID, appIDs := range tmplSetAppsMap {
+		for _, id := range appIDs {
+			details = append(details, &pbtbr.MultiTemplateSetBoundUnnamedAppDetail{
+				TemplateSetId:   tmplSetID,
+				TemplateSetName: tmplSetMap[tmplSetID].Spec.Name,
+				AppId:           id,
+				AppName:         appMap[id].Spec.Name,
+			})
+		}
+
+	}
+
+	// totalCnt is all data count
+	totalCnt := uint32(len(details))
+
+	if req.All {
+		// return all data
+		return &pbds.ListMultiTemplateSetBoundUnnamedAppDetailsResp{
+			Count:   totalCnt,
+			Details: details,
+		}, nil
+	}
+
+	// page by logic
+	if req.Start >= uint32(len(details)) {
+		details = details[:0]
+	} else if req.Start+req.Limit > uint32(len(details)) {
+		details = details[req.Start:]
+	} else {
+		details = details[req.Start : req.Start+req.Limit]
+	}
+
+	resp := &pbds.ListMultiTemplateSetBoundUnnamedAppDetailsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
