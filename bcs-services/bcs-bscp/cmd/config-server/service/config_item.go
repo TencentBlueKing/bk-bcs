@@ -144,9 +144,10 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 		})
 	}
 	buReq := &pbds.BatchUpsertConfigItemsReq{
-		BizId: req.BizId,
-		AppId: req.AppId,
-		Items: items,
+		BizId:      req.BizId,
+		AppId:      req.AppId,
+		Items:      items,
+		ReplaceAll: req.ReplaceAll,
 	}
 	if _, e := s.client.DS.BatchUpsertConfigItems(grpcKit.RpcCtx(), buReq); e != nil {
 		logs.Errorf("batch upsert config item failed, err: %v, rid: %s", e, grpcKit.Rid)
