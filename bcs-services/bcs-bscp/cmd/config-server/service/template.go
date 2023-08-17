@@ -42,7 +42,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 
 	idsLen := len(req.TemplateSetIds)
 	if idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template revision ids is %d, it must be within the range of [1,%d]",
+		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [0,%d]",
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
@@ -107,6 +107,45 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateRe
 	}
 	if _, err := s.client.DS.DeleteTemplate(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("delete template failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// BatchDeleteTemplate delete templates in batch
+func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDeleteTemplateReq) (*pbcs.
+	BatchDeleteTemplateResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.BatchDeleteTemplateResp)
+
+	templateIDs, err := tools.GetUint32List(req.TemplateIds)
+	if err != nil {
+		return nil, fmt.Errorf("invalid template ids, %s", err)
+	}
+	idsLen := len(templateIDs)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Delete,
+		ResourceID: templateIDs[0]}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.BatchDeleteTemplateReq{
+		Ids: templateIDs,
+		Attachment: &pbtemplate.TemplateAttachment{
+			BizId:           grpcKit.BizID,
+			TemplateSpaceId: req.TemplateSpaceId,
+		},
+		Force: req.Force,
+	}
+	if _, err := s.client.DS.BatchDeleteTemplate(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("batch delete template failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

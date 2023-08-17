@@ -61,6 +61,7 @@ const (
 	Config_ListTemplateSpacesByIDs_FullMethodName                    = "/pbcs.Config/ListTemplateSpacesByIDs"
 	Config_CreateTemplate_FullMethodName                             = "/pbcs.Config/CreateTemplate"
 	Config_DeleteTemplate_FullMethodName                             = "/pbcs.Config/DeleteTemplate"
+	Config_BatchDeleteTemplate_FullMethodName                        = "/pbcs.Config/BatchDeleteTemplate"
 	Config_UpdateTemplate_FullMethodName                             = "/pbcs.Config/UpdateTemplate"
 	Config_ListTemplates_FullMethodName                              = "/pbcs.Config/ListTemplates"
 	Config_AddTemplatesToTemplateSets_FullMethodName                 = "/pbcs.Config/AddTemplatesToTemplateSets"
@@ -159,6 +160,7 @@ type ConfigClient interface {
 	ListTemplateSpacesByIDs(ctx context.Context, in *ListTemplateSpacesByIDsReq, opts ...grpc.CallOption) (*ListTemplateSpacesByIDsResp, error)
 	CreateTemplate(ctx context.Context, in *CreateTemplateReq, opts ...grpc.CallOption) (*CreateTemplateResp, error)
 	DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, opts ...grpc.CallOption) (*DeleteTemplateResp, error)
+	BatchDeleteTemplate(ctx context.Context, in *BatchDeleteTemplateReq, opts ...grpc.CallOption) (*BatchDeleteTemplateResp, error)
 	UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*UpdateTemplateResp, error)
 	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
 	AddTemplatesToTemplateSets(ctx context.Context, in *AddTemplatesToTemplateSetsReq, opts ...grpc.CallOption) (*AddTemplatesToTemplateSetsResp, error)
@@ -563,6 +565,15 @@ func (c *configClient) CreateTemplate(ctx context.Context, in *CreateTemplateReq
 func (c *configClient) DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, opts ...grpc.CallOption) (*DeleteTemplateResp, error) {
 	out := new(DeleteTemplateResp)
 	err := c.cc.Invoke(ctx, Config_DeleteTemplate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) BatchDeleteTemplate(ctx context.Context, in *BatchDeleteTemplateReq, opts ...grpc.CallOption) (*BatchDeleteTemplateResp, error) {
+	out := new(BatchDeleteTemplateResp)
+	err := c.cc.Invoke(ctx, Config_BatchDeleteTemplate_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1057,6 +1068,7 @@ type ConfigServer interface {
 	ListTemplateSpacesByIDs(context.Context, *ListTemplateSpacesByIDsReq) (*ListTemplateSpacesByIDsResp, error)
 	CreateTemplate(context.Context, *CreateTemplateReq) (*CreateTemplateResp, error)
 	DeleteTemplate(context.Context, *DeleteTemplateReq) (*DeleteTemplateResp, error)
+	BatchDeleteTemplate(context.Context, *BatchDeleteTemplateReq) (*BatchDeleteTemplateResp, error)
 	UpdateTemplate(context.Context, *UpdateTemplateReq) (*UpdateTemplateResp, error)
 	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
 	AddTemplatesToTemplateSets(context.Context, *AddTemplatesToTemplateSetsReq) (*AddTemplatesToTemplateSetsResp, error)
@@ -1228,6 +1240,9 @@ func (UnimplementedConfigServer) CreateTemplate(context.Context, *CreateTemplate
 }
 func (UnimplementedConfigServer) DeleteTemplate(context.Context, *DeleteTemplateReq) (*DeleteTemplateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplate not implemented")
+}
+func (UnimplementedConfigServer) BatchDeleteTemplate(context.Context, *BatchDeleteTemplateReq) (*BatchDeleteTemplateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteTemplate not implemented")
 }
 func (UnimplementedConfigServer) UpdateTemplate(context.Context, *UpdateTemplateReq) (*UpdateTemplateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTemplate not implemented")
@@ -2086,6 +2101,24 @@ func _Config_DeleteTemplate_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).DeleteTemplate(ctx, req.(*DeleteTemplateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_BatchDeleteTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteTemplateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchDeleteTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchDeleteTemplate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchDeleteTemplate(ctx, req.(*BatchDeleteTemplateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3134,6 +3167,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteTemplate",
 			Handler:    _Config_DeleteTemplate_Handler,
+		},
+		{
+			MethodName: "BatchDeleteTemplate",
+			Handler:    _Config_BatchDeleteTemplate_Handler,
 		},
 		{
 			MethodName: "UpdateTemplate",

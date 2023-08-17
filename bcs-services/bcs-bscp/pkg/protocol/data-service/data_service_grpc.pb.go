@@ -76,6 +76,7 @@ const (
 	Data_ListTemplates_FullMethodName                              = "/pbds.Data/ListTemplates"
 	Data_UpdateTemplate_FullMethodName                             = "/pbds.Data/UpdateTemplate"
 	Data_DeleteTemplate_FullMethodName                             = "/pbds.Data/DeleteTemplate"
+	Data_BatchDeleteTemplate_FullMethodName                        = "/pbds.Data/BatchDeleteTemplate"
 	Data_AddTemplatesToTemplateSets_FullMethodName                 = "/pbds.Data/AddTemplatesToTemplateSets"
 	Data_DeleteTemplatesFromTemplateSets_FullMethodName            = "/pbds.Data/DeleteTemplatesFromTemplateSets"
 	Data_ListTemplatesByIDs_FullMethodName                         = "/pbds.Data/ListTemplatesByIDs"
@@ -192,6 +193,7 @@ type DataClient interface {
 	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
 	UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	BatchDeleteTemplate(ctx context.Context, in *BatchDeleteTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	AddTemplatesToTemplateSets(ctx context.Context, in *AddTemplatesToTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteTemplatesFromTemplateSets(ctx context.Context, in *DeleteTemplatesFromTemplateSetsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListTemplatesByIDs(ctx context.Context, in *ListTemplatesByIDsReq, opts ...grpc.CallOption) (*ListTemplatesByIDsResp, error)
@@ -699,6 +701,15 @@ func (c *dataClient) UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, 
 func (c *dataClient) DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_DeleteTemplate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) BatchDeleteTemplate(ctx context.Context, in *BatchDeleteTemplateReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_BatchDeleteTemplate_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1219,6 +1230,7 @@ type DataServer interface {
 	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
 	UpdateTemplate(context.Context, *UpdateTemplateReq) (*base.EmptyResp, error)
 	DeleteTemplate(context.Context, *DeleteTemplateReq) (*base.EmptyResp, error)
+	BatchDeleteTemplate(context.Context, *BatchDeleteTemplateReq) (*base.EmptyResp, error)
 	AddTemplatesToTemplateSets(context.Context, *AddTemplatesToTemplateSetsReq) (*base.EmptyResp, error)
 	DeleteTemplatesFromTemplateSets(context.Context, *DeleteTemplatesFromTemplateSetsReq) (*base.EmptyResp, error)
 	ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error)
@@ -1433,6 +1445,9 @@ func (UnimplementedDataServer) UpdateTemplate(context.Context, *UpdateTemplateRe
 }
 func (UnimplementedDataServer) DeleteTemplate(context.Context, *DeleteTemplateReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplate not implemented")
+}
+func (UnimplementedDataServer) BatchDeleteTemplate(context.Context, *BatchDeleteTemplateReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteTemplate not implemented")
 }
 func (UnimplementedDataServer) AddTemplatesToTemplateSets(context.Context, *AddTemplatesToTemplateSetsReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTemplatesToTemplateSets not implemented")
@@ -2474,6 +2489,24 @@ func _Data_DeleteTemplate_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).DeleteTemplate(ctx, req.(*DeleteTemplateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_BatchDeleteTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteTemplateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).BatchDeleteTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_BatchDeleteTemplate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).BatchDeleteTemplate(ctx, req.(*BatchDeleteTemplateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3580,6 +3613,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteTemplate",
 			Handler:    _Data_DeleteTemplate_Handler,
+		},
+		{
+			MethodName: "BatchDeleteTemplate",
+			Handler:    _Data_BatchDeleteTemplate_Handler,
 		},
 		{
 			MethodName: "AddTemplatesToTemplateSets",

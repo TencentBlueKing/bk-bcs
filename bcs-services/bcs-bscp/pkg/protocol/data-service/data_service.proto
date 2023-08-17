@@ -98,6 +98,7 @@ service Data {
     rpc ListTemplates(ListTemplatesReq) returns (ListTemplatesResp) {}
     rpc UpdateTemplate(UpdateTemplateReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplate(DeleteTemplateReq) returns (pbbase.EmptyResp) {}
+    rpc BatchDeleteTemplate(BatchDeleteTemplateReq) returns (pbbase.EmptyResp) {}
     rpc AddTemplatesToTemplateSets(AddTemplatesToTemplateSetsReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplatesFromTemplateSets(DeleteTemplatesFromTemplateSetsReq) returns (pbbase.EmptyResp) {}
     rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {}
@@ -623,6 +624,12 @@ message UpdateTemplateReq {
 
 message DeleteTemplateReq {
     uint32                        id         = 1;
+    pbtemplate.TemplateAttachment attachment = 2;
+    bool                          force      = 3;
+}
+
+message BatchDeleteTemplateReq {
+    repeated uint32               ids        = 1;
     pbtemplate.TemplateAttachment attachment = 2;
     bool                          force      = 3;
 }

@@ -248,6 +248,11 @@ service Config {
             delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}"
         };
     }
+    rpc BatchDeleteTemplate(BatchDeleteTemplateReq) returns (BatchDeleteTemplateResp) {
+        option (google.api.http) = {
+            delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates"
+        };
+    }
     rpc UpdateTemplate(UpdateTemplateReq) returns (UpdateTemplateResp) {
         option (google.api.http) = {
             put : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}"
@@ -1061,6 +1066,15 @@ message DeleteTemplateReq {
 }
 
 message DeleteTemplateResp {}
+
+message BatchDeleteTemplateReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    string template_ids      = 3;
+    bool   force             = 4;
+}
+
+message BatchDeleteTemplateResp {}
 
 message ListTemplatesReq {
     uint32 biz_id            = 1;
