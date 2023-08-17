@@ -28,7 +28,6 @@ const (
 	Cache_GetCurrentCursorReminder_FullMethodName = "/pbcs.Cache/GetCurrentCursorReminder"
 	Cache_ListEventsMeta_FullMethodName           = "/pbcs.Cache/ListEventsMeta"
 	Cache_GetCredential_FullMethodName            = "/pbcs.Cache/GetCredential"
-	Cache_ListCredentialMatchedCI_FullMethodName  = "/pbcs.Cache/ListCredentialMatchedCI"
 	Cache_BenchAppMeta_FullMethodName             = "/pbcs.Cache/BenchAppMeta"
 	Cache_BenchReleasedCI_FullMethodName          = "/pbcs.Cache/BenchReleasedCI"
 )
@@ -45,7 +44,6 @@ type CacheClient interface {
 	GetCurrentCursorReminder(ctx context.Context, in *base.EmptyReq, opts ...grpc.CallOption) (*CurrentCursorReminderResp, error)
 	ListEventsMeta(ctx context.Context, in *ListEventsReq, opts ...grpc.CallOption) (*ListEventsResp, error)
 	GetCredential(ctx context.Context, in *GetCredentialReq, opts ...grpc.CallOption) (*JsonRawResp, error)
-	ListCredentialMatchedCI(ctx context.Context, in *ListCredentialMatchedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	// only stress test use.
 	BenchAppMeta(ctx context.Context, in *BenchAppMetaReq, opts ...grpc.CallOption) (*BenchAppMetaResp, error)
 	BenchReleasedCI(ctx context.Context, in *BenchReleasedCIReq, opts ...grpc.CallOption) (*BenchReleasedCIResp, error)
@@ -131,15 +129,6 @@ func (c *cacheClient) GetCredential(ctx context.Context, in *GetCredentialReq, o
 	return out, nil
 }
 
-func (c *cacheClient) ListCredentialMatchedCI(ctx context.Context, in *ListCredentialMatchedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error) {
-	out := new(JsonRawResp)
-	err := c.cc.Invoke(ctx, Cache_ListCredentialMatchedCI_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *cacheClient) BenchAppMeta(ctx context.Context, in *BenchAppMetaReq, opts ...grpc.CallOption) (*BenchAppMetaResp, error) {
 	out := new(BenchAppMetaResp)
 	err := c.cc.Invoke(ctx, Cache_BenchAppMeta_FullMethodName, in, out, opts...)
@@ -170,7 +159,6 @@ type CacheServer interface {
 	GetCurrentCursorReminder(context.Context, *base.EmptyReq) (*CurrentCursorReminderResp, error)
 	ListEventsMeta(context.Context, *ListEventsReq) (*ListEventsResp, error)
 	GetCredential(context.Context, *GetCredentialReq) (*JsonRawResp, error)
-	ListCredentialMatchedCI(context.Context, *ListCredentialMatchedCIReq) (*JsonRawResp, error)
 	// only stress test use.
 	BenchAppMeta(context.Context, *BenchAppMetaReq) (*BenchAppMetaResp, error)
 	BenchReleasedCI(context.Context, *BenchReleasedCIReq) (*BenchReleasedCIResp, error)
@@ -203,9 +191,6 @@ func (UnimplementedCacheServer) ListEventsMeta(context.Context, *ListEventsReq) 
 }
 func (UnimplementedCacheServer) GetCredential(context.Context, *GetCredentialReq) (*JsonRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCredential not implemented")
-}
-func (UnimplementedCacheServer) ListCredentialMatchedCI(context.Context, *ListCredentialMatchedCIReq) (*JsonRawResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListCredentialMatchedCI not implemented")
 }
 func (UnimplementedCacheServer) BenchAppMeta(context.Context, *BenchAppMetaReq) (*BenchAppMetaResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BenchAppMeta not implemented")
@@ -369,24 +354,6 @@ func _Cache_GetCredential_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Cache_ListCredentialMatchedCI_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListCredentialMatchedCIReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CacheServer).ListCredentialMatchedCI(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Cache_ListCredentialMatchedCI_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CacheServer).ListCredentialMatchedCI(ctx, req.(*ListCredentialMatchedCIReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Cache_BenchAppMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BenchAppMetaReq)
 	if err := dec(in); err != nil {
@@ -461,10 +428,6 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCredential",
 			Handler:    _Cache_GetCredential_Handler,
-		},
-		{
-			MethodName: "ListCredentialMatchedCI",
-			Handler:    _Cache_ListCredentialMatchedCI_Handler,
 		},
 		{
 			MethodName: "BenchAppMeta",
