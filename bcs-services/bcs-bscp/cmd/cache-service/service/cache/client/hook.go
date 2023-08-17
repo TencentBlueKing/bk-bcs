@@ -129,15 +129,14 @@ func (c *client) refreshReleasedHookCache(kt *kit.Kit, bizID uint32, releaseID u
 		return "", err
 	}
 
-	c.mc.releasedHookByteSize.With(prm.Labels{"rsc": releasedHookRes, "biz": tools.Itoa(bizID)}).
-		Observe(float64(len(js)))
-
 	err = c.bds.Set(kt.Ctx, hookKey, string(js), keys.Key.ReleasedHookTtlSec(false))
 	if err != nil {
 		logs.Errorf("refresh biz: %d, release: %d hook cache failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
 		return "", err
 	}
 
+	c.mc.cacheItemByteSize.With(prm.Labels{"rsc": releasedHookRes, "biz": tools.Itoa(bizID)}).Observe(float64(len(js)))
+	
 	// return the array string json.
 	return string(js), nil
 }
