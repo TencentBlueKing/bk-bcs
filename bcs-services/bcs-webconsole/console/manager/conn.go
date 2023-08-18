@@ -32,6 +32,7 @@ import (
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/terminalRecord"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -60,6 +61,7 @@ type RemoteStreamConn struct {
 	inputMsgChan  <-chan wsMessage
 	outputMsgChan chan []byte
 	hideBanner    bool
+	replayInfo    *terminalRecord.ReplyInfo
 }
 
 // NewRemoteStreamConn :
@@ -72,17 +74,24 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 		resizeMsgChan: make(chan *TerminalSize, 1), // 放入初始宽高
 		outputMsgChan: make(chan []byte),
 		hideBanner:    hideBanner,
+		replayInfo:    &terminalRecord.ReplyInfo{},
 	}
 
 	// 初始化命令行宽和高
 	if initTerminalSize != nil {
 		conn.resizeMsgChan <- initTerminalSize
+		conn.replayInfo.Width = initTerminalSize.Cols
+		conn.replayInfo.Height = initTerminalSize.Rows
+		conn.replayInfo.TimeStamp = time.Now()
 	} else {
 		// 前端没有指定长宽高, 使用默认值
 		conn.resizeMsgChan <- &TerminalSize{
 			Rows: DefaultRows,
 			Cols: DefaultCols,
 		}
+		conn.replayInfo.Width = DefaultCols
+		conn.replayInfo.Height = DefaultRows
+		conn.replayInfo.TimeStamp = time.Now()
 	}
 
 	return conn
@@ -235,6 +244,12 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 
 	guideMessages := helloMessage(c, r.bindMgr.PodCtx.Source)
 	notSendMsg := true
+	//终端session记录
+	replayRecorder, err := terminalRecord.NewReplayRecord(r.bindMgr.PodCtx.SessionId, r.replayInfo)
+	if err != nil {
+		return errors.Errorf("new replayRecord error:%s\n", err)
+	}
+	defer replayRecorder.End()
 
 	for {
 		select {
@@ -248,10 +263,15 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 			}
 			// 收到首个字节才发送 hello 信息
 			if notSendMsg && !r.hideBanner {
+				terminalRecord.Record(replayRecorder, []byte(guideMessages))
 				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
 				notSendMsg = false
 			}
 
+			dst := make([]byte, base64.StdEncoding.DecodedLen(len(output)))
+			n, _ := base64.StdEncoding.Decode(dst, output)
+			dst = dst[:n]
+			terminalRecord.Record(replayRecorder, dst)
 			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {
 				return err
 			}
