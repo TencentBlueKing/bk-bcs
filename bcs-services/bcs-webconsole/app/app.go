@@ -46,6 +46,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/ternimalReplay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
@@ -177,6 +178,21 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 				os.Exit(1)
 				return err
 			}
+			os.Exit(0)
+			return nil
+		}
+		//回放文件
+		replayFile := c.String("replay")
+		if replayFile == "" {
+			logger.Errorf("replay file not set, exited")
+			os.Exit(1)
+		}
+		err := ternimalReplay.Replay(replayFile)
+		if err != nil {
+			logger.Errorf("replay failure, err: %s, exited", err)
+			os.Exit(1)
+			return err
+		} else if err == nil {
 			os.Exit(0)
 			return nil
 		}
@@ -363,6 +379,10 @@ func buildFlags() []cli.Flag {
 			Name:    "confinfo",
 			Usage:   "print init confinfo to stdout",
 			Aliases: []string{"o"},
+		},
+		&cli.StringFlag{
+			Name:  "replay",
+			Usage: "replay terminal session record",
 		},
 	}
 }
