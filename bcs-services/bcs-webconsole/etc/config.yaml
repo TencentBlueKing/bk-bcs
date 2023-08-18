@@ -65,3 +65,7 @@ tracing:
   resource_attrs:
     k1: ""
     k2: ""
+
+terminal_record:
+  enable: true
+  file_path: ""
