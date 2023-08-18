@@ -55,8 +55,8 @@ const (
 	AppDelete client.ActionID = "app_delete"
 	// GenerateRelease generate release.
 	GenerateRelease client.ActionID = "generate_release"
-	// ConfigItemPublish config item publish.
-	ConfigItemPublish client.ActionID = "config_item_publish"
+	// ReleasePublish release publish.
+	ReleasePublish client.ActionID = "release_publish"
 	// ConfigItemFinishPublish config item finish publish.
 	ConfigItemFinishPublish client.ActionID = "config_item_finish_publish"
 
@@ -108,7 +108,7 @@ var ActionIDNameMap = map[client.ActionID]string{
 	AppEdit:                 "服务编辑",
 	AppDelete:               "服务删除",
 	GenerateRelease:         "生成版本",
-	ConfigItemPublish:       "上线版本",
+	ReleasePublish:          "上线版本",
 	ConfigItemFinishPublish: "配置项结束发布",
 
 	StrategySetCreate: "策略集创建",
