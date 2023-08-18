@@ -69,7 +69,7 @@ bcs-k8s: bcs-component bcs-network
 
 bcs-component:k8s-driver \
 	cc-agent kube-sche apiserver-proxy \
-	apiserver-proxy-tools logbeat-sidecar webhook-server \
+	logbeat-sidecar webhook-server \
 	general-pod-autoscaler cluster-autoscaler
 
 bcs-network:network networkpolicy cloud-netservice cloud-netcontroller cloud-netagent
@@ -440,11 +440,6 @@ apiserver-proxy:pre
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-apiserver-proxy/* ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
 	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/bcs-apiserver-proxy ./main.go
 	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy/ipvs_tools && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/apiserver-proxy-tools .
-
-apiserver-proxy-tools:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
-	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy/ipvs_tools && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/apiserver-proxy-tools .
-
 
 data-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-data-manager
