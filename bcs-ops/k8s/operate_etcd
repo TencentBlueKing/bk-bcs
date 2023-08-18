@@ -183,6 +183,10 @@ new_etcd() {
   cert=${8}
   key=${9}
 
+  if [[ -d ${data_dir} ]];then
+    utils::log "FATAL" "${data_dir} already exists"
+  fi
+  
   cp /etc/kubernetes/manifests/etcd.yaml /tmp/etcd-"${name}".yaml
   sed -i "s|--initial-cluster=.*|--initial-cluster=${initial_cluster}|g" /tmp/etcd-"${name}".yaml
   sed -i "s|/data/bcs/lib/etcd|${data_dir}|g" /tmp/etcd-"${name}".yaml

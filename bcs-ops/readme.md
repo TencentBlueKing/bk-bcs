@@ -1,6 +1,6 @@
-bcs-ops
+# bcs-ops
 
-# Usage
+## Usage
 
 ```plaintext
 Usage:
@@ -94,3 +94,121 @@ ip route add 10/8 via <next hop> dev <interface> src <lan_ipv4>
 ip -6 route add fd00::/8 via <next hop> dev <interface> src <lan_ipv6>
 ```
 > 注意：`fe80::/10` link-local 地址不能用于 k8s 的 node-ip。
+
+---
+# etcd 操作
+## 脚本
+### 1. operate_etcd backup (etcd 备份)
+
+参数 
+1. endpoint etcd实例IP
+2. cacert 访问etcd的ca证书文件路径
+3. cert 访问etcd的证书文件路径
+4. key 访问etcd的key文件路径
+5. backup_file 备份文件路径
+
+功能描述
+
+1. 请求endpoint指定的etcd实例，获取snapshot存储在backup_file指定的路径
+
+
+### 2. operate_etcd restore (etcd 恢复)
+> 注意：etcd集群恢复时所有etcd节点都必须使用同一份snapshot文件恢复
+
+参数 
+1. backup_file 备份文件路径
+2. data_dir 数据恢复路径
+3. member_name 本机的etcd节点的名字
+4. member_peer 本机的etcd节点的peer url
+5. initial_cluster 此次恢复的etcd集群所有成员信息
+
+功能描述
+
+1. 根据member_name，member_peer，initial_cluster参数将数据从backup_file中恢复到data_dir
+
+### 3. operate_etcd new (etcd 新实例)
+
+参数 
+1. name etcd集群名
+2. data_dir 数据目录
+3. peer_port etcd节点peer port
+4. service_port etcd节点service port
+5. metric_port etcd节点metric port
+6. initial_cluster 此次恢复的etcd集群所有成员信息
+7. cacert 访问etcd的ca证书文件路径
+8. cert 访问etcd的证书文件路径
+9. key 访问etcd的key文件路径
+
+
+功能描述
+
+1. 根据参数基于原本kubeadm创建出来的etcd.yaml文件进行替换，并用静态pod的方式拉起新集群的本机节点
+
+
+
+## 标准运维
+### 1. 【BCS】etcd backup
+
+参数 
+1. host_ip_list 需要进行备份的etcd节点ip，多个使用,隔开
+2. cacert 访问etcd的ca证书文件路径
+3. cert 访问etcd的证书文件路径
+4. key 访问etcd的key文件路径
+5. backup_file 备份文件路径
+6. workspace 节点上的bcs-ops目录
+
+功能描述
+
+1. 在各个etcd节点上，通过本机的endpoint获取snapshot到backup_file指定目录
+
+### 2. 【BCS】etcd restore
+
+参数 
+1. host_ip_list 需要进行备份的etcd节点ip，多个使用,隔开
+2. source_host 备份文件来源机器
+3. source_file 备份文件路径
+4. data_dir etcd数据目录
+5. clusterinfo_file 集群信息文件路径
+6. workspace 节点上的bcs-ops目录
+
+功能描述
+
+1. 将source_file备份文件从source_host传到各台etcd节点机器上后，根据clusterinfo_file中的信息将数据恢复到data_dir指定的目录
+
+### 3. etcd new
+
+参数 
+1. host_ip_list 新集群的etcd节点ip，多个使用,隔开
+2. name etcd集群名
+3. data_dir 数据目录
+4. peer_port etcd节点peer port
+5. service_port etcd节点service port
+6. metric_port etcd节点metric port
+7. initial_cluster 此次恢复的etcd集群所有成员信息
+8. cacert 访问etcd的ca证书文件路径
+9. cert 访问etcd的证书文件路径
+10. key 访问etcd的key文件路径
+11. workspace 节点上的bcs-ops目录
+
+功能描述
+
+1. 根据参数基于原本kubeadm创建出来的etcd.yaml文件进行替换，并用静态pod的方式拉起新集群的所有节点
+
+
+
+# 集群控制面故障替换
+## 标准运维
+### 1. 【BCS】K8S master replace
+
+参数 
+1. master_ip 一个当前存在于集群的master，且不是本次被替换的master的ip
+2. new_master_ip 本次将被替换进集群的master的ip
+3. unwanted_master_ip 本次将被替换出集群的master的ip
+4. unwanted_master_name 本次将被替换进集群的master的节点名
+5. workspace 节点上的bcs-ops目录
+
+功能描述
+
+1. 扩容new_master_ip指定的master节点
+
+2. 清理掉unwanted_master_ip指定的master节点上的k8s环境以及unwanted_master_name对应的k8s节点以及etcd节点
