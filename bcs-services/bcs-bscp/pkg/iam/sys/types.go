@@ -88,6 +88,15 @@ const (
 	Unsupported client.ActionID = "unsupported"
 	// Skip is an action that no need to auth
 	Skip client.ActionID = "skip"
+
+	// CredentialCreate 服务密钥创建
+	CredentialCreate client.ActionID = "app_credential_create"
+	// CredentialView 服务密钥查看
+	CredentialView client.ActionID = "app_credential_view"
+	// CredentialEdit 服务密钥编辑
+	CredentialEdit client.ActionID = "app_credential_edit"
+	// CredentialDelete 服务密钥删除
+	CredentialDelete client.ActionID = "app_credential_delete"
 )
 
 // ActionIDNameMap is action id type map.
@@ -115,6 +124,11 @@ var ActionIDNameMap = map[client.ActionID]string{
 	GroupDelete: "分组删除",
 
 	TaskHistoryView: "任务历史",
+
+	CredentialCreate: "服务密钥创建",
+	CredentialView:   "服务密钥查看",
+	CredentialEdit:   "服务密钥编辑",
+	CredentialDelete: "服务密钥删除",
 }
 
 // InstanceSelectionID selection id to register iam.
@@ -130,6 +144,7 @@ const (
 	View   client.ActionType = "view"
 	Edit   client.ActionType = "edit"
 	List   client.ActionType = "list"
+	Manage client.ActionType = "manage"
 )
 
 // ActionTypeIDNameMap is action type map.
