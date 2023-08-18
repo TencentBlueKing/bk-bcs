@@ -35,7 +35,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 
 	if _, err := s.dao.Template().GetByUniqueKey(kt, req.Attachment.BizId, req.Attachment.TemplateSpaceId,
 		req.Spec.Name, req.Spec.Path); err == nil {
-		return nil, fmt.Errorf("template's same name %s and path %s already exists", req.Spec.Name, req.Spec.Path)
+		return nil, fmt.Errorf("config item's same name %s and path %s already exists", req.Spec.Name, req.Spec.Path)
 	}
 	if len(req.TemplateSetIds) > 0 {
 		if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.TemplateSetIds); err != nil {
