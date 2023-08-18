@@ -5,7 +5,7 @@ go 1.20
 replace moul.io/http2curl => moul.io/http2curl/v2 v2.3.0
 
 require (
-	github.com/TencentBlueKing/iam-go-sdk v0.1.3
+	github.com/TencentBlueKing/iam-go-sdk v0.1.4
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/parnurzeal/gorequest v0.2.16
