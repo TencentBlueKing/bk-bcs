@@ -53,8 +53,8 @@ const (
 	AppEdit client.ActionID = "app_edit"
 	// AppDelete app delete.
 	AppDelete client.ActionID = "app_delete"
-	// ConfigItemPacking config item packing.
-	ConfigItemPacking client.ActionID = "config_item_packing"
+	// GenerateRelease generate release.
+	GenerateRelease client.ActionID = "generate_release"
 	// ConfigItemPublish config item publish.
 	ConfigItemPublish client.ActionID = "config_item_publish"
 	// ConfigItemFinishPublish config item finish publish.
@@ -107,7 +107,7 @@ var ActionIDNameMap = map[client.ActionID]string{
 	AppView:                 "服务查看",
 	AppEdit:                 "服务编辑",
 	AppDelete:               "服务删除",
-	ConfigItemPacking:       "生成版本",
+	GenerateRelease:         "生成版本",
 	ConfigItemPublish:       "上线版本",
 	ConfigItemFinishPublish: "配置项结束发布",
 
