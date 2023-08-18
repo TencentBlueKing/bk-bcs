@@ -105,6 +105,12 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 		}
 	}
 
+	if len(req.Spec.TemplateIds) > 0 {
+		if err := s.dao.Validator().ValidateTemplatesExist(kt, req.Spec.TemplateIds); err != nil {
+			return nil, err
+		}
+	}
+
 	templateSet := &table.TemplateSet{
 		ID:         req.Id,
 		Spec:       req.Spec.TemplateSetSpec(),

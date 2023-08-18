@@ -114,6 +114,7 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbcs.UpdateTemplat
 			TemplateSpaceId: req.TemplateSpaceId,
 		},
 		Spec: &pbtset.TemplateSetSpec{
+			Name:        req.Name,
 			Memo:        req.Memo,
 			TemplateIds: req.TemplateIds,
 			Public:      req.Public,
