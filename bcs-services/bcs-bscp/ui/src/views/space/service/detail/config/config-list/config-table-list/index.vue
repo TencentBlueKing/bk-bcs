@@ -174,7 +174,13 @@
     </div>
     <section class="config-list-table">
       <bk-loading :loading="loading">
-        <bk-table v-if="!loading" :border="['outer']" :data="configList">
+        <bk-table
+          v-if="!loading"
+          :border="['outer']"
+          :data="configList"
+          :pagination="pagination"
+          @page-limit-change="handlePageLimitChange"
+          @page-change="refreshConfigList($event)">
           <bk-table-column label="配置文件名" prop="spec.name" :sort="true" :min-width="240" show-overflow-tooltip>
             <template #default="{ row }">
               <bk-button
@@ -213,15 +219,6 @@
             </template>
           </bk-table-column>
         </bk-table>
-        <bk-pagination
-          class="table-list-pagination"
-          v-model="pagination.current"
-          location="left"
-          :layout="['total', 'limit', 'list']"
-          :count="pagination.count"
-          :limit="pagination.limit"
-          @change="refreshConfigList($event)"
-          @limit-change="handlePageLimitChange"/>
       </bk-loading>
       <edit-config
         v-model:show="editPanelShow"
@@ -303,15 +300,6 @@
   .operate-action-btns {
     .bk-button:not(:last-of-type) {
       margin-right: 8px;
-    }
-  }
-  .table-list-pagination {
-    padding: 12px;
-    border: 1px solid #dcdee5;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    :deep(.bk-pagination-list.is-last) {
-      margin-left: auto;
     }
   }
 </style>

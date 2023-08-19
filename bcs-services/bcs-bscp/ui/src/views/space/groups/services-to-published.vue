@@ -74,7 +74,12 @@
         </bk-input>
       </div>
       <bk-loading class="loading-wrapper" :loading="loading">
-        <bk-table :data="list" :border="['outer']">
+        <bk-table
+          :data="list"
+          :border="['outer']"
+          :pagination="pagination"
+          @page-limit-change="handlePageLimitChange"
+          @page-change="loadServicesList">
           <bk-table-column label="服务名称" prop="app_name"></bk-table-column>
           <bk-table-column label="服务版本">
             <template #default="{ row }">
@@ -82,15 +87,6 @@
             </template>
           </bk-table-column>
         </bk-table>
-        <bk-pagination
-          class="table-list-pagination"
-          v-model="pagination.current"
-          location="left"
-          :layout="['total', 'limit', 'list']"
-          :count="pagination.count"
-          :limit="pagination.limit"
-          @change="loadServicesList"
-          @limit-change="handlePageLimitChange" />
       </bk-loading>
     </div>
     <div class="action-btn">
@@ -122,16 +118,6 @@
   }
   .link-btn {
     font-size: 12px;
-  }
-  .table-list-pagination {
-    padding: 12px;
-    border: 1px solid #dcdee5;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    background-color: #ffffff;
-    :deep(.bk-pagination-list.is-last) {
-      margin-left: auto;
-    }
   }
   .action-btn {
     padding: 8px 24px;

@@ -5,12 +5,14 @@
   import { AngleDown } from 'bkui-vue/lib/icon'
   import { useGlobalStore } from '../store/global'
   import { useUserStore } from '../store/user'
+  import { useTemplateStore } from '../store/template'
   import { ISpaceDetail } from '../../types/index'
 
   const route = useRoute()
   const router = useRouter()
   const { spaceId, spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore())
   const { userInfo } = storeToRefs(useUserStore())
+  const templateStore = useTemplateStore()
 
   const navList = [
     { id: 'service-mine', module: 'service', name: '服务管理'},
@@ -64,7 +66,18 @@
         showApplyPermDialog.value = true
         return
       }
-      router.push({ name: 'service-mine', params: { spaceId: id } })
+      console.log(route)
+      templateStore.$patch((state) => {
+        state.templateSpaceList = []
+        state.currentTemplateSpace = 0
+        state.currentPkg = ''
+      })
+      const nav = navList.find(item => item.module === route.meta.navModule)
+      if (nav) {
+        router.push({ name: nav.id, params: { spaceId: id } })
+      } else {
+        router.push({ name: 'service-mine', params: { spaceId: id } })
+      }
     }
   }
 

@@ -96,6 +96,8 @@
     emits('update:selectedConfigs', configs)
   }
 
+  const handleEditConfig = () => {}
+
   const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {
     isAddToPkgsDialogShow.value = true
     crtConfig.value = [config]
@@ -139,43 +141,45 @@
           </template>
       </bk-input>
     </div>
-    <bk-table empty-text="暂无配置项" :border="['outer']" :data="list" @selection-change="handleSelectionChange">
-      <bk-table-column type="selection" :width="80"></bk-table-column>
-      <bk-table-column label="配置项名称">
-        <template #default="{ row }">
-          <div v-if="row.spec">{{ row.spec.name }}</div>
-        </template>
-      </bk-table-column>
-      <bk-table-column label="配置项路径" prop="spec.path"></bk-table-column>
-      <bk-table-column label="配置项描述" prop="spec.memo"></bk-table-column>
-      <slot name="columns"></slot>
-      <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
-      <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
-      <bk-table-column label="更新时间" prop="revision.update_at"></bk-table-column>
-      <bk-table-column label="操作" width="120">
-        <template #default="{ row }">
-          <div class="actions-wrapper">
-            <slot name="columnOperations" :config="row">
-              <bk-button theme='primary' text @click="goToVersionManange(row.id)">版本管理</bk-button>
-              <bk-popover
-                theme="light template-config-actions-popover"
-                placement="bottom-end"
-                :arrow="false">
-                <div class="more-actions">
-                  <Ellipsis class="ellipsis-icon" />
-                </div>
-                <template #content>
-                  <div class="config-actions">
-                    <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">添加至套餐</div>
-                    <div class="action-item" @click="handleOpenMoveOutFromPkgsDialog(row)">移出套餐</div>
+    <bk-loading style="min-height: 200px;" :loading="loading">
+      <bk-table empty-text="暂无配置项" :border="['outer']" :data="list" @selection-change="handleSelectionChange">
+        <bk-table-column type="selection" :fixed="true" :width="40"></bk-table-column>
+        <bk-table-column label="配置项名称" :fixed="true" :width="280">
+          <template #default="{ row }">
+            <div v-if="row.spec" @click="handleEditConfig">{{ row.spec.name }}</div>
+          </template>
+        </bk-table-column>
+        <bk-table-column label="配置项路径" prop="spec.path" :width="280"></bk-table-column>
+        <bk-table-column label="配置项描述" prop="spec.memo"></bk-table-column>
+        <slot name="columns"></slot>
+        <bk-table-column label="创建人" prop="revision.creator" :width="100"></bk-table-column>
+        <bk-table-column label="更新人" prop="revision.reviser" :width="100"></bk-table-column>
+        <bk-table-column label="更新时间" prop="revision.update_at" :width="180"></bk-table-column>
+        <bk-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <div class="actions-wrapper">
+              <slot name="columnOperations" :config="row">
+                <bk-button theme='primary' text @click="goToVersionManange(row.id)">版本管理</bk-button>
+                <bk-popover
+                  theme="light template-config-actions-popover"
+                  placement="bottom-end"
+                  :arrow="false">
+                  <div class="more-actions">
+                    <Ellipsis class="ellipsis-icon" />
                   </div>
-                </template>
-              </bk-popover>
-            </slot>
-          </div>
-        </template>
-      </bk-table-column>
-    </bk-table>
+                  <template #content>
+                    <div class="config-actions">
+                      <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">添加至套餐</div>
+                      <div class="action-item" @click="handleOpenMoveOutFromPkgsDialog(row)">移出套餐</div>
+                    </div>
+                  </template>
+                </bk-popover>
+              </slot>
+            </div>
+          </template>
+        </bk-table-column>
+      </bk-table>
+    </bk-loading>
     <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" />
     <MoveOutFromPkgsDialog
       v-model:show="isMoveOutFromPkgsDialogShow"

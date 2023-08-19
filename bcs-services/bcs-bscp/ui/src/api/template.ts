@@ -122,6 +122,18 @@ export const getUnNamedVersionAppsBoundByPackage = (biz_id: string, template_spa
 }
 
 /**
+ * 获取多个模板套餐被未命名版本引用的服务引用列表
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @returns
+ */
+export const getUnNamedVersionAppsBoundByPackages = (biz_id: string, template_space_id: number, template_sets: number[], params: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/bound_unnamed_app_details`, {
+    params: { template_set_ids: template_sets.join(','), ...params }
+  })
+}
+
+/**
  * 获取当前模板套餐被已生成版本引用的服务引用列表
  * @param biz_id 业务ID
  * @param template_space_id 模板空间ID
@@ -185,8 +197,8 @@ export const getTemplatesDetailByIds = (biz_id: string, ids: number[]) => {
  * @param template_set_ids 模板套餐列表
  * @returns
  */
-export const addTemplateToPackage = (biz_id: string, template_space_id: number, template_id: number, template_set_ids: number[]) => {
-  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/add_to_template_sets`, { template_set_ids })
+export const addTemplateToPackage = (biz_id: string, template_space_id: number, template_ids: number[], template_set_ids: number[]) => {
+  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/add_to_template_sets`, { template_ids, template_set_ids })
 }
 
 /**

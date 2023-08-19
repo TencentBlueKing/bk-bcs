@@ -143,7 +143,14 @@
       </bk-input>
     </div>
     <bk-loading :loading="listLoading">
-        <bk-table :border="['outer']" :data="versionList" :row-class="getRowCls" @row-click="handleSelectVersion">
+        <bk-table
+          :border="['outer']"
+          :data="versionList"
+          :row-class="getRowCls"
+          :pagination="pagination"
+          @row-click="handleSelectVersion"
+          @page-limit-change="handlePageLimitChange"
+          @page-change="refreshVersionList($event)">
           <bk-table-column label="版本" prop="spec.name" show-overflow-tooltip></bk-table-column>
           <bk-table-column label="版本描述" prop="spec.memo" show-overflow-tooltip>
             <template v-slot="{ row }">
@@ -192,15 +199,6 @@
             </template>
           </bk-table-column>
         </bk-table>
-        <bk-pagination
-          class="table-list-pagination"
-          v-model="pagination.current"
-          location="left"
-          :layout="['total', 'limit', 'list']"
-          :count="pagination.count"
-          :limit="pagination.limit"
-          @change="refreshVersionList($event)"
-          @limit-change="handlePageLimitChange"/>
     </bk-loading>
     <VersionDiff
       v-model:show="showDiffPanel"
@@ -279,15 +277,6 @@
       color: #14a568;
       background: #e4faf0;
       border-color: rgba(20, 165, 104, 0.3);
-    }
-  }
-  .table-list-pagination {
-    padding: 12px;
-    border: 1px solid #dcdee5;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    :deep(.bk-pagination-list.is-last) {
-      margin-left: auto;
     }
   }
   .header-wrapper {

@@ -58,9 +58,6 @@
   .version-table {
     width: 100%;
     background: #ffffff;
-    :deep(.bk-table-footer) {
-      padding-left: 16px;
-    }
   }
   .actions-wrapper {
     .bk-button {

@@ -18,7 +18,7 @@
   const selectedConfigs = ref<ITemplateConfigItem[]>([])
 
   const getConfigList = (params: ICommonQuery) => {
-    console.log('Package Config List Loading')
+    console.log('Package Config List Loading', currentTemplateSpace.value)
     return getTemplatesByPackageId(spaceId.value, currentTemplateSpace.value, <number>currentPkg.value, params)
   }
 

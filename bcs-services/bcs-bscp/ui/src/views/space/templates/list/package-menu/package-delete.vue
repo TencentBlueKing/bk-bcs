@@ -4,8 +4,8 @@
   import { Message } from 'bkui-vue/lib'
   import { useGlobalStore } from '../../../../../store/global'
   import { getUnNamedVersionAppsBoundByPackage, deleteTemplatePackage } from '../../../../../api/template'
-  import { ITemplatePackageItem } from '../../../../../../types/template'
-  import { IAppItem } from '../../../../../../types/app'
+  import { ITemplatePackageItem, IPackageCitedByApps } from '../../../../../../types/template'
+  import LinkToApp from '../components/link-to-app.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 
@@ -19,7 +19,7 @@
 
   const isShow = ref(false)
   const appsLoading = ref(false)
-  const appList = ref<IAppItem[]>([])
+  const appList = ref<IPackageCitedByApps[]>([])
   const pending = ref(false)
 
   watch(() => props.show, val => {
@@ -33,8 +33,7 @@
     appsLoading.value = true
     const params = {
       start: 0,
-      limit: 1000
-      // all: true
+      all: true
     }
     const res = await getUnNamedVersionAppsBoundByPackage(spaceId.value, props.templateSpaceId, props.pkg.id, params)
     appList.value = res.details
@@ -69,15 +68,24 @@
     :esc-close="false"
     :quick-close="false"
     @closed="close">
-    <p class="tips">以下服务的未命名版本中引用此套餐的内容也将删除</p>
+    <p v-if="appList.length > 0" class="tips">以下服务的未命名版本中引用此套餐的内容也将删除</p>
     <div class="service-table">
-      <bk-table :data="appList" empty-text="暂无未命名版本引用此套餐">
-        <bk-table-column label="引用此套餐的服务"></bk-table-column>
-      </bk-table>
+      <bk-loading style="min-height: 200px;" :loading="appsLoading">
+        <bk-table :data="appList" empty-text="暂无未命名版本引用此套餐">
+          <bk-table-column label="引用此套餐的服务">
+            <template #default="{ row }">
+              <div class="app-info">
+                <div class="name">{{ row.app_name }}</div>
+                <LinkToApp :id="row.app_id" />
+              </div>
+            </template>
+          </bk-table-column>
+        </bk-table>
+      </bk-loading>
     </div>
     <div class="action-btns">
       <bk-button theme="primary" class="delete-btn" :disabled="appsLoading" :loading="pending" @click="handleDelete">删除套餐</bk-button>
-      <bk-button>取消</bk-button>
+      <bk-button @click="close">取消</bk-button>
     </div>
   </bk-dialog>
 </template>

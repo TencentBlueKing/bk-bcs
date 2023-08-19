@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, computed, onMounted } from 'vue';
+  import { ref, computed, onMounted, watch } from 'vue';
   import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { DownShape, Del } from 'bkui-vue/lib/icon'
@@ -29,6 +29,13 @@
     data: { id: 0, name: '', memo: '' }
   })
 
+  const spaceName = computed(() => {
+    if (templateSpaceDetail.value.name === 'default_space') {
+      return '默认空间'
+    }
+    return templateSpaceDetail.value.name
+  })
+
   const templateSpaceDetail = computed(() => {
     const item = templateSpaceList.value.find(item => item.id === currentTemplateSpace.value)
     if (item) {
@@ -38,7 +45,15 @@
     return { name: '', memo: '' }
   })
 
-  onMounted(async () => {
+  watch(() => spaceId.value, () => {
+    initData()
+  })
+
+  onMounted(() => {
+    initData()
+  })
+
+  const initData = async() => {
     await loadList()
     if (!currentTemplateSpace.value) {
       const spaceId = spaceList.value[0].id
@@ -49,7 +64,7 @@
     } else {
       setTemplateSpace(currentTemplateSpace.value)
     }
-  })
+  }
 
   const loadList = async () => {
     loading.value = true
@@ -155,7 +170,7 @@
       @change="handleSelect">
       <template #trigger>
         <div class="select-trigger">
-          <h5 class="space-name" :title="templateSpaceDetail.name">{{ templateSpaceDetail.name }}</h5>
+          <h5 class="space-name" :title="spaceName">{{ spaceName }}</h5>
           <div class="space-desc">{{ templateSpaceDetail.memo }}</div>
           <DownShape :class="['triangle-icon', { up: selectorOpen }]" />
         </div>
@@ -165,7 +180,7 @@
           <div class="name-text">{{ item.spec.name }}</div>
           <div class="actions">
             <i class="bk-bscp-icon icon-edit-small" @click.stop="handleEditOpen(item)"></i>
-            <Del class="delete-icon" @click.stop="handleDelete(item)" />
+            <Del v-if="templateSpaceDetail.name !== 'default_space'" class="delete-icon" @click.stop="handleDelete(item)" />
           </div>
         </div>
       </bk-option>

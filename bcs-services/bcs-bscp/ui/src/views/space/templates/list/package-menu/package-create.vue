@@ -23,7 +23,7 @@
     name: '',
     memo: '',
     public: true,
-    template_ids: [1],
+    template_ids: [],
     bound_apps: []
   })
   const isFormChange = ref(false)
