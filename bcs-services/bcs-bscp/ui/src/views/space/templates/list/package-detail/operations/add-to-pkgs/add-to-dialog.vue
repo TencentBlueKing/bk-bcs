@@ -1,17 +1,21 @@
 <script lang="ts" setup>
   import { ref, computed, watch } from 'vue'
   import { storeToRefs } from 'pinia'
+  import { Message } from 'bkui-vue';
   import { ITemplateConfigItem } from '../../../../../../../../types/template';
+  import { useGlobalStore } from '../../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../../store/template'
+  import { addTemplateToPackage } from '../../../../../../../api/template'
 
-  const { packageList, currentPkg } = storeToRefs(useTemplateStore())
+  const { spaceId } = storeToRefs(useGlobalStore())
+  const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
 
   const props = defineProps<{
     show: boolean;
     value: ITemplateConfigItem[];
   }>()
 
-  const emits = defineEmits(['update:show'])
+  const emits = defineEmits(['update:show', 'added'])
 
   const formRef = ref()
   const selectedPkgs = ref<number[]>([])
@@ -34,6 +38,22 @@
   const handleConfirm = async () => {
     const isValid = await formRef.value.validate()
     if (!isValid) return
+
+    try {
+      pending.value = true
+      const templateIds = props.value.map(item => item.id)
+      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, templateIds, selectedPkgs.value)
+      emits('added')
+      close()
+      Message({
+        theme: 'success',
+        message: '添加配置项成功'
+      })
+    } catch (e) {
+      console.log(e)
+    } finally {
+      pending.value = false
+    }
   }
 
   const close = () => {

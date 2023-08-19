@@ -39,8 +39,11 @@
 
   watch(() => props.show, val => {
     isShow.value = val
-    isFormChange.value = false
-    selectedConfigs.value = []
+    if (val) {
+      openedPkgTable.value = ''
+      isFormChange.value = false
+      selectedConfigs.value = []
+    }
   })
 
   const handleToggleOpenTable = (id: string|number) => {
@@ -48,7 +51,10 @@
   }
 
   const handleDeleteConfig = (id: number) => {
-    console.log('delete config: ', id)
+    const index = selectedConfigs.value.findIndex(item => item.id === id)
+    if (index > -1) {
+      selectedConfigs.value.splice(index, 1)
+    }
   }
 
   const handleAddConfigs = async() => {

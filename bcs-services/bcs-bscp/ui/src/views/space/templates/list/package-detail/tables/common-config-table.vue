@@ -108,6 +108,10 @@
     crtConfig.value = [config]
   }
 
+  const refreshConfigList = () => {
+    refreshList()
+  }
+
   const goToVersionManange = (id: number) => {
     router.push({ name: 'template-version-manange', params: {
       templateSpaceId: props.currentTemplateSpace,
@@ -180,11 +184,12 @@
         </bk-table-column>
       </bk-table>
     </bk-loading>
-    <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" />
+    <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" @added="refreshConfigList" />
     <MoveOutFromPkgsDialog
       v-model:show="isMoveOutFromPkgsDialogShow"
       :id="crtConfig.length > 0 ? crtConfig[0].id : 0"
-      :name="crtConfig.length > 0 ? crtConfig[0].spec.name : ''" />
+      :name="crtConfig.length > 0 ? crtConfig[0].spec.name : ''"
+      @moved-out="refreshConfigList" />
   </div>
 </template>
 <style lang="scss" scoped>

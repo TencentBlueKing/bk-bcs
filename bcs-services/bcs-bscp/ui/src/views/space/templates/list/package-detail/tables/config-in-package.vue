@@ -22,7 +22,7 @@
     return getTemplatesByPackageId(spaceId.value, currentTemplateSpace.value, <number>currentPkg.value, params)
   }
 
-  const handleAdded = () => {
+  const refreshConfigList = () => {
     configTable.value.refreshList()
   }
 
@@ -36,9 +36,9 @@
     :current-pkg="currentPkg"
     :get-config-list="getConfigList">
     <template #tableOperations>
-      <AddConfigs :show-add-existing-config-option="true" @added="handleAdded" />
-      <BatchAddTo :configs="selectedConfigs" />
-      <BatchMoveOutFromPkg :configs="selectedConfigs" />
+      <AddConfigs :show-add-existing-config-option="true" @added="refreshConfigList" />
+      <BatchAddTo :configs="selectedConfigs" @added="refreshConfigList" />
+      <BatchMoveOutFromPkg :configs="selectedConfigs" @movedOut="refreshConfigList" />
     </template>
     <template #columns>
       <bk-table-column label="所在套餐"></bk-table-column>

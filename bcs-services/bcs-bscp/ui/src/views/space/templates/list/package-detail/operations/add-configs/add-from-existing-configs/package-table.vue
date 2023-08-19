@@ -34,7 +34,7 @@
     let res
     const params = {
       start: (page.value - 1) * 10,
-      limit: 10
+      all: true
     }
     if (typeof props.pkg.id === 'number') {
       res = await getTemplatesByPackageId(spaceId.value, currentTemplateSpace.value, props.pkg.id, params)

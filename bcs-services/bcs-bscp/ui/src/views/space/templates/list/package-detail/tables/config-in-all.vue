@@ -35,7 +35,7 @@
     v-model:selectedConfigs="selectedConfigs">
     <template #tableOperations>
       <AddConfigs @added="handleAdded" />
-      <BatchAddTo :configs="selectedConfigs" />
+      <BatchAddTo :configs="selectedConfigs" @added="handleAdded" />
     </template>
     <template #columns>
       <bk-table-column label="所在套餐"></bk-table-column>

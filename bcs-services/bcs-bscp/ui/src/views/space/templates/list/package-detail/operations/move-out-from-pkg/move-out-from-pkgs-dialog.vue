@@ -1,6 +1,14 @@
 <script lang="ts" setup>
   import { ref, computed } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { Warn } from 'bkui-vue/lib/icon';
+  import { Message } from 'bkui-vue';
+  import { useGlobalStore } from '../../../../../../../store/global'
+  import { useTemplateStore } from '../../../../../../../store/template'
+  import { moveOutTemplateFromPackage } from '../../../../../../../api/template'
+
+  const { spaceId } = storeToRefs(useGlobalStore())
+  const { currentTemplateSpace } = storeToRefs(useTemplateStore())
 
   const props = defineProps<{
     show: boolean;
@@ -8,11 +16,34 @@
     name: string;
   }>()
 
-  const emits = defineEmits(['update:show'])
+  const emits = defineEmits(['update:show', 'movedOut'])
 
+  const selectedPkgs = ref<number[]>([])
   const pending = ref(false)
 
-  const handleConfirm = () => {}
+  const handleConfirm = async () => {
+    if (selectedPkgs.value.length === 0) {
+      Message({
+        theme: 'warn',
+        message: '请选择套餐'
+      })
+      return
+    }
+    try {
+      pending.value = true
+      await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, [props.id], selectedPkgs.value)
+      emits('movedOut')
+      close()
+      Message({
+        theme: 'success',
+        message: '添加配置项成功'
+      })
+    } catch (e) {
+      console.log(e)
+    } finally {
+      pending.value = false
+    }
+  }
 
   const close = () => {
     emits('update:show', false)
