@@ -94,6 +94,22 @@ export interface IPackagesCitedByApps {
   app_name: string;
 }
 
+// 模板被服务绑定或套餐引用计数详情
+export interface ITemplateCitedCountDetailItem {
+  bound_named_app_count: number;
+  bound_template_set_count: number;
+  bound_unnamed_app_count: number;
+  template_id: number;
+}
+
+// 模板被未命名版本服务绑定详情
+export interface IAppBoundByTemplateDetailItem {
+  template_revision_id: number;
+  template_revision_name: string;
+  app_id: number;
+  app_name: string;
+}
+
 // 模板版本单条数据
 export interface ITemplateVersionItem {
   id: number;

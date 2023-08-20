@@ -1,28 +1,41 @@
 <script lang="ts" setup>
   import { onMounted, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
-  import { Ellipsis, Search } from 'bkui-vue/lib/icon'
+  import { storeToRefs } from 'pinia';
+  import { Ellipsis, Search, Spinner } from 'bkui-vue/lib/icon'
+  import { useGlobalStore } from '../../../../../../store/global';
   import { useTemplateStore } from '../../../../../../store/template';
-  import { ITemplateConfigItem } from '../../../../../../../types/template';
   import { ICommonQuery } from '../../../../../../../types/index';
+  import { ITemplateConfigItem, ITemplateCitedCountDetailItem } from '../../../../../../../types/template';
+  import { getPackagesByTemplateIds, getCountsByTemplateIds } from '../../../../../../api/template'
   import AddToDialog from '../operations/add-to-pkgs/add-to-dialog.vue'
   import MoveOutFromPkgsDialog from '../operations/move-out-from-pkg/move-out-from-pkgs-dialog.vue'
+  import PkgsTag from '../../components/packages-tag.vue'
+  import AppsBoundByTemplate from '../apps-bound-by-template.vue';
 
   const router = useRouter()
 
+  const { spaceId } = storeToRefs(useGlobalStore())
   const templateStore = useTemplateStore()
+  const { currentTemplateSpace } = storeToRefs(templateStore)
 
   const props = defineProps<{
     currentTemplateSpace: number;
     currentPkg: number|string;
     selectedConfigs: ITemplateConfigItem[];
+    showCitedByPkgsCol?: boolean; // 是否显示模板被套餐引用列
+    showBoundByAppsCol?: boolean; // 是否显示模板被服务引用列
     getConfigList: Function;
   }>()
 
   const emits = defineEmits(['update:selectedConfigs'])
 
-  const loading = ref(false)
+  const listLoading = ref(false)
   const list = ref<ITemplateConfigItem[]>([])
+  const citedByPkgsLoading = ref(false)
+  const citeByPkgsList = ref<{template_set_id: number; template_set_name: string;}[][]>([])
+  const boundByAppsCountLoading = ref(false)
+  const boundByAppsCountList = ref<ITemplateCitedCountDetailItem[]>([])
   const searchStr = ref('')
   const pagination = ref({
     current: 1,
@@ -31,6 +44,13 @@
   })
   const isAddToPkgsDialogShow = ref(false)
   const isMoveOutFromPkgsDialogShow = ref(false)
+  const appBoundByTemplateSliderData = ref<{ open: boolean; data: { id: number; name: string; } }>({
+    open: false,
+    data: {
+      id: 0,
+      name: ''
+    }
+  })
   const crtConfig = ref<ITemplateConfigItem[]>([])
 
   watch(() => props.currentPkg, () => {
@@ -43,7 +63,7 @@
   })
 
   const loadConfigList = async () => {
-    loading.value = true
+    listLoading.value = true
     const params:ICommonQuery = {
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit
@@ -53,7 +73,33 @@
     }
     const res = await props.getConfigList(params)
     list.value = res.details
-    loading.value = false
+    listLoading.value = false
+    const ids = list.value.map(item => item.id)
+    citeByPkgsList.value = []
+    boundByAppsCountList.value = []
+    if (ids.length > 0) {
+      if (props.showCitedByPkgsCol) {
+        loadCiteByPkgsCountList(ids)
+      }
+
+      if (props.showBoundByAppsCol) {
+        loadBoundByAppsList(ids)
+      }
+    }
+  }
+
+  const loadCiteByPkgsCountList = async(ids: number[]) => {
+    citedByPkgsLoading.value = true
+    const res = await getPackagesByTemplateIds(spaceId.value, currentTemplateSpace.value, ids)
+    citeByPkgsList.value = res.details
+    citedByPkgsLoading.value = false
+  }
+
+  const loadBoundByAppsList = async(ids: number[]) => {
+    boundByAppsCountLoading.value = true
+    const res = await getCountsByTemplateIds(spaceId.value, currentTemplateSpace.value, ids)
+    boundByAppsCountList.value = res.details
+    boundByAppsCountLoading.value = false
   }
 
   const refreshList = (current: number = 1) => {
@@ -61,6 +107,7 @@
     loadConfigList()
   }
 
+  // 模板移出或删除后刷新列表
   const refreshListAfterDeleted = (num: number) => {
     if (num === list.value.length && pagination.value.current > 1) {
       pagination.value.current -= 1
@@ -126,6 +173,16 @@
     })
   }
 
+  const handleOpenAppBoundByTemplateSlider = (config: ITemplateConfigItem) => {
+    appBoundByTemplateSliderData.value = {
+      open: true,
+      data: {
+        id: config.id,
+        name: config.spec.name
+      }
+    }
+  }
+
   const refreshConfigList = () => {
     refreshList()
   }
@@ -164,17 +221,44 @@
           </template>
       </bk-input>
     </div>
-    <bk-loading style="min-height: 200px;" :loading="loading">
+    <bk-loading style="min-height: 200px;" :loading="listLoading">
       <bk-table empty-text="暂无配置项" :border="['outer']" :data="list" @selection-change="handleSelectionChange">
-        <bk-table-column type="selection" :fixed="true" :width="40"></bk-table-column>
-        <bk-table-column label="配置项名称" :fixed="true" :width="280">
+        <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column>
+        <bk-table-column label="配置项名称">
           <template #default="{ row }">
             <div v-if="row.spec" @click="handleEditConfig">{{ row.spec.name }}</div>
           </template>
         </bk-table-column>
-        <bk-table-column label="配置项路径" prop="spec.path" :width="280"></bk-table-column>
+        <bk-table-column label="配置项路径" prop="spec.path"></bk-table-column>
         <bk-table-column label="配置项描述" prop="spec.memo"></bk-table-column>
-        <slot name="columns"></slot>
+        <template v-if="showCitedByPkgsCol">
+          <bk-table-column label="所在套餐">
+            <template #default="{ index }">
+              <template v-if="citedByPkgsLoading"><Spinner /></template>
+              <template v-else-if="citeByPkgsList[index]">
+                <PkgsTag v-if="citeByPkgsList[index].length > 0" :pkgs="citeByPkgsList[index]" />
+                <span v-else>--</span>
+              </template>
+            </template>
+          </bk-table-column>
+        </template>
+        <template v-if="showBoundByAppsCol">
+          <bk-table-column label="被引用">
+            <template #default="{ row, index }">
+              <template v-if="boundByAppsCountLoading"><Spinner /></template>
+              <template v-else-if="boundByAppsCountList[index]">
+                <bk-button
+                  v-if="boundByAppsCountList[index].bound_unnamed_app_count > 0"
+                  text
+                  theme="primary"
+                  @click="handleOpenAppBoundByTemplateSlider(row)">
+                  {{ boundByAppsCountList[index].bound_unnamed_app_count }}
+                </bk-button>
+                <span v-else>0</span>
+              </template>
+            </template>
+          </bk-table-column>
+        </template>
         <bk-table-column label="创建人" prop="revision.creator" :width="100"></bk-table-column>
         <bk-table-column label="更新人" prop="revision.reviser" :width="100"></bk-table-column>
         <bk-table-column label="更新时间" prop="revision.update_at" :width="180"></bk-table-column>
@@ -209,6 +293,11 @@
       :id="crtConfig.length > 0 ? crtConfig[0].id : 0"
       :name="crtConfig.length > 0 ? crtConfig[0].spec.name : ''"
       @moved-out="handleMovedOut" />
+    <AppsBoundByTemplate
+      v-model:show="appBoundByTemplateSliderData.open"
+      :space-id="spaceId"
+      :current-template-space="currentTemplateSpace"
+      :config="appBoundByTemplateSliderData.data" />
   </div>
 </template>
 <style lang="scss" scoped>
