@@ -75,7 +75,7 @@ export const updateTemplatePackage = (biz_id: string, template_space_id: number,
  * @returns
  */
 export const deleteTemplatePackage = (biz_id: string, template_space_id: number, template_set_id: number) => {
-  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}`).then(res => res.data);
+  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}`, { params: { force: true } }).then(res => res.data);
 }
 
 /**
@@ -122,6 +122,18 @@ export const getUnNamedVersionAppsBoundByPackage = (biz_id: string, template_spa
 }
 
 /**
+ * 获取多个模板套餐被未命名版本引用的服务引用列表
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @returns
+ */
+export const getUnNamedVersionAppsBoundByPackages = (biz_id: string, template_space_id: number, template_sets: number[], params: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/bound_unnamed_app_details`, {
+    params: { template_set_ids: template_sets.join(','), ...params }
+  })
+}
+
+/**
  * 获取当前模板套餐被已生成版本引用的服务引用列表
  * @param biz_id 业务ID
  * @param template_space_id 模板空间ID
@@ -155,15 +167,14 @@ export const createTemplate = (biz_id: string, template_space_id: number, params
 }
 
 /**
- * 删除模板
+ * 批量删除模板
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
  * @param template_ids 模板ID列表
  * @returns
  */
-// @todo 需要后台提供接口
 export const deleteTemplate = (biz_id: string, template_space_id: number, template_ids: number[]) => {
-  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/{template_id}`)
+  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, { params: { template_ids: template_ids.join(',') } })
 }
 
 /**
@@ -178,15 +189,27 @@ export const getTemplatesDetailByIds = (biz_id: string, ids: number[]) => {
 
 
 /**
- * 添加模版到模版套餐
+ * 添加模版到模版套餐(多个模板添加到多个套餐)
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
  * @param template_id 模板ID
  * @param template_set_ids 模板套餐列表
  * @returns
  */
-export const addTemplateToPackage = (biz_id: string, template_space_id: number, template_id: number, template_set_ids: number[]) => {
-  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/add_to_template_sets`, { template_set_ids })
+export const addTemplateToPackage = (biz_id: string, template_space_id: number, template_ids: number[], template_set_ids: number[]) => {
+  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/add_to_template_sets`, { template_ids, template_set_ids })
+}
+
+/**
+ * 将模版移出套餐(多个模板移出多个套餐)
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param template_set_ids 模板套餐列表
+ * @returns
+ */
+export const moveOutTemplateFromPackage = (biz_id: string, template_space_id: number, template_ids: number[], template_set_ids: number[]) => {
+  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/delete_from_template_sets`, { template_ids, template_set_ids })
 }
 
 /**

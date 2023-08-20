@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted, nextTick } from 'vue'
+  import { ref, watch, onMounted, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../store/global'
   import { Plus, Search, Eye, Unvisible, Copy, EditLine } from 'bkui-vue/lib/icon'
@@ -25,6 +25,11 @@
     current: 1,
     count: 0,
     limit: 10,
+  })
+
+  watch(() => spaceId.value, () => {
+    createPending.value = false
+    refreshListWithLoading()
   })
 
   onMounted(() => {
@@ -236,7 +241,14 @@
         </div>
       </div>
       <bk-loading style="min-height: 300px;" :loading="listLoading">
-        <bk-table class="credential-table" :data="credentialList" :border="['outer']" :row-class="getRowCls">
+        <bk-table
+          class="credential-table"
+          :data="credentialList"
+          :border="['outer']"
+          :row-class="getRowCls"
+          :pagination="pagination"
+          @page-limit-change="handlePageLimitChange"
+          @page-change="refreshListWithLoading">
           <bk-table-column label="密钥" width="340">
             <template #default="{ row }">
               <div v-if="row.spec" class="credential-text">
@@ -288,15 +300,6 @@
             </template>
           </bk-table-column>
         </bk-table>
-        <bk-pagination
-          class="table-list-pagination"
-          v-model="pagination.current"
-          location="left"
-          :layout="['total', 'limit', 'list']"
-          :count="pagination.count"
-          :limit="pagination.limit"
-          @change="refreshListWithLoading"
-          @limit-change="handlePageLimitChange" />
       </bk-loading>
     </div>
     <AssociateConfigItems :show="isAssociateSliderShow" :id="currentCredential" @close="handleAssociateSliderClose" />
@@ -444,16 +447,6 @@
     align-items: center;
     .text {
       margin-left: 9px;
-    }
-  }
-  .table-list-pagination {
-    padding: 12px;
-    border: 1px solid #dcdee5;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    background: #ffffff;
-    :deep(.bk-pagination-list.is-last) {
-      margin-left: auto;
     }
   }
 </style>

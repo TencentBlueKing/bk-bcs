@@ -102,7 +102,7 @@
       <bk-input v-model="localVal.name" @change="change" />
     </bk-form-item>
     <bk-form-item label="模板套餐描述" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :rows="6" :maxlength="100" @change="change" />
+      <bk-input v-model="localVal.memo" type="textarea" :rows="6" :maxlength="256" @change="change" />
     </bk-form-item>
     <bk-form-item label="服务可见范围" property="public" required>
       <bk-radio-group v-model="localVal.public" @change="change">

@@ -47,7 +47,7 @@
   const rules = {
     name: [
       {
-        validator: (value: string) => value.length < 64,
+        validator: (value: string) => value.length <= 64,
         message: '最大长度64个字符'
       },
       {
@@ -60,11 +60,11 @@
     privilege: [{
       required: true,
       message: '文件权限 不能为空',
-      trigger: 'blur'
+      trigger: 'change'
     }],
     path: [
       {
-        validator: (value: string) => value.length < 256,
+        validator: (value: string) => value.length <= 256,
         message: '最大长度256个字符'
       }
     ],
@@ -221,7 +221,7 @@
       <bk-input v-model="localVal.path" placeholder="请输入绝对路径，下载路径为前缀+配置路径" :disabled="!editable" @change="change"></bk-input>
     </bk-form-item>
     <bk-form-item label="配置项描述" property="memo">
-      <bk-input v-model="localVal.memo" :disabled="!editable" @change="change"></bk-input>
+      <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change"></bk-input>
     </bk-form-item>
     <bk-form-item label="配置项格式">
     <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">

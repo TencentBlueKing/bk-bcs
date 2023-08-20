@@ -99,7 +99,12 @@
       </bk-input>
     </div>
     <div class="cited-data-table">
-      <bk-table :border="['outer']" :data="list">
+      <bk-table
+        :border="['outer']"
+        :data="list"
+        :pagination="pagination"
+        @page-limit-change="handlePageLimitChange"
+        @page-change="refreshList">
         <bk-table-column label="脚本名称" prop="hook_release_name"></bk-table-column>
         <bk-table-column label="服务名称" prop="app_name"></bk-table-column>
         <bk-table-column label="配置文件版本">
@@ -113,15 +118,6 @@
           </template>
         </bk-table-column>
       </bk-table>
-      <bk-pagination
-        class="table-list-pagination"
-        v-model="pagination.current"
-        location="left"
-        :layout="['total', 'limit', 'list']"
-        :count="pagination.count"
-        :limit="pagination.limit"
-        @change="refreshList"
-        @limit-change="handlePageLimitChange"/>
     </div>
     <div class="action-btn">
       <bk-button @click="handleClose">关闭</bk-button>
@@ -148,15 +144,6 @@
   }
   .link-btn {
     font-size: 12px;
-  }
-  .table-list-pagination {
-    padding: 12px;
-    border: 1px solid #dcdee5;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    :deep(.bk-pagination-list.is-last) {
-      margin-left: auto;
-    }
   }
   .action-btn {
     padding: 8px 24px;

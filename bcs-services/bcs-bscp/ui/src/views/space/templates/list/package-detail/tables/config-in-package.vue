@@ -12,17 +12,26 @@
   import BatchMoveOutFromPkg from '../operations/move-out-from-pkg/batch-move-out-button.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
-  const { currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
+  const templateStore = useTemplateStore()
+  const { currentTemplateSpace, currentPkg } = storeToRefs(templateStore)
 
   const configTable = ref()
   const selectedConfigs = ref<ITemplateConfigItem[]>([])
 
   const getConfigList = (params: ICommonQuery) => {
-    console.log('Package Config List Loading')
+    console.log('Package Config List Loading', currentTemplateSpace.value)
     return getTemplatesByPackageId(spaceId.value, currentTemplateSpace.value, <number>currentPkg.value, params)
   }
 
-  const handleAdded = () => {
+  const handleMovedOut = () => {
+    configTable.value.refreshListAfterDeleted(selectedConfigs.value.length)
+    selectedConfigs.value = []
+    templateStore.$patch(state => {
+      state.needRefreshMenuFlag = true
+    })
+  }
+
+  const refreshConfigList = () => {
     configTable.value.refreshList()
   }
 
@@ -36,9 +45,9 @@
     :current-pkg="currentPkg"
     :get-config-list="getConfigList">
     <template #tableOperations>
-      <AddConfigs :show-add-existing-config-option="true" @added="handleAdded" />
-      <BatchAddTo :configs="selectedConfigs" />
-      <BatchMoveOutFromPkg :configs="selectedConfigs" />
+      <AddConfigs :show-add-existing-config-option="true" @added="refreshConfigList" />
+      <BatchAddTo :configs="selectedConfigs" @added="refreshConfigList" />
+      <BatchMoveOutFromPkg :configs="selectedConfigs" @movedOut="handleMovedOut" />
     </template>
     <template #columns>
       <bk-table-column label="所在套餐"></bk-table-column>

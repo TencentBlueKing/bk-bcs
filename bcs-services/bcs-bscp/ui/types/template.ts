@@ -76,6 +76,25 @@ export interface ITemplateConfigItem {
   }
 }
 
+// 单个模板套餐被多个服务引用数据
+
+export interface IPackageCitedByApps {
+  template_revision_id: number;
+  template_revision_name: string;
+  app_id: number;
+  app_name: string;
+}
+
+// 多个模板套餐被多个服务引用数据
+
+export interface IPackagesCitedByApps {
+  template_set_id: number;
+  template_set_name: string;
+  app_id: number;
+  app_name: string;
+}
+
+// 模板版本单条数据
 export interface ITemplateVersionItem {
   id: number;
   spec: {

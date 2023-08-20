@@ -8,6 +8,8 @@
   import { getAppList } from '../../../../../api/index'
   import { getUnNamedVersionAppsBoundByPackage } from '../../../../../api/template'
   import { IAppItem } from '../../../../../../types/app'
+  import { IPackageCitedByApps } from '../../../../../../types/template'
+  import LinkToApp from '../components/link-to-app.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const { userInfo } = storeToRefs(useUserStore())
@@ -16,16 +18,16 @@
 
   const userAppList = ref<IAppItem[]>([])
   const userAppListLoading = ref(false)
-  const boundApps = ref<IAppItem[][]>([])
+  const boundApps = ref<IPackageCitedByApps[]>([])
   const boundAppsLoading = ref(false)
 
-  watch(() => currentPkg.value, val => {
-    if (typeof val === 'number') {
-      getBoundApps()
-    }
+  watch(() => currentPkg.value, () => {
+    boundApps.value = []
+    getBoundApps()
   })
 
   onMounted(() => {
+    getBoundApps()
     getUserApps()
   })
 
@@ -42,6 +44,7 @@
   }
 
   const getBoundApps = async() => {
+    if (typeof currentPkg.value !== 'number') return
     boundAppsLoading.value = true
     const params = {
       start: 0,
@@ -52,6 +55,7 @@
     boundApps.value = res.details
     boundAppsLoading.value = false
   }
+
 </script>
 <template>
   <div class="use-package-apps">
@@ -68,7 +72,14 @@
     </bk-select>
     <div class="table-wrapper">
       <bk-table :border="['outer']" :data="boundApps">
-        <bk-table-column label="当前使用此套餐的服务" property="spec.name"></bk-table-column>
+        <bk-table-column label="当前使用此套餐的服务">
+          <template #default="{ row }">
+            <div class="app-info">
+              <div class="name">{{ row.app_name }}</div>
+              <LinkToApp :id="row.app_id" />
+            </div>
+          </template>
+        </bk-table-column>
       </bk-table>
       <bk-pagination
         class="table-pagination"

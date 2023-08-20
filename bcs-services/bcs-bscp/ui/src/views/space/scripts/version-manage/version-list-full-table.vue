@@ -30,7 +30,10 @@
 <template>
   <bk-table
     :border="['outer']"
-    :data="props.list">
+    :data="props.list"
+    :pagination="pagination"
+    @page-limit-change="emits('pageLimitChange', $event)"
+    @page-change="emits('pageChange', $event)">
     <bk-table-column label="版本号" prop="spec.name" show-overflow-tooltip>
       <template #default="{ row }">
         <div v-if="row.spec" class="version-name" @click="emits('view', row)">{{ row.spec.name }}</div>
@@ -65,15 +68,6 @@
       </template>
     </bk-table-column>
   </bk-table>
-  <bk-pagination
-    :model-value="props.pagination.current"
-    class="table-list-pagination"
-    location="left"
-    :layout="['total', 'limit', 'list']"
-    :count="props.pagination.count"
-    :limit="props.pagination.limit"
-    @change="emits('pageChange', $event)"
-    @limit-change="emits('pageLimitChange', $event)" />
   <ScriptCited v-model:show="showCiteSlider" :id="props.scriptId" :version-id="versionId" />
 </template>
 <style scoped lang="scss">
@@ -100,16 +94,6 @@
     &.not_deployed {
       border: 1px solid #ff9c01;
       background: #ffe8c3;
-    }
-  }
-  .table-list-pagination {
-    padding: 12px;
-    background: #ffffff;
-    border: 1px solid #dcdee5;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    :deep(.bk-pagination-list.is-last) {
-      margin-left: auto;
     }
   }
 </style>

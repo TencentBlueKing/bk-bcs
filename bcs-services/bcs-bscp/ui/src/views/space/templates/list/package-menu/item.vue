@@ -28,7 +28,7 @@
         theme="light template-package-actions-popover"
         placement="bottom-end"
         :arrow="false">
-        <Ellipsis class="action-more-icon" />
+        <Ellipsis class="action-more-icon" @click.stop />
         <template #content>
           <div class="package-actions">
             <div class="action-item" @click="emits('edit', props.pkg.id, 'edit')">编辑</div>

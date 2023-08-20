@@ -3,8 +3,12 @@
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../../../store/template'
-  import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../../types/config'
+  import { IConfigEditParams } from '../../../../../../../../../types/config'
+  import { IPackagesCitedByApps } from '../../../../../../../../../types/template'
+  import { getUnNamedVersionAppsBoundByPackages } from '../../../../../../../../api/template'
+  import LinkToApp from '../../../../components/link-to-app.vue'
 
+  const { spaceId } = storeToRefs(useGlobalStore())
   const { currentTemplateSpace, currentPkg, packageList } = storeToRefs(useTemplateStore())
 
   const props = defineProps<{
@@ -16,7 +20,9 @@
 
   const selectedPkgs = ref<number[]>([])
   const formRef = ref()
+  const loading = ref(false)
   const pending = ref(false)
+  const citedList = ref<IPackagesCitedByApps[]>([])
 
   const tips = computed(() => {
     return selectedPkgs.value.includes(0)
@@ -28,6 +34,9 @@
     if (val) {
       selectedPkgs.value = typeof currentPkg.value === 'number' ? [currentPkg.value] : []
       pending.value = false
+      if (selectedPkgs.value.length > 0) {
+        getCitedData()
+      }
     }
   })
 
@@ -50,7 +59,19 @@
       selectedPkgs.value = preHasNotSpecified ? val.filter(id => id !== 0) : [0]
     } else {
       selectedPkgs.value = val.slice()
+      getCitedData()
     }
+  }
+
+  const getCitedData = async() => {
+    loading.value = true
+    const params = {
+      start: 0,
+      all: true
+    }
+    const res = await getUnNamedVersionAppsBoundByPackages(spaceId.value, currentTemplateSpace.value, selectedPkgs.value, params)
+    console.log(res)
+    loading.value = false
   }
 
   const handleConfirm = async() => {
@@ -100,10 +121,19 @@
       </bk-form-item>
     </bk-form>
     <p class="tips">{{ tips }}</p>
-    <bk-table v-if="!selectedPkgs.includes(0)">
-      <bk-table-column label="模板套餐"></bk-table-column>
-      <bk-table-column label="使用此套餐的服务"></bk-table-column>
-    </bk-table>
+    <bk-loading style="min-height: 200px;" :loading="loading">
+      <bk-table v-if="!selectedPkgs.includes(0)" :data="citedList">
+        <bk-table-column label="模板套餐" prop="template_set_name"></bk-table-column>
+        <bk-table-column label="使用此套餐的服务">
+          <template #default="{ row }">
+            <div class="app-info">
+              <div class="name">{{ row.app_name }}</div>
+              <LinkToApp :id="row.app_id" />
+            </div>
+          </template>
+        </bk-table-column>
+      </bk-table>
+    </bk-loading>
   </bk-dialog>
 </template>
 <style lang="scss" scoped>
@@ -129,6 +159,13 @@
     margin: 0 0 16px;
     font-size: 12px;
     color: #63656e;
+  }
+  .app-info {
+    display: flex;
+    align-items: center;
+    .share-icon {
+      font-size: 16px;
+    }
   }
 </style>
 <style lang="scss">

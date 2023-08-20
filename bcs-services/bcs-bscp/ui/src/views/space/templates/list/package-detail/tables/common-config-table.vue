@@ -2,12 +2,15 @@
   import { onMounted, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
   import { Ellipsis, Search } from 'bkui-vue/lib/icon'
+  import { useTemplateStore } from '../../../../../../store/template';
   import { ITemplateConfigItem } from '../../../../../../../types/template';
   import { ICommonQuery } from '../../../../../../../types/index';
   import AddToDialog from '../operations/add-to-pkgs/add-to-dialog.vue'
   import MoveOutFromPkgsDialog from '../operations/move-out-from-pkg/move-out-from-pkgs-dialog.vue'
 
   const router = useRouter()
+
+  const templateStore = useTemplateStore()
 
   const props = defineProps<{
     currentTemplateSpace: number;
@@ -58,6 +61,13 @@
     loadConfigList()
   }
 
+  const refreshListAfterDeleted = (num: number) => {
+    if (num === list.value.length && pagination.value.current > 1) {
+      pagination.value.current -= 1
+    }
+    refreshList()
+  }
+
   const handleSearchInputChange = () => {
     if (!searchStr.value) {
       refreshList()
@@ -96,6 +106,8 @@
     emits('update:selectedConfigs', configs)
   }
 
+  const handleEditConfig = () => {}
+
   const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {
     isAddToPkgsDialogShow.value = true
     crtConfig.value = [config]
@@ -104,6 +116,18 @@
   const handleOpenMoveOutFromPkgsDialog = (config: ITemplateConfigItem) => {
     isMoveOutFromPkgsDialogShow.value = true
     crtConfig.value = [config]
+  }
+
+  const handleMovedOut = () => {
+    refreshListAfterDeleted(1)
+    crtConfig.value = []
+    templateStore.$patch(state => {
+      state.needRefreshMenuFlag = true
+    })
+  }
+
+  const refreshConfigList = () => {
+    refreshList()
   }
 
   const goToVersionManange = (id: number) => {
@@ -115,7 +139,8 @@
   }
 
   defineExpose({
-    refreshList
+    refreshList,
+    refreshListAfterDeleted
   })
 
 </script>
@@ -139,48 +164,51 @@
           </template>
       </bk-input>
     </div>
-    <bk-table empty-text="暂无配置项" :border="['outer']" :data="list" @selection-change="handleSelectionChange">
-      <bk-table-column type="selection" :width="80"></bk-table-column>
-      <bk-table-column label="配置项名称">
-        <template #default="{ row }">
-          <div v-if="row.spec">{{ row.spec.name }}</div>
-        </template>
-      </bk-table-column>
-      <bk-table-column label="配置项路径" prop="spec.path"></bk-table-column>
-      <bk-table-column label="配置项描述" prop="spec.memo"></bk-table-column>
-      <slot name="columns"></slot>
-      <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
-      <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
-      <bk-table-column label="更新时间" prop="revision.update_at"></bk-table-column>
-      <bk-table-column label="操作" width="120">
-        <template #default="{ row }">
-          <div class="actions-wrapper">
-            <slot name="columnOperations" :config="row">
-              <bk-button theme='primary' text @click="goToVersionManange(row.id)">版本管理</bk-button>
-              <bk-popover
-                theme="light template-config-actions-popover"
-                placement="bottom-end"
-                :arrow="false">
-                <div class="more-actions">
-                  <Ellipsis class="ellipsis-icon" />
-                </div>
-                <template #content>
-                  <div class="config-actions">
-                    <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">添加至套餐</div>
-                    <div class="action-item" @click="handleOpenMoveOutFromPkgsDialog(row)">移出套餐</div>
+    <bk-loading style="min-height: 200px;" :loading="loading">
+      <bk-table empty-text="暂无配置项" :border="['outer']" :data="list" @selection-change="handleSelectionChange">
+        <bk-table-column type="selection" :fixed="true" :width="40"></bk-table-column>
+        <bk-table-column label="配置项名称" :fixed="true" :width="280">
+          <template #default="{ row }">
+            <div v-if="row.spec" @click="handleEditConfig">{{ row.spec.name }}</div>
+          </template>
+        </bk-table-column>
+        <bk-table-column label="配置项路径" prop="spec.path" :width="280"></bk-table-column>
+        <bk-table-column label="配置项描述" prop="spec.memo"></bk-table-column>
+        <slot name="columns"></slot>
+        <bk-table-column label="创建人" prop="revision.creator" :width="100"></bk-table-column>
+        <bk-table-column label="更新人" prop="revision.reviser" :width="100"></bk-table-column>
+        <bk-table-column label="更新时间" prop="revision.update_at" :width="180"></bk-table-column>
+        <bk-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <div class="actions-wrapper">
+              <slot name="columnOperations" :config="row">
+                <bk-button theme='primary' text @click="goToVersionManange(row.id)">版本管理</bk-button>
+                <bk-popover
+                  theme="light template-config-actions-popover"
+                  placement="bottom-end"
+                  :arrow="false">
+                  <div class="more-actions">
+                    <Ellipsis class="ellipsis-icon" />
                   </div>
-                </template>
-              </bk-popover>
-            </slot>
-          </div>
-        </template>
-      </bk-table-column>
-    </bk-table>
-    <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" />
+                  <template #content>
+                    <div class="config-actions">
+                      <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">添加至套餐</div>
+                      <div class="action-item" @click="handleOpenMoveOutFromPkgsDialog(row)">移出套餐</div>
+                    </div>
+                  </template>
+                </bk-popover>
+              </slot>
+            </div>
+          </template>
+        </bk-table-column>
+      </bk-table>
+    </bk-loading>
+    <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" @added="refreshConfigList" />
     <MoveOutFromPkgsDialog
       v-model:show="isMoveOutFromPkgsDialogShow"
       :id="crtConfig.length > 0 ? crtConfig[0].id : 0"
-      :name="crtConfig.length > 0 ? crtConfig[0].spec.name : ''" />
+      :name="crtConfig.length > 0 ? crtConfig[0].spec.name : ''"
+      @moved-out="handleMovedOut" />
   </div>
 </template>
 <style lang="scss" scoped>

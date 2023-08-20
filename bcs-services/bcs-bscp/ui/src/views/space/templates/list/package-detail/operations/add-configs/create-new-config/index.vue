@@ -19,10 +19,10 @@
     show: boolean;
   }>()
 
-  const emits = defineEmits(['update:show'])
+  const emits = defineEmits(['update:show', 'added'])
 
   const isShow = ref(false)
-  const isFormChange = ref(false)
+  const isFormChanged = ref(false)
   const configForm = ref<IConfigEditParams>(getConfigEditParams())
   const fileUploading = ref(false)
   const content = ref<IFileConfigContentSummary|string>('')
@@ -32,13 +32,13 @@
 
   watch(() => props.show, val => {
     isShow.value = val
-    isFormChange.value = false
+    isFormChanged.value = false
   })
 
   const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary|string) => {
     configForm.value = data
     content.value = configContent
-    isFormChange.value = true
+    isFormChanged.value = true
   }
 
   const handleCreateClick = async () => {
@@ -61,9 +61,12 @@
       }
       const params = { ...configForm.value, ...{ sign, byte_size: size } }
       const res = await createTemplate(spaceId.value, currentTemplateSpace.value, params)
-      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, res.data.id, pkgIds)
-      console.log(res)
+      // 选择未指定套餐时,不需要调用添加接口
+      if (pkgIds.length > 1 || pkgIds[0] !== 0) {
+        await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, [res.data.id], pkgIds)
+      }
       isSelectPkgDialogShow.value = false
+      emits('added')
       close()
       Message({
         theme: 'success',
@@ -77,7 +80,7 @@
   }
 
   const handleBeforeClose = async() => {
-    if (isFormChange.value) {
+    if (isFormChanged.value) {
       const result = await useModalCloseConfirmation()
       return result
     }

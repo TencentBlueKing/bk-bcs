@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { InfoBox } from 'bkui-vue'
   import { Plus, Search } from 'bkui-vue/lib/icon'
@@ -29,6 +29,11 @@
     current: 1,
     count: 0,
     limit: 10,
+  })
+
+  watch(() => spaceId.value, () => {
+    refreshList()
+    getTags()
   })
 
   onMounted(() => {
@@ -82,7 +87,7 @@
   }
 
   // 删除分组
-  const handleDeleteScript = (script: IScriptItem) => { 
+  const handleDeleteScript = (script: IScriptItem) => {
     InfoBox({
       title: `确认是否删除脚本【${script.spec.name}?】`,
       infoType: "danger",
@@ -157,43 +162,41 @@
            </template>
         </bk-input>
       </div>
-      <bk-table :border="['outer']" :data="scriptsData">
-        <bk-table-column label="脚本名称" prop="spec.name"></bk-table-column>
-        <bk-table-column label="脚本语言" prop="spec.type" width="120"></bk-table-column>
-        <bk-table-column label="分类标签">
-          <template #default="{ row }">
-            <span v-if="row.spec">{{ row.spec.tag || '--' }}</span>
-          </template>
-        </bk-table-column>
-        <bk-table-column label="被引用" width="100">
-          <template #default="{ row }">
-            <template v-if="row.spec">
-              <bk-button v-if="row.spec.publish_num > 0" text theme="primary" @click="showCiteSlider = true">{{ row.spec.publish_num }}</bk-button>
-              <span v-else>0</span>
+      <bk-loading style="min-height: 300px;" :loading="scriptsLoading">
+        <bk-table
+          :border="['outer']"
+          :data="scriptsData"
+          :pagination="pagination"
+          @page-limit-change="handlePageLimitChange"
+          @page-change="refreshList">
+          <bk-table-column label="脚本名称" prop="spec.name"></bk-table-column>
+          <bk-table-column label="脚本语言" prop="spec.type" width="120"></bk-table-column>
+          <bk-table-column label="分类标签">
+            <template #default="{ row }">
+              <span v-if="row.spec">{{ row.spec.tag || '--' }}</span>
             </template>
-          </template>
-        </bk-table-column>
-        <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
-        <bk-table-column label="更新时间" prop="revision.update_at" min-width="180"></bk-table-column>
-        <bk-table-column label="操作">
-          <template #default="{ row }" width="180">
-            <div class="action-btns">
-              <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button>
-              <bk-button text theme="primary" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.id } })">版本管理</bk-button>
-              <bk-button text theme="primary" @click="handleDeleteScript(row)">删除</bk-button>
-            </div>
-          </template>
-        </bk-table-column>
-      </bk-table>
-      <bk-pagination
-        class="table-list-pagination"
-        v-model="pagination.current"
-        location="left"
-        :layout="['total', 'limit', 'list']"
-        :count="pagination.count"
-        :limit="pagination.limit"
-        @change="refreshList"
-        @limit-change="handlePageLimitChange"/>
+          </bk-table-column>
+          <bk-table-column label="被引用" width="100">
+            <template #default="{ row }">
+              <template v-if="row.spec">
+                <bk-button v-if="row.spec.publish_num > 0" text theme="primary" @click="showCiteSlider = true">{{ row.spec.publish_num }}</bk-button>
+                <span v-else>0</span>
+              </template>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
+          <bk-table-column label="更新时间" prop="revision.update_at" min-width="180"></bk-table-column>
+          <bk-table-column label="操作">
+            <template #default="{ row }" width="180">
+              <div class="action-btns">
+                <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button>
+                <bk-button text theme="primary" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.id } })">版本管理</bk-button>
+                <bk-button text theme="primary" @click="handleDeleteScript(row)">删除</bk-button>
+              </div>
+            </template>
+          </bk-table-column>
+        </bk-table>
+      </bk-loading>
     </div>
     <CreateScript v-if="showCreateScript" v-model:show="showCreateScript" @created="handleCreatedScript" />
     <ScriptCited v-model:show="showCiteSlider" :id="currentId" />
@@ -299,15 +302,6 @@
   .action-btns {
     .bk-button {
       margin-right: 8px;
-    }
-  }
-  .table-list-pagination {
-    padding: 12px;
-    border: 1px solid #dcdee5;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    :deep(.bk-pagination-list.is-last) {
-      margin-left: auto;
     }
   }
 </style>

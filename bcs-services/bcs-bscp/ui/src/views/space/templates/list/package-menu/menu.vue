@@ -50,7 +50,7 @@
     return { id: 'no_specified', name: '未指定套餐', count: countOfTemplatesForNoSpecifiedPackage.value }
   })
 
-  watch(() => currentTemplateSpace.value, async(val, oldVal) => {
+  watch(() => currentTemplateSpace.value, async() => {
     searchStr.value = ''
     getMenuInitData()
   })
@@ -233,7 +233,7 @@
           <i class="bk-bscp-icon icon-app-store all-config-icon"></i>
         </template>
       </PackageItem>
-      <PackageItem :pkg="menuItemOfNoSpecifiedPackage" :current-pkg="currentPkg" @select="handleSelect">
+      <PackageItem v-if="countOfTemplatesForNoSpecifiedPackage" :pkg="menuItemOfNoSpecifiedPackage" :current-pkg="currentPkg" @select="handleSelect">
         <template #icon>
           <i class="bk-bscp-icon icon-empty empty-config-icon"></i>
         </template>

@@ -1,17 +1,21 @@
 <script lang="ts" setup>
   import { ref, computed, watch } from 'vue'
   import { storeToRefs } from 'pinia'
+  import { Message } from 'bkui-vue';
   import { ITemplateConfigItem } from '../../../../../../../../types/template';
+  import { useGlobalStore } from '../../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../../store/template'
+  import { addTemplateToPackage } from '../../../../../../../api/template'
 
-  const { packageList, currentPkg } = storeToRefs(useTemplateStore())
+  const { spaceId } = storeToRefs(useGlobalStore())
+  const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
 
   const props = defineProps<{
     show: boolean;
     value: ITemplateConfigItem[];
   }>()
 
-  const emits = defineEmits(['update:show'])
+  const emits = defineEmits(['update:show', 'added'])
 
   const formRef = ref()
   const selectedPkgs = ref<number[]>([])
@@ -34,6 +38,22 @@
   const handleConfirm = async () => {
     const isValid = await formRef.value.validate()
     if (!isValid) return
+
+    try {
+      pending.value = true
+      const templateIds = props.value.map(item => item.id)
+      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, templateIds, selectedPkgs.value)
+      emits('added')
+      close()
+      Message({
+        theme: 'success',
+        message: '添加配置项成功'
+      })
+    } catch (e) {
+      console.log(e)
+    } finally {
+      pending.value = false
+    }
   }
 
   const close = () => {
@@ -71,7 +91,7 @@
         </bk-select>
       </bk-form-item>
     </bk-form>
-    <p class="tips">以下服务配置的未命名版本引用目标套餐的内容也将更新</p>
+    <p class="tips">以下服务配置的未命名版本中将添加已选配置项的 <span class="notice">latest 版本</span></p>
     <bk-table>
       <bk-table-column label="模板套餐"></bk-table-column>
       <bk-table-column label="使用此套餐的服务"></bk-table-column>
@@ -115,5 +135,8 @@
     margin: 0 0 16px;
     font-size: 12px;
     color: #63656e;
+    .notice {
+      color: #ff9c01;
+    }
   }
 </style>
