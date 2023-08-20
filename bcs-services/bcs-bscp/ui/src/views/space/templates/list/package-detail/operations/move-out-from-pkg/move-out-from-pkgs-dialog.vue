@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, computed } from 'vue'
+  import { ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Warn } from 'bkui-vue/lib/icon';
   import { Message } from 'bkui-vue';
@@ -21,14 +21,13 @@
   const selectedPkgs = ref<number[]>([])
   const pending = ref(false)
 
-  const handleConfirm = async () => {
-    if (selectedPkgs.value.length === 0) {
-      Message({
-        theme: 'warn',
-        message: '请选择套餐'
-      })
-      return
+  watch(() => props.show, val => {
+    if (val) {
+      selectedPkgs.value = []
     }
+  })
+
+  const handleConfirm = async () => {
     try {
       pending.value = true
       await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, [props.id], selectedPkgs.value)
@@ -72,6 +71,12 @@
       <Warn class="warn-icon" />
       移出后配置项将不存在任一套餐。你仍可在「全部配置项」或「未指定套餐」分类下找回。
     </p>
+    <template #footer>
+      <div class="actions-wrapper">
+        <bk-button theme="primary" :loading="pending" :disabled="selectedPkgs.length === 0" @click="handleConfirm">确认删除</bk-button>
+        <bk-button @click="close">取消</bk-button>
+      </div>
+    </template>
   </bk-dialog>
 </template>
 <style lang="scss" scoped>
@@ -84,6 +89,12 @@
       margin-right: 4px;
       font-size: 14px;
       color: #ff9c05;
+    }
+  }
+  .actions-wrapper {
+    padding-bottom: 20px;
+    .bk-button:not(:last-of-type) {
+      margin-right: 8px;
     }
   }
 </style>

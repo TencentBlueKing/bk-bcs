@@ -2,12 +2,15 @@
   import { onMounted, ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
   import { Ellipsis, Search } from 'bkui-vue/lib/icon'
+  import { useTemplateStore } from '../../../../../../store/template';
   import { ITemplateConfigItem } from '../../../../../../../types/template';
   import { ICommonQuery } from '../../../../../../../types/index';
   import AddToDialog from '../operations/add-to-pkgs/add-to-dialog.vue'
   import MoveOutFromPkgsDialog from '../operations/move-out-from-pkg/move-out-from-pkgs-dialog.vue'
 
   const router = useRouter()
+
+  const templateStore = useTemplateStore()
 
   const props = defineProps<{
     currentTemplateSpace: number;
@@ -56,6 +59,13 @@
   const refreshList = (current: number = 1) => {
     pagination.value.current = current
     loadConfigList()
+  }
+
+  const refreshListAfterDeleted = (num: number) => {
+    if (num === list.value.length && pagination.value.current > 1) {
+      pagination.value.current -= 1
+    }
+    refreshList()
   }
 
   const handleSearchInputChange = () => {
@@ -108,6 +118,14 @@
     crtConfig.value = [config]
   }
 
+  const handleMovedOut = () => {
+    refreshListAfterDeleted(1)
+    crtConfig.value = []
+    templateStore.$patch(state => {
+      state.needRefreshMenuFlag = true
+    })
+  }
+
   const refreshConfigList = () => {
     refreshList()
   }
@@ -121,7 +139,8 @@
   }
 
   defineExpose({
-    refreshList
+    refreshList,
+    refreshListAfterDeleted
   })
 
 </script>
@@ -189,7 +208,7 @@
       v-model:show="isMoveOutFromPkgsDialogShow"
       :id="crtConfig.length > 0 ? crtConfig[0].id : 0"
       :name="crtConfig.length > 0 ? crtConfig[0].spec.name : ''"
-      @moved-out="refreshConfigList" />
+      @moved-out="handleMovedOut" />
   </div>
 </template>
 <style lang="scss" scoped>

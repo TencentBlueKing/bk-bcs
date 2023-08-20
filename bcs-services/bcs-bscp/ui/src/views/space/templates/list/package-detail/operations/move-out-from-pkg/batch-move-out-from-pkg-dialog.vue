@@ -65,7 +65,7 @@
     @confirm="handleConfirm"
     @closed="close">
     <div class="selected-mark">已选 <span class="num">{{ props.value.length }}</span> 个配置项</div>
-    <p class="tips">以下服务配置的未命名版本引用目标套餐的内容也将更新</p>
+    <p class="tips">以下服务配置的未命名版本中引用此套餐的内容也将更新</p>
     <bk-table>
       <bk-table-column label="所在模板套餐"></bk-table-column>
       <bk-table-column label="使用此套餐的服务"></bk-table-column>

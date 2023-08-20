@@ -85,7 +85,11 @@
       <RightShape class="triangle-icon" />
       <div class="title">{{ props.pkg.name }}</div>
     </div>
-    <bk-table v-show="props.open" :data="configList" @selection-change="handleSelectionChange">
+    <bk-table
+      v-show="props.open"
+      empty-text="暂无配置项"
+      :data="configList"
+      @selection-change="handleSelectionChange">
       <bk-table-column type="selection" :min-width="20" :width="30" />
       <bk-table-column label="配置项名称" prop="spec.name"></bk-table-column>
       <bk-table-column label="配置项路径" prop="spec.path"></bk-table-column>

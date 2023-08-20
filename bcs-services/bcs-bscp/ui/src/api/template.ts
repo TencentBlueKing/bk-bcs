@@ -75,7 +75,7 @@ export const updateTemplatePackage = (biz_id: string, template_space_id: number,
  * @returns
  */
 export const deleteTemplatePackage = (biz_id: string, template_space_id: number, template_set_id: number) => {
-  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}`).then(res => res.data);
+  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}`, { params: { force: true } }).then(res => res.data);
 }
 
 /**
@@ -167,15 +167,14 @@ export const createTemplate = (biz_id: string, template_space_id: number, params
 }
 
 /**
- * 删除模板
+ * 批量删除模板
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
  * @param template_ids 模板ID列表
  * @returns
  */
-// @todo 需要后台提供接口
 export const deleteTemplate = (biz_id: string, template_space_id: number, template_ids: number[]) => {
-  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/{template_id}`)
+  return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, { params: { template_ids: template_ids.join(',') } })
 }
 
 /**

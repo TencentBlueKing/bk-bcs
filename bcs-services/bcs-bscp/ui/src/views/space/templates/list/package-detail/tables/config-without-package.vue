@@ -6,11 +6,11 @@
   import { ICommonQuery } from '../../../../../../../types/index';
   import { ITemplateConfigItem } from '../../../../../../../types/template';
   import { getTemplatesWithNoSpecifiedPackage } from '../../../../../../api/template';
-  import useDeleteTemplateConfigs from '../../../../../../utils/hooks/use-delete-template-configs';
   import CommonConfigTable from './common-config-table.vue'
   import BatchAddTo from '../operations/add-to-pkgs/add-to-button.vue'
   import AddToDialog from '../operations/add-to-pkgs/add-to-dialog.vue'
   import DeleteConfigs from '../operations/delete-configs/delete-button.vue'
+  import DeleteConfigDialog from '../operations/delete-configs/delete-config-dialog.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const templateStore = useTemplateStore()
@@ -19,7 +19,7 @@
   const configTable = ref()
   const selectedConfigs = ref<ITemplateConfigItem[]>([])
   const isAddToPkgsDialogShow = ref(false)
-  const pending = ref(false)
+  const isDeleteConfigDialogShow = ref(false)
 
   const getConfigList = (params: ICommonQuery) => {
     console.log('Config Without Package List Loading')
@@ -32,22 +32,13 @@
   }
 
   const handleDeleteClick = async(config: ITemplateConfigItem) => {
-    try {
-      pending.value = true
-      const result = await useDeleteTemplateConfigs(spaceId.value, currentTemplateSpace.value, [config])
-      if (result) {
-        handleConfigsDeleted()
-      }
-    } catch (e) {
-      console.log(e)
-    } finally {
-      pending.value = false
-    }
+    isDeleteConfigDialogShow.value = true
+    selectedConfigs.value = [config]
   }
 
   const handleConfigsDeleted = () => {
+    configTable.value.refreshListAfterDeleted(selectedConfigs.value.length)
     selectedConfigs.value = []
-    configTable.value.refreshList()
     templateStore.$patch(state => {
       state.needRefreshMenuFlag = true
     })
@@ -76,6 +67,7 @@
     </template>
   </CommonConfigTable>
   <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="selectedConfigs" />
+  <DeleteConfigDialog v-model:show="isDeleteConfigDialogShow" :configs="selectedConfigs" @deleted="handleConfigsDeleted" />
 </template>
 <style lang="scss" scoped>
   .delete-btn {

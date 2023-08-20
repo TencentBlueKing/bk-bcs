@@ -61,7 +61,10 @@
       }
       const params = { ...configForm.value, ...{ sign, byte_size: size } }
       const res = await createTemplate(spaceId.value, currentTemplateSpace.value, params)
-      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, [res.data.id], pkgIds)
+      // 选择未指定套餐时,不需要调用添加接口
+      if (pkgIds.length > 1 || pkgIds[0] !== 0) {
+        await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, [res.data.id], pkgIds)
+      }
       isSelectPkgDialogShow.value = false
       emits('added')
       close()
