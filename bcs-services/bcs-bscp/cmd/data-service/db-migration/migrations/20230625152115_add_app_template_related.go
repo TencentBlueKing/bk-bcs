@@ -178,7 +178,7 @@ func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
 		"released_app_template_bindings",
 		"template_variables",
 		"app_template_variables",
-		"released_template_variables",
+		"released_app_template_variables",
 	); err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
 		"released_app_template_bindings",
 		"template_variables",
 		"app_template_variables",
-		"released_template_variables",
+		"released_app_template_variables",
 	}
 	if result := tx.Where("resource in ?", resources).Delete(&IDGenerators{}); result.Error != nil {
 		return result.Error
