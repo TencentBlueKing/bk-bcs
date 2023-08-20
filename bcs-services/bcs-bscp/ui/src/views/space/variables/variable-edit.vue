@@ -33,7 +33,7 @@
     isShow.value = val
     if (val) {
       isFormChanged.value = false
-      variableConfig.value = { ...props.data }
+      variableConfig.value = { ...props.data, name: props.data.name.replace('bk_bscp_', '') }
     }
   })
 
@@ -46,7 +46,8 @@
     await formRef.value.validate()
     try {
       pending.value = true
-      await updateVariable(spaceId.value, props.id, variableConfig.value)
+      const { default_val, memo } = variableConfig.value
+      await updateVariable(spaceId.value, props.id, { default_val, memo })
       close()
       emits('edited')
       Message({
