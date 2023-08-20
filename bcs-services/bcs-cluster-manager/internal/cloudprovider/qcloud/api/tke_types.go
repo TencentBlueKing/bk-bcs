@@ -1617,3 +1617,10 @@ type ClusterEndpointInfo struct {
 	// 集群APIServer的外网访问ACL列表
 	ClusterExternalACL []string
 }
+
+// ZoneInfo zone info
+type ZoneInfo struct {
+	ZoneID   uint64
+	Zone     string
+	ZoneName string
+}

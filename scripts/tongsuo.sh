@@ -12,9 +12,9 @@ cd Tongsuo-8.3.2/
 
 if [ "$IS_STATIC" == true ]; then
   yum -y install glibc-static
-  ./config --prefix=$TONGSUO_PATH -static
+  ./config --prefix=$TONGSUO_PATH -static -fPIC
 else
-  ./config --prefix=$TONGSUO_PATH
+  ./config --prefix=$TONGSUO_PATH -fPIC
 fi
 
 make -j

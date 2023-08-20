@@ -15,6 +15,7 @@ package operationlog
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -60,39 +61,45 @@ func (ua *ListOperationLogsAction) setResp(code uint32, msg string) {
 }
 
 func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
-	conds := make([]bson.E, 0)
+	var (
+		conds   = make([]bson.E, 0)
+		condDst = make([]bson.E, 0)
+	)
 	if ua.req.ResourceType != "" {
-		conds = append(conds, util.Condition(operator.Eq, "resourcetype", ua.req.ResourceType))
+		conds = append(conds, util.Condition(operator.Eq, "resourcetype", []string{ua.req.ResourceType}))
 	}
 	if ua.req.ResourceID != "" {
-		conds = append(conds, util.Condition(operator.Eq, "resourceid", ua.req.ResourceID))
+		conds = append(conds, util.Condition(operator.Eq, "resourceid", []string{ua.req.ResourceID}))
 	}
 	if ua.req.ClusterID != "" {
-		conds = append(conds, util.Condition(operator.Eq, "clusterid", ua.req.ClusterID))
-		conds = append(conds, bson.E{Key: "clusterid", Value: ua.req.ClusterID})
+		conds = append(conds, util.Condition(operator.Eq, "clusterid", []string{ua.req.ClusterID}))
 	}
 	if ua.req.ProjectID != "" {
-		conds = append(conds, util.Condition(operator.Eq, "projectid", ua.req.ProjectID))
+		conds = append(conds, util.Condition(operator.Eq, "projectid", []string{ua.req.ProjectID}))
 	}
 
 	// time range condition
 	start := time.Unix(int64(ua.req.StartTime), 0).Format(time.RFC3339)
 	end := time.Unix(int64(ua.req.EndTime), 0).Format(time.RFC3339)
-	conds = append(conds, util.Condition(operator.Gte, "createtime", start))
-	conds = append(conds, util.Condition(operator.Lte, "createtime", end))
+	conds = append(conds, util.Condition(util.Range, "createtime", []string{start, end}))
 
 	// default taskID empty filter
 	if !ua.req.TaskIDNull {
-		conds = append(conds, util.Condition(operator.Ne, "taskid", ""))
+		conds = append(conds, util.Condition(operator.Ne, "taskid", []string{""}))
 	}
 	if ua.req.Status != "" {
-		conds = append(conds, util.Condition(operator.Eq, "status", ua.req.Status))
+		conds = append(conds, util.Condition(operator.Eq, "status", []string{ua.req.Status}))
 	}
 	if ua.req.TaskType != "" {
-		conds = append(conds, util.Condition(util.Regex, "tasktype", ua.req.TaskType))
+		conds = append(conds, util.Condition(util.Regex, "tasktype", []string{ua.req.TaskType}))
 	}
 
-	sumLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, &options.ListOption{
+	if len(ua.req.IpList) > 0 {
+		ipList := strings.Split(ua.req.IpList, ",")
+		condDst = append(condDst, util.Condition(operator.In, "nodeiplist", ipList))
+	}
+
+	sumLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, condDst, &options.ListOption{
 		Count: true,
 	})
 	if err != nil {
@@ -103,7 +110,7 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
 	offset := (ua.req.Page - 1) * ua.req.Limit
 	sort := map[string]int{"createtime": -1}
 
-	opLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, &options.ListOption{
+	opLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, condDst, &options.ListOption{
 		Limit: int64(ua.req.Limit), Offset: int64(offset), Sort: sort})
 	if err != nil {
 		return err

@@ -884,6 +884,16 @@ service ClusterManager {
       summary : "更新云账号"
     };
   }
+  rpc MigrateCloudAccount(MigrateCloudAccountRequest) returns (MigrateCloudAccountResponse) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/clouds/{cloudID}/accounts"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "迁移加密云账号信息(支持单个账号迁移、多账号、全部账号迁移)"
+      summary : "迁移云账号"
+    };
+  }
   rpc DeleteCloudAccount(DeleteCloudAccountRequest) returns (DeleteCloudAccountResponse) {
     option (google.api.http) = {
       delete : "/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"
@@ -1453,6 +1463,10 @@ message Node {
     title: "innerIPv6",
     description: "节点ipv6地址"
   }];
+  string zoneName = 20 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "zoneName",
+    description: "节点所在可用区名称"
+  }];
 }
 
 message NetworkSetting {
@@ -1716,6 +1730,10 @@ message BKOpsPlugin {
   map<string, string> params = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "params", 
     description: "bksops模板默认通用参数，实际调用时根据实际行为可覆盖或定制化"
+  }];
+  bool allowSkipWhenFailed = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "allowSkipWhenFailed",
+    description: "allowSkipWhenFailed插件执行失败时是否允许跳过, 默认不允许跳过"
   }];
 }
 
@@ -2049,9 +2067,60 @@ message UpdateCloudAccountRequest {
     title: "updater",
     description: "更新者"
   },(validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z]+$"}];
+  Account account = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "account",
+    description: "cloud更新云账号信息"
+  }];
 }
 
 message UpdateCloudAccountResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
+  }];
+}
+
+message MigrateCloudAccountRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "MigrateCloudAccountRequest"
+      description : "迁移cloud账号请求，主要用于环境存量账号的加密迁移"
+      required: ["cloudID"]
+    }
+  };
+  string cloudID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cloudID",
+    description: "云类型，英文字符串"
+  }, (validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z-]+$"}];
+  string accountIDs = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "accountIDs通过,隔开，可操作多个账号",
+    description: "cloud云账号ID"
+  }];
+  OriginEncrypt encrypt = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "encrypt原始的加密方式转换为该环境的加密方式，为空表示明文存储",
+    description: "encrypt原始加密方式转换"
+  }];
+  bool all = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "all",
+    description: "all操作所有的账号迁移"
+  }];
+}
+
+message OriginEncrypt {
+  string encryptType = 1;
+  string kv = 2;
+  string iv =3;
+}
+
+message MigrateCloudAccountResponse {
   uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "code",
     description : "返回错误码"
@@ -3550,7 +3619,7 @@ message NodeTemplate {
   }];
   string scaleInPreScript = 26[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "scaleInPreScript",
-    description: "缩容节点后置脚本, base64编码的用户脚本."
+    description: "缩容节点前置脚本, base64编码的用户脚本."
   }];
   string scaleInPostScript = 27[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "scaleInPostScript",
@@ -3567,6 +3636,14 @@ message NodeTemplate {
   bool skipSystemInit = 30 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "skipSystemInit",
     description: "是否跳过执行系统初始化, 默认执行"
+  }];
+  bool allowSkipScaleOutWhenFailed = 31 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "allowSkipScaleOutWhenFailed",
+    description: "扩容失败时是否允许跳过流程, 默认不允许跳过"
+  }];
+  bool allowSkipScaleInWhenFailed = 32 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "skipSystemInit",
+    description: "缩容失败时是否允许跳过流程, 默认不允许跳过"
   }];
 }
 
@@ -10367,6 +10444,10 @@ message ListOperationLogsRequest {
   bool v2 = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "v2",
     description: "是否使用v2的查询版本"
+  }];
+  string ipList = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ipList",
+    description: "通过,隔开ipList过滤任务"
   }];
 }
 

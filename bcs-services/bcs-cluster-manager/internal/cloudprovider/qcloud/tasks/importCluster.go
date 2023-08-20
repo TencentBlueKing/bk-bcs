@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
@@ -112,7 +113,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	// 社区版本 TKE共有云导入获取集群kubeConfig并进行配置
+	// 社区版本 TKE公有云导入获取集群kubeConfig并进行配置
 	err = registerTKEClusterEndpoint(ctx, basicInfo, api.ClusterEndpointConfig{
 		IsExtranet: true,
 	})
@@ -253,18 +254,18 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 		}
 	}
 
-	// syncCluster sync kubeconfig to cluster
-	if syncCluster {
-		// save cluster kubeConfig
-		data.Cluster.KubeConfig = kubeConfig
-		cloudprovider.UpdateCluster(data.Cluster)
-	}
-
 	kubeRet, err := base64.StdEncoding.DecodeString(kubeConfig)
 	if err != nil {
 		return err
 	}
 	blog.Infof("importClusterCredential[%s] kubeConfig[%s]", taskID, string(kubeRet))
+
+	// syncCluster sync kubeconfig to cluster
+	if syncCluster {
+		// save cluster kubeConfig
+		data.Cluster.KubeConfig, _ = encrypt.Encrypt(nil, string(kubeRet))
+		cloudprovider.UpdateCluster(data.Cluster)
+	}
 
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
 		YamlContent: string(kubeRet),

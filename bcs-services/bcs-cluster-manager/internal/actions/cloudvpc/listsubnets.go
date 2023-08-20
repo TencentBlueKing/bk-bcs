@@ -72,7 +72,7 @@ func (la *ListSubnetsAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
-	account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
+	account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID, false)
 	if err != nil {
 		return err
 	}

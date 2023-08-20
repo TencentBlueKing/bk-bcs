@@ -17,10 +17,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/clientcmd"
 	"strconv"
 	"strings"
 	"time"
@@ -44,6 +40,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	k8scorev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -131,7 +131,8 @@ func GetCredential(data *CredentialData) (*CommonOption, error) {
 	// if credential not exist account, get from common cloud
 	if data.AccountID != "" {
 		// try to get credential in cluster
-		account, err := GetStorageModel().GetCloudAccount(context.Background(), data.Cloud.CloudID, data.AccountID)
+		account, err := GetStorageModel().GetCloudAccount(context.Background(),
+			data.Cloud.CloudID, data.AccountID, false)
 		if err != nil {
 			return nil, fmt.Errorf("GetCloudAccount failed: %v", err)
 		}
@@ -315,6 +316,7 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 		return fmt.Errorf("importClusterCredential parse kubeConfig failed: %v", "[server|caCertData|token] null")
 	}
 
+	// need to handle crypt
 	now := time.Now().Format(time.RFC3339)
 	err := GetStorageModel().PutClusterCredential(context.Background(), &proto.ClusterCredential{
 		ServerKey:     clusterID,
@@ -672,7 +674,7 @@ func WithStepSkipFailed(skip bool) StepOption {
 
 // InitTaskStep init task step
 func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
-	defaultOptions := &StepOptions{Retry: 0}
+	defaultOptions := &StepOptions{Retry: 0, SkipFailed: false}
 	for _, opt := range opts {
 		opt(defaultOptions)
 	}
@@ -683,7 +685,7 @@ func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
 		System:       "api",
 		Params:       make(map[string]string),
 		Retry:        0,
-		SkipOnFailed: false,
+		SkipOnFailed: defaultOptions.SkipFailed,
 		Start:        nowStr,
 		Status:       TaskStatusNotStarted,
 		TaskMethod:   stepInfo.StepMethod,

@@ -54,6 +54,21 @@ func (cm *ClusterManager) UpdateCloudAccount(ctx context.Context,
 	return nil
 }
 
+// MigrateCloudAccount implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) MigrateCloudAccount(ctx context.Context,
+	req *cmproto.MigrateCloudAccountRequest, resp *cmproto.MigrateCloudAccountResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := account.NewMigrateAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("MigrateCloudAccount", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: MigrateCloudAccount, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // DeleteCloudAccount implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) DeleteCloudAccount(ctx context.Context,
 	req *cmproto.DeleteCloudAccountRequest, resp *cmproto.DeleteCloudAccountResponse) error {

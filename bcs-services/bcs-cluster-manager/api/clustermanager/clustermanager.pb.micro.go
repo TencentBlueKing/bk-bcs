@@ -596,6 +596,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.MigrateCloudAccount",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.DeleteCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
 			Method:  []string{"DELETE"},
@@ -897,6 +904,7 @@ type ClusterManagerService interface {
 	// Cloud Account information management
 	CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...client.CallOption) (*CreateCloudAccountResponse, error)
 	UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, opts ...client.CallOption) (*UpdateCloudAccountResponse, error)
+	MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, opts ...client.CallOption) (*MigrateCloudAccountResponse, error)
 	DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, opts ...client.CallOption) (*DeleteCloudAccountResponse, error)
 	ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...client.CallOption) (*ListCloudAccountResponse, error)
 	ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, opts ...client.CallOption) (*ListCloudAccountPermResponse, error)
@@ -1787,6 +1795,16 @@ func (c *clusterManagerService) UpdateCloudAccount(ctx context.Context, in *Upda
 	return out, nil
 }
 
+func (c *clusterManagerService) MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, opts ...client.CallOption) (*MigrateCloudAccountResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.MigrateCloudAccount", in)
+	out := new(MigrateCloudAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, opts ...client.CallOption) (*DeleteCloudAccountResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DeleteCloudAccount", in)
 	out := new(DeleteCloudAccountResponse)
@@ -2204,6 +2222,7 @@ type ClusterManagerHandler interface {
 	// Cloud Account information management
 	CreateCloudAccount(context.Context, *CreateCloudAccountRequest, *CreateCloudAccountResponse) error
 	UpdateCloudAccount(context.Context, *UpdateCloudAccountRequest, *UpdateCloudAccountResponse) error
+	MigrateCloudAccount(context.Context, *MigrateCloudAccountRequest, *MigrateCloudAccountResponse) error
 	DeleteCloudAccount(context.Context, *DeleteCloudAccountRequest, *DeleteCloudAccountResponse) error
 	ListCloudAccount(context.Context, *ListCloudAccountRequest, *ListCloudAccountResponse) error
 	ListCloudAccountToPerm(context.Context, *ListCloudAccountPermRequest, *ListCloudAccountPermResponse) error
@@ -2337,6 +2356,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, out *GetNodeTemplateResponse) error
 		CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error
 		UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, out *UpdateCloudAccountResponse) error
+		MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, out *MigrateCloudAccountResponse) error
 		DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, out *DeleteCloudAccountResponse) error
 		ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error
 		ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, out *ListCloudAccountPermResponse) error
@@ -2928,6 +2948,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.MigrateCloudAccount",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteCloudAccount",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
 		Method:  []string{"DELETE"},
@@ -3466,6 +3493,10 @@ func (h *clusterManagerHandler) CreateCloudAccount(ctx context.Context, in *Crea
 
 func (h *clusterManagerHandler) UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, out *UpdateCloudAccountResponse) error {
 	return h.ClusterManagerHandler.UpdateCloudAccount(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, out *MigrateCloudAccountResponse) error {
+	return h.ClusterManagerHandler.MigrateCloudAccount(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, out *DeleteCloudAccountResponse) error {

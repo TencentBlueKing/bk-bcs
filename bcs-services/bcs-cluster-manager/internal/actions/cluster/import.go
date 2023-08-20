@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
@@ -104,7 +105,10 @@ func (ia *ImportAction) syncClusterInfoToDB(cls *cmproto.Cluster) error {
 
 	// save kubeConfig
 	if ia.req.CloudMode.KubeConfig != "" {
-		kubeRet := base64.StdEncoding.EncodeToString([]byte(ia.req.CloudMode.KubeConfig))
+		kubeRet, err := encrypt.Encrypt(nil, ia.req.CloudMode.KubeConfig)
+		if err != nil {
+			return err
+		}
 		cls.KubeConfig = kubeRet
 	}
 
@@ -377,7 +381,7 @@ func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 
 	// check account validate
 	if len(req.AccountID) > 0 {
-		_, err := ia.model.GetCloudAccount(ia.ctx, ia.cloud.CloudID, req.AccountID)
+		_, err := ia.model.GetCloudAccount(ia.ctx, ia.cloud.CloudID, req.AccountID, false)
 		if err != nil {
 			return err
 		}

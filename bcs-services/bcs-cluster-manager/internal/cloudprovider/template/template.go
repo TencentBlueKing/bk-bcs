@@ -140,8 +140,9 @@ func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *pr
 		Start:  now,
 		Status: cloudprovider.TaskStatusNotStarted,
 		// method name is registered name to taskServer
-		TaskMethod: cloudprovider.BKSOPTask,
-		TaskName:   taskName,
+		TaskMethod:   cloudprovider.BKSOPTask,
+		TaskName:     taskName,
+		SkipOnFailed: plugin.AllowSkipWhenFailed,
 	}
 	step.Params[cloudprovider.BkSopsUrlKey.String()] = plugin.Link
 	step.Params[cloudprovider.ShowSopsUrlKey.String()] = fmt.Sprintf("%v", info.ShowSopsUrl)

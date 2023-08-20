@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"strings"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -42,6 +44,7 @@ type DeleteAction struct {
 	quotaList  []cmproto.ResourceQuota
 	nodeGroups []cmproto.NodeGroup
 
+	kube *clusterops.K8SOperator
 	// cluster associate ca options
 	scalingOption *cmproto.ClusterAutoScalingOption
 	tasks         *cmproto.Task
@@ -50,9 +53,10 @@ type DeleteAction struct {
 }
 
 // NewDeleteAction delete cluster action
-func NewDeleteAction(model store.ClusterManagerModel) *DeleteAction {
+func NewDeleteAction(model store.ClusterManagerModel, kube *clusterops.K8SOperator) *DeleteAction {
 	return &DeleteAction{
 		model: model,
+		kube:  kube,
 	}
 }
 
@@ -145,9 +149,9 @@ func (da *DeleteAction) canDelete() error {
 	return nil
 }
 
-func (da *DeleteAction) cleanLocalInformation() error {
+func (da *DeleteAction) cleanLocalInformation(connect bool) error {
 	// importer cluster only delete cluster related data
-	if da.isImporterCluster() {
+	if da.isImporterCluster() || !connect {
 		da.req.IsForced = true
 	}
 	if da.req.IsForced {
@@ -393,9 +397,10 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	//     OnlyDeleteInfo = true && IsForced = true (delete relative resource and delete cluster)
 	//     and IsForced = false (check resource, can't delete cluster if resource do not nil).
 	// if delete importer cluster need to delete cluster extra data, thus set IsForced = true
-	if req.OnlyDeleteInfo || da.isImporterCluster() {
+	connect := utils.CheckClusterConnection(da.kube, da.req.ClusterID)
+	if req.OnlyDeleteInfo || da.isImporterCluster() || !connect {
 		//clean all relative resource then delete cluster finally
-		if err := da.cleanLocalInformation(); err != nil {
+		if err := da.cleanLocalInformation(connect); err != nil {
 			blog.Errorf("only delete Cluster %s local information err, %s", req.ClusterID, err.Error())
 			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 			return

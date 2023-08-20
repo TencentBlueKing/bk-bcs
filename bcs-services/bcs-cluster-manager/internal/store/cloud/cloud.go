@@ -25,7 +25,6 @@ import (
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
-
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -95,7 +94,7 @@ func (m *ModelCloud) CreateCloud(ctx context.Context, cloud *types.Cloud) error 
 		return err
 	}
 	if cloud.CloudCredential != nil {
-		if err := util.EncryptCredential(cloud.CloudCredential); err != nil {
+		if err := util.EncryptCredentialData(nil, cloud.CloudCredential); err != nil {
 			blog.Errorf("encrypt cloud %s credential information failed, %s", cloud.CloudID, err.Error())
 			return err
 		}
@@ -117,7 +116,7 @@ func (m *ModelCloud) UpdateCloud(ctx context.Context, cloud *types.Cloud) error 
 	})
 
 	if cloud.CloudCredential != nil {
-		if err := util.EncryptCredential(cloud.CloudCredential); err != nil {
+		if err := util.EncryptCredentialData(nil, cloud.CloudCredential); err != nil {
 			blog.Errorf("encrypt cloud %s credential information failed, %s", cloud.CloudID, err.Error())
 			return err
 		}
@@ -154,7 +153,7 @@ func (m *ModelCloud) GetCloud(ctx context.Context, cloudID string) (*types.Cloud
 	}
 
 	if cloud.CloudCredential != nil {
-		if err := util.DecryptCredential(cloud.CloudCredential); err != nil {
+		if err := util.DecryptCredentialData(nil, cloud.CloudCredential); err != nil {
 			return nil, err
 		}
 	}
@@ -182,7 +181,7 @@ func (m *ModelCloud) ListCloud(ctx context.Context, cond *operator.Condition, op
 	}
 	for _, cloud := range cloudList {
 		if cloud.CloudCredential != nil {
-			if err := util.DecryptCredential(cloud.CloudCredential); err != nil {
+			if err := util.DecryptCredentialData(nil, cloud.CloudCredential); err != nil {
 				blog.Errorf("decrypt cloud %s credential failed when ListCloud, %s", cloud.CloudID, err.Error())
 				return nil, err
 			}

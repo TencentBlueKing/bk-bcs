@@ -13,6 +13,7 @@
 package options
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
@@ -86,13 +87,13 @@ type BrokerConfig struct {
 
 // BKOpsConfig for call bkops job
 type BKOpsConfig struct {
-	Server        string `json:"server"`
-	AppCode       string `json:"appCode"`
-	AppSecret     string `json:"appSecret"`
-	BkUserName    string `json:"bkUserName"`
-	Debug         bool   `json:"debug"`
-	TemplateURL   string `json:"templateURL"`
-	FrontURL      string `json:"frontURL"`
+	Server      string `json:"server"`
+	AppCode     string `json:"appCode"`
+	AppSecret   string `json:"appSecret"`
+	BkUserName  string `json:"bkUserName"`
+	Debug       bool   `json:"debug"`
+	TemplateURL string `json:"templateURL"`
+	FrontURL    string `json:"frontURL"`
 }
 
 // CmdbConfig for cloud different tags info
@@ -296,6 +297,7 @@ type ClusterManagerOptions struct {
 	ResourceSchemaPath string                `json:"resourceSchemaPath"`
 	TagDepart          string                `json:"tagDepart"`
 	PrefixVcluster     string                `json:"prefixVcluster"`
+	Encrypt            encryptv2.Config      `json:"encrypt"`
 	ServerConfig
 	ClientConfig
 }

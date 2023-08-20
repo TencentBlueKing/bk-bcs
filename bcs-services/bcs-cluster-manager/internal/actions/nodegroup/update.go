@@ -309,6 +309,8 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 		group.NodeTemplate.Labels = ua.req.NodeTemplate.Labels
 		group.NodeTemplate.Annotations = ua.req.NodeTemplate.Annotations
 		group.NodeTemplate.SkipSystemInit = ua.req.NodeTemplate.SkipSystemInit
+		group.NodeTemplate.AllowSkipScaleOutWhenFailed = ua.req.NodeTemplate.AllowSkipScaleOutWhenFailed
+		group.NodeTemplate.AllowSkipScaleInWhenFailed = ua.req.NodeTemplate.AllowSkipScaleInWhenFailed
 	}
 }
 

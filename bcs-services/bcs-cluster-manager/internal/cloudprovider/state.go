@@ -152,7 +152,7 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 			if step.SkipOnFailed {
 				continue
 			}
-			//check this step is ok
+			// check this step is ok
 			if step.Status != TaskStatusSuccess {
 				// ok = false
 				break
@@ -296,6 +296,9 @@ func (stat *TaskState) SkipFailure(start time.Time, stepName string, err error) 
 	step.Status = TaskStatusFailure
 	step.LastUpdate = step.End
 	step.Message = fmt.Sprintf("running failed, %s", err.Error())
+	if stat.TaskUrl != "" {
+		step.Params[BkSopsTaskUrlKey.String()] = stat.TaskUrl
+	}
 
 	stat.Task.Status = TaskStatusRunning
 	stat.Task.Message = fmt.Sprintf("step %s running failed", step.Name)
@@ -309,6 +312,8 @@ func (stat *TaskState) SkipFailure(start time.Time, stepName string, err error) 
 		stat.Task.Status = TaskStatusSuccess
 		stat.Task.Message = fmt.Sprintf("whole task is done")
 
+		metrics.ReportMasterTaskMetric(stat.Task.TaskType, stat.Task.Status, "", taskStart)
+
 		if stat.JobResult != nil {
 			err := stat.JobResult.UpdateJobResultStatus(true)
 			if err != nil {
@@ -317,6 +322,13 @@ func (stat *TaskState) SkipFailure(start time.Time, stepName string, err error) 
 				blog.Infof("task[%s] stepName[%s] UpdateJobResultStatus successful", stat.Task.TaskID, stepName)
 			}
 		}
+	} else {
+		stepStart, _ := time.Parse(time.RFC3339, step.Start)
+		metricName := step.Name
+		if strings.HasPrefix(step.Name, BKSOPTask) {
+			metricName = BKSOPTask
+		}
+		metrics.ReportMasterTaskMetric(stat.Task.TaskType, step.Status, metricName, stepStart)
 	}
 
 	if err := GetStorageModel().UpdateTask(context.Background(), stat.Task); err != nil {

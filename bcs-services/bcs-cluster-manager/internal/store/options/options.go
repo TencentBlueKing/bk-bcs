@@ -24,4 +24,6 @@ type ListOption struct {
 	All bool
 	// Count for index
 	Count bool
+	// SkipDecrypt skip data decrypt
+	SkipDecrypt bool
 }

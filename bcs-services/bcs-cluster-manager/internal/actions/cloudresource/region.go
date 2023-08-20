@@ -107,7 +107,7 @@ func (ga *GetCloudRegionsAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
-	account, err := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID)
+	account, err := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID, false)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func (ga *GetCloudRegionZonesAction) getRelativeData() error {
 	ga.cloud = cloud
 
 	if ga.req.AccountID != "" {
-		account, err := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID)
+		account, err := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID, false)
 		if err != nil {
 			return err
 		}
@@ -350,7 +350,7 @@ func (ga *GetCloudAccountTypeAction) getRelativeData() error {
 	}
 
 	if len(ga.req.AccountID) > 0 {
-		account, errGet := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID)
+		account, errGet := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID, false)
 		if errGet != nil {
 			return errGet
 		}

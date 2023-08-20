@@ -206,10 +206,11 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetNodeTemplate":    project.CanViewProjectOperation,
 
 	// cloud account
-	"ClusterManager.CreateCloudAccount": cloudaccount.CanCreateCloudAccountOperation,
-	"ClusterManager.UpdateCloudAccount": cloudaccount.CanManageCloudAccountOperation,
-	"ClusterManager.DeleteCloudAccount": cloudaccount.CanManageCloudAccountOperation,
-	"ClusterManager.ListCloudAccount":   cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.CreateCloudAccount":  cloudaccount.CanCreateCloudAccountOperation,
+	"ClusterManager.UpdateCloudAccount":  cloudaccount.CanManageCloudAccountOperation,
+	"ClusterManager.DeleteCloudAccount":  cloudaccount.CanManageCloudAccountOperation,
+	"ClusterManager.ListCloudAccount":    cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.MigrateCloudAccount": "",
 
 	// cloud component paras
 	"ClusterManager.CreateCloudModuleFlag": "",
