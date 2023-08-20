@@ -222,7 +222,7 @@
             </ul>
           </aside>
           <div class="diff-content-area">
-            <diff v-if="!!selectedConfig.id" :config="selectedConfig">
+            <diff v-if="!!selectedConfig.id" :app-id="appId" :config="selectedConfig">
               <template #leftHead>
                   <slot name="baseHead">
                     <div class="diff-panel-head">

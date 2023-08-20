@@ -290,6 +290,16 @@ export const getTemplateVersionList = (biz_id: string, template_space_id: number
 }
 
 /**
+ * 根据模板版本id列表查询对应模板版本详情
+ * @param biz_id 业务ID
+ * @param ids 模板版本ID列表
+ * @returns
+ */
+export const getTemplateVersionsDetailByIds = (biz_id: string, ids: number[]) => {
+  return http.post(`/config/biz/${biz_id}/template_revisions/list_by_ids`, { ids }).then(res => res.data)
+}
+
+/**
  * 删除模板版本
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
@@ -299,4 +309,46 @@ export const getTemplateVersionList = (biz_id: string, template_space_id: number
  */
 export const deleteTemplateVersion = (biz_id: string, template_space_id: number, template_id: number, template_revision_id: number) => {
   return http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions/${template_revision_id}`)
+}
+
+/**
+ * 查询模板版本被引用计数
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param ids 版本ID列表
+ * @returns
+ */
+export const getCountsByTemplateVersionIds = (biz_id: string, template_space_id: number, template_id: number, ids: number[]) => {
+  return http
+    .post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions/bound_counts`, { template_revision_ids: ids })
+    .then(res => res.data)
+}
+
+/**
+ * 获取模板版本被未命名版本服务引用详情
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param template_revision_id 版本ID
+ * @returns
+ */
+export const getUnNamedVersionAppsBoundByTemplateVersion = (biz_id: string, template_space_id: number, template_id: number, template_revision_id: number, params: ICommonQuery) => {
+  return http
+    .get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions/${template_revision_id}/bound_unnamed_app_details`, { params })
+    .then(res => res.data)
+}
+
+/**
+ * 获取模板版被已生成版本服务引用详情
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param template_revision_id 版本ID
+ * @returns
+ */
+export const getAppsVersionBoundByTemplateVersion = (biz_id: string, template_space_id: number, template_id: number, template_revision_id: number, params: ICommonQuery) => {
+  return http
+    .get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions/${template_revision_id}/bound_named_app_details`, { params })
+    .then(res => res.data)
 }

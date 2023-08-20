@@ -2,12 +2,13 @@
   import { ref, computed, onMounted } from 'vue'
   import { storeToRefs } from 'pinia';
   import { useRoute, useRouter } from 'vue-router'
-  import { ArrowsLeft, Plus, Search } from 'bkui-vue/lib/icon';
+  import { ArrowsLeft, Plus } from 'bkui-vue/lib/icon';
   import { useGlobalStore } from '../../../../store/global'
   import { ITemplateConfigItem, ITemplateVersionItem } from '../../../../../types/template'
   import { IPagination, ICommonQuery } from '../../../../../types/index';
-  import { getTemplatesDetailByIds, getTemplateVersionList } from '../../../../api/template'
+  import { getTemplatesDetailByIds, getTemplateVersionList, getCountsByTemplateVersionIds } from '../../../../api/template'
   import VersionFullTable from './version-full-table.vue';
+  import SearchInput from '../../../../components/search-input.vue';
 
   const getRouteId = (id: string) => {
     if (id && typeof Number(id) === 'number') {
@@ -23,6 +24,8 @@
   const templateDetail = ref<ITemplateConfigItem>()
   const versionListLoading = ref(false)
   const versionList = ref<ITemplateVersionItem[]>([])
+  const boundByAppsCountLoading = ref(false)
+  const boundByAppsCountList = ref([])
   const searchStr = ref('')
   const pagination = ref<IPagination>({
     count: 0,
@@ -60,19 +63,25 @@
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit
     }
+    if (searchStr.value) {
+      params.search_key = searchStr.value
+    }
     const res = await getTemplateVersionList(spaceId.value, templateSpaceId.value, templateId.value, params)
     versionList.value = res.details
-  }
-
-  const refreshList = (current: number = 1) => {
-    pagination.value.current = current
-    getVersionList()
-  }
-
-  const handleSearchInputChange = (val: string) => {
-    if (!val) {
-      refreshList()
+    pagination.value.count = res.count
+    versionListLoading.value = false
+    const ids = versionList.value.map(item => item.id)
+    boundByAppsCountList.value = []
+    if (ids.length > 0) {
+      loadBoundByAppsList(ids)
     }
+  }
+
+  const loadBoundByAppsList = async(ids: number[]) => {
+    boundByAppsCountLoading.value = true
+    const res = await getCountsByTemplateVersionIds(spaceId.value, templateSpaceId.value, templateId.value, ids)
+    boundByAppsCountList.value = res.details
+    boundByAppsCountLoading.value = false
   }
 
   const goToTemplateListPage = () => {
@@ -80,6 +89,18 @@
       templateSpaceId: templateSpaceId.value,
       packageId: packageId.value
     }})
+  }
+
+  const handleVersionDeleted = () => {
+    if (versionList.value.length === 1 && pagination.value.current > 1) {
+      pagination.value.current -= 1
+    }
+    getVersionList()
+  }
+
+  const refreshList = (current: number = 1) => {
+    pagination.value.current = current
+    getVersionList()
   }
 
 </script>
@@ -97,26 +118,21 @@
         <Plus class="button-icon" />
         新建版本
       </bk-button>
-      <bk-input
-        v-model.trim="searchStr"
-        class="search-input"
+      <SearchInput
+        v-model:keyword="searchStr"
         placeholder="版本号/版本说明/更新人"
-        :clearable="true"
-        @enter="refreshList()"
-        @clear="refreshList()"
-        @change="handleSearchInputChange">
-          <template #suffix>
-            <Search class="search-input-icon" />
-          </template>
-      </bk-input>
+        @search="refreshList()" />
     </div>
     <div class="version-content-area">
       <VersionFullTable
         :spaceId="spaceId"
-        :currentTemplateSpace="templateSpaceId"
+        :template-space-id="templateSpaceId"
         :templateId="templateId"
         :list="versionList"
-        :pagination="pagination" />
+        :bound-by-apps-count-loading="boundByAppsCountLoading"
+        :bound-by-apps-count-list="boundByAppsCountList"
+        :pagination="pagination"
+        @deleted="handleVersionDeleted" />
     </div>
   </div>
 </template>
