@@ -42,11 +42,12 @@ func (m *AppTemplateBindingSpec) AppTemplateBindingSpec() *table.AppTemplateBind
 	}
 
 	return &table.AppTemplateBindingSpec{
-		TemplateSpaceIDs:    m.TemplateSpaceIds,
-		TemplateSetIDs:      m.TemplateSetIds,
-		TemplateIDs:         m.TemplateIds,
-		TemplateRevisionIDs: m.TemplateRevisionIds,
-		Bindings:            result,
+		TemplateSpaceIDs:          m.TemplateSpaceIds,
+		TemplateSetIDs:            m.TemplateSetIds,
+		TemplateIDs:               m.TemplateIds,
+		TemplateRevisionIDs:       m.TemplateRevisionIds,
+		LatestTemplateRevisionIDs: m.LatestTemplateRevisionIds,
+		Bindings:                  result,
 	}
 }
 
@@ -62,11 +63,12 @@ func PbAppTemplateBindingSpec(spec *table.AppTemplateBindingSpec) *AppTemplateBi
 	}
 
 	return &AppTemplateBindingSpec{
-		TemplateSpaceIds:    spec.TemplateSpaceIDs,
-		TemplateSetIds:      spec.TemplateSetIDs,
-		TemplateIds:         spec.TemplateIDs,
-		TemplateRevisionIds: spec.TemplateRevisionIDs,
-		Bindings:            result,
+		TemplateSpaceIds:          spec.TemplateSpaceIDs,
+		TemplateSetIds:            spec.TemplateSetIDs,
+		TemplateIds:               spec.TemplateIDs,
+		TemplateRevisionIds:       spec.TemplateRevisionIDs,
+		LatestTemplateRevisionIds: spec.LatestTemplateRevisionIDs,
+		Bindings:                  result,
 	}
 }
 
@@ -76,9 +78,14 @@ func (m *TemplateBinding) TemplateBinding() *table.TemplateBinding {
 		return nil
 	}
 
+	result := make([]*table.TemplateRevisionBinding, 0)
+	for _, one := range m.TemplateRevisions {
+		result = append(result, one.TemplateRevisionBinding())
+	}
+
 	return &table.TemplateBinding{
-		TemplateSetID:       m.TemplateSetId,
-		TemplateRevisionIDs: m.TemplateRevisionIds,
+		TemplateSetID:     m.TemplateSetId,
+		TemplateRevisions: result,
 	}
 }
 
@@ -88,9 +95,40 @@ func PbTemplateBinding(spec *table.TemplateBinding) *TemplateBinding {
 		return nil
 	}
 
+	result := make([]*TemplateRevisionBinding, 0)
+	for _, one := range spec.TemplateRevisions {
+		result = append(result, PbTemplateRevisionBinding(one))
+	}
+
 	return &TemplateBinding{
-		TemplateSetId:       spec.TemplateSetID,
-		TemplateRevisionIds: spec.TemplateRevisionIDs,
+		TemplateSetId:     spec.TemplateSetID,
+		TemplateRevisions: result,
+	}
+}
+
+// TemplateRevisionBinding convert pb TemplateRevisionBinding to table TemplateRevisionBinding
+func (m *TemplateRevisionBinding) TemplateRevisionBinding() *table.TemplateRevisionBinding {
+	if m == nil {
+		return nil
+	}
+
+	return &table.TemplateRevisionBinding{
+		TemplateID:         m.TemplateId,
+		TemplateRevisionID: m.TemplateRevisionId,
+		IsLatest:           m.IsLatest,
+	}
+}
+
+// PbTemplateRevisionBinding convert table TemplateRevisionBinding to pb TemplateRevisionBinding
+func PbTemplateRevisionBinding(spec *table.TemplateRevisionBinding) *TemplateRevisionBinding {
+	if spec == nil {
+		return nil
+	}
+
+	return &TemplateRevisionBinding{
+		TemplateId:         spec.TemplateID,
+		TemplateRevisionId: spec.TemplateRevisionID,
+		IsLatest:           spec.IsLatest,
 	}
 }
 

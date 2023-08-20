@@ -39,6 +39,8 @@ type Validator interface {
 	ValidateTemplateSetExist(kit *kit.Kit, id uint32) error
 	// ValidateTemplateSpaceNoSubResource validate if one template space has not subresource
 	ValidateTemplateSpaceNoSubResource(kit *kit.Kit, id uint32) error
+	// ValidateTemplatesBelongToTemplateSet validate if templates belong to a template set
+	ValidateTemplatesBelongToTemplateSet(kit *kit.Kit, templateIDs []uint32, templateSetID uint32) error
 }
 
 var _ Validator = new(validatorDao)
@@ -170,6 +172,24 @@ func (dao *validatorDao) ValidateTemplateSpaceNoSubResource(kit *kit.Kit, id uin
 	}
 	if tmplCnt > 0 {
 		return fmt.Errorf("there are templates under the template space, need to delete them first")
+	}
+
+	return nil
+}
+
+// ValidateTemplatesBelongToTemplateSet validate if templates belong to a template set
+func (dao *validatorDao) ValidateTemplatesBelongToTemplateSet(
+	kit *kit.Kit, templateIDs []uint32, templateSetID uint32) error {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+	var existIDs []uint32
+	if err := q.Select(m.TemplateIDs).Where(m.ID.Eq(templateSetID)).Scan(&existIDs); err != nil {
+		return fmt.Errorf("validate templates in a template set failed, err: %v", err)
+	}
+
+	diffIDs := tools.SliceDiff(templateIDs, existIDs)
+	if len(diffIDs) > 0 {
+		return fmt.Errorf("template id in %v is not belong to tempalte set id %d", diffIDs, templateSetID)
 	}
 
 	return nil

@@ -133,20 +133,28 @@ func (t *AppTemplateBinding) ValidateDelete() error {
 
 // AppTemplateBindingSpec defines all the specifics for AppTemplateBinding set by user.
 type AppTemplateBindingSpec struct {
-	TemplateSpaceIDs    types.Uint32Slice `json:"template_space_ids" gorm:"column:template_space_ids;type:json;default:'[]'"`
-	TemplateSetIDs      types.Uint32Slice `json:"template_set_ids" gorm:"column:template_set_ids;type:json;default:'[]'"`
-	TemplateIDs         types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json;default:'[]'"`
-	TemplateRevisionIDs types.Uint32Slice `json:"template_revision_ids" gorm:"column:template_revision_ids;type:json;default:'[]'"`
-	Bindings            TemplateBindings  `json:"bindings" gorm:"column:bindings;type:json;default:'[]'"`
+	TemplateSpaceIDs          types.Uint32Slice `json:"template_space_ids" gorm:"column:template_space_ids;type:json;default:'[]'"`
+	TemplateSetIDs            types.Uint32Slice `json:"template_set_ids" gorm:"column:template_set_ids;type:json;default:'[]'"`
+	TemplateIDs               types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json;default:'[]'"`
+	TemplateRevisionIDs       types.Uint32Slice `json:"template_revision_ids" gorm:"column:template_revision_ids;type:json;default:'[]'"`
+	LatestTemplateRevisionIDs types.Uint32Slice `json:"latest_template_revision_ids" gorm:"column:latest_template_revision_ids;type:json;default:'[]'"`
+	Bindings                  TemplateBindings  `json:"bindings" gorm:"column:bindings;type:json;default:'[]'"`
 }
 
 // TemplateBindings is []*TemplateBinding
 type TemplateBindings []*TemplateBinding
 
-// TemplateBinding is relation between template set id and template release ids
+// TemplateBinding is relation between template set id and template revisions
 type TemplateBinding struct {
-	TemplateSetID       uint32   `json:"template_set_id"`
-	TemplateRevisionIDs []uint32 `json:"template_revision_ids"`
+	TemplateSetID     uint32                     `json:"template_set_id"`
+	TemplateRevisions []*TemplateRevisionBinding `json:"template_revisions"`
+}
+
+// TemplateRevisionBinding is template revision binding
+type TemplateRevisionBinding struct {
+	TemplateID         uint32 `json:"template_id"`
+	TemplateRevisionID uint32 `json:"template_revision_id"`
+	IsLatest           bool   `json:"is_latest"`
 }
 
 // Value implements the driver.Valuer interface
@@ -208,7 +216,7 @@ func validateBindings(bindings TemplateBindings) error {
 		if b.TemplateSetID <= 0 {
 			return fmt.Errorf("invalid template set id of bindings member: %d", b.TemplateSetID)
 		}
-		if len(b.TemplateRevisionIDs) == 0 {
+		if len(b.TemplateRevisions) == 0 {
 			return errors.New("template release ids of bindings member can't be empty")
 		}
 	}

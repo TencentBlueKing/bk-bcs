@@ -16,17 +16,24 @@ message AppTemplateBinding {
 
 // AppTemplateBindingSpec source resource reference: pkg/dal/table/app_template_binding.go
 message AppTemplateBindingSpec {
-    repeated uint32          template_space_ids   = 1;
-    repeated uint32          template_set_ids     = 2;
-    repeated uint32          template_ids         = 3;
-    repeated uint32          template_revision_ids = 4;
-    repeated TemplateBinding bindings             = 5;
+    repeated uint32          template_space_ids           = 1;
+    repeated uint32          template_set_ids             = 2;
+    repeated uint32          template_ids                 = 3;
+    repeated uint32          template_revision_ids        = 4;
+    repeated uint32          latest_template_revision_ids = 5;
+    repeated TemplateBinding bindings                     = 6;
 }
 
 // TemplateBinding source resource reference: pkg/dal/table/app_template_binding.go
 message TemplateBinding {
-    uint32          template_set_id      = 1;
-    repeated uint32 template_revision_ids = 2;
+    uint32                           template_set_id    = 1;
+    repeated TemplateRevisionBinding template_revisions = 2;
+}
+
+message TemplateRevisionBinding {
+    uint32 template_id          = 1;
+    uint32 template_revision_id = 2;
+    bool   is_latest            = 3;
 }
 
 
