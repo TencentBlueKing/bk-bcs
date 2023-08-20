@@ -25,7 +25,7 @@ func init() {
 	// validate if the VERSION is valid
 	_, err := parseVersion(VERSION)
 	if err != nil {
-		msg := fmt.Sprintf("invalid build version, the version(%s) format should be like v1.0.0, err: %v", VERSION, err)
+		msg := fmt.Sprintf("invalid build version, err: %v", err)
 		panic(msg)
 	}
 }
@@ -117,7 +117,7 @@ func Version() *SysVersion {
 func SemanticVersion() [3]int {
 	ver, err := parseVersion(VERSION)
 	if err != nil {
-		panic(fmt.Sprintf("parse version %s fail, error: %v", VERSION, err))
+		panic(fmt.Sprintf("parse version fail, err: %v", err))
 	}
 	return ver
 }
@@ -128,7 +128,7 @@ var versionRegex = regexp.MustCompile(`^v1\.\d+\.\d+.*$`)
 func parseVersion(v string) ([3]int, error) {
 	// 语义化版本之上限定 bscp 版本规范
 	if !versionRegex.MatchString(v) {
-		return [3]int{}, fmt.Errorf("the version %s format should be like v1.0.0", v)
+		return [3]int{}, fmt.Errorf("the version(%s) format should be like v1.0.0", v)
 	}
 
 	// 后面的先行版本号和版本编译信息按语义化版本规则处理
