@@ -64,7 +64,7 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item label="变量名称" property="name" :required="!isEditMode">
-      <bk-input v-model="localVal.name" prefix="bk_bscp_" :disabled="isEditMode" @change="change" />
+      <bk-input v-model.trim="localVal.name" prefix="bk_bscp_" :disabled="isEditMode" @change="change" />
     </bk-form-item>
     <bk-form-item label="类型" property="type" :required="!isEditMode">
       <bk-select v-model="localVal.type" :clearable="false" @change="change">
@@ -77,7 +77,7 @@
       <bk-input v-model="localVal.default_val" @change="change" />
     </bk-form-item>
     <bk-form-item label="描述" property="name">
-      <bk-input v-model="localVal.memo" type="textarea" :maxlength="100" @change="change" />
+      <bk-input v-model="localVal.memo" type="textarea" :maxlength="100" :rows="5" @change="change" />
     </bk-form-item>
   </bk-form>
 </template>

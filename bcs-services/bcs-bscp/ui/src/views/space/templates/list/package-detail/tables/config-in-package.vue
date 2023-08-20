@@ -38,20 +38,18 @@
 </script>
 <template>
   <CommonConfigTable
-    ref="configTable"
     v-model:selectedConfigs="selectedConfigs"
+    ref="configTable"
     :current-template-space="currentTemplateSpace"
     :key="currentPkg"
+    :show-cited-by-pkgs-col="true"
+    :show-bound-by-apps-col="true"
     :current-pkg="currentPkg"
     :get-config-list="getConfigList">
     <template #tableOperations>
       <AddConfigs :show-add-existing-config-option="true" @added="refreshConfigList" />
       <BatchAddTo :configs="selectedConfigs" @added="refreshConfigList" />
       <BatchMoveOutFromPkg :configs="selectedConfigs" @movedOut="handleMovedOut" />
-    </template>
-    <template #columns>
-      <bk-table-column label="所在套餐"></bk-table-column>
-      <bk-table-column label="被引用"></bk-table-column>
     </template>
   </CommonConfigTable>
 </template>

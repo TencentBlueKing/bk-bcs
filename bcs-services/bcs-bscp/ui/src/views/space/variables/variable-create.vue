@@ -49,7 +49,8 @@
     await formRef.value.validate()
     try {
       pending.value = true
-      await createVariable(spaceId.value, variableConfig.value)
+      const params = { ...variableConfig.value, name: `bk_bscp_${variableConfig.value.name}` }
+      await createVariable(spaceId.value, params)
       close()
       emits('created')
       Message({

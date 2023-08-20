@@ -29,7 +29,7 @@ export const createVariable = (biz_id: string, params: IVariableEditParams) => {
  * @param params 编辑参数
  * @returns
  */
-export const updateVariable = (biz_id: string, template_variable_id: number, params: IVariableEditParams) => {
+export const updateVariable = (biz_id: string, template_variable_id: number, params: { default_val: string; memo: string; }) => {
   return http.put(`/config/biz/${biz_id}/template_variables/${template_variable_id}`, params)
 }
 

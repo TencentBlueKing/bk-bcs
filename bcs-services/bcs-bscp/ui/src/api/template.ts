@@ -187,7 +187,6 @@ export const getTemplatesDetailByIds = (biz_id: string, ids: number[]) => {
   return http.post(`/config/biz/${biz_id}/templates/list_by_ids`, { ids }).then(res => res.data)
 }
 
-
 /**
  * 添加模版到模版套餐(多个模板添加到多个套餐)
  * @param biz_id 业务ID
@@ -210,6 +209,61 @@ export const addTemplateToPackage = (biz_id: string, template_space_id: number, 
  */
 export const moveOutTemplateFromPackage = (biz_id: string, template_space_id: number, template_ids: number[], template_set_ids: number[]) => {
   return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/delete_from_template_sets`, { template_ids, template_set_ids })
+}
+
+/**
+ * 查询模板被套餐引用详情
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param params 列表查询参数
+ * @returns
+ */
+export const getPackagesByTemplateId = (biz_id: string, template_space_id: number, template_id: number, params: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/bound_template_set_details`, { params }).then(res => res.data)
+}
+
+/**
+ * 查询多个模板被套餐引用详情
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_ids 模板ID
+ * @param params 列表查询参数
+ * @returns
+ */
+export const getPackagesByTemplateIds = (biz_id: string, template_space_id: number, template_ids: number[]) => {
+  // @todo 需要后台提供接口
+  // return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/bound_template_set_details`, { params: { template_ids.join(',') } }).then(res => res.data)
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_ids[0]}/bound_template_set_details`, { params: {start: 0, all: true } }).then(res => {
+    const list = []
+    for(let i = 0; i < template_ids.length; i++) {
+      list.push(res.data.details)
+    }
+    return { details: list }
+  })
+}
+
+/**
+ * 查询模板被引用计数
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_ids 模板ID列表
+ * @returns
+ */
+export const getCountsByTemplateIds = (biz_id: string, template_space_id: number, template_ids: number[]) => {
+  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/bound_counts`, { template_ids }).then(res => res.data)
+}
+
+/**
+ * 查询模板被未命名版本服务引用详情
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param params 列表查询参数
+ * @returns
+ */
+export const getUnNamedVersionAppsBoundByTemplate = (biz_id: string, template_space_id: number, template_id: number, params: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/bound_unnamed_app_details`, { params }).then(res => res.data)
 }
 
 /**
