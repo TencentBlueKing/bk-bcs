@@ -14,22 +14,18 @@ limitations under the License.
 package version
 
 import (
-	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"runtime"
-	"strconv"
-	"strings"
+
+	semver "github.com/hashicorp/go-version"
 )
 
 func init() {
 	// validate if the VERSION is valid
-	_, err := parseVersion()
+	_, err := parseVersion(VERSION)
 	if err != nil {
-		msg := fmt.Sprintf("invalid build version, the version(%s) format should be like like v1.0.0 or "+
-			"v1.0.0-alpha1, err: %v", VERSION, err)
-		fmt.Fprintf(os.Stderr, msg)
+		msg := fmt.Sprintf("invalid build version, err: %v", err)
 		panic(msg)
 	}
 }
@@ -75,11 +71,7 @@ type VersionFormat string
 
 // Debug show the version if enable debug.
 func Debug() bool {
-	if DEBUG == "true" {
-		return true
-	}
-
-	return false
+	return DEBUG == "true"
 }
 
 // ShowVersion shows the version info.
@@ -122,45 +114,32 @@ func Version() *SysVersion {
 }
 
 // SemanticVersion return the current process's version with semantic version format.
-func SemanticVersion() [3]uint32 {
-	ver, err := parseVersion()
+func SemanticVersion() [3]int {
+	ver, err := parseVersion(VERSION)
 	if err != nil {
-		panic(fmt.Sprintf("parse version fail, error: %v", err))
+		panic(fmt.Sprintf("parse version fail, err: %v", err))
 	}
 	return ver
 }
 
-var versionRegex = regexp.MustCompile(`^v1\.\d?(\.\d?){1,2}(-[a-z]+\d+)?$`)
+// versionRegex 限制版本号前缀只能为 v1.x.x 格式
+var versionRegex = regexp.MustCompile(`^v1\.\d+\.\d+.*$`)
 
-func parseVersion() ([3]uint32, error) {
-	if !versionRegex.MatchString(VERSION) {
-		return [3]uint32{}, errors.New("the version should be suffixed with format like v1.0.0")
+func parseVersion(v string) ([3]int, error) {
+	// 语义化版本之上限定 bscp 版本规范
+	if !versionRegex.MatchString(v) {
+		return [3]int{}, fmt.Errorf("the version(%s) format should be like v1.0.0", v)
 	}
 
-	ver := strings.Split(VERSION, "-")[0]
-	ver = strings.Trim(ver, " ")
-	ver = strings.TrimPrefix(ver, "v")
-	ele := strings.Split(ver, ".")
-	if len(ele) < 3 {
-		return [3]uint32{}, errors.New("version should be like v1.0.0")
-	}
-
-	major, err := strconv.Atoi(ele[0])
+	// 后面的先行版本号和版本编译信息按语义化版本规则处理
+	version, err := semver.NewSemver(v)
 	if err != nil {
-		return [3]uint32{}, fmt.Errorf("invalid major version: %s", ele[0])
+		return [3]int{}, err
 	}
 
-	minor, err := strconv.Atoi(ele[1])
-	if err != nil {
-		return [3]uint32{}, fmt.Errorf("invalid minor version: %s", ele[0])
-	}
-
-	patch, err := strconv.Atoi(ele[2])
-	if err != nil {
-		return [3]uint32{}, fmt.Errorf("invalid patch version: %s", ele[0])
-	}
-
-	return [3]uint32{uint32(major), uint32(minor), uint32(patch)}, nil
+	segments := version.Segments()
+	// 合法的语义化版本必定有 major / minor / patch 版本号
+	return [3]int{segments[0], segments[1], segments[2]}, nil
 }
 
 // SysVersion describe a binary version
