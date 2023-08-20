@@ -14,7 +14,10 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -34,6 +37,10 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbcs.CreateTe
 		ResourceID: req.BizId}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
+	}
+
+	if !strings.HasPrefix(strings.ToLower(req.Name), constant.TemplateVariablePrefix) {
+		return nil, fmt.Errorf("template variable name must start with %s", constant.TemplateVariablePrefix)
 	}
 
 	r := &pbds.CreateTemplateVariableReq{

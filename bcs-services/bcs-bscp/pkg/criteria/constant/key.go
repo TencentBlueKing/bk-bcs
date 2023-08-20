@@ -56,6 +56,9 @@ const (
 	AppIDHeaderKey = "X-Bscp-App-Id"
 	// TmplSpaceIDHeaderKey is template space id.
 	TmplSpaceIDHeaderKey = "X-Bscp-Template-Space-Id"
+
+	// TemplateVariablePrefix is the prefix for template variable name
+	TemplateVariablePrefix = "bk_bscp_"
 )
 
 // default resource
