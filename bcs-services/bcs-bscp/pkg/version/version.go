@@ -114,7 +114,7 @@ func Version() *SysVersion {
 }
 
 // SemanticVersion return the current process's version with semantic version format.
-func SemanticVersion() [3]int {
+func SemanticVersion() [3]uint32 {
 	ver, err := parseVersion(VERSION)
 	if err != nil {
 		panic(fmt.Sprintf("parse version fail, err: %v", err))
@@ -125,21 +125,21 @@ func SemanticVersion() [3]int {
 // versionRegex 限制版本号前缀只能为 v1.x.x 格式
 var versionRegex = regexp.MustCompile(`^v1\.\d+\.\d+.*$`)
 
-func parseVersion(v string) ([3]int, error) {
+func parseVersion(v string) ([3]uint32, error) {
 	// 语义化版本之上限定 bscp 版本规范
 	if !versionRegex.MatchString(v) {
-		return [3]int{}, fmt.Errorf("the version(%s) format should be like v1.0.0", v)
+		return [3]uint32{}, fmt.Errorf("the version(%s) format should be like v1.0.0", v)
 	}
 
 	// 后面的先行版本号和版本编译信息按语义化版本规则处理
 	version, err := semver.NewSemver(v)
 	if err != nil {
-		return [3]int{}, err
+		return [3]uint32{}, err
 	}
 
 	segments := version.Segments()
 	// 合法的语义化版本必定有 major / minor / patch 版本号
-	return [3]int{segments[0], segments[1], segments[2]}, nil
+	return [3]uint32{uint32(segments[0]), uint32(segments[1]), uint32(segments[2])}, nil
 }
 
 // SysVersion describe a binary version

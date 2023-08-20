@@ -23,9 +23,9 @@ func TestCurrentVersion(t *testing.T) {
 	ver, err := parseVersion(VERSION)
 
 	assert.NoError(t, err, "parse version failed, err: %v", err)
-	assert.Equal(t, 1, ver[0], "invalid major version: %d", ver[0])
-	assert.Equal(t, 2, ver[1], "invalid minor version: %d", ver[1])
-	assert.Equal(t, 3, ver[2], "invalid patch version: %d", ver[2])
+	assert.Equal(t, uint32(1), ver[0], "invalid major version: %d", ver[0])
+	assert.Equal(t, uint32(2), ver[1], "invalid minor version: %d", ver[1])
+	assert.Equal(t, uint32(3), ver[2], "invalid patch version: %d", ver[2])
 }
 
 func TestIncorrectVersion(t *testing.T) {
