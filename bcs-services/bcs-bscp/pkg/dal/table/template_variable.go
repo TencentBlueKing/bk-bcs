@@ -14,6 +14,7 @@ package table
 
 import (
 	"errors"
+	"fmt"
 
 	"bscp.io/pkg/criteria/validator"
 )
@@ -130,15 +131,19 @@ func (t *TemplateVariable) ValidateDelete() error {
 
 // TemplateVariableSpec defines all the specifics for template variable set by user.
 type TemplateVariableSpec struct {
-	Name       string `json:"name" gorm:"column:name"`
-	Type       string `json:"type" gorm:"column:type"`
-	DefaultVal string `json:"default_val" gorm:"column:default_val"`
-	Memo       string `json:"memo" gorm:"column:memo"`
+	Name       string       `json:"name" gorm:"column:name"`
+	Type       VariableType `json:"type" gorm:"column:type"`
+	DefaultVal string       `json:"default_val" gorm:"column:default_val"`
+	Memo       string       `json:"memo" gorm:"column:memo"`
 }
 
 // ValidateCreate validate template variable spec when it is created.
 func (t *TemplateVariableSpec) ValidateCreate() error {
 	if err := validator.ValidateName(t.Name); err != nil {
+		return err
+	}
+
+	if err := t.Type.Validate(); err != nil {
 		return err
 	}
 
@@ -163,6 +168,31 @@ type TemplateVariableAttachment struct {
 func (t *TemplateVariableAttachment) Validate() error {
 	if t.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
+	}
+
+	return nil
+}
+
+const (
+	// StringVar is string type variable
+	StringVar VariableType = "string"
+	// NumberVar is number type variable
+	NumberVar VariableType = "number"
+	// 	BoolVar is bool type variable
+	BoolVar VariableType = "bool"
+)
+
+// VariableType is template variable type
+type VariableType string
+
+// Validate the file format is supported or not.
+func (t VariableType) Validate() error {
+	switch t {
+	case StringVar:
+	case NumberVar:
+	case BoolVar:
+	default:
+		return fmt.Errorf("unsupported variable type: %s", t)
 	}
 
 	return nil

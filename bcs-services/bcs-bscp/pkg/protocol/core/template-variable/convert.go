@@ -38,7 +38,7 @@ func (m *TemplateVariableSpec) TemplateVariableSpec() *table.TemplateVariableSpe
 
 	return &table.TemplateVariableSpec{
 		Name:       m.Name,
-		Type:       m.Type,
+		Type:       table.VariableType(m.Type),
 		DefaultVal: m.DefaultVal,
 		Memo:       m.Memo,
 	}
@@ -52,7 +52,7 @@ func PbTemplateVariableSpec(spec *table.TemplateVariableSpec) *TemplateVariableS
 
 	return &TemplateVariableSpec{
 		Name:       spec.Name,
-		Type:       spec.Type,
+		Type:       string(spec.Type),
 		DefaultVal: spec.DefaultVal,
 		Memo:       spec.Memo,
 	}
