@@ -38,11 +38,12 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		TemplateSpaceIDs    string `gorm:"type:json not null"`
-		TemplateSetIDs      string `gorm:"type:json not null"`
-		TemplateIDs         string `gorm:"type:json not null"`
-		TemplateRevisionIDs string `gorm:"type:json not null"`
-		Bindings            string `gorm:"type:json not null"`
+		TemplateSpaceIDs          string `gorm:"type:json not null"`
+		TemplateSetIDs            string `gorm:"type:json not null"`
+		TemplateIDs               string `gorm:"type:json not null"`
+		TemplateRevisionIDs       string `gorm:"type:json not null"`
+		LatestTemplateRevisionIDs string `gorm:"type:json not null"`
+		Bindings                  string `gorm:"type:json not null"`
 
 		// Attachment is attachment info of the resource
 		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID,priority:1"`
@@ -154,7 +155,7 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		{Resource: "released_app_template_bindings", MaxID: 0},
 		{Resource: "template_variables", MaxID: 0},
 		{Resource: "app_template_variables", MaxID: 0},
-		{Resource: "released_template_variables", MaxID: 0},
+		{Resource: "released_app_template_variables", MaxID: 0},
 	}); result.Error != nil {
 		return result.Error
 	}
@@ -178,7 +179,7 @@ func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
 		"released_app_template_bindings",
 		"template_variables",
 		"app_template_variables",
-		"released_template_variables",
+		"released_app_template_variables",
 	); err != nil {
 		return err
 	}
@@ -188,7 +189,7 @@ func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
 		"released_app_template_bindings",
 		"template_variables",
 		"app_template_variables",
-		"released_template_variables",
+		"released_app_template_variables",
 	}
 	if result := tx.Where("resource in ?", resources).Delete(&IDGenerators{}); result.Error != nil {
 		return result.Error

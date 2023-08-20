@@ -1225,11 +1225,12 @@ message UpdateTemplateSetReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     uint32          template_set_id   = 3;
-    string          memo              = 4;
-    repeated uint32 template_ids      = 5;
-    bool            public            = 6;
-    repeated uint32 bound_apps        = 7;
-    bool            force             = 8;
+    string          name              = 4;
+    string          memo              = 5;
+    repeated uint32 template_ids      = 6;
+    bool            public            = 7;
+    repeated uint32 bound_apps        = 8;
+    bool            force             = 9;
 }
 
 message UpdateTemplateSetResp {

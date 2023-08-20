@@ -33,7 +33,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateAppTemplateBindingResp)
 
-	templateSetIDs, templateRevisionIDs, err := parseBindings(req.Bindings)
+	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -42,13 +42,13 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
 	}
-	repeatedTmplRevisiondIDs := tools.SliceRepeatedElements(templateRevisionIDs)
-	if len(repeatedTmplRevisiondIDs) > 0 {
-		return nil, fmt.Errorf("repeated template revision ids: %v, id must be unique", repeatedTmplRevisiondIDs)
+	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
+	if len(repeatedTmplRevisionIDs) > 0 {
+		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
 	}
-	if len(templateRevisionIDs) > 500 {
-		return nil, fmt.Errorf("the length of template revision ids is %d, it must be within the range of [1,500]",
-			len(templateRevisionIDs))
+	if len(templateIDs) > 500 {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
+			len(templateIDs))
 	}
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Create,
@@ -111,7 +111,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateAppTemplateBindingResp)
 
-	templateSetIDs, templateRevisionIDs, err := parseBindings(req.Bindings)
+	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -120,13 +120,13 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
 	}
-	repeatedTmplRevisiondIDs := tools.SliceRepeatedElements(templateRevisionIDs)
-	if len(repeatedTmplRevisiondIDs) > 0 {
-		return nil, fmt.Errorf("repeated template revision ids: %v, id must be unique", repeatedTmplRevisiondIDs)
+	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
+	if len(repeatedTmplRevisionIDs) > 0 {
+		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
 	}
-	if len(templateRevisionIDs) > 500 {
-		return nil, fmt.Errorf("the length of template revision ids is %d, it must be within the range of [1,500]",
-			len(templateRevisionIDs))
+	if len(templateIDs) > 500 {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
+			len(templateIDs))
 	}
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
@@ -186,7 +186,7 @@ func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbcs.ListApp
 	return resp, nil
 }
 
-func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateRevisionIDs []uint32, err error) {
+func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateIDs []uint32, err error) {
 	if len(bindings) == 0 {
 		return nil, nil, errors.New("bindings can't be empty")
 	}
@@ -194,12 +194,20 @@ func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateR
 		if b.TemplateSetId <= 0 {
 			return nil, nil, fmt.Errorf("invalid template set id of bindings member: %d", b.TemplateSetId)
 		}
-		if len(b.TemplateRevisionIds) == 0 {
-			return nil, nil, errors.New("template revision ids of bindings member can't be empty")
+		if len(b.TemplateRevisions) == 0 {
+			return nil, nil, errors.New("template revisions of bindings member can't be empty")
 		}
 		templateSetIDs = append(templateSetIDs, b.TemplateSetId)
-		templateRevisionIDs = append(templateRevisionIDs, b.TemplateRevisionIds...)
+		for _, r := range b.TemplateRevisions {
+			if r.TemplateId <= 0 {
+				return nil, nil, fmt.Errorf("invalid template id of bindings member: %d", r.TemplateId)
+			}
+			templateIDs = append(templateIDs, r.TemplateId)
+			if r.TemplateRevisionId <= 0 {
+				return nil, nil, fmt.Errorf("invalid template revision id of bindings member: %d", r.TemplateRevisionId)
+			}
+		}
 	}
 
-	return templateSetIDs, templateRevisionIDs, nil
+	return templateSetIDs, templateIDs, nil
 }

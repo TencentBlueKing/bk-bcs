@@ -13,7 +13,6 @@ limitations under the License.
 package dao
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -51,19 +50,12 @@ func (dao *appTemplateBindingDao) Create(kit *kit.Kit, g *table.AppTemplateBindi
 	if err := g.ValidateCreate(); err != nil {
 		return 0, err
 	}
-
-	templateRevisions, err := dao.fillModel(kit, g)
-	if err != nil {
-		return 0, err
-	}
-
-	if err = dao.validateUpsert(kit, g, templateRevisions); err != nil {
+	if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
 		return 0, err
 	}
 
 	// generate a app template binding id and update to app template binding.
-	var id uint32
-	id, err = dao.idGen.One(kit, table.Name(g.TableName()))
+	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
 		return 0, err
 	}
@@ -96,21 +88,14 @@ func (dao *appTemplateBindingDao) Update(kit *kit.Kit, g *table.AppTemplateBindi
 	if err := g.ValidateUpdate(); err != nil {
 		return err
 	}
-
-	templateRevisions, err := dao.fillModel(kit, g)
-	if err != nil {
-		return err
-	}
-
-	if err = dao.validateUpsert(kit, g, templateRevisions); err != nil {
+	if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
 		return err
 	}
 
 	// 更新操作, 获取当前记录做审计
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
-	var oldOne *table.AppTemplateBinding
-	oldOne, err = q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
 		return err
 	}
@@ -141,12 +126,16 @@ func (dao *appTemplateBindingDao) List(kit *kit.Kit, bizID, appID uint32,
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
 
-	result, count, err := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).FindByPage(opt.Offset(), opt.LimitInt())
-	if err != nil {
-		return nil, 0, err
+	d := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID))
+	if opt.All {
+		result, err := d.Find()
+		if err != nil {
+			return nil, 0, err
+		}
+		return result, int64(len(result)), err
 	}
 
-	return result, count, nil
+	return d.FindByPage(opt.Offset(), opt.LimitInt())
 }
 
 // Delete one app template binding instance.
@@ -184,126 +173,6 @@ func (dao *appTemplateBindingDao) Delete(kit *kit.Kit, g *table.AppTemplateBindi
 	return nil
 }
 
-// listTemplateRevisionsByIDs list template releases details by template release ids.
-func (dao *appTemplateBindingDao) listTemplateRevisionsByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateRevision, error) {
-	m := dao.genQ.TemplateRevision
-	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
-	result, err := q.Where(m.ID.In(ids...)).Find()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
-// fillModel fill model AppTemplateBinding's fields
-// including TemplateSetIDs,TemplateRevisionIDs,TemplateSpaceIDs,TemplateIDs
-func (dao *appTemplateBindingDao) fillModel(kit *kit.Kit, g *table.AppTemplateBinding) (
-	[]*table.TemplateRevision, error) {
-	templateSetIDs, templateRevisionIDs := parseBindings(g.Spec.Bindings)
-	g.Spec.TemplateSetIDs = templateSetIDs
-	g.Spec.TemplateRevisionIDs = templateRevisionIDs
-
-	templateRevisions, err := dao.listTemplateRevisionsByIDs(kit, templateRevisionIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	templateSpaceIDs := make(map[uint32]struct{})
-	templateIDs := make(map[uint32]struct{})
-	for _, tr := range templateRevisions {
-		templateSpaceIDs[tr.Attachment.TemplateSpaceID] = struct{}{}
-		templateIDs[tr.Attachment.TemplateID] = struct{}{}
-	}
-	g.Spec.TemplateSpaceIDs = convertToSlice(templateSpaceIDs)
-	g.Spec.TemplateIDs = convertToSlice(templateIDs)
-
-	return templateRevisions, nil
-}
-
-func convertToSlice(m map[uint32]struct{}) []uint32 {
-	var keys []uint32
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
-}
-
-// validateUpsert validate for create or update operation
-func (dao *appTemplateBindingDao) validateUpsert(kit *kit.Kit, g *table.AppTemplateBinding,
-	templateRevisions []*table.TemplateRevision) error {
-	if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
-		return err
-	}
-
-	if err := dao.validateTemplateSetsExist(kit, g.Spec.TemplateSetIDs); err != nil {
-		return err
-	}
-
-	if err := dao.validateTemplateRevisionsExist(kit, g.Spec.TemplateRevisionIDs); err != nil {
-		return err
-	}
-
-	if err := validateUniqueKeyOfInput(templateRevisions); err != nil {
-		return err
-	}
-
-	if err := dao.validateUniqueKey(kit, g.Attachment.BizID, g.Attachment.AppID, templateRevisions); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// validateUniqueKeyOfInput validates unique key which is name+path of input only
-func validateUniqueKeyOfInput(templateRevisions []*table.TemplateRevision) error {
-	var uids []uid
-	for _, tr := range templateRevisions {
-		uids = append(uids, uid{
-			Name: tr.Spec.Name,
-			Path: tr.Spec.Path,
-		})
-	}
-	repeated := findRepeatedElements(uids)
-	if len(repeated) > 0 {
-		js, _ := json.Marshal(repeated)
-		return fmt.Errorf("template's name and path must be unique, these are repeated: %s", js)
-	}
-
-	return nil
-}
-
-type uid struct {
-	Name string
-	Path string
-}
-
-func findRepeatedElements(slice []uid) []uid {
-	frequencyMap := make(map[uid]int)
-	var repeatedElements []uid
-
-	// Count the frequency of each uID in the slice
-	for _, key := range slice {
-		frequencyMap[key]++
-	}
-
-	// Check if any uID appears more than once
-	for key, count := range frequencyMap {
-		if count > 1 {
-			repeatedElements = append(repeatedElements, key)
-		}
-	}
-
-	return repeatedElements
-}
-
-// validateUniqueKey validates unique key which is name+path
-func (dao *appTemplateBindingDao) validateUniqueKey(kit *kit.Kit, bizID, appID uint32,
-	templateRevisions []*table.TemplateRevision) error {
-	// Note: implement by comparing name+path of input with existing in table config_items and template_revisions
-	return nil
-}
-
 // validateAttachmentExist validate if attachment resource exists before operating template
 func (dao *appTemplateBindingDao) validateAttachmentExist(kit *kit.Kit, am *table.AppTemplateBindingAttachment) error {
 	m := dao.genQ.App
@@ -334,30 +203,4 @@ func (dao *appTemplateBindingDao) validateTemplateSetsExist(kit *kit.Kit, templa
 	}
 
 	return nil
-}
-
-// validateTemplateRevisionsExist validate if all template releases resource exists before operating app template binding
-func (dao *appTemplateBindingDao) validateTemplateRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error {
-	m := dao.genQ.TemplateRevision
-	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
-	var existIDs []uint32
-	if err := q.Where(m.ID.In(templateRevisionIDs...)).Pluck(m.ID, &existIDs); err != nil {
-		return fmt.Errorf("validate template releases exist failed, err: %v", err)
-	}
-
-	diffIDs := tools.SliceDiff(templateRevisionIDs, existIDs)
-	if len(diffIDs) > 0 {
-		return fmt.Errorf("template release id in %v is not exist", diffIDs)
-	}
-
-	return nil
-}
-
-func parseBindings(bindings []*table.TemplateBinding) (templateSetIDs, templateRevisiondIDs []uint32) {
-	for _, b := range bindings {
-		templateSetIDs = append(templateSetIDs, b.TemplateSetID)
-		templateRevisiondIDs = append(templateRevisiondIDs, b.TemplateRevisionIDs...)
-	}
-
-	return templateSetIDs, templateRevisiondIDs
 }
