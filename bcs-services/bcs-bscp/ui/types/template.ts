@@ -141,3 +141,15 @@ export interface ITemplateVersionItem {
   }
 }
 
+// 模板版本编辑数据
+export interface ITemplateVersionEditingData {
+  revision_memo: string;
+  file_type: string;
+  file_mode: string;
+  user: string;
+  user_group: string;
+  privilege: string;
+  sign: string;
+  byte_size: number;
+}
+

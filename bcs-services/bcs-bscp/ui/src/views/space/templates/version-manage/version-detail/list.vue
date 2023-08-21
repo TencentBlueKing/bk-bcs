@@ -1,0 +1,93 @@
+<script lang="ts" setup>
+  import { computed } from 'vue';
+  import { RightShape } from 'bkui-vue/lib/icon';
+  import { IPagination } from '../../../../../../types/index';
+  import { ITemplateVersionItem } from '../../../../../../types/template';
+
+  const props = defineProps<{
+    list: ITemplateVersionItem[];
+    pagination: IPagination;
+    id: number;
+  }>()
+
+  const emits = defineEmits(['pageChange', 'select'])
+
+  const tableList = computed(() => {
+    const simpleList = props.list.map(item => {
+      const { id, spec } = item
+      return { id, name: spec.revision_name }
+    })
+    if (props.id === 0) {
+      simpleList.unshift({ id: 0, name: '新建版本' })
+    }
+    return simpleList
+  })
+
+  const getRowCls = (data: { id: number; name: string; }) => {
+    if (data.id === props.id) {
+      return 'selected'
+    }
+    return ''
+  }
+
+  const handleSelectVersion = (event: Event|undefined, data: { id: number; name: string; }) => {
+    emits('select', data.id)
+  }
+
+</script>
+<template>
+  <bk-table
+    :border="['row']"
+    :data="tableList"
+    :row-class="getRowCls"
+    @row-click="handleSelectVersion">
+    <bk-table-column label="版本号" show-overflow-tooltip>
+      <template #default="{ row }">
+        <div class="version-name-wrapper">
+          <div class="name">{{ row.name }}</div>
+          <RightShape v-if="props.id === row.id" class="arrow-icon" />
+        </div>
+      </template>
+    </bk-table-column>
+  </bk-table>
+  <bk-pagination
+    :model-value="props.pagination.current"
+    class="table-compact-pagination"
+    small
+    align="right"
+    :count="props.pagination.count"
+    :limit="props.pagination.limit"
+    :show-limit="false"
+    :show-total-count="false"
+    @change="emits('pageChange', $event)" />
+</template>
+<style scoped lang="scss">
+  .version-name-wrapper {
+    position: relative;
+    width: 100%;
+    padding-right: 5px;
+    .name {
+      color: #3a84ff;
+    }
+    .arrow-icon {
+      position: absolute;
+      top: 15px;
+      right: -10px;
+      font-size: 12px;
+      color: #3a84ff;
+    }
+  }
+  .bk-table {
+    :deep(.bk-table-body) {
+      tr {
+        cursor: pointer;
+        &.selected td {
+          background: #e1ecff !important;
+        }
+      }
+    }
+  }
+  .table-compact-pagination {
+    margin-top: 16px;
+  }
+</style>

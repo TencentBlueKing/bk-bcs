@@ -44,7 +44,7 @@
     pending.value = true
     await deleteTemplatePackage(spaceId.value, props.templateSpaceId, props.pkg.id)
     close()
-    emits('deleted')
+    emits('deleted', props.pkg.id)
     Message({
       theme: 'success',
       message: '删除成功'

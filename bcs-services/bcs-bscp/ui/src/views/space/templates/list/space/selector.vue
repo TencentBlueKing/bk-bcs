@@ -122,7 +122,14 @@
         extCls: 'delete-space-infobox',
         onConfirm: async () => {
           await deleteTemplateSpace(spaceId.value, space.id)
-          loadList()
+          if (space.id === currentTemplateSpace.value) {
+            templateStore.$patch(state => {
+              state.currentTemplateSpace = ''
+            })
+            initData()
+          } else {
+            loadList()
+          }
           Message({
             theme: 'success',
             message: '删除成功'

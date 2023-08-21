@@ -1,6 +1,6 @@
 import http from "../request"
 import { ICommonQuery } from '../../types/index'
-import { ITemplatePackageEditParams } from '../../types/template'
+import { ITemplatePackageEditParams, ITemplateVersionEditingData } from '../../types/template'
 import { IConfigEditParams } from '../../types/config'
 
 /**
@@ -167,6 +167,39 @@ export const createTemplate = (biz_id: string, template_space_id: number, params
 }
 
 /**
+ * 上传模板配置内容
+ * @param biz_id 业务ID
+ * @param templateSpaceId 模板空间ID
+ * @param data 配置内容
+ * @param signature sha256签名
+ * @returns
+ */
+export const updateTemplateContent = (biz_id: string, templateSpaceId: number, data: string|File, signature: string) => {
+  return http.put(`/bizs/${biz_id}/content/upload`, data, {
+    headers: {
+      'X-Bscp-Template-Space-Id': templateSpaceId,
+      'X-Bkapi-File-Content-Id': signature,
+      'X-Bkapi-File-Content-Overwrite': 'false',
+      'Content-Type': 'text/plain'
+    }}).then(res => res.data)
+}
+
+/**
+ * 下载模板配置内容
+ * @param biz_id 业务ID
+ * @param templateSpaceId 模板空间ID
+ * @param signature sha256签名
+ * @returns
+ */
+export const downloadTemplateContent = (biz_id: string, templateSpaceId: number, signature: string) => {
+  return http.get(`/bizs/${biz_id}/content/upload`, {
+    headers: {
+      'X-Bscp-Template-Space-Id': templateSpaceId,
+      'X-Bkapi-File-Content-Id': signature,
+    }}).then(res => res.data)
+}
+
+/**
  * 批量删除模板
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
@@ -271,10 +304,11 @@ export const getUnNamedVersionAppsBoundByTemplate = (biz_id: string, template_sp
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
  * @param template_id 模板ID
+ * @param params 模板配置参数
  * @returns
  */
-export const createTemplateVersion = (biz_id: string, template_space_id: number, template_id: number) => {
-  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions`)
+export const createTemplateVersion = (biz_id: string, template_space_id: number, template_id: number, params: ITemplateVersionEditingData) => {
+  return http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions`, params).then(res => res.data)
 }
 
 /**

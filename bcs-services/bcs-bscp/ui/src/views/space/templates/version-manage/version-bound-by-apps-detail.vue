@@ -1,7 +1,7 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
-  import { getAppsVersionBoundByTemplateVersion } from '../../../../api/template';
+  import { getUnNamedVersionAppsBoundByTemplateVersion } from '../../../../api/template';
   import { ICommonQuery } from '../../../../../types/index';
   import { IAppBoundByTemplateDetailItem } from '../../../../../types/template'
   import SearchInput from '../../../../components/search-input.vue';
@@ -44,7 +44,7 @@
     if (searchStr.value) {
       params.search_key = searchStr.value
     }
-    const res = await getAppsVersionBoundByTemplateVersion(props.spaceId, props.currentTemplateSpace, props.config.id, props.config.versionId, params)
+    const res = await getUnNamedVersionAppsBoundByTemplateVersion(props.spaceId, props.currentTemplateSpace, props.config.id, props.config.versionId, params)
     appList.value = res.details
     pagination.value.count = res.count
     loading.value = false

@@ -18,7 +18,7 @@
     pagination: IPagination;
   }>()
 
-  const emits = defineEmits(['page-value-change', 'page-limit-change', 'openVersionDiff', 'deleted'])
+  const emits = defineEmits(['page-value-change', 'page-limit-change', 'openVersionDiff', 'select', 'deleted'])
 
   const boundDetailSliderData = ref<{ open: boolean; data: { id: number; versionId: number; name: string; } }>({
     open: false,
@@ -69,7 +69,11 @@
     :pagination="pagination"
     @page-value-change="emits('page-value-change', $event)"
     @page-limit-change="emits('page-limit-change', $event)">
-    <bk-table-column label="版本号" prop="spec.revision_name"></bk-table-column>
+    <bk-table-column label="版本号" prop="spec.revision_name">
+      <template #default="{ row }">
+        <bk-button v-if="row.spec" text theme="primary" @click="emits('select', row.id)">{{ row.spec.revision_name }}</bk-button>
+      </template>
+    </bk-table-column>
     <bk-table-column label="版本说明">
       <template #default="{ row }">
         <span v-if="row.spec">{{ row.spec.revision_memo || '--' }}</span>
@@ -80,11 +84,11 @@
         <template v-if="boundByAppsCountLoading"><Spinner /></template>
           <template v-else-if="boundByAppsCountList[index]">
             <bk-button
-              v-if="boundByAppsCountList[index].bound_unnamed_app_count + boundByAppsCountList[index].bound_named_app_count > 0"
+              v-if="boundByAppsCountList[index].bound_unnamed_app_count > 0"
               text
               theme="primary"
               @click="handleOpenBoundDetailSlider(row)">
-              {{ boundByAppsCountList[index].bound_unnamed_app_count + boundByAppsCountList[index].bound_named_app_count }}
+              {{ boundByAppsCountList[index].bound_unnamed_app_count }}
             </bk-button>
             <span v-else @click="handleOpenBoundDetailSlider(row)">0</span>
           </template>
