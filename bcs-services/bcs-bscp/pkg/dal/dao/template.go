@@ -22,6 +22,7 @@ import (
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
 )
 
@@ -34,7 +35,7 @@ type Template interface {
 	// Update one template's info.
 	Update(kit *kit.Kit, template *table.Template) error
 	// List templates with options.
-	List(kit *kit.Kit, bizID, templateSpaceID uint32, searchKey string, opt *types.BasePage) ([]*table.Template, int64, error)
+	List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) ([]*table.Template, int64, error)
 	// Delete one template instance.
 	Delete(kit *kit.Kit, template *table.Template) error
 	// DeleteWithTx delete one template instance with transaction.
@@ -158,16 +159,23 @@ func (dao *templateDao) Update(kit *kit.Kit, g *table.Template) error {
 }
 
 // List templates with options.
-func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, searchKey string, opt *types.BasePage) (
+func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) (
 	[]*table.Template, int64, error) {
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
 
 	var conds []rawgen.Condition
-	if searchKey != "" {
-		conds = append(conds, q.Where(m.Name.Regexp("(?i)"+searchKey)).
-			Or(m.Memo.Regexp("(?i)"+searchKey)).
-			Or(m.Path.Regexp("(?i)"+searchKey)))
+	// add search condition
+	exprs := s.SearchExprs(dao.genQ)
+	if len(exprs) > 0 {
+		var do gen.ITemplateDo
+		for i := range exprs {
+			if i == 0 {
+				do = q.Where(exprs[i])
+			}
+			do = do.Or(exprs[i])
+		}
+		conds = append(conds, do)
 	}
 
 	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...)

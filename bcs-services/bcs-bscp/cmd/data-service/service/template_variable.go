@@ -22,6 +22,7 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbtv "bscp.io/pkg/protocol/core/template-variable"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
 )
 
@@ -63,7 +64,12 @@ func (s *Service) ListTemplateVariables(ctx context.Context, req *pbds.ListTempl
 		return nil, err
 	}
 
-	details, count, err := s.dao.TemplateVariable().List(kt, req.BizId, req.SearchKey, opt)
+	searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.TemplateVariable)
+	if err != nil {
+		return nil, err
+	}
+
+	details, count, err := s.dao.TemplateVariable().List(kt, req.BizId, searcher, opt)
 
 	if err != nil {
 		logs.Errorf("list template variables failed, err: %v, rid: %s", err, kt.Rid)

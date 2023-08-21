@@ -53,6 +53,7 @@ require (
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v3 v3.0.1
+	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c
 	gorm.io/driver/mysql v1.5.1
 	gorm.io/gen v0.3.22
 	gorm.io/gorm v1.25.1
@@ -136,7 +137,6 @@ require (
 	google.golang.org/grpc/examples v0.0.0-20230426024715-eff0942e95d9 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c // indirect
 	gorm.io/hints v1.1.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 )

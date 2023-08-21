@@ -23,6 +23,7 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbtset "bscp.io/pkg/protocol/core/template-set"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
 )
 
@@ -66,7 +67,12 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSe
 		return nil, err
 	}
 
-	details, count, err := s.dao.TemplateSet().List(kt, req.BizId, req.TemplateSpaceId, req.SearchKey, opt)
+	searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.TemplateSet)
+	if err != nil {
+		return nil, err
+	}
+
+	details, count, err := s.dao.TemplateSet().List(kt, req.BizId, req.TemplateSpaceId, searcher, opt)
 
 	if err != nil {
 		logs.Errorf("list template sets failed, err: %v, rid: %s", err, kt.Rid)

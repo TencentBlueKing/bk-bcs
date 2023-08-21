@@ -233,7 +233,7 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 
 	// get template revision details of the template
 	tmplRevisions, _, err := s.dao.TemplateRevision().
-		List(kt, req.BizId, req.TemplateId, "", &types.BasePage{All: true})
+		List(kt, req.BizId, req.TemplateId, nil, &types.BasePage{All: true})
 	if err != nil {
 		logs.Errorf("list template bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -319,7 +319,7 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 
 	// get template revision details of the template
 	tmplRevisions, _, err := s.dao.TemplateRevision().
-		List(kt, req.BizId, req.TemplateId, "", &types.BasePage{All: true})
+		List(kt, req.BizId, req.TemplateId, nil, &types.BasePage{All: true})
 	if err != nil {
 		logs.Errorf("list template bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
