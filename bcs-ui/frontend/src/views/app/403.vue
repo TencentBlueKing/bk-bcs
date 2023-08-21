@@ -25,9 +25,10 @@
   </bk-exception>
 </template>
 <script lang="ts">
-import { PropType, defineComponent, onBeforeMount, ref } from 'vue';
-import { userPermsByAction } from '@/api/base';
+import { defineComponent, onBeforeMount, ref } from 'vue';
+import { userPermsByAction } from '@/api/modules/user-manager';
 import actionsMap from '@/views/app/actions-map';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'AuthForbidden',
@@ -47,17 +48,6 @@ export default defineComponent({
     permCtx: {
       type: [Object, String],
       default: () => ({}),
-    },
-    // 接口返回的权限数据
-    perms: {
-      type: [Object, String] as PropType<{
-        action_list: Array<{
-          action_id: string
-          resource_type: string
-        }>
-        apply_url: string
-      }>,
-      default: () => null,
     },
     fromRoute: {
       type: String,
@@ -88,9 +78,14 @@ export default defineComponent({
           : props.permCtx,
       }).catch(() => ({}));
       isLoading.value = false;
-      if (data?.perms?.[props.actionId] && props.fromRoute) {
+      if (data?.perms?.[props.actionId]) {
         // 有权限跳回原来界面
-        window.location.href = props.fromRoute;
+        if (props.fromRoute) {
+          window.location.href = props.fromRoute;
+        } else {
+          const { href } = $router.resolve({ name: 'home' });
+          window.location.href = href;
+        }
       } else {
         // 无权限
         handleSetPermsData(data?.perms?.apply_url, [{
@@ -101,19 +96,8 @@ export default defineComponent({
     };
 
     onBeforeMount(async () => {
-      if (props.perms) {
-        // 已经返回权限信息
-        const { apply_url, action_list } = typeof props.perms === 'string'
-          ? JSON.parse(props.perms)
-          : props.perms;
-        handleSetPermsData(apply_url, action_list.map(item => ({
-          ...item,
-          resource_name: props.resourceName,
-        })));
-      } else {
-        // 查询权限信息
-        handleGetPermsData();
-      }
+      // 查询权限信息
+      handleGetPermsData();
     });
     return {
       handleGotoIAM,

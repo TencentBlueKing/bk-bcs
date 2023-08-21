@@ -197,7 +197,7 @@
         />
       </div>
     </div>
-    <div class="flex overflow-hidden">
+    <div class="flex overflow-hidden" v-if="curCluster.clusterType !== 'virtual'">
       <!--POD使用率-->
       <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
         <div class="flex justify-between">

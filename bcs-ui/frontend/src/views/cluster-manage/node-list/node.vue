@@ -384,6 +384,7 @@
                   :fill-color="item.color"
                   :key="row.nodeName"
                   v-bk-tooltips="{
+                    disabled: !item.percent,
                     content: nodeMetric[row.nodeName][`${item.prop}_tips`]
                   }"
                   v-if="nodeMetric[row.nodeName] && nodeMetric[row.nodeName][item.prop]" />

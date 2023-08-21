@@ -18,7 +18,7 @@
           @confirm="handleCopyNotes">
           <bcs-button text size="small" :disabled="!releaseDetail.notes">{{$t('deploy.helm.showNotes')}}</bcs-button>
           <template #content>
-            <div class="break-all">{{releaseDetail.notes}}</div>
+            <pre class="break-words whitespace-pre-wrap">{{releaseDetail.notes}}</pre>
           </template>
         </bcs-popconfirm>
       </div>

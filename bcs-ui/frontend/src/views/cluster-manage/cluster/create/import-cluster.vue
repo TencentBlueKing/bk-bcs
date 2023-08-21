@@ -70,7 +70,6 @@
                   actionId: 'cloud_account_use',
                   resourceName: item.account.accountName,
                   disablePerms: true,
-                  newPerms: true,
                   permCtx: {
                     project_id: item.account.projectID,
                     account_id: item.account.accountID,
