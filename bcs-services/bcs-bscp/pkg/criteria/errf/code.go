@@ -50,9 +50,6 @@ const (
 	UnHealth int32 = 4000009
 	// ErrGroupAlreadyPublished means the group has already been published in specified app.
 	ErrGroupAlreadyPublished int32 = 4000010
-
-	// endOfThisScope is a flag to show this scope's error code's end.
-	endOfThisScope int32 = 4089999
 )
 
 // Note: Sidecar related error code scope, ranges at [4090000, 409999]

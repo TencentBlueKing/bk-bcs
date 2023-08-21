@@ -185,7 +185,7 @@ func (dao *hookRevisionDao) List(kit *kit.Kit,
 		q = q.Where(m.State.Eq(opt.State.String()))
 	}
 
-	result := make([]*table.HookRevision, 0)
+	var result []*table.HookRevision
 	var count int64
 	var err error
 

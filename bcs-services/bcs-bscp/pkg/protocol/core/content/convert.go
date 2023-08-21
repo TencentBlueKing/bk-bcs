@@ -99,7 +99,7 @@ func PbContent(c *table.Content) *Content {
 }
 
 // MarshalJSONPB ContentSpec to json.
-func (m ContentSpec) MarshalJSONPB(mars *jsonpb.Marshaler) ([]byte, error) {
+func (m *ContentSpec) MarshalJSONPB(mars *jsonpb.Marshaler) ([]byte, error) {
 	return jsoni.Marshal(m)
 }
 

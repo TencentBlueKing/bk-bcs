@@ -24,6 +24,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/dal/bedis"
@@ -85,7 +86,7 @@ func newCacheServiceMux() (*runtime.ServeMux, error) {
 	tls := network.TLS
 	if !tls.Enable() {
 		// dial without ssl
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		// dial with ssl.
 		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,
