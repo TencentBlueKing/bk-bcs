@@ -50,9 +50,11 @@
     return { id: 'no_specified', name: '未指定套餐', count: countOfTemplatesForNoSpecifiedPackage.value }
   })
 
-  watch(() => currentTemplateSpace.value, async() => {
+  watch(() => currentTemplateSpace.value, async(val) => {
     searchStr.value = ''
-    getMenuInitData()
+    if (val) {
+      getMenuInitData()
+    }
   })
 
   watch(() => needRefreshMenuFlag.value, async(val) => {
@@ -181,6 +183,17 @@
     updateRouter(id)
   }
 
+  const handlePkgDeleted = (id: number) => {
+    if (id === currentPkg.value) {
+      templateStore.$patch((state) => {
+        state.currentPkg = ''
+      })
+      getMenuInitData()
+    } else {
+      getList()
+    }
+  }
+
   const setCurrentPackage = (id: number|string) => {
     templateStore.$patch((state) => {
       state.currentPkg = id
@@ -258,7 +271,7 @@
     v-model:show="deletingPkgData.open"
     :template-space-id="currentTemplateSpace"
     :pkg="(deletingPkgData.data as ITemplatePackageItem)"
-    @deleted="getList" />
+    @deleted="handlePkgDeleted" />
 </template>
 <style lang="scss" scoped>
   .package-list-comp {

@@ -73,6 +73,7 @@
     }
     const res = await props.getConfigList(params)
     list.value = res.details
+    pagination.value.count = res.count
     listLoading.value = false
     const ids = list.value.map(item => item.id)
     citeByPkgsList.value = []
@@ -153,8 +154,6 @@
     emits('update:selectedConfigs', configs)
   }
 
-  const handleEditConfig = () => {}
-
   const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {
     isAddToPkgsDialogShow.value = true
     crtConfig.value = [config]
@@ -187,7 +186,7 @@
     refreshList()
   }
 
-  const goToVersionManange = (id: number) => {
+  const goToVersionManage = (id: number) => {
     router.push({ name: 'template-version-manange', params: {
       templateSpaceId: props.currentTemplateSpace,
       packageId: props.currentPkg,
@@ -226,7 +225,7 @@
         <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column>
         <bk-table-column label="配置项名称">
           <template #default="{ row }">
-            <div v-if="row.spec" @click="handleEditConfig">{{ row.spec.name }}</div>
+            <bk-button v-if="row.spec" text theme="primary" @click="goToVersionManage(row.id)">{{ row.spec.name }}</bk-button>
           </template>
         </bk-table-column>
         <bk-table-column label="配置项路径" prop="spec.path"></bk-table-column>
@@ -266,7 +265,7 @@
           <template #default="{ row }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
-                <bk-button theme='primary' text @click="goToVersionManange(row.id)">版本管理</bk-button>
+                <bk-button theme='primary' text @click="goToVersionManage(row.id)">版本管理</bk-button>
                 <bk-popover
                   theme="light template-config-actions-popover"
                   placement="bottom-end"

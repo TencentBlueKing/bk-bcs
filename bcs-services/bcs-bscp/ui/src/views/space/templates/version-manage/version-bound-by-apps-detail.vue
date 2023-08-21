@@ -1,10 +1,10 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
-  import { getUnNamedVersionAppsBoundByTemplate } from '../../../../../api/template';
-  import { ICommonQuery } from '../../../../../../types/index';
-  import { IAppBoundByTemplateDetailItem } from '../../../../../../types/template'
-  import SearchInput from '../../../../../components/search-input.vue';
+  import { getUnNamedVersionAppsBoundByTemplateVersion } from '../../../../api/template';
+  import { ICommonQuery } from '../../../../../types/index';
+  import { IAppBoundByTemplateDetailItem } from '../../../../../types/template'
+  import SearchInput from '../../../../components/search-input.vue';
 
   const router = useRouter()
 
@@ -12,7 +12,7 @@
     show: boolean;
     spaceId: string;
     currentTemplateSpace: number;
-    config: { id: number; name: string; };
+    config: { id: number; versionId: number; name: string; };
   }>()
 
   const emits = defineEmits(['update:show'])
@@ -44,7 +44,7 @@
     if (searchStr.value) {
       params.search_key = searchStr.value
     }
-    const res = await getUnNamedVersionAppsBoundByTemplate(props.spaceId, props.currentTemplateSpace, props.config.id, params)
+    const res = await getUnNamedVersionAppsBoundByTemplateVersion(props.spaceId, props.currentTemplateSpace, props.config.id, props.config.versionId, params)
     appList.value = res.details
     pagination.value.count = res.count
     loading.value = false

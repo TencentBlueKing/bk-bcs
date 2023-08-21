@@ -51,7 +51,6 @@
 <template>
   <bk-dialog
     ext-cls="move-out-from-pkgs-dialog"
-    confirm-text="确定移出"
     header-align="center"
     footer-align="center"
     :title="`确认将配置项【${name}】移出套餐?`"
@@ -59,7 +58,6 @@
     :is-show="props.show"
     :esc-close="false"
     :quick-close="false"
-    :is-loading="pending"
     @confirm="handleConfirm"
     @closed="close">
     <bk-table>
@@ -73,7 +71,7 @@
     </p>
     <template #footer>
       <div class="actions-wrapper">
-        <bk-button theme="primary" :loading="pending" :disabled="selectedPkgs.length === 0" @click="handleConfirm">确认删除</bk-button>
+        <bk-button theme="primary" :loading="pending" :disabled="selectedPkgs.length === 0" @click="handleConfirm">确认移出</bk-button>
         <bk-button @click="close">取消</bk-button>
       </div>
     </template>

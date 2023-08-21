@@ -21,13 +21,13 @@
   })
 
   const handleInputChange = () => {
-    emits('update:keyword', inputVal.value)
     if (inputVal.value === '') {
       triggerSearch()
     }
   }
 
   const triggerSearch = () => {
+    emits('update:keyword', inputVal.value)
     emits('search', inputVal.value)
   }
 

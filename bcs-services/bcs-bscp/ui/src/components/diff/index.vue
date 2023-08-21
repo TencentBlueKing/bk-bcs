@@ -1,8 +1,6 @@
 <script setup lang="ts">
     import { ref, watch, onMounted } from 'vue'
     import { useRoute } from 'vue-router'
-    import { storeToRefs } from 'pinia'
-    import { useServiceStore } from '../../store/service'
     import { IConfigDiffDetail } from '../../../types/config';
     import { getConfigContent } from '../../api/config';
     import { byteUnitConverse } from '../../utils';
@@ -10,11 +8,11 @@
     import Text from './text.vue'
 
     const route = useRoute()
-    const { appData } = storeToRefs(useServiceStore())
     const bkBizId = ref(String(route.params.spaceId))
 
     const props = defineProps<{
         panelName?: String,
+        appId: number;
         config: IConfigDiffDetail,
     }>()
 
@@ -56,7 +54,7 @@
             const { signature, update_at } = config
             return { id, name, signature, update_at, size: byteUnitConverse(Number(config.byte_size)) }
         }
-        const configContent = await getConfigContent(bkBizId.value, <number>appData.value.id, config.signature)
+        const configContent = await getConfigContent(bkBizId.value, props.appId, config.signature)
         return String(configContent)
     }
 
