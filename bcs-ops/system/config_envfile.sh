@@ -128,6 +128,8 @@ init_env() {
   KUBE_VIP_VERSION=${KUBE_VIP_VERSION:-"v0.5.12"}
   BIND_INTERFACE=${BIND_INTERFACE:-}
   VIP_CIDR=${VIP_CIDR:-"32"}
+  ## multus
+  ENABLE_MULTUS_HA=${ENABLE_MULTUS_HA:-"true"}
 }
 
 source_cluster_env() {
