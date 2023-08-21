@@ -98,13 +98,11 @@ func WriteResp(w http.ResponseWriter, resp interface{}) {
 		return
 	}
 
-	_, err = fmt.Fprintf(w, string(bytes))
+	_, err = fmt.Fprint(w, string(bytes))
 	if err != nil {
 		logs.ErrorDepthf(1, "write resp to ResponseWriter failed, err: %v", err)
 		return
 	}
-
-	return
 }
 
 // OKResponse is a http standard response

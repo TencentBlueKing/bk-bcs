@@ -186,7 +186,7 @@ func (gt *GreaterThanType) Match(match *Element, labels map[string]string) (bool
 		return false, nil
 	}
 
-	to, err := strconv.ParseFloat(compare, 10)
+	to, err := strconv.ParseFloat(compare, 32)
 	if err != nil {
 		return false, fmt.Errorf("parse gt oper's target label value: %s to float failed, err: %v", compare, err)
 	}
@@ -225,7 +225,7 @@ func (ge *GreaterThanEqualType) Match(match *Element, with map[string]string) (b
 		return false, nil
 	}
 
-	to, err := strconv.ParseFloat(compare, 10)
+	to, err := strconv.ParseFloat(compare, 32)
 	if err != nil {
 		return false, fmt.Errorf("parse ge oper's target label value: %s to float failed, err: %v", compare, err)
 	}
@@ -264,7 +264,7 @@ func (lt *LessThanType) Match(match *Element, labels map[string]string) (bool, e
 		return false, nil
 	}
 
-	to, err := strconv.ParseFloat(compare, 10)
+	to, err := strconv.ParseFloat(compare, 32)
 	if err != nil {
 		return false, fmt.Errorf("parse lt oper's target label value: %s to float failed, err: %v", compare, err)
 	}

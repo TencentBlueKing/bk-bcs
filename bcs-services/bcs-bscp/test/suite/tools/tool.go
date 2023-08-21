@@ -15,7 +15,6 @@ package main
 import (
 	"bufio"
 	"flag"
-	"io/ioutil"
 	"log"
 	"os"
 )
@@ -33,7 +32,7 @@ func main() {
 		"file that by go convey test result, save file path")
 	flag.Parse()
 
-	files, err := ioutil.ReadDir(inputDir)
+	files, err := os.ReadDir(inputDir)
 	if err != nil {
 		log.Fatalln(err)
 	}
