@@ -76,6 +76,8 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
       "${ROOT_DIR}"/k8s/operate_kube_vip apply
     elif [[ ${APISERVER_HA_MODE} == "bcs-apiserver-proxy" ]]; then
       "${ROOT_DIR}"/k8s/operate_bap apply
+    else
+      "${ROOT_DIR}"/k8s/operate_bap apply
     fi
   fi
 
