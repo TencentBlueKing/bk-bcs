@@ -61,7 +61,7 @@ func New(code int32, message string) error {
 
 // Newf create an error with error code and formatted message.
 func Newf(code int32, format string, args ...interface{}) error {
-	return &ErrorF{Code: code, Message: fmt.Sprintf(format, args)}
+	return &ErrorF{Code: code, Message: fmt.Sprintf(format, args...)}
 }
 
 const grpcErrPrefix = "rpc error: code = Unknown desc = "

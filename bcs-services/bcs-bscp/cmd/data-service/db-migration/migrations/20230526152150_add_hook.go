@@ -120,64 +120,6 @@ func mig20230526152150GormUp(tx *gorm.DB) error {
 // mig20230526152150GormDown for down migration
 func mig20230526152150GormDown(tx *gorm.DB) error {
 
-	// Hook 脚本
-	type Hook struct {
-		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
-
-		// Spec is specifics of the resource defined with user
-		Name string `gorm:"type:varchar(64) not null;uniqueIndex:idx_bizID_name,priority:2"`
-		Meme string `gorm:"type:varchar(64) not null"`
-		Type string `gorm:"type:varchar(64) not null"`
-		Tag  string `gorm:"type:varchar(64) not null"`
-
-		// Attachment is attachment info of the resource
-		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_name,priority:1"`
-
-		// Revision is revision info of the resource
-		Creator   string    `gorm:"type:varchar(64) not null"`
-		Reviser   string    `gorm:"type:varchar(64) not null"`
-		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
-		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
-	}
-
-	// HookRevision 脚本版本
-	type HookRevision struct {
-		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
-
-		// Spec is specifics of the resource defined with user
-		Name    string `gorm:"type:varchar(64) not null;uniqueIndex:idx_bizID_revisionName,priority:2"`
-		Meme    string `gorm:"type:varchar(64) not null"`
-		State   string `gorm:"type:varchar(64) not null"`
-		Content string `gorm:"type:longtext"`
-
-		// Attachment is attachment info of the resource
-		BizID  uint `gorm:"type:bigint(1) unsigned not null"`
-		HookID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_revisionName,priority:1"`
-
-		// Revision is revision info of the resource
-		Creator   string    `gorm:"type:varchar(64) not null"`
-		Reviser   string    `gorm:"type:varchar(64) not null"`
-		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
-		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
-	}
-
-	// ReleasedHook : 已随配置项版本发布的配置脚本
-	type ReleasedHook struct {
-		ID               uint      `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
-		APPID            uint      `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_appID_releaseID_hookType,priority:1"`
-		ReleaseID        uint      `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_appID_releaseID_hookType,priority:2"`
-		HookID           uint      `gorm:"type:bigint(1) unsigned not null"`
-		HookRevisionID   uint      `gorm:"type:bigint(1) unsigned not null"`
-		HookName         string    `gorm:"type:varchar(64) not null"`
-		HookRevisionName string    `gorm:"type:varchar(64) not null"`
-		Content          string    `gorm:"type:longtext"`
-		ScriptType       string    `gorm:"type:varchar(64) not null"`
-		HookType         string    `gorm:"type:varchar(64) not null;uniqueIndex:idx_appID_releaseID_hookType,priority:3"`
-		BizID            uint      `gorm:"type:bigint(1) unsigned not null"`
-		Reviser          string    `gorm:"type:varchar(64) not null"`
-		UpdatedAt        time.Time `gorm:"type:datetime(6) not null"`
-	}
-
 	// IDGenerators : ID生成器
 	type IDGenerators struct {
 		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`

@@ -17,7 +17,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"os"
 )
 
 // TLSConfig is inner tls config.
@@ -86,7 +86,7 @@ func ServerTLSConfVerify(caFile, certFile, keyFile, passwd string) (*tls.Config,
 }
 
 func loadCa(caFile string) (*x509.CertPool, error) {
-	ca, err := ioutil.ReadFile(caFile)
+	ca, err := os.ReadFile(caFile)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func loadCa(caFile string) (*x509.CertPool, error) {
 }
 
 func loadCertificates(certFile, keyFile, passwd string) (*tls.Certificate, error) {
-	priKey, err := ioutil.ReadFile(keyFile)
+	priKey, err := os.ReadFile(keyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func loadCertificates(certFile, keyFile, passwd string) (*tls.Certificate, error
 		})
 	}
 
-	certData, err := ioutil.ReadFile(certFile)
+	certData, err := os.ReadFile(certFile)
 	if err != nil {
 		return nil, err
 	}

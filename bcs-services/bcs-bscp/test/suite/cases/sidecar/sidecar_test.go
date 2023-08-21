@@ -14,7 +14,7 @@ package sidecar
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os/exec"
 	"testing"
 	"time"
@@ -131,7 +131,7 @@ func startSidecar(cmdStr string) error {
 	}
 
 	// read exec stdout.
-	result, err := ioutil.ReadAll(stdout)
+	result, err := io.ReadAll(stdout)
 	if err != nil {
 		return err
 	}

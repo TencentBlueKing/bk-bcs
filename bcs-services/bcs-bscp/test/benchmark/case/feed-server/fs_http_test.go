@@ -553,7 +553,7 @@ func TestScene11(t *testing.T) {
 
 // TestScene12 在基础数据下，1000个应用随机匹配Namespace策略
 func TestScene12(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	list, err := getQueryReleaseMeta()
 	if err != nil {
@@ -563,7 +563,7 @@ func TestScene12(t *testing.T) {
 
 	if debug {
 		// random debug an application.
-		meta := list[rand.Intn(appRandomNum)]
+		meta := list[r.Intn(appRandomNum)]
 
 		req := &types.ListFileAppLatestReleaseMetaReq{
 			BizId:     meta.BizID,
@@ -583,7 +583,7 @@ func TestScene12(t *testing.T) {
 	}
 
 	m := run.FireLoadTest(func() error {
-		meta := list[rand.Intn(appRandomNum)]
+		meta := list[r.Intn(appRandomNum)]
 		req := &types.ListFileAppLatestReleaseMetaReq{
 			BizId:     meta.BizID,
 			AppId:     meta.AppID,
@@ -609,7 +609,7 @@ func TestScene12(t *testing.T) {
 
 // TestScene13 在基础数据下，1000个应用随机匹配Namespace策略，压测地址是代理 FeedServer 的 ApiGateway。
 func TestScene13(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	list, err := getQueryReleaseMeta()
 	if err != nil {
@@ -625,7 +625,7 @@ func TestScene13(t *testing.T) {
 
 	if debug {
 		// random debug an application.
-		meta := list[rand.Intn(appRandomNum)]
+		meta := list[r.Intn(appRandomNum)]
 
 		req := &types.ListFileAppLatestReleaseMetaReq{
 			BizId:     meta.BizID,
@@ -645,7 +645,7 @@ func TestScene13(t *testing.T) {
 	}
 
 	m := run.FireLoadTest(func() error {
-		meta := list[rand.Intn(appRandomNum)]
+		meta := list[r.Intn(appRandomNum)]
 		req := &types.ListFileAppLatestReleaseMetaReq{
 			BizId:     meta.BizID,
 			AppId:     meta.AppID,

@@ -128,8 +128,8 @@ func (o *One) AutoTxn(kit *kit.Kit, run TxnFunc) error {
 	// if the operation need to retry, retry for at most 3 times, each wait for 50~500ms
 	for retryCount := 1; retryCount <= 3; retryCount++ {
 		logs.Warnf("retry transaction, retry count: %d, rid: %s", retryCount, kit.Rid)
-		rand.Seed(time.Now().UnixNano())
-		time.Sleep(time.Millisecond * time.Duration(rand.Intn(450)+50))
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		time.Sleep(time.Millisecond * time.Duration(r.Intn(450)+50))
 
 		retry, err = o.autoTxn(kit, run)
 		if err != nil {

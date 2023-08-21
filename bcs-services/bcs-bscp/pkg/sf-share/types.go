@@ -16,7 +16,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"bscp.io/pkg/cc"
@@ -314,17 +314,17 @@ func LoadTLSBytes(tls cc.Repository) (*TLSBytes, error) {
 			return new(TLSBytes), nil
 		}
 
-		ca, err := ioutil.ReadFile(tls.BkRepo.TLS.CAFile)
+		ca, err := os.ReadFile(tls.BkRepo.TLS.CAFile)
 		if err != nil {
 			return nil, err
 		}
 
-		cert, err := ioutil.ReadFile(tls.BkRepo.TLS.CertFile)
+		cert, err := os.ReadFile(tls.BkRepo.TLS.CertFile)
 		if err != nil {
 			return nil, err
 		}
 
-		key, err := ioutil.ReadFile(tls.BkRepo.TLS.KeyFile)
+		key, err := os.ReadFile(tls.BkRepo.TLS.KeyFile)
 		if err != nil {
 			return nil, err
 		}
