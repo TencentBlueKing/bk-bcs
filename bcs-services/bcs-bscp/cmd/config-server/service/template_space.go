@@ -127,11 +127,12 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbcs.ListTemplate
 	}
 
 	r := &pbds.ListTemplateSpacesReq{
-		BizId:     grpcKit.BizID,
-		Start:     req.Start,
-		Limit:     req.Limit,
-		SearchKey: req.SearchKey,
-		All:       req.All,
+		BizId:        grpcKit.BizID,
+		SearchFields: req.SearchFields,
+		SearchValue:  req.SearchValue,
+		Start:        req.Start,
+		Limit:        req.Limit,
+		All:          req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateSpaces(grpcKit.RpcCtx(), r)

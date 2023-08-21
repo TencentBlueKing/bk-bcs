@@ -22,6 +22,7 @@ import (
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
 )
 
@@ -32,7 +33,7 @@ type TemplateRevision interface {
 	// CreateWithTx create one template revision instance with transaction.
 	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, template *table.TemplateRevision) (uint32, error)
 	// List templates with options.
-	List(kit *kit.Kit, bizID, templateID uint32, searchKey string, opt *types.BasePage) ([]*table.TemplateRevision, int64, error)
+	List(kit *kit.Kit, bizID, templateID uint32, s search.Searcher, opt *types.BasePage) ([]*table.TemplateRevision, int64, error)
 	// Delete one template revision instance.
 	Delete(kit *kit.Kit, templateRevision *table.TemplateRevision) error
 	// GetByUniqueKey get template revision by unique key.
@@ -117,14 +118,23 @@ func (dao *templateRevisionDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *t
 }
 
 // List template revisions with options.
-func (dao *templateRevisionDao) List(kit *kit.Kit, bizID, templateID uint32, searchKey string, opt *types.BasePage) (
+func (dao *templateRevisionDao) List(kit *kit.Kit, bizID, templateID uint32, s search.Searcher, opt *types.BasePage) (
 	[]*table.TemplateRevision, int64, error) {
 	m := dao.genQ.TemplateRevision
 	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
 
 	var conds []rawgen.Condition
-	if searchKey != "" {
-		conds = append(conds, q.Where(m.RevisionName.Regexp("(?i)"+searchKey)).Or(m.RevisionMemo.Regexp("(?i)"+searchKey)))
+	// add search condition
+	exprs := s.SearchExprs(dao.genQ)
+	if len(exprs) > 0 {
+		var do gen.ITemplateRevisionDo
+		for i := range exprs {
+			if i == 0 {
+				do = q.Where(exprs[i])
+			}
+			do = do.Or(exprs[i])
+		}
+		conds = append(conds, do)
 	}
 
 	d := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID)).Where(conds...)

@@ -23,6 +23,7 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbtr "bscp.io/pkg/protocol/core/template-revision"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
 )
 
@@ -72,7 +73,12 @@ func (s *Service) ListTemplateRevisions(ctx context.Context, req *pbds.ListTempl
 		return nil, err
 	}
 
-	details, count, err := s.dao.TemplateRevision().List(kt, req.BizId, req.TemplateId, req.SearchKey, opt)
+	searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.TemplateRevision)
+	if err != nil {
+		return nil, err
+	}
+
+	details, count, err := s.dao.TemplateRevision().List(kt, req.BizId, req.TemplateId, searcher, opt)
 
 	if err != nil {
 		logs.Errorf("list template revisions failed, err: %v, rid: %s", err, kt.Rid)

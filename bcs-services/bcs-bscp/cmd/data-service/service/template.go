@@ -25,6 +25,7 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbtemplate "bscp.io/pkg/protocol/core/template"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
@@ -105,7 +106,12 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq)
 		return nil, err
 	}
 
-	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, req.SearchKey, opt)
+	searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.Template)
+	if err != nil {
+		return nil, err
+	}
+
+	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, searcher, opt)
 
 	if err != nil {
 		logs.Errorf("list templates failed, err: %v, rid: %s", err, kt.Rid)
@@ -384,12 +390,23 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 	details := pbtemplate.PbTemplates(templates)
 
 	// search by logic
-	if req.SearchKey != "" {
+	if req.SearchValue != "" {
+		searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.Template)
+		if err != nil {
+			return nil, err
+		}
+		fields := searcher.SearchFields()
+		fieldsMap := make(map[string]bool)
+		for _, f := range fields {
+			fieldsMap[f] = true
+		}
 		newDetails := make([]*pbtemplate.Template, 0)
 		for _, detail := range details {
-			if strings.Contains(detail.Spec.Name, req.SearchKey) ||
-				strings.Contains(detail.Spec.Path, req.SearchKey) ||
-				strings.Contains(detail.Spec.Memo, req.SearchKey) {
+			if (fieldsMap["name"] && strings.Contains(detail.Spec.Name, req.SearchValue)) ||
+				(fieldsMap["path"] && strings.Contains(detail.Spec.Path, req.SearchValue)) ||
+				(fieldsMap["memo"] && strings.Contains(detail.Spec.Memo, req.SearchValue)) ||
+				(fieldsMap["creator"] && strings.Contains(detail.Revision.Creator, req.SearchValue)) ||
+				(fieldsMap["reviser"] && strings.Contains(detail.Revision.Reviser, req.SearchValue)) {
 				newDetails = append(newDetails, detail)
 			}
 		}
@@ -446,12 +463,23 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbds.List
 	details := pbtemplate.PbTemplates(templates)
 
 	// search by logic
-	if req.SearchKey != "" {
+	if req.SearchValue != "" {
+		searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.Template)
+		if err != nil {
+			return nil, err
+		}
+		fields := searcher.SearchFields()
+		fieldsMap := make(map[string]bool)
+		for _, f := range fields {
+			fieldsMap[f] = true
+		}
 		newDetails := make([]*pbtemplate.Template, 0)
 		for _, detail := range details {
-			if strings.Contains(detail.Spec.Name, req.SearchKey) ||
-				strings.Contains(detail.Spec.Path, req.SearchKey) ||
-				strings.Contains(detail.Spec.Memo, req.SearchKey) {
+			if (fieldsMap["name"] && strings.Contains(detail.Spec.Name, req.SearchValue)) ||
+				(fieldsMap["path"] && strings.Contains(detail.Spec.Path, req.SearchValue)) ||
+				(fieldsMap["memo"] && strings.Contains(detail.Spec.Memo, req.SearchValue)) ||
+				(fieldsMap["creator"] && strings.Contains(detail.Revision.Creator, req.SearchValue)) ||
+				(fieldsMap["reviser"] && strings.Contains(detail.Revision.Reviser, req.SearchValue)) {
 				newDetails = append(newDetails, detail)
 			}
 		}

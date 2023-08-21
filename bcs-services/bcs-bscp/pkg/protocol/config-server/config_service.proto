@@ -999,11 +999,12 @@ message DeleteTemplateSpaceReq {
 message DeleteTemplateSpaceResp {}
 
 message ListTemplateSpacesReq {
-    uint32 biz_id     = 1;
-    string search_key = 2;
-    uint32 start      = 3;
-    uint32 limit      = 4;
-    bool   all        = 5;
+    uint32 biz_id        = 1;
+    string search_fields = 2;
+    string search_value  = 3;
+    uint32 start         = 4;
+    uint32 limit         = 5;
+    bool   all           = 6;
 }
 
 message ListTemplateSpacesResp {
@@ -1085,10 +1086,11 @@ message BatchDeleteTemplateResp {}
 message ListTemplatesReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
-    string search_key        = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
-    bool   all               = 6;
+    string search_fields     = 3;
+    string search_value      = 4;
+    uint32 start             = 5;
+    uint32 limit             = 6;
+    bool   all               = 7;
 }
 
 message ListTemplatesResp {
@@ -1127,10 +1129,11 @@ message ListTemplatesByIDsResp {
 message ListTemplatesNotBoundReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
-    string search_key        = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
-    bool   all               = 6;
+    string search_fields     = 3;
+    string search_value      = 4;
+    uint32 start             = 5;
+    uint32 limit             = 6;
+    bool   all               = 7;
 }
 
 message ListTemplatesNotBoundResp {
@@ -1142,10 +1145,11 @@ message ListTemplatesOfTemplateSetReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_set_id   = 3;
-    string search_key        = 4;
-    uint32 start             = 5;
-    uint32 limit             = 6;
-    bool   all               = 7;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
 }
 
 message ListTemplatesOfTemplateSetResp {
@@ -1178,10 +1182,11 @@ message ListTemplateRevisionsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    string search_key        = 4;
-    uint32 start             = 5;
-    uint32 limit             = 6;
-    bool   all               = 7;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
 }
 
 message ListTemplateRevisionsResp {
@@ -1248,10 +1253,11 @@ message DeleteTemplateSetResp {}
 message ListTemplateSetsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
-    string search_key        = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
-    bool   all               = 6;
+    string search_fields     = 3;
+    string search_value      = 4;
+    uint32 start             = 5;
+    uint32 limit             = 6;
+    bool   all               = 7;
 }
 
 message ListTemplateSetsResp {
@@ -1491,11 +1497,12 @@ message DeleteTemplateVariableReq {
 message DeleteTemplateVariableResp {}
 
 message ListTemplateVariablesReq {
-    uint32 biz_id     = 1;
-    string search_key = 2;
-    uint32 start      = 3;
-    uint32 limit      = 4;
-    bool   all        = 5;
+    uint32 biz_id        = 1;
+    string search_fields = 2;
+    string search_value  = 3;
+    uint32 start         = 4;
+    uint32 limit         = 5;
+    bool   all           = 6;
 }
 
 message ListTemplateVariablesResp {

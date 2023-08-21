@@ -22,6 +22,7 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbts "bscp.io/pkg/protocol/core/template-space"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
 )
 
@@ -60,7 +61,12 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplate
 		return nil, err
 	}
 
-	details, count, err := s.dao.TemplateSpace().List(kt, req.BizId, req.SearchKey, opt)
+	searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.TemplateSpace)
+	if err != nil {
+		return nil, err
+	}
+
+	details, count, err := s.dao.TemplateSpace().List(kt, req.BizId, searcher, opt)
 
 	if err != nil {
 		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
