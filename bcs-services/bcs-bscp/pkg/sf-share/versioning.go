@@ -38,17 +38,17 @@ func IsAPIVersionMatch(ver *pbbase.Versioning) bool {
 		return false
 	}
 
-	if ver.Major > leastAPIVersion.Major {
+	if ver.Major < leastAPIVersion.Major {
 		return false
 	}
 
 	if ver.Major == leastAPIVersion.Major {
-		if ver.Minor > leastAPIVersion.Minor {
+		if ver.Minor < leastAPIVersion.Minor {
 			return false
 		}
 
 		if ver.Minor == leastAPIVersion.Minor {
-			if ver.Patch > leastAPIVersion.Patch {
+			if ver.Patch < leastAPIVersion.Patch {
 				return false
 			}
 		}
@@ -71,17 +71,17 @@ var leastSidecarVersion = &pbbase.Versioning{
 // feed server's version request.
 func IsSidecarVersionMatch(ver *pbbase.Versioning) bool {
 
-	if ver.Major > leastSidecarVersion.Major {
+	if ver.Major < leastSidecarVersion.Major {
 		return false
 	}
 
 	if ver.Major == leastSidecarVersion.Major {
-		if ver.Minor > leastSidecarVersion.Minor {
+		if ver.Minor < leastSidecarVersion.Minor {
 			return false
 		}
 
 		if ver.Minor == leastSidecarVersion.Minor {
-			if ver.Patch > leastSidecarVersion.Patch {
+			if ver.Patch < leastSidecarVersion.Patch {
 				return false
 			}
 		}
