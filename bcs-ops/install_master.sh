@@ -78,6 +78,12 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
       "${ROOT_DIR}"/k8s/operate_bap apply
     fi
   fi
+
+  if [[ ${ENABLE_MULTUS_HA} == "true" ]]; then
+    if ! "${ROOT_DIR}"/k8s/operate_multus apply;then
+      utils::log "FATAL" "fail to apply multus"
+    fi
+  fi
 else
   kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
     || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
