@@ -144,7 +144,6 @@ const (
 	View   client.ActionType = "view"
 	Edit   client.ActionType = "edit"
 	List   client.ActionType = "list"
-	Manage client.ActionType = "manage"
 )
 
 // ActionTypeIDNameMap is action type map.
