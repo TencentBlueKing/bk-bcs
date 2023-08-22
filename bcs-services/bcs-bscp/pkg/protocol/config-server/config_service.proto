@@ -349,6 +349,11 @@ service Config {
             body : "*"
         };
     }
+    rpc ListTemplateSetsOfBiz(ListTemplateSetsOfBizReq) returns (ListTemplateSetsOfBizResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_sets/list_all_of_biz"
+        };
+    }
 
     rpc CreateAppTemplateBinding(CreateAppTemplateBindingReq) returns (CreateAppTemplateBindingResp) {
         option (google.api.http) = {
@@ -1281,6 +1286,14 @@ message ListTemplateSetsByIDsReq {
 
 message ListTemplateSetsByIDsResp {
     repeated pbtset.TemplateSet details = 1;
+}
+
+message ListTemplateSetsOfBizReq {
+    uint32          biz_id = 1;
+}
+
+message ListTemplateSetsOfBizResp {
+    repeated pbtset.TemplateSetOfBizDetail details = 1;
 }
 
 message CreateAppTemplateBindingReq {

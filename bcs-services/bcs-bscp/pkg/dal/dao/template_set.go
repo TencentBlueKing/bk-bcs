@@ -59,6 +59,8 @@ type TemplateSet interface {
 	ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
 	// ListAllTemplateIDs list all template ids of all template sets in one template space.
 	ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error)
+	// ListAllTemplateSetsOfBiz list all template sets of one biz
+	ListAllTemplateSetsOfBiz(kit *kit.Kit, bizID uint32) ([]*table.TemplateSet, error)
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -412,6 +414,14 @@ func (dao *templateSetDao) ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpace
 	}
 
 	return ids, nil
+}
+
+// ListAllTemplateSetsOfBiz list all template sets of one biz
+func (dao *templateSetDao) ListAllTemplateSetsOfBiz(kit *kit.Kit, bizID uint32) ([]*table.TemplateSet, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	return q.Where(m.BizID.Eq(bizID)).Find()
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template

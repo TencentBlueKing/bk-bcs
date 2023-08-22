@@ -245,3 +245,56 @@ func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbds.ListTempl
 	}
 	return resp, nil
 }
+
+// ListTemplateSetsOfBiz list template sets of one biz.
+func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbds.ListTemplateSetsOfBizReq) (
+	*pbds.ListTemplateSetsOfBizResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	tmplSets, err := s.dao.TemplateSet().ListAllTemplateSetsOfBiz(kt, req.BizId)
+	if err != nil {
+		logs.Errorf("list template sets of biz failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	if len(tmplSets) == 0 {
+		return &pbds.ListTemplateSetsOfBizResp{}, nil
+	}
+
+	// get the map of template space id => template set detail
+	tmplSetsMap := make(map[uint32]*pbtset.TemplateSetOfBizDetail)
+	for _, t := range tmplSets {
+		if _, ok := tmplSetsMap[t.Attachment.TemplateSpaceID]; !ok {
+			tmplSetsMap[t.Attachment.TemplateSpaceID] = &pbtset.TemplateSetOfBizDetail{}
+		}
+		tmplSetsMap[t.Attachment.TemplateSpaceID].TemplateSets = append(
+			tmplSetsMap[t.Attachment.TemplateSpaceID].TemplateSets,
+			&pbtset.TemplateSetOfBizDetail_TemplateSetOfBiz{
+				TemplateSetId:   t.ID,
+				TemplateSetName: t.Spec.Name,
+			})
+	}
+	tmplSpaceIDs := make([]uint32, 0, len(tmplSetsMap))
+	for tmplSpaceID := range tmplSetsMap {
+		tmplSpaceIDs = append(tmplSpaceIDs, tmplSpaceID)
+	}
+
+	tmplSpaces, err := s.dao.TemplateSpace().ListByIDs(kt, tmplSpaceIDs)
+	if err != nil {
+		logs.Errorf("list template sets of biz failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	details := make([]*pbtset.TemplateSetOfBizDetail, 0)
+	for _, t := range tmplSpaces {
+		details = append(details, &pbtset.TemplateSetOfBizDetail{
+			TemplateSpaceId:   t.ID,
+			TemplateSpaceName: t.Spec.Name,
+			TemplateSets:      tmplSetsMap[t.ID].TemplateSets,
+		})
+	}
+
+	resp := &pbds.ListTemplateSetsOfBizResp{
+		Details: details,
+	}
+	return resp, nil
+}

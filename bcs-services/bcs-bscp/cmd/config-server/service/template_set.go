@@ -221,11 +221,39 @@ func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbcs.ListTempl
 
 	rp, err := s.client.DS.ListTemplateSetsByIDs(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list template sets by ids failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
 	resp = &pbcs.ListTemplateSetsByIDsResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListTemplateSetsOfBiz list template sets of one biz
+func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbcs.ListTemplateSetsOfBizReq) (*pbcs.
+	ListTemplateSetsOfBizResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListTemplateSetsOfBizResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSet, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListTemplateSetsOfBizReq{
+		BizId: req.BizId,
+	}
+
+	rp, err := s.client.DS.ListTemplateSetsOfBiz(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list template sets of biz failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListTemplateSetsOfBizResp{
 		Details: rp.Details,
 	}
 	return resp, nil

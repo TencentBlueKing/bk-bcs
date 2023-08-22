@@ -79,6 +79,7 @@ const (
 	Config_ListTemplateSets_FullMethodName                           = "/pbcs.Config/ListTemplateSets"
 	Config_ListAppTemplateSets_FullMethodName                        = "/pbcs.Config/ListAppTemplateSets"
 	Config_ListTemplateSetsByIDs_FullMethodName                      = "/pbcs.Config/ListTemplateSetsByIDs"
+	Config_ListTemplateSetsOfBiz_FullMethodName                      = "/pbcs.Config/ListTemplateSetsOfBiz"
 	Config_CreateAppTemplateBinding_FullMethodName                   = "/pbcs.Config/CreateAppTemplateBinding"
 	Config_DeleteAppTemplateBinding_FullMethodName                   = "/pbcs.Config/DeleteAppTemplateBinding"
 	Config_UpdateAppTemplateBinding_FullMethodName                   = "/pbcs.Config/UpdateAppTemplateBinding"
@@ -179,6 +180,7 @@ type ConfigClient interface {
 	ListTemplateSets(ctx context.Context, in *ListTemplateSetsReq, opts ...grpc.CallOption) (*ListTemplateSetsResp, error)
 	ListAppTemplateSets(ctx context.Context, in *ListAppTemplateSetsReq, opts ...grpc.CallOption) (*ListAppTemplateSetsResp, error)
 	ListTemplateSetsByIDs(ctx context.Context, in *ListTemplateSetsByIDsReq, opts ...grpc.CallOption) (*ListTemplateSetsByIDsResp, error)
+	ListTemplateSetsOfBiz(ctx context.Context, in *ListTemplateSetsOfBizReq, opts ...grpc.CallOption) (*ListTemplateSetsOfBizResp, error)
 	CreateAppTemplateBinding(ctx context.Context, in *CreateAppTemplateBindingReq, opts ...grpc.CallOption) (*CreateAppTemplateBindingResp, error)
 	DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*DeleteAppTemplateBindingResp, error)
 	UpdateAppTemplateBinding(ctx context.Context, in *UpdateAppTemplateBindingReq, opts ...grpc.CallOption) (*UpdateAppTemplateBindingResp, error)
@@ -735,6 +737,15 @@ func (c *configClient) ListTemplateSetsByIDs(ctx context.Context, in *ListTempla
 	return out, nil
 }
 
+func (c *configClient) ListTemplateSetsOfBiz(ctx context.Context, in *ListTemplateSetsOfBizReq, opts ...grpc.CallOption) (*ListTemplateSetsOfBizResp, error) {
+	out := new(ListTemplateSetsOfBizResp)
+	err := c.cc.Invoke(ctx, Config_ListTemplateSetsOfBiz_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateAppTemplateBinding(ctx context.Context, in *CreateAppTemplateBindingReq, opts ...grpc.CallOption) (*CreateAppTemplateBindingResp, error) {
 	out := new(CreateAppTemplateBindingResp)
 	err := c.cc.Invoke(ctx, Config_CreateAppTemplateBinding_FullMethodName, in, out, opts...)
@@ -1097,6 +1108,7 @@ type ConfigServer interface {
 	ListTemplateSets(context.Context, *ListTemplateSetsReq) (*ListTemplateSetsResp, error)
 	ListAppTemplateSets(context.Context, *ListAppTemplateSetsReq) (*ListAppTemplateSetsResp, error)
 	ListTemplateSetsByIDs(context.Context, *ListTemplateSetsByIDsReq) (*ListTemplateSetsByIDsResp, error)
+	ListTemplateSetsOfBiz(context.Context, *ListTemplateSetsOfBizReq) (*ListTemplateSetsOfBizResp, error)
 	CreateAppTemplateBinding(context.Context, *CreateAppTemplateBindingReq) (*CreateAppTemplateBindingResp, error)
 	DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*DeleteAppTemplateBindingResp, error)
 	UpdateAppTemplateBinding(context.Context, *UpdateAppTemplateBindingReq) (*UpdateAppTemplateBindingResp, error)
@@ -1306,6 +1318,9 @@ func (UnimplementedConfigServer) ListAppTemplateSets(context.Context, *ListAppTe
 }
 func (UnimplementedConfigServer) ListTemplateSetsByIDs(context.Context, *ListTemplateSetsByIDsReq) (*ListTemplateSetsByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetsByIDs not implemented")
+}
+func (UnimplementedConfigServer) ListTemplateSetsOfBiz(context.Context, *ListTemplateSetsOfBizReq) (*ListTemplateSetsOfBizResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetsOfBiz not implemented")
 }
 func (UnimplementedConfigServer) CreateAppTemplateBinding(context.Context, *CreateAppTemplateBindingReq) (*CreateAppTemplateBindingResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAppTemplateBinding not implemented")
@@ -2444,6 +2459,24 @@ func _Config_ListTemplateSetsByIDs_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ListTemplateSetsOfBiz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateSetsOfBizReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListTemplateSetsOfBiz(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListTemplateSetsOfBiz_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListTemplateSetsOfBiz(ctx, req.(*ListTemplateSetsOfBizReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateAppTemplateBindingReq)
 	if err := dec(in); err != nil {
@@ -3272,6 +3305,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateSetsByIDs",
 			Handler:    _Config_ListTemplateSetsByIDs_Handler,
+		},
+		{
+			MethodName: "ListTemplateSetsOfBiz",
+			Handler:    _Config_ListTemplateSetsOfBiz_Handler,
 		},
 		{
 			MethodName: "CreateAppTemplateBinding",
