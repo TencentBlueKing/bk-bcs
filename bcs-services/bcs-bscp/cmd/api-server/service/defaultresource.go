@@ -59,6 +59,4 @@ func (p *proxy) initBizsOfTmplSpaces() {
 		bizsOfTS.Bizs[bizID] = struct{}{}
 	}
 	logs.Infof("init bizs of template spaces success, len(biz):%d", len(resp.BizIds))
-
-	return
 }

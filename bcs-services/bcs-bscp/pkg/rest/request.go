@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -179,13 +178,10 @@ func (r *Request) Body(body interface{}) *Request {
 			r.body = []byte("")
 			return r
 		}
-		break
 	case reflect.String:
 		r.body = []byte(body.(string))
 		return r
-
 	case reflect.Struct:
-		break
 
 	default:
 		r.err = errors.New("body should be one of interface, map, pointer or slice value")
@@ -349,7 +345,7 @@ func (r *Request) Do() *Result {
 			}
 
 			if r.ctx != nil {
-				req.WithContext(r.ctx)
+				req = req.WithContext(r.ctx)
 			}
 
 			req.Header = cloneHeader(r.headers)
@@ -401,7 +397,7 @@ func (r *Request) Do() *Result {
 
 			var body []byte
 			if resp.Body != nil {
-				data, err := ioutil.ReadAll(resp.Body)
+				data, err := io.ReadAll(resp.Body)
 				if err != nil {
 					if err == io.ErrUnexpectedEOF {
 						// retry now
@@ -464,7 +460,7 @@ func ridFromContext(ctx context.Context) string {
 	}
 	rid := ctx.Value(constant.RidKey)
 	ridValue, ok := rid.(string)
-	if ok == true {
+	if ok {
 		return ridValue
 	}
 	return ""

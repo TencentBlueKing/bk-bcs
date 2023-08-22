@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	pbcs "bscp.io/pkg/protocol/cache-service"
 	"bscp.io/test/benchmark/run"
@@ -91,7 +92,8 @@ func init() {
 	// build cache service conn pool.
 	csPool.conn = make([]pbcs.CacheClient, conSize)
 	opts := make([]grpc.DialOption, 0)
-	opts = append(opts, grpc.WithInsecure(), grpc.WithWriteBufferSize(16*1024*1024),
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithWriteBufferSize(16*1024*1024),
 		grpc.WithReadBufferSize(32*1024*1024), grpc.WithInitialConnWindowSize(32*1024*1024))
 	for i := 0; i < conSize; i++ {
 		conn, err := grpc.Dial(host, opts...)

@@ -26,7 +26,7 @@ import (
 // AdaptAuthOptions convert bscp auth resource to iam action id and resources
 func AdaptAuthOptions(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	if a == nil {
-		return "", nil, errf.New(errf.InvalidParameter, fmt.Sprintf("resource attribute is not set"))
+		return "", nil, errf.New(errf.InvalidParameter, "resource attribute is not set")
 	}
 
 	// skip actions do not need to relate to resources

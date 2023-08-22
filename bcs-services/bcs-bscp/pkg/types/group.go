@@ -70,19 +70,19 @@ type ListGroupRleasesdAppsOption struct {
 
 // Validate the list group's published apps options
 func (opt *ListGroupRleasesdAppsOption) Validate() error {
-	if opt.BizID <= 0 {
+	if opt.BizID == 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
 	}
 
-	if opt.GroupID <= 0 {
+	if opt.GroupID == 0 {
 		return errf.New(errf.InvalidParameter, "invalid group id, should >= 1")
 	}
 
-	if opt.Start < 0 {
+	if opt.Start == 0 {
 		return errf.New(errf.InvalidParameter, "invalid start, should >= 0")
 	}
 
-	if opt.Limit <= 0 {
+	if opt.Limit == 0 {
 		return errf.New(errf.InvalidParameter, "invalid limit, should >= 1")
 	}
 	return nil

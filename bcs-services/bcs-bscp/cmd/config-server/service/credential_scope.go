@@ -69,17 +69,9 @@ func (s *Service) UpdateCredentialScope(ctx context.Context, req *pbcs.UpdateCre
 		CredentialId: req.CredentialId,
 	}
 
-	for _, add := range req.AddScope {
-		r.Created = append(r.Created, add)
-	}
-
-	for _, updated := range req.AlterScope {
-		r.Updated = append(r.Updated, updated)
-	}
-
-	for _, del := range req.DelId {
-		r.Deleted = append(r.Deleted, del)
-	}
+	r.Created = append(r.Created, req.AddScope...)
+	r.Updated = append(r.Updated, req.AlterScope...)
+	r.Deleted = append(r.Deleted, req.DelId...)
 
 	_, err = s.client.DS.UpdateCredentialScopes(grpcKit.RpcCtx(), r)
 	if err != nil {
