@@ -192,11 +192,11 @@ export const updateTemplateContent = (biz_id: string, templateSpaceId: number, d
  * @returns
  */
 export const downloadTemplateContent = (biz_id: string, templateSpaceId: number, signature: string) => {
-  return http.get(`/bizs/${biz_id}/content/upload`, {
+  return http.get<string, string>(`/bizs/${biz_id}/content/download`, {
     headers: {
       'X-Bscp-Template-Space-Id': templateSpaceId,
       'X-Bkapi-File-Content-Id': signature,
-    }}).then(res => res.data)
+    }}).then(res => res)
 }
 
 /**

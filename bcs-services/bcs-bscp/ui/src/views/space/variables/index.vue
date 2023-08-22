@@ -58,12 +58,6 @@
     loading.value = false
   }
 
-  const handleSearchInputChange = () => {
-    if (searchStr.value === '') {
-      refreshList()
-    }
-  }
-
   const handleEditVar = (variable: IVariableItem) => {
     const { id, spec} = variable
     editSliderData.value = {

@@ -33,6 +33,10 @@
   const close = () => {
     emits('update:show', false)
   }
+
+  defineExpose({
+    close
+  })
 </script>
 <template>
   <bk-dialog

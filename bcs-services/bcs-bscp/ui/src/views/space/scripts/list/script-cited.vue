@@ -1,12 +1,12 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
-  import { Search } from 'bkui-vue/lib/icon'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
   import { VERSION_STATUS_MAP } from '../../../../constants/config'
   import { IScriptCiteQuery, IScriptCitedItem } from '../../../../../types/script'
   import { getScriptCiteList } from '../../../../api/script'
+  import SearchInput from '../../../../components/search-input.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 
@@ -58,14 +58,8 @@
     return href
   }
 
-  const handleNameInputChange = (val: string) => {
-    if (!val) {
-      refreshList()
-    }
-  }
-
-  const refreshList = () => {
-    pagination.value.current = 1
+  const refreshList = (current: number = 1) => {
+    pagination.value.current = current
     getCitedData()
   }
 
@@ -85,18 +79,7 @@
     :is-show="props.show"
     @closed="handleClose">
     <div class="search-area">
-      <bk-input
-        v-model="searchStr"
-        class="search-input"
-        placeholder="服务名称/版本名称/被引用的版本"
-        :clearable="true"
-        @enter="refreshList"
-        @clear="refreshList"
-        @change="handleNameInputChange">
-          <template #suffix>
-            <Search class="search-input-icon" />
-          </template>
-      </bk-input>
+      <SearchInput v-model="searchStr" placeholder="服务名称/版本名称/被引用的版本" @search="refreshList()" />
     </div>
     <div class="cited-data-table">
       <bk-table
