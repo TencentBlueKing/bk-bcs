@@ -41,6 +41,7 @@
     theme="light add-configs-button-popover"
     placement="bottom-end"
     trigger="click"
+    width="122"
     :arrow="false">
     <bk-button
       theme="primary"
@@ -60,6 +61,9 @@
   <ImportConfigs v-model:show="silders.isImportOpen" />
 </template>
 <style lang="scss" scoped>
+  .create-config-btn {
+    min-width: 122px;
+  }
   .button-icon {
     font-size: 18px;
   }

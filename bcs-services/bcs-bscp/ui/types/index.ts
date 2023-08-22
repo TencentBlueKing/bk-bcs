@@ -21,6 +21,8 @@ export interface ICommonQuery {
   limit?: number;
   all?: boolean;
   search_key?: string;
+  search_fields?: string;
+  search_value?: string;
 }
 
 // 权限查询参数

@@ -46,7 +46,7 @@
 
   watch(() => props.value, val => {
     localVal.value = { ...val }
-  })
+  }, { immediate: true })
 
   const change = () => {
     emits('change', { ...localVal.value })
@@ -67,16 +67,16 @@
       <bk-input v-model.trim="localVal.name" prefix="bk_bscp_" :disabled="isEditMode" @change="change" />
     </bk-form-item>
     <bk-form-item label="类型" property="type" :required="!isEditMode">
-      <bk-select v-model="localVal.type" :clearable="false" @change="change">
+      <bk-select v-model="localVal.type" :clearable="false" :disabled="isEditMode" @change="change">
         <bk-option id="string" label="string"></bk-option>
         <bk-option id="number" label="number"></bk-option>
         <bk-option id="bool" label="bool"></bk-option>
       </bk-select>
     </bk-form-item>
-    <bk-form-item label="默认值" property="name" required>
+    <bk-form-item label="默认值" property="default_val" required>
       <bk-input v-model="localVal.default_val" @change="change" />
     </bk-form-item>
-    <bk-form-item label="描述" property="name">
+    <bk-form-item label="描述" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :maxlength="100" :rows="5" @change="change" />
     </bk-form-item>
   </bk-form>

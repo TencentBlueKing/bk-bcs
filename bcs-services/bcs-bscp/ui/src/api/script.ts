@@ -4,7 +4,7 @@ import { IScriptEditingForm, IScriptCiteQuery, IScriptListQuery } from '../../ty
 /**
  * 创建脚本
  * @param biz_id 空间ID
- * @returns 
+ * @returns
  */
 export const createScript = (biz_id: string, params: IScriptEditingForm) => {
   return http.post(`/config/biz/${biz_id}/hooks`, params).then(res => res.data)
@@ -14,7 +14,7 @@ export const createScript = (biz_id: string, params: IScriptEditingForm) => {
  * 获取脚本列表
  * @param biz_id 空间ID
  * @param params 查询参数
- * @returns 
+ * @returns
  */
 
 export const getScriptList = (biz_id: string, params: IScriptListQuery) => {
@@ -25,7 +25,7 @@ export const getScriptList = (biz_id: string, params: IScriptListQuery) => {
  * 获取脚本详情
  * @param biz_id 空间ID
  * @param id 脚本ID
- * @returns 
+ * @returns
  */
 export const getScriptDetail = (biz_id: string, id: number) => {
   return http.get(`/config/biz/${biz_id}/hooks/${id}`).then(res => res.data);
@@ -36,7 +36,7 @@ export const getScriptDetail = (biz_id: string, id: number) => {
  * @param biz_id 空间ID
  * @param id 脚本ID
  * @param release_id 版本ID
- * @returns 
+ * @returns
  */
 export const getScriptVersionDetail = (biz_id: string, id: number, release_id: number) => {
   return http.get(`/config/biz/${biz_id}/hooks/${id}/hook_releases/${release_id}`).then(res => res.data);
@@ -46,7 +46,7 @@ export const getScriptVersionDetail = (biz_id: string, id: number, release_id: n
  * 删除脚本
  * @param biz_id 空间ID
  * @param id 脚本ID
- * @returns 
+ * @returns
  */
 export const deleteScript = (biz_id: string, id: number) => {
   return http.delete(`/config/biz/${biz_id}/hooks/${id}`).then(res => res.data);
@@ -56,7 +56,7 @@ export const deleteScript = (biz_id: string, id: number) => {
  * 获取脚本标签列表
  * @param biz_id 空间ID
  * @param params 查询参数
- * @returns 
+ * @returns
  */
 export const getScriptTagList = (biz_id: string) => {
   return http.get(`/config/biz/${biz_id}/hook_tags`).then(res => res.data);
@@ -67,9 +67,9 @@ export const getScriptTagList = (biz_id: string) => {
  * @param biz_id 空间ID
  * @param hook_id 脚本ID
  * @param params 查询参数
- * @returns 
+ * @returns
  */
-export const getScriptVersionList = (biz_id: string, hook_id: number, params: { start: number; limit?: number; searchKey?: string; }) => {
+export const getScriptVersionList = (biz_id: string, hook_id: number, params: { start: number; limit?: number; searchKey?: string; all?: boolean }) => {
   return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases`, { params }).then(res => res.data);
 }
 
@@ -78,7 +78,7 @@ export const getScriptVersionList = (biz_id: string, hook_id: number, params: { 
  * @param biz_id 空间ID
  * @param hook_id 脚本ID
  * @param params 查询参数
- * @returns 
+ * @returns
  */
 export const createScriptVersion = (biz_id: string, hook_id: number, params: { name: string; memo: string; content: string; }) => {
   return http.post(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases`, params).then(res => res.data);
@@ -89,7 +89,7 @@ export const createScriptVersion = (biz_id: string, hook_id: number, params: { n
  * @param biz_id 空间ID
  * @param hook_id 脚本ID
  * @param params 查询参数
- * @returns 
+ * @returns
  */
 export const updateScriptVersion = (biz_id: string, hook_id: number, release_id: number, params: { name: string; memo: string; content: string; }) => {
   return http.put(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases/${release_id}`, params).then(res => res.data);
@@ -100,7 +100,7 @@ export const updateScriptVersion = (biz_id: string, hook_id: number, release_id:
  * @param biz_id 空间ID
  * @param hook_id 脚本ID
  * @param release_id 版本ID
- * @returns 
+ * @returns
  */
 export const deleteScriptVersion = (biz_id: string, hook_id: number, release_id: number) => {
   return http.delete(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases/${release_id}`).then(res => res.data);
@@ -111,7 +111,7 @@ export const deleteScriptVersion = (biz_id: string, hook_id: number, release_id:
  * @param biz_id 空间ID
  * @param hook_id 脚本ID
  * @param release_id 版本ID
- * @returns 
+ * @returns
  */
 export const publishVersion = (biz_id: string, hook_id: number, release_id: number) => {
   return http.put(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases/${release_id}/publish`).then(res => res.data);
@@ -122,7 +122,7 @@ export const publishVersion = (biz_id: string, hook_id: number, release_id: numb
  * @param biz_id 空间ID
  * @param hook_id 脚本ID
  * @param params 查询参数
- * @returns 
+ * @returns
  */
 export const getScriptCiteList = (biz_id: string, hook_id: number, params: IScriptCiteQuery) => {
   return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/references`, { params }).then(res => res.data);

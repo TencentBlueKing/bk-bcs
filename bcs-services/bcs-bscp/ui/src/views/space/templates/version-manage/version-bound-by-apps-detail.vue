@@ -42,7 +42,8 @@
       limit: pagination.value.limit
     }
     if (searchStr.value) {
-      params.search_key = searchStr.value
+      params.search_fields = 'name,id'
+      params.search_value = searchStr.value
     }
     const res = await getUnNamedVersionAppsBoundByTemplateVersion(props.spaceId, props.currentTemplateSpace, props.config.id, props.config.versionId, params)
     appList.value = res.details
@@ -80,7 +81,7 @@
     @closed="close">
     <div class="top-area">
       <div class="config-name">{{ props.config.name }}</div>
-      <SearchInput placeholder="服务名称/配置项版本" :keyword="searchStr" @search="handleSearch" />
+      <SearchInput v-model="searchStr" placeholder="服务名称/配置项版本" :width="320" @search="handleSearch" />
     </div>
     <div class="apps-table">
       <bk-table

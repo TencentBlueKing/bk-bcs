@@ -9,12 +9,13 @@
   import { getVariableList, deleteVariable } from '../../../api/variable'
   import VariableCreate from './variable-create.vue';
   import VariableEdit from './variable-edit.vue';
+  import SearchInput from '../../../components/search-input.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 
   const loading = ref(false)
   const list = ref<IVariableItem[]>([])
-  const searchstr = ref('')
+  const searchStr = ref('')
   const pagination = ref<IPagination>({
     current: 1,
     count: 0,
@@ -47,8 +48,9 @@
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit
     }
-    if (searchstr.value) {
-      params.search_key = searchstr.value
+    if (searchStr.value) {
+      params.search_fields = 'name'
+      params.search_value = searchStr.value
     }
     const res = await getVariableList(spaceId.value, params)
     list.value = res.details
@@ -57,7 +59,7 @@
   }
 
   const handleSearchInputChange = () => {
-    if (searchstr.value === '') {
+    if (searchStr.value === '') {
       refreshList()
     }
   }
@@ -103,17 +105,7 @@
     </bk-alert>
     <div class="operation-area">
       <bk-button theme="primary" @click="isCreateSliderShow = true"><Plus class="button-icon" />新增变量</bk-button>
-      <bk-input
-        v-model="searchstr"
-        class="search-input"
-        placeholder="请输入变量名称"
-        clearable
-        @change="handleSearchInputChange"
-        @enter="refreshList()">
-          <template #suffix>
-            <Search class="search-input-icon" />
-          </template>
-      </bk-input>
+      <SearchInput v-model="searchStr" placeholder="请输入变量名称" :width="320" @search="refreshList()" />
     </div>
     <div class="variable-table">
       <bk-table
@@ -130,7 +122,11 @@
         </bk-table-column>
         <bk-table-column label="类型" prop="spec.type" width="120"></bk-table-column>
         <bk-table-column label="默认值" prop="spec.default_val"></bk-table-column>
-        <bk-table-column label="描述" props="spec.memo"></bk-table-column>
+        <bk-table-column label="描述">
+          <template #default="{ row }">
+            <span v-if="row.spec">{{ row.spec.memo || '--' }}</span>
+          </template>
+        </bk-table-column>
         <bk-table-column label="操作" width="200">
           <template #default="{ row }">
             <div class="action-btns">
@@ -176,8 +172,6 @@
     padding: 16px 24px 24px;
   }
   .action-btns {
-    display: flex;
-    align-items: center;
     .bk-button:not(:last-of-type) {
       margin-right: 8px;
     }

@@ -69,7 +69,8 @@
       limit: pagination.value.limit
     }
     if (searchStr.value) {
-      params.search_key = searchStr.value
+      params.search_fields = 'name,path,memo,creator,reviser'
+      params.search_value = searchStr.value
     }
     const res = await props.getConfigList(params)
     list.value = res.details
