@@ -145,22 +145,21 @@
         ref="publishVersionRef"
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
-        :release-id="versionData.id"
-        :app-name="appData.spec.name"
-        :version-name="versionData.spec.name"
         :config-list="configList"
         @confirm="refreshVesionList" />
       <ModifyGroupPublish
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
-        :release-id="versionData.id"
-        :app-name="appData.spec.name"
-        :version-name="versionData.spec.name"
         :config-list="configList"
         @confirm="refreshVesionList" />
     </section>
     <div class="operate-area">
-      <CreateConfig v-if="versionData.status.publish_status === 'editing'" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
+      <CreateConfig
+        v-if="versionData.status.publish_status === 'editing'"
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        @confirm="refreshConfigList" />
+
       <div class="groups-info" v-if="versionData.status.released_groups.length > 0">
         <div v-for="group in versionData.status.released_groups" class="group-item" :key="group.id">
           {{ group.name }}

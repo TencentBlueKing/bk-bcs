@@ -4,7 +4,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import { ArrowsLeft, Plus } from 'bkui-vue/lib/icon';
   import { useGlobalStore } from '../../../../store/global'
-  import { ITemplateConfigItem, ITemplateVersionItem, ITemplateVersionEditingData } from '../../../../../types/template'
+  import { ITemplateConfigItem, ITemplateVersionItem } from '../../../../../types/template'
   import { IPagination, ICommonQuery } from '../../../../../types/index';
   import { getTemplatesDetailByIds, getTemplateVersionList, getCountsByTemplateVersionIds } from '../../../../api/template'
   import SearchInput from '../../../../components/search-input.vue';
@@ -25,6 +25,8 @@
   const templateDetail = ref<ITemplateConfigItem>()
   const versionListLoading = ref(false)
   const versionList = ref<ITemplateVersionItem[]>([])
+  const allVersionListLoading = ref(false)
+  const allVersionList = ref<{ id: number; name: string; }[]>([]) // 全量版本列表，选择载入版本使用
   const boundByAppsCountLoading = ref(false)
   const boundByAppsCountList = ref([])
   const searchStr = ref('')
@@ -88,6 +90,17 @@
     }
   }
 
+  const getAllVersionList = async () => {
+    allVersionListLoading.value = true
+    const res = await getTemplateVersionList(spaceId.value, templateSpaceId.value, templateId.value, { start: 0, all: true })
+    allVersionList.value = res.details.map((item: ITemplateVersionItem) => {
+      const { id, spec } = item
+      const name = spec.revision_memo ? `${spec.revision_name}(${spec.revision_memo})` : spec.revision_name
+      return { id, name }
+    })
+    allVersionListLoading.value = false
+  }
+
   const loadBoundByAppsList = async(ids: number[]) => {
     boundByAppsCountLoading.value = true
     const res = await getCountsByTemplateVersionIds(spaceId.value, templateSpaceId.value, templateId.value, ids)
@@ -102,8 +115,10 @@
     }})
   }
 
-  const openSelectVersionDialog = () => {
-    selectVersionDialog.value = { open: true, id: '' }
+  const openSelectVersionDialog = async() => {
+    selectVersionDialog.value.open = true
+    await getAllVersionList()
+    selectVersionDialog.value.id = allVersionList.value.length > 0 ? allVersionList.value[0].id : ''
   }
 
   const handleVersionMenuSelect = (id: number) => {
@@ -156,8 +171,9 @@
         新建版本
       </bk-button>
       <SearchInput
-        v-model:keyword="searchStr"
+        v-model="searchStr"
         placeholder="版本号/版本说明/更新人"
+        :width="320"
         @search="refreshList()" />
     </div>
     <div class="version-content-area">
@@ -190,12 +206,19 @@
       width="480"
       dialog-type="operation"
       :is-show="selectVersionDialog.open"
+      :is-loading="allVersionListLoading"
       @confirm="handleSelectVersionConfirm"
-      @cancel="selectVersionDialog.open = false">
+      @closed="selectVersionDialog.open = false">
       <bk-form ref="selectVersionFormRef" form-type="vertical" :model="{ id: selectVersionDialog.id }">
         <bk-form-item label="选择载入版本" required property="id">
-          <bk-select v-model="selectVersionDialog.id" :clearable="false">
-            <bk-option v-for="item in versionList" :key="item.id" :id="item.id" :label="item.spec.revision_name"></bk-option>
+          <bk-select v-model="selectVersionDialog.id" :clearable="false" :filterable="true" :input-search="false">
+            <bk-option
+              v-for="item in allVersionList"
+              v-overflow-title
+              :key="item.id"
+              :id="item.id"
+              :label="item.name">
+            </bk-option>
           </bk-select>
         </bk-form-item>
       </bk-form>

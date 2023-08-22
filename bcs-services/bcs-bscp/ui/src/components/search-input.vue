@@ -3,37 +3,36 @@
   import { Search } from 'bkui-vue/lib/icon';
 
   const props = withDefaults(defineProps<{
-    keyword?: string;
+    modelValue: string;
     placeholder?: string;
     width?: number;
   }>(), {
-    keyword: '',
-    placeholder: '请输入',
-    width: 320
+    placeholder: '请输入'
   })
 
-  const emits = defineEmits(['update:keyword', 'search'])
+  const emits = defineEmits(['update:modelValue', 'search'])
 
   const inputVal = ref('')
 
-  watch(() => props.keyword, val => {
+  watch(() => props.modelValue, val => {
     inputVal.value = val
   })
 
   const handleInputChange = () => {
+    emits('update:modelValue', inputVal.value)
     if (inputVal.value === '') {
       triggerSearch()
     }
   }
 
   const triggerSearch = () => {
-    emits('update:keyword', inputVal.value)
+    emits('update:modelValue', inputVal.value)
     emits('search', inputVal.value)
   }
 
 </script>
 <template>
-  <div class="search-input" :style="`width: ${props.width}px`">
+  <div class="search-input" :style="`width: ${props.width ? props.width + 'px' : '100%'}`">
     <bk-input
       v-model="inputVal"
       :placeholder="props.placeholder"

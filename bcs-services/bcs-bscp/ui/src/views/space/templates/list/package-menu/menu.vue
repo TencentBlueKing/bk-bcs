@@ -7,6 +7,7 @@
   import { useTemplateStore } from '../../../../../store/template'
   import { getTemplatePackageList, getTemplatesWithNoSpecifiedPackage, getTemplatesBySpaceId } from '../../../../../api/template'
   import { ITemplatePackageItem, IPackageMenuItem } from '../../../../../../types/template'
+  import SearchInput from '../../../../../components/search-input.vue';
   import PackageItem from './item.vue'
   import PackageCreate from './package-create.vue'
   import PackageEdit from './package-edit.vue';
@@ -144,16 +145,10 @@
     } else {
       result = packages.value.slice()
     }
-    return result.map(item => {
+    menuList.value = result.map(item => {
       const { id, spec } = item
       return { id, name: spec.name, count: item.spec.template_ids.length }
     })
-  }
-
-  const handleSearchInput = () => {
-    if (searchStr.value === '') {
-      handleSearch()
-    }
   }
 
   const handlePkgAction = (id: number, type: string) => {
@@ -212,17 +207,7 @@
         <Plus />
       </div>
       <div class="search-input">
-        <bk-input
-          v-model="searchStr"
-          placeholder="搜索模板套餐"
-          :clearable="true"
-          @enter="handleSearch"
-          @clear="handleSearch"
-          @input="handleSearchInput">
-          <template #suffix>
-            <Search class="search-icon" />
-          </template>
-        </bk-input>
+        <SearchInput v-model="searchStr" placeholder="搜索模板套餐" @search="handleSearch" />
       </div>
     </div>
     <div v-if="menuList.length > 0" class="package-list">
