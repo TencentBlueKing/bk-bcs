@@ -87,19 +87,11 @@ export default defineComponent({
 
       // 无权限
       if (code === 40403) {
-        const { action_id, resource_type } = web_annotations?.perms?.action_list?.[0] || {};
         $router.replace({
           name: '403',
-          query: {
-            resourceName: projectCode,
-            actionId: action_id,
-            permCtx: {
-              resource_type,
-            },
-            fromRoute: window.location.href,
-          },
           params: {
             projectCode,
+            perms: web_annotations?.perms,
           },
         });
         return false;

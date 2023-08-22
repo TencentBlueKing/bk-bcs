@@ -36,7 +36,8 @@
           class="flex items-center"
           v-bk-tooltips="{
             content: option.businessID
-              ? `${$t('projects.project.name')}: ${option.name}<br/>${$t('projects.project.businessID')}: ${option.businessID}`
+              ? `${$t('projects.project.name')}:
+              ${option.name}<br/>${$t('projects.project.businessID')}: ${option.businessID}`
               : `${$t('projects.project.name')}: ${option.name}<br/>${$t('bcs.registry.toEnable')}`,
             placement: 'left',
             boundary: 'window',

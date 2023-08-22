@@ -572,7 +572,7 @@
       :ok-text="$t('generic.button.delete')"
       :cancel-text="$t('generic.button.close')"
       :confirm="confirmDelNode"
-      @ancel="cancelDelNode" />
+      @cancel="cancelDelNode" />
   </div>
 </template>
 <script lang="ts">

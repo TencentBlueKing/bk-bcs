@@ -11,8 +11,8 @@
         </template>
       </bk-table-column>
       <bk-table-column :label="$t('iam.label.resource')" prop="resource" min-width="220">
-        <template #default="{ row }">
-          {{ row.resource_name || '--' }}
+        <template #default>
+          {{ projectCode }}
         </template>
       </bk-table-column>
     </bk-table>
@@ -25,10 +25,19 @@
   </bk-exception>
 </template>
 <script lang="ts">
-import { defineComponent, onBeforeMount, ref } from 'vue';
-import { userPermsByAction } from '@/api/modules/user-manager';
+import { PropType, defineComponent, onBeforeMount, ref } from 'vue';
 import actionsMap from '@/views/app/actions-map';
 import $router from '@/router';
+import useProjects from '../project-manage/project/use-project';
+import $bkMessage from '@/common/bkmagic';
+
+interface IPerms {
+  action_list: Array<{
+    action_id: string
+    resource_type: string
+  }>
+  apply_url: string
+}
 
 export default defineComponent({
   name: 'AuthForbidden',
@@ -37,24 +46,21 @@ export default defineComponent({
       type: String,
       default: '403',
     },
-    actionId: {
-      type: String,
-      default: '',
-    },
-    resourceName: {
-      type: String,
-      default: '',
-    },
-    permCtx: {
-      type: [Object, String],
-      default: () => ({}),
+    perms: {
+      type: Object as PropType<IPerms>,
     },
     fromRoute: {
       type: String,
       default: '',
     },
+    projectCode: {
+      type: String,
+      required: true,
+    },
   },
   setup(props) {
+    const { fetchProjectInfo } = useProjects();
+
     const tableData = ref<any[]>([]);
     const href = ref('');
     const isLoading = ref(false);
@@ -68,36 +74,40 @@ export default defineComponent({
       tableData.value = data;
     };
 
-    const handleGetPermsData = async () => {
-      if (!props.actionId) return;
+    const handleGetProjectPerms = async () => {
+      if (props.perms) {
+        handleSetPermsData(props.perms.apply_url, props.perms.action_list);
+        return;
+      };
+
       isLoading.value = true;
-      const data = await userPermsByAction({
-        $actionId: [props.actionId],
-        perm_ctx: typeof props.permCtx === 'string'
-          ? JSON.parse(props.permCtx)
-          : props.permCtx,
-      }).catch(() => ({}));
+      const { code, web_annotations, message } = await fetchProjectInfo({
+        $projectId: props.projectCode,
+      });
       isLoading.value = false;
-      if (data?.perms?.[props.actionId]) {
-        // 有权限跳回原来界面
-        if (props.fromRoute) {
-          window.location.href = props.fromRoute;
-        } else {
-          const { href } = $router.resolve({ name: 'home' });
-          window.location.href = href;
-        }
+
+      if (code === 0) {  // 有权限
+        const { href } = $router.resolve({
+          name: 'clusterMain',
+          params: {
+            projectCode: props.projectCode,
+          },
+        });
+        window.location.href = href;
+      } else if (code === 40403) { // 无权限
+        const perms: IPerms = web_annotations?.perms;
+        handleSetPermsData(perms.apply_url, perms.action_list);
       } else {
-        // 无权限
-        handleSetPermsData(data?.perms?.apply_url, [{
-          resource_name: props.resourceName,
-          action_id: props.actionId,
-        }]);
+        $bkMessage({
+          theme: 'error',
+          message,
+        });
       }
     };
 
     onBeforeMount(async () => {
       // 查询权限信息
-      handleGetPermsData();
+      handleGetProjectPerms();
     });
     return {
       handleGotoIAM,
