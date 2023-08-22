@@ -15,6 +15,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -170,6 +171,7 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 	}
 	microCmd := cmd.NewCmd(cmdOptions...)
 	microCmd.App().Flags = buildFlags()
+	microCmd.App().Commands = buildCommands()
 	microCmd.App().Action = func(c *cli.Context) error {
 		if c.Bool("confinfo") {
 			encoder := yaml2.NewEncoder(os.Stdout)
@@ -178,21 +180,6 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 				os.Exit(1)
 				return err
 			}
-			os.Exit(0)
-			return nil
-		}
-		//回放文件
-		replayFile := c.String("replay")
-		if replayFile == "" {
-			logger.Errorf("replay file not set, exited")
-			os.Exit(1)
-		}
-		err := ternimalReplay.Replay(replayFile)
-		if err != nil {
-			logger.Errorf("replay failure, err: %s, exited", err)
-			os.Exit(1)
-			return err
-		} else if err == nil {
 			os.Exit(0)
 			return nil
 		}
@@ -380,9 +367,29 @@ func buildFlags() []cli.Flag {
 			Usage:   "print init confinfo to stdout",
 			Aliases: []string{"o"},
 		},
-		&cli.StringFlag{
-			Name:  "replay",
-			Usage: "replay terminal session record",
+	}
+}
+
+// 命令行子命令
+func buildCommands() []*cli.Command {
+	return cli.Commands{
+		&cli.Command{
+			Name:    "replay",
+			Usage:   "replay terminal session record",
+			Aliases: []string{"r"},
+			Action: func(c *cli.Context) error {
+				fmt.Println(c.NArg())
+				if c.NArg() == 0 {
+					logger.Error("replay file not set")
+					return errors.New("replay file not set")
+				}
+				if err := ternimalReplay.Replay(c.Args().First()); err != nil {
+					logger.Errorf("replay failure, err: %s, exited", err)
+					return err
+				}
+				os.Exit(0)
+				return nil
+			},
 		},
 	}
 }
