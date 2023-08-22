@@ -90,13 +90,13 @@ const (
 	Skip client.ActionID = "skip"
 
 	// CredentialCreate 服务密钥创建
-	CredentialCreate client.ActionID = "app_credential_create"
+	CredentialCreate client.ActionID = "credential_create"
 	// CredentialView 服务密钥查看
-	CredentialView client.ActionID = "app_credential_view"
+	CredentialView client.ActionID = "credential_view"
 	// CredentialEdit 服务密钥编辑
-	CredentialEdit client.ActionID = "app_credential_edit"
+	CredentialEdit client.ActionID = "credential_edit"
 	// CredentialDelete 服务密钥删除
-	CredentialDelete client.ActionID = "app_credential_delete"
+	CredentialDelete client.ActionID = "credential_delete"
 )
 
 // ActionIDNameMap is action id type map.
