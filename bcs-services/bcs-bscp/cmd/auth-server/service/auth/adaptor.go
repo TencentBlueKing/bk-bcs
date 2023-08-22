@@ -37,7 +37,7 @@ func AdaptAuthOptions(a *meta.ResourceAttribute) (client.ActionID, []client.Reso
 	switch a.Basic.Type {
 	case meta.Biz:
 		return genBizResource(a)
-	case meta.App, meta.Commit, meta.ConfigItem, meta.Content, meta.CRInstance, meta.Release, meta.ReleasedCI, meta.Strategy, meta.StrategySet, meta.PSH, meta.Repo, meta.Sidecar:
+	case meta.App, meta.Commit, meta.ConfigItem, meta.Content, meta.CRInstance, meta.Release, meta.ReleasedCI, meta.Strategy, meta.StrategySet, meta.PSH, meta.Repo, meta.Sidecar, meta.Credential:
 		return genSkipResource(a)
 	//case meta.App:
 	//	return genAppResource(a)
