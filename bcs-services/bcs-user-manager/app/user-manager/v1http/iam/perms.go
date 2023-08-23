@@ -240,6 +240,7 @@ func getApplyURL(applications []iam.ApplicationAction) (string, error) {
 	return url, nil
 }
 
+// NOCC:CCN_thresholde(设计如此),golint/fnsize(设计如此)
 func getResourceTypeFromAction(action string) string {
 	switch action {
 	case project.ProjectCreate.String():
