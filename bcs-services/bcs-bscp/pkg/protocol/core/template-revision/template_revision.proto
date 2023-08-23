@@ -34,3 +34,15 @@ message TemplateRevisionAttachment {
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
 }
+
+// TemplateRevisionNamesDetail is template revision names Detail.
+message TemplateRevisionNamesDetail {
+    message revision_names {
+        uint32 template_revision_id   = 1;
+        string template_revision_name = 2;
+    }
+    uint32                  template_id                 = 1;
+    string                  template_name               = 2;
+    uint32                  latest_template_revision_id = 3;
+    repeated revision_names template_revisions          = 4;
+}

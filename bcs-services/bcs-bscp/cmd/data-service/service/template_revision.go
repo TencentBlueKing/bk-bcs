@@ -113,6 +113,10 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbds.List
 	ListTemplateRevisionsByIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	if err := s.dao.Validator().ValidateTemplateRevisionsExist(kt, req.Ids); err != nil {
+		return nil, err
+	}
+
 	details, err := s.dao.TemplateRevision().ListByIDs(kt, req.Ids)
 	if err != nil {
 		logs.Errorf("list template revisions failed, err: %v, rid: %s", err, kt.Rid)
@@ -121,6 +125,76 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbds.List
 
 	resp := &pbds.ListTemplateRevisionsByIDsResp{
 		Details: pbtr.PbTemplateRevisions(details),
+	}
+	return resp, nil
+}
+
+// ListTemplateRevisionNamesByTemplateIDs list template revision by ids.
+func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
+	req *pbds.ListTemplateRevisionNamesByTemplateIDsReq) (
+	*pbds.
+		ListTemplateRevisionNamesByTemplateIDsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplatesExist(kt, req.TemplateIds); err != nil {
+		return nil, err
+	}
+
+	tmplRevisions, err := s.dao.TemplateRevision().ListByTemplateIDs(kt, req.BizId, req.TemplateIds)
+	if err != nil {
+		logs.Errorf("list template revision names by template ids failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	if len(tmplRevisions) == 0 {
+		return &pbds.ListTemplateRevisionNamesByTemplateIDsResp{}, nil
+	}
+
+	// get the map of template id => the latest template revision id
+	latestRevisionMap := make(map[uint32]uint32)
+	// get the map of template id => template revision detail
+	tmplRevisionMap := make(map[uint32]*pbtr.TemplateRevisionNamesDetail)
+	for _, t := range tmplRevisions {
+		if _, ok := latestRevisionMap[t.Attachment.TemplateID]; !ok {
+			latestRevisionMap[t.Attachment.TemplateID] = t.ID
+		} else {
+			if t.ID > latestRevisionMap[t.Attachment.TemplateID] {
+				latestRevisionMap[t.Attachment.TemplateID] = t.ID
+			}
+		}
+
+		if _, ok := tmplRevisionMap[t.Attachment.TemplateID]; !ok {
+			tmplRevisionMap[t.Attachment.TemplateID] = &pbtr.TemplateRevisionNamesDetail{}
+		}
+		tmplRevisionMap[t.Attachment.TemplateID].TemplateRevisions = append(
+			tmplRevisionMap[t.Attachment.TemplateID].TemplateRevisions,
+			&pbtr.TemplateRevisionNamesDetailRevisionNames{
+				TemplateRevisionId:   t.ID,
+				TemplateRevisionName: t.Spec.RevisionName,
+			})
+	}
+	tmplIDs := make([]uint32, 0, len(tmplRevisionMap))
+	for tmplID := range tmplRevisionMap {
+		tmplIDs = append(tmplIDs, tmplID)
+	}
+
+	tmpls, err := s.dao.Template().ListByIDs(kt, tmplIDs)
+	if err != nil {
+		logs.Errorf("list template sets of biz failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	details := make([]*pbtr.TemplateRevisionNamesDetail, 0)
+	for _, t := range tmpls {
+		details = append(details, &pbtr.TemplateRevisionNamesDetail{
+			TemplateId:               t.ID,
+			TemplateName:             t.Spec.Name,
+			LatestTemplateRevisionId: latestRevisionMap[t.ID],
+			TemplateRevisions:        tmplRevisionMap[t.ID].TemplateRevisions,
+		})
+	}
+
+	resp := &pbds.ListTemplateRevisionNamesByTemplateIDsResp{
+		Details: details,
 	}
 	return resp, nil
 }

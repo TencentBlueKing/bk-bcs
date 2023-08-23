@@ -86,12 +86,14 @@ const (
 	Data_ListTemplateRevisions_FullMethodName                      = "/pbds.Data/ListTemplateRevisions"
 	Data_DeleteTemplateRevision_FullMethodName                     = "/pbds.Data/DeleteTemplateRevision"
 	Data_ListTemplateRevisionsByIDs_FullMethodName                 = "/pbds.Data/ListTemplateRevisionsByIDs"
+	Data_ListTemplateRevisionNamesByTemplateIDs_FullMethodName     = "/pbds.Data/ListTemplateRevisionNamesByTemplateIDs"
 	Data_CreateTemplateSet_FullMethodName                          = "/pbds.Data/CreateTemplateSet"
 	Data_ListTemplateSets_FullMethodName                           = "/pbds.Data/ListTemplateSets"
 	Data_UpdateTemplateSet_FullMethodName                          = "/pbds.Data/UpdateTemplateSet"
 	Data_DeleteTemplateSet_FullMethodName                          = "/pbds.Data/DeleteTemplateSet"
 	Data_ListAppTemplateSets_FullMethodName                        = "/pbds.Data/ListAppTemplateSets"
 	Data_ListTemplateSetsByIDs_FullMethodName                      = "/pbds.Data/ListTemplateSetsByIDs"
+	Data_ListTemplateSetsOfBiz_FullMethodName                      = "/pbds.Data/ListTemplateSetsOfBiz"
 	Data_CreateAppTemplateBinding_FullMethodName                   = "/pbds.Data/CreateAppTemplateBinding"
 	Data_ListAppTemplateBindings_FullMethodName                    = "/pbds.Data/ListAppTemplateBindings"
 	Data_UpdateAppTemplateBinding_FullMethodName                   = "/pbds.Data/UpdateAppTemplateBinding"
@@ -205,6 +207,7 @@ type DataClient interface {
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	DeleteTemplateRevision(ctx context.Context, in *DeleteTemplateRevisionReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
+	ListTemplateRevisionNamesByTemplateIDs(ctx context.Context, in *ListTemplateRevisionNamesByTemplateIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionNamesByTemplateIDsResp, error)
 	// template set related interface.
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListTemplateSets(ctx context.Context, in *ListTemplateSetsReq, opts ...grpc.CallOption) (*ListTemplateSetsResp, error)
@@ -212,6 +215,7 @@ type DataClient interface {
 	DeleteTemplateSet(ctx context.Context, in *DeleteTemplateSetReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListAppTemplateSets(ctx context.Context, in *ListAppTemplateSetsReq, opts ...grpc.CallOption) (*ListAppTemplateSetsResp, error)
 	ListTemplateSetsByIDs(ctx context.Context, in *ListTemplateSetsByIDsReq, opts ...grpc.CallOption) (*ListTemplateSetsByIDsResp, error)
+	ListTemplateSetsOfBiz(ctx context.Context, in *ListTemplateSetsOfBizReq, opts ...grpc.CallOption) (*ListTemplateSetsOfBizResp, error)
 	// app template binding related interface.
 	CreateAppTemplateBinding(ctx context.Context, in *CreateAppTemplateBindingReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListAppTemplateBindings(ctx context.Context, in *ListAppTemplateBindingsReq, opts ...grpc.CallOption) (*ListAppTemplateBindingsResp, error)
@@ -799,6 +803,15 @@ func (c *dataClient) ListTemplateRevisionsByIDs(ctx context.Context, in *ListTem
 	return out, nil
 }
 
+func (c *dataClient) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context, in *ListTemplateRevisionNamesByTemplateIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionNamesByTemplateIDsResp, error) {
+	out := new(ListTemplateRevisionNamesByTemplateIDsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateRevisionNamesByTemplateIDs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateTemplateSet_FullMethodName, in, out, opts...)
@@ -847,6 +860,15 @@ func (c *dataClient) ListAppTemplateSets(ctx context.Context, in *ListAppTemplat
 func (c *dataClient) ListTemplateSetsByIDs(ctx context.Context, in *ListTemplateSetsByIDsReq, opts ...grpc.CallOption) (*ListTemplateSetsByIDsResp, error) {
 	out := new(ListTemplateSetsByIDsResp)
 	err := c.cc.Invoke(ctx, Data_ListTemplateSetsByIDs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateSetsOfBiz(ctx context.Context, in *ListTemplateSetsOfBizReq, opts ...grpc.CallOption) (*ListTemplateSetsOfBizResp, error) {
+	out := new(ListTemplateSetsOfBizResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateSetsOfBiz_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1252,6 +1274,7 @@ type DataServer interface {
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	DeleteTemplateRevision(context.Context, *DeleteTemplateRevisionReq) (*base.EmptyResp, error)
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
+	ListTemplateRevisionNamesByTemplateIDs(context.Context, *ListTemplateRevisionNamesByTemplateIDsReq) (*ListTemplateRevisionNamesByTemplateIDsResp, error)
 	// template set related interface.
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateResp, error)
 	ListTemplateSets(context.Context, *ListTemplateSetsReq) (*ListTemplateSetsResp, error)
@@ -1259,6 +1282,7 @@ type DataServer interface {
 	DeleteTemplateSet(context.Context, *DeleteTemplateSetReq) (*base.EmptyResp, error)
 	ListAppTemplateSets(context.Context, *ListAppTemplateSetsReq) (*ListAppTemplateSetsResp, error)
 	ListTemplateSetsByIDs(context.Context, *ListTemplateSetsByIDsReq) (*ListTemplateSetsByIDsResp, error)
+	ListTemplateSetsOfBiz(context.Context, *ListTemplateSetsOfBizReq) (*ListTemplateSetsOfBizResp, error)
 	// app template binding related interface.
 	CreateAppTemplateBinding(context.Context, *CreateAppTemplateBindingReq) (*CreateResp, error)
 	ListAppTemplateBindings(context.Context, *ListAppTemplateBindingsReq) (*ListAppTemplateBindingsResp, error)
@@ -1488,6 +1512,9 @@ func (UnimplementedDataServer) DeleteTemplateRevision(context.Context, *DeleteTe
 func (UnimplementedDataServer) ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisionsByIDs not implemented")
 }
+func (UnimplementedDataServer) ListTemplateRevisionNamesByTemplateIDs(context.Context, *ListTemplateRevisionNamesByTemplateIDsReq) (*ListTemplateRevisionNamesByTemplateIDsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisionNamesByTemplateIDs not implemented")
+}
 func (UnimplementedDataServer) CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateSet not implemented")
 }
@@ -1505,6 +1532,9 @@ func (UnimplementedDataServer) ListAppTemplateSets(context.Context, *ListAppTemp
 }
 func (UnimplementedDataServer) ListTemplateSetsByIDs(context.Context, *ListTemplateSetsByIDsReq) (*ListTemplateSetsByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetsByIDs not implemented")
+}
+func (UnimplementedDataServer) ListTemplateSetsOfBiz(context.Context, *ListTemplateSetsOfBizReq) (*ListTemplateSetsOfBizResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetsOfBiz not implemented")
 }
 func (UnimplementedDataServer) CreateAppTemplateBinding(context.Context, *CreateAppTemplateBindingReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAppTemplateBinding not implemented")
@@ -2688,6 +2718,24 @@ func _Data_ListTemplateRevisionsByIDs_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListTemplateRevisionNamesByTemplateIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateRevisionNamesByTemplateIDsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateRevisionNamesByTemplateIDs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateRevisionNamesByTemplateIDs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateRevisionNamesByTemplateIDs(ctx, req.(*ListTemplateRevisionNamesByTemplateIDsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_CreateTemplateSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateTemplateSetReq)
 	if err := dec(in); err != nil {
@@ -2792,6 +2840,24 @@ func _Data_ListTemplateSetsByIDs_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListTemplateSetsByIDs(ctx, req.(*ListTemplateSetsByIDsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateSetsOfBiz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateSetsOfBizReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateSetsOfBiz(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateSetsOfBiz_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateSetsOfBiz(ctx, req.(*ListTemplateSetsOfBizReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3688,6 +3754,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListTemplateRevisionsByIDs_Handler,
 		},
 		{
+			MethodName: "ListTemplateRevisionNamesByTemplateIDs",
+			Handler:    _Data_ListTemplateRevisionNamesByTemplateIDs_Handler,
+		},
+		{
 			MethodName: "CreateTemplateSet",
 			Handler:    _Data_CreateTemplateSet_Handler,
 		},
@@ -3710,6 +3780,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateSetsByIDs",
 			Handler:    _Data_ListTemplateSetsByIDs_Handler,
+		},
+		{
+			MethodName: "ListTemplateSetsOfBiz",
+			Handler:    _Data_ListTemplateSetsOfBiz_Handler,
 		},
 		{
 			MethodName: "CreateAppTemplateBinding",

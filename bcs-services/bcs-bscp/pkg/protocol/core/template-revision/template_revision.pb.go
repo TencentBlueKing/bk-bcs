@@ -263,6 +263,133 @@ func (x *TemplateRevisionAttachment) GetTemplateId() uint32 {
 	return 0
 }
 
+// TemplateRevisionNamesDetail is template revision names Detail.
+type TemplateRevisionNamesDetail struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TemplateId               uint32                                      `protobuf:"varint,1,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty"`
+	TemplateName             string                                      `protobuf:"bytes,2,opt,name=template_name,json=templateName,proto3" json:"template_name,omitempty"`
+	LatestTemplateRevisionId uint32                                      `protobuf:"varint,3,opt,name=latest_template_revision_id,json=latestTemplateRevisionId,proto3" json:"latest_template_revision_id,omitempty"`
+	TemplateRevisions        []*TemplateRevisionNamesDetailRevisionNames `protobuf:"bytes,4,rep,name=template_revisions,json=templateRevisions,proto3" json:"template_revisions,omitempty"`
+}
+
+func (x *TemplateRevisionNamesDetail) Reset() {
+	*x = TemplateRevisionNamesDetail{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_template_revision_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TemplateRevisionNamesDetail) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TemplateRevisionNamesDetail) ProtoMessage() {}
+
+func (x *TemplateRevisionNamesDetail) ProtoReflect() protoreflect.Message {
+	mi := &file_template_revision_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TemplateRevisionNamesDetail.ProtoReflect.Descriptor instead.
+func (*TemplateRevisionNamesDetail) Descriptor() ([]byte, []int) {
+	return file_template_revision_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *TemplateRevisionNamesDetail) GetTemplateId() uint32 {
+	if x != nil {
+		return x.TemplateId
+	}
+	return 0
+}
+
+func (x *TemplateRevisionNamesDetail) GetTemplateName() string {
+	if x != nil {
+		return x.TemplateName
+	}
+	return ""
+}
+
+func (x *TemplateRevisionNamesDetail) GetLatestTemplateRevisionId() uint32 {
+	if x != nil {
+		return x.LatestTemplateRevisionId
+	}
+	return 0
+}
+
+func (x *TemplateRevisionNamesDetail) GetTemplateRevisions() []*TemplateRevisionNamesDetailRevisionNames {
+	if x != nil {
+		return x.TemplateRevisions
+	}
+	return nil
+}
+
+type TemplateRevisionNamesDetailRevisionNames struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TemplateRevisionId   uint32 `protobuf:"varint,1,opt,name=template_revision_id,json=templateRevisionId,proto3" json:"template_revision_id,omitempty"`
+	TemplateRevisionName string `protobuf:"bytes,2,opt,name=template_revision_name,json=templateRevisionName,proto3" json:"template_revision_name,omitempty"`
+}
+
+func (x *TemplateRevisionNamesDetailRevisionNames) Reset() {
+	*x = TemplateRevisionNamesDetailRevisionNames{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_template_revision_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TemplateRevisionNamesDetailRevisionNames) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TemplateRevisionNamesDetailRevisionNames) ProtoMessage() {}
+
+func (x *TemplateRevisionNamesDetailRevisionNames) ProtoReflect() protoreflect.Message {
+	mi := &file_template_revision_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TemplateRevisionNamesDetailRevisionNames.ProtoReflect.Descriptor instead.
+func (*TemplateRevisionNamesDetailRevisionNames) Descriptor() ([]byte, []int) {
+	return file_template_revision_proto_rawDescGZIP(), []int{3, 0}
+}
+
+func (x *TemplateRevisionNamesDetailRevisionNames) GetTemplateRevisionId() uint32 {
+	if x != nil {
+		return x.TemplateRevisionId
+	}
+	return 0
+}
+
+func (x *TemplateRevisionNamesDetailRevisionNames) GetTemplateRevisionName() string {
+	if x != nil {
+		return x.TemplateRevisionName
+	}
+	return ""
+}
+
 var File_template_revision_proto protoreflect.FileDescriptor
 
 var file_template_revision_proto_rawDesc = []byte{
@@ -317,7 +444,31 @@ var file_template_revision_proto_rawDesc = []byte{
 	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
 	0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x49, 0x64, 0x12, 0x1f, 0x0a, 0x0b, 0x74, 0x65, 0x6d, 0x70,
 	0x6c, 0x61, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0a, 0x74,
-	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x49, 0x64, 0x42, 0x32, 0x5a, 0x30, 0x62, 0x73, 0x63,
+	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x49, 0x64, 0x22, 0xfd, 0x02, 0x0a, 0x1b, 0x54, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x4e, 0x61,
+	0x6d, 0x65, 0x73, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x12, 0x1f, 0x0a, 0x0b, 0x74, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0a,
+	0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x49, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x74, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0c, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x12,
+	0x3d, 0x0a, 0x1b, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x5f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x5f, 0x72, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0d, 0x52, 0x18, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x12, 0x5f,
+	0x0a, 0x12, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x76, 0x69, 0x73,
+	0x69, 0x6f, 0x6e, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x30, 0x2e, 0x70, 0x62, 0x74,
+	0x72, 0x2e, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69,
+	0x6f, 0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x2e, 0x72, 0x65,
+	0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x52, 0x11, 0x74, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x1a,
+	0x78, 0x0a, 0x0e, 0x72, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x6e, 0x61, 0x6d, 0x65,
+	0x73, 0x12, 0x30, 0x0a, 0x14, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65,
+	0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x12, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f,
+	0x6e, 0x49, 0x64, 0x12, 0x34, 0x0a, 0x16, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f,
+	0x72, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x14, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x76,
+	0x69, 0x73, 0x69, 0x6f, 0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x42, 0x32, 0x5a, 0x30, 0x62, 0x73, 0x63,
 	0x70, 0x2e, 0x69, 0x6f, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
 	0x6c, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x2d,
 	0x72, 0x65, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x3b, 0x70, 0x62, 0x74, 0x72, 0x62, 0x06, 0x70,
@@ -336,26 +487,29 @@ func file_template_revision_proto_rawDescGZIP() []byte {
 	return file_template_revision_proto_rawDescData
 }
 
-var file_template_revision_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_template_revision_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_template_revision_proto_goTypes = []interface{}{
-	(*TemplateRevision)(nil),           // 0: pbtr.TemplateRevision
-	(*TemplateRevisionSpec)(nil),       // 1: pbtr.TemplateRevisionSpec
-	(*TemplateRevisionAttachment)(nil), // 2: pbtr.TemplateRevisionAttachment
-	(*base.CreatedRevision)(nil),       // 3: pbbase.CreatedRevision
-	(*config_item.FilePermission)(nil), // 4: pbci.FilePermission
-	(*content.ContentSpec)(nil),        // 5: pbcontent.ContentSpec
+	(*TemplateRevision)(nil),                         // 0: pbtr.TemplateRevision
+	(*TemplateRevisionSpec)(nil),                     // 1: pbtr.TemplateRevisionSpec
+	(*TemplateRevisionAttachment)(nil),               // 2: pbtr.TemplateRevisionAttachment
+	(*TemplateRevisionNamesDetail)(nil),              // 3: pbtr.TemplateRevisionNamesDetail
+	(*TemplateRevisionNamesDetailRevisionNames)(nil), // 4: pbtr.TemplateRevisionNamesDetail.revision_names
+	(*base.CreatedRevision)(nil),                     // 5: pbbase.CreatedRevision
+	(*config_item.FilePermission)(nil),               // 6: pbci.FilePermission
+	(*content.ContentSpec)(nil),                      // 7: pbcontent.ContentSpec
 }
 var file_template_revision_proto_depIdxs = []int32{
 	1, // 0: pbtr.TemplateRevision.spec:type_name -> pbtr.TemplateRevisionSpec
 	2, // 1: pbtr.TemplateRevision.attachment:type_name -> pbtr.TemplateRevisionAttachment
-	3, // 2: pbtr.TemplateRevision.revision:type_name -> pbbase.CreatedRevision
-	4, // 3: pbtr.TemplateRevisionSpec.permission:type_name -> pbci.FilePermission
-	5, // 4: pbtr.TemplateRevisionSpec.content_spec:type_name -> pbcontent.ContentSpec
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	5, // 2: pbtr.TemplateRevision.revision:type_name -> pbbase.CreatedRevision
+	6, // 3: pbtr.TemplateRevisionSpec.permission:type_name -> pbci.FilePermission
+	7, // 4: pbtr.TemplateRevisionSpec.content_spec:type_name -> pbcontent.ContentSpec
+	4, // 5: pbtr.TemplateRevisionNamesDetail.template_revisions:type_name -> pbtr.TemplateRevisionNamesDetail.revision_names
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_template_revision_proto_init() }
@@ -400,6 +554,30 @@ func file_template_revision_proto_init() {
 				return nil
 			}
 		}
+		file_template_revision_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TemplateRevisionNamesDetail); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_template_revision_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TemplateRevisionNamesDetailRevisionNames); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -407,7 +585,7 @@ func file_template_revision_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_template_revision_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

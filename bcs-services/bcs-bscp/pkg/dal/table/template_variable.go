@@ -178,8 +178,6 @@ const (
 	StringVar VariableType = "string"
 	// NumberVar is number type variable
 	NumberVar VariableType = "number"
-	// 	BoolVar is bool type variable
-	BoolVar VariableType = "bool"
 )
 
 // VariableType is template variable type
@@ -190,7 +188,6 @@ func (t VariableType) Validate() error {
 	switch t {
 	case StringVar:
 	case NumberVar:
-	case BoolVar:
 	default:
 		return fmt.Errorf("unsupported variable type: %s", t)
 	}

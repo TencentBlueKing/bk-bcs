@@ -110,6 +110,7 @@ service Data {
     rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {}
     rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (pbbase.EmptyResp) {}
     rpc ListTemplateRevisionsByIDs(ListTemplateRevisionsByIDsReq) returns (ListTemplateRevisionsByIDsResp) {}
+    rpc ListTemplateRevisionNamesByTemplateIDs(ListTemplateRevisionNamesByTemplateIDsReq) returns (ListTemplateRevisionNamesByTemplateIDsResp) {}
 
     // template set related interface.
     rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateResp) {}
@@ -118,6 +119,7 @@ service Data {
     rpc DeleteTemplateSet(DeleteTemplateSetReq) returns (pbbase.EmptyResp) {}
     rpc ListAppTemplateSets(ListAppTemplateSetsReq) returns (ListAppTemplateSetsResp) {}
     rpc ListTemplateSetsByIDs(ListTemplateSetsByIDsReq) returns (ListTemplateSetsByIDsResp) {}
+    rpc ListTemplateSetsOfBiz(ListTemplateSetsOfBizReq) returns (ListTemplateSetsOfBizResp) {}
 
     // app template binding related interface.
     rpc CreateAppTemplateBinding(CreateAppTemplateBindingReq) returns (CreateResp) {}
@@ -725,6 +727,15 @@ message  ListTemplateRevisionsByIDsResp {
     repeated pbtr.TemplateRevision details = 1;
 }
 
+message ListTemplateRevisionNamesByTemplateIDsReq {
+    uint32          biz_id       = 1;
+    repeated uint32 template_ids = 2;
+}
+
+message ListTemplateRevisionNamesByTemplateIDsResp {
+    repeated pbtr.TemplateRevisionNamesDetail details = 1;
+}
+
 message CreateTemplateSetReq {
     pbtset.TemplateSetAttachment attachment = 1;
     pbtset.TemplateSetSpec       spec       = 2;
@@ -773,6 +784,14 @@ message  ListTemplateSetsByIDsReq {
 
 message  ListTemplateSetsByIDsResp {
     repeated pbtset.TemplateSet details = 1;
+}
+
+message  ListTemplateSetsOfBizReq {
+    uint32 biz_id = 1;
+}
+
+message  ListTemplateSetsOfBizResp {
+    repeated pbtset.TemplateSetOfBizDetail details = 1;
 }
 
 message CreateAppTemplateBindingReq {

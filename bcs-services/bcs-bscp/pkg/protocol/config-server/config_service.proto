@@ -315,6 +315,13 @@ service Config {
             body : "*"
         };
     }
+    rpc ListTemplateRevisionNamesByTemplateIDs(ListTemplateRevisionNamesByTemplateIDsReq) returns
+        (ListTemplateRevisionNamesByTemplateIDsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids"
+            body : "*"
+        };
+    }
 
     rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateTemplateSetResp) {
         option (google.api.http) = {
@@ -347,6 +354,11 @@ service Config {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_sets/list_by_ids"
             body : "*"
+        };
+    }
+    rpc ListTemplateSetsOfBiz(ListTemplateSetsOfBizReq) returns (ListTemplateSetsOfBizResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_sets/list_all_of_biz"
         };
     }
 
@@ -1212,6 +1224,16 @@ message ListTemplateRevisionsByIDsResp {
     repeated pbtr.TemplateRevision details = 1;
 }
 
+message ListTemplateRevisionNamesByTemplateIDsReq {
+    uint32          biz_id       = 1;
+    repeated uint32 template_ids = 2;
+}
+
+message ListTemplateRevisionNamesByTemplateIDsResp {
+    repeated pbtr.TemplateRevisionNamesDetail details = 1;
+}
+
+
 message CreateTemplateSetReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
@@ -1281,6 +1303,14 @@ message ListTemplateSetsByIDsReq {
 
 message ListTemplateSetsByIDsResp {
     repeated pbtset.TemplateSet details = 1;
+}
+
+message ListTemplateSetsOfBizReq {
+    uint32 biz_id = 1;
+}
+
+message ListTemplateSetsOfBizResp {
+    repeated pbtset.TemplateSetOfBizDetail details = 1;
 }
 
 message CreateAppTemplateBindingReq {

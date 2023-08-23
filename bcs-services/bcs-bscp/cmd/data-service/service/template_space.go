@@ -155,6 +155,10 @@ func (s *Service) ListTemplateSpacesByIDs(ctx context.Context, req *pbds.ListTem
 	ListTemplateSpacesByIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	if err := s.dao.Validator().ValidateTemplateSpacesExist(kt, req.Ids); err != nil {
+		return nil, err
+	}
+
 	details, err := s.dao.TemplateSpace().ListByIDs(kt, req.Ids)
 	if err != nil {
 		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
