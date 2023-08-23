@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" href="{{ .SITE_STATIC_URL }}/web/static/images/favicon.ico" />
+    <title>BCS Asciinema Player</title>
+    <link rel="stylesheet" type="text/css" href="{{ .SITE_STATIC_URL }}/web/static/assets/asciinema-player.css">
+</head>
+<body>
+    <h1>Asciinema Player</h1>
+    {{range $fn,$fc:=.file}}
+    <ul>
+        <li><a href="javascript:void(0)" onclick="playFile('{{$fc}}')">{{$fn}}</a></li>
+    </ul>
+    {{end}}
+    <!-- 用于显示播放器的容器 -->
+    <div id="player"></div>
+
+    <script src="{{ .SITE_STATIC_URL }}/web/static/assets/asciinema-player.min.js"></script>
+    <script type="text/javascript" defer>
+        const player = document.getElementById('player')
+        function playFile(data) {
+            player.innerHTML = '';
+            const d = 'data:text/plain;base64,' + data
+            AsciinemaPlayer.create(d, player);
+        }
+    </script>
+
+</body>
+</html>
