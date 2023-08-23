@@ -14,10 +14,16 @@
 package web
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+	"k8s.io/klog/v2"
 
 	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -25,8 +31,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-	"github.com/gin-gonic/gin"
 )
 
 type service struct {
@@ -51,11 +57,54 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web.GET("/projects/:projectId/mgr/", metrics.RequestCollect("MgrPage"), s.MgrPageHandler)
 	web.GET("/portal/container/", metrics.RequestCollect("ContainerGatePage"), s.ContainerGatePageHandler)
 	web.GET("/portal/cluster/", metrics.RequestCollect("ClusterGatePage"), s.ClusterGatePageHandler)
+	web.GET("/replay/", route.APIAuthRequired(), s.ReplayPageHandler)
 
 	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
 	web.GET("/-/ready", s.ReadyHandler)
 	web.GET("/metrics", metrics.PromMetricHandler())
+}
+
+func (s *service) ReplayPageHandler(c *gin.Context) {
+	authCtx := route.MustGetAuthContext(c)
+	user := authCtx.Username
+	managers := config.G.Base.Managers
+	for _, manager := range managers {
+		if manager == user {
+			dirname := config.G.TerminalRecord.FilePath
+			entries, err := os.ReadDir(dirname)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, types.APIResponse{
+					Code:      types.ApiErrorCode,
+					Message:   err.Error(),
+					RequestID: authCtx.RequestId,
+				})
+				klog.Errorf("read dir err", err)
+				return
+			}
+			file := make(map[string]any)
+			for _, entry := range entries {
+				if entry.Type().IsRegular() {
+					f := strings.TrimSuffix(dirname, "/")
+					f = f + "/" + entry.Name()
+					content, _ := os.ReadFile(f)
+					c := base64.StdEncoding.EncodeToString(content)
+					file[entry.Name()] = c
+				}
+			}
+			data := gin.H{
+				"file":            file,
+				"SITE_STATIC_URL": s.opts.RoutePrefix,
+			}
+			c.HTML(http.StatusOK, "replay.html", data)
+			return
+		}
+	}
+	c.JSON(http.StatusUnauthorized, types.APIResponse{
+		Code:      types.ApiErrorCode,
+		Message:   "Only Manager Can Review",
+		RequestID: authCtx.RequestId,
+	})
 }
 
 // IndexPageHandler index 页面
