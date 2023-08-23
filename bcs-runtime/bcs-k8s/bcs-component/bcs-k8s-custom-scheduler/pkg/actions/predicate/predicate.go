@@ -15,12 +15,14 @@
 package predicate
 
 import (
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
 	v1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v1"
 	v2 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v2"
+	v3 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v3"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
-	"time"
 
 	"github.com/emicklei/go-restful"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
@@ -74,6 +76,8 @@ func handleIpSchedulerPredicate(req *restful.Request, resp *restful.Response) {
 		extenderFilterResult, err = v1.HandleIpSchedulerPredicate(extenderArgs)
 	} else if ipSchedulerVersion == actions.IpSchedulerV2 {
 		extenderFilterResult, err = v2.HandleIpSchedulerPredicate(extenderArgs)
+	} else if ipSchedulerVersion == actions.IpSchedulerV3 {
+		extenderFilterResult, err = v3.HandleIpSchedulerPredicate(extenderArgs)
 	} else {
 		extenderFilterResult = &schedulerapi.ExtenderFilterResult{
 			Nodes:       nil,
