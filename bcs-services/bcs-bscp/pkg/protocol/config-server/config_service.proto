@@ -315,6 +315,13 @@ service Config {
             body : "*"
         };
     }
+    rpc ListTemplateRevisionNamesByTemplateIDs(ListTemplateRevisionNamesByTemplateIDsReq) returns
+        (ListTemplateRevisionNamesByTemplateIDsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids"
+            body : "*"
+        };
+    }
 
     rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateTemplateSetResp) {
         option (google.api.http) = {
@@ -1217,6 +1224,16 @@ message ListTemplateRevisionsByIDsResp {
     repeated pbtr.TemplateRevision details = 1;
 }
 
+message ListTemplateRevisionNamesByTemplateIDsReq {
+    uint32          biz_id       = 1;
+    repeated uint32 template_ids = 2;
+}
+
+message ListTemplateRevisionNamesByTemplateIDsResp {
+    repeated pbtr.TemplateRevisionNamesDetail details = 1;
+}
+
+
 message CreateTemplateSetReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
@@ -1289,7 +1306,7 @@ message ListTemplateSetsByIDsResp {
 }
 
 message ListTemplateSetsOfBizReq {
-    uint32          biz_id = 1;
+    uint32 biz_id = 1;
 }
 
 message ListTemplateSetsOfBizResp {

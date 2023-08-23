@@ -211,9 +211,8 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplat
 }
 
 // ListAppTemplateSets list app template set.
-func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbds.ListAppTemplateSetsReq) (*pbds.
-	ListAppTemplateSetsResp,
-	error) {
+func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbds.ListAppTemplateSetsReq) (
+	*pbds.ListAppTemplateSetsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	details, err := s.dao.TemplateSet().ListAppTmplSets(kt, req.BizId, req.AppId)
@@ -229,10 +228,13 @@ func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbds.ListAppTemp
 }
 
 // ListTemplateSetsByIDs list template set by ids.
-func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbds.ListTemplateSetsByIDsReq) (*pbds.
-	ListTemplateSetsByIDsResp,
-	error) {
+func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbds.ListTemplateSetsByIDsReq) (
+	*pbds.ListTemplateSetsByIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.Ids); err != nil {
+		return nil, err
+	}
 
 	details, err := s.dao.TemplateSet().ListByIDs(kt, req.Ids)
 	if err != nil {

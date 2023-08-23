@@ -355,6 +355,10 @@ func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbds.ListTemplate
 	*pbds.ListTemplatesByIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	if err := s.dao.Validator().ValidateTemplatesExist(kt, req.Ids); err != nil {
+		return nil, err
+	}
+
 	details, err := s.dao.Template().ListByIDs(kt, req.Ids)
 	if err != nil {
 		logs.Errorf("list template failed, err: %v, rid: %s", err, kt.Rid)

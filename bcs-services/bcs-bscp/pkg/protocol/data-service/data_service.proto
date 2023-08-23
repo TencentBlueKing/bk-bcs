@@ -110,6 +110,7 @@ service Data {
     rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {}
     rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (pbbase.EmptyResp) {}
     rpc ListTemplateRevisionsByIDs(ListTemplateRevisionsByIDsReq) returns (ListTemplateRevisionsByIDsResp) {}
+    rpc ListTemplateRevisionNamesByTemplateIDs(ListTemplateRevisionNamesByTemplateIDsReq) returns (ListTemplateRevisionNamesByTemplateIDsResp) {}
 
     // template set related interface.
     rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateResp) {}
@@ -724,6 +725,15 @@ message  ListTemplateRevisionsByIDsReq {
 
 message  ListTemplateRevisionsByIDsResp {
     repeated pbtr.TemplateRevision details = 1;
+}
+
+message ListTemplateRevisionNamesByTemplateIDsReq {
+    uint32          biz_id       = 1;
+    repeated uint32 template_ids = 2;
+}
+
+message ListTemplateRevisionNamesByTemplateIDsResp {
+    repeated pbtr.TemplateRevisionNamesDetail details = 1;
 }
 
 message CreateTemplateSetReq {

@@ -25,6 +25,8 @@ import (
 
 // Validator supplies all the validate operations.
 type Validator interface {
+	// ValidateTemplateSpacesExist validate if templates spaces exists
+	ValidateTemplateSpacesExist(kit *kit.Kit, templateSpaceIDs []uint32) error
 	// ValidateTemplatesExist validate if templates exists
 	ValidateTemplatesExist(kit *kit.Kit, templateIDs []uint32) error
 	// ValidateTemplateRevisionsExist validate if template releases exists
@@ -49,6 +51,23 @@ type validatorDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// ValidateTemplateSpacesExist validate if templates spaces exists
+func (dao *validatorDao) ValidateTemplateSpacesExist(kit *kit.Kit, templateSpaceIDs []uint32) error {
+	m := dao.genQ.TemplateSpace
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
+	var existIDs []uint32
+	if err := q.Where(m.ID.In(templateSpaceIDs...)).Pluck(m.ID, &existIDs); err != nil {
+		return fmt.Errorf("validate templates exist failed, err: %v", err)
+	}
+
+	diffIDs := tools.SliceDiff(templateSpaceIDs, existIDs)
+	if len(diffIDs) > 0 {
+		return fmt.Errorf("template space id in %v is not exist", diffIDs)
+	}
+
+	return nil
 }
 
 // ValidateTemplatesExist validate if templates exists

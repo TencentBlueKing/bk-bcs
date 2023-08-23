@@ -172,3 +172,44 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbcs.List
 	}
 	return resp, nil
 }
+
+// ListTemplateRevisionNamesByTemplateIDs list template Revisions by ids
+func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
+	req *pbcs.ListTemplateRevisionNamesByTemplateIDsReq) (
+	*pbcs.
+		ListTemplateRevisionNamesByTemplateIDsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListTemplateRevisionNamesByTemplateIDsResp)
+
+	// validate input param
+	ids := tools.SliceRepeatedElements(req.TemplateIds)
+	if len(ids) > 0 {
+		return nil, fmt.Errorf("repeated ids: %v, id must be unique", ids)
+	}
+	idsLen := len(req.TemplateIds)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateRevision, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListTemplateRevisionNamesByTemplateIDsReq{
+		BizId:       req.BizId,
+		TemplateIds: req.TemplateIds,
+	}
+
+	rp, err := s.client.DS.ListTemplateRevisionNamesByTemplateIDs(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list template Revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListTemplateRevisionNamesByTemplateIDsResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}
