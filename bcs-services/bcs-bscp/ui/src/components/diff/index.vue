@@ -3,6 +3,7 @@
     import { useRoute } from 'vue-router'
     import { IConfigDiffDetail } from '../../../types/config';
     import { getConfigContent } from '../../api/config';
+    import { downloadTemplateContent } from '../../api/template';
     import { byteUnitConverse } from '../../utils';
     import File from './file.vue'
     import Text from './text.vue'
@@ -12,7 +13,8 @@
 
     const props = defineProps<{
         panelName?: String,
-        appId: number;
+        appId?: number;
+        templateSpaceId?: number;
         config: IConfigDiffDetail,
     }>()
 
@@ -20,9 +22,9 @@
     const base = ref()
     const contentLoading = ref(true)
 
-    watch(() => props.config, (val) => {
+    watch(() => props.config, () => {
         fetchConfigContent()
-    })
+    }, { deep: true })
 
     onMounted(() => {
         fetchConfigContent()
@@ -54,7 +56,14 @@
             const { signature, update_at } = config
             return { id, name, signature, update_at, size: byteUnitConverse(Number(config.byte_size)) }
         }
-        const configContent = await getConfigContent(bkBizId.value, props.appId, config.signature)
+        if (!config.signature) return
+        let configContent = ''
+        if (props.appId) {
+            configContent = await getConfigContent(bkBizId.value, props.appId, config.signature)
+        } else if (props.templateSpaceId) {
+            configContent = await downloadTemplateContent(bkBizId.value, props.templateSpaceId, config.signature)
+        }
+
         return String(configContent)
     }
 

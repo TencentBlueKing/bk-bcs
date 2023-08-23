@@ -4,7 +4,7 @@
   import { Message } from 'bkui-vue';
   import { useGlobalStore } from '../../../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../../../store/template'
-  import { updateConfigContent } from '../../../../../../../../api/config'
+  import { updateTemplateContent } from '../../../../../../../../api/template'
   import { createTemplate, addTemplateToPackage } from '../../../../../../../../api/template'
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../../types/config'
   import { getConfigEditParams } from '../../../../../../../../utils/config'
@@ -57,7 +57,7 @@
       } else {
         const stringContent = <string>content.value
         size = new Blob([stringContent]).size
-        await updateConfigContent(spaceId.value, currentTemplateSpace.value, stringContent, sign)
+        await updateTemplateContent(spaceId.value, currentTemplateSpace.value, stringContent, sign)
       }
       const params = { ...configForm.value, ...{ sign, byte_size: size } }
       const res = await createTemplate(spaceId.value, currentTemplateSpace.value, params)

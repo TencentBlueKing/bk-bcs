@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-  import { computed } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import { AngleDoubleRightLine } from 'bkui-vue/lib/icon'
-  import { IPagination, ICommonQuery } from '../../../../../../types/index';
-  import { ITemplateConfigItem, ITemplateVersionItem } from '../../../../../../types/template'
+  import { IPagination } from '../../../../../../types/index';
+  import { ITemplateVersionItem } from '../../../../../../types/template'
   import List from './list.vue'
   import VersionEditor from './version-editor.vue'
 
@@ -18,16 +18,8 @@
 
   const emits = defineEmits(['close', 'refresh', 'select'])
 
-  const versionName = computed(() => {
-    let name = ''
-    if (props.versionId) {
-      const version = props.list.find(item => item.id === props.versionId)
-      if (version) {
-        name = version.spec.revision_name
-      }
-    }
-    return name
-  })
+  const versionName = ref('')
+  const templateName = ref('')
 
   const versionEditingData = computed(() => {
     let data = {
@@ -51,6 +43,16 @@
     }
     return data
   })
+
+  watch(() => props.versionId, val => {
+    if (val) {
+      const version = props.list.find(item => item.id === val)
+      if (version) {
+        versionName.value = version.spec.revision_name
+        templateName.value = version.spec.name
+      }
+    }
+  }, { immediate: true })
 
   const handleCreated = (id: number) => {
     emits('refresh')
@@ -82,6 +84,7 @@
         :templateId="props.templateId"
         :version-id="props.versionId"
         :version-name="versionName"
+        :template-name="templateName"
         :data="versionEditingData"
         :type="props.type"
         @created="handleCreated"

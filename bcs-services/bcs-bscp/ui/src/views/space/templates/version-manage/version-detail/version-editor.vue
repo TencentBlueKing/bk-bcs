@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue';
+  import { computed, onMounted, ref, watch } from 'vue';
   import SHA256 from 'crypto-js/sha256'
   import WordArray from 'crypto-js/lib-typedarrays'
   import { Message } from 'bkui-vue';
@@ -8,7 +8,7 @@
   import { IFileConfigContentSummary } from '../../../../../../types/config'
   import { stringLengthInBytes } from '../../../../../utils/index'
   import { transFileToObject, fileDownload } from '../../../../../utils/file'
-  import { updateTemplateContent, downloadTemplateContent, createTemplateVersion } from '../../../../../api/template'
+  import { updateTemplateContent, downloadTemplateContent, createTemplateVersion, getCountsByTemplateVersionIds } from '../../../../../api/template'
   import CodeEditor from '../../../../../components/code-editor/index.vue'
   import PermissionInputPicker from '../../../../../components/permission-input-picker.vue';
   import CreateVersionConfirmDialog from './create-version-confirm-dialog.vue';
@@ -20,6 +20,7 @@
     templateId: number;
     versionId: number;
     versionName: string;
+    templateName: string;
     type: string;
     data: ITemplateVersionEditingData;
   }>()
@@ -40,7 +41,10 @@
   const stringContent = ref('')
   const fileContent = ref<IFileConfigContentSummary|File>()
   const isFileChanged = ref(false)
+  const contentLoading = ref(false)
   const uploadPending = ref(false)
+  const boundCountLoading = ref(false)
+  const boundCount = ref(0)
   const submitPending = ref(false)
   const isConfirmDialogShow = ref(false)
 
@@ -57,6 +61,20 @@
     formData.value = { ...val }
   }, { immediate: true })
 
+  watch(() => props.versionId, val => {
+    if (val) {
+      getContent()
+      getBoundCount()
+    }
+  })
+
+  onMounted(() => {
+    if (props.versionId) {
+      getContent()
+      getBoundCount()
+    }
+  })
+
   const handleFileUpload = (option: { file: File }) => {
     isFileChanged.value = true
     return new Promise(resolve => {
@@ -65,6 +83,31 @@
         resolve(res)
       })
     })
+  }
+
+  // 获取非文件类型配置项内容，文件类型手动点击时再下载
+  const getContent = async() => {
+    try {
+      contentLoading.value = true
+      const { file_type, sign: signature, byte_size } = formData.value
+      if (file_type === 'binary') {
+        fileContent.value = { name: props.templateName, signature, size: String(byte_size) }
+      } else {
+        const configContent = await downloadTemplateContent(props.spaceId, props.templateSpaceId, signature)
+        stringContent.value = String(configContent)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      contentLoading.value = false
+    }
+  }
+
+  const getBoundCount = async() => {
+    boundCountLoading.value = true
+    const res = await getCountsByTemplateVersionIds(props.spaceId, props.templateSpaceId, props.templateId, [props.versionId])
+    boundCount.value = res.details[0].bound_unnamed_app_count
+    boundCountLoading.value = false
   }
 
   // 上传配置内容
@@ -107,7 +150,7 @@
     const handleDownloadFile = async () => {
     const { signature, name } = <IFileConfigContentSummary>fileContent.value
     const res = await downloadTemplateContent(props.spaceId, props.templateSpaceId, signature)
-    fileDownload(res, `${name}.bin`)
+    fileDownload(String(res), `${name}.bin`)
   }
 
   const validate = async() => {
@@ -139,6 +182,7 @@
         await uploadContent()
       }
       const res = await createTemplateVersion(props.spaceId, props.templateSpaceId, props.templateId, formData.value)
+      isConfirmDialogShow.value = false
       emits('created', res.id)
       Message({
         theme: 'success',
@@ -159,7 +203,7 @@
         <div v-if="props.type === 'create'" class="create-version-title">新建版本</div>
         <div v-else class="version-view-title">
           {{ props.versionName }}
-          <span class="cited-info">被引用：{{ 0 }}</span>
+          <span class="cited-info">被引用：{{ boundCount }}</span>
         </div>
       </div>
     </div>
@@ -180,7 +224,7 @@
           </bk-form-item>
         </bk-form>
       </div>
-      <div class="config-content">
+      <div v-bkloading="{ loading: contentLoading }" class="config-content">
         <div v-if="props.data.file_type === 'binary'" class="file-uploader-wrapper">
           <bk-upload
             class="config-uploader"

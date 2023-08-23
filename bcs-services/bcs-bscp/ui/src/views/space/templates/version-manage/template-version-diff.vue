@@ -14,33 +14,38 @@
 
   const emits = defineEmits(['update:show'])
 
+  const getDefaultConfig = () => {
+    return {
+      id: props.crtVersion.id,
+      name: '',
+      file_type: '',
+      current: {
+        signature: '',
+        byte_size: '',
+        update_at: ''
+      },
+      base: {
+        signature: '',
+        byte_size: '',
+        update_at: ''
+      }
+    }
+  }
+
   const selectedVersion = ref()
   const versionList = ref<ITemplateVersionItem[]>([])
   const versionListLoading = ref(false)
-  const configDiffData = ref<IConfigDiffDetail>({
-    id: props.crtVersion.id,
-    name: '',
-    file_type: '',
-    current: {
-      signature: '',
-      byte_size: '',
-      update_at: ''
-    },
-    base: {
-      signature: '',
-      byte_size: '',
-      update_at: ''
-    }
-  })
+  const configDiffData = ref<IConfigDiffDetail>(getDefaultConfig())
 
   watch(() => props.show, async val => {
     if (val) {
       getVersionList()
       const detail = await getTemplateVersionDetail(props.crtVersion.versionId)
-      const { spec, content_spec } = detail
-      configDiffData.value.file_type = spec.file_type
-      configDiffData.value.base.signature = content_spec.signature
-      configDiffData.value.base.byte_size = content_spec.byte_size
+      const { name, file_type, content_spec } = detail.spec
+      configDiffData.value.name = name
+      configDiffData.value.file_type = file_type
+      configDiffData.value.current.signature = content_spec.signature
+      configDiffData.value.current.byte_size = content_spec.byte_size
     }
   })
 
@@ -63,13 +68,16 @@
   const handleSelectVersion = (id: number) => {
     const version = versionList.value.find(item => item.id === id)
     if (version) {
-      // baseContent.value = version.spec.content
+      const { signature, byte_size } = version.spec.content_spec
+      configDiffData.value.base.signature = signature
+      configDiffData.value.base.byte_size = String(byte_size)
     }
   }
 
   const handleClose = () => {
     selectedVersion.value = undefined
     versionList.value = []
+    configDiffData.value = getDefaultConfig()
     emits('update:show', false)
   }
 
@@ -81,7 +89,7 @@
     :width="1200"
     @closed="handleClose">
     <div class="diff-content-area">
-      <diff :app-id="props.crtVersion.id" :config="configDiffData">
+      <diff :template-space-id="props.templateSpaceId" :config="configDiffData">
         <template #leftHead>
             <slot name="baseHead">
               <div class="diff-panel-head">
@@ -95,7 +103,7 @@
                   <bk-option
                     v-for="version in versionList"
                     :key="version.id"
-                    :label="version.spec.name"
+                    :label="version.spec.revision_name"
                     :value="version.id">
                   </bk-option>
                 </bk-select>
