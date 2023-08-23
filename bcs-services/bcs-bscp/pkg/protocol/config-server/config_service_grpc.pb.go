@@ -85,6 +85,7 @@ const (
 	Config_DeleteAppTemplateBinding_FullMethodName                   = "/pbcs.Config/DeleteAppTemplateBinding"
 	Config_UpdateAppTemplateBinding_FullMethodName                   = "/pbcs.Config/UpdateAppTemplateBinding"
 	Config_ListAppTemplateBindings_FullMethodName                    = "/pbcs.Config/ListAppTemplateBindings"
+	Config_ListAppBoundTemplateRevisions_FullMethodName              = "/pbcs.Config/ListAppBoundTemplateRevisions"
 	Config_ListTemplateBoundCounts_FullMethodName                    = "/pbcs.Config/ListTemplateBoundCounts"
 	Config_ListTemplateRevisionBoundCounts_FullMethodName            = "/pbcs.Config/ListTemplateRevisionBoundCounts"
 	Config_ListTemplateSetBoundCounts_FullMethodName                 = "/pbcs.Config/ListTemplateSetBoundCounts"
@@ -187,6 +188,7 @@ type ConfigClient interface {
 	DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*DeleteAppTemplateBindingResp, error)
 	UpdateAppTemplateBinding(ctx context.Context, in *UpdateAppTemplateBindingReq, opts ...grpc.CallOption) (*UpdateAppTemplateBindingResp, error)
 	ListAppTemplateBindings(ctx context.Context, in *ListAppTemplateBindingsReq, opts ...grpc.CallOption) (*ListAppTemplateBindingsResp, error)
+	ListAppBoundTemplateRevisions(ctx context.Context, in *ListAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTemplateRevisionsResp, error)
 	ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error)
 	ListTemplateRevisionBoundCounts(ctx context.Context, in *ListTemplateRevisionBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundCountsResp, error)
 	ListTemplateSetBoundCounts(ctx context.Context, in *ListTemplateSetBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundCountsResp, error)
@@ -793,6 +795,15 @@ func (c *configClient) ListAppTemplateBindings(ctx context.Context, in *ListAppT
 	return out, nil
 }
 
+func (c *configClient) ListAppBoundTemplateRevisions(ctx context.Context, in *ListAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTemplateRevisionsResp, error) {
+	out := new(ListAppBoundTemplateRevisionsResp)
+	err := c.cc.Invoke(ctx, Config_ListAppBoundTemplateRevisions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error) {
 	out := new(ListTemplateBoundCountsResp)
 	err := c.cc.Invoke(ctx, Config_ListTemplateBoundCounts_FullMethodName, in, out, opts...)
@@ -1125,6 +1136,7 @@ type ConfigServer interface {
 	DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*DeleteAppTemplateBindingResp, error)
 	UpdateAppTemplateBinding(context.Context, *UpdateAppTemplateBindingReq) (*UpdateAppTemplateBindingResp, error)
 	ListAppTemplateBindings(context.Context, *ListAppTemplateBindingsReq) (*ListAppTemplateBindingsResp, error)
+	ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error)
 	ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error)
 	ListTemplateRevisionBoundCounts(context.Context, *ListTemplateRevisionBoundCountsReq) (*ListTemplateRevisionBoundCountsResp, error)
 	ListTemplateSetBoundCounts(context.Context, *ListTemplateSetBoundCountsReq) (*ListTemplateSetBoundCountsResp, error)
@@ -1348,6 +1360,9 @@ func (UnimplementedConfigServer) UpdateAppTemplateBinding(context.Context, *Upda
 }
 func (UnimplementedConfigServer) ListAppTemplateBindings(context.Context, *ListAppTemplateBindingsReq) (*ListAppTemplateBindingsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppTemplateBindings not implemented")
+}
+func (UnimplementedConfigServer) ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAppBoundTemplateRevisions not implemented")
 }
 func (UnimplementedConfigServer) ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateBoundCounts not implemented")
@@ -2582,6 +2597,24 @@ func _Config_ListAppTemplateBindings_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ListAppBoundTemplateRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAppBoundTemplateRevisionsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListAppBoundTemplateRevisions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListAppBoundTemplateRevisions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListAppBoundTemplateRevisions(ctx, req.(*ListAppBoundTemplateRevisionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ListTemplateBoundCounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateBoundCountsReq)
 	if err := dec(in); err != nil {
@@ -3362,6 +3395,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAppTemplateBindings",
 			Handler:    _Config_ListAppTemplateBindings_Handler,
+		},
+		{
+			MethodName: "ListAppBoundTemplateRevisions",
+			Handler:    _Config_ListAppBoundTemplateRevisions_Handler,
 		},
 		{
 			MethodName: "ListTemplateBoundCounts",

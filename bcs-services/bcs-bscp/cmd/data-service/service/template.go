@@ -377,6 +377,12 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 	*pbds.ListTemplatesNotBoundResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	// validate the page params
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
+
 	idsAll, err := s.dao.Template().ListAllIDs(kt, req.BizId, req.TemplateSpaceId)
 	if err != nil {
 		logs.Errorf("list templates not bound failed, err: %v, rid: %s", err, kt.Rid)
@@ -448,6 +454,12 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbds.ListTemplatesOfTemplateSetReq) (
 	*pbds.ListTemplatesOfTemplateSetResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+
+	// validate the page params
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
 
 	if err := s.dao.Validator().ValidateTemplateSetExist(kt, req.TemplateSetId); err != nil {
 		return nil, err

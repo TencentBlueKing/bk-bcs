@@ -211,3 +211,39 @@ func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateI
 
 	return templateSetIDs, templateIDs, nil
 }
+
+// ListAppBoundTemplateRevisions list app bound template revisions
+func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.ListAppBoundTemplateRevisionsReq) (*pbcs.
+	ListAppBoundTemplateRevisionsResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAppBoundTemplateRevisionsResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
+		BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListAppBoundTemplateRevisionsReq{
+		BizId:        req.BizId,
+		AppId:        req.AppId,
+		SearchFields: req.SearchFields,
+		SearchValue:  req.SearchValue,
+		Start:        req.Start,
+		Limit:        req.Limit,
+		All:          req.All,
+	}
+
+	rp, err := s.client.DS.ListAppBoundTemplateRevisions(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListAppBoundTemplateRevisionsResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
