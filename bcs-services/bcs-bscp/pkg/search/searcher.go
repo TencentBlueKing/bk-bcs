@@ -41,7 +41,7 @@ const (
 var supportedFields = map[TableName][]string{
 	TemplateSpace:    {"name", "memo", "creator", "reviser"},
 	Template:         {"name", "path", "memo", "creator", "reviser"},
-	TemplateRevision: {"revision_name", "revision_memo", "creator"},
+	TemplateRevision: {"revision_name", "revision_memo", "name", "path", "creator"},
 	TemplateSet:      {"name", "memo", "creator", "reviser"},
 	TemplateVariable: {"name", "memo", "creator", "reviser"},
 }
@@ -50,7 +50,7 @@ var supportedFields = map[TableName][]string{
 var supportedFieldsMap = map[TableName]map[string]struct{}{
 	TemplateSpace:    {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 	Template:         {"name": {}, "path": {}, "memo": {}, "creator": {}, "reviser": {}},
-	TemplateRevision: {"revision_name": {}, "revision_memo": {}, "creator": {}},
+	TemplateRevision: {"revision_name": {}, "revision_memo": {}, "name": {}, "path": {}, "creator": {}},
 	TemplateSet:      {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 	TemplateVariable: {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 }

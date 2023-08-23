@@ -98,6 +98,7 @@ const (
 	Data_ListAppTemplateBindings_FullMethodName                    = "/pbds.Data/ListAppTemplateBindings"
 	Data_UpdateAppTemplateBinding_FullMethodName                   = "/pbds.Data/UpdateAppTemplateBinding"
 	Data_DeleteAppTemplateBinding_FullMethodName                   = "/pbds.Data/DeleteAppTemplateBinding"
+	Data_ListAppBoundTemplateRevisions_FullMethodName              = "/pbds.Data/ListAppBoundTemplateRevisions"
 	Data_ListTemplateBoundCounts_FullMethodName                    = "/pbds.Data/ListTemplateBoundCounts"
 	Data_ListTemplateRevisionBoundCounts_FullMethodName            = "/pbds.Data/ListTemplateRevisionBoundCounts"
 	Data_ListTemplateSetBoundCounts_FullMethodName                 = "/pbds.Data/ListTemplateSetBoundCounts"
@@ -221,6 +222,7 @@ type DataClient interface {
 	ListAppTemplateBindings(ctx context.Context, in *ListAppTemplateBindingsReq, opts ...grpc.CallOption) (*ListAppTemplateBindingsResp, error)
 	UpdateAppTemplateBinding(ctx context.Context, in *UpdateAppTemplateBindingReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	ListAppBoundTemplateRevisions(ctx context.Context, in *ListAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTemplateRevisionsResp, error)
 	// template binding relation related interface.
 	ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error)
 	ListTemplateRevisionBoundCounts(ctx context.Context, in *ListTemplateRevisionBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundCountsResp, error)
@@ -911,6 +913,15 @@ func (c *dataClient) DeleteAppTemplateBinding(ctx context.Context, in *DeleteApp
 	return out, nil
 }
 
+func (c *dataClient) ListAppBoundTemplateRevisions(ctx context.Context, in *ListAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTemplateRevisionsResp, error) {
+	out := new(ListAppBoundTemplateRevisionsResp)
+	err := c.cc.Invoke(ctx, Data_ListAppBoundTemplateRevisions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error) {
 	out := new(ListTemplateBoundCountsResp)
 	err := c.cc.Invoke(ctx, Data_ListTemplateBoundCounts_FullMethodName, in, out, opts...)
@@ -1288,6 +1299,7 @@ type DataServer interface {
 	ListAppTemplateBindings(context.Context, *ListAppTemplateBindingsReq) (*ListAppTemplateBindingsResp, error)
 	UpdateAppTemplateBinding(context.Context, *UpdateAppTemplateBindingReq) (*base.EmptyResp, error)
 	DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*base.EmptyResp, error)
+	ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error)
 	// template binding relation related interface.
 	ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error)
 	ListTemplateRevisionBoundCounts(context.Context, *ListTemplateRevisionBoundCountsReq) (*ListTemplateRevisionBoundCountsResp, error)
@@ -1547,6 +1559,9 @@ func (UnimplementedDataServer) UpdateAppTemplateBinding(context.Context, *Update
 }
 func (UnimplementedDataServer) DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAppTemplateBinding not implemented")
+}
+func (UnimplementedDataServer) ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAppBoundTemplateRevisions not implemented")
 }
 func (UnimplementedDataServer) ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateBoundCounts not implemented")
@@ -2934,6 +2949,24 @@ func _Data_DeleteAppTemplateBinding_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListAppBoundTemplateRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAppBoundTemplateRevisionsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListAppBoundTemplateRevisions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListAppBoundTemplateRevisions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListAppBoundTemplateRevisions(ctx, req.(*ListAppBoundTemplateRevisionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListTemplateBoundCounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateBoundCountsReq)
 	if err := dec(in); err != nil {
@@ -3800,6 +3833,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteAppTemplateBinding",
 			Handler:    _Data_DeleteAppTemplateBinding_Handler,
+		},
+		{
+			MethodName: "ListAppBoundTemplateRevisions",
+			Handler:    _Data_ListAppBoundTemplateRevisions_Handler,
 		},
 		{
 			MethodName: "ListTemplateBoundCounts",

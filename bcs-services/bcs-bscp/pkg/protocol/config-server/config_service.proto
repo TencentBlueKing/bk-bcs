@@ -384,6 +384,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings"
         };
     }
+    rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_revisions"
+        };
+    }
+
 
     rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {
         option (google.api.http) = {
@@ -1349,6 +1355,21 @@ message ListAppTemplateBindingsReq {
 message ListAppTemplateBindingsResp {
     uint32                            count   = 1;
     repeated pbatb.AppTemplateBinding details = 2;
+}
+
+message ListAppBoundTemplateRevisionsReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    string search_fields = 3;
+    string search_value  = 4;
+    uint32 start         = 5;
+    uint32 limit         = 6;
+    bool   all           = 7;
+}
+
+message ListAppBoundTemplateRevisionsResp {
+    uint32                              count   = 1;
+    repeated pbatb.AppBoundTmplRevision details = 2;
 }
 
 message ListTemplateBoundCountsReq {
