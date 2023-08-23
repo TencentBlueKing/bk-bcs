@@ -47,7 +47,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbds.Create
 		return nil, err
 	}
 
-	if err := s.fillUnspecifiedTemplates(kt, appTemplateBinding.Spec.Bindings, pbs); err != nil {
+	if err := s.fillUnspecifiedTemplates(kt, pbs); err != nil {
 		return nil, err
 	}
 
@@ -114,7 +114,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbds.Update
 		return nil, err
 	}
 
-	if err := s.fillUnspecifiedTemplates(kt, appTemplateBinding.Spec.Bindings, pbs); err != nil {
+	if err := s.fillUnspecifiedTemplates(kt, pbs); err != nil {
 		return nil, err
 	}
 
@@ -181,64 +181,105 @@ func (s *Service) ValidateAppTemplateBindingUniqueKey(kt *kit.Kit, bizID, appID 
 }
 
 // fillATBModel fill model AppTemplateBinding's fields
-// including TemplateSetIDs,TemplateRevisionIDs,TemplateSpaceIDs,TemplateIDs
 func (s *Service) fillATBModel(kit *kit.Kit, g *table.AppTemplateBinding, pbs *parsedBindings) error {
 	g.Spec.TemplateSetIDs = pbs.TemplateSetIDs
 	g.Spec.TemplateRevisionIDs = pbs.TemplateRevisionIDs
 	g.Spec.LatestTemplateRevisionIDs = pbs.LatestTemplateRevisionIDs
 	g.Spec.TemplateIDs = pbs.TemplateIDs
+	g.Spec.Bindings = pbs.TemplateBindings
 
 	templateRevisions, err := s.dao.TemplateRevision().ListByIDs(kit, pbs.TemplateRevisionIDs)
 	if err != nil {
 		return err
 	}
 
-	templateSpaceIDs := make(map[uint32]struct{})
+	tmplSpaceMap := make(map[uint32]struct{})
 	for _, tr := range templateRevisions {
-		templateSpaceIDs[tr.Attachment.TemplateSpaceID] = struct{}{}
+		tmplSpaceMap[tr.Attachment.TemplateSpaceID] = struct{}{}
 	}
-	g.Spec.TemplateSpaceIDs = convertToSlice(templateSpaceIDs)
+	g.Spec.TemplateSpaceIDs = convertToSlice(tmplSpaceMap)
 
 	return nil
 }
 
+// parseBindings parse the input into the target object
 // no need to validate the bindings here, it is already done in config server
 func parseBindings(bindings []*table.TemplateBinding) *parsedBindings {
 	pbs := new(parsedBindings)
 	for _, b := range bindings {
-		pbs.TemplateSetIDs = append(pbs.TemplateSetIDs, b.TemplateSetID)
+		b2 := &table.TemplateBinding{
+			TemplateSetID:     b.TemplateSetID,
+			TemplateRevisions: make([]*table.TemplateRevisionBinding, 0, len(b.TemplateRevisions)),
+		}
 
+		pbs.TemplateSetIDs = append(pbs.TemplateSetIDs, b.TemplateSetID)
 		for _, r := range b.TemplateRevisions {
 			pbs.TemplateRevisionIDs = append(pbs.TemplateRevisionIDs, r.TemplateRevisionID)
 			pbs.TemplateIDs = append(pbs.TemplateIDs, r.TemplateID)
 			if r.IsLatest {
 				pbs.LatestTemplateRevisionIDs = append(pbs.LatestTemplateRevisionIDs, r.TemplateRevisionID)
 			}
+
+			b2.TemplateRevisions = append(b2.TemplateRevisions, &table.TemplateRevisionBinding{
+				TemplateID:         r.TemplateID,
+				TemplateRevisionID: r.TemplateRevisionID,
+				IsLatest:           r.IsLatest,
+			})
 		}
+
+		pbs.TemplateBindings = append(pbs.TemplateBindings, b2)
 	}
 
 	return pbs
 }
 
 // fillUnspecifiedTemplates update the pbs's unspecified templates and revisions
-func (s *Service) fillUnspecifiedTemplates(kit *kit.Kit, bindings []*table.TemplateBinding, pbs *parsedBindings) error {
-	for _, b := range bindings {
+func (s *Service) fillUnspecifiedTemplates(kit *kit.Kit, pbs *parsedBindings) error {
+	for i := range pbs.TemplateBindings {
+		b := pbs.TemplateBindings[i]
 		var templateIDs []uint32
 		for _, r := range b.TemplateRevisions {
 			templateIDs = append(templateIDs, r.TemplateID)
 		}
 
-		// get all the templates belong to the template set
-		templateSets, err := s.dao.TemplateSet().ListByIDs(kit, []uint32{b.TemplateSetID})
-		if err != nil {
-			logs.Errorf("parse bindings failed, err: %v, rid: %s", err, kit.Rid)
+		if err := s.dao.Validator().ValidateTemplatesBelongToTemplateSet(kit, templateIDs, b.TemplateSetID); err != nil {
 			return err
 		}
 
+		// get all the templates belong to the template set, then get the unspecified templates
+		templateSets, err := s.dao.TemplateSet().ListByIDs(kit, []uint32{b.TemplateSetID})
+		if err != nil {
+			logs.Errorf("fill unspecified templates failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
 		unspecified := tools.SliceDiff(templateSets[0].Spec.TemplateIDs, templateIDs)
-		// Note: Use list_template_revision_by_id to get all latest revisions and update pbs's unspecified templates
-		if len(unspecified) > 0 {
 
+		// get all latest revisions and update pbs's unspecified templates
+		if len(unspecified) > 0 {
+			pbs.TemplateIDs = append(pbs.TemplateIDs, unspecified...)
+
+			templateRevisions, err := s.ListTemplateRevisionNamesByTemplateIDs(
+				kit.Ctx,
+				&pbds.ListTemplateRevisionNamesByTemplateIDsReq{
+					BizId:       kit.BizID,
+					TemplateIds: unspecified,
+				})
+			if err != nil {
+				logs.Errorf("fill unspecified templates failed, err: %v, rid: %s", err, kit.Rid)
+				return err
+			}
+
+			// for unspecified template, use the latest revision and set is_latest true
+			for _, t := range templateRevisions.Details {
+				b.TemplateRevisions = append(b.TemplateRevisions, &table.TemplateRevisionBinding{
+					TemplateID:         t.TemplateId,
+					TemplateRevisionID: t.LatestTemplateRevisionId,
+					IsLatest:           true,
+				})
+
+				pbs.TemplateRevisionIDs = append(pbs.TemplateRevisionIDs, t.LatestTemplateRevisionId)
+				pbs.LatestTemplateRevisionIDs = append(pbs.LatestTemplateRevisionIDs, t.LatestTemplateRevisionId)
+			}
 		}
 	}
 
@@ -274,6 +315,45 @@ func (s *Service) validateATBUpsert(kit *kit.Kit, b *parsedBindings) error {
 
 	if err := s.dao.Validator().ValidateTemplateRevisionsExist(kit, b.TemplateRevisionIDs); err != nil {
 		return err
+	}
+
+	if err := s.validateATBLatestRevisions(kit, b); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateATBLatestRevisions validate whether the latest revisions specified by user is latest
+func (s *Service) validateATBLatestRevisions(kit *kit.Kit, b *parsedBindings) error {
+	templateRevisions, err := s.ListTemplateRevisionNamesByTemplateIDs(
+		kit.Ctx,
+		&pbds.ListTemplateRevisionNamesByTemplateIDsReq{
+			BizId:       kit.BizID,
+			TemplateIds: b.TemplateIDs,
+		})
+	if err != nil {
+		logs.Errorf("validate the latest template revision failed, err: %v, rid: %s", err, kit.Rid)
+		return err
+	}
+
+	latestMap := make(map[uint32]bool, len(templateRevisions.Details))
+	for _, t := range templateRevisions.Details {
+		latestMap[t.LatestTemplateRevisionId] = true
+	}
+
+	// validate whether the latest revision specified by user is latest
+	nonLatest := make([]uint32, 0)
+	for _, id := range b.LatestTemplateRevisionIDs {
+		if !latestMap[id] {
+			nonLatest = append(nonLatest, id)
+
+		}
+	}
+
+	if len(nonLatest) > 0 {
+		return fmt.Errorf("template revision id in %v is not the latest revision, please confirm it carefully",
+			nonLatest)
 	}
 
 	return nil

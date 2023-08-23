@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 
+	"bscp.io/pkg/dal/types"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/gen"
@@ -201,12 +202,16 @@ func (dao *validatorDao) ValidateTemplatesBelongToTemplateSet(
 	kit *kit.Kit, templateIDs []uint32, templateSetID uint32) error {
 	m := dao.genQ.TemplateSet
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
-	var existIDs []uint32
+
+	type existT struct {
+		TemplateIDs types.Uint32Slice `json:"template_ids"`
+	}
+	var existIDs existT
 	if err := q.Select(m.TemplateIDs).Where(m.ID.Eq(templateSetID)).Scan(&existIDs); err != nil {
 		return fmt.Errorf("validate templates in a template set failed, err: %v", err)
 	}
 
-	diffIDs := tools.SliceDiff(templateIDs, existIDs)
+	diffIDs := tools.SliceDiff(templateIDs, []uint32(existIDs.TemplateIDs))
 	if len(diffIDs) > 0 {
 		return fmt.Errorf("template id in %v is not belong to tempalte set id %d", diffIDs, templateSetID)
 	}
