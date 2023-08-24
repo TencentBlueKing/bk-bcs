@@ -115,7 +115,7 @@
           <bk-form-item label="系统盘">
             {{systemDisk || '--'}}
           </bk-form-item>
-          <bk-form-item label="cluster.ca.nodePool.create.instanceTypeConfig.disk.data">
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')">
             <bk-button
               text
               size="small"
