@@ -170,10 +170,8 @@ func (t *TemplateVariableSpec) ValidateUpdate() error {
 
 // ValidateDefaultVal validate template variable default value.
 func (t *TemplateVariableSpec) ValidateDefaultVal() error {
-	if t.Type == NumberVar {
-		if !tools.IsNumber(t.DefaultVal) {
-			return fmt.Errorf("default_val %s is not a number type", t.DefaultVal)
-		}
+	if t.Type == NumberVar && !tools.IsNumber(t.DefaultVal) {
+		return fmt.Errorf("default_val %s is not a number type", t.DefaultVal)
 	}
 
 	return nil
