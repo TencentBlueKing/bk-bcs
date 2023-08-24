@@ -113,7 +113,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 
 	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
 	if err != nil {
-		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("update app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
@@ -246,4 +246,116 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		Details: rp.Details,
 	}
 	return resp, nil
+}
+
+// UpdateAppBoundTemplateRevisions update app bound template revisions
+func (s *Service) UpdateAppBoundTemplateRevisions(ctx context.Context, req *pbcs.UpdateAppBoundTemplateRevisionsReq) (
+	*pbcs.
+		UpdateAppBoundTemplateRevisionsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.UpdateAppBoundTemplateRevisionsResp)
+
+	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
+	if err != nil {
+		logs.Errorf("update app bound template revisions failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
+	if len(repeatedTmplSetIDs) > 0 {
+		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
+	}
+	repeatedTmplRevisionIDs := tools.SliceRepeatedElements(templateIDs)
+	if len(repeatedTmplRevisionIDs) > 0 {
+		return nil, fmt.Errorf("repeated template ids: %v, id must be unique", repeatedTmplRevisionIDs)
+	}
+	if len(templateIDs) > 500 {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
+			len(templateIDs))
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
+		ResourceID: req.BindingId}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	var (
+		bResp    *pbcs.ListAppTemplateBindingsResp
+		bindings []*pbatb.TemplateBinding
+	)
+
+	if bResp, err = s.ListAppTemplateBindings(ctx, &pbcs.ListAppTemplateBindingsReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+	}); err != nil {
+		logs.Errorf("update app bound template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	if len(bResp.Details) == 0 {
+		return nil, fmt.Errorf("app template binding not found, biz id: %d, app id: %d", req.BizId, req.AppId)
+	}
+
+	if bindings, err = getUpdatedBindings(bResp.Details[0].Spec.Bindings, req.Bindings); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UpdateAppTemplateBindingReq{
+		Id: req.BindingId,
+		Attachment: &pbatb.AppTemplateBindingAttachment{
+			BizId: req.BizId,
+			AppId: req.AppId,
+		},
+		Spec: &pbatb.AppTemplateBindingSpec{
+			Bindings: bindings,
+		},
+	}
+	if _, err := s.client.DS.UpdateAppTemplateBinding(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("update app bound template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// getUpdatedBindings get the final template bindings after update
+func getUpdatedBindings(origin, update []*pbatb.TemplateBinding) ([]*pbatb.TemplateBinding, error) {
+	// revisionsMap is the existent template revisions
+	// map: template set id -> (map: template id -> template revision binding)
+	revisionsMap := make(map[uint32]map[uint32]*pbatb.TemplateRevisionBinding)
+	for _, b := range origin {
+		if _, ok := revisionsMap[b.TemplateSetId]; !ok {
+			revisionsMap[b.TemplateSetId] = make(map[uint32]*pbatb.TemplateRevisionBinding)
+		}
+		for _, t := range b.TemplateRevisions {
+			revisionsMap[b.TemplateSetId][t.TemplateId] = t
+		}
+	}
+
+	// update existent template revisions with the new template revisions
+	for _, b := range update {
+		if _, ok := revisionsMap[b.TemplateSetId]; !ok {
+			return nil, fmt.Errorf("template set id %d is not existent for the app bound templates", b.TemplateSetId)
+		}
+		for _, t := range b.TemplateRevisions {
+			if _, ok := revisionsMap[b.TemplateSetId][t.TemplateId]; !ok {
+				return nil, fmt.Errorf("template id %d is not existent for the app bound templates", t.TemplateId)
+			}
+			revisionsMap[b.TemplateSetId][t.TemplateId] = t
+		}
+	}
+
+	// final is the final template bindings after update
+	final := make([]*pbatb.TemplateBinding, 0, len(revisionsMap))
+	for tmplSetID, tmplRevisionMap := range revisionsMap {
+		tmplRevisions := make([]*pbatb.TemplateRevisionBinding, 0, len(tmplRevisionMap))
+		for _, tmplRevision := range tmplRevisionMap {
+			tmplRevisions = append(tmplRevisions, tmplRevision)
+		}
+		final = append(final, &pbatb.TemplateBinding{
+			TemplateSetId:     tmplSetID,
+			TemplateRevisions: tmplRevisions,
+		})
+	}
+
+	return final, nil
 }
