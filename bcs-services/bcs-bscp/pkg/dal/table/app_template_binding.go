@@ -200,15 +200,15 @@ func (u *TemplateBindings) Scan(value interface{}) error {
 
 // ValidateCreate validate AppTemplateBinding spec when it is created.
 func (t *AppTemplateBindingSpec) ValidateCreate() error {
-	return validateBindings(t.Bindings)
+	return validateBindingsCreate(t.Bindings)
 }
 
 // ValidateUpdate validate AppTemplateBinding spec when it is updated.
 func (t *AppTemplateBindingSpec) ValidateUpdate() error {
-	return validateBindings(t.Bindings)
+	return validateBindingsUpdate(t.Bindings)
 }
 
-func validateBindings(bindings TemplateBindings) error {
+func validateBindingsCreate(bindings TemplateBindings) error {
 	if len(bindings) == 0 {
 		return errors.New("bindings can't be empty")
 	}
@@ -216,8 +216,14 @@ func validateBindings(bindings TemplateBindings) error {
 		if b.TemplateSetID <= 0 {
 			return fmt.Errorf("invalid template set id of bindings member: %d", b.TemplateSetID)
 		}
-		if len(b.TemplateRevisions) == 0 {
-			return errors.New("template release ids of bindings member can't be empty")
+	}
+	return nil
+}
+
+func validateBindingsUpdate(bindings TemplateBindings) error {
+	for _, b := range bindings {
+		if b.TemplateSetID <= 0 {
+			return fmt.Errorf("invalid template set id of bindings member: %d", b.TemplateSetID)
 		}
 	}
 	return nil

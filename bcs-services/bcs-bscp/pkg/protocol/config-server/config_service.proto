@@ -389,7 +389,18 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_revisions"
         };
     }
-
+    rpc UpdateAppBoundTemplateRevisions(UpdateAppBoundTemplateRevisionsReq) returns
+        (UpdateAppBoundTemplateRevisionsResp) {
+        option (google.api.http) = {
+            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_revisions"
+            body : "*"
+        };
+    }
+    rpc DeleteAppBoundTemplateSets(DeleteAppBoundTemplateSetsReq) returns (DeleteAppBoundTemplateSetsResp) {
+        option (google.api.http) = {
+            delete : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_sets"
+        };
+    }
 
     rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {
         option (google.api.http) = {
@@ -1371,6 +1382,28 @@ message ListAppBoundTemplateRevisionsResp {
     uint32                              count   = 1;
     repeated pbatb.AppBoundTmplRevision details = 2;
 }
+
+message UpdateAppBoundTemplateRevisionsReq {
+    uint32                         biz_id     = 1;
+    uint32                         app_id     = 2;
+    uint32                         binding_id = 3;
+    repeated pbatb.TemplateBinding bindings   = 4;
+}
+
+message UpdateAppBoundTemplateRevisionsResp {
+}
+
+message DeleteAppBoundTemplateSetsReq {
+    uint32 biz_id           = 1;
+    uint32 app_id           = 2;
+    uint32 binding_id       = 3;
+    string template_set_ids = 4;
+}
+
+message DeleteAppBoundTemplateSetsResp {
+}
+
+
 
 message ListTemplateBoundCountsReq {
     uint32          biz_id            = 1;

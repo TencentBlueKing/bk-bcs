@@ -32,6 +32,7 @@ func newAppTemplateBinding(db *gorm.DB, opts ...gen.DOOption) appTemplateBinding
 	_appTemplateBinding.TemplateSetIDs = field.NewField(tableName, "template_set_ids")
 	_appTemplateBinding.TemplateIDs = field.NewField(tableName, "template_ids")
 	_appTemplateBinding.TemplateRevisionIDs = field.NewField(tableName, "template_revision_ids")
+	_appTemplateBinding.LatestTemplateRevisionIDs = field.NewField(tableName, "latest_template_revision_ids")
 	_appTemplateBinding.Bindings = field.NewField(tableName, "bindings")
 	_appTemplateBinding.BizID = field.NewUint32(tableName, "biz_id")
 	_appTemplateBinding.AppID = field.NewUint32(tableName, "app_id")
@@ -48,19 +49,20 @@ func newAppTemplateBinding(db *gorm.DB, opts ...gen.DOOption) appTemplateBinding
 type appTemplateBinding struct {
 	appTemplateBindingDo appTemplateBindingDo
 
-	ALL                 field.Asterisk
-	ID                  field.Uint32
-	TemplateSpaceIDs    field.Field
-	TemplateSetIDs      field.Field
-	TemplateIDs         field.Field
-	TemplateRevisionIDs field.Field
-	Bindings            field.Field
-	BizID               field.Uint32
-	AppID               field.Uint32
-	Creator             field.String
-	Reviser             field.String
-	CreatedAt           field.Time
-	UpdatedAt           field.Time
+	ALL                       field.Asterisk
+	ID                        field.Uint32
+	TemplateSpaceIDs          field.Field
+	TemplateSetIDs            field.Field
+	TemplateIDs               field.Field
+	TemplateRevisionIDs       field.Field
+	LatestTemplateRevisionIDs field.Field
+	Bindings                  field.Field
+	BizID                     field.Uint32
+	AppID                     field.Uint32
+	Creator                   field.String
+	Reviser                   field.String
+	CreatedAt                 field.Time
+	UpdatedAt                 field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -82,6 +84,7 @@ func (a *appTemplateBinding) updateTableName(table string) *appTemplateBinding {
 	a.TemplateSetIDs = field.NewField(table, "template_set_ids")
 	a.TemplateIDs = field.NewField(table, "template_ids")
 	a.TemplateRevisionIDs = field.NewField(table, "template_revision_ids")
+	a.LatestTemplateRevisionIDs = field.NewField(table, "latest_template_revision_ids")
 	a.Bindings = field.NewField(table, "bindings")
 	a.BizID = field.NewUint32(table, "biz_id")
 	a.AppID = field.NewUint32(table, "app_id")
@@ -113,12 +116,13 @@ func (a *appTemplateBinding) GetFieldByName(fieldName string) (field.OrderExpr, 
 }
 
 func (a *appTemplateBinding) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 12)
+	a.fieldMap = make(map[string]field.Expr, 13)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["template_space_ids"] = a.TemplateSpaceIDs
 	a.fieldMap["template_set_ids"] = a.TemplateSetIDs
 	a.fieldMap["template_ids"] = a.TemplateIDs
 	a.fieldMap["template_revision_ids"] = a.TemplateRevisionIDs
+	a.fieldMap["latest_template_revision_ids"] = a.LatestTemplateRevisionIDs
 	a.fieldMap["bindings"] = a.Bindings
 	a.fieldMap["biz_id"] = a.BizID
 	a.fieldMap["app_id"] = a.AppID
