@@ -57,7 +57,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web.GET("/projects/:projectId/mgr/", metrics.RequestCollect("MgrPage"), s.MgrPageHandler)
 	web.GET("/portal/container/", metrics.RequestCollect("ContainerGatePage"), s.ContainerGatePageHandler)
 	web.GET("/portal/cluster/", metrics.RequestCollect("ClusterGatePage"), s.ClusterGatePageHandler)
-	web.GET("/replay/", route.APIAuthRequired(), s.ReplayPageHandler)
+	web.GET("/replay/", metrics.RequestCollect("ReplayPage"), route.APIAuthRequired(), s.ReplayPageHandler)
 
 	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
