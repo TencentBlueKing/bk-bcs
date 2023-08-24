@@ -1394,7 +1394,6 @@ cluster:
         allIP: Copy all
       cancelSelectAll: Cancel all data
       delete:
-        tips: Please stop node scheduling first
         subTitle: 'Confirm whether to delete {ip} and other {num} nodes'
         article1: >-
           Containers running on the current node are scheduled to other
@@ -1414,6 +1413,7 @@ cluster:
       max10NodeDrain: 'At most, it can only expel 10 nodes in batches'
     tips:
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
+      hasNotNodePoolNode: ''
     placeholder:
       searchNode: 'Search for IP, label, taints, annotations, status, node source, nodePool'
     title:
@@ -2959,3 +2959,4 @@ manualNode:
     gotoNodePool: Node pool
   msg:
     confirmText: Confirm whether to continue adding nodes
+    confirmText1: ''

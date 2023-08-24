@@ -1126,7 +1126,6 @@ cluster:
         allIP: 复制所有IP
       cancelSelectAll: 取消选择所有数据
       delete:
-        tips: 请先停止节点调度
         subTitle: '确认是否删除 {ip} 等 {num} 个节点'
         article1: 当前节点上正在运行的容器会被调度到其它可用节点
         article2: 清理容器服务系统组件
@@ -2392,7 +2391,7 @@ manualNode:
     gotoNodePool: 管理节点池
   msg:
     confirmText: 请确认是否继续添加节点
-    confirmText1: 此节点池已开启弹性伸缩, 请确认是否继续添加节点
+    confirmText1: '此节点池已开启弹性伸缩, 请确认是否继续添加节点'
   tips:
     insufficientNode: '节点数量不足, 前往节点池修改'
     desiredSize: '此节点池最多可添加 {0} 个节点；如有需要，请前往调整节点池配额'

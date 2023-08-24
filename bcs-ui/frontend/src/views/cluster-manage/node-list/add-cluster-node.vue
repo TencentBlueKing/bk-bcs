@@ -125,7 +125,13 @@
             </div>
           </bk-form-item>
           <bk-form-item :label="$t('manualNode.title.desiredSize')" property="desiredSize" error-display-type="normal">
-            <bcs-input type="number" class="w-[74px]" :max="maxCount" :min="1" v-model="desiredSize"></bcs-input>
+            <bcs-input
+              type="number"
+              class="w-[74px]"
+              :max="maxCount"
+              :min="1"
+              :precision="0"
+              v-model="desiredSize"></bcs-input>
             <span class="text-[#979BA5] ml-[8px]">
               {{ $t('manualNode.tips.desiredSize', [maxCount]) }}
             </span>
@@ -350,7 +356,7 @@ export default defineComponent({
         confirmFn: async () => {
           const result = await desirednode({
             $id: nodePoolID.value,
-            desiredNode: Number(desiredSize.value + (curNodePool.value?.autoScaling?.desiredSize || 0)),
+            desiredNode: Number(desiredSize.value) + Number(curNodePool.value?.autoScaling?.desiredSize || 0),
             manual: true,
             operator: user.value.username,
           });
