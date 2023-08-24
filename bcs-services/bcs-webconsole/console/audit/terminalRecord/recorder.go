@@ -13,14 +13,17 @@
 package terminalRecord
 
 import (
-	"k8s.io/klog/v2"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
+	"k8s.io/klog/v2"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/asciinema"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 const (
@@ -39,9 +42,9 @@ type ReplyRecorder struct {
 	SessionID   string
 	info        *ReplyInfo
 	absFilePath string
-	Target      string
-	Writer      *asciinema.Writer
-	err         error
+	//Target      string
+	Writer *asciinema.Writer
+	err    error
 
 	file *os.File
 	once sync.Once
@@ -63,12 +66,12 @@ func EnsureDirExist(name string) error {
 	return nil
 }
 
-func NewReplayRecord(sid string, info *ReplyInfo) (*ReplyRecorder, error) {
+func NewReplayRecord(podCtx *types.PodContext, info *ReplyInfo) (*ReplyRecorder, error) {
 	if !config.G.TerminalRecord.Enable {
 		return nil, nil
 	}
 	recorder := &ReplyRecorder{
-		SessionID: sid,
+		SessionID: podCtx.SessionId,
 		info:      info,
 	}
 	path := config.G.TerminalRecord.FilePath
@@ -78,7 +81,10 @@ func NewReplayRecord(sid string, info *ReplyInfo) (*ReplyRecorder, error) {
 		recorder.err = err
 		return recorder, err
 	}
-	filename := sid + replayFilenameSuffix
+	date := time.Now().Format(dateTimeFormat)
+	f := fmt.Sprintf("%s_%s_%s_%s_%s_%s_%s", date, podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName,
+		podCtx.ContainerName, podCtx.SessionId[:6])
+	filename := f + replayFilenameSuffix
 	absFilePath := filepath.Join(path, filename)
 	recorder.absFilePath = absFilePath
 	fd, err := os.Create(recorder.absFilePath)
