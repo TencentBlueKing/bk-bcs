@@ -192,9 +192,13 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    allowSkipWhenFailed: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(props) {
-    const { addons, actionsKey, clusterId } = toRefs(props);
+    const { addons, actionsKey, clusterId, allowSkipWhenFailed } = toRefs(props);
     const curProject = computed(() => $store.state.curProject);
     const user = computed(() => $store.state.user);
 
@@ -349,6 +353,7 @@ export default defineComponent({
             template_user: user.value.username,
             ...sopsParams.value,
           },
+          allowSkipWhenFailed: allowSkipWhenFailed.value,
         },
       },
     }));

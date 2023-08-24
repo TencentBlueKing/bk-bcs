@@ -378,6 +378,7 @@ generic:
     step: step
     execTime: Started
     execTime2: Time cost
+    whenFailed: After failed
   status:
     ready: Normal
     error: Error
@@ -1198,6 +1199,41 @@ cluster:
           userScript: Placing rear rear initialization
           scaleInPreScript: Clean the configuration before node recycling
           placeholder: Please enter the bash script
+          preInit:
+            tips: >-
+              The pre-initialization will not get the execution result of the
+              script. Whether the execution is successful or not will continue
+              to execute the expansion task. If this step is a critical step,
+              please check the execution result of this step in the
+              post-initialization task
+          postInit:
+            errorHandling:
+              radio1: Terminate the expansion task after failure
+              tips1: >-
+                If this critical is a key step, it is suitable to select this
+                option. If the CA function is enabled, after the expansion task
+                is terminated, the nodes for this expansion will be recovered
+                and the next round of expansion process will start
+              radio2: Continue the expansion task after failure
+              tips2: >-
+                If this step is a non-critical step, it is suitable to choose
+                this option, and it will not affect the entire expansion task.
+                You can process and optimize this task after expansion
+          recycleClean:
+            errorHandling:
+              radio1: Terminate shrink task after failure
+              tips1: >-
+                If this step is a critical step, it is suitable to select this
+                option. If the CA function is enabled, the shrinking task will
+                be retried after the shrinking task is terminated
+              radio2: Continue shrinking task after failure
+              tips2: >-
+                If this step is a non-critical step, it is suitable to choose
+                this option, and it will not affect the shrinking process. You
+                can process and optimize this task after shrinking
+          label:
+            keyStepsRecommended: Recommended if it is key steps
+            unKeyStepsRecommended: Recommended if it is not key steps
         cloudArea:
           title: Cloud area
           desc: >-
@@ -1359,7 +1395,6 @@ cluster:
       cancelSelectAll: Cancel all data
       delete:
         tips: Please stop node scheduling first
-        title: 'Confirm to delete the node【{innerIp}】?'
         subTitle: 'Confirm whether to delete {ip} and other {num} nodes'
         article1: >-
           Containers running on the current node are scheduled to other
@@ -1378,9 +1413,7 @@ cluster:
     validate:
       max10NodeDrain: 'At most, it can only expel 10 nodes in batches'
     tips:
-      selectNode: Please select nodes
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
-      disableCaNodeBatchAction: autoscaler nodes cannot be operated in batches
     placeholder:
       searchNode: 'Search for IP, label, taints, annotations, status, node source, nodePool'
     title:
@@ -1408,6 +1441,8 @@ cluster:
       addNodeFailed: Failed to be on the shelves
       deleteNodeFailed: Failure to get off the shelves
       scaleOKButRemoveFailed: 'Successful shrinking, failure to get off the shelves'
+      applyFailure: Apply failure
+      applying: Applying
     create:
       text: Nodes
       button:
@@ -2904,3 +2939,23 @@ logCollector:
           labels that exist on the Pod will be collected
       workload: Select by workload
       container: Select by container name
+manualNode:
+  title:
+    source:
+      text: Node source
+      existingServer: Existing server
+      addFromNodePool: From node pool
+    nodePool:
+      text: Node pool
+      disabledGroup: Disabled node pool
+      enableGroup: Enabled node pool
+    desiredSize: Desired size
+  tips:
+    insufficientNode: 'The number of nodes is insufficient, go to the node pool'
+    desiredSize: >-
+      A maximum of {0} nodes can be added to the node pool. adjust the node pool
+      quota if necessary
+  button:
+    gotoNodePool: Node pool
+  msg:
+    confirmText: Confirm whether to continue adding nodes

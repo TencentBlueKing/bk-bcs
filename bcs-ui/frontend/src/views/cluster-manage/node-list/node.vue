@@ -17,7 +17,10 @@
     <div class="cluster-node-operate">
       <div class="left">
         <template v-if="fromCluster">
-          <span v-bk-tooltips="{ disabled: !isImportCluster, content: $t('cluster.nodeList.tips.disableImportClusterAction') }">
+          <span v-bk-tooltips="{
+            disabled: !isKubeConfig,
+            content: $t('cluster.nodeList.tips.disableImportClusterAction')
+          }">
             <bcs-button
               theme="primary"
               icon="plus"
@@ -33,7 +36,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isImportCluster"
+              :disabled="isKubeConfig"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -76,8 +79,9 @@
             }">
             <li @click="handleBatchEnableNodes">{{$t('generic.button.uncordon.text')}}</li>
             <li @click="handleBatchStopNodes">{{$t('generic.button.cordon.text')}}</li>
+            <!-- 'REMOVE-FAILURE', 'ADD-FAILURE' 才支持删除 -->
             <li
-              :disabled="isImportCluster"
+              :disabled="isImportCluster || selections.some(item => !['REMOVE-FAILURE', 'ADD-FAILURE'].includes(item.status))"
               v-bk-tooltips="{
                 disabled: !isImportCluster,
                 content: $t('cluster.nodeList.tips.disableImportClusterAction')
@@ -92,16 +96,12 @@
             <div
               class="h-[32px]"
               v-bk-tooltips="{
-                content: $t('cluster.nodeList.button.delete.tips'),
-                disabled: !selections.some(item => item.status === 'RUNNING'),
+                content: disableBatchDeleteTips,
+                disabled: !disableBatchDelete,
                 placement: 'right'
               }">
               <li
-                :disabled="isImportCluster || selections.some(item => item.status === 'RUNNING')"
-                v-bk-tooltips="{
-                  disabled: !isImportCluster,
-                  content: !isImportCluster ? $t('cluster.nodeList.tips.disableImportClusterAction') : $t('cluster.nodeList.button.delete.tips')
-                }"
+                :disabled="disableBatchDelete"
                 @click="handleBatchDeleteNodes">{{$t('generic.button.delete')}}</li>
             </div>
           </ul>
@@ -182,17 +182,11 @@
           :resizable="false"
           fixed="left">
           <template #default="{ row }">
-            <span
-              v-bk-tooltips="{
-                disabled: !row.nodeGroupID,
-                content: $t('cluster.nodeList.tips.disableCaNodeBatchAction')
-              }">
-              <bcs-checkbox
-                :checked="selections.some(item => item.nodeName === row.nodeName)"
-                :disabled="!row.nodeName || !!row.nodeGroupID"
-                @change="(value) => handleRowCheckChange(value, row)"
-              />
-            </span>
+            <bcs-checkbox
+              :checked="selections.some(item => item.nodeName === row.nodeName && item.nodeID === row.nodeID)"
+              :disabled="!row.nodeID || ['INITIALIZATION', 'DELETING', 'APPLYING'].includes(row.status)"
+              @change="(value) => handleRowCheckChange(value, row)"
+            />
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('cluster.nodeList.label.name')" min-width="120" prop="nodeName" fixed="left" show-overflow-tooltip>
@@ -216,7 +210,11 @@
             </bcs-button>
           </template>
         </bcs-table-column>
-        <bcs-table-column label="IPv4" width="150" prop="innerIP" sortable show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column label="IPv4" width="150" prop="innerIP" sortable show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ row.innerIP || '--' }}
+          </template>
+        </bcs-table-column>
         <bcs-table-column
           label="IPv6"
           prop="innerIPv6"
@@ -258,7 +256,7 @@
           show-overflow-tooltip>
           <template #default="{ row }">
             <LoadingIcon
-              v-if="['INITIALIZATION', 'DELETING'].includes(row.status)"
+              v-if="['INITIALIZATION', 'DELETING', 'APPLYING'].includes(row.status)"
             >
               <span class="bcs-ellipsis">{{ nodeStatusMap[row.status.toLowerCase()] }}</span>
             </LoadingIcon>
@@ -396,6 +394,9 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('generic.label.action')" width="160" :resizable="false" fixed="right">
           <template #default="{ row }">
+            <bk-button class="mr10" text v-if="row.status === 'APPLY-FAILURE'" @click="handleDeleteNode(row)">
+              {{ $t('generic.button.delete') }}
+            </bk-button>
             <div
               class="node-operate-wrapper"
               v-authority="{
@@ -409,7 +410,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              v-if="row.status !== 'REMOVE-CA-FAILURE'">
+              v-else-if="!['REMOVE-CA-FAILURE', 'APPLYING'].includes(row.status)">
               <bk-button
                 class="mr10"
                 text
@@ -461,10 +462,11 @@
                       </li>
                     </template>
                     <li
-                      :class="['bcs-dropdown-item', { disabled: isImportCluster }]"
+                      :class="['bcs-dropdown-item', { disabled: isImportCluster && !row.nodeGroupID }]"
                       v-bk-tooltips="{
-                        disabled: !isImportCluster,
-                        content: $t('cluster.nodeList.tips.disableImportClusterAction')
+                        disabled: !isImportCluster || row.nodeGroupID,
+                        content: $t('cluster.nodeList.tips.disableImportClusterAction'),
+                        placement: 'right'
                       }"
                       v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
                       :disabled="!row.inner_ip"
@@ -576,35 +578,38 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, onMounted, watch, set, computed } from 'vue';
-import StatusIcon from '@/components/status-icon';
-import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
-import LoadingIcon from '@/components/loading-icon.vue';
-import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
-import useNode from './use-node';
-import useTableSetting from '../../../composables/use-table-setting';
-import usePage from '@/composables/use-page';
-import useTableSearchSelect, { ISearchSelectData } from '../../../composables/use-table-search-select';
-import useTableAcrossCheck from '../../../composables/use-table-across-check';
-import { CheckType } from '@/components/across-check.vue';
-import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
-import LoadingCell from '@/views/cluster-manage/components/loading-cell.vue';
-import { copyText, padIPv6, formatBytes } from '@/common/util';
-import useInterval from '@/composables/use-interval';
-import KeyValue, { IData } from '@/components/key-value.vue';
-import TaintContent from '../components/taint.vue';
-import ConfirmDialog from '@/components/comfirm-dialog.vue';
-import ApplyHost from '@/views/cluster-manage/components/apply-host.vue';
+import { computed, defineComponent, onMounted, ref, set, watch } from 'vue';
 import { TranslateResult } from 'vue-i18n';
+
+import useTableAcrossCheck from '../../../composables/use-table-across-check';
+import useTableSearchSelect, { ISearchSelectData } from '../../../composables/use-table-search-select';
+import useTableSetting from '../../../composables/use-table-setting';
+import TaintContent from '../components/taint.vue';
 import TaskList from '../components/task-list.vue';
-import { ICluster, useCluster } from '@/composables/use-app';
-import BcsCascade from '@/components/cascade.vue';
-import useSideslider from '@/composables/use-sideslider';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+
+import useNode from './use-node';
+
 import $bkMessage from '@/common/bkmagic';
-import $store from '@/store';
-import $router from '@/router';
+import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
+import { copyText, formatBytes, padIPv6 } from '@/common/util';
+import { CheckType } from '@/components/across-check.vue';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import BcsCascade from '@/components/cascade.vue';
+import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
+import ConfirmDialog from '@/components/comfirm-dialog.vue';
+import KeyValue, { IData } from '@/components/key-value.vue';
+import LoadingIcon from '@/components/loading-icon.vue';
+import StatusIcon from '@/components/status-icon';
+import { ICluster, useCluster } from '@/composables/use-app';
+import useInterval from '@/composables/use-interval';
+import usePage from '@/composables/use-page';
+import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
+import ApplyHost from '@/views/cluster-manage/components/apply-host.vue';
+import LoadingCell from '@/views/cluster-manage/components/loading-cell.vue';
+import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 
 interface IMetricData {
   container_count: string
@@ -669,6 +674,7 @@ export default defineComponent({
       'add-failure': 'red',
       'remove-failure': 'red',
       'remove-ca-failure': 'red',
+      'apply-failure': 'red',
       removable: '',
       notready: 'red',
       unknown: '',
@@ -680,6 +686,8 @@ export default defineComponent({
       'add-failure': window.i18n.t('cluster.nodeList.status.addNodeFailed'),
       'remove-failure': window.i18n.t('cluster.nodeList.status.deleteNodeFailed'),
       'remove-ca-failure': window.i18n.t('cluster.nodeList.status.scaleOKButRemoveFailed'),
+      'apply-failure': window.i18n.t('cluster.nodeList.status.applyFailure'),
+      applying: window.i18n.t('cluster.nodeList.status.applying'),
       removable: window.i18n.t('generic.status.removable'),
       notready: window.i18n.t('generic.status.notReady'),
       unknown: window.i18n.t('generic.status.unknown1'),
@@ -948,11 +956,12 @@ export default defineComponent({
       handleCordonNodes,
       handleUncordonNodes,
       schedulerNode,
-      deleteNode,
       addNode,
       getNodeOverview,
       retryTask,
       setNodeLabels,
+      batchDeleteNodes,
+      taskDetail,
     } = useNode();
 
     const tableLoading = ref(false);
@@ -962,6 +971,7 @@ export default defineComponent({
       .find(item => item.clusterID === localClusterId.value) || {});
     // 导入集群
     const isImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer');
+    const isKubeConfig = computed(() => isImportCluster.value && curSelectedCluster.value.importCategory === 'kubeConfig');
     // 全量表格数据
     const tableData = ref<any[]>([]);
 
@@ -1075,9 +1085,9 @@ export default defineComponent({
 
     // 跨页全选
     const filterFailureTableData = computed(() => filterTableData.value
-      .filter(item => !!item.nodeName && !item.nodeGroupID));
+      .filter(item => !!item.nodeID && !['INITIALIZATION', 'DELETING', 'APPLYING'].includes(item.status)));
     const filterFailureCurTableData = computed(() => curPageData.value
-      .filter(item => !!item.nodeName && !item.nodeGroupID));
+      .filter(item => !!item.nodeID && !['INITIALIZATION', 'DELETING', 'APPLYING'].includes(item.status)));
     const {
       selectType,
       selections,
@@ -1089,6 +1099,16 @@ export default defineComponent({
     } = useTableAcrossCheck({
       tableData: filterFailureTableData,
       curPageData: filterFailureCurTableData,
+    });
+    // kubeConfig导入、选中节点含有运行中状态、含有非节点池节点不让删除
+    const disableBatchDelete = computed(() => isKubeConfig.value || selections.value.some(item => item.status === 'RUNNING' || !item.nodeGroupID));
+    const disableBatchDeleteTips = computed(() => {
+      if (isKubeConfig.value) {
+        return $i18n.t('cluster.nodeList.tips.disableImportClusterAction');
+      } if (selections.value.some(item => !item.nodeGroupID)) {
+        return $i18n.t('cluster.nodeList.tips.hasNotNodePoolNode');
+      }
+      return $i18n.t('cluster.ca.nodePool.nodes.action.delete.tips');
     });
 
     const handleGoOverview = (row) => {
@@ -1345,55 +1365,50 @@ export default defineComponent({
     const removeNodeDialogTitle = ref<any>('');
     const user = computed(() => $store.state.user);
     const handleDeleteNode = async (row) => {
-      if (isImportCluster.value) return;
+      if (isImportCluster && !row.nodeGroupID) return;
 
-      if (row.nodeGroupID) {
-        $bkInfo({
-          type: 'warning',
-          clsName: 'custom-info-confirm',
-          title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
-          subTitle: $i18n.t('cluster.ca.nodePool.nodes.action.delete.subTitle', { ip: row.innerIP }),
-          defaultInfo: true,
-          confirmFn: async () => {
-            const result = await $store.dispatch('clustermanager/deleteNodeGroupNode', {
-              $nodeGroupID: row.nodeGroupID,
-              nodes: row.inner_ip,
-              clusterID: row.clusterID,
-              operator: user.value.username,
-            });
-            if (result) {
-              $bkMessage({
-                theme: 'success',
-                message: $i18n.t('generic.msg.success.ok'),
-              });
-              handleGetNodeData();
-              handleResetPage();
-              handleResetCheckStatus();
-            }
-          },
-        });
-      } else {
-        curDeleteRows.value = [row];
-        removeNodeDialogTitle.value = $i18n.t('cluster.nodeList.button.delete.title', {
-          innerIp: row.inner_ip,
-        });
-        showConfirmDialog.value = true;
-      }
+      $bkInfo({
+        type: 'warning',
+        clsName: 'custom-info-confirm',
+        title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
+        subTitle: $i18n.t('cluster.ca.nodePool.nodes.action.delete.subTitle', { ip: row.innerIP }),
+        defaultInfo: true,
+        confirmFn: async () => {
+          await delNode(row.clusterID, [row]);
+        },
+      });
     };
     const cancelDelNode = () => {
       curDeleteRows.value = [];
     };
-    const delNode = async (clusterId: string, nodeIps: string[]) => {
-      const result = await deleteNode({
-        clusterId,
-        nodeIps,
+    const delNode = async ($clusterId: string, data: any[]) => {
+      const nodeIPs: string[] = [];
+      const virtualNodeIDs: string[] = [];
+      data.forEach((row) => {
+        if (row.innerIP) {
+          nodeIPs.push(row.innerIP);
+        } else if (row.nodeID) {
+          virtualNodeIDs.push(row.nodeID);
+        }
       });
-      result && handleGetNodeData();
-      handleResetPage();
-      handleResetCheckStatus();
+      const result = await batchDeleteNodes({
+        $clusterId,
+        nodeIPs: nodeIPs.join(','),
+        virtualNodeIDs: virtualNodeIDs.join(','),
+        operator: user.value.username,
+      });
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('generic.msg.success.ok'),
+        });
+        handleGetNodeData();
+        handleResetPage();
+        handleResetCheckStatus();
+      }
     };
     const confirmDelNode = async () => {
-      await delNode(localClusterId.value, curDeleteRows.value.map(item => item.inner_ip));
+      await delNode(localClusterId.value, curDeleteRows.value);
     };
     const addClusterNode = async (clusterId: string, nodeIps: string[]) => {
       stop();
@@ -1462,7 +1477,9 @@ export default defineComponent({
     };
     // 重新添加节点
     const handleBatchReAddNodes = () => {
-      if (!selections.value.length || isImportCluster.value) return;
+      if (!selections.value.length
+      || isImportCluster.value
+      || selections.value.some(item => !['REMOVE-FAILURE', 'ADD-FAILURE'].includes(item.status))) return;
 
       bkComfirmInfo({
         title: $i18n.t('cluster.nodeList.title.confirmReAddNode'),
@@ -1482,15 +1499,15 @@ export default defineComponent({
     };
     // 批量删除节点
     const handleBatchDeleteNodes = () => {
-      if (isImportCluster.value) return;
+      if (disableBatchDelete.value) return;
       bkComfirmInfo({
         title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
         subTitle: $i18n.t('cluster.nodeList.button.delete.subTitle', {
           num: selections.value.length,
-          ip: selections.value[0].inner_ip,
+          ip: selections.value[0].innerIP || selections.value[0].nodeID,
         }),
         callback: async () => {
-          await delNode(localClusterId.value, selections.value.map(item => item.inner_ip));
+          await delNode(localClusterId.value, selections.value);
         },
       });
     };
@@ -1546,15 +1563,20 @@ export default defineComponent({
       logSideDialogConf.value.loading = false;
     };
     const getTaskTableData = async (row) => {
-      const { taskData, latestTask } = await getTaskData({
-        clusterId: row.cluster_id,
-        nodeIP: row.inner_ip,
-      });
-      logSideDialogConf.value.taskData = taskData || [];
-      if (['RUNNING', 'INITIALZING'].includes(latestTask?.status)) {
-        logIntervalStart();
+      if (row.taskID) {
+        const data = await taskDetail(row.taskID);
+        logSideDialogConf.value.taskData = [data] as unknown as any;
       } else {
-        logIntervalStop();
+        const { taskData, latestTask } = await getTaskData({
+          clusterId: row.cluster_id,
+          nodeIP: row.inner_ip,
+        });
+        logSideDialogConf.value.taskData = taskData || [];
+        if (['RUNNING', 'INITIALZING'].includes(latestTask?.status)) {
+          logIntervalStart();
+        } else {
+          logIntervalStop();
+        }
       }
     };
     const { stop: logIntervalStop, start: logIntervalStart } = useInterval(async () => {
@@ -1792,12 +1814,15 @@ export default defineComponent({
       webAnnotations,
       curProject,
       isImportCluster,
+      isKubeConfig,
       KEY_REGEXP,
       VALUE_REGEXP,
       showBatchMenu,
       showCopyMenu,
       setChanged,
       handleBeforeClose,
+      disableBatchDelete,
+      disableBatchDeleteTips,
     };
   },
 });

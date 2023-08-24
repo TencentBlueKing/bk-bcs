@@ -42,13 +42,15 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, reactive, toRefs, h, ref, watch, computed, PropType } from 'vue';
-import { ipSelector, AgentStatus } from './ip-selector';
+import { computed, defineComponent, h, PropType, reactive, ref, toRefs, watch } from 'vue';
+
+import { AgentStatus, ipSelector } from './ip-selector';
+
 import './ip-selector.css';
-import { fetchBizTopo, fetchBizHosts, nodeAvailable } from '@/api/base';
+import { fetchBizHosts, fetchBizTopo, nodeAvailable } from '@/api/base';
+import $bkMessage from '@/common/bkmagic';
 import { copyText } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
-import $bkMessage from '@/common/bkmagic';
 import $store from '@/store';
 import { useClusterOperate } from '@/views/cluster-manage/cluster/use-cluster';
 

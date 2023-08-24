@@ -68,3 +68,9 @@ export const cloudsZones = request('get', '/clouds/$cloudId/zones');
 export const sharedclusters = request('get', '/sharedclusters');
 export const deleteVCluster = request('delete', '/vcluster/$clusterId');
 export const createVCluster = request('post', '/vcluster');
+
+// nodegroup
+export const nodeGroups = request('get', '/clusters/$clusterId/nodegroups');
+export const desirednode = request('post', '/nodegroup/$id/desirednode');
+
+export const batchDeleteNodes = request('delete', '/clusters/$clusterId/nodes/-/batch');

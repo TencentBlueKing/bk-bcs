@@ -11,7 +11,10 @@
     </ContentHeader>
     <div class="node-template bcs-content-wrapper">
       <div class="node-template-header">
-        <bk-button theme="primary" icon="plus" @click="handleAddTemplate">{{$t('cluster.nodeTemplate.title.create')}}</bk-button>
+        <bk-button
+          theme="primary"
+          icon="plus"
+          @click="handleAddTemplate">{{$t('cluster.nodeTemplate.title.create')}}</bk-button>
         <bk-input
           class="search-input"
           v-model="searchValue"

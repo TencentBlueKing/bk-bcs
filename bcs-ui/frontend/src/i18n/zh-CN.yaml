@@ -356,6 +356,7 @@ generic:
     step: 步骤
     execTime: 执行时间
     execTime2: 耗时
+    whenFailed: 失败后
   status:
     ready: 正常
     error: 异常
@@ -716,24 +717,24 @@ cluster:
     name: Cluster Autoscaler
     title:
       caConfig: Cluster Autoscaler配置
-      nodePoolManage: 节点规格管理
+      nodePoolManage: 节点池管理
       confirmOnScalerDownConfig: 确定开启自动缩容配置
       confirmOffScalerDownConfig: 确定关闭自动缩容配置
     tips:
-      emptyNodePool: 没有检测到可用节点规格，请先创建节点规格
-      notEnableAnyNodePool: 请至少启用 1 个节点规格的自动扩缩容功能或创建新的节点规格
+      emptyNodePool: 没有检测到可用节点池，请先创建节点池
+      notEnableAnyNodePool: 请至少启用 1 个节点池的自动扩缩容功能或创建新的节点池
       cannotEnableScalerDownConfig: 集群自动扩缩容已关闭，无法单独开启自动缩容配置
       cannotEnablePodsPriorityConfig: 集群自动扩缩容已关闭，无法单独开启低优先级 Pod 配置
       noModule: 弹性伸缩需要配置扩容后转移模块
-      notEmptyNodes: 请删除节点后再删除节点规格
-      noEnableNodePool: Cluster Autoscaler 需要至少一个节点规格开启，请停用 Cluster Autoscaler 后再关闭
-      needMoreThanOneNodePoolOn: Cluster Autoscaler 需要至少一个节点规格，请停用 Cluster Autoscaler 后再删除
+      notEmptyNodes: 请删除节点后再删除节点池
+      noEnableNodePool: Cluster Autoscaler 需要至少一个节点池开启，请停用 Cluster Autoscaler 后再关闭
+      needMoreThanOneNodePoolOn: Cluster Autoscaler 需要至少一个节点池，请停用 Cluster Autoscaler 后再删除
       selfEnvCannotModify: 自研上云环境暂不支持修改
     button:
       save: 保存配置
       edit: 编辑配置
       create: 立即新建
-      createNodePool: 新建节点规格
+      createNodePool: 新建节点池
       record: 扩缩容记录
     metric:
       curUsagePath: '( 当前使用率 {val} % )'
@@ -759,7 +760,7 @@ cluster:
       expander:
         title: 扩容算法
         desc: >-
-          random：在有多个节点规格时，随机选择节点规格<br/>least-waste：在有多个节点规格时，以最小浪费原则选择，选择有最少可用资源的节点规格<br/>most-pods：在有多个节点规格时，选择容量最大（可以创建最多Pod）的节点规格
+          random：在有多个节点池时，随机选择节点池<br/>least-waste：在有多个节点池时，以最小浪费原则选择，选择有最少可用资源的节点池<br/>most-pods：在有多个节点池时，选择容量最大（可以创建最多Pod）的节点池
       bufferResourceCpuRatio:
         title: 触发扩容资源阈值 (CPU)
         desc: '集群整体CPU资源(Request)使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值'
@@ -771,8 +772,8 @@ cluster:
         desc: '集群整体内存资源Pod数量使用率超过该阈值触发扩容, 无论CPU / 内存资源使用率是否达到阈值'
       maxNodeProvisionTime:
         title: 等待节点提供最长时间
-        desc: 如果节点规格在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败
-        desc1: 如果节点规格在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败，取值范围900 ~ 86400秒
+        desc: 如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败
+        desc1: 如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败，取值范围900 ~ 86400秒
     autoScalerDownConfig:
       title: 自动缩容配置
       label: 允许缩容节点
@@ -816,31 +817,31 @@ cluster:
         'on': 开启低优先级 Pod 配置
         list: 以下
     nodePool:
-      text: 节点规格
+      text: 节点池
       validate:
         name: 名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符(-)及小数点
       label:
-        nameAndID: 节点规格 ID (名称)
+        nameAndID: 节点池 ID (名称)
         nodeQuota: 节点配额
         nodeCounts: 节点数量
         system: 操作系统
-        status: 节点规格状态
-        name: 节点规格名称
-        detail: 查看节点规格详情
+        status: 节点池状态
+        name: 节点池名称
+        detail: 查看节点池详情
       title:
         nodeConfig: 节点配置
         initConfig: 初始化配置
         initConfig1: 初始化配置说明
       action:
-        'off': 关闭节点规格
-        'on': 启用节点规格
-        edit: 编辑节点规格
+        'off': 关闭节点池
+        'on': 启用节点池
+        edit: 编辑节点池
         delete:
-          text: 删除节点规格
-          title: '确定删除节点规格 {name} '
+          text: 删除节点池
+          title: '确定删除节点池 {name} '
       create:
         button:
-          save: 保存节点规格
+          save: 保存节点池
         validate:
           name: 名称2 ~ 255个字符之间，仅支持中文、英文、数字、下划线，分隔符(-)及小数点
           password: linux机器密码需8到30位，推荐使用12位以上的密码；且必须包含大写字母，小写字母和数字
@@ -934,14 +935,14 @@ cluster:
           desc: 镜像提供方与操作系统使用TKE集群设置，暂不支持修改
           private_image: 自定义镜像
         enableAutoscale:
-          title: 是否启用节点规格
+          title: 是否启用节点池
           title1: 是否开启调度
-          tips: 节点规格启用后Autoscaler组件将会根据扩容算法使用该节点规格资源，开启Autoscaler组件后必须要开启至少一个节点规格
+          tips: 节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池
         multiZoneSubnetPolicy:
           title: 实例创建策略
           desc: >-
             首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散
-            ：在节点规格指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效
+            ：在节点池指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效
           priority: 首选可用区（子网）优先
           equality: 多可用区（子网）打散
         retryPolicy:
@@ -965,6 +966,23 @@ cluster:
           userScript: 扩容后置初始化
           scaleInPreScript: 节点回收前清理配置
           placeholder: 请输入 bash 脚本
+          label:
+            keyStepsRecommended: 关键步骤推荐此选项
+            unKeyStepsRecommended: 非关键步骤推荐此选项
+          preInit:
+            tips: 前置初始化不会判断作业执行结果，无论执行成功与否都会继续扩容流程，如果此步骤是关键步骤，请在后置初始化作业中检查此步骤的执行结果
+          postInit:
+            errorHandling:
+              radio1: 终止扩容流程
+              tips1: 如果本步骤是关键步骤适合选择此选项，如有启用CA功能，终止扩容流程后会回收本次扩容的节点后开启下一轮扩容流程
+              radio2: 继续扩容流程
+              tips2: 如果本步骤是非关键步骤适合选择此选项，不影响整个扩容流程，可以扩容后再处理和优化此任务
+          recycleClean:
+            errorHandling:
+              radio1: 终止缩容流程
+              tips1: 如果本步骤是关键步骤适合选择此选项，如有启用CA功能，终止缩容流程后会重试缩容流程
+              radio2: 继续缩容流程
+              tips2: 如果本步骤是非关键步骤适合选择此选项，不影响整个缩容流程，可以缩容后再处理和优化此任务
         cloudArea:
           title: 云区域
           desc: >-
@@ -979,11 +997,11 @@ cluster:
           params: 参数名
       records:
         taskType:
-          create: 创建节点规格
-          update: 更新节点规格
-          enable: 开启/关闭节点规格
-          scale: 扩容节点规格
-          down: 缩容节点规格
+          create: 创建节点池
+          update: 更新节点池
+          enable: 开启/关闭节点池
+          scale: 扩容节点池
+          down: 缩容节点池
         label:
           stepName: 步骤名称
           stepMsg: 步骤信息
@@ -996,7 +1014,7 @@ cluster:
           ipList: IP列表
       nodes:
         title: 管理节点数量
-        desc: 注意：若节点规格已开启自动伸缩， 则数量将会随集群负载自动调整
+        desc: 注意：若节点池已开启自动伸缩， 则数量将会随集群负载自动调整
         label:
           name: 节点名称
         msg:
@@ -1109,7 +1127,6 @@ cluster:
       cancelSelectAll: 取消选择所有数据
       delete:
         tips: 请先停止节点调度
-        title: '确认要删除节点【{innerIp}】？'
         subTitle: '确认是否删除 {ip} 等 {num} 个节点'
         article1: 当前节点上正在运行的容器会被调度到其它可用节点
         article2: 清理容器服务系统组件
@@ -1124,11 +1141,10 @@ cluster:
     validate:
       max10NodeDrain: 最多只能批量驱逐10个节点
     tips:
-      selectNode: 请选择节点
       disableImportClusterAction: 导入集群，节点管理功能不可用
-      disableCaNodeBatchAction: CA节点无法批量操作
+      hasNotNodePoolNode: 选择的节点中有非节点池添加的节点
     placeholder:
-      searchNode: 搜索IP、标签、污点、注解、状态、可用区、节点来源、所属节点规格
+      searchNode: 搜索IP、标签、污点、注解、状态、可用区、节点来源、所属节点池
     title:
       confirmAddNode: 确定添加节点
       confirmReAddNode: 确认重新添加节点
@@ -1145,7 +1161,7 @@ cluster:
       source:
         text: 节点来源
         add: 手动添加
-      nodePool: 所属节点规格
+      nodePool: 所属节点池
     metric:
       cpuUsageAndRequestUsage: CPU使用率/装箱率
       memUsageAndRequestUsage: 内存使用率/装箱率
@@ -1154,6 +1170,8 @@ cluster:
       addNodeFailed: 上架失败
       deleteNodeFailed: 下架失败
       scaleOKButRemoveFailed: '缩容成功,下架失败'
+      applyFailure: 资源申请失败
+      applying: 资源申请中
     create:
       text: 添加节点
       button:
@@ -2359,3 +2377,22 @@ logCollector:
         tips: 如果添加多个标签，只会采集Pod上同时存在多个标签的容器日志
       workload: 按工作负载选择
       container: 按容器名选择
+manualNode:
+  title:
+    source:
+      text: 节点来源
+      existingServer: 已有服务器
+      addFromNodePool: 从节点池添加
+    nodePool:
+      text: 节点池
+      disabledGroup: 未启用自动扩缩容
+      enableGroup: 已启用自动扩缩容
+    desiredSize: 添加节点数量
+  button:
+    gotoNodePool: 管理节点池
+  msg:
+    confirmText: 请确认是否继续添加节点
+    confirmText1: 此节点池已开启弹性伸缩, 请确认是否继续添加节点
+  tips:
+    insufficientNode: '节点数量不足, 前往节点池修改'
+    desiredSize: '此节点池最多可添加 {0} 个节点；如有需要，请前往调整节点池配额'

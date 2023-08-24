@@ -54,12 +54,13 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted, watch, toRefs } from 'vue';
-import NodeTemplateDetail from '@/views/cluster-manage/node-template/node-template-detail.vue';
-import $store from '@/store/index';
-import $router from '@/router';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
+
 import { NODE_TEMPLATE_ID } from '@/common/constant';
 import { useConfig } from '@/composables/use-app';
+import $router from '@/router';
+import $store from '@/store/index';
+import NodeTemplateDetail from '@/views/cluster-manage/node-template/node-template-detail.vue';
 
 export default defineComponent({
   name: 'TemplateSelector',

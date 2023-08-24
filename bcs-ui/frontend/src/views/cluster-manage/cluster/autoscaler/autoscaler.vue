@@ -281,10 +281,14 @@
         :pagination="nodePagination"
         @page-change="nodePageChange"
         @page-limit-change="nodePageSizeChange">
-        <bcs-table-column :label="$t('cluster.ca.nodePool.nodes.label.name')" prop="innerIP"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.nodes.label.name')" prop="innerIP">
+          <template #default="{ row }">
+            {{ row.innerIP || '--' }}
+          </template>
+        </bcs-table-column>
         <bcs-table-column :label="$t('generic.label.status')">
           <template #default="{ row }">
-            <LoadingIcon v-if="['DELETING', 'INITIALIZATION'].includes(row.status)">
+            <LoadingIcon v-if="['DELETING', 'INITIALIZATION', 'APPLYING'].includes(row.status)">
               {{ nodeStatusMap[row.status] }}
             </LoadingIcon>
             <StatusIcon
@@ -298,37 +302,45 @@
         <bcs-table-column :label="$t('generic.label.action')" width="120">
           <template #default="{ row }">
             <div class="operate">
-              <bcs-button
-                text
-                :disabled="['DELETING', 'INITIALIZATION'].includes(row.status)"
-                @click="handleToggleCordon(row)">
-                {{row.unSchedulable ? $t('generic.button.uncordon.text') : $t('generic.button.cordon.text')}}
-              </bcs-button>
-              <bcs-popover
-                placement="bottom"
-                theme="light dropdown"
-                :arrow="false"
-                :disabled="['DELETING', 'INITIALIZATION'].includes(row.status)"
-                trigger="click"
-                class="ml15">
-                <span
-                  :class="['more-icon', { 'disabled': ['DELETING', 'INITIALIZATION'].includes(row.status) }]">
-                  <i class="bcs-icon bcs-icon-more"></i>
-                </span>
-                <div slot="content">
-                  <ul>
-                    <li class="dropdown-item" @click="handleNodeDrain(row)">{{$t('generic.button.drain.text')}}</li>
-                    <li
-                      :class="['dropdown-item', { disabled: !row.unSchedulable }]"
-                      v-bk-tooltips="{
-                        content: $t('cluster.ca.nodePool.nodes.action.delete.tips'),
-                        disabled: row.unSchedulable
-                      }"
-                      @click="handleDeleteNodeGroupNode(row)"
-                    >{{$t('cluster.ca.nodePool.nodes.action.delete.text')}}</li>
-                  </ul>
-                </div>
-              </bcs-popover>
+              <template v-if="row.status === 'APPLY-FAILURE'">
+                <bk-button text @click="handleDeleteNodeGroupNode(row)">
+                  {{ $t('cluster.ca.nodePool.nodes.action.delete.text') }}
+                </bk-button>
+              </template>
+              <template v-else-if="row.status !== 'APPLYING'">
+                <bcs-button
+                  text
+                  :disabled="['DELETING', 'INITIALIZATION'].includes(row.status)"
+                  @click="handleToggleCordon(row)">
+                  {{row.unSchedulable ? $t('generic.button.uncordon.text') : $t('generic.button.cordon.text')}}
+                </bcs-button>
+                <bcs-popover
+                  placement="bottom"
+                  theme="light dropdown"
+                  :arrow="false"
+                  :disabled="['DELETING', 'INITIALIZATION'].includes(row.status)"
+                  trigger="click"
+                  class="ml15">
+                  <span
+                    :class="['more-icon', { 'disabled': ['DELETING', 'INITIALIZATION'].includes(row.status) }]">
+                    <i class="bcs-icon bcs-icon-more"></i>
+                  </span>
+                  <div slot="content">
+                    <ul>
+                      <li class="dropdown-item" @click="handleNodeDrain(row)">{{$t('generic.button.drain.text')}}</li>
+                      <li
+                        :class="['dropdown-item', { disabled: !row.unSchedulable }]"
+                        v-bk-tooltips="{
+                          content: $t('cluster.ca.nodePool.nodes.action.delete.tips'),
+                          disabled: row.unSchedulable,
+                          placement: 'left'
+                        }"
+                        @click="handleDeleteNodeGroupNode(row)"
+                      >{{$t('cluster.ca.nodePool.nodes.action.delete.text')}}</li>
+                    </ul>
+                  </div>
+                </bcs-popover>
+              </template>
             </div>
           </template>
         </bcs-table-column>
@@ -343,7 +355,6 @@
       v-model="showRecord"
       @cancel="handleRecordCancel">
       <div class="mb15 flex-between">
-        <div></div>
         <bcs-date-picker
           :shortcuts="shortcuts"
           type="datetimerange"
@@ -353,6 +364,13 @@
           v-model="timeRange"
           @change="handleTimeRangeChange">
         </bcs-date-picker>
+        <bcs-input
+          class="w-[360px]"
+          right-icon="bk-icon icon-search"
+          clearable
+          :placeholder="$t('generic.ipSelector.placeholder.searchIp')"
+          v-model="searchIp">
+        </bcs-input>
       </div>
       <bcs-table
         v-bkloading="{ isLoading: recordLoading }"
@@ -527,22 +545,27 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed, onBeforeUnmount, getCurrentInstance } from 'vue';
+import { computed, defineComponent, getCurrentInstance, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
+import useNode from '../../node-list/use-node';
+
+import AutoScalerFormItem from './form-item.vue';
+
+import { clusterOverview } from '@/api/modules/monitor';
+import $bkMessage from '@/common/bkmagic';
+import { formatBytes } from '@/common/util';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import LoadingIcon from '@/components/loading-icon.vue';
+import StatusIcon from '@/components/status-icon';
+import { useConfig } from '@/composables/use-app';
+import useDebouncedRef from '@/composables/use-debounce';
+import useInterval from '@/composables/use-interval';
+import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import StatusIcon from '@/components/status-icon';
-import LoadingIcon from '@/components/loading-icon.vue';
-import usePage from '@/composables/use-page';
-import useInterval from '@/composables/use-interval';
-import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
-import AutoScalerFormItem from './form-item.vue';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
-import { clusterOverview } from '@/api/modules/monitor';
-import { formatBytes } from '@/common/util';
-import $bkMessage from '@/common/bkmagic';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import { useConfig } from '@/composables/use-app';
+import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
 
 export default defineComponent({
   name: 'AutoScaler',
@@ -967,6 +990,8 @@ export default defineComponent({
       NOTREADY: $i18n.t('generic.status.notReady'),
       UNKNOWN: $i18n.t('generic.status.unknown1'),
       'REMOVE-CA-FAILURE': $i18n.t('cluster.ca.nodePool.nodes.status.removeFailed'),
+      APPLYING: $i18n.t('cluster.nodeList.status.applying'),
+      'APPLY-FAILURE': $i18n.t('cluster.nodeList.status.applyFailure'),
     };
     const nodeColorMap = {
       RUNNING: 'green',
@@ -974,6 +999,7 @@ export default defineComponent({
       'ADD-FAILURE': 'red',
       'REMOVE-FAILURE': 'red',
       'REMOVE-CA-FAILURE': 'red',
+      'APPLY-FAILURE': 'red',
     };
     const nodeListLoading = ref(false);
     const nodeList = ref<any[]>([]);
@@ -1045,8 +1071,9 @@ export default defineComponent({
         },
       });
     };
+    const { batchDeleteNodes } = useNode();
     const handleDeleteNodeGroupNode = async (row) => {
-      if (nodeListLoading.value || !row.unSchedulable) return;
+      if (nodeListLoading.value || (!row.unSchedulable && row.status !== 'APPLY-FAILURE')) return;
 
       $bkInfo({
         type: 'warning',
@@ -1057,11 +1084,11 @@ export default defineComponent({
         confirmFn: async () => {
           // 删除节点组节点
           nodeListLoading.value = true;
-          const result = await $store.dispatch('clustermanager/deleteNodeGroupNode', {
-            $nodeGroupID: currentOperateRow.value.nodeGroupID,
-            nodes: row.innerIP,
-            clusterID: props.clusterId,
+          const result = await batchDeleteNodes({
+            $clusterId: props.clusterId,
             operator: user.value.username,
+            nodeIPs: row.innerIP,
+            virtualNodeIDs: !row.innerIP ? row.nodeID : '',
           });
           if (result) {
             $bkMessage({
@@ -1219,6 +1246,11 @@ export default defineComponent({
       count: 0,
       showTotalCount: true,
     });
+    const searchIp = useDebouncedRef<string>('');
+    watch(searchIp, () => {
+      handleGetRecordList();
+    });
+
     const recordPageChange = (page) => {
       recordPagination.value.current = page;
       handleGetRecordList();
@@ -1276,6 +1308,7 @@ export default defineComponent({
         status: status?.[0],
         taskType: taskType?.[0],
         clusterID: props.clusterId,
+        ipList: searchIp.value.split(' ').join(','),
       });
       recordList.value = results.map(item => ({
         ...item,
@@ -1396,6 +1429,7 @@ export default defineComponent({
       stopTaskPool();
     });
     return {
+      searchIp,
       isPodsPriorityEnable,
       podsPriorityLoading,
       showPodsPriorityDialog,
