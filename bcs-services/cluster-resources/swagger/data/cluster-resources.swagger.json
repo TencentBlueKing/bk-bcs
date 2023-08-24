@@ -3842,6 +3842,167 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/revision": {
+      "get": {
+        "summary": "GetHistoryDeployRevision API",
+        "description": "获取 Deployment Revision",
+        "operationId": "Workload_GetDeployHistoryRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "资源名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/detail": {
+      "get": {
+        "summary": "GetDeployRevisionDetail API",
+        "description": "获取 Deployment Revision相关信息",
+        "operationId": "Workload_GetDeployRevisionDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "资源名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "revision",
+            "description": "deployment revision版本.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/revision": {
+      "put": {
+        "summary": "RolloutDeployRevision API",
+        "description": "回滚 Deployment Revision",
+        "operationId": "Workload_RolloutDeployRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesRolloutDeployRevisionReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}": {
       "get": {
         "summary": "GetDeploy API",
@@ -7358,6 +7519,33 @@
       },
       "description": "更新单个 k8s 资源请求体",
       "title": "ResUpdateReq"
+    },
+    "clusterresourcesRolloutDeployRevisionReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "name": {
+          "type": "string",
+          "title": "资源名称"
+        },
+        "revision": {
+          "type": "string",
+          "title": "deployment revision版本"
+        }
+      },
+      "description": "删除单个 k8s 资源请求体",
+      "title": "ResDeleteReq"
     },
     "clusterresourcesSubscribeResp": {
       "type": "object",
