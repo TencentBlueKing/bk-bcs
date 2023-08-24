@@ -17,6 +17,7 @@ import (
 	"fmt"
 
 	"bscp.io/pkg/criteria/validator"
+	"bscp.io/pkg/tools"
 )
 
 // TemplateVariable 模版变量
@@ -139,6 +140,10 @@ type TemplateVariableSpec struct {
 
 // ValidateCreate validate template variable spec when it is created.
 func (t *TemplateVariableSpec) ValidateCreate() error {
+	if err := t.ValidateDefaultVal(); err != nil {
+		return err
+	}
+
 	if err := validator.ValidateName(t.Name); err != nil {
 		return err
 	}
@@ -152,8 +157,21 @@ func (t *TemplateVariableSpec) ValidateCreate() error {
 
 // ValidateUpdate validate template variable spec when it is updated.
 func (t *TemplateVariableSpec) ValidateUpdate() error {
+	if err := t.ValidateDefaultVal(); err != nil {
+		return err
+	}
+
 	if err := validator.ValidateMemo(t.Memo, false); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ValidateDefaultVal validate template variable default value.
+func (t *TemplateVariableSpec) ValidateDefaultVal() error {
+	if t.Type == NumberVar && !tools.IsNumber(t.DefaultVal) {
+		return fmt.Errorf("default_val %s is not a number type", t.DefaultVal)
 	}
 
 	return nil

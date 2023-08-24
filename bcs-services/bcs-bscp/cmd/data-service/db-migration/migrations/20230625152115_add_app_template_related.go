@@ -84,7 +84,7 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		// Spec is specifics of the resource defined with user
 		Name       string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_name,priority:2"`
 		Type       string `gorm:"type:varchar(20) not null"`
-		DefaultVal string `gorm:"type:json not null"`
+		DefaultVal string `gorm:"type:mediumtext"`
 		Memo       string `gorm:"type:varchar(256) default ''"`
 
 		// Attachment is attachment info of the resource
