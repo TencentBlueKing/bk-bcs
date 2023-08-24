@@ -160,13 +160,13 @@ func getResourceNodeFromPermCtx(permCtx *PermCtx) iam.ResourceNode {
 		node.Rp = project.ProjectResourcePath{}
 	case Cluster:
 		node.RInstance = permCtx.ClusterID
-		node.Rp = cloudaccount.AccountResourcePath{ProjectID: permCtx.ProjectID}
+		node.Rp = cluster.ClusterResourcePath{ProjectID: permCtx.ProjectID}
 	case Namespace:
 		node.RInstance = authutil.CalcIAMNsID(permCtx.ClusterID, permCtx.Namespace)
 		node.Rp = namespace.NamespaceResourcePath{ProjectID: permCtx.ProjectID, ClusterID: permCtx.ClusterID}
 	case TemplateSet:
 		node.RInstance = permCtx.TemplateID
-		node.Rp = cloudaccount.AccountResourcePath{ProjectID: permCtx.ProjectID}
+		node.Rp = templateset.TemplateSetResourcePath{ProjectID: permCtx.ProjectID}
 	case CloudAccount:
 		node.RInstance = permCtx.AccountID
 		node.Rp = cloudaccount.AccountResourcePath{ProjectID: permCtx.ProjectID}
