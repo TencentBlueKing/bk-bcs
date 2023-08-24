@@ -19,58 +19,19 @@ import (
 	"github.com/pborman/ansi"
 )
 
-type cmdParse struct {
-	CmdOutput  chan []map[*ansi.S][]*ansi.S
+type CmdParse struct {
 	Cmd        *ansi.S
 	InputSlice []*ansi.S
 	CmdResult  map[*ansi.S]*ansi.S
 }
 
-func NewCmdParse() *cmdParse {
-	c := new(cmdParse)
-	c.CmdOutput = make(chan []map[*ansi.S][]*ansi.S)
+func NewCmdParse() *CmdParse {
+	c := new(CmdParse)
+
 	c.CmdResult = make(map[*ansi.S]*ansi.S)
 	c.InputSlice = make([]*ansi.S, 0)
 
 	return c
-}
-
-// ReceivedCmdOutChan 从outChannel读取数据
-func ReceivedCmdOutChan(c *cmdParse) {
-	for inOutSlice := range c.CmdOutput {
-		readyParse := make([]*ansi.S, 0)
-		cmdMap := make(map[*ansi.S]*ansi.S)
-		for _, inOutMap := range inOutSlice {
-			for in, outSlice := range inOutMap {
-				for _, out := range outSlice {
-					if in.Code == "\r" {
-						if !notInVim(outSlice) {
-							readyParse = []*ansi.S{}
-						}
-					} else {
-						readyParse = append(readyParse, in)
-						cmdMap[in] = out
-					}
-				}
-
-			}
-		}
-
-		udCmd := parseUpDown(readyParse, cmdMap)
-		tabCmd := parseTab(udCmd, cmdMap)
-		lCmd, rCmd := parseShortCut(tabCmd)
-		lrCmd := parseLeftRight(lCmd, rCmd)
-		dCmd := parseDelete(lrCmd)
-		//for _, v := range dCmd {
-		//	fmt.Printf("---dCmd---%#v\n", v)
-		//}
-
-		cmd := ""
-		for _, v := range dCmd {
-			cmd += string(v.Code)
-		}
-
-	}
 }
 
 // 将命令字符串转换结构体
@@ -232,7 +193,8 @@ func parseDelete(s []*ansi.S) []*ansi.S {
 	return result
 }
 
-func ResolveInOut(c *cmdParse) string {
+// ResolveInOut ..
+func ResolveInOut(c *CmdParse) string {
 	readyParseIn := make([]*ansi.S, 0)
 	readyParseMap := make(map[*ansi.S]*ansi.S)
 	for _, v := range c.InputSlice {

@@ -35,6 +35,7 @@ import (
 const (
 	spaceUIDFormat        = "bkci__%s"
 	bcsLogConfigSeparator = ":"
+	bkLogPrefix           = "bklog|"
 )
 
 // GetLogRuleResp log rule resp
@@ -205,6 +206,18 @@ func getBcsLogConfigNamespaces(id string) (string, string) {
 	return s[0], s[1]
 }
 
+func isBKLogID(id string) bool {
+	return strings.HasPrefix(id, bkLogPrefix)
+}
+
+func toBKLogID(name string) string {
+	return fmt.Sprintf("%s%s", bkLogPrefix, name)
+}
+
+func getBKLogName(id string) string {
+	return strings.TrimPrefix(id, bkLogPrefix)
+}
+
 // 转换 bcslogconfig 到通用规则
 func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, logIndexID *entity.LogIndex,
 	newRuleID string) {
@@ -280,6 +293,48 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 			}
 		}
 		resp.Config.LogRuleContainer.Container.ContainerName = strings.Join(names, ",")
+	}
+}
+
+// 转换 entity.LogRule 到通用规则
+func (resp *GetLogRuleResp) loadFromBkLog(rule bklog.ListBCSCollectorRespData, projectCode string) {
+	resp.ID = toBKLogID(rule.CollectorConfigNameEN)
+	resp.Name = rule.CollectorConfigName
+	// 从日志平台创建的规则禁止编辑
+	resp.RuleID = 0
+	resp.RuleName = rule.CollectorConfigNameEN
+	resp.Description = rule.Description
+	resp.FileIndexSetID = rule.FileIndexSetID
+	resp.STDIndexSetID = rule.STDIndexSetID
+	resp.RuleFileIndexSetID = rule.RuleFileIndexSetID
+	resp.RuleSTDIndexSetID = rule.RuleSTDIndexSetID
+	resp.CreatedAt = utils.JSONTime{Time: rule.CreatedAt}
+	resp.UpdatedAt = utils.JSONTime{Time: rule.UpdatedAt}
+	resp.Creator = rule.Creator
+	resp.Updator = rule.Updator
+	resp.Status = rule.Status()
+	resp.Message = rule.Message()
+	resp.Entrypoint = Entrypoint{
+		STDLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", strings.TrimRight(config.G.BKLog.Entrypoint, "/"),
+			rule.STDIndexSetID, projectCode),
+		FileLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", strings.TrimRight(config.G.BKLog.Entrypoint, "/"),
+			rule.FileIndexSetID, projectCode),
+	}
+	resp.Config = bklog.LogRule{
+		ExtraLabels: make([]bklog.Label, 0),
+		LogRuleContainer: bklog.LogRuleContainer{
+			Paths: make([]string, 0),
+		},
+	}
+	resp.Config = rule.ToLogRule()
+	// append bkbase info
+	if resp.Config.DataInfo.FileBKDataDataID != 0 {
+		resp.Entrypoint.FileBKBaseURL = getBKBaseEntrypoing(config.G.BKLog.BKBaseEntrypoint,
+			resp.Config.DataInfo.FileBKDataDataID)
+	}
+	if resp.Config.DataInfo.StdBKDataDataID != 0 {
+		resp.Entrypoint.STDBKBaseURL = getBKBaseEntrypoing(config.G.BKLog.BKBaseEntrypoint,
+			resp.Config.DataInfo.StdBKDataDataID)
 	}
 }
 

@@ -77,6 +77,9 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 	}
 
 	pre, post, err := rs.cache.ReleasedHook.Get(kt, opts.BizID, releaseID)
+	if err != nil {
+		return nil, err
+	}
 
 	uriDec := rs.provider.URIDecorator(opts.BizID)
 	meta := &types.AppLatestReleaseMeta{

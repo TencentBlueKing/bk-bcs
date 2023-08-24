@@ -4,9 +4,8 @@ import { DirectiveBinding } from 'vue/types/options';
 import { VueConstructor, VNode } from 'vue';
 import { bus } from '@/common/bus';
 import bkTooltips from 'bk-magic-vue/lib/directives/tooltips';
-import {  userPerms, userPermsByAction } from '@/api/base';
+import {  userPerms, userPermsByAction } from '@/api/modules/user-manager';
 import { deepEqual } from '@/common/util';
-import { newUserPermsByAction } from '@/api/modules/cluster-manager';
 import  { messageInfo } from '@/common/bkmagic';
 import $i18n from '@/i18n/i18n-setup';
 interface IElement extends HTMLElement {
@@ -19,7 +18,6 @@ interface IOptions {
   disablePerms?: boolean; // 是否禁用自动权限请求（完全交个外部控制clickable的值决定状态）
   resourceName?: string;
   actionId?: string | string[];
-  newPerms?: boolean; // 是否调用新接口
   // key?: string; // 防止指令替换DOM后，Vue diff Vnode时进行Vnode替换找不到节点报错问题
   permCtx?: {
     project_id: string; // 项目权限 如果实例无关，可不传
@@ -92,15 +90,10 @@ function init(el: IElement, binding: DirectiveBinding, vNode: VNode) {
     const $actionId = Array.isArray(actionId) ? actionId[0] : actionId;
 
     bus.$emit('show-apply-perm-modal', async () => {
-      const data = binding.value?.newPerms
-        ? await newUserPermsByAction({
-          $actionId,
-          perm_ctx: permCtx,
-        }).catch(() => ({}))
-        : await userPermsByAction({
-          $actionId,
-          perm_ctx: permCtx,
-        }).catch(() => ({}));
+      const data = await userPermsByAction({
+        $actionId,
+        perm_ctx: permCtx,
+      }).catch(() => ({}));
 
       if (data?.perms?.[$actionId]) {
         messageInfo($i18n.t('generic.msg.info.refreshAuth'));
@@ -145,7 +138,7 @@ function destroy(cloneEl: IElement, vNode: VNode) {
 }
 
 async function updatePerms(el: IElement, binding: DirectiveBinding, vNode: VNode) {
-  const { actionId = '', permCtx, newPerms } = binding.value as IOptions;
+  const { actionId = '', permCtx } = binding.value as IOptions;
   const { resource_type, cluster_id, project_id, template_id, name } = permCtx || {};
   // 校验数据完整性
   if (!actionId
@@ -157,21 +150,13 @@ async function updatePerms(el: IElement, binding: DirectiveBinding, vNode: VNode
   ) return;
 
   const actionIds = Array.isArray(actionId) ? actionId : [actionId];
-  const data = newPerms
-    ? await newUserPermsByAction({
-      $actionId: actionIds[0], // 目前只兼容一个
-      perm_ctx: permCtx,
-    }, {
-      fromCache: true,
-      requestId: `${JSON.stringify(actionIds)}-${JSON.stringify(permCtx)}`,
-    })
-    : await userPerms({
-      action_ids: actionIds,
-      perm_ctx: permCtx,
-    }, {
-      fromCache: true,
-      requestId: `${JSON.stringify(actionIds)}-${JSON.stringify(permCtx)}`,
-    }).catch(() => ({}));
+  const data = await userPerms({
+    action_ids: actionIds,
+    perm_ctx: permCtx,
+  }, {
+    fromCache: true,
+    requestId: `${JSON.stringify(actionIds)}-${JSON.stringify(permCtx)}`,
+  }).catch(() => ({}));
   const clickable = actionIds.every(actionId => data?.perms?.[actionId]);
   el.dataset.clickable = clickable ? 'true' : '';
 

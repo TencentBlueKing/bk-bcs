@@ -384,6 +384,7 @@
                   :fill-color="item.color"
                   :key="row.nodeName"
                   v-bk-tooltips="{
+                    disabled: !item.percent,
                     content: nodeMetric[row.nodeName][`${item.prop}_tips`]
                   }"
                   v-if="nodeMetric[row.nodeName] && nodeMetric[row.nodeName][item.prop]" />
@@ -571,7 +572,7 @@
       :ok-text="$t('generic.button.delete')"
       :cancel-text="$t('generic.button.close')"
       :confirm="confirmDelNode"
-      @ancel="cancelDelNode" />
+      @cancel="cancelDelNode" />
   </div>
 </template>
 <script lang="ts">

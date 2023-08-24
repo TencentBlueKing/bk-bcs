@@ -17,7 +17,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	_ "net/http/pprof" // nolint
@@ -195,7 +195,7 @@ func RequestBodyLogger(ignorePattern ...string) func(http.Handler) http.Handler 
 			buf := bytes.NewBuffer(nil)
 			ww.Tee(buf)
 
-			body, err := ioutil.ReadAll(r.Body)
+			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				render.Render(w, r, rest.BadRequest(err))
 				return
@@ -212,7 +212,7 @@ func RequestBodyLogger(ignorePattern ...string) func(http.Handler) http.Handler 
 				)
 			}()
 
-			r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+			r.Body = io.NopCloser(bytes.NewBuffer(body))
 			next.ServeHTTP(ww, r)
 		}
 

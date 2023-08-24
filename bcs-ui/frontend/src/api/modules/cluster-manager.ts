@@ -60,9 +60,6 @@ export const setNodeTaints = request('put', '/node/taints');
 // 集群管理
 export const masterList = request('get', '/cluster/$clusterId/master');
 
-// auth
-export const newUserPermsByAction = request('post', '/perms/actions/$actionId');
-
 // CA
 export const clusterAutoScalingLogsV2 = request('get', '/operationlogs');
 export const cloudsZones = request('get', '/clouds/$cloudId/zones');

@@ -18,6 +18,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -25,8 +27,7 @@ import (
 // SecretPlugin for internal project authorization
 type SecretPlugin struct {
 	*mux.Router
-	middleware MiddlewareInterface
-	session    *Session
+	middleware mw.MiddlewareInterface
 }
 
 // all argocd secret URL:
@@ -77,132 +78,83 @@ func (plugin *SecretPlugin) Init() error {
 
 // POST,PUT /api/v1/secrets, create new secret && update(create new version) new secret
 // validate project detail from request
-func (plugin *SecretPlugin) createPutSecretHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *SecretPlugin) createPutSecretHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	project := mux.Vars(r)["project"]
 
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, project, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project '%s' edit permission failed", project),
-		}
+		return mw.ReturnErrorResponse(statusCode,
+			errors.Wrapf(err, "check project '%s' edit permission failed", project))
 	}
-
-	resp := plugin.middleware.ProxySecretRequest(r)
-	return &httpResponse{
-		obj: resp,
-	}
+	return mw.ReturnSecretReverse()
 }
 
 // Delete with preifx /api/v1/secrets/{project}/{path}
-func (plugin *SecretPlugin) deleteSecretHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *SecretPlugin) deleteSecretHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	projectName := mux.Vars(r)["project"]
 
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project permission failed"),
-		}
+		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
 
-	resp := plugin.middleware.ProxySecretRequest(r)
-	return &httpResponse{
-		obj: resp,
-	}
+	return mw.ReturnSecretReverse()
 }
 
 // Get with preifx /api/v1/secrets/{project}/{path}?version={version}
-func (plugin *SecretPlugin) getSecretHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *SecretPlugin) getSecretHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	projectName := mux.Vars(r)["project"]
 
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project permission failed"),
-		}
+		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
 
-	resp := plugin.middleware.ProxySecretRequest(r)
-	if resp.Data == nil {
-		resp.Data = map[string]interface{}{}
-	}
-	return &httpResponse{
-		obj: resp,
-	}
+	return mw.ReturnSecretReverse()
 }
 
 // GET /api/v1/secrets/{project}/list？path=${path}
-func (plugin *SecretPlugin) listSecretHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *SecretPlugin) listSecretHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	projectName := mux.Vars(r)["project"]
 
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project permission failed"),
-		}
+		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
 
-	resp := plugin.middleware.ProxySecretRequest(r)
-	if resp.Data == nil {
-		resp.Data = []string{}
-	}
-	return &httpResponse{
-		obj: resp,
-	}
+	return mw.ReturnSecretReverse()
 }
 
 // GET /api/v1/secrets/{project}/{path}/metadata
-func (plugin *SecretPlugin) getMetadataHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *SecretPlugin) getMetadataHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	projectName := mux.Vars(r)["project"]
 
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project permission failed"),
-		}
+		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
-	resp := plugin.middleware.ProxySecretRequest(r)
-	return &httpResponse{
-		obj: resp,
-	}
+	return mw.ReturnSecretReverse()
 }
 
 // GET /api/v1/secrets/{project}/{path}/version
-func (plugin *SecretPlugin) getVersionHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *SecretPlugin) getVersionHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	projectName := mux.Vars(r)["project"]
 
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project permission failed"),
-		}
+		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
 
-	resp := plugin.middleware.ProxySecretRequest(r)
-	return &httpResponse{
-		obj: resp,
-	}
+	return mw.ReturnSecretReverse()
 }
 
 // POST /api/v1/secrets/{project}/{path}/rollback
-func (plugin *SecretPlugin) rollbackHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *SecretPlugin) rollbackHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	projectName := mux.Vars(r)["project"]
 
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project permission failed"),
-		}
+		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
-
-	resp := plugin.middleware.ProxySecretRequest(r)
-	return &httpResponse{
-		obj: resp,
-	}
+	return mw.ReturnSecretReverse()
 }

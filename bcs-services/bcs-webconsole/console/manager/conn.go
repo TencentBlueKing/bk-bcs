@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/base64"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -43,8 +44,6 @@ import (
 // End-of-Transmission character ctrl-d
 const EndOfTransmission = "\u0004"
 
-var cmdParser = audit.NewCmdParse()
-
 type wsMessage struct {
 	msgType int
 	msg     []byte
@@ -62,6 +61,7 @@ type RemoteStreamConn struct {
 	outputMsgChan chan []byte
 	hideBanner    bool
 	replayInfo    *terminalRecord.ReplyInfo
+	cmdParser     *audit.CmdParse
 }
 
 // NewRemoteStreamConn :
@@ -75,6 +75,7 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 		outputMsgChan: make(chan []byte),
 		hideBanner:    hideBanner,
 		replayInfo:    &terminalRecord.ReplyInfo{},
+		cmdParser:     audit.NewCmdParse(),
 	}
 
 	// 初始化命令行宽和高
@@ -142,22 +143,19 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 		return nil, nil
 	}
 
-	// 打印日志
-	if channel == LogChannel {
-		inputMsg, _ := r.bindMgr.HandleInputMsg(decodeMsg)
-		logger.Infof("UserName=%s  SessionID=%s  Command=%s",
-			r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, string(inputMsg))
-		return nil, nil
-	}
-
 	inputMsg, err := r.bindMgr.HandleInputMsg(decodeMsg)
 	if err != nil {
 		return nil, nil
 	}
 
-	_, ss, _ := ansi.Decode(inputMsg)
-	cmdParser.Cmd = ss
-	cmdParser.InputSlice = append(cmdParser.InputSlice, ss)
+	_, ss, err := ansi.Decode(inputMsg)
+	if err != nil {
+		return inputMsg, nil
+	}
+
+	r.cmdParser.Cmd = ss
+	r.cmdParser.InputSlice = append(r.cmdParser.InputSlice, ss)
+
 	return inputMsg, nil
 }
 
@@ -180,6 +178,39 @@ func (r *RemoteStreamConn) Read(p []byte) (int, error) {
 	}
 }
 
+// auditCmd 命令行审计, 不能影响主流程
+func (r *RemoteStreamConn) auditCmd(outputMsg []byte) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error("[audit cmd panic], err: %v, debug strace: %s", r, debug.Stack())
+		}
+	}()
+
+	//输入输出映射,用于查找历史命令
+	out, ss, err := ansi.Decode(outputMsg)
+	if err != nil {
+		logger.Error("decode output error: %s", err)
+		return
+	}
+
+	//TODO:历史命令问题,可能解析问题导致
+	if strings.ReplaceAll(string(ss.Code), "\b", "") == "" {
+		rex := regexp.MustCompile("\\x1b\\[\\d+P")
+		l := rex.Split(string(out), -1)
+		ss.Code = ansi.Name(l[len(l)-1])
+	}
+	//时序性问题不可避免
+	r.cmdParser.CmdResult[r.cmdParser.Cmd] = ss
+
+	if r.cmdParser.Cmd != nil && r.cmdParser.Cmd.Code == "\r" {
+		cmd := audit.ResolveInOut(r.cmdParser)
+		if cmd != "" {
+			logger.Infof("UserName=%s  SessionID=%s  Command=%s",
+				r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, cmd)
+		}
+	}
+}
+
 // Write : executor 回调向 web 端输出
 func (r *RemoteStreamConn) Write(p []byte) (int, error) {
 	msg := make([]byte, len(p))
@@ -189,27 +220,9 @@ func (r *RemoteStreamConn) Write(p []byte) (int, error) {
 	if err != nil {
 		return 0, nil
 	}
-	//输入输出映射,用于查找历史命令
-	out, ss, e := ansi.Decode(outputMsg)
-	if e != nil {
-		logger.Error("decode output error:", e)
-	}
-	//TODO:历史命令问题,可能解析问题导致
-	if strings.ReplaceAll(string(ss.Code), "\b", "") == "" {
-		rex := regexp.MustCompile("\\x1b\\[\\d+P")
-		l := rex.Split(string(out), -1)
-		ss.Code = ansi.Name(l[len(l)-1])
-	}
-	//时序性问题不可避免
-	cmdParser.CmdResult[cmdParser.Cmd] = ss
 
-	if cmdParser.Cmd != nil && cmdParser.Cmd.Code == "\r" {
-		cmd := audit.ResolveInOut(cmdParser)
-		if cmd != "" {
-			logger.Infof("UserName=%s  SessionID=%s  Command=%s",
-				r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, cmd)
-		}
-	}
+	// 命令行解析与审计
+	r.auditCmd(outputMsg)
 
 	output := []byte(base64.StdEncoding.EncodeToString(outputMsg))
 	r.outputMsgChan <- output

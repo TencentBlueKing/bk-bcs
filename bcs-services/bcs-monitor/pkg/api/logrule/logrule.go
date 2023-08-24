@@ -94,6 +94,21 @@ func ListLogCollectors(c *rest.Context) (interface{}, error) {
 		result = append(result, lrr)
 	}
 
+	// 从日志平台获取非 bcs 创建的日志规则
+	for _, rule := range lcs {
+		for _, v := range result {
+			if v.RuleName == rule.CollectorConfigNameEN {
+				continue
+			}
+		}
+		if !rule.FromBKLog {
+			continue
+		}
+		lrr := &GetLogRuleResp{}
+		lrr.loadFromBkLog(rule, c.ProjectCode)
+		result = append(result, lrr)
+	}
+
 	// 从 bcslogconfigs 获取数据
 	bcsLogConfigs, err := k8sclient.ListBcsLogConfig(c.Request.Context(), c.ClusterId)
 	if err != nil {
@@ -151,14 +166,26 @@ func GetLogRule(c *rest.Context) (interface{}, error) {
 		return result, nil
 	}
 
-	// 从数据库获取规则数据
-	lcInDB, err := store.GetLogRule(c.Request.Context(), id)
+	// 从 bk-log 获取规则数据
+	lcs, err := bklog.ListLogCollectors(c.Request.Context(), c.ClusterId, GetSpaceID(c.ProjectCode))
 	if err != nil {
 		return nil, err
 	}
 
-	// 从 bk-log 获取规则数据
-	lcs, err := bklog.ListLogCollectors(c.Request.Context(), c.ClusterId, GetSpaceID(c.ProjectCode))
+	if isBKLogID(id) {
+		ruleName := getBKLogName(id)
+		for _, rule := range lcs {
+			if rule.CollectorConfigNameEN == ruleName {
+				result := &GetLogRuleResp{}
+				result.loadFromBkLog(rule, c.ProjectCode)
+				return result, nil
+			}
+		}
+		return nil, errors.Errorf("not found %s", id)
+	}
+
+	// 从数据库获取规则数据
+	lcInDB, err := store.GetLogRule(c.Request.Context(), id)
 	if err != nil {
 		return nil, err
 	}
@@ -215,8 +242,8 @@ func CreateLogRule(c *rest.Context) (interface{}, error) {
 // @Router  /log_collector/rules/:id [put]
 func UpdateLogRule(c *rest.Context) (interface{}, error) {
 	id := c.Param("id")
-	if isBcsLogConfigID(id) {
-		return nil, fmt.Errorf("can't update bcslogconfig")
+	if isBcsLogConfigID(id) || isBKLogID(id) {
+		return nil, fmt.Errorf("id is invalid")
 	}
 	req := &UpdateLogRuleReq{}
 	if err := c.ShouldBindJSON(req); err != nil {

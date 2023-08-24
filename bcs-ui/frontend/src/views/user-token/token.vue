@@ -31,7 +31,7 @@
       <bk-table-column :label="$t('apiToken.text')" min-width="300">
         <template #default="{ row }">
           <div class="token-row">
-            <span>{{hiddenToken ? new Array(row.token.length).fill('*').join('') : row.token}}</span>
+            <span>{{hiddenToken ? new Array(12).fill('*').join('') : row.token}}</span>
             <i
               :class="['ml10 bcs-icon', `bcs-icon-${hiddenToken ? 'eye-slash' : 'eye'}`]"
               @click="toggleHiddenToken"></i>

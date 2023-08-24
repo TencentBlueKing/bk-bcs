@@ -6,7 +6,6 @@
         v-authority="{
           actionId: 'cloud_account_create',
           resourceName: curProject.project_name,
-          newPerms: true,
           permCtx: {
             resource_type: 'project',
             project_id: curProject.project_id,
@@ -73,7 +72,6 @@
               actionId: 'cloud_account_manage',
               resourceName: row.account.accountName,
               disablePerms: true,
-              newPerms: true,
               permCtx: {
                 project_id: row.account.projectID,
                 account_id: row.account.accountID,

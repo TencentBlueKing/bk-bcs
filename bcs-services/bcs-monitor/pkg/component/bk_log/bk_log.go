@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -26,7 +27,40 @@ import (
 
 // ListLogCollectors list log collectors
 func ListLogCollectors(ctx context.Context, clusterID, spaceUID string) ([]ListBCSCollectorRespData, error) {
-	url := fmt.Sprintf("%s/list_bcs_collector", config.G.BKLog.APIServer)
+	bcsPath := "list_bcs_collector"
+	withoutBcsPath := "list_bcs_collector_without_rule"
+	g, ctx := errgroup.WithContext(ctx)
+	var result1 []ListBCSCollectorRespData
+	var result2 []ListBCSCollectorRespData
+	g.Go(func() error {
+		var err error
+		result1, err = ListLogCollectorsWithPath(ctx, clusterID, spaceUID, bcsPath)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	g.Go(func() error {
+		var err error
+		result2, err = ListLogCollectorsWithPath(ctx, clusterID, spaceUID, withoutBcsPath)
+		if err != nil {
+			return err
+		}
+		for i := range result2 {
+			result2[i].FromBKLog = true
+		}
+		return nil
+	})
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+	return append(result1, result2...), nil
+}
+
+// ListLogCollectorsWithPath list log collectors
+func ListLogCollectorsWithPath(ctx context.Context, clusterID, spaceUID string,
+	path string) ([]ListBCSCollectorRespData, error) {
+	url := fmt.Sprintf("%s/%s", config.G.BKLog.APIServer, path)
 	authInfo, err := component.GetBKAPIAuthorization()
 	if err != nil {
 		return nil, err

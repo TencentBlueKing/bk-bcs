@@ -105,14 +105,9 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 	}
 
 	if !req.All {
-		if req.Start < 0 {
-			return nil, errors.New("start has to be greater than 0")
-		}
-
-		if req.Limit < 0 {
+		if req.Limit == 0 {
 			return nil, errors.New("limit has to be greater than 0")
 		}
-
 		r.Start = req.Start
 		r.Limit = req.Limit
 	}

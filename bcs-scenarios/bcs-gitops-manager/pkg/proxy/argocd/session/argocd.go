@@ -8,9 +8,10 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package argocd
+package session
 
 import (
 	"crypto/tls"
@@ -25,14 +26,21 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 )
 
-// Session purpose: simple revese proxy for argocd according kubernetes service.
+// ArgoSession purpose: simple revese proxy for argocd according kubernetes service.
 // gitops proxy implements http.Handler interface.
-type Session struct {
+type ArgoSession struct {
 	option *proxy.GitOpsOptions
 }
 
+// NewArgoSession create the session of argoCD
+func NewArgoSession(option *proxy.GitOpsOptions) *ArgoSession {
+	return &ArgoSession{
+		option: option,
+	}
+}
+
 // ServeHTTP http.Handler implementation
-func (s *Session) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+func (s *ArgoSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// backend real path with encoded format
 	realPath := strings.TrimPrefix(req.URL.RequestURI(), common.GitOpsProxyURL)
 	// !force https link

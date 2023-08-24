@@ -74,7 +74,7 @@ export default function useProjects() {
   }
 
   async function fetchProjectInfo(params: { $projectId: string }) {
-    const { data, web_annotations, code } = await getProject(params, {
+    const { data, web_annotations, code, message } = await getProject(params, {
       needRes: true,
       globalError: false,
     }).catch(() => ({}));
@@ -97,6 +97,7 @@ export default function useProjects() {
       code,
       data: bcsProjectData as IProject,
       web_annotations,
+      message,
     };
   }
 

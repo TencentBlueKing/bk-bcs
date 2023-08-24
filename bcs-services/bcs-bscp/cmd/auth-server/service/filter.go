@@ -52,20 +52,20 @@ func (g *gateway) setFilter(next http.Handler) http.Handler {
 			module = paths[4]
 		} else {
 			logs.Errorf("received url path length not conform to the regulations, path: %s", r.URL.Path)
-			fmt.Fprintf(w, errf.New(http.StatusNotFound, "Not Found").Error())
+			fmt.Fprint(w, errf.New(http.StatusNotFound, "Not Found").Error())
 			return
 		}
 
 		switch moduleType(module) {
 		case iamModule:
 			if err := iamRequestFilter(g.iamSys, w, r); err != nil {
-				fmt.Fprintf(w, errf.Error(err).Error())
+				fmt.Fprint(w, errf.Error(err).Error())
 				return
 			}
 
 		case authModule:
 			if err := authRequestFilter(w, r); err != nil {
-				fmt.Fprintf(w, errf.Error(err).Error())
+				fmt.Fprint(w, errf.Error(err).Error())
 				return
 			}
 
@@ -73,7 +73,7 @@ func (g *gateway) setFilter(next http.Handler) http.Handler {
 
 		default:
 			logs.Errorf("received unknown module's request req: %v", r)
-			fmt.Fprintf(w, errf.New(http.StatusNotFound, "Not Found").Error())
+			fmt.Fprint(w, errf.New(http.StatusNotFound, "Not Found").Error())
 			return
 		}
 
