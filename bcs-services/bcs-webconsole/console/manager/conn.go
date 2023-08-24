@@ -258,7 +258,7 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 	guideMessages := helloMessage(c, r.bindMgr.PodCtx.Source)
 	notSendMsg := true
 	//终端session记录
-	replayRecorder, err := terminalRecord.NewReplayRecord(r.bindMgr.PodCtx.SessionId, r.replayInfo)
+	replayRecorder, err := terminalRecord.NewReplayRecord(r.bindMgr.PodCtx, r.replayInfo)
 	if err != nil {
 		return errors.Errorf("new replayRecord error:%s\n", err)
 	}
