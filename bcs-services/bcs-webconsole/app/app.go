@@ -378,7 +378,6 @@ func buildCommands() []*cli.Command {
 			Usage:   "replay terminal session record",
 			Aliases: []string{"r"},
 			Action: func(c *cli.Context) error {
-				fmt.Println(c.NArg())
 				if c.NArg() == 0 {
 					logger.Error("replay file not set")
 					return errors.New("replay file not set")
