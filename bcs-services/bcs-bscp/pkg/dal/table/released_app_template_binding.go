@@ -107,12 +107,7 @@ type ReleasedAppTemplateBindingType string
 
 // ValidateCreate validate ReleasedAppTemplateBinding spec when it is created.
 func (t *ReleasedAppTemplateBindingSpec) ValidateCreate() error {
-	return validateBindings(t.Bindings)
-}
-
-// ValidateUpdate validate ReleasedAppTemplateBinding spec when it is updated.
-func (t *ReleasedAppTemplateBindingSpec) ValidateUpdate() error {
-	return validateBindings(t.Bindings)
+	return validateBindingsCreate(t.Bindings)
 }
 
 // ReleasedAppTemplateBindingAttachment defines the ReleasedAppTemplateBinding attachments.

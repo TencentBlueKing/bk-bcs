@@ -114,9 +114,8 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateRe
 }
 
 // BatchDeleteTemplate delete templates in batch
-func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDeleteTemplateReq) (*pbcs.
-	BatchDeleteTemplateResp,
-	error) {
+func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDeleteTemplateReq) (
+	*pbcs.BatchDeleteTemplateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.BatchDeleteTemplateResp)
 
