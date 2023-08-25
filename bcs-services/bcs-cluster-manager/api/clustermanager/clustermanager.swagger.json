@@ -4947,6 +4947,47 @@
         ]
       }
     },
+    "/clustermanager/v1/vcluster/{clusterID}/quota": {
+      "put": {
+        "summary": "更新配额",
+        "description": "更新虚拟集群命名空间配额",
+        "operationId": "ClusterManager_UpdateVirtualClusterQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateVirtualClusterQuotaResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateVirtualClusterQuotaReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/vpccidr/{vpcID}": {
       "get": {
         "summary": "查询vpc cidr列表",
@@ -16116,6 +16157,65 @@
           "title": "data"
         }
       }
+    },
+    "clustermanagerUpdateVirtualClusterQuotaReq": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "quota": {
+          "$ref": "#/definitions/clustermanagerNamespaceQuota",
+          "description": "命名空间quota限制",
+          "title": "quota"
+        },
+        "updater": {
+          "type": "string",
+          "description": "操作人员名称",
+          "title": "updater"
+        }
+      },
+      "description": "更新虚拟集群命名空间配额",
+      "title": "UpdateVirtualClusterQuotaReq",
+      "required": [
+        "clusterID",
+        "updater"
+      ]
+    },
+    "clustermanagerUpdateVirtualClusterQuotaResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerNamespaceQuota",
+          "description": "返回更新后的命名空间配置",
+          "title": "data"
+        }
+      },
+      "description": "更新虚拟集群命名空间配额的返回",
+      "title": "UpdateVirtualClusterQuotaResp",
+      "required": [
+        "code",
+        "message"
+      ]
     },
     "clustermanagerVPCCidr": {
       "type": "object",

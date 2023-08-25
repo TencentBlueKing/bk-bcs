@@ -16303,6 +16303,322 @@ var _ interface {
 	ErrorName() string
 } = DeleteVirtualClusterRespValidationError{}
 
+// Validate checks the field values on UpdateVirtualClusterQuotaReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateVirtualClusterQuotaReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateVirtualClusterQuotaReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateVirtualClusterQuotaReqMultiError, or nil if none found.
+func (m *UpdateVirtualClusterQuotaReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateVirtualClusterQuotaReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
+		err := UpdateVirtualClusterQuotaReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := UpdateVirtualClusterQuotaReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdateVirtualClusterQuotaReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := UpdateVirtualClusterQuotaReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetQuota()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateVirtualClusterQuotaReqValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateVirtualClusterQuotaReqValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuota()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateVirtualClusterQuotaReqValidationError{
+				field:  "Quota",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetUpdater()) > 1024 {
+		err := UpdateVirtualClusterQuotaReqValidationError{
+			field:  "Updater",
+			reason: "value length must be at most 1024 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return UpdateVirtualClusterQuotaReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateVirtualClusterQuotaReqMultiError is an error wrapping multiple
+// validation errors returned by UpdateVirtualClusterQuotaReq.ValidateAll() if
+// the designated constraints aren't met.
+type UpdateVirtualClusterQuotaReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateVirtualClusterQuotaReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateVirtualClusterQuotaReqMultiError) AllErrors() []error { return m }
+
+// UpdateVirtualClusterQuotaReqValidationError is the validation error returned
+// by UpdateVirtualClusterQuotaReq.Validate if the designated constraints
+// aren't met.
+type UpdateVirtualClusterQuotaReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateVirtualClusterQuotaReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateVirtualClusterQuotaReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateVirtualClusterQuotaReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateVirtualClusterQuotaReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateVirtualClusterQuotaReqValidationError) ErrorName() string {
+	return "UpdateVirtualClusterQuotaReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateVirtualClusterQuotaReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateVirtualClusterQuotaReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateVirtualClusterQuotaReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateVirtualClusterQuotaReqValidationError{}
+
+var _UpdateVirtualClusterQuotaReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on UpdateVirtualClusterQuotaResp with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateVirtualClusterQuotaResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateVirtualClusterQuotaResp with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// UpdateVirtualClusterQuotaRespMultiError, or nil if none found.
+func (m *UpdateVirtualClusterQuotaResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateVirtualClusterQuotaResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateVirtualClusterQuotaRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateVirtualClusterQuotaRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateVirtualClusterQuotaRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return UpdateVirtualClusterQuotaRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateVirtualClusterQuotaRespMultiError is an error wrapping multiple
+// validation errors returned by UpdateVirtualClusterQuotaResp.ValidateAll()
+// if the designated constraints aren't met.
+type UpdateVirtualClusterQuotaRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateVirtualClusterQuotaRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateVirtualClusterQuotaRespMultiError) AllErrors() []error { return m }
+
+// UpdateVirtualClusterQuotaRespValidationError is the validation error
+// returned by UpdateVirtualClusterQuotaResp.Validate if the designated
+// constraints aren't met.
+type UpdateVirtualClusterQuotaRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateVirtualClusterQuotaRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateVirtualClusterQuotaRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateVirtualClusterQuotaRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateVirtualClusterQuotaRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateVirtualClusterQuotaRespValidationError) ErrorName() string {
+	return "UpdateVirtualClusterQuotaRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateVirtualClusterQuotaRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateVirtualClusterQuotaResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateVirtualClusterQuotaRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateVirtualClusterQuotaRespValidationError{}
+
 // Validate checks the field values on DeleteClusterReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.

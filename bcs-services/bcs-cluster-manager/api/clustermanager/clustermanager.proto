@@ -215,6 +215,17 @@ service ClusterManager {
     };
   }
 
+  rpc UpdateVirtualClusterQuota(UpdateVirtualClusterQuotaReq) returns (UpdateVirtualClusterQuotaResp) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/vcluster/{clusterID}/quota"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新虚拟集群配额"
+      summary : "更新配额"
+    };
+  }
+
   //* node management
   rpc GetNode(GetNodeRequest) returns (GetNodeResponse) {
     option (google.api.http) = {
@@ -5053,6 +5064,62 @@ message DeleteVirtualClusterResp {
   WebAnnotationsV2 web_annotations = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "web_annotations",
     description : "用户所属的集群权限"
+  }];
+}
+
+message UpdateVirtualClusterQuotaReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateVirtualClusterQuotaReq"
+      description : "更新虚拟集群配额"
+      required : [
+        "clusterID",
+        "quota"
+      ]
+    }
+  };
+
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  NamespaceQuota quota = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "quota",
+    description : "quota限制"
+  }];
+  string updater = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "updater",
+      description : "操作人员名称"
+    },
+    (validate.rules).string = {max_len : 1024}
+  ];
+}
+
+message UpdateVirtualClusterQuotaResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateVirtualClusterQuotaResp"
+      description : "更新虚拟集群命名空间配额的返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", description : "返回结果"
+  }];
+  NamespaceQuota data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data", description : "返回更新后的命名空间配置"
   }];
 }
 
