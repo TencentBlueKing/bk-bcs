@@ -53,10 +53,10 @@ const (
 	AppEdit client.ActionID = "app_edit"
 	// AppDelete app delete.
 	AppDelete client.ActionID = "app_delete"
-	// ConfigItemPacking config item packing.
-	ConfigItemPacking client.ActionID = "config_item_packing"
-	// ConfigItemPublish config item publish.
-	ConfigItemPublish client.ActionID = "config_item_publish"
+	// GenerateRelease generate release.
+	GenerateRelease client.ActionID = "generate_release"
+	// ReleasePublish release publish.
+	ReleasePublish client.ActionID = "release_publish"
 	// ConfigItemFinishPublish config item finish publish.
 	ConfigItemFinishPublish client.ActionID = "config_item_finish_publish"
 
@@ -88,6 +88,15 @@ const (
 	Unsupported client.ActionID = "unsupported"
 	// Skip is an action that no need to auth
 	Skip client.ActionID = "skip"
+
+	// CredentialCreate 服务密钥创建
+	CredentialCreate client.ActionID = "credential_create"
+	// CredentialView 服务密钥查看
+	CredentialView client.ActionID = "credential_view"
+	// CredentialEdit 服务密钥编辑
+	CredentialEdit client.ActionID = "credential_edit"
+	// CredentialDelete 服务密钥删除
+	CredentialDelete client.ActionID = "credential_delete"
 )
 
 // ActionIDNameMap is action id type map.
@@ -98,8 +107,8 @@ var ActionIDNameMap = map[client.ActionID]string{
 	AppView:                 "服务查看",
 	AppEdit:                 "服务编辑",
 	AppDelete:               "服务删除",
-	ConfigItemPacking:       "生成版本",
-	ConfigItemPublish:       "上线版本",
+	GenerateRelease:         "生成版本",
+	ReleasePublish:          "上线版本",
 	ConfigItemFinishPublish: "配置项结束发布",
 
 	StrategySetCreate: "策略集创建",
@@ -115,6 +124,11 @@ var ActionIDNameMap = map[client.ActionID]string{
 	GroupDelete: "分组删除",
 
 	TaskHistoryView: "任务历史",
+
+	CredentialCreate: "服务密钥创建",
+	CredentialView:   "服务密钥查看",
+	CredentialEdit:   "服务密钥编辑",
+	CredentialDelete: "服务密钥删除",
 }
 
 // InstanceSelectionID selection id to register iam.
