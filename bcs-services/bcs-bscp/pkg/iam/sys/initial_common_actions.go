@@ -57,10 +57,10 @@ func genBizCommonActions() []client.CommonAction {
 					AppEdit,
 				},
 				{
-					ConfigItemPacking,
+					GenerateRelease,
 				},
 				{
-					ConfigItemPublish,
+					ReleasePublish,
 				},
 				{
 					CredentialView,
