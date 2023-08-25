@@ -14,6 +14,7 @@ package service
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -105,6 +106,13 @@ func (p *proxy) routers() http.Handler {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repo.FileMetadata)
 	})
+
+	// for test
+	vaultAddr := os.Getenv("VAULT_ADDR")
+	if vaultAddr == "" {
+		vaultAddr = "http://bk-bscp-vault-barrier:8200"
+	}
+	r.Mount("/vault", http.StripPrefix("/vault", handler.ReverseProxyHandler("vault", vaultAddr)))
 
 	return r
 }
