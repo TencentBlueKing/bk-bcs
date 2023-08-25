@@ -45,8 +45,8 @@ func genBusinessManagementActionGroups() []client.ActionGroup {
 						{ID: AppView},
 						{ID: AppEdit},
 						{ID: AppDelete},
-						{ID: ConfigItemPacking},
-						{ID: ConfigItemPublish},
+						{ID: GenerateRelease},
+						{ID: ReleasePublish},
 					},
 				},
 				{
