@@ -233,8 +233,8 @@ func genApplicationActions() []client.ResourceAction {
 	})
 
 	actions = append(actions, client.ResourceAction{
-		ID:                   ConfigItemPacking,
-		Name:                 ActionIDNameMap[ConfigItemPacking],
+		ID:                   GenerateRelease,
+		Name:                 ActionIDNameMap[GenerateRelease],
 		NameEn:               "Packing ConfigItem",
 		Type:                 Edit,
 		RelatedResourceTypes: relatedResource,
@@ -243,8 +243,8 @@ func genApplicationActions() []client.ResourceAction {
 	})
 
 	actions = append(actions, client.ResourceAction{
-		ID:                   ConfigItemPublish,
-		Name:                 ActionIDNameMap[ConfigItemPublish],
+		ID:                   ReleasePublish,
+		Name:                 ActionIDNameMap[ReleasePublish],
 		NameEn:               "Publish ConfigItem",
 		Type:                 Edit,
 		RelatedResourceTypes: relatedResource,
