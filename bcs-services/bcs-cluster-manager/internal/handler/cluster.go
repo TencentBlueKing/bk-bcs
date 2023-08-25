@@ -169,7 +169,7 @@ func (cm *ClusterManager) DeleteCluster(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	ca := clusterac.NewDeleteAction(cm.model)
+	ca := clusterac.NewDeleteAction(cm.model, cm.kubeOp)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("DeleteCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: DeleteCluster, req %v, resp %v", reqID, req, resp)

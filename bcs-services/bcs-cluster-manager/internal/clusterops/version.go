@@ -18,6 +18,8 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CheckClusterConnection check cluster connection by version
@@ -31,11 +33,11 @@ func (ko *K8SOperator) CheckClusterConnection(ctx context.Context, clusterID str
 		return err
 	}
 
-	version, err := clientInterface.Discovery().ServerVersion()
+	_, err = clientInterface.CoreV1().Namespaces().List(ctx, v1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("CheckClusterConnection[%s] failed: %v", clusterID, err)
 	}
 
-	blog.Infof("CheckClusterConnection[%s] success[%s]", clusterID, version)
+	blog.Infof("CheckClusterConnection[%s] success", clusterID)
 	return nil
 }

@@ -70,7 +70,8 @@ bcs-k8s: bcs-component bcs-network
 bcs-component:k8s-driver \
 	cc-agent kube-sche apiserver-proxy \
 	logbeat-sidecar webhook-server \
-	general-pod-autoscaler cluster-autoscaler
+	general-pod-autoscaler cluster-autoscaler \
+	netservice-controller
 
 bcs-network:network networkpolicy cloud-netservice cloud-netcontroller cloud-netagent
 
@@ -340,6 +341,11 @@ cluster-autoscaler:pre
 	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22 && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/hyper/bcs-cluster-autoscaler-1.22 ./main.go
 	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler && ls -la ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/hyper
 
+netservice-controller:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-netservice-controller ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-netservice-controller && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/bcs-netservice-controller ./main.go
+
 # network plugins section
 networkpolicy:pre
 	cd ${BCS_NETWORK_PATH} && go mod tidy && make networkpolicy
@@ -393,7 +399,7 @@ cluster-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger
 	cp -R ${BCS_SERVICES_PATH}/bcs-cluster-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/
 	cp ${BCS_SERVICES_PATH}/bcs-cluster-manager/api/clustermanager/clustermanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/swagger-ui/clustermanager.swagger.json
-	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
+	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy && ${CGO_BUILD_FLAGS} go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
 
 alert-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger

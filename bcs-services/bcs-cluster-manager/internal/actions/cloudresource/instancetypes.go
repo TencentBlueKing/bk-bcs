@@ -82,7 +82,7 @@ func (la *ListNodeTypeAction) getRelativeData() error {
 	la.cloud = cloud
 
 	if la.req.AccountID != "" {
-		account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
+		account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID, false)
 		if err != nil {
 			return err
 		}

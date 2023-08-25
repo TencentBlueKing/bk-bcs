@@ -66,44 +66,67 @@ func MapInt2MapIf(m map[string]int) map[string]interface{} {
 
 const (
 	Regex = "regex"
+	Range = "range"
 )
 
 // Condition xxx
-func Condition(ope operator.Operator, src, dst string) bson.E {
+func Condition(ope operator.Operator, src string, values []string) bson.E {
+	if len(values) == 0 {
+		return bson.E{}
+	}
+
 	switch ope {
 	case operator.Eq:
 		return bson.E{
 			Key: src,
 			Value: bson.M{
-				"$eq": dst,
+				"$eq": values[0],
 			},
 		}
 	case operator.Ne:
 		return bson.E{
 			Key: src,
 			Value: bson.M{
-				"$ne": dst,
+				"$ne": values[0],
 			},
 		}
 	case Regex:
 		return bson.E{
 			Key: src,
 			Value: bson.M{
-				"$regex": dst,
+				"$regex": values[0],
+			},
+		}
+	case Range:
+		if len(values) <= 1 {
+			return bson.E{}
+		}
+		return bson.E{
+			Key: src,
+			Value: bson.M{
+				"$gte": values[0],
+				"$lte": values[1],
 			},
 		}
 	case operator.Lte:
 		return bson.E{
 			Key: src,
 			Value: bson.M{
-				"$lte": dst,
+				"$lte": values[0],
 			},
 		}
 	case operator.Gte:
 		return bson.E{
 			Key: src,
 			Value: bson.M{
-				"$gte": dst,
+				"$gte": values[0],
+			},
+		}
+	case operator.In:
+		return bson.E{
+			Key: src,
+			Value: bson.M{
+				"$in": values,
 			},
 		}
 	}
@@ -199,5 +222,6 @@ func BuildTaskOperationLogProject() map[string]interface{} {
 		"status":       "$task.status",
 		"clusterid":    "$clusterid",
 		"projectid":    "$projectid",
+		"nodeiplist":   "$task.nodeiplist",
 	}
 }

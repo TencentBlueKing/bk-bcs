@@ -698,26 +698,32 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 }
 
 func (la *ListNodesInClusterAction) handleNodes() {
-	zones, err := autils.GetCloudZones(la.cluster, la.cloud)
+	// get all nodes instance cloud info
+	ips := make([]string, 0)
+	for i := range la.nodes {
+		if la.nodes[i].InnerIP != "" {
+			ips = append(ips, la.nodes[i].InnerIP)
+		}
+	}
+	nodes, err := autils.GetCloudInstanceList(ips, la.cluster, la.cloud)
 	if err != nil {
-		blog.Errorf("ListNodesInClusterAction[%s] handleNodes failed: %v", la.req.ClusterID, err)
+		blog.Errorf("GetCloudInstanceList[%s] handleNodes failed: %v", la.req.ClusterID, err)
 		return
 	}
-
-	if len(zones) == 0 {
-		return
-	}
-
-	zoneMap := make(map[string]*cmproto.ZoneInfo, 0)
-	for i := range zones {
-		zoneMap[zones[i].Zone] = zones[i]
+	instanceMap := make(map[string]*cmproto.Node, 0)
+	for i := range nodes {
+		instanceMap[nodes[i].InnerIP] = nodes[i]
 	}
 
 	// get node zoneName
 	for i := range la.nodes {
-		zone, ok := zoneMap[la.nodes[i].ZoneID]
+		if len(la.nodes[i].GetZoneName()) > 0 {
+			continue
+		}
+
+		node, ok := instanceMap[la.nodes[i].InnerIP]
 		if ok {
-			la.nodes[i].ZoneName = zone.ZoneName
+			la.nodes[i].ZoneName = node.ZoneName
 		}
 	}
 }

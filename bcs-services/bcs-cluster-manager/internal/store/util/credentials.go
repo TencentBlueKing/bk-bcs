@@ -4,11 +4,10 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package util
@@ -16,102 +15,164 @@ package util
 import (
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
 
-// EncryptProjectCred encrypt credential for storage
-func EncryptProjectCred(pro *proto.Project) error {
-	if pro.Credentials != nil {
-		for cloudID, cred := range pro.Credentials {
-			if err := EncryptCredential(cred); err != nil {
-				return fmt.Errorf("cloud %s credential encrypt failed %s", cloudID, err.Error())
-			}
-		}
-	}
-	return nil
-}
-
-// DecryptProjectCred encrypt credential for storage
-func DecryptProjectCred(pro *proto.Project) error {
-	if pro.Credentials != nil {
-		for cloudID, cred := range pro.Credentials {
-			if err := DecryptCredential(cred); err != nil {
-				blog.Errorf("cloud %s credential retrieve failed, %s",
-					cloudID, err.Error(),
-				)
-				return fmt.Errorf("cloud %s credential dencrypt failed %s", cloudID, err.Error())
-			}
-		}
-	}
-	return nil
-}
-
-// EncryptCredential encrypt credential for storage
-func EncryptCredential(cred *proto.Credential) error {
+// EncryptCredentialData encrypt credential for storage
+func EncryptCredentialData(en encryptv2.Cryptor, cred *proto.Credential) error {
 	if cred == nil {
 		return fmt.Errorf("lost credential info")
 	}
 
 	// tencentCloud
 	if len(cred.Key) > 0 {
-		destKey, err := encrypt.DesEncryptToBase([]byte(cred.Key))
+		destKey, err := encrypt.Encrypt(en, cred.Key)
 		if err != nil {
 			return err
 		}
-		cred.Key = string(destKey)
+		cred.Key = destKey
 	}
 	if len(cred.Secret) > 0 {
-		destSrt, err := encrypt.DesEncryptToBase([]byte(cred.Secret))
+		destSrt, err := encrypt.Encrypt(en, cred.Secret)
 		if err != nil {
 			return err
 		}
-		cred.Secret = string(destSrt)
+		cred.Secret = destSrt
 	}
 
 	// gke
 	if len(cred.ServiceAccountSecret) != 0 {
-		destSas, err := encrypt.DesEncryptToBase([]byte(cred.ServiceAccountSecret))
+		destSas, err := encrypt.Encrypt(en, cred.ServiceAccountSecret)
 		if err != nil {
 			return err
 		}
-		cred.ServiceAccountSecret = string(destSas)
+		cred.ServiceAccountSecret = destSas
 	}
 
 	return nil
 }
 
-// DecryptCredential encrypt credential for storage
-func DecryptCredential(cred *proto.Credential) error {
+// DecryptCredentialData decrypt credential for storage
+func DecryptCredentialData(de encryptv2.Cryptor, cred *proto.Credential) error {
 	if cred == nil {
 		return fmt.Errorf("lost credential info")
 	}
 
 	// tencentCloud
 	if len(cred.Key) > 0 {
-		destKey, err := encrypt.DesDecryptFromBase([]byte(cred.Key))
+		destKey, err := encrypt.Decrypt(de, cred.Key)
 		if err != nil {
 			return err
 		}
-		cred.Key = string(destKey)
+		cred.Key = destKey
 	}
 	if len(cred.Secret) > 0 {
-		destSrt, err := encrypt.DesDecryptFromBase([]byte(cred.Secret))
+		destSrt, err := encrypt.Decrypt(de, cred.Secret)
 		if err != nil {
 			return err
 		}
-		cred.Secret = string(destSrt)
+		cred.Secret = destSrt
 	}
 
 	// gke
 	if len(cred.ServiceAccountSecret) != 0 {
-		destSaKey, err := encrypt.DesDecryptFromBase([]byte(cred.ServiceAccountSecret))
+		destSaKey, err := encrypt.Decrypt(de, cred.ServiceAccountSecret)
 		if err != nil {
 			return err
 		}
-		cred.ServiceAccountSecret = string(destSaKey)
+		cred.ServiceAccountSecret = destSaKey
+	}
+
+	return nil
+}
+
+// EncryptCloudAccountData encrypt cloud account for storage
+func EncryptCloudAccountData(en encryptv2.Cryptor, account *proto.Account) error {
+	if account == nil {
+		return fmt.Errorf("lost account info")
+	}
+
+	// encrypt cloud account by different cloud
+	// tencentCloud
+	if len(account.SecretKey) > 0 {
+		destKey, err := encrypt.Encrypt(en, account.SecretKey)
+		if err != nil {
+			return err
+		}
+		account.SecretKey = destKey
+	}
+
+	if len(account.SecretID) > 0 {
+		destID, err := encrypt.Encrypt(en, account.SecretID)
+		if err != nil {
+			return err
+		}
+		account.SecretID = destID
+	}
+
+	// azure
+	if len(account.ClientSecret) > 0 {
+		destSecret, err := encrypt.Encrypt(en, account.ClientSecret)
+		if err != nil {
+			return err
+		}
+		account.ClientSecret = destSecret
+	}
+
+	// gke
+	if len(account.ServiceAccountSecret) > 0 {
+		destSas, err := encrypt.Encrypt(en, account.ServiceAccountSecret)
+		if err != nil {
+			return err
+		}
+		account.ServiceAccountSecret = destSas
+	}
+
+	return nil
+}
+
+// DecryptCloudAccountData decrypt account for storage
+func DecryptCloudAccountData(de encryptv2.Cryptor, account *proto.Account) error {
+	if account == nil {
+		return fmt.Errorf("lost account info")
+	}
+
+	// decrypt cloud account by different cloud
+	// tencentCloud
+	if len(account.SecretKey) > 0 {
+		destKey, err := encrypt.Decrypt(de, account.SecretKey)
+		if err != nil {
+			return err
+		}
+		account.SecretKey = destKey
+	}
+
+	if len(account.SecretID) > 0 {
+		destID, err := encrypt.Decrypt(de, account.SecretID)
+		if err != nil {
+			return err
+		}
+		account.SecretID = destID
+	}
+
+	// azure
+	if len(account.ClientSecret) > 0 {
+		destSecret, err := encrypt.Decrypt(de, account.ClientSecret)
+		if err != nil {
+			return err
+		}
+		account.ClientSecret = destSecret
+	}
+
+	// gke
+	if len(account.ServiceAccountSecret) > 0 {
+		destSas, err := encrypt.Decrypt(de, account.ServiceAccountSecret)
+		if err != nil {
+			return err
+		}
+		account.ServiceAccountSecret = destSas
 	}
 
 	return nil

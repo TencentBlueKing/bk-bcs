@@ -11,7 +11,11 @@
       <bcs-tab-panel name="info" :label="$t('generic.title.basicInfo1')" render-directive="if">
         <Info :cluster-id="clusterId" />
       </bcs-tab-panel>
-      <bcs-tab-panel name="quota" :label="$t('cluster.detail.title.quota')" render-directive="if" v-if="curCluster.clusterType === 'virtual'">
+      <bcs-tab-panel
+        name="quota"
+        :label="$t('cluster.detail.title.quota')"
+        render-directive="if"
+        v-if="curCluster.clusterType === 'virtual'">
         <VClusterQuota :cluster-id="clusterId" />
       </bcs-tab-panel>
       <template v-else>
@@ -22,7 +26,7 @@
           <Master :cluster-id="clusterId" />
         </bcs-tab-panel>
         <bcs-tab-panel name="node" :label="$t('cluster.detail.title.nodeList')" render-directive="if">
-          <Node class="pb-[20px]" :cluster-id="clusterId" hide-cluster-select from-cluster />
+          <Node class="pb-[20px] max-h-[calc(100vh-188px)]" :cluster-id="clusterId" hide-cluster-select from-cluster />
         </bcs-tab-panel>
         <bcs-tab-panel
           name="autoscaler"
@@ -42,17 +46,20 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
-import BcsContent from '@/components/layout/Content.vue';
+
 import Node from '../node-list/node.vue';
-import Overview from '@/views/cluster-manage/cluster/overview/overview.vue';
-import Info from '@/views/cluster-manage/cluster/info/basic-info.vue';
-import VClusterQuota from '@/views/cluster-manage/cluster/info/vcluster-quota.vue';
-import Network from '@/views/cluster-manage/cluster/info/network.vue';
-import Master from '@/views/cluster-manage/cluster/info/master.vue';
+
 import AutoScaler from './autoscaler/autoscaler.vue';
-import $store from '@/store';
-import $router from '@/router';
+
+import BcsContent from '@/components/layout/Content.vue';
 import { useCluster } from '@/composables/use-app';
+import $router from '@/router';
+import $store from '@/store';
+import Info from '@/views/cluster-manage/cluster/info/basic-info.vue';
+import Master from '@/views/cluster-manage/cluster/info/master.vue';
+import Network from '@/views/cluster-manage/cluster/info/network.vue';
+import VClusterQuota from '@/views/cluster-manage/cluster/info/vcluster-quota.vue';
+import Overview from '@/views/cluster-manage/cluster/overview/overview.vue';
 
 export default defineComponent({
   components: {

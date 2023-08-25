@@ -96,6 +96,10 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		errMsg := fmt.Sprintf("RunBKsopsJob[%s] validateParameter task[%s] step[%s] failed", taskID, taskID, stepName)
 		blog.Errorf(errMsg)
 		retErr := fmt.Errorf("RunBKsopsJob err, %s", errMsg)
+		if step.GetSkipOnFailed() {
+			_ = state.SkipFailure(start, stepName, err)
+			return nil
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -106,6 +110,10 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		errMsg := fmt.Sprintf("RunBKsopsJob[%s] unmarshal constants failed[%v]", taskID, err)
 		blog.Errorf(errMsg)
 		retErr := fmt.Errorf("RunBKsopsJob err, %s", errMsg)
+		if step.GetSkipOnFailed() {
+			_ = state.SkipFailure(start, stepName, err)
+			return nil
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -128,6 +136,10 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	})
 	if err != nil {
 		state.TaskUrl = taskUrl
+		if step.GetSkipOnFailed() {
+			_ = state.SkipFailure(start, stepName, err)
+			return nil
+		}
 		_ = state.UpdateStepFailure(start, stepName, err)
 		return err
 	}

@@ -323,18 +323,19 @@
   </div>
 </template>
 <script lang="ts">
+import { sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
-import $router from '@/router';
-import $i18n from '@/i18n/i18n-setup';
-import $store from '@/store/index';
-import usePage from '@/composables/use-page';
-import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
-import { useProject } from '@/composables/use-app';
-import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
-import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+
 import { cloudsZones } from '@/api/modules/cluster-manager';
 import TextTips from '@/components/layout/TextTips.vue';
-import { sortBy } from 'lodash';
+import { useProject } from '@/composables/use-app';
+import usePage from '@/composables/use-page';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store/index';
+import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 
 export default defineComponent({
   components: { FormGroup, TextTips },
@@ -671,7 +672,7 @@ export default defineComponent({
       return nodePoolConfig.value;
     };
     const validate = async () => {
-      const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);;
+      const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);
       if (!basicFormValidate && nodeConfigRef.value) {
         nodeConfigRef.value.scrollTop = 0;
         return false;

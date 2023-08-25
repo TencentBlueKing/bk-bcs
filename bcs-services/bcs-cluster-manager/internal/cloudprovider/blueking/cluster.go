@@ -87,10 +87,6 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 		return nil, fmt.Errorf("blueking ImportCluster cluster opt or cloud is empty")
 	}
 
-	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("blueking ImportCluster opt lost valid crendential info")
-	}
-
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloud %s TaskManager when ImportCluster %d failed, %s",

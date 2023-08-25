@@ -26,10 +26,13 @@
 
 import axios from 'axios';
 import cookie from 'cookie';
+
+import { messageError } from '../common/bkmagic';
 import { bus } from '../common/bus';
+
 import CachedPromise from './cached-promise';
 import RequestQueue from './request-queue';
-import { messageError } from '../common/bkmagic';
+
 import { random } from '@/common/util';
 
 // axios 实例

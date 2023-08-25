@@ -53,6 +53,8 @@ type JobExecParas struct {
 	Operator string
 	// StepName 自定义step名称
 	StepName string
+	// AllowSkipJobTask 任务失败时候是否允许跳过
+	AllowSkipJobTask bool
 }
 
 // BuildJobExecuteScriptStep build job execute script step
@@ -60,7 +62,8 @@ func BuildJobExecuteScriptStep(task *proto.Task, paras JobExecParas) {
 	if paras.StepName != "" {
 		jobExecuteScriptStep.StepName = paras.StepName
 	}
-	jobScriptStep := cloudprovider.InitTaskStep(jobExecuteScriptStep)
+	jobScriptStep := cloudprovider.InitTaskStep(jobExecuteScriptStep,
+		cloudprovider.WithStepSkipFailed(paras.AllowSkipJobTask))
 
 	if len(paras.NodeIps) == 0 {
 		paras.NodeIps = template.NodeIPList
@@ -148,6 +151,10 @@ func JobExecuteScriptTask(taskID string, stepName string) error {
 	jobParas, err := renderScript(ctx, clusterID, content, nodeIPs, operator)
 	if err != nil {
 		blog.Errorf("JobExecuteScriptTask[%s] renderScript failed: %v", taskID, err)
+		if step.GetSkipOnFailed() {
+			_ = state.SkipFailure(start, stepName, err)
+			return nil
+		}
 		_ = state.UpdateStepFailure(start, stepName, err)
 		return err
 	}
@@ -158,6 +165,10 @@ func JobExecuteScriptTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("JobExecuteScriptTask[%s] ExecuteScriptByJob failed: %v", taskID, err)
 		state.TaskUrl = url
+		if step.GetSkipOnFailed() {
+			_ = state.SkipFailure(start, stepName, err)
+			return nil
+		}
 		_ = state.UpdateStepFailure(start, stepName, err)
 		return err
 	}

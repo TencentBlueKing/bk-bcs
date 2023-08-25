@@ -417,7 +417,8 @@ func getContainerQueryLogLinks(containerIDs []string, stdIndexSetID, fileIndexSe
 	}
 
 	for _, v := range containerIDs {
-		addition := []addition{{Field: "__ext.container_id", Operator: "=", Value: v}}
+		id := strings.TrimPrefix(v, "containerd://")
+		addition := []addition{{Field: "__ext.container_id", Operator: "=", Value: id}}
 		additionData, _ := json.Marshal(addition)
 		query := url.Values{}
 		query.Add("spaceUid", GetSpaceID(projectCode))

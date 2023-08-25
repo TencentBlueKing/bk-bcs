@@ -163,6 +163,21 @@
         "server": "${bcsNodeManServer}",
         "debug": ${bcsNodeManDebug}
     },
+    "encrypt": {
+        "enabled": ${bcsEncryptEnabled},
+        "algorithm": "${bcsEncryptAlgorithm}",
+        "sm4": {
+            "key": "${bcsEncryptSm4Key}",
+            "iv": "${bcsEncryptSm4Iv}"
+        },
+        "aes_gcm": {
+            "key": "${bcsEncryptAesKey}",
+            "nonce": "${bcsEncryptAesNonce}"
+        },
+        "normal": {
+            "priKey": "${bcsEncryptNormalPriKey}"
+        }
+    },
     "tagDepart": "${tagDepart}",
     "prefixVcluster": "${prefixVcluster}",
     "version": "${bcsClusterManagerVersion}",

@@ -282,14 +282,15 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, PropType, toRefs } from 'vue';
-import StatusIcon from '@/components/status-icon';
-import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
-import PopoverSelector from '@/components/popover-selector.vue';
-import LoadingIcon from '@/components/loading-icon.vue';
-import { ICluster, useProject } from '@/composables/use-app';
+
 import { CLUSTER_ENV } from '@/common/constant';
+import LoadingIcon from '@/components/loading-icon.vue';
+import PopoverSelector from '@/components/popover-selector.vue';
+import StatusIcon from '@/components/status-icon';
+import { ICluster, useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
+import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 
 export default defineComponent({
   name: 'ClusterList',

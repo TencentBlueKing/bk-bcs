@@ -944,6 +944,45 @@
         "tags": [
           "ClusterManager"
         ]
+      },
+      "put": {
+        "summary": "迁移云账号",
+        "description": "迁移加密云账号信息(支持单个账号迁移、多账号、全部账号迁移)",
+        "operationId": "ClusterManager_MigrateCloudAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerMigrateCloudAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云类型，英文字符串",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerMigrateCloudAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
       }
     },
     "/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}": {
@@ -4187,6 +4226,13 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
+          },
+          {
+            "name": "ipList",
+            "description": "ipList. 通过,隔开ipList过滤任务",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4950,7 +4996,7 @@
     "/clustermanager/v1/vcluster/{clusterID}/quota": {
       "put": {
         "summary": "更新配额",
-        "description": "更新虚拟集群命名空间配额",
+        "description": "更新虚拟集群配额",
         "operationId": "ClusterManager_UpdateVirtualClusterQuota",
         "responses": {
           "200": {
@@ -5648,6 +5694,12 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "allowSkipWhenFailed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "allowSkipWhenFailed插件执行失败时是否允许跳过, 默认不允许跳过",
+          "title": "allowSkipWhenFailed"
         }
       },
       "description": "标准运维模板信息记录，用于自动化工作流程记录",
@@ -12242,6 +12294,59 @@
         }
       }
     },
+    "clustermanagerMigrateCloudAccountRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "云类型，英文字符串",
+          "title": "cloudID"
+        },
+        "accountIDs": {
+          "type": "string",
+          "description": "cloud云账号ID",
+          "title": "accountIDs通过,隔开，可操作多个账号"
+        },
+        "encrypt": {
+          "$ref": "#/definitions/clustermanagerOriginEncrypt",
+          "description": "encrypt原始加密方式转换",
+          "title": "encrypt原始的加密方式转换为该环境的加密方式，为空表示明文存储"
+        },
+        "all": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "all操作所有的账号迁移",
+          "title": "all"
+        }
+      },
+      "description": "迁移cloud账号请求，主要用于环境存量账号的加密迁移",
+      "title": "MigrateCloudAccountRequest",
+      "required": [
+        "cloudID"
+      ]
+    },
+    "clustermanagerMigrateCloudAccountResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      }
+    },
     "clustermanagerModuleInfo": {
       "type": "object",
       "properties": {
@@ -12578,6 +12683,11 @@
           "type": "string",
           "description": "节点ipv6地址",
           "title": "innerIPv6"
+        },
+        "zoneName": {
+          "type": "string",
+          "description": "节点所在可用区名称",
+          "title": "zoneName"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
@@ -13230,7 +13340,7 @@
         },
         "scaleInPreScript": {
           "type": "string",
-          "description": "缩容节点后置脚本, base64编码的用户脚本.",
+          "description": "缩容节点前置脚本, base64编码的用户脚本.",
           "title": "scaleInPreScript"
         },
         "scaleInPostScript": {
@@ -13254,6 +13364,18 @@
           "type": "boolean",
           "format": "boolean",
           "description": "是否跳过执行系统初始化, 默认执行",
+          "title": "skipSystemInit"
+        },
+        "allowSkipScaleOutWhenFailed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "扩容失败时是否允许跳过流程, 默认不允许跳过",
+          "title": "allowSkipScaleOutWhenFailed"
+        },
+        "allowSkipScaleInWhenFailed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "缩容失败时是否允许跳过流程, 默认不允许跳过",
           "title": "skipSystemInit"
         }
       },
@@ -13357,6 +13479,20 @@
           "type": "string",
           "description": "任务状态",
           "title": "status"
+        }
+      }
+    },
+    "clustermanagerOriginEncrypt": {
+      "type": "object",
+      "properties": {
+        "encryptType": {
+          "type": "string"
+        },
+        "kv": {
+          "type": "string"
+        },
+        "iv": {
+          "type": "string"
         }
       }
     },
@@ -14733,6 +14869,11 @@
           "type": "string",
           "description": "更新者",
           "title": "updater"
+        },
+        "account": {
+          "$ref": "#/definitions/clustermanagerAccount",
+          "description": "cloud更新云账号信息",
+          "title": "account"
         }
       },
       "description": "更新cloud账号请求，不允许更改账号信息，防止对存量集群产生影响",
@@ -16168,7 +16309,7 @@
         },
         "quota": {
           "$ref": "#/definitions/clustermanagerNamespaceQuota",
-          "description": "命名空间quota限制",
+          "description": "quota限制",
           "title": "quota"
         },
         "updater": {
@@ -16177,11 +16318,11 @@
           "title": "updater"
         }
       },
-      "description": "更新虚拟集群命名空间配额",
+      "description": "更新虚拟集群配额",
       "title": "UpdateVirtualClusterQuotaReq",
       "required": [
         "clusterID",
-        "updater"
+        "quota"
       ]
     },
     "clustermanagerUpdateVirtualClusterQuotaResp": {

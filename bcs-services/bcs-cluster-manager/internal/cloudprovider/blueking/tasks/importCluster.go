@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
 	v1 "k8s.io/api/core/v1"
@@ -94,7 +95,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 }
 
 func importClusterCredential(data *cloudprovider.CloudDependBasicInfo) error {
-	kubeRet, err := base64.StdEncoding.DecodeString(data.Cluster.KubeConfig)
+	kubeRet, err := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
 	if err != nil {
 		return err
 	}
@@ -201,7 +202,13 @@ func getNodeIP(node v1.Node) types.NodeAddress {
 
 func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) ([]types.NodeAddress,
 	[]types.NodeAddress, error) {
-	kubeCli, err := clusterops.NewKubeClient(data.Cluster.KubeConfig)
+
+	kubeConfig, err := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	kubeCli, err := clusterops.NewKubeClient(base64.StdEncoding.EncodeToString([]byte(kubeConfig)))
 	if err != nil {
 		return nil, nil, err
 	}

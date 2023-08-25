@@ -80,7 +80,7 @@ func (la *ListSecurityGroupsAction) getRelativeData() error {
 	la.cloud = cloud
 
 	if len(la.req.AccountID) > 0 {
-		account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
+		account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID, false)
 		if err != nil {
 			return err
 		}

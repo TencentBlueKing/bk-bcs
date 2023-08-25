@@ -576,6 +576,8 @@ func (m *Node) validate(all bool) error {
 
 	// no validation rules for InnerIPv6
 
+	// no validation rules for ZoneName
+
 	if len(errors) > 0 {
 		return NodeMultiError(errors)
 	}
@@ -2036,6 +2038,8 @@ func (m *BKOpsPlugin) validate(all bool) error {
 	// no validation rules for Link
 
 	// no validation rules for Params
+
+	// no validation rules for AllowSkipWhenFailed
 
 	if len(errors) > 0 {
 		return BKOpsPluginMultiError(errors)
@@ -3782,6 +3786,35 @@ func (m *UpdateCloudAccountRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if all {
+		switch v := interface{}(m.GetAccount()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateCloudAccountRequestValidationError{
+					field:  "Account",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateCloudAccountRequestValidationError{
+					field:  "Account",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAccount()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateCloudAccountRequestValidationError{
+				field:  "Account",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return UpdateCloudAccountRequestMultiError(errors)
 	}
@@ -3975,6 +4008,380 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateCloudAccountResponseValidationError{}
+
+// Validate checks the field values on MigrateCloudAccountRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *MigrateCloudAccountRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on MigrateCloudAccountRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// MigrateCloudAccountRequestMultiError, or nil if none found.
+func (m *MigrateCloudAccountRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *MigrateCloudAccountRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetCloudID()); l < 2 || l > 1024 {
+		err := MigrateCloudAccountRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_MigrateCloudAccountRequest_CloudID_Pattern.MatchString(m.GetCloudID()) {
+		err := MigrateCloudAccountRequestValidationError{
+			field:  "CloudID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for AccountIDs
+
+	if all {
+		switch v := interface{}(m.GetEncrypt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, MigrateCloudAccountRequestValidationError{
+					field:  "Encrypt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, MigrateCloudAccountRequestValidationError{
+					field:  "Encrypt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetEncrypt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return MigrateCloudAccountRequestValidationError{
+				field:  "Encrypt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for All
+
+	if len(errors) > 0 {
+		return MigrateCloudAccountRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// MigrateCloudAccountRequestMultiError is an error wrapping multiple
+// validation errors returned by MigrateCloudAccountRequest.ValidateAll() if
+// the designated constraints aren't met.
+type MigrateCloudAccountRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m MigrateCloudAccountRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m MigrateCloudAccountRequestMultiError) AllErrors() []error { return m }
+
+// MigrateCloudAccountRequestValidationError is the validation error returned
+// by MigrateCloudAccountRequest.Validate if the designated constraints aren't met.
+type MigrateCloudAccountRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MigrateCloudAccountRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MigrateCloudAccountRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MigrateCloudAccountRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MigrateCloudAccountRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MigrateCloudAccountRequestValidationError) ErrorName() string {
+	return "MigrateCloudAccountRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MigrateCloudAccountRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMigrateCloudAccountRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MigrateCloudAccountRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MigrateCloudAccountRequestValidationError{}
+
+var _MigrateCloudAccountRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on OriginEncrypt with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *OriginEncrypt) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on OriginEncrypt with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in OriginEncryptMultiError, or
+// nil if none found.
+func (m *OriginEncrypt) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *OriginEncrypt) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for EncryptType
+
+	// no validation rules for Kv
+
+	// no validation rules for Iv
+
+	if len(errors) > 0 {
+		return OriginEncryptMultiError(errors)
+	}
+
+	return nil
+}
+
+// OriginEncryptMultiError is an error wrapping multiple validation errors
+// returned by OriginEncrypt.ValidateAll() if the designated constraints
+// aren't met.
+type OriginEncryptMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m OriginEncryptMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m OriginEncryptMultiError) AllErrors() []error { return m }
+
+// OriginEncryptValidationError is the validation error returned by
+// OriginEncrypt.Validate if the designated constraints aren't met.
+type OriginEncryptValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OriginEncryptValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OriginEncryptValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OriginEncryptValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OriginEncryptValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OriginEncryptValidationError) ErrorName() string { return "OriginEncryptValidationError" }
+
+// Error satisfies the builtin error interface
+func (e OriginEncryptValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOriginEncrypt.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OriginEncryptValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OriginEncryptValidationError{}
+
+// Validate checks the field values on MigrateCloudAccountResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *MigrateCloudAccountResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on MigrateCloudAccountResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// MigrateCloudAccountResponseMultiError, or nil if none found.
+func (m *MigrateCloudAccountResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *MigrateCloudAccountResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if len(errors) > 0 {
+		return MigrateCloudAccountResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// MigrateCloudAccountResponseMultiError is an error wrapping multiple
+// validation errors returned by MigrateCloudAccountResponse.ValidateAll() if
+// the designated constraints aren't met.
+type MigrateCloudAccountResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m MigrateCloudAccountResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m MigrateCloudAccountResponseMultiError) AllErrors() []error { return m }
+
+// MigrateCloudAccountResponseValidationError is the validation error returned
+// by MigrateCloudAccountResponse.Validate if the designated constraints
+// aren't met.
+type MigrateCloudAccountResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MigrateCloudAccountResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MigrateCloudAccountResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MigrateCloudAccountResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MigrateCloudAccountResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MigrateCloudAccountResponseValidationError) ErrorName() string {
+	return "MigrateCloudAccountResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MigrateCloudAccountResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMigrateCloudAccountResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MigrateCloudAccountResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MigrateCloudAccountResponseValidationError{}
 
 // Validate checks the field values on DeleteCloudAccountRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -10312,6 +10719,10 @@ func (m *NodeTemplate) validate(all bool) error {
 	// no validation rules for MaxPodsPerNode
 
 	// no validation rules for SkipSystemInit
+
+	// no validation rules for AllowSkipScaleOutWhenFailed
+
+	// no validation rules for AllowSkipScaleInWhenFailed
 
 	if len(errors) > 0 {
 		return NodeTemplateMultiError(errors)
@@ -42086,6 +42497,8 @@ func (m *ListOperationLogsRequest) validate(all bool) error {
 	// no validation rules for TaskType
 
 	// no validation rules for V2
+
+	// no validation rules for IpList
 
 	if len(errors) > 0 {
 		return ListOperationLogsRequestMultiError(errors)
