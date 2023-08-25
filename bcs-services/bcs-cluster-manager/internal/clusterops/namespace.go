@@ -15,6 +15,7 @@ package clusterops
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
@@ -222,7 +223,7 @@ func (ko *K8SOperator) UpdateResourceQuota(ctx context.Context, clusterID string
 
 	if errors.IsNotFound(err) {
 		blog.Infof("UpdateResourceQuota[%s:%s] notfound", clusterID, info.Name)
-		return nil
+		return fmt.Errorf("resource quotas not found")
 	}
 
 	nsResourceQuota := &apiv1.ResourceQuota{
