@@ -40,6 +40,7 @@
         :placeholder="hideClusterAndNamespace ? $t('projects.eventQuery._search') : $t('projects.eventQuery.search')"
         :show-popover-tag-change="false"
         :popover-zindex="9999"
+        selected-style="checkbox"
         v-model="params.searchSelect"
         @change="handleInitEventData">
       </bcs-search-select>
