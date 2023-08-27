@@ -463,6 +463,114 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 	return resp, nil
 }
 
+// ListMultiTemplateBoundTemplateSetDetails list template bound template set details.
+func (s *Service) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context,
+	req *pbds.ListMultiTemplateBoundTemplateSetDetailsReq) (
+	*pbds.ListMultiTemplateBoundTemplateSetDetailsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	templateIDs := tools.RemoveDuplicates(req.TemplateIds)
+	if err := s.dao.Validator().ValidateTemplatesExist(kt, templateIDs); err != nil {
+		return nil, err
+	}
+
+	allTmplSetIDs := make([]uint32, 0)
+	tmplTmplSetsMap := make(map[uint32][]uint32)
+	var hitError error
+	pipe := make(chan struct{}, 10)
+	wg := sync.WaitGroup{}
+
+	for _, tmplID := range templateIDs {
+		wg.Add(1)
+
+		pipe <- struct{}{}
+		go func(tmplID uint32) {
+			defer func() {
+				wg.Done()
+				<-pipe
+			}()
+
+			tmplSetIDs, err := s.dao.TemplateBindingRelation().
+				ListTemplateBoundTemplateSetDetails(kt, req.BizId, tmplID)
+			if err != nil {
+				hitError = err
+				return
+			}
+			tmplTmplSetsMap[tmplID] = tmplSetIDs
+			allTmplSetIDs = append(allTmplSetIDs, tmplSetIDs...)
+		}(tmplID)
+	}
+	wg.Wait()
+
+	if hitError != nil {
+		logs.Errorf("list multiple template bound template set details failed, err: %v, rid: %s", hitError, kt.Rid)
+		return nil, hitError
+	}
+	allTmplSetIDs = tools.RemoveDuplicates(allTmplSetIDs)
+
+	// get template set details
+	tmplSets, err := s.dao.TemplateSet().ListByIDs(kt, allTmplSetIDs)
+	if err != nil {
+		logs.Errorf("list multiple template bound template set details failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	tmplSetMap := make(map[uint32]*table.TemplateSet, len(tmplSets))
+	for _, t := range tmplSets {
+		tmplSetMap[t.ID] = t
+	}
+
+	// get template details
+	tmpls, err := s.dao.Template().ListByIDs(kt, templateIDs)
+	if err != nil {
+		logs.Errorf("list multiple template bound template set details failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	tmplMap := make(map[uint32]*table.Template, len(tmpls))
+	for _, t := range tmpls {
+		tmplMap[t.ID] = t
+	}
+
+	// combine resp details
+	details := make([]*pbtbr.MultiTemplateBoundTemplateSetDetail, 0)
+	for tmplID, tmplSetIDs := range tmplTmplSetsMap {
+		for _, tmplSetID := range tmplSetIDs {
+			details = append(details, &pbtbr.MultiTemplateBoundTemplateSetDetail{
+				TemplateId:      tmplID,
+				TemplateName:    tmplMap[tmplID].Spec.Name,
+				TemplateSetId:   tmplSetID,
+				TemplateSetName: tmplSetMap[tmplSetID].Spec.Name,
+			})
+		}
+
+	}
+
+	// totalCnt is all data count
+	totalCnt := uint32(len(details))
+
+	if req.All {
+		// return all data
+		return &pbds.ListMultiTemplateBoundTemplateSetDetailsResp{
+			Count:   totalCnt,
+			Details: details,
+		}, nil
+	}
+
+	// page by logic
+	if req.Start >= uint32(len(details)) {
+		details = details[:0]
+	} else if req.Start+req.Limit > uint32(len(details)) {
+		details = details[req.Start:]
+	} else {
+		details = details[req.Start : req.Start+req.Limit]
+	}
+
+	resp := &pbds.ListMultiTemplateBoundTemplateSetDetailsResp{
+		Count:   totalCnt,
+		Details: details,
+	}
+	return resp, nil
+}
+
 // ListTemplateRevisionBoundUnnamedAppDetails list template revision bound unnamed app details.
 func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context,
 	req *pbds.ListTemplateRevisionBoundUnnamedAppDetailsReq) (
@@ -685,22 +793,42 @@ func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context
 
 	allAppIDs := make([]uint32, 0)
 	tmplSetAppsMap := make(map[uint32][]uint32)
-	for _, templateSetID := range templateSetIDs {
-		appIDs, err := s.dao.TemplateBindingRelation().
-			ListTemplateSetBoundUnnamedAppDetails(kt, req.BizId, templateSetID)
-		if err != nil {
-			logs.Errorf("list template set bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
-			return nil, err
-		}
-		tmplSetAppsMap[templateSetID] = appIDs
-		allAppIDs = append(allAppIDs, appIDs...)
+	var hitError error
+	pipe := make(chan struct{}, 10)
+	wg := sync.WaitGroup{}
+
+	for _, tmplSetID := range templateSetIDs {
+		wg.Add(1)
+
+		pipe <- struct{}{}
+		go func(tmplSetID uint32) {
+			defer func() {
+				wg.Done()
+				<-pipe
+			}()
+
+			appIDs, err := s.dao.TemplateBindingRelation().
+				ListTemplateSetBoundUnnamedAppDetails(kt, req.BizId, tmplSetID)
+			if err != nil {
+				hitError = err
+				return
+			}
+			tmplSetAppsMap[tmplSetID] = appIDs
+			allAppIDs = append(allAppIDs, appIDs...)
+		}(tmplSetID)
+	}
+	wg.Wait()
+
+	if hitError != nil {
+		logs.Errorf("list multiple template set bound unnamed app details failed, err: %v, rid: %s", hitError, kt.Rid)
+		return nil, hitError
 	}
 	allAppIDs = tools.RemoveDuplicates(allAppIDs)
 
 	// get app details
 	apps, err := s.dao.App().ListAppsByIDs(kt, allAppIDs)
 	if err != nil {
-		logs.Errorf("list template set bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list multiple template set bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	appMap := make(map[uint32]*table.App, len(apps))
@@ -711,7 +839,7 @@ func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context
 	// get template set details
 	tmplSets, err := s.dao.TemplateSet().ListByIDs(kt, templateSetIDs)
 	if err != nil {
-		logs.Errorf("list template set bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list multiple template set bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	tmplSetMap := make(map[uint32]*table.TemplateSet, len(tmplSets))

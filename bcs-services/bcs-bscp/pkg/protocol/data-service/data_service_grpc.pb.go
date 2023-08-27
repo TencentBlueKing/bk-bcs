@@ -105,6 +105,7 @@ const (
 	Data_ListTemplateBoundUnnamedAppDetails_FullMethodName         = "/pbds.Data/ListTemplateBoundUnnamedAppDetails"
 	Data_ListTemplateBoundNamedAppDetails_FullMethodName           = "/pbds.Data/ListTemplateBoundNamedAppDetails"
 	Data_ListTemplateBoundTemplateSetDetails_FullMethodName        = "/pbds.Data/ListTemplateBoundTemplateSetDetails"
+	Data_ListMultiTemplateBoundTemplateSetDetails_FullMethodName   = "/pbds.Data/ListMultiTemplateBoundTemplateSetDetails"
 	Data_ListTemplateRevisionBoundUnnamedAppDetails_FullMethodName = "/pbds.Data/ListTemplateRevisionBoundUnnamedAppDetails"
 	Data_ListTemplateRevisionBoundNamedAppDetails_FullMethodName   = "/pbds.Data/ListTemplateRevisionBoundNamedAppDetails"
 	Data_ListTemplateSetBoundUnnamedAppDetails_FullMethodName      = "/pbds.Data/ListTemplateSetBoundUnnamedAppDetails"
@@ -230,6 +231,7 @@ type DataClient interface {
 	ListTemplateBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateBoundUnnamedAppDetailsResp, error)
 	ListTemplateBoundNamedAppDetails(ctx context.Context, in *ListTemplateBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateBoundNamedAppDetailsResp, error)
 	ListTemplateBoundTemplateSetDetails(ctx context.Context, in *ListTemplateBoundTemplateSetDetailsReq, opts ...grpc.CallOption) (*ListTemplateBoundTemplateSetDetailsResp, error)
+	ListMultiTemplateBoundTemplateSetDetails(ctx context.Context, in *ListMultiTemplateBoundTemplateSetDetailsReq, opts ...grpc.CallOption) (*ListMultiTemplateBoundTemplateSetDetailsResp, error)
 	ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateRevisionBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundUnnamedAppDetailsResp, error)
 	ListTemplateRevisionBoundNamedAppDetails(ctx context.Context, in *ListTemplateRevisionBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundNamedAppDetailsResp, error)
 	ListTemplateSetBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateSetBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundUnnamedAppDetailsResp, error)
@@ -976,6 +978,15 @@ func (c *dataClient) ListTemplateBoundTemplateSetDetails(ctx context.Context, in
 	return out, nil
 }
 
+func (c *dataClient) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context, in *ListMultiTemplateBoundTemplateSetDetailsReq, opts ...grpc.CallOption) (*ListMultiTemplateBoundTemplateSetDetailsResp, error) {
+	out := new(ListMultiTemplateBoundTemplateSetDetailsResp)
+	err := c.cc.Invoke(ctx, Data_ListMultiTemplateBoundTemplateSetDetails_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateRevisionBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundUnnamedAppDetailsResp, error) {
 	out := new(ListTemplateRevisionBoundUnnamedAppDetailsResp)
 	err := c.cc.Invoke(ctx, Data_ListTemplateRevisionBoundUnnamedAppDetails_FullMethodName, in, out, opts...)
@@ -1307,6 +1318,7 @@ type DataServer interface {
 	ListTemplateBoundUnnamedAppDetails(context.Context, *ListTemplateBoundUnnamedAppDetailsReq) (*ListTemplateBoundUnnamedAppDetailsResp, error)
 	ListTemplateBoundNamedAppDetails(context.Context, *ListTemplateBoundNamedAppDetailsReq) (*ListTemplateBoundNamedAppDetailsResp, error)
 	ListTemplateBoundTemplateSetDetails(context.Context, *ListTemplateBoundTemplateSetDetailsReq) (*ListTemplateBoundTemplateSetDetailsResp, error)
+	ListMultiTemplateBoundTemplateSetDetails(context.Context, *ListMultiTemplateBoundTemplateSetDetailsReq) (*ListMultiTemplateBoundTemplateSetDetailsResp, error)
 	ListTemplateRevisionBoundUnnamedAppDetails(context.Context, *ListTemplateRevisionBoundUnnamedAppDetailsReq) (*ListTemplateRevisionBoundUnnamedAppDetailsResp, error)
 	ListTemplateRevisionBoundNamedAppDetails(context.Context, *ListTemplateRevisionBoundNamedAppDetailsReq) (*ListTemplateRevisionBoundNamedAppDetailsResp, error)
 	ListTemplateSetBoundUnnamedAppDetails(context.Context, *ListTemplateSetBoundUnnamedAppDetailsReq) (*ListTemplateSetBoundUnnamedAppDetailsResp, error)
@@ -1580,6 +1592,9 @@ func (UnimplementedDataServer) ListTemplateBoundNamedAppDetails(context.Context,
 }
 func (UnimplementedDataServer) ListTemplateBoundTemplateSetDetails(context.Context, *ListTemplateBoundTemplateSetDetailsReq) (*ListTemplateBoundTemplateSetDetailsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateBoundTemplateSetDetails not implemented")
+}
+func (UnimplementedDataServer) ListMultiTemplateBoundTemplateSetDetails(context.Context, *ListMultiTemplateBoundTemplateSetDetailsReq) (*ListMultiTemplateBoundTemplateSetDetailsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListMultiTemplateBoundTemplateSetDetails not implemented")
 }
 func (UnimplementedDataServer) ListTemplateRevisionBoundUnnamedAppDetails(context.Context, *ListTemplateRevisionBoundUnnamedAppDetailsReq) (*ListTemplateRevisionBoundUnnamedAppDetailsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisionBoundUnnamedAppDetails not implemented")
@@ -3075,6 +3090,24 @@ func _Data_ListTemplateBoundTemplateSetDetails_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListMultiTemplateBoundTemplateSetDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMultiTemplateBoundTemplateSetDetailsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListMultiTemplateBoundTemplateSetDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListMultiTemplateBoundTemplateSetDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListMultiTemplateBoundTemplateSetDetails(ctx, req.(*ListMultiTemplateBoundTemplateSetDetailsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListTemplateRevisionBoundUnnamedAppDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateRevisionBoundUnnamedAppDetailsReq)
 	if err := dec(in); err != nil {
@@ -3861,6 +3894,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateBoundTemplateSetDetails",
 			Handler:    _Data_ListTemplateBoundTemplateSetDetails_Handler,
+		},
+		{
+			MethodName: "ListMultiTemplateBoundTemplateSetDetails",
+			Handler:    _Data_ListMultiTemplateBoundTemplateSetDetails_Handler,
 		},
 		{
 			MethodName: "ListTemplateRevisionBoundUnnamedAppDetails",

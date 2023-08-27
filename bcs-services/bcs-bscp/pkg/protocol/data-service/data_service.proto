@@ -138,6 +138,8 @@ service Data {
         (ListTemplateBoundNamedAppDetailsResp) {}
     rpc ListTemplateBoundTemplateSetDetails(ListTemplateBoundTemplateSetDetailsReq) returns
         (ListTemplateBoundTemplateSetDetailsResp) {}
+    rpc ListMultiTemplateBoundTemplateSetDetails(ListMultiTemplateBoundTemplateSetDetailsReq) returns
+        (ListMultiTemplateBoundTemplateSetDetailsResp) {}
     rpc ListTemplateRevisionBoundUnnamedAppDetails(ListTemplateRevisionBoundUnnamedAppDetailsReq) returns
         (ListTemplateRevisionBoundUnnamedAppDetailsResp){}
     rpc ListTemplateRevisionBoundNamedAppDetails(ListTemplateRevisionBoundNamedAppDetailsReq) returns
@@ -909,6 +911,20 @@ message ListTemplateBoundTemplateSetDetailsReq {
 message ListTemplateBoundTemplateSetDetailsResp {
     uint32                                        count   = 1;
     repeated pbtbr.TemplateBoundTemplateSetDetail details = 2;
+}
+
+message ListMultiTemplateBoundTemplateSetDetailsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_ids      = 3;
+    uint32          start             = 4;
+    uint32          limit             = 5;
+    bool            all               = 6;
+}
+
+message ListMultiTemplateBoundTemplateSetDetailsResp {
+    uint32                                             count   = 1;
+    repeated pbtbr.MultiTemplateBoundTemplateSetDetail details = 2;
 }
 
 message ListTemplateRevisionBoundUnnamedAppDetailsReq {

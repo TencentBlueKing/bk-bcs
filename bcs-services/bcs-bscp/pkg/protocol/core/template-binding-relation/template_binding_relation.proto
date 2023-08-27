@@ -50,6 +50,15 @@ message TemplateBoundTemplateSetDetail {
     string template_set_name = 2;
 }
 
+// MultiTemplateBoundTemplateSetDetail is multiple templates bound unnamed app detail.
+message MultiTemplateBoundTemplateSetDetail {
+    uint32 template_id       = 1;
+    string template_name     = 2;
+    uint32 template_set_id   = 3;
+    string template_set_name = 4;
+}
+
+
 // TemplateRevisionBoundUnnamedAppDetail is template release bound unnamed app detail.
 message TemplateRevisionBoundUnnamedAppDetail {
     uint32 app_id   = 1;
@@ -85,3 +94,4 @@ message TemplateSetBoundNamedAppDetail {
     uint32 release_id   = 3;
     string release_name = 4;
 }
+
