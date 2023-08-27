@@ -95,3 +95,11 @@ message TemplateSetBoundNamedAppDetail {
     string release_name = 4;
 }
 
+// LatestTemplateBoundUnnamedAppDetail is the latest template bound unnamed app detail.
+message LatestTemplateBoundUnnamedAppDetail {
+    uint32 template_set_id   = 1;
+    string template_set_name = 2;
+    uint32 app_id            = 3;
+    string app_name          = 4;
+}
+

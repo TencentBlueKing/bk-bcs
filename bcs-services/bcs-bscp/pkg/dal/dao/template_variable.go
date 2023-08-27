@@ -122,16 +122,18 @@ func (dao *templateVariableDao) List(
 
 	var conds []rawgen.Condition
 	// add search condition
-	exprs := s.SearchExprs(dao.genQ)
-	if len(exprs) > 0 {
-		var do gen.ITemplateVariableDo
-		for i := range exprs {
-			if i == 0 {
-				do = q.Where(exprs[i])
+	if s != nil {
+		exprs := s.SearchExprs(dao.genQ)
+		if len(exprs) > 0 {
+			var do gen.ITemplateVariableDo
+			for i := range exprs {
+				if i == 0 {
+					do = q.Where(exprs[i])
+				}
+				do = do.Or(exprs[i])
 			}
-			do = do.Or(exprs[i])
+			conds = append(conds, do)
 		}
-		conds = append(conds, do)
 	}
 
 	d := q.Where(m.BizID.Eq(bizID)).Where(conds...)

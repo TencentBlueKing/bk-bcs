@@ -473,3 +473,37 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 	}
 	return resp, nil
 }
+
+// ListLatestTemplateBoundUnnamedAppDetails list the latest template bound unnamed app details
+func (s *Service) ListLatestTemplateBoundUnnamedAppDetails(ctx context.Context,
+	req *pbcs.ListLatestTemplateBoundUnnamedAppDetailsReq) (
+	*pbcs.ListLatestTemplateBoundUnnamedAppDetailsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListLatestTemplateBoundUnnamedAppDetailsResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListLatestTemplateBoundUnnamedAppDetailsReq{
+		BizId:           req.BizId,
+		TemplateSpaceId: req.TemplateSpaceId,
+		TemplateId:      req.TemplateId,
+		Start:           req.Start,
+		Limit:           req.Limit,
+		All:             req.All,
+	}
+
+	rp, err := s.client.DS.ListLatestTemplateBoundUnnamedAppDetails(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list the latest template bound unnamed app details failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListLatestTemplateBoundUnnamedAppDetailsResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}

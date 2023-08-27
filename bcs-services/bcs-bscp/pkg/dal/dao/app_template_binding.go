@@ -106,7 +106,7 @@ func (dao *appTemplateBindingDao) Update(kit *kit.Kit, g *table.AppTemplateBindi
 		q = tx.AppTemplateBinding.WithContext(kit.Ctx)
 		if _, err = q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
 			Select(m.Bindings, m.TemplateSpaceIDs, m.TemplateSetIDs, m.TemplateIDs, m.TemplateRevisionIDs,
-				m.LatestTemplateRevisionIDs, m.Creator, m.Reviser).
+				m.LatestTemplateIDs, m.Creator, m.Reviser).
 			Updates(g); err != nil {
 			return err
 		}

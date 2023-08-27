@@ -341,7 +341,7 @@ func (s *Service) ValidateAppTemplateBindingUniqueKey(kt *kit.Kit, bizID, appID 
 func (s *Service) fillATBModel(kit *kit.Kit, g *table.AppTemplateBinding, pbs *parsedBindings) error {
 	g.Spec.TemplateSetIDs = pbs.TemplateSetIDs
 	g.Spec.TemplateRevisionIDs = pbs.TemplateRevisionIDs
-	g.Spec.LatestTemplateRevisionIDs = pbs.LatestTemplateRevisionIDs
+	g.Spec.LatestTemplateIDs = pbs.LatestTemplateIDs
 	g.Spec.TemplateIDs = pbs.TemplateIDs
 	g.Spec.Bindings = pbs.TemplateBindings
 
@@ -374,7 +374,7 @@ func parseBindings(bindings []*table.TemplateBinding) *parsedBindings {
 			pbs.TemplateRevisionIDs = append(pbs.TemplateRevisionIDs, r.TemplateRevisionID)
 			pbs.TemplateIDs = append(pbs.TemplateIDs, r.TemplateID)
 			if r.IsLatest {
-				pbs.LatestTemplateRevisionIDs = append(pbs.LatestTemplateRevisionIDs, r.TemplateRevisionID)
+				pbs.LatestTemplateIDs = append(pbs.LatestTemplateIDs, r.TemplateID)
 			}
 
 			b2.TemplateRevisions = append(b2.TemplateRevisions, &table.TemplateRevisionBinding{
@@ -435,7 +435,7 @@ func (s *Service) fillUnspecifiedTemplates(kit *kit.Kit, pbs *parsedBindings) er
 				})
 
 				pbs.TemplateRevisionIDs = append(pbs.TemplateRevisionIDs, t.LatestTemplateRevisionId)
-				pbs.LatestTemplateRevisionIDs = append(pbs.LatestTemplateRevisionIDs, t.LatestTemplateRevisionId)
+				pbs.LatestTemplateIDs = append(pbs.LatestTemplateIDs, t.TemplateId)
 			}
 		}
 	}
@@ -444,11 +444,11 @@ func (s *Service) fillUnspecifiedTemplates(kit *kit.Kit, pbs *parsedBindings) er
 }
 
 type parsedBindings struct {
-	TemplateIDs               []uint32
-	TemplateSetIDs            []uint32
-	TemplateRevisionIDs       []uint32
-	LatestTemplateRevisionIDs []uint32
-	TemplateBindings          []*table.TemplateBinding
+	TemplateIDs         []uint32
+	TemplateSetIDs      []uint32
+	TemplateRevisionIDs []uint32
+	LatestTemplateIDs   []uint32
+	TemplateBindings    []*table.TemplateBinding
 }
 
 func convertToSlice(m map[uint32]struct{}) []uint32 {
@@ -501,7 +501,7 @@ func (s *Service) validateATBLatestRevisions(kit *kit.Kit, b *parsedBindings) er
 
 	// validate whether the latest revision specified by user is latest
 	nonLatest := make([]uint32, 0)
-	for _, id := range b.LatestTemplateRevisionIDs {
+	for _, id := range b.LatestTemplateIDs {
 		if !latestMap[id] {
 			nonLatest = append(nonLatest, id)
 

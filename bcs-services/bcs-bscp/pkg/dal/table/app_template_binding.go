@@ -133,12 +133,12 @@ func (t *AppTemplateBinding) ValidateDelete() error {
 
 // AppTemplateBindingSpec defines all the specifics for AppTemplateBinding set by user.
 type AppTemplateBindingSpec struct {
-	TemplateSpaceIDs          types.Uint32Slice `json:"template_space_ids" gorm:"column:template_space_ids;type:json;default:'[]'"`
-	TemplateSetIDs            types.Uint32Slice `json:"template_set_ids" gorm:"column:template_set_ids;type:json;default:'[]'"`
-	TemplateIDs               types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json;default:'[]'"`
-	TemplateRevisionIDs       types.Uint32Slice `json:"template_revision_ids" gorm:"column:template_revision_ids;type:json;default:'[]'"`
-	LatestTemplateRevisionIDs types.Uint32Slice `json:"latest_template_revision_ids" gorm:"column:latest_template_revision_ids;type:json;default:'[]'"`
-	Bindings                  TemplateBindings  `json:"bindings" gorm:"column:bindings;type:json;default:'[]'"`
+	TemplateSpaceIDs    types.Uint32Slice `json:"template_space_ids" gorm:"column:template_space_ids;type:json;default:'[]'"`
+	TemplateSetIDs      types.Uint32Slice `json:"template_set_ids" gorm:"column:template_set_ids;type:json;default:'[]'"`
+	TemplateIDs         types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json;default:'[]'"`
+	TemplateRevisionIDs types.Uint32Slice `json:"template_revision_ids" gorm:"column:template_revision_ids;type:json;default:'[]'"`
+	LatestTemplateIDs   types.Uint32Slice `json:"latest_template_ids" gorm:"column:latest_template_ids;type:json;default:'[]'"`
+	Bindings            TemplateBindings  `json:"bindings" gorm:"column:bindings;type:json;default:'[]'"`
 }
 
 // TemplateBindings is []*TemplateBinding

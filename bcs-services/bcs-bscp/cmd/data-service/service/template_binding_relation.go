@@ -262,6 +262,7 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 	details := make([]*pbtbr.TemplateBoundUnnamedAppDetail, 0)
 	for _, r := range relations {
 		for _, id := range r.TemplateRevisionIDs {
+			// the template revision must belong to the target template
 			if _, ok := tmplRevisionMap[id]; ok {
 				details = append(details, &pbtbr.TemplateBoundUnnamedAppDetail{
 					TemplateRevisionId:   id,
@@ -359,6 +360,7 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 	details := make([]*pbtbr.TemplateBoundNamedAppDetail, 0)
 	for _, r := range relations {
 		for _, id := range r.TemplateRevisionIDs {
+			// the template revision must belong to the target template
 			if _, ok := tmplRevisionMap[id]; ok {
 				details = append(details, &pbtbr.TemplateBoundNamedAppDetail{
 					TemplateRevisionId:   id,
@@ -963,6 +965,112 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 	}
 
 	resp := &pbds.ListTemplateSetBoundNamedAppDetailsResp{
+		Count:   totalCnt,
+		Details: details,
+	}
+	return resp, nil
+}
+
+// ListLatestTemplateBoundUnnamedAppDetails list the latest template bound unnamed app details.
+func (s *Service) ListLatestTemplateBoundUnnamedAppDetails(ctx context.Context,
+	req *pbds.ListLatestTemplateBoundUnnamedAppDetailsReq) (
+	*pbds.ListLatestTemplateBoundUnnamedAppDetailsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
+		return nil, err
+	}
+
+	atbs, err := s.dao.TemplateBindingRelation().
+		ListLatestTemplateBoundUnnamedAppDetails(kt, req.BizId, req.TemplateId)
+	if err != nil {
+		logs.Errorf("list the latest template bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	if len(atbs) == 0 {
+		return &pbds.ListLatestTemplateBoundUnnamedAppDetailsResp{
+			Count:   0,
+			Details: []*pbtbr.LatestTemplateBoundUnnamedAppDetail{},
+		}, nil
+	}
+
+	var (
+		appIDs, tmplSetIDs []uint32
+		appTmplSetMap      = make(map[uint32]uint32)
+	)
+	for _, atb := range atbs {
+		appIDs = append(appIDs, atb.Attachment.AppID)
+		hitTmplID := false
+		for _, b := range atb.Spec.Bindings {
+			for _, r := range b.TemplateRevisions {
+				if r.TemplateID == req.TemplateId {
+					tmplSetIDs = append(tmplSetIDs, b.TemplateSetID)
+					appTmplSetMap[atb.Attachment.AppID] = b.TemplateSetID
+					hitTmplID = true
+					break
+				}
+			}
+			if hitTmplID {
+				break
+			}
+		}
+	}
+	tmplSetIDs = tools.RemoveDuplicates(tmplSetIDs)
+
+	// get app details
+	apps, err := s.dao.App().ListAppsByIDs(kt, appIDs)
+	if err != nil {
+		logs.Errorf("list the latest template bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	appMap := make(map[uint32]*table.App, len(apps))
+	for _, a := range apps {
+		appMap[a.ID] = a
+	}
+
+	// get template set details
+	tmplSets, err := s.dao.TemplateSet().ListByIDs(kt, tmplSetIDs)
+	if err != nil {
+		logs.Errorf("list the latest template bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	tmplSetMap := make(map[uint32]*table.TemplateSet, len(tmplSets))
+	for _, t := range tmplSets {
+		tmplSetMap[t.ID] = t
+	}
+
+	// combine resp details
+	details := make([]*pbtbr.LatestTemplateBoundUnnamedAppDetail, 0)
+	for _, appID := range appIDs {
+		details = append(details, &pbtbr.LatestTemplateBoundUnnamedAppDetail{
+			TemplateSetId:   appTmplSetMap[appID],
+			TemplateSetName: tmplSetMap[appTmplSetMap[appID]].Spec.Name,
+			AppId:           appID,
+			AppName:         appMap[appID].Spec.Name,
+		})
+	}
+
+	// totalCnt is all data count
+	totalCnt := uint32(len(details))
+
+	if req.All {
+		// return all data
+		return &pbds.ListLatestTemplateBoundUnnamedAppDetailsResp{
+			Count:   totalCnt,
+			Details: details,
+		}, nil
+	}
+
+	// page by logic
+	if req.Start >= uint32(len(details)) {
+		details = details[:0]
+	} else if req.Start+req.Limit > uint32(len(details)) {
+		details = details[req.Start:]
+	} else {
+		details = details[req.Start : req.Start+req.Limit]
+	}
+
+	resp := &pbds.ListLatestTemplateBoundUnnamedAppDetailsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
