@@ -44,21 +44,8 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbds.Create
 		},
 	}
 
-	pbs := parseBindings(appTemplateBinding.Spec.Bindings)
-
-	if err := s.validateATBUpsert(kt, pbs); err != nil {
-		return nil, err
-	}
-
-	if err := s.fillUnspecifiedTemplates(kt, pbs); err != nil {
-		return nil, err
-	}
-
-	if err := s.validateATBUniqueKey(kt, pbs, req.Attachment.BizId, req.Attachment.AppId); err != nil {
-		return nil, err
-	}
-
-	if err := s.fillATBModel(kt, appTemplateBinding, pbs); err != nil {
+	if err := s.genFinalATB(kt, appTemplateBinding, true); err != nil {
+		logs.Errorf("create app template binding failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -73,9 +60,8 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbds.Create
 }
 
 // ListAppTemplateBindings list app template binding.
-func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbds.ListAppTemplateBindingsReq) (*pbds.
-	ListAppTemplateBindingsResp,
-	error) {
+func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbds.ListAppTemplateBindingsReq) (
+	*pbds.ListAppTemplateBindingsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
@@ -111,21 +97,8 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbds.Update
 		},
 	}
 
-	pbs := parseBindings(appTemplateBinding.Spec.Bindings)
-
-	if err := s.validateATBUpsert(kt, pbs); err != nil {
-		return nil, err
-	}
-
-	if err := s.fillUnspecifiedTemplates(kt, pbs); err != nil {
-		return nil, err
-	}
-
-	if err := s.validateATBUniqueKey(kt, pbs, req.Attachment.BizId, req.Attachment.AppId); err != nil {
-		return nil, err
-	}
-
-	if err := s.fillATBModel(kt, appTemplateBinding, pbs); err != nil {
+	if err := s.genFinalATB(kt, appTemplateBinding, true); err != nil {
+		logs.Errorf("update app template binding failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -308,6 +281,29 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.L
 	return resp, nil
 }
 
+// genFinalATB generate the final app template binding.
+func (s *Service) genFinalATB(kt *kit.Kit, atb *table.AppTemplateBinding, validateRevision bool) error {
+	pbs := parseBindings(atb.Spec.Bindings)
+
+	if err := s.validateATBUpsert(kt, pbs, validateRevision); err != nil {
+		return err
+	}
+
+	if err := s.fillUnspecifiedTemplates(kt, pbs); err != nil {
+		return err
+	}
+
+	if err := s.validateATBUniqueKey(kt, pbs, atb.Attachment.BizID, atb.Attachment.AppID); err != nil {
+		return err
+	}
+
+	if err := s.fillATBModel(kt, atb, pbs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ValidateAppTemplateBindingUniqueKey validate the unique key name+path for an app.
 // if the unique key name+path exists in table app_template_binding for the app, return error.
 func (s *Service) ValidateAppTemplateBindingUniqueKey(kt *kit.Kit, bizID, appID uint32, name,
@@ -460,7 +456,7 @@ func convertToSlice(m map[uint32]struct{}) []uint32 {
 }
 
 // validateUpsert validate for create or update operation of app template binding
-func (s *Service) validateATBUpsert(kit *kit.Kit, b *parsedBindings) error {
+func (s *Service) validateATBUpsert(kit *kit.Kit, b *parsedBindings, validateRevision bool) error {
 
 	if err := s.dao.Validator().ValidateTemplateSetsExist(kit, b.TemplateSetIDs); err != nil {
 		return err
@@ -470,12 +466,14 @@ func (s *Service) validateATBUpsert(kit *kit.Kit, b *parsedBindings) error {
 		return err
 	}
 
-	if err := s.dao.Validator().ValidateTemplateRevisionsExist(kit, b.TemplateRevisionIDs); err != nil {
-		return err
-	}
+	if validateRevision {
+		if err := s.dao.Validator().ValidateTemplateRevisionsExist(kit, b.TemplateRevisionIDs); err != nil {
+			return err
+		}
 
-	if err := s.validateATBLatestRevisions(kit, b); err != nil {
-		return err
+		if err := s.validateATBLatestRevisions(kit, b); err != nil {
+			return err
+		}
 	}
 
 	return nil

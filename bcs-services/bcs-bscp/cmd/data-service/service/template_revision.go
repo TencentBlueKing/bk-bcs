@@ -42,6 +42,9 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 		return nil, err
 	}
 
+	tx := s.dao.GenQuery().Begin()
+
+	// 1. create template revision
 	spec := req.Spec.TemplateRevisionSpec()
 	spec.RevisionName = generateRevisionName()
 	// keep the revision's name and path same with template
@@ -54,14 +57,55 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 			Creator: kt.User,
 		},
 	}
-	id, err := s.dao.TemplateRevision().Create(kt, templateRevision)
+	id, err := s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision)
+	if err != nil {
+		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
+		return nil, err
+	}
+
+	// 2. update the latest template revision for app template bindings if necessary
+	atbs, err := s.dao.TemplateBindingRelation().
+		ListLatestTemplateBoundUnnamedAppDetails(kt, req.Attachment.BizId, req.Attachment.TemplateId)
 	if err != nil {
 		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
+	if len(atbs) > 0 {
+		for _, atb := range atbs {
+			updateBindingsWithLatest(atb.Spec.Bindings, req.Attachment.TemplateId, id)
+			// no need to validate the template revision which just created
+			// the query operation in genFinalATB method are not in the same transaction with the update operation
+			// query it will cause error: `template release id is not exist`
+			if err := s.genFinalATB(kt, atb, false); err != nil {
+				logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
+				tx.Rollback()
+				return nil, err
+			}
+			if err := s.dao.AppTemplateBinding().UpdateWithTx(kt, tx, atb); err != nil {
+				logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
+				tx.Rollback()
+				return nil, err
+			}
+		}
+	}
+
+	tx.Commit()
 
 	resp := &pbds.CreateResp{Id: id}
 	return resp, nil
+}
+
+// updateBindingsWithLatest get the final template bindings after update with the latest template revision
+func updateBindingsWithLatest(bindings []*table.TemplateBinding, tmplID, latestRevisionID uint32) {
+	for _, b := range bindings {
+		for _, r := range b.TemplateRevisions {
+			if r.TemplateID == tmplID {
+				// update the latest template revision
+				r.TemplateRevisionID = latestRevisionID
+			}
+		}
+	}
 }
 
 // ListTemplateRevisions list template revision.
