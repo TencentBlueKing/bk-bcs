@@ -1,12 +1,9 @@
-FROM centos:7
+FROM centos:8
 
 ENV GODEBUG=x509sha1=1
 
 RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo 'Asia/Shanghai' > /etc/timezone
-
-# for command envsubset
-RUN yum install -y gettext
 
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert /data/bcs/swagger
 RUN mkdir -p /data/bcs/bcs-helm-manager

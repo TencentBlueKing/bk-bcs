@@ -33,11 +33,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/middleware"
 )
 
-const (
-	// 注册到网关的路由
-	apiRoutePrefix = "/bcsapi/v4/ui"
-)
-
 // WebServer :
 type WebServer struct {
 	ctx            context.Context
@@ -110,11 +105,12 @@ func (w *WebServer) newRouter() http.Handler {
 		r.Mount("/bcsapi", ReverseAPIHandler("bcs_host", config.G.BCS.Host))
 	}
 
-	if config.G.Web.RoutePrefix != "" && config.G.Web.RoutePrefix != "/" && config.G.Web.RoutePrefix != apiRoutePrefix {
-		r.Mount(config.G.Web.RoutePrefix+"/", http.StripPrefix(config.G.Web.RoutePrefix, w.subRouter()))
+	// 注册到网关的地址, 默认/bcsapi/v4/ui
+	routePrefix := config.G.Web.RoutePrefix
+	if routePrefix != "" && routePrefix != "/" {
+		r.Mount(routePrefix+"/", http.StripPrefix(routePrefix, w.subRouter()))
 	}
 
-	r.Mount(apiRoutePrefix+"/", http.StripPrefix(apiRoutePrefix, w.subRouter()))
 	r.Mount("/", w.subRouter())
 
 	return r

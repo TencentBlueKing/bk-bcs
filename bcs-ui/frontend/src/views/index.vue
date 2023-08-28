@@ -89,10 +89,9 @@ export default defineComponent({
       if (code === 40403) {
         $router.replace({
           name: '403',
-          query: {
-            resourceName: projectCode,
-            perms: web_annotations.perms,
-            fromRoute: window.location.href,
+          params: {
+            projectCode,
+            perms: web_annotations?.perms,
           },
         });
         return false;

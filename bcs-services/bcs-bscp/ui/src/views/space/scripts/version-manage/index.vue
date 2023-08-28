@@ -6,7 +6,7 @@
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
   import { useScriptStore } from '../../../../store/script'
-  import { IScriptVersion } from '../../../../../types/script'
+  import { IScriptVersion, IScriptVersionListItem } from '../../../../../types/script'
   import { getScriptDetail, getScriptVersionList, deleteScriptVersion, publishVersion, getScriptVersionDetail } from '../../../../api/script'
   import DetailLayout from '../components/detail-layout.vue'
   import VersionListFullTable from './version-list-full-table.vue'
@@ -25,7 +25,7 @@
   const detailLoading = ref(true)
   const scriptDetail = ref({ spec: { name: '', type: '' }, not_release_id: 0 })
   const versionLoading = ref(true)
-  const versionList = ref<IScriptVersion[]>([])
+  const versionList = ref<IScriptVersionListItem[]>([])
   const unPublishVersion = ref<IScriptVersion|null>(null) // 未发布版本
   const createBtnDisabled = ref(false)
   const showVersionDiff = ref(false)
@@ -122,13 +122,13 @@
   }
 
   // 查看版本
-  const handleViewVersionClick = (version: IScriptVersion) => {
-    const { name, memo, content } = version.spec
+  const handleViewVersionClick = (version: IScriptVersionListItem) => {
+    const { name, memo, content } = version.hook_revision.spec
     versionEditData.value = {
       panelOpen: true,
       editable: false,
       form: {
-        id: version.id,
+        id: version.hook_revision.id,
         name,
         memo,
         content
@@ -152,14 +152,15 @@
   }
 
   // 删除版本
-  const handleDelClick = (version: IScriptVersion) => {
+  const handleDelClick = (version: IScriptVersionListItem) => {
     InfoBox({
-      title: `确认是否删除版本【${version.spec.name}?】`,
-      infoType: "danger",
+      title: `确认是否删除版本【${version.hook_revision.spec.name}?】`,
+      subTitle: `${version.confirm_delete ? '当前脚本有被服务未命名版本引用，删除后，未命名版本里的引用将会被删除，是否确认删除？' : ''}`,
+      infoType: "warning",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
-        await deleteScriptVersion(spaceId.value, scriptId.value, version.id)
+        await deleteScriptVersion(spaceId.value, scriptId.value, version.hook_revision.id)
         if (versionList.value.length === 1 && pagination.value.current > 1) {
           pagination.value.current = pagination.value.current - 1
         }
@@ -262,19 +263,19 @@
               @page-change="refreshList"
               @page-limit-change="handlePageLimitChange">
               <template #operations="{ data }">
-                <div v-if="data.spec" class="action-btns">
-                  <bk-button v-if="data.spec.state === 'not_deployed'" text theme="primary" @click="handlePublishClick(data)">上线</bk-button>
-                  <bk-button v-if="data.spec.state === 'not_deployed'" text theme="primary" @click="handleEditVersionClick">编辑</bk-button>
-                  <bk-button text theme="primary" @click="handleVersionDiff(data)">版本对比</bk-button>
+                <div v-if="data.hook_revision" class="action-btns">
+                  <bk-button v-if="['not_deployed', 'shutdown'].includes(data.hook_revision.spec.state)" text theme="primary" @click="handlePublishClick(data.hook_revision)">上线</bk-button>
+                  <bk-button v-if="data.hook_revision.spec.state === 'not_deployed'" text theme="primary" @click="handleEditVersionClick">编辑</bk-button>
+                  <bk-button text theme="primary" @click="handleVersionDiff(data.hook_revision)">版本对比</bk-button>
                   <bk-button
-                    v-if="data.spec.state !== 'not_deployed'"
+                    v-if="data.hook_revision.spec.state !== 'not_deployed'"
                     text
                     theme="primary"
                     :disabled="!!unPublishVersion"
-                    @click="handleCreateVersionClick(data.spec.content)">
+                    @click="handleCreateVersionClick(data.hook_revision.spec.content)">
                     复制并新建
                   </bk-button>
-                  <bk-button v-if="data.spec.state === 'not_deployed'" text theme="primary" @click="handleDelClick(data)">删除</bk-button>
+                  <bk-button v-if="data.hook_revision.spec.state === 'not_deployed'" text theme="primary" :disabled="pagination.count <= 1" @click="handleDelClick(data)">删除</bk-button>
               </div>
               </template>
             </VersionListFullTable>

@@ -15,9 +15,9 @@ package dao
 import (
 	"errors"
 	"fmt"
-	
+
 	"gorm.io/gorm"
-	
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
@@ -142,7 +142,7 @@ func (dao *lockDao) DecreaseCount(kit *kit.Kit, tx *gen.Query, lock *table.Resou
 	if count > 1 {
 		if _, err := m.WithContext(kit.Ctx).
 			Where(m.ResType.Eq(lock.ResType), m.ResKey.Eq(lock.ResKey), m.BizID.Eq(lock.BizID)).
-			Update(m.ResCount, m.ResCount.Add(num)); err != nil {
+			Update(m.ResCount, m.ResCount.Sub(num)); err != nil {
 			return err
 		}
 		return nil

@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
@@ -80,6 +81,18 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 		}
 		// get variables
 		retData.Variables = variablesMap[ns.GetName()]
+		// get managers
+		managers := []string{}
+		if creator, exists := ns.Annotations[constant.AnnotationKeyCreator]; exists {
+			managers = append(managers, creator)
+		}else {
+			cluster, err := clustermanager.GetCluster(req.ClusterID)
+			if err != nil {
+				return err
+			}
+			managers = append(managers, cluster.Creator)
+		}
+		retData.Managers = managers
 		retDatas = append(retDatas, retData)
 	}
 	resp.Data = retDatas

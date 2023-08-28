@@ -7,11 +7,11 @@
       <div class="w-[280px] log-border-r relative">
         <Row class="log-border-b px-[16px] h-[42px] text-[12px] bg-[#FAFBFD]">
           <template #left>
-            <div class="text-[#313238]">{{ $t('规则名称') }}</div>
+            <div class="text-[#313238]">{{ $t('plugin.tools.ruleName') }}</div>
           </template>
           <template #right>
             <bcs-button text class="text-[12px]" @click="handleShowList">
-              {{ $t('展开列表') }}
+              {{ $t('logCollector.button.expandList') }}
               <i class="bcs-icon bcs-icon-angle-double-right"></i>
             </bcs-button>
           </template>
@@ -24,7 +24,7 @@
           ]"
           v-if="fromOldRule || !activeID"
           @click="handleChangeID()">
-          <span>{{ fromOldRule ? $t('生成新规则') : $t('新建规则') }}</span>
+          <span>{{ fromOldRule ? $t('logCollector.action.newRule') : $t('plugin.tools.create') }}</span>
         </div>
         <!-- 规则列表 -->
         <div
@@ -49,14 +49,14 @@
                 class="inline-flex items-center justify-center w-[24px] relative
                   h-[24px] bg-[#F0F1F5] rounded-sm text-[#979BA5] mr-[8px]"
                 v-bk-tooltips="{
-                  content: $t('已生成新规则: <br/> {0}<br/>此规则自动清理期限:<br/>{1}', [
+                  content: $t('logCollector.tips.oldRuleHasNewRule', [
                     row.new_rule_name,
                     moment(row.new_rule_created_at).add(30, 'days').format('YYYY-MM-DD')
                   ]),
                   disabled: !row.new_rule_id
                 }"
                 v-if="row.old">
-                {{ $t('旧') }}
+                {{ $t('logCollector.msg.oldRuleFlag') }}
                 <!-- 是否转换过 -->
                 <i
                   class="absolute bottom-[0px] right-[-6px] text-[#87cfab] bcs-icon bcs-icon-check-circle-shape"
@@ -84,7 +84,11 @@
             <bcs-tag :theme="statusTheme" class="mr-[8px]" v-if="activeID">
               {{ statusTextMap[activeRow.status || ''] }}
             </bcs-tag>
-            <span class="font-bold">{{ activeID ? activeRow.name : (fromOldRule ? $t('生成新规则') : $t('新建规则')) }}</span>
+            <span class="font-bold">
+              {{ activeID
+                ? activeRow.name
+                : (fromOldRule ? $t('logCollector.action.newRule') : $t('plugin.tools.create')) }}
+            </span>
           </template>
           <template #right>
             <!-- 编辑规则 -->
@@ -98,7 +102,7 @@
                 @click="setStatusOfEditRule">
                 <span class="flex items-center">
                   <span class="text-[14px] relative top-[-2px]"><i class="bk-icon icon-edit-line"></i></span>
-                  <span class="ml-[5px]">{{ $t('编辑') }}</span>
+                  <span class="ml-[5px]">{{ $t('generic.button.edit') }}</span>
                 </span>
               </bcs-button>
               <bcs-button
@@ -110,7 +114,7 @@
                   <span class="text-[14px] relative top-[-1px]">
                     <i class="bcs-icon bcs-icon-arrows-up-circle"></i>
                   </span>
-                  <span class="ml-[5px]">{{ $t('生成新规则') }}</span>
+                  <span class="ml-[5px]">{{ $t('logCollector.action.newRule') }}</span>
                 </span>
               </bcs-button>
               <bcs-button
@@ -120,26 +124,32 @@
                 @click="handleToggleRule">
                 <span class="flex items-center">
                   <span class="text-[14px] relative top-[-1px]"><i class="bcs-icon bcs-icon-switch"></i></span>
-                  <span class="ml-[5px]">{{ activeRow.status === 'TERMINATED' ? $t('启用') : $t('停用') }}</span>
+                  <span class="ml-[5px]">
+                    {{ activeRow.status === 'TERMINATED'
+                      ? $t('logCollector.action.enable') : $t('logCollector.action.stop') }}
+                  </span>
                 </span>
               </bcs-button>
               <bcs-button text class="text-[12px] ml-[16px]" @click="handleDeleteRule">
                 <span class="flex items-center">
                   <span class="text-[14px] relative top-[-2px]"><i class="bk-icon icon-close3-shape"></i></span>
-                  <span class="ml-[5px]">{{ $t('删除') }}</span>
+                  <span class="ml-[5px]">{{ $t('generic.button.delete') }}</span>
                 </span>
               </bcs-button>
             </template>
             <!-- 新建规则 -->
             <template v-else>
-              <bcs-button theme="primary" class="w-[72px]" @click="handleSaveData">{{ $t('保存') }}</bcs-button>
-              <bcs-button @click="handleCancel">{{ $t('取消') }}</bcs-button>
+              <bcs-button
+                theme="primary"
+                class="w-[72px]"
+                @click="handleSaveData">{{ $t('generic.button.save') }}</bcs-button>
+              <bcs-button @click="handleCancel">{{ $t('generic.button.cancel') }}</bcs-button>
             </template>
           </template>
         </Row>
         <bcs-alert
           type="warning"
-          :title="$t('生成新规则后，新旧版本规则采集到的日志数据将在 {0} 后完全同步，届时系统将自动为您清理旧规则。', [date])"
+          :title="$t('logCollector.msg.oldRuleToNewRule', [date])"
           v-if="fromOldRule" />
         <div
           :class="[
@@ -245,11 +255,11 @@ const handleShowList = () => {
   }
   // 编辑态返回列表确认
   $bkInfo({
-    title: $i18n.t('确认离开当前页?'),
-    subTitle: $i18n.t('离开将会导致未保存信息丢失'),
+    title: $i18n.t('generic.msg.info.exitTips.text'),
+    subTitle: $i18n.t('generic.msg.info.exitTips.subTitle'),
     clsName: 'custom-info-confirm default-info',
-    okText: $i18n.t('离开'),
-    cancelText: $i18n.t('取消'),
+    okText: $i18n.t('generic.button.exit'),
+    cancelText: $i18n.t('generic.button.cancel'),
     confirmFn() {
       activeID.value = '';
       emits('show-list');
@@ -330,10 +340,10 @@ const setStatusOfCreateRuleFromOld = async () => {
   if (logData.value?.new_rule_id) {
     $bkInfo({
       type: 'warning',
-      title: $i18n.t('{0} 已生成新规则，是否再次生成？', [logData.value.name]),
+      title: $i18n.t('logCollector.title.exitNewRule', [logData.value.name]),
       clsName: 'custom-info-confirm default-info',
-      okText: $i18n.t('继续生成'),
-      cancelText: $i18n.t('取消'),
+      okText: $i18n.t('logCollector.button.continueCreateNewRule'),
+      cancelText: $i18n.t('generic.button.cancel'),
       async confirmFn() {
         setNewRuleStatus();
       },
@@ -365,7 +375,7 @@ const handleCreateRule = async (data: IRuleData) => {
   if (result) {
     $bkMessage({
       theme: 'success',
-      message: $i18n.t('创建任务提交成功'),
+      message: $i18n.t('logCollector.msg.success.create'),
     });
     logData.value = undefined;
     emits('update-create-id', result);
@@ -384,7 +394,7 @@ const handleModifyRule = async (data: IRuleData) => {
   if (result) {
     $bkMessage({
       theme: 'success',
-      message: $i18n.t('修改任务提交成功'),
+      message: $i18n.t('logCollector.msg.success.update'),
     });
     logData.value = undefined;
     editable.value = false;

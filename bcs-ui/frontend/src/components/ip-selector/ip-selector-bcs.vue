@@ -19,11 +19,11 @@
     :tree-data-options="treeDataOptions"
     :preview-width="240"
     :left-panel-width="300"
-    :preview-title="$t('已选节点')"
+    :preview-title="$t('generic.ipSelector.selected.text')"
     :default-active-name="['nodes']"
     :enable-search-panel="false"
     :enable-tree-filter="true"
-    :static-table-placeholder="$t('请输入IP，多IP可使用空格分隔')"
+    :static-table-placeholder="$t('generic.ipSelector.placeholder.searchIp')"
     :across-page="true"
     ip-key="bk_host_innerip"
     ellipsis-direction="ltr"
@@ -34,7 +34,7 @@
     @menu-click="handleMenuClick"
     @search-selection-change="handleCheckChange">
     <template #collapse-title="{ item }">
-      <i18n path="{count} 个IP节点">
+      <i18n path="generic.ipSelector.selected.suffix">
         <span place="count" class="preview-count">{{ item.data.length }}</span>
       </i18n>
     </template>
@@ -42,13 +42,15 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, reactive, toRefs, h, ref, watch, computed, PropType } from 'vue';
-import { ipSelector, AgentStatus } from './ip-selector';
+import { computed, defineComponent, h, PropType, reactive, ref, toRefs, watch } from 'vue';
+
+import { AgentStatus, ipSelector } from './ip-selector';
+
 import './ip-selector.css';
-import { fetchBizTopo, fetchBizHosts, nodeAvailable } from '@/api/base';
+import { fetchBizHosts, fetchBizTopo, nodeAvailable } from '@/api/base';
+import $bkMessage from '@/common/bkmagic';
 import { copyText } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
-import $bkMessage from '@/common/bkmagic';
 import $store from '@/store';
 import { useClusterOperate } from '@/views/cluster-manage/cluster/use-cluster';
 
@@ -102,8 +104,8 @@ export default defineComponent({
       1: 'running',
     };
     const textMap = {
-      0: $i18n.t('异常'),
-      1: $i18n.t('正常'),
+      0: $i18n.t('generic.status.error'),
+      1: $i18n.t('generic.status.ready'),
     };
     const renderIpAgentStatus = row => h(AgentStatus, {
       props: {
@@ -121,11 +123,11 @@ export default defineComponent({
       panels: [
         {
           name: 'static-topo',
-          label: $i18n.t('静态拓扑'),
+          label: $i18n.t('generic.ipSelector.button.staticTop'),
         },
         {
           name: 'custom-input',
-          label: $i18n.t('手动输入'),
+          label: $i18n.t('generic.ipSelector.button.customInput'),
         },
       ],
       active: 'static-topo',
@@ -133,30 +135,30 @@ export default defineComponent({
       staticTableConfig: [
         {
           prop: 'bk_host_innerip',
-          label: $i18n.t('内网IP'),
+          label: $i18n.t('generic.ipSelector.label.innerIp'),
         },
         {
           prop: 'agent_alive',
-          label: $i18n.t('Agent状态'),
+          label: $i18n.t('generic.ipSelector.label.agentStatus'),
           render: renderIpAgentStatus,
         },
         {
           prop: 'idc_unit_name',
-          label: $i18n.t('机房'),
+          label: $i18n.t('generic.ipSelector.label.idc'),
         },
         {
           prop: 'svr_device_class',
-          label: $i18n.t('机型'),
+          label: $i18n.t('generic.ipSelector.label.serverModel'),
         },
       ],
       previewOperateList: [
         {
           id: 'removeAll',
-          label: $i18n.t('移除所有'),
+          label: $i18n.t('generic.ipSelector.selected.action.removeAll'),
         },
         {
           id: 'copyIp',
-          label: $i18n.t('复制IP'),
+          label: $i18n.t('generic.ipSelector.selected.action.copyIp.text'),
         },
       ],
       searchDataOptions: {},
@@ -310,7 +312,7 @@ export default defineComponent({
         copyText(ipList.join('\n'));
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('成功复制IP {number} 个', { number: ipList.length }),
+          message: $i18n.t('generic.ipSelector.selected.action.copyIp.msg', { number: ipList.length }),
         });
       }
     };
@@ -403,7 +405,7 @@ export default defineComponent({
       if (typeof item === 'object') {
         pre[item.ip] = item.tips;
       } else {
-        pre[item] = $i18n.t('当前IP不可用');
+        pre[item] = $i18n.t('generic.ipSelector.tips.ipNotAvailable');
       }
       return pre;
     }, {}));
@@ -416,10 +418,10 @@ export default defineComponent({
     const getRowTipsContent = (row) => {
       let tips: any = '';
       if (!row.is_valid) {
-        tips = $i18n.t('Docker机不允许使用');
+        tips = $i18n.t('generic.ipSelector.tips.dockerIpNotAvailable');
       } else if (nodeAvailableMap[row.bk_host_innerip]?.isExist) {
         const { clusterName = '', clusterID = '' } = nodeAvailableMap[row.bk_host_innerip];
-        tips = $i18n.t('IP已被 {name}{id} 占用', {
+        tips = $i18n.t('generic.ipSelector.tips.ipInUsed', {
           name: clusterName,
           id: clusterID ? ` (${clusterID}) ` : '',
         });
@@ -427,9 +429,9 @@ export default defineComponent({
         tips = disabledIpData.value[row.bk_host_innerip];
       } else if (!!props.cloudId && !!props.region) {
         if (row.region !== props.region) {
-          tips = $i18n.t('待选节点所属地域需与集群保持一致, 集群地域: {0}', [getRegionName(props.region)]);
+          tips = $i18n.t('generic.ipSelector.tips.ipRegionNotMatched', [getRegionName(props.region)]);
         } else if (row.vpc !== props.vpc?.vpcID) {
-          tips = $i18n.t('待选节点所属VPC需与集群保持一致, 待选节点VPC: {0}, 集群VPC: {1}', [row.vpc, props.vpc?.vpcID]);
+          tips = $i18n.t('generic.ipSelector.tips.ipVpcNotMatched', [row.vpc, props.vpc?.vpcID]);
         }
       }
       return tips;

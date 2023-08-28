@@ -15,9 +15,10 @@ package handler
 import (
 	"context"
 
+	"google.golang.org/genproto/googleapis/api/httpbody"
+
 	actionChart "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/actions/chart"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-	"google.golang.org/genproto/googleapis/api/httpbody"
 )
 
 // ListChartV1 provide the actions to list charts
@@ -80,6 +81,14 @@ func (hm *HelmManager) DownloadChart(ctx context.Context,
 
 	defer recorder(ctx, "DownloadChart", req, nil)()
 	action := actionChart.NewDownloadChartAction(hm.model, hm.platform)
+	return action.Handle(ctx, req, resp)
+}
+
+// UploadChart provide the actions to upload chart
+func (hm *HelmManager) UploadChart(ctx context.Context,
+	req *helmmanager.UploadChartReq, resp *helmmanager.UploadChartResp) error {
+	defer recorder(ctx, "UploadChart", req, nil)()
+	action := actionChart.NewUploadChartAction(hm.model, hm.platform)
 	return action.Handle(ctx, req, resp)
 }
 

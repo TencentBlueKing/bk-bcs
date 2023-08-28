@@ -20,8 +20,8 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
@@ -82,21 +82,21 @@ func checkResourceID(resourceID *resourceID) error {
 		resourceID.ClusterID = resourceID.ServerKey
 	}
 	if resourceID.InnerIP != "" && resourceID.ClusterID == "" {
-		node, err := cloudprovider.GetStorageModel().GetNodeByIP(context.TODO(), resourceID.InnerIP)
+		node, err := store.GetStoreModel().GetNodeByIP(context.TODO(), resourceID.InnerIP)
 		if err != nil {
 			return err
 		}
 		resourceID.ClusterID = node.ClusterID
 	}
 	if resourceID.ClusterID != "" && resourceID.ProjectID == "" {
-		cluster, err := cloudprovider.GetStorageModel().GetCluster(context.TODO(), resourceID.ClusterID)
+		cluster, err := store.GetStoreModel().GetCluster(context.TODO(), resourceID.ClusterID)
 		if err != nil {
 			return err
 		}
 		resourceID.ProjectID = cluster.ProjectID
 	}
 	if resourceID.NodeGroupID != "" && resourceID.ClusterID == "" {
-		np, err := cloudprovider.GetStorageModel().GetNodeGroup(context.TODO(), resourceID.NodeGroupID)
+		np, err := store.GetStoreModel().GetNodeGroup(context.TODO(), resourceID.NodeGroupID)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func checkResourceID(resourceID *resourceID) error {
 		resourceID.ProjectID = np.ProjectID
 	}
 	if resourceID.TaskID != "" && resourceID.ClusterID == "" {
-		task, err := cloudprovider.GetStorageModel().GetTask(context.TODO(), resourceID.TaskID)
+		task, err := store.GetStoreModel().GetTask(context.TODO(), resourceID.TaskID)
 		if err != nil {
 			return err
 		}
@@ -112,8 +112,8 @@ func checkResourceID(resourceID *resourceID) error {
 		resourceID.ProjectID = task.ProjectID
 	}
 	if resourceID.CloudID != "" && resourceID.AccountID != "" && resourceID.ProjectID == "" {
-		cloud, err := cloudprovider.GetStorageModel().GetCloudAccount(context.TODO(),
-			resourceID.CloudID, resourceID.AccountID)
+		cloud, err := store.GetStoreModel().GetCloudAccount(context.TODO(),
+			resourceID.CloudID, resourceID.AccountID, false)
 		if err != nil {
 			return err
 		}

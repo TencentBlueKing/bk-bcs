@@ -1,6 +1,6 @@
 <template>
   <div ref="mancoEditor" :class="['biz-manco-editor', { 'full-screen': isFullScreen }]">
-    <div class="build-code-fullscreen" :title="isFullScreen ? $t('关闭') : $t('全屏')" @click="setFullScreen()">
+    <div class="build-code-fullscreen" :title="isFullScreen ? $t('generic.button.close') : $t('generic.button.fullScreen.text')" @click="setFullScreen()">
       <i class="bcs-icon bcs-icon-full-screen" v-if="!isFullScreen"></i>
       <i class="bcs-icon bcs-icon-close" v-else></i>
     </div>

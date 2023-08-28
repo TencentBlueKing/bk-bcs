@@ -27,8 +27,9 @@ var Key = &keyGenerator{
 	nullKeyTTLRange:             [2]int{60, 120},
 	releasedGroupTTLRange:       [2]int{30 * 60, 60 * 60},
 	credentialMatchedCITTLRange: [2]int{30 * 60, 60 * 60},
-	credentialTTLRange:          [2]int{1, 5},
+	credentialTTLRange:          [2]int{5, 60},
 	releasedCITTLRange:          [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
+	releasedHookTTLRange:        [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
 	appMetaTTLRange:             [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
 	appHasRITTLRange:            [2]int{5 * 60, 10 * 60},
 }
@@ -39,6 +40,7 @@ const (
 	cacheHead string = "bscp"
 
 	releasedConfigItem  namespace = "released-ci"
+	releasedHook        namespace = "released-hook"
 	releasedGroup       namespace = "released-group"
 	credentialMatchedCI namespace = "credential-matched-ci"
 	credential          namespace = "credential"
@@ -52,6 +54,7 @@ type keyGenerator struct {
 	credentialMatchedCITTLRange [2]int
 	credentialTTLRange          [2]int
 	releasedCITTLRange          [2]int
+	releasedHookTTLRange        [2]int
 	appMetaTTLRange             [2]int
 	appHasRITTLRange            [2]int
 }
@@ -69,8 +72,8 @@ func (k keyGenerator) ReleasedGroup(bizID uint32, appID uint32) string {
 func (k keyGenerator) ReleasedGroupTtlSec(withRange bool) int {
 
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.releasedGroupTTLRange[1]-k.releasedGroupTTLRange[0]) + k.releasedGroupTTLRange[0]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.releasedGroupTTLRange[1]-k.releasedGroupTTLRange[0]) + k.releasedGroupTTLRange[0]
 		return seconds
 	}
 
@@ -90,8 +93,8 @@ func (k keyGenerator) CredentialMatchedCI(bizID uint32, credential string) strin
 func (k keyGenerator) CredentialMatchedCITtlSec(withRange bool) int {
 
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.credentialMatchedCITTLRange[1]-
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.credentialMatchedCITTLRange[1]-
 			k.credentialMatchedCITTLRange[0]) + k.credentialMatchedCITTLRange[0]
 		return seconds
 	}
@@ -111,8 +114,8 @@ func (k keyGenerator) Credential(bizID uint32, str string) string {
 // CredentialTtlSec generate the credential's TTL seconds
 func (k keyGenerator) CredentialTtlSec(withRange bool) int {
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.credentialTTLRange[1]-k.credentialTTLRange[0]) + k.credentialTTLRange[0]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.credentialTTLRange[1]-k.credentialTTLRange[0]) + k.credentialTTLRange[0]
 		return seconds
 	}
 	return k.credentialTTLRange[0]
@@ -132,12 +135,33 @@ func (k keyGenerator) ReleasedCI(bizID uint32, releaseID uint32) string {
 func (k keyGenerator) ReleasedCITtlSec(withRange bool) int {
 
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.releasedCITTLRange[1]-k.releasedCITTLRange[0]) + k.releasedCITTLRange[0]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.releasedCITTLRange[1]-k.releasedCITTLRange[0]) + k.releasedCITTLRange[0]
 		return seconds
 	}
 
 	return k.releasedCITTLRange[1]
+}
+
+// ReleasedHook generate a release's hook cache key to save pre and post hook undert his release
+func (k keyGenerator) ReleasedHook(bizID uint32, releaseID uint32) string {
+	return element{
+		biz: bizID,
+		ns:  releasedHook,
+		key: strconv.FormatUint(uint64(releaseID), 10),
+	}.String()
+}
+
+// ReleasedHookTtlSec generate the current released hook's TTL seconds
+func (k keyGenerator) ReleasedHookTtlSec(withRange bool) int {
+
+	if withRange {
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.releasedHookTTLRange[1]-k.releasedHookTTLRange[0]) + k.releasedHookTTLRange[0]
+		return seconds
+	}
+
+	return k.releasedHookTTLRange[1]
 }
 
 // AppMeta generate the app id cache key.
@@ -162,8 +186,8 @@ func (k keyGenerator) AppMeta(bizID uint32, appID uint32) string {
 func (k keyGenerator) AppMetaTtlSec(withRange bool) int {
 
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.appMetaTTLRange[1]-k.appMetaTTLRange[0]) + k.appMetaTTLRange[0]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.appMetaTTLRange[1]-k.appMetaTTLRange[0]) + k.appMetaTTLRange[0]
 		return seconds
 	}
 
@@ -177,8 +201,8 @@ func (k keyGenerator) NullValue() string {
 
 // NullKeyTtlSec return the null key's ttl seconds
 func (k keyGenerator) NullKeyTtlSec() int {
-	rand.Seed(time.Now().UnixNano())
-	seconds := rand.Intn(k.nullKeyTTLRange[1]-k.nullKeyTTLRange[0]) + k.nullKeyTTLRange[0]
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	seconds := r.Intn(k.nullKeyTTLRange[1]-k.nullKeyTTLRange[0]) + k.nullKeyTTLRange[0]
 	return seconds
 }
 

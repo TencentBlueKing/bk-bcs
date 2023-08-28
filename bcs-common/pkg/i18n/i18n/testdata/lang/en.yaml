@@ -1,0 +1,3 @@
+hello: "hello"
+world: "world"
+OrderPay: "You have successfully complete order %d payment, paid amount: ￥%0.2f."

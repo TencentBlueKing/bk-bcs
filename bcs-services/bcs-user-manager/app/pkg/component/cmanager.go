@@ -54,6 +54,7 @@ type Cluster struct {
 	Creator     string `json:"creator"`
 	Updater     string `json:"updater"`
 	Status      string `json:"status"`
+	IsShared    bool   `json:"is_shared"`
 }
 
 // GetClusterByClusterID get cluster by clusterID

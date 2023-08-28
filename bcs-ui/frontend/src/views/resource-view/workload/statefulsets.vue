@@ -10,23 +10,23 @@
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('名称')" prop="metadata.name" sortable>
+        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable>
           <template #default="{ row }">
             <bk-button class="bcs-button-ellipsis" text @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" sortable></bk-table-column>
-        <bk-table-column :label="$t('升级策略')" min-width="100">
+        <bk-table-column :label="$t('k8s.namespace')" prop="metadata.namespace" sortable></bk-table-column>
+        <bk-table-column :label="$t('k8s.updateStrategy.text')" min-width="100">
           <template slot-scope="{ row }">
-            {{ updateStrategyMap[$chainable(row.spec, 'updateStrategy.type')] || $t('滚动升级') }}
+            {{ updateStrategyMap[$chainable(row.spec, 'updateStrategy.type')] || $t('k8s.updateStrategy.rollingUpdate') }}
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('Pod 管理策略')">
+        <bk-table-column :label="$t('k8s.statefulset.podManagementPolicy')">
           <template slot-scope="{ row }">
             {{ row.spec.podManagementPolicy || '--' }}
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('状态')" min-width="60">
+        <bk-table-column :label="$t('generic.label.status')" min-width="60">
           <template slot-scope="{ row }">
             <StatusIcon status="running" v-if="handleGetExtData(row.metadata.uid, 'status') === 'normal'">
               {{statusMap[handleGetExtData(row.metadata.uid, 'status')] || '--'}}
@@ -47,33 +47,33 @@
             <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('创建人')">
+        <bk-table-column :label="$t('generic.label.createdBy')">
           <template slot-scope="{ row }">
             <span>{{handleGetExtData(row.metadata.uid, 'creator') || '--'}}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('编辑模式')" width="100">
+        <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
           <template slot-scope="{ row }">
             <span>
               {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
-                ? $t('表单') : 'YAML'}}
+                ? $t('generic.label.editMode.form') : 'YAML'}}
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('操作')" :resizable="false" width="240">
+        <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="250">
           <template #default="{ row }">
             <bk-button
               text
-              @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
+              @click="handleUpdateResource(row)">{{ $t('generic.button.update') }}</bk-button>
             <bk-button
               class="ml10" text
-              @click="handleEnlargeCapacity(row)">{{ $t('扩缩容') }}</bk-button>
+              @click="handleEnlargeCapacity(row)">{{ $t('deploy.templateset.scale') }}</bk-button>
             <bk-button
               class="ml10" text
-              @click="gotoDetail(row)">{{ $t('重新调度') }}</bk-button>
+              @click="gotoDetail(row)">{{ $t('dashboard.workload.pods.delete') }}</bk-button>
             <bk-button
               class="ml10" text
-              @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
+              @click="handleDeleteResource(row)">{{ $t('generic.button.delete') }}</bk-button>
           </template>
         </bk-table-column>
         <template #empty>

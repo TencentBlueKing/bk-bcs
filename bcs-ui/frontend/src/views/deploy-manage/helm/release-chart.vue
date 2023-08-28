@@ -1,6 +1,6 @@
 <!-- eslint-disable max-len -->
 <template>
-  <BcsContent :title="isEdit ? releaseName : $t('Chart部署')" v-bkloading="{ isLoading }" ref="contentRef">
+  <BcsContent :title="isEdit ? releaseName : $t('deploy.helm.chartInstall')" v-bkloading="{ isLoading }" ref="contentRef">
     <!-- 基本信息 -->
     <div class="bcs-border min-h-[320px] bg-[#fff] flex">
       <div class="w-[400px] border-right flex flex-col items-center justify-center">
@@ -12,18 +12,18 @@
         </div>
         <bcs-popconfirm
           trigger="click"
-          :confirm-text="$t('复制')"
+          :confirm-text="$t('cluster.nodeList.button.copy.text')"
           v-if="isEdit"
           :disabled="!releaseDetail.notes"
           @confirm="handleCopyNotes">
-          <bcs-button text size="small" :disabled="!releaseDetail.notes">{{$t('查看Notes')}}</bcs-button>
+          <bcs-button text size="small" :disabled="!releaseDetail.notes">{{$t('deploy.helm.showNotes')}}</bcs-button>
           <template #content>
-            <div class="break-all">{{releaseDetail.notes}}</div>
+            <pre class="break-words whitespace-pre-wrap">{{releaseDetail.notes}}</pre>
           </template>
         </bcs-popconfirm>
       </div>
       <div class="flex-1">
-        <div class="px-[20px] h-[40px] flex items-center text-[14px] border-bottom">{{$t('配置选项')}}</div>
+        <div class="px-[20px] h-[40px] flex items-center text-[14px] border-bottom">{{$t('deploy.helm.args')}}</div>
         <!-- form组件实现强依赖 bk-form 名称 -->
         <bk-form
           form-type="vertical"
@@ -31,10 +31,10 @@
           :model="releaseData"
           :rules="rules"
           ref="formRef">
-          <bk-form-item :label="$t('名称')" required property="name" error-display-type="normal">
+          <bk-form-item :label="$t('generic.label.name')" required property="name" error-display-type="normal">
             <bcs-input :maxlength="53" :disabled="isEdit" v-model="releaseData.name"></bcs-input>
           </bk-form-item>
-          <bk-form-item :label="$t('版本')" required property="chartVersion" error-display-type="normal">
+          <bk-form-item :label="$t('generic.label.version')" required property="chartVersion" error-display-type="normal">
             <div class="flex items-center">
               <bcs-select
                 class="flex-1"
@@ -52,13 +52,13 @@
               <span
                 class="bcs-icon-btn flex items-center justify-center w-[32px] h-[32px] ml-[-1px]"
                 style="border: 1px solid #c4c6cc"
-                v-bk-tooltips="$t('刷新列表')"
+                v-bk-tooltips="$t('generic.button.refresh')"
                 @click="handleGetVersionList">
                 <i class="bcs-icon bcs-icon-reset"></i>
               </span>
             </div>
           </bk-form-item>
-          <bk-form-item :label="$t('所属集群')" required property="clusterID" error-display-type="normal">
+          <bk-form-item :label="$t('generic.label.cluster1')" required property="clusterID" error-display-type="normal">
             <ClusterSelect
               :disabled="isEdit"
               searchable
@@ -68,8 +68,8 @@
             </ClusterSelect>
           </bk-form-item>
           <bk-form-item
-            :label="$t('命名空间')"
-            :desc="$t('如果Chart中已经配置命名空间，则会使用Chart中的命名空间，会导致不匹配等问题;建议Chart中不要配置命名空间')"
+            :label="$t('k8s.namespace')"
+            :desc="$t('deploy.helm.chartNSTips')"
             desc-type="icon"
             required
             property="namespace"
@@ -82,7 +82,7 @@
             </NamespaceSelect>
           </bk-form-item>
           <bk-form-item
-            :label="$t('更新说明')"
+            :label="$t('deploy.helm.upgradeDesc')"
             property="description"
             required
             error-display-type="normal"
@@ -98,15 +98,15 @@
       :active.sync="activeTab"
       v-bkloading="{ isLoading: versionDetailLoading }"
       v-if="showTab">
-      <bcs-tab-panel name="values" :label="$t('Chart部署选项')">
+      <bcs-tab-panel name="values" :label="$t('deploy.helm.chartFlags')">
         <bcs-alert
           class="mb-[10px]"
           type="info"
-          :title="$t('YAML初始值为创建时Chart中values.yaml内容，后续更新部署以该YAML内容为准，YAML内容最终通过`--values`选项传递给`helm template`命令')">
+          :title="$t('deploy.helm.defaultDesc')">
         </bcs-alert>
         <div class="flex items-center bcs-border h-[64px] bg-[#f9fbfd] px-[16px]">
           <template v-if="!isEdit || !lockValues">
-            <span class="text-[14px]">{{$t('Values文件')}}:</span>
+            <span class="text-[14px]">{{$t('deploy.helm.valuesFile')}}:</span>
             <bcs-select
               class="w-[360px] bg-[#fff] ml-[10px]"
               :clearable="false"
@@ -121,17 +121,17 @@
             </bcs-select>
             <span
               class="ml-[5px] mr-[10px]"
-              v-bk-tooltips="$t('Values文件包含两类: <br/>- 以values.yaml或以values.yml结尾, 例如xxx-values.yaml文件 <br/>- bcs-values目录下的以.yml或.yaml结尾的文件')">
+              v-bk-tooltips="$t('deploy.helm.values')">
               <i class="bk-icon icon-question-circle"></i>
             </span>
           </template>
           <bcs-checkbox v-model="lockValues" class="flex flex-1 release-chart-lock-checkbox" v-if="isEdit">
             <div
               class="flex"
-              :title="$t('(默认锁定values内容为当前release(版本: {version} )的内容, 解除锁定后, 加载为对应Chart中的values内容)', { version: releaseDetail.chartVersion })">
-              {{lockValues ? $t('已锁定') : $t('已解锁')}}
+              :title="$t('deploy.helm.defaultLockedValuesContent', { version: releaseDetail.chartVersion })">
+              {{lockValues ? $t('deploy.helm.locked') : $t('deploy.helm.unlocked')}}
               <i18n
-                path="(默认锁定values内容为当前release(版本: {version} )的内容, 解除锁定后, 加载为对应Chart中的values内容)"
+                path="deploy.helm.defaultLockedValuesContent"
                 class="flex-1 text-[#979ba5] text-[12px] bcs-ellipsis">
                 <span place="version">{{releaseDetail.chartVersion}}</span>
               </i18n>
@@ -145,31 +145,31 @@
           v-model="valuesData.valueFileContent">
         </CodeEditor>
       </bcs-tab-panel>
-      <bcs-tab-panel name="params" :label="$t('Helm部署参数')">
+      <bcs-tab-panel name="params" :label="$t('deploy.helm.helmFlags')">
         <div class="flex flex-col">
           <bcs-checkbox false-value="false" true-value="true" v-model="args['--skip-crds']">
-            {{$t('忽略CRD')}}
+            {{$t('deploy.helm.skipCrds')}}
             <span class="bcs-icon-btn" v-bk-tooltips="'--skip-crds'">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </bcs-checkbox>
           <bcs-checkbox false-value="false" true-value="true" class="mt-[10px]" v-model="args['--wait-for-jobs']">
-            {{$t('等待所有Jobs完成')}}
+            {{$t('deploy.helm.waitforJobs')}}
             <span class="bcs-icon-btn" v-bk-tooltips="'--wait-for-jobs'">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </bcs-checkbox>
           <bcs-checkbox false-value="false" true-value="true" class="mt-[10px]" v-model="args['--wait']">
-            {{$t('等待所有Pod，PVC处于ready状态')}}
+            {{$t('deploy.helm.wait')}}
             <span class="bcs-icon-btn" v-bk-tooltips="'--wait'">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </bcs-checkbox>
           <div class="flex items-center text-[14px] mt-[10px]">
-            {{$t('超时时间')}}
+            {{$t('deploy.helm.timeout')}}
             <bcs-input type="number" class="w-[200px] ml-[5px]" v-model="args['--timeout']">
               <template #append>
-                <div class="group-text">{{$t('秒')}}</div>
+                <div class="group-text">{{$t('units.suffix.seconds')}}</div>
               </template>
             </bcs-input>
             <span class="bcs-icon-btn ml-[5px]" v-bk-tooltips="'--timeout'">
@@ -177,7 +177,7 @@
             </span>
           </div>
           <div v-if="isEdit" class="flex items-center text-[14px] mt-[10px]">
-            {{$t('保留最大历史版本')}}
+            {{$t('deploy.helm.hisotryMax.label')}}
             <bcs-input
               type="number"
               :min="1"
@@ -185,20 +185,20 @@
               class="w-[150px] ml-[5px]"
               v-model="args['--history-max']">
               <template #append>
-                <div class="group-text">{{$t('个')}}</div>
+                <div class="group-text">{{$t('units.suffix.units')}}</div>
               </template>
             </bcs-input>
-            <span class="bcs-icon-btn ml-[5px]" v-bk-tooltips="$t('--history-max，可用于回滚的历史版本个数')">
+            <span class="bcs-icon-btn ml-[5px]" v-bk-tooltips="$t('deploy.helm.hisotryMax.desc')">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </div>
           <!-- 自定义参数 -->
           <div class="mt-[10px]">
             <bcs-button text size="small" class="!pl-[0px]" @click="showCustomArgs = !showCustomArgs">
-              {{$t('自定义参数')}}
+              {{$t('deploy.helm.flags.label')}}
               <i :class="['bcs-icon', showCustomArgs ? 'bcs-icon-angle-double-up' : 'bcs-icon-angle-double-down']"></i>
             </bcs-button>
-            <span class="bcs-icon-btn" v-bk-tooltips="$t('设置Flags，如设置wait，输入格式为 --wait = true')">
+            <span class="bcs-icon-btn" v-bk-tooltips="$t('deploy.helm.flags.desc')">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
             <KeyValue
@@ -207,7 +207,7 @@
               :show-header="false"
               :show-footer="false"
               :key-rules="[{
-                message: $t('参数Key必须由 -- 字符开头'),
+                message: $t('deploy.helm.keyTips'),
                 validator: '^--'
               }]"
               :model-value="customArgs"
@@ -225,7 +225,7 @@
       :is-show.sync="showPreview"
       quick-close
       :width="1000"
-      :title="$t('预览')"
+      :title="$t('generic.title.preview')"
       @hidden="isPreview = false">
       <template #content>
         <ChartFileTree
@@ -244,11 +244,11 @@
       <bcs-alert
         class="mb-[10px]"
         type="info"
-        :title="$t('Helm Release参数发生如下变化，请确认后再点击“确定”更新')">
+        :title="$t('deploy.helm.flagsChange')">
       </bcs-alert>
       <div class="flex mb-[5px]">
-        <span class="flex-1">{{$t('当前版本')}}: {{releaseDetail.chartVersion}}</span>
-        <span class="flex-1">{{$t('更新版本')}}: {{releaseData.chartVersion}}</span>
+        <span class="flex-1">{{$t('generic.title.curVersion')}}: {{releaseDetail.chartVersion}}</span>
+        <span class="flex-1">{{$t('deploy.helm.upgrade')}}: {{releaseData.chartVersion}}</span>
       </div>
       <CodeEditor
         v-bkloading="{ isLoading: confirmLoading }"
@@ -264,8 +264,8 @@
           theme="primary"
           :disabled="!Object.keys(previewData).length"
           :loading="confirmLoading"
-          @click="handleConfirmUpdate">{{$t('确定')}}</bcs-button>
-        <bcs-button :disabled="confirmLoading" @click="showDiffDialog = false">{{$t('取消')}}</bcs-button>
+          @click="handleConfirmUpdate">{{$t('generic.button.confirm')}}</bcs-button>
+        <bcs-button :disabled="confirmLoading" @click="showDiffDialog = false">{{$t('generic.button.cancel')}}</bcs-button>
       </template>
     </bcs-dialog>
     <!-- 操作 -->
@@ -287,19 +287,19 @@
           }
         }"
         @click="handleReleaseOrUpdateChart">
-        {{isEdit ? $t('更新') : $t('部署')}}
+        {{isEdit ? $t('generic.button.update') : $t('deploy.helm.install')}}
       </bcs-button>
       <bcs-button
         :loading="releaseLoading"
         :disabled="releaseLoading"
         @click="handleShowPreview">
-        {{$t('预览')}}
+        {{$t('generic.title.preview')}}
       </bcs-button>
       <bcs-button
         :loading="releaseLoading"
         :disabled="releaseLoading"
         @click="handleBack">
-        {{$t('取消')}}
+        {{$t('generic.button.cancel')}}
       </bcs-button>
     </div>
   </BcsContent>
@@ -360,11 +360,11 @@ export default defineComponent({
         return;
       };
       $bkInfo({
-        title: $i18n.t('确认离开当前页?'),
-        subTitle: $i18n.t('离开将会导致未保存信息丢失'),
+        title: $i18n.t('generic.msg.info.exitTips.text'),
+        subTitle: $i18n.t('generic.msg.info.exitTips.subTitle'),
         clsName: 'custom-info-confirm default-info',
-        okText: $i18n.t('离开'),
-        cancelText: $i18n.t('取消'),
+        okText: $i18n.t('generic.button.exit'),
+        cancelText: $i18n.t('generic.button.cancel'),
         confirmFn() {
           resolve(true);
         },
@@ -420,7 +420,7 @@ export default defineComponent({
       name: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
         {
@@ -428,27 +428,27 @@ export default defineComponent({
             return /^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/.test(v);
           },
           trigger: 'blur',
-          message: $i18n.t('Release名称只能由小写字母数字或者-组成'),
+          message: $i18n.t('deploy.helm.regexReleaseName'),
         },
       ],
       chartVersion: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       clusterID: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       namespace: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
@@ -458,7 +458,7 @@ export default defineComponent({
             return isPreview.value || args.value['--description'];
           },
           trigger: 'blur',
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
         },
       ],
     });

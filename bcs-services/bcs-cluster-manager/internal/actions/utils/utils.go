@@ -14,12 +14,31 @@
 package utils
 
 import (
+	"context"
+	"strings"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	"strings"
 )
+
+// CheckClusterConnection check cluster connection when delete cluster or other scenes
+func CheckClusterConnection(operator *clusterops.K8SOperator, clusterID string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	err := operator.CheckClusterConnection(ctx, clusterID)
+	if err != nil {
+		blog.Errorf("CheckClusterConnection[%s] failed: %v", clusterID, err)
+		return false
+	}
+
+	blog.Infof("CheckClusterConnection[%s] success", clusterID)
+	return true
+}
 
 // GetCloudZones get cloud region zones
 func GetCloudZones(cls *proto.Cluster, cloud *proto.Cloud) ([]*proto.ZoneInfo, error) {
@@ -33,13 +52,34 @@ func GetCloudZones(cls *proto.Cluster, cloud *proto.Cloud) ([]*proto.ZoneInfo, e
 		AccountID: cls.CloudAccountID,
 	})
 	if err != nil {
-		blog.Errorf("get credential for cloudprovider %s/%s list SecurityGroups failed, %s",
+		blog.Errorf("get credential for cloudprovider %s/%s getCloudZones failed, %s",
 			cloud.CloudID, cloud.CloudProvider, err.Error())
 		return nil, err
 	}
 	cmOption.Region = cls.Region
 
 	return nodeMgr.GetZoneList(cmOption)
+}
+
+// GetCloudInstanceList get cloud instances info
+func GetCloudInstanceList(ips []string, cls *proto.Cluster, cloud *proto.Cloud) ([]*proto.Node, error) {
+	nodeMgr, err := cloudprovider.GetNodeMgr(cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s NodeManager getCloudInstanceList failed, %s", cloud.CloudProvider, err.Error())
+		return nil, err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     cloud,
+		AccountID: cls.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s getCloudInstanceList failed, %s",
+			cloud.CloudID, cloud.CloudProvider, err.Error())
+		return nil, err
+	}
+	cmOption.Region = cls.Region
+
+	return nodeMgr.ListNodesByIP(ips, &cloudprovider.ListNodesOption{Common: cmOption})
 }
 
 // FormatTaskTime format task time

@@ -1,13 +1,15 @@
-import store from '@/store';
 import Vue, { computed } from 'vue';
+
 import {
+  batchDeleteNodes as batchDeleteNodesAPI,
+  cordonNodes,
   getK8sNodes,
   schedulerNode as handleSchedulerNode,
-  cordonNodes,
-  uncordonNodes,
   setNodeLabels as handleSetNodeLabels,
   setNodeTaints as handleSetNodeTaints,
-} from '@/api/modules/cluster-manager';
+  taskDetail as taskDetailAPI,
+  uncordonNodes } from '@/api/modules/cluster-manager';
+import store from '@/store';
 
 const { $bkMessage, $bkInfo } = Vue.prototype;
 
@@ -66,7 +68,15 @@ export default function useNode() {
       cluster_id: item.clusterID,
       // todo 方便前端搜索逻辑(节点来源: 节点池、手动添加)
       nodeSource: item.nodeGroupID ? 'nodepool' : 'custom',
-    }));
+    })).sort((pre, current) => {
+      const runnings = ['INITIALIZATION', 'DELETING', 'APPLYING'];
+      if (!runnings.includes(pre.status) && runnings.includes(current.status)) {
+        return 1;
+      } if (runnings.includes(pre.status) && !runnings.includes(current.status)) {
+        return -1;
+      }
+      return 0;
+    });
   };
   // 添加节点
   const addNode = async (params: Pick<INodesParams, 'clusterId' | 'nodeIps' | 'nodeTemplateID'>) => {
@@ -83,7 +93,7 @@ export default function useNode() {
     });
     result && $bkMessage({
       theme: 'success',
-      message: window.i18n.t('任务下发成功'),
+      message: window.i18n.t('generic.msg.success.deliveryTask'),
     });
     return result;
   };
@@ -132,7 +142,7 @@ export default function useNode() {
     }).catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: window.i18n.t('停止调度成功'),
+      message: window.i18n.t('cluster.nodeList.msg.unCordonOK'),
     });
     return result;
   };
@@ -149,7 +159,7 @@ export default function useNode() {
     }).catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: window.i18n.t('允许调度成功'),
+      message: window.i18n.t('cluster.nodeList.msg.cordonOK'),
     });
     return result;
   };
@@ -167,7 +177,7 @@ export default function useNode() {
     if (data?.fail?.length) {
       $bkInfo({
         type: 'error',
-        title: window.i18n.t('以下调度节点失败'),
+        title: window.i18n.t('cluster.nodeList.title.failedCordonData'),
         defaultInfo: true,
         clsName: 'custom-info-confirm',
         subTitle: data.fail.map(item => `${item.nodeName}(${item.message})`).join(', '),
@@ -175,7 +185,7 @@ export default function useNode() {
     } else if (data && !data.fail?.length) {
       $bkMessage({
         theme: 'success',
-        message: window.i18n.t('Pod驱逐成功'),
+        message: window.i18n.t('cluster.nodeList.msg.drainOK'),
       });
     }
     return data && !data.fail?.length;
@@ -193,7 +203,7 @@ export default function useNode() {
     });
     result && $bkMessage({
       theme: 'success',
-      message: window.i18n.t('任务下发成功'),
+      message: window.i18n.t('generic.msg.success.deliveryTask'),
     });
     return result;
   };
@@ -223,6 +233,21 @@ export default function useNode() {
       .catch(() => false);
     return result;
   };
+  // 批量删除节点（节点组、空节点）
+  const batchDeleteNodes = async (params: {
+    $clusterId: string
+    nodeIPs?: string
+    virtualNodeIDs?: string
+    operator: string
+  }) => {
+    const result = await batchDeleteNodesAPI(params).catch(() => false);
+    return result;
+  };
+  // 任务详情
+  const taskDetail = async ($taskId: string) => {
+    const data = await taskDetailAPI({ $taskId }).catch(() => []);
+    return data;
+  };
   return {
     getNodeList,
     getTaskData,
@@ -235,5 +260,7 @@ export default function useNode() {
     retryTask,
     setNodeLabels,
     setNodeTaints,
+    batchDeleteNodes,
+    taskDetail,
   };
 }

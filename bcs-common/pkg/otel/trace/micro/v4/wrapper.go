@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -24,11 +25,18 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	grpc_codes "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
+)
+
+var (
+	traceParent = http.CanonicalHeaderKey("traceparent")
+	prop        = propagation.TraceContext{}
 )
 
 // NewTracingWrapper :
@@ -37,14 +45,21 @@ func NewTracingWrapper() server.HandlerWrapper {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 			// 开始时间
 			startTime := time.Now()
-
-			// 获取或生成 request id 注入到 context
-			requestID := utils.GetOrCreateReqID(ctx)
-			ctx = context.WithValue(ctx, constants.RequestIDKey, requestID)
-			ctx = utils.ContextWithRequestID(ctx, requestID)
-
+			m, ok := metadata.FromIncomingContext(ctx)
+			if !ok {
+				m = metadata.New(nil)
+			} else {
+				m = m.Copy()
+			}
+			if len(m.Get(traceParent)) <= 0 {
+				// 获取或生成 request id 注入到 context
+				requestID := utils.GetOrCreateReqID(ctx)
+				ctx = context.WithValue(ctx, constants.RequestIDKey, requestID)
+				ctx = utils.ContextWithRequestID(ctx, requestID)
+			}
+			h := http.Header{traceParent: m.Get(traceParent)}
+			ctx = prop.Extract(ctx, propagation.HeaderCarrier(h))
 			name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
-
 			tracer := otel.Tracer(req.Service())
 			commonAttrs := []attribute.KeyValue{
 				attribute.String("component", "gRPC"),

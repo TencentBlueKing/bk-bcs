@@ -15,161 +15,115 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
-
-	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
-	pbch "bscp.io/pkg/protocol/core/config-hook"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/types"
 )
-
-// CreateConfigHook create configHook.
-func (s *Service) CreateConfigHook(ctx context.Context, req *pbds.CreateConfigHookReq) (*pbds.CreateResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	if _, err := s.dao.ConfigHook().GetByAppID(kt, req.Attachment.BizId, req.Attachment.AppId); err == nil {
-		return nil, fmt.Errorf("configHook app_id %d already exists", req.Attachment.AppId)
-	}
-
-	if req.Spec.PreHookId > 0 {
-		opt := &types.GetByPubStateOption{
-			BizID:  req.Attachment.BizId,
-			HookID: req.Spec.PreHookId,
-			State:  table.DeployedHookReleased,
-		}
-		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
-		if err != nil {
-			logs.Errorf("no released releases of the pre-hook, err: %v, rid: %s", err, kt.Rid)
-			return nil, errors.New("no released releases of the pre-hook")
-		}
-		req.Spec.PreHookReleaseId = hr.ID
-	}
-
-	if req.Spec.PostHookId > 0 {
-		opt := &types.GetByPubStateOption{
-			BizID:  req.Attachment.BizId,
-			HookID: req.Spec.PostHookId,
-			State:  table.DeployedHookReleased,
-		}
-		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
-		if err != nil {
-			logs.Errorf("no released releases of the post-hook, err: %v, rid: %s", err, kt.Rid)
-			return nil, errors.New("no released releases of the post-hook")
-		}
-		req.Spec.PostHookReleaseId = hr.ID
-	}
-
-	spec, err := req.Spec.ConfigHookSpec()
-	if err != nil {
-		logs.Errorf("get configHook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	hook := &table.ConfigHook{
-		Spec:       spec,
-		Attachment: req.Attachment.ConfigHookAttachment(),
-		Revision: &table.Revision{
-			Creator: kt.User,
-			Reviser: kt.User,
-		},
-	}
-	id, err := s.dao.ConfigHook().Create(kt, hook)
-	if err != nil {
-		logs.Errorf("create configHook failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	resp := &pbds.CreateResp{Id: id}
-	return resp, nil
-
-}
 
 // UpdateConfigHook update ConfigHook.
 func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHookReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
 
-	if req.Spec.PreHookId > 0 {
+	tx := s.dao.GenQuery().Begin()
+
+	preHook := &table.ReleasedHook{
+		AppID: req.AppId,
+		BizID: req.BizId,
+		// ReleasedID 0 for editing release
+		ReleaseID: 0,
+		HookType:  table.PreHook,
+	}
+	postHook := &table.ReleasedHook{
+		AppID: req.AppId,
+		BizID: req.BizId,
+		// ReleasedID 0 for editing release
+		ReleaseID: 0,
+		HookType:  table.PostHook,
+	}
+	if req.PreHookId > 0 {
 		opt := &types.GetByPubStateOption{
-			BizID:  req.Attachment.BizId,
-			HookID: req.Spec.PreHookId,
-			State:  table.DeployedHookReleased,
+			BizID:  req.BizId,
+			HookID: req.PreHookId,
+			State:  table.HookRevisionStatusDeployed,
 		}
-		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
+		h, err := s.dao.Hook().GetByID(kt, req.BizId, req.PreHookId)
+		if err != nil {
+			logs.Errorf("get pre-hook failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
+		hr, err := s.dao.HookRevision().GetByPubState(kt, opt)
 		if err != nil {
 			logs.Errorf("no released releases of the pre-hook, err: %v, rid: %s", err, kt.Rid)
 			return nil, errors.New("no released releases of the pre-hook")
 		}
-		req.Spec.PreHookReleaseId = hr.ID
+		preHook.HookID = h.ID
+		preHook.HookName = h.Spec.Name
+		preHook.HookRevisionID = hr.ID
+		preHook.HookRevisionName = hr.Spec.Name
+		preHook.Content = hr.Spec.Content
+		preHook.ScriptType = h.Spec.Type
+		preHook.Reviser = kt.User
+		if err = s.dao.ReleasedHook().UpsertWithTx(kt, tx, preHook); err != nil {
+			logs.Errorf("upsert pre-hook failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
 	} else {
-		req.Spec.PreHookId = 0
-		req.Spec.PreHookReleaseId = 0
+		if err := s.dao.ReleasedHook().DeleteByUniqueKeyWithTx(kt, tx, preHook); err != nil {
+			logs.Errorf("delete pre-hook failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
 	}
 
-	if req.Spec.PostHookId > 0 {
+	if req.PostHookId > 0 {
 		opt := &types.GetByPubStateOption{
-			BizID:  req.Attachment.BizId,
-			HookID: req.Spec.PostHookId,
-			State:  table.DeployedHookReleased,
+			BizID:  req.BizId,
+			HookID: req.PostHookId,
+			State:  table.HookRevisionStatusDeployed,
 		}
-		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
+		h, err := s.dao.Hook().GetByID(kt, req.BizId, req.PostHookId)
+		if err != nil {
+			logs.Errorf("get pre-hook failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
+		hr, err := s.dao.HookRevision().GetByPubState(kt, opt)
 		if err != nil {
 			logs.Errorf("no released releases of the post-hook, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
 			return nil, errors.New("no released releases of the post-hook")
 		}
-		req.Spec.PostHookReleaseId = hr.ID
+		postHook.HookID = h.ID
+		postHook.HookName = h.Spec.Name
+		postHook.HookRevisionID = hr.ID
+		postHook.HookRevisionName = hr.Spec.Name
+		postHook.Content = hr.Spec.Content
+		postHook.ScriptType = h.Spec.Type
+		postHook.Reviser = kt.User
+		if err = s.dao.ReleasedHook().UpsertWithTx(kt, tx, postHook); err != nil {
+			logs.Errorf("upsert post-hook failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
 	} else {
-		req.Spec.PostHookId = 0
-		req.Spec.PostHookReleaseId = 0
+		if err := s.dao.ReleasedHook().DeleteByUniqueKeyWithTx(kt, tx, postHook); err != nil {
+			logs.Errorf("delete post-hook failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
 	}
-
-	spec, e := req.Spec.ConfigHookSpec()
-	if e != nil {
-		logs.Errorf("get ConfigHookSpec spec from pb failed, err: %v, rid: %s", e, kt.Rid)
-		return nil, e
-	}
-	hook := &table.ConfigHook{
-		ID:         req.Id,
-		Spec:       spec,
-		Attachment: req.Attachment.ConfigHookAttachment(),
-		Revision: &table.Revision{
-			Reviser: kt.User,
-		},
-	}
-	if err := s.dao.ConfigHook().Update(kt, hook); err != nil {
-		logs.Errorf("update ConfigHook failed, err: %v, rid: %s", err, kt.Rid)
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
 		return nil, err
 	}
 
 	return new(pbbase.EmptyResp), nil
-}
-
-// GetConfigHook get a configHook
-func (s *Service) GetConfigHook(ctx context.Context, req *pbds.GetConfigHookReq) (*pbch.ConfigHook, error) {
-
-	kt := kit.FromGrpcContext(ctx)
-
-	hook, err := s.dao.ConfigHook().GetByAppID(kt, req.BizId, req.AppId)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return pbch.PbConfigHook(genNilConfigHook()), nil
-	}
-	if err != nil {
-		logs.Errorf("get ConfigHook failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	return pbch.PbConfigHook(hook), err
-
-}
-
-func genNilConfigHook() *table.ConfigHook {
-	return &table.ConfigHook{
-		Spec:       &table.ConfigHookSpec{},
-		Attachment: &table.ConfigHookAttachment{},
-		Revision:   &table.Revision{},
-	}
 }

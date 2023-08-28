@@ -17,7 +17,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -97,7 +97,7 @@ func (s *Server) sendToGitops(ctx context.Context, body []byte) ([]byte, error) 
 		return nil, errors.Wrapf(err, "http request failed")
 	}
 	defer resp.Body.Close()
-	bs, err := ioutil.ReadAll(resp.Body)
+	bs, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrapf(err, "read response body failed")
 	}

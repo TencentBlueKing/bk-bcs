@@ -169,6 +169,100 @@ func local_request_ClusterManager_CheckCloudKubeConfig_0(ctx context.Context, ma
 
 }
 
+var (
+	filter_ClusterManager_CheckCloudKubeConfigConnect_0 = &utilities.DoubleArray{Encoding: map[string]int{"cloudID": 0, "clusterID": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+)
+
+func request_ClusterManager_CheckCloudKubeConfigConnect_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq KubeConfigConnectReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["cloudID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cloudID")
+	}
+
+	protoReq.CloudID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cloudID", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ClusterManager_CheckCloudKubeConfigConnect_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.CheckCloudKubeConfigConnect(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ClusterManager_CheckCloudKubeConfigConnect_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq KubeConfigConnectReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["cloudID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cloudID")
+	}
+
+	protoReq.CloudID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cloudID", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ClusterManager_CheckCloudKubeConfigConnect_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.CheckCloudKubeConfigConnect(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_ClusterManager_ImportCluster_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ImportClusterReq
 	var metadata runtime.ServerMetadata
@@ -1367,6 +1461,40 @@ func local_request_ClusterManager_UpdateNodeLabels_0(ctx context.Context, marsha
 	}
 
 	msg, err := server.UpdateNodeLabels(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_ClusterManager_UpdateNodeAnnotations_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UpdateNodeAnnotationsRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.UpdateNodeAnnotations(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ClusterManager_UpdateNodeAnnotations_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UpdateNodeAnnotationsRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.UpdateNodeAnnotations(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -4685,6 +4813,76 @@ func local_request_ClusterManager_UpdateCloudAccount_0(ctx context.Context, mars
 
 }
 
+func request_ClusterManager_MigrateCloudAccount_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq MigrateCloudAccountRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["cloudID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cloudID")
+	}
+
+	protoReq.CloudID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cloudID", err)
+	}
+
+	msg, err := client.MigrateCloudAccount(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ClusterManager_MigrateCloudAccount_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq MigrateCloudAccountRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["cloudID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cloudID")
+	}
+
+	protoReq.CloudID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cloudID", err)
+	}
+
+	msg, err := server.MigrateCloudAccount(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_ClusterManager_DeleteCloudAccount_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq DeleteCloudAccountRequest
 	var metadata runtime.ServerMetadata
@@ -5518,6 +5716,78 @@ func local_request_ClusterManager_ListCloudInstances_0(ctx context.Context, mars
 }
 
 var (
+	filter_ClusterManager_GetCloudAccountType_0 = &utilities.DoubleArray{Encoding: map[string]int{"cloudID": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
+func request_ClusterManager_GetCloudAccountType_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetCloudAccountTypeRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["cloudID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cloudID")
+	}
+
+	protoReq.CloudID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cloudID", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ClusterManager_GetCloudAccountType_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.GetCloudAccountType(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ClusterManager_GetCloudAccountType_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetCloudAccountTypeRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["cloudID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cloudID")
+	}
+
+	protoReq.CloudID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cloudID", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ClusterManager_GetCloudAccountType_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.GetCloudAccountType(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
 	filter_ClusterManager_ListOperationLogs_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
@@ -6079,6 +6349,374 @@ func local_request_ClusterManager_DebugBkSopsTask_0(ctx context.Context, marshal
 
 }
 
+func request_ClusterManager_GetBatchCustomSetting_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetBatchCustomSettingRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scopeType"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeType")
+	}
+
+	protoReq.ScopeType, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeType", err)
+	}
+
+	val, ok = pathParams["scopeId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeId")
+	}
+
+	protoReq.ScopeId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeId", err)
+	}
+
+	msg, err := client.GetBatchCustomSetting(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ClusterManager_GetBatchCustomSetting_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetBatchCustomSettingRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scopeType"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeType")
+	}
+
+	protoReq.ScopeType, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeType", err)
+	}
+
+	val, ok = pathParams["scopeId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeId")
+	}
+
+	protoReq.ScopeId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeId", err)
+	}
+
+	msg, err := server.GetBatchCustomSetting(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_ClusterManager_GetBizTopologyHost_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetBizTopologyHostRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scopeType"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeType")
+	}
+
+	protoReq.ScopeType, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeType", err)
+	}
+
+	val, ok = pathParams["scopeId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeId")
+	}
+
+	protoReq.ScopeId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeId", err)
+	}
+
+	msg, err := client.GetBizTopologyHost(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ClusterManager_GetBizTopologyHost_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetBizTopologyHostRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scopeType"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeType")
+	}
+
+	protoReq.ScopeType, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeType", err)
+	}
+
+	val, ok = pathParams["scopeId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeId")
+	}
+
+	protoReq.ScopeId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeId", err)
+	}
+
+	msg, err := server.GetBizTopologyHost(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_ClusterManager_GetTopologyNodes_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetTopologyNodesRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scopeType"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeType")
+	}
+
+	protoReq.ScopeType, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeType", err)
+	}
+
+	val, ok = pathParams["scopeId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeId")
+	}
+
+	protoReq.ScopeId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeId", err)
+	}
+
+	msg, err := client.GetTopologyNodes(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ClusterManager_GetTopologyNodes_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetTopologyNodesRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scopeType"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeType")
+	}
+
+	protoReq.ScopeType, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeType", err)
+	}
+
+	val, ok = pathParams["scopeId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeId")
+	}
+
+	protoReq.ScopeId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeId", err)
+	}
+
+	msg, err := server.GetTopologyNodes(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_ClusterManager_GetScopeHostCheck_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetScopeHostCheckRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scopeType"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeType")
+	}
+
+	protoReq.ScopeType, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeType", err)
+	}
+
+	val, ok = pathParams["scopeId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeId")
+	}
+
+	protoReq.ScopeId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeId", err)
+	}
+
+	msg, err := client.GetScopeHostCheck(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ClusterManager_GetScopeHostCheck_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetScopeHostCheckRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scopeType"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeType")
+	}
+
+	protoReq.ScopeType, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeType", err)
+	}
+
+	val, ok = pathParams["scopeId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scopeId")
+	}
+
+	protoReq.ScopeId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scopeId", err)
+	}
+
+	msg, err := server.GetScopeHostCheck(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_ClusterManager_CreateCloudModuleFlag_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CreateCloudModuleFlagRequest
 	var metadata runtime.ServerMetadata
@@ -6600,6 +7238,26 @@ func RegisterClusterManagerGwServer(ctx context.Context, mux *runtime.ServeMux, 
 
 	})
 
+	mux.Handle("GET", pattern_ClusterManager_CheckCloudKubeConfigConnect_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterManager_CheckCloudKubeConfigConnect_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_CheckCloudKubeConfigConnect_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_ClusterManager_ImportCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -7057,6 +7715,26 @@ func RegisterClusterManagerGwServer(ctx context.Context, mux *runtime.ServeMux, 
 		}
 
 		forward_ClusterManager_UpdateNodeLabels_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_ClusterManager_UpdateNodeAnnotations_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterManager_UpdateNodeAnnotations_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_UpdateNodeAnnotations_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -8160,6 +8838,26 @@ func RegisterClusterManagerGwServer(ctx context.Context, mux *runtime.ServeMux, 
 
 	})
 
+	mux.Handle("PUT", pattern_ClusterManager_MigrateCloudAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterManager_MigrateCloudAccount_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_MigrateCloudAccount_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("DELETE", pattern_ClusterManager_DeleteCloudAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -8400,6 +9098,26 @@ func RegisterClusterManagerGwServer(ctx context.Context, mux *runtime.ServeMux, 
 
 	})
 
+	mux.Handle("GET", pattern_ClusterManager_GetCloudAccountType_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterManager_GetCloudAccountType_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_GetCloudAccountType_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ClusterManager_ListOperationLogs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -8597,6 +9315,86 @@ func RegisterClusterManagerGwServer(ctx context.Context, mux *runtime.ServeMux, 
 		}
 
 		forward_ClusterManager_DebugBkSopsTask_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_ClusterManager_GetBatchCustomSetting_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterManager_GetBatchCustomSetting_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_GetBatchCustomSetting_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_ClusterManager_GetBizTopologyHost_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterManager_GetBizTopologyHost_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_GetBizTopologyHost_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_ClusterManager_GetTopologyNodes_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterManager_GetTopologyNodes_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_GetTopologyNodes_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_ClusterManager_GetScopeHostCheck_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterManager_GetScopeHostCheck_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_GetScopeHostCheck_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -8798,6 +9596,26 @@ func RegisterClusterManagerGwClient(ctx context.Context, mux *runtime.ServeMux, 
 		}
 
 		forward_ClusterManager_CheckCloudKubeConfig_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ClusterManager_CheckCloudKubeConfigConnect_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterManager_CheckCloudKubeConfigConnect_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_CheckCloudKubeConfigConnect_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -9258,6 +10076,26 @@ func RegisterClusterManagerGwClient(ctx context.Context, mux *runtime.ServeMux, 
 		}
 
 		forward_ClusterManager_UpdateNodeLabels_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_ClusterManager_UpdateNodeAnnotations_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterManager_UpdateNodeAnnotations_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_UpdateNodeAnnotations_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -10361,6 +11199,26 @@ func RegisterClusterManagerGwClient(ctx context.Context, mux *runtime.ServeMux, 
 
 	})
 
+	mux.Handle("PUT", pattern_ClusterManager_MigrateCloudAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterManager_MigrateCloudAccount_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_MigrateCloudAccount_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("DELETE", pattern_ClusterManager_DeleteCloudAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -10601,6 +11459,26 @@ func RegisterClusterManagerGwClient(ctx context.Context, mux *runtime.ServeMux, 
 
 	})
 
+	mux.Handle("GET", pattern_ClusterManager_GetCloudAccountType_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterManager_GetCloudAccountType_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_GetCloudAccountType_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ClusterManager_ListOperationLogs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -10801,6 +11679,86 @@ func RegisterClusterManagerGwClient(ctx context.Context, mux *runtime.ServeMux, 
 
 	})
 
+	mux.Handle("POST", pattern_ClusterManager_GetBatchCustomSetting_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterManager_GetBatchCustomSetting_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_GetBatchCustomSetting_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_ClusterManager_GetBizTopologyHost_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterManager_GetBizTopologyHost_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_GetBizTopologyHost_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_ClusterManager_GetTopologyNodes_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterManager_GetTopologyNodes_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_GetTopologyNodes_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_ClusterManager_GetScopeHostCheck_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterManager_GetScopeHostCheck_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterManager_GetScopeHostCheck_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_ClusterManager_CreateCloudModuleFlag_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -10911,6 +11869,8 @@ var (
 
 	pattern_ClusterManager_CheckCloudKubeConfig_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "cloud", "kubeConfig"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_ClusterManager_CheckCloudKubeConfigConnect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"clustermanager", "v1", "clouds", "cloudID", "clusters", "clusterID", "connect"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_ClusterManager_ImportCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "cluster", "import"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterManager_UpdateCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"clustermanager", "v1", "cluster", "clusterID"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -10956,6 +11916,8 @@ var (
 	pattern_ClusterManager_DrainNode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "node", "drain"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterManager_UpdateNodeLabels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "node", "labels"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_ClusterManager_UpdateNodeAnnotations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "node", "annotations"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterManager_UpdateNodeTaints_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "node", "taints"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -11067,6 +12029,8 @@ var (
 
 	pattern_ClusterManager_UpdateCloudAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"clustermanager", "v1", "clouds", "cloudID", "accounts", "accountID"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_ClusterManager_MigrateCloudAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clustermanager", "v1", "clouds", "cloudID", "accounts"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_ClusterManager_DeleteCloudAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"clustermanager", "v1", "clouds", "cloudID", "accounts", "accountID"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterManager_ListCloudAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clustermanager", "v1", "clouds", "cloudID", "accounts"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -11091,6 +12055,8 @@ var (
 
 	pattern_ClusterManager_ListCloudInstances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clustermanager", "v1", "clouds", "cloudID", "instances"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_ClusterManager_GetCloudAccountType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clustermanager", "v1", "clouds", "cloudID", "accounttype"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_ClusterManager_ListOperationLogs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"clustermanager", "v1", "operationlogs"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterManager_ListResourceSchema_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"clustermanager", "v1", "resourceschema", "cloudID"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -11111,6 +12077,14 @@ var (
 
 	pattern_ClusterManager_DebugBkSopsTask_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "bksops", "debug"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_ClusterManager_GetBatchCustomSetting_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"clustermanager", "v1", "web", "customSettings", "scope", "scopeType", "scopeId", "batchGet"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_ClusterManager_GetBizTopologyHost_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 2, 6, 2, 7}, []string{"clustermanager", "v1", "web", "scope", "scopeType", "scopeId", "topology", "hostCount"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_ClusterManager_GetTopologyNodes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 2, 6, 2, 7, 2, 8}, []string{"clustermanager", "v1", "web", "scope", "scopeType", "scopeId", "topology", "hosts", "nodes"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_ClusterManager_GetScopeHostCheck_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 2, 6, 2, 7}, []string{"clustermanager", "v1", "web", "scope", "scopeType", "scopeId", "host", "check"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_ClusterManager_CreateCloudModuleFlag_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"clustermanager", "v1", "clouds", "cloudID", "versions", "version", "modules"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterManager_UpdateCloudModuleFlag_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"clustermanager", "v1", "clouds", "cloudID", "versions", "version", "modules", "moduleID"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -11128,6 +12102,8 @@ var (
 	forward_ClusterManager_RetryCreateClusterTask_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterManager_CheckCloudKubeConfig_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterManager_CheckCloudKubeConfigConnect_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterManager_ImportCluster_0 = runtime.ForwardResponseMessage
 
@@ -11174,6 +12150,8 @@ var (
 	forward_ClusterManager_DrainNode_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterManager_UpdateNodeLabels_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterManager_UpdateNodeAnnotations_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterManager_UpdateNodeTaints_0 = runtime.ForwardResponseMessage
 
@@ -11285,6 +12263,8 @@ var (
 
 	forward_ClusterManager_UpdateCloudAccount_0 = runtime.ForwardResponseMessage
 
+	forward_ClusterManager_MigrateCloudAccount_0 = runtime.ForwardResponseMessage
+
 	forward_ClusterManager_DeleteCloudAccount_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterManager_ListCloudAccount_0 = runtime.ForwardResponseMessage
@@ -11309,6 +12289,8 @@ var (
 
 	forward_ClusterManager_ListCloudInstances_0 = runtime.ForwardResponseMessage
 
+	forward_ClusterManager_GetCloudAccountType_0 = runtime.ForwardResponseMessage
+
 	forward_ClusterManager_ListOperationLogs_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterManager_ListResourceSchema_0 = runtime.ForwardResponseMessage
@@ -11328,6 +12310,14 @@ var (
 	forward_ClusterManager_GetInnerTemplateValues_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterManager_DebugBkSopsTask_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterManager_GetBatchCustomSetting_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterManager_GetBizTopologyHost_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterManager_GetTopologyNodes_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterManager_GetScopeHostCheck_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterManager_CreateCloudModuleFlag_0 = runtime.ForwardResponseMessage
 

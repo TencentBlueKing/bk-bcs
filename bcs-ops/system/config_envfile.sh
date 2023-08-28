@@ -37,7 +37,7 @@ Usage:
         dump: print bcs.env file.
         clean: clean bcs.env file ]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {
@@ -61,7 +61,7 @@ init_env() {
   BCS_OFFLINE=${BCS_OFFLINE:-}
 
   # cri
-  CRI_TYPE=${CRI_TYPE:-"containerd"}
+  CRI_TYPE=${CRI_TYPE:-"docker"}
   ## DOCKER
   DOCKER_VER=${DOCKER_VER:-"19.03.9"}
   DOCKER_LIB=${DOCKER_LIB:-"${BK_HOME}/lib/docker"}
@@ -76,7 +76,7 @@ init_env() {
   ETCD_LIB=${ETCD_LIB:-"${BK_HOME}/lib/etcd"}
   KUBELET_LIB=${KUBELET_LIB:-"${BK_HOME}/lib/kubelet"}
   ## K8S_VER
-  K8S_VER=${K8S_VER:-"1.24.15"}
+  K8S_VER=${K8S_VER:-"1.20.15"}
   ## K8S_CIDR
   K8S_CTRL_IP=${K8S_CTRL_IP:-"$LAN_IP"}
   K8S_SVC_CIDR=${K8S_SVC_CIDR:-"10.96.0.0/12"}
@@ -94,6 +94,9 @@ init_env() {
   ## if BCS_CP_WORKER==0, then untaint master
   BCS_CP_WORKER=${BCS_CP_WORKER:-0}
 
+  # csi
+  K8S_CSI=${K8S_CSI:-"localpv"}
+
   # mirror
   ## yum_mirror
   MIRROR_URL=${MIRROR_URL:-"https://mirrors.tencent.com"}
@@ -106,9 +109,27 @@ init_env() {
   BK_PUBLIC_REPO=${BK_PUBLIC_REPO:-"hub.bktencent.com"}
 
   # helm
-  BKREPO_URL=${BKREPO_URL:-}
-  BK_RELEASE_REPO=${BK_RELEASE_REPO:-"hub.bktencent.com/blueking"}
-  # HELM_MIRROR https://hub.bktencent.com/chartrepo/mirrors
+  BKREPO_URL=${BKREPO_URL:-"https://hub.bktencent.com/chartrepo"}
+
+  # apiserver HA
+  ENABLE_APISERVER_HA=${ENABLE_APISERVER_HA:-"false"}
+  APISERVER_HA_MODE=${APISERVER_HA_MODE:-"bcs-apiserver-proxy"}
+  VIP=${VIP:-}
+  ## bcs apiserver proxy
+  APISERVER_PROXY_VERSION=${APISERVER_PROXY_VERSION:-"v1.28.0"}
+  PROXY_TOOL_PATH=${PROXY_TOOL_PATH:-"/usr/bin"}
+  VS_PORT=${VS_PORT:-"6443"}
+  LVS_SCHEDULER=${LVS_SCHEDULER:-"rr"}
+  PERSIST_DIR=${PERSIST_DIR:-"/root/.bcs"}
+  MANAGER_INTERVAL=${MANAGER_INTERVAL:-"10"}
+  LOG_LEVEL=${LOG_LEVEL:-"3"}
+  DEBUG_MODE=${DEBUG_MODE:-"true"}
+  ## kube-vip
+  KUBE_VIP_VERSION=${KUBE_VIP_VERSION:-"v0.5.12"}
+  BIND_INTERFACE=${BIND_INTERFACE:-}
+  VIP_CIDR=${VIP_CIDR:-"32"}
+  ## multus
+  ENABLE_MULTUS_HA=${ENABLE_MULTUS_HA:-"true"}
 }
 
 source_cluster_env() {
@@ -179,6 +200,7 @@ now is ${K8S_IPv6_STATUS}"
 
 render_env() {
   utils::log "INFO" "RENDERING bcs env file"
+  [[ -d "${ROOT_DIR}/env" ]] || install -dv "${ROOT_DIR}/env"
   cat >"${BCS_ENV_FILE}" <<EOF
 # bcs config begin
 ## HOST
@@ -205,7 +227,7 @@ CRI_EOF
       "docker")
         cat <<CRI_EOF
 DOCKER_LIB="${DOCKER_LIB}"
-DOCKER_VERSION="${DOCKER_VERSION}"
+DOCKER_VER="${DOCKER_VER}"
 DOCKER_LIVE_RESTORE="${DOCKER_LIVE_RESTORE}"
 DOCKER_BRIDGE="${DOCKER_BRIDGE}"
 CRI_EOF
@@ -235,6 +257,9 @@ K8S_CNI="${K8S_CNI}"
 K8S_EXTRA_ARGS="${K8S_EXTRA_ARGS}"
 BCS_CP_WORKER="${BCS_CP_WORKER}"
 
+# csi
+K8S_CSI="${K8S_CSI}"
+
 ## yum_mirror
 MIRROR_URL="${MIRROR_URL}"
 MIRROR_IP="${MIRROR_IP}"
@@ -246,7 +271,27 @@ BK_PUBLIC_REPO="${BK_PUBLIC_REPO}"
 
 ## helm
 BKREPO_URL="${BKREPO_URL}"
-BK_RELEASE_REPO="${BK_RELEASE_REPO}"
+
+
+# apiserver HA
+ENABLE_APISERVER_HA="${ENABLE_APISERVER_HA}"
+APISERVER_HA_MODE="${APISERVER_HA_MODE}"
+VIP="${VIP}"
+## bcs apiserver proxy
+APISERVER_PROXY_VERSION="${APISERVER_PROXY_VERSION}"
+PROXY_TOOL_PATH="${PROXY_TOOL_PATH}"
+VS_PORT="${VS_PORT}"
+LVS_SCHEDULER="${LVS_SCHEDULER}"
+PERSIST_DIR="${PERSIST_DIR}"
+MANAGER_INTERVAL="${MANAGER_INTERVAL}"
+LOG_LEVEL="${LOG_LEVEL}"
+DEBUG_MODE="${DEBUG_MODE}"
+## kube-vip
+KUBE_VIP_VERSION="${KUBE_VIP_VERSION}"
+BIND_INTERFACE="${BIND_INTERFACE}"
+VIP_CIDR="${VIP_CIDR}"
+## multus
+ENABLE_MULTUS_HA="${ENABLE_MULTUS_HA}"
 # bcs config end
 EOF
 }
@@ -341,7 +386,7 @@ main() {
         init_env
         ;;
       *)
-        utils::log "ERROR" "unkonw para: $1"
+        utils::log "ERROR" "unkown para: $1"
         ;;
     esac
     shift

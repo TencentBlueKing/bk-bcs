@@ -101,6 +101,7 @@ CLUSTER_ENV=${cluster_env}
 JOIN_CMD=${join_cmd}
 set +a
 ./bcs-ops -i node
+======================
 EOF
 }
 main

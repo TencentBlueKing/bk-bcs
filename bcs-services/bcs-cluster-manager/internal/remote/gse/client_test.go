@@ -18,7 +18,7 @@ import "testing"
 func getNewClient() *Client {
 	cli, err := NewGseClient(Options{
 		Enable:     true,
-		AppCode:    "bcs-xx",
+		AppCode:    "xx",
 		AppSecret:  "xxx",
 		Server:     "xxx",
 		BKUserName: "xxx",
@@ -31,10 +31,21 @@ func getNewClient() *Client {
 	return cli
 }
 
-func TestGetAgentStatus(t *testing.T) {
+func TestGetAgentStatusV1(t *testing.T) {
 	cli := getNewClient()
 
-	resp, err := cli.GetAgentStatus(&GetAgentStatusReqV2{})
+	resp, err := cli.GetAgentStatusV1(&GetAgentStatusReq{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("%+v", resp)
+}
+
+func TestGetAgentStatusV2(t *testing.T) {
+	cli := getNewClient()
+
+	resp, err := cli.GetAgentStatusV2(&GetAgentStatusReqV2{})
 	if err != nil {
 		t.Fatal(err)
 	}

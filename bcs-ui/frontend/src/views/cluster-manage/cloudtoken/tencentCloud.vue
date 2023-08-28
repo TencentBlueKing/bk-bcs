@@ -6,17 +6,16 @@
         v-authority="{
           actionId: 'cloud_account_create',
           resourceName: curProject.project_name,
-          newPerms: true,
           permCtx: {
             resource_type: 'project',
             project_id: curProject.project_id,
             operator: user.username
           }
         }"
-        @click="handleShowCreateDialog">{{$t('新建凭证')}}</bk-button>
+        @click="handleShowCreateDialog">{{$t('projects.cloudToken.add')}}</bk-button>
       <bk-input
         class="w400"
-        :placeholder="$t('搜索名称、SecretID、集群ID')"
+        :placeholder="$t('projects.cloudToken.search')"
         clearable
         v-model="searchValue">
       </bk-input>
@@ -28,19 +27,19 @@
       v-bkloading="{ isLoading: loading }"
       @page-change="pageChange"
       @page-limit-change="pageSizeChange">
-      <bcs-table-column label="ID" width="220">
+      <bcs-table-column label="ID" width="220" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.account.accountID }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('名称')">
+      <bcs-table-column :label="$t('generic.label.name')" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.account.accountName }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('描述')">
+      <bcs-table-column :label="$t('cluster.create.label.desc')" show-overflow-tooltip>
         <template #default="{ row }">
-          {{ row.account.desc }}
+          {{ row.account.desc || '--' }}
         </template>
       </bcs-table-column>
       <bcs-table-column label="SecretID" show-overflow-tooltip>
@@ -53,17 +52,17 @@
           {{ row.account.account.secretKey }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('关联集群')">
+      <bcs-table-column :label="$t('projects.cloudToken.cluster')" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.clusters.join(',') || '--' }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('创建时间')">
+      <bcs-table-column :label="$t('cluster.labels.createdAt')" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.account.updateTime }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('操作')" width="100">
+      <bcs-table-column :label="$t('generic.label.action')" width="100">
         <template #default="{ row }">
           <bk-button
             text
@@ -73,14 +72,13 @@
               actionId: 'cloud_account_manage',
               resourceName: row.account.accountName,
               disablePerms: true,
-              newPerms: true,
               permCtx: {
                 project_id: row.account.projectID,
                 account_id: row.account.accountID,
                 operator: user.username
               }
             }"
-            @click="handleDeleteAccount(row)">{{$t('删除')}}</bk-button>
+            @click="handleDeleteAccount(row)">{{$t('generic.button.delete')}}</bk-button>
         </template>
       </bcs-table-column>
       <template #empty>
@@ -93,12 +91,12 @@
       :mask-close="false"
       header-position="left"
       width="600"
-      :title="$t('新建凭证')">
+      :title="$t('projects.cloudToken.add')">
       <bk-form :label-width="100" :model="account" :rules="formRules" ref="formRef">
-        <bk-form-item :label="$t('名称')" property="accountName" error-display-type="normal" required>
+        <bk-form-item :label="$t('generic.label.name')" property="accountName" error-display-type="normal" required>
           <bk-input :maxlength="64" v-model="account.accountName"></bk-input>
         </bk-form-item>
-        <bk-form-item :label="$t('描述')">
+        <bk-form-item :label="$t('cluster.create.label.desc')">
           <bk-input :maxlength="256" type="textarea" v-model="account.desc"></bk-input>
         </bk-form-item>
         <bk-form-item label="SecretID" property="account.secretID" error-display-type="normal" required>
@@ -114,9 +112,9 @@
             theme="primary"
             :loading="createLoading"
             @click="handleCreateAccount">
-            {{ $t('确定') }}
+            {{ $t('generic.button.confirm') }}
           </bk-button>
-          <bk-button @click="() => showDialog = false">{{ $t('取消') }}</bk-button>
+          <bk-button @click="() => showDialog = false">{{ $t('generic.button.cancel') }}</bk-button>
         </div>
       </template>
     </bcs-dialog>
@@ -156,11 +154,11 @@ export default defineComponent({
       accountName: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
         {
-          message: $i18n.t('仅支持英文、数字和字符(-)'),
+          message: $i18n.t('projects.cloudToken.nameRegex'),
           trigger: 'blur',
           validator(val) {
             return /^[0-9a-zA-Z-]+$/g.test(val);
@@ -170,11 +168,11 @@ export default defineComponent({
       'account.secretID': [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
         {
-          message: $i18n.t('仅支持英文、数字和字符(-)'),
+          message: $i18n.t('projects.cloudToken.nameRegex'),
           trigger: 'blur',
           validator(val) {
             return /^[0-9a-zA-Z-]+$/g.test(val);
@@ -184,11 +182,11 @@ export default defineComponent({
       'account.secretKey': [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
         {
-          message: $i18n.t('仅支持英文、数字和字符(-)'),
+          message: $i18n.t('projects.cloudToken.nameRegex'),
           trigger: 'blur',
           validator(val) {
             return /^[0-9a-zA-Z-]+$/g.test(val);
@@ -217,7 +215,7 @@ export default defineComponent({
         type: 'warning',
         clsName: 'custom-info-confirm',
         subTitle: row.account.accountID,
-        title: $i18n.t('删除凭证'),
+        title: $i18n.t('projects.cloudToken.delete'),
         defaultInfo: true,
         confirmFn: async () => {
           loading.value = true;
@@ -228,7 +226,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('删除成功'),
+              message: $i18n.t('generic.msg.success.delete'),
             });
             await handleGetCloud();
           }
@@ -251,7 +249,7 @@ export default defineComponent({
       showDialog.value = false;
       $bkMessage({
         theme: 'success',
-        message: $i18n.t('创建成功'),
+        message: $i18n.t('generic.msg.success.create'),
       });
       handleGetCloud();
     };

@@ -26,6 +26,7 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.13
 	github.com/RichardKnop/machinery/v2 v2.0.11
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230707084844-155f32c8f606
+	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230811095616-815d33d32e2d
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230607093333-1f5cd2719e19
 	github.com/avast/retry-go v2.7.0+incompatible
 	github.com/coreos/etcd v3.3.25+incompatible
@@ -44,10 +45,10 @@ require (
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/prometheus/client_golang v1.11.0
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as v1.0.398
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.544
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.714
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.376
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke v1.0.544
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc v1.0.374
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc v1.0.714
 	go.mongodb.org/mongo-driver v1.5.3
 	google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1
 	google.golang.org/grpc v1.46.0
@@ -66,6 +67,7 @@ require (
 )
 
 require (
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	google.golang.org/api v0.44.0
@@ -93,6 +95,7 @@ require (
 	github.com/RichardKnop/logging v0.0.0-20190827224416-1a693bdd4fae // indirect
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d // indirect
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 // indirect
+	github.com/TencentBlueKing/crypto-golang-sdk v1.0.0 // indirect
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8 // indirect
 	github.com/aws/aws-sdk-go v1.37.27 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
@@ -101,6 +104,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/cloudflare/circl v1.2.0 // indirect
+	github.com/coreos/bbolt v1.3.4 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
@@ -163,7 +167,6 @@ require (
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

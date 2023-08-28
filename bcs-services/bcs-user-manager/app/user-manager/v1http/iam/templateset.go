@@ -22,7 +22,7 @@ type TemplateSetProvider struct {
 }
 
 func init() {
-	dispatcher.RegisterProvider("templateset", TemplateSetProvider{})
+	dispatcher.RegisterProvider(TemplateSet, TemplateSetProvider{})
 }
 
 // ListAttr implements the list_attr

@@ -162,8 +162,8 @@ func (m *Migrator) Up(step int) error {
 		count++
 	}
 
-	if err := tx.Commit(); err != nil {
-		fmt.Printf("commit transaction failed, err: %v", err)
+	if err := tx.Commit().Error; err != nil {
+		fmt.Printf("commit transaction failed, err: %s", err.Error())
 	}
 
 	return nil
@@ -200,7 +200,9 @@ func (m *Migrator) Down(step int) error {
 		count++
 	}
 
-	tx.Commit()
+	if err := tx.Commit().Error; err != nil {
+		fmt.Printf("commit transaction failed, err: %s", err.Error())
+	}
 
 	return nil
 }
@@ -211,9 +213,9 @@ func (m *Migrator) MigrationStatus() error {
 		mg := m.Migrations[v]
 
 		if mg.done {
-			fmt.Println(fmt.Sprintf("Migration %s completed", mg.Name))
+			fmt.Printf("Migration %s completed\n", mg.Name)
 		} else {
-			fmt.Println(fmt.Sprintf("Migration %s pending", mg.Name))
+			fmt.Printf("Migration %s pending\n", mg.Name)
 		}
 	}
 

@@ -139,7 +139,7 @@ export default defineComponent({
       index > -1 && hoverIds.value.splice(index, 1);
     };
 
-    const lastText = computed(() => (showLastContainer.value ? $i18n.t('返回最新日志') : $i18n.t('最近一次重启日志')));
+    const lastText = computed(() => (showLastContainer.value ? $i18n.t('generic.log.button.latest') : $i18n.t('generic.log.button.previous')));
 
     const handleToggleLast = () => {
       showLastContainer.value = !showLastContainer.value;

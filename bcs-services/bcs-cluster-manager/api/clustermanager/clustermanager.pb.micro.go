@@ -64,6 +64,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.CheckCloudKubeConfigConnect",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/clusters/{clusterID}/connect"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ImportCluster",
 			Path:    []string{"/clustermanager/v1/cluster/import"},
 			Method:  []string{"POST"},
@@ -211,6 +217,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		&api.Endpoint{
 			Name:    "ClusterManager.UpdateNodeLabels",
 			Path:    []string{"/clustermanager/v1/node/labels"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateNodeAnnotations",
+			Path:    []string{"/clustermanager/v1/node/annotations"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
@@ -583,6 +596,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.MigrateCloudAccount",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.DeleteCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
 			Method:  []string{"DELETE"},
@@ -656,6 +676,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.GetCloudAccountType",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounttype"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ListOperationLogs",
 			Path:    []string{"/clustermanager/v1/operationlogs"},
 			Method:  []string{"GET"},
@@ -718,6 +744,34 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.GetBatchCustomSetting",
+			Path:    []string{"/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetBizTopologyHost",
+			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetTopologyNodes",
+			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetScopeHostCheck",
+			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.CreateCloudModuleFlag",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules"},
 			Method:  []string{"POST"},
@@ -756,10 +810,11 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 // Client API for ClusterManager service
 
 type ClusterManagerService interface {
-	// * cluster management
+	//* cluster management
 	CreateCluster(ctx context.Context, in *CreateClusterReq, opts ...client.CallOption) (*CreateClusterResp, error)
 	RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, opts ...client.CallOption) (*RetryCreateClusterResp, error)
 	CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, opts ...client.CallOption) (*KubeConfigResp, error)
+	CheckCloudKubeConfigConnect(ctx context.Context, in *KubeConfigConnectReq, opts ...client.CallOption) (*KubeConfigConnectResp, error)
 	ImportCluster(ctx context.Context, in *ImportClusterReq, opts ...client.CallOption) (*ImportClusterResp, error)
 	UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...client.CallOption) (*UpdateClusterResp, error)
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
@@ -774,7 +829,7 @@ type ClusterManagerService interface {
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
 	CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, opts ...client.CallOption) (*CreateVirtualClusterResp, error)
 	DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...client.CallOption) (*DeleteVirtualClusterResp, error)
-	// * node management
+	//* node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
 	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error)
 	RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, opts ...client.CallOption) (*CommonResp, error)
@@ -784,29 +839,30 @@ type ClusterManagerService interface {
 	UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error)
 	DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error)
 	UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error)
+	UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, opts ...client.CallOption) (*UpdateNodeAnnotationsResponse, error)
 	UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...client.CallOption) (*UpdateNodeTaintsResponse, error)
-	// * cluster credential management
+	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
 	DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, opts ...client.CallOption) (*DeleteClusterCredentialResp, error)
 	ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, opts ...client.CallOption) (*ListClusterCredentialResp, error)
-	// * federation cluster management
+	//* federation cluster management
 	InitFederationCluster(ctx context.Context, in *InitFederationClusterReq, opts ...client.CallOption) (*InitFederationClusterResp, error)
 	AddFederatedCluster(ctx context.Context, in *AddFederatedClusterReq, opts ...client.CallOption) (*AddFederatedClusterResp, error)
-	// * Cloud information management *
+	//* Cloud information management *
 	CreateCloud(ctx context.Context, in *CreateCloudRequest, opts ...client.CallOption) (*CreateCloudResponse, error)
 	UpdateCloud(ctx context.Context, in *UpdateCloudRequest, opts ...client.CallOption) (*UpdateCloudResponse, error)
 	DeleteCloud(ctx context.Context, in *DeleteCloudRequest, opts ...client.CallOption) (*DeleteCloudResponse, error)
 	GetCloud(ctx context.Context, in *GetCloudRequest, opts ...client.CallOption) (*GetCloudResponse, error)
 	ListCloud(ctx context.Context, in *ListCloudRequest, opts ...client.CallOption) (*ListCloudResponse, error)
-	// * Cloud VPC information management *
+	//* Cloud VPC information management *
 	CreateCloudVPC(ctx context.Context, in *CreateCloudVPCRequest, opts ...client.CallOption) (*CreateCloudVPCResponse, error)
 	UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, opts ...client.CallOption) (*UpdateCloudVPCResponse, error)
 	DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, opts ...client.CallOption) (*DeleteCloudVPCResponse, error)
 	ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...client.CallOption) (*ListCloudVPCResponse, error)
 	ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...client.CallOption) (*ListCloudRegionsResponse, error)
 	GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, opts ...client.CallOption) (*GetVPCCidrResponse, error)
-	// * NodeGroup information management *
+	//* NodeGroup information management *
 	CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, opts ...client.CallOption) (*CreateNodeGroupResponse, error)
 	UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, opts ...client.CallOption) (*UpdateNodeGroupResponse, error)
 	DeleteNodeGroup(ctx context.Context, in *DeleteNodeGroupRequest, opts ...client.CallOption) (*DeleteNodeGroupResponse, error)
@@ -824,14 +880,14 @@ type ClusterManagerService interface {
 	UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, opts ...client.CallOption) (*UpdateGroupMinMaxSizeResponse, error)
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
-	// * Task information management *
+	//* Task information management *
 	CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error)
 	RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...client.CallOption) (*RetryTaskResponse, error)
 	UpdateTask(ctx context.Context, in *UpdateTaskRequest, opts ...client.CallOption) (*UpdateTaskResponse, error)
 	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...client.CallOption) (*DeleteTaskResponse, error)
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...client.CallOption) (*GetTaskResponse, error)
 	ListTask(ctx context.Context, in *ListTaskRequest, opts ...client.CallOption) (*ListTaskResponse, error)
-	// * ClusterAutoScalingOption information management *
+	//* ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, opts ...client.CallOption) (*CreateAutoScalingOptionResponse, error)
 	UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, opts ...client.CallOption) (*UpdateAutoScalingOptionResponse, error)
 	DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...client.CallOption) (*DeleteAutoScalingOptionResponse, error)
@@ -848,6 +904,7 @@ type ClusterManagerService interface {
 	// Cloud Account information management
 	CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...client.CallOption) (*CreateCloudAccountResponse, error)
 	UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, opts ...client.CallOption) (*UpdateCloudAccountResponse, error)
+	MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, opts ...client.CallOption) (*MigrateCloudAccountResponse, error)
 	DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, opts ...client.CallOption) (*DeleteCloudAccountResponse, error)
 	ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...client.CallOption) (*ListCloudAccountResponse, error)
 	ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, opts ...client.CallOption) (*ListCloudAccountPermResponse, error)
@@ -861,6 +918,7 @@ type ClusterManagerService interface {
 	ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error)
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error)
 	ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error)
+	GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...client.CallOption) (*GetCloudAccountTypeResponse, error)
 	// Operation logs
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
 	// ** ResourceSchema **
@@ -877,6 +935,15 @@ type ClusterManagerService interface {
 	GetBkSopsTemplateInfo(ctx context.Context, in *GetBkSopsTemplateInfoRequest, opts ...client.CallOption) (*GetBkSopsTemplateInfoResponse, error)
 	GetInnerTemplateValues(ctx context.Context, in *GetInnerTemplateValuesRequest, opts ...client.CallOption) (*GetInnerTemplateValuesResponse, error)
 	DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, opts ...client.CallOption) (*DebugBkSopsTaskResponse, error)
+	// IP selector interface
+	// 批量获取多个配置项, 返回配置项内容map
+	GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, opts ...client.CallOption) (*GetBatchCustomSettingResponse, error)
+	// 批量获取含各节点主机数量的拓扑树
+	GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, opts ...client.CallOption) (*GetBizTopologyHostResponse, error)
+	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机信息(当前仅支持业务拓扑节点)
+	GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, opts ...client.CallOption) (*GetTopologyNodesResponse, error)
+	// 根据用户手动输入的IP/IPv6/主机名/hostId等关键字信息获取真实存在的机器信息
+	GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, opts ...client.CallOption) (*GetScopeHostCheckResponse, error)
 	// Cloud module flag management
 	CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, opts ...client.CallOption) (*CreateCloudModuleFlagResponse, error)
 	UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, opts ...client.CallOption) (*UpdateCloudModuleFlagResponse, error)
@@ -921,6 +988,16 @@ func (c *clusterManagerService) RetryCreateClusterTask(ctx context.Context, in *
 func (c *clusterManagerService) CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, opts ...client.CallOption) (*KubeConfigResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CheckCloudKubeConfig", in)
 	out := new(KubeConfigResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CheckCloudKubeConfigConnect(ctx context.Context, in *KubeConfigConnectReq, opts ...client.CallOption) (*KubeConfigConnectResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CheckCloudKubeConfigConnect", in)
+	out := new(KubeConfigConnectResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1151,6 +1228,16 @@ func (c *clusterManagerService) DrainNode(ctx context.Context, in *DrainNodeRequ
 func (c *clusterManagerService) UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeLabels", in)
 	out := new(UpdateNodeLabelsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, opts ...client.CallOption) (*UpdateNodeAnnotationsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeAnnotations", in)
+	out := new(UpdateNodeAnnotationsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1708,6 +1795,16 @@ func (c *clusterManagerService) UpdateCloudAccount(ctx context.Context, in *Upda
 	return out, nil
 }
 
+func (c *clusterManagerService) MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, opts ...client.CallOption) (*MigrateCloudAccountResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.MigrateCloudAccount", in)
+	out := new(MigrateCloudAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, opts ...client.CallOption) (*DeleteCloudAccountResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DeleteCloudAccount", in)
 	out := new(DeleteCloudAccountResponse)
@@ -1828,6 +1925,16 @@ func (c *clusterManagerService) ListCloudInstances(ctx context.Context, in *List
 	return out, nil
 }
 
+func (c *clusterManagerService) GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...client.CallOption) (*GetCloudAccountTypeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetCloudAccountType", in)
+	out := new(GetCloudAccountTypeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListOperationLogs", in)
 	out := new(ListOperationLogsResponse)
@@ -1928,6 +2035,46 @@ func (c *clusterManagerService) DebugBkSopsTask(ctx context.Context, in *DebugBk
 	return out, nil
 }
 
+func (c *clusterManagerService) GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, opts ...client.CallOption) (*GetBatchCustomSettingResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetBatchCustomSetting", in)
+	out := new(GetBatchCustomSettingResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, opts ...client.CallOption) (*GetBizTopologyHostResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetBizTopologyHost", in)
+	out := new(GetBizTopologyHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, opts ...client.CallOption) (*GetTopologyNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetTopologyNodes", in)
+	out := new(GetTopologyNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, opts ...client.CallOption) (*GetScopeHostCheckResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetScopeHostCheck", in)
+	out := new(GetScopeHostCheckResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, opts ...client.CallOption) (*CreateCloudModuleFlagResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CreateCloudModuleFlag", in)
 	out := new(CreateCloudModuleFlagResponse)
@@ -1981,10 +2128,11 @@ func (c *clusterManagerService) Health(ctx context.Context, in *HealthRequest, o
 // Server API for ClusterManager service
 
 type ClusterManagerHandler interface {
-	// * cluster management
+	//* cluster management
 	CreateCluster(context.Context, *CreateClusterReq, *CreateClusterResp) error
 	RetryCreateClusterTask(context.Context, *RetryCreateClusterReq, *RetryCreateClusterResp) error
 	CheckCloudKubeConfig(context.Context, *KubeConfigReq, *KubeConfigResp) error
+	CheckCloudKubeConfigConnect(context.Context, *KubeConfigConnectReq, *KubeConfigConnectResp) error
 	ImportCluster(context.Context, *ImportClusterReq, *ImportClusterResp) error
 	UpdateCluster(context.Context, *UpdateClusterReq, *UpdateClusterResp) error
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
@@ -1999,7 +2147,7 @@ type ClusterManagerHandler interface {
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
 	CreateVirtualCluster(context.Context, *CreateVirtualClusterReq, *CreateVirtualClusterResp) error
 	DeleteVirtualCluster(context.Context, *DeleteVirtualClusterReq, *DeleteVirtualClusterResp) error
-	// * node management
+	//* node management
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
 	GetNodeInfo(context.Context, *GetNodeInfoRequest, *GetNodeInfoResponse) error
 	RecordNodeInfo(context.Context, *RecordNodeInfoRequest, *CommonResp) error
@@ -2009,29 +2157,30 @@ type ClusterManagerHandler interface {
 	UnCordonNode(context.Context, *UnCordonNodeRequest, *UnCordonNodeResponse) error
 	DrainNode(context.Context, *DrainNodeRequest, *DrainNodeResponse) error
 	UpdateNodeLabels(context.Context, *UpdateNodeLabelsRequest, *UpdateNodeLabelsResponse) error
+	UpdateNodeAnnotations(context.Context, *UpdateNodeAnnotationsRequest, *UpdateNodeAnnotationsResponse) error
 	UpdateNodeTaints(context.Context, *UpdateNodeTaintsRequest, *UpdateNodeTaintsResponse) error
-	// * cluster credential management
+	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
 	DeleteClusterCredential(context.Context, *DeleteClusterCredentialReq, *DeleteClusterCredentialResp) error
 	ListClusterCredential(context.Context, *ListClusterCredentialReq, *ListClusterCredentialResp) error
-	// * federation cluster management
+	//* federation cluster management
 	InitFederationCluster(context.Context, *InitFederationClusterReq, *InitFederationClusterResp) error
 	AddFederatedCluster(context.Context, *AddFederatedClusterReq, *AddFederatedClusterResp) error
-	// * Cloud information management *
+	//* Cloud information management *
 	CreateCloud(context.Context, *CreateCloudRequest, *CreateCloudResponse) error
 	UpdateCloud(context.Context, *UpdateCloudRequest, *UpdateCloudResponse) error
 	DeleteCloud(context.Context, *DeleteCloudRequest, *DeleteCloudResponse) error
 	GetCloud(context.Context, *GetCloudRequest, *GetCloudResponse) error
 	ListCloud(context.Context, *ListCloudRequest, *ListCloudResponse) error
-	// * Cloud VPC information management *
+	//* Cloud VPC information management *
 	CreateCloudVPC(context.Context, *CreateCloudVPCRequest, *CreateCloudVPCResponse) error
 	UpdateCloudVPC(context.Context, *UpdateCloudVPCRequest, *UpdateCloudVPCResponse) error
 	DeleteCloudVPC(context.Context, *DeleteCloudVPCRequest, *DeleteCloudVPCResponse) error
 	ListCloudVPC(context.Context, *ListCloudVPCRequest, *ListCloudVPCResponse) error
 	ListCloudRegions(context.Context, *ListCloudRegionsRequest, *ListCloudRegionsResponse) error
 	GetVPCCidr(context.Context, *GetVPCCidrRequest, *GetVPCCidrResponse) error
-	// * NodeGroup information management *
+	//* NodeGroup information management *
 	CreateNodeGroup(context.Context, *CreateNodeGroupRequest, *CreateNodeGroupResponse) error
 	UpdateNodeGroup(context.Context, *UpdateNodeGroupRequest, *UpdateNodeGroupResponse) error
 	DeleteNodeGroup(context.Context, *DeleteNodeGroupRequest, *DeleteNodeGroupResponse) error
@@ -2049,14 +2198,14 @@ type ClusterManagerHandler interface {
 	UpdateGroupMinMaxSize(context.Context, *UpdateGroupMinMaxSizeRequest, *UpdateGroupMinMaxSizeResponse) error
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
 	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest, *DisableNodeGroupAutoScaleResponse) error
-	// * Task information management *
+	//* Task information management *
 	CreateTask(context.Context, *CreateTaskRequest, *CreateTaskResponse) error
 	RetryTask(context.Context, *RetryTaskRequest, *RetryTaskResponse) error
 	UpdateTask(context.Context, *UpdateTaskRequest, *UpdateTaskResponse) error
 	DeleteTask(context.Context, *DeleteTaskRequest, *DeleteTaskResponse) error
 	GetTask(context.Context, *GetTaskRequest, *GetTaskResponse) error
 	ListTask(context.Context, *ListTaskRequest, *ListTaskResponse) error
-	// * ClusterAutoScalingOption information management *
+	//* ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(context.Context, *CreateAutoScalingOptionRequest, *CreateAutoScalingOptionResponse) error
 	UpdateAutoScalingOption(context.Context, *UpdateAutoScalingOptionRequest, *UpdateAutoScalingOptionResponse) error
 	DeleteAutoScalingOption(context.Context, *DeleteAutoScalingOptionRequest, *DeleteAutoScalingOptionResponse) error
@@ -2073,6 +2222,7 @@ type ClusterManagerHandler interface {
 	// Cloud Account information management
 	CreateCloudAccount(context.Context, *CreateCloudAccountRequest, *CreateCloudAccountResponse) error
 	UpdateCloudAccount(context.Context, *UpdateCloudAccountRequest, *UpdateCloudAccountResponse) error
+	MigrateCloudAccount(context.Context, *MigrateCloudAccountRequest, *MigrateCloudAccountResponse) error
 	DeleteCloudAccount(context.Context, *DeleteCloudAccountRequest, *DeleteCloudAccountResponse) error
 	ListCloudAccount(context.Context, *ListCloudAccountRequest, *ListCloudAccountResponse) error
 	ListCloudAccountToPerm(context.Context, *ListCloudAccountPermRequest, *ListCloudAccountPermResponse) error
@@ -2086,6 +2236,7 @@ type ClusterManagerHandler interface {
 	ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest, *ListCloudInstanceTypeResponse) error
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest, *ListCloudOsImageResponse) error
 	ListCloudInstances(context.Context, *ListCloudInstancesRequest, *ListCloudInstancesResponse) error
+	GetCloudAccountType(context.Context, *GetCloudAccountTypeRequest, *GetCloudAccountTypeResponse) error
 	// Operation logs
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
 	// ** ResourceSchema **
@@ -2102,6 +2253,15 @@ type ClusterManagerHandler interface {
 	GetBkSopsTemplateInfo(context.Context, *GetBkSopsTemplateInfoRequest, *GetBkSopsTemplateInfoResponse) error
 	GetInnerTemplateValues(context.Context, *GetInnerTemplateValuesRequest, *GetInnerTemplateValuesResponse) error
 	DebugBkSopsTask(context.Context, *DebugBkSopsTaskRequest, *DebugBkSopsTaskResponse) error
+	// IP selector interface
+	// 批量获取多个配置项, 返回配置项内容map
+	GetBatchCustomSetting(context.Context, *GetBatchCustomSettingRequest, *GetBatchCustomSettingResponse) error
+	// 批量获取含各节点主机数量的拓扑树
+	GetBizTopologyHost(context.Context, *GetBizTopologyHostRequest, *GetBizTopologyHostResponse) error
+	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机信息(当前仅支持业务拓扑节点)
+	GetTopologyNodes(context.Context, *GetTopologyNodesRequest, *GetTopologyNodesResponse) error
+	// 根据用户手动输入的IP/IPv6/主机名/hostId等关键字信息获取真实存在的机器信息
+	GetScopeHostCheck(context.Context, *GetScopeHostCheckRequest, *GetScopeHostCheckResponse) error
 	// Cloud module flag management
 	CreateCloudModuleFlag(context.Context, *CreateCloudModuleFlagRequest, *CreateCloudModuleFlagResponse) error
 	UpdateCloudModuleFlag(context.Context, *UpdateCloudModuleFlagRequest, *UpdateCloudModuleFlagResponse) error
@@ -2116,6 +2276,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		CreateCluster(ctx context.Context, in *CreateClusterReq, out *CreateClusterResp) error
 		RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, out *RetryCreateClusterResp) error
 		CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, out *KubeConfigResp) error
+		CheckCloudKubeConfigConnect(ctx context.Context, in *KubeConfigConnectReq, out *KubeConfigConnectResp) error
 		ImportCluster(ctx context.Context, in *ImportClusterReq, out *ImportClusterResp) error
 		UpdateCluster(ctx context.Context, in *UpdateClusterReq, out *UpdateClusterResp) error
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
@@ -2139,6 +2300,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error
 		DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error
 		UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error
+		UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, out *UpdateNodeAnnotationsResponse) error
 		UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
@@ -2194,6 +2356,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, out *GetNodeTemplateResponse) error
 		CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error
 		UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, out *UpdateCloudAccountResponse) error
+		MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, out *MigrateCloudAccountResponse) error
 		DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, out *DeleteCloudAccountResponse) error
 		ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error
 		ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, out *ListCloudAccountPermResponse) error
@@ -2206,6 +2369,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
 		ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error
+		GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
 		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error
 		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error
@@ -2216,6 +2380,10 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetBkSopsTemplateInfo(ctx context.Context, in *GetBkSopsTemplateInfoRequest, out *GetBkSopsTemplateInfoResponse) error
 		GetInnerTemplateValues(ctx context.Context, in *GetInnerTemplateValuesRequest, out *GetInnerTemplateValuesResponse) error
 		DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, out *DebugBkSopsTaskResponse) error
+		GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, out *GetBatchCustomSettingResponse) error
+		GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, out *GetBizTopologyHostResponse) error
+		GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, out *GetTopologyNodesResponse) error
+		GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, out *GetScopeHostCheckResponse) error
 		CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, out *CreateCloudModuleFlagResponse) error
 		UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, out *UpdateCloudModuleFlagResponse) error
 		DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, out *DeleteCloudModuleFlagResponse) error
@@ -2245,6 +2413,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Path:    []string{"/clustermanager/v1/cloud/kubeConfig"},
 		Method:  []string{"PUT"},
 		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CheckCloudKubeConfigConnect",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/clusters/{clusterID}/connect"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2395,6 +2569,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNodeLabels",
 		Path:    []string{"/clustermanager/v1/node/labels"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateNodeAnnotations",
+		Path:    []string{"/clustermanager/v1/node/annotations"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
@@ -2767,6 +2948,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.MigrateCloudAccount",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteCloudAccount",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}"},
 		Method:  []string{"DELETE"},
@@ -2840,6 +3028,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetCloudAccountType",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounttype"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListOperationLogs",
 		Path:    []string{"/clustermanager/v1/operationlogs"},
 		Method:  []string{"GET"},
@@ -2902,6 +3096,34 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetBatchCustomSetting",
+		Path:    []string{"/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetBizTopologyHost",
+		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetTopologyNodes",
+		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetScopeHostCheck",
+		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateCloudModuleFlag",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules"},
 		Method:  []string{"POST"},
@@ -2951,6 +3173,10 @@ func (h *clusterManagerHandler) RetryCreateClusterTask(ctx context.Context, in *
 
 func (h *clusterManagerHandler) CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, out *KubeConfigResp) error {
 	return h.ClusterManagerHandler.CheckCloudKubeConfig(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CheckCloudKubeConfigConnect(ctx context.Context, in *KubeConfigConnectReq, out *KubeConfigConnectResp) error {
+	return h.ClusterManagerHandler.CheckCloudKubeConfigConnect(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ImportCluster(ctx context.Context, in *ImportClusterReq, out *ImportClusterResp) error {
@@ -3043,6 +3269,10 @@ func (h *clusterManagerHandler) DrainNode(ctx context.Context, in *DrainNodeRequ
 
 func (h *clusterManagerHandler) UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error {
 	return h.ClusterManagerHandler.UpdateNodeLabels(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, out *UpdateNodeAnnotationsResponse) error {
+	return h.ClusterManagerHandler.UpdateNodeAnnotations(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error {
@@ -3265,6 +3495,10 @@ func (h *clusterManagerHandler) UpdateCloudAccount(ctx context.Context, in *Upda
 	return h.ClusterManagerHandler.UpdateCloudAccount(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, out *MigrateCloudAccountResponse) error {
+	return h.ClusterManagerHandler.MigrateCloudAccount(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, out *DeleteCloudAccountResponse) error {
 	return h.ClusterManagerHandler.DeleteCloudAccount(ctx, in, out)
 }
@@ -3313,6 +3547,10 @@ func (h *clusterManagerHandler) ListCloudInstances(ctx context.Context, in *List
 	return h.ClusterManagerHandler.ListCloudInstances(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error {
+	return h.ClusterManagerHandler.GetCloudAccountType(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {
 	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
 }
@@ -3351,6 +3589,22 @@ func (h *clusterManagerHandler) GetInnerTemplateValues(ctx context.Context, in *
 
 func (h *clusterManagerHandler) DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, out *DebugBkSopsTaskResponse) error {
 	return h.ClusterManagerHandler.DebugBkSopsTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, out *GetBatchCustomSettingResponse) error {
+	return h.ClusterManagerHandler.GetBatchCustomSetting(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, out *GetBizTopologyHostResponse) error {
+	return h.ClusterManagerHandler.GetBizTopologyHost(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, out *GetTopologyNodesResponse) error {
+	return h.ClusterManagerHandler.GetTopologyNodes(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, out *GetScopeHostCheckResponse) error {
+	return h.ClusterManagerHandler.GetScopeHostCheck(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, out *CreateCloudModuleFlagResponse) error {

@@ -18,21 +18,21 @@
       <span
         class="ml10"
         v-if="templateUrl"
-        v-bk-tooltips.top="$t('前往标准运维')"
+        v-bk-tooltips.top="$t('cluster.nodeTemplate.sops.tips.gotoSops')"
         @click="handleGotoSops">
         <i class="bcs-icon bcs-icon-fenxiang"></i>
       </span>
       <span
         class="ml10"
-        v-bk-tooltips.top="$t('刷新列表')"
+        v-bk-tooltips.top="$t('generic.button.refresh')"
         @click="handleRefreshList">
         <i class="bcs-icon bcs-icon-reset"></i>
       </span>
     </div>
     <div class="bk-sops-params max-w-[600px]" v-bkloading="{ isLoading: sopsParamsLoading }">
       <div class="title">
-        <span v-bk-tooltips.top="{ content: $t('目前仅支持输入框类型参数') }" class="name">
-          {{$t('任务参数')}}
+        <span v-bk-tooltips.top="{ content: $t('cluster.nodeTemplate.sops.title.taskArgs.tips') }" class="name">
+          {{$t('cluster.nodeTemplate.sops.title.taskArgs.text')}}
         </span>
       </div>
       <div class="content">
@@ -48,7 +48,7 @@
           </div>
           <bcs-input
             behavior="simplicity"
-            :placeholder="$t('参数值留空代表使用标准运维流程参数默认值')"
+            :placeholder="$t('cluster.nodeTemplate.sops.placeholder.input')"
             v-model="sopsParams[item.key]">
           </bcs-input>
         </div>
@@ -56,12 +56,12 @@
           theme="primary"
           outline
           @click="handleBeforeDebug">
-          {{$t('调试')}}
+          {{$t('cluster.nodeTemplate.sops.button.debug.text')}}
         </bcs-button>
       </div>
     </div>
     <!-- 任务参数 -->
-    <bcs-dialog :title="$t('内置变量确认')" v-model="showTaskParams">
+    <bcs-dialog :title="$t('cluster.nodeTemplate.sops.title.confirmInnerVar')" v-model="showTaskParams">
       <div v-bkloading="{ isLoading: templateValuesLoading }">
         <div
           class="content-item mb15"
@@ -78,15 +78,15 @@
             </bcs-input>
             <i
               v-if="!variableParams[item.key]"
-              v-bk-tooltips="$t('必填项')"
+              v-bk-tooltips="$t('generic.validate.required')"
               class="text-[red] absolute top-[10px] right-[5px] bk-icon icon-exclamation-circle-shape"></i>
           </div>
         </div>
       </div>
       <template #footer>
         <div>
-          <bcs-button theme="primary" @click="handleDebug">{{ $t('确认') }}</bcs-button>
-          <bcs-button @click="showTaskParams = false">{{ $t('取消') }}</bcs-button>
+          <bcs-button theme="primary" @click="handleDebug">{{ $t('generic.button.confirm1') }}</bcs-button>
+          <bcs-button @click="showTaskParams = false">{{ $t('generic.button.cancel') }}</bcs-button>
         </div>
       </template>
     </bcs-dialog>
@@ -108,14 +108,14 @@
             mode: 'spin'
           }"></div>
         <template v-if="['INITIALIZING', 'RUNNING'].includes(taskData.status)">
-          <div class="title mt15">{{$t('调试正在进行中')}}...</div>
+          <div class="title mt15">{{$t('cluster.nodeTemplate.sops.status.running.text')}}...</div>
           <div class="operator mt15">
             <bcs-button
               text
               size="small"
               :disabled="!taskUrl"
               @click="handleGotoTaskDetail">
-              {{$t('查看详情')}}
+              {{$t('cluster.nodeTemplate.sops.status.running.detailBtn')}}
             </bcs-button>
           </div>
         </template>
@@ -123,29 +123,29 @@
           <div class="bcs-flex-center">
             <span class="status-icon success"><i class="bcs-icon bcs-icon-check-1"></i></span>
           </div>
-          <div class="title mt20">{{$t('调试成功')}}</div>
+          <div class="title mt20">{{$t('cluster.nodeTemplate.sops.status.success')}}</div>
           <div class="operator mt20">
             <bcs-button
               class="mw88"
               theme="primary"
               :disabled="!taskUrl"
               @click="handleGotoTaskDetail"
-            >{{$t('查看详情')}}</bcs-button>
+            >{{$t('cluster.nodeTemplate.sops.status.running.detailBtn')}}</bcs-button>
             <bcs-button
               class="ml5"
               style="min-width: 88px;"
-              @click="showDebugStatus = false">{{$t('完成')}}</bcs-button>
+              @click="showDebugStatus = false">{{$t('generic.status.done')}}</bcs-button>
           </div>
         </template>
         <template v-else-if="taskData.status === 'FAILURE'">
           <div class="bcs-flex-center">
             <span class="status-icon failure"><i class="bcs-icon bcs-icon-close"></i></span>
           </div>
-          <div class="title mt20">{{$t('调试失败')}}</div>
+          <div class="title mt20">{{$t('cluster.nodeTemplate.sops.status.failed.text')}}</div>
           <div class="operator mt20">
             <span
               v-bk-tooltips="{
-                content: $t('标准任务执行失败，请检查是否有标准运维作业执行权限'),
+                content: $t('cluster.nodeTemplate.sops.status.failed.tips'),
                 disabled: !!taskUrl
               }">
               <bcs-button
@@ -153,12 +153,12 @@
                 theme="primary"
                 :disabled="!taskUrl"
                 @click="handleGotoTaskDetail"
-              >{{$t('查看详情')}}</bcs-button>
+              >{{$t('cluster.nodeTemplate.sops.status.running.detailBtn')}}</bcs-button>
             </span>
             <bcs-button
               class="mw88 ml5"
               theme="primary"
-              @click="handleBeforeDebug">{{$t('再次调试')}}</bcs-button>
+              @click="handleBeforeDebug">{{$t('cluster.nodeTemplate.sops.button.retry')}}</bcs-button>
           </div>
         </template>
       </div>
@@ -192,9 +192,13 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    allowSkipWhenFailed: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(props) {
-    const { addons, actionsKey, clusterId } = toRefs(props);
+    const { addons, actionsKey, clusterId, allowSkipWhenFailed } = toRefs(props);
     const curProject = computed(() => $store.state.curProject);
     const user = computed(() => $store.state.user);
 
@@ -349,6 +353,7 @@ export default defineComponent({
             template_user: user.value.username,
             ...sopsParams.value,
           },
+          allowSkipWhenFailed: allowSkipWhenFailed.value,
         },
       },
     }));

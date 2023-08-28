@@ -31,7 +31,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
@@ -60,6 +59,7 @@ import (
 	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/helm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/job"
@@ -234,10 +234,6 @@ func (cm *ClusterManager) initModel() error {
 		return fmt.Errorf("mongo database cannot be empty")
 	}
 	password := cm.opt.Mongo.Password
-	if password != "" {
-		realPwd, _ := encrypt.DesDecryptFromBase([]byte(password))
-		password = string(realPwd)
-	}
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(cm.opt.Mongo.Address, ","),
 		ConnectTimeoutSeconds: int(cm.opt.Mongo.ConnectTimeout),
@@ -379,6 +375,12 @@ func (cm *ClusterManager) initRemoteClient() error {
 		return err
 	}
 
+	// init encrypt client
+	err = encrypt.SetEncryptClient(cm.opt.Encrypt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -414,14 +416,11 @@ func (cm *ClusterManager) initAlarmClient() error {
 // init bk-ops client
 func (cm *ClusterManager) initBKOpsClient() error {
 	err := common.SetBKOpsClient(common.Options{
-		Server:        cm.opt.BKOps.Server,
-		AppCode:       cm.opt.BKOps.AppCode,
-		AppSecret:     cm.opt.BKOps.AppSecret,
-		BKUserName:    cm.opt.BKOps.BkUserName,
-		Debug:         cm.opt.BKOps.Debug,
-		CreateTaskURL: cm.opt.BKOps.CreateTaskURL,
-		TaskStatusURL: cm.opt.BKOps.TaskStatusURL,
-		StartTaskURL:  cm.opt.BKOps.StartTaskURL,
+		Server:     cm.opt.BKOps.Server,
+		AppCode:    cm.opt.BKOps.AppCode,
+		AppSecret:  cm.opt.BKOps.AppSecret,
+		BKUserName: cm.opt.BKOps.BkUserName,
+		Debug:      cm.opt.BKOps.Debug,
 	})
 	if err != nil {
 		blog.Errorf("initBKOpsClient failed: %v", err)
@@ -509,6 +508,8 @@ func (cm *ClusterManager) initCloudTemplateConfig() error {
 		return fmt.Errorf("cloud template path empty, please manual build cloud")
 	}
 
+	blog.Infof("initCloudTemplateConfig %s", cm.opt.CloudTemplatePath)
+
 	cloudList := &options.CloudTemplateList{}
 	cloudBytes, err := ioutil.ReadFile(cm.opt.CloudTemplatePath)
 	if err != nil {
@@ -521,6 +522,8 @@ func (cm *ClusterManager) initCloudTemplateConfig() error {
 		blog.Errorf("initCloudTemplateConfig Unmarshal err: %v", err)
 		return err
 	}
+
+	blog.Infof("initCloudTemplateConfig cloudList %+v", cloudList)
 
 	// init cloud config
 	for i := range cloudList.CloudList {
@@ -553,6 +556,7 @@ func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
 			return err
 		}
 
+		blog.Infof("updateCloudConfig[%s] success", cloud.CloudID)
 		return nil
 	}
 
@@ -614,6 +618,7 @@ func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
 		return err
 	}
 
+	blog.Infof("updateCloudConfig[%s] success", cloud.CloudID)
 	return nil
 }
 
@@ -1023,16 +1028,20 @@ func (cm *ClusterManager) Init() error {
 	if err := cm.initLocker(); err != nil {
 		return err
 	}
+	// init registry
+	if err := cm.initRegistry(); err != nil {
+		return err
+	}
+	// init remote cloud depend client
+	if err := cm.initRemoteClient(); err != nil {
+		return err
+	}
 	// init model
 	if err := cm.initModel(); err != nil {
 		return err
 	}
 	// init kube operator
 	cm.initK8SOperator()
-	// init registry
-	if err := cm.initRegistry(); err != nil {
-		return err
-	}
 	// init IAM client
 	if err := cm.initIAMClient(); err != nil {
 		return err
@@ -1072,11 +1081,6 @@ func (cm *ClusterManager) Init() error {
 	}
 	// init bk-ops client
 	err = cm.initBKOpsClient()
-	if err != nil {
-		return err
-	}
-	// init remote cloud depend client
-	err = cm.initRemoteClient()
 	if err != nil {
 		return err
 	}

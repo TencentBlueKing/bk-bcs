@@ -6,13 +6,13 @@
     <div class="content-wrapper">
       <div class="content">
         <div class="content-item">
-          <div class="label">{{$t('内置变量')}}</div>
+          <div class="label">{{$t('cluster.nodeTemplate.variable.title')}}</div>
           <bcs-table class="mt15" :data="configList">
-            <bcs-table-column :label="$t('变量名')">
+            <bcs-table-column :label="$t('cluster.nodeTemplate.variable.label.var.text')">
               <template #default="{ row }">
                 <span
                   v-bk-tooltips.top="{
-                    content: $t('点击复制变量名 {name}', { name: row.refer })
+                    content: $t('cluster.nodeTemplate.variable.label.var.tips', { name: row.refer })
                   }"
                   @click="handleCopyVar(row)">
                   {{row.refer}}
@@ -20,21 +20,23 @@
               </template>
             </bcs-table-column>
             <bcs-table-column
-              :label="$t('含义')"
+              :label="$t('cluster.nodeTemplate.variable.label.meaning')"
               prop="desc"
               show-overflow-tooltip
             ></bcs-table-column>
           </bcs-table>
         </div>
-        <BcsMd class="mt15" :code=" type === 'default' ? postActionDescMd : autoscalerScriptsMd"></BcsMd>
+        <BcsMd class="mt15" :code="type === 'default' ? postActionDescMd : autoscalerScriptsMd"></BcsMd>
       </div>
     </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref } from 'vue';
+import { computed, defineComponent, onMounted, ref } from 'vue';
 import postActionDescMd from '../node-template/postaction-desc.md';
+import postActionDescMdEn from '../node-template/postaction-desc-en.md';
 import autoscalerScriptsMd from '../cluster/autoscaler/autoscaler-scripts.md';
+import autoscalerScriptsMdEn from '../cluster/autoscaler/autoscaler-scripts-en.md';
 import { copyText } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import $i18n from '@/i18n/i18n-setup';
@@ -58,6 +60,7 @@ export default defineComponent({
     // 配置说明
     const configLoading = ref(false);
     const configList = ref([]);
+    const isEn = computed(() => $store.state.isEn);
     const handleGetConfigList = async () => {
       configLoading.value = true;
       configList.value = await $store.dispatch('clustermanager/bkSopsTemplatevalues');
@@ -67,7 +70,7 @@ export default defineComponent({
       copyText(row.refer);
       $bkMessage({
         theme: 'success',
-        message: $i18n.t('复制成功'),
+        message: $i18n.t('generic.msg.success.copy'),
       });
     };
 
@@ -76,8 +79,8 @@ export default defineComponent({
     });
 
     return {
-      postActionDescMd,
-      autoscalerScriptsMd,
+      postActionDescMd: isEn.value ? postActionDescMdEn : postActionDescMd,
+      autoscalerScriptsMd: isEn.value ? autoscalerScriptsMdEn : autoscalerScriptsMd,
       configList,
       handleCopyVar,
       handleGetConfigList,

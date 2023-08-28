@@ -15,6 +15,7 @@ package common
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 // GetSecretType secret type
@@ -105,4 +106,10 @@ func GetGitopsPassword() string {
 		return pwd
 	}
 	return ""
+}
+
+// ParseKvPath Parse kvpath into mountpath and secretpath
+func ParseKvPath(kvpath string) (mountPath string, secretPath string) {
+	tmp := strings.Split(kvpath, "/data/")
+	return tmp[0], tmp[1]
 }

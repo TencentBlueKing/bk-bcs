@@ -1,7 +1,6 @@
 <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { useServiceStore } from '../../../../../../../store/service'
   import { useConfigStore } from '../../../../../../../store/config'
   import { InfoBox } from "bkui-vue/lib";
   import { Search } from 'bkui-vue/lib/icon';
@@ -12,14 +11,9 @@
   import { datetimeFormat } from '../../../../../../../utils/index'
   import EditConfig from './edit-config.vue'
   import CreateConfig from './create-config.vue'
-  import PublishVersion from './publish-version/index.vue'
-  import CreateVersion from './create-version/index.vue'
-  import ModifyGroupPublish from './modify-group-publish.vue'
   import VersionDiff from '../../components/version-diff/index.vue'
 
-  const serviceStore = useServiceStore()
   const configStore = useConfigStore()
-  const { appData } = storeToRefs(serviceStore)
   const { versionData } = storeToRefs(configStore)
 
   const props = defineProps<{
@@ -39,7 +33,6 @@
   const activeConfig = ref(0)
   const isDiffPanelShow = ref(false)
   const diffConfig = ref(0)
-  const publishVersionRef = ref()
 
   watch(() => versionData.value.id, () => {
     getListData()
@@ -110,24 +103,9 @@
     } as any);
   }
 
-  // 创建版本成功后，刷新版本列表，若选择同时上线，则打开选择分组面板
-  const handleVersionCreated = (version: IConfigVersion, isPublish: boolean) => {
-    refreshVesionList()
-    if (isPublish && publishVersionRef.value) {
-        versionData.value = version
-        publishVersionRef.value.handleOpenSelectGroupPanel()
-      }
-  }
-
   const handlePageLimitChange = (limit: number) => {
     pagination.value.limit = limit
     refreshConfigList()
-  }
-
-  const refreshVesionList = () => {
-    configStore.$patch((state) => {
-      state.refreshVersionListFlag = true
-    })
   }
 
   defineExpose({
@@ -136,30 +114,6 @@
 </script>
 <template>
   <section class="config-list-wrapper">
-    <section class="version-operations">
-      <CreateVersion
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :config-count="pagination.count"
-        @confirm="handleVersionCreated" />
-      <PublishVersion
-        ref="publishVersionRef"
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :release-id="versionData.id"
-        :app-name="appData.spec.name"
-        :version-name="versionData.spec.name"
-        :config-list="configList"
-        @confirm="refreshVesionList" />
-      <ModifyGroupPublish
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :release-id="versionData.id"
-        :app-name="appData.spec.name"
-        :version-name="versionData.spec.name"
-        :config-list="configList"
-        @confirm="refreshVesionList" />
-    </section>
     <div class="operate-area">
       <CreateConfig v-if="versionData.status.publish_status === 'editing'" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
       <div class="groups-info" v-if="versionData.status.released_groups.length > 0">
@@ -245,12 +199,6 @@
   .config-list-wrapper {
     position: relative;
     padding: 0 24px;
-  }
-  .version-operations {
-    position: absolute;
-    top: -36px;
-    right: 24px;
-    z-index: 10;
   }
   .operate-area {
     display: flex;

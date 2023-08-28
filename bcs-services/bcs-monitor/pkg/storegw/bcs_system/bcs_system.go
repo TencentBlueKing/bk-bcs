@@ -100,10 +100,12 @@ func (s *BCSSystemStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 }
 
 // Series 返回时序数据
+// NOCC:golint/fnsize(设计如此)
 func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
 	ctx := srv.Context()
 
-	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime=", r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
+	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime=", r.MinTime, "maxTime",
+		r.MaxTime, "step", r.QueryHints.StepMillis)
 
 	// series 数据, 这里只查询最近 SeriesStepDeltaSeconds
 	if r.SkipChunks {
@@ -165,7 +167,7 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	client, err := source.ClientFactory(ctx, cluster.ClusterId, s.dispatch[clusterID].SourceType, s.dispatch,
+	client, err := source.ClientFactory(ctx, cluster.ClusterID, s.dispatch[clusterID].SourceType, s.dispatch,
 		cluster.IsVirtual())
 	if err != nil {
 		return err
@@ -174,8 +176,8 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	params := metricsParams{
 		client:         client,
 		ctx:            ctx,
-		projectID:      cluster.ProjectId,
-		clusterID:      cluster.ClusterId,
+		projectID:      cluster.ProjectID,
+		clusterID:      cluster.ClusterID,
 		namespace:      namespace,
 		podName:        podName,
 		podNames:       podNameList,

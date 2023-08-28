@@ -142,3 +142,22 @@ func (cm *ClusterManager) ListKeypairs(ctx context.Context,
 	blog.V(5).Infof("reqID: %s, action: ListKeypairs, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// GetCloudAccountType implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetCloudAccountType(ctx context.Context,
+	req *cmproto.GetCloudAccountTypeRequest, resp *cmproto.GetCloudAccountTypeResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	ca := cloudresource.NewGetCloudAccountTypeAction(cm.model)
+	ca.Handle(ctx, req, resp)
+
+	metrics.ReportAPIRequestMetric("GetCloudAccountType", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetCloudAccountType, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data %v", reqID, req, resp.Code, resp.Message, resp.Data)
+	blog.V(5).Infof("reqID: %s, action: GetCloudAccountType, req %v, resp %v", reqID, req, resp)
+	return nil
+}

@@ -17,7 +17,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/secret"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 )
 
 const (
@@ -41,15 +41,16 @@ type Options struct {
 	// work mode, tunnel/service
 	Mode string `json:"mode,omitempty"`
 	// 用于存放 Cluster Server 地址，为空则使用 APIGateway 的值
-	APIGatewayForCluster string                `json:"apigatewayforcluster,omitempty"`
-	APIGateway           string                `json:"apigateway,omitempty"`
-	APIGatewayToken      string                `json:"apigatewaytoken,omitempty"`
-	APIConnectToken      string                `json:"apiconnecttoken,omitempty"`
-	APIConnectURL        string                `json:"apiconnecturl,omitempty"`
-	ClusterSyncInterval  uint                  `json:"clustersyncinterval,omitempty"`
-	GitOps               *GitOps               `json:"gitops,omitempty"`
-	SecretServer         *secret.ServerOptions `json:"secretserver,omitempty"`
-	Auth                 *common.AuthConfig    `json:"auth,omitempty"`
+	APIGatewayForCluster string                          `json:"apigatewayforcluster,omitempty"`
+	APIGateway           string                          `json:"apigateway,omitempty"`
+	APIGatewayToken      string                          `json:"apigatewaytoken,omitempty"`
+	APIConnectToken      string                          `json:"apiconnecttoken,omitempty"`
+	APIConnectURL        string                          `json:"apiconnecturl,omitempty"`
+	ClusterSyncInterval  uint                            `json:"clustersyncinterval,omitempty"`
+	GitOps               *GitOps                         `json:"gitops,omitempty"`
+	SecretServer         *secretstore.SecretStoreOptions `json:"secretserver,omitempty"`
+	Auth                 *common.AuthConfig              `json:"auth,omitempty"`
+	TraceConfig          *common.TraceConfig             `json:"traceConfig,omitempty"`
 }
 
 // DefaultOptions for gitops-manager

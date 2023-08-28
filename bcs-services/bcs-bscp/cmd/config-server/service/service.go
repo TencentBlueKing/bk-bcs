@@ -32,6 +32,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Service do all the data service's work
@@ -89,7 +90,7 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig) (*ClientSet, error) {
 
 	if !tls.Enable() {
 		// dial without ssl
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		// dial with ssl.
 		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,

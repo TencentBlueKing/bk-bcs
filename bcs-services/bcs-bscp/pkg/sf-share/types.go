@@ -16,7 +16,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"bscp.io/pkg/cc"
@@ -26,6 +26,7 @@ import (
 	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
+	pbhook "bscp.io/pkg/protocol/core/hook"
 	pbfs "bscp.io/pkg/protocol/feed-server"
 	"bscp.io/pkg/runtime/jsoni"
 )
@@ -186,6 +187,8 @@ type ReleaseEventMetaV1 struct {
 	ReleaseID  uint32              `json:"releaseID"`
 	CIMetas    []*ConfigItemMetaV1 `json:"ciMetas"`
 	Repository *RepositoryV1       `json:"repository"`
+	PreHook    *pbhook.HookSpec    `json:"preHook"`
+	PostHook   *pbhook.HookSpec    `json:"postHook"`
 }
 
 // InstanceSpec defines the specifics for an app instance to watch the event.
@@ -311,17 +314,17 @@ func LoadTLSBytes(tls cc.Repository) (*TLSBytes, error) {
 			return new(TLSBytes), nil
 		}
 
-		ca, err := ioutil.ReadFile(tls.BkRepo.TLS.CAFile)
+		ca, err := os.ReadFile(tls.BkRepo.TLS.CAFile)
 		if err != nil {
 			return nil, err
 		}
 
-		cert, err := ioutil.ReadFile(tls.BkRepo.TLS.CertFile)
+		cert, err := os.ReadFile(tls.BkRepo.TLS.CertFile)
 		if err != nil {
 			return nil, err
 		}
 
-		key, err := ioutil.ReadFile(tls.BkRepo.TLS.KeyFile)
+		key, err := os.ReadFile(tls.BkRepo.TLS.KeyFile)
 		if err != nil {
 			return nil, err
 		}

@@ -70,6 +70,22 @@ func (cm *ClusterManager) CheckCloudKubeConfig(ctx context.Context,
 	return nil
 }
 
+// CheckCloudKubeConfigConnect implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) CheckCloudKubeConfigConnect(ctx context.Context,
+	req *cmproto.KubeConfigConnectReq, resp *cmproto.KubeConfigConnectResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	ca := clusterac.NewCheckKubeConnectAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("CheckCloudKubeConfig", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: CheckCloudKubeConfig, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ImportCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ImportCluster(ctx context.Context,
 	req *cmproto.ImportClusterReq, resp *cmproto.ImportClusterResp) error {
@@ -153,7 +169,7 @@ func (cm *ClusterManager) DeleteCluster(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	ca := clusterac.NewDeleteAction(cm.model)
+	ca := clusterac.NewDeleteAction(cm.model, cm.kubeOp)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("DeleteCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: DeleteCluster, req %v, resp %v", reqID, req, resp)

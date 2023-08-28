@@ -944,6 +944,45 @@
         "tags": [
           "ClusterManager"
         ]
+      },
+      "put": {
+        "summary": "迁移云账号",
+        "description": "迁移加密云账号信息(支持单个账号迁移、多账号、全部账号迁移)",
+        "operationId": "ClusterManager_MigrateCloudAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerMigrateCloudAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云类型，英文字符串",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerMigrateCloudAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
       }
     },
     "/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}": {
@@ -1032,6 +1071,53 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/accounttype": {
+      "get": {
+        "summary": "查询云账号类型",
+        "description": "根据AKSK查询云账号类型",
+        "operationId": "ClusterManager_GetCloudAccountType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetCloudAccountTypeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID, 通过指定的云账号信息获取",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/clusters": {
       "get": {
         "summary": "查询cloud地域集群列表",
@@ -1069,6 +1155,68 @@
           {
             "name": "accountID",
             "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/clusters/{clusterID}/connect": {
+      "get": {
+        "summary": "kubeConfig内/外网访问状态",
+        "description": "kubeConfig访问集群内/外网状态",
+        "operationId": "ClusterManager_CheckCloudKubeConfigConnect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerKubeConfigConnectResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云模版ID, 集群所属云进行流程管理",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "云集群ID(例如: 腾讯云: cls-xxx)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "isExtranet",
+            "description": "isExtranet. 默认false 获取内网，是否获取外网访问的kubeconfig",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 集群所在地域",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3000,6 +3148,40 @@
         ]
       }
     },
+    "/clustermanager/v1/node/annotations": {
+      "put": {
+        "summary": "更新节点注解",
+        "description": "更新节点注解",
+        "operationId": "ClusterManager_UpdateNodeAnnotations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateNodeAnnotationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateNodeAnnotationsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/node/available": {
       "post": {
         "summary": "获取node信息是否存在bcs集群",
@@ -4044,6 +4226,13 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
+          },
+          {
+            "name": "ipList",
+            "description": "ipList. 通过,隔开ipList过滤任务",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4837,6 +5026,198 @@
         ]
       }
     },
+    "/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet": {
+      "post": {
+        "summary": "获取IP选择器配置项信息",
+        "description": "获取IP选择器配置项信息",
+        "operationId": "ClusterManager_GetBatchCustomSetting",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetBatchCustomSettingResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopeType",
+            "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scopeId",
+            "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetBatchCustomSettingRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check": {
+      "post": {
+        "summary": "根据IP/IPv6/主机名等信息获取主机列表",
+        "description": "获取某个业务下 用户手动输入的IP/IPv6/主机名等信息获取主机信息",
+        "operationId": "ClusterManager_GetScopeHostCheck",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetScopeHostCheckResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopeType",
+            "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scopeId",
+            "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetScopeHostCheckRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount": {
+      "post": {
+        "summary": "获取业务的拓扑树, 目前仅支持业务维度",
+        "description": "获取业务的拓扑树, 目前仅支持业务维度",
+        "operationId": "ClusterManager_GetBizTopologyHost",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetBizTopologyHostResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopeType",
+            "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scopeId",
+            "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetBizTopologyHostRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes": {
+      "post": {
+        "summary": "获取拓扑主机",
+        "description": "获取拓扑的主机, 目前仅支持业务维度下的其他集群或者模块",
+        "operationId": "ClusterManager_GetTopologyNodes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetTopologyNodesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopeType",
+            "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scopeId",
+            "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetTopologyNodesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v2/nodegroup/{nodeGroupID}/groupnode": {
       "delete": {
         "summary": "回收节点组中的节点，使用query参数指定需要清理的节点",
@@ -5272,6 +5653,12 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "allowSkipWhenFailed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "allowSkipWhenFailed插件执行失败时是否允许跳过, 默认不允许跳过",
+          "title": "allowSkipWhenFailed"
         }
       },
       "description": "标准运维模板信息记录，用于自动化工作流程记录",
@@ -5626,6 +6013,16 @@
         }
       },
       "title": "CloudAccountInfo return account relative info"
+    },
+    "clustermanagerCloudAccountType": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "云账号类型(用户账号的网络类型，STANDARD为标准用户，LEGACY为传统用户)",
+          "title": "type"
+        }
+      }
     },
     "clustermanagerCloudArea": {
       "type": "object",
@@ -9228,6 +9625,129 @@
         "message"
       ]
     },
+    "clustermanagerGetBatchCustomSettingRequest": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string",
+          "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+          "title": "scopeType"
+        },
+        "scopeId": {
+          "type": "string",
+          "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+          "title": "scopeId"
+        },
+        "moduleList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "moduleList获取配置项的模块列表，不传表示获取所有模块(目前仅支持 ip_selector_host_list)",
+          "title": "moduleList"
+        }
+      },
+      "description": "查询配置项内容请求",
+      "title": "GetBatchCustomSettingRequest"
+    },
+    "clustermanagerGetBatchCustomSettingResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "success": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否成功",
+          "title": "success"
+        },
+        "errorMsg": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMsg"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "data": {
+          "type": "object",
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
+    },
+    "clustermanagerGetBizTopologyHostRequest": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string",
+          "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+          "title": "scopeType"
+        },
+        "scopeId": {
+          "type": "string",
+          "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+          "title": "scopeId"
+        },
+        "allScope": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否获取所有资源范围的拓扑结构，默认为false",
+          "title": "allScope"
+        },
+        "scopeList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerScopeInfo"
+          },
+          "description": "要获取拓扑结构的资源范围数组(目前仅支持biz维度的拓扑)",
+          "title": "scopeList"
+        }
+      },
+      "description": "查询配置项内容请求",
+      "title": "GetBatchCustomSettingRequest"
+    },
+    "clustermanagerGetBizTopologyHostResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "success": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否成功",
+          "title": "success"
+        },
+        "errorMsg": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMsg"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
+    },
     "clustermanagerGetBkSopsTemplateInfoResponse": {
       "type": "object",
       "properties": {
@@ -9280,6 +9800,39 @@
       },
       "description": "获取模板列表返回信息",
       "title": "GetBkSopsTemplateListResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerGetCloudAccountTypeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerCloudAccountType",
+          "description": "获取节点列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询云账号类型返回",
+      "title": "GetCloudAccountTypeResponse",
       "required": [
         "code",
         "message"
@@ -9677,6 +10230,82 @@
         "message"
       ]
     },
+    "clustermanagerGetScopeHostCheckRequest": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string",
+          "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+          "title": "scopeType"
+        },
+        "scopeId": {
+          "type": "string",
+          "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+          "title": "scopeId"
+        },
+        "ipList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IPv4数组, 支持对云区域进行模糊匹配",
+          "title": "ipList"
+        },
+        "ipv6List": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IPv6数组, 支持对云区域进行模糊匹配",
+          "title": "ipv6List"
+        },
+        "keyList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "关键字数组, 解析出的主机名/hostId等关键字信息",
+          "title": "keyList"
+        }
+      },
+      "description": "过滤拓扑的主机列表",
+      "title": "GetScopeHostCheckRequest"
+    },
+    "clustermanagerGetScopeHostCheckResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "success": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否成功",
+          "title": "success"
+        },
+        "errorMsg": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMsg"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerHostData"
+          },
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
+    },
     "clustermanagerGetTaskResponse": {
       "type": "object",
       "properties": {
@@ -9710,6 +10339,109 @@
         "message",
         "data"
       ]
+    },
+    "clustermanagerGetTopologyNodesData": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "pageSize": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "total": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerHostData"
+          }
+        }
+      }
+    },
+    "clustermanagerGetTopologyNodesRequest": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string",
+          "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+          "title": "scopeType"
+        },
+        "scopeId": {
+          "type": "string",
+          "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+          "title": "scopeId"
+        },
+        "nodeList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeData"
+          },
+          "description": "拓扑节点数组",
+          "title": "nodeList"
+        },
+        "searchContent": {
+          "type": "string",
+          "description": "模糊搜索内容（支持同时对主机IP/主机名/操作系统/云区域名称进行模糊搜索）",
+          "title": "searchContent"
+        },
+        "alive": {
+          "type": "integer",
+          "format": "int32",
+          "description": "筛选条件：alive：0为Agent异常，1为Agent正常，不传则不筛选",
+          "title": "alive"
+        },
+        "start": {
+          "type": "string",
+          "format": "uint64",
+          "description": "数据起始位置，不传默认为0",
+          "title": "start"
+        },
+        "pageSize": {
+          "type": "string",
+          "format": "uint64",
+          "description": "拉取数据数量，最大500，不传默认为20",
+          "title": "pageSize"
+        }
+      },
+      "description": "查询拓扑的主机列表",
+      "title": "GetTopologyNodesRequest"
+    },
+    "clustermanagerGetTopologyNodesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "success": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否成功",
+          "title": "success"
+        },
+        "errorMsg": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMsg"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerGetTopologyNodesData",
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
     },
     "clustermanagerGetVPCCidrResponse": {
       "type": "object",
@@ -9784,6 +10516,46 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerHostCloudArea": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "clustermanagerHostData": {
+      "type": "object",
+      "properties": {
+        "hostId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "ipv6": {
+          "type": "string"
+        },
+        "hostName": {
+          "type": "string"
+        },
+        "alive": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "osName": {
+          "type": "string"
+        },
+        "cloudArea": {
+          "$ref": "#/definitions/clustermanagerHostCloudArea"
+        }
+      }
     },
     "clustermanagerImageInfo": {
       "type": "object",
@@ -10238,6 +11010,35 @@
       },
       "description": "密钥对信息",
       "title": "KeyPair"
+    },
+    "clustermanagerKubeConfigConnectResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "检测kubeConfig可用性结果返回",
+      "title": "KubeConfigResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
     },
     "clustermanagerKubeConfigReq": {
       "type": "object",
@@ -11452,6 +12253,59 @@
         }
       }
     },
+    "clustermanagerMigrateCloudAccountRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "云类型，英文字符串",
+          "title": "cloudID"
+        },
+        "accountIDs": {
+          "type": "string",
+          "description": "cloud云账号ID",
+          "title": "accountIDs通过,隔开，可操作多个账号"
+        },
+        "encrypt": {
+          "$ref": "#/definitions/clustermanagerOriginEncrypt",
+          "description": "encrypt原始加密方式转换",
+          "title": "encrypt原始的加密方式转换为该环境的加密方式，为空表示明文存储"
+        },
+        "all": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "all操作所有的账号迁移",
+          "title": "all"
+        }
+      },
+      "description": "迁移cloud账号请求，主要用于环境存量账号的加密迁移",
+      "title": "MigrateCloudAccountRequest",
+      "required": [
+        "cloudID"
+      ]
+    },
+    "clustermanagerMigrateCloudAccountResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      }
+    },
     "clustermanagerModuleInfo": {
       "type": "object",
       "properties": {
@@ -11788,10 +12642,31 @@
           "type": "string",
           "description": "节点ipv6地址",
           "title": "innerIPv6"
+        },
+        "zoneName": {
+          "type": "string",
+          "description": "节点所在可用区名称",
+          "title": "zoneName"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
       "title": "Node"
+    },
+    "clustermanagerNodeAnnotation": {
+      "type": "object",
+      "properties": {
+        "nodeName": {
+          "type": "string",
+          "description": "节点名称",
+          "title": "nodeName"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
     },
     "clustermanagerNodeConfig": {
       "type": "object",
@@ -11818,6 +12693,18 @@
           "format": "int64",
           "description": "节点GPU信息，可能为0",
           "title": "GPU"
+        }
+      }
+    },
+    "clustermanagerNodeData": {
+      "type": "object",
+      "properties": {
+        "objectId": {
+          "type": "string"
+        },
+        "instanceId": {
+          "type": "string",
+          "format": "uint64"
         }
       }
     },
@@ -12412,7 +13299,7 @@
         },
         "scaleInPreScript": {
           "type": "string",
-          "description": "缩容节点后置脚本, base64编码的用户脚本.",
+          "description": "缩容节点前置脚本, base64编码的用户脚本.",
           "title": "scaleInPreScript"
         },
         "scaleInPostScript": {
@@ -12436,6 +13323,18 @@
           "type": "boolean",
           "format": "boolean",
           "description": "是否跳过执行系统初始化, 默认执行",
+          "title": "skipSystemInit"
+        },
+        "allowSkipScaleOutWhenFailed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "扩容失败时是否允许跳过流程, 默认不允许跳过",
+          "title": "allowSkipScaleOutWhenFailed"
+        },
+        "allowSkipScaleInWhenFailed": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "缩容失败时是否允许跳过流程, 默认不允许跳过",
           "title": "skipSystemInit"
         }
       },
@@ -12539,6 +13438,20 @@
           "type": "string",
           "description": "任务状态",
           "title": "status"
+        }
+      }
+    },
+    "clustermanagerOriginEncrypt": {
+      "type": "object",
+      "properties": {
+        "encryptType": {
+          "type": "string"
+        },
+        "kv": {
+          "type": "string"
+        },
+        "iv": {
+          "type": "string"
         }
       }
     },
@@ -12900,6 +13813,17 @@
       },
       "title": "RunTimeInfo cluster runTime info"
     },
+    "clustermanagerScopeInfo": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string"
+        },
+        "scopeId": {
+          "type": "string"
+        }
+      }
+    },
     "clustermanagerSecurityGroup": {
       "type": "object",
       "properties": {
@@ -13041,6 +13965,11 @@
           "format": "uint64",
           "description": "剩余 IP 数",
           "title": "availableIPAddressCount"
+        },
+        "zoneName": {
+          "type": "string",
+          "description": "子网所在可用区",
+          "title": "zoneName"
         }
       },
       "description": "子网信息",
@@ -13452,6 +14381,9 @@
           "type": "string"
         },
         "editor": {
+          "type": "string"
+        },
+        "projectID": {
           "type": "string"
         }
       }
@@ -13896,6 +14828,11 @@
           "type": "string",
           "description": "更新者",
           "title": "updater"
+        },
+        "account": {
+          "$ref": "#/definitions/clustermanagerAccount",
+          "description": "cloud更新云账号信息",
+          "title": "account"
         }
       },
       "description": "更新cloud账号请求，不允许更改账号信息，防止对存量集群产生影响",
@@ -14718,6 +15655,57 @@
       },
       "description": "修改NodeGroup最小最大的扩容限额的请求结果",
       "title": "UpdateGroupMinMaxSizeResponse"
+    },
+    "clustermanagerUpdateNodeAnnotationsRequest": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "更新节点所属的clusterID",
+          "title": "clusterID"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeAnnotation"
+          },
+          "description": "节点列表",
+          "title": "nodes"
+        }
+      }
+    },
+    "clustermanagerUpdateNodeAnnotationsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerNodeOperationStatus",
+          "description": "返回数据",
+          "title": "data"
+        }
+      },
+      "description": "更新节点annotation",
+      "title": "UpdateNodeAnnotationsResponse",
+      "required": [
+        "code",
+        "message"
+      ]
     },
     "clustermanagerUpdateNodeGroupRequest": {
       "type": "object",

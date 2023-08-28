@@ -18,7 +18,7 @@
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('名称')" prop="metadata.name" sortable>
+        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable>
           <template #default="{ row }">
             <bk-button
               class="bcs-button-ellipsis" text

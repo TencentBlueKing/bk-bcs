@@ -40,6 +40,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	k8scorev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -127,7 +131,8 @@ func GetCredential(data *CredentialData) (*CommonOption, error) {
 	// if credential not exist account, get from common cloud
 	if data.AccountID != "" {
 		// try to get credential in cluster
-		account, err := GetStorageModel().GetCloudAccount(context.Background(), data.Cloud.CloudID, data.AccountID)
+		account, err := GetStorageModel().GetCloudAccount(context.Background(),
+			data.Cloud.CloudID, data.AccountID, false)
 		if err != nil {
 			return nil, fmt.Errorf("GetCloudAccount failed: %v", err)
 		}
@@ -311,6 +316,7 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 		return fmt.Errorf("importClusterCredential parse kubeConfig failed: %v", "[server|caCertData|token] null")
 	}
 
+	// need to handle crypt
 	now := time.Now().Format(time.RFC3339)
 	err := GetStorageModel().PutClusterCredential(context.Background(), &proto.ClusterCredential{
 		ServerKey:     clusterID,
@@ -668,7 +674,7 @@ func WithStepSkipFailed(skip bool) StepOption {
 
 // InitTaskStep init task step
 func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
-	defaultOptions := &StepOptions{Retry: 0}
+	defaultOptions := &StepOptions{Retry: 0, SkipFailed: false}
 	for _, opt := range opts {
 		opt(defaultOptions)
 	}
@@ -679,7 +685,7 @@ func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
 		System:       "api",
 		Params:       make(map[string]string),
 		Retry:        0,
-		SkipOnFailed: false,
+		SkipOnFailed: defaultOptions.SkipFailed,
 		Start:        nowStr,
 		Status:       TaskStatusNotStarted,
 		TaskMethod:   stepInfo.StepMethod,
@@ -999,4 +1005,40 @@ func CheckManagedClusterExistNode(cluster *proto.Cluster) bool {
 	}
 
 	return len(nodes) > 0
+}
+
+// GetCRDByKubeConfig get crd by kubeConfig
+func GetCRDByKubeConfig(kubeConfig string) (*v1.CustomResourceDefinitionList, error) {
+	_, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
+		FileName:    "",
+		YamlContent: kubeConfig,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("checkKubeConfig get kubeConfig from YAML body failed: %v", err)
+	}
+
+	// 解析 kubeConfig 字符串
+	cfg, err := clientcmd.NewClientConfigFromBytes([]byte(kubeConfig))
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取 Kubernetes 配置
+	config, err := cfg.ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// 使用 Kubernetes 配置创建一个 Kubernetes 客户端
+	cli, err := clientset.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取 CRD
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	defer cancel()
+
+	return cli.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
 }

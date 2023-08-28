@@ -48,9 +48,7 @@ type Columns struct {
 // Columns returns all the db columns
 func (col Columns) Columns() []string {
 	copied := make([]string, len(col.columns))
-	for idx := range col.columns {
-		copied[idx] = col.columns[idx]
-	}
+	copy(copied, col.columns)
 	return copied
 }
 
@@ -284,8 +282,6 @@ func (r Revision) IsEmpty() bool {
 
 	return true
 }
-
-const lagSeconds = 5 * 60
 
 // ValidateCreate validate revision when created
 // no need to validate time here, because the time is injected by gorm automatically

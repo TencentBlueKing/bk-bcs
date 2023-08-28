@@ -22,11 +22,11 @@
           </div>
         </div>
         <div class="btns">
-          <bk-button theme="primary" @click="handleShowYamlPanel">{{ $t('查看YAML配置') }}</bk-button>
+          <bk-button theme="primary" @click="handleShowYamlPanel">{{ $t('dashboard.workload.button.yaml') }}</bk-button>
           <template v-if="!hiddenOperate">
             <bk-button
               theme="primary"
-              @click="handleUpdateResource">{{$t('更新')}}</bk-button>
+              @click="handleUpdateResource">{{$t('generic.button.update')}}</bk-button>
             <bk-button
               theme="danger"
               v-authority="{
@@ -36,17 +36,17 @@
                   && webAnnotations.perms.page.deleteBtn ? webAnnotations.perms.page.deleteBtn.tip : '',
                 disablePerms: true
               }"
-              @click="handleDeleteResource">{{$t('删除')}}</bk-button>
+              @click="handleDeleteResource">{{$t('generic.button.delete')}}</bk-button>
           </template>
         </div>
       </div>
       <div class="workload-main-info">
         <div class="info-item">
-          <span class="label">{{ $t('命名空间') }}</span>
+          <span class="label">{{ $t('k8s.namespace') }}</span>
           <span class="value">{{ metadata.namespace }}</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('镜像') }}</span>
+          <span class="label">{{ $t('k8s.image') }}</span>
           <span class="value" v-bk-overflow-tips="getImagesTips(manifestExt.images)">
             {{ manifestExt.images && manifestExt.images.join(', ') }}</span>
         </div>
@@ -55,40 +55,42 @@
           <span class="value">{{ metadata.uid }}</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('创建时间') }}</span>
-          <span class="value">{{ timeZoneTransForm(manifestExt.createTime) }}</span>
+          <span class="label">{{ $t('cluster.labels.createdAt') }}</span>
+          <span class="value">{{ manifestExt.createTime }}</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('存在时间') }}</span>
+          <span class="label">{{ $t('k8s.age') }}</span>
           <span class="value">{{ manifestExt.age }}</span>
         </div>
         <div class="info-item" v-if="showUpdateStrategy">
-          <span class="label">{{ $t('升级策略') }}</span>
-          <span class="value">{{ updateStrategyMap[updateStrategy.type] || $t('滚动升级') }}</span>
+          <span class="label">{{ $t('k8s.updateStrategy.text') }}</span>
+          <span class="value">
+            {{ updateStrategyMap[updateStrategy.type] || $t('k8s.updateStrategy.rollingUpdate') }}
+          </span>
         </div>
       </div>
       <div class="workload-main-info" v-if="category === 'deployments'">
         <div class="info-item">
-          <span class="label">{{ $t('最大调度Pod数量') }}</span>
+          <span class="label">{{ $t('k8s.deployment.maxSurge') }}</span>
           <span class="value" v-if="$chainable(spec, 'strategy.rollingUpdate.maxSurge')">
             {{ spec.strategy.rollingUpdate.maxSurge }}
           </span>
           <span class="value" v-else>--</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('最大不可用数量') }}</span>
+          <span class="label">{{ $t('k8s.deployment.maxUnavailable') }}</span>
           <span class="value" v-if="$chainable(spec, 'strategy.rollingUpdate.maxUnavailable')">
             {{ spec.strategy.rollingUpdate.maxUnavailable }}
           </span>
           <span class="value" v-else>--</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('最小就绪时间') }}</span>
+          <span class="label">{{ $t('k8s.deployment.minReadySeconds') }}</span>
           <span class="value" v-if="Number.isInteger(spec.minReadySeconds)">{{ spec.minReadySeconds }}s</span>
           <span class="value" v-else>--</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('进程截止时间') }}</span>
+          <span class="label">{{ $t('k8s.deployment.progressDeadlineSeconds') }}</span>
           <span class="value" v-if="Number.isInteger(spec.progressDeadlineSeconds)">
             {{ spec.progressDeadlineSeconds }}s</span>
           <span class="value" v-else>--</span>
@@ -96,11 +98,11 @@
       </div>
       <div class="workload-main-info" v-if="category === 'statefulsets'">
         <div class="info-item">
-          <span class="label">{{ $t('Pod管理策略') }}</span>
+          <span class="label">{{ $t('dashboard.workload.pods.podManagementPolicy') }}</span>
           <span class="value">{{ spec.podManagementPolicy || '--' }}</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('分区滚动更新') }}</span>
+          <span class="label">{{ $t('k8s.statefulset.partition') }}</span>
           <span class="value" v-if="Number.isInteger($chainable(spec, 'updateStrategy.rollingUpdate.partition'))">
             {{ spec.updateStrategy.rollingUpdate.partition }}s</span>
           <span class="value" v-else>--</span>
@@ -109,24 +111,31 @@
     </div>
     <div class="workload-detail-body">
       <div class="workload-metric" v-bkloading="{ isLoading: podLoading }">
-        <Metric :title="$t('CPU使用率')" metric="cpu_usage" :params="params" category="pods" colors="#30d878"></Metric>
         <Metric
-          :title="$t('内存使用量')"
+          :title="$t('metrics.cpuUsage')"
+          metric="cpu_usage"
+          :params="params"
+          category="pods"
+          colors="#30d878"
+          unit="percent-number">
+        </Metric>
+        <Metric
+          :title="$t('metrics.memUsage1')"
           metric="memory_used"
           :params="params"
           unit="byte"
           category="pods"
           colors="#3a84ff"
-          :desc="$t('container_memory_working_set_bytes，limit限制时oom判断依据')">
+          :desc="$t('dashboard.workload.tips.containerMemoryWorkingSetBytesOom')">
         </Metric>
         <Metric
-          :title="$t('网络')"
+          :title="$t('k8s.networking')"
           :metric="['network_receive', 'network_transmit']"
           :params="params"
           category="pods"
           unit="byte"
           :colors="['#853cff', '#30d878']"
-          :suffix="[$t('入流量'), $t('出流量')]">
+          :suffix="[$t('metrics.network.receive'), $t('metrics.network.transmit')]">
         </Metric>
       </div>
       <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
@@ -137,13 +146,13 @@
               :loading="batchBtnLoading"
               :disabled="!selectPods.length"
               @click="handelShowRescheduleDialog">
-              {{ $t('批量重新调度') }}
+              {{ $t('dashboard.workload.pods.multiDelete') }}
             </bk-button>
             <!-- 占位 -->
             <div v-else></div>
             <bk-input
               v-model="searchValue"
-              :placeholder="$t('请入名称、镜像、IP、Node搜索')"
+              :placeholder="$t('dashboard.workload.pods.search')"
               class="search-input"
               right-icon="bk-icon icon-search"
               clearable>
@@ -168,7 +177,7 @@
               :selectable="handlePodSelectable">
             </bcs-table-column>
             <bcs-table-column
-              :label="$t('名称')"
+              :label="$t('generic.label.name')"
               min-width="130" prop="metadata.name" sortable show-overflow-tooltip fixed="left">
               <template #default="{ row }">
                 <bk-button
@@ -176,7 +185,7 @@
                   text @click="gotoPodDetail(row)">{{ row.metadata.name }}</bk-button>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('镜像')" min-width="200" :show-overflow-tooltip="false">
+            <bcs-table-column :label="$t('k8s.image')" min-width="200" :show-overflow-tooltip="false">
               <template #default="{ row }">
                 <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
                   {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
@@ -213,14 +222,14 @@
                 <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('操作')" width="140" fixed="right">
+            <bcs-table-column :label="$t('generic.label.action')" width="140" fixed="right">
               <template #default="{ row }">
                 <bk-button
                   text :disabled="handleGetExtData(row.metadata.uid, 'status') === 'Terminating'"
-                  @click="handleShowLog(row)">{{ $t('日志') }}</bk-button>
+                  @click="handleShowLog(row)">{{ $t('generic.button.log1') }}</bk-button>
                 <bk-button
                   class="ml10" :disabled="handleGetExtData(row.metadata.uid, 'status') === 'Terminating'"
-                  text @click="handleReschedule(row)">{{ $t('重新调度') }}</bk-button>
+                  text @click="handleReschedule(row)">{{ $t('dashboard.workload.pods.delete') }}</bk-button>
               </template>
             </bcs-table-column>
             <template #empty>
@@ -228,7 +237,7 @@
             </template>
           </bcs-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="event" :label="$t('事件')">
+        <bcs-tab-panel name="event" :label="$t('generic.label.event')">
           <EventQueryTableVue
             class="min-h-[360px]"
             hide-cluster-and-namespace
@@ -239,19 +248,22 @@
             v-if="!loading">
           </EventQueryTableVue>
         </bcs-tab-panel>
-        <bcs-tab-panel name="label" :label="$t('标签')">
+        <bcs-tab-panel name="label" :label="$t('k8s.label')">
           <bk-table :data="labels">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="annotations" :label="$t('注解')">
+        <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')">
           <bk-table :data="annotations">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="selector" :label="$t('选择器')" v-if="['deployments', 'statefulsets'].includes(category)">
+        <bcs-tab-panel
+          name="selector"
+          :label="$t('k8s.selector')"
+          v-if="['deployments', 'statefulsets'].includes(category)">
           <bk-table :data="selectors">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
@@ -281,7 +293,10 @@
       :namespace="currentRow.metadata.namespace"
       :name="currentRow.metadata.name">
     </BcsLog>
-    <bcs-dialog v-model="podRescheduleShow" :title="$t(`确认重新调度以下Pod`)" @confirm="handleConfirmReschedule">
+    <bcs-dialog
+      v-model="podRescheduleShow"
+      :title="$t('dashboard.workload.pods.confirm')"
+      @confirm="handleConfirmReschedule">
       <template v-if="isBatchReschedule">
         <div v-for="pod in selectPods" :key="pod['metadata']['uid']">
           {{ pod['metadata']['name'] }}
@@ -377,10 +392,10 @@ export default defineComponent({
   setup(props, ctx) {
     const { clusterId } = toRefs(props);
     const updateStrategyMap = ref({
-      RollingUpdate: $i18n.t('滚动升级'),
-      InplaceUpdate: $i18n.t('原地升级'),
-      OnDelete: $i18n.t('手动删除'),
-      Recreate: $i18n.t('重新创建'),
+      RollingUpdate: $i18n.t('k8s.updateStrategy.rollingUpdate'),
+      InplaceUpdate: $i18n.t('k8s.updateStrategy.inplaceUpdate'),
+      OnDelete: $i18n.t('k8s.updateStrategy.onDelete'),
+      Recreate: $i18n.t('k8s.updateStrategy.reCreate'),
     });
     const curType = props.category === 'custom_objects' ? 'crd' : 'workloads';
     const {
@@ -554,7 +569,7 @@ export default defineComponent({
       });
       result && $bkMessage({
         theme: 'success',
-        message: $i18n.t('调度成功'),
+        message: $i18n.t('generic.msg.success.cordon'),
       });
       selectPods.value = [];
       podTableRef.value?.clearSelection();
@@ -592,7 +607,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('调度成功'),
+          message: $i18n.t('generic.msg.success.cordon'),
         });
         selectPods.value = [];
         podTableRef.value?.clearSelection();

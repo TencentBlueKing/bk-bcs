@@ -5,12 +5,12 @@
       <div class="bk-form-item">
         <div class="bk-form-content" style="margin-left: 0;">
           <div class="bk-form-item is-required">
-            <label class="bk-label" style="width: 130px;">{{$t('名称')}}：</label>
+            <label class="bk-label" style="width: 130px;">{{$t('generic.label.name')}}：</label>
             <div class="bk-form-content" style="margin-left: 130px;">
-              <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('applicationName') }]" :placeholder="$t('请输入64个字符以内')" style="width: 310px;" v-model="curIngress.config.metadata.name" maxlength="64" name="applicationName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
+              <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('applicationName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit64')" style="width: 310px;" v-model="curIngress.config.metadata.name" maxlength="64" name="applicationName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
             </div>
             <div class="bk-form-tip is-danger" style="margin-left: 130px;" v-if="errors.has('applicationName')">
-              <p class="bk-tip-text">{{$t('名称必填，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)')}}</p>
+              <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
             </div>
           </div>
         </div>
@@ -19,10 +19,10 @@
       <div class="bk-form-item">
         <div class="bk-form-content" style="margin-left: 130px;">
           <bk-button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isTlsPanelShow }]" @click.stop.prevent="toggleTlsPanel">
-            {{$t('TLS设置')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
+            {{$t('deploy.templateset.TLSsettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
           </bk-button>
           <bk-button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isPanelShow }]" @click.stop.prevent="togglePanel">
-            {{$t('更多设置')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
+            {{$t('deploy.templateset.moreSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
           </bk-button>
         </div>
       </div>
@@ -37,7 +37,7 @@
                       <td>
                         <bkbcs-input
                           type="text"
-                          :placeholder="$t('主机名，多个用英文逗号分隔')"
+                          :placeholder="$t('deploy.templateset.hostnamesCommaSeparated')"
                           style="width: 310px;"
                           :value.sync="computer.hosts"
                           :list="varList"
@@ -47,7 +47,7 @@
                       <td>
                         <bkbcs-input
                           type="text"
-                          :placeholder="$t('请输入证书')"
+                          :placeholder="$t('deploy.templateset.enterCertificate')"
                           style="width: 350px;"
                           :value.sync="computer.secretName"
                         >
@@ -73,12 +73,12 @@
       <div class="bk-form-item mt0" v-show="isPanelShow">
         <div class="bk-form-content" style="margin-left: 130px;">
           <bk-tab :type="'fill'" :active-name="'remark'" :size="'small'">
-            <bk-tab-panel name="remark" :title="$t('注解')">
+            <bk-tab-panel name="remark" :title="$t('k8s.annotation')">
               <div class="biz-tab-wrapper m20">
                 <bk-keyer :key-list.sync="curRemarkList" :var-list="varList" ref="remarkKeyer"></bk-keyer>
               </div>
             </bk-tab-panel>
-            <bk-tab-panel name="label" :title="$t('标签')">
+            <bk-tab-panel name="label" :title="$t('k8s.label')">
               <div class="biz-tab-wrapper m20">
                 <bk-keyer :key-list.sync="curLabelList" :var-list="varList" ref="labelKeyer"></bk-keyer>
               </div>
@@ -92,11 +92,11 @@
         <div class="bk-button-group">
           <div class="item" v-for="(rule, index) in curIngress.config.spec.rules" :key="index">
             <bk-button :class="['bk-button bk-default is-outline', { 'is-selected': curRuleIndex === index }]" @click.stop="setCurRule(rule, index)">
-              {{rule.host || $t('未命名')}}
+              {{rule.host || $t('deploy.templateset.unnamed')}}
             </bk-button>
             <span class="bcs-icon bcs-icon-close-circle" @click.stop="removeRule(index)" v-if="curIngress.config.spec.rules.length > 1"></span>
           </div>
-          <bcs-popover ref="containerTooltip" :content="$t('添加Rule')" placement="top">
+          <bcs-popover ref="containerTooltip" :content="$t('deploy.templateset.addRule')" placement="top">
             <bk-button type="button" class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addLocalRule">
               <i class="bcs-icon bcs-icon-plus"></i>
             </bk-button>
@@ -106,16 +106,16 @@
 
       <div class="bk-form biz-configuration-form pb15">
         <div class="biz-span">
-          <span class="title">{{$t('基础信息')}}</span>
+          <span class="title">{{$t('generic.title.basicInfo')}}</span>
         </div>
         <div class="bk-form-item is-required">
-          <label class="bk-label" style="width: 130px;">{{$t('虚拟主机名')}}：</label>
+          <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.virtualHostName')}}：</label>
           <div class="bk-form-content" style="margin-left: 130px;">
-            <bk-input :placeholder="$t('请输入')" style="width: 310px;" v-model="curRule.host" name="ruleName" />
+            <bk-input :placeholder="$t('generic.placeholder.input')" style="width: 310px;" v-model="curRule.host" name="ruleName" />
           </div>
         </div>
         <div class="bk-form-item">
-          <label class="bk-label" style="width: 130px;">{{$t('路径组')}}：</label>
+          <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.pathGroup')}}：</label>
           <div class="bk-form-content" style="margin-left: 130px;">
             <table class="biz-simple-table">
               <tbody>
@@ -123,7 +123,7 @@
                   <td>
                     <bkbcs-input
                       type="text"
-                      :placeholder="$t('路径')"
+                      :placeholder="$t('deploy.templateset.path')"
                       style="width: 310px;"
                       :value.sync="pathRule.path"
                       :list="varList"
@@ -136,7 +136,7 @@
                   <td>
                     <bk-selector
                       style="width: 180px;"
-                      :placeholder="$t('Service名称')"
+                      :placeholder="$t('deploy.templateset._serviceName')"
                       :disabled="isLoadBalanceEdited"
                       :setting-key="'_name'"
                       :display-key="'_name'"
@@ -148,7 +148,7 @@
                   <td>
                     <bk-selector
                       style="width: 180px;"
-                      :placeholder="$t('端口')"
+                      :placeholder="$t('deploy.helm.port')"
                       :disabled="isLoadBalanceEdited"
                       :setting-key="'_id'"
                       :display-key="'_name'"
@@ -167,7 +167,7 @@
                 </tr>
               </tbody>
             </table>
-            <p class="biz-tip">{{$t('提示：同一个虚拟主机名可以有多个路径')}}</p>
+            <p class="biz-tip">{{$t('deploy.templateset.sameHostnameMultiplePathsHint')}}</p>
           </div>
         </div>
       </div>
@@ -356,7 +356,7 @@ export default {
           if (path.backend.serviceName && !this.serviceNames.includes(path.backend.serviceName)) {
             this.$bkMessage({
               theme: 'error',
-              message: this.$t('{name}中路径组：关联的Service【{serviceName}】不存在，请重新绑定', {
+              message: this.$t('deploy.templateset.pathGroupMissingService', {
                 name: this.curIngress.config.metadata.name,
                 serviceName: path.backend.serviceName,
               }),

@@ -640,11 +640,12 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	// 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
-			ClusterID: cls.ClusterID,
-			Content:   opt.NodeTemplate.UserScript,
-			NodeIps:   strings.Join(nodeIPs, ","),
-			Operator:  opt.Operator,
-			StepName:  common.PostInitStepJob,
+			ClusterID:        cls.ClusterID,
+			Content:          opt.NodeTemplate.UserScript,
+			NodeIps:          strings.Join(nodeIPs, ","),
+			Operator:         opt.Operator,
+			StepName:         common.PostInitStepJob,
+			AllowSkipJobTask: opt.NodeTemplate.AllowSkipScaleOutWhenFailed,
 		})
 	}
 
@@ -751,11 +752,12 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	// 业务自定义缩容流程: 支持 缩容节点前置脚本和前置标准运维流程
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.ScaleInPreScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
-			ClusterID: cls.ClusterID,
-			Content:   opt.NodeTemplate.ScaleInPreScript,
-			NodeIps:   strings.Join(nodeIPs, ","),
-			Operator:  opt.Operator,
-			StepName:  common.PreInitStepJob,
+			ClusterID:        cls.ClusterID,
+			Content:          opt.NodeTemplate.ScaleInPreScript,
+			NodeIps:          strings.Join(nodeIPs, ","),
+			Operator:         opt.Operator,
+			StepName:         common.PreInitStepJob,
+			AllowSkipJobTask: opt.NodeTemplate.AllowSkipScaleInWhenFailed,
 		})
 	}
 	// business define sops task
@@ -912,6 +914,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 		CommonParams:   make(map[string]string),
 		ForceTerminate: false,
 		NodeGroupID:    group.NodeGroupID,
+		NodeIPList:     nodeIPs,
 	}
 	// generate taskName
 	taskName := fmt.Sprintf(cleanNodeGroupNodesTaskTemplate, group.ClusterID, group.Name)
@@ -936,11 +939,12 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	// step1. business user define flow
 	if group.NodeTemplate != nil && len(group.NodeTemplate.ScaleInPreScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
-			ClusterID: opt.Cluster.ClusterID,
-			Content:   group.NodeTemplate.ScaleInPreScript,
-			NodeIps:   strings.Join(nodeIPs, ","),
-			Operator:  opt.Operator,
-			StepName:  common.PreInitStepJob,
+			ClusterID:        opt.Cluster.ClusterID,
+			Content:          group.NodeTemplate.ScaleInPreScript,
+			NodeIps:          strings.Join(nodeIPs, ","),
+			Operator:         opt.Operator,
+			StepName:         common.PreInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.AllowSkipScaleInWhenFailed,
 		})
 	}
 
@@ -1174,22 +1178,6 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		}
 	}
 
-	// 用户通用前置标准运维流程
-	if group.NodeTemplate != nil && group.NodeTemplate.ScaleOutExtraAddons != nil {
-		err := template.BuildSopsFactory{
-			StepName: template.UserBeforeInit,
-			Cluster:  opt.Cluster,
-			Extra: template.ExtraInfo{
-				InstancePasswd: passwd,
-				NodeIPList:     "",
-				NodeOperator:   opt.Operator,
-				ShowSopsUrl:    true,
-			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, true)
-		if err != nil {
-			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
-		}
-	}
-
 	// step3. platform define sops task
 	if !isExternal && opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil &&
 		opt.Cloud.NodeGroupManagement.UpdateDesiredNodes != nil {
@@ -1225,17 +1213,15 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		}
 	}
 
-	// set external node labels
-	updateDesiredNodesTask.BuildNodeLabelsStep(task)
-
 	// step4. business define sops task 支持脚本和标准运维流程
 	if group.NodeTemplate != nil && len(group.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
-			ClusterID: group.ClusterID,
-			Content:   group.NodeTemplate.UserScript,
-			NodeIps:   "",
-			Operator:  opt.Operator,
-			StepName:  common.PostInitStepJob,
+			ClusterID:        group.ClusterID,
+			Content:          group.NodeTemplate.UserScript,
+			NodeIps:          "",
+			Operator:         opt.Operator,
+			StepName:         common.PostInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.GetAllowSkipScaleOutWhenFailed(),
 		})
 	}
 
@@ -1255,6 +1241,9 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
 		}
 	}
+
+	// set external node labels
+	updateDesiredNodesTask.BuildNodeLabelsStep(task)
 
 	// step4: set node annotations
 	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil, getAnnotationsByNg(opt.NodeGroup))

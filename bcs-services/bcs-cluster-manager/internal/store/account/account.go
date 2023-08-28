@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -95,6 +96,13 @@ func (m *ModelCloudAccount) CreateCloudAccount(ctx context.Context, account *typ
 		return err
 	}
 
+	if account.Account != nil {
+		if err := util.EncryptCloudAccountData(nil, account.Account); err != nil {
+			blog.Errorf("encrypt cloudAccount %s credential information failed, %s", account.AccountID, err.Error())
+			return err
+		}
+	}
+
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{account}); err != nil {
 		return err
 	}
@@ -103,7 +111,8 @@ func (m *ModelCloudAccount) CreateCloudAccount(ctx context.Context, account *typ
 
 // UpdateCloudAccount update cloudAccount with all fileds, if some fields are nil
 // that field will be overwrite with empty
-func (m *ModelCloudAccount) UpdateCloudAccount(ctx context.Context, account *types.CloudAccount) error {
+func (m *ModelCloudAccount) UpdateCloudAccount(ctx context.Context,
+	account *types.CloudAccount, skipEncrypt bool) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
@@ -111,6 +120,12 @@ func (m *ModelCloudAccount) UpdateCloudAccount(ctx context.Context, account *typ
 		CloudKey:     account.CloudID,
 		AccountIDKey: account.AccountID,
 	})
+	if account.Account != nil && !skipEncrypt {
+		if err := util.EncryptCloudAccountData(nil, account.Account); err != nil {
+			blog.Errorf("encrypt cloudAccount %s credential information failed, %s", account.AccountID, err.Error())
+			return err
+		}
+	}
 
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": account})
 }
@@ -132,7 +147,8 @@ func (m *ModelCloudAccount) DeleteCloudAccount(ctx context.Context, cloudID stri
 }
 
 // GetCloudAccount get cloudAccount
-func (m *ModelCloudAccount) GetCloudAccount(ctx context.Context, cloudID, accountID string) (*types.CloudAccount, error) {
+func (m *ModelCloudAccount) GetCloudAccount(ctx context.Context,
+	cloudID, accountID string, skipDecrypt bool) (*types.CloudAccount, error) {
 	if err := m.ensureTable(ctx); err != nil {
 		return nil, err
 	}
@@ -143,6 +159,13 @@ func (m *ModelCloudAccount) GetCloudAccount(ctx context.Context, cloudID, accoun
 	cloudAccount := &types.CloudAccount{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, cloudAccount); err != nil {
 		return nil, err
+	}
+	if cloudAccount.Account != nil && !skipDecrypt {
+		if err := util.DecryptCloudAccountData(nil, cloudAccount.Account); err != nil {
+			// Compatible with older versions and only output error
+			blog.Errorf("decrypt cloudAccount % credential info failed: %v", accountID, err)
+			return nil, err
+		}
 	}
 
 	return cloudAccount, nil
@@ -166,6 +189,17 @@ func (m *ModelCloudAccount) ListCloudAccount(ctx context.Context, cond *operator
 	}
 	if err := finder.All(ctx, &cloudAccountList); err != nil {
 		return nil, err
+	}
+
+	for _, account := range cloudAccountList {
+		if account.Account != nil && !opt.SkipDecrypt {
+			if err := util.DecryptCloudAccountData(nil, account.Account); err != nil {
+				// Compatible with older versions and only output error
+				blog.Errorf("decrypt cloudAccount %s credential failed when ListCloudAccount, %s",
+					account.AccountID, err.Error())
+				return nil, err
+			}
+		}
 	}
 
 	return cloudAccountList, nil

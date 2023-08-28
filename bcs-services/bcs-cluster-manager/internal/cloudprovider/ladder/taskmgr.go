@@ -223,11 +223,12 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	// 业务自定义流程: 缩容前置流程支持 标准运维任务和执行业务job脚本
 	if group.NodeTemplate != nil && len(group.NodeTemplate.ScaleInPreScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
-			ClusterID: opt.Cluster.ClusterID,
-			Content:   group.NodeTemplate.ScaleInPreScript,
-			NodeIps:   strings.Join(nodeIPs, ","),
-			Operator:  opt.Operator,
-			StepName:  common.PreInitStepJob,
+			ClusterID:        opt.Cluster.ClusterID,
+			Content:          group.NodeTemplate.ScaleInPreScript,
+			NodeIps:          strings.Join(nodeIPs, ","),
+			Operator:         opt.Operator,
+			StepName:         common.PreInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.AllowSkipScaleInWhenFailed,
 		})
 	}
 
@@ -354,11 +355,12 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// 业务扩容节点后置自定义流程: 支持job后置脚本和标准运维任务
 	if group.NodeTemplate != nil && len(group.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
-			ClusterID: group.ClusterID,
-			Content:   group.NodeTemplate.UserScript,
-			NodeIps:   "",
-			Operator:  opt.Operator,
-			StepName:  common.PostInitStepJob,
+			ClusterID:        group.ClusterID,
+			Content:          group.NodeTemplate.UserScript,
+			NodeIps:          "",
+			Operator:         opt.Operator,
+			StepName:         common.PostInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.GetAllowSkipScaleOutWhenFailed(),
 		})
 	}
 

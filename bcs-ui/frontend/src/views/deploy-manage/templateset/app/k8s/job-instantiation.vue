@@ -31,7 +31,7 @@ export default {
         const h = me.$createElement;
         me.$bkInfo({
           title: '',
-          content: h('p', this.$t('确定要取消{tmplAppName}实例化操作？', { tmplAppName: me.tmplAppName })),
+          content: h('p', this.$t('deploy.templateset.confirmTemplate', { tmplAppName: me.tmplAppName })),
           confirmFn() {
             me.$router.push({
               name: 'job',

@@ -10,11 +10,11 @@
       disabled
       @collapse-change="handleCollapseChange">
       <template #aside>
-        <ActionDoc type="autoscaler" class="aside" :title="$t('初始化配置说明')" />
+        <ActionDoc type="autoscaler" class="aside" :title="$t('cluster.ca.nodePool.title.initConfig1')" />
       </template>
       <template #main>
         <div class="main" ref="nodePoolInfoRef">
-          <FormGroup :title="$t('基本信息')" :allow-toggle="false">
+          <FormGroup :title="$t('generic.title.basicInfo1')" :allow-toggle="false">
             <BasicPoolInfo
               :schema="schema"
               :default-values="defaultValues"
@@ -24,30 +24,36 @@
             </BasicPoolInfo>
           </FormGroup>
           <div class="px-[16px]"><bcs-divider class="!my-[0px]"></bcs-divider></div>
-          <FormGroup :title="$t('Kubelet组件参数配置')" :allow-toggle="false">
+          <FormGroup :title="$t('cluster.nodeTemplate.kubelet.title.argsConfig1')" :allow-toggle="false">
             <KubeletParams v-model="nodePoolInfoData.nodeTemplate.extraArgs.kubelet" ref="kubeletRef"></KubeletParams>
           </FormGroup>
           <div class="px-[16px]"><bcs-divider class="!my-[0px]"></bcs-divider></div>
-          <FormGroup :title="$t('扩容节点初始化配置')" :allow-toggle="false">
-            <p>{{$t('前置初始化')}}</p>
+          <FormGroup :title="$t('cluster.ca.nodePool.create.scaleInitConfig.title')" :allow-toggle="false">
+            <p>
+              <span
+                class="bcs-border-tips"
+                v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.preInit.tips')">
+                {{$t('cluster.nodeTemplate.label.preInstall.title')}}
+              </span>
+            </p>
             <bcs-input
               type="textarea"
               class="mt10"
               :rows="6"
-              :placeholder="$t('请输入 bash 脚本')"
+              :placeholder="$t('cluster.ca.nodePool.create.scaleInitConfig.placeholder')"
               v-model="nodePoolInfoData.nodeTemplate.preStartUserScript">
             </bcs-input>
-            <p class="mt-[32px]">{{$t('后置初始化')}}</p>
+            <p class="mt-[32px]">{{$t('cluster.nodeTemplate.label.postInstall.title')}}</p>
             <div class="mt-[10px]">
               <bcs-select class="max-w-[524px]" :clearable="false" v-model="scaleOutPostActionType">
-                <bcs-option id="simple" :name="$t('简单脚本执行')"></bcs-option>
-                <bcs-option id="complex" :name="$t('标准运维流程执行')"></bcs-option>
+                <bcs-option id="simple" :name="$t('cluster.nodeTemplate.label.postInstall.type.scripts')"></bcs-option>
+                <bcs-option id="complex" :name="$t('cluster.nodeTemplate.label.postInstall.type.sops')"></bcs-option>
               </bcs-select>
               <bcs-input
                 type="textarea"
                 class="mt10"
                 :rows="6"
-                :placeholder="$t('请输入 bash 脚本')"
+                :placeholder="$t('cluster.ca.nodePool.create.scaleInitConfig.placeholder')"
                 v-if="scaleOutPostActionType === 'simple'"
                 v-model="nodePoolInfoData.nodeTemplate.userScript">
               </bcs-input>
@@ -56,22 +62,46 @@
                 actions-key="postActions"
                 :cluster-id="cluster.clusterID"
                 :addons="nodePoolInfoData.nodeTemplate.scaleOutExtraAddons"
+                :allow-skip-when-failed="allowSkipScaleOutWhenFailed"
                 ref="scaleOutRef"
                 v-else>
               </BkSops>
             </div>
+            <p class="mt-[10px]">{{$t('generic.label.whenFailed')}}</p>
+            <bk-radio-group class="mt-[8px]" v-model="allowSkipScaleOutWhenFailed">
+              <bk-radio :value="false" class="text-[12px]">
+                {{ $t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.radio1') }}
+                <span class="text-[#699DF4]">
+                  [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.keyStepsRecommended') }}]
+                </span>
+                <i
+                  class="bk-icon icon-info-circle"
+                  v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.tips1')">
+                </i>
+              </bk-radio>
+              <bk-radio :value="true" class="text-[12px]">
+                {{ $t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.radio2') }}
+                <span class="text-[#979BA5]">
+                  [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.unKeyStepsRecommended') }}]
+                </span>
+                <i
+                  class="bk-icon icon-info-circle"
+                  v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.tips2')">
+                </i>
+              </bk-radio>
+            </bk-radio-group>
           </FormGroup>
           <div class="px-[16px]"><bcs-divider class="!my-[0px]"></bcs-divider></div>
-          <FormGroup :title="$t('节点回收前清理配置')" :allow-toggle="false">
+          <FormGroup :title="$t('cluster.ca.nodePool.create.scaleInitConfig.scaleInPreScript')" :allow-toggle="false">
             <bcs-select class="max-w-[524px]" :clearable="false" v-model="scaleInPreActionType">
-              <bcs-option id="simple" :name="$t('简单脚本执行')"></bcs-option>
-              <bcs-option id="complex" :name="$t('标准运维流程执行')"></bcs-option>
+              <bcs-option id="simple" :name="$t('cluster.nodeTemplate.label.postInstall.type.scripts')"></bcs-option>
+              <bcs-option id="complex" :name="$t('cluster.nodeTemplate.label.postInstall.type.sops')"></bcs-option>
             </bcs-select>
             <bcs-input
               type="textarea"
               class="mt10"
               :rows="6"
-              :placeholder="$t('请输入 bash 脚本')"
+              :placeholder="$t('cluster.ca.nodePool.create.scaleInitConfig.placeholder')"
               v-if="scaleInPreActionType === 'simple'"
               v-model="nodePoolInfoData.nodeTemplate.scaleInPreScript">
             </bcs-input>
@@ -80,35 +110,62 @@
               actions-key="preActions"
               :addons="nodePoolInfoData.nodeTemplate.scaleInExtraAddons"
               :cluster-id="cluster.clusterID"
+              :allow-skip-when-failed="allowSkipScaleInWhenFailed"
               ref="scaleInRef"
               v-else>
             </BkSops>
+            <p class="mt-[10px]">{{$t('generic.label.whenFailed')}}</p>
+            <bk-radio-group class="mt-[8px]" v-model="allowSkipScaleInWhenFailed">
+              <bk-radio :value="false" class="text-[12px]">
+                {{ $t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.radio1') }}
+                <span class="text-[#699DF4]">
+                  [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.keyStepsRecommended') }}]
+                </span>
+                <i
+                  class="bk-icon icon-info-circle"
+                  v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.tips1')">
+                </i>
+              </bk-radio>
+              <bk-radio :value="true" class="text-[12px]">
+                {{ $t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.radio2') }}
+                <span class="text-[#979BA5]">
+                  [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.unKeyStepsRecommended') }}]
+                </span>
+                <i
+                  class="bk-icon icon-info-circle"
+                  v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.tips2')">
+                </i>
+              </bk-radio>
+            </bk-radio-group>
           </FormGroup>
         </div>
       </template>
     </bcs-resize-layout>
     <div class="bcs-fixed-footer" v-if="showFooter">
-      <bcs-button @click="handlePre">{{$t('上一步')}}</bcs-button>
+      <bcs-button @click="handlePre">{{$t('generic.button.pre')}}</bcs-button>
       <bcs-button
         theme="primary"
         :loading="saveLoading"
         class="ml10"
         @click="handleSaveNodePoolData">
-        {{isEdit ? $t('保存节点规格') : $t('创建节点规格')}}
+        {{isEdit ? $t('cluster.ca.nodePool.create.button.save') : $t('cluster.ca.nodePool.records.taskType.create')}}
       </bcs-button>
-      <bk-button class="ml10" @click="handleCancel">{{ $t('取消') }}</bk-button>
+      <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </div>
   </div>
 </template>
 <script lang="ts">
 import { defineComponent, onMounted, ref, toRefs } from 'vue';
-import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
-import BasicPoolInfo from './basic-pool-info.vue';
-import KubeletParams from '../kubelet-params.vue';
+
 import BkSops from '../bk-sops.vue';
-import $router from '@/router';
+import KubeletParams from '../kubelet-params.vue';
+
+import BasicPoolInfo from './basic-pool-info.vue';
+
 import { mergeDeep } from '@/common/util';
-import ActionDoc from '@/views/cluster-manage/components/action-doc.vue';
+import $router from '@/router';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+import ActionDoc from '@/views/cluster-manage/components/action-doc.vue';;
 
 export default defineComponent({
   name: 'NodePoolInfo',
@@ -153,6 +210,8 @@ export default defineComponent({
         scaleInPreScript: defaultValues.value?.nodeTemplate?.scaleInPreScript || '', // 缩容前置脚本
         scaleInExtraAddons: defaultValues.value?.nodeTemplate?.scaleInExtraAddons || {}, // 缩容后置流程
         labels: {}, // basic-pool-info里面赋值
+        allowSkipScaleOutWhenFailed: defaultValues.value?.nodeTemplate?.allowSkipScaleOutWhenFailed,
+        allowSkipScaleInWhenFailed: defaultValues.value?.nodeTemplate?.allowSkipScaleInWhenFailed,
       },
       labels: {},
     });
@@ -175,6 +234,7 @@ export default defineComponent({
         nodePoolInfoData.value.nodeTemplate.scaleOutExtraAddons = scaleOutRef.value?.bkSopsData;
       } else {
         nodePoolInfoData.value.nodeTemplate.scaleOutExtraAddons = {};
+        nodePoolInfoData.value.nodeTemplate.allowSkipScaleOutWhenFailed = allowSkipScaleOutWhenFailed.value;
       }
 
       // 处理缩容前置脚本参数
@@ -183,6 +243,7 @@ export default defineComponent({
         nodePoolInfoData.value.nodeTemplate.scaleInExtraAddons = scaleInRef.value?.bkSopsData;
       } else {
         nodePoolInfoData.value.nodeTemplate.scaleInExtraAddons = {};
+        nodePoolInfoData.value.nodeTemplate.allowSkipScaleInWhenFailed = allowSkipScaleInWhenFailed.value;
       }
 
       // 处理label参数 后端label放两地方
@@ -219,9 +280,31 @@ export default defineComponent({
     const handleCollapseChange = (value) => {
       collapse.value = value;
     };
+
+    // 脚本失败后能够跳过配置
+    const allowSkipScaleOutWhenFailed = ref(false);
+    const allowSkipScaleInWhenFailed = ref(true);
+
     onMounted(() => {
       scaleOutPostActionType.value = nodePoolInfoData.value.nodeTemplate.scaleOutExtraAddons?.postActions?.length ? 'complex' : 'simple';
       scaleInPreActionType.value = nodePoolInfoData.value.nodeTemplate.scaleInExtraAddons?.preActions?.length ? 'complex' : 'simple';
+      if (scaleOutPostActionType.value === 'complex') {
+        const addons = nodePoolInfoData.value.nodeTemplate?.scaleOutExtraAddons;
+        const plugin = addons?.postActions?.[0];// 取postAction第1个（目前只支持一个），但是后端设计为了数组
+        allowSkipScaleOutWhenFailed.value = !!addons?.plugins?.[plugin]?.allowSkipWhenFailed;
+      } else {
+        allowSkipScaleOutWhenFailed.value = !!nodePoolInfoData.value.nodeTemplate.allowSkipScaleOutWhenFailed;
+      }
+
+      if (scaleInPreActionType.value === 'complex') {
+        const addons = nodePoolInfoData.value.nodeTemplate?.scaleInExtraAddons;
+        const plugin = addons?.preActions?.[0];// 取preAction第1个（目前只支持一个），但是后端设计为了数组
+        allowSkipScaleInWhenFailed.value = !!addons?.plugins?.[plugin]?.allowSkipWhenFailed;
+      } else {
+        allowSkipScaleInWhenFailed.value = nodePoolInfoData.value.nodeTemplate.allowSkipScaleInWhenFailed !== undefined
+          ? !!nodePoolInfoData.value.nodeTemplate.allowSkipScaleInWhenFailed
+          : true;
+      }
     });
     return {
       collapse,
@@ -233,6 +316,8 @@ export default defineComponent({
       scaleOutPostActionType,
       scaleInPreActionType,
       nodePoolInfoData,
+      allowSkipScaleOutWhenFailed,
+      allowSkipScaleInWhenFailed,
       getNodePoolData,
       validate,
       handlePre,

@@ -18,105 +18,79 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 )
 
-func TestIsVersionMatch(t *testing.T) {
-	with := &pbbase.Versioning{
-		Major: 3,
-		Minor: 4,
-		Patch: 5,
-	}
-	leastAPIVersion = with
-
-	// matched test case.
-	test := &pbbase.Versioning{
+func TestIsAPIVersionMatch(t *testing.T) {
+	leastAPIVersion = &pbbase.Versioning{
 		Major: 3,
 		Minor: 4,
 		Patch: 5,
 	}
 
-	yes := IsAPIVersionMatch(test)
-
-	if !yes {
-		t.Errorf("should matched, but not.")
-		return
+	testCases := []struct {
+		name     string
+		ver      *pbbase.Versioning
+		expected bool
+	}{
+		{
+			name: "Major version mismatch",
+			ver: &pbbase.Versioning{
+				Major: 2,
+				Minor: 4,
+				Patch: 5,
+			},
+			expected: false,
+		},
+		{
+			name: "Minor version mismatch",
+			ver: &pbbase.Versioning{
+				Major: 3,
+				Minor: 3,
+				Patch: 5,
+			},
+			expected: false,
+		},
+		{
+			name: "Patch version mismatch",
+			ver: &pbbase.Versioning{
+				Major: 3,
+				Minor: 4,
+				Patch: 4,
+			},
+			expected: false,
+		},
+		{
+			name: "Major version match",
+			ver: &pbbase.Versioning{
+				Major: 3,
+				Minor: 4,
+				Patch: 5,
+			},
+			expected: true,
+		},
+		{
+			name: "Minor version match",
+			ver: &pbbase.Versioning{
+				Major: 3,
+				Minor: 4,
+				Patch: 6,
+			},
+			expected: true,
+		},
+		{
+			name: "Patch version match",
+			ver: &pbbase.Versioning{
+				Major: 3,
+				Minor: 5,
+				Patch: 5,
+			},
+			expected: true,
+		},
 	}
 
-	test = &pbbase.Versioning{
-		Major: 3,
-		Minor: 4,
-		Patch: 4,
+	for _, tc := range testCases {
+		result := IsAPIVersionMatch(tc.ver)
+		if result != tc.expected {
+			t.Errorf("Test %s failed, Expected %v, got %v", tc.name, tc.expected, result)
+			t.Fail()
+		}
 	}
-
-	yes = IsAPIVersionMatch(test)
-
-	if !yes {
-		t.Errorf("should matched, but not.")
-		return
-	}
-
-	test = &pbbase.Versioning{
-		Major: 3,
-		Minor: 3,
-		Patch: 10,
-	}
-
-	yes = IsAPIVersionMatch(test)
-
-	if !yes {
-		t.Errorf("should matched, but not.")
-		return
-	}
-
-	test = &pbbase.Versioning{
-		Major: 2,
-		Minor: 10,
-		Patch: 10,
-	}
-
-	yes = IsAPIVersionMatch(test)
-
-	if !yes {
-		t.Errorf("should matched, but not.")
-		return
-	}
-
-	// not match test case.
-	test = &pbbase.Versioning{
-		Major: 3,
-		Minor: 5,
-		Patch: 0,
-	}
-
-	yes = IsAPIVersionMatch(test)
-
-	if yes {
-		t.Errorf("should not matched, but not.")
-		return
-	}
-
-	test = &pbbase.Versioning{
-		Major: 3,
-		Minor: 4,
-		Patch: 6,
-	}
-
-	yes = IsAPIVersionMatch(test)
-
-	if yes {
-		t.Errorf("should not matched, but not.")
-		return
-	}
-
-	test = &pbbase.Versioning{
-		Major: 4,
-		Minor: 0,
-		Patch: 0,
-	}
-
-	yes = IsAPIVersionMatch(test)
-
-	if yes {
-		t.Errorf("should not matched, but not.")
-		return
-	}
-
 }

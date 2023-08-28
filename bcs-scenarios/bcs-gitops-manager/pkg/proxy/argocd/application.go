@@ -17,7 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
@@ -36,7 +37,7 @@ import (
 type AppPlugin struct {
 	*mux.Router
 	storage    store.Store
-	middleware MiddlewareInterface
+	middleware mw.MiddlewareInterface
 }
 
 // all argocd application URL:
@@ -101,33 +102,22 @@ func (plugin *AppPlugin) Init() error {
 
 // POST /api/v1/applications, create new application
 // validate project detail from request
-func (plugin *AppPlugin) createApplicationHandler(ctx context.Context, r *http.Request) *httpResponse {
-	body, err := ioutil.ReadAll(r.Body)
+func (plugin *AppPlugin) createApplicationHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        errors.Wrapf(err, "read body failed"),
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "read body failed"))
 	}
 	app := &v1alpha1.Application{}
 	if err = json.Unmarshal(body, app); err != nil {
-		return &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        errors.Wrapf(err, "unmarshal body failed"),
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "unmarshal body failed"))
 	}
 	if app.Spec.Project == "" || app.Spec.Project == "default" {
-		return &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        errors.Errorf("project information lost"),
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("project information lost"))
 	}
 	argoProject, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, app.Spec.Project, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project '%s' edit permission failed", app.Spec.Project),
-		}
+		return mw.ReturnErrorResponse(statusCode,
+			errors.Wrapf(err, "check project '%s' edit permission failed", app.Spec.Project))
 	}
 
 	// setting application name with project prefix
@@ -143,101 +133,72 @@ func (plugin *AppPlugin) createApplicationHandler(ctx context.Context, r *http.R
 
 	updatedBody, err := json.Marshal(app)
 	if err != nil {
-		return &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        errors.Wrapf(err, "json marshal application failed: %v", app),
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest,
+			errors.Wrapf(err, "json marshal application failed: %v", app))
 	}
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(updatedBody))
+	r.Body = io.NopCloser(bytes.NewBuffer(updatedBody))
 	length := len(updatedBody)
 	r.Header.Set("Content-Length", strconv.Itoa(length))
 	r.ContentLength = int64(length)
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 // GET /api/v1/applications?projects={projects}
-func (plugin *AppPlugin) listApplicationsHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *AppPlugin) listApplicationsHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	projectName := r.URL.Query().Get("projects")
 	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        err,
-		}
+		return mw.ReturnErrorResponse(statusCode,
+			errors.Wrapf(err, "check project '%s' permission failed", projectName))
 	}
 	appList, err := plugin.middleware.ListApplications(ctx, []string{projectName})
 	if err != nil {
-		return &httpResponse{
-			statusCode: http.StatusInternalServerError,
-			err:        errors.Wrapf(err, "list applications by project '%s' from storage failed", projectName),
-		}
+		return mw.ReturnErrorResponse(http.StatusInternalServerError,
+			errors.Wrapf(err, "list applications by project '%s' from storage failed", projectName))
 	}
-	return &httpResponse{
-		obj: appList,
-	}
+	return mw.ReturnJSONResponse(appList)
 }
 
 // Put,Patch,Delete with preifx /api/v1/applications/{name}
-func (plugin *AppPlugin) applicationEditHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *AppPlugin) applicationEditHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	appName := mux.Vars(r)["name"]
 	if appName == "" {
-		return &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        fmt.Errorf("request application name cannot be empty"),
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
 	}
 	_, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, appName, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        err,
-		}
+		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check application permission failed"))
 	}
 	return nil
 }
 
-func (plugin *AppPlugin) applicationCleanHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *AppPlugin) applicationCleanHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	appName := mux.Vars(r)["name"]
 	if appName == "" {
-		return &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        fmt.Errorf("request application name cannot be empty"),
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
 	}
 	app, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, appName, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        err,
-		}
+		return mw.ReturnErrorResponse(statusCode, err)
 	}
 	if err = plugin.storage.DeleteApplicationResource(ctx, app); err != nil {
-		return &httpResponse{
-			statusCode: http.StatusInternalServerError,
-			err:        err,
-		}
+		return mw.ReturnErrorResponse(http.StatusInternalServerError, err)
 	}
-	return &httpResponse{
-		statusCode: http.StatusOK,
-		obj:        "clean application subresource success",
-	}
+	return mw.ReturnJSONResponse("clean application subresource success")
 }
 
 // GET with prefix /api/v1/applications/{name}
-func (plugin *AppPlugin) applicationViewsHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *AppPlugin) applicationViewsHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	appName := mux.Vars(r)["name"]
 	if appName == "" {
-		return &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        fmt.Errorf("request application name cannot be empty"),
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
 	}
 	_, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, appName, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        err,
-		}
+		return mw.ReturnErrorResponse(statusCode, err)
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }

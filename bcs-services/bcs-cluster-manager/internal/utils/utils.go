@@ -83,10 +83,20 @@ func StringInSlice(s string, l []string) bool {
 	return false
 }
 
+// SliceContainInString return true if slice contain in string
+func SliceContainInString(l []string, s string) bool {
+	for _, objStr := range l {
+		if strings.Contains(s, objStr) {
+			return true
+		}
+	}
+	return false
+}
+
 // StringContainInSlice returns true if given string contain in slice
 func StringContainInSlice(s string, l []string) bool {
 	for _, objStr := range l {
-		if strings.Contains(s, objStr) {
+		if strings.Contains(objStr, s) {
 			return true
 		}
 	}

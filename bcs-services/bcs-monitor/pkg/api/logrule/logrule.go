@@ -38,8 +38,10 @@ type GetEntrypointsReq struct {
 
 // Entrypoint entrypoint
 type Entrypoint struct {
-	STDLogURL  string `json:"std_log_url"`
-	FileLogURL string `json:"file_log_url"`
+	STDLogURL     string `json:"std_log_url"`
+	FileLogURL    string `json:"file_log_url"`
+	STDBKBaseURL  string `json:"std_bk_base_url"`  // 跳转到数据平台地址
+	FileBKBaseURL string `json:"file_bk_base_url"` // 跳转到数据平台地址
 }
 
 // GetEntrypoints 获取容器日志查询入口
@@ -92,6 +94,21 @@ func ListLogCollectors(c *rest.Context) (interface{}, error) {
 		result = append(result, lrr)
 	}
 
+	// 从日志平台获取非 bcs 创建的日志规则
+	for _, rule := range lcs {
+		for _, v := range result {
+			if v.RuleName == rule.CollectorConfigNameEN {
+				continue
+			}
+		}
+		if !rule.FromBKLog {
+			continue
+		}
+		lrr := &GetLogRuleResp{}
+		lrr.loadFromBkLog(rule, c.ProjectCode)
+		result = append(result, lrr)
+	}
+
 	// 从 bcslogconfigs 获取数据
 	bcsLogConfigs, err := k8sclient.ListBcsLogConfig(c.Request.Context(), c.ClusterId)
 	if err != nil {
@@ -115,8 +132,6 @@ func ListLogCollectors(c *rest.Context) (interface{}, error) {
 	}
 
 	sort.Sort(GetLogRuleRespSortByName(result))
-	// 仅需要名称排序
-	// sort.Sort(GetLogRuleRespSortByStatus(result))
 	return result, nil
 }
 
@@ -151,14 +166,26 @@ func GetLogRule(c *rest.Context) (interface{}, error) {
 		return result, nil
 	}
 
-	// 从数据库获取规则数据
-	lcInDB, err := store.GetLogRule(c.Request.Context(), id)
+	// 从 bk-log 获取规则数据
+	lcs, err := bklog.ListLogCollectors(c.Request.Context(), c.ClusterId, GetSpaceID(c.ProjectCode))
 	if err != nil {
 		return nil, err
 	}
 
-	// 从 bk-log 获取规则数据
-	lcs, err := bklog.ListLogCollectors(c.Request.Context(), c.ClusterId, GetSpaceID(c.ProjectCode))
+	if isBKLogID(id) {
+		ruleName := getBKLogName(id)
+		for _, rule := range lcs {
+			if rule.CollectorConfigNameEN == ruleName {
+				result := &GetLogRuleResp{}
+				result.loadFromBkLog(rule, c.ProjectCode)
+				return result, nil
+			}
+		}
+		return nil, errors.Errorf("not found %s", id)
+	}
+
+	// 从数据库获取规则数据
+	lcInDB, err := store.GetLogRule(c.Request.Context(), id)
 	if err != nil {
 		return nil, err
 	}
@@ -215,8 +242,8 @@ func CreateLogRule(c *rest.Context) (interface{}, error) {
 // @Router  /log_collector/rules/:id [put]
 func UpdateLogRule(c *rest.Context) (interface{}, error) {
 	id := c.Param("id")
-	if isBcsLogConfigID(id) {
-		return nil, fmt.Errorf("can't update bcslogconfig")
+	if isBcsLogConfigID(id) || isBKLogID(id) {
+		return nil, fmt.Errorf("id is invalid")
 	}
 	req := &UpdateLogRuleReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -307,14 +334,33 @@ func RetryLogRule(c *rest.Context) (interface{}, error) {
 		return nil, err
 	}
 
-	if rule.RuleID == 0 {
-		return nil, errors.Errorf("invalid rule id, please recreate log rule")
-	}
-
 	data := entity.M{
-		entity.FieldKeyStatus:  entity.SuccessStatus,
+		entity.FieldKeyStatus:  entity.PendingStatus,
 		entity.FieldKeyMessage: "",
 		entity.FieldKeyUpdator: c.Username,
+	}
+	// 重新创建
+	if rule.RuleID == 0 {
+		// 创建 bklog 规则耗时比较长，异步调用
+		ruleName := fmt.Sprintf("%s_%s", rule.Name, rand.String(5))
+		data.Update(entity.FieldKeyRuleName, ruleName)
+		// 更新状态
+		err = store.UpdateLogRule(c.Context, id, data)
+		if err != nil {
+			return nil, err
+		}
+		go createBKLog(&bklog.CreateBCSCollectorReq{
+			SpaceUID:              GetSpaceID(c.ProjectCode),
+			ProjectID:             c.ProjectId,
+			CollectorConfigName:   ruleName,
+			CollectorConfigNameEN: ruleName,
+			Description:           rule.Description,
+			BCSClusterID:          c.ClusterId,
+			AddPodLabel:           rule.Rule.AddPodLabel,
+			ExtraLabels:           rule.Rule.ExtraLabels,
+			LogRuleContainer:      []bklog.LogRuleContainer{rule.Rule.LogRuleContainer},
+		})
+		return nil, nil
 	}
 
 	// 重试 bklog collector
@@ -322,6 +368,7 @@ func RetryLogRule(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		data.Update(entity.FieldKeyStatus, entity.FailedStatus)
 		data.Update(entity.FieldKeyMessage, err.Error())
+		store.UpdateLogRule(c.Context, id, data)
 		return nil, err
 	}
 

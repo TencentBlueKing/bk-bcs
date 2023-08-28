@@ -30,7 +30,6 @@ func newHook(db *gorm.DB, opts ...gen.DOOption) hook {
 	_hook.ID = field.NewUint32(tableName, "id")
 	_hook.Name = field.NewString(tableName, "name")
 	_hook.Type = field.NewString(tableName, "type")
-	_hook.PublishNum = field.NewUint32(tableName, "publish_num")
 	_hook.Tag = field.NewString(tableName, "tag")
 	_hook.Memo = field.NewString(tableName, "memo")
 	_hook.BizID = field.NewUint32(tableName, "biz_id")
@@ -47,18 +46,17 @@ func newHook(db *gorm.DB, opts ...gen.DOOption) hook {
 type hook struct {
 	hookDo hookDo
 
-	ALL        field.Asterisk
-	ID         field.Uint32
-	Name       field.String
-	Type       field.String
-	PublishNum field.Uint32
-	Tag        field.String
-	Memo       field.String
-	BizID      field.Uint32
-	Creator    field.String
-	Reviser    field.String
-	CreatedAt  field.Time
-	UpdatedAt  field.Time
+	ALL       field.Asterisk
+	ID        field.Uint32
+	Name      field.String
+	Type      field.String
+	Tag       field.String
+	Memo      field.String
+	BizID     field.Uint32
+	Creator   field.String
+	Reviser   field.String
+	CreatedAt field.Time
+	UpdatedAt field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -78,7 +76,6 @@ func (h *hook) updateTableName(table string) *hook {
 	h.ID = field.NewUint32(table, "id")
 	h.Name = field.NewString(table, "name")
 	h.Type = field.NewString(table, "type")
-	h.PublishNum = field.NewUint32(table, "publish_num")
 	h.Tag = field.NewString(table, "tag")
 	h.Memo = field.NewString(table, "memo")
 	h.BizID = field.NewUint32(table, "biz_id")
@@ -108,11 +105,10 @@ func (h *hook) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (h *hook) fillFieldMap() {
-	h.fieldMap = make(map[string]field.Expr, 11)
+	h.fieldMap = make(map[string]field.Expr, 10)
 	h.fieldMap["id"] = h.ID
 	h.fieldMap["name"] = h.Name
 	h.fieldMap["type"] = h.Type
-	h.fieldMap["publish_num"] = h.PublishNum
 	h.fieldMap["tag"] = h.Tag
 	h.fieldMap["memo"] = h.Memo
 	h.fieldMap["biz_id"] = h.BizID

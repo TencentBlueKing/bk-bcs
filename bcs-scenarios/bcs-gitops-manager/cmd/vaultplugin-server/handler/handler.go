@@ -62,6 +62,7 @@ func (h *V1VaultPluginHandler) Init() {
 	h.router.HandleFunc("/secrets/{project}/{path}/version", h.getVersionHandler).Methods(http.MethodGet)
 	h.router.HandleFunc("/secrets/{project}/{path}/rollback", h.rollbackHandler).Methods(http.MethodPost).Queries("version", "{version}")
 	h.router.HandleFunc("/secrets/init", h.initHandler).Methods(http.MethodPost).Queries("project", "{project}")
+	h.router.HandleFunc("/secrets/annotation", h.getSecretAnnotationHandler).Methods(http.MethodGet).Queries("project", "{project}")
 }
 
 // Router v1 vault routes

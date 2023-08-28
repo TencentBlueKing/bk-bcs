@@ -334,7 +334,7 @@ func (ko *K8SOperator) UpdateNodeLabels(ctx context.Context, clusterID, nodeName
 
 // UpdateNodeAnnotations update node annotations
 func (ko *K8SOperator) UpdateNodeAnnotations(ctx context.Context, clusterID, nodeName string,
-	annotations map[string]string) error {
+	annotations map[string]string, merge bool) error {
 	if ko == nil {
 		return ErrServerNotInit
 	}
@@ -355,9 +355,14 @@ func (ko *K8SOperator) UpdateNodeAnnotations(ctx context.Context, clusterID, nod
 	if err != nil {
 		return err
 	}
-	// merge annotations
-	for k, v := range annotations {
-		node.Annotations[k] = v
+
+	if merge {
+		// merge annotations
+		for k, v := range annotations {
+			node.Annotations[k] = v
+		}
+	} else {
+		node.Annotations = annotations
 	}
 
 	newData, err := json.Marshal(node)

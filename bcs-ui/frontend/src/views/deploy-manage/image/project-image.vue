@@ -7,7 +7,7 @@
             <div class="biz-search-input" style="width: 300px;">
               <bk-input
                 clearable
-                :placeholder="$t('输入镜像名搜索')"
+                :placeholder="$t('deploy.image.search')"
                 v-model="searchKey"
                 right-icon="bk-icon icon-search"
                 @change="handleSearch">
@@ -28,15 +28,15 @@
                       <span>{{item.name}}</span>
                     </div>
                     <div class="attr">
-                      <span>{{$t('类型：')}}{{item.type || '--'}}</span>
-                      <span>{{$t('来源：')}}{{item.deployBy || '--'}}</span>
+                      <span>{{$t('generic.label.type1')}}{{item.type || '--'}}</span>
+                      <span>{{$t('deploy.image.sources')}}{{item.deployBy || '--'}}</span>
                     </div>
                     <div class="desc">
-                      {{$t('简介：')}}{{item.desc || '--'}}
+                      {{$t('plugin.tools._intro')}}{{item.desc || '--'}}
                     </div>
                   </div>
                   <div class="detail" @click="toImageDetail(item)">
-                    {{$t('详情')}}<i class="bcs-icon bcs-icon-angle-right"></i>
+                    {{$t('deploy.image.detail')}}<i class="bcs-icon bcs-icon-angle-right"></i>
                   </div>
                 </div>
               </div>

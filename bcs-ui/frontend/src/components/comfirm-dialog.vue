@@ -36,9 +36,9 @@
         :loading="loading"
         class="mr10 min-w-[88px]"
         @click="handleConfirm">
-        {{ okText || $t('确定') }}
+        {{ okText || $t('generic.button.confirm') }}
       </bcs-button>
-      <bk-button :disabled="loading" class="min-w-[88px]" @click="handleCancel">{{ cancelText || $t('取消') }}</bk-button>
+      <bk-button :disabled="loading" class="min-w-[88px]" @click="handleCancel">{{ cancelText || $t('generic.button.cancel') }}</bk-button>
     </div>
   </bcs-dialog>
 </template>

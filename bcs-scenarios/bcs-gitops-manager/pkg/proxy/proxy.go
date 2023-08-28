@@ -28,7 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
@@ -43,9 +42,21 @@ type GitOpsOptions struct {
 	// JWTClient for authentication
 	JWTDecoder *jwt.JWTClient
 	// IAMClient is basic client
-	IAMClient iam.PermClient
-	// Secret client
-	SecretClient *secret.ServerProxy
+	IAMClient    iam.PermClient
+	SecretOption *SecretOption
+	TraceOption  *TraceOption
+}
+
+// TraceOption defines the config of bkmonitor APM
+type TraceOption struct {
+	Endpoint string
+	Token    string
+}
+
+// SecretOption defines the config of secret
+type SecretOption struct {
+	Address string
+	Port    string
 }
 
 // Validate options
@@ -85,7 +96,8 @@ func (user *UserInfo) GetUser() string {
 
 const (
 	headerBKUserName = "bkUserName"
-	adminClientUser  = "bcs-gitops-manager"
+	AdminClientUser  = "admin"
+	AdminGitOpsUser  = "bcs-gitops-manager"
 )
 
 // GetJWTInfo from request
@@ -95,7 +107,7 @@ func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "get authorization user failed")
 	}
-	if user.ClientID == adminClientUser {
+	if user.ClientID == AdminGitOpsUser || user.ClientID == AdminClientUser {
 		userName := req.Header.Get(headerBKUserName)
 		user.UserName = userName
 	}
@@ -136,6 +148,11 @@ func JSONResponse(w http.ResponseWriter, obj interface{}) {
 	w.WriteHeader(http.StatusOK)
 	content, _ := json.Marshal(obj)
 	fmt.Fprintln(w, string(content))
+}
+
+func DirectlyResponse(w http.ResponseWriter, obj interface{}) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, obj)
 }
 
 var (

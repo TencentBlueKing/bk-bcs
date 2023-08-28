@@ -52,6 +52,8 @@ const (
 	FeedServerName Name = "feed-server"
 	// AuthServerName is the auth server's service name
 	AuthServerName Name = "auth-server"
+	// VaultServerName is the vault server's service name
+	VaultServerName Name = "vault-server"
 	// UIName is the ui service name
 	UIName Name = "ui"
 )
@@ -370,6 +372,51 @@ func (s FeedServerSetting) Validate() error {
 	}
 
 	if err := s.MRLimiter.validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// VaultServerSetting defines cache service used setting options.
+type VaultServerSetting struct {
+	Network    Network    `yaml:"network"`
+	Service    Service    `yaml:"service"`
+	Log        LogOption  `yaml:"log"`
+	Credential Credential `yaml:"credential"`
+	Sharding   Sharding   `yaml:"sharding"`
+}
+
+// trySetFlagBindIP try set flag bind ip.
+func (s *VaultServerSetting) trySetFlagBindIP(ip net.IP) error {
+	return s.Network.trySetFlagBindIP(ip)
+}
+
+// trySetFlagPort set http and grpc port
+func (s *VaultServerSetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
+// trySetDefault set the CacheServiceSetting default value if user not configured.
+func (s *VaultServerSetting) trySetDefault() {
+	s.Network.trySetDefault()
+	s.Service.trySetDefault()
+	s.Log.trySetDefault()
+	s.Sharding.trySetDefault()
+}
+
+// Validate CacheServiceSetting option.
+func (s VaultServerSetting) Validate() error {
+
+	if err := s.Network.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Service.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Sharding.validate(); err != nil {
 		return err
 	}
 

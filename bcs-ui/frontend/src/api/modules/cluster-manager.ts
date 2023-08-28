@@ -47,6 +47,7 @@ export const taskRetry = request('put', '/task/$taskId/retry');
 export const cloudDetail = request('get', '/cloud/$cloudId');
 export const cloudNodes = request('get', '/clouds/$cloudId/instances');
 export const cloudKeyPairs = request('get', '/clouds/$cloudId/keypairs');
+export const cloudAccountType = request('get', '/clouds/$cloudId/accounttype');
 
 // node 操作
 export const getK8sNodes = request('get', '/cluster/$clusterId/node');
@@ -59,9 +60,6 @@ export const setNodeTaints = request('put', '/node/taints');
 // 集群管理
 export const masterList = request('get', '/cluster/$clusterId/master');
 
-// auth
-export const newUserPermsByAction = request('post', '/perms/actions/$actionId');
-
 // CA
 export const clusterAutoScalingLogsV2 = request('get', '/operationlogs');
 export const cloudsZones = request('get', '/clouds/$cloudId/zones');
@@ -70,3 +68,9 @@ export const cloudsZones = request('get', '/clouds/$cloudId/zones');
 export const sharedclusters = request('get', '/sharedclusters');
 export const deleteVCluster = request('delete', '/vcluster/$clusterId');
 export const createVCluster = request('post', '/vcluster');
+
+// nodegroup
+export const nodeGroups = request('get', '/clusters/$clusterId/nodegroups');
+export const desirednode = request('post', '/nodegroup/$id/desirednode');
+
+export const batchDeleteNodes = request('delete', '/clusters/$clusterId/nodes/-/batch');

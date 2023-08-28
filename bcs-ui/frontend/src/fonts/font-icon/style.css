@@ -896,3 +896,6 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-switch:before {
 	content: "\e230";
 }
+.bcs-icon-shujuqingxi:before {
+	content: "\e231";
+}

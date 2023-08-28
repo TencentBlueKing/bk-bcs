@@ -15,16 +15,16 @@ package nodegroup
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -133,6 +133,7 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		group.NodeTemplate.ScaleInPreScript = utils.Base64Encode(group.NodeTemplate.ScaleInPreScript)
 		group.NodeTemplate.ScaleInPostScript = utils.Base64Encode(group.NodeTemplate.ScaleInPostScript)
 	}
+
 	return group
 }
 
@@ -164,12 +165,14 @@ func (ca *CreateAction) validate() error {
 		return fmt.Errorf("nodeTemplate is empty")
 	}
 	// not external nodeGroup check launchTemplate
-	if ca.req.NodeGroupType != common.External.String() {
-		err := validateLaunchTemplate(ca.req.LaunchTemplate)
-		if err != nil {
-			return err
+	/*
+		if ca.req.NodeGroupType != common.External.String() {
+			err := validateLaunchTemplate(ca.req.LaunchTemplate)
+			if err != nil {
+				return err
+			}
 		}
-	}
+	*/
 
 	// cloud special validate info
 	cloudValidate, err := cloudprovider.GetCloudValidateMgr(ca.cloud.CloudProvider)

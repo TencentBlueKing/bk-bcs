@@ -17,12 +17,14 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/TencentBlueKing/iam-go-sdk/resource"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	blog "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/log"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 )
 
 // NamespaceProvider is an namespace provider
@@ -30,7 +32,7 @@ type NamespaceProvider struct {
 }
 
 func init() {
-	dispatcher.RegisterProvider("namespace", NamespaceProvider{})
+	dispatcher.RegisterProvider(Namespace, NamespaceProvider{})
 }
 
 // ListAttr implements the list_attr
@@ -60,7 +62,16 @@ func (p NamespaceProvider) ListInstance(req resource.Request) resource.Response 
 	}
 	projectID := filter.Ancestors[0].ID
 	clusterID := filter.Ancestors[1].ID
-	result, err := component.GetClusterNamespaces(context.Background(), projectID, clusterID)
+	// get project code from project id
+	project, err := component.GetProject(req.Context, projectID)
+	if err != nil {
+		return resource.Response{
+			Code:    SystemErrCode,
+			Message: err.Error(),
+		}
+	}
+
+	result, err := component.GetClusterNamespaces(req.Context, project.ProjectCode, clusterID)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,
@@ -69,7 +80,7 @@ func (p NamespaceProvider) ListInstance(req resource.Request) resource.Response 
 	}
 	results := make([]interface{}, 0)
 	for _, r := range result {
-		ins := Instance{utils.CalcIAMNsID(clusterID, r.Name), r.Name, nil}
+		ins := Instance{authUtils.CalcIAMNsID(clusterID, r.Name), r.Name, nil}
 		results = append(results, ins)
 	}
 	return resource.Response{
@@ -88,26 +99,35 @@ func (p NamespaceProvider) FetchInstanceInfo(req resource.Request) resource.Resp
 			Data:    []interface{}{},
 		}
 	}
-	ctx := context.Background()
 
 	// get namespaces
+	nsChan := make(chan Instance, len(filter.IDs))
 	results := make([]interface{}, 0)
+	wg := sync.WaitGroup{}
 	for _, v := range filter.IDs {
-		clusterID, err := parseNSID(v)
-		if err != nil {
-			return resource.Response{
-				Code:    NotFoundCode,
-				Message: err.Error(),
-				Data:    results,
+		wg.Add(1)
+		go func(nsID string) {
+			defer wg.Done()
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, utils.ContextValueKeyRequestID, utils.GetRequestIDFromContext(req.Context))
+			clusterID, err := parseNSID(nsID)
+			if err != nil {
+				blog.Log(ctx).Errorf("get namespace %s in cluster %s failed, err %s", nsID, clusterID, err.Error())
+				return
 			}
-		}
-		ns, err := component.GetCachedNamespace(ctx, clusterID, v)
-		if err != nil {
-			blog.Log(ctx).Errorf("get namespace %s failed, err %s", v, err.Error())
-			continue
-		}
+			ns, err := component.GetCachedNamespace(ctx, clusterID, nsID)
+			if err != nil {
+				blog.Log(ctx).Errorf("get namespace %s in cluster %s failed, err %s", nsID, clusterID, err.Error())
+				return
+			}
+			nsChan <- Instance{nsID, ns.Name, ns.Managers}
+		}(v)
+	}
+	wg.Wait()
+	close(nsChan)
 
-		results = append(results, Instance{v, ns.Name, nil})
+	for n := range nsChan {
+		results = append(results, n)
 	}
 	return resource.Response{
 		Code: 0,
@@ -134,7 +154,16 @@ func (p NamespaceProvider) SearchInstance(req resource.Request) resource.Respons
 	}
 	projectID := filter.Ancestors[0].ID
 	clusterID := filter.Ancestors[1].ID
-	result, err := component.GetClusterNamespaces(context.Background(), projectID, clusterID)
+	// get project code from project id
+	project, err := component.GetProject(req.Context, projectID)
+	if err != nil {
+		return resource.Response{
+			Code:    SystemErrCode,
+			Message: err.Error(),
+		}
+	}
+
+	result, err := component.GetClusterNamespaces(req.Context, project.ProjectCode, clusterID)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,
@@ -146,7 +175,7 @@ func (p NamespaceProvider) SearchInstance(req resource.Request) resource.Respons
 		if filter.Keyword != "" && !strings.Contains(r.Name, filter.Keyword) {
 			continue
 		}
-		ins := Instance{utils.CalcIAMNsID(clusterID, r.Name), r.Name, nil}
+		ins := Instance{authUtils.CalcIAMNsID(clusterID, r.Name), r.Name, nil}
 		results = append(results, ins)
 	}
 	return resource.Response{

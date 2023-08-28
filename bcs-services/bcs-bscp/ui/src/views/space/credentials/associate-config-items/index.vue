@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useGlobalStore } from '../../../../store/global'
 import { getCredentialScopes, updateCredentialScopes } from '../../../../api/credentials'
 import { ICredentialRule, IRuleUpdateParams } from '../../../../../types/credential'
+import useModalCloseConfirmation from '../../../../utils/hooks/use-modal-close-confirmation'
 // import MatchingResult from './matching-result.vue'
 import RuleView from './rule-view.vue'
 import RuleEdit from './rule-edit.vue'
@@ -15,7 +16,7 @@ const props = defineProps<{
   id: number
 }>()
 
-const emits = defineEmits(['close'])
+const emits = defineEmits(['close', 'refresh'])
 
 const loading = ref(true)
 const rules = ref<ICredentialRule[]>([])
@@ -25,6 +26,7 @@ const ruleChangeParams = ref<IRuleUpdateParams>({
   alter_scope: []
 })
 const isRuleEdit = ref(false)
+const isFormChange = ref(false)
 const pending = ref(false)
 
 watch(() => props.show, (val) => {
@@ -46,6 +48,7 @@ const loadRules = async () => {
 }
 
 const handleRuleChange = (val: IRuleUpdateParams) => {
+  isFormChange.value = true
   ruleChangeParams.value = Object.assign({}, ruleChangeParams.value, val)
 }
 
@@ -59,11 +62,20 @@ const handleSave = async() => {
       alter_scope: []
     }
     handleClose()
+    emits('refresh')
   } catch (e) {
     console.error(e)
   } finally {
     pending.value = false
   }
+}
+
+const handleBeforeClose = async () => {
+  if (isRuleEdit.value && isFormChange.value) {
+    const result = await useModalCloseConfirmation()
+    return result
+  }
+  return true
 }
 
 const handleClose = () => {
@@ -78,6 +90,7 @@ const handleClose = () => {
     title="关联配置项"
     width="400"
     :is-show="props.show"
+    :before-close="handleBeforeClose"
     @closed="handleClose">
     <section class="associate-config-items">
       <div :class="['rules-wrapper', { 'edit-mode': isRuleEdit }]">

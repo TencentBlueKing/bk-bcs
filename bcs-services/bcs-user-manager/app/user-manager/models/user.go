@@ -22,7 +22,7 @@ type BcsUser struct {
 	ID        uint       `json:"id" gorm:"primary_key"`
 	Name      string     `json:"name" gorm:"not null"`
 	UserType  uint       `json:"user_type"`
-	UserToken string     `json:"user_token" gorm:"unique;size:64"`
+	UserToken string     `json:"user_token" gorm:"unique;size:128"`
 	CreatedBy string     `json:"created_by"`
 	CreatedAt time.Time  `json:"created_at" gorm:"type:timestamp null;default:null"` // 用户创建时间
 	UpdatedAt time.Time  `json:"updated_at" gorm:"type:timestamp null;default:null"` // user-token刷新时间

@@ -70,6 +70,7 @@ type GameDeploymentSpec struct {
 
 	// UpdateStrategy indicates the UpdateStrategy that will be employed to
 	// update Pods in the GameDeployment when a revision is made to Template.
+	// +kubebuilder:validation:Required
 	UpdateStrategy GameDeploymentUpdateStrategy `json:"updateStrategy,omitempty"`
 
 	// PreDeleteUpdateStrategy indicates the PreDeleteUpdateStrategy that will be employed to

@@ -7,7 +7,7 @@
         <div class="biz-crd-header">
           <div class="left">
             <svg style="display: none;">
-              <title>{{$t('模板集默认图标')}}</title>
+              <title>{{$t('deploy.templateset.icon')}}</title>
               <symbol id="biz-set-icon" viewBox="0 0 32 32">
                 <path d="M6 3v3h-3v23h23v-3h3v-23h-23zM24 24v3h-19v-19h19v16zM27 24h-1v-18h-18v-1h19v19z"></path>
                 <path d="M13.688 18.313h-6v6h6v-6z"></path>
@@ -20,7 +20,7 @@
                 <use xlink:href="#biz-set-icon"></use>
               </svg>
               <div class="desc" :title="curApp.description">
-                <span>{{$t('简介')}}：</span>
+                <span>{{$t('plugin.tools.intro')}}：</span>
                 {{curApp.tool_info.description || '--'}}
               </div>
             </div>
@@ -29,18 +29,18 @@
           <div class="right">
             <div class="bk-collapse-item bk-collapse-item-active">
               <div class="biz-item-header" style="cursor: default;">
-                {{$t('配置选项')}}
+                {{$t('deploy.helm.args')}}
               </div>
               <div class="bk-collapse-item-content f12" style="padding: 15px;">
                 <div class="config-box" style="min-width: 580px;">
                   <div class="inner">
                     <div class="inner-item">
-                      <label class="title">{{$t('名称')}}</label>
+                      <label class="title">{{$t('generic.label.name')}}</label>
                       <bkbcs-input :value="curApp.release_name" :disabled="true" style="width: 250px;" />
                     </div>
 
                     <div class="inner-item">
-                      <label class="title">{{$t('版本')}}</label>
+                      <label class="title">{{$t('generic.label.version')}}</label>
                       <div>
                         <bcs-select v-model="curApp.chart_version" style="width: 250px;">
                           <bcs-option
@@ -55,12 +55,12 @@
                   </div>
                   <div class="inner">
                     <div class="inner-item">
-                      <label class="title">{{$t('所属集群')}}</label>
+                      <label class="title">{{$t('generic.label.cluster1')}}</label>
                       <bkbcs-input :value="curApp.cluster_id" :disabled="true" style="width: 250px;" />
                     </div>
 
                     <div class="inner-item">
-                      <label class="title">{{$t('命名空间')}}</label>
+                      <label class="title">{{$t('k8s.namespace')}}</label>
                       <div>
                         <bkbcs-input v-model="curApp.namespace" style="width: 250px;" disabled></bkbcs-input>
                       </div>
@@ -74,7 +74,7 @@
 
         <div class="action-box">
           <div class="title mb10">
-            Values {{$t('内容')}}
+            Values {{$t('plugin.tools.content')}}
           </div>
         </div>
 
@@ -93,11 +93,11 @@
         </div>
 
         <div class="create-wrapper">
-          <bk-button type="primary" :title="$t('更新')" @click="handleUpdate">
-            {{$t('更新')}}
+          <bk-button type="primary" :title="$t('generic.button.update')" @click="handleUpdate">
+            {{$t('generic.button.update')}}
           </bk-button>
-          <bk-button type="default" :title="$t('取消')" @click="goBack">
-            {{$t('取消')}}
+          <bk-button type="default" :title="$t('generic.button.cancel')" @click="goBack">
+            {{$t('generic.button.cancel')}}
           </bk-button>
         </div>
       </div>
@@ -112,7 +112,7 @@
       <template slot="content">
         <p
           class="biz-tip mb5 tl" style="color: #666;"
-          v-if="yamlDiffEditorOptions.isDiff">{{$t('Values 内容发生如下变化，请确认后再点击“确定”更新')}}</p>
+          v-if="yamlDiffEditorOptions.isDiff">{{$t('plugin.tools.confirmUpgradeTips')}}</p>
         <div class="difference-code">
           <div class="editor-header" v-if="yamlDiffEditorOptions.isDiff">
             <div>当前内容</div>
@@ -143,12 +143,12 @@
             <bk-button
               :class="['bk-button bk-dialog-btn-confirm bk-primary', { 'is-disabled': updateInstanceLoading }]"
               @click="updateCrdController">
-              {{updateInstanceLoading ? $t('更新中...') : $t('确定')}}
+              {{updateInstanceLoading ? $t('generic.status.updating') : $t('generic.button.confirm')}}
             </bk-button>
             <bk-button
               :class="['bk-button bk-dialog-btn-cancel bk-default']"
               @click="hideConfirmDialog">
-              {{$t('取消')}}
+              {{$t('generic.button.cancel')}}
             </bk-button>
           </template>
         </div>
@@ -191,7 +191,7 @@ export default {
         isDiff: false,
       },
       updateConfirmDialog: {
-        title: this.$t('确认更新'),
+        title: this.$t('plugin.tools.confirmUpgrade'),
         isShow: false,
         width: 1060,
         height: 350,
@@ -256,7 +256,7 @@ export default {
       this.curAppDifference.content = this.editorOptions.content;
       this.curAppDifference.originContent = this.editorOptions.originContent;
       if (this.curAppDifference.content === this.curAppDifference.originContent) {
-        this.curAppDifference.content = this.$t('本次更新没有内容变化');
+        this.curAppDifference.content = this.$t('plugin.tools.noChages');
         this.yamlDiffEditorOptions.isDiff = false;
       } else {
         this.yamlDiffEditorOptions.isDiff = true;
@@ -272,7 +272,7 @@ export default {
       if (!this.editorOptions.content) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请填写Values 内容'),
+          message: this.$t('plugin.tools.input.values'),
         });
         return false;
       }
@@ -305,7 +305,7 @@ export default {
         if (result) {
           this.$bkMessage({
             theme: 'success',
-            message: this.$t('配置已下发成功'),
+            message: this.$t('plugin.tools.submit'),
           });
           this.goBack();
         }

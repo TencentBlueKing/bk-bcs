@@ -2,12 +2,12 @@
   <div class="biz-content form-resource" v-bkloading="{ isLoading }">
     <bcs-popconfirm
       class="switch-button-pop"
-      :title="$t('确认切换为 YAML 模式？')"
-      :content="$t('切换至 YAML 模式并提交更改后，将无法再次使用表单模式进行编辑！')"
+      :title="$t('dashboard.workload.editor.yamlMode.confirm')"
+      :content="$t('dashboard.workload.editor.yamlMode.warnning')"
       width="280"
       trigger="click"
       @confirm="handleSwitchMode">
-      <FixedButton position="unset" :title="$t('切换为 YAML 模式')" />
+      <FixedButton position="unset" :title="$t('dashboard.workload.editor.actions.switchToYAMLMode')" />
     </bcs-popconfirm>
     <Header :title="title" />
     <div class="form-resource-content" ref="editorWrapperRef">
@@ -53,22 +53,22 @@
           theme="primary"
           v-if="!showDiff"
           @click="handleShowDiff">
-          {{$t('下一步')}}
+          {{$t('generic.button.next')}}
         </bk-button>
-        <span v-bk-tooltips.top="{ disabled: !disableUpdate, content: $t('内容未变更') }" v-else>
+        <span v-bk-tooltips.top="{ disabled: !disableUpdate, content: $t('dashboard.workload.editor.tips.contentUnchanged') }" v-else>
           <bk-button
             class="min-w-[88px]"
             theme="primary"
             :loading="loading"
             :disabled="disableUpdate"
             @click="handleSaveFormData">
-            {{$t('更新')}}
+            {{$t('generic.button.update')}}
           </bk-button>
         </span>
         <bk-button
           class="min-w-[88px] ml15"
-          @click="handleToggleDiff">{{showDiff ? $t('继续编辑') : $t('显示差异')}}</bk-button>
-        <bk-button class="min-w-[88px] ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
+          @click="handleToggleDiff">{{showDiff ? $t('dashboard.workload.editor.continueEditing') : $t('dashboard.workload.editor.showDifference')}}</bk-button>
+        <bk-button class="min-w-[88px] ml15" @click="handleCancel">{{$t('generic.button.cancel')}}</bk-button>
       </template>
       <template v-else>
         <bk-button
@@ -76,10 +76,10 @@
           theme="primary"
           :loading="loading"
           @click="handleSaveFormData">
-          {{$t('创建')}}
+          {{$t('generic.button.create')}}
         </bk-button>
-        <bk-button class="min-w-[88px] ml15" @click="handlePreview">{{$t('预览')}}</bk-button>
-        <bk-button class="min-w-[88px] ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
+        <bk-button class="min-w-[88px] ml15" @click="handlePreview">{{$t('generic.title.preview')}}</bk-button>
+        <bk-button class="min-w-[88px] ml15" @click="handleCancel">{{$t('generic.button.cancel')}}</bk-button>
       </template>
     </div>
 
@@ -215,7 +215,7 @@ export default {
       return !!this.name;
     },
     title() {
-      const prefix = this.isEdit ? this.$t('更新') : this.$t('创建');
+      const prefix = this.isEdit ? this.$t('generic.button.update') : this.$t('generic.button.create');
       return `${prefix} ${this.kind}`;
     },
     resourceName() {
@@ -339,8 +339,8 @@ export default {
       this.$bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: this.$t('确认退出当前编辑状态'),
-        subTitle: this.$t('退出后，你修改的内容将丢失'),
+        title: this.$t('generic.msg.info.exitEdit.text'),
+        subTitle: this.$t('generic.msg.info.exitEdit.subTitle'),
         defaultInfo: true,
         confirmFn: () => {
           this.$router.push({ name: this.$store.state.curSideMenu?.route });
@@ -391,8 +391,8 @@ export default {
       this.$bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: this.$t('确认资源更新'),
-        subTitle: this.$t('将执行 Replace 操作，若多人同时编辑可能存在冲突'),
+        title: this.$t('dashboard.workload.editor.dialog.confirmResourceUpdate'),
+        subTitle: this.$t('dashboard.workload.editor.msg.replaceConflictWarning'),
         defaultInfo: true,
         confirmFn: async () => {
           let result = false;
@@ -427,7 +427,7 @@ export default {
           if (result) {
             this.$bkMessage({
               theme: 'success',
-              message: this.$t('更新成功'),
+              message: this.$t('generic.msg.success.update'),
             });
             this.$router.back();
           }
@@ -466,7 +466,7 @@ export default {
       if (result) {
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('创建成功'),
+          message: this.$t('generic.msg.success.create'),
         });
         this.$store.commit('updateCurNamespace', this.schemaFormData.metadata?.namespace);
         this.$router.back();

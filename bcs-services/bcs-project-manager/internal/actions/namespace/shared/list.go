@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -92,7 +93,11 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		logging.Error("batch list variables failed, err: %s", err.Error())
 		return errorx.NewClusterErr(err.Error())
 	}
-	retDatas = append(retDatas, loadRetDatasFromCluster(namespaces, variablesMap, quotaMap, existns)...)
+	list, err := loadRetDatasFromCluster(req.ClusterID, namespaces, variablesMap, quotaMap, existns)
+	if err != nil {
+		return err
+	}
+	retDatas = append(retDatas, list...)
 	resp.Data = retDatas
 
 	go func() {
@@ -208,6 +213,7 @@ func loadListRetDataFromDB(namespace nsm.Namespace) *proto.NamespaceData {
 		})
 	}
 	retData.Variables = variables
+	retData.Managers = []string{namespace.Managers}
 	retData.ItsmTicketSN = namespace.ItsmTicketSN
 	retData.ItsmTicketStatus = namespace.ItsmTicketStatus
 	retData.ItsmTicketURL = namespace.ItsmTicketURL
@@ -215,8 +221,9 @@ func loadListRetDataFromDB(namespace nsm.Namespace) *proto.NamespaceData {
 	return retData
 }
 
-func loadRetDatasFromCluster(namespaces []corev1.Namespace, variablesMap map[string][]*proto.VariableValue,
-	quotaMap map[string]corev1.ResourceQuota, existns map[string]nsm.Namespace) []*proto.NamespaceData {
+func loadRetDatasFromCluster(clusterID string, namespaces []corev1.Namespace,
+	variablesMap map[string][]*proto.VariableValue, quotaMap map[string]corev1.ResourceQuota,
+	existns map[string]nsm.Namespace) ([]*proto.NamespaceData, error) {
 	retDatas := []*proto.NamespaceData{}
 	for _, namespace := range namespaces {
 		retData := &proto.NamespaceData{
@@ -238,7 +245,19 @@ func loadRetDatasFromCluster(namespaces []corev1.Namespace, variablesMap map[str
 			retData.ItsmTicketStatus = ns.ItsmTicketStatus
 			retData.ItsmTicketURL = ns.ItsmTicketURL
 		}
+		// get managers
+		managers := []string{}
+		if creator, exists := namespace.Annotations[constant.AnnotationKeyCreator]; exists {
+			managers = append(managers, creator)
+		}else {
+			cluster, err := clustermanager.GetCluster(clusterID)
+			if err != nil {
+				return nil, err
+			}
+			managers = append(managers, cluster.Creator)
+		}
+		retData.Managers = managers
 		retDatas = append(retDatas, retData)
 	}
-	return retDatas
+	return retDatas, nil
 }

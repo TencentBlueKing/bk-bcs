@@ -15,7 +15,7 @@ package cc
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"bscp.io/pkg/config"
 	"github.com/spf13/viper"
@@ -67,7 +67,7 @@ func mergeConfigFile(filenames []string) ([]byte, error) {
 	masterConf := map[string]interface{}{}
 
 	for _, filename := range filenames {
-		file, err := ioutil.ReadFile(filename)
+		file, err := os.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("load Setting from file: %s failed, err: %v", filename, err)
 		}
@@ -107,6 +107,8 @@ func loadFromFile(conf []byte) (Setting, error) {
 		s = new(DataServiceSetting)
 	case FeedServerName:
 		s = new(FeedServerSetting)
+	case VaultServerName:
+		s = new(VaultServerSetting)
 	default:
 		return nil, fmt.Errorf("unknown %s service name", ServiceName())
 	}

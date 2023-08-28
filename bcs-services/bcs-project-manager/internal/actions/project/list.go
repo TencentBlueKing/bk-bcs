@@ -62,14 +62,17 @@ func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*
 }
 
 func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
-	condM := make(operator.M)
 
 	var cond *operator.Condition
 	// 通过项目名称进行模糊查询
 	if la.req.SearchName != "" {
-		condM["name"] = primitive.Regex{Pattern: la.req.SearchName, Options: "i"}
-		cond = operator.NewLeafCondition(operator.Con, condM)
+		condName := operator.NewLeafCondition(operator.Con,
+			operator.M{"name": primitive.Regex{Pattern: la.req.SearchName, Options: "i"}})
+		condProjectCode := operator.NewLeafCondition(operator.Con,
+			operator.M{"projectCode": primitive.Regex{Pattern: la.req.SearchName, Options: "i"}})
+		cond = operator.NewBranchCondition(operator.Or, condName, condProjectCode)
 	} else {
+		condM := make(operator.M)
 		if la.req.ProjectIDs != "" {
 			condM["projectID"] = stringx.SplitString(la.req.ProjectIDs)
 		}
@@ -80,10 +83,10 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 			condM["projectCode"] = stringx.SplitString(la.req.ProjectCode)
 		}
 		if la.req.Kind != "" {
-			condM["kind"] = []string{la.req.Kind}
+			condM["kind"] = stringx.SplitString(la.req.Kind)
 		}
 		if la.req.BusinessID != "" {
-			condM["businessID"] = []string{la.req.GetBusinessID()}
+			condM["businessID"] = stringx.SplitString(la.req.GetBusinessID())
 		}
 		cond = operator.NewLeafCondition(operator.In, condM)
 	}

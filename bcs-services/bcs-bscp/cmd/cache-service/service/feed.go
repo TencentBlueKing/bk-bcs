@@ -74,6 +74,23 @@ func (s *Service) GetReleasedCI(ctx context.Context, req *pbcs.GetReleasedCIReq)
 	}, nil
 }
 
+// GetReleasedHook get released hook from cache.
+func (s *Service) GetReleasedHook(ctx context.Context, req *pbcs.GetReleasedHookReq) (*pbcs.JsonRawResp, error) {
+	if req.BizId <= 0 || req.ReleaseId <= 0 {
+		return nil, errf.New(errf.InvalidParameter, "invalid biz id or release id")
+	}
+
+	kt := kit.FromGrpcContext(ctx)
+	hooks, err := s.op.GetReleasedHook(kt, req.BizId, req.ReleaseId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.JsonRawResp{
+		JsonRaw: hooks,
+	}, nil
+}
+
 // ListAppReleasedGroups list app's released groups.
 func (s *Service) ListAppReleasedGroups(ctx context.Context, req *pbcs.ListAppReleasedGroupsReq) (
 	*pbcs.JsonRawResp, error) {
@@ -84,27 +101,6 @@ func (s *Service) ListAppReleasedGroups(ctx context.Context, req *pbcs.ListAppRe
 
 	kt := kit.FromGrpcContext(ctx)
 	list, err := s.op.ListAppReleasedGroups(kt, req.BizId, req.AppId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pbcs.JsonRawResp{JsonRaw: list}, nil
-}
-
-// ListCredentialMatchedCI list all config item ids which can be matched by credential.
-func (s *Service) ListCredentialMatchedCI(ctx context.Context, req *pbcs.ListCredentialMatchedCIReq) (
-	*pbcs.JsonRawResp, error) {
-
-	if req.BizId <= 0 {
-		return nil, errf.New(errf.InvalidParameter, "biz id can't be empty")
-	}
-
-	if req.Credential == "" {
-		return nil, errf.New(errf.InvalidParameter, "credential can't be empty")
-	}
-
-	kt := kit.FromGrpcContext(ctx)
-	list, err := s.op.ListCredentialMatchedCI(kt, req.BizId, req.Credential)
 	if err != nil {
 		return nil, err
 	}

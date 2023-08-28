@@ -696,11 +696,12 @@ func (nm *NodeManager) transIPsToNodes(ips []string, opt *cloudprovider.ListNode
 // InstanceToNode parse Instance information in qcloud to Node in clustermanager
 // @param Instance: qcloud instance information, can not be nil;
 // @return Node: cluster-manager node information;
-func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]uint32) *proto.Node {
-	var zoneID uint32
+func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]*ZoneInfo) *proto.Node {
+	var zone *ZoneInfo
 	if zoneInfo != nil {
-		zoneID = zoneInfo[*inst.Placement.Zone]
+		zone = zoneInfo[*inst.Placement.Zone]
 	}
+
 	node := &proto.Node{
 		NodeID:       *inst.InstanceId,
 		InstanceType: *inst.InstanceType,
@@ -709,14 +710,15 @@ func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]uint32) *proto.Node 
 		GPU:          0,
 		VPC:          *inst.VirtualPrivateCloud.VpcId,
 		ZoneID:       *inst.Placement.Zone,
-		Zone:         zoneID,
+		Zone:         uint32(zone.ZoneID),
 		InnerIPv6:    utils.SlicePtrToString(inst.IPv6Addresses),
+		ZoneName:     zone.ZoneName,
 	}
 	return node
 }
 
 // GetZoneInfoByRegion region: ap-nanjing/ap-shenzhen
-func GetZoneInfoByRegion(client *cvm.Client, region string) (map[string]uint32, error) {
+func GetZoneInfoByRegion(client *cvm.Client, region string) (map[string]*ZoneInfo, error) {
 	if client == nil {
 		return nil, fmt.Errorf("getZoneInfoByRegion client is nil")
 	}
@@ -741,11 +743,15 @@ func GetZoneInfoByRegion(client *cvm.Client, region string) (map[string]uint32, 
 		return nil, nil
 	}
 
-	zoneIDMap := make(map[string]uint32)
+	zoneIDMap := make(map[string]*ZoneInfo)
 	for i := range response.ZoneSet {
 		if _, ok := zoneIDMap[*response.ZoneSet[i].Zone]; !ok {
 			zoneID, _ := strconv.ParseUint(*response.ZoneSet[i].ZoneId, 10, 32)
-			zoneIDMap[*response.ZoneSet[i].Zone] = uint32(zoneID)
+			zoneIDMap[*response.ZoneSet[i].Zone] = &ZoneInfo{
+				ZoneID:   zoneID,
+				Zone:     *response.ZoneSet[i].Zone,
+				ZoneName: *response.ZoneSet[i].ZoneName,
+			}
 		}
 	}
 
@@ -1033,7 +1039,10 @@ func (nm *NodeManager) DescribeInstances(ins []string, filters []*Filter, opt *c
 			}
 			if v.Placement != nil && v.Placement.Zone != nil {
 				node.ZoneID = *v.Placement.Zone
-				node.Zone = zoneInfo[*v.Placement.Zone]
+				zone, ok := zoneInfo[*v.Placement.Zone]
+				if ok {
+					node.Zone = uint32(zone.ZoneID)
+				}
 			}
 			if v.VirtualPrivateCloud != nil && v.VirtualPrivateCloud.VpcId != nil {
 				node.VPC = *v.VirtualPrivateCloud.VpcId

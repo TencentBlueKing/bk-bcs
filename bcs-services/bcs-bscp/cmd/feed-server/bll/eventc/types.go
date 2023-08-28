@@ -173,9 +173,7 @@ func (eq *eventQueue) popAll() []*types.EventMeta {
 	defer eq.lock.Unlock()
 
 	copied := make([]*types.EventMeta, len(eq.queue))
-	for idx := range eq.queue {
-		copied[idx] = eq.queue[idx]
-	}
+	copy(copied, eq.queue)
 
 	// reset the queue.
 	eq.queue = make([]*types.EventMeta, 0)

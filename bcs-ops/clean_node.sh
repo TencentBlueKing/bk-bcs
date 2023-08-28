@@ -76,3 +76,6 @@ utils::log "OK" "Back Files >>> Done"
   && utils::log "OK" "Clean bcs hosts entry,bcs sysctl >>> Done"
 "${ROOT_DIR}"/system/config_envfile.sh -c clean \
   && utils::log "OK" "Clean bcs.env"
+
+"${ROOT_DIR}"/system/config_iptables.sh clean \
+  && utils::log "OK" "Clean k8s-components iptables rules"

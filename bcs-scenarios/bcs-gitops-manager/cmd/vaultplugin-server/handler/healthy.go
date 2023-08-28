@@ -14,7 +14,7 @@ package handler
 
 import "net/http"
 
-func (v1 V1VaultPluginHandler) healthy(w http.ResponseWriter, r *http.Request) {
+func (v1 *V1VaultPluginHandler) healthy(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("healthy"))
 }

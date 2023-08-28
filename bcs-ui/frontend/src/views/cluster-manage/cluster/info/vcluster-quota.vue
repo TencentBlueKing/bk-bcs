@@ -1,15 +1,15 @@
 <template>
   <bk-form class="bcs-small-form px-[60px] py-[24px]">
-    <bk-form-item :label="$t('CPU 配额')">
-      {{ quota.cpuLimits ? `${quota.cpuLimits}${$t('核')}` : '--' }}
+    <bk-form-item :label="$t('cluster.labels.cpuQuota')">
+      {{ quota.cpuLimits ? `${quota.cpuLimits}${$t('units.suffix.cores')}` : '--' }}
     </bk-form-item>
-    <bk-form-item :label="$t('内存配额')">
+    <bk-form-item :label="$t('cluster.labels.memQuota')">
       {{ quota.memoryLimits ? `${quota.memoryLimits}B` : '--' }}
     </bk-form-item>
-    <bk-form-item :label="$t('Pod IP  数量')">
+    <bk-form-item :label="$t('cluster.labels.maxNodePodNum')">
       {{ networkSettings.maxNodePodNum || '--' }}
     </bk-form-item>
-    <bk-form-item :label="$t('Service IP 数量')">
+    <bk-form-item :label="$t('cluster.create.label.networkSetting1.maxServiceNum')">
       {{ networkSettings.maxServiceNum || '--' }}
     </bk-form-item>
   </bk-form>

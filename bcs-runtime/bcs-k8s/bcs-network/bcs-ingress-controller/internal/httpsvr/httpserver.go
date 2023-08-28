@@ -16,7 +16,9 @@ import (
 	"github.com/emicklei/go-restful"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/aws"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/nodecache"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 )
 
 // HttpServerClient http server client
@@ -24,6 +26,10 @@ type HttpServerClient struct {
 	Mgr manager.Manager
 
 	NodeCache *nodecache.NodeCache
+
+	AgaSupporter *aws.AgaSupporter
+
+	Ops *option.ControllerOption
 }
 
 // InitRouters init router
@@ -33,4 +39,5 @@ func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 	ws.Route(ws.GET("/api/v1/listeners/{condition}/{namespace}/{name}").To(httpServerClient.listListener))
 
 	ws.Route(ws.GET("/api/v1/node").To(httpServerClient.listNode))
+	ws.Route(ws.GET("/api/v1/aga_entrance").To(httpServerClient.getPodRelatedAgaEntrance))
 }

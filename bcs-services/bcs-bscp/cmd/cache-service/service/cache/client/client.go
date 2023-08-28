@@ -31,8 +31,8 @@ type Interface interface {
 	GetAppID(kt *kit.Kit, bizID uint32, appName string) (uint32, error)
 	GetAppMeta(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
 	GetReleasedCI(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error)
+	GetReleasedHook(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error)
 	ListAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
-	ListCredentialMatchedCI(kt *kit.Kit, bizID uint32, credential string) (string, error)
 	GetCredential(kt *kit.Kit, bizID uint32, credential string) (string, error)
 	RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error
 }

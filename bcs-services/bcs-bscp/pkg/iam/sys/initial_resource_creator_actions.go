@@ -36,11 +36,11 @@ func GenerateResourceCreatorActions() client.ResourceCreatorActions {
 					},
 
 					{
-						ID:         ConfigItemPacking,
+						ID:         GenerateRelease,
 						IsRequired: false,
 					},
 					{
-						ID:         ConfigItemPublish,
+						ID:         ReleasePublish,
 						IsRequired: false,
 					},
 				},

@@ -470,7 +470,7 @@ func updateClusterNodesAnnotations(ctx context.Context, data NodeAnnotationsData
 			blog.Infof("updateClusterNodesAnnotations[%s] node[%s] annotations empty", taskID, name)
 			continue
 		}
-		err := k8sOperator.UpdateNodeAnnotations(ctx, data.clusterID, name, annotations)
+		err := k8sOperator.UpdateNodeAnnotations(ctx, data.clusterID, name, annotations, true)
 		if err != nil {
 			blog.Errorf("updateClusterNodesAnnotations[%s] ip[%s] failed: %v", taskID, name, err)
 			continue

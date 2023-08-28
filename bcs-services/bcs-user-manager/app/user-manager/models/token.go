@@ -24,7 +24,7 @@ const (
 type BcsTempToken struct {
 	ID        uint       `json:"id" gorm:"primary_key"`
 	Username  string     `json:"username" gorm:"not null"`
-	Token     string     `json:"token" gorm:"unique;size:64"`
+	Token     string     `json:"token" gorm:"unique;size:128"`
 	UserType  uint       `json:"user_type"` // normal user or admin
 	CreatedBy string     `json:"created_by"`
 	CreatedAt time.Time  `json:"created_at"`

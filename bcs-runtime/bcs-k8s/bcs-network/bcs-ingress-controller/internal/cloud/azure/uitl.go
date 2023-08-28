@@ -60,7 +60,7 @@ func transProbeProtocolPtr(str string) *armnetwork.ProbeProtocol {
 		protocol = armnetwork.ProbeProtocolHTTP
 	case AzureProtocolHTTPS:
 		protocol = armnetwork.ProbeProtocolHTTPS
-	case AzureProtocolTCP:
+	case AzureProtocolTCP, AzureProtocolUDP: // azure不支持UDP协议的健康检查，当使用UDP时，转为TCP
 		protocol = armnetwork.ProbeProtocolTCP
 	}
 	return &protocol

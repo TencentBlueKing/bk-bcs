@@ -26,6 +26,24 @@ func (m *Compute) GetNodeInfo(ctx context.Context, projectID, clusterID, node st
 	return nil, nil
 }
 
+// GetNodeCPUTotal 节点CPU总量
+func (m *Compute) GetNodeCPUTotal(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetNodeCPURequest 节点CPU请求量
+func (m *Compute) GetNodeCPURequest(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetNodeCPUUsed 节点CPU使用量
+func (m *Compute) GetNodeCPUUsed(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
 // GetNodeCPUUsage 节点CPU使用率
 func (m *Compute) GetNodeCPUUsage(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
@@ -34,6 +52,24 @@ func (m *Compute) GetNodeCPUUsage(ctx context.Context, projectID, clusterID, nod
 
 // GetNodeCPURequestUsage 节点CPU装箱率
 func (m *Compute) GetNodeCPURequestUsage(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetNodeMemoryTotal 节点Memory总量
+func (m *Compute) GetNodeMemoryTotal(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetNodeMemoryRequest 节点Memory请求量
+func (m *Compute) GetNodeMemoryRequest(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetNodeMemoryUsed 节点Memory使用量
+func (m *Compute) GetNodeMemoryUsed(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
@@ -47,6 +83,18 @@ func (m *Compute) GetNodeMemoryUsage(ctx context.Context, projectID, clusterID, 
 // GetNodeMemoryRequestUsage 节点内存装箱率
 func (m *Compute) GetNodeMemoryRequestUsage(ctx context.Context, projectID, clusterID, node string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetNodeDiskTotal 节点磁盘总量
+func (m *Compute) GetNodeDiskTotal(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetNodeDiskUsed 节点磁盘使用量
+func (m *Compute) GetNodeDiskUsed(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 

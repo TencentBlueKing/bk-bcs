@@ -65,19 +65,6 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 	// step3: begin transaction to create release and released config item.
 	tx := s.dao.GenQuery().Begin()
 	// step4: create release, and create release and released config item need to begin tx.
-	hook, err := s.dao.ConfigHook().GetByAppID(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		logs.Errorf("get configHook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		req.Spec.Hook = &pbrelease.Hook{
-			PreHookId:         hook.Spec.PreHookID,
-			PreHookReleaseId:  hook.Spec.PreHookReleaseID,
-			PostHookId:        hook.Spec.PostHookID,
-			PostHookReleaseId: hook.Spec.PostHookReleaseID,
-		}
-	}
 	release := &table.Release{
 		Spec:       req.Spec.ReleaseSpec(),
 		Attachment: req.Attachment.ReleaseAttachment(),
@@ -91,7 +78,36 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		logs.Errorf("create release failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
-	// step5: create released config item.
+	// step5: create released hook.
+	pre, err := s.dao.ReleasedHook().Get(grpcKit, req.Attachment.BizId, req.Attachment.AppId, 0, table.PreHook)
+	if err == nil {
+		pre.ID = 0
+		pre.ReleaseID = release.ID
+		if _, e := s.dao.ReleasedHook().CreateWithTx(grpcKit, tx, pre); e != nil {
+			logs.Errorf("create released pre-hook failed, err: %v, rid: %s", e, grpcKit.Rid)
+			tx.Rollback()
+			return nil, e
+		}
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("query released pre-hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		tx.Rollback()
+		return nil, err
+	}
+	post, err := s.dao.ReleasedHook().Get(grpcKit, req.Attachment.BizId, req.Attachment.AppId, 0, table.PostHook)
+	if err == nil {
+		post.ID = 0
+		post.ReleaseID = release.ID
+		if _, e := s.dao.ReleasedHook().CreateWithTx(grpcKit, tx, post); e != nil {
+			logs.Errorf("create released post-hook failed, err: %v, rid: %s", e, grpcKit.Rid)
+			tx.Rollback()
+			return nil, e
+		}
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("query released post-hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		tx.Rollback()
+		return nil, err
+	}
+	// step6: create released config item.
 	for _, rci := range releasedCIs {
 		rci.ReleaseID = release.ID
 	}
@@ -100,7 +116,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		logs.Errorf("bulk create released config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
-	// step6: commit transaction.
+	// step7: commit transaction.
 	if err = tx.Commit(); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err

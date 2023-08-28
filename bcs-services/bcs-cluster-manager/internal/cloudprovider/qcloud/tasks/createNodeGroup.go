@@ -24,6 +24,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -133,9 +134,11 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 		Name:            &group.Name,
 		Tags:            api.MapToTags(group.Tags),
 	}
-	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil &&
-		group.LaunchTemplate.ImageInfo.ImageID != "" {
-		nodePool.NodePoolOs = &group.LaunchTemplate.ImageInfo.ImageID
+
+	// 节点池Os 当为自定义镜像时，传镜像id；否则为公共镜像的osName; 若为空复用集群级别
+	// 示例值：ubuntu18.04.1x86_64
+	if group.NodeTemplate != nil && group.NodeTemplate.NodeOS != "" {
+		nodePool.NodePoolOs = &group.NodeTemplate.NodeOS
 	}
 	if group.NodeTemplate != nil {
 		nodePool.Taints = api.MapToTaints(group.NodeTemplate.Taints)
@@ -612,12 +615,12 @@ func generateInstanceAdvanceSettings(template *proto.NodeTemplate) *api.Instance
 		}
 	}
 	// extra args
-	if template.ExtraArgs != nil {
-		// parse kubelet extra args
-		kubeletArgs := strings.Split(template.ExtraArgs[Kubelet], ";")
-		if len(kubeletArgs) > 0 {
-			result.ExtraArgs = &api.InstanceExtraArgs{Kubelet: kubeletArgs}
-		}
+	kubeletMap := cutils.GetKubeletParas(template)
+	// parse kubelet extra args
+	kubeletArgs := strings.Split(kubeletMap[Kubelet], ";")
+	if len(kubeletArgs) > 0 {
+		result.ExtraArgs = &api.InstanceExtraArgs{Kubelet: kubeletArgs}
 	}
+
 	return result
 }

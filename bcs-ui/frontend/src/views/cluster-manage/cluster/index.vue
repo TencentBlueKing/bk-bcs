@@ -1,9 +1,9 @@
 <template>
   <div class="biz-content">
     <Header>
-      {{$t('集群列表')}}
+      {{$t('generic.label.clusterList')}}
       <span class="ml-[5px] text-[12px] text-[#979ba5]">
-        {{`( ${$t('业务')}: ${curProject.businessName} )`}}
+        {{`( ${$t('generic.label.business')}: ${curProject.businessName} )`}}
       </span>
       <span class="bk-text-button bk-default f12 ml5" @click="handleShowProjectConf">
         <i class="bcs-icon bcs-icon-edit"></i>
@@ -16,7 +16,7 @@
             <span
               v-bk-tooltips="{
                 disabled: isMaintainer,
-                content: $t('您不是当前项目绑定业务的运维人员，请联系业务运维人员')
+                content: $t('bcs.msg.notDevOps')
               }">
               <bk-button
                 theme="primary"
@@ -31,16 +31,16 @@
                 }"
                 :disabled="!isMaintainer"
                 @click="goCreateCluster">
-                {{$t('添加集群')}}
+                {{$t('cluster.button.addCluster')}}
               </bk-button>
             </span>
-            <ApplyHost :title="$t('申请Master节点')" class="ml10" v-if="$INTERNAL" />
+            <ApplyHost :title="$t('cluster.button.applyMaster')" class="ml10" v-if="$INTERNAL" />
           </template>
           <template #right>
             <bk-input
               right-icon="bk-icon icon-search"
               class="w-[360px]"
-              :placeholder="$t('集群名称/集群ID')"
+              :placeholder="$t('cluster.placeholder.searchCluster')"
               v-model="searchValue"
               clearable>
             </bk-input>
@@ -48,12 +48,12 @@
               <bcs-icon
                 :class="['bcs-icon-btn bcs-icon bcs-icon-lie', { active: activeType === 'list' }]"
                 type=""
-                v-bk-tooltips="$t('列表视图')"
+                v-bk-tooltips="$t('cluster.mode.list')"
                 @click="handleChangeType('list')" />
               <bcs-icon
                 :class="['bcs-icon-btn bcs-icon bcs-icon-kuai ml-[-1px]', { active: activeType === 'card' }]"
                 type=""
-                v-bk-tooltips="$t('卡片视图')"
+                v-bk-tooltips="$t('cluster.mode.card')"
                 @click="handleChangeType('card')" />
             </div>
           </template>
@@ -115,20 +115,20 @@
             theme="primary"
             v-if="['CREATE-FAILURE', 'DELETE-FAILURE'].includes(curOperateCluster.status)"
             @click="handleRetry(curOperateCluster)">
-            {{ $t('重试') }}
+            {{ $t('cluster.ca.nodePool.records.action.retry') }}
           </bcs-button>
-          <bcs-button class="w-[88px]" @click="showLogDialog = false">{{ $t('取消') }}</bcs-button>
+          <bcs-button class="w-[88px]" @click="showLogDialog = false">{{ $t('generic.button.cancel') }}</bcs-button>
         </div>
       </template>
     </bcs-sideslider>
     <!-- 集群删除确认弹窗 -->
     <ConfirmDialog
       v-model="showConfirmDialog"
-      :title="$t('确定删除集群？')"
-      :sub-title="$t('此操作无法撤回，请确认：')"
+      :title="$t('cluster.button.delete.title')"
+      :sub-title="$t('generic.subTitle.deleteConfirm')"
       :tips="deleteClusterTips"
-      :ok-text="$t('删除')"
-      :cancel-text="$t('关闭')"
+      :ok-text="$t('generic.button.delete')"
+      :cancel-text="$t('generic.button.close')"
       :confirm="confirmDeleteCluster" />
     <!-- 编辑项目集群信息 -->
     <ProjectConfig v-model="isProjectConfDialogShow" />
@@ -146,7 +146,7 @@ import ProjectConfig from '@/views/project-manage/project/project-config.vue';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
 import TaskList from '@/views/cluster-manage/components/task-list.vue';
 import Header from '@/components/layout/Header.vue';
-import ClusterGuide from './cluster-guide.vue';
+import ClusterGuide from '@/views/app/cluster-guide.vue';
 import Row from '@/components/layout/Row.vue';
 import ListMode from './cluster-list.vue';
 import CardMode from './cluster-card.vue';
@@ -175,11 +175,11 @@ export default defineComponent({
 
     // 集群状态
     const statusTextMap = {
-      INITIALIZATION: $i18n.t('初始化中'),
-      DELETING: $i18n.t('删除中'),
-      'CREATE-FAILURE': $i18n.t('创建失败'),
-      'DELETE-FAILURE': $i18n.t('删除失败'),
-      'IMPORT-FAILURE': $i18n.t('导入失败'),
+      INITIALIZATION: $i18n.t('generic.status.initializing'),
+      DELETING: $i18n.t('generic.status.deleting'),
+      'CREATE-FAILURE': $i18n.t('generic.status.createFailed'),
+      'DELETE-FAILURE': $i18n.t('generic.status.deleteFailed'),
+      'IMPORT-FAILURE': $i18n.t('cluster.status.importFailed'),
     };
     // 切换展示模式
     const activeType = computed<'card'|'list'>(() => $store.state.clusterViewType as any);
@@ -272,23 +272,23 @@ export default defineComponent({
     const deleteClusterTips = computed(() => {
       if (curOperateCluster.value?.clusterType === 'virtual') {
         return [
-          $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
-          $i18n.t('请确认已清理该集群下的所有应用'),
-          $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
+          $i18n.t('cluster.button.delete.article1', { clusterName: curOperateCluster.value?.clusterID }),
+          $i18n.t('cluster.button.delete.article2'),
+          $i18n.t('cluster.button.delete.article3'),
         ];
       }
       return curOperateCluster.value?.clusterCategory === 'importer'
         ? [
-          $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
-          $i18n.t('删除导入集群不会对集群有任何操作'),
-          $i18n.t('删除导入集群后蓝鲸容器管理平台会丧失对该集群的管理能力'),
-          $i18n.t('删除导入集群不会清理集群上的任何资源，删除集群后请视情况手工清理'),
+          $i18n.t('cluster.button.delete.article1', { clusterName: curOperateCluster.value?.clusterID }),
+          $i18n.t('cluster.button.delete.article4'),
+          $i18n.t('cluster.button.delete.article5'),
+          $i18n.t('cluster.button.delete.article6'),
         ]
         : [
-          $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
-          $i18n.t('请确认已清理该集群下的所有应用与节点'),
-          $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
-          $i18n.t('集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
+          $i18n.t('cluster.button.delete.article1', { clusterName: curOperateCluster.value?.clusterID }),
+          $i18n.t('cluster.button.delete.article7'),
+          $i18n.t('cluster.button.delete.article3'),
+          $i18n.t('cluster.button.delete.article8'),
         ];
     });
     const { handleDeleteVCluster } = useVCluster();
@@ -308,13 +308,14 @@ export default defineComponent({
         await handleGetClusterList();
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('任务下发成功'),
+          message: $i18n.t('generic.msg.success.deliveryTask'),
         });
       }
     };
     const handleDeleteCluster = (cluster) => {
       if (
         cluster.clusterType !== 'virtual'
+        && cluster.clusterCategory !== 'importer'
         && clusterNodesMap.value[cluster.clusterID]?.length > 0
         && cluster.status === 'RUNNING'
       ) return;
@@ -339,12 +340,12 @@ export default defineComponent({
       notstarted: 'blue',
     });
     const taskStatusTextMap = ref({
-      initialzing: $i18n.t('初始化中'),
-      running: $i18n.t('运行中'),
-      success: $i18n.t('成功'),
-      failure: $i18n.t('失败'),
-      timeout: $i18n.t('超时'),
-      notstarted: $i18n.t('未执行'),
+      initialzing: $i18n.t('generic.status.initializing'),
+      running: $i18n.t('generic.status.running'),
+      success: $i18n.t('generic.status.success'),
+      failure: $i18n.t('generic.status.failed'),
+      timeout: $i18n.t('generic.status.timeout'),
+      notstarted: $i18n.t('generic.status.todo'),
     });
     const taskData = computed(() => {
       const steps = latestTask.value?.stepSequence || [];
@@ -381,7 +382,7 @@ export default defineComponent({
         // 创建重试
         $bkInfo({
           type: 'warning',
-          title: cluster.status === 'CREATE-FAILURE' ? $i18n.t('确认重新创建集群') :  $i18n.t('确认删除集群'),
+          title: cluster.status === 'CREATE-FAILURE' ? $i18n.t('cluster.title.retryCreate') :  $i18n.t('cluster.title.confirmDelete'),
           clsName: 'custom-info-confirm default-info',
           subTitle: cluster.clusterName,
           confirmFn: async () => {
@@ -391,7 +392,7 @@ export default defineComponent({
               await handleGetClusterList();
               $bkMessage({
                 theme: 'success',
-                message: $i18n.t('任务下发成功'),
+                message: $i18n.t('generic.msg.success.deliveryTask'),
               });
             }
             isLoading.value = false;
@@ -400,7 +401,7 @@ export default defineComponent({
       } else {
         $bkMessage({
           theme: 'error',
-          message: $i18n.t('未知状态'),
+          message: $i18n.t('generic.status.unknown1'),
         });
       }
       isLoading.value = false;
@@ -411,7 +412,7 @@ export default defineComponent({
     const clusterNodesMap = ref({});
     const handleGetClusterNodes = async () => {
       clusterList.value
-        .filter(cluster => webAnnotations.value.perms[cluster.clusterID].cluster_manage && cluster.clusterType !== 'virtual')
+        .filter(cluster => webAnnotations.value.perms[cluster.clusterID]?.cluster_manage && cluster.clusterType !== 'virtual')
         .forEach((item) => {
           getNodeList(item.clusterID).then((data) => {
             set(clusterNodesMap.value, item.clusterID, data);

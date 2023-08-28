@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"strings"
 	"time"
 
@@ -28,11 +29,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	"github.com/golang/protobuf/ptypes/wrappers"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -104,7 +105,10 @@ func (ia *ImportAction) syncClusterInfoToDB(cls *cmproto.Cluster) error {
 
 	// save kubeConfig
 	if ia.req.CloudMode.KubeConfig != "" {
-		kubeRet := base64.StdEncoding.EncodeToString([]byte(ia.req.CloudMode.KubeConfig))
+		kubeRet, err := encrypt.Encrypt(nil, ia.req.CloudMode.KubeConfig)
+		if err != nil {
+			return err
+		}
 		cls.KubeConfig = kubeRet
 	}
 
@@ -377,7 +381,7 @@ func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 
 	// check account validate
 	if len(req.AccountID) > 0 {
-		_, err := ia.model.GetCloudAccount(ia.ctx, ia.cloud.CloudID, req.AccountID)
+		_, err := ia.model.GetCloudAccount(ia.ctx, ia.cloud.CloudID, req.AccountID, false)
 		if err != nil {
 			return err
 		}
@@ -495,22 +499,109 @@ func checkKubeConfig(kubeConfig string) error {
 		YamlContent: kubeConfig,
 	})
 	if err != nil {
-		return fmt.Errorf("checkKubeConfig validate failed: %v", err)
+		return fmt.Errorf("checkKubeConfig get kubeConfig from YAML body failed: %v", err)
 	}
 
 	kubeRet := base64.StdEncoding.EncodeToString([]byte(kubeConfig))
 	kubeCli, err := clusterops.NewKubeClient(kubeRet)
 	if err != nil {
-		return fmt.Errorf("checkKubeConfig validate failed: %v", err)
+		return fmt.Errorf("checkKubeConfig encode to string failed: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
 	defer cancel()
+
 	_, err = kubeCli.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("checkKubeConfig connect cluster failed: %v", err)
 	}
+
 	blog.Infof("checkKubeConfig YAMLStyle and connectCluster success")
 
 	return nil
+}
+
+// CheckKubeConnectAction action for check kubeConfig connect cluster
+type CheckKubeConnectAction struct {
+	ctx   context.Context
+	cloud *cmproto.Cloud
+	model store.ClusterManagerModel
+	req   *cmproto.KubeConfigConnectReq
+	resp  *cmproto.KubeConfigConnectResp
+}
+
+// NewCheckKubeConnectAction check cluster kubeConfig connect action
+func NewCheckKubeConnectAction(model store.ClusterManagerModel) *CheckKubeConnectAction {
+	return &CheckKubeConnectAction{
+		model: model,
+	}
+}
+
+func (ka *CheckKubeConnectAction) setResp(code uint32, msg string) {
+	ka.resp.Code = code
+	ka.resp.Message = msg
+	ka.resp.Result = code == common.BcsErrClusterManagerSuccess
+}
+
+// Handle create cluster request
+func (ka *CheckKubeConnectAction) Handle(ctx context.Context, req *cmproto.KubeConfigConnectReq,
+	resp *cmproto.KubeConfigConnectResp) {
+	if req == nil || resp == nil {
+		blog.Errorf("check cluster kubeConfig failed, req or resp is empty")
+		return
+	}
+	ka.ctx = ctx
+	ka.req = req
+	ka.resp = resp
+
+	var (
+		err error
+	)
+
+	// import validate cluster
+	if err = req.Validate(); err != nil {
+		ka.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	if ka.cloud, err = actions.GetCloudByCloudID(ka.model, req.CloudID); err != nil {
+		ka.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ka.cloud,
+		AccountID: ka.req.AccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloud provider %s/%s failed, %s",
+			ka.cloud.CloudID, ka.cloud.CloudProvider, err.Error())
+		ka.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		return
+	}
+	cmOption.Region = ka.req.Region
+
+	// Create Cluster by CloudProvider, underlay cloud cluster manager interface
+	provider, err := cloudprovider.GetClusterMgr(ka.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cluster %s relative cloud provider %s failed, %s",
+			req.ClusterID, ka.cloud.CloudProvider, err.Error())
+		ka.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		return
+	}
+
+	ok, err := provider.CheckClusterEndpointStatus(req.ClusterID, req.IsExtranet,
+		&cloudprovider.CheckEndpointStatusOption{CommonOption: *cmOption})
+	if err != nil {
+		ka.setResp(common.BcsErrClusterManagerCheckKubeConnErr, err.Error())
+		return
+	}
+
+	if !ok {
+		ka.setResp(common.BcsErrClusterManagerCheckKubeConnErr, "cluster kubeConfig failed to connect to the cluster")
+		return
+	}
+
+	ka.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
 }

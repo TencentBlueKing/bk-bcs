@@ -42,6 +42,8 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/scheduler"
 	scheduler_utils "k8s.io/autoscaler/cluster-autoscaler/utils/scheduler"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/taints"
+
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 )
 
 const (
@@ -671,6 +673,7 @@ func checkResourceNotEnough(nodes map[string]*schedulerframework.NodeInfo,
 			continue
 		}
 		r := float64(left.MilliValue()) / float64(sum.MilliValue())
+		metricsinternal.UpdateResourceUsedRatio(name.String(), 1.0-r)
 		switch name {
 		case apiv1.ResourceCPU:
 			klog.V(4).Infof("%v ratio %v, desired CPU ratio %v", name, r, cpuRatio)

@@ -30,7 +30,7 @@ Usage:
       [ -4 get default route lan ipv4 addr]
 	  [ -6 get default route lan ipv6 addr]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {

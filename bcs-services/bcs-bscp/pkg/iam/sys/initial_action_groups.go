@@ -33,32 +33,42 @@ func genBusinessManagementActionGroups() []client.ActionGroup {
 				{ID: BusinessViewResource},
 			},
 		},
-		// {
-		// 	Name:   "配置管理",
-		// 	NameEn: "Configuration Management",
-		// 	SubGroups: []client.ActionGroup{
-		// 		{
-		// 			Name:   "服务管理",
-		// 			NameEn: "Application Management", // 有业务访问权限即可查看, 默认显示有编辑权限的应用
-		// 			Actions: []client.ActionWithID{
-		// 				{ID: AppCreate},
-		// 				{ID: AppView},
-		// 				{ID: AppEdit},
-		// 				{ID: AppDelete},
-		// 				{ID: ConfigItemPacking},
-		// 				{ID: ConfigItemPublish},
-		// 			},
-		// 		},
-		// 		// {
-		// 		// 	Name:   "分组管理",
-		// 		// 	NameEn: "Group Management",
-		// 		// 	Actions: []client.ActionWithID{ // 有应用编辑权限即可查看
-		// 		// 		{ID: GroupCreate},
-		// 		// 		{ID: GroupEdit},
-		// 		// 		{ID: GroupDelete},
-		// 		// 	},
-		// 		// },
-		// 	},
-		// },
+		{
+			Name:   "配置管理",
+			NameEn: "Configuration Management",
+			SubGroups: []client.ActionGroup{
+				{
+					Name:   "服务管理",
+					NameEn: "Application Management", // 有业务访问权限即可查看, 默认显示有编辑权限的应用
+					Actions: []client.ActionWithID{
+						{ID: AppCreate},
+						{ID: AppView},
+						{ID: AppEdit},
+						{ID: AppDelete},
+						{ID: GenerateRelease},
+						{ID: ReleasePublish},
+					},
+				},
+				{
+					Name:   "服务密钥管理",
+					NameEn: "Credential Management", // 有业务访问权限即可查看, 默认显示有编辑权限的应用
+					Actions: []client.ActionWithID{
+						{ID: CredentialCreate},
+						{ID: CredentialView},
+						{ID: CredentialEdit},
+						{ID: CredentialDelete},
+					},
+				},
+				// {
+				// 	Name:   "分组管理",
+				// 	NameEn: "Group Management",
+				// 	Actions: []client.ActionWithID{ // 有应用编辑权限即可查看
+				// 		{ID: GroupCreate},
+				// 		{ID: GroupEdit},
+				// 		{ID: GroupDelete},
+				// 	},
+				// },
+			},
+		},
 	}
 }

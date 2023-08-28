@@ -6,7 +6,7 @@
         <template v-if="varList.length">
           <bkbcs-input
             type="text"
-            :placeholder="keyPlaceholder || $t('键')"
+            :placeholder="keyPlaceholder || $t('generic.label.key')"
             :style="{ width: `${keyInputWidth}px` }"
             :value.sync="keyItem.key"
             :list="varList"
@@ -20,7 +20,7 @@
           <input
             type="text"
             class="bk-form-input"
-            :placeholder="keyPlaceholder || $t('键')"
+            :placeholder="keyPlaceholder || $t('generic.label.key')"
             :style="{ width: `${keyInputWidth}px` }"
             v-model="keyItem.key"
             :disabled="!!keyItem.disabled"
@@ -35,7 +35,7 @@
         <template v-if="varList.length">
           <bkbcs-input
             :type="valueType"
-            :placeholder="valuePlaceholder || $t('值')"
+            :placeholder="valuePlaceholder || $t('generic.label.value')"
             :style="{ width: `${valueInputWidth}px` }"
             :value.sync="keyItem.value"
             :list="varList"
@@ -49,7 +49,7 @@
           <input
             :type="valueType"
             class="bk-form-input"
-            :placeholder="valuePlaceholder || $t('值')"
+            :placeholder="valuePlaceholder || $t('generic.label.value')"
             :style="{ width: `${valueInputWidth}px` }"
             :disabled="keyItem.disabled"
             v-model="keyItem.value"
@@ -74,7 +74,7 @@
           v-model="keyItem.isSelector"
           style="margin-left: 20px;"
           @change="valueChange">
-          {{addToSelectorStr || $t('添加至选择器')}}
+          {{addToSelectorStr || $t('generic.keyer.actions.add')}}
         </bk-checkbox>
         <div v-if="keyItem.linkMessage" class="biz-tip mt5 f12" style="line-height: 1;">{{keyItem.linkMessage}}</div>
       </div>
@@ -82,7 +82,7 @@
     <slot>
       <p
         style="line-height: 1;"
-        :class="['biz-tip', { 'is-danger': isTipChange }]">{{tip ? tip : $t('小提示：同时粘贴多行“键=值”的文本会自动添加多行记录')}}</p>
+        :class="['biz-tip', { 'is-danger': isTipChange }]">{{tip ? tip : $t('generic.keyer.msg.info')}}</p>
     </slot>
   </div>
 </template>

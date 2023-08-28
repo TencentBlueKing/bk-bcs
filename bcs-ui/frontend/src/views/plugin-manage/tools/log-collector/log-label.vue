@@ -12,7 +12,7 @@
         class="flex-1 z-10"
         :value="label.key"
         :rules="[{
-          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          message: $i18n.t('generic.validate.labelKey'),
           validator: '^[A-Za-z0-9._/-]+$',
         }]"
         required
@@ -24,7 +24,7 @@
         class="flex-1 hover:z-20 ml-[-1px]"
         :value="label.value"
         :rules="[{
-          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          message: $i18n.t('generic.validate.labelKey'),
           validator: '^[A-Za-z0-9._/-]+$',
         }]"
         required

@@ -1496,6 +1496,10 @@ message NamespaceData {
     title: "itsmTicketType", 
     description: "itsm 单据类型: create, update, delete"
   }];
+  repeated string managers = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "managers", 
+    description: "命名空间管理员"
+  }];
 }
 
 message NativeNamespaceData {
@@ -1727,7 +1731,7 @@ message CreateVariableRequest {
   string key = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "key", 
     description: "变量 key，项目内唯一，长度不能超过64字符"
-  }, (validate.rules).string = {max_len: 64, pattern: "^[a-zA-Z][a-zA-Z0-9-_]*$"}];
+  }, (validate.rules).string = {max_len: 64, pattern: "^[a-zA-Z][a-zA-Z0-9_]*$"}];
   string scope = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "name", 
       description: "变量作用域，取值范围：global, cluster, namespace"
@@ -1788,7 +1792,7 @@ message UpdateVariableRequest {
   string key = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "key", 
     description: "变量 key, 项目内唯一, 长度不能超过64字符"
-  }, (validate.rules).string = {max_len: 64, pattern: "^[a-zA-Z][a-zA-Z0-9-_]*$"}];
+  }, (validate.rules).string = {max_len: 64, pattern: "^[a-zA-Z][a-zA-Z0-9_]*$"}];
   string scope = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "scope", 
       description: "变量作用域, 取值范围: global, cluster, namespace"
@@ -2558,7 +2562,7 @@ message ImportVariableData {
   string key = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "key", 
     description: "变量 key，项目内唯一，长度不能超过64字符"
-  }, (validate.rules).string = {max_len: 64, pattern: "^[a-zA-Z][a-zA-Z0-9-_]*$"}];
+  }, (validate.rules).string = {max_len: 64, pattern: "^[a-zA-Z][a-zA-Z0-9_]*$"}];
   string scope = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "name", 
       description: "变量作用域，取值范围：global, cluster, namespace"

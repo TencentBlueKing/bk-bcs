@@ -4,14 +4,13 @@ go 1.20
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
-	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230612113959-ee7959290ae2
+	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230802065941-49e19e258f38
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220926153300-4e631deaebe4
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 	github.com/dustin/go-humanize v1.0.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-contrib/i18n v0.0.1
 	github.com/gin-gonic/gin v1.9.0
-	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-micro/plugins/v4/config/encoder/yaml v1.1.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/go-micro/plugins/v4/server/http v1.1.1
@@ -25,6 +24,7 @@ require (
 	github.com/hashicorp/go-version v1.4.0
 	github.com/nicksnyder/go-i18n/v2 v2.2.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/pborman/ansi v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.1
 	github.com/prometheus/prometheus v1.8.2-0.20200811193703-869f1bc587e6
@@ -32,7 +32,6 @@ require (
 	github.com/urfave/cli/v2 v2.3.0
 	go-micro.dev/v4 v4.10.2
 	go.opentelemetry.io/otel v1.14.0
-	go.opentelemetry.io/otel/metric v0.26.0
 	go.opentelemetry.io/otel/trace v1.14.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/text v0.9.0
@@ -124,7 +123,6 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.14.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.14.0 // indirect
 	go.opentelemetry.io/otel/exporters/zipkin v1.3.0 // indirect
-	go.opentelemetry.io/otel/internal/metric v0.26.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.14.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect

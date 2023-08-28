@@ -16,5 +16,60 @@ import "bscp.io/pkg/iam/client"
 
 // GenerateCommonActions generate all the common actions registered to IAM.
 func GenerateCommonActions() []client.CommonAction {
-	return []client.CommonAction{}
+	CommonActions := make([]client.CommonAction, 0)
+
+	CommonActions = append(CommonActions, genBizCommonActions()...)
+
+	return CommonActions
+
+}
+
+// genBizCommonActions 推荐权限，业务查看、业务运维
+func genBizCommonActions() []client.CommonAction {
+	return []client.CommonAction{
+		{
+			Name:        "业务查看",
+			EnglishName: "business view",
+			Actions: []client.ActionWithID{
+				{
+					BusinessViewResource,
+				},
+				{
+
+					AppView,
+				},
+				{
+					CredentialView,
+				},
+			},
+		},
+		{
+			Name:        "业务运维",
+			EnglishName: "business ops",
+			Actions: []client.ActionWithID{
+				{
+					BusinessViewResource,
+				},
+				{
+					AppView,
+				},
+				{
+					AppEdit,
+				},
+				{
+					GenerateRelease,
+				},
+				{
+					ReleasePublish,
+				},
+				{
+					CredentialView,
+				},
+				{
+					CredentialEdit,
+				},
+			},
+		},
+	}
+
 }

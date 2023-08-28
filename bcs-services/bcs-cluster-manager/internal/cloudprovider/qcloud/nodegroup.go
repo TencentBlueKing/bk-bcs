@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -26,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	intercommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
@@ -238,23 +240,23 @@ func (ng *NodeGroup) updateNormalNodePool(systemID string, group *proto.NodeGrou
 	if err = tkeCli.ModifyClusterNodePool(ng.generateModifyClusterNodePoolInput(group, systemID)); err != nil {
 		return err
 	}
+	/*
+		// as client
+		asCli, err := api.NewASClient(opt)
+		if err != nil {
+			blog.Errorf("updateNormalNodePool NewASClient failed, err: %s", err.Error())
+			return err
+		}
+		// modify asg
+		if err = asCli.ModifyAutoScalingGroup(ng.generateModifyAutoScalingGroupInput(group)); err != nil {
+			return err
+		}
 
-	// as client
-	asCli, err := api.NewASClient(opt)
-	if err != nil {
-		blog.Errorf("updateNormalNodePool NewASClient failed, err: %s", err.Error())
-		return err
-	}
-	// modify asg
-	if err = asCli.ModifyAutoScalingGroup(ng.generateModifyAutoScalingGroupInput(group)); err != nil {
-		return err
-	}
-
-	// modify launch config
-	if err = asCli.UpgradeLaunchConfiguration(ng.generateUpgradeLaunchConfInput(group)); err != nil {
-		return err
-	}
-
+		// modify launch config
+		if err = asCli.UpgradeLaunchConfiguration(ng.generateUpgradeLaunchConfInput(group)); err != nil {
+			return err
+		}
+	*/
 	// update bkCloudName
 	if group.Area == nil {
 		group.Area = &proto.CloudArea{}
@@ -311,13 +313,35 @@ func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, 
 	}
 	req.Tags = api.MapToCloudTags(group.Tags)
 	req.EnableAutoscale = common.BoolPtr(false)
+
+	if group.AutoScaling != nil {
+		req.MinNodesNum = common.Int64Ptr(int64(group.AutoScaling.MinSize))
+		req.MaxNodesNum = common.Int64Ptr(int64(group.AutoScaling.MaxSize))
+	}
+
+	if group.NodeTemplate.PreStartUserScript != "" {
+		req.UserScript = common.StringPtr(group.NodeTemplate.PreStartUserScript)
+	}
+
 	// MaxNodesNum/MinNodesNum 通过 asg 修改，这里不用修改
 	if group.NodeTemplate != nil {
 		req.Unschedulable = common.Int64Ptr(int64(group.NodeTemplate.UnSchedulable))
 	}
-	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
-		req.OsName = &group.LaunchTemplate.ImageInfo.ImageID
+
+	// 节点池Os 当为自定义镜像时，传镜像id；否则为公共镜像的osName; 若为空复用集群级别
+	// 示例值：ubuntu18.04.1x86_64
+	if group.NodeTemplate != nil && group.NodeTemplate.NodeOS != "" {
+		req.OsName = &group.NodeTemplate.NodeOS
 	}
+
+	kubeletParas := cutils.GetKubeletParas(group.NodeTemplate)
+	if paras, ok := kubeletParas[intercommon.Kubelet]; ok {
+		if req.ExtraArgs == nil {
+			req.ExtraArgs = &tke.InstanceExtraArgs{}
+		}
+		req.ExtraArgs.Kubelet = common.StringPtrs(strings.Split(paras, ";"))
+	}
+
 	return req
 }
 

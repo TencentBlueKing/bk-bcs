@@ -115,13 +115,15 @@ func IsMaintainer(username string, bizID string) (bool, error) {
 }
 
 // GetBusinessByID 通过业务ID获取业务信息
-func GetBusinessByID(bizID string) (BusinessData, error) {
+func GetBusinessByID(bizID string, useCache bool) (BusinessData, error) {
 	// 先尝试从缓存中获取
 	c := cache.GetCache()
-	if biz, exists := c.Get(fmt.Sprintf(CacheKeyBusinessPrefix, bizID)); exists {
-		logging.Info("get business %s hit cache", bizID)
-		data := biz.(BusinessData)
-		return data, nil
+	if useCache {
+		if biz, exists := c.Get(fmt.Sprintf(CacheKeyBusinessPrefix, bizID)); exists {
+			logging.Info("get business %s hit cache", bizID)
+			data := biz.(BusinessData)
+			return data, nil
+		}
 	}
 	data, err := SearchBusiness("", bizID)
 	if err != nil {
@@ -187,7 +189,7 @@ func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) 
 
 // GetBusinessMaintainers get maintainers by bizID
 func GetBusinessMaintainers(bizID string) ([]string, error) {
-	business, err := GetBusinessByID(bizID)
+	business, err := GetBusinessByID(bizID, false)
 	if err != nil {
 		return nil, err
 	}

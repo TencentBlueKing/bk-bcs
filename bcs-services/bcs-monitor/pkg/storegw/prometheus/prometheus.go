@@ -110,7 +110,8 @@ func (s *PromStore) LabelValues(ctx context.Context, r *storepb.LabelValuesReque
 // Series 返回时序数据
 func (s *PromStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
 	ctx := srv.Context()
-	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
+	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime",
+		r.MaxTime, "step", r.QueryHints.StepMillis)
 
 	// step 固定1分钟
 	// 注意: 目前实现的 aggrChunk 为 Raw 格式, 不支持降采样, 支持参考 https://thanos.io/tip/components/compact.md/
@@ -140,29 +141,36 @@ func (s *PromStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesSer
 		return nil
 	}
 
-	clusterId, err := clientutil.GetLabelMatchValue("bcs_cluster_id", r.Matchers)
+	clusterID, err := clientutil.GetLabelMatchValue("cluster_id", r.Matchers)
 	if err != nil {
 		return err
 	}
 
 	scopeClusterID := store.ClusterIDValue(ctx)
-	if clusterId == "" && scopeClusterID == "" {
-		return nil
+	if clusterID == "" {
+		clusterID = scopeClusterID
 	}
-	if clusterId != s.config.ClusterID && scopeClusterID != s.config.ClusterID {
+
+	// invalid clusterID
+	if clusterID == "" || clusterID != s.config.ClusterID {
 		return nil
 	}
 
 	newMatchers := make([]storepb.LabelMatcher, 0)
+	newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: clusterID})
 	for _, m := range r.Matchers {
 		if m.Name == "provider" {
+			continue
+		}
+		if m.Name == "cluster_id" || m.Name == "bcs_cluster_id" {
 			continue
 		}
 		newMatchers = append(newMatchers, m)
 	}
 
 	r.Matchers = newMatchers
-	matrix, _, err := promclient.QueryRangeMatrix(ctx, s.promURL.String(), nil, r.ToPromQL(), start, end, time.Second*time.Duration(step))
+	matrix, _, err := promclient.QueryRangeMatrix(ctx, s.promURL.String(), nil, r.ToPromQL(), start, end,
+		time.Second*time.Duration(step))
 	if err != nil {
 		return err
 	}

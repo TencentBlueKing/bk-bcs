@@ -153,7 +153,7 @@ func (e *EmbedWeb) IndexHandler() http.Handler {
 		// 头部指定 SiteURL, 使用头部的， 多域名访问场景
 		siteURL := r.Header.Get(siteURLHeaderKey)
 		if siteURL == "" {
-			siteURL = config.G.Web.RoutePrefix
+			siteURL = config.G.FrontendConf.Host.SiteURL
 		}
 
 		// 首页根路径下重定向跳转到 siteURL 前缀

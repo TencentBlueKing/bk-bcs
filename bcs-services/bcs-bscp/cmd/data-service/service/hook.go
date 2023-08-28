@@ -25,6 +25,7 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbhook "bscp.io/pkg/protocol/core/hook"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -62,22 +63,23 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		return nil, err
 	}
 
-	// 2. create hook release
-	release := &table.HookRelease{
-		Spec: &table.HookReleaseSpec{
-			Name:    req.Spec.ReleaseName,
+	// 2. create hook revision
+	revision := &table.HookRevision{
+		Spec: &table.HookRevisionSpec{
+			Name:    tools.GenerateRevisionName(),
 			Content: req.Spec.Content,
-			State:   table.NotDeployedHookReleased,
+			Memo:    req.Spec.Memo,
+			State:   table.HookRevisionStatusDeployed,
 		},
-		Attachment: &table.HookReleaseAttachment{
+		Attachment: &table.HookRevisionAttachment{
 			BizID:  req.Attachment.BizId,
 			HookID: id,
 		},
 		Revision: res,
 	}
-	_, err = s.dao.HookRelease().CreateWithTx(kt, tx, release)
+	_, err = s.dao.HookRevision().CreateWithTx(kt, tx, revision)
 	if err != nil {
-		logs.Errorf("create hook release failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("create hook revision failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
 	}
@@ -97,7 +99,7 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 	kt := kit.FromGrpcContext(ctx)
 
 	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
-	opt := &types.ListHooksOption{
+	opt := &types.ListHooksWithReferOption{
 		BizID:  req.BizId,
 		Name:   req.Name,
 		Tag:    req.Tag,
@@ -113,7 +115,7 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 		return nil, err
 	}
 
-	details, count, err := s.dao.Hook().List(kt, opt)
+	details, count, err := s.dao.Hook().ListWithRefer(kt, opt)
 	if err != nil {
 		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -124,15 +126,19 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 		return nil, err
 	}
 
-	hooks, err := pbhook.PbHooks(details)
-	if err != nil {
-		logs.Errorf("get pb hook failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	result := []*pbds.ListHooksResp_Detail{}
+	for _, detail := range details {
+		result = append(result, &pbds.ListHooksResp_Detail{
+			Hook:                pbhook.PbHook(detail.Hook),
+			BoundNum:            uint32(detail.ReferCount),
+			ConfirmDelete:       detail.BoundEditingRelease,
+			PublishedRevisionId: detail.PublishedRevisionID,
+		})
 	}
 
 	resp := &pbds.ListHooksResp{
 		Count:   uint32(count),
-		Details: hooks,
+		Details: result,
 	}
 	return resp, nil
 }
@@ -143,26 +149,39 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 
 	tx := s.dao.GenQuery().Begin()
 
-	// 1. delete hook
-	hook := &table.Hook{
-		ID:         req.Id,
-		Attachment: req.Attachment.HookAttachment(),
-	}
-	if err := s.dao.Hook().DeleteWithTx(kt, tx, hook); err != nil {
-		logs.Errorf("delete hook failed, err: %v, rid: %s", err, kt.Rid)
+	// 1. check if hook was bound to an editing release
+	count, err := s.dao.ReleasedHook().CountByHookIDAndReleaseID(kt, req.BizId, req.HookId, 0)
+	if err != nil {
+		logs.Errorf("count hook bound editing releases failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
 	}
-
-	// 2. delete hook release
-	release := &table.HookRelease{
-		Attachment: &table.HookReleaseAttachment{
-			BizID:  req.Attachment.BizId,
-			HookID: req.Id,
+	if count > 0 && !req.Force {
+		tx.Rollback()
+		return nil, fmt.Errorf("hook was bound to %d editing releases, "+
+			"set force=true to delete hook with references, rid: %s", count, kt.Rid)
+	}
+	// 2. delete released hook that release_id = 0
+	if err := s.dao.ReleasedHook().DeleteByHookIDAndReleaseIDWithTx(kt, tx, req.BizId, req.HookId, 0); err != nil {
+		logs.Errorf("delete released hook failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
+		return nil, err
+	}
+	// 3. delete all hook revisions by hook id
+	if err := s.dao.HookRevision().DeleteByHookIDWithTx(kt, tx, req.HookId, req.BizId); err != nil {
+		logs.Errorf("delete hook revision failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
+		return nil, err
+	}
+	// 4. delete hook
+	hook := &table.Hook{
+		ID: req.HookId,
+		Attachment: &table.HookAttachment{
+			BizID: req.BizId,
 		},
 	}
-	if err := s.dao.HookRelease().DeleteByHookIDWithTx(kt, tx, release); err != nil {
-		logs.Errorf("delete hook release failed, err: %v, rid: %s", err, kt.Rid)
+	if err := s.dao.Hook().DeleteWithTx(kt, tx, hook); err != nil {
+		logs.Errorf("delete hook failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
 	}
@@ -211,32 +230,123 @@ func (s *Service) GetHook(ctx context.Context, req *pbds.GetHookReq) (*pbds.GetH
 	opt := &types.GetByPubStateOption{
 		BizID:  req.BizId,
 		HookID: req.HookId,
-		State:  table.NotDeployedHookReleased,
+		State:  table.HookRevisionStatusNotDeployed,
 	}
-	var releaseID uint32
-	release, err := s.dao.HookRelease().GetByPubState(kt, opt)
+	var revisionID uint32
+	revision, err := s.dao.HookRevision().GetByPubState(kt, opt)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		logs.Errorf("get hook failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		releaseID = 0
+		revisionID = 0
 	} else {
-		releaseID = release.ID
+		revisionID = revision.ID
 	}
 
 	resp := &pbds.GetHookResp{
 		Id: h.ID,
 		Spec: &pbds.GetHookInfoSpec{
-			Name:       h.Spec.Name,
-			Type:       string(h.Spec.Type),
-			Tag:        h.Spec.Tag,
-			Memo:       h.Spec.Memo,
-			PublishNum: h.Spec.PublishNum,
-			Releases:   &pbds.GetHookInfoSpec_Releases{NotReleaseId: releaseID},
+			Name:     h.Spec.Name,
+			Type:     string(h.Spec.Type),
+			Tag:      h.Spec.Tag,
+			Memo:     h.Spec.Memo,
+			Releases: &pbds.GetHookInfoSpec_Releases{NotReleaseId: revisionID},
 		},
 		Attachment: pbhook.PbHookAttachment(h.Attachment),
 		Revision:   pbbase.PbRevision(h.Revision),
+	}
+
+	return resp, nil
+}
+
+// ListHookReferences ..
+func (s *Service) ListHookReferences(ctx context.Context,
+	req *pbds.ListHookReferencesReq) (*pbds.ListHookReferencesResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	opt := &types.ListHookReferencesOption{
+		BizID:  req.BizId,
+		HookID: req.HookId,
+		Page:   page,
+	}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
+
+	results, count, err := s.dao.Hook().ListHookReferences(kt, opt)
+	if err != nil {
+		logs.Errorf("list hook references failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	details := make([]*pbds.ListHookReferencesResp_Detail, 0, len(results))
+	for _, result := range results {
+		details = append(details, &pbds.ListHookReferencesResp_Detail{
+			HookRevisionId:   result.HookRevisionID,
+			HookRevisionName: result.HookRevisionName,
+			AppId:            result.AppID,
+			AppName:          result.AppName,
+			ReleaseId:        result.ReleaseID,
+			ReleaseName:      result.ReleaseName,
+			Type:             result.HookType,
+		})
+	}
+
+	if err != nil {
+		logs.Errorf("list group current releases failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListHookReferencesResp{
+		Count:   uint32(count),
+		Details: details,
+	}
+
+	return resp, nil
+}
+
+// GetReleaseHook get release's pre hook and post hook
+func (s *Service) GetReleaseHook(ctx context.Context, req *pbds.GetReleaseHookReq) (*pbds.GetReleaseHookResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	preHook, err := s.dao.ReleasedHook().Get(grpcKit, req.BizId, req.AppId, req.ReleaseId, table.PreHook)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("get pre hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	postHook, err := s.dao.ReleasedHook().Get(grpcKit, req.BizId, req.AppId, req.ReleaseId, table.PostHook)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("get post hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	var pre, post *pbds.GetReleaseHookResp_Hook
+	if preHook != nil {
+		pre = &pbds.GetReleaseHookResp_Hook{
+			HookId:           preHook.HookID,
+			HookName:         preHook.HookName,
+			HookRevisionId:   preHook.HookRevisionID,
+			HookRevisionName: preHook.HookRevisionName,
+			Type:             preHook.ScriptType.String(),
+			Content:          preHook.Content,
+		}
+	}
+	if postHook != nil {
+		post = &pbds.GetReleaseHookResp_Hook{
+			HookId:           postHook.HookID,
+			HookName:         postHook.HookName,
+			HookRevisionId:   postHook.HookRevisionID,
+			HookRevisionName: postHook.HookRevisionName,
+			Type:             postHook.ScriptType.String(),
+			Content:          postHook.Content,
+		}
+	}
+	resp := &pbds.GetReleaseHookResp{
+		PreHook:  pre,
+		PostHook: post,
 	}
 
 	return resp, nil

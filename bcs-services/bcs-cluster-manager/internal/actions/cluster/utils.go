@@ -289,7 +289,7 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	// 如果是业务运维，查询全量主机
 	if utils.StringInSlice(user, maintainers) {
 		var hostList []cmdb.HostData
-		hostList, err = cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID)
+		hostList, err = cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID, false)
 		if err != nil {
 			blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 			return nil
@@ -302,7 +302,7 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	}
 
 	// 查询有主机负责人权限的主机
-	hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID)
+	hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID, false)
 	if err != nil {
 		blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 		return nil

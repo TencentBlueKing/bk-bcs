@@ -1,6 +1,6 @@
 <template>
   <bk-table :data="clusterList" size="medium">
-    <bk-table-column :label="$t('集群名称/ID')" :min-width="160" :show-overflow-tooltip="false">
+    <bk-table-column :label="$t('cluster.labels.nameAndId')" :min-width="160" :show-overflow-tooltip="false">
       <template #default="{ row }">
         <bk-button
           :disabled="row.status !== 'RUNNING'"
@@ -14,25 +14,25 @@
       </template>
     </bk-table-column>
     <bk-table-column
-      :label="$t('集群状态')"
+      :label="$t('cluster.labels.status')"
       prop="status"
       :filters="[{
-        text: $t('正常'),
+        text: $t('generic.status.ready'),
         value: 'RUNNING'
       },{
-        text: $t('初始化中'),
+        text: $t('generic.status.initializing'),
         value: 'INITIALIZATION'
       },{
-        text: $t('删除中'),
+        text: $t('generic.status.deleting'),
         value: 'DELETING'
       },{
-        text: $t('创建失败'),
+        text: $t('generic.status.createFailed'),
         value: 'CREATE-FAILURE'
       },{
-        text: $t('删除失败'),
+        text: $t('generic.status.deleteFailed'),
         value: 'DELETE-FAILURE'
       },{
-        text: $t('导入失败'),
+        text: $t('cluster.status.importFailed'),
         value: 'IMPORT-FAILURE'
       }]"
       :filter-method="filterMethod">
@@ -45,19 +45,19 @@
             RUNNING: 'green'
           }"
           :status-text-map="{
-            INITIALIZATION: $t('初始化中'),
-            DELETING: $t('删除中'),
-            'CREATE-FAILURE': $t('创建失败'),
-            'DELETE-FAILURE': $t('删除失败'),
-            'IMPORT-FAILURE': $t('导入失败'),
-            RUNNING: $t('正常')
+            INITIALIZATION: $t('generic.status.initializing'),
+            DELETING: $t('generic.status.deleting'),
+            'CREATE-FAILURE': $t('generic.status.createFailed'),
+            'DELETE-FAILURE': $t('generic.status.deleteFailed'),
+            'IMPORT-FAILURE': $t('cluster.status.importFailed'),
+            RUNNING: $t('generic.status.ready')
           }"
           :status="row.status"
           :pending="['INITIALIZATION', 'DELETING'].includes(row.status)" />
       </template>
     </bk-table-column>
     <bk-table-column
-      :label="$t('集群环境')"
+      :label="$t('cluster.labels.env')"
       prop="environment"
       :filters="clusterEnvFilters"
       :filter-method="filterMethod">
@@ -66,21 +66,21 @@
       </template>
     </bk-table-column>
     <bk-table-column
-      :label="$t('集群类型')"
+      :label="$t('cluster.labels.clusterType')"
       prop="manageType"
       :filters="clusterTypeFilterList"
       :filter-method="filterMethod">
       <template #default="{ row }">
         <template v-if="row.clusterType === 'virtual'">vCluster</template>
         <template v-else>
-          {{ row.manageType === 'INDEPENDENT_CLUSTER' ? $t('独立集群') : $t('托管集群') }}
+          {{ row.manageType === 'INDEPENDENT_CLUSTER' ? $t('bcs.cluster.selfDeployed') : $t('bcs.cluster.managed') }}
         </template>
       </template>
     </bk-table-column>
-    <bk-table-column :label="$t('集群节点数')">
+    <bk-table-column :label="$t('cluster.labels.nodeCounts')">
       <template #default="{ row }">
         <template v-if="perms[row.clusterID] && perms[row.clusterID].cluster_manage && row.clusterType !== 'virtual'">
-          <LoadingIcon v-if="!clusterNodesMap[row.clusterID]">{{ $t('加载中') }}...</LoadingIcon>
+          <LoadingIcon v-if="!clusterNodesMap[row.clusterID]">{{ $t('generic.status.loading') }}...</LoadingIcon>
           <div
             :class=" row.status === 'RUNNING' ? 'cursor-pointer' : 'cursor-not-allowed'"
             v-else
@@ -93,7 +93,7 @@
         <span v-else>--</span>
       </template>
     </bk-table-column>
-    <bk-table-column :label="$t('集群资源(CPU/内存/磁盘)')" min-width="200">
+    <bk-table-column :label="$t('cluster.labels.metric')" min-width="200">
       <template #default="{ row }">
         <template v-if="overview[row.clusterID]">
           <RingCell
@@ -112,20 +112,20 @@
         <span v-else>--</span>
       </template>
     </bk-table-column>
-    <bk-table-column :label="$t('操作')" width="180">
+    <bk-table-column :label="$t('generic.label.action')" width="200">
       <template #default="{ row }">
         <!-- 进行中 -->
         <template v-if="['INITIALIZATION', 'DELETING'].includes(row.status)">
           <bk-button
             text
             @click="handleShowClusterLog(row)">
-            {{$t('查看日志')}}
+            {{$t('generic.button.log')}}
           </bk-button>
         </template>
         <!-- 失败状态 -->
         <template v-else-if="['CREATE-FAILURE', 'DELETE-FAILURE'].includes(row.status)">
-          <bk-button class="mr-[10px]" text @click="handleRetry(row)">{{ $t('重试') }}</bk-button>
-          <bk-button class="mr-[10px]" text @click="handleShowClusterLog(row)">{{$t('查看日志')}}</bk-button>
+          <bk-button class="mr-[10px]" text @click="handleRetry(row)">{{ $t('cluster.ca.nodePool.records.action.retry') }}</bk-button>
+          <bk-button class="mr-[10px]" text @click="handleShowClusterLog(row)">{{$t('generic.button.log')}}</bk-button>
           <PopoverSelector offset="0, 10">
             <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
             <template #content>
@@ -145,7 +145,7 @@
                   }"
                   key="deleteCluster"
                   @click="handleDeleteCluster(row)">
-                  {{ $t('删除') }}
+                  {{ $t('generic.button.delete') }}
                 </li>
               </ul>
             </template>
@@ -153,12 +153,14 @@
         </template>
         <!-- 正常状态 -->
         <template v-else-if="row.status === 'RUNNING'">
-          <bk-button text class="mr10" @click="handleGotoClusterOverview(row)">{{ $t('集群总览') }}</bk-button>
+          <bk-button text class="mr10" @click="handleGotoClusterOverview(row)">
+            {{ $t('cluster.button.overview') }}
+          </bk-button>
           <bk-button
             text
             class="mr10"
             v-if="row.clusterType === 'virtual'"
-            @click="handleGotoDashborad(row)">{{ $t('资源视图') }}</bk-button>
+            @click="handleGotoDashborad(row)">{{ $t('cluster.button.dashboard') }}</bk-button>
           <bk-button
             text
             class="mr10"
@@ -176,24 +178,24 @@
             key="nodeList"
             v-if="row.clusterType !== 'virtual'"
             @click="handleGotoClusterNode(row)">
-            {{ $t('节点列表') }}
+            {{ $t('cluster.detail.title.nodeList') }}
           </bk-button>
           <PopoverSelector offset="0, 10">
             <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
             <template #content>
               <ul class="bg-[#fff]">
-                <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(row, 'info')">{{ $t('基本信息') }}</li>
+                <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(row, 'info')">{{ $t('generic.title.basicInfo1') }}</li>
                 <li
                   class="bcs-dropdown-item"
                   v-if="row.clusterType === 'virtual'"
                   @click="handleGotoClusterDetail(row, 'quota')">
-                  {{ $t('配额管理') }}
+                  {{ $t('cluster.detail.title.quota') }}
                 </li>
                 <template v-else>
-                  <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(row, 'network')">{{ $t('网络配置') }}</li>
+                  <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(row, 'network')">{{ $t('cluster.detail.title.network') }}</li>
                   <li
                     class="bcs-dropdown-item"
-                    @click="handleGotoClusterDetail(row, 'master')">{{ $t('Master配置') }}</li>
+                    @click="handleGotoClusterDetail(row, 'master')">{{ $t('cluster.detail.title.master') }}</li>
                   <li
                     class="bcs-dropdown-item"
                     v-if="clusterExtraInfo
@@ -212,7 +214,7 @@
                     }"
                     key="ca"
                     @click="handleGotoClusterCA(row)">
-                    {{ $t('弹性扩缩容') }}
+                    {{ $t('cluster.detail.title.autoScaler') }}
                   </li>
                 </template>
                 <li class="bcs-dropdown-item" @click="handleGotoToken">KubeConfig</li>
@@ -231,9 +233,9 @@
                     }
                   }"
                   key="deletevCluster"
-                  v-if="row.clusterType === 'virtual'"
+                  v-if="row.clusterType === 'virtual' || row.clusterCategory === 'importer'"
                   @click="handleDeleteCluster(row)">
-                  {{ $t('删除') }}
+                  {{ $t('generic.button.delete') }}
                 </li>
                 <li
                   :class="[
@@ -253,13 +255,13 @@
                   }"
                   key="deleteCluster"
                   v-bk-tooltips="{
-                    content: $t('集群下存在节点，无法删除'),
+                    content: $t('cluster.validate.exitNodes'),
                     disabled: !clusterNodesMap[row.clusterID] || clusterNodesMap[row.clusterID].length === 0,
                     placement: 'right'
                   }"
                   v-else
                   @click="handleDeleteCluster(row)">
-                  {{ $t('删除') }}
+                  {{ $t('generic.button.delete') }}
                 </li>
               </ul>
             </template>
@@ -269,7 +271,7 @@
           text
           v-else-if="deletable(row) && row.status !== 'DELETING'"
           @click="handleDeleteCluster(row)">
-          {{ $t('删除') }}
+          {{ $t('generic.button.delete') }}
         </bk-button>
       </template>
     </bk-table-column>
@@ -280,14 +282,15 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, PropType, toRefs } from 'vue';
-import StatusIcon from '@/components/status-icon';
-import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
-import PopoverSelector from '@/components/popover-selector.vue';
-import LoadingIcon from '@/components/loading-icon.vue';
-import { ICluster, useProject } from '@/composables/use-app';
+
 import { CLUSTER_ENV } from '@/common/constant';
+import LoadingIcon from '@/components/loading-icon.vue';
+import PopoverSelector from '@/components/popover-selector.vue';
+import StatusIcon from '@/components/status-icon';
+import { ICluster, useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
+import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 
 export default defineComponent({
   name: 'ClusterList',
@@ -336,9 +339,9 @@ export default defineComponent({
         if (item.clusterType === 'virtual') {
           pre.virtual = 'vCluster';
         } else if (item.manageType === 'INDEPENDENT_CLUSTER') {
-          pre.INDEPENDENT_CLUSTER = $i18n.t('独立集群');
+          pre.INDEPENDENT_CLUSTER = $i18n.t('bcs.cluster.selfDeployed');
         } else if (item.manageType === 'MANAGED_CLUSTER') {
-          pre.MANAGED_CLUSTER = $i18n.t('托管集群');
+          pre.MANAGED_CLUSTER = $i18n.t('bcs.cluster.managed');
         }
         return pre;
       }, {});

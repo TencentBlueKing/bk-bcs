@@ -194,7 +194,8 @@ func (e *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate *schedul
 
 func computeNewNodeNumWithRatio(nodeTemplate *schedulerframework.NodeInfo, name corev1.ResourceName,
 	sum, left resource.Quantity, ratio float64) float64 {
-	if ratio == 0 {
+	if math.Abs(ratio) < 1e-9 {
+		klog.V(4).Infof("the ratio of %s is 0, cannot calculate desired node num", name)
 		return 0
 	}
 	var num float64
@@ -206,14 +207,8 @@ func computeNewNodeNumWithRatio(nodeTemplate *schedulerframework.NodeInfo, name 
 	nodeResource := nodeTemplate.Allocatable
 	nodeResourceList := scheduler.ResourceToResourceList(nodeResource)
 	nodeCapacity, ok := nodeResourceList[name]
-	if !ok && r < ratio {
-		// the resource is not exist in nodeTemplate
-		// scale up when current ratio small than desired ratio
-		klog.V(4).Infof("resource %v is not in nodeTemplate's capacity, scale up 1 node instead", name)
-		num = 1
-	} else if !ok {
-		// the resource is not exist in nodeTemplate
-		// but there is no need to scale up
+	if !ok {
+		klog.V(4).Infof("resource %v is not in nodeTemplate's capacity, don't scale up nodes", name)
 		num = 0
 	} else {
 		num = math.Ceil(resourceRequest / float64(nodeCapacity.MilliValue()))

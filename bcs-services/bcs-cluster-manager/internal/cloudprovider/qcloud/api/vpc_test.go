@@ -70,3 +70,13 @@ func TestDescribeSubnets(t *testing.T) {
 		}
 	}
 }
+
+func TestVPCClient_DescribeNetworkAccountType(t *testing.T) {
+	cli := getVpcClient("ap-nanjing")
+	account, err := cli.GetCloudNetworkAccountType(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(account)
+}
