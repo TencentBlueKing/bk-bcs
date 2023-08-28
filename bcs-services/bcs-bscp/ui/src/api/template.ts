@@ -90,6 +90,15 @@ export const getTemplatePackageList = (biz_id: string, template_space_id: string
 }
 
 /**
+ * 获取业务下所有模板套餐（按模板空间分组）
+ * @param biz_id 业务ID
+ * @returns
+ */
+export const getAllPackagesGroupBySpace = (biz_id: string) => {
+  return http.get(`/config/biz/${biz_id}/template_sets/list_all_of_biz`).then(res => res.data);
+}
+
+/**
  * 获取模板空间下的全部配置项模板列表
  * @param biz_id 业务ID
  * @param template_space_id 模板空间ID
@@ -385,4 +394,24 @@ export const getAppsVersionBoundByTemplateVersion = (biz_id: string, template_sp
   return http
     .get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions/${template_revision_id}/bound_named_app_details`, { params })
     .then(res => res.data)
+}
+
+/**
+ * 查询模板套餐和服务的绑定关系
+ * @param biz_id 业务ID
+ * @param app_id 应用ID
+ * @returns
+ */
+export const getAppPkgBindingRelations = (biz_id: string, app_id: number) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/template_bindings`).then(res => res.data)
+}
+
+/**
+ * 批量查询模板的版本名称
+ * @param biz_id 业务ID
+ * @param template_ids 模板ID列表
+ * @returns
+ */
+export const getTemplateVersionsNameByIds = (biz_id: string, template_ids: number[]) => {
+  return http.post(`/config/biz/${biz_id}/template_revisions/list_names_by_template_ids`, { template_ids }).then(res => res.data)
 }

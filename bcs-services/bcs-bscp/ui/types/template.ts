@@ -86,7 +86,6 @@ export interface IPackageCitedByApps {
 }
 
 // 多个模板套餐被多个服务引用数据
-
 export interface IPackagesCitedByApps {
   template_set_id: number;
   template_set_name: string;
@@ -153,3 +152,34 @@ export interface ITemplateVersionEditingData {
   byte_size: number;
 }
 
+// 业务下所有模板套餐列表（按模板空间分组）
+export interface IAllPkgsGroupBySpaceInBiz {
+  template_space_id: number;
+  template_space_name: string;
+  template_sets: {
+    template_set_id: number;
+    template_set_name: string;
+    is_latest: boolean;
+  }[]
+}
+
+// 业务下所有模板套餐列表树
+export interface IPkgTreeItem {
+  id: number;
+  nodeId: string;
+  name: string;
+  checked?: boolean;
+  disabled?: boolean;
+  indeterminate?: boolean;
+}
+
+// 模板下多个版本名称
+export interface ITemplateVersionsName {
+  template_id: number;
+  template_name: string;
+  latest_template_revision_id: number;
+  template_revisions: {
+    template_revision_id: number;
+    template_revision_name: string;
+  }[]
+}

@@ -134,3 +134,13 @@ export interface IReleasedGroup {
   };
   uid: string;
 }
+
+// 模板套餐与服务的绑定数据
+export interface ITemplateBoundByAppData {
+  template_set_id: number;
+  template_revisions: {
+    template_id: number;
+    template_revision_id: number;
+    is_latest: boolean;
+  }[]
+}
