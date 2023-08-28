@@ -179,7 +179,8 @@ func getResourceNodeFromPermCtx(permCtx *PermCtx) iam.ResourceNode {
 func getApplicationsFromPermCtx(permCtx *PermCtx, actionsID string) []iam.ApplicationAction {
 	apps := make([]iam.ApplicationAction, 0)
 	if permCtx == nil {
-		return []iam.ApplicationAction{{ActionID: actionsID}}
+		return []iam.ApplicationAction{{ActionID: actionsID,
+			RelatedResources: []iamsdk.ApplicationRelatedResourceType{}}}
 	}
 	switch permCtx.ResourceType {
 	case Project:
@@ -229,7 +230,8 @@ func getApplicationsFromPermCtx(permCtx *PermCtx, actionsID string) []iam.Applic
 				},
 			})
 	default:
-		apps = []iam.ApplicationAction{{ActionID: actionsID}}
+		apps = []iam.ApplicationAction{{ActionID: actionsID,
+			RelatedResources: []iamsdk.ApplicationRelatedResourceType{}}}
 	}
 	return apps
 }
