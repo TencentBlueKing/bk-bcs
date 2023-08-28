@@ -20,6 +20,8 @@ const (
 	IpSchedulerV1 = "v1"
 	// IpSchedulerV2 scheduler v2
 	IpSchedulerV2 = "v2"
+	// IpSchedulerV3 scheduler v3
+	IpSchedulerV3 = "v3"
 
 	// TotalNodeNumKey total node
 	TotalNodeNumKey = "totalNode"
