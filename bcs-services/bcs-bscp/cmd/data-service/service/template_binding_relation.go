@@ -481,6 +481,7 @@ func (s *Service) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context,
 	var hitError error
 	pipe := make(chan struct{}, 10)
 	wg := sync.WaitGroup{}
+	lock := sync.Mutex{}
 
 	for _, tmplID := range templateIDs {
 		wg.Add(1)
@@ -498,8 +499,10 @@ func (s *Service) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context,
 				hitError = err
 				return
 			}
+			lock.Lock()
 			tmplTmplSetsMap[tmplID] = tmplSetIDs
 			allTmplSetIDs = append(allTmplSetIDs, tmplSetIDs...)
+			lock.Unlock()
 		}(tmplID)
 	}
 	wg.Wait()
@@ -798,6 +801,7 @@ func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context
 	var hitError error
 	pipe := make(chan struct{}, 10)
 	wg := sync.WaitGroup{}
+	lock := sync.Mutex{}
 
 	for _, tmplSetID := range templateSetIDs {
 		wg.Add(1)
@@ -815,8 +819,10 @@ func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context
 				hitError = err
 				return
 			}
+			lock.Lock()
 			tmplSetAppsMap[tmplSetID] = appIDs
 			allAppIDs = append(allAppIDs, appIDs...)
+			lock.Unlock()
 		}(tmplSetID)
 	}
 	wg.Wait()
