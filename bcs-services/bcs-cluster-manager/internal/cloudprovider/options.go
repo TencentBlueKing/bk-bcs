@@ -433,6 +433,7 @@ type UpdateDesiredNodeOption struct {
 	// AsOption for moduleInfo
 	AsOption *proto.ClusterAutoScalingOption
 	Operator string
+	Manual   bool
 }
 
 // SwitchNodeGroupAutoScalingOption switch nodegroup auto scaling

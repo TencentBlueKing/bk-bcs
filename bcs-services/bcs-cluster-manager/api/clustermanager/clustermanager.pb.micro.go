@@ -98,6 +98,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.BatchDeleteNodesFromCluster",
+			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes/-/batch"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
 			Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
 			Method:  []string{"GET"},
@@ -819,6 +826,7 @@ type ClusterManagerService interface {
 	UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...client.CallOption) (*UpdateClusterResp, error)
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
 	DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error)
+	BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error)
 	GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error)
 	ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error)
 	ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error)
@@ -1038,6 +1046,16 @@ func (c *clusterManagerService) AddNodesToCluster(ctx context.Context, in *AddNo
 func (c *clusterManagerService) DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DeleteNodesFromCluster", in)
 	out := new(DeleteNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.BatchDeleteNodesFromCluster", in)
+	out := new(BatchDeleteClusterNodesResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2137,6 +2155,7 @@ type ClusterManagerHandler interface {
 	UpdateCluster(context.Context, *UpdateClusterReq, *UpdateClusterResp) error
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
 	DeleteNodesFromCluster(context.Context, *DeleteNodesRequest, *DeleteNodesResponse) error
+	BatchDeleteNodesFromCluster(context.Context, *BatchDeleteClusterNodesRequest, *BatchDeleteClusterNodesResponse) error
 	GetExternalNodeScriptByGroupID(context.Context, *GetExternalNodeScriptRequest, *GetExternalNodeScriptResponse) error
 	ListNodesInCluster(context.Context, *ListNodesInClusterRequest, *ListNodesInClusterResponse) error
 	ListMastersInCluster(context.Context, *ListMastersInClusterRequest, *ListMastersInClusterResponse) error
@@ -2281,6 +2300,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateCluster(ctx context.Context, in *UpdateClusterReq, out *UpdateClusterResp) error
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
 		DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error
+		BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error
 		GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error
 		ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error
 		ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error
@@ -2445,6 +2465,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteNodesFromCluster",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.BatchDeleteNodesFromCluster",
+		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes/-/batch"},
 		Method:  []string{"DELETE"},
 		Body:    "",
 		Handler: "rpc",
@@ -3193,6 +3220,10 @@ func (h *clusterManagerHandler) AddNodesToCluster(ctx context.Context, in *AddNo
 
 func (h *clusterManagerHandler) DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error {
 	return h.ClusterManagerHandler.DeleteNodesFromCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error {
+	return h.ClusterManagerHandler.BatchDeleteNodesFromCluster(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error {

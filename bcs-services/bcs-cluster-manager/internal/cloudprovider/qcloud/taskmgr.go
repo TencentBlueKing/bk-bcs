@@ -95,6 +95,7 @@ func newtask() *Task {
 
 	// clean node in nodeGroup task
 	task.works[cleanNodeGroupNodesStep.StepMethod] = tasks.CleanNodeGroupNodesTask
+	task.works[checkClusterCleanNodsStep.StepMethod] = tasks.CheckClusterCleanNodsTask
 	task.works[returnIDCNodeToResourcePoolStep.StepMethod] = tasks.ReturnIDCNodeToResourcePoolTask
 	//task.works[checkCleanNodeGroupNodesStatusTask] = tasks.CheckCleanNodeGroupNodesStatusTask
 	//task.works[updateCleanNodeGroupNodesDBInfoTask] = tasks.UpdateCleanNodeGroupNodesDBInfoTask
@@ -986,29 +987,29 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	// step1: cluster scaleIn to clean cluster nodes
 	if !isExternal {
 		cleanNodeGroupNodes.BuildCleanNodeGroupNodesStep(task)
+		cleanNodeGroupNodes.BuildCheckClusterCleanNodsStep(task)
 		common.BuildRemoveHostStep(task, opt.Cluster.BusinessID, nodeIPs)
 	} else {
 		cleanNodeGroupNodes.BuildRemoveExternalNodesStep(task)
+		// externalNodes platform bk sops task 系统初始化
+		if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil &&
+			opt.Cloud.NodeGroupManagement.DeleteExternalNodesFromCluster != nil {
+			err := template.BuildSopsFactory{
+				Cluster: opt.Cluster,
+				Extra: template.ExtraInfo{
+					NodeIPList:         strings.Join(nodeIPs, ","),
+					NodeOperator:       opt.Operator,
+					ExternalNodeScript: "",
+					ModuleID:           cloudprovider.GetScaleInModuleID(opt.AsOption, group.NodeTemplate),
+					BusinessID:         cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, false),
+					NodeGroupID:        group.NodeGroupID,
+				}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.DeleteExternalNodesFromCluster, false)
+			if err != nil {
+				return nil, fmt.Errorf("BuildCleanNodesInGroupTask BuildBkSopsStepAction failed: %v", err)
+			}
+		}
 		// 归还第三方节点机器
 		cleanNodeGroupNodes.BuildReturnIDCNodeToResPoolStep(task)
-	}
-
-	// externalNodes platform bk sops task
-	if isExternal && opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil &&
-		opt.Cloud.NodeGroupManagement.DeleteExternalNodesFromCluster != nil {
-		err := template.BuildSopsFactory{
-			Cluster: opt.Cluster,
-			Extra: template.ExtraInfo{
-				NodeIPList:         strings.Join(nodeIPs, ","),
-				NodeOperator:       opt.Operator,
-				ExternalNodeScript: "",
-				ModuleID:           cloudprovider.GetScaleInModuleID(opt.AsOption, group.NodeTemplate),
-				BusinessID:         cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, false),
-				NodeGroupID:        group.NodeGroupID,
-			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.DeleteExternalNodesFromCluster, false)
-		if err != nil {
-			return nil, fmt.Errorf("BuildCleanNodesInGroupTask BuildBkSopsStepAction failed: %v", err)
-		}
 	}
 
 	// set current step
@@ -1263,6 +1264,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// must set job-type
 	task.CommonParams[cloudprovider.ScalingNodesNumKey.String()] = strconv.Itoa(int(desired))
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupDesiredNodeJob.String()
+	task.CommonParams[cloudprovider.ManualKey.String()] = strconv.FormatBool(opt.Manual)
+
 	return task, nil
 }
 
@@ -1465,7 +1468,8 @@ func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*pr
 	addExternalNodesTask.BuildGetExternalNodeScriptStep(task)
 
 	// postAction bk-sops task
-	if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil && opt.Cloud.NodeGroupManagement.AddExternalNodesToCluster != nil {
+	if !group.GetNodeTemplate().GetSkipSystemInit() && opt.Cloud != nil &&
+		opt.Cloud.NodeGroupManagement != nil && opt.Cloud.NodeGroupManagement.AddExternalNodesToCluster != nil {
 		err := template.BuildSopsFactory{
 			Cluster: opt.Cluster,
 			Extra: template.ExtraInfo{
@@ -1480,6 +1484,36 @@ func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*pr
 			return nil, fmt.Errorf("BuildAddExternalNodeToCluster BuildBkSopsStepAction failed: %v", err)
 		}
 	}
+
+	// step3. business define sops task 支持脚本和标准运维流程
+	if group.NodeTemplate != nil && len(group.NodeTemplate.UserScript) > 0 {
+		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+			ClusterID:        group.ClusterID,
+			Content:          group.NodeTemplate.UserScript,
+			NodeIps:          strings.Join(nodeIPs, ","),
+			Operator:         opt.Operator,
+			StepName:         common.PostInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.GetAllowSkipScaleOutWhenFailed(),
+		})
+	}
+
+	if group.NodeTemplate != nil && group.NodeTemplate.ScaleOutExtraAddons != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.UserAfterInit,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				InstancePasswd:     "",
+				NodeIPList:         strings.Join(nodeIPs, ","),
+				NodeOperator:       opt.Operator,
+				ShowSopsUrl:        true,
+				ExternalNodeScript: "",
+				NodeGroupID:        group.NodeGroupID,
+			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
 	// step3: 设置节点labels
 	addExternalNodesTask.BuildNodeLabelsStep(task)
 	// step4: 设置节点可调度状态

@@ -3017,6 +3017,68 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "enableFilter",
+            "description": "enableFilter. enableFilter为true时, 输出结果按照是否开启弹性伸缩排序(开启的排序在后面)",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clusters/{clusterID}/nodes/-/batch": {
+      "delete": {
+        "summary": "批量下架集群节点",
+        "description": "批量下架集群节点(包括集群手动上下架节点、CA节点、第三方节点等)",
+        "operationId": "ClusterManager_BatchDeleteNodesFromCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerBatchDeleteClusterNodesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "缩容集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nodeIPs",
+            "description": "nodeIPs. 需要缩容的IP列表,字符','隔开",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "virtualNodeIDs",
+            "description": "virtualNodeIDs. 需要缩容的虚拟节点列表,字符','隔开",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "operator. 操作者",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5664,6 +5726,74 @@
       "description": "标准运维模板信息记录，用于自动化工作流程记录",
       "title": "BKOpsPlugin"
     },
+    "clustermanagerBatchDeleteClusterNodesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerBatchNodesStatus"
+          },
+          "description": "返回节点下架结果",
+          "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属集群权限",
+          "title": "web_annotations"
+        }
+      },
+      "description": "批量下架节点返回，主要是返回相应下架节点的任务，确认节点下架是否成功",
+      "title": "BatchDeleteClusterNodesResponse",
+      "required": [
+        "code",
+        "data"
+      ]
+    },
+    "clustermanagerBatchNodesStatus": {
+      "type": "object",
+      "properties": {
+        "nodeIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "taskID": {
+          "type": "string"
+        },
+        "nodeGroupID": {
+          "type": "string"
+        },
+        "nodeGroupType": {
+          "type": "string"
+        }
+      }
+    },
     "clustermanagerCheckNodesRequest": {
       "type": "object",
       "properties": {
@@ -7253,6 +7383,11 @@
           "type": "string",
           "description": "云上节点可用区名称",
           "title": "zoneName"
+        },
+        "taskID": {
+          "type": "string",
+          "description": "节点所属的扩容IP,主要是针对虚拟节点展示任务详情",
+          "title": "taskID"
         }
       },
       "description": "记录节点信息，用于节点列表展示",
@@ -12647,6 +12782,11 @@
           "type": "string",
           "description": "节点所在可用区名称",
           "title": "zoneName"
+        },
+        "taskID": {
+          "type": "string",
+          "description": "节点对应的任务ID, 仅在申请资源时追踪节点数据",
+          "title": "taskID"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
@@ -15495,6 +15635,12 @@
           "type": "string",
           "description": "扩容操作人员",
           "title": "operator"
+        },
+        "manual": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "手动扩容操作,用户手动扩容操作不做数据回退清理，展示具体的步骤，支持用户重试",
+          "title": "manual"
         }
       },
       "description": "更新NodeGroup期望的节点数",

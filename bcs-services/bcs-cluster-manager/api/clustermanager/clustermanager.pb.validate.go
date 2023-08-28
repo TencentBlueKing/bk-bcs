@@ -341,6 +341,8 @@ func (m *Node) Validate() error {
 
 	// no validation rules for ZoneName
 
+	// no validation rules for TaskID
+
 	return nil
 }
 
@@ -13837,6 +13839,8 @@ func (m *ClusterNode) Validate() error {
 
 	// no validation rules for ZoneName
 
+	// no validation rules for TaskID
+
 	return nil
 }
 
@@ -17352,6 +17356,8 @@ func (m *ListClusterNodeGroupRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for EnableFilter
+
 	return nil
 }
 
@@ -17904,6 +17910,291 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = AddNodesResponseValidationError{}
+
+// Validate checks the field values on BatchDeleteClusterNodesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *BatchDeleteClusterNodesRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
+		return BatchDeleteClusterNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		return BatchDeleteClusterNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+	}
+
+	if !_BatchDeleteClusterNodesRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return BatchDeleteClusterNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	// no validation rules for NodeIPs
+
+	// no validation rules for VirtualNodeIDs
+
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 20 {
+		return BatchDeleteClusterNodesRequestValidationError{
+			field:  "Operator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+	}
+
+	if !_BatchDeleteClusterNodesRequest_Operator_Pattern.MatchString(m.GetOperator()) {
+		return BatchDeleteClusterNodesRequestValidationError{
+			field:  "Operator",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// BatchDeleteClusterNodesRequestValidationError is the validation error
+// returned by BatchDeleteClusterNodesRequest.Validate if the designated
+// constraints aren't met.
+type BatchDeleteClusterNodesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BatchDeleteClusterNodesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BatchDeleteClusterNodesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BatchDeleteClusterNodesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BatchDeleteClusterNodesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BatchDeleteClusterNodesRequestValidationError) ErrorName() string {
+	return "BatchDeleteClusterNodesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e BatchDeleteClusterNodesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBatchDeleteClusterNodesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BatchDeleteClusterNodesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BatchDeleteClusterNodesRequestValidationError{}
+
+var _BatchDeleteClusterNodesRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _BatchDeleteClusterNodesRequest_Operator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on BatchDeleteClusterNodesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *BatchDeleteClusterNodesResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return BatchDeleteClusterNodesResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return BatchDeleteClusterNodesResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// BatchDeleteClusterNodesResponseValidationError is the validation error
+// returned by BatchDeleteClusterNodesResponse.Validate if the designated
+// constraints aren't met.
+type BatchDeleteClusterNodesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BatchDeleteClusterNodesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BatchDeleteClusterNodesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BatchDeleteClusterNodesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BatchDeleteClusterNodesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BatchDeleteClusterNodesResponseValidationError) ErrorName() string {
+	return "BatchDeleteClusterNodesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e BatchDeleteClusterNodesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBatchDeleteClusterNodesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BatchDeleteClusterNodesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BatchDeleteClusterNodesResponseValidationError{}
+
+// Validate checks the field values on BatchNodesStatus with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *BatchNodesStatus) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	// no validation rules for Message
+
+	// no validation rules for TaskID
+
+	// no validation rules for NodeGroupID
+
+	// no validation rules for NodeGroupType
+
+	return nil
+}
+
+// BatchNodesStatusValidationError is the validation error returned by
+// BatchNodesStatus.Validate if the designated constraints aren't met.
+type BatchNodesStatusValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BatchNodesStatusValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BatchNodesStatusValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BatchNodesStatusValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BatchNodesStatusValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BatchNodesStatusValidationError) ErrorName() string { return "BatchNodesStatusValidationError" }
+
+// Error satisfies the builtin error interface
+func (e BatchNodesStatusValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBatchNodesStatus.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BatchNodesStatusValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BatchNodesStatusValidationError{}
 
 // Validate checks the field values on DeleteNodesRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -19809,6 +20100,8 @@ func (m *UpdateGroupDesiredNodeRequest) Validate() error {
 			reason: "value length must be at most 100 runes",
 		}
 	}
+
+	// no validation rules for Manual
 
 	return nil
 }

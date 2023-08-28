@@ -462,6 +462,7 @@ func transNodeToClusterNode(model store.ClusterManagerModel, node *proto.Node) *
 		NodeName:      node.NodeName,
 		NodeGroupName: nodeGroupName,
 		InnerIPv6:     node.InnerIPv6,
+		TaskID:        node.TaskID,
 	}
 }
 
