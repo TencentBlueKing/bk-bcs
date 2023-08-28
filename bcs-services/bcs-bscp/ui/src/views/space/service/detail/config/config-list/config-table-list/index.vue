@@ -10,7 +10,7 @@
   import { getConfigList, deleteServiceConfigItem } from '../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../utils/config'
   import EditConfig from './edit-config.vue'
-  import CreateConfig from './create-config.vue'
+  import CreateConfig from './create-config/index.vue'
   import PublishVersion from './publish-version/index.vue'
   import CreateVersion from './create-version/index.vue'
   import ModifyGroupPublish from './modify-group-publish.vue'
@@ -18,7 +18,6 @@
 
   const serviceStore = useServiceStore()
   const configStore = useConfigStore()
-  const { appData } = storeToRefs(serviceStore)
   const { versionData } = storeToRefs(configStore)
 
   const props = defineProps<{

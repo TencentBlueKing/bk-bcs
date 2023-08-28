@@ -1,5 +1,5 @@
 import http from "../request"
-import { IConfigEditParams, IConfigListQueryParams, IConfigVersionQueryParams } from '../../types/config'
+import { IConfigEditParams, IConfigListQueryParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config'
 
 /**
  * 获取配置项列表，通过params中的release_id区分是否拿某个版本下的配置项列表
@@ -148,4 +148,8 @@ export const getConfigInitScript = (bizId: string, appId: number) => {
  */
 export const updateConfigInitScript = (bizId: string, appId: number, params: { pre_hook_id: number; post_hook_id: number; }) => {
   return http.put(`/config/biz/${bizId}/apps/${appId}/config_hooks`, params)
+}
+
+export const importTemplateConfigPkgs = (bizId: string, appId: number, params: { bindings: ITemplateBoundByAppData[] }) => {
+  return http.post(`/config/biz/${bizId}/apps/${appId}/template_bindings`, params)
 }
