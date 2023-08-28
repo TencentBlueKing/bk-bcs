@@ -307,7 +307,7 @@ func genReleaseRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resourc
 	switch a.Basic.Action {
 	case meta.Create:
 		// create current released instance is related to bscp application resource, using config item packing action
-		return sys.ConfigItemPacking, []client.Resource{appRes}, nil
+		return sys.GenerateRelease, []client.Resource{appRes}, nil
 	case meta.Find:
 		// find release is related to cmdb business resource, using view biz action
 		return sys.BusinessViewResource, []client.Resource{bizRes}, nil
@@ -364,7 +364,7 @@ func genStrategyRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resour
 		return sys.StrategyDelete, []client.Resource{appRes}, nil
 	case meta.Publish:
 		// publish strategy is related to bscp application resource, using strategy publish action
-		return sys.ConfigItemPublish, []client.Resource{appRes}, nil
+		return sys.ReleasePublish, []client.Resource{appRes}, nil
 	case meta.FinishPublish:
 		// finish publish strategy is related to bscp application resource, using strategy finish publish action
 		return sys.ConfigItemFinishPublish, []client.Resource{appRes}, nil
