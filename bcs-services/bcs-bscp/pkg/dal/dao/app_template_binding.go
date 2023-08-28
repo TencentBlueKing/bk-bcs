@@ -28,13 +28,15 @@ import (
 // AppTemplateBinding supplies all the app template binding related operations.
 type AppTemplateBinding interface {
 	// Create one app template binding instance.
-	Create(kit *kit.Kit, templateSpace *table.AppTemplateBinding) (uint32, error)
+	Create(kit *kit.Kit, atb *table.AppTemplateBinding) (uint32, error)
 	// Update one app template binding's info.
-	Update(kit *kit.Kit, templateSpace *table.AppTemplateBinding) error
+	Update(kit *kit.Kit, atb *table.AppTemplateBinding) error
+	// UpdateWithTx Update one app template binding's info with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding) error
 	// List app template bindings with options.
 	List(kit *kit.Kit, bizID, appID uint32, opt *types.BasePage) ([]*table.AppTemplateBinding, int64, error)
 	// Delete one app template binding instance.
-	Delete(kit *kit.Kit, templateSpace *table.AppTemplateBinding) error
+	Delete(kit *kit.Kit, atb *table.AppTemplateBinding) error
 }
 
 var _ AppTemplateBinding = new(appTemplateBindingDao)
@@ -106,7 +108,7 @@ func (dao *appTemplateBindingDao) Update(kit *kit.Kit, g *table.AppTemplateBindi
 		q = tx.AppTemplateBinding.WithContext(kit.Ctx)
 		if _, err = q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
 			Select(m.Bindings, m.TemplateSpaceIDs, m.TemplateSetIDs, m.TemplateIDs, m.TemplateRevisionIDs,
-				m.LatestTemplateRevisionIDs, m.Creator, m.Reviser).
+				m.LatestTemplateIDs, m.Creator, m.Reviser, m.UpdatedAt).
 			Updates(g); err != nil {
 			return err
 		}
@@ -117,6 +119,39 @@ func (dao *appTemplateBindingDao) Update(kit *kit.Kit, g *table.AppTemplateBindi
 		return nil
 	}
 	if err = dao.genQ.Transaction(updateTx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateWithTx Update one app template binding's info with transaction.
+func (dao *appTemplateBindingDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	g *table.AppTemplateBinding) error {
+	if err := g.ValidateUpdate(); err != nil {
+		return err
+	}
+	if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
+		return err
+	}
+
+	// 更新操作, 获取当前记录做审计
+	m := tx.AppTemplateBinding
+	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
+	if err := ad.Do(tx.Query); err != nil {
+		return err
+	}
+
+	q = tx.AppTemplateBinding.WithContext(kit.Ctx)
+	if _, err = q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+		Select(m.Bindings, m.TemplateSpaceIDs, m.TemplateSetIDs, m.TemplateIDs, m.TemplateRevisionIDs,
+			m.LatestTemplateIDs, m.Creator, m.Reviser, m.UpdatedAt).
+		Updates(g); err != nil {
 		return err
 	}
 

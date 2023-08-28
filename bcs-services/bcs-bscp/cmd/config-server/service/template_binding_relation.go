@@ -248,6 +248,50 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 	return resp, nil
 }
 
+// ListMultiTemplateBoundTemplateSetDetails list multiple template bound template set details
+func (s *Service) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context,
+	req *pbcs.ListMultiTemplateBoundTemplateSetDetailsReq) (
+	*pbcs.ListMultiTemplateBoundTemplateSetDetailsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListMultiTemplateBoundTemplateSetDetailsResp)
+
+	templateIDs, err := tools.GetUint32List(req.TemplateIds)
+	if err != nil {
+		return nil, fmt.Errorf("invalid template ids, %s", err)
+	}
+	idsLen := len(templateIDs)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListMultiTemplateBoundTemplateSetDetailsReq{
+		BizId:           req.BizId,
+		TemplateSpaceId: req.TemplateSpaceId,
+		TemplateIds:     templateIDs,
+		Start:           req.Start,
+		Limit:           req.Limit,
+		All:             req.All,
+	}
+
+	rp, err := s.client.DS.ListMultiTemplateBoundTemplateSetDetails(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list multiple template bound template set details failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListMultiTemplateBoundTemplateSetDetailsResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
 // ListTemplateRevisionBoundUnnamedAppDetails list template revision bound unnamed app details
 func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context,
 	req *pbcs.ListTemplateRevisionBoundUnnamedAppDetailsReq) (
@@ -361,7 +405,7 @@ func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context
 
 	templateSetIDs, err := tools.GetUint32List(req.TemplateSetIds)
 	if err != nil {
-		return nil, fmt.Errorf("invalid template ids, %s", err)
+		return nil, fmt.Errorf("invalid template set ids, %s", err)
 	}
 	idsLen := len(templateSetIDs)
 	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
@@ -424,6 +468,40 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 	}
 
 	resp = &pbcs.ListTemplateSetBoundNamedAppDetailsResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListLatestTemplateBoundUnnamedAppDetails list the latest template bound unnamed app details
+func (s *Service) ListLatestTemplateBoundUnnamedAppDetails(ctx context.Context,
+	req *pbcs.ListLatestTemplateBoundUnnamedAppDetailsReq) (
+	*pbcs.ListLatestTemplateBoundUnnamedAppDetailsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListLatestTemplateBoundUnnamedAppDetailsResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListLatestTemplateBoundUnnamedAppDetailsReq{
+		BizId:           req.BizId,
+		TemplateSpaceId: req.TemplateSpaceId,
+		TemplateId:      req.TemplateId,
+		Start:           req.Start,
+		Limit:           req.Limit,
+		All:             req.All,
+	}
+
+	rp, err := s.client.DS.ListLatestTemplateBoundUnnamedAppDetails(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list the latest template bound unnamed app details failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListLatestTemplateBoundUnnamedAppDetailsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

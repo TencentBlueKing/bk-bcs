@@ -127,16 +127,18 @@ func (dao *templateRevisionDao) List(kit *kit.Kit, bizID, templateID uint32, s s
 
 	var conds []rawgen.Condition
 	// add search condition
-	exprs := s.SearchExprs(dao.genQ)
-	if len(exprs) > 0 {
-		var do gen.ITemplateRevisionDo
-		for i := range exprs {
-			if i == 0 {
-				do = q.Where(exprs[i])
+	if s != nil {
+		exprs := s.SearchExprs(dao.genQ)
+		if len(exprs) > 0 {
+			var do gen.ITemplateRevisionDo
+			for i := range exprs {
+				if i == 0 {
+					do = q.Where(exprs[i])
+				}
+				do = do.Or(exprs[i])
 			}
-			do = do.Or(exprs[i])
+			conds = append(conds, do)
 		}
-		conds = append(conds, do)
 	}
 
 	d := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID)).Where(conds...)

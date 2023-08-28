@@ -20,7 +20,7 @@ message AppTemplateBindingSpec {
     repeated uint32          template_set_ids             = 2;
     repeated uint32          template_ids                 = 3;
     repeated uint32          template_revision_ids        = 4;
-    repeated uint32          latest_template_revision_ids = 5;
+    repeated uint32          latest_template_ids = 5;
     repeated TemplateBinding bindings                     = 6;
 }
 

@@ -438,6 +438,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details"
         };
     }
+    rpc ListMultiTemplateBoundTemplateSetDetails(ListMultiTemplateBoundTemplateSetDetailsReq) returns
+        (ListMultiTemplateBoundTemplateSetDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_template_set_details"
+        };
+    }
     rpc ListTemplateRevisionBoundUnnamedAppDetails(ListTemplateRevisionBoundUnnamedAppDetailsReq) returns
         (ListTemplateRevisionBoundUnnamedAppDetailsResp) {
         option (google.api.http) = {
@@ -466,6 +472,12 @@ service Config {
         (ListTemplateSetBoundNamedAppDetailsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details"
+        };
+    }
+    rpc ListLatestTemplateBoundUnnamedAppDetails(ListLatestTemplateBoundUnnamedAppDetailsReq) returns
+        (ListLatestTemplateBoundUnnamedAppDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/latest/bound_unnamed_app_details"
         };
     }
 
@@ -1478,6 +1490,20 @@ message ListTemplateBoundTemplateSetDetailsResp {
     repeated pbtbr.TemplateBoundTemplateSetDetail details = 2;
 }
 
+message ListMultiTemplateBoundTemplateSetDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    string template_ids      = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+    bool   all               = 6;
+}
+
+message ListMultiTemplateBoundTemplateSetDetailsResp {
+    uint32                                             count   = 1;
+    repeated pbtbr.MultiTemplateBoundTemplateSetDetail details = 2;
+}
+
 message ListTemplateRevisionBoundUnnamedAppDetailsReq {
     uint32 biz_id               = 1;
     uint32 template_space_id    = 2;
@@ -1549,6 +1575,20 @@ message ListTemplateSetBoundNamedAppDetailsReq {
 message ListTemplateSetBoundNamedAppDetailsResp {
     uint32                                        count   = 1;
     repeated pbtbr.TemplateSetBoundNamedAppDetail details = 2;
+}
+
+message ListLatestTemplateBoundUnnamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+    bool   all               = 6;
+}
+
+message ListLatestTemplateBoundUnnamedAppDetailsResp {
+    uint32                                             count   = 1;
+    repeated pbtbr.LatestTemplateBoundUnnamedAppDetail details = 2;
 }
 
 message CreateTemplateVariableReq {

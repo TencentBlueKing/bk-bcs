@@ -38,12 +38,12 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		TemplateSpaceIDs          string `gorm:"type:json not null"`
-		TemplateSetIDs            string `gorm:"type:json not null"`
-		TemplateIDs               string `gorm:"type:json not null"`
-		TemplateRevisionIDs       string `gorm:"type:json not null"`
-		LatestTemplateRevisionIDs string `gorm:"type:json not null"`
-		Bindings                  string `gorm:"type:json not null"`
+		TemplateSpaceIDs    string `gorm:"type:json not null"`
+		TemplateSetIDs      string `gorm:"type:json not null"`
+		TemplateIDs         string `gorm:"type:json not null"`
+		TemplateRevisionIDs string `gorm:"type:json not null"`
+		LatestTemplateIDs   string `gorm:"type:json not null"`
+		Bindings            string `gorm:"type:json not null"`
 
 		// Attachment is attachment info of the resource
 		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID,priority:1"`

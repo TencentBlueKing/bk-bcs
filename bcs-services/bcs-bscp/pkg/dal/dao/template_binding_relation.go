@@ -14,6 +14,7 @@ package dao
 
 import (
 	"bscp.io/pkg/dal/gen"
+	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/types"
 
@@ -52,6 +53,8 @@ type TemplateBindingRelation interface {
 	ListTemplateSetBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateSetID uint32) ([]uint32, error)
 	// ListTemplateSetBoundNamedAppDetails list bound named app details of the target template set.
 	ListTemplateSetBoundNamedAppDetails(kit *kit.Kit, bizID, templateSetID uint32) ([]*types.TmplSetBoundNamedAppDetail, error)
+	// ListLatestTemplateBoundUnnamedAppDetails list bound unnamed app details of the latest target template.
+	ListLatestTemplateBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateID uint32) ([]*table.AppTemplateBinding, error)
 	// ListTemplateSetInvisibleApps list invisible apps of the target template set when update its app visible scope.
 	ListTemplateSetInvisibleApps(kit *kit.Kit, bizID, templateSetID uint32, boundApps []uint32) ([]uint32, error)
 	// DeleteTmplWithTx delete a template with transaction.
@@ -296,6 +299,16 @@ func (dao *templateBindingRelationDao) ListTemplateSetBoundNamedAppDetails(kit *
 	}
 
 	return rs, nil
+}
+
+// ListLatestTemplateBoundUnnamedAppDetails list bound unnamed app details of the latest target template.
+func (dao *templateBindingRelationDao) ListLatestTemplateBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateID uint32) (
+	[]*table.AppTemplateBinding, error) {
+	m := dao.genQ.AppTemplateBinding
+	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
+	return q.Where(m.BizID.Eq(bizID)).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("latest_template_ids").Contains(templateID))...).
+		Find()
 }
 
 // ListTemplateSetInvisibleApps list invisible apps of the target template set when update its app visible scope.
