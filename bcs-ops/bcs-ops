@@ -25,7 +25,8 @@ readonly VERSION PROGRAM SELF_DIR ROOT_DIR
 INSTALL_PROJECTS=(master node helm op)
 RENDER_PROJECTS=(bcsenv kubeadm joincmd)
 CLEAN_PROJECTS=(master node bcsenv op)
-readonly INSTALL_PROJECTS CLEAN_PROJECTS RENDER_PROJECTS
+CHECK_PROJECTS=(all check_kernel check_swap check_selinux check_firewalld check_yum_proxy check_http_proxy check_openssl check_hostname check_tools)
+readonly INSTALL_PROJECTS CLEAN_PROJECTS RENDER_PROJECTS CHECK_PROJECTS
 
 usage_and_exit() {
   cat <<EOF
@@ -36,6 +37,7 @@ Usage:
     [ -i --install     support: ${INSTALL_PROJECTS[*]}]
     [ -r --render      suppport: ${RENDER_PROJECTS[*]}]
     [ -c --clean       support: ${CLEAN_PROJECTS[*]}]
+    [ -e --check       support: ${CHECK_PROJECTS[*]}]
 EOF
   exit "$1"
 }
@@ -115,6 +117,10 @@ clean_op() {
   "${ROOT_DIR}"/k8s/operate_completion clean
 }
 
+check_all() {
+    "${ROOT_DIR}"/system/check_host.sh -c all
+}
+
 main() {
   local source_files
   source_files=("${ROOT_DIR}"/functions/utils.sh)
@@ -149,6 +155,12 @@ main() {
       --clean | -c)
         shift
         op_type=clean
+        project="$1"
+        break
+        ;;
+      --check | -e)
+        shift
+        op_type=check
         project="$1"
         break
         ;;
