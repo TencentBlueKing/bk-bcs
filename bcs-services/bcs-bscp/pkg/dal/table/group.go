@@ -220,6 +220,8 @@ func (g GroupSpec) ValidateCreate() error {
 		if g.UID == "" {
 			return errors.New("group works in debug mode, uid should be set")
 		}
+	default:
+		return fmt.Errorf("unsupported group working mode: %s", g.Mode.String())
 	}
 	return nil
 }

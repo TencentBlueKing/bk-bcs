@@ -277,7 +277,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 func (s *Service) doBatchUpdateConfigItemSpec(kt *kit.Kit, tx *gen.QueryTx,
 	toUpdate []*pbds.BatchUpsertConfigItemsReq_ConfigItem, now time.Time,
 	bizID, appID uint32, ciMap map[string]*table.ConfigItem) error {
-	toCreateConfigItems := []*table.ConfigItem{}
+	configItems := []*table.ConfigItem{}
 	for _, item := range toUpdate {
 		ci := &table.ConfigItem{
 			ID:         ciMap[path.Join(item.ConfigItemSpec.Path, item.ConfigItemSpec.Name)].ID,
@@ -290,9 +290,9 @@ func (s *Service) doBatchUpdateConfigItemSpec(kt *kit.Kit, tx *gen.QueryTx,
 				UpdatedAt: now,
 			},
 		}
-		toCreateConfigItems = append(toCreateConfigItems, ci)
+		configItems = append(configItems, ci)
 	}
-	if err := s.dao.ConfigItem().BatchUpdateWithTx(kt, tx, toCreateConfigItems); err != nil {
+	if err := s.dao.ConfigItem().BatchUpdateWithTx(kt, tx, configItems); err != nil {
 		logs.Errorf("batch update config items failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
