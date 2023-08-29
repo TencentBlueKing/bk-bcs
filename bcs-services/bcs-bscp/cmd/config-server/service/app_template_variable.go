@@ -28,7 +28,7 @@ func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbcs.Ext
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ExtractAppTemplateVariablesResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateVariable, Action: meta.Find},
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find},
 		BizID: req.BizId}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
@@ -41,11 +41,40 @@ func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbcs.Ext
 
 	rp, err := s.client.DS.ExtractAppTemplateVariables(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
 	resp = &pbcs.ExtractAppTemplateVariablesResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// GetAppTemplateVariableReferences get app template variable references
+func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbcs.GetAppTemplateVariableReferencesReq) (
+	*pbcs.GetAppTemplateVariableReferencesResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.GetAppTemplateVariableReferencesResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find},
+		BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetAppTemplateVariableReferencesReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+	}
+
+	rp, err := s.client.DS.GetAppTemplateVariableReferences(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("get app template variable references failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.GetAppTemplateVariableReferencesResp{
 		Details: rp.Details,
 	}
 	return resp, nil

@@ -108,3 +108,21 @@ func RemoveDuplicates(input []uint32) []uint32 {
 
 	return uniqueSlice
 }
+
+// RemoveDuplicateStrings remove duplicate elements from a slice of string
+func RemoveDuplicateStrings(input []string) []string {
+	// Create a map to track unique elements
+	uniqueMap := make(map[string]bool)
+	uniqueSlice := make([]string, 0)
+
+	// Iterate through the original slice
+	for _, item := range input {
+		// If the element is not in the map, add it to the map and new slice
+		if !uniqueMap[item] {
+			uniqueMap[item] = true
+			uniqueSlice = append(uniqueSlice, item)
+		}
+	}
+
+	return uniqueSlice
+}
