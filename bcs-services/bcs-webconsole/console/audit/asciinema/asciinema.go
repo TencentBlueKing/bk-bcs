@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	maxBuffSize  = 1024
 	maxFileSize  = 100 * 1000 * 1000 // 100M
 	version      = 2
 	defaultShell = "/bin/bash"
@@ -45,6 +46,7 @@ func NewWriter(w io.Writer, opts ...Option) *Writer {
 		TimestampNano: conf.Timestamp.UnixNano(),
 		writer:        w,
 		limit:         maxFileSize,
+		WriteBuff:     make([]byte, 0, maxBuffSize),
 	}
 }
 
@@ -54,6 +56,7 @@ type Writer struct {
 	writer        io.Writer
 	limit         int
 	written       int
+	WriteBuff     []byte
 }
 
 func (w *Writer) WriteHeader() error {
@@ -92,12 +95,43 @@ func (w *Writer) WriteStdout(ts float64, data []byte) error {
 	if err != nil {
 		return err
 	}
-	_, err = w.Write(raw)
-	if err != nil {
+
+	if len(raw) > maxBuffSize { //读取的数据大于最大缓存
+		//先缓存写入再将读取的数据写入文件
+		_, err := w.Write(w.WriteBuff)
+		if err != nil {
+			return err
+		}
+		w.WriteBuff = w.WriteBuff[:0]
+		_, err = w.Write(raw)
+		if err != nil {
+			return err
+		}
+		_, err = w.Write(newLine)
 		return err
+	} else if len(raw)+len(w.WriteBuff) > maxBuffSize { //检查是否达到最大容量
+		//buff写入文件,清空buff,raw写入buff
+		_, err := w.Write(w.WriteBuff)
+		if err != nil {
+			return err
+		}
+		w.WriteBuff = w.WriteBuff[:0]
+		raw := append(raw, newLine...)
+		w.WriteBuff = append(w.WriteBuff, raw...)
+	} else {
+		raw := append(raw, newLine...)
+		w.WriteBuff = append(w.WriteBuff, raw...)
 	}
-	_, err = w.Write(newLine)
-	return err
+	//w.WriteBuff = append(w.WriteBuff, raw...)
+	//w.WriteBuff = append(w.WriteBuff, newLine...)
+	//
+	//_, err = w.Write(raw)
+	//if err != nil {
+	//	return err
+	//}
+	//_, err = w.Write(newLine)
+	//return err
+	return nil
 }
 
 type Header struct {

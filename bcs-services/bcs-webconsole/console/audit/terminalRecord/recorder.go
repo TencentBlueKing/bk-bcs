@@ -130,6 +130,8 @@ func (r *ReplyRecorder) End() {
 	if r == nil {
 		return
 	} else {
+		//关闭前将剩余缓冲区数据写入
+		r.Writer.Write(r.Writer.WriteBuff)
 		r.file.Close()
 		return
 	}
