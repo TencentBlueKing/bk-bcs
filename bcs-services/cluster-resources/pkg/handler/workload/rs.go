@@ -75,12 +75,12 @@ func (h *Handler) GetDeployHistoryRevision(ctx context.Context, req *clusterRes.
 	return nil
 }
 
-// GetDeployRevisionDetail 获取deployment revision信息
-func (h *Handler) GetDeployRevisionDetail(ctx context.Context, req *clusterRes.GetDeployRevisionDetailReq,
+// GetDeployRevisionDiff 获取deployment revision差异信息
+func (h *Handler) GetDeployRevisionDiff(ctx context.Context, req *clusterRes.GetDeployRevisionDetailReq,
 	resp *clusterRes.CommonResp) error {
 
 	// 根据deployment name筛选
-	ret, err := cli.NewRSCliByClusterID(ctx, req.ClusterID).GetDeployRevisionDetail(
+	ret, err := cli.NewRSCliByClusterID(ctx, req.ClusterID).GetDeployRevisionDiff(
 		ctx, req.Name, req.Namespace, req.Revision)
 
 	if err != nil {

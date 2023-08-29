@@ -3842,7 +3842,7 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/revision": {
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/{name}": {
       "get": {
         "summary": "GetHistoryDeployRevision API",
         "description": "获取 Deployment Revision",
@@ -3882,9 +3882,8 @@
           },
           {
             "name": "name",
-            "description": "资源名称.",
-            "in": "query",
-            "required": false,
+            "in": "path",
+            "required": true,
             "type": "string"
           }
         ],
@@ -3893,11 +3892,11 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/detail": {
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/diff/{name}": {
       "get": {
         "summary": "GetDeployRevisionDetail API",
-        "description": "获取 Deployment Revision相关信息",
-        "operationId": "Workload_GetDeployRevisionDetail",
+        "description": "获取deployment revision差异信息",
+        "operationId": "Workload_GetDeployRevisionDiff",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -3933,9 +3932,8 @@
           },
           {
             "name": "name",
-            "description": "资源名称.",
-            "in": "query",
-            "required": false,
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
@@ -3951,7 +3949,7 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/revision": {
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/{name}": {
       "put": {
         "summary": "RolloutDeployRevision API",
         "description": "回滚 Deployment Revision",
@@ -3985,6 +3983,12 @@
           },
           {
             "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
             "in": "path",
             "required": true,
             "type": "string"

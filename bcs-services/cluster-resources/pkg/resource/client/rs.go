@@ -17,7 +17,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +28,7 @@ import (
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // RSClient ReplicaSet Client
@@ -99,15 +99,15 @@ func (c *RSClient) GetDeployHistoryRevision(
 	// 获取版本号和change cause map[int64]runtime.Object -> map[string]interface{}
 	for key, data := range s {
 		if value, ok := data.(*v1.ReplicaSet); ok {
-			m[fmt.Sprintf("%d", key)] = value.ObjectMeta.Annotations["deployment.kubernetes.io/change-cause"]
+			m[fmt.Sprintf("%d", key)] = value.ObjectMeta.Annotations[resCsts.ChangeCause]
 		}
 	}
 
 	return m, err
 }
 
-// GetDeployRevisionDetail 获取deployment revision信息
-func (c *RSClient) GetDeployRevisionDetail(
+// GetDeployRevisionDiff 获取deployment revision差异信息
+func (c *RSClient) GetDeployRevisionDiff(
 	ctx context.Context, deployName, namespace, revision string) (m map[string]interface{}, err error) {
 
 	// permValidate IAM 权限校验
@@ -118,18 +118,33 @@ func (c *RSClient) GetDeployRevisionDetail(
 	// 初始化
 	m = map[string]interface{}{}
 
-	// 转换成int64，和前端的交互统一为string
-	deployRevision, err := strconv.ParseInt(revision, 10, 64)
+	// 即将回滚的版本，转换成int64，和前端的交互统一为string
+	rolloutRevision, err := stringx.GetInt64(revision)
 	if err != nil {
 		return m, nil
 	}
 
+	// 初始化k8s ClientSet
 	clientSet, err := kubernetes.NewForConfig(c.conf.Rest)
 	if err != nil {
 		return m, err
 	}
 
-	// 通过GroupKind创建HistoryViewer
+	// 获取当前版本deploy相关信息
+	deploy, err := clientSet.AppsV1().Deployments(namespace).Get(ctx, deployName, metav1.GetOptions{})
+	if err != nil {
+		return m, err
+	}
+
+	// 版本号
+	revisionStr := deploy.Annotations[resCsts.Revision]
+	// 转换成int64
+	currentRevision, err := stringx.GetInt64(revisionStr)
+	if err != nil {
+		return m, nil
+	}
+
+	// 通过GroupKind创建HistoryViewer，获取template
 	historyViewer, err := polymorphichelpers.HistoryViewerFor(
 		schema.GroupKind{Group: c.res.Group, Kind: "Deployment"}, clientSet)
 	if err != nil {
@@ -137,13 +152,19 @@ func (c *RSClient) GetDeployRevisionDetail(
 	}
 
 	// 以string的方法返回revision相关信息
-	s, err := historyViewer.ViewHistory(namespace, deployName, deployRevision)
+	rolloutHistory, err := historyViewer.ViewHistory(namespace, deployName, rolloutRevision)
 	if err != nil {
 		return m, err
 	}
 
-	// key为revision，值为string
-	m[revision] = s
+	currentHistory, err := historyViewer.ViewHistory(namespace, deployName, currentRevision)
+	if err != nil {
+		return m, err
+	}
+
+	// key为revision，值为template，string格式
+	m[resCsts.RolloutRevision] = rolloutHistory
+	m[resCsts.CurrentRevision] = currentHistory
 	return m, err
 }
 
@@ -160,7 +181,7 @@ func (c *RSClient) RolloutDeployRevision(
 	m = map[string]interface{}{}
 
 	// 转换成int64，和前端的交互统一为string
-	deployRevision, err := strconv.ParseInt(revision, 10, 64)
+	deployRevision, err := stringx.GetInt64(revision)
 	if err != nil {
 		return m, nil
 	}
@@ -184,11 +205,11 @@ func (c *RSClient) RolloutDeployRevision(
 	}
 
 	// rollout 回滚
-	s, err := rollbacker.Rollback(deploy, nil, deployRevision, 0)
+	_, err = rollbacker.Rollback(deploy, nil, deployRevision, 0)
 	if err != nil {
 		return m, err
 	}
 
-	m[revision] = s
+	m["status"] = "ok"
 	return m, err
 }

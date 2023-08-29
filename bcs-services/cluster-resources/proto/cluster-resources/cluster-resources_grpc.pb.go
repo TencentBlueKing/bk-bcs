@@ -420,7 +420,7 @@ const (
 	Workload_RescheduleDeployPo_FullMethodName       = "/clusterresources.Workload/RescheduleDeployPo"
 	Workload_DeleteDeploy_FullMethodName             = "/clusterresources.Workload/DeleteDeploy"
 	Workload_GetDeployHistoryRevision_FullMethodName = "/clusterresources.Workload/GetDeployHistoryRevision"
-	Workload_GetDeployRevisionDetail_FullMethodName  = "/clusterresources.Workload/GetDeployRevisionDetail"
+	Workload_GetDeployRevisionDiff_FullMethodName    = "/clusterresources.Workload/GetDeployRevisionDiff"
 	Workload_RolloutDeployRevision_FullMethodName    = "/clusterresources.Workload/RolloutDeployRevision"
 	Workload_ListRS_FullMethodName                   = "/clusterresources.Workload/ListRS"
 	Workload_ListDS_FullMethodName                   = "/clusterresources.Workload/ListDS"
@@ -472,7 +472,7 @@ type WorkloadClient interface {
 	RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, opts ...grpc.CallOption) (*CommonResp, error)
 	DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...grpc.CallOption) (*CommonResp, error)
 	GetDeployHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, opts ...grpc.CallOption) (*CommonResp, error)
-	GetDeployRevisionDetail(ctx context.Context, in *GetDeployRevisionDetailReq, opts ...grpc.CallOption) (*CommonResp, error)
+	GetDeployRevisionDiff(ctx context.Context, in *GetDeployRevisionDetailReq, opts ...grpc.CallOption) (*CommonResp, error)
 	RolloutDeployRevision(ctx context.Context, in *RolloutDeployRevisionReq, opts ...grpc.CallOption) (*CommonResp, error)
 	ListRS(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
 	ListDS(ctx context.Context, in *ResListReq, opts ...grpc.CallOption) (*CommonResp, error)
@@ -592,9 +592,9 @@ func (c *workloadClient) GetDeployHistoryRevision(ctx context.Context, in *GetDe
 	return out, nil
 }
 
-func (c *workloadClient) GetDeployRevisionDetail(ctx context.Context, in *GetDeployRevisionDetailReq, opts ...grpc.CallOption) (*CommonResp, error) {
+func (c *workloadClient) GetDeployRevisionDiff(ctx context.Context, in *GetDeployRevisionDetailReq, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
-	err := c.cc.Invoke(ctx, Workload_GetDeployRevisionDetail_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Workload_GetDeployRevisionDiff_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -946,7 +946,7 @@ type WorkloadServer interface {
 	RescheduleDeployPo(context.Context, *ResBatchRescheduleReq) (*CommonResp, error)
 	DeleteDeploy(context.Context, *ResDeleteReq) (*CommonResp, error)
 	GetDeployHistoryRevision(context.Context, *GetDeployHistoryRevisionReq) (*CommonResp, error)
-	GetDeployRevisionDetail(context.Context, *GetDeployRevisionDetailReq) (*CommonResp, error)
+	GetDeployRevisionDiff(context.Context, *GetDeployRevisionDetailReq) (*CommonResp, error)
 	RolloutDeployRevision(context.Context, *RolloutDeployRevisionReq) (*CommonResp, error)
 	ListRS(context.Context, *ResListReq) (*CommonResp, error)
 	ListDS(context.Context, *ResListReq) (*CommonResp, error)
@@ -1015,8 +1015,8 @@ func (UnimplementedWorkloadServer) DeleteDeploy(context.Context, *ResDeleteReq) 
 func (UnimplementedWorkloadServer) GetDeployHistoryRevision(context.Context, *GetDeployHistoryRevisionReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeployHistoryRevision not implemented")
 }
-func (UnimplementedWorkloadServer) GetDeployRevisionDetail(context.Context, *GetDeployRevisionDetailReq) (*CommonResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetDeployRevisionDetail not implemented")
+func (UnimplementedWorkloadServer) GetDeployRevisionDiff(context.Context, *GetDeployRevisionDetailReq) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeployRevisionDiff not implemented")
 }
 func (UnimplementedWorkloadServer) RolloutDeployRevision(context.Context, *RolloutDeployRevisionReq) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RolloutDeployRevision not implemented")
@@ -1286,20 +1286,20 @@ func _Workload_GetDeployHistoryRevision_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Workload_GetDeployRevisionDetail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Workload_GetDeployRevisionDiff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetDeployRevisionDetailReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WorkloadServer).GetDeployRevisionDetail(ctx, in)
+		return srv.(WorkloadServer).GetDeployRevisionDiff(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Workload_GetDeployRevisionDetail_FullMethodName,
+		FullMethod: Workload_GetDeployRevisionDiff_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkloadServer).GetDeployRevisionDetail(ctx, req.(*GetDeployRevisionDetailReq))
+		return srv.(WorkloadServer).GetDeployRevisionDiff(ctx, req.(*GetDeployRevisionDetailReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2010,8 +2010,8 @@ var Workload_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Workload_GetDeployHistoryRevision_Handler,
 		},
 		{
-			MethodName: "GetDeployRevisionDetail",
-			Handler:    _Workload_GetDeployRevisionDetail_Handler,
+			MethodName: "GetDeployRevisionDiff",
+			Handler:    _Workload_GetDeployRevisionDiff_Handler,
 		},
 		{
 			MethodName: "RolloutDeployRevision",

@@ -1201,10 +1201,6 @@ func local_request_Workload_DeleteDeploy_0(ctx context.Context, marshaler runtim
 
 }
 
-var (
-	filter_Workload_GetDeployHistoryRevision_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "clusterID": 1, "namespace": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
-)
-
 func request_Workload_GetDeployHistoryRevision_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetDeployHistoryRevisionReq
 	var metadata runtime.ServerMetadata
@@ -1249,11 +1245,15 @@ func request_Workload_GetDeployHistoryRevision_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
 	}
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Workload_GetDeployHistoryRevision_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.Name, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
 	msg, err := client.GetDeployHistoryRevision(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -1305,11 +1305,15 @@ func local_request_Workload_GetDeployHistoryRevision_0(ctx context.Context, mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
 	}
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Workload_GetDeployHistoryRevision_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.Name, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
 	msg, err := server.GetDeployHistoryRevision(ctx, &protoReq)
@@ -1318,10 +1322,10 @@ func local_request_Workload_GetDeployHistoryRevision_0(ctx context.Context, mars
 }
 
 var (
-	filter_Workload_GetDeployRevisionDetail_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "clusterID": 1, "namespace": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
+	filter_Workload_GetDeployRevisionDiff_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "clusterID": 1, "namespace": 2, "name": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
 )
 
-func request_Workload_GetDeployRevisionDetail_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_Workload_GetDeployRevisionDiff_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetDeployRevisionDetailReq
 	var metadata runtime.ServerMetadata
 
@@ -1365,19 +1369,30 @@ func request_Workload_GetDeployRevisionDetail_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
 	}
 
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Workload_GetDeployRevisionDetail_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Workload_GetDeployRevisionDiff_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetDeployRevisionDetail(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetDeployRevisionDiff(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Workload_GetDeployRevisionDetail_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_Workload_GetDeployRevisionDiff_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetDeployRevisionDetailReq
 	var metadata runtime.ServerMetadata
 
@@ -1421,14 +1436,25 @@ func local_request_Workload_GetDeployRevisionDetail_0(ctx context.Context, marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
 	}
 
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Workload_GetDeployRevisionDetail_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Workload_GetDeployRevisionDiff_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.GetDeployRevisionDetail(ctx, &protoReq)
+	msg, err := server.GetDeployRevisionDiff(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1483,6 +1509,17 @@ func request_Workload_RolloutDeployRevision_0(ctx context.Context, marshaler run
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
 	msg, err := client.RolloutDeployRevision(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -1540,6 +1577,17 @@ func local_request_Workload_RolloutDeployRevision_0(ctx context.Context, marshal
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
 	msg, err := server.RolloutDeployRevision(ctx, &protoReq)
@@ -14191,7 +14239,7 @@ func RegisterWorkloadGwServer(ctx context.Context, mux *runtime.ServeMux, server
 
 	})
 
-	mux.Handle("GET", pattern_Workload_GetDeployRevisionDetail_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Workload_GetDeployRevisionDiff_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -14202,7 +14250,7 @@ func RegisterWorkloadGwServer(ctx context.Context, mux *runtime.ServeMux, server
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Workload_GetDeployRevisionDetail_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Workload_GetDeployRevisionDiff_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -14210,7 +14258,7 @@ func RegisterWorkloadGwServer(ctx context.Context, mux *runtime.ServeMux, server
 			return
 		}
 
-		forward_Workload_GetDeployRevisionDetail_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Workload_GetDeployRevisionDiff_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -17156,7 +17204,7 @@ func RegisterWorkloadGwClient(ctx context.Context, mux *runtime.ServeMux, client
 
 	})
 
-	mux.Handle("GET", pattern_Workload_GetDeployRevisionDetail_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Workload_GetDeployRevisionDiff_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -17165,14 +17213,14 @@ func RegisterWorkloadGwClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Workload_GetDeployRevisionDetail_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Workload_GetDeployRevisionDiff_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Workload_GetDeployRevisionDetail_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Workload_GetDeployRevisionDiff_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -17934,11 +17982,11 @@ var (
 
 	pattern_Workload_DeleteDeploy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 1, 0, 4, 1, 5, 10}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "namespaces", "namespace", "workloads", "deployments", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Workload_GetDeployHistoryRevision_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 2, 10, 2, 11}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "namespaces", "namespace", "workloads", "deployments", "history", "revision"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Workload_GetDeployHistoryRevision_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 2, 10, 1, 0, 4, 1, 5, 11}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "namespaces", "namespace", "workloads", "deployments", "history", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Workload_GetDeployRevisionDetail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 2, 10, 2, 11}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "namespaces", "namespace", "workloads", "deployments", "revision", "detail"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Workload_GetDeployRevisionDiff_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 2, 10, 2, 11, 1, 0, 4, 1, 5, 12}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "namespaces", "namespace", "workloads", "deployments", "revision", "diff", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Workload_RolloutDeployRevision_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 2, 10, 2, 11}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "namespaces", "namespace", "workloads", "deployments", "rollout", "revision"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Workload_RolloutDeployRevision_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9, 2, 10, 1, 0, 4, 1, 5, 11}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "namespaces", "namespace", "workloads", "deployments", "rollout", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Workload_ListRS_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9}, []string{"clusterresources", "v1", "projects", "projectID", "clusters", "clusterID", "namespaces", "namespace", "workloads", "replicasets"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -18030,7 +18078,7 @@ var (
 
 	forward_Workload_GetDeployHistoryRevision_0 = runtime.ForwardResponseMessage
 
-	forward_Workload_GetDeployRevisionDetail_0 = runtime.ForwardResponseMessage
+	forward_Workload_GetDeployRevisionDiff_0 = runtime.ForwardResponseMessage
 
 	forward_Workload_RolloutDeployRevision_0 = runtime.ForwardResponseMessage
 

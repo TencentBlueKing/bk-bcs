@@ -181,7 +181,7 @@ service Workload {
 
 	rpc GetDeployHistoryRevision(GetDeployHistoryRevisionReq) returns (CommonResp) {
 		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/revision"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/{name}"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "获取 Deployment Revision"
@@ -189,19 +189,19 @@ service Workload {
 		};
 	}
 
-	rpc GetDeployRevisionDetail(GetDeployRevisionDetailReq) returns (CommonResp) {
+	rpc GetDeployRevisionDiff(GetDeployRevisionDetailReq) returns (CommonResp) {
 		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/detail"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/diff/{name}"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-			description: "获取 Deployment Revision相关信息"
+			description: "获取deployment revision差异信息"
 			summary: "GetDeployRevisionDetail API"
 		};
 	}
 
 	rpc RolloutDeployRevision(RolloutDeployRevisionReq) returns (CommonResp) {
 		option (google.api.http) = {
-			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/revision"
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/{name}"
 			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
