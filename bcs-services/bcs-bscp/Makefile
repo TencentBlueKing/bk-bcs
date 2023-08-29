@@ -76,6 +76,11 @@ pb:
 	@cd pkg/protocol && make clean && make
 	@echo -e "\e[34;1mMake Protocol Done\n\033[0m"
 
+py:
+	@echo -e "\e[34;1mMake Python Protocol...\033[0m"
+	@cd pkg/protocol && make py
+	@echo -e "\e[34;1mMake Python Protocol Done\n\033[0m"
+
 .PHONY: gen
 gen:
 	@go run scripts/gen/main.go
