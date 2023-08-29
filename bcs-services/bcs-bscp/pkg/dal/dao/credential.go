@@ -207,7 +207,7 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Credential.WithContext(kit.Ctx)
 		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-			Select(m.Memo, m.Enable).Updates(g); err != nil {
+			Select(m.Memo, m.Enable, m.Reviser).Updates(g); err != nil {
 			return err
 		}
 
