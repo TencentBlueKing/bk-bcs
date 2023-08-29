@@ -36,7 +36,7 @@ type BCSNetIPStatus struct {
 	Fixed bool `json:"fixed,omitempty"`
 	// 容器ID
 	ContainerID string `json:"containerID,omitempty"`
-	// BCSNetIPClaim名称
+	// BCSNetIPClaim信息，格式为"命名空间/名称"
 	IPClaimKey   string      `json:"ipClaimKey,omitempty"`
 	PodName      string      `json:"podName,omitempty"`
 	PodNamespace string      `json:"podNamespace,omitempty"`
