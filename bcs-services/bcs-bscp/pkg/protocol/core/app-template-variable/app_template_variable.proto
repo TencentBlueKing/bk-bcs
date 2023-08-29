@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package pbatv;
+
+option go_package = "bscp.io/pkg/protocol/core/app-template-variable;pbatv";
+
+// AppTemplateVariableReference is app template variable reference
+message AppTemplateVariableReference {
+    message reference {
+        uint32 template_id          = 1;
+        uint32 template_revision_id = 2;
+        string name                 = 3;
+    }
+
+    string             variable_name = 1;
+    repeated reference references    = 2;
+}

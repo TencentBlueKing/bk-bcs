@@ -15,6 +15,7 @@ import "bscp.io/pkg/protocol/core/template-binding-relation/template_binding_rel
 import "bscp.io/pkg/protocol/core/template-revision/template_revision.proto";
 import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
+import "bscp.io/pkg/protocol/core/app-template-variable/app_template_variable.proto";
 import "bscp.io/pkg/protocol/core/template-variable/template_variable.proto";
 import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "google/api/annotations.proto";
@@ -501,6 +502,18 @@ service Config {
     rpc ListTemplateVariables(ListTemplateVariablesReq) returns (ListTemplateVariablesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_variables"
+        };
+    }
+
+    rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/extract_template_variables"
+        };
+    }
+    rpc GetAppTemplateVariableReferences(GetAppTemplateVariableReferencesReq) returns
+        (GetAppTemplateVariableReferencesResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"
         };
     }
 
@@ -1633,6 +1646,25 @@ message ListTemplateVariablesResp {
     uint32                         count   = 1;
     repeated pbtv.TemplateVariable details = 2;
 }
+
+message ExtractAppTemplateVariablesReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ExtractAppTemplateVariablesResp {
+    repeated string details = 2;
+}
+
+message GetAppTemplateVariableReferencesReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message GetAppTemplateVariableReferencesResp {
+    repeated pbatv.AppTemplateVariableReference details = 2;
+}
+
 
 message CreateGroupReq {
     uint32                 biz_id    = 1;
