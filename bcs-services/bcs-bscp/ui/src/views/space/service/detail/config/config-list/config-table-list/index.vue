@@ -158,7 +158,6 @@
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         @confirm="refreshConfigList" />
-
       <div class="groups-info" v-if="versionData.status.released_groups.length > 0">
         <div v-for="group in versionData.status.released_groups" class="group-item" :key="group.id">
           {{ group.name }}
@@ -218,13 +217,13 @@
           </bk-table-column>
         </bk-table>
       </bk-loading>
-      <edit-config
-        v-model:show="editPanelShow"
-        :config-id="activeConfig"
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        @confirm="getListData" />
     </section>
+    <edit-config
+      v-model:show="editPanelShow"
+      :config-id="activeConfig"
+      :bk-biz-id="props.bkBizId"
+      :app-id="props.appId"
+      @confirm="getListData" />
     <VersionDiff
       v-model:show="isDiffPanelShow"
       :current-version="versionData"
@@ -272,9 +271,6 @@
     }
   }
   .config-list-table {
-    :deep(.bk-pagination) {
-      padding-left: 15px;
-    }
     .status{
       &:not(.nochange) {
         padding: 4px 10px;

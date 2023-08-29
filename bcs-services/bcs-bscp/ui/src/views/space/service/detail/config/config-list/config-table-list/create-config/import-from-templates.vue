@@ -3,7 +3,7 @@
   import { Message } from 'bkui-vue';
   import { ITemplateBoundByAppData } from '../../../../../../../../../types/config'
   import { IAllPkgsGroupBySpaceInBiz } from '../../../../../../../../../types/template'
-  import { importTemplateConfigPkgs } from '../../../../../../../../api/config';
+  import { importTemplateConfigPkgs, updateTemplateConfigPkgs } from '../../../../../../../../api/config';
   import { getAllPackagesGroupBySpace, getAppPkgBindingRelations } from '../../../../../../../../api/template';
   import PkgTree from './pkg-tree.vue';
   import PkgTemplatesTable from './pkg-templates-table.vue';
@@ -18,6 +18,7 @@
 
   const pkgListLoading = ref(false)
   const pkgList = ref<IAllPkgsGroupBySpaceInBiz[]>([])
+  const bindingId = ref(0) // 模板和服务的绑定关系id，不为0表示绑定关系已经存在，编辑时需要调用编辑接口
   const importedPkgsLoading = ref(false)
   const importedPkgs = ref<ITemplateBoundByAppData[]>([])
   const selectedPkgs = ref<ITemplateBoundByAppData[]>([])
@@ -26,6 +27,8 @@
 
   watch(() => props.show, val => {
     if (val) {
+      bindingId.value = 0
+      expandedPkg.value = 0
       importedPkgs.value = []
       selectedPkgs.value = []
       getPkgList()
@@ -44,8 +47,10 @@
     importedPkgsLoading.value = true
     const res = await getAppPkgBindingRelations(props.bkBizId, props.appId)
     if (res.details.length === 1) {
+      bindingId.value = res.details[0].id
       importedPkgs.value = res.details[0].spec.bindings
     } else {
+      bindingId.value = 0
       importedPkgs.value = []
     }
     importedPkgsLoading.value = false
@@ -66,10 +71,26 @@
     expandedPkg.value = expandedPkg.value === id ? 0 : id
   }
 
+  const handleSelectTplVersion = (pkgId: number, version: { template_id: number; template_revision_id: number; is_latest: boolean; }) => {
+    const pkgData = selectedPkgs.value.find(item => item.template_set_id === pkgId)
+    if (pkgData) {
+      const index = pkgData.template_revisions.findIndex(item => item.template_id === version.template_id)
+      if (index > -1) {
+        pkgData.template_revisions.splice(index, 1, version)
+      } else {
+        pkgData.template_revisions.push(version)
+      }
+    }
+  }
+
   const handleImportConfirm = async () => {
     try {
       pending.value = true
-      await importTemplateConfigPkgs(props.bkBizId, props.appId, { bindings: selectedPkgs.value })
+      if (bindingId.value) {
+        await updateTemplateConfigPkgs(props.bkBizId, props.appId, bindingId.value, { bindings: selectedPkgs.value.concat(importedPkgs.value) })
+      } else {
+        await importTemplateConfigPkgs(props.bkBizId, props.appId, { bindings: selectedPkgs.value })
+      }
       emits('imported')
       close()
       Message({
@@ -117,6 +138,7 @@
               :disabled="true"
               :expanded="expandedPkg === pkg.template_set_id"
               :pkg-id="pkg.template_set_id"
+              :selected-versions="pkg.template_revisions"
               @expand="handleExpandTable" />
             <PkgTemplatesTable
               v-for="pkg in selectedPkgs"
@@ -125,8 +147,10 @@
               :pkg-list="pkgList"
               :expanded="expandedPkg === pkg.template_set_id"
               :pkg-id="pkg.template_set_id"
+              :selected-versions="pkg.template_revisions"
               @delete="handleDeletePkg"
-              @expand="handleExpandTable" />
+              @expand="handleExpandTable"
+              @select-version="handleSelectTplVersion(pkg.template_set_id, $event)" />
           </template>
           <bk-exception v-else scene="part" type="empty">
             <div class="empty-tips">

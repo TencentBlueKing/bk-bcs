@@ -150,6 +150,24 @@ export const updateConfigInitScript = (bizId: string, appId: number, params: { p
   return http.put(`/config/biz/${bizId}/apps/${appId}/config_hooks`, params)
 }
 
+/**
+ * 新建模板配置项和服务绑定关系
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param params 查询参数
+ * @returns
+ */
 export const importTemplateConfigPkgs = (bizId: string, appId: number, params: { bindings: ITemplateBoundByAppData[] }) => {
   return http.post(`/config/biz/${bizId}/apps/${appId}/template_bindings`, params)
+}
+
+/**
+ * 更新模板配置项和服务绑定关系
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param params 查询参数
+ * @returns
+ */
+export const updateTemplateConfigPkgs = (bizId: string, appId: number, bindingId: number, params: { bindings: ITemplateBoundByAppData[] }) => {
+  return http.put(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}`, params)
 }
