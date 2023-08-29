@@ -128,6 +128,9 @@ service Data {
     rpc DeleteAppTemplateBinding(DeleteAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
     rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {}
 
+    // extract template variables related interface.
+    rpc ExtractTemplateVariables(ExtractTemplateVariablesReq) returns (ExtractTemplateVariablesResp) {}
+
     // template binding relation related interface.
     rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {}
     rpc ListTemplateRevisionBoundCounts(ListTemplateRevisionBoundCountsReq) returns (ListTemplateRevisionBoundCountsResp){}
@@ -840,6 +843,15 @@ message ListAppBoundTemplateRevisionsReq {
 message ListAppBoundTemplateRevisionsResp {
     uint32                              count   = 1;
     repeated pbatb.AppBoundTmplRevision details = 2;
+}
+
+message ExtractTemplateVariablesReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ExtractTemplateVariablesResp {
+    repeated string details = 2;
 }
 
 message ListTemplateBoundCountsReq {

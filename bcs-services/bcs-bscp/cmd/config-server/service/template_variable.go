@@ -158,3 +158,32 @@ func (s *Service) ListTemplateVariables(ctx context.Context, req *pbcs.ListTempl
 	}
 	return resp, nil
 }
+
+// ExtractTemplateVariables extract template variables
+func (s *Service) ExtractTemplateVariables(ctx context.Context, req *pbcs.ExtractTemplateVariablesReq) (
+	*pbcs.ExtractTemplateVariablesResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ExtractTemplateVariablesResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateVariable, Action: meta.Find},
+		BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ExtractTemplateVariablesReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+	}
+
+	rp, err := s.client.DS.ExtractTemplateVariables(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ExtractTemplateVariablesResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}

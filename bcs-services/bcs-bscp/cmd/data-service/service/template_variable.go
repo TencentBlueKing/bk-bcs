@@ -13,8 +13,11 @@ limitations under the License.
 package service
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
+	"sync"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -119,4 +122,92 @@ func (s *Service) DeleteTemplateVariable(ctx context.Context, req *pbds.DeleteTe
 	}
 
 	return new(pbbase.EmptyResp), nil
+}
+
+// ExtractTemplateVariables extract template variables.
+func (s *Service) ExtractTemplateVariables(ctx context.Context, req *pbds.ExtractTemplateVariablesReq) (
+	*pbds.ExtractTemplateVariablesResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	opt := &types.BasePage{All: true}
+	details, _, err := s.dao.AppTemplateBinding().List(kt, req.BizId, req.AppId, opt)
+	if err != nil {
+		logs.Errorf("extract template variables failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	// so far, no any template config item exists for the app
+	if len(details) == 0 {
+		return &pbds.ExtractTemplateVariablesResp{
+			Details: []string{},
+		}, nil
+	}
+
+	// get template revision details
+	tmplRevisions, err := s.dao.TemplateRevision().
+		ListByIDs(kt, details[0].Spec.TemplateRevisionIDs)
+	if err != nil {
+		logs.Errorf("extract template variables failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	if len(tmplRevisions) == 0 {
+		return &pbds.ExtractTemplateVariablesResp{
+			Details: []string{},
+		}, nil
+	}
+
+	tmplRevisionMap := make(map[uint32]*table.TemplateRevision, len(tmplRevisions))
+	for _, r := range tmplRevisions {
+		tmplRevisionMap[r.ID] = r
+	}
+
+	// download template config item content
+	contents := make([][]byte, len(tmplRevisions))
+	var hitError error
+	pipe := make(chan struct{}, 10)
+	wg := sync.WaitGroup{}
+
+	for idx, r := range tmplRevisions {
+		wg.Add(1)
+
+		pipe <- struct{}{}
+		go func(idx int, r *table.TemplateRevision) {
+			defer func() {
+				wg.Done()
+				<-pipe
+			}()
+
+			k := kt.GetKitForRepoTmpl(r.Attachment.TemplateSpaceID)
+			body, _, err := s.repo.Download(k, r.Spec.ContentSpec.Signature)
+			if err != nil {
+				hitError = fmt.Errorf("download template config content from repo failed, "+
+					"template id: %d, name: %s, path: %s, error: %v",
+					r.Attachment.TemplateID, r.Spec.Name, r.Spec.Path, err)
+				return
+			}
+			content, err := ioutil.ReadAll(body)
+			if err != nil {
+				hitError = fmt.Errorf("read template config content from body failed, "+
+					"template id: %d, name: %s, path: %s, error: %v",
+					r.Attachment.TemplateID, r.Spec.Name, r.Spec.Path, err)
+				return
+			}
+
+			contents[idx] = content
+		}(idx, r)
+	}
+	wg.Wait()
+
+	if hitError != nil {
+		logs.Errorf("extract template variables failed, err: %v, rid: %s", hitError, kt.Rid)
+		return nil, hitError
+	}
+
+	// merge all template content
+	allContent := bytes.Join(contents, []byte(" "))
+	// extract all template variables
+	variables := s.tmplProc.ExtractVariables(allContent)
+
+	return &pbds.ExtractTemplateVariablesResp{
+		Details: variables,
+	}, nil
 }

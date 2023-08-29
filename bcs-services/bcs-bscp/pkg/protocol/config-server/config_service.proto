@@ -504,6 +504,12 @@ service Config {
         };
     }
 
+    rpc ExtractTemplateVariables(ExtractTemplateVariablesReq) returns (ExtractTemplateVariablesResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/extract_template_variables"
+        };
+    }
+
     rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/groups"
@@ -1632,6 +1638,15 @@ message ListTemplateVariablesReq {
 message ListTemplateVariablesResp {
     uint32                         count   = 1;
     repeated pbtv.TemplateVariable details = 2;
+}
+
+message ExtractTemplateVariablesReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ExtractTemplateVariablesResp {
+    repeated string details = 2;
 }
 
 message CreateGroupReq {

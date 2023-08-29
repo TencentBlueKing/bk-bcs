@@ -18,6 +18,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"github.com/pkg/errors"
 
@@ -62,7 +63,27 @@ type bkrepoClient struct {
 	project     string
 	client      *http.Client
 	cli         *repo.Client
-	repoCreated map[string]struct{}
+	repoCreated *RepoCreated
+}
+
+type RepoCreated struct {
+	sync.Mutex
+	created map[string]struct{}
+}
+
+// Set sets kv
+func (r *RepoCreated) Set(name string) {
+	r.Lock()
+	defer r.Unlock()
+	r.created[name] = struct{}{}
+}
+
+// Exist check kv
+func (r *RepoCreated) Exist(name string) bool {
+	r.Lock()
+	defer r.Unlock()
+	_, ok := r.created[name]
+	return ok
 }
 
 func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
@@ -70,9 +91,11 @@ func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
 	if err != nil {
 		return err
 	}
-	if _, ok := c.repoCreated[repoName]; ok {
+
+	if c.repoCreated.Exist(repoName) {
 		return nil
 	}
+
 	repoReq := &repo.CreateRepoReq{
 		ProjectID:     cc.ApiServer().Repo.BkRepo.Project,
 		Name:          repoName,
@@ -85,7 +108,7 @@ func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
 		return err
 	}
 
-	c.repoCreated[repoName] = struct{}{}
+	c.repoCreated.Set(repoName)
 	return nil
 }
 
@@ -358,10 +381,12 @@ func newBKRepoProvider(settings cc.Repository) (Provider, error) {
 	host := settings.BkRepo.Endpoints[0]
 
 	p := &bkrepoClient{
-		cli:         cli,
-		host:        host,
-		project:     settings.BkRepo.Project,
-		repoCreated: map[string]struct{}{},
+		cli:     cli,
+		host:    host,
+		project: settings.BkRepo.Project,
+		repoCreated: &RepoCreated{
+			created: make(map[string]struct{}),
+		},
 	}
 
 	transport := &bkrepoAuthTransport{

@@ -38,9 +38,14 @@ func NewTmplProcessor() TmplProcessor {
 func (p *processor) ExtractVariables(template []byte) []string {
 	matches := re.FindAllStringSubmatch(string(template), -1)
 
-	var varNames []string
+	nameMap := make(map[string]struct{})
 	for _, match := range matches {
-		varNames = append(varNames, match[1])
+		nameMap[match[1]] = struct{}{}
+	}
+
+	varNames := make([]string, 0, len(nameMap))
+	for name := range nameMap {
+		varNames = append(varNames, name)
 	}
 
 	return varNames

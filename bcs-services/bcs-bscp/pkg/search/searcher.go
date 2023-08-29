@@ -114,7 +114,7 @@ type searcher struct {
 	supportedFields []string
 }
 
-// NewSearcher new a searcher
+// NewSearcher new a Searcher
 func NewSearcher(fieldsStr string, value string, table TableName) (Searcher, error) {
 	fields := make([]string, 0)
 	if fieldsStr != "" {
