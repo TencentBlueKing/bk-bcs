@@ -170,6 +170,42 @@ add_mirror_hosts() {
   return 0
 }
 
+set_hostname() {
+    curr=$(hostname)
+    if [[ "$curr" =~ "_" ]]; then
+        utils::log "INFO" "Set hostname"
+        hostnamectl set-hostname "$(hostname | sed 's/_/-/g')"
+    fi
+
+}
+
+set_selinux() {
+    selinux_status=$(getenforce)
+    if [[ $selinux_status == "Enforcing" ]]; then
+        utils::log "INFO" "Set selinux"
+        setenforce 0 2>/dev/null
+        sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config
+    fi
+}
+
+close_swap() {
+    curr=$(free -h | grep Swap | awk '{print $2}')
+    if [[ "$curr" != "0B" ]]; then
+        utils::log "INFO" "Close swap"
+        sed -ri 's/.*swap.*/#&/' /etc/fstab
+        swapoff -a
+    fi
+}
+
+stop_firewalld() {
+    firewall_status=$(systemctl is-active firewalld)
+    if [[ $firewall_status == "active" ]]; then
+        utils::log "INFO" "Stop firewalld"
+        systemctl stop firewalld
+        systemctl disable firewalld
+    fi
+}
+
 config_dns() {
   add_master_hosts
   add_mirror_hosts
@@ -178,6 +214,10 @@ config_dns() {
 config_sysctl() {
   add_kernel_para
   add_limits
+  set_hostname
+  set_selinux
+  close_swap
+  stop_firewalld
 }
 
 del_dns() {

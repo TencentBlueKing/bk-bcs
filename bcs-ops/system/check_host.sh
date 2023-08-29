@@ -17,30 +17,26 @@ VERSION="1.0.0"
 PROGRAM="$(basename "$0")"
 
 # 全局默认变量
+SELF_DIR=$(dirname "$(readlink -f "$0")")
+ROOT_DIR="${SELF_DIR}/.."
 KERNEL_VERSION="3.10.0"
 LIMIT_VALUE="204800"
-RPM_LIST='utpdate chrony screen pssh yq parallel zip unzip rsync gawk curl lsof tar sed iproute uuid psmisc wget rsync jq expect uuid bash-completion lsof openssl-devel readline-devel libcurl-devel libxml2-devel glibc-devel zlib-devel iproute procps-ng bind-utils'
-CHECK_LIST=(check_kernel check_date check_swap check_selinux check_firewalld check_yum_proxy check_http_proxy check_openssl check_hostname check_tools check_yum_repo)
+RPM_LIST='zip unzip curl lsof wget expect lsof openssl-devel readline-devel libcurl-devel libxml2-devel glibc-devel zlib-devel procps-ng bind-utils'
+CHECK_LIST=(check_kernel check_swap check_selinux check_firewalld check_yum_proxy check_http_proxy check_openssl check_hostname check_tools)
 
 # common
 _version_ge() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"; }
 
-log() {
-    echo "$@"
-}
-
-error() {
-    echo "$@" 1>&2
-}
-
-fail() {
-    echo "$@" 1>&2
-    exit 1
-}
-
-warning() {
-    echo "$@" 1>&2
-    EXITCODE=$((EXITCODE + 1))
+safe_source() {
+    local source_file=$1
+    if [[ -f ${source_file} ]]; then
+        #shellcheck source=/dev/null
+        source "${source_file}"
+    else
+        echo "[ERROR]: FAIL to source, missing ${source_file}"
+        exit 1
+    fi
+    return 0
 }
 
 version() {
@@ -70,68 +66,58 @@ version() {
 check_kernel() {
     currfmt=$(uname -r | cut -d '-' -f1)
     if _version_ge $currfmt $KERNEL_VERSION; then
-        log "│   └──[SUCC] => $1 : 当前配置($currfmt).内核版本大于或等于$KERNEL_VERSION"
+        utils::log "OK" "$1 : 当前配置($currfmt).内核版本大于或等于$KERNEL_VERSION"
     else
-        error "│   └──[FAIL] => $1 : 当前配置($currfmt).内核版本小于$KERNEL_VERSION"
+        utils::log "FATAL" "$1 : 当前配置($currfmt).内核版本小于$KERNEL_VERSION"
     fi
 }
-# 检查所有主机时间 check_date
-check_date() {
-    OFFSET_TIME=$(ntpdate -q cn.pool.ntp.org | grep ntpdate | awk -F 'offset' '{print $2}' | awk '{print $1}' | cut -d '-' -f2 | awk -F "." '{print $1}')
-    nowtime=$(date +'%Y-%m-%d %H:%M')
-    if [ $OFFSET_TIME -ge 3 ]; then
 
-        error "│   └──[FAIL] => $1 : 当前时间($nowtime).主机时间与时间服务器不一致"
-    else
-        log "│   └──[SUCC] => $1 : 当前时间($nowtime).主机时间与时间服务器基本一致"
-    fi
-
-}
 # 检查关闭swap check_swap
 check_swap() {
     curr=$(free -h | grep Swap | awk '{print $2}')
     if [[ "$curr" == "0B" ]]; then
-        log "│   └──[SUCC] => $1 : 当前值($curr)."
+        utils::log "OK" "$1 : 当前值($curr)."
     else
-        error "│   └──[FAIL] => $1 : 当前值($curr)."
-        exit 1
+        utils::log "ERROR" "$1 : 当前值($curr)."
+        utils::log "WARN" "部署k8s建议是关闭swap分区，可以使用 swapoff -a 进行关闭"
     fi
 }
 # 关闭selinux check_selinux
 check_selinux() {
     curr=$(getenforce)
     if [[ $curr == "Enforcing" ]]; then
-        error "│   └──[FAIL] => $1 : 当前配置($curr)."
+        utils::log "ERROR" "$1 : 当前配置($curr)."
+        utils::log "WARN" "部署k8s建议是关闭selinux，可以使用 setenforce 0 进行关闭"
     else
-        log "│   └──[SUCC] => $1 : 当前配置($curr)."
+        utils::log "OK" "$1 : 当前配置($curr)."
     fi
 }
 # 关闭防火墙 check_firewalld
 check_firewalld() {
     curr=$(systemctl is-active firewalld)
     if [[ $curr == "active" ]]; then
-        error "│   └──[FAIL] => $1 : 当前状态(RUNNING)."
+        utils::log "ERROR" "$1 : 当前状态(RUNNING)."
+        utils::log "WARN" "部署k8s建议是关闭firewalld，可以使用 systemctl stop firewalld && systemctl disable firewalld 进行关闭"
     else
-        log "│   └──[SUCC] => $1 : 当前状态(STOPPED)."
+        utils::log "OK" "$1 : 当前状态(STOPPED)."
     fi
 }
 # 设置ulimit204800 check_ulimit
 check_ulimit() {
     curr=$(ulimit -n)
     if [[ $curr -ge $LIMIT_VALUE ]]; then
-        log "│   └──[SUCC] => $1 : 当前值($curr)."
+        utils::log "OK" "$1 : 当前值($curr)."
     else
-        error "│   └──[FAIL] => $1 : 当前值($curr)."
+        utils::log "WARN" "$1 : 当前值($curr)."
     fi
 }
 # 检查是否存在YUM代理 check_yum_proxy
 check_yum_proxy() {
     curr=$(cat /etc/yum.conf | grep -i proxy)
     if [ "$curr" != "" ]; then
-        error "│   └──[FAIL] => $1 : 当前配置($curr)."
-        exit 1
+        utils::log "WARN" "$1 : 当前配置($curr)."
     else
-        log "│   └──[SUCC] => $1 : 当前配置(无代理)."
+        utils::log "OK" "$1 : 当前配置(无代理)."
     fi
 }
 # 检查是否存在HTTP代理 check_http_proxy
@@ -142,10 +128,9 @@ check_http_proxy() {
     )
     currfmt=$(echo $curr | sed 's/ /;/g')
     if [ "$currfmt" != "" ]; then
-        error "│   └──[FAIL] => $1 : 当前配置($currfmt)."
-        exit 1
+        utils::log "WARN" "$1 : 当前配置($currfmt)."
     else
-        log "│   └──[SUCC] => $1 : 当前配置(无代理)."
+        utils::log "OK" "$1 : 当前配置(无代理)."
     fi
 }
 # 检查openssl check_openssl
@@ -153,42 +138,32 @@ check_openssl() {
     curr=$(openssl version | awk '{print $2}')
     currformatch=$(openssl version | awk '{print $2}' | awk -F'.' '{print $1$2}')
     if [ "$currformatch" == "11" ]; then
-        error "│   └──[FAIL] => $1 : 当前配置($curr)."
-        exit 1
+        utils::log "WARN" "$1 : 当前配置($curr)."
     else
-        log "│   └──[SUCC] => $1 : 当前配置($curr)."
+        utils::log "OK" "$1 : 当前配置($curr)."
     fi
 }
 # 检查主机名 check_hostname
 check_hostname() {
     curr=$(hostname)
     if [[ "$curr" =~ "_" ]]; then
-        error "│   └──[FAIL] => $1 : 当前主机名($curr).包含下划线"
-        exit 1
+        utils::log "ERROR" "$1 : 当前主机名($curr).包含下划线"
+        utils::log "WARN" "部署k8s建议是主机名不包含下划线，可以使用 hostnamectl set-hostname 主机名 进行修改"
     else
-        log "│   └──[SUCC] => $1 : 当前主机名($curr)."
+        utils::log "OK" "$1 : 当前主机名($curr)."
     fi
 }
 # 安装检查通用工具，所有主机 check_tools
 check_tools() {
-    rpm_list_fmt=$(echo $RPM_LIST | sed 's/ /|/g')
+    rpm_list_fmt=$(echo "$RPM_LIST" | sed 's/ /|/g')
     rpm_list_array=($RPM_LIST)
 
     curr=$(rpm -qa --queryformat '%{NAME}\n' | grep -E "^($rpm_list_fmt)")
     currfmt=$(echo $curr | tr "\n" " " | sed -e 's/,$/\n/')
-    log "│   └──[SUCC] => $1 : 目前主机已安装($currfmt)."
+    utils::log "OK" "$1 : 目前主机已安装($currfmt)."
     currfmt=($currfmt)
     diff_array=($(echo "${currfmt[@]}" "${rpm_list_array[@]}" | tr ' ' '\n' | sort | uniq -u))
-    error "│   └──[FAIL] => $1 : 目前主机未安装(${diff_array[@]})."
-}
-# 检查yum源是否成功添加 check_yum_repo
-check_yum_repo() {
-    curr=$(yum repolist | grep EPEL | awk '{print $2,$3,$4,$5}')
-    if [ "$curr" == "EPEL for redhat/centos 7" ]; then
-        log "│   └──[SUCC] => $1 : 当前配置($curr)."
-    else
-        error "│   └──[FAIL] => $1 : 当前配置($curr)."
-    fi
+    utils::log "WARN" "$1 : 目前主机未安装(${diff_array[@]})."
 }
 
 # 解析命令行参数，长短混合模式
@@ -201,7 +176,7 @@ while (($# > 0)); do
         ;;
     -l | --list)
         shift
-        echo ${CHECK_LIST[@]} | xargs -n 1
+        echo "${CHECK_LIST[@]}" | xargs -n 1
         exit 0
         ;;
     --help | -h | '-?')
@@ -212,7 +187,7 @@ while (($# > 0)); do
         exit 0
         ;;
     -*)
-        error "不可识别的参数: $1"
+        utils::log "ERROR" "unkown para: $1"
         ;;
     *)
         break
@@ -220,23 +195,15 @@ while (($# > 0)); do
     esac
     shift
 done
-
+safe_source "${ROOT_DIR}/functions/utils.sh"
 rerun=$CHECK_MODULE
 if [ "$rerun" == "" ]; then
-    error "当前值为($curr).请输入"
+    utils::log "FATAL" "当前值为($curr).请输入"
     exit 1
-fi
-
-if [ "$rerun" != "all" ]; then
-    [[ ${CHECK_LIST[@]/${rerun}/} == ${CHECK_LIST[@]} ]] && error "不可识别的参数: $rerun" && exit 1
-    $rerun $rerun
 else
-
     for index in "${!CHECK_LIST[@]}"; do
         let index2=$index+1
-        log "├──[STEP ${index2}/${#CHECK_LIST[@]}] => [${CHECK_LIST[$index]}] - [$(date +'%H:%M:%S')]"
+        utils::log "INFO" "├──[STEP ${index2}/${#CHECK_LIST[@]}] => [${CHECK_LIST[$index]}] - [$(date +'%H:%M:%S')]"
         ${CHECK_LIST[$index]} ${CHECK_LIST[$index]}
     done
-
 fi
-
