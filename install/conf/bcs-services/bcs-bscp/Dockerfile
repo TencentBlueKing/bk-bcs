@@ -9,5 +9,6 @@ COPY hyper/bk-bscp-feedserver /bk-bscp/bk-bscp-feedserver
 COPY hyper/bk-bscp-cacheservice /bk-bscp/bk-bscp-cacheservice
 COPY hyper/bk-bscp-vaultserver /bk-bscp/bk-bscp-vaultserver
 COPY hyper/vault-barrier /bk-bscp/vault-barrier
+COPY hyper/vault-sidecar /bk-bscp/vault-sidecar
 ENTRYPOINT ["/bscp-ui"]
 CMD []
