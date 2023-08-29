@@ -40,7 +40,7 @@ type ReplyInfo struct {
 
 type ReplyRecorder struct {
 	SessionID   string
-	info        *ReplyInfo
+	Info        *ReplyInfo
 	absFilePath string
 	//Target      string
 	Writer *asciinema.Writer
@@ -66,20 +66,20 @@ func EnsureDirExist(name string) error {
 	return nil
 }
 
-func NewReplayRecord(podCtx *types.PodContext, info *ReplyInfo) (*ReplyRecorder, error) {
+func NewReplayRecord(podCtx *types.PodContext, originTerminalSize *ReplyInfo) *ReplyRecorder {
 	if !config.G.TerminalRecord.Enable {
-		return nil, nil
+		return nil
 	}
 	recorder := &ReplyRecorder{
 		SessionID: podCtx.SessionId,
-		info:      info,
+		Info:      originTerminalSize,
 	}
 	path := config.G.TerminalRecord.FilePath
 	err := EnsureDirExist(path)
 	if err != nil {
 		klog.Errorf("Create dir %s error: %s\n", path, err)
 		recorder.err = err
-		return recorder, err
+		return recorder
 	}
 	date := time.Now().Format(dateTimeFormat)
 	f := fmt.Sprintf("%s_%s_%s_%s_%s_%s_%s", date, podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName,
@@ -91,22 +91,22 @@ func NewReplayRecord(podCtx *types.PodContext, info *ReplyInfo) (*ReplyRecorder,
 	if err != nil {
 		klog.Errorf("Create replay file %s error: %s\n", recorder.absFilePath, err)
 		recorder.err = err
-		return recorder, err
+		return recorder
 	}
 	recorder.file = fd
 	options := make([]asciinema.Option, 0, 3)
-	options = append(options, asciinema.WithHeight(info.Height))
-	options = append(options, asciinema.WithWidth(info.Width))
-	options = append(options, asciinema.WithTimestamp(info.TimeStamp))
+	options = append(options, asciinema.WithHeight(originTerminalSize.Height))
+	options = append(options, asciinema.WithWidth(originTerminalSize.Width))
+	options = append(options, asciinema.WithTimestamp(originTerminalSize.TimeStamp))
 	recorder.Writer = asciinema.NewWriter(recorder.file, options...)
-	return recorder, nil
+	return recorder
 }
 
 func (r *ReplyRecorder) isNullError() bool {
 	return r.err != nil
 }
 
-func Record(r *ReplyRecorder, p []byte) {
+func Record(r *ReplyRecorder, p []byte, event asciinema.EventType) {
 	//不开启terminal recorder时, ReplyRecorder返回nil
 	if r == nil {
 		return
@@ -120,7 +120,7 @@ func Record(r *ReplyRecorder, p []byte) {
 				klog.Errorf("Session %s write replay header failed: %s", r.SessionID, err)
 			}
 		})
-		if err := r.Writer.WriteRow(p); err != nil {
+		if err := r.Writer.WriteRow(p, event); err != nil {
 			klog.Errorf("Session %s write replay row failed: %s", r.SessionID, err)
 		}
 	}

@@ -19,12 +19,19 @@ import (
 	"time"
 )
 
+//EventType 事件类型: o:输出 / r:终端变化
+type EventType string
+
 const (
-	maxBuffSize  = 1024
-	maxFileSize  = 100 * 1000 * 1000 // 100M
+	maxBuffSize = 1024
+	maxFileSize = 100 * 1000 * 1000 // 100M
+
 	version      = 2
 	defaultShell = "/bin/bash"
 	defaultTerm  = "xterm"
+
+	OutputEvent EventType = "o"
+	ResizeEvent EventType = "r"
 )
 
 var (
@@ -83,14 +90,14 @@ func (w *Writer) WriteHeader() error {
 	return err
 }
 
-func (w *Writer) WriteRow(p []byte) error {
+func (w *Writer) WriteRow(p []byte, event EventType) error {
 	now := time.Now().UnixNano()
 	ts := float64(now-w.TimestampNano) / 1000 / 1000 / 1000
-	return w.WriteStdout(ts, p)
+	return w.WriteStdout(ts, p, event)
 }
 
-func (w *Writer) WriteStdout(ts float64, data []byte) error {
-	row := []interface{}{ts, "o", string(data)}
+func (w *Writer) WriteStdout(ts float64, data []byte, event EventType) error {
+	row := []interface{}{ts, event, string(data)}
 	raw, err := json.Marshal(row)
 	if err != nil {
 		return err
@@ -122,15 +129,6 @@ func (w *Writer) WriteStdout(ts float64, data []byte) error {
 		raw := append(raw, newLine...)
 		w.WriteBuff = append(w.WriteBuff, raw...)
 	}
-	//w.WriteBuff = append(w.WriteBuff, raw...)
-	//w.WriteBuff = append(w.WriteBuff, newLine...)
-	//
-	//_, err = w.Write(raw)
-	//if err != nil {
-	//	return err
-	//}
-	//_, err = w.Write(newLine)
-	//return err
 	return nil
 }
 
