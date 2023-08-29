@@ -60,36 +60,15 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	cmOption := dependInfo.CmOption
-	cluster := dependInfo.Cluster
-	group := dependInfo.NodeGroup
 
-	// create node group
-	gkeCli, err := api.NewContainerServiceClient(cmOption)
+	err = createGKENodeGroup(dependInfo.CmOption, dependInfo.NodeGroup, dependInfo.Cluster, nodeGroupID, taskID, stepName)
 	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: get gke client for nodegroup[%s] in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud gke client err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
+		_ = state.UpdateStepFailure(start, stepName, err)
 		return err
 	}
-	// gke nodePool名称中不允许有大写字母
-	group.CloudNodeGroupID = strings.ToLower(group.NodeGroupID)
-
-	operation, err := gkeCli.CreateClusterNodePool(context.Background(),
-		generateCreateNodePoolInput(group, cluster), cluster.SystemID)
-	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool[%s] api in task %s "+
-			"step %s failed, %s, operation ID: %s", taskID, nodeGroupID, taskID, stepName, err.Error(), operation)
-		retErr := fmt.Errorf("call CreateClusterNodePool[%s] api err, %s, operation ID: %s",
-			nodeGroupID, err.Error(), operation)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool successful", taskID)
 
 	// update nodegorup cloudNodeGroupID
-	err = updateNodeGroupCloudNodeGroupID(nodeGroupID, group)
+	err = updateNodeGroupCloudNodeGroupID(nodeGroupID, dependInfo.NodeGroup)
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudNodeGroupID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -106,12 +85,42 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		state.Task.CommonParams = make(map[string]string)
 	}
 
-	state.Task.CommonParams["CloudNodeGroupID"] = group.CloudNodeGroupID
+	state.Task.CommonParams["CloudNodeGroupID"] = dependInfo.NodeGroup.CloudNodeGroupID
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
+	return nil
+}
+
+func createGKENodeGroup(cmOption *cloudprovider.CommonOption, group *proto.NodeGroup, cluster *proto.Cluster,
+	nodeGroupID, taskID, stepName string) error {
+
+	gkeCli, err := api.NewContainerServiceClient(cmOption)
+	if err != nil {
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: get gke client for nodegroup[%s] in task %s step %s failed, %s",
+			taskID, nodeGroupID, taskID, stepName, err.Error())
+		return fmt.Errorf("get cloud gke client err, %s", err.Error())
+	}
+
+	operationID, err := gkeCli.CreateClusterNodePool(context.Background(),
+		generateCreateNodePoolInput(group, cluster), cluster.SystemID)
+	if err != nil {
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool[%s] api in task %s "+
+			"step %s failed, %s, operation ID: %s", taskID, nodeGroupID, taskID, stepName, err.Error(), operationID)
+		return fmt.Errorf("call CreateClusterNodePool[%s] api err, %s, operation ID: %s",
+			nodeGroupID, err.Error(), operationID)
+	}
+	gceCli, err := api.NewComputeServiceClient(cmOption)
+	if err != nil {
+		return err
+	}
+	if err = checkOperationStatus(gceCli, operationID, taskID, 3*time.Second); err != nil {
+		return err
+	}
+	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool successful", taskID)
+
 	return nil
 }
 
@@ -121,7 +130,8 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 	}
 	return &api.CreateNodePoolRequest{
 		NodePool: &api.NodePool{
-			Name:             group.CloudNodeGroupID,
+			// gke nodePool名称中不允许有大写字母
+			Name:             strings.ToLower(group.NodeGroupID),
 			Config:           generateNodeConfig(group),
 			InitialNodeCount: 0,
 			MaxPodsConstraint: &api.MaxPodsConstraint{
@@ -262,8 +272,8 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v", taskID, err)
 		return nil, nil, err
 	}
-	newIt := it
 
+	newIt := it
 	err = newItFromBaseIt(newIt, it, group, cluster, computeCli, taskID)
 	if err != nil {
 		return nil, nil, err
@@ -426,7 +436,7 @@ func generateNodeConfig(nodeGroup *proto.NodeGroup) *api.NodeConfig {
 	diskSize, _ := strconv.Atoi(template.SystemDisk.DiskSize)
 	conf := &api.NodeConfig{
 		MachineType: template.InstanceType,
-		Labels:      nodeGroup.Labels,
+		Labels:      nodeGroup.NodeTemplate.Labels,
 		Taints:      api.MapTaints(nodeGroup.NodeTemplate.Taints),
 		DiskSizeGb:  int64(diskSize),
 		DiskType:    template.SystemDisk.DiskType,
@@ -445,7 +455,7 @@ func generateNodeManagement(nodeGroup *proto.NodeGroup, cluster *proto.Cluster) 
 	nm.AutoUpgrade = nodeGroup.AutoScaling.AutoUpgrade
 	nm.AutoRepair = nodeGroup.AutoScaling.ReplaceUnhealthy
 	if cluster.ExtraInfo != nil {
-		if cluster.ExtraInfo["releaseChannel"] != "" {
+		if cluster.ExtraInfo[api.GKEClusterReleaseChannel] != "" {
 			// when releaseChannel is set, autoUpgrade and autoRepair must be true
 			nm.AutoUpgrade = true
 			nm.AutoRepair = true

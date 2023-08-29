@@ -15,7 +15,7 @@ package google
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,7 +23,9 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/tasks"
+
 	"github.com/google/uuid"
 )
 
@@ -133,6 +135,10 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	importCluster.BuildRegisterKubeConfigStep(task)
 	// step2: import cluster nodes step
 	importCluster.BuildImportClusterNodesStep(task)
+	// step3: install cluster watch component
+	if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
+		common.BuildWatchComponentTaskStep(task, cls, "")
+	}
 
 	// set current step
 	if len(task.StepSequence) == 0 {

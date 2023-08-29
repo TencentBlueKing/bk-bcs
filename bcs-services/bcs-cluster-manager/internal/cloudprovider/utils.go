@@ -39,7 +39,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
-	k8scorev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -960,26 +959,6 @@ func UpdateAutoScalingOptionModuleInfo(clusterID string) error {
 	err = GetStorageModel().UpdateAutoScalingOption(context.Background(), asOption)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// ImportClusterNodesToCM writes cluster nodes to DB
-func ImportClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error {
-	for i := range nodes {
-		ipv4, ipv6 := utils.GetNodeIPAddress(&nodes[i])
-		node := &proto.Node{
-			InnerIP:   utils.SliceToString(ipv4),
-			InnerIPv6: utils.SliceToString(ipv6),
-			Status:    common.StatusRunning,
-			NodeName:  nodes[i].Name,
-			ClusterID: clusterID,
-		}
-		err := GetStorageModel().CreateNode(ctx, node)
-		if err != nil {
-			blog.Errorf("ImportClusterNodesToCM CreateNode[%s] failed: %v", nodes[i].Name, err)
-		}
 	}
 
 	return nil

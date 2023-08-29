@@ -22,9 +22,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
+	k8scorev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -144,14 +147,44 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		return fmt.Errorf("importClusterInstances NewKubeClient failed: %v", err)
 	}
 
+	gceCli, err := api.NewComputeServiceClient(data.CmOption)
+	if err != nil {
+		return fmt.Errorf("get gce client failed, %s", err.Error())
+	}
+
 	nodes, err := kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("list nodes failed, %s", err.Error())
 	}
 
-	err = cloudprovider.ImportClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)
+	err = importClusterNodesToCM(context.Background(), gceCli, nodes.Items, data.Cluster.ClusterID)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ImportClusterNodesToCM writes cluster nodes to DB
+func importClusterNodesToCM(ctx context.Context, gceCli *api.ComputeServiceClient, nodes []k8scorev1.Node, clusterID string) error {
+
+	for _, v := range nodes {
+		instance, err := gceCli.GetInstance(ctx, v.Name)
+		if err != nil {
+			return err
+		}
+		ipv4, ipv6 := utils.GetNodeIPAddress(&v)
+
+		node := api.InstanceToNode(gceCli, instance)
+		node.InnerIP = utils.SliceToString(ipv4)
+		node.InnerIPv6 = utils.SliceToString(ipv6)
+		node.ClusterID = clusterID
+
+		err = cloudprovider.GetStorageModel().CreateNode(ctx, node)
+		if err != nil {
+			blog.Errorf("ImportClusterNodesToCM CreateNode[%s] failed: %v", v.Name, err)
+			return err
+		}
 	}
 
 	return nil

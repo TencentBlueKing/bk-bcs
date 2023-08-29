@@ -171,7 +171,6 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 		}
 		nodeMap[node.NodeID] = node
 		node.InnerIP = inst.NetworkInterfaces[0].NetworkIP
-		node.Region = opt.Common.Region
 		// check node vpc and cluster vpc
 		if !strings.Contains(node.VPC, opt.ClusterVPCID) {
 			return nil, fmt.Errorf(cloudprovider.ErrCloudNodeVPCDiffWithClusterResponse, node.InnerIP)
@@ -189,14 +188,17 @@ func InstanceToNode(cli *ComputeServiceClient, ins *compute.Instance) *proto.Nod
 	zoneInfo, _ := GetGCEResourceInfo(ins.Zone)
 	zone, _ := cli.GetZone(context.Background(), zoneInfo[len(zoneInfo)-1])
 	node := &proto.Node{}
+	node.NodeID = strconv.Itoa(int(ins.Id))
+	node.NodeName = ins.Name
 	if zoneInfo != nil {
 		node.ZoneID = zone.Zone
 		zoneID, _ := strconv.Atoi(zone.ZoneID)
 		node.Zone = uint32(zoneID)
 	}
 	machineInfo, _ := GetGCEResourceInfo(ins.MachineType)
-	node.NodeID = ins.Name
 	node.InstanceType = machineInfo[len(machineInfo)-1]
-	node.VPC = ins.NetworkInterfaces[0].Network
+	node.VPC = ins.NetworkInterfaces[0].Subnetwork
+	node.Status = ins.Status
+	node.Region = cli.location
 	return node
 }
