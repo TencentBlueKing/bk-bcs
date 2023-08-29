@@ -90,7 +90,7 @@ proxy: tidy
 .PHONY: webhook
 webhook: tidy
 	mkdir -p ${OUTPUT}/bcs-gitops-webhook
-	cp -r images/proxy/* ${OUTPUT}/bcs-gitops-webhook/
+	cp -r images/webhook/* ${OUTPUT}/bcs-gitops-webhook/
 	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-webhook/bcs-gitops-webhook cmd/webhook/main.go
 
 .PHONY: vaultplugin

@@ -7,12 +7,14 @@ option go_package = "./proto;bcsgitopsmanager";
 import "protoc-gen-swagger/options/annotations.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
+import "google/protobuf/descriptor.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 service BcsGitopsWebhook {
   rpc TGitWebhook(TGitWebhookRequest) returns (TGitWebhookResponse) {
     option (google.api.http) = {
       post : "/gitopswebhook/v1/webhook/tgit"
-      body : "*"
+      body : "rawData"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       summary : "工峰 webhook"
@@ -22,6 +24,7 @@ service BcsGitopsWebhook {
   rpc GeneralWebhook(GeneralWebhookRequest) returns (GeneralWebhookResponse) {
     option (google.api.http) = {
       post : "/gitopswebhook/v1/webhook/general"
+      body : "rawData"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       summary : "常规 Git Webhook（github/gitlab）"
@@ -31,13 +34,13 @@ service BcsGitopsWebhook {
 }
 
 message TGitWebhookRequest {
-  google.protobuf.Any body = 1;
+  bytes rawData = 1;
 }
 
 message TGitWebhookResponse {}
 
 message GeneralWebhookRequest {
-  google.protobuf.Any body = 1;
+  bytes rawData = 1;
 }
 
 message GeneralWebhookResponse {}

@@ -23,16 +23,24 @@ type GitopsWebhookOptions struct {
 	conf.LogConfig
 	conf.CertConfig
 
-	Address     string `json:"address,omitempty"`
-	IPv6Address string `json:"ipv6address,omitempty"`
-	GRPCPort    uint   `json:"grpcPort,omitempty"`
-	HTTPPort    uint   `json:"httpPort,omitempty"`
-	MetricPort  uint   `json:"metricPort,omitempty"`
+	Address string `json:"address,omitempty"`
+	// IPv6Address string `json:"ipv6address,omitempty"`
+	GRPCPort   uint `json:"grpcPort,omitempty"`
+	HTTPPort   uint `json:"httpPort,omitempty"`
+	MetricPort uint `json:"metricPort,omitempty"`
 
 	Registry Registry `json:"registry,omitempty"`
 
 	GitOpsWebhook string `json:"gitOpsWebhook"`
 	GitOpsToken   string `json:"gitOpsToken"`
+
+	TraceConfig TraceConfig `json:"traceConfig"`
+}
+
+// TraceConfig defines the config of trace
+type TraceConfig struct {
+	Endpoint string `json:"endpoint"`
+	Token    string `json:"token"`
 }
 
 // Registry defines the registry of gitops webhook

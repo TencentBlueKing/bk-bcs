@@ -1,6 +1,6 @@
 {
     "log_dir": "${log_dir}",
-    "v": ${bcsGitOpsProxyVerbosity},
+    "v": ${bcsGitOpsWebhookVerbosity},
     "alsologtostderr": true,
     "log_max_size": 500,
     "log_max_num": 10,
@@ -13,15 +13,20 @@
       "ca": "${bcsEtcdCAFile}"
     },
     "address": "${localIp}",
+    "ipv6address": "${ipv6Address}",
     "httpPort": ${httpPort},
     "grpcPort": ${grpcPort},
     "metricPort": ${metricPort},
     "gitOpsWebhook": "${gitopsWebhook}",
     "gitOpsToken": "${gitOpsToken}",
-    "serverca": "${caFile}",
-    "servercert": "${serverCertFile}",
-    "serverkey": "${serverKeyFile}",
-    "clientca": "${caFile}",
-    "clientcert": "${clientCertFile}",
-    "clientkey": "${clientKeyFile}"
-  }
+    "traceConfig": {
+        "endpoint": "${traceEndpoint}",
+        "token": "${traceToken}"
+    },
+    "ca_file": "${caFile}",
+    "server_cert_file": "${serverCertFile}",
+    "server_key_file": "${serverKeyFile}",
+    "ca_file": "${caFile}",
+    "client_cert_file": "${clientCertFile}",
+    "client_key_file": "${clientKeyFile}"
+}
