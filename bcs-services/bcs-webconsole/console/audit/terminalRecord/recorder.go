@@ -127,7 +127,10 @@ func Record(r *ReplyRecorder, p []byte) {
 }
 
 func (r *ReplyRecorder) End() {
-	if r.isNullError() {
+	if r == nil {
+		return
+	} else {
+		r.file.Close()
 		return
 	}
 }

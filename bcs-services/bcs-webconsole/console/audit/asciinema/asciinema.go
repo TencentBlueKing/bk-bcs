@@ -14,11 +14,13 @@ package asciinema
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"time"
 )
 
 const (
+	maxFileSize  = 100 * 1000 * 1000 // 100M
 	version      = 2
 	defaultShell = "/bin/bash"
 	defaultTerm  = "xterm"
@@ -42,6 +44,7 @@ func NewWriter(w io.Writer, opts ...Option) *Writer {
 		Config:        conf,
 		TimestampNano: conf.Timestamp.UnixNano(),
 		writer:        w,
+		limit:         maxFileSize,
 	}
 }
 
@@ -49,6 +52,8 @@ type Writer struct {
 	Config
 	TimestampNano int64
 	writer        io.Writer
+	limit         int
+	written       int
 }
 
 func (w *Writer) WriteHeader() error {
@@ -67,11 +72,11 @@ func (w *Writer) WriteHeader() error {
 	if err != nil {
 		return err
 	}
-	_, err = w.writer.Write(raw)
+	_, err = w.Write(raw)
 	if err != nil {
 		return err
 	}
-	_, err = w.writer.Write(newLine)
+	_, err = w.Write(newLine)
 	return err
 }
 
@@ -87,11 +92,11 @@ func (w *Writer) WriteStdout(ts float64, data []byte) error {
 	if err != nil {
 		return err
 	}
-	_, err = w.writer.Write(raw)
+	_, err = w.Write(raw)
 	if err != nil {
 		return err
 	}
-	_, err = w.writer.Write(newLine)
+	_, err = w.Write(newLine)
 	return err
 }
 
@@ -107,4 +112,19 @@ type Header struct {
 type Env struct {
 	Shell string `json:"SHELL"`
 	Term  string `json:"TERM"`
+}
+
+func (w *Writer) Write(p []byte) (n int, err error) {
+	remainingSpace := w.limit - w.written
+	if remainingSpace <= 0 {
+		return 0, errors.New("Exceeds the file size")
+	}
+
+	if len(p) > remainingSpace {
+		p = p[:remainingSpace]
+	}
+
+	n, err = w.writer.Write(p)
+	w.written += n
+	return n, err
 }
