@@ -99,7 +99,7 @@ const (
 	Data_UpdateAppTemplateBinding_FullMethodName                   = "/pbds.Data/UpdateAppTemplateBinding"
 	Data_DeleteAppTemplateBinding_FullMethodName                   = "/pbds.Data/DeleteAppTemplateBinding"
 	Data_ListAppBoundTemplateRevisions_FullMethodName              = "/pbds.Data/ListAppBoundTemplateRevisions"
-	Data_ExtractTemplateVariables_FullMethodName                   = "/pbds.Data/ExtractTemplateVariables"
+	Data_ExtractAppTemplateVariables_FullMethodName                = "/pbds.Data/ExtractAppTemplateVariables"
 	Data_ListTemplateBoundCounts_FullMethodName                    = "/pbds.Data/ListTemplateBoundCounts"
 	Data_ListTemplateRevisionBoundCounts_FullMethodName            = "/pbds.Data/ListTemplateRevisionBoundCounts"
 	Data_ListTemplateSetBoundCounts_FullMethodName                 = "/pbds.Data/ListTemplateSetBoundCounts"
@@ -227,7 +227,7 @@ type DataClient interface {
 	DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListAppBoundTemplateRevisions(ctx context.Context, in *ListAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTemplateRevisionsResp, error)
 	// extract template variables related interface.
-	ExtractTemplateVariables(ctx context.Context, in *ExtractTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractTemplateVariablesResp, error)
+	ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error)
 	// template binding relation related interface.
 	ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error)
 	ListTemplateRevisionBoundCounts(ctx context.Context, in *ListTemplateRevisionBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundCountsResp, error)
@@ -929,9 +929,9 @@ func (c *dataClient) ListAppBoundTemplateRevisions(ctx context.Context, in *List
 	return out, nil
 }
 
-func (c *dataClient) ExtractTemplateVariables(ctx context.Context, in *ExtractTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractTemplateVariablesResp, error) {
-	out := new(ExtractTemplateVariablesResp)
-	err := c.cc.Invoke(ctx, Data_ExtractTemplateVariables_FullMethodName, in, out, opts...)
+func (c *dataClient) ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error) {
+	out := new(ExtractAppTemplateVariablesResp)
+	err := c.cc.Invoke(ctx, Data_ExtractAppTemplateVariables_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1335,7 +1335,7 @@ type DataServer interface {
 	DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*base.EmptyResp, error)
 	ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error)
 	// extract template variables related interface.
-	ExtractTemplateVariables(context.Context, *ExtractTemplateVariablesReq) (*ExtractTemplateVariablesResp, error)
+	ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error)
 	// template binding relation related interface.
 	ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error)
 	ListTemplateRevisionBoundCounts(context.Context, *ListTemplateRevisionBoundCountsReq) (*ListTemplateRevisionBoundCountsResp, error)
@@ -1601,8 +1601,8 @@ func (UnimplementedDataServer) DeleteAppTemplateBinding(context.Context, *Delete
 func (UnimplementedDataServer) ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppBoundTemplateRevisions not implemented")
 }
-func (UnimplementedDataServer) ExtractTemplateVariables(context.Context, *ExtractTemplateVariablesReq) (*ExtractTemplateVariablesResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExtractTemplateVariables not implemented")
+func (UnimplementedDataServer) ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExtractAppTemplateVariables not implemented")
 }
 func (UnimplementedDataServer) ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateBoundCounts not implemented")
@@ -3014,20 +3014,20 @@ func _Data_ListAppBoundTemplateRevisions_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Data_ExtractTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExtractTemplateVariablesReq)
+func _Data_ExtractAppTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExtractAppTemplateVariablesReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataServer).ExtractTemplateVariables(ctx, in)
+		return srv.(DataServer).ExtractAppTemplateVariables(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Data_ExtractTemplateVariables_FullMethodName,
+		FullMethod: Data_ExtractAppTemplateVariables_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).ExtractTemplateVariables(ctx, req.(*ExtractTemplateVariablesReq))
+		return srv.(DataServer).ExtractAppTemplateVariables(ctx, req.(*ExtractAppTemplateVariablesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3940,8 +3940,8 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListAppBoundTemplateRevisions_Handler,
 		},
 		{
-			MethodName: "ExtractTemplateVariables",
-			Handler:    _Data_ExtractTemplateVariables_Handler,
+			MethodName: "ExtractAppTemplateVariables",
+			Handler:    _Data_ExtractAppTemplateVariables_Handler,
 		},
 		{
 			MethodName: "ListTemplateBoundCounts",

@@ -26,9 +26,9 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// ExtractTemplateVariables extract template variables.
-func (s *Service) ExtractTemplateVariables(ctx context.Context, req *pbds.ExtractTemplateVariablesReq) (
-	*pbds.ExtractTemplateVariablesResp, error) {
+// ExtractAppTemplateVariables extract app template variables.
+func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbds.ExtractAppTemplateVariablesReq) (
+	*pbds.ExtractAppTemplateVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	opt := &types.BasePage{All: true}
@@ -39,7 +39,7 @@ func (s *Service) ExtractTemplateVariables(ctx context.Context, req *pbds.Extrac
 	}
 	// so far, no any template config item exists for the app
 	if len(details) == 0 {
-		return &pbds.ExtractTemplateVariablesResp{
+		return &pbds.ExtractAppTemplateVariablesResp{
 			Details: []string{},
 		}, nil
 	}
@@ -52,7 +52,7 @@ func (s *Service) ExtractTemplateVariables(ctx context.Context, req *pbds.Extrac
 		return nil, err
 	}
 	if len(tmplRevisions) == 0 {
-		return &pbds.ExtractTemplateVariablesResp{
+		return &pbds.ExtractAppTemplateVariablesResp{
 			Details: []string{},
 		}, nil
 	}
@@ -109,7 +109,7 @@ func (s *Service) ExtractTemplateVariables(ctx context.Context, req *pbds.Extrac
 	// extract all template variables
 	variables := s.tmplProc.ExtractVariables(allContent)
 
-	return &pbds.ExtractTemplateVariablesResp{
+	return &pbds.ExtractAppTemplateVariablesResp{
 		Details: variables,
 	}, nil
 }

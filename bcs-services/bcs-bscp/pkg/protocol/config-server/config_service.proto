@@ -504,7 +504,7 @@ service Config {
         };
     }
 
-    rpc ExtractTemplateVariables(ExtractTemplateVariablesReq) returns (ExtractTemplateVariablesResp) {
+    rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/extract_template_variables"
         };
@@ -1640,12 +1640,12 @@ message ListTemplateVariablesResp {
     repeated pbtv.TemplateVariable details = 2;
 }
 
-message ExtractTemplateVariablesReq {
+message ExtractAppTemplateVariablesReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
 }
 
-message ExtractTemplateVariablesResp {
+message ExtractAppTemplateVariablesResp {
     repeated string details = 2;
 }
 

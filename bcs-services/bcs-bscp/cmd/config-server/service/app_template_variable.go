@@ -22,11 +22,11 @@ import (
 	pbds "bscp.io/pkg/protocol/data-service"
 )
 
-// ExtractTemplateVariables extract template variables
-func (s *Service) ExtractTemplateVariables(ctx context.Context, req *pbcs.ExtractTemplateVariablesReq) (
-	*pbcs.ExtractTemplateVariablesResp, error) {
+// ExtractAppTemplateVariables extract app template variables
+func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbcs.ExtractAppTemplateVariablesReq) (
+	*pbcs.ExtractAppTemplateVariablesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ExtractTemplateVariablesResp)
+	resp := new(pbcs.ExtractAppTemplateVariablesResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateVariable, Action: meta.Find},
 		BizID: req.BizId}
@@ -34,18 +34,18 @@ func (s *Service) ExtractTemplateVariables(ctx context.Context, req *pbcs.Extrac
 		return nil, err
 	}
 
-	r := &pbds.ExtractTemplateVariablesReq{
+	r := &pbds.ExtractAppTemplateVariablesReq{
 		BizId: req.BizId,
 		AppId: req.AppId,
 	}
 
-	rp, err := s.client.DS.ExtractTemplateVariables(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ExtractAppTemplateVariables(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("list template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.ExtractTemplateVariablesResp{
+	resp = &pbcs.ExtractAppTemplateVariablesResp{
 		Details: rp.Details,
 	}
 	return resp, nil

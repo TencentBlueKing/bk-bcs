@@ -129,7 +129,7 @@ service Data {
     rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {}
 
     // extract template variables related interface.
-    rpc ExtractTemplateVariables(ExtractTemplateVariablesReq) returns (ExtractTemplateVariablesResp) {}
+    rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {}
 
     // template binding relation related interface.
     rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {}
@@ -845,12 +845,12 @@ message ListAppBoundTemplateRevisionsResp {
     repeated pbatb.AppBoundTmplRevision details = 2;
 }
 
-message ExtractTemplateVariablesReq {
+message ExtractAppTemplateVariablesReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
 }
 
-message ExtractTemplateVariablesResp {
+message ExtractAppTemplateVariablesResp {
     repeated string details = 2;
 }
 
