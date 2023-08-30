@@ -59,4 +59,22 @@ func (m *MockTokenStore) CreateTemporaryToken(token *models.BcsTempToken) error 
 	return args.Error(0)
 }
 
+// GetTempTokenByCondition mock create temporary token
+func (m *MockTokenStore) GetTempTokenByCondition(cond *models.BcsTempToken) *models.BcsTempToken {
+	args := m.Called(cond)
+	return args.Get(0).(*models.BcsTempToken)
+}
+
+// GetAllNotExpiredTokens mock create temporary token
+func (m *MockTokenStore) GetAllNotExpiredTokens() []models.BcsUser {
+	args := m.Called()
+	return args.Get(0).([]models.BcsUser)
+}
+
+// GetAllTokens mock create temporary token
+func (m *MockTokenStore) GetAllTokens() []models.BcsUser {
+	args := m.Called()
+	return args.Get(0).([]models.BcsUser)
+}
+
 var _ sqlstore.TokenStore = &MockTokenStore{}

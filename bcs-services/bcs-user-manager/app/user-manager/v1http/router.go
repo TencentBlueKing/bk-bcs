@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/tke"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/token"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/user"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 // InitV1Routers init v1 version route,
@@ -82,7 +83,7 @@ func initPermissionRouters(ws *restful.WebService, service *permission.PermVerif
 
 // initTokenRouters init bcs token
 func initTokenRouters(ws *restful.WebService) {
-	tokenHandler := token.NewTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB),
+	tokenHandler := token.NewTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor),
 		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient)
 	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens").To(tokenHandler.CreateToken)))
 	ws.Route(auth.TokenAuthFunc(ws.GET("/v1/users/{username}/tokens").To(tokenHandler.GetToken)))
@@ -96,7 +97,7 @@ func initTokenRouters(ws *restful.WebService) {
 
 // initExtraTokenRouters init bcs extra token for third-party system
 func initExtraTokenRouters(ws *restful.WebService, service *permission.PermVerifyClient) {
-	tokenHandler := token.NewExtraTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB),
+	tokenHandler := token.NewExtraTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor),
 		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient, cmdb.CMDBClient)
 	ws.Route(ws.GET("/v1/tokens/extra/getClusterUserToken").To(tokenHandler.GetTokenByUserAndClusterID))
 }

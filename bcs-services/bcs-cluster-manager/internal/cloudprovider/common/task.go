@@ -41,16 +41,17 @@ func RegisterCommonActions() map[string]interface{} {
 		cloudprovider.JobFastExecuteScriptAction: JobExecuteScriptTask,
 		cloudprovider.EnsureAutoScalerAction:     EnsureAutoScalerTask,
 
-		cloudprovider.InstallVclusterAction:      InstallVclusterTask,
-		cloudprovider.DeleteVclusterAction:       UnInstallVclusterTask,
-		cloudprovider.CreateNamespaceAction:      CreateNamespaceTask,
-		cloudprovider.DeleteNamespaceAction:      DeleteNamespaceTask,
-		cloudprovider.SetNodeLabelsAction:        SetNodeLabelsTask,
-		cloudprovider.SetNodeAnnotationsAction:   SetNodeAnnotationsTask,
-		cloudprovider.CheckKubeAgentStatusAction: CheckKubeAgentStatusTask,
-		cloudprovider.CreateResourceQuotaAction:  CreateResourceQuotaTask,
-		cloudprovider.DeleteResourceQuotaAction:  DeleteResourceQuotaTask,
-		cloudprovider.ResourcePoolLabelAction:    SetResourcePoolDeviceLabels,
+		cloudprovider.InstallVclusterAction:         InstallVclusterTask,
+		cloudprovider.DeleteVclusterAction:          UnInstallVclusterTask,
+		cloudprovider.CreateNamespaceAction:         CreateNamespaceTask,
+		cloudprovider.DeleteNamespaceAction:         DeleteNamespaceTask,
+		cloudprovider.SetNodeLabelsAction:           SetNodeLabelsTask,
+		cloudprovider.SetNodeAnnotationsAction:      SetNodeAnnotationsTask,
+		cloudprovider.CheckKubeAgentStatusAction:    CheckKubeAgentStatusTask,
+		cloudprovider.CreateResourceQuotaAction:     CreateResourceQuotaTask,
+		cloudprovider.DeleteResourceQuotaAction:     DeleteResourceQuotaTask,
+		cloudprovider.ResourcePoolLabelAction:       SetResourcePoolDeviceLabels,
+		cloudprovider.LadderResourcePoolLabelAction: EmptyAction,
 	}
 }
 

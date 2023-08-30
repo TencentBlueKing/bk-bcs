@@ -16,6 +16,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -62,12 +63,15 @@ func (plugin *RepositoryPlugin) Init() error {
 
 // GET /api/v1/repositories?projects={projects}
 func (plugin *RepositoryPlugin) listRepositoryHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
-	projectName := r.URL.Query().Get("projects")
+	projects := r.URL.Query()["projects"]
+	if len(projects) == 0 {
+		return mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'projects' cannot be empty"))
+	}
 	repositoryList, statusCode, err := plugin.middleware.
-		ListRepositories(ctx, []string{projectName}, true)
+		ListRepositories(ctx, projects, true)
 	if statusCode != http.StatusOK {
 		return mw.ReturnErrorResponse(statusCode,
-			errors.Wrapf(err, "list repositories for project '%s' failed", projectName))
+			errors.Wrapf(err, "list repositories for project '%v' failed", projects))
 	}
 	return mw.ReturnJSONResponse(repositoryList)
 }

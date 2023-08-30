@@ -19,13 +19,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/utils"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -52,14 +55,17 @@ type ModelRepository struct {
 	db                  drivers.DB
 	isTableEnsured      bool
 	isTableEnsuredMutex sync.Mutex
+
+	cryptor encryptv2.Cryptor
 }
 
 // New return a new ModelRepository instance
-func New(db drivers.DB) *ModelRepository {
+func New(db drivers.DB, cryptor encryptv2.Cryptor) *ModelRepository {
 	return &ModelRepository{
 		tableName: utils.DataTableNamePrefix + tableName,
 		indexes:   tableIndexes,
 		db:        db,
+		cryptor:   cryptor,
 	}
 }
 
@@ -81,6 +87,30 @@ func (m *ModelRepository) ensureTable(ctx context.Context) error {
 	return nil
 }
 
+func (m *ModelRepository) encryptPassword(password string) string {
+	if m.cryptor == nil {
+		return password
+	}
+	p, err := m.cryptor.Encrypt(password)
+	if err != nil {
+		blog.Errorf("encrypt password failed, err %s", err.Error())
+		return password
+	}
+	return p
+}
+
+func (m *ModelRepository) decryptPassword(password string) string {
+	if m.cryptor == nil {
+		return password
+	}
+	p, err := m.cryptor.Decrypt(password)
+	if err != nil {
+		blog.Errorf("decrypt password failed, err %s", err.Error())
+		return password
+	}
+	return p
+}
+
 // CreateRepository create a new entity.Repository into database
 func (m *ModelRepository) CreateRepository(ctx context.Context, repository *entity.Repository) error {
 	if repository == nil {
@@ -89,6 +119,10 @@ func (m *ModelRepository) CreateRepository(ctx context.Context, repository *enti
 
 	if err := m.ensureTable(ctx); err != nil {
 		return err
+	}
+
+	if repository.Password != "" {
+		repository.Password = m.encryptPassword(repository.Password)
 	}
 
 	timestamp := time.Now().UTC().Unix()
@@ -124,6 +158,10 @@ func (m *ModelRepository) UpdateRepository(ctx context.Context, projectID, name 
 		return err
 	}
 
+	if repository.GetString(entity.FieldKeyPassword) != "" {
+		repository.Update(entity.FieldKeyPassword, m.encryptPassword(repository.GetString(entity.FieldKeyPassword)))
+	}
+
 	repository.Update(entity.FieldKeyUpdateTime, time.Now().UTC().Unix())
 	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": repository}); err != nil {
 		return err
@@ -149,6 +187,10 @@ func (m *ModelRepository) GetRepository(ctx context.Context, projectID, name str
 	repository := &entity.Repository{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, repository); err != nil {
 		return nil, err
+	}
+
+	if repository.Password != "" {
+		repository.Password = m.decryptPassword(repository.Password)
 	}
 
 	return repository, nil
@@ -195,6 +237,12 @@ func (m *ModelRepository) ListRepository(ctx context.Context, cond *operator.Con
 
 	if err := finder.All(ctx, &l); err != nil {
 		return 0, nil, err
+	}
+
+	for k, v := range l {
+		if v.Password != "" {
+			l[k].Password = m.decryptPassword(v.Password)
+		}
 	}
 
 	total, err := finder.Count(ctx)

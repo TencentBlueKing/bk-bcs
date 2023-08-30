@@ -14,6 +14,7 @@
 package iam
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
@@ -41,12 +42,12 @@ type PermRequest struct {
 
 // PermCtx perm context
 type PermCtx struct {
-	ResourceType string `json:"resource_type"`
-	ProjectID    string `json:"project_id"`
-	ClusterID    string `json:"cluster_id"`
-	Namespace    string `json:"name"`
-	TemplateID   string `json:"template_id"`
-	AccountID    string `json:"account_id"`
+	ResourceType string      `json:"resource_type"`
+	ProjectID    string      `json:"project_id"`
+	ClusterID    string      `json:"cluster_id"`
+	Namespace    string      `json:"name"`
+	TemplateID   json.Number `json:"template_id"`
+	AccountID    string      `json:"account_id"`
 }
 
 // GetPerms get perm
@@ -125,7 +126,7 @@ func GetPermByActionID(request *restful.Request, response *restful.Response) {
 	}
 	var allow bool
 	var applyURL string
-	if form.PermCtx == nil {
+	if form.PermCtx == nil || form.PermCtx.ResourceType == "" {
 		allow, err = config.GloablIAMClient.IsAllowedWithoutResource(actionID, permReq, true)
 	} else {
 		node := getResourceNodeFromPermCtx(form.PermCtx)
@@ -160,13 +161,13 @@ func getResourceNodeFromPermCtx(permCtx *PermCtx) iam.ResourceNode {
 		node.Rp = project.ProjectResourcePath{}
 	case Cluster:
 		node.RInstance = permCtx.ClusterID
-		node.Rp = cloudaccount.AccountResourcePath{ProjectID: permCtx.ProjectID}
+		node.Rp = cluster.ClusterResourcePath{ProjectID: permCtx.ProjectID}
 	case Namespace:
 		node.RInstance = authutil.CalcIAMNsID(permCtx.ClusterID, permCtx.Namespace)
 		node.Rp = namespace.NamespaceResourcePath{ProjectID: permCtx.ProjectID, ClusterID: permCtx.ClusterID}
 	case TemplateSet:
-		node.RInstance = permCtx.TemplateID
-		node.Rp = cloudaccount.AccountResourcePath{ProjectID: permCtx.ProjectID}
+		node.RInstance = permCtx.TemplateID.String()
+		node.Rp = templateset.TemplateSetResourcePath{ProjectID: permCtx.ProjectID}
 	case CloudAccount:
 		node.RInstance = permCtx.AccountID
 		node.Rp = cloudaccount.AccountResourcePath{ProjectID: permCtx.ProjectID}
@@ -177,6 +178,10 @@ func getResourceNodeFromPermCtx(permCtx *PermCtx) iam.ResourceNode {
 // 根据 resource type 拼装 iam.ApplicationAction
 func getApplicationsFromPermCtx(permCtx *PermCtx, actionsID string) []iam.ApplicationAction {
 	apps := make([]iam.ApplicationAction, 0)
+	if permCtx == nil {
+		return []iam.ApplicationAction{{ActionID: actionsID,
+			RelatedResources: []iamsdk.ApplicationRelatedResourceType{}}}
+	}
 	switch permCtx.ResourceType {
 	case Project:
 		apps = project.BuildProjectSameInstanceApplication(false, []string{actionsID}, []string{permCtx.ProjectID})
@@ -205,7 +210,7 @@ func getApplicationsFromPermCtx(permCtx *PermCtx, actionsID string) []iam.Applic
 			},
 			{
 				ResourceType: TemplateSet,
-				ResourceID:   permCtx.TemplateID,
+				ResourceID:   permCtx.TemplateID.String(),
 			},
 		})
 		rr := make([]iamsdk.ApplicationRelatedResourceType, 0)
@@ -224,6 +229,9 @@ func getApplicationsFromPermCtx(permCtx *PermCtx, actionsID string) []iam.Applic
 					Account: permCtx.AccountID,
 				},
 			})
+	default:
+		apps = []iam.ApplicationAction{{ActionID: actionsID,
+			RelatedResources: []iamsdk.ApplicationRelatedResourceType{}}}
 	}
 	return apps
 }

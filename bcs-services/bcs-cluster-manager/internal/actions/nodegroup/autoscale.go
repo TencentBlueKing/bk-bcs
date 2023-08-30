@@ -16,15 +16,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 )
 
@@ -88,12 +92,60 @@ func (ua *EnableNodeGroupAutoScaleAction) getRelativeResource() error {
 	return nil
 }
 
+func (ua *EnableNodeGroupAutoScaleAction) handleNodeGroupVirtualNodes() error {
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		"clusterid":   ua.cluster.ClusterID,
+		"nodegroupid": ua.group.NodeGroupID,
+	})
+	nodes, err := ua.model.ListNode(ua.ctx, cond, &storeopt.ListOption{})
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		blog.Errorf("get Cluster %s Nodes failed, %s", ua.cluster.ClusterID, err.Error())
+		return err
+	}
+
+	if len(nodes) == 0 {
+		return nil
+	}
+
+	var (
+		virtualNodeNum = 0
+	)
+	for i := range nodes {
+		if nodes[i].Status == common.StatusResourceApplyFailed && strings.HasPrefix(nodes[i].NodeID, "bcs") {
+			virtualNodeNum++
+			err = ua.model.DeleteClusterNode(ua.ctx, ua.cluster.ClusterID, nodes[i].NodeID)
+			if err != nil {
+				blog.Errorf("EnableNodeGroupAutoScaleAction[%s:%s] DeleteClusterNode[%s] failed: %v",
+					ua.cluster.ClusterID, ua.req.NodeGroupID, nodes[i].GetNodeID())
+			}
+		}
+	}
+
+	if virtualNodeNum > 0 {
+		err = actions.UpdateNodeGroupDesiredSize(ua.model, ua.req.NodeGroupID, virtualNodeNum, true)
+		if err != nil {
+			blog.Errorf("EnableNodeGroupAutoScaleAction[%s:%s] UpdateNodeGroupDesiredSize[%v] failed: %v",
+				ua.cluster.ClusterID, ua.req.NodeGroupID, virtualNodeNum)
+		}
+	}
+
+	return nil
+}
+
 func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 	// check auto scale state, if enable, return success
 	if ua.group.EnableAutoscale {
 		blog.Infof("nodegroup %s is already enable auto scale", ua.group.Name)
 		return nil
 	}
+
+	// handle virtual nodes to keep data consistency when notEnableCA nodegroup enable CA
+	err := ua.handleNodeGroupVirtualNodes()
+	if err != nil {
+		blog.Errorf("EnableNodeGroupAutoScaleAction[%s:%s] handleNodeGroupVirtualNodes failed: %v",
+			ua.cluster.ClusterID, ua.req.NodeGroupID, err)
+	}
+
 	mgr, err := cloudprovider.GetNodeGroupMgr(ua.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get NodeGroup Manager cloudprovider %s/%s for enable nodegroup auto scale in Cluster %s failed, %s",

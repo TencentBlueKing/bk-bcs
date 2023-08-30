@@ -130,6 +130,19 @@ type CredentialScope struct {
 	Namespace   string `json:"namespace" yaml:"namespace"`
 }
 
+// Encrypt define encrypt config
+type Encrypt struct {
+	Enable    bool          `json:"enable" yaml:"enable"`
+	Algorithm string        `json:"algorithm" yaml:"algorithm"`
+	Secret    EncryptSecret `json:"secret" yaml:"secret"`
+}
+
+// EncryptSecret define encrypt secret
+type EncryptSecret struct {
+	Key    string `json:"key" yaml:"key"`
+	Secret string `json:"secret" yaml:"secret"`
+}
+
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
 	Etcd        EtcdOption    `json:"etcd" yaml:"etcd"`
@@ -141,6 +154,7 @@ type HelmManagerOptions struct {
 	IAM         IAMConfig     `json:"iam" yaml:"iam"`
 	JWT         JWTConfig     `json:"jwt" yaml:"jwt"`
 	Credentials []Credential  `json:"credentials" yaml:"credentials"`
+	Encrypt     Encrypt       `json:"encrypt" yaml:"encrypt"`
 	Debug       bool          `json:"debug" yaml:"debug"`
 	TLS         TLS           `json:"tls" yaml:"tls"`
 	ServerConfig

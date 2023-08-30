@@ -40,6 +40,6 @@ func (plugin *WebhookPlugin) Init() error {
 
 func (plugin *WebhookPlugin) executeWebhook(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	user := mw.User(ctx)
-	blog.Infof("user %s request webhook", user.GetUser())
+	blog.Infof("RequestID[%s], user %s request webhook", mw.RequestID(ctx), user.GetUser())
 	return nil
 }

@@ -185,6 +185,10 @@ var (
 		StepMethod: fmt.Sprintf("%s-CleanNodeGroupNodesTask", cloudName),
 		StepName:   "下架节点组节点",
 	}
+	checkClusterCleanNodsStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckClusterCleanNodsTask", cloudName),
+		StepName:   "检测下架节点状态",
+	}
 	returnIDCNodeToResourcePoolStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-ReturnIDCNodeToResourcePoolTask", cloudName),
 		StepName:   "下架第三方节点",
@@ -745,6 +749,21 @@ func (cn *CleanNodeInGroupTaskOption) BuildCleanNodeGroupNodesStep(task *proto.T
 
 	task.Steps[cleanNodeGroupNodesStep.StepMethod] = cleanStep
 	task.StepSequence = append(task.StepSequence, cleanNodeGroupNodesStep.StepMethod)
+}
+
+// BuildCheckClusterCleanNodsStep 检测集群清理节点池节点
+func (cn *CleanNodeInGroupTaskOption) BuildCheckClusterCleanNodsStep(task *proto.Task) {
+	checkStep := cloudprovider.InitTaskStep(checkClusterCleanNodsStep)
+
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Group.ClusterID
+	checkStep.Params[cloudprovider.NodeGroupIDKey.String()] = cn.Group.NodeGroupID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = cn.Group.Provider
+
+	checkStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.NodeIPs, ",")
+	checkStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(cn.NodeIds, ",")
+
+	task.Steps[checkClusterCleanNodsStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkClusterCleanNodsStep.StepMethod)
 }
 
 // BuildCordonNodesStep 设置节点不可调度状态

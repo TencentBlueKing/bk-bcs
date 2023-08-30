@@ -42,6 +42,7 @@ require (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607083304-55bca53fa223
+	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230811095616-815d33d32e2d
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230607083304-55bca53fa223
 	github.com/chartmuseum/helm-push v0.10.4
 	github.com/goccy/go-yaml v1.9.6
@@ -80,6 +81,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d // indirect
 	github.com/Tencent/bk-bcs/bcs-scenarios/kourse v0.0.0-20230620131944-108c92952073 // indirect
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 // indirect
+	github.com/TencentBlueKing/crypto-golang-sdk v1.0.0 // indirect
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
 	github.com/aws/aws-sdk-go v1.37.27 // indirect

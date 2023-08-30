@@ -85,7 +85,7 @@ func NewCmdbClient(options Options) (*Client, error) {
 		serverDebug: options.Debug,
 		// Create a cache with a default expiration time of 10 minutes, and which
 		// purges expired items every 1 hour
-		cache: cache.New(20*time.Minute, 60*time.Minute),
+		cache: cache.New(10*time.Minute, 60*time.Minute),
 	}
 
 	if !options.Enable {
@@ -918,13 +918,15 @@ func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
 }
 
 // ListTopology list topology
-func (c *Client) ListTopology(bizID int, filterInter bool) (*SearchBizInstTopoData, error) {
-	bizTopo, ok := GetBizTopoData(c.cache, bizID)
-	if ok {
-		blog.Infof("ListTopology hit cache by bizID[%s]", bizID)
-		return bizTopo, nil
+func (c *Client) ListTopology(bizID int, filterInter bool, cache bool) (*SearchBizInstTopoData, error) {
+	if cache {
+		bizTopo, ok := GetBizTopoData(c.cache, bizID)
+		if ok {
+			blog.Infof("ListTopology hit cache by bizID[%s]", bizID)
+			return bizTopo, nil
+		}
+		blog.V(3).Infof("ListTopology miss cache by bizID[%v]", bizID)
 	}
-	blog.V(3).Infof("ListTopology miss cache by bizID[%v]", bizID)
 
 	internalModules, err := c.GetBizInternalModule(bizID)
 	if err != nil {
@@ -970,9 +972,11 @@ func (c *Client) ListTopology(bizID int, filterInter bool) (*SearchBizInstTopoDa
 	childs = append(childs, topo.Child...)
 	topo.Child = childs
 
-	err = SetBizTopoData(c.cache, bizID, topo)
-	if err != nil {
-		blog.Errorf("ListTopology[%v] SetBizTopoData failed: %v", bizID, err)
+	if cache {
+		err = SetBizTopoData(c.cache, bizID, topo)
+		if err != nil {
+			blog.Errorf("ListTopology[%v] SetBizTopoData failed: %v", bizID, err)
+		}
 	}
 
 	return topo, nil

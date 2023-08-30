@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils/jsonq"
 )
 
 // AppPlugin for internal project authorization
@@ -140,23 +141,39 @@ func (plugin *AppPlugin) createApplicationHandler(ctx context.Context, r *http.R
 	length := len(updatedBody)
 	r.Header.Set("Content-Length", strconv.Itoa(length))
 	r.ContentLength = int64(length)
+
 	return mw.ReturnArgoReverse()
 }
 
 // GET /api/v1/applications?projects={projects}
 func (plugin *AppPlugin) listApplicationsHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
-	projectName := r.URL.Query().Get("projects")
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
-	if statusCode != http.StatusOK {
-		return mw.ReturnErrorResponse(statusCode,
-			errors.Wrapf(err, "check project '%s' permission failed", projectName))
+	projects := r.URL.Query()["projects"]
+	if len(projects) == 0 {
+		return mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'projects' cannot be empty"))
 	}
-	appList, err := plugin.middleware.ListApplications(ctx, []string{projectName})
+	for i := range projects {
+		projectName := projects[i]
+		_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
+		if statusCode != http.StatusOK {
+			return mw.ReturnErrorResponse(statusCode,
+				errors.Wrapf(err, "check project '%s' permission failed", projectName))
+		}
+	}
+	appList, err := plugin.middleware.ListApplications(ctx, projects)
 	if err != nil {
 		return mw.ReturnErrorResponse(http.StatusInternalServerError,
-			errors.Wrapf(err, "list applications by project '%s' from storage failed", projectName))
+			errors.Wrapf(err, "list applications by project '%v' from storage failed", projects))
 	}
-	return mw.ReturnJSONResponse(appList)
+
+	fields := r.URL.Query().Get("fields")
+	if fields == "" {
+		return mw.ReturnJSONResponse(appList)
+	}
+	bs, err := jsonq.ReserveField(appList, strings.Split(fields, ","))
+	if err != nil {
+		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "parse by query 'fields' failed"))
+	}
+	return mw.ReturnDirectResponse(string(bs))
 }
 
 // Put,Patch,Delete with preifx /api/v1/applications/{name}

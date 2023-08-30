@@ -146,6 +146,21 @@ func (cm *ClusterManager) AddNodesToCluster(ctx context.Context,
 	return nil
 }
 
+// BatchDeleteNodesFromCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) BatchDeleteNodesFromCluster(ctx context.Context,
+	req *cmproto.BatchDeleteClusterNodesRequest, resp *cmproto.BatchDeleteClusterNodesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewBatchDeleteClusterNodesAction(cm.model, cm.locker)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("BatchDeleteClusterNodes", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: BatchDeleteClusterNodes, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // DeleteNodesFromCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) DeleteNodesFromCluster(ctx context.Context,
 	req *cmproto.DeleteNodesRequest, resp *cmproto.DeleteNodesResponse) error {

@@ -11,13 +11,15 @@
  *
  */
 
-package transfer
+package utils
 
 import (
 	"context"
+
+	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 )
 
-// Interface defines the interface of transfer webhook
-type Interface interface {
-	Transfer(context.Context, []byte) ([]byte, error)
+// RequestID defines how to get requestID from context
+func RequestID(ctx context.Context) string {
+	return ctx.Value(traceconst.RequestIDHeaderKey).(string)
 }

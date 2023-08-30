@@ -45,6 +45,7 @@
               :loading="zoneListLoading"
               :disabled="isEdit"
               :clearable="false"
+              selected-style="checkbox"
               @change="handleSetDefaultInstance">
               <bcs-option
                 v-for="zone in zoneList"
@@ -286,6 +287,7 @@
             multiple
             searchable
             class="bg-[#fff]"
+            selected-style="checkbox"
             disabled>
             <bcs-option
               v-for="securityGroup in securityGroupsList"

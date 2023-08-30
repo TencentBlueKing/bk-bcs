@@ -16,16 +16,17 @@ package bind
 
 import (
 	"fmt"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v1"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v2"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
+	"time"
 
 	"github.com/emicklei/go-restful"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
-	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
+	v1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v1"
+	v2 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v2"
+	v3 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v3"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
 )
 
 const (
@@ -76,6 +77,8 @@ func handleIpSchedulerBind(req *restful.Request, resp *restful.Response) {
 		err = v1.HandleIpSchedulerBinding(extenderBindingArgs)
 	} else if ipSchedulerVersion == actions.IpSchedulerV2 {
 		err = v2.HandleIpSchedulerBinding(extenderBindingArgs)
+	} else if ipSchedulerVersion == actions.IpSchedulerV3 {
+		err = v3.HandleIpSchedulerBinding(extenderBindingArgs)
 	} else {
 		err = fmt.Errorf("invalid IpScheduler version")
 	}

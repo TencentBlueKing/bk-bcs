@@ -16,8 +16,10 @@ package store
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/repository"
@@ -72,9 +74,9 @@ type modelSet struct {
 }
 
 // New return a new ResourceManagerModel instance
-func New(db drivers.DB) HelmManagerModel {
+func New(db drivers.DB, cryptor encryptv2.Cryptor) HelmManagerModel {
 	return &modelSet{
-		ModelRepository: repository.New(db),
+		ModelRepository: repository.New(db, cryptor),
 		ModelRelease:    release.New(db),
 	}
 }

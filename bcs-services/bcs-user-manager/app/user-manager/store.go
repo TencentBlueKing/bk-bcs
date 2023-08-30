@@ -67,7 +67,7 @@ func SetupStore(conf *config.UserMgrConfig) error {
 
 // createBootstrapUsers create the bootstrap users, the bootstrap users can be defined in config files
 func createBootstrapUsers(users []options.BootStrapUser) error {
-	tokenStore := sqlstore.NewTokenStore(sqlstore.GCoreDB)
+	tokenStore := sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor)
 	for _, u := range users {
 		var userType uint
 		var subType jwt.UserType
@@ -152,7 +152,8 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 
 // syncTokenToRedis will fetch user token from bcs_tokens, and store it to redis
 func syncTokenToRedis() {
-	tokens := sqlstore.GetAllNotExpiredTokens()
+	tokenStore := sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor)
+	tokens := tokenStore.GetAllNotExpiredTokens()
 	blog.Infof("sync token to redis, total %d", len(tokens))
 	done := 0
 	needLess := 0

@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "bcs-netservice-controller.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 8088
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 8080
+      targetPort: webhook
+      protocol: TCP
+      name: webhook
+    - port: 8082
+      targetPort: probe
+      protocol: TCP
+      name: probe
+    - port: 8081
+      targetPort: metric
+      protocol: TCP
+      name: metric
+  selector:
+    {{- include "bcs-netservice-controller.selectorLabels" . | nindent 4 }}

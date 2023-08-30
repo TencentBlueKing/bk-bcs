@@ -698,6 +698,7 @@ func (nm *NodeManager) transIPsToNodes(ips []string, opt *cloudprovider.ListNode
 // @return Node: cluster-manager node information;
 func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]*ZoneInfo) *proto.Node {
 	var zone *ZoneInfo
+	// zone may be nil when api qps limit exceed or zone not exist
 	if zoneInfo != nil {
 		zone = zoneInfo[*inst.Placement.Zone]
 	}
@@ -710,9 +711,19 @@ func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]*ZoneInfo) *proto.No
 		GPU:          0,
 		VPC:          *inst.VirtualPrivateCloud.VpcId,
 		ZoneID:       *inst.Placement.Zone,
-		Zone:         uint32(zone.ZoneID),
-		InnerIPv6:    utils.SlicePtrToString(inst.IPv6Addresses),
-		ZoneName:     zone.ZoneName,
+		Zone: func() uint32 {
+			if zone != nil {
+				return uint32(zone.ZoneID)
+			}
+			return 0
+		}(),
+		InnerIPv6: utils.SlicePtrToString(inst.IPv6Addresses),
+		ZoneName: func() string {
+			if zone != nil {
+				return zone.ZoneName
+			}
+			return ""
+		}(),
 	}
 	return node
 }

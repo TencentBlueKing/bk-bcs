@@ -307,7 +307,7 @@ func genReleaseRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resourc
 	switch a.Basic.Action {
 	case meta.Create:
 		// create current released instance is related to bscp application resource, using config item packing action
-		return sys.ConfigItemPacking, []client.Resource{appRes}, nil
+		return sys.GenerateRelease, []client.Resource{appRes}, nil
 	case meta.Find:
 		// find release is related to cmdb business resource, using view biz action
 		return sys.BusinessViewResource, []client.Resource{bizRes}, nil
@@ -364,7 +364,7 @@ func genStrategyRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resour
 		return sys.StrategyDelete, []client.Resource{appRes}, nil
 	case meta.Publish:
 		// publish strategy is related to bscp application resource, using strategy publish action
-		return sys.ConfigItemPublish, []client.Resource{appRes}, nil
+		return sys.ReleasePublish, []client.Resource{appRes}, nil
 	case meta.FinishPublish:
 		// finish publish strategy is related to bscp application resource, using strategy finish publish action
 		return sys.ConfigItemFinishPublish, []client.Resource{appRes}, nil
@@ -459,6 +459,44 @@ func genSidecarRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resourc
 	case meta.Access:
 		// request from sidecar is related to business view resource
 		return sys.BusinessViewResource, []client.Resource{bizRes}, nil
+	default:
+		return "", nil, errf.New(errf.InvalidParameter, fmt.Sprintf("unsupported bscp action: %s", a.Basic.Action))
+	}
+}
+
+// genCredentialRes generate application credential related iam resource.
+func genCredentialRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
+	bizRes := client.Resource{
+		System: sys.SystemIDCMDB,
+		Type:   sys.Business,
+		ID:     strconv.FormatUint(uint64(a.BizID), 10),
+	}
+
+	credentialRes := client.Resource{
+		System: sys.SystemIDBSCP,
+		Type:   sys.Application,
+		ID: strconv.FormatUint(uint64(a.BizID), 10) + bizIDAssembleSymbol +
+			strconv.FormatUint(uint64(a.ResourceID), 10),
+		// can be authorized based on business
+		Attribute: map[string]interface{}{
+			client.IamPathKey: []string{fmt.Sprintf("/%s,%d/", sys.Business, a.BizID)},
+		},
+	}
+
+	switch a.Basic.Action {
+	case meta.Create:
+		// create credential is related to cmdb business resource
+		return sys.CredentialCreate, []client.Resource{bizRes}, nil
+	case meta.Access:
+		// request from credential is related to business view resource
+		return sys.CredentialView, []client.Resource{credentialRes}, nil
+	case meta.Update:
+		// update credential is related to bscp application resource
+		return sys.CredentialEdit, []client.Resource{credentialRes}, nil
+	case meta.Delete:
+		// delete credential is related to bscp application resource
+		return sys.CredentialDelete, []client.Resource{credentialRes}, nil
+
 	default:
 		return "", nil, errf.New(errf.InvalidParameter, fmt.Sprintf("unsupported bscp action: %s", a.Basic.Action))
 	}

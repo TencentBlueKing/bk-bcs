@@ -24,13 +24,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/app"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/options"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v1"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v2"
+	v1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v1"
+	v2 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v2"
+	v3 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/ipscheduler/v3"
 )
 
 const (
 	ipSchedulerV1Type = "IpSchedulerV1"
 	ipSchedulerV2Type = "IpSchedulerV2"
+	ipSchedulerV3Type = "IpSchedulerV3"
 )
 
 func main() {
@@ -65,6 +67,13 @@ func main() {
 		}
 		v2.DefaultIpScheduler = defaultIpScheduler
 		defer v2.DefaultIpScheduler.Stop()
+	case ipSchedulerV3Type:
+		defaultIpScheduler, err := v3.NewIpScheduler(conf)
+		if err != nil {
+			blog.Errorf("failed to build IpSchedulerV3: %s", err.Error())
+			os.Exit(1)
+		}
+		v3.DefaultIpScheduler = defaultIpScheduler
 	}
 
 	// listening OS shutdown singal

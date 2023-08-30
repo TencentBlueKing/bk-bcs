@@ -17,9 +17,9 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
+
 	// pprof
 	_ "net/http/pprof"
 	"os"
@@ -31,6 +31,17 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/gorilla/mux"
 	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microCfg "github.com/micro/go-micro/v2/config"
@@ -45,16 +56,6 @@ import (
 	gCred "google.golang.org/grpc/credentials"
 	"gopkg.in/yaml.v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
@@ -107,10 +108,13 @@ type HelmManager struct {
 	addons         release.AddonsSlice
 	releaseHandler release.Handler
 
+	// encrypt
+	cryptor encryptv2.Cryptor
+
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
 	stopCh        chan struct{}
-	CredConf      microCfg.Config
+	credConf      microCfg.Config
 }
 
 // NewHelmManager create a new helm manager
@@ -121,7 +125,7 @@ func NewHelmManager(opt *options.HelmManagerOptions, credConf microCfg.Config) *
 		ctx:           ctx,
 		ctxCancelFunc: cancel,
 		stopCh:        make(chan struct{}),
-		CredConf:      credConf,
+		credConf:      credConf,
 	}
 }
 
@@ -130,6 +134,7 @@ func (hm *HelmManager) Init() error {
 	hm.getServerAddress()
 	for _, f := range []func() error{
 		hm.initTLSConfig,
+		hm.initCryptor,
 		hm.initModel,
 		hm.initAddons,
 		hm.initPlatform,
@@ -230,7 +235,7 @@ func (hm *HelmManager) initModel() error {
 		return err
 	}
 	blog.Info("init mongo db successfully")
-	hm.model = store.New(mongoDB)
+	hm.model = store.New(mongoDB, hm.cryptor)
 	blog.Info("init store successfully")
 	return nil
 }
@@ -242,7 +247,7 @@ func (hm *HelmManager) initAddons() error {
 	}
 
 	// Load the YAML file
-	configData, err := ioutil.ReadFile(hm.opt.Release.AddonsConfigFile)
+	configData, err := os.ReadFile(hm.opt.Release.AddonsConfigFile)
 	if err != nil {
 		blog.Errorf("init addons read file failed, err %s", err.Error())
 		return err
@@ -586,8 +591,41 @@ func (hm *HelmManager) initIAMClient() error {
 	return nil
 }
 
+func (hm *HelmManager) initCryptor() error {
+	if !hm.opt.Encrypt.Enable {
+		return nil
+	}
+	conf := &encryptv2.Config{
+		Enabled:   hm.opt.Encrypt.Enable,
+		Algorithm: encryptv2.Algorithm(hm.opt.Encrypt.Algorithm),
+	}
+	switch conf.Algorithm {
+	case encryptv2.Sm4:
+		conf.Sm4 = &encryptv2.Sm4Conf{
+			Key: hm.opt.Encrypt.Secret.Key,
+			Iv:  hm.opt.Encrypt.Secret.Secret,
+		}
+	case encryptv2.AesGcm:
+		conf.AesGcm = &encryptv2.AesGcmConf{
+			Key:   hm.opt.Encrypt.Secret.Key,
+			Nonce: hm.opt.Encrypt.Secret.Secret,
+		}
+	case encryptv2.Normal:
+		conf.Normal = &encryptv2.NormalConf{
+			PriKey: static.EncryptionKey,
+		}
+	}
+	cryptor, err := encryptv2.NewCrypto(conf)
+	if err != nil {
+		return fmt.Errorf("init cryptor failed, %s", err.Error())
+	}
+	hm.cryptor = cryptor
+	blog.Info("init cryptor successfully")
+	return nil
+}
+
 func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
-	fs, err := ioutil.ReadDir(dir)
+	fs, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -598,7 +636,7 @@ func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
 			continue
 		}
 
-		data, err := ioutil.ReadFile(filepath.Join(dir, f.Name()))
+		data, err := os.ReadFile(filepath.Join(dir, f.Name()))
 		if err != nil {
 			return nil, err
 		}
@@ -646,7 +684,7 @@ func (hm *HelmManager) InitComponentConfig() error {
 // 监听配置文件
 func (hm *HelmManager) watch() error {
 	var eg errgroup.Group
-	w, err := hm.CredConf.Watch("credentials")
+	w, err := hm.credConf.Watch("credentials")
 	if err != nil {
 		return err
 	}

@@ -164,7 +164,7 @@
         <template>
           <bk-button
             v-authority="{
-              clickable: isNewTemplate ? true : getAuthority('templateset_view', Number(curTemplateId)),
+              clickable: isNewTemplate || isFromNewTemplate ? true : getAuthority('templateset_view', Number(curTemplateId)),
               actionId: 'templateset_view',
               resourceName: curTemplate.name,
               disablePerms: true,
@@ -388,10 +388,11 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable max-len */
 /* eslint-disable no-useless-escape */
-import yamljs from 'js-yaml';
 import base64 from 'base-64';
-import { isObject } from '@/common/util';
+import yamljs from 'js-yaml';
 import shlex from 'shlex';
+
+import { isObject } from '@/common/util';
 import Header from '@/components/layout/Header.vue';
 
 export default {

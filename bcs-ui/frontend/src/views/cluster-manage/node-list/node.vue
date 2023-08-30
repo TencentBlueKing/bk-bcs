@@ -133,6 +133,7 @@
           :show-condition="false"
           :show-popover-tag-change="false"
           :placeholder="$t('cluster.nodeList.placeholder.searchNode')"
+          selected-style="checkbox"
           default-focus
           v-model="searchSelectValue"
           @change="searchSelectChange"

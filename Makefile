@@ -289,7 +289,7 @@ ui:pre
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-user-manager ${PACKAGEPATH}/bcs-services
-	cd bcs-services/bcs-user-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./main.go
+	cd bcs-services/bcs-user-manager/ && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./main.go
 
 webconsole:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webconsole
@@ -465,8 +465,8 @@ helm-manager:pre
 	# i18n files
 	cp ${BCS_SERVICES_PATH}/bcs-helm-manager/internal/i18n/locale/lc_msgs.yaml ${PACKAGEPATH}/bcs-services/bcs-helm-manager/lc_msgs.yaml
 	# build
-	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager ./main.go
-	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager-migrator ./cmd/bcs-helm-manager-migrator/main.go
+	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager ./main.go
+	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager-migrator ./cmd/bcs-helm-manager-migrator/main.go
 
 
 nodegroup-manager:pre
