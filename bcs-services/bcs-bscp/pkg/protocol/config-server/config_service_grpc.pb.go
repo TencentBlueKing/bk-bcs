@@ -107,6 +107,8 @@ const (
 	Config_ListTemplateVariables_FullMethodName                      = "/pbcs.Config/ListTemplateVariables"
 	Config_ExtractAppTemplateVariables_FullMethodName                = "/pbcs.Config/ExtractAppTemplateVariables"
 	Config_GetAppTemplateVariableReferences_FullMethodName           = "/pbcs.Config/GetAppTemplateVariableReferences"
+	Config_UpdateAppTemplateVariables_FullMethodName                 = "/pbcs.Config/UpdateAppTemplateVariables"
+	Config_ListAppTemplateVariables_FullMethodName                   = "/pbcs.Config/ListAppTemplateVariables"
 	Config_CreateGroup_FullMethodName                                = "/pbcs.Config/CreateGroup"
 	Config_DeleteGroup_FullMethodName                                = "/pbcs.Config/DeleteGroup"
 	Config_UpdateGroup_FullMethodName                                = "/pbcs.Config/UpdateGroup"
@@ -216,6 +218,8 @@ type ConfigClient interface {
 	ListTemplateVariables(ctx context.Context, in *ListTemplateVariablesReq, opts ...grpc.CallOption) (*ListTemplateVariablesResp, error)
 	ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(ctx context.Context, in *GetAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetAppTemplateVariableReferencesResp, error)
+	UpdateAppTemplateVariables(ctx context.Context, in *UpdateAppTemplateVariablesReq, opts ...grpc.CallOption) (*UpdateAppTemplateVariablesResp, error)
+	ListAppTemplateVariables(ctx context.Context, in *ListAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListAppTemplateVariablesResp, error)
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
@@ -1005,6 +1009,24 @@ func (c *configClient) GetAppTemplateVariableReferences(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *configClient) UpdateAppTemplateVariables(ctx context.Context, in *UpdateAppTemplateVariablesReq, opts ...grpc.CallOption) (*UpdateAppTemplateVariablesResp, error) {
+	out := new(UpdateAppTemplateVariablesResp)
+	err := c.cc.Invoke(ctx, Config_UpdateAppTemplateVariables_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListAppTemplateVariables(ctx context.Context, in *ListAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListAppTemplateVariablesResp, error) {
+	out := new(ListAppTemplateVariablesResp)
+	err := c.cc.Invoke(ctx, Config_ListAppTemplateVariables_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error) {
 	out := new(CreateGroupResp)
 	err := c.cc.Invoke(ctx, Config_CreateGroup_FullMethodName, in, out, opts...)
@@ -1224,6 +1246,8 @@ type ConfigServer interface {
 	ListTemplateVariables(context.Context, *ListTemplateVariablesReq) (*ListTemplateVariablesResp, error)
 	ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error)
+	UpdateAppTemplateVariables(context.Context, *UpdateAppTemplateVariablesReq) (*UpdateAppTemplateVariablesResp, error)
+	ListAppTemplateVariables(context.Context, *ListAppTemplateVariablesReq) (*ListAppTemplateVariablesResp, error)
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
@@ -1498,6 +1522,12 @@ func (UnimplementedConfigServer) ExtractAppTemplateVariables(context.Context, *E
 }
 func (UnimplementedConfigServer) GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAppTemplateVariableReferences not implemented")
+}
+func (UnimplementedConfigServer) UpdateAppTemplateVariables(context.Context, *UpdateAppTemplateVariablesReq) (*UpdateAppTemplateVariablesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppTemplateVariables not implemented")
+}
+func (UnimplementedConfigServer) ListAppTemplateVariables(context.Context, *ListAppTemplateVariablesReq) (*ListAppTemplateVariablesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAppTemplateVariables not implemented")
 }
 func (UnimplementedConfigServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
@@ -3083,6 +3113,42 @@ func _Config_GetAppTemplateVariableReferences_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_UpdateAppTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAppTemplateVariablesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateAppTemplateVariables(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateAppTemplateVariables_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateAppTemplateVariables(ctx, req.(*UpdateAppTemplateVariablesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListAppTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAppTemplateVariablesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListAppTemplateVariables(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListAppTemplateVariables_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListAppTemplateVariables(ctx, req.(*ListAppTemplateVariablesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateGroupReq)
 	if err := dec(in); err != nil {
@@ -3681,6 +3747,14 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAppTemplateVariableReferences",
 			Handler:    _Config_GetAppTemplateVariableReferences_Handler,
+		},
+		{
+			MethodName: "UpdateAppTemplateVariables",
+			Handler:    _Config_UpdateAppTemplateVariables_Handler,
+		},
+		{
+			MethodName: "ListAppTemplateVariables",
+			Handler:    _Config_ListAppTemplateVariables_Handler,
 		},
 		{
 			MethodName: "CreateGroup",
