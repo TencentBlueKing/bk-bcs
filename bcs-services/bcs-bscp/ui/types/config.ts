@@ -131,3 +131,28 @@ export interface ITemplateBoundByAppData {
     is_latest: boolean;
   }[]
 }
+
+// 服务绑定下的模板配置详情数据
+export interface IBoundTemplateDetail {
+  template_space_id: number;
+  template_space_name: string;
+  template_set_id: number;
+  template_set_name: string
+  template_id: number;
+  name: string;
+  path: string;
+  template_revision_id: number;
+  is_latest: true;
+  template_revision_name: string;
+  template_revision_memo: string;
+  file_type: string;
+  file_mode: string;
+  user: string;
+  user_group: string;
+  privilege: string;
+  signature: string;
+  byte_size: string;
+  creator: string;
+  create_at: string;
+}
+

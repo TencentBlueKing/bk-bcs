@@ -36,6 +36,7 @@
     () => props.show,
     (val) => {
       if (val) {
+        isFormChange.value = false
         getConfigDetail()
       }
     }
@@ -98,6 +99,7 @@
       const params = { ...configForm.value, ...{ sign, byte_size: size } }
       await updateServiceConfigItem(props.configId, props.appId, props.bkBizId, params)
       emits('confirm')
+      close()
       Message({
         theme: 'success',
         message: '编辑配置项成功'
@@ -120,7 +122,7 @@
       :is-show="props.show"
       :before-close="handleBeforeClose"
       @closed="close">
-        <bk-loading :loading="configDetailLoading" style="height: 100%;">
+        <bk-loading :loading="configDetailLoading" class="config-loading-container">
           <ConfigForm
             v-if="!configDetailLoading"
             ref="formRef"

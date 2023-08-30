@@ -128,7 +128,7 @@
                 @change="handleSelectVersion(tpl.id, tpl.versions, $event)">
                 <bk-option
                   v-for="version in tpl.versions"
-                  :key="version.id"
+                  :key="version.isLatest ? 0 : version.id"
                   :id="version.isLatest ? 0 : version.id"
                   :label="version.name">
                 </bk-option>
@@ -138,7 +138,7 @@
         </template>
         <tr v-else>
           <td colspan="3">
-            <bk-exception scene="part" type="empty">该套餐下暂无模板</bk-exception>
+            <bk-exception class="empty-tips" scene="part" type="empty">该套餐下暂无模板</bk-exception>
           </td>
         </tr>
       </tbody>
@@ -204,6 +204,7 @@
     th {
       padding: 11px 16px;
       color: #313238;
+      background: #fafbfd;
     }
     td {
       padding: 0;
@@ -224,6 +225,9 @@
         height: 42px;
         border-color: transparent;
       }
+    }
+    .empty-tips {
+      margin: 20px 0;
     }
   }
 </style>

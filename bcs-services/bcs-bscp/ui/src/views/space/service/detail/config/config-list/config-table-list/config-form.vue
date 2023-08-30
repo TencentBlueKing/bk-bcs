@@ -99,17 +99,6 @@
     }
   }, { immediate: true })
 
-  watch([
-    () => localVal.value,
-    () => stringContent.value,
-    () => fileContent.value
-  ], () => {
-    console.log('change')
-    emits('change')
-  }, {
-    deep: true
-  })
-
   // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
   const handlePrivilegeInputBlur = () => {
     if (/^[0-7]{3}$/.test(privilegeInputVal.value)) {

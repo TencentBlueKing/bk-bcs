@@ -4,10 +4,26 @@ export const CONFIG_FILE_TYPE = [
 ]
 
 export const CONFIG_STATUS_MAP = {
-  'ADD': '增加',
-  'DELETE': '删除',
-  'REVISE': '修改',
-  'UNCHANGE': '--'
+  'ADD': {
+    text: '新增',
+    color: '#3a84ff',
+    bgColor: '#edf4ff'
+  },
+  'DELETE': {
+    text: '删除',
+    color: '#feebea',
+    bgColor: '#ea3536'
+  },
+  'REVISE': {
+    text: '修改',
+    color: '#fe9c00',
+    bgColor: '#fff1db'
+  },
+  'UNCHANGE': {
+    text: '--',
+    color: '',
+    bgColor: ''
+  }
 }
 
 export const VERSION_STATUS_MAP = {

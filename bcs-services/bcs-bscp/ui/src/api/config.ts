@@ -1,5 +1,6 @@
 import http from "../request"
 import { IConfigEditParams, IConfigListQueryParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config'
+import { ICommonQuery } from "../../types/index"
 
 // 配置项版本下脚本配置接口可能会返回null，做数据兼容处理
 export const getDefaultConfigScriptData = () => {
@@ -54,7 +55,7 @@ export const getConfigList = (biz_id: string, app_id: number, params: IConfigLis
  * @param appId 应用ID
  * @returns
  */
- export const deleteServiceConfigItem = (id: number, bizId: number, appId: number) => {
+ export const deleteServiceConfigItem = (id: number, bizId: string, appId: number) => {
   return http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
 }
 
@@ -194,9 +195,45 @@ export const importTemplateConfigPkgs = (bizId: string, appId: number, params: {
  * 更新模板配置项和服务绑定关系
  * @param bizId 业务ID
  * @param appId 应用ID
- * @param params 查询参数
+ * @param bindingId 模板和服务绑定关系ID
+ * @param params 更新参数
  * @returns
  */
 export const updateTemplateConfigPkgs = (bizId: string, appId: number, bindingId: number, params: { bindings: ITemplateBoundByAppData[] }) => {
   return http.put(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}`, params)
+}
+
+/**
+ * 获取服务下绑定的模板配置项列表
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param params 查询参数
+ * @returns
+ */
+export const getBoundTemplates = (bizId: string, appId: number, params: ICommonQuery) => {
+  return http.get(`/config/biz/${bizId}/apps/${appId}/template_revisions`, { params }).then(res => res.data)
+}
+
+/**
+ * 更新服务下模板配置项版本
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param bindingId 模板和服务绑定关系ID
+ * @param params 更新参数
+ * @returns
+ */
+export const updateBoundTemplateVersion = (bizId: string, appId: number, bindingId: number, params: { bindings: ITemplateBoundByAppData[] }) => {
+  return http.put(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}/template_revisions`, params)
+}
+
+/**
+ * 删除服务下绑定的模板套餐
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param bindingId 模板和服务绑定关系ID
+ * @param template_set_ids 模板套餐ID列表
+ * @returns
+ */
+export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, template_set_ids: number[]) => {
+  return http.delete(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}/template_sets`, { params: { template_set_ids: template_set_ids.join(',') } })
 }
