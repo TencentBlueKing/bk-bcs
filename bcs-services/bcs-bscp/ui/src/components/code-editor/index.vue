@@ -27,6 +27,7 @@
 
   const props = withDefaults(defineProps<{
     modelValue: string;
+    lfEol?: boolean;
     editable?: boolean;
     language?: string;
   }>(), {
@@ -63,6 +64,10 @@
         language: props.language,
         readOnly: !props.editable
       })
+    }
+    if (props.lfEol) {
+      const model = <monaco.editor.ITextModel>editor.getModel()
+      model.setEOL(monaco.editor.EndOfLineSequence.LF)
     }
     editor.onDidChangeModelContent((val:any) => {
       localVal.value = editor.getValue();

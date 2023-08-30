@@ -7,6 +7,7 @@
   import { getConfigEditParams } from '../../../../../../../utils/config'
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config'
   import { useConfigStore } from '../../../../../../../store/config'
+  import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation'
 
   const { versionData } = storeToRefs(useConfigStore())
 
@@ -25,6 +26,7 @@
   const formRef = ref()
   const fileUploading = ref(false)
   const pending = ref(false)
+  const isFormChange = ref(false)
 
   const editable = computed(() => {
     return versionData.value.id === 0
@@ -64,9 +66,18 @@
     }
   }
 
+  const handleBeforeClose = async () => {
+    if (isFormChange.value) {
+      const result = await useModalCloseConfirmation()
+      return result
+    }
+    return true
+  }
+
   const handleChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary|string) => {
     configForm.value = data
     content.value = configContent
+    isFormChange.value = true
   }
 
   const handleSubmit = async() => {
@@ -107,8 +118,9 @@
       width="640"
       :title="`${editable ? '编辑' : '查看'}配置项`"
       :is-show="props.show"
-      :before-close="close">
-        <bk-loading :loading="configDetailLoading" class="config-loading-container">
+      :before-close="handleBeforeClose"
+      @closed="close">
+        <bk-loading :loading="configDetailLoading" style="height: 100%;">
           <ConfigForm
             v-if="!configDetailLoading"
             ref="formRef"

@@ -1,8 +1,10 @@
 <script setup lang="ts">
-  import { onMounted, ref, watch } from 'vue'
+  import { ref, watch } from 'vue'
   import { ITemplateVersionItem } from '../../../../../types/template'
-  import { IConfigDiffDetail } from '../../../../../types/config'
+  import { IDiffDetail } from '../../../../../types/service'
   import { getTemplateVersionsDetailByIds, getTemplateVersionList } from '../../../../api/template'
+  import { downloadTemplateContent } from '../../../../api/template';
+  import { byteUnitConverse } from '../../../../utils';
   import Diff from '../../../../components/diff/index.vue'
 
   const props = defineProps<{
@@ -14,38 +16,25 @@
 
   const emits = defineEmits(['update:show'])
 
-  const getDefaultConfig = () => {
-    return {
-      id: props.crtVersion.id,
-      name: '',
-      file_type: '',
-      current: {
-        signature: '',
-        byte_size: '',
-        update_at: ''
-      },
-      base: {
-        signature: '',
-        byte_size: '',
-        update_at: ''
-      }
-    }
-  }
-
   const selectedVersion = ref()
   const versionList = ref<ITemplateVersionItem[]>([])
   const versionListLoading = ref(false)
-  const configDiffData = ref<IConfigDiffDetail>(getDefaultConfig())
+  const configDiffData = ref<IDiffDetail>({
+    contentType: 'text',
+    current: {
+      content: ''
+    },
+    base: {
+      content: ''
+    }
+  })
 
   watch(() => props.show, async val => {
     if (val) {
       getVersionList()
-      const detail = await getTemplateVersionDetail(props.crtVersion.versionId)
-      const { name, file_type, content_spec } = detail.spec
-      configDiffData.value.name = name
-      configDiffData.value.file_type = file_type
-      configDiffData.value.current.signature = content_spec.signature
-      configDiffData.value.current.byte_size = content_spec.byte_size
+      const detail: ITemplateVersionItem = await getTemplateVersionDetail(props.crtVersion.versionId)
+      configDiffData.value.contentType = detail.spec.file_type === 'binary' ? 'file' : 'text'
+      configDiffData.value.current.content = await getConfigContent(detail)
     }
   })
 
@@ -65,19 +54,38 @@
     return getTemplateVersionsDetailByIds(props.spaceId, [versionId] ).then(res => res.details[0])
   }
 
-  const handleSelectVersion = (id: number) => {
+  const getConfigContent = async (config: ITemplateVersionItem) => {
+    const { id, spec, revision } = config
+    const { name, content_spec } = spec
+    const { signature, byte_size } = content_spec
+    if (config.spec.file_type === 'binary') {
+        return { id, name, signature, update_at: revision.create_at, size: byteUnitConverse(Number(byte_size)) }
+    }
+
+    const configContent = await downloadTemplateContent(props.spaceId, props.templateSpaceId, signature)
+
+    return String(configContent)
+  }
+
+  const handleSelectVersion = async (id: number) => {
     const version = versionList.value.find(item => item.id === id)
     if (version) {
-      const { signature, byte_size } = version.spec.content_spec
-      configDiffData.value.base.signature = signature
-      configDiffData.value.base.byte_size = String(byte_size)
+      configDiffData.value.base.content = await getConfigContent(version)
     }
   }
 
   const handleClose = () => {
     selectedVersion.value = undefined
     versionList.value = []
-    configDiffData.value = getDefaultConfig()
+    configDiffData.value = {
+      contentType: 'text',
+      current: {
+        content: ''
+      },
+      base: {
+        content: ''
+      }
+    }
     emits('update:show', false)
   }
 
@@ -89,7 +97,7 @@
     :width="1200"
     @closed="handleClose">
     <div class="diff-content-area">
-      <diff :template-space-id="props.templateSpaceId" :config="configDiffData">
+      <diff :diff="configDiffData" :loading="false">
         <template #leftHead>
             <slot name="baseHead">
               <div class="diff-panel-head">

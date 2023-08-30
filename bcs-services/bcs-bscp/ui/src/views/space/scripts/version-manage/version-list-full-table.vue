@@ -1,7 +1,8 @@
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { IScriptVersion } from '../../../../../types/script';
+  import { IScriptVersionListItem } from '../../../../../types/script';
   import { IPagination } from '../../../../../types/index';
+  import { datetimeFormat } from '../../../../utils/index';
   import ScriptCited from '../list/script-cited.vue';
 
   const STATUS_MAP = {
@@ -12,7 +13,7 @@
 
   const props = defineProps<{
     scriptId: number;
-    list: IScriptVersion[];
+    list: IScriptVersionListItem[];
     pagination: IPagination;
   }>()
 
@@ -21,8 +22,8 @@
 
   const emits = defineEmits(['view', 'pageChange', 'pageLimitChange'])
 
-  const handleOpenCitedSlider = (version: IScriptVersion) => {
-    versionId.value = version.attachment.hook_id
+  const handleOpenCitedSlider = (version: IScriptVersionListItem) => {
+    versionId.value = version.hook_revision.id
     showCiteSlider.value = true
   }
 
@@ -36,29 +37,31 @@
     @page-change="emits('pageChange', $event)">
     <bk-table-column label="版本号" prop="spec.name" show-overflow-tooltip>
       <template #default="{ row }">
-        <div v-if="row.spec" class="version-name" @click="emits('view', row)">{{ row.spec.name }}</div>
+        <div v-if="row.hook_revision" class="version-name" @click="emits('view', row)">{{ row.hook_revision.spec.name }}</div>
       </template>
     </bk-table-column>
     <bk-table-column label="版本说明">
       <template #default="{ row }">
-        <span>{{ (row.spec && row.spec.memo) || '--' }}</span>
+        <span>{{ (row.hook_revision && row.hook_revision.spec.memo) || '--' }}</span>
       </template>
     </bk-table-column>
-    <bk-table-column label="被引用" prop="spec.publish_num" :width="80">
+    <bk-table-column label="被引用" prop="bound_num" :width="80">
       <template #default="{ row }">
-        <template v-if="row.spec">
-          <bk-button v-if="row.spec.publish_num > 0" text theme="primary" @click="handleOpenCitedSlider(row)">{{ row.spec.publish_num }}</bk-button>
-          <span v-else>0</span>
-        </template>
+        <bk-button v-if="row.bound_num > 0" text theme="primary" @click="handleOpenCitedSlider(row)">{{ row.bound_num }}</bk-button>
+        <span v-else>0</span>
       </template>
     </bk-table-column>
-    <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
-    <bk-table-column label="更新时间" prop="revision.update_at"></bk-table-column>
+    <bk-table-column label="更新人" prop="hook_revision.revision.reviser"></bk-table-column>
+    <bk-table-column label="更新时间" width="220">
+      <template #default="{ row }">
+        <span v-if="row.hook_revision">{{ datetimeFormat(row.hook_revision.revision.update_at) }}</span>
+      </template>
+    </bk-table-column>
     <bk-table-column label="状态">
       <template #default="{ row }">
-        <span v-if="row.spec">
-          <span :class="['status-dot', row.spec.state]"></span>
-          {{ STATUS_MAP[row.spec.state as keyof typeof STATUS_MAP] }}
+        <span v-if="row.hook_revision">
+          <span :class="['status-dot', row.hook_revision.spec.state]"></span>
+          {{ STATUS_MAP[row.hook_revision.spec.state as keyof typeof STATUS_MAP] }}
         </span>
       </template>
     </bk-table-column>

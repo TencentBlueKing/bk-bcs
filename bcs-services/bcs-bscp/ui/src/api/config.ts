@@ -1,6 +1,18 @@
 import http from "../request"
 import { IConfigEditParams, IConfigListQueryParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config'
 
+// 配置项版本下脚本配置接口可能会返回null，做数据兼容处理
+export const getDefaultConfigScriptData = () => {
+  return {
+    hook_id: 0,
+    hook_name: '',
+    hook_revision_id: 0,
+    hook_revision_name: '',
+    type: '',
+    content: ''
+  }
+}
+
 /**
  * 获取配置项列表，通过params中的release_id区分是否拿某个版本下的配置项列表
  * @param biz_id 空间ID
@@ -86,7 +98,10 @@ export const getConfigContent = (bizId: string, appId: number, SHA256Str: string
   return http.get<string, string>(`/api/get/content/download/biz_id/${bizId}/app_id/${appId}`, {
     headers: {
       'X-Bkapi-File-Content-Id': SHA256Str
-    }
+    },
+    transitional: {
+      forcedJSONParsing: false
+    },
   }).then(res => res)
 }
 
@@ -133,10 +148,24 @@ export const publishVersion = (bizId: string, appId: number, releaseId: number, 
  * 获取服务下初始化脚本引用配置
  * @param bizId 业务ID
  * @param appId 应用ID
+ * @param releaseId 版本ID
  * @returns
  */
-export const getConfigInitScript = (bizId: string, appId: number) => {
-  return http.get(`/config/biz/${bizId}/apps/${appId}/config_hooks`)
+export const getConfigScript = (bizId: string, appId: number, releaseId: number) => {
+  return http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/hooks`).then(response => {
+    const { pre_hook, post_hook } = response.data
+    const data = {
+      pre_hook: getDefaultConfigScriptData(),
+      post_hook: getDefaultConfigScriptData()
+    }
+    if (pre_hook) {
+      data.pre_hook = pre_hook
+    }
+    if (post_hook) {
+      data.post_hook = post_hook
+    }
+    return data
+  })
 }
 
 /**
@@ -146,7 +175,7 @@ export const getConfigInitScript = (bizId: string, appId: number) => {
  * @param params 配置数据
  * @returns
  */
-export const updateConfigInitScript = (bizId: string, appId: number, params: { pre_hook_id: number; post_hook_id: number; }) => {
+export const updateConfigInitScript = (bizId: string, appId: number, params: { pre_hook_id: number|undefined; post_hook_id: number|undefined; }) => {
   return http.put(`/config/biz/${bizId}/apps/${appId}/config_hooks`, params)
 }
 

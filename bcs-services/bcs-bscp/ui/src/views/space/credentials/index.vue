@@ -6,7 +6,7 @@
   import BkMessage from 'bkui-vue/lib/message'
   import { InfoBox } from 'bkui-vue/lib'
   import { getCredentialList, createCredential, updateCredential, deleteCredential } from '../../../api/credentials'
-  import { copyToClipBoard } from '../../../utils/index'
+  import { copyToClipBoard, datetimeFormat } from '../../../utils/index'
   import { ICredentialItem } from '../../../../types/credential'
   import AssociateConfigItems from './associate-config-items/index.vue'
 
@@ -58,7 +58,7 @@
       return
     }
     listLoading.value = true
-    pagination.value.current = 1
+    pagination.value.current = current
     await loadCredentialList()
     listLoading.value = false
   }
@@ -275,7 +275,11 @@
             </template>
           </bk-table-column>
           <bk-table-column label="更新人" width="160" prop="revision.reviser"></bk-table-column>
-          <bk-table-column label="更新时间" width="160" prop="revision.update_at"></bk-table-column>
+          <bk-table-column label="更新时间" width="220">
+            <template #default="{ row }">
+              <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
+            </template>
+          </bk-table-column>
           <bk-table-column label="状态" width="110">
             <template #default="{ row }">
               <div v-if="row.spec" class="status-action">
@@ -302,7 +306,11 @@
         </bk-table>
       </bk-loading>
     </div>
-    <AssociateConfigItems :show="isAssociateSliderShow" :id="currentCredential" @close="handleAssociateSliderClose" />
+    <AssociateConfigItems
+      :show="isAssociateSliderShow"
+      :id="currentCredential"
+      @close="handleAssociateSliderClose"
+      @refresh="refreshListWithLoading(pagination.current)" />
   </section>
 </template>
 <style lang="scss" scoped>

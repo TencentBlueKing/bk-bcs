@@ -99,6 +99,17 @@
     }
   }, { immediate: true })
 
+  watch([
+    () => localVal.value,
+    () => stringContent.value,
+    () => fileContent.value
+  ], () => {
+    console.log('change')
+    emits('change')
+  }, {
+    deep: true
+  })
+
   // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
   const handlePrivilegeInputBlur = () => {
     if (/^[0-7]{3}$/.test(privilegeInputVal.value)) {
@@ -215,7 +226,7 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item label="配置项名称" property="name" :required="true">
-      <bk-input v-model="localVal.name" :disabled="!editable" @change="change"></bk-input>
+      <bk-input v-model="localVal.name" placeholder="请输入1~64个字符，只允许英文、数字、下划线、中划线或点" :disabled="!editable" @change="change"></bk-input>
     </bk-form-item>
     <bk-form-item label="配置项路径" property="path" :required="true">
       <bk-input v-model="localVal.path" placeholder="请输入绝对路径，下载路径为前缀+配置路径" :disabled="!editable" @change="change"></bk-input>
@@ -253,8 +264,9 @@
             ext-cls="privilege-select-popover"
             theme="light"
             trigger="click"
-            placement="bottom">
-            <div class="perm-panel-trigger">
+            placement="bottom"
+            :disabled="!editable">
+            <div :class="['perm-panel-trigger', { disabled: !editable }]">
               <i class="bk-bscp-icon icon-configuration-line"></i>
             </div>
             <template #content>
@@ -340,6 +352,11 @@
       color: #3a84ff;
       border: 1px solid #3a84ff;
       cursor: pointer;
+      &.disabled {
+        color: #dcdee5;
+        border-color: #dcdee5;
+        cursor: not-allowed;
+      }
     }
   }
   .privilege-tips-btn-area {

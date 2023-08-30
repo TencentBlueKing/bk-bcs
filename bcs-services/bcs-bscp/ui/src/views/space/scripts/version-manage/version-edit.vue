@@ -19,7 +19,7 @@
   })
 
   const emits = defineEmits(['close', 'submitted'])
-  
+
   const localVal = ref<IScriptVersionForm>({
     id: 0,
     name: '',
@@ -52,8 +52,8 @@
     try {
       pending.value = true
       const { name, memo, content } = localVal.value
-      const params = { name, memo, content }
       if (localVal.value.id) {
+        const params = { name, memo, content }
         await updateScriptVersion(spaceId.value, props.scriptId, localVal.value.id, params)
         emits('submitted', { ...localVal.value }, 'update')
         BkMessage({
@@ -61,6 +61,7 @@
           message: '编辑版本成功'
         })
       } else {
+        const params = { memo, content }
         const res = await createScriptVersion(spaceId.value, props.scriptId, params)
         emits('submitted', { ...localVal.value, id: res.id }, 'create')
         BkMessage({
@@ -89,11 +90,8 @@
       <template v-if="props.editable" #preContent="{ fullscreen }">
         <div v-show="!fullscreen" class="version-config-form">
           <bk-form ref="formRef" form-type="vertical" :model="localVal">
-            <bk-form-item label="版本号" required property="name">
-              <bk-input v-model="localVal.name" />
-            </bk-form-item>
             <bk-form-item label="版本说明" propperty="memo">
-              <bk-input v-model="localVal.memo" type="textarea" :rows="5" />
+              <bk-input v-model="localVal.memo" type="textarea" :rows="8" />
             </bk-form-item>
           </bk-form>
         </div>
