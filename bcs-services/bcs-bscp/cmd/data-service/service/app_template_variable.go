@@ -23,6 +23,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbatv "bscp.io/pkg/protocol/core/app-template-variable"
+	pbbase "bscp.io/pkg/protocol/core/base"
 	pbtv "bscp.io/pkg/protocol/core/template-variable"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/tools"
@@ -251,4 +252,25 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAp
 	return &pbds.ListAppTemplateVariablesResp{
 		Details: finalVar,
 	}, nil
+}
+
+// UpdateAppTemplateVariables update app template variables.
+func (s *Service) UpdateAppTemplateVariables(ctx context.Context, req *pbds.UpdateAppTemplateVariablesReq) (
+	*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	appVar := &table.AppTemplateVariable{
+		Spec:       req.Spec.AppTemplateVariableSpec(),
+		Attachment: req.Attachment.AppTemplateVariableAttachment(),
+		Revision: &table.Revision{
+			Creator: kt.User,
+			Reviser: kt.User,
+		},
+	}
+	if err := s.dao.AppTemplateVariable().Upsert(kt, appVar); err != nil {
+		logs.Errorf("update app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
 }

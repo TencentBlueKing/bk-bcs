@@ -132,6 +132,7 @@ service Data {
     // app template variables related interface.
     rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {}
     rpc GetAppTemplateVariableReferences(GetAppTemplateVariableReferencesReq) returns (GetAppTemplateVariableReferencesResp) {}
+    rpc UpdateAppTemplateVariables(UpdateAppTemplateVariablesReq) returns (pbbase.EmptyResp) {}
     rpc ListAppTemplateVariables(ListAppTemplateVariablesReq) returns (ListAppTemplateVariablesResp) {}
 
     // template binding relation related interface.
@@ -864,6 +865,11 @@ message GetAppTemplateVariableReferencesReq {
 
 message GetAppTemplateVariableReferencesResp {
     repeated pbatv.AppTemplateVariableReference details = 1;
+}
+
+message UpdateAppTemplateVariablesReq {
+    pbatv.AppTemplateVariableAttachment attachment = 1;
+    pbatv.AppTemplateVariableSpec       spec       = 2;
 }
 
 message ListAppTemplateVariablesReq {

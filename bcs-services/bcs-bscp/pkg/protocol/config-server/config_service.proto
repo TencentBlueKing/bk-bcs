@@ -516,6 +516,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"
         };
     }
+    rpc UpdateAppTemplateVariables(UpdateAppTemplateVariablesReq) returns (UpdateAppTemplateVariablesResp) {
+        option (google.api.http) = {
+            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"
+            body : "*"
+        };
+    }
     rpc ListAppTemplateVariables(ListAppTemplateVariablesReq) returns (ListAppTemplateVariablesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"
@@ -1047,8 +1053,7 @@ message UpdateTemplateSpaceReq {
     string memo              = 3;
 }
 
-message UpdateTemplateSpaceResp {
-}
+message UpdateTemplateSpaceResp {}
 
 message DeleteTemplateSpaceReq {
     uint32 biz_id            = 1;
@@ -1121,8 +1126,7 @@ message UpdateTemplateReq {
     string memo              = 4;
 }
 
-message UpdateTemplateResp {
-}
+message UpdateTemplateResp {}
 
 message DeleteTemplateReq {
     uint32 biz_id            = 1;
@@ -1307,8 +1311,7 @@ message UpdateTemplateSetReq {
     bool            force             = 9;
 }
 
-message UpdateTemplateSetResp {
-}
+message UpdateTemplateSetResp {}
 
 message DeleteTemplateSetReq {
     uint32 biz_id            = 1;
@@ -1377,8 +1380,7 @@ message UpdateAppTemplateBindingReq {
     repeated pbatb.TemplateBinding bindings   = 4;
 }
 
-message UpdateAppTemplateBindingResp {
-}
+message UpdateAppTemplateBindingResp {}
 
 message DeleteAppTemplateBindingReq {
     uint32 biz_id     = 1;
@@ -1430,10 +1432,7 @@ message DeleteAppBoundTemplateSetsReq {
     string template_set_ids = 4;
 }
 
-message DeleteAppBoundTemplateSetsResp {
-}
-
-
+message DeleteAppBoundTemplateSetsResp {}
 
 message ListTemplateBoundCountsReq {
     uint32          biz_id            = 1;
@@ -1628,8 +1627,7 @@ message UpdateTemplateVariableReq {
     string memo                 = 4;
 }
 
-message UpdateTemplateVariableResp {
-}
+message UpdateTemplateVariableResp {}
 
 message DeleteTemplateVariableReq {
     uint32 biz_id               = 1;
@@ -1669,6 +1667,14 @@ message GetAppTemplateVariableReferencesReq {
 message GetAppTemplateVariableReferencesResp {
     repeated pbatv.AppTemplateVariableReference details = 1;
 }
+
+message UpdateAppTemplateVariablesReq {
+    uint32                             biz_id    = 1;
+    uint32                             app_id    = 2;
+    repeated pbtv.TemplateVariableSpec variables = 3;
+}
+
+message UpdateAppTemplateVariablesResp {}
 
 message ListAppTemplateVariablesReq {
     uint32 biz_id = 1;

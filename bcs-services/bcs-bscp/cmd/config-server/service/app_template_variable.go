@@ -19,6 +19,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	pbatv "bscp.io/pkg/protocol/core/app-template-variable"
 	pbds "bscp.io/pkg/protocol/data-service"
 )
 
@@ -106,5 +107,36 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbcs.ListAp
 	resp = &pbcs.ListAppTemplateVariablesResp{
 		Details: rp.Details,
 	}
+	return resp, nil
+}
+
+// UpdateAppTemplateVariables update app template variables
+func (s *Service) UpdateAppTemplateVariables(ctx context.Context, req *pbcs.UpdateAppTemplateVariablesReq) (
+	*pbcs.UpdateAppTemplateVariablesResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.UpdateAppTemplateVariablesResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find},
+		BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UpdateAppTemplateVariablesReq{
+		Attachment: &pbatv.AppTemplateVariableAttachment{
+			BizId: req.BizId,
+			AppId: req.AppId,
+		},
+		Spec: &pbatv.AppTemplateVariableSpec{
+			Variables: req.Variables,
+		},
+	}
+
+	_, err := s.client.DS.UpdateAppTemplateVariables(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("update app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
 	return resp, nil
 }
