@@ -17,6 +17,7 @@ package handler
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	vda "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/variable/definition"
 	vva "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/variable/value"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -86,12 +87,54 @@ func (p *VariableHandler) ListVariableDefinitions(ctx context.Context,
 	}
 	if result, ok := (*vd)["results"].([]*vdm.VariableDefinition); ok {
 		for _, v := range result {
-			vds = append(vds, v.Transfer2Proto())
+			vds = append(vds, translate(ctx, v.Transfer2Proto()))
 		}
 	}
 	respData.Results = vds
 	resp.Data = respData
 	return nil
+}
+
+func translate(ctx context.Context, v *proto.VariableDefinition) *proto.VariableDefinition {
+	return &proto.VariableDefinition{
+		Id:           v.Id,
+		Key:          v.Key,
+		Name:         translateName(ctx, v.Key, v.Category, v.Name),
+		Default:      v.Default,
+		DefaultValue: v.DefaultValue,
+		Scope:        v.Scope,
+		ScopeName:    translateScopeName(ctx, v.Scope),
+		Category:     v.Category,
+		CategoryName: translateCategoryName(ctx, v.Category),
+		Desc:         v.Desc,
+		Created:      v.Created,
+		Updated:      v.Updated,
+		Creator:      v.Creator,
+		Updater:      v.Updater,
+	}
+}
+
+func translateCategoryName(ctx context.Context, scope string) string {
+	content := i18n.T(ctx, scope)
+	if content == scope {
+		return i18n.T(ctx, "{{.scope.Default}}")
+	}
+	return content
+}
+
+func translateScopeName(ctx context.Context, category string) string {
+	content := i18n.T(ctx, category)
+	if content == category {
+		return i18n.T(ctx, "{{.category.Default}}")
+	}
+	return content
+}
+
+func translateName(ctx context.Context, key, category, name string) string {
+	if category == vdm.VariableCategoryCustom {
+		return name
+	}
+	return i18n.T(ctx, key)
 }
 
 // ListClustersVariables implement for ListClustersVariables interface

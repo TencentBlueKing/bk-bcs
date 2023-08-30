@@ -381,6 +381,24 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Workload.GetDeployHistoryRevision",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetDeployRevisionDiff",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/diff/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.RolloutDeployRevision",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/{name}"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Workload.ListRS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/replicasets"},
 			Method:  []string{"GET"},
@@ -609,6 +627,9 @@ type WorkloadService interface {
 	ScaleDeploy(ctx context.Context, in *ResScaleReq, opts ...client.CallOption) (*CommonResp, error)
 	RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	GetDeployHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, opts ...client.CallOption) (*CommonResp, error)
+	GetDeployRevisionDiff(ctx context.Context, in *GetDeployRevisionDetailReq, opts ...client.CallOption) (*CommonResp, error)
+	RolloutDeployRevision(ctx context.Context, in *RolloutDeployRevisionReq, opts ...client.CallOption) (*CommonResp, error)
 	ListRS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	ListDS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetDS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
@@ -721,6 +742,36 @@ func (c *workloadService) RescheduleDeployPo(ctx context.Context, in *ResBatchRe
 
 func (c *workloadService) DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.DeleteDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetDeployHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetDeployHistoryRevision", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetDeployRevisionDiff(ctx context.Context, in *GetDeployRevisionDetailReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetDeployRevisionDiff", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) RolloutDeployRevision(ctx context.Context, in *RolloutDeployRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.RolloutDeployRevision", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -1099,6 +1150,9 @@ type WorkloadHandler interface {
 	ScaleDeploy(context.Context, *ResScaleReq, *CommonResp) error
 	RescheduleDeployPo(context.Context, *ResBatchRescheduleReq, *CommonResp) error
 	DeleteDeploy(context.Context, *ResDeleteReq, *CommonResp) error
+	GetDeployHistoryRevision(context.Context, *GetDeployHistoryRevisionReq, *CommonResp) error
+	GetDeployRevisionDiff(context.Context, *GetDeployRevisionDetailReq, *CommonResp) error
+	RolloutDeployRevision(context.Context, *RolloutDeployRevisionReq, *CommonResp) error
 	ListRS(context.Context, *ResListReq, *CommonResp) error
 	ListDS(context.Context, *ResListReq, *CommonResp) error
 	GetDS(context.Context, *ResGetReq, *CommonResp) error
@@ -1146,6 +1200,9 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		ScaleDeploy(ctx context.Context, in *ResScaleReq, out *CommonResp) error
 		RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, out *CommonResp) error
 		DeleteDeploy(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		GetDeployHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, out *CommonResp) error
+		GetDeployRevisionDiff(ctx context.Context, in *GetDeployRevisionDetailReq, out *CommonResp) error
+		RolloutDeployRevision(ctx context.Context, in *RolloutDeployRevisionReq, out *CommonResp) error
 		ListRS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		ListDS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetDS(ctx context.Context, in *ResGetReq, out *CommonResp) error
@@ -1227,6 +1284,24 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Name:    "Workload.DeleteDeploy",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
 		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetDeployHistoryRevision",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetDeployRevisionDiff",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/diff/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.RolloutDeployRevision",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/{name}"},
+		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1478,6 +1553,18 @@ func (h *workloadHandler) RescheduleDeployPo(ctx context.Context, in *ResBatchRe
 
 func (h *workloadHandler) DeleteDeploy(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
 	return h.WorkloadHandler.DeleteDeploy(ctx, in, out)
+}
+
+func (h *workloadHandler) GetDeployHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetDeployHistoryRevision(ctx, in, out)
+}
+
+func (h *workloadHandler) GetDeployRevisionDiff(ctx context.Context, in *GetDeployRevisionDetailReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetDeployRevisionDiff(ctx, in, out)
+}
+
+func (h *workloadHandler) RolloutDeployRevision(ctx context.Context, in *RolloutDeployRevisionReq, out *CommonResp) error {
+	return h.WorkloadHandler.RolloutDeployRevision(ctx, in, out)
 }
 
 func (h *workloadHandler) ListRS(ctx context.Context, in *ResListReq, out *CommonResp) error {
