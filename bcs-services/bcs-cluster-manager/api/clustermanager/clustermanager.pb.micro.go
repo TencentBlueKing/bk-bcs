@@ -168,6 +168,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.UpdateVirtualClusterQuota",
+			Path:    []string{"/clustermanager/v1/vcluster/{clusterID}/quota"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.GetNode",
 			Path:    []string{"/clustermanager/v1/node/{innerIP}"},
 			Method:  []string{"GET"},
@@ -837,6 +844,7 @@ type ClusterManagerService interface {
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
 	CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, opts ...client.CallOption) (*CreateVirtualClusterResp, error)
 	DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...client.CallOption) (*DeleteVirtualClusterResp, error)
+	UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, opts ...client.CallOption) (*UpdateVirtualClusterQuotaResp, error)
 	//* node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
 	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error)
@@ -1156,6 +1164,16 @@ func (c *clusterManagerService) CreateVirtualCluster(ctx context.Context, in *Cr
 func (c *clusterManagerService) DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...client.CallOption) (*DeleteVirtualClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DeleteVirtualCluster", in)
 	out := new(DeleteVirtualClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, opts ...client.CallOption) (*UpdateVirtualClusterQuotaResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateVirtualClusterQuota", in)
+	out := new(UpdateVirtualClusterQuotaResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2166,6 +2184,7 @@ type ClusterManagerHandler interface {
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
 	CreateVirtualCluster(context.Context, *CreateVirtualClusterReq, *CreateVirtualClusterResp) error
 	DeleteVirtualCluster(context.Context, *DeleteVirtualClusterReq, *DeleteVirtualClusterResp) error
+	UpdateVirtualClusterQuota(context.Context, *UpdateVirtualClusterQuotaReq, *UpdateVirtualClusterQuotaResp) error
 	//* node management
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
 	GetNodeInfo(context.Context, *GetNodeInfoRequest, *GetNodeInfoResponse) error
@@ -2311,6 +2330,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error
 		CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, out *CreateVirtualClusterResp) error
 		DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, out *DeleteVirtualClusterResp) error
+		UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, out *UpdateVirtualClusterQuotaResp) error
 		GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error
 		GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, out *GetNodeInfoResponse) error
 		RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, out *CommonResp) error
@@ -2537,6 +2557,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Path:    []string{"/clustermanager/v1/vcluster/{clusterID}"},
 		Method:  []string{"DELETE"},
 		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateVirtualClusterQuota",
+		Path:    []string{"/clustermanager/v1/vcluster/{clusterID}/quota"},
+		Method:  []string{"PUT"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3264,6 +3291,10 @@ func (h *clusterManagerHandler) CreateVirtualCluster(ctx context.Context, in *Cr
 
 func (h *clusterManagerHandler) DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, out *DeleteVirtualClusterResp) error {
 	return h.ClusterManagerHandler.DeleteVirtualCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, out *UpdateVirtualClusterQuotaResp) error {
+	return h.ClusterManagerHandler.UpdateVirtualClusterQuota(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error {

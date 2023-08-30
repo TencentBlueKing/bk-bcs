@@ -105,17 +105,18 @@ var NoAuthMethod = []string{
 // ActionPermissions action 对应权限中心的权限
 var ActionPermissions = map[string]string{
 	// cluster
-	"ClusterManager.CreateCluster":          cluster.CanCreateClusterOperation,
-	"ClusterManager.RetryCreateClusterTask": cluster.CanCreateClusterOperation,
-	"ClusterManager.ImportCluster":          cluster.CanCreateClusterOperation,
-	"ClusterManager.UpdateCluster":          cluster.CanManageClusterOperation,
-	"ClusterManager.DeleteCluster":          cluster.CanDeleteClusterOperation,
-	"ClusterManager.GetCluster":             cluster.CanViewClusterOperation,
-	"ClusterManager.ListProjectCluster":     project.CanViewProjectOperation,
-	"ClusterManager.ListCluster":            project.CanViewProjectOperation,
-	"ClusterManager.ListCommonCluster":      "",
-	"ClusterManager.CreateVirtualCluster":   cluster.CanCreateClusterOperation,
-	"ClusterManager.DeleteVirtualCluster":   cluster.CanDeleteClusterOperation,
+	"ClusterManager.CreateCluster":             cluster.CanCreateClusterOperation,
+	"ClusterManager.RetryCreateClusterTask":    cluster.CanCreateClusterOperation,
+	"ClusterManager.ImportCluster":             cluster.CanCreateClusterOperation,
+	"ClusterManager.UpdateCluster":             cluster.CanManageClusterOperation,
+	"ClusterManager.DeleteCluster":             cluster.CanDeleteClusterOperation,
+	"ClusterManager.GetCluster":                cluster.CanViewClusterOperation,
+	"ClusterManager.ListProjectCluster":        project.CanViewProjectOperation,
+	"ClusterManager.ListCluster":               project.CanViewProjectOperation,
+	"ClusterManager.ListCommonCluster":         "",
+	"ClusterManager.CreateVirtualCluster":      cluster.CanCreateClusterOperation,
+	"ClusterManager.DeleteVirtualCluster":      cluster.CanDeleteClusterOperation,
+	"ClusterManager.UpdateVirtualClusterQuota": cluster.CanManageClusterOperation,
 
 	// node
 	"ClusterManager.AddNodesToCluster":           cluster.CanManageClusterOperation,
