@@ -39,12 +39,10 @@ var secret = `global:
 
 // VaultConf ..
 type VaultConf struct {
-	Vault struct {
-		UnsealKeys      []string `yaml:"unseal_keys"`
-		RootToken       string   `yaml:"root_token"`
-		SecretShares    int      `yaml:"secret_shares"`
-		SecretThreshold int      `yaml:"secret_threshold"`
-	} `yaml:"vault"`
+	UnsealKeys      []string `yaml:"unsealKeys"`
+	RootToken       string   `yaml:"rootToken"`
+	SecretShares    int      `yaml:"secretShares"`
+	SecretThreshold int      `yaml:"secretThreshold"`
 }
 
 // runVaultInitCmd 初始化

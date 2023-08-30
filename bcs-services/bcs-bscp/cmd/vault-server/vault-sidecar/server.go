@@ -163,11 +163,11 @@ func tryUnseal(conf VaultConf) error {
 	if !status.Sealed {
 		return nil
 	}
-	if len(conf.Vault.UnsealKeys) == 0 {
+	if len(conf.UnsealKeys) == 0 {
 		return fmt.Errorf("empty unseal keys")
 	}
 
-	for idx, k := range conf.Vault.UnsealKeys {
+	for idx, k := range conf.UnsealKeys {
 		s, err := c.Sys().UnsealWithContext(ctx, k)
 		if err != nil {
 			klog.InfoS(fmt.Sprintf("unseal with key %d, failed", idx))
