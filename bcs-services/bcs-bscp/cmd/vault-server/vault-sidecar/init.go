@@ -31,11 +31,11 @@ func initCmd() *cobra.Command {
 
 var secret = `global:
   vault:
-    unseal_keys:
+    unsealKeys:
     {{- range .KeysB64 }}
       - {{ . }}
     {{- end }}
-    root_token: {{ .RootToken }}`
+    rootToken: {{ .RootToken }}`
 
 // VaultConf ..
 type VaultConf struct {
