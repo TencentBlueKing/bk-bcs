@@ -23,6 +23,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbatv "bscp.io/pkg/protocol/core/app-template-variable"
+	pbtv "bscp.io/pkg/protocol/core/template-variable"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
@@ -33,22 +34,7 @@ func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbds.Ext
 	*pbds.ExtractAppTemplateVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.BasePage{All: true}
-	details, _, err := s.dao.AppTemplateBinding().List(kt, req.BizId, req.AppId, opt)
-	if err != nil {
-		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	// so far, no any template config item exists for the app
-	if len(details) == 0 {
-		return &pbds.ExtractAppTemplateVariablesResp{
-			Details: []string{},
-		}, nil
-	}
-
-	// get template revision details
-	tmplRevisions, err := s.dao.TemplateRevision().
-		ListByIDs(kt, details[0].Spec.TemplateRevisionIDs)
+	tmplRevisions, err := s.getAppTmplRevisions(kt, req.BizId, req.AppId)
 	if err != nil {
 		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -73,6 +59,30 @@ func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbds.Ext
 	return &pbds.ExtractAppTemplateVariablesResp{
 		Details: variables,
 	}, nil
+}
+
+// getAppTmplRevisions get app template revision details
+func (s *Service) getAppTmplRevisions(kt *kit.Kit, bizID, appID uint32) ([]*table.TemplateRevision, error) {
+	opt := &types.BasePage{All: true}
+	details, _, err := s.dao.AppTemplateBinding().List(kt, bizID, appID, opt)
+	if err != nil {
+		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	// so far, no any template config item exists for the app
+	if len(details) == 0 {
+		return nil, nil
+	}
+
+	// get template revision details
+	tmplRevisions, err := s.dao.TemplateRevision().
+		ListByIDs(kt, details[0].Spec.TemplateRevisionIDs)
+	if err != nil {
+		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return tmplRevisions, nil
 }
 
 // downloadTmplContent download template config item content from repo.
@@ -127,24 +137,9 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbd
 	*pbds.GetAppTemplateVariableReferencesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.BasePage{All: true}
-	details, _, err := s.dao.AppTemplateBinding().List(kt, req.BizId, req.AppId, opt)
+	tmplRevisions, err := s.getAppTmplRevisions(kt, req.BizId, req.AppId)
 	if err != nil {
-		logs.Errorf("extract template variables failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	// so far, no any template config item exists for the app
-	if len(details) == 0 {
-		return &pbds.GetAppTemplateVariableReferencesResp{
-			Details: []*pbatv.AppTemplateVariableReference{},
-		}, nil
-	}
-
-	// get template revision details
-	tmplRevisions, err := s.dao.TemplateRevision().
-		ListByIDs(kt, details[0].Spec.TemplateRevisionIDs)
-	if err != nil {
-		logs.Errorf("extract template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get app template variable references failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	if len(tmplRevisions) == 0 {
@@ -155,7 +150,7 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbd
 
 	contents, err := s.downloadTmplContent(kt, tmplRevisions)
 	if err != nil {
-		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get app template variable references failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -194,5 +189,66 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbd
 
 	return &pbds.GetAppTemplateVariableReferencesResp{
 		Details: refs,
+	}, nil
+}
+
+// ListAppTemplateVariables get app template variable references.
+func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAppTemplateVariablesReq) (
+	*pbds.ListAppTemplateVariablesResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	// extract all variables for current app
+	extractRep, err := s.ExtractAppTemplateVariables(ctx, &pbds.ExtractAppTemplateVariablesReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+	})
+	if err != nil {
+		logs.Errorf("list app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	allVariables := extractRep.Details
+	if len(allVariables) == 0 {
+		return &pbds.ListAppTemplateVariablesResp{
+			Details: []*pbtv.TemplateVariableSpec{},
+		}, nil
+	}
+
+	// get app template variables
+	appVars, err := s.dao.AppTemplateVariable().ListVariables(kt, req.BizId, req.AppId)
+	if err != nil {
+		logs.Errorf("list app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	appVarMap := make(map[string]*table.TemplateVariableSpec, len(appVars))
+	for _, v := range appVars {
+		appVarMap[v.Name] = v
+	}
+
+	// get biz template variables
+	bizVars, _, err := s.dao.TemplateVariable().List(kt, req.BizId, nil, &types.BasePage{All: true})
+	if err != nil {
+		logs.Errorf("list app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	bizVarMap := make(map[string]*table.TemplateVariableSpec, len(bizVars))
+	for _, v := range bizVars {
+		bizVarMap[v.Spec.Name] = v.Spec
+	}
+
+	// get final app template variables
+	// use app variables first, then use biz variables
+	finalVar := make([]*pbtv.TemplateVariableSpec, 0)
+	for _, name := range allVariables {
+		if v, ok := appVarMap[name]; ok {
+			finalVar = append(finalVar, pbtv.PbTemplateVariableSpec(v))
+			continue
+		}
+		if v, ok := bizVarMap[name]; ok {
+			finalVar = append(finalVar, pbtv.PbTemplateVariableSpec(v))
+		}
+	}
+
+	return &pbds.ListAppTemplateVariablesResp{
+		Details: finalVar,
 	}, nil
 }

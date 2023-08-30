@@ -54,6 +54,7 @@ func main() {
 		table.TemplateSet{},
 		table.AppTemplateBinding{},
 		table.ReleasedAppTemplateBinding{},
+		table.AppTemplateVariable{},
 	)
 
 	g.Execute()

@@ -79,3 +79,32 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbc
 	}
 	return resp, nil
 }
+
+// ListAppTemplateVariables list app template variables
+func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbcs.ListAppTemplateVariablesReq) (
+	*pbcs.ListAppTemplateVariablesResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAppTemplateVariablesResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find},
+		BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListAppTemplateVariablesReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+	}
+
+	rp, err := s.client.DS.ListAppTemplateVariables(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListAppTemplateVariablesResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}

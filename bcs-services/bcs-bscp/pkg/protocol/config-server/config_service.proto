@@ -516,6 +516,11 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"
         };
     }
+    rpc ListAppTemplateVariables(ListAppTemplateVariablesReq) returns (ListAppTemplateVariablesResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"
+        };
+    }
 
     rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp) {
         option (google.api.http) = {
@@ -1653,7 +1658,7 @@ message ExtractAppTemplateVariablesReq {
 }
 
 message ExtractAppTemplateVariablesResp {
-    repeated string details = 2;
+    repeated string details = 1;
 }
 
 message GetAppTemplateVariableReferencesReq {
@@ -1662,9 +1667,17 @@ message GetAppTemplateVariableReferencesReq {
 }
 
 message GetAppTemplateVariableReferencesResp {
-    repeated pbatv.AppTemplateVariableReference details = 2;
+    repeated pbatv.AppTemplateVariableReference details = 1;
 }
 
+message ListAppTemplateVariablesReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ListAppTemplateVariablesResp {
+    repeated pbtv.TemplateVariableSpec details = 1;
+}
 
 message CreateGroupReq {
     uint32                 biz_id    = 1;
