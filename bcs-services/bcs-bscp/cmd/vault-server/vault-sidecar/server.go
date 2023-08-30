@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 	"time"
 
@@ -88,6 +92,34 @@ func runServerCmd() error {
 			}
 
 			klog.Info("unseal vault done")
+			return
+		}
+	}()
+
+	plugins, err := getPlugins(conf)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		tick := time.NewTicker(time.Second * 5)
+		defer tick.Stop()
+
+		for range tick.C {
+			klog.InfoS("try register plugin")
+
+			// already unsealed
+			if err := checkVaultStatus(); err != nil {
+				klog.InfoS("check vault status not ready", "reason", err)
+				continue
+			}
+
+			if err := autoRegisterPlugin(conf, plugins); err != nil {
+				klog.Warningf("register failed, err: %s", err)
+				continue
+			}
+
+			klog.InfoS("register plugin done", "plugins", plugins)
 			return
 		}
 	}()
@@ -186,4 +218,60 @@ func tryUnseal(conf VaultConf) error {
 	}
 
 	return fmt.Errorf("unseal with all keys failed")
+}
+
+func getPlugins(conf VaultConf) (map[string]string, error) {
+	dir, err := os.ReadDir(conf.PluginDir)
+	if err != nil {
+		return nil, err
+	}
+
+	result := map[string]string{}
+	for _, v := range dir {
+		if v.IsDir() {
+			continue
+		}
+		info, err := v.Info()
+		if err != nil {
+			return nil, err
+		}
+
+		f, err := os.Open(path.Join(conf.PluginDir, info.Name()))
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		h := sha256.New()
+		if _, err := io.Copy(h, f); err != nil {
+			return nil, err
+		}
+		result[info.Name()] = hex.EncodeToString(h.Sum(nil))
+	}
+
+	return result, nil
+}
+func autoRegisterPlugin(conf VaultConf, plugins map[string]string) error {
+	c, err := api.NewClient(api.DefaultConfig())
+	if err != nil {
+		return err
+	}
+	c.SetToken(conf.RootToken)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	for name, hash := range plugins {
+		pluginInput := &api.RegisterPluginInput{
+			Name:    name,
+			Type:    api.PluginTypeSecrets,
+			SHA256:  hash,
+			Command: name,
+		}
+		if err := c.Sys().RegisterPluginWithContext(ctx, pluginInput); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

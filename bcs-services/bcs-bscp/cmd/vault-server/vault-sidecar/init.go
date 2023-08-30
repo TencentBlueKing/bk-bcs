@@ -39,6 +39,7 @@ var secret = `global:
 
 // VaultConf ..
 type VaultConf struct {
+	PluginDir       string   `yaml:"pluginDir"`
 	UnsealKeys      []string `yaml:"unsealKeys"`
 	RootToken       string   `yaml:"rootToken"`
 	SecretShares    int      `yaml:"secretShares"`
