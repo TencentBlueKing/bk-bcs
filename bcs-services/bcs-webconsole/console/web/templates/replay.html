@@ -7,9 +7,9 @@
 </head>
 <body>
     <h1>Asciinema Player</h1>
-    {{range $fn,$fc:=.file}}
+    {{range $k,$fn:=.file_name}}
     <ul>
-        <li><a href="javascript:void(0)" onclick="playFile('{{$fc}}')">{{$fn}}</a></li>
+        <li><a href="javascript:void(0)" onclick="playFile('{{$fn}}')">{{$fn}}</a></li>
     </ul>
     {{end}}
     <!-- 用于显示播放器的容器 -->
@@ -20,7 +20,7 @@
         const player = document.getElementById('player')
         function playFile(data) {
             player.innerHTML = '';
-            const d = 'data:text/plain;base64,' + data
+            const d = 'casts/replay/' + data
             AsciinemaPlayer.create(d, player);
         }
     </script>

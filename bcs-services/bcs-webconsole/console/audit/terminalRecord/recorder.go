@@ -32,12 +32,14 @@ const (
 	replayFilenameSuffix = ".cast"
 )
 
+// ReplyInfo 回访记录初始信息
 type ReplyInfo struct {
 	Width     uint16
 	Height    uint16
 	TimeStamp time.Time
 }
 
+// ReplyRecorder 终端回放记录器
 type ReplyRecorder struct {
 	SessionID   string
 	Info        *ReplyInfo
@@ -50,7 +52,7 @@ type ReplyRecorder struct {
 	once sync.Once
 }
 
-func FileExists(name string) bool {
+func fileExists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
 			return false
@@ -59,13 +61,15 @@ func FileExists(name string) bool {
 	return true
 }
 
-func EnsureDirExist(name string) error {
-	if !FileExists(name) {
+func ensureDirExist(name string) error {
+	if !fileExists(name) {
 		return os.MkdirAll(name, os.ModePerm)
 	}
 	return nil
 }
 
+// NewReplayRecord 初始化Recorder
+// 确认是否开启终端记录 / 创建记录文件 / 初始记录信息
 func NewReplayRecord(podCtx *types.PodContext, originTerminalSize *ReplyInfo) *ReplyRecorder {
 	if !config.G.TerminalRecord.Enable {
 		return nil
@@ -75,7 +79,7 @@ func NewReplayRecord(podCtx *types.PodContext, originTerminalSize *ReplyInfo) *R
 		Info:      originTerminalSize,
 	}
 	path := config.G.TerminalRecord.FilePath
-	err := EnsureDirExist(path)
+	err := ensureDirExist(path)
 	if err != nil {
 		klog.Errorf("Create dir %s error: %s\n", path, err)
 		recorder.err = err
@@ -106,6 +110,7 @@ func (r *ReplyRecorder) isNullError() bool {
 	return r.err != nil
 }
 
+// Record 记录终端输出信息
 func Record(r *ReplyRecorder, p []byte, event asciinema.EventType) {
 	//不开启terminal recorder时, ReplyRecorder返回nil
 	if r == nil {
@@ -126,6 +131,7 @@ func Record(r *ReplyRecorder, p []byte, event asciinema.EventType) {
 	}
 }
 
+// End 会话结束前关闭缓存和文件
 func (r *ReplyRecorder) End() {
 	if r == nil {
 		return

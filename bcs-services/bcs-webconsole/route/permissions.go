@@ -213,3 +213,27 @@ func CredentialRequired() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// ManagersRequired 校验用户是否为manager
+func ManagersRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authCtx := MustGetAuthContext(c)
+		user := authCtx.Username
+		managers := config.G.Base.Managers
+		in := false
+		for _, manager := range managers {
+			if user == manager {
+				in = true
+			}
+		}
+		if !in {
+			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+				Code:      types.ApiErrorCode,
+				Message:   fmt.Sprintf("%s is not managers, has no permission", user),
+				RequestID: authCtx.RequestId,
+			})
+			return
+		}
+		c.Next()
+	}
+}

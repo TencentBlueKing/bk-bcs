@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-//EventType 事件类型: o:输出 / r:终端变化
+// EventType 事件类型: o:输出 / r:终端变化
 type EventType string
 
 const (
@@ -38,6 +38,7 @@ var (
 	newLine = []byte{'\n'}
 )
 
+// NewWriter 初始化Writer
 func NewWriter(w io.Writer, opts ...Option) *Writer {
 	conf := Config{
 		Width:    80,
@@ -57,6 +58,7 @@ func NewWriter(w io.Writer, opts ...Option) *Writer {
 	}
 }
 
+// Writer 自定义文件写入,文件格式遵循asciinema format
 type Writer struct {
 	Config
 	TimestampNano int64
@@ -66,6 +68,7 @@ type Writer struct {
 	WriteBuff     []byte
 }
 
+// WriteHeader 写入头信息
 func (w *Writer) WriteHeader() error {
 	header := Header{
 		Version:   version,
@@ -90,12 +93,14 @@ func (w *Writer) WriteHeader() error {
 	return err
 }
 
+// WriteRow 记录terminal输出的流式信息
 func (w *Writer) WriteRow(p []byte, event EventType) error {
 	now := time.Now().UnixNano()
 	ts := float64(now-w.TimestampNano) / 1000 / 1000 / 1000
 	return w.WriteStdout(ts, p, event)
 }
 
+// WriteStdout 批量写入,减少文件io
 func (w *Writer) WriteStdout(ts float64, data []byte, event EventType) error {
 	row := []interface{}{ts, event, string(data)}
 	raw, err := json.Marshal(row)
@@ -146,6 +151,7 @@ type Env struct {
 	Term  string `json:"TERM"`
 }
 
+// Write 限制文件大小
 func (w *Writer) Write(p []byte) (n int, err error) {
 	remainingSpace := w.limit - w.written
 	if remainingSpace <= 0 {

@@ -14,6 +14,7 @@ package asciinema
 
 import "time"
 
+// Config asciinema文件Header信息
 type Config struct {
 	Title     string
 	EnvShell  string
@@ -23,6 +24,7 @@ type Config struct {
 	Timestamp time.Time
 }
 
+// Option 可选配置
 type Option func(options *Config)
 
 func WithWidth(width uint16) Option {
