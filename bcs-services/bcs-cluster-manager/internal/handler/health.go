@@ -42,3 +42,22 @@ func (cm *ClusterManager) Health(ctx context.Context,
 
 	return nil
 }
+
+// DeleteDBData implements interface cmproto.Health
+func (cm *ClusterManager) DeleteDBData(ctx context.Context,
+	req *cmproto.DeleteDBDataReq, resp *cmproto.DeleteDBDataResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := health.NewDeleteDBDataAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("Health", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: Health, req %v, resp.Code %d, resp.Message %s",
+		reqID, req, resp.Code, resp.Message)
+	blog.V(5).Infof("reqID: %s, action: Health, req %v, resp %v",
+		reqID, req, resp)
+
+	return nil
+}

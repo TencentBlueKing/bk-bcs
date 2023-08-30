@@ -140,6 +140,24 @@ func (m *ModelOperationLog) DeleteOperationLogByResourceType(ctx context.Context
 	return nil
 }
 
+// DeleteOperationLogByDate delete operationLog by date
+func (m *ModelOperationLog) DeleteOperationLogByDate(ctx context.Context, startTime, endTime string) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+
+	startCond := operator.NewLeafCondition(operator.Gte, operator.M{"createtime": startTime})
+	endCond := operator.NewLeafCondition(operator.Lte, operator.M{"createtime": endTime})
+	cond := operator.NewBranchCondition(operator.And, startCond, endCond)
+
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ListOperationLog list logs
 func (m *ModelOperationLog) ListOperationLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
 	[]types.OperationLog, error) {

@@ -14,6 +14,7 @@ package store
 
 import (
 	"context"
+
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -142,11 +143,13 @@ type ClusterManagerModel interface {
 	DeleteTask(ctx context.Context, taskID string) error
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
 	ListTask(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Task, error)
+	DeleteFinishTaskByDate(ctx context.Context, startTime, endTime string) error
 
 	// OperationLog
 	CreateOperationLog(ctx context.Context, log *types.OperationLog) error
 	DeleteOperationLogByResourceID(ctx context.Context, resourceIndex string) error
 	DeleteOperationLogByResourceType(ctx context.Context, resType string) error
+	DeleteOperationLogByDate(ctx context.Context, startTime, endTime string) error
 	ListOperationLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.OperationLog, error)
 	CountOperationLog(ctx context.Context, cond *operator.Condition) (int64, error)
 	ListAggreOperationLog(ctx context.Context, condSrc, condDst []bson.E,

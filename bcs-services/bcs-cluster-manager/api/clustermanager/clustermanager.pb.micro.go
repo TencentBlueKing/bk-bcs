@@ -804,6 +804,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DeleteDBData",
+			Path:    []string{"/clustermanager/v1/db/data"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -951,6 +958,8 @@ type ClusterManagerService interface {
 	ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, opts ...client.CallOption) (*ListCloudModuleFlagResponse, error)
 	// cluster manager health interface
 	Health(ctx context.Context, in *HealthRequest, opts ...client.CallOption) (*HealthResponse, error)
+	// DeleteDBData delete database data based on conditions
+	DeleteDBData(ctx context.Context, in *DeleteDBDataReq, opts ...client.CallOption) (*DeleteDBDataResp, error)
 }
 
 type clusterManagerService struct {
@@ -2125,6 +2134,16 @@ func (c *clusterManagerService) Health(ctx context.Context, in *HealthRequest, o
 	return out, nil
 }
 
+func (c *clusterManagerService) DeleteDBData(ctx context.Context, in *DeleteDBDataReq, opts ...client.CallOption) (*DeleteDBDataResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteDBData", in)
+	out := new(DeleteDBDataResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterManager service
 
 type ClusterManagerHandler interface {
@@ -2269,6 +2288,8 @@ type ClusterManagerHandler interface {
 	ListCloudModuleFlag(context.Context, *ListCloudModuleFlagRequest, *ListCloudModuleFlagResponse) error
 	// cluster manager health interface
 	Health(context.Context, *HealthRequest, *HealthResponse) error
+	// DeleteDBData delete database data based on conditions
+	DeleteDBData(context.Context, *DeleteDBDataReq, *DeleteDBDataResp) error
 }
 
 func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, opts ...server.HandlerOption) error {
@@ -2389,6 +2410,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, out *DeleteCloudModuleFlagResponse) error
 		ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, out *ListCloudModuleFlagResponse) error
 		Health(ctx context.Context, in *HealthRequest, out *HealthResponse) error
+		DeleteDBData(ctx context.Context, in *DeleteDBDataReq, out *DeleteDBDataResp) error
 	}
 	type ClusterManager struct {
 		clusterManager
@@ -3156,6 +3178,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteDBData",
+		Path:    []string{"/clustermanager/v1/db/data"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterManager{h}, opts...))
 }
 
@@ -3625,4 +3654,8 @@ func (h *clusterManagerHandler) ListCloudModuleFlag(ctx context.Context, in *Lis
 
 func (h *clusterManagerHandler) Health(ctx context.Context, in *HealthRequest, out *HealthResponse) error {
 	return h.ClusterManagerHandler.Health(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteDBData(ctx context.Context, in *DeleteDBDataReq, out *DeleteDBDataResp) error {
+	return h.ClusterManagerHandler.DeleteDBData(ctx, in, out)
 }

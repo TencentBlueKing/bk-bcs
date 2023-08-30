@@ -1212,6 +1212,17 @@ service ClusterManager {
       summary : "服务健康检查接口"
     };
   }
+
+  // DeleteDBData delete database data based on conditions
+  rpc DeleteDBData(DeleteDBDataReq) returns (DeleteDBDataResp) {
+    option (google.api.http) = {
+      delete : "/clustermanager/v1/db/data"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据条件删除数据库数据"
+      summary : "根据条件删除数据库数据"
+    };
+  }
 }
 
 message Cluster {
@@ -11795,3 +11806,39 @@ message GetScopeHostCheckResponse {
   }];
 }
 
+message DeleteDBDataReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteDBDataReq"
+      description : "根据条件删除数据库数据"
+    }
+  };
+
+  string dataType = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dataType",
+    description: "数据类型, 目前仅支持task,operationLog,可以多个,用逗号分隔"
+  }];
+  string startTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "startTime", 
+    description: "要删除数据的开始时间,格式:2023-08-29,包含"
+  }];
+  string endTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "endTime", 
+    description: "要删除数据的结束时间,格式:2023-08-29,包含"
+  }];
+}
+
+message DeleteDBDataResp {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
+  }];
+}

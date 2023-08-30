@@ -34,6 +34,21 @@ const (
 	//! all struct key in mongo is lowcase in default
 	tableKey              = "taskid"
 	defaultTaskListLength = 1000
+
+	// TaskStatusInit INIT task status
+	StatusInit = "INITIALIZING"
+	// TaskStatusRunning running task status
+	StatusRunning = "RUNNING"
+	// TaskStatusSuccess task success
+	StatusSuccess = "SUCCESS"
+	// TaskStatusFailure task failed
+	StatusFailure = "FAILURE"
+	// TaskStatusTimeout task run timeout
+	StatusTimeout = "TIMEOUT"
+	// TaskStatusForceTerminate force task terminate
+	StatusForceTerminate = "FORCETERMINATE"
+	// TaskStatusNotStarted force task terminate
+	StatusNotStarted = "NOTSTARTED"
 )
 
 var (
@@ -176,4 +191,24 @@ func (m *ModelTask) ListTask(ctx context.Context, cond *operator.Condition, opt 
 		return nil, err
 	}
 	return taskList, nil
+}
+
+// DeleteFinishTaskByDate delete finish task by date
+func (m *ModelTask) DeleteFinishTaskByDate(ctx context.Context, startTime, endTime string) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+
+	startCond := operator.NewLeafCondition(operator.Gte, operator.M{"end": startTime})
+	endCond := operator.NewLeafCondition(operator.Lte, operator.M{"end": endTime})
+	statusCond := operator.NewLeafCondition(operator.In, operator.M{"status": []string{
+		StatusSuccess, StatusFailure, StatusTimeout, StatusForceTerminate,
+	}})
+	cond := operator.NewBranchCondition(operator.And, statusCond, startCond, endCond)
+
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	if err != nil {
+		return err
+	}
+	return nil
 }
