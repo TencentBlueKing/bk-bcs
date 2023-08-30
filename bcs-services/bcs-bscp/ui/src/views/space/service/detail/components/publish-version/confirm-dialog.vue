@@ -1,9 +1,8 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue'
-  import { InfoBox } from "bkui-vue/lib";
-  import { publishVersion } from '../../../../../../../../api/config'
-  import { IGroupToPublish } from '../../../../../../../../../types/group';
-  import RuleTag from '../../../../../../groups/components/rule-tag.vue'
+  import { publishVersion } from '../../../../../../api/config'
+  import { IGroupToPublish } from '../../../../../../../types/group';
+  import RuleTag from '../../../../groups/components/rule-tag.vue'
 
   interface IFormData {
     groups: number[];
@@ -16,6 +15,7 @@
     bkBizId: string,
     appId: number,
     releaseId: number|null,
+    groupType: string;
     groups: IGroupToPublish[]
   }>()
 
@@ -38,7 +38,7 @@
   }
 
   watch(() => props.groups, (val) => {
-    localVal.value.groups = props.groups.map(item => item.id)
+      localVal.value.groups = props.groups.map(item => item.id)
   }, { immediate: true })
 
   const handleClose = () => {
@@ -54,7 +54,12 @@
     try {
       pending.value = true
       await formRef.value.validate()
-      await publishVersion(props.bkBizId, props.appId, <number>props.releaseId, localVal.value)
+      const params = { ...localVal.value }
+      if (props.groupType === 'all') {
+        params.groups = []
+        params.all = true
+      }
+      await publishVersion(props.bkBizId, props.appId, <number>props.releaseId, params)
       emits('confirm')
       handleClose()
     } catch (e) {

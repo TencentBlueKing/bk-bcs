@@ -4,6 +4,7 @@
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../../types/config'
   import { createServiceConfigItem, updateConfigContent } from '../../../../../../../../api/config'
   import { getConfigEditParams } from '../../../../../../../../utils/config'
+  import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation'
   import ConfigForm from '../config-form.vue'
 
   const props = defineProps<{
@@ -19,6 +20,7 @@
   const pending = ref(false)
   const content = ref<IFileConfigContentSummary|string>('')
   const formRef = ref()
+  const isFormChange = ref(false)
 
   watch(() => props.show, val => {
     console.log(val)
@@ -30,6 +32,14 @@
   const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary|string) => {
     configForm.value = data
     content.value = configContent
+  }
+
+  const handleBeforeClose = async () => {
+    if (isFormChange.value) {
+      const result = await useModalCloseConfirmation()
+      return result
+    }
+    return true
   }
 
   const handleSubmit = async() => {
@@ -50,6 +60,7 @@
       const params = { ...configForm.value, ...{ sign, byte_size: size } }
       await createServiceConfigItem(props.appId, props.bkBizId, params)
       emits('confirm')
+      close()
       Message({
         theme: 'success',
         message: '新建配置项成功'
@@ -71,7 +82,8 @@
     width="640"
     title="新增配置文件"
     :is-show="props.show"
-    :before-close="close">
+    :before-close="handleBeforeClose"
+    @closed="close">
     <ConfigForm
       ref="formRef"
       class="config-form-wrapper"

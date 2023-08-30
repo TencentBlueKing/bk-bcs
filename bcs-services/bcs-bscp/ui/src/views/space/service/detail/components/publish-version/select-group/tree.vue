@@ -1,9 +1,9 @@
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
   import { Search, AngleDown, AngleUp } from 'bkui-vue/lib/icon'
-  import { IGroupToPublish } from '../../../../../../../../../../types/group'
-  import { IConfigVersion } from '../../../../../../../../../../types/config'
-  import RuleTag from '../../../../../../../groups/components/rule-tag.vue'
+  import { IGroupToPublish } from '../../../../../../../../types/group'
+  import { IConfigVersion } from '../../../../../../../../types/config'
+  import RuleTag from '../../../../../groups/components/rule-tag.vue'
 
   interface ITreeParentNodeData {
     parent: boolean;

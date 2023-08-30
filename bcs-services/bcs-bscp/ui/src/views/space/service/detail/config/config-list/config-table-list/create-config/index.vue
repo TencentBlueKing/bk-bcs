@@ -9,6 +9,8 @@
     appId: number
   }>()
 
+  const emits = defineEmits(['created', 'imported'])
+
   const buttonRef = ref()
   const isPopoverOpen = ref(false)
   const isManualCreateSliderOpen = ref(false)
@@ -53,12 +55,13 @@
   <ManualCreate
     v-model:show="isManualCreateSliderOpen"
     :bk-biz-id="props.bkBizId"
-    :app-id="props.appId" />
+    :app-id="props.appId"
+    @confirm="emits('created')" />
   <ImportFromTemplate
     v-model:show="isImportTemplatesDialogOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @imported="handleImported" />
+    @imported="emits('imported')" />
 </template>
 <style lang="scss" scoped>
   .create-config-btn {

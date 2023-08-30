@@ -4,14 +4,13 @@
   import InfoBox from 'bkui-vue/lib/info-box';
   import BkMessage from 'bkui-vue/lib/message';
   import { storeToRefs } from 'pinia'
-  import { useServiceStore } from '../../../../../../../../store/service'
-  import { useConfigStore } from '../../../../../../../../store/config'
-  import VersionLayout from '../../../components/version-layout.vue'
+  import { useServiceStore } from '../../../../../../store/service'
+  import { useConfigStore } from '../../../../../../store/config'
+  import VersionLayout from '../../config/components/version-layout.vue'
   import ConfirmDialog from './confirm-dialog.vue'
-  import { IConfigItem } from '../../../../../../../../../types/config'
-  import { IGroupToPublish } from '../../../../../../../../../types/group';
+  import { IGroupToPublish } from '../../../../../../../types/group';
   import SelectGroup from './select-group/index.vue'
-  import VersionDiff from '../../../components/version-diff/index.vue';
+  import VersionDiff from '../../config/components/version-diff/index.vue';
 
   const serviceStore = useServiceStore()
   const versionStore = useConfigStore()
@@ -20,8 +19,7 @@
 
   const props = defineProps<{
     bkBizId: string,
-    appId: number,
-    configList: IConfigItem[]
+    appId: number
   }>()
 
   const emit = defineEmits(['confirm'])
@@ -29,6 +27,7 @@
   const openSelectGroupPanel = ref(false)
   const isDiffSliderShow = ref(false)
   const isConfirmDialogShow = ref(false)
+  const groupType = ref('select')
   const groups = ref<IGroupToPublish[]>([])
   const baseVersionId = ref(0)
 
@@ -64,6 +63,7 @@
   }
 
   const handlePanelClose = () => {
+    groupType.value ='select'
     openSelectGroupPanel.value = false
     groups.value = []
   }
@@ -76,30 +76,38 @@
 <template>
     <section class="create-version">
         <bk-button v-if="versionData.status.publish_status === 'not_released'" class="trigger-button" theme="primary" @click="handleOpenSelectGroupPanel">上线版本</bk-button>
-        <VersionLayout v-if="openSelectGroupPanel">
-            <template #header>
-                <section class="header-wrapper">
-                    <span class="header-name" @click="handlePanelClose">
-                        <ArrowsLeft class="arrow-left" />
-                        <span class="service-name">{{ appData.spec.name }}</span>
-                    </span>
-                    <AngleRight class="arrow-right" />
-                    上线版本：{{ versionData.spec.name }}
-                </section>
-            </template>
-            <select-group :groups="groups" @openPreviewVersionDiff="openPreviewVersionDiff" @change="groups = $event"></select-group>
-            <template #footer>
-                <section class="actions-wrapper">
-                    <bk-button class="publish-btn" theme="primary" @click="isDiffSliderShow = true">对比并上线</bk-button>
-                    <bk-button @click="handlePanelClose">取消</bk-button>
-                </section>
-            </template>
-        </VersionLayout>
+        <Teleport to="body">
+          <VersionLayout v-if="openSelectGroupPanel">
+              <template #header>
+                  <section class="header-wrapper">
+                      <span class="header-name" @click="handlePanelClose">
+                          <ArrowsLeft class="arrow-left" />
+                          <span class="service-name">{{ appData.spec.name }}</span>
+                      </span>
+                      <AngleRight class="arrow-right" />
+                      上线版本：{{ versionData.spec.name }}
+                  </section>
+              </template>
+              <select-group
+                :group-type="groupType"
+                :groups="groups"
+                @openPreviewVersionDiff="openPreviewVersionDiff"
+                @groupTypeChange="groupType = $event"
+                @change="groups = $event" />
+              <template #footer>
+                  <section class="actions-wrapper">
+                      <bk-button class="publish-btn" theme="primary" @click="isDiffSliderShow = true">对比并上线</bk-button>
+                      <bk-button @click="handlePanelClose">取消</bk-button>
+                  </section>
+              </template>
+          </VersionLayout>
+        </Teleport>
         <ConfirmDialog
             v-model:show="isConfirmDialogShow"
             :bk-biz-id="props.bkBizId"
             :app-id="props.appId"
             :release-id="versionData.id"
+            :group-type="groupType"
             :groups="groups"
             @confirm="handleConfirm"/>
         <VersionDiff

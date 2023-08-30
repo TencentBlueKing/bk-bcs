@@ -14,12 +14,6 @@ export interface IConfigVersion {
   spec: {
     name: string;
     memo: string;
-    hook: {
-      post_hook_id: number;
-      post_hook_release_id: number;
-      pre_hook_id: number;
-      pre_hook_release_id: number;
-    }
   };
   status: {
     publish_status: string;
@@ -90,17 +84,9 @@ export interface IFileConfigContentSummary {
 export interface IConfigDiffDetail {
   id: number;
   name: string;
-  file_type: string;
-  current: {
-    signature: string;
-    byte_size: string;
-    update_at: string;
-  }
-  base: {
-    signature: string;
-    byte_size: string;
-    update_at: string;
-  }
+  type: string;
+  current: string;
+  base: string;
 }
 
 // 配置项列表查询接口请求参数
@@ -108,7 +94,8 @@ export interface IConfigListQueryParams {
   searchKey?: string;
   release_id?: number;
   start?: number;
-  limit?: number
+  limit?: number;
+  all?: boolean;
 }
 
 // 版本列表查询接口请求参数
@@ -144,3 +131,28 @@ export interface ITemplateBoundByAppData {
     is_latest: boolean;
   }[]
 }
+
+// 服务绑定下的模板配置详情数据
+export interface IBoundTemplateDetail {
+  template_space_id: number;
+  template_space_name: string;
+  template_set_id: number;
+  template_set_name: string
+  template_id: number;
+  name: string;
+  path: string;
+  template_revision_id: number;
+  is_latest: true;
+  template_revision_name: string;
+  template_revision_memo: string;
+  file_type: string;
+  file_mode: string;
+  user: string;
+  user_group: string;
+  privilege: string;
+  signature: string;
+  byte_size: string;
+  creator: string;
+  create_at: string;
+}
+

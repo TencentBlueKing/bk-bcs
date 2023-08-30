@@ -38,7 +38,7 @@
     try {
       const params: IConfigListQueryParams = {
         start: 0,
-        limit: 200 // @todo 分页条数待确认
+        all: true
       }
       if (versionData.value.id !== 0) {
         params.release_id = <number>versionData.value.id

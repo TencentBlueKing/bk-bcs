@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { IGroupToPublish } from '../../../../../../../../../../types/group'
-  import { IConfigVersion } from '../../../../../../../../../../types/config'
+  import { IGroupToPublish } from '../../../../../../../../types/group'
+  import { IConfigVersion } from '../../../../../../../../types/config'
   import GroupTree from './tree.vue'
 
   const props = withDefaults(defineProps<{
@@ -10,6 +10,7 @@
     versionListLoading: boolean;
     versionList: IConfigVersion[];
     disabled?: number[];
+    groupType: string;
     value: IGroupToPublish[];
   }>(), {
     groupList: () => [],
@@ -18,9 +19,9 @@
     value: () => []
   })
 
-  const emits = defineEmits(['togglePreviewDelete', 'change'])
+  const emits = defineEmits(['groupTypeChange', 'change'])
 
-  const type = ref('select')
+  const type = ref(props.groupType)
 
   // 选择上线的分组，排除分组需要做取反操作
   const selectedGroup = computed(() => {
@@ -41,12 +42,11 @@
     } else {
       let list: IGroupToPublish[] = []
       if (props.disabled.length > 0) {
-        debugger
         list = props.groupList.filter(group => !props.disabled.includes(group.id))
       }
       handleSelectGroup(list)
     }
-    emits('togglePreviewDelete', val === 'select')
+    emits('groupTypeChange', val)
   }
 
   const handleSelectGroup = (val: IGroupToPublish[]) => {

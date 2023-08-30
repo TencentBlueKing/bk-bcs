@@ -3,7 +3,7 @@
   import { Plus } from 'bkui-vue/lib/icon'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
-  import { IScriptVersion } from '../../../../../types/script'
+  import { IScriptVersionListItem } from '../../../../../types/script'
   import { getScriptVersionList } from '../../../../api/script'
 
   const { spaceId } = storeToRefs(useGlobalStore())
@@ -20,7 +20,7 @@
 
   const popoverShow = ref(false)
   const dialogShow = ref(false)
-  const list = ref<{ id: number; name: string; content: string; }[]>([])
+  const list = ref<IScriptVersionListItem[]>([])
   const listLoading = ref(false)
   const selectedScript = ref<number|string>('')
   const formRef = ref()
@@ -30,14 +30,14 @@
       selectedScript.value = ''
       listLoading.value = true
       const res = await getScriptVersionList(spaceId.value, props.scriptId, { start: 0, all: true })
-      list.value = res.details.map((item: IScriptVersion) => {
-        const { id, spec } = item
+      list.value = res.details.map((item: IScriptVersionListItem) => {
+        const { id, spec } = item.hook_revision
         const name = spec.memo ? `${spec.name}(${spec.memo})` : spec.name
         return { id, name, content: spec.content }
       })
       listLoading.value = false
       if (list.value.length > 0) {
-        selectedScript.value = list.value[0].id
+        selectedScript.value = list.value[0].hook_revision.id
       }
     }
   }
@@ -59,10 +59,10 @@
 
   const handleLoadScript = async() => {
     await formRef.value.validate()
-    const script = list.value.find(item => item.id === selectedScript.value)
+    const script = list.value.find(item => item.hook_revision.id === selectedScript.value)
     if (script) {
       dialogShow.value = false
-      emits('create', script.content)
+      emits('create', script.hook_revision.spec.content)
     }
   }
 
@@ -109,7 +109,7 @@
     <bk-form ref="formRef" form-type="vertical" :model="{ selectedScript }">
       <bk-form-item label="选择载入脚本" required property="selectedScript">
         <bk-select v-model="selectedScript" :loading="listLoading" :clearable="false" :filterable="true" :input-search="false">
-          <bk-option v-for="option in list" v-overflow-title :key="option.id" :value="option.id" :label="option.name"></bk-option>
+          <bk-option v-for="option in list" v-overflow-title :key="option.hook_revision.id" :value="option.hook_revision.id" :label="option.hook_revision.spec.name"></bk-option>
         </bk-select>
       </bk-form-item>
     </bk-form>

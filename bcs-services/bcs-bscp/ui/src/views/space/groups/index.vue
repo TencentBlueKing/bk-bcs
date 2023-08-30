@@ -250,10 +250,12 @@
             </bk-table-column>
             <bk-table-column label="分组状态" :width="100">
               <template #default="{ row }">
-                <span class="group-status">
-                  <div :class="['dot', { 'published': row.released_apps_num > 0 }]"></div>
-                  {{ row.released_apps_num > 0 ? '已上线': '未上线' }}
-                </span>
+                <template v-if="!row.IS_CATEORY_ROW">
+                  <span class="group-status">
+                    <div :class="['dot', { 'published': row.released_apps_num > 0 }]"></div>
+                    {{ row.released_apps_num > 0 ? '已上线': '未上线' }}
+                  </span>
+                </template>
               </template>
             </bk-table-column>
             <bk-table-column label="上线服务数" :width="110">

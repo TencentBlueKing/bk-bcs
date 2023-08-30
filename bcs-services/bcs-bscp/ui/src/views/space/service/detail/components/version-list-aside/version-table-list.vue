@@ -5,6 +5,7 @@
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../../store/config'
   import { getConfigVersionList } from '../../../../../../api/config';
+  import { datetimeFormat } from '../../../../../../utils/index'
   import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config'
   import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
   import VersionDiff from '../../config/components/version-diff/index.vue';
@@ -167,9 +168,9 @@
               {{ row.revision?.creator || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column label="生成时间">
+          <bk-table-column label="生成时间" width="220">
             <template v-slot="{ row }">
-              {{ row.revision?.create_at || '--' }}
+              <span v-if="row.revision">{{ row.revision.create_at ? datetimeFormat(row.revision.create_at) : '--' }}</span>
             </template>
           </bk-table-column>
           <bk-table-column label="状态">

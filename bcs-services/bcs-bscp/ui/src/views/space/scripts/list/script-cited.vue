@@ -3,9 +3,8 @@
   import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
-  import { VERSION_STATUS_MAP } from '../../../../constants/config'
   import { IScriptCiteQuery, IScriptCitedItem } from '../../../../../types/script'
-  import { getScriptCiteList } from '../../../../api/script'
+  import { getScriptCiteList, getScriptVersionCiteList } from '../../../../api/script'
   import SearchInput from '../../../../components/search-input.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
@@ -37,6 +36,7 @@
 
   const getCitedData = async () => {
     loading.value = true
+    let res
     const params: IScriptCiteQuery = {
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit
@@ -45,9 +45,10 @@
       params.searchKey = searchStr.value
     }
     if (props.versionId) {
-      params.release_id = props.versionId
+      res = await getScriptVersionCiteList(spaceId.value, props.id, props.versionId, params)
+    } else {
+      res = await getScriptCiteList(spaceId.value, props.id, params)
     }
-    const res = await getScriptCiteList(spaceId.value, props.id, params)
     list.value = res.details
     pagination.value.count = res.count
     loading.value = false
@@ -88,16 +89,15 @@
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
         @page-change="refreshList">
-        <bk-table-column label="脚本名称" prop="hook_release_name"></bk-table-column>
+        <bk-table-column label="脚本版本">
+          <template #default="{ row }">
+            <template v-if="row.hook_revision_name || row.revision_name">{{ row.hook_revision_name || row.revision_name }}</template>
+          </template>
+        </bk-table-column>
         <bk-table-column label="服务名称" prop="app_name"></bk-table-column>
         <bk-table-column label="配置文件版本">
           <template #default="{ row }">
-            <bk-link v-if="row.config_release_id" class="link-btn" theme="primary" target="_blank" :href="getHref(row.app_id)">{{ row.config_release_name }}</bk-link>
-          </template>
-        </bk-table-column>
-        <bk-table-column label="配置文件版本状态">
-          <template #default="{ row }">
-            <span v-if="row.state">{{ VERSION_STATUS_MAP[row.state as keyof typeof VERSION_STATUS_MAP] }}</span>
+            <bk-link v-if="row.release_name" class="link-btn" theme="primary" target="_blank" :href="getHref(row.app_id)">{{ row.release_name }}</bk-link>
           </template>
         </bk-table-column>
       </bk-table>

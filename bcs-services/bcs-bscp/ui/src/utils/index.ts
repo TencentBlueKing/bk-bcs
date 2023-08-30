@@ -1,5 +1,7 @@
+import dayjs from 'dayjs'
+
 // 字节数转换为对应的显示单位
-export const byteUnitConverse = (size: number) => {
+export const byteUnitConverse = (size: number): string => {
   if (0 <= size && size < 1024) {
     return `${size}B`
   } else if (1024 <= size && size < 1024 * 1024) {
@@ -9,6 +11,7 @@ export const byteUnitConverse = (size: number) => {
   } else if (1024 * 1024 * 1024 <= size) {
     return `${(size / (1024 * 1024 * 1024)).toFixed(1)}GB`
   }
+  return ''
 }
 
 // 字符串内容的字节大小
@@ -31,4 +34,21 @@ export const copyToClipBoard = (content: string) => {
     document.execCommand('copy', true)
     document.body.removeChild($textarea)
   }
+}
+
+// 时间格式化
+export const datetimeFormat = (str: string): string => {
+  return dayjs(str).format('YYYY-MM-DD HH:mm:ss')
+}
+
+// 获取diff类型
+export const getDiffType = (base: string, current: string) => {
+  if (base === '' && current !== '') {
+    return 'add'
+  } else if (base !== '' && current === '') {
+    return 'delete'
+  } else if ( base !== '' && current !== '' && base !== current ) {
+    return 'modify'
+  }
+  return ''
 }

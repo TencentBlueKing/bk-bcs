@@ -65,3 +65,6 @@ url("../assets/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .icon-folder:before {
 	content: "\e10f";
 }
+.icon-setting:before {
+	content: "\e110";
+}

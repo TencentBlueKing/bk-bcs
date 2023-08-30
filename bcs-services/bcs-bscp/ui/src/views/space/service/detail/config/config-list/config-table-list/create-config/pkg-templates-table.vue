@@ -14,10 +14,11 @@
     pkgList: IAllPkgsGroupBySpaceInBiz[];
     pkgId: number;
     expanded: boolean;
+    selectedVersions: { template_id: number; template_revision_id: number; is_latest: boolean; }[];
     disabled?: boolean;
   }>()
 
-  const emits = defineEmits(['delete', 'expand'])
+  const emits = defineEmits(['delete', 'expand', 'selectVersion'])
 
   const listLoading = ref(false)
   const configTemplateList = ref<ITemplateConfigWithVersions[]>([])
@@ -39,6 +40,9 @@
         }
       })
     })
+    if (props.expanded) {
+      getTemplateList()
+    }
   })
 
   const getTemplateList = async () => {
@@ -61,7 +65,7 @@
           const version = template_revisions.find(version => version.template_revision_id === latest_template_revision_id)
           if (version) {
             configTemplate.versions.unshift({
-              id: 0,
+              id: version.template_revision_id,
               name: `latest（当前最新为${version.template_revision_name}）`,
               isLatest: true
             })
@@ -70,6 +74,25 @@
       })
     }
     listLoading.value = false
+  }
+
+  const getVersionSelectVal = (id: number) => {
+    const version = props.selectedVersions.find(item => item.template_id === id)
+    if (version) {
+      return version.is_latest ? 0 : version.template_revision_id
+    }
+    return ''
+  }
+
+  const handleSelectVersion = (tplId: number,versions: { id: number; name: string; isLatest: boolean; }[], val: number) => {
+    const isLatest = val === 0
+    const versionId = isLatest ? versions.find(item => item.isLatest)?.id : val
+    const versionData = {
+      template_id: tplId,
+      template_revision_id: versionId,
+      is_latest: isLatest
+    }
+    emits('selectVersion', versionData)
   }
 
   const handleDeletePkg = () => {
@@ -95,18 +118,27 @@
       <tbody>
         <template v-if="configTemplateList.length > 0">
           <tr v-for="tpl in configTemplateList" :key="tpl.id">
-            <td>{{ tpl.spec.name }}</td>
-            <td>{{ tpl.spec.path }}</td>
+            <td><div class="cell">{{ tpl.spec.name }}</div></td>
+            <td><div class="cell">{{ tpl.spec.path }}</div></td>
             <td class="select-version">
-              <bk-select>
-                <bk-option v-for="version in tpl.versions" :key="version.id" :id="version.id" :label="version.name"></bk-option>
+              <bk-select
+                :clearable="false"
+                :model-value="getVersionSelectVal(tpl.id)"
+                :disabled="props.disabled"
+                @change="handleSelectVersion(tpl.id, tpl.versions, $event)">
+                <bk-option
+                  v-for="version in tpl.versions"
+                  :key="version.isLatest ? 0 : version.id"
+                  :id="version.isLatest ? 0 : version.id"
+                  :label="version.name">
+                </bk-option>
               </bk-select>
             </td>
           </tr>
         </template>
         <tr v-else>
           <td colspan="3">
-            <bk-exception scene="part" type="empty">该套餐下暂无模板</bk-exception>
+            <bk-exception class="empty-tips" scene="part" type="empty">该套餐下暂无模板</bk-exception>
           </td>
         </tr>
       </tbody>
@@ -163,7 +195,6 @@
     width: 100%;
     border-collapse: collapse;
     th,td {
-      padding: 11px 16px;
       line-height: 20px;
       font-size: 12px;
       font-weight: 400;
@@ -171,14 +202,32 @@
       text-align: left;
     }
     th {
+      padding: 11px 16px;
       color: #313238;
+      background: #fafbfd;
     }
     td {
+      padding: 0;
       color: #63656e;
       background: #f5f7fa;
+      .cell {
+        padding: 11px 16px;
+        height: 42px;
+        line-height: 20px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
     .select-version {
       padding: 0;
+      :deep(.bk-input) {
+        height: 42px;
+        border-color: transparent;
+      }
+    }
+    .empty-tips {
+      margin: 20px 0;
     }
   }
 </style>
