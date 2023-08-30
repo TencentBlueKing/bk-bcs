@@ -36,7 +36,8 @@ var (
 )
 
 // BuildInstallGseAgentTaskStep build common watch step
-func BuildInstallGseAgentTaskStep(task *proto.Task, cls *proto.Cluster, group *proto.NodeGroup, passwd string) {
+func BuildInstallGseAgentTaskStep(task *proto.Task, cls *proto.Cluster, group *proto.NodeGroup,
+	passwd string, port string) {
 	installGseStep := cloudprovider.InitTaskStep(installGseAgentStep, cloudprovider.WithStepSkipFailed(true))
 
 	installGseStep.Params[cloudprovider.BKBizIDKey.String()] = cls.BusinessID
@@ -47,6 +48,7 @@ func BuildInstallGseAgentTaskStep(task *proto.Task, cls *proto.Cluster, group *p
 	installGseStep.Params[cloudprovider.PasswordKey.String()] = passwd
 	installGseStep.Params[cloudprovider.SecretKey.String()] = group.GetLaunchTemplate().GetKeyPair().GetKeySecret()
 	installGseStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
+	installGseStep.Params[cloudprovider.PortKey.String()] = port
 
 	task.Steps[installGseAgentStep.StepMethod] = installGseStep
 	task.StepSequence = append(task.StepSequence, installGseAgentStep.StepMethod)
@@ -74,6 +76,8 @@ func InstallGSEAgentTask(taskID string, stepName string) error {
 	passwd := step.Params[cloudprovider.PasswordKey.String()]
 	// get user
 	user := step.Params[cloudprovider.UsernameKey.String()]
+	// get port
+	port := step.Params[cloudprovider.PortKey.String()]
 	if len(user) == 0 {
 		user = nodeman.RootAccount
 	}
@@ -127,7 +131,17 @@ func InstallGSEAgentTask(taskID string, stepName string) error {
 			InnerIP:   v,
 			LoginIP:   v,
 			Account:   user,
-			Port:      nodeman.DefaultPort,
+			Port: func() int {
+				if port == "" {
+					return nodeman.DefaultPort
+				}
+				dPort, err := strconv.Atoi(port)
+				if err != nil {
+					return nodeman.DefaultPort
+				}
+
+				return dPort
+			}(),
 			AuthType: func() nodeman.AuthType {
 				if len(secret) > 0 {
 					return nodeman.KeyAuthType

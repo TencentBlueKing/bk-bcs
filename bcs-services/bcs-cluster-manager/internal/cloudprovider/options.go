@@ -240,6 +240,15 @@ type GetNodesOption struct {
 	CommonOption
 }
 
+// ClusterGroupOption cluster/group option
+type ClusterGroupOption struct {
+	CommonOption
+	// Cluster xxx
+	Cluster *proto.Cluster
+	// Group xxx
+	Group *proto.NodeGroup
+}
+
 // GetClusterOption get cluster option
 type GetClusterOption struct {
 	CommonOption

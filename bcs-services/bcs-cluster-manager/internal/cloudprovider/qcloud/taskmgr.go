@@ -1171,7 +1171,18 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		// step2. check cluster nodes and all nodes status is running
 		updateDesiredNodesTask.BuildCheckClusterNodeStatusStep(task)
 		// install gse agent
-		common.BuildInstallGseAgentTaskStep(task, opt.Cluster, group, passwd)
+		common.BuildInstallGseAgentTaskStep(task, opt.Cluster, group, passwd, func() string {
+			exist := checkIfWhiteImageOsNames(&cloudprovider.ClusterGroupOption{
+				CommonOption: opt.CommonOption,
+				Cluster:      opt.Cluster,
+				Group:        opt.NodeGroup,
+			})
+			if exist {
+				return fmt.Sprintf("%v", utils.ConnectPort)
+			}
+
+			return ""
+		}())
 		// transfer host module
 		moduleID := getTransModuleInfo(opt.AsOption, opt.NodeGroup)
 		if moduleID != "" {

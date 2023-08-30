@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -691,7 +692,9 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 	}
 
 	// cloud nodes addition features
-	la.handleNodes()
+	if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
+		la.handleNodes()
+	}
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
@@ -717,13 +720,17 @@ func (la *ListNodesInClusterAction) handleNodes() {
 
 	// get node zoneName
 	for i := range la.nodes {
-		if len(la.nodes[i].GetZoneName()) > 0 {
-			continue
+		if len(la.nodes[i].GetZoneName()) == 0 {
+			node, ok := instanceMap[la.nodes[i].InnerIP]
+			if ok {
+				la.nodes[i].ZoneName = node.ZoneName
+			}
 		}
-
-		node, ok := instanceMap[la.nodes[i].InnerIP]
-		if ok {
-			la.nodes[i].ZoneName = node.ZoneName
+		if len(la.nodes[i].GetNodeID()) == 0 {
+			node, ok := instanceMap[la.nodes[i].InnerIP]
+			if ok {
+				la.nodes[i].NodeID = node.NodeID
+			}
 		}
 	}
 }

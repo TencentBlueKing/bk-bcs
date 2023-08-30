@@ -182,6 +182,8 @@ var (
 	UsernameKey ParamKey = "username"
 	// SecretKey xxx
 	SecretKey ParamKey = "secret"
+	// PortKey xxx
+	PortKey ParamKey = "port"
 
 	// ScalingNodesNumKey xxx
 	ScalingNodesNumKey ParamKey = "scalingNodesNum"
