@@ -211,7 +211,8 @@ func GetPodLogByte(ctx context.Context, clusterId, namespace, podname string, op
 
 	result := client.CoreV1().Pods(namespace).GetLogs(podname, opts).Do(ctx)
 	if result.Error() != nil {
-		return nil, result.Error()
+		// 错误以log的方式输出
+		return []byte(result.Error().Error()), nil
 	}
 
 	body, err := result.Raw()
