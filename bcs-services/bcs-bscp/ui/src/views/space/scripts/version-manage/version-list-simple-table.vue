@@ -60,7 +60,7 @@
       right: -10px;
       font-size: 12px;
       color: #3a84ff;
-    } 
+    }
   }
 
   .bk-table {

@@ -5,16 +5,20 @@
   import { AngleDown } from 'bkui-vue/lib/icon'
   import { useGlobalStore } from '../store/global'
   import { useUserStore } from '../store/user'
+  import { useTemplateStore } from '../store/template'
   import { ISpaceDetail } from '../../types/index'
 
   const route = useRoute()
   const router = useRouter()
   const { spaceId, spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore())
   const { userInfo } = storeToRefs(useUserStore())
+  const templateStore = useTemplateStore()
 
   const navList = [
     { id: 'service-mine', module: 'service', name: '服务管理'},
     { id: 'groups-management', module: 'groups', name: '分组管理'},
+    { id: 'variables-management', module: 'variables', name: '变量管理'},
+    { id: 'templates-list', module: 'templates', name: '配置模板'},
     { id: 'script-list', module: 'scripts', name: '脚本管理'},
     { id: 'credentials-management', module: 'credentials', name: '服务密钥'}
   ]
@@ -58,11 +62,22 @@
           },
           gen_apply_url: true
         }
-        
+
         showApplyPermDialog.value = true
         return
       }
-      router.push({ name: 'service-mine', params: { spaceId: id } })
+      console.log(route)
+      templateStore.$patch((state) => {
+        state.templateSpaceList = []
+        state.currentTemplateSpace = 0
+        state.currentPkg = ''
+      })
+      const nav = navList.find(item => item.module === route.meta.navModule)
+      if (nav) {
+        router.push({ name: nav.id, params: { spaceId: id } })
+      } else {
+        router.push({ name: 'service-mine', params: { spaceId: id } })
+      }
     }
   }
 

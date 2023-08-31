@@ -92,6 +92,8 @@ func (r release) TableName() string { return r.releaseDo.TableName() }
 
 func (r release) Alias() string { return r.releaseDo.Alias() }
 
+func (r release) Columns(cols ...field.Expr) gen.Columns { return r.releaseDo.Columns(cols...) }
+
 func (r *release) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := r.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -229,10 +231,6 @@ func (r releaseDo) Select(conds ...field.Expr) IReleaseDo {
 
 func (r releaseDo) Where(conds ...gen.Condition) IReleaseDo {
 	return r.withDO(r.DO.Where(conds...))
-}
-
-func (r releaseDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IReleaseDo {
-	return r.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (r releaseDo) Order(conds ...field.Expr) IReleaseDo {

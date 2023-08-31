@@ -42,7 +42,7 @@
     ],
     memo: [
       {
-        validator: (value: string) => value.length < 100,
+        validator: (value: string) => value.length <= 100,
         message: '最大长度100个字符'
       }
     ],

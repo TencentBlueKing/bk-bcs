@@ -1139,6 +1139,30 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/list_by_ids:
+    post:
+      operationId: list_template_space_by_id
+      description: 根据ID查询模版空间
+      tags:
+        - 模版空间
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_spaces/list_by_ids
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates:
     post:
       operationId: create_template
@@ -1233,9 +1257,57 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases:
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/add_to_template_sets:
     post:
-      operationId: create_template_release
+      operationId: add_template_to_template_set
+      description: 添加模版到模版套餐
+      tags:
+        - 模版
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/add_to_template_sets
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/templates/list_by_ids:
+    post:
+      operationId: list_template_by_id
+      description: 根据ID查询模版
+      tags:
+        - 模版
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/templates/list_by_ids
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions:
+    post:
+      operationId: create_template_revision
       description: 创建模版版本
       tags:
         - 模版版本
@@ -1249,7 +1321,7 @@ paths:
         backend:
           type: HTTP
           method: post
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -1258,7 +1330,7 @@ paths:
           userVerifiedRequired: true
         disabledStages: []
     get:
-      operationId: list_template_release
+      operationId: list_template_revision
       description: 查询模版版本列表
       tags:
         - 模版版本
@@ -1272,7 +1344,7 @@ paths:
         backend:
           type: HTTP
           method: get
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions
           matchSubpath: false
           timeout: 0
           upstreams: { }
@@ -1280,9 +1352,9 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/{template_release_id}:
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}:
     delete:
-      operationId: delete_template_release
+      operationId: delete_template_revision
       description: 删除模版版本
       tags:
         - 模版版本
@@ -1296,7 +1368,7 @@ paths:
         backend:
           type: HTTP
           method: delete
-          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/{template_release_id}
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -1304,6 +1376,30 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_revisions/list_by_ids:
+    post:
+      operationId: list_template_revision_by_id
+      description: 根据ID查询模版版本
+      tags:
+        - 模版版本
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_revisions/list_by_ids
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets:
     post:
       operationId: create_template_set
@@ -1391,6 +1487,482 @@ paths:
           type: HTTP
           method: delete
           path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/template_sets:
+    get:
+      operationId: list_app_template_set
+      description: 查询服务可见的模版套餐列表
+      tags:
+        - 模版套餐
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/template_sets
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_sets/list_by_ids:
+    post:
+      operationId: list_template_set_by_id
+      description: 根据ID查询模版套餐
+      tags:
+        - 模版套餐
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_sets/list_by_ids
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings:
+    post:
+      operationId: create_app_template_binding
+      description: 创建服务模版绑定
+      tags:
+        - 服务模版绑定
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+    get:
+      operationId: list_app_template_binding
+      description: 查询服务模版绑定列表
+      tags:
+        - 服务模版绑定
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}:
+    put:
+      operationId: update_app_template_binding
+      description: 更新服务模版绑定
+      tags:
+        - 服务模版绑定
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+    delete:
+      operationId: delete_app_template_binding
+      description: 删除服务模版绑定
+      tags:
+        - 服务模版绑定
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts:
+    post:
+      operationId: list_template_bound_count
+      description: 查询模版被引用计数
+      tags:
+        - 模版引用关系
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts:
+    post:
+      operationId: list_template_revision_bound_count
+      description: 查询模版版本被引用计数
+      tags:
+        - 模版引用关系
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts:
+    post:
+      operationId: list_template_set_bound_count
+      description: 查询套餐被引用计数
+      tags:
+        - 模版引用关系
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details:
+    get:
+      operationId: list_template_bound_unnamed_app_detail
+      description: 查询模版被未命名版本服务引用详情
+      tags:
+        - 模版引用关系
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details:
+    get:
+      operationId: list_template_bound_named_app_detail
+      description: 查询模版被已命名版本服务引用详情
+      tags:
+        - 模版引用关系
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details:
+    get:
+      operationId: list_template_bound_template_set_detail
+      description: 查询模版被模版套餐引用详情
+      tags:
+        - 模版引用关系
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details:
+    get:
+      operationId: list_template_revision_bound_unnamed_app_detail
+      description: 查询模版版本被未命名版本服务引用详情
+      tags:
+        - 模版引用关系
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details:
+    get:
+      operationId: list_template_revision_bound_named_app_detail
+      description: 查询模版版本被已命名版本服务引用详情
+      tags:
+        - 模版引用关系
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details:
+    get:
+      operationId: list_template_set_bound_unnamed_app_detail
+      description: 查询模版套餐被未命名版本服务引用详情
+      tags:
+        - 模版引用关系
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details:
+    get:
+      operationId: list_template_set_bound_named_app_detail
+      description: 查询模版套餐被已命名版本服务引用详情
+      tags:
+        - 模版引用关系
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_variables:
+    post:
+      operationId: create_template_variable
+      description: 创建模版变量
+      tags:
+        - 模版变量
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_variables
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+    get:
+      operationId: list_template_variable
+      description: 查询模版变量列表
+      tags:
+        - 模版变量
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/template_variables
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}:
+    put:
+      operationId: update_template_variable
+      description: 更新模版变量
+      tags:
+        - 模版变量
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+    delete:
+      operationId: delete_template_variable
+      description: 删除模版变量
+      tags:
+        - 模版变量
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}

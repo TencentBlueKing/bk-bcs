@@ -28,3 +28,15 @@ message TemplateSetAttachment {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
 }
+
+// TemplateSetOfBizDetail is template set of biz detail
+message TemplateSetOfBizDetail {
+    message TemplateSetOfBiz {
+        uint32 template_set_id   = 1;
+        string template_set_name = 2;
+    }
+    uint32                    template_space_id   = 1;
+    string                    template_space_name = 2;
+    repeated TemplateSetOfBiz template_sets       = 3;
+
+}

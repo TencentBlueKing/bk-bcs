@@ -100,6 +100,10 @@ func (h hookRevision) TableName() string { return h.hookRevisionDo.TableName() }
 
 func (h hookRevision) Alias() string { return h.hookRevisionDo.Alias() }
 
+func (h hookRevision) Columns(cols ...field.Expr) gen.Columns {
+	return h.hookRevisionDo.Columns(cols...)
+}
+
 func (h *hookRevision) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := h.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -239,10 +243,6 @@ func (h hookRevisionDo) Select(conds ...field.Expr) IHookRevisionDo {
 
 func (h hookRevisionDo) Where(conds ...gen.Condition) IHookRevisionDo {
 	return h.withDO(h.DO.Where(conds...))
-}
-
-func (h hookRevisionDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IHookRevisionDo {
-	return h.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (h hookRevisionDo) Order(conds ...field.Expr) IHookRevisionDo {

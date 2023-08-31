@@ -53,6 +53,8 @@ type Authorizer interface {
 	AppVerified(next http.Handler) http.Handler
 	// BizVerified 业务鉴权
 	BizVerified(next http.Handler) http.Handler
+	// ContentVerified 内容(上传下载)鉴权
+	ContentVerified(next http.Handler) http.Handler
 }
 
 // NewAuthorizer create an authorizer for iam authorize related operation.

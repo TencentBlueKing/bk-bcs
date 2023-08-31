@@ -112,6 +112,8 @@ func (c configItem) TableName() string { return c.configItemDo.TableName() }
 
 func (c configItem) Alias() string { return c.configItemDo.Alias() }
 
+func (c configItem) Columns(cols ...field.Expr) gen.Columns { return c.configItemDo.Columns(cols...) }
+
 func (c *configItem) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := c.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -255,10 +257,6 @@ func (c configItemDo) Select(conds ...field.Expr) IConfigItemDo {
 
 func (c configItemDo) Where(conds ...gen.Condition) IConfigItemDo {
 	return c.withDO(c.DO.Where(conds...))
-}
-
-func (c configItemDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IConfigItemDo {
-	return c.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (c configItemDo) Order(conds ...field.Expr) IConfigItemDo {

@@ -17,6 +17,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -92,6 +93,36 @@ func GetFileSign(r *http.Request) (string, error) {
 	}
 
 	return sign, nil
+}
+
+// GetContentLevelID get content level id, including app id and template space id
+func GetContentLevelID(r *http.Request) (uint32, uint32, error) {
+	appIDStr := r.Header.Get(constant.AppIDHeaderKey)
+	tmplSpaceIDStr := r.Header.Get(constant.TmplSpaceIDHeaderKey)
+
+	if appIDStr == "" && tmplSpaceIDStr == "" {
+		return 0, 0, errors.Errorf("one of %s, %s must be set in header",
+			constant.AppIDHeaderKey, constant.TmplSpaceIDHeaderKey)
+	}
+
+	if appIDStr != "" && tmplSpaceIDStr != "" {
+		return 0, 0, errors.Errorf("only one of %s, %s can be set in header",
+			constant.AppIDHeaderKey, constant.TmplSpaceIDHeaderKey)
+	}
+
+	if appIDStr != "" {
+		appID, err := strconv.Atoi(appIDStr)
+		if err != nil || appID == 0 {
+			return 0, 0, errors.Errorf("not valid %s in header", constant.AppIDHeaderKey)
+		}
+		return uint32(appID), 0, nil
+	}
+
+	tmplSpaceID, err := strconv.Atoi(tmplSpaceIDStr)
+	if err != nil || tmplSpaceID == 0 {
+		return 0, 0, errors.Errorf("not valid %s in header", constant.TmplSpaceIDHeaderKey)
+	}
+	return 0, uint32(tmplSpaceID), nil
 }
 
 type uriDecoratorInter struct {
