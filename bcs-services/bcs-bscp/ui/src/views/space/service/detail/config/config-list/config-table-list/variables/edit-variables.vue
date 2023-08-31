@@ -2,7 +2,7 @@
   import { ref } from 'vue'
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation'
   import VariablesTable from './variables-table.vue';
-  import { IConfigVariableItem } from '../../../../../../../../../types/variable';
+  import { IVariableEditParams } from '../../../../../../../../../types/variable';
   import { getUnReleasedAppVariables, updateUnReleasedAppVariables } from '../../../../../../../../api/variable'
 
   const props = defineProps<{
@@ -12,7 +12,7 @@
 
   const isSliderShow = ref(false)
   const loading = ref(false)
-  const variableList = ref<IConfigVariableItem[]>([])
+  const variableList = ref<IVariableEditParams[]>([])
   const isFormChange = ref(false)
   const pending = ref(false)
 

@@ -1,6 +1,6 @@
 import http from "../request"
 import { ICommonQuery } from "../../types/index"
-import { IVariableEditParams, IConfigVariableItem } from '../../types/variable'
+import { IVariableEditParams } from '../../types/variable'
 
 /**
  * 查询变量列表
@@ -59,7 +59,7 @@ export const getUnReleasedAppVariables = (biz_id: string, app_id: number) => {
  * @param app_id 应用ID
  * @returns
  */
-export const updateUnReleasedAppVariables = (biz_id: string, app_id: number, variables: IConfigVariableItem[]) => {
+export const updateUnReleasedAppVariables = (biz_id: string, app_id: number, variables: IVariableEditParams[]) => {
   return http.put(`/config/biz/${biz_id}/apps/${app_id}/template_variables`, { variables }).then(res => res.data)
 }
 

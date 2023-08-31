@@ -18,15 +18,8 @@ export interface IVariableItem {
   };
 }
 
-export interface IVariableEditParams {
-  name: string;
-  type: string;
-  default_val: string;
-  memo: string;
-}
-
 // 服务中使用的变量详情
-export interface IConfigVariableItem {
+export interface IVariableEditParams {
   name: string;
   type: string;
   default_val: string;

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
   import VariablesTable from './variables-table.vue';
-  import { IConfigVariableItem } from '../../../../../../../../../types/variable';
+  import { IVariableEditParams } from '../../../../../../../../../types/variable';
   import { getReleasedAppVariables } from '../../../../../../../../api/variable'
 
   const props = defineProps<{
@@ -12,7 +12,7 @@
 
   const isSliderShow = ref(false)
   const loading = ref(false)
-  const variableList = ref<IConfigVariableItem[]>([])
+  const variableList = ref<IVariableEditParams[]>([])
 
   const getVariableList = async() => {
     loading.value = true

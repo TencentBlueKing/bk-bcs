@@ -1,9 +1,9 @@
 <script lang="ts" setup>
   import { onMounted, ref, computed } from 'vue'
-  import { IConfigVariableItem } from '../../../../../../../../../types/variable';
+  import { IVariableEditParams } from '../../../../../../../../../types/variable';
 
   const props = withDefaults(defineProps<{
-    list: IConfigVariableItem[];
+    list: IVariableEditParams[];
     editable: boolean;
     showCited: boolean;
   }>(), {
@@ -11,7 +11,7 @@
     showCited: false
   })
 
-  const variables = ref<IConfigVariableItem[]>([])
+  const variables = ref<IVariableEditParams[]>([])
 
   const cols = computed(() => {
     const tableCols = [
