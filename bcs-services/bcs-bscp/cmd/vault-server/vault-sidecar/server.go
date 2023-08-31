@@ -71,7 +71,7 @@ func runServerCmd() error {
 		return err
 	}
 	conf := vaultConf{}
-	if err := yaml.Unmarshal(confIn, conf); err != nil {
+	if err := yaml.Unmarshal(confIn, &conf); err != nil {
 		return err
 	}
 
