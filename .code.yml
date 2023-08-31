@@ -20,6 +20,9 @@ source:
       - /bcs-services/bcs-mesh-manager/config/options.go
       - /bcs-services/bcs-upgrader/upgrades/u1.21.202203082112/migrate.go
       - /bcs-services/bcs-upgrader/upgrades/u1.21.202203082112/types.go
+      - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks/createNodeGroup.go
+      - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks/createClusterTask.go
+      - /bcs-services/bcs-cluster-manager/internal/remote/resource/tresource/resource.go
 
       # Security & Sensitive: it's safe to ignore
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16/go.mod
@@ -36,6 +39,7 @@ source:
       # Misc
       - /bcs-scenarios/kourse
       - /bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1/gamedeployment.go
+      - /bcs-common/pkg/bcsapiv4/storage/tkex/gamedeployment/v1alpha1/gamedeployment.go
       - /bcs-common/pkg/esb/apigateway/bkdata/types.go
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core/scale_up.go
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator/drain.go

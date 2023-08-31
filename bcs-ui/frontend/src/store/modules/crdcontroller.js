@@ -37,7 +37,6 @@ import {
   updateLogCollect,
   deleteLogCollect,
   retrieveLogCollect,
-  getLogLinks,
 } from '@/api/base';
 
 export default {
@@ -247,10 +246,6 @@ export default {
     },
     async retrieveLogCollect(ctx, params) {
       const data = await retrieveLogCollect(params).catch(() => ({}));
-      return data;
-    },
-    async getLogLinks(ctx, params) {
-      const data = await getLogLinks(params);
       return data;
     },
   },

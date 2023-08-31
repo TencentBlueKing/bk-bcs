@@ -4,6 +4,8 @@
   import { useConfigStore } from '../../../../../../../store/config'
   import SearchInput from '../../../../../../../components/search-input.vue';
   import CreateConfig from './create-config/index.vue'
+  import EditVariables from './variables/edit-variables.vue'
+  import ViewVariables from './variables/view-variables.vue'
   import TableWithTemplates from './tables/table-with-templates.vue';
   import TableWithPagination from './tables/table-with-pagination.vue';
 
@@ -30,12 +32,23 @@
 <template>
   <section class="config-list-wrapper">
     <div class="operate-area">
-      <CreateConfig
-        v-if="versionData.status.publish_status === 'editing'"
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        @created="refreshConfigList"
-        @imported="refreshConfigList" />
+      <div class="operate-btns">
+        <template v-if="versionData.status.publish_status === 'editing'">
+          <CreateConfig
+            :bk-biz-id="props.bkBizId"
+            :app-id="props.appId"
+            @created="refreshConfigList"
+            @imported="refreshConfigList" />
+          <EditVariables
+            :bk-biz-id="props.bkBizId"
+            :app-id="props.appId"/>
+        </template>
+        <ViewVariables
+          v-else
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :verision-id="versionData.id"/>
+      </div>
       <div class="groups-info" v-if="versionData.status.released_groups.length > 0">
         <div v-for="group in versionData.status.released_groups" class="group-item" :key="group.id">
           {{ group.name }}
@@ -63,6 +76,13 @@
     display: flex;
     align-items: center;
     padding: 16px 0;
+    .operate-btns {
+      display: flex;
+      align-items: center;
+      :deep(.create-config-btn) {
+        margin-right: 8px;
+      }
+    }
     .groups-info {
       display: flex;
       align-items: center;

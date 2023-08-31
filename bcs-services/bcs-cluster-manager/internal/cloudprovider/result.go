@@ -15,13 +15,14 @@ package cloudprovider
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var (
@@ -35,14 +36,22 @@ type JobType string
 var (
 	// CreateClusterJob for createCluster job
 	CreateClusterJob JobType = "create-cluster"
+	// CreateVirtualClusterJob create virtual job
+	CreateVirtualClusterJob JobType = "create-virtual-cluster"
 	// ImportClusterJob for importCluster job
 	ImportClusterJob JobType = "import-cluster"
 	// DeleteClusterJob for deleteCluster job
 	DeleteClusterJob JobType = "delete-cluster"
+	// DeleteVirtualClusterJob for deleteVirtualCluster job
+	DeleteVirtualClusterJob JobType = "delete-virtual-cluster"
 	// AddNodeJob for addNodes job
 	AddNodeJob JobType = "add-node"
 	// DeleteNodeJob for deleteNodes job
 	DeleteNodeJob JobType = "delete-node"
+	// AddExternalNodeJob for addNodes job
+	AddExternalNodeJob JobType = "add-external-node"
+	// DeleteExternalNodeJob for deleteNodes job
+	DeleteExternalNodeJob JobType = "delete-external-node"
 
 	// CreateNodeGroupJob for createNodeGroup job
 	CreateNodeGroupJob JobType = "create-nodegroup"
@@ -54,6 +63,7 @@ var (
 	UpdateNodeGroupDesiredNodeJob JobType = "update-nodegroup-desired-node"
 	// CleanNodeGroupNodesJob for cleanNodeGroupNodes job
 	CleanNodeGroupNodesJob JobType = "clean-nodegroup-nodes"
+
 	// MoveNodesToNodeGroupJob for moveNodesToNodeGroup job
 	MoveNodesToNodeGroupJob JobType = "move-nodes-to-nodegroup"
 	// SwitchNodeGroupAutoScalingJob for switchNodeGroupAutoScaling job
@@ -64,7 +74,7 @@ var (
 	SwitchAutoScalingOptionStatusJob JobType = "switch-autoscalingoption-status"
 )
 
-// String to string
+// String xxx
 func (jt JobType) String() string {
 	return string(jt)
 }
@@ -96,32 +106,39 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 		sjr.TaskID, sjr.JobType, isSuccess, sjr.ClusterID, sjr.NodeIPs)
 
 	switch sjr.JobType {
-	case CreateClusterJob:
+	case CreateClusterJob, CreateVirtualClusterJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusCreateClusterFailed)
 		return sjr.updateClusterResultStatus(isSuccess)
-	case DeleteClusterJob:
+	case DeleteClusterJob, DeleteVirtualClusterJob:
 		sjr.Status = generateStatusResult(common.StatusDeleted, common.StatusDeleteClusterFailed)
 		return sjr.updateClusterResultStatus(isSuccess)
-	case AddNodeJob:
+	// 上架节点
+	case AddNodeJob, AddExternalNodeJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusAddNodesFailed)
 		return sjr.updateNodesResultStatus(isSuccess)
-	case DeleteNodeJob:
+	// 下架节点
+	case DeleteNodeJob, DeleteExternalNodeJob:
 		sjr.Status = generateStatusResult("", common.StatusRemoveNodesFailed)
 		return sjr.deleteNodesResultStatus(isSuccess)
 	case ImportClusterJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusImportClusterFailed)
 		return sjr.updateClusterResultStatus(isSuccess)
+	// CA 扩容节点
 	case UpdateNodeGroupDesiredNodeJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusAddNodesFailed)
 		return sjr.updateCANodesResultStatus(isSuccess)
+	// CA 缩容节点
 	case CleanNodeGroupNodesJob:
-		sjr.Status = generateStatusResult("", common.StatusRemoveNodesFailed)
+		sjr.Status = generateStatusResult("", common.StatusRemoveCANodesFailed)
 		return sjr.deleteCANodesResultStatus(isSuccess)
 	case DeleteNodeGroupJob:
 		sjr.Status = generateStatusResult("", common.StatusDeleteNodeGroupFailed)
 		return sjr.updateDeleteNodeGroupStatus(isSuccess)
 	case CreateNodeGroupJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusCreateNodeGroupFailed)
+		return sjr.updateNodeGroupStatus(isSuccess)
+	case UpdateNodeGroupJob:
+		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusNodeGroupUpdateFailed)
 		return sjr.updateNodeGroupStatus(isSuccess)
 	case SwitchNodeGroupAutoScalingJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusNodeGroupUpdateFailed)
@@ -146,8 +163,11 @@ func generateStatusResult(successStatus string, failStatus string) StatusResult 
 
 func (sjr *SyncJobResult) deleteCANodesResultStatus(isSuccess bool) error {
 	if len(sjr.NodeIPs) == 0 {
-		return fmt.Errorf("SyncJobResult deleteCANodesResultStatus failed: %v", "NodeIPs is empty")
+		return fmt.Errorf("SyncJobResult[%s] deleteCANodesResultStatus failed: %v", sjr.TaskID, "NodeIPs is empty")
 	}
+
+	blog.Infof("SyncJobResult[%s] deleteCANodesResultStatus[%v] %s:%s", sjr.TaskID,
+		isSuccess, sjr.Status.Success, sjr.Status.Failure)
 
 	if isSuccess {
 		blog.Infof("task[%s] deleteCANodesResultStatus isSuccess[%v] InnerIPs[%v]", sjr.TaskID, isSuccess, sjr.NodeIPs)
@@ -155,10 +175,11 @@ func (sjr *SyncJobResult) deleteCANodesResultStatus(isSuccess bool) error {
 		if err != nil {
 			blog.Errorf("task[%s] deleteCANodesResultStatus failed: %v", sjr.TaskID, err)
 		}
-		return deleteNodesByNodeIPs(sjr.NodeIPs)
+
+		return sjr.deleteClusterNodesByIP(sjr.ClusterID, sjr.NodeIPs)
 	}
 
-	return sjr.updateNodeStatusByIP(sjr.NodeIPs, sjr.Status.Failure)
+	return sjr.updateNodeStatusByIP(sjr.ClusterID, sjr.NodeIPs, sjr.Status.Failure)
 }
 
 func (sjr *SyncJobResult) updateNodeGroupDesiredNum() error {
@@ -169,8 +190,7 @@ func (sjr *SyncJobResult) updateNodeGroupDesiredNum() error {
 
 	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
 	if err != nil {
-		return fmt.Errorf("task[%s] updateNodeGroupDesiredNum get NodeGroup[%s] failed %s", sjr.TaskID, nodeGroupID,
-			err.Error())
+		return fmt.Errorf("task[%s] updateNodeGroupDesiredNum get NodeGroup[%s] failed %s", sjr.TaskID, nodeGroupID, err.Error())
 	}
 
 	blog.Infof("task[%s] update nodeGroup current[%d] clean[%d]", sjr.TaskID,
@@ -200,18 +220,23 @@ func (sjr *SyncJobResult) deleteNodesResultStatus(isSuccess bool) error {
 	}
 
 	if isSuccess {
-		return deleteNodesByNodeIPs(sjr.NodeIPs)
+		return sjr.deleteClusterNodesByIP(sjr.ClusterID, sjr.NodeIPs)
 	}
 
-	return sjr.updateNodeStatusByIP(sjr.NodeIPs, sjr.Status.Failure)
+	return sjr.updateNodeStatusByIP(sjr.ClusterID, sjr.NodeIPs, sjr.Status.Failure)
 }
 
-func deleteNodesByNodeIPs(nodeIPs []string) error {
-	return GetStorageModel().DeleteNodesByIPs(context.Background(), nodeIPs)
-}
+func (sjr *SyncJobResult) deleteClusterNodesByIP(clusterID string, nodeIPs []string) error {
+	for _, ip := range nodeIPs {
+		err := GetStorageModel().DeleteClusterNodeByIP(context.Background(), clusterID, ip)
+		if err != nil {
+			blog.Errorf("deleteClusterNodesByIP[%s] cluster&IP[%s:%s] failed: %v", sjr.TaskID, clusterID, ip, err)
+			continue
+		}
+		blog.Infof("deleteClusterNodesByIP[%s] cluster&IP[%s:%s]", sjr.TaskID, clusterID, ip)
+	}
 
-func deleteNodesByNodeIDs(nodeIDs []string) error {
-	return GetStorageModel().DeleteNodesByNodeIDs(context.Background(), nodeIDs)
+	return nil
 }
 
 func (sjr *SyncJobResult) updateClusterResultStatus(isSuccess bool) error {
@@ -235,14 +260,16 @@ func (sjr *SyncJobResult) updateClusterResultStatus(isSuccess bool) error {
 
 func (sjr *SyncJobResult) updateCANodesResultStatus(isSuccess bool) error {
 	if len(sjr.NodeIPs) == 0 {
-		return fmt.Errorf("SyncJobResult updateCANodesResultStatus failed: %v", "NodeIPs is empty")
+		return fmt.Errorf("SyncJobResult[%s] updateCANodesResultStatus failed: %v", sjr.TaskID, "NodeIPs is empty")
 	}
+
+	blog.Infof("SyncJobResult[%s] updateCANodesResultStatus %s %s", sjr.TaskID, sjr.Status.Failure, sjr.Status.Success)
 
 	if !isSuccess {
-		return sjr.updateNodeStatusByIP(sjr.NodeIPs, sjr.Status.Failure)
+		return sjr.updateNodeStatusByIP(sjr.ClusterID, sjr.NodeIPs, sjr.Status.Failure)
 	}
 
-	return sjr.updateNodeStatusByIP(sjr.NodeIPs, sjr.Status.Success)
+	return sjr.updateNodeStatusByIP(sjr.ClusterID, sjr.NodeIPs, sjr.Status.Success)
 }
 
 func (sjr *SyncJobResult) updateAutoScalingStatus(isSuccess bool) error {
@@ -257,10 +284,12 @@ func (sjr *SyncJobResult) updateAutoScalingStatus(isSuccess bool) error {
 	if !option.EnableAutoscale {
 		sjr.Status.Success = common.StatusAutoScalingOptionStopped
 	}
+
 	task, err := GetStorageModel().GetTask(context.Background(), sjr.TaskID)
 	if err != nil {
 		return err
 	}
+
 	if isSuccess {
 		option.Status = sjr.Status.Success
 		option.ErrorMessage = ""
@@ -316,9 +345,13 @@ func (sjr *SyncJobResult) updateDeleteNodeGroupStatus(isSuccess bool) error {
 // deleteNodeGroupByID delete nodegroup by ID
 func (sjr *SyncJobResult) deleteNodeGroupByID(nodeGroupID string) error {
 	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
+
 	blog.Infof("task[%s] nodeGroup[%s] status[%s]", sjr.TaskID, nodeGroupID, group.Status)
 	err = GetStorageModel().DeleteNodeGroup(context.Background(), nodeGroupID)
 	if err != nil {
@@ -361,32 +394,36 @@ func (sjr *SyncJobResult) updateNodesResultStatus(isSuccess bool) error {
 	}
 
 	if len(sjr.NodeIPs) > 0 {
-		return sjr.updateNodeStatusByIP(sjr.NodeIPs, getStatus())
+		return sjr.updateNodeStatusByIP(sjr.ClusterID, sjr.NodeIPs, getStatus())
 	}
 
-	return sjr.updateNodeStatusByNodeID(sjr.NodeIDs, getStatus())
+	return sjr.updateNodeStatusByNodeID(sjr.ClusterID, sjr.NodeIDs, getStatus())
 }
 
-// updateNodeStatusByIP set node status
-func (sjr *SyncJobResult) updateNodeStatusByIP(ipList []string, status string) error {
+// updateNodeStatus set node status
+func (sjr *SyncJobResult) updateNodeStatusByIP(clusterID string, ipList []string, status string) error {
 	if len(ipList) == 0 {
 		return nil
 	}
 
+	blog.Infof("SyncJobResult[%s] updateNodeStatusByIP status[%s] ipList[%+v]", sjr.TaskID, status, ipList)
+
 	for _, ip := range ipList {
-		node, err := GetStorageModel().GetNodeByIP(context.Background(), ip)
+		node, err := GetStorageModel().GetClusterNodeByIP(context.Background(), clusterID, ip)
 		if err != nil {
+			blog.Errorf("SyncJobResult[%s] updateNodeStatusByIP GetNodeByIP[%s] failed: %v", sjr.TaskID, ip, err)
 			continue
 		}
 		blog.Infof("task[%s] nodeIP[%s] status[%s]", sjr.TaskID, ip, node.Status)
-		if node.Status == status || utils.StringInSlice(node.Status, []string{common.StatusAddNodesFailed,
-			common.StatusRunning}) {
+
+		if node.Status == status {
 			continue
 		}
 
 		node.Status = status
 		err = GetStorageModel().UpdateNode(context.Background(), node)
 		if err != nil {
+			blog.Errorf("SyncJobResult[%s] updateNodeStatusByIP UpdateNode[%s] failed: %v", sjr.TaskID, ip, err)
 			continue
 		}
 	}
@@ -395,19 +432,18 @@ func (sjr *SyncJobResult) updateNodeStatusByIP(ipList []string, status string) e
 }
 
 // updateNodeStatusByNodeID set node status
-func (sjr *SyncJobResult) updateNodeStatusByNodeID(idList []string, status string) error {
+func (sjr *SyncJobResult) updateNodeStatusByNodeID(clusterID string, idList []string, status string) error {
 	if len(idList) == 0 {
 		return nil
 	}
 
 	for _, id := range idList {
-		node, err := GetStorageModel().GetNode(context.Background(), id)
+		node, err := GetStorageModel().GetClusterNode(context.Background(), clusterID, id)
 		if err != nil {
 			continue
 		}
 		blog.Infof("task[%s] nodeIP[%s] status[%s]", sjr.TaskID, id, node.Status)
-		if node.Status == status || utils.StringInSlice(node.Status, []string{common.StatusAddNodesFailed,
-			common.StatusRunning}) {
+		if node.Status == status {
 			continue
 		}
 
@@ -428,7 +464,7 @@ func NewJobSyncResult(task *cmproto.Task) *SyncJobResult {
 		JobType:     JobType(task.CommonParams[JobTypeKey.String()]),
 		ClusterID:   task.ClusterID,
 		NodeGroupID: task.NodeGroupID,
-		NodeIPs:     strings.Split(task.CommonParams[NodeIPsKey.String()], ","),
-		NodeIDs:     strings.Split(task.CommonParams[NodeIDsKey.String()], ","),
+		NodeIPs:     ParseNodeIpOrIdFromCommonMap(task.CommonParams, NodeIPsKey.String(), ","),
+		NodeIDs:     ParseNodeIpOrIdFromCommonMap(task.CommonParams, NodeIDsKey.String(), ","),
 	}
 }

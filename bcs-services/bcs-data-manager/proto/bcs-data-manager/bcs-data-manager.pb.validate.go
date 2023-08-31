@@ -6412,3 +6412,256 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = PodAutoscalerMetricsValidationError{}
+
+// Validate checks the field values on GetPowerTradingDataRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetPowerTradingDataRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetPowerTradingDataRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetPowerTradingDataRequestMultiError, or nil if none found.
+func (m *GetPowerTradingDataRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetPowerTradingDataRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Table
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
+	// no validation rules for Params
+
+	// no validation rules for Sort
+
+	if len(errors) > 0 {
+		return GetPowerTradingDataRequestMultiError(errors)
+	}
+	return nil
+}
+
+// GetPowerTradingDataRequestMultiError is an error wrapping multiple
+// validation errors returned by GetPowerTradingDataRequest.ValidateAll() if
+// the designated constraints aren't met.
+type GetPowerTradingDataRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetPowerTradingDataRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetPowerTradingDataRequestMultiError) AllErrors() []error { return m }
+
+// GetPowerTradingDataRequestValidationError is the validation error returned
+// by GetPowerTradingDataRequest.Validate if the designated constraints aren't met.
+type GetPowerTradingDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetPowerTradingDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetPowerTradingDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetPowerTradingDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetPowerTradingDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetPowerTradingDataRequestValidationError) ErrorName() string {
+	return "GetPowerTradingDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetPowerTradingDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetPowerTradingDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetPowerTradingDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetPowerTradingDataRequestValidationError{}
+
+// Validate checks the field values on GetPowerTradingDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetPowerTradingDataResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetPowerTradingDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetPowerTradingDataResponseMultiError, or nil if none found.
+func (m *GetPowerTradingDataResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetPowerTradingDataResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Total
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetPowerTradingDataResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetPowerTradingDataResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetPowerTradingDataResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetPowerTradingDataResponseMultiError(errors)
+	}
+	return nil
+}
+
+// GetPowerTradingDataResponseMultiError is an error wrapping multiple
+// validation errors returned by GetPowerTradingDataResponse.ValidateAll() if
+// the designated constraints aren't met.
+type GetPowerTradingDataResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetPowerTradingDataResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetPowerTradingDataResponseMultiError) AllErrors() []error { return m }
+
+// GetPowerTradingDataResponseValidationError is the validation error returned
+// by GetPowerTradingDataResponse.Validate if the designated constraints
+// aren't met.
+type GetPowerTradingDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetPowerTradingDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetPowerTradingDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetPowerTradingDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetPowerTradingDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetPowerTradingDataResponseValidationError) ErrorName() string {
+	return "GetPowerTradingDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetPowerTradingDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetPowerTradingDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetPowerTradingDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetPowerTradingDataResponseValidationError{}

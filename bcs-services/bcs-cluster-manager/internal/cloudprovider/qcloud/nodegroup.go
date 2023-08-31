@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -24,8 +25,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	intercommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
+	"github.com/avast/retry-go"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -35,7 +41,7 @@ var groupMgr sync.Once
 
 func init() {
 	groupMgr.Do(func() {
-		// init Node
+		//init Node
 		cloudprovider.InitNodeGroupManager(cloudName, &NodeGroup{})
 	})
 }
@@ -47,6 +53,20 @@ type NodeGroup struct {
 // CreateNodeGroup create nodegroup by cloudprovider api, only create NodeGroup entity
 func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (
 	*proto.Task, error) {
+
+	// handler external nodes
+	if group.NodeGroupType == intercommon.External.String() {
+		nodePoolID, err := createExternalNodePool(group, opt)
+		if err != nil {
+			blog.Errorf("CreateNodeGroup createExternalNodePool failed: %v", err)
+			return nil, err
+		}
+		group.CloudNodeGroupID = nodePoolID
+
+		return nil, nil
+	}
+
+	// normal nodePool
 	mgr, err := cloudprovider.GetTaskManager(cloudName)
 	if err != nil {
 		blog.Errorf("get cloud %s TaskManager when CreateNodeGroup %s failed, %s",
@@ -54,6 +74,7 @@ func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 		)
 		return nil, err
 	}
+	// build createNodeGroup task
 	task, err := mgr.BuildCreateNodeGroupTask(group, opt)
 	if err != nil {
 		blog.Errorf("build CreateNodeGroup task for cluster %s with cloudprovider %s failed, %s",
@@ -68,6 +89,19 @@ func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 // will be released. Task is background automatic task
 func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
+	// external nodePool
+	if group.NodeGroupType == intercommon.External.String() {
+		err := deleteExternalNodePool(group, opt)
+		if err != nil {
+			blog.Errorf("DeleteNodeGroup deleteExternalNodePool failed: %v", err)
+			return nil, err
+		}
+
+		blog.Infof("DeleteNodeGroup[%s:%s] deleteExternalNodePool successful",
+			group.NodeGroupID, group.CloudNodeGroupID)
+		return nil, nil
+	}
+
 	mgr, err := cloudprovider.GetTaskManager(cloudName)
 	if err != nil {
 		blog.Errorf("get cloud %s TaskManager when DeleteNodeGroup %s failed, %s",
@@ -75,6 +109,7 @@ func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node
 		)
 		return nil, err
 	}
+	// build Delete nodeGroup task
 	task, err := mgr.BuildDeleteNodeGroupTask(group, nodes, opt)
 	if err != nil {
 		blog.Errorf("build DeleteNodeGroup task for cluster %s with cloudprovider %s failed, %s",
@@ -86,60 +121,187 @@ func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node
 }
 
 // UpdateNodeGroup update specified nodegroup configuration
-func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
-	_, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), group.Provider, group.ClusterID)
+func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.UpdateNodeGroupOption) (
+	*proto.Task, error) {
+	if group == nil || opt == nil {
+		return nil, fmt.Errorf("UpdateNodeGroup group or opt is nil")
+	}
+	if group.NodeGroupID == "" || group.ClusterID == "" {
+		blog.Errorf("nodegroup id or cluster id is empty")
+		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
+	}
+
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: group.ClusterID,
+		CloudID:   group.Provider,
+	})
+	if err != nil {
+		blog.Errorf("get cluster %s failed, %s", group.ClusterID, err.Error())
+		return nil, err
+	}
+
+	// external nodePool
+	if group.NodeGroupType == intercommon.External.String() {
+		err = ng.updateExternalNodePool(dependInfo.Cluster.SystemID, group, &opt.CommonOption)
+		if err != nil {
+			blog.Errorf("UpdateNodeGroup[%s] updateExternalNodePool failed: %v", group.NodeGroupID, err)
+			return nil, err
+		}
+		blog.Infof("UpdateNodeGroup[%s] updateExternalNodePool successful", group.NodeGroupID)
+
+		return nil, nil
+	}
+
+	// update normal nodePool
+	err = ng.updateNormalNodePool(dependInfo.Cluster.SystemID, group, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("UpdateNodeGroup[%s] updateNormalNodePool failed: %v", group.NodeGroupID, err)
+		return nil, err
+	}
+	blog.Infof("UpdateNodeGroup[%s] updateNormalNodePool successful", group.NodeGroupID)
+
+	// build task
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when BuildUpdateNodeGroupTask in NodeGroup %s failed, %s",
+			opt.Cloud.CloudProvider, group.NodeGroupID, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildUpdateNodeGroupTask(group, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("BuildUpdateNodeGroupTask failed: %v", err)
+		return nil, err
+	}
+
+	return task, nil
+}
+
+// updateExternalNodePool update external nodePool
+func (ng *NodeGroup) updateExternalNodePool(systemID string, group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
+	tkeCli, err := api.NewTkeClient(opt)
+	if err != nil {
+		blog.Errorf("updateExternalNodePool NewTkeClient failed, err: %s", err.Error())
+		return err
+	}
+
+	// tke external only support modify nodePoolName / labels / taints
+	err = retry.Do(func() error {
+		errModify := tkeCli.ModifyExternalNodePool(systemID, api.ModifyExternalNodePoolConfig{
+			NodePoolId: group.GetCloudNodeGroupID(),
+			Name:       group.Name,
+			Labels: func() []*api.Label {
+				if group.NodeTemplate == nil {
+					return nil
+				}
+				return api.MapToLabels(group.NodeTemplate.Labels)
+			}(),
+			Taints: func() []*api.Taint {
+				if group.NodeTemplate == nil {
+					return nil
+				}
+				return api.MapToTaints(group.NodeTemplate.Taints)
+			}(),
+		})
+		if errModify != nil {
+			blog.Errorf("updateExternalNodePool[%s] ModifyExternalNodePool failed: %v",
+				group.CloudNodeGroupID, errModify)
+			return errModify
+		}
+
+		return nil
+	}, retry.Attempts(3))
+	if err != nil {
+		blog.Errorf("updateExternalNodePool[%s] ModifyExternalNodePool failed: %v", group.CloudNodeGroupID, err)
+		return err
+	}
+
+	blog.Errorf("updateExternalNodePool[%s] ModifyExternalNodePool successful", group.CloudNodeGroupID)
+	return nil
+}
+
+// updateNormalNodePool update normal nodePool
+func (ng *NodeGroup) updateNormalNodePool(systemID string, group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: group.ClusterID,
+		CloudID:   group.Provider,
+	})
 	if err != nil {
 		blog.Errorf("get cluster %s failed, %s", group.ClusterID, err.Error())
 		return err
 	}
 	tkeCli, err := api.NewTkeClient(opt)
 	if err != nil {
-		blog.Errorf("create tke client failed, err: %s", err.Error())
+		blog.Errorf("updateNormalNodePool NewTkeClient failed, err: %s", err.Error())
 		return err
-	}
-	asCli, err := api.NewASClient(opt)
-	if err != nil {
-		blog.Errorf("create as client failed, err: %s", err.Error())
-		return err
-	}
-	if group.NodeGroupID == "" || group.ClusterID == "" {
-		blog.Errorf("nodegroup id or cluster id is empty")
-		return fmt.Errorf("nodegroup id or cluster id is empty")
 	}
 
 	// modify node pool
-	if err := tkeCli.ModifyClusterNodePool(ng.generateModifyClusterNodePoolInput(group, cluster.SystemID)); err != nil {
+	if err = tkeCli.ModifyClusterNodePool(ng.generateModifyClusterNodePoolInput(group, systemID)); err != nil {
 		return err
 	}
+	/*
+		// as client
+		asCli, err := api.NewASClient(opt)
+		if err != nil {
+			blog.Errorf("updateNormalNodePool NewASClient failed, err: %s", err.Error())
+			return err
+		}
+		// modify asg
+		if err = asCli.ModifyAutoScalingGroup(ng.generateModifyAutoScalingGroupInput(group)); err != nil {
+			return err
+		}
 
-	// modify asg
-	if err := asCli.ModifyAutoScalingGroup(ng.generateModifyAutoScalingGroupInput(group)); err != nil {
-		return err
+		// modify launch config
+		if err = asCli.UpgradeLaunchConfiguration(ng.generateUpgradeLaunchConfInput(group)); err != nil {
+			return err
+		}
+	*/
+	// update bkCloudName
+	if group.Area == nil {
+		group.Area = &proto.CloudArea{}
 	}
+	group.Area.BkCloudName = cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
 
-	// modify launch config
-	if err := asCli.UpgradeLaunchConfiguration(ng.generateUpgradeLaunchConfInput(group)); err != nil {
-		return err
-	}
-
-	// update node module
+	// module info
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
-		bkBizID, _ := strconv.Atoi(cluster.BusinessID)
+		bkBizID, _ := strconv.Atoi(dependInfo.Cluster.BusinessID)
 		bkModuleID, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
 		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
 	}
 
 	// update imageName
-	if err := ng.updateImageInfo(group); err != nil {
+	if err = ng.updateImageInfo(group); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup,
-	clusterID string) *tke.ModifyClusterNodePoolRequest {
+// update image info
+func (ng *NodeGroup) updateImageInfo(group *proto.NodeGroup) error {
+	if group.LaunchTemplate == nil || group.LaunchTemplate.ImageInfo == nil {
+		return nil
+	}
+
+	// image info
+	imageName := group.LaunchTemplate.ImageInfo.ImageName
+	for _, v := range utils.ImageOsList {
+		if v.ImageID == group.LaunchTemplate.ImageInfo.ImageID {
+			imageName = v.Alias
+			break
+		}
+	}
+	if imageName == group.LaunchTemplate.ImageInfo.ImageName {
+		return nil
+	}
+	group.LaunchTemplate.ImageInfo.ImageName = imageName
+	return cloudprovider.GetStorageModel().UpdateNodeGroup(context.TODO(), group)
+}
+
+// generateModifyClusterNodePoolInput modify nodePool info
+func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string) *tke.ModifyClusterNodePoolRequest {
 	// modify nodegroup
 	req := tke.NewModifyClusterNodePoolRequest()
 	req.ClusterId = &clusterID
@@ -151,18 +313,39 @@ func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup,
 	}
 	req.Tags = api.MapToCloudTags(group.Tags)
 	req.EnableAutoscale = common.BoolPtr(false)
+
+	if group.AutoScaling != nil {
+		req.MinNodesNum = common.Int64Ptr(int64(group.AutoScaling.MinSize))
+		req.MaxNodesNum = common.Int64Ptr(int64(group.AutoScaling.MaxSize))
+	}
+
+	if group.NodeTemplate.PreStartUserScript != "" {
+		req.UserScript = common.StringPtr(group.NodeTemplate.PreStartUserScript)
+	}
+
 	// MaxNodesNum/MinNodesNum 通过 asg 修改，这里不用修改
 	if group.NodeTemplate != nil {
 		req.Unschedulable = common.Int64Ptr(int64(group.NodeTemplate.UnSchedulable))
 	}
-	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID !=
-		"" {
-		req.OsName = &group.LaunchTemplate.ImageInfo.ImageID
+
+	// 节点池Os 当为自定义镜像时，传镜像id；否则为公共镜像的osName; 若为空复用集群级别
+	// 示例值：ubuntu18.04.1x86_64
+	if group.NodeTemplate != nil && group.NodeTemplate.NodeOS != "" {
+		req.OsName = &group.NodeTemplate.NodeOS
 	}
+
+	kubeletParas := cutils.GetKubeletParas(group.NodeTemplate)
+	if paras, ok := kubeletParas[intercommon.Kubelet]; ok {
+		if req.ExtraArgs == nil {
+			req.ExtraArgs = &tke.InstanceExtraArgs{}
+		}
+		req.ExtraArgs.Kubelet = common.StringPtrs(strings.Split(paras, ";"))
+	}
+
 	return req
 }
 
-// generateModifyAutoScalingGroupInput 根据需要修改 asg
+// 根据需要修改 asg
 func (ng *NodeGroup) generateModifyAutoScalingGroupInput(group *proto.NodeGroup) *as.ModifyAutoScalingGroupRequest {
 	req := as.NewModifyAutoScalingGroupRequest()
 	if group.AutoScaling == nil {
@@ -181,6 +364,7 @@ func (ng *NodeGroup) generateModifyAutoScalingGroupInput(group *proto.NodeGroup)
 	return req
 }
 
+// generateUpgradeLaunchConfInput upgrade launch config
 func (ng *NodeGroup) generateUpgradeLaunchConfInput(
 	group *proto.NodeGroup) *as.UpgradeLaunchConfigurationRequest {
 	req := as.NewUpgradeLaunchConfigurationRequest()
@@ -230,31 +414,12 @@ func (ng *NodeGroup) generateUpgradeLaunchConfInput(
 		DiskType: common.StringPtr(group.LaunchTemplate.SystemDisk.GetDiskType()),
 		DiskSize: common.Uint64Ptr(uint64(diskSize)),
 	}
-	req.UserData = common.StringPtr(group.LaunchTemplate.UserData)
+	//req.UserData = common.StringPtr(group.LaunchTemplate.UserData)
 	return req
 }
 
-func (ng *NodeGroup) updateImageInfo(group *proto.NodeGroup) error {
-	if group.LaunchTemplate == nil || group.LaunchTemplate.ImageInfo == nil {
-		return nil
-	}
-	imageName := group.LaunchTemplate.ImageInfo.ImageName
-	for _, v := range utils.ImageOsList {
-		if v.ImageID == group.LaunchTemplate.ImageInfo.ImageID {
-			imageName = v.Alias
-			break
-		}
-	}
-	if imageName == group.LaunchTemplate.ImageInfo.ImageName {
-		return nil
-	}
-	group.LaunchTemplate.ImageInfo.ImageName = imageName
-	return cloudprovider.GetStorageModel().UpdateNodeGroup(context.TODO(), group)
-}
-
-// GetNodesInGroup get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode,
-	error) {
+// GetNodesInGroupV2 get all nodes belong to NodeGroup
+func (ng *NodeGroup) GetNodesInGroupV2(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
 	if group.ClusterID == "" || group.NodeGroupID == "" {
 		blog.Errorf("nodegroup id or cluster id is empty")
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
@@ -264,12 +429,14 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 		blog.Errorf("GetCloudAndCluster failed, err: %s", err.Error())
 		return nil, err
 	}
-	tkecli, err := api.NewTkeClient(opt)
+	tkeCli, err := api.NewTkeClient(opt)
 	if err != nil {
 		blog.Errorf("create tke client failed, err: %s", err.Error())
 		return nil, err
 	}
-	nodes, err := tkecli.GetNodeGroupInstances(cluster.SystemID, group.CloudNodeGroupID)
+
+	// get group nodes
+	nodes, err := tkeCli.GetNodeGroupInstances(cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
 		blog.Errorf("GetNodeGroupInstances failed, err: %s", err.Error())
 		return nil, err
@@ -287,6 +454,7 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 	return groupNodes, nil
 }
 
+// transTkeNodeToNode trans node status
 func transTkeNodeToNode(node *tke.Instance) *proto.NodeGroupNode {
 	n := &proto.NodeGroupNode{NodeID: *node.InstanceId}
 	if node.InstanceRole != nil {
@@ -310,6 +478,74 @@ func transTkeNodeToNode(node *tke.Instance) *proto.NodeGroupNode {
 	return n
 }
 
+// GetNodesInGroup get all nodes belong to NodeGroup
+func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node, error) {
+	if group.ClusterID == "" || group.NodeGroupID == "" {
+		blog.Errorf("nodegroup id or cluster id is empty")
+		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
+	}
+	_, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), group.Provider, group.ClusterID)
+	if err != nil {
+		blog.Errorf("GetCloudAndCluster failed, err: %s", err.Error())
+		return nil, err
+	}
+	tkeCli, err := api.NewTkeClient(opt)
+	if err != nil {
+		blog.Errorf("create tke client failed, err: %s", err.Error())
+		return nil, err
+	}
+
+	// cloud node pool info
+	nodePool, err := tkeCli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
+	if err != nil {
+		blog.Errorf("DescribeClusterNodePoolDetail failed, err: %s", err.Error())
+		return nil, err
+	}
+	if nodePool == nil || nodePool.AutoscalingGroupId == nil {
+		err = fmt.Errorf("GetNodesInGroup failed, node pool is empty")
+		blog.Errorf("%s", err.Error())
+		return nil, err
+	}
+	asCli, err := api.NewASClient(opt)
+	if err != nil {
+		blog.Errorf("create as client failed, err: %s", err.Error())
+		return nil, err
+	}
+
+	// nodePool instances
+	ins, err := asCli.DescribeAutoScalingInstances(*nodePool.AutoscalingGroupId)
+	if err != nil {
+		blog.Errorf("DescribeAutoScalingInstances failed, err: %s", err.Error())
+		return nil, err
+	}
+	insIDs := make([]string, 0)
+	for _, v := range ins {
+		insIDs = append(insIDs, *v.InstanceID)
+	}
+	if len(insIDs) == 0 {
+		return nil, nil
+	}
+	nm := api.NodeManager{}
+	nodes, err := nm.ListNodesByInstanceID(insIDs, &cloudprovider.ListNodesOption{
+		Common:       opt,
+		ClusterVPCID: group.AutoScaling.VpcID,
+	})
+	if err != nil {
+		blog.Errorf("DescribeInstances failed, err: %s", err.Error())
+		return nil, err
+	}
+
+	groupNodes := make([]*proto.Node, 0)
+	for i := range nodes {
+		nodes[i].Status = intercommon.StatusRunning
+		nodes[i].ClusterID = group.ClusterID
+		nodes[i].NodeGroupID = group.NodeGroupID
+		groupNodes = append(groupNodes, nodes[i])
+	}
+
+	return nodes, nil
+}
+
 // MoveNodesToGroup add cluster nodes to NodeGroup
 func (ng *NodeGroup) MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup,
 	opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
@@ -320,6 +556,8 @@ func (ng *NodeGroup) MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGrou
 		)
 		return nil, err
 	}
+
+	// build move nodes to group task
 	task, err := mgr.BuildMoveNodesToGroupTask(nodes, group, opt)
 	if err != nil {
 		blog.Errorf("build MoveNodesToGroup task for cluster %s with cloudprovider %s failed, %s",
@@ -387,15 +625,15 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	// check if nodes are already in cluster
 	goodNodes, err := cloudprovider.ListNodesInClusterNodePool(opt.Cluster.ClusterID, group.NodeGroupID)
 	if err != nil {
-		blog.Errorf("cloudprovider yunti get NodeGroup %s all Nodes failed, %s", group.NodeGroupID, err.Error())
+		blog.Errorf("cloudprovider qcloud get NodeGroup %s all Nodes failed, %s", group.NodeGroupID, err.Error())
 		return nil, err
 	}
 
 	// check incoming nodes
 	inComingNodes, err := cloudprovider.GetNodesNumWhenApplyInstanceTask(opt.Cluster.ClusterID, group.NodeGroupID,
-		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode),
-		cloudprovider.TaskStatusRunning,
-		[]string{cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyInstanceMachinesTask)})
+		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode), cloudprovider.TaskStatusRunning,
+		[]string{cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyInstanceMachinesTask),
+			cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyExternalNodeMachinesTask)})
 	if err != nil {
 		blog.Errorf("UpdateDesiredNodes GetNodesNumWhenApplyInstanceTask failed: %v", err)
 		return nil, err
@@ -408,17 +646,16 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	for _, node := range goodNodes {
 		nodeNames = append(nodeNames, node.InnerIP)
 	}
-	blog.Infof("NodeGroup %s has total nodes %d, current capable nodes %d, current incoming nodes %d, details %v",
-		group.NodeGroupID, len(goodNodes), current, inComingNodes, nodeNames)
+	blog.Infof("NodeGroup %s has total nodes %d, current capable nodes %d, current incoming nodes %d, "+
+		"desired nodes %d, details %v", group.NodeGroupID, len(goodNodes), current, inComingNodes, desired, nodeNames)
 
 	if current >= int(desired) {
 		blog.Infof("NodeGroup %s current capable nodes %d larger than desired %d nodes, nothing to do",
 			group.NodeGroupID, current, desired)
 		return &cloudprovider.ScalingResponse{
-				ScalingUp:    0,
-				CapableNodes: nodeNames,
-			}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes", group.NodeGroupID, current,
-				desired)
+			ScalingUp:    0,
+			CapableNodes: nodeNames,
+		}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes", group.NodeGroupID, current, desired)
 	}
 
 	// current scale nodeNum
@@ -430,7 +667,7 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	}, nil
 }
 
-// SwitchNodeGroupAutoScaling 开/关CA - switch nodegroup auto scaling
+// SwitchNodeGroupAutoScaling switch nodegroup auto scaling
 func (ng *NodeGroup) SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool,
 	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
 	mgr, err := cloudprovider.GetTaskManager(cloudName)
@@ -454,14 +691,14 @@ func (ng *NodeGroup) SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable b
 // deploy cluster-autoscaler in backgroup according cloudprovider implementation
 func (ng *NodeGroup) CreateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,
 	opt *cloudprovider.CreateScalingOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	return nil, nil
 }
 
 // DeleteAutoScalingOption delete cluster autoscaling, cloudprovider will clean
 // cluster-autoscaler in backgroup according cloudprovider implementation
 func (ng *NodeGroup) DeleteAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,
 	opt *cloudprovider.DeleteScalingOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	return nil, nil
 }
 
 // UpdateAutoScalingOption update cluster autoscaling option, cloudprovider will update
@@ -476,6 +713,13 @@ func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoSca
 		)
 		return nil, err
 	}
+
+	err = cloudprovider.UpdateAutoScalingOptionModuleInfo(scalingOption.ClusterID)
+	if err != nil {
+		blog.Errorf("UpdateAutoScalingOption update asOption moduleInfo failed: %v", err)
+		return nil, err
+	}
+
 	task, err := mgr.BuildUpdateAutoScalingOptionTask(scalingOption, opt)
 	if err != nil {
 		blog.Errorf("build UpdateAutoScalingOption task for cluster %s with cloudprovider %s failed, %s",
@@ -504,4 +748,155 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 		return nil, err
 	}
 	return task, nil
+}
+
+// AddExternalNodeToCluster add external to cluster
+func (ng *NodeGroup) AddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.AddExternalNodesOption) (*proto.Task, error) {
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when AddExternalNodeToCluster %s failed, %s",
+			cloudName, group.NodeGroupID, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildAddExternalNodeToCluster(group, nodes, opt)
+	if err != nil {
+		blog.Errorf("build AddExternalNodeToCluster task for nodeGroup %s with cloudprovider %s failed, %s",
+			group.NodeGroupID, cloudName, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
+}
+
+// DeleteExternalNodeFromCluster remove external node from cluster
+func (ng *NodeGroup) DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.DeleteExternalNodesOption) (*proto.Task, error) {
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when DeleteExternalNodeFromCluster %s failed, %s",
+			cloudName, group.NodeGroupID, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildDeleteExternalNodeFromCluster(group, nodes, opt)
+	if err != nil {
+		blog.Errorf("build DeleteExternalNodeFromCluster task for nodeGroup %s with cloudprovider %s failed, %s",
+			group.NodeGroupID, cloudName, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
+}
+
+func createExternalNodePool(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (string, error) {
+	tkeCli, err := api.NewTkeClient(&opt.CommonOption)
+	if err != nil {
+		blog.Errorf("createExternalNodePool[%s] failed: %v", cloudName, err)
+		return "", err
+	}
+
+	var (
+		nodePoolID string
+	)
+	err = retry.Do(func() error {
+		nodePoolID, err = tkeCli.CreateExternalNodePool(opt.Cluster.GetSystemID(), api.CreateExternalNodePoolConfig{
+			Name: group.Name,
+			ContainerRuntime: func() string {
+				if group != nil && group.NodeTemplate != nil && group.NodeTemplate.GetRuntime() != nil {
+					return group.NodeTemplate.GetRuntime().ContainerRuntime
+				}
+
+				return intercommon.DockerContainerRuntime
+			}(),
+			RuntimeVersion: func() string {
+				if group != nil && group.NodeTemplate != nil && group.NodeTemplate.GetRuntime() != nil {
+					return group.NodeTemplate.GetRuntime().RuntimeVersion
+				}
+				return intercommon.DockerRuntimeVersion
+			}(),
+			Labels: func() []*api.Label {
+				if group.NodeTemplate == nil {
+					return nil
+				}
+				return api.MapToLabels(group.NodeTemplate.Labels)
+			}(),
+			Taints: func() []*api.Taint {
+				if group.NodeTemplate == nil {
+					return nil
+				}
+				return api.MapToTaints(group.NodeTemplate.Taints)
+			}(),
+			InstanceAdvancedSettings: tasks.GenerateClsAdvancedInsSettingFromNT(&cloudprovider.CloudDependBasicInfo{
+				Cluster:      opt.Cluster,
+				NodeTemplate: group.NodeTemplate,
+			}, template.RenderVars{Render: false}, nil),
+		})
+		if err != nil {
+			blog.Errorf("createExternalNodePool[%s] failed: %v", cloudName, err)
+			return err
+		}
+		return nil
+	}, retry.Attempts(3))
+	if err != nil {
+		blog.Errorf("createExternalNodePool[%s] failed: %v", cloudName, err)
+		return nodePoolID, err
+	}
+
+	blog.Infof("cloud[%s] createExternalNodePool successful[%s]", cloudName, nodePoolID)
+
+	return nodePoolID, nil
+}
+
+func deleteExternalNodePool(group *proto.NodeGroup, opt *cloudprovider.DeleteNodeGroupOption) error {
+	tkeCli, err := api.NewTkeClient(&opt.CommonOption)
+	if err != nil {
+		blog.Errorf("deleteExternalNodePool[%s] failed: %v", cloudName, err)
+		return err
+	}
+
+	err = retry.Do(func() error {
+		err = tkeCli.DeleteExternalNodePool(opt.Cluster.GetSystemID(), api.DeleteExternalNodePoolConfig{
+			NodePoolIds: []string{group.CloudNodeGroupID},
+			Force:       false,
+		})
+
+		if err != nil {
+			blog.Errorf("deleteExternalNodePool[%s] failed: %v", cloudName, err)
+			return err
+		}
+		return nil
+	}, retry.Attempts(3))
+	if err != nil {
+		blog.Errorf("deleteExternalNodePool[%s] failed: %v", cloudName, err)
+		return err
+	}
+
+	blog.Infof("cloud[%s] deleteExternalNodePool successful[%s:%s]", cloudName, group.ClusterID, group.CloudNodeGroupID)
+
+	return nil
+}
+
+// GetExternalNodeScript get nodegroup external node script
+func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, error) {
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   group.ClusterID,
+		CloudID:     group.Provider,
+		NodeGroupID: group.NodeGroupID,
+	})
+	if err != nil {
+		errMsg := fmt.Errorf("GetExternalNodeScript[%s] GetClusterDependBasicInfo failed, %s",
+			group.NodeGroupID, err.Error())
+		return "", errMsg
+	}
+
+	script, err := tasks.GetClusterExternalNodeScript(context.Background(), dependInfo)
+	if err != nil {
+		blog.Errorf("GetExternalNodeScript[%s] GetClusterExternalNodeScript failed: %v", group.NodeGroupID, err)
+		return "", err
+	}
+
+	blog.Infof("GetExternalNodeScript[%s] successful", group.NodeGroupID)
+	return script, nil
 }

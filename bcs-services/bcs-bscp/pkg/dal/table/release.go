@@ -109,26 +109,17 @@ var ReleaseSpecColumnDescriptor = mergeColumnDescriptors("",
 
 var HookColumnDescriptor = ColumnDescriptors{
 	{Column: "pre_hook_id", NamedC: "pre_hook_id", Type: enumor.Numeric},
-	{Column: "pre_hook_release_id", NamedC: "pre_hook_release_id", Type: enumor.Numeric},
+	{Column: "pre_hook_revision_id", NamedC: "pre_hook_revision_id", Type: enumor.Numeric},
 	{Column: "post_hook_id", NamedC: "post_hook_id", Type: enumor.Numeric},
-	{Column: "post_hook_release_id", NamedC: "post_hook_release_id", Type: enumor.Numeric},
+	{Column: "post_hook_revision_id", NamedC: "post_hook_revision_id", Type: enumor.Numeric},
 }
 
 // ReleaseSpec defines all the specifics related with a release, which is set by user.
 type ReleaseSpec struct {
-	Name       string       `db:"name" json:"name"`
-	Memo       string       `db:"memo" json:"memo"`
-	Deprecated bool         `db:"deprecated" json:"deprecated"`
-	PublishNum uint32       `db:"publish_num" json:"publish_num"`
-	Hook       *ReleaseHook `db:"hook" json:"hook" gorm:"embedded"`
-}
-
-// ReleaseHook is a resource's resource hook
-type ReleaseHook struct {
-	PreHookID         uint32 `db:"pre_hook_id" json:"pre_hook_id" gorm:"pre_hook_id"`
-	PreHookReleaseID  uint32 `db:"pre_hook_release_id" json:"pre_hook_release_id" gorm:"pre_hook_release_id"`
-	PostHookID        uint32 `db:"post_hook_id" json:"post_hook_id" gorm:"post_hook_id"`
-	PostHookReleaseID uint32 `db:"post_hook_release_id" json:"post_hook_release_id" gorm:"post_hook_release_id"`
+	Name       string `db:"name" json:"name"`
+	Memo       string `db:"memo" json:"memo"`
+	Deprecated bool   `db:"deprecated" json:"deprecated"`
+	PublishNum uint32 `db:"publish_num" json:"publish_num"`
 }
 
 // Validate a release specifics when it is created.

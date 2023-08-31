@@ -54,6 +54,21 @@ func (cm *ClusterManager) UpdateAutoScalingOption(ctx context.Context,
 	return nil
 }
 
+// SyncAutoScalingOption implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) SyncAutoScalingOption(ctx context.Context,
+	req *cmproto.SyncAutoScalingOptionRequest, resp *cmproto.SyncAutoScalingOptionResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := autoscalingoption.NewSyncAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("SyncAutoScalingOption", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: SyncAutoScalingOption, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // DeleteAutoScalingOption implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) DeleteAutoScalingOption(ctx context.Context,
 	req *cmproto.DeleteAutoScalingOptionRequest, resp *cmproto.DeleteAutoScalingOptionResponse) error {
@@ -98,8 +113,8 @@ func (cm *ClusterManager) ListAutoScalingOption(ctx context.Context,
 	ca := autoscalingoption.NewListAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListAutoScalingOption", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListAutoScalingOption, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListAutoScalingOption, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListAutoScalingOption, req %v, resp %v", reqID, req, resp)
 	return nil
 }

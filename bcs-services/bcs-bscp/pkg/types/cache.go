@@ -63,6 +63,22 @@ type ReleaseCICache struct {
 	Attachment     *table.ConfigItemAttachment `json:"am"`
 }
 
+// ReleasedHooksCache is the released hooks info which will be stored in cache.
+type ReleasedHooksCache struct {
+	AppID    uint32             `db:"app_id" json:"app_id"`
+	BizID    uint32             `db:"biz_id" json:"biz_id"`
+	PreHook  *ReleasedHookCache `db:"pre_hook" json:"pre_hook"`
+	PostHook *ReleasedHookCache `db:"post_hook" json:"post_hook"`
+}
+
+// ReleasedHookCache is the release hook info which will be stored in cache.
+type ReleasedHookCache struct {
+	HookID         uint32           `db:"hook_id" json:"hook_id"`
+	HookRevisionID uint32           `db:"hook_revision_id" json:"hook_revision_id"`
+	Content        string           `db:"content" json:"content"`
+	Type           table.ScriptType `db:"type" json:"type"`
+}
+
 // CommitSpecCache cache struct.
 type CommitSpecCache struct {
 	ContentID uint32 `json:"id"`

@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"time"
 
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -51,15 +50,12 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 		return nil, errf.New(errf.InvalidParameter, "group must not bind apps when public is set to true")
 	}
 
-	now := time.Now()
 	group := &table.Group{
 		Spec:       spec,
 		Attachment: req.Attachment.GroupAttachment(),
 		Revision: &table.Revision{
-			Creator:   kt.User,
-			Reviser:   kt.User,
-			CreatedAt: now,
-			UpdatedAt: now,
+			Creator: kt.User,
+			Reviser: kt.User,
 		},
 	}
 	tx := s.dao.GenQuery().Begin()
@@ -225,6 +221,19 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq)
 	}, nil
 }
 
+// GetGroupByName get group by group name.
+func (s *Service) GetGroupByName(ctx context.Context, req *pbds.GetGroupByNameReq) (*pbgroup.Group, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	group, err := s.dao.Group().GetByName(grpcKit, req.GetBizId(), req.GetGroupName())
+	if err != nil {
+		logs.Errorf("get group by name failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, fmt.Errorf("query group by name %s failed", req.GetGroupName())
+	}
+
+	return pbgroup.PbGroup(group)
+}
+
 // UpdateGroup update group.
 func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
@@ -244,14 +253,12 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		return nil, errf.New(errf.InvalidParameter, "group must not bind apps when public is set to true")
 	}
 
-	now := time.Now()
 	new := &table.Group{
 		ID:         req.Id,
 		Spec:       spec,
 		Attachment: req.Attachment.GroupAttachment(),
 		Revision: &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: now,
+			Reviser: kt.User,
 		},
 	}
 

@@ -137,7 +137,7 @@ func (s *Service) GetAppByName(ctx context.Context, req *pbds.GetAppByNameReq) (
 	app, err := s.dao.App().GetByName(grpcKit, req.GetBizId(), req.GetAppName())
 	if err != nil {
 		logs.Errorf("get app by name failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, errors.Wrapf(err, "query app by name %s", req.GetAppName())
+		return nil, errors.Wrapf(err, "query app by name %s failed", req.GetAppName())
 	}
 
 	return pbapp.PbApp(app), nil

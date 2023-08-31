@@ -18,6 +18,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	bklog "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_log"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
@@ -47,6 +48,7 @@ type LogRule struct {
 	ProjectID          string             `json:"project_id" bson:"projectID"`
 	ProjectCode        string             `json:"project_code" bson:"projectCode"`
 	ClusterID          string             `json:"cluster_id" bson:"clusterID"`
+	Rule               bklog.LogRule      `json:"rule" bson:"rule"`
 	FileIndexSetID     int                `json:"file_index_set_id" bson:"fileIndexSetID"`
 	STDIndexSetID      int                `json:"std_index_set_id" bson:"stdIndexSetID"`
 	RuleFileIndexSetID int                `json:"rule_file_index_set_id" bson:"ruleFileIndexSetID"`

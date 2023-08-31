@@ -57,6 +57,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/httpsvr"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/ingresscache"
+	internalmetric "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/nodecache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
@@ -144,7 +145,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// 用于异步处理listener删除
 	listenerHelper := listenerctrl.NewListenerHelper(mgr.GetClient())
+	// 缓存Ingress使用到的LB信息 （会在Check中定时刷新）
 	lbIDCache := gocache.New(time.Duration(opts.LBCacheExpiration)*time.Minute, 120*time.Minute)
 	lbNameCache := gocache.New(time.Duration(opts.LBCacheExpiration)*time.Minute, 120*time.Minute)
 	ingressConverter, err := generator.NewIngressConverter(&generator.IngressConverterOpt{
@@ -158,6 +161,7 @@ func main() {
 	}
 
 	nodeCache := nodecache.NewNodeCache(mgr.GetClient(), nodeClient)
+	// ingressCache 缓存ingress相关的service/workload信息，避免量大时影响ingress调谐时间
 	ingressCache := ingresscache.NewDefaultCache()
 	if err = (&ingressctrl.IngressReconciler{
 		Ctx:              context.Background(),
@@ -208,6 +212,7 @@ func main() {
 		}
 	}
 
+	// conflictHandler 避免不同Ingress/PortPool之间出现端口冲突
 	conflictHandler := conflicthandler.NewConflictHandler(opts.ConflictCheckOpen, opts.IsTCPUDPPortReuse, opts.Region,
 		mgr.GetClient(), ingressConverter, mgr.GetEventRecorderFor("bcs-ingress-controller"))
 	// init webhook server
@@ -239,6 +244,7 @@ func main() {
 	}
 	blog.Infof("starting http server")
 
+	// 定时执行检查
 	checkRunner := check.NewCheckRunner(context.Background())
 	checkRunner.
 		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"))).
@@ -253,6 +259,7 @@ func main() {
 	}
 }
 
+// initInClusterClient return client from clsuter config
 func initInClusterClient() (*kubernetes.Clientset, error) {
 	cfg, err := rest.InClusterConfig()
 	if err != nil {
@@ -276,6 +283,8 @@ func runPrometheusMetrics(op *option.ControllerOption) {
 			blog.Errorf("metric server listen err: %v", err)
 		}
 	}()
+
+	internalmetric.ControllerInfo.WithLabelValues(op.ImageTag, op.Cloud).Set(1)
 }
 
 // initHttpServer init ingress controller http server
@@ -295,6 +304,11 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 	httpServerClient := &httpsvr.HttpServerClient{
 		Mgr:       mgr,
 		NodeCache: nodeCache,
+		Ops:       op,
+	}
+	// aga supporter can only be init when use
+	if op.Cloud == constant.CloudAWS {
+		httpServerClient.AgaSupporter = aws.NewAgaSupporter()
 	}
 	httpsvr.InitRouters(ws, httpServerClient)
 
@@ -324,6 +338,7 @@ func initClient(opts *option.ControllerOption, cli client.Client, eventWatcher e
 				os.Exit(1)
 			}
 		} else {
+			// NameSpacedLB在处理监听器时，会使用对应命名空间下的Secret作为云密钥
 			lbClient = namespacedlb.NewNamespacedLB(cli, eventWatcher,
 				tencentcloud.NewClbWithSecret)
 		}

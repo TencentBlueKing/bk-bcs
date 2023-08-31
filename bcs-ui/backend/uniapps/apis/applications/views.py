@@ -61,6 +61,7 @@ from backend.helm.app.utils import ruamel_yaml_dump
 logger = logging.getLogger(__name__)
 PIPELINE_DEFAULT_USER = settings.PIPELINE_DEFAULT_USER
 GCLOUD_DEFAULT_USER = settings.GCLOUD_DEFAULT_USER
+BK_OPS_APP_CODE = ["gcloud", "workbench", "bksops"]
 
 
 class ProjectApplicationInfo(app_views.BaseAPI, BaseAPIViews):
@@ -611,7 +612,7 @@ class BaseBatchHandleInstance(BaseAPIViews):
         return {str(info.id): info for info in inst_info}
 
     def get_ns_variables(self, project_id, ns_id_data):
-        default_variables = bcs_variable.get_multi_ns_variables(project_id, "", ns_id_data, None)
+        default_variables = bcs_variable.get_multi_ns_variables(project_id, "", ns_id_data, [])
         return default_variables
 
     def category_map(self, kind, category):
@@ -935,7 +936,7 @@ class BatchUpdateInstance(BaseBatchHandleInstance, app_views.BaseAPI):
         # 查询相应的实例信息
         version_id = None
         ns_var_map = {}
-        if request.user.app_code in ["gcloud", "workbench"]:
+        if request.user.app_code in BK_OPS_APP_CODE:
             inst_id_list, inst_variables, ns_id_name_map, ns_var_map, instance_num = self.get_params_from_gcloud(
                 request, project_id, real_category
             )
@@ -955,7 +956,7 @@ class BatchUpdateInstance(BaseBatchHandleInstance, app_views.BaseAPI):
 
             cluster_id = labels.get("io.tencent.bcs.clusterid")
             template_id = labels.get("io.tencent.paas.templateid")
-            if request.user.app_code in ["gcloud", "workbench"]:
+            if request.user.app_code in BK_OPS_APP_CODE:
                 curr_inst_info_detail = inst_variables.get(inst_name)
                 if not curr_inst_info_detail:
                     continue
@@ -978,11 +979,11 @@ class BatchUpdateInstance(BaseBatchHandleInstance, app_views.BaseAPI):
             real_instance_num = pre_instance_num
             # 获取当前实例对应的变量
             curr_variables = json.loads(inst_info.variables) if inst_info.variables else {}
-            if request.user.app_code in ["gcloud", "workbench"]:
+            if request.user.app_code in BK_OPS_APP_CODE:
                 ns_var_info = ns_var_map.get(int(inst_info.namespace)) or {}
                 curr_variables.update(ns_var_info)
             if inst_variables:
-                if request.user.app_code in ["gcloud", "workbench"]:
+                if request.user.app_code in BK_OPS_APP_CODE:
                     curr_inst_info_detail = inst_variables[inst_name]
                     if namespace in curr_inst_info_detail.get("namespace_list") or []:
                         curr_variables.update(curr_inst_info_detail.get("variables") or {})

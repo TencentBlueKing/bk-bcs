@@ -17,7 +17,7 @@ import (
 )
 
 // Validate BenchAppMetaReq.
-func (m BenchAppMetaReq) Validate() error {
+func (m *BenchAppMetaReq) Validate() error {
 	if m.BizId == 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz_id, biz_id should > 0")
 	}
@@ -30,7 +30,7 @@ func (m BenchAppMetaReq) Validate() error {
 }
 
 // Validate BenchReleasedCIReq.
-func (m BenchReleasedCIReq) Validate() error {
+func (m *BenchReleasedCIReq) Validate() error {
 	if m.BizId == 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz_id, biz_id should > 0")
 	}

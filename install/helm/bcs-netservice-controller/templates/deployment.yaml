@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "bcs-netservice-controller.fullname" . }}
+  labels:
+    {{- include "bcs-netservice-controller.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "bcs-netservice-controller.fullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "bcs-netservice-controller.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "bcs-netservice-controller.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bcs-netservice-controller.fullname" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+      - name: webhook-certs
+        secret:
+          secretName: bcs-netservice-controller-certs
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+          - /data/bcs/bcs-netservice-controller/bcs-netservice-controller
+          args:
+          - --address=0.0.0.0
+          - --probe_port=8082
+          - --metric_port=8081
+          - --port=8080
+          - --leader-elect=true
+          - --log_dir=/data/bcs/bcs-netservice-controller/logs
+          - --alsologtostderr=true
+          - --http_svr_port=8088
+          ports:
+            - name: webhook
+              containerPort: 8080
+              protocol: TCP
+            - name: http
+              containerPort: 8088
+              protocol: TCP
+            - name: probe
+              containerPort: 8082
+              protocol: TCP
+            - name: metric
+              containerPort: 8081
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: probe
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: probe
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - mountPath: /tmp/k8s-webhook-server/serving-certs
+            name: webhook-certs
+            readOnly: true
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

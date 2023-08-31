@@ -14,6 +14,7 @@ package config
 
 // BKLogConf bk log config
 type BKLogConf struct {
-	APIServer  string `yaml:"api_server"` // openapi 地址
-	Entrypoint string `yaml:"entrypoint"` // bk-log 页面 host 地址，e.g: https://bklog.example.com
+	APIServer        string `yaml:"api_server"`        // openapi 地址
+	Entrypoint       string `yaml:"entrypoint"`        // bk-log 页面 host 地址，e.g: https://bklog.example.com
+	BKBaseEntrypoint string `yaml:"bkbase_entrypoint"` // bkbase 页面 host 地址，e.g: https://bkbase.example.com
 }

@@ -87,7 +87,7 @@ func migrateLogRule(ctx context.Context, model storage.Storage, mysqlDB *gorm.DB
 		if exist {
 			continue
 		}
-		err = model.CreateLogRule(ctx, &entity.LogRule{
+		_, err = model.CreateLogRule(ctx, &entity.LogRule{
 			Name:      v.RuleName,
 			RuleName:  v.RuleName,
 			RuleID:    v.RuleID,

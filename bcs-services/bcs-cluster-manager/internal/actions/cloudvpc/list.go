@@ -15,13 +15,19 @@ package cloudvpc
 
 import (
 	"context"
+	"sort"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ListAction action for list online clusterVPC
@@ -30,7 +36,7 @@ type ListAction struct {
 	model        store.ClusterManagerModel
 	req          *cmproto.ListCloudVPCRequest
 	resp         *cmproto.ListCloudVPCResponse
-	cloudVPCList []*cmproto.CloudVPC
+	cloudVPCList []*cmproto.CloudVPCResp
 }
 
 // NewListAction create list action for cluster vpc list
@@ -42,8 +48,8 @@ func NewListAction(model store.ClusterManagerModel) *ListAction {
 
 func (la *ListAction) listCloudVPC() error {
 	condM := make(operator.M)
-	// ! we don't setting bson tag in proto file
-	// ! all fields are in lowcase
+	//! we don't setting bson tag in proto file
+	//! all fields are in lowcase
 	if len(la.req.CloudID) != 0 {
 		condM["cloudid"] = la.req.CloudID
 	}
@@ -62,14 +68,96 @@ func (la *ListAction) listCloudVPC() error {
 	if err != nil {
 		return err
 	}
+
+	var (
+		barrier = utils.NewRoutinePool(5)
+		lock    = sync.Mutex{}
+	)
+	defer barrier.Close()
+
 	for i := range cloudVPCs {
 		if cloudVPCs[i].Available == "false" {
 			continue
 		}
 
-		la.cloudVPCList = append(la.cloudVPCList, &cloudVPCs[i])
+		if la.req.BusinessID != "" && cloudVPCs[i].BusinessID != "" &&
+			!strings.EqualFold(la.req.BusinessID, cloudVPCs[i].BusinessID) {
+			continue
+		}
+
+		barrier.Add(1)
+		// query available vpc
+		go func(vpc cmproto.CloudVPC) {
+			defer func() {
+				barrier.Done()
+			}()
+
+			var surPlusIPNum uint32
+			ipNum, err := getAvailableIPNumByVpc(utils.GlobalRouter.String(), vpc.Region, vpc.VpcID)
+			if err != nil {
+				blog.Errorf("listCloudVPC getAvailableIPNumByVpc failed: %v", err)
+			} else {
+				blog.Infof("region[%s] vpc[%s] availableIPNum[%v]", vpc.Region, vpc.VpcID, ipNum)
+			}
+
+			if ipNum <= vpc.ReservedIPNum {
+				surPlusIPNum = 0
+			} else {
+				surPlusIPNum = ipNum - vpc.ReservedIPNum
+			}
+
+			cloud := &cmproto.CloudVPCResp{
+				CloudID:        vpc.CloudID,
+				Region:         vpc.Region,
+				RegionName:     vpc.RegionName,
+				NetworkType:    vpc.NetworkType,
+				VpcID:          vpc.VpcID,
+				VpcName:        vpc.VpcName,
+				Available:      vpc.Available,
+				Extra:          vpc.Extra,
+				ReservedIPNum:  vpc.ReservedIPNum,
+				AvailableIPNum: surPlusIPNum,
+			}
+			lock.Lock()
+			la.cloudVPCList = append(la.cloudVPCList, cloud)
+			lock.Unlock()
+
+			return
+		}(cloudVPCs[i])
 	}
+	barrier.Wait()
+
+	// sort cloudVpcResp by available IP num
+	sort.Sort(utils.CloudVpcSlice(la.cloudVPCList))
+
 	return nil
+}
+
+func getAvailableIPNumByVpc(networkType, region, vpc string) (uint32, error) {
+	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		if conClose != nil {
+			conClose()
+		}
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
+	req := &cidrmanager.GetVPCIPSurplusRequest{
+		Region:   region,
+		CidrType: networkType,
+		VpcID:    vpc,
+	}
+	resp, err := cidrCli.GetVPCIPSurplus(ctx, req)
+	if err != nil {
+		return 0, err
+	}
+
+	return resp.Data.IPSurplus, nil
 }
 
 func (la *ListAction) setResp(code uint32, msg string) {
@@ -79,7 +167,7 @@ func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Data = la.cloudVPCList
 }
 
-// Handle handle list cluster vpc list
+// Handle list cluster vpc list
 func (la *ListAction) Handle(
 	ctx context.Context, req *cmproto.ListCloudVPCRequest, resp *cmproto.ListCloudVPCResponse) {
 	if req == nil || resp == nil {
@@ -135,6 +223,10 @@ func (la *ListRegionAction) listCloudRegions() error {
 	}
 	regions := make(map[string]*RegionData)
 	for i := range cloudVPCs {
+		if cloudVPCs[i].Available == "false" {
+			continue
+		}
+
 		if _, ok := regions[cloudVPCs[i].Region]; !ok {
 			regions[cloudVPCs[i].Region] = &RegionData{
 				Region:     cloudVPCs[i].Region,
@@ -161,7 +253,7 @@ func (la *ListRegionAction) setResp(code uint32, msg string) {
 	la.resp.Data = la.regions
 }
 
-// Handle handle list cloud regions
+// Handle list cloud regions
 func (la *ListRegionAction) Handle(
 	ctx context.Context, req *cmproto.ListCloudRegionsRequest, resp *cmproto.ListCloudRegionsResponse) {
 	if req == nil || resp == nil {

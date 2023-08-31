@@ -28,10 +28,10 @@ var (
 
 // NewRetryPolicy create a new retry policy.
 // Note:
-// 1. immuneCount is the count which the sleep time is constant at: retryCount * sleepRangeMS[0] * time.Millisecond.
-// 2. if the retry times > immuneCount, then the sleep time will be the value calculated bellow in milliseconds.
-//    sleepTime = sleepRangeMS[0] + randomValueBetween(sleepRangeMS[0], sleepRangeMS[1])
-// 3. both immuneCount and sleepRangeMS value should all be > 0, if not, the default value will be used.
+//  1. immuneCount is the count which the sleep time is constant at: retryCount * sleepRangeMS[0] * time.Millisecond.
+//  2. if the retry times > immuneCount, then the sleep time will be the value calculated bellow in milliseconds.
+//     sleepTime = sleepRangeMS[0] + randomValueBetween(sleepRangeMS[0], sleepRangeMS[1])
+//  3. both immuneCount and sleepRangeMS value should all be > 0, if not, the default value will be used.
 func NewRetryPolicy(immuneCount uint, sleepRangeMS [2]uint) *RetryPolicy {
 	immune := immuneCount
 	if immune == 0 {
@@ -79,8 +79,8 @@ func (r *RetryPolicy) Sleep() {
 	}
 
 	// no matter retry how many times, sleep a const time and with an extra rand time.
-	rand.Seed(time.Now().UnixNano())
-	randTime := rand.Intn(int(r.rangeMillSeconds[1])-int(r.rangeMillSeconds[0])) + int(r.rangeMillSeconds[0])
+	rd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	randTime := rd.Intn(int(r.rangeMillSeconds[1])-int(r.rangeMillSeconds[0])) + int(r.rangeMillSeconds[0])
 	duration := r.rangeMillSeconds[0] + uint(randTime)
 	time.Sleep(time.Duration(duration) * time.Millisecond)
 	return

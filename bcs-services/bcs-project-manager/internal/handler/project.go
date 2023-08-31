@@ -16,18 +16,13 @@ package handler
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
@@ -83,35 +78,17 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	var enableVcluster bool
-	if vclusterFeatureFlag, exists := config.GlobalConf.FeatureFlags[constant.FlagKeyEnableVcluster]; exists {
-		if enable, exists := vclusterFeatureFlag[projectInfo.ProjectCode]; exists && enable {
-			enableVcluster = true
-		}
-	}
 	businessName := ""
 	if projectInfo.BusinessID != "" && projectInfo.BusinessID != "0" {
-		// get business name from cache
-		c := cache.GetCache()
-		if name, exists := c.Get(fmt.Sprintf(CacheKeyBusinessIDPrefix, projectInfo.BusinessID)); exists {
-			businessName = name.(string)
-		} else {
-			searchData, err := cmdb.SearchBusiness("", projectInfo.BusinessID)
-			if err != nil {
-				return errorx.NewRequestCMDBErr(err.Error())
-			}
-			if searchData.Count != 1 {
-				return errorx.NewReadableErr(errorx.ParamErr,
-					fmt.Sprintf("can not find business %s", projectInfo.BusinessID))
-			}
-			businessName = searchData.Info[0].BKBizName
-			c.Add(fmt.Sprintf(CacheKeyBusinessIDPrefix, projectInfo.BusinessID), businessName, time.Hour)
+		business, err := cmdb.GetBusinessByID(projectInfo.BusinessID, true)
+		if err != nil {
+			return errorx.NewRequestCMDBErr(err.Error())
 		}
+		businessName = business.BKBizName
 	}
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)
 	resp.Data.BusinessName = businessName
-	resp.Data.EnableVcluster = enableVcluster
 	return nil
 }
 

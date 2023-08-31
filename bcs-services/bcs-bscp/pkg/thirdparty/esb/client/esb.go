@@ -16,6 +16,7 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/rest/client"
+	"bscp.io/pkg/thirdparty/esb/bklogin"
 	"bscp.io/pkg/thirdparty/esb/cmdb"
 	"bscp.io/pkg/tools"
 
@@ -25,6 +26,7 @@ import (
 // Client NOTES
 type Client interface {
 	Cmdb() cmdb.Client
+	BKLogin() bklogin.Client
 }
 
 // NewClient new esb client.
@@ -41,6 +43,13 @@ func NewClient(cfg *cc.Esb, reg prometheus.Registerer) (Client, error) {
 		return nil, err
 	}
 
+	// esb 鉴权中间件
+	authTransport, err := newEsbAuthTransport(cfg, tools.NewCurlLogTransport(cli.Transport))
+	if err != nil {
+		return nil, err
+	}
+
+	cli.Transport = authTransport
 	c := &client.Capability{
 		Client: cli,
 		Discover: &esbDiscovery{
@@ -52,15 +61,22 @@ func NewClient(cfg *cc.Esb, reg prometheus.Registerer) (Client, error) {
 	restCli := rest.NewClient(c, "/api/c/compapi/v2")
 
 	return &esbCli{
-		cc: cmdb.NewClient(restCli, cfg),
+		cc:         cmdb.NewClient(restCli),
+		bkloginCli: bklogin.NewClient(restCli),
 	}, nil
 }
 
 type esbCli struct {
-	cc cmdb.Client
+	cc         cmdb.Client
+	bkloginCli bklogin.Client
 }
 
 // Cmdb NOTES
 func (e *esbCli) Cmdb() cmdb.Client {
 	return e.cc
+}
+
+// BKLogin NOTES
+func (e *esbCli) BKLogin() bklogin.Client {
+	return e.bkloginCli
 }

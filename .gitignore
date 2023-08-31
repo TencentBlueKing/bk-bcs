@@ -137,3 +137,9 @@ build.yml
 # bscp 软连接
 bcs-services/bscp.io
 .vscode
+
+bcs-scenarios/bcs-kourse-rollout/bin/*
+
+# ignore scripts tongsuo tar file
+scripts/8.3.2.tar.gz
+scripts/Tongsuo-8.3.2/

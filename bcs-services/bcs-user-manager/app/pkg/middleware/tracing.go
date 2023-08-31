@@ -29,7 +29,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/tracing"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/tracing"
 )
 
 // TracingFilter add tracing

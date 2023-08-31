@@ -12,8 +12,6 @@ COPY bcs-cluster-resources /usr/bin/bcs-cluster-resources
 
 COPY etc/ /data/workspace/etc
 
-COPY swagger/ /data/workspace/swagger
-
 # package example files 
 
 RUN mkdir -p /data/workspace/example

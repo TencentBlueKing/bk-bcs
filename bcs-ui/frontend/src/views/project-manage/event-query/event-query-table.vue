@@ -1,6 +1,6 @@
 <template>
   <div>
-    <bcs-alert type="info" class="mb20" :title="$t('由于事件数据量过大，平台暂提供单集群 7 天内 或1500万条事件查询，以先到达的指标为准')"></bcs-alert>
+    <bcs-alert type="info" class="mb20" :title="$t('projects.eventQuery.info')"></bcs-alert>
     <div class="flex justify-end mb-[20px]">
       <template v-if="!hideClusterAndNamespace">
         <ClusterSelect
@@ -11,8 +11,8 @@
         </ClusterSelect>
         <NamespaceSelect
           :cluster-id="params.clusterId"
-          :clearable="false"
-          required
+          :clearable="nsClearable"
+          :required="nsRequired"
           :list="namespaceList"
           :loading="namespaceLoading"
           v-model="params.namespace"
@@ -21,7 +21,7 @@
         </NamespaceSelect>
       </template>
       <bcs-date-picker
-        :placeholder="$t('选择日期')"
+        :placeholder="$t('generic.placeholder.searchDate')"
         :shortcuts="shortcuts"
         class="ml-[5px] max-w-[320px]"
         type="datetimerange"
@@ -37,9 +37,10 @@
         filter
         :show-condition="false"
         :data="filterData"
-        :placeholder="hideClusterAndNamespace ? $t('搜索组件、资源名称、事件级别') : $t('搜索组件、资源类型、资源名称、事件级别')"
+        :placeholder="hideClusterAndNamespace ? $t('projects.eventQuery._search') : $t('projects.eventQuery.search')"
         :show-popover-tag-change="false"
         :popover-zindex="9999"
+        selected-style="checkbox"
         v-model="params.searchSelect"
         @change="handleInitEventData">
       </bcs-search-select>
@@ -50,24 +51,29 @@
       v-bkloading="{ isLoading: eventLoading }"
       @page-change="handlePageChange"
       @page-limit-change="handlePageLimitChange">
-      <bcs-table-column :label="$t('时间')" prop="eventTime" width="180">
+      <bcs-table-column :label="$t('generic.label.time')" prop="eventTime" width="180">
         <template #default="{ row }">
           {{formatDate(row.eventTime)}}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('组件')" prop="component" width="210" show-overflow-tooltip>
+      <bcs-table-column :label="$t('projects.eventQuery.module')" prop="component" width="210" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.component || '--' }}
         </template>
       </bcs-table-column>
       <bcs-table-column
-        :label="$t('资源名称')"
+        :label="$t('projects.eventQuery.resourceName')"
         prop="extraInfo.name"
         width="200"
         show-overflow-tooltip>
       </bcs-table-column>
-      <bcs-table-column :label="$t('事件级别')" prop="level" width="100"></bcs-table-column>
-      <bcs-table-column :label="$t('事件内容')" prop="describe" min-width="100" show-overflow-tooltip></bcs-table-column>
+      <bcs-table-column :label="$t('projects.eventQuery.level')" prop="level" width="100"></bcs-table-column>
+      <bcs-table-column
+        :label="$t('projects.eventQuery.content')"
+        prop="describe"
+        min-width="100"
+        show-overflow-tooltip>
+      </bcs-table-column>
       <template #empty>
         <BcsEmptyTableStatus :type="searchEmpty ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
       </template>
@@ -79,7 +85,7 @@
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
-import { storageEvents, uatStorageEvents } from '@/api/modules/storage';
+import { storageEvents } from '@/api/modules/storage';
 import { formatDate } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
 import { useCluster } from '@/composables/use-app';
@@ -124,6 +130,14 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    nsClearable: {
+      type: Boolean,
+      default: false,
+    },
+    nsRequired: {
+      type: Boolean,
+      default: true,
+    },
   },
   setup(props) {
     const {
@@ -134,15 +148,14 @@ export default defineComponent({
       level,
       component,
       hideClusterAndNamespace,
+      nsRequired,
     } = toRefs(props);
 
     const { curClusterId, clusterList } = useCluster();
     const { namespaceList, namespaceLoading, getNamespaceData } = useSelectItemsNamespace();
-
-    const isDebugCluster = computed(() => clusterList.value.find(item => item.clusterID === params.value.clusterId || item.clusterID === curClusterId.value)?.environment !== 'prod');
     const shortcuts = ref([
       {
-        text: $i18n.t('近1小时'),
+        text: $i18n.t('projects.eventQuery.lastHour'),
         value() {
           const end = new Date();
           const start = new Date();
@@ -151,7 +164,7 @@ export default defineComponent({
         },
       },
       {
-        text: $i18n.t('近6小时'),
+        text: $i18n.t('projects.eventQuery.last6Hours'),
         value() {
           const end = new Date();
           const start = new Date();
@@ -160,7 +173,7 @@ export default defineComponent({
         },
       },
       {
-        text: $i18n.t('近24小时'),
+        text: $i18n.t('projects.eventQuery.last24Hours'),
         value() {
           const end = new Date();
           const start = new Date();
@@ -169,7 +182,7 @@ export default defineComponent({
         },
       },
       {
-        text: $i18n.t('近3天'),
+        text: $i18n.t('projects.eventQuery.last3Days'),
         value() {
           const end = new Date();
           const start = new Date();
@@ -178,7 +191,7 @@ export default defineComponent({
         },
       },
       {
-        text: $i18n.t('近7天'),
+        text: $i18n.t('units.time.lastDays'),
         value() {
           const end = new Date();
           const start = new Date();
@@ -289,22 +302,22 @@ export default defineComponent({
     });
     const filterData = computed(() => [
       {
-        name: $i18n.t('组件'),
+        name: $i18n.t('projects.eventQuery.module'),
         id: 'component',
         children: componentList.map(item => ({ id: item, name: item })),
       },
       {
-        name: $i18n.t('资源类型'),
+        name: $i18n.t('k8s.kind'),
         id: 'kind',
         multiable: true,
         children: kindList.map(item => ({ id: item, name: item })),
       },
       {
-        name: $i18n.t('资源名称'),
+        name: $i18n.t('projects.eventQuery.resourceName'),
         id: 'name',
       },
       {
-        name: $i18n.t('事件级别'),
+        name: $i18n.t('projects.eventQuery.level'),
         id: 'level',
         children: [{ id: 'Normal', name: 'Normal' }, { id: 'Warning', name: 'Warning' }],
       },
@@ -331,7 +344,7 @@ export default defineComponent({
         } else {
           params.value.searchSelect.push({
             id: 'name',
-            name: $i18n.t('资源名称'),
+            name: $i18n.t('projects.eventQuery.resourceName'),
             values,
           });
         }
@@ -345,7 +358,7 @@ export default defineComponent({
     const handleClusterChange = async () => {
       eventLoading.value = true;
       await getNamespaceData({ clusterId: params.value.clusterId });
-      params.value.namespace = namespaceList.value[0]?.name;
+      params.value.namespace = '';
       await handleInitEventData();
       eventLoading.value = false;
     };
@@ -360,12 +373,10 @@ export default defineComponent({
     const handleGetEventList = async () => {
       const clusterId = params.value.clusterId || curClusterId.value;
       const cluster = clusterList.value.find(item => item.clusterID === clusterId);
-      if (cluster.is_shared && !params.value.namespace) return; // 共享集群没有命名空间时，不请求
+      if (cluster?.is_shared && !params.value.namespace) return; // 共享集群没有命名空间时，不请求
       eventLoading.value = true;
       const [start, end] = params.value.date;
-      // todo 临时处理
-      const eventAction = isDebugCluster.value ? uatStorageEvents : storageEvents;
-      const { data = [], total = 0 } = await eventAction({
+      const { data = [], total = 0 } = await storageEvents({
         offset: (pagination.value.current - 1) * pagination.value.limit,
         length: pagination.value.limit,
         clusterId,
@@ -396,28 +407,28 @@ export default defineComponent({
       if (level.value) {
         params.value.searchSelect.push({
           id: 'level',
-          name: $i18n.t('事件级别'),
+          name: $i18n.t('projects.eventQuery.level'),
           values: [{ id: level.value, name: level.value }],
         });
       }
       if (kinds.value && !hideClusterAndNamespace.value) {
         params.value.searchSelect.push({
           id: 'kind',
-          name: $i18n.t('资源类型'),
+          name: $i18n.t('k8s.kind'),
           values: (Array.isArray(kinds.value) ? kinds.value : [kinds.value]).map(item => ({ id: item, name: item })),
         });
       }
       if (name.value && !hideClusterAndNamespace.value) {
         params.value.searchSelect.push({
           id: 'name',
-          name: $i18n.t('资源名称'),
+          name: $i18n.t('projects.eventQuery.resourceName'),
           values: (Array.isArray(name.value) ? name.value : [name.value]).map(item => ({ id: item, name: item })),
         });
       }
       if (component.value) {
         params.value.searchSelect.push({
           id: 'component',
-          name: $i18n.t('组件'),
+          name: $i18n.t('projects.eventQuery.module'),
           values: [{ id: component.value, name: component.value }],
         });
       }
@@ -428,12 +439,13 @@ export default defineComponent({
     };
 
     onMounted(async () => {
-      await getNamespaceData({ clusterId: params.value.clusterId || curClusterId.value });
-      handleGetEventList();
+      eventLoading.value = true;
+      await getNamespaceData({ clusterId: params.value.clusterId || curClusterId.value }, nsRequired.value);
+      await handleGetEventList();
+      eventLoading.value = false;
     });
 
     return {
-      isDebugCluster,
       kindList,
       filterData,
       params,

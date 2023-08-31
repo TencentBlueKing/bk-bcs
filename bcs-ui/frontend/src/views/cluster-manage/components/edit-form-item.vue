@@ -22,8 +22,8 @@
           @change="handleChange">
         </bcs-input>
       </Validate>
-      <!-- <bcs-button text class="text-[12px] ml-[10px] h-[32px]" @click="handleSave">{{ $t('保存') }}</bcs-button>
-      <bcs-button text class="text-[12px] ml-[10px] h-[32px]" @click="handleCancel">{{ $t('取消') }}</bcs-button> -->
+      <!-- <bcs-button text class="text-[12px] ml-[10px] h-[32px]" @click="handleSave">{{ $t('generic.button.save') }}</bcs-button>
+      <bcs-button text class="text-[12px] ml-[10px] h-[32px]" @click="handleCancel">{{ $t('generic.button.cancel') }}</bcs-button> -->
     </template>
   </div>
 </template>

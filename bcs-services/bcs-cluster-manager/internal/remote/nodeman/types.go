@@ -78,12 +78,16 @@ const (
 
 	// PasswordAuthType password auth type
 	PasswordAuthType AuthType = "PASSWORD"
+	// KeyAuthType key auth type
+	KeyAuthType AuthType = "KEY"
 
 	// RootAccount root account
 	RootAccount = "root"
 
 	// DefaultPort default port
 	DefaultPort = 22
+	// SpecialPort special port
+	SpecialPort = 36000
 
 	// JobSuccess job success
 	JobSuccess JobStatus = "SUCCESS"
@@ -129,6 +133,7 @@ type JobInstallHost struct {
 	Port      int      `json:"port"`
 	AuthType  AuthType `json:"auth_type"`
 	Password  string   `json:"password"`
+	Key       string   `json:"key"`
 }
 
 // JobInstallRequest job install request

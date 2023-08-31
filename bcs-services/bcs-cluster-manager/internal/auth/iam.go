@@ -32,6 +32,8 @@ var (
 
 // InitPermClient new a perm client
 func InitPermClient(iamClient iam.PermClient) {
+	IAMClient = iamClient
+
 	ProjectIamClient = project.NewBCSProjectPermClient(iamClient)
 	ClusterIamClient = cluster.NewBCSClusterPermClient(iamClient)
 	CloudAccountIamClient = cloudaccount.NewBCSAccountPermClient(iamClient)

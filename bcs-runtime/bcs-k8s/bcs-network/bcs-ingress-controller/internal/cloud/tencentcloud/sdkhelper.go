@@ -73,16 +73,22 @@ func (sw *SdkWrapper) loadEnv() error {
 
 // getRegionClient create region client
 func (sw *SdkWrapper) getRegionClient(region string) (*tclb.Client, error) {
-	cli, ok := sw.clbCliMap[region]
+	iCli, ok := sw.clbCliMap.Load(region)
 	if !ok {
 		newCli, err := tclb.NewClient(sw.credential, region, sw.cpf)
 		if err != nil {
 			blog.Errorf("create clb client for region %s failed, err %s", region, err.Error())
 			return nil, fmt.Errorf("create clb client for region %s failed, err %s", region, err.Error())
 		}
-		sw.clbCliMap[region] = newCli
+		sw.clbCliMap.Store(region, newCli)
 		return newCli, nil
 	}
+	cli, ok := iCli.(*tclb.Client)
+	if !ok {
+		blog.Errorf("unknown type store in clbCliMap, value: %v", iCli)
+		return nil, fmt.Errorf("unknown type store in clbCliMap, value: %v", iCli)
+	}
+
 	return cli, nil
 }
 

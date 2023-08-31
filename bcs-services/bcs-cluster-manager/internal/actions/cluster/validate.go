@@ -31,3 +31,10 @@ var ClusterTypeLookup = map[string]struct{}{
 	"federation": {},
 	"single":     {},
 }
+
+// ClusterEnvMap cluster env map
+var ClusterEnvMap = map[string]struct{}{
+	"stag":  {},
+	"debug": {},
+	"prod":  {},
+}

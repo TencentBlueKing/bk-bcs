@@ -95,7 +95,7 @@ func (c *client) refreshReleasedCICache(kt *kit.Kit, bizID uint32, releaseID uin
 	cancel := kt.CtxWithTimeoutMS(500)
 	defer cancel()
 
-	releasedCIs, err := c.op.ReleasedCI().ListAll(kt, bizID)
+	releasedCIs, err := c.op.ReleasedCI().ListAllByReleaseIDs(kt, []uint32{releaseID}, bizID)
 	if err != nil {
 		logs.Errorf("get biz: %d release: %d CI from db failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
 		return "", err
@@ -121,14 +121,13 @@ func (c *client) refreshReleasedCICache(kt *kit.Kit, bizID uint32, releaseID uin
 		return "", err
 	}
 
-	c.mc.releasedCIByteSize.With(prm.Labels{"rsc": releasedCIRes, "biz": tools.Itoa(bizID)}).
-		Observe(float64(len(js)))
-
 	err = c.bds.Set(kt.Ctx, ciKey, string(js), keys.Key.ReleasedCITtlSec(false))
 	if err != nil {
 		logs.Errorf("refresh biz: %d, release: %d CI cache failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
 		return "", err
 	}
+
+	c.mc.cacheItemByteSize.With(prm.Labels{"rsc": releasedCIRes, "biz": tools.Itoa(bizID)}).Observe(float64(len(js)))
 
 	// return the array string json.
 	return string(js), nil

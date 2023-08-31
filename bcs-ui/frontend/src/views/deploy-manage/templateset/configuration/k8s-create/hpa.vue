@@ -16,15 +16,15 @@
             <bk-alert type="info" class="mb20">
               <div slot="title">
                 <div>
-                  {{$t('HPA (Horizontal Pod Autoscaler) 是k8s自动扩缩容服务，利用HPA，k8s能够根据监测到的 cpu, memory 利用率, 自动的扩缩容 Deployment 中 Pod 的数量')}}，
-                  <a v-if="$INTERNAL" class="bk-text-button" :href="PROJECT_CONFIG.k8sHpa" target="_blank">{{$t('详情查看文档')}}</a>
+                  {{$t('deploy.templateset.HPA')}}，
+                  <a v-if="$INTERNAL" class="bk-text-button" :href="PROJECT_CONFIG.k8sHpa" target="_blank">{{$t('plugin.tools.docs')}}</a>
                 </div>
               </div>
             </bk-alert>
             <template v-if="!HPAs.length">
               <div class="biz-guide-box mt0">
                 <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalHPA">
-                  <span style="margin-left: 0;">{{$t('添加')}}HPA</span>
+                  <span style="margin-left: 0;">{{$t('generic.button.add')}}HPA</span>
                 </bk-button>
               </div>
             </template>
@@ -33,13 +33,13 @@
                 <div class="biz-list-operation">
                   <div class="item" v-for="(hpa, index) in HPAs" :key="hpa.id">
                     <bk-button :class="['bk-button', { 'bk-primary': curHPA.id === hpa.id }]" @click.stop="setCurHPA(hpa, index)">
-                      {{(hpa && hpa.config.metadata.name) || $t('未命名')}}
+                      {{(hpa && hpa.config.metadata.name) || $t('deploy.templateset.unnamed')}}
                       <span class="biz-update-dot" v-show="hpa.isEdited"></span>
                     </bk-button>
                     <span class="bcs-icon bcs-icon-close" @click.stop="removeHPA(hpa, index)"></span>
                   </div>
 
-                  <bcs-popover ref="hpaTooltip" :content="$t('添加HPA')" placement="top">
+                  <bcs-popover ref="hpaTooltip" :content="$t('deploy.templateset.addHPA')" placement="top">
                     <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalHPA">
                       <i class="bcs-icon bcs-icon-plus"></i>
                     </bk-button>
@@ -49,7 +49,7 @@
 
               <div class="biz-configuration-content" style="position: relative; margin-bottom: 130px;">
                 <div class="bk-form biz-configuration-form">
-                  <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('导入YAML')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
 
                   <bk-sideslider
                     :is-show.sync="toJsonDialogConf.isShow"
@@ -60,8 +60,8 @@
                     @hidden="closeToJson">
                     <div slot="content" style="position: relative;">
                       <div class="biz-log-box" :style="{ height: `${winHeight - 60}px` }" v-bkloading="{ isLoading: toJsonDialogConf.loading }">
-                        <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('导入')}}</bk-button>
-                        <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('取消')}}</bk-button>
+                        <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
+                        <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
                         <ace
                           :value="editorConfig.value"
                           :width="editorConfig.width"
@@ -76,21 +76,21 @@
                   </bk-sideslider>
 
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 140px;">{{$t('名称')}}：</label>
+                    <label class="bk-label" style="width: 140px;">{{$t('generic.label.name')}}：</label>
                     <div class="bk-form-content" style="margin-left: 140px;">
-                      <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('hpaName') }]" :placeholder="$t('请输入64个以内的字符')" style="width: 310px;" maxlength="64" v-model="curHPA.config.metadata.name" name="hpaName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
+                      <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('hpaName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit')" style="width: 310px;" maxlength="64" v-model="curHPA.config.metadata.name" name="hpaName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
                       <div class="bk-form-tip" v-if="errors.has('hpaName')">
-                        <p class="bk-tip-text">{{$t('名称必填，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)')}}</p>
+                        <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
                       </div>
                     </div>
                   </div>
 
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 140px;">{{$t('关联应用')}}：</label>
+                    <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.associateApplication')}}：</label>
                     <div class="bk-form-content" style="margin-left: 140px;">
                       <div class="bk-dropdown-box" style="width: 310px;">
                         <bk-selector
-                          :placeholder="$t('请选择要关联的应用')"
+                          :placeholder="$t('deploy.templateset.selectAssociatedApplication')"
                           :setting-key="'deploy_name'"
                           :display-key="'deploy_name'"
                           :selected.sync="curHPA.config.spec.scaleTargetRef.name"
@@ -99,20 +99,20 @@
                           :is-loading="isLoadingApps">
                         </bk-selector>
                       </div>
-                      <span class="biz-tip ml10" v-if="!isDataLoading && !applicationList.length">{{$t('请先配置Deployment，再进行关联')}}</span>
+                      <span class="biz-tip ml10" v-if="!isDataLoading && !applicationList.length">{{$t('deploy.templateset.configureDeploymentFirst')}}</span>
                     </div>
                   </div>
 
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 140px;">{{$t('实例数范围')}}：</label>
+                    <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.instanceRange')}}：</label>
                     <div class="bk-form-content" style="margin-left: 140px;">
                       <div class="bk-form-input-group is-addon-left mr10">
                         <span class="input-group-addon prefix" style="display: inline-block;">
-                          {{$t('最小')}}
+                          {{$t('deploy.templateset.min')}}
                         </span>
                         <bkbcs-input
                           type="number"
-                          :placeholder="$t('请输入')"
+                          :placeholder="$t('generic.placeholder.input')"
                           style="width: 105px;"
                           :min="1"
                           :value.sync="curHPA.config.spec.minReplicas"
@@ -122,11 +122,11 @@
 
                       <div class="bk-form-input-group is-addon-left" style="display: inline-block;">
                         <span class="input-group-addon prefix">
-                          {{$t('最大')}}
+                          {{$t('deploy.templateset.max')}}
                         </span>
                         <bkbcs-input
                           type="number"
-                          :placeholder="$t('请输入')"
+                          :placeholder="$t('generic.placeholder.input')"
                           style="width: 103px;"
                           :min="curHPA.config.spec.minReplicas"
                           :value.sync="curHPA.config.spec.maxReplicas"
@@ -136,7 +136,7 @@
                     </div>
                   </div>
                   <div class="biz-span">
-                    <span data-v-d78ff3e4="" class="title">{{$t('扩缩容触发条件')}}</span>
+                    <span data-v-d78ff3e4="" class="title">{{$t('deploy.templateset.scalingTriggerCondition')}}</span>
                   </div>
 
                   <div class="bk-form-item">
@@ -145,8 +145,8 @@
                       <table class="biz-simple-table">
                         <thead>
                           <tr>
-                            <th style="width: 313px;">{{$t('资源类型')}}</th>
-                            <th style="width: 225px;">{{$t('资源目标')}}</th>
+                            <th style="width: 313px;">{{$t('k8s.kind')}}</th>
+                            <th style="width: 225px;">{{$t('deploy.templateset.resourceTarget')}}</th>
                             <th></th>
                           </tr>
                         </thead>
@@ -154,7 +154,7 @@
                           <tr v-for="(metric, index) in curHPA.config.spec.metrics" :key="index">
                             <td>
                               <bk-selector
-                                :placeholder="$t('请选择资源类型')"
+                                :placeholder="$t('deploy.templateset.selectResourceType')"
                                 :setting-key="'name'"
                                 :display-key="'description'"
                                 :selected.sync="metric.resource.name"
@@ -169,7 +169,7 @@
                                   type="number"
                                   style="width: 180px;"
                                   :min="0"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   :value.sync="metric.resource.target.averageUtilization">
                                 </bkbcs-input>
                                 <span class="input-group-addon">
@@ -387,8 +387,8 @@ export default {
       const HPAId = hpa.id;
 
       this.$bkInfo({
-        title: this.$t('确认删除'),
-        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('删除HPA')}：${hpa.config.metadata.name || this.$t('未命名')}`),
+        title: this.$t('generic.title.confirmDelete'),
+        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('deploy.templateset.deleteHPA')}：${hpa.config.metadata.name || this.$t('deploy.templateset.unnamed')}`),
         async confirmFn() {
           if (HPAId.indexOf && HPAId.indexOf('local_') > -1) {
             self.removeLocalHPA(hpa, index);
@@ -539,7 +539,7 @@ export default {
         if (!appParamKeys.includes(key)) {
           this.$bkMessage({
             theme: 'error',
-            message: `${key}${this.$t('为无效字段')}`,
+            message: `${key}${this.$t('deploy.templateset.invalidField')}`,
           });
           const match = editor.find(`${key}`);
           if (match) {
@@ -560,7 +560,7 @@ export default {
       if (!yaml) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入YAML'),
+          message: this.$t('deploy.templateset.enterYAML'),
         });
         return false;
       }
@@ -570,7 +570,7 @@ export default {
       } catch (err) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入合法的YAML'),
+          message: this.$t('deploy.templateset.enterValidYAML'),
         });
         return false;
       }
@@ -622,7 +622,7 @@ export default {
       if (deploymentName && !appNames.includes(deploymentName)) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('{curHPA}中关联应用：关联的Deployment【{deploymentName}】不存在，请重新绑定！', {
+          message: this.$t('deploy.templateset.rebindWarning', {
             curHPA: this.curHPA.config.metadata.name,
             deploymentName,
           }),

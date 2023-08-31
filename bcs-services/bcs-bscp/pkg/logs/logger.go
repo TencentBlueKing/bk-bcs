@@ -24,7 +24,6 @@ import (
 type logPrefix string
 
 const (
-	etcdPrefix  logPrefix = "[etcd] "
 	redisPrefix logPrefix = "[redis] "
 	grpcPrefix  logPrefix = "[grpc] "
 )

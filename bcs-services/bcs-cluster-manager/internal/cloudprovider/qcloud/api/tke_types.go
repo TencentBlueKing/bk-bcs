@@ -17,7 +17,6 @@ import (
 	"fmt"
 
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
@@ -86,7 +85,7 @@ var (
 // InstanceAsStatus 实例在伸缩活动中的状态
 type InstanceAsStatus string
 
-// String return es
+// String return is
 func (is InstanceAsStatus) String() string {
 	return string(is)
 }
@@ -105,7 +104,7 @@ var (
 // InstanceTkeStatus tke集群中实例状态
 type InstanceTkeStatus string
 
-// String return es
+// String return is
 func (is InstanceTkeStatus) String() string {
 	return string(is)
 }
@@ -117,6 +116,13 @@ var (
 	RunningInstanceTke InstanceAsStatus = "running"
 	// FailedInstanceTke xxx
 	FailedInstanceTke InstanceAsStatus = "failed"
+)
+
+const (
+	// TkeClusterType tke
+	TkeClusterType = "tke"
+	// EksClusterType eks
+	EksClusterType = "eks"
 )
 
 const (
@@ -148,7 +154,7 @@ const (
 
 // QueryFilter xxx
 type QueryFilter interface {
-	// BuildFilters () build filters
+	// BuildFilters() build filters
 	BuildFilters() []*tke.Filter
 }
 
@@ -272,17 +278,29 @@ func (dir *DeleteInstancesRequest) validate() error {
 	return nil
 }
 
+var (
+	// GlobalRouteCIDRCheck global router
+	GlobalRouteCIDRCheck = "GlobalRouteCIDRCheck"
+	// VpcCniCIDRCheck vpc-cni subnet resource
+	VpcCniCIDRCheck = "VpcCniCIDRCheck"
+)
+
 // AddExistedInstanceReq xxx
 type AddExistedInstanceReq struct {
 	ClusterID       string                    `json:"clusterID"`
 	InstanceIDs     []string                  `json:"instanceIDs"`
 	AdvancedSetting *InstanceAdvancedSettings `json:"advancedSetting"`
-	// SecurityGroupIds instance security group set, only support single group; if null, use default group
+	// 实例所属安全组. 该参数可以通过调用 DescribeSecurityGroups 的返回值中的sgId字段来获取。若不指定该参数，则绑定默认安全组。
 	SecurityGroupIds []string `json:"securityGroupIds"`
 	// NodePool nodePool conf
 	NodePool        *NodePoolOption  `json:"nodePool"`
 	EnhancedSetting *EnhancedService `json:"enhancedSetting"`
 	LoginSetting    *LoginSettings   `json:"loginSetting"`
+	// SkipValidateOptions 校验规则相关选项，可配置跳过某些校验规则。目前支持GlobalRouteCIDRCheck(跳过GlobalRouter的相关校验), VpcCniCIDRCheck（跳过VpcCni相关校验）
+	SkipValidateOptions []string `json:"skipValidateOptions"`
+	// InstanceAdvancedSettingsOverrides 参数InstanceAdvancedSettingsOverride数组的长度应与InstanceIds数组一致；
+	// 当长度大于InstanceIds数组长度时将报错；当长度小于InstanceIds数组时，没有对应配置的instace将使用默认配置。
+	InstanceAdvancedSettingsOverrides []*InstanceAdvancedSettings
 }
 
 func (aei *AddExistedInstanceReq) validate() error {
@@ -309,13 +327,28 @@ type AddExistedInstanceRsp struct {
 	TimeoutInstanceIDs []string `json:"timeoutInstanceIDs"`
 }
 
+// DefaultDataDisk set disk ext4 type data when cvm has many disks
+var DefaultDataDisk = DataDetailDisk{
+	FileSystem:         "ext4",
+	MountTarget:        MountTarget,
+	AutoFormatAndMount: true,
+	DiskPartition:      "/dev/vdb",
+}
+
+// DefaultDiskPartition default disk partition
+var DefaultDiskPartition = []string{"/dev/vdb", "/dev/vdc", "/dev/vdd", "/dev/vde", "/dev/vdf"}
+
 // InstanceAdvancedSettings instance advanced setting
 type InstanceAdvancedSettings struct {
+	// 数据盘挂载点, 默认不挂载数据盘. 已格式化的 ext3，ext4，xfs 文件系统的数据盘将直接挂载，其他文件系统或未格式化的数据盘将自动格式化为ext4 (tlinux系统格式化成xfs)并挂载，请注意备份数据! 无数据盘或有多块数据盘的云主机此设置不生效。
+	// 注意，多盘场景请使用下方的DataDisks数据结构，设置对应的云盘类型、云盘大小、挂载路径、是否格式化等信息。
 	// MountTarget data disk mountPoint
 	MountTarget string `json:"mountTarget"`
 	// DockerGraphPath dockerd --graph
 	DockerGraphPath string `json:"dockerGraphPath"`
-	// Unschedulable involved scheduler
+	// UserScript  base64 编码的用户脚本, 此脚本会在 k8s 组件运行后执行, 需要用户保证脚本的可重入及重试逻辑
+	UserScript string `json:"userScript"`
+	// Unschedulable involved scheduler, 默认值是0 表示参与调度
 	Unschedulable *int64 `json:"unschedulable"`
 	// Labels instance labels
 	Labels []*KeyValue `json:"labels"`
@@ -323,8 +356,10 @@ type InstanceAdvancedSettings struct {
 	DataDisks []DataDetailDisk `json:"dataDisks"`
 	// ExtraArgs component start parameter
 	ExtraArgs *InstanceExtraArgs `json:"extraArgs"`
-	// UserScript  base64 编码的用户脚本, 此脚本会在 k8s 组件运行后执行, 需要用户保证脚本的可重入及重试逻辑
-	UserScript string `json:"userScript"`
+	// PreStartUserScript base64 编码的用户脚本，在初始化节点之前执行，目前只对添加已有节点生效
+	PreStartUserScript string `json:"preStartUserScript"`
+	// TaintList 节点污点
+	TaintList []*Taint `json:"taintList"`
 }
 
 // KeyValue struct(name/value)
@@ -346,12 +381,14 @@ type DataDetailDisk struct {
 	DiskType string `json:"diskType"`
 	// DiskSize size
 	DiskSize int64 `json:"diskSize"`
+	// FileSystem file system 文件系统(ext3/ext4/xfs)
+	FileSystem string `json:"fileSystem"`
 	// MountTarget mount point
 	MountTarget string `json:"mountTarget"`
-	// FileSystem file system
-	FileSystem string `json:"fileSystem"`
 	// AutoFormatAndMount auto format and mount
 	AutoFormatAndMount bool `json:"autoFormatAndMount"`
+	// DiskPartition 挂载设备名或分区名，当且仅当添加已有节点时需要
+	DiskPartition string `json:"diskPartition"`
 }
 
 // EnhancedService tke cluster enhanced service
@@ -365,24 +402,20 @@ type EnhancedService struct {
 
 // RunMonitorServiceEnabled tke cluster monitor service
 type RunMonitorServiceEnabled struct {
-
-	// 是否开启[云监控](https://cloud.tencent.com/document/product/248)服务。取值范围：<br><li>TRUE：表示开启云监控服务<br><li>FALSE：表示不开启云监控服务<br><br>默认取值：TRUE。
-	// 注意：此字段可能返回 null，表示取不到有效值。
 	Enabled *bool `json:"Enabled,omitempty" name:"Enabled"`
 }
 
 // RunSecurityServiceEnabled 开启云安全服务。若不指定该参数，则默认开启云安全服务。
 type RunSecurityServiceEnabled struct {
-
-	// 是否开启[云安全](https://cloud.tencent.com/document/product/296)服务。取值范围：<br><li>TRUE：表示开启云安全服务<br><li>FALSE：表示不开启云安全服务<br><br>默认取值：TRUE。
-	// 注意：此字段可能返回 null，表示取不到有效值。
 	Enabled *bool `json:"Enabled,omitempty" name:"Enabled"`
 }
 
 // LoginSettings reset passwd
 type LoginSettings struct {
 	// Password reset instance passwd
-	Password string `json:"Password"`
+	Password string `json:"Password,omitempty"`
+	// KeyIds secret
+	KeyIds []string `json:"KeyIds,omitempty"`
 }
 
 // NodePoolOption nodePool options
@@ -397,15 +430,15 @@ type NodePoolOption struct {
 
 // CreateCVMRequest create cluster cvm request
 type CreateCVMRequest struct {
-	// tke clusterId, required
+	//tke clusterId, required
 	ClusterID string `json:"clusterId"`
-	// VPCID, required
+	//VPCID, required
 	VPCID string `json:"vpcId"`
-	// subnet, required
+	//subnet, required
 	SubNetID string `json:"subnetId"`
-	// available zone, required
+	//available zone, required
 	Zone string `json:"zone"`
-	// cvm number, required
+	//cvm number, required
 	ApplyNum uint32 `json:"applyNum"`
 	// cvm instance type, required
 	InstanceType string `json:"instanceType"`
@@ -415,15 +448,15 @@ type CreateCVMRequest struct {
 	SystemDiskSize uint32 `json:"systemDiskSize"`
 	// dataDisk, optional
 	DataDisks []*DataDisk `json:"dataDisk"`
-	// image information for system, required
+	//image information for system, required
 	Image *ImageInfo `json:"image"`
-	// security group, optional
+	//security group, optional
 	Security *SecurityGroup `json:"security"`
-	// setup security service, optional, default 0
+	//setup security service, optional, default 0
 	IsSecurityService uint32 `json:"isSecurityService,omitempty"`
-	// cloud monitor, optional, default 1
+	//cloud monitor, optional, default 1
 	IsMonitorService uint32 `json:"isMonitorService"`
-	// cvm instance name, optional
+	//cvm instance name, optional
 	InstanceName string `json:"instanceName,omitempty"`
 	// instance login setting
 	Login LoginSettings `json:"login"`
@@ -433,17 +466,17 @@ type CreateCVMRequest struct {
 
 // ImageInfo for system
 type ImageInfo struct {
-	ID   string `json:"imageId"`           // required
-	Name string `json:"imageName"`         // required
-	OS   string `json:"imageOs,omitempty"` // optional
-	Type string `json:"imageType"`         // optional
+	ID   string `json:"imageId"`           //required
+	Name string `json:"imageName"`         //required
+	OS   string `json:"imageOs,omitempty"` //optional
+	Type string `json:"imageType"`         //optional
 }
 
 // SecurityGroup sg information
 type SecurityGroup struct {
-	ID   string `json:"securityGroupId"`             // required
-	Name string `json:"securityGroupName,omitempty"` // optional
-	Desc string `json:"securityGroupDesc,omitempty"` // optional
+	ID   string `json:"securityGroupId"`             //required
+	Name string `json:"securityGroupName,omitempty"` //optional
+	Desc string `json:"securityGroupDesc,omitempty"` //optional
 }
 
 // DataDisk for CVMOrder
@@ -482,6 +515,14 @@ type CreateClusterRequest struct {
 	RunInstancesForNode []*RunInstancesForNode `json:"RunInstancesForNode,omitempty" name:"RunInstancesForNode"`
 	// InstanceDataDiskMountSettings instance dataDisk mount setting
 	InstanceDataDiskMountSettings []*InstanceDataDiskMountSetting `json:"instanceDataDiskMountSettings"`
+	// ExtensionAddon createCluster deploy extensionAddon
+	Addons []ExtensionAddon `json:"addons"`
+}
+
+// ExtensionAddon addon parameters
+type ExtensionAddon struct {
+	AddonName  string
+	AddonParam string
 }
 
 // ClusterCIDRSettings cluster network config
@@ -513,6 +554,12 @@ type ClusterBasicSettings struct {
 	ProjectID int64 `json:"projectID,omitempty"`
 	// TagSpecification describe cluster tag list, resourceType only support "cluster"
 	TagSpecification []*TagSpecification `json:"tagSpecification,omitempty"`
+	// SubnetID 当选择Cilium Overlay网络插件时，TKE会从该子网获取2个IP用来创建内网负载均衡
+	SubnetID string `json:"subnetID,omitempty"`
+	// ClusterLevel 集群等级，针对托管集群生效
+	ClusterLevel string `json:"clusterLevel,omitempty"`
+	// IsAutoUpgrade 集群是否自动升级，针对托管集群生效
+	IsAutoUpgradeClusterLevel bool `json:"isAutoUpgrade,omitempty"`
 }
 
 // ClusterAdvancedSettings cluster advanced setting
@@ -529,6 +576,8 @@ type ClusterAdvancedSettings struct {
 	ExtraArgs *ClusterExtraArgs `json:"extraArgs"`
 	// DeletionProtection cluster delete protection
 	DeletionProtection bool `json:"deletionProtection"`
+	// AuditEnabled cluster audit
+	AuditEnabled bool `json:"auditEnabled"`
 }
 
 // ExistedInstancesForNode use existed nodes for create cluster or add node
@@ -634,7 +683,7 @@ type EnableVpcCniInput struct {
 	VpcCniType string
 	SubnetsIDs []string
 
-	EnableStaticIP bool
+	EnableStaticIp bool
 	ExpiredSeconds int
 }
 
@@ -908,7 +957,7 @@ type LaunchConfiguration struct {
 	// 启动配置显示名称。名称仅支持中文、英文、数字、下划线、分隔符"-"、小数点，最大长度不能超60个字节。
 	LaunchConfigurationName *string `json:"LaunchConfigurationName,omitempty" name:"LaunchConfigurationName"`
 
-	// 指定有效的[镜像]ID，格式形如`img-8toqc6s3`。com/list)查询。
+	// 指定有效的[镜像]
 	ImageID *string `json:"ImageId,omitempty" name:"ImageId"`
 
 	// 启动配置所属项目ID。不填为默认项目。
@@ -916,7 +965,6 @@ type LaunchConfiguration struct {
 	ProjectID *uint64 `json:"ProjectId,omitempty" name:"ProjectId"`
 
 	// 实例机型。不同实例机型指定了不同的资源规格
-	// `InstanceType`和`InstanceTypes`参数互斥，二者必填一个且只能填写一个。
 	InstanceType *string `json:"InstanceType,omitempty" name:"InstanceType"`
 
 	// 实例系统盘配置信息。若不指定该参数，则按照系统默认值进行分配。
@@ -986,7 +1034,7 @@ type LaunchConfiguration struct {
 // SystemDisk 系统盘配置信息。
 type SystemDisk struct {
 
-	// 系统盘类型。取值范围：LOCAL_BASIC：本地硬盘 LOCAL_SSD：本地SSD硬盘 CLOUD_BASIC：普通云硬盘 CLOUD_PREMIUM：高性能云硬盘 CLOUD_SSD：SSD云硬盘 默认取值：CLOUD_PREMIUM。
+	// 系统盘类型
 	DiskType *string `json:"DiskType,omitempty" name:"DiskType"`
 
 	// 系统盘大小，单位：GB。默认值为 50
@@ -997,11 +1045,10 @@ type SystemDisk struct {
 // LaunchConfigureDataDisk 数据盘配置信息。
 type LaunchConfigureDataDisk struct {
 
-	// 数据盘类型。
-	// 取值范围：LOCAL_BASIC：本地硬盘 LOCAL_SSD：本地SSD硬盘 CLOUD_BASIC：普通云硬盘 CLOUD_PREMIUM：高性能云硬盘 CLOUD_SSD：SSD云硬盘 CLOUD_HSSD：增强型SSD云硬盘 CLOUD_TSSD：极速型SSD云硬盘 默认取值与系统盘类型（SystemDisk.DiskType）保持一致。
+	// 数据盘类型
 	DiskType *string `json:"DiskType,omitempty" name:"DiskType"`
 
-	// 数据盘大小，单位：GB。最小调整步长为10G
+	// 数据盘大小，单位：GB。最小调整步长为10G，不同数据盘类型取值范围不同
 	DiskSize *uint64 `json:"DiskSize,omitempty" name:"DiskSize"`
 }
 
@@ -1074,7 +1121,7 @@ type InstanceChargePrepaid struct {
 	// 购买实例的时长，单位：月。取值范围：1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 36。
 	Period *int64 `json:"Period,omitempty" name:"Period"`
 
-	// 自动续费标识。
+	// 自动续费标识
 	RenewFlag *string `json:"RenewFlag,omitempty" name:"RenewFlag"`
 }
 
@@ -1288,4 +1335,292 @@ type AutoScalingInstances struct {
 
 	// 伸缩组名称
 	AutoScalingGroupName *string `json:"AutoScalingGroupName,omitempty" name:"AutoScalingGroupName"`
+}
+
+// NetWorkType xxx
+type NetWorkType string
+
+var (
+	// Flannel xxx
+	Flannel NetWorkType = "Flannel"
+	// CiliumBGP xxx
+	CiliumBGP NetWorkType = "CiliumBGP"
+	// CiliumVXLan xxx
+	CiliumVXLan NetWorkType = "CiliumVXLan"
+)
+
+var netWorkTypeMap = map[NetWorkType]struct{}{
+	Flannel:     {},
+	CiliumBGP:   {},
+	CiliumVXLan: {},
+}
+
+// EnableExternalNodeConfig enable externalNode config
+type EnableExternalNodeConfig struct {
+	// NetworkType 集群网络插件类型，支持：Flannel、CiliumBGP、CiliumVXLan
+	NetworkType string `json:"networkType,omitempty"`
+	// ClusterCIDR Pod CIDR
+	ClusterCIDR string `json:"clusterCIDR,omitempty"`
+	// SubnetId 子网ID
+	SubnetId string `json:"subnetId,omitempty"`
+	// 是否开启第三方节点池支持
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func (cfg EnableExternalNodeConfig) validate() error {
+	if _, ok := netWorkTypeMap[NetWorkType(cfg.NetworkType)]; !ok {
+		return fmt.Errorf("EnableExternalNodeConfig not support networkType[%s]", cfg.NetworkType)
+	}
+
+	if cfg.ClusterCIDR == "" || cfg.SubnetId == "" {
+		return fmt.Errorf("EnableExternalNodeConfig clusterCIDR&SubnetID not empty")
+	}
+
+	return nil
+}
+
+// DescribeExternalNodeScriptConfig xxx
+type DescribeExternalNodeScriptConfig struct {
+	// 节点池ID
+	NodePoolId string `json:"NodePoolId,omitempty"`
+	// 网卡名
+	Interface string `json:"Interface,omitempty"`
+	// 节点名称
+	Name string `json:"Name,omitempty"`
+}
+
+func (cfg DescribeExternalNodeScriptConfig) validate() error {
+	if cfg.NodePoolId == "" {
+		return fmt.Errorf("DescribeExternalNodeScriptConfig NodePoolId is empty")
+	}
+
+	return nil
+}
+
+// DeleteExternalNodeConfig xxx
+type DeleteExternalNodeConfig struct {
+	// Names 第三方节点列表
+	Names []string `json:"names,omitempty"`
+	// Force 是否强制删除：如果第三方节点上有运行中Pod，则非强制删除状态下不会进行删除
+	Force bool `json:"force,omitempty"`
+}
+
+func (cfg DeleteExternalNodeConfig) validate() error {
+	if len(cfg.Names) == 0 {
+		return fmt.Errorf("DeleteExternalNodeConfig Names is empty")
+	}
+
+	return nil
+}
+
+// DeleteExternalNodePoolConfig xxx
+type DeleteExternalNodePoolConfig struct {
+	// NodePoolIds 第三方节点池ID列表
+	NodePoolIds []string `json:"nodePoolIds,omitempty"`
+	// Force 是否强制删除，在第三方节点上有pod的情况下，如果选择非强制删除，则删除会失败
+	Force bool `json:"force,omitempty"`
+}
+
+func (cfg DeleteExternalNodePoolConfig) validate() error {
+	if len(cfg.NodePoolIds) == 0 {
+		return fmt.Errorf("DeleteExternalNodePoolConfig NodePoolIds is empty")
+	}
+
+	return nil
+}
+
+// DescribeExternalNodeConfigInfoResponse xxx
+type DescribeExternalNodeConfigInfoResponse struct {
+	// ClusterCIDR 用于分配集群容器和服务 IP 的 CIDR，不得与 VPC CIDR 冲突，也不得与同 VPC 内其他集群 CIDR 冲突。
+	// 且网段范围必须在内网网段内，例如:10.1.0.0/14, 192.168.0.1/18,172.16.0.0/16
+	ClusterCIDR string `json:"clusterCIDR,omitempty"`
+	// NetworkType 集群网络插件类型，支持：CiliumBGP、CiliumVXLan
+	NetworkType string `json:"networkType,omitempty"`
+	// SubnetId 子网ID
+	SubnetId string `json:"subnetId,omitempty"`
+	// Enabled 是否开启第三方节点支持
+	Enabled bool `json:"enabled,omitempty"`
+	// AS 节点所属交换机的BGP AS 号
+	AS string `json:"aS,omitempty"`
+	// SwitchIP 节点所属交换机的交换机 IP
+	SwitchIP string `json:"switchIP,omitempty"`
+	// Status 开启第三方节电池状态
+	Status string `json:"status,omitempty"`
+	// FailedReason 如果开启失败原因
+	FailedReason string `json:"failedReason,omitempty"`
+	// Master 内网访问地址
+	Master string `json:"master,omitempty"`
+	// Proxy 镜像仓库代理地址
+	Proxy string `json:"Proxy,omitempty"`
+}
+
+// CreateExternalNodePoolConfig xxx
+type CreateExternalNodePoolConfig struct {
+	// Name 节点池名称
+	Name string `json:"name,omitempty"`
+	// ContainerRuntime 运行时
+	ContainerRuntime string `json:"containerRuntime,omitempty"`
+	// RuntimeVersion 运行时版本
+	RuntimeVersion string `json:"runtimeVersion,omitempty"`
+	// Labels 第三方节点label
+	Labels []*Label `json:"labels,omitempty"`
+	// 第三方节点taint
+	Taints []*Taint `json:"taints,omitempty"`
+	// 第三方节点高级设置
+	InstanceAdvancedSettings *InstanceAdvancedSettings `json:"instanceAdvancedSettings,omitempty"`
+}
+
+func (cfg CreateExternalNodePoolConfig) validate() error {
+	if cfg.Name == "" || cfg.ContainerRuntime == "" || cfg.RuntimeVersion == "" {
+		return fmt.Errorf("CreateExternalNodePoolConfig must paras empty")
+	}
+
+	return nil
+}
+
+func (cfg CreateExternalNodePoolConfig) transToTkeExternalNodeConfig(clusterID string) *CreateExternalNodePoolRequest {
+	req := NewCreateExternalNodePoolRequest()
+	req.ClusterId = common.StringPtr(clusterID)
+	req.Name = common.StringPtr(cfg.Name)
+	req.ContainerRuntime = common.StringPtr(cfg.ContainerRuntime)
+	req.RuntimeVersion = common.StringPtr(cfg.RuntimeVersion)
+
+	if len(cfg.Labels) > 0 {
+		req.Labels = cfg.Labels
+	}
+	if len(cfg.Taints) > 0 {
+		req.Taints = cfg.Taints
+	}
+
+	req.InstanceAdvancedSettings = generateInstanceAdvancedSetting(cfg.InstanceAdvancedSettings)
+
+	return req
+}
+
+// ModifyExternalNodePoolConfig xxx
+type ModifyExternalNodePoolConfig struct {
+	// NodePoolId 节点池ID
+	NodePoolId string `json:"nodePoolId,omitempty"`
+	// Name 节点池名称
+	Name string `json:"name,omitempty"`
+	// Labels 第三方节点label
+	Labels []*Label `json:"Labels,omitempty"`
+	// 第三方节点taint
+	Taints []*Taint `json:"Taints,omitempty"`
+}
+
+func (cfg ModifyExternalNodePoolConfig) validate() error {
+	if cfg.NodePoolId == "" {
+		return fmt.Errorf("ModifyExternalNodePoolConfig NodePoolId empty")
+	}
+
+	return nil
+}
+
+// DescribeExternalNodeConfig xxx
+type DescribeExternalNodeConfig struct {
+	// NodePoolId 节点池ID
+	NodePoolId string `json:"nodePoolId,omitempty"`
+	// Names 节点名称
+	Names []string `json:"names,omitempty"`
+}
+
+func (cfg DescribeExternalNodeConfig) validate() error {
+	if cfg.NodePoolId == "" {
+		return fmt.Errorf("DescribeExternalNodeConfig NodePoolId empty")
+	}
+
+	return nil
+}
+
+// ExternalNodeInfo 第三方节点信息
+type ExternalNodeInfo struct {
+	// Name 第三方节点名称
+	Name string `json:"Name,omitempty"`
+	// NodePoolId 第三方节点所属节点池
+	NodePoolId string `json:"NodePoolId,omitempty"`
+	// IP 第三方IP地址
+	IP string `json:"ip,omitempty"`
+	// Location 第三方地域
+	Location string `json:"location,omitempty"`
+	// Status 第三方节点状态
+	Status string `json:"Status,omitempty"`
+	// CreatedTime 创建时间
+	CreatedTime string `json:"createdTime,omitempty"`
+	// Reason 异常原因
+	Reason string `json:"reason,omitempty"`
+	// Unschedulable 是否封锁。true表示已封锁，false表示未封锁
+	Unschedulable bool `json:"unschedulable,omitempty"`
+}
+
+// DescribeVpcCniPodLimitsOut xxx
+type DescribeVpcCniPodLimitsOut struct {
+	Zone         string
+	InstanceType string
+	Limits       PodLimits
+}
+
+// PodLimits 某机型可支持的最大 VPC-CNI 模式的 Pod 数量
+type PodLimits struct {
+	RouterEniNonStaticIP int64
+	RouterEniStaticIP    int64
+	directEni            int64
+}
+
+// ClusterEndpointConfig xxx
+type ClusterEndpointConfig struct {
+	// 是否为外网访问（TRUE 外网访问 FALSE 内网访问，默认值： FALSE）
+	IsExtranet bool
+	// 集群端口所在的子网ID  (仅在开启非外网访问时需要填，必须为集群所在VPC内的子网)
+	SubnetId string
+	// 设置域名
+	Domain string
+	// 使用的安全组，只有外网访问需要传递（开启外网访问时必传）
+	SecurityGroup string
+	// 创建lb参数，只有外网访问需要设置
+	ExtensiveParameters string
+}
+
+func (cef ClusterEndpointConfig) getEndpointConfig(clusterID string) *tke.CreateClusterEndpointRequest {
+	req := tke.NewCreateClusterEndpointRequest()
+	req.ClusterId = common.StringPtr(clusterID)
+	req.IsExtranet = common.BoolPtr(cef.IsExtranet)
+
+	if cef.IsExtranet {
+		req.SecurityGroup = common.StringPtr(cef.SecurityGroup)
+		req.ExtensiveParameters = common.StringPtr(cef.ExtensiveParameters)
+
+		return req
+	}
+
+	req.SubnetId = common.StringPtr(cef.SubnetId)
+	req.Domain = common.StringPtr(cef.Domain)
+	return req
+}
+
+// ClusterEndpointInfo endpointInfo
+type ClusterEndpointInfo struct {
+	// 集群APIServer的CA证书
+	CertClusterAuthority string
+	// 集群APIServer的外网访问地址
+	ClusterExternalEndpoint string
+	// 集群APIServer的内网访问地址
+	ClusterIntranetEndpoint string
+	// 外网域名
+	ClusterExternalDomain string
+	// 内网域名
+	ClusterIntranetDomain string
+	// 集群APIServer的域名
+	ClusterDomain string
+	// 外网安全组
+	SecurityGroup string
+	// 集群APIServer的外网访问ACL列表
+	ClusterExternalACL []string
+}
+
+// ZoneInfo zone info
+type ZoneInfo struct {
+	ZoneID   uint64
+	Zone     string
+	ZoneName string
 }

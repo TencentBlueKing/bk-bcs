@@ -20,8 +20,8 @@ import (
 )
 
 // GetNodeList 获取集群节点列表
-func GetNodeList(ctx context.Context, clusterId string, excludeMasterRole bool) ([]string, []string, error) {
-	client, err := GetK8SClientByClusterId(clusterId)
+func GetNodeList(ctx context.Context, clusterID string, excludeMasterRole, filter bool) ([]string, []string, error) {
+	client, err := GetK8SClientByClusterId(clusterID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -36,9 +36,13 @@ func GetNodeList(ctx context.Context, clusterId string, excludeMasterRole bool) 
 		return nil, nil, err
 	}
 
-	nodeIPList := make([]string, 0, len(nodeList.Items))
-	nodeNameList := make([]string, 0, len(nodeList.Items))
+	nodeIPList := make([]string, 0)
+	nodeNameList := make([]string, 0)
 	for _, item := range nodeList.Items {
+		// 过滤掉被标记的节点，该 annotation 表示该节点不参与资源调度
+		if v, ok := item.Annotations["io.tencent.bcs.dev/filter-node-resource"]; ok && v == "true" && filter {
+			continue
+		}
 		nodeNameList = append(nodeNameList, item.Name)
 		for _, addr := range item.Status.Addresses {
 			if addr.Type == v1.NodeInternalIP {

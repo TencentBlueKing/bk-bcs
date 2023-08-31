@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.0
+    controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
   name: hookruns.tkex.tencent.com
 spec:
@@ -216,7 +215,7 @@ spec:
                         if a measurement is considered successful Expression is a
                         goevaluate expression. The keyword `result` is a variable
                         reference to the value of measurement. Results can be both
-                        structured data or primitive. Examples:   result > 10   (result.requests_made
+                        structured data or primitive. Examples: result > 10 (result.requests_made
                         * result.requests_succeeded / 100) >= 90'
                       type: string
                     successfulLimit:
@@ -309,9 +308,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

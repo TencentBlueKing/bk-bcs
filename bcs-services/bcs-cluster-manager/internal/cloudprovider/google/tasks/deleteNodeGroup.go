@@ -41,7 +41,11 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -62,7 +66,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 	found := true
 	if group.CloudNodeGroupID != "" {
-		_, err := containerCli.GetClusterNodePool(context.Background(), cluster.SystemID, group.CloudNodeGroupID)
+		_, err = containerCli.GetClusterNodePool(context.Background(), cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
 			if strings.Contains(err.Error(), "NotFound") || strings.Contains(err.Error(), "not found") {
 				blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
@@ -79,7 +83,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		}
 	}
 	if found && group.CloudNodeGroupID != "" {
-		_, err := containerCli.DeleteClusterNodePool(context.Background(), cluster.SystemID, group.CloudNodeGroupID)
+		_, err = containerCli.DeleteClusterNodePool(context.Background(), cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
 			blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool[%s] api in task %s step %s failed, %s",
 				taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -96,7 +100,7 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}

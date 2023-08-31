@@ -44,7 +44,7 @@ const request2 = createRequest({
 // 日志
 export const podContainersList = request2('get', '/namespaces/$namespaceId/pods/$podId/containers');
 export const podLogs = request2('get', '/namespaces/$namespaceId/pods/$podId/logs');
-export const podLogsDownloadURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName`;
+export const podLogsDownloadURL = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName&previous=$previous`;
 export const podLogsStreamURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/stream?container_name=$containerName&started_at=$startedAt`;
 export const logEntrypoints = request2('get', '/log_collector/entrypoints');
 export const logRules = request2('get', '/log_collector/rules');
@@ -52,3 +52,18 @@ export const ruleDetail = request2('get', '/log_collector/rules/$name');
 export const createLogRule = request2('post', '/log_collector/rules');
 export const updateLogRule = request2('put', '/log_collector/rules/$name');
 export const deleteLogRule = request2('delete', '/log_collector/rules/$name');
+
+// 日志规则
+const logRequest = createRequest({
+  domain: window.BCS_API_HOST,
+  prefix: '/bcsapi/v4/monitor/api/projects/$projectCode/clusters/$clusterId',
+});
+export const logCollectorRules = logRequest('get', '/log_collector/rules');
+export const retryLogCollectorRule = logRequest('post', '/log_collector/rules/$ID/retry');
+export const enableLogCollector = logRequest('post', '/log_collector/rules/$ID/enable');
+export const disableLogCollector = logRequest('post', '/log_collector/rules/$ID/disable');
+export const deleteLogCollectorRule = logRequest('delete', '/log_collector/rules/$ID');
+export const logCollectorDetail = logRequest('get', '/log_collector/rules/$ID');
+export const createLogCollectorRule = logRequest('post', '/log_collector/rules');
+export const modifyLogCollectorRule = logRequest('put', '/log_collector/rules/$ID');
+export const logCollectorEntrypoints = logRequest('post', '/log_collector/entrypoints');

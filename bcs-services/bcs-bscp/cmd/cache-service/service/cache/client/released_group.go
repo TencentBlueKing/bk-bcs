@@ -110,7 +110,7 @@ func (c *client) refreshAppReleasedGroupCache(kt *kit.Kit, bizID uint32, appID u
 		return "", fmt.Errorf("set biz: %d, app: %d, released group cache failed, err: %v", bizID, appID, err)
 	}
 
-	c.mc.releasedGroupByteSize.With(prm.Labels{"rsc": releasedGroupRes, "biz": tools.Itoa(bizID)}).Observe(float64(size))
+	c.mc.cacheItemByteSize.With(prm.Labels{"rsc": releasedGroupRes, "biz": tools.Itoa(bizID)}).Observe(float64(size))
 
 	return list, nil
 }

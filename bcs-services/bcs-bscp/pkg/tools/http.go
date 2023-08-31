@@ -50,7 +50,7 @@ func reqToCurl(r *http.Request) string {
 	for key, values := range r.Header {
 		for _, value := range values {
 			if _, ok := maskKeys[key]; ok {
-				value = "<masked>"
+				value = "***"
 			}
 			headers += fmt.Sprintf(" -H %q", fmt.Sprintf("%s: %s", key, value))
 		}
@@ -83,7 +83,7 @@ func reqToCurl(r *http.Request) string {
 
 // respToCurl 返回日志
 func respToCurl(resp *http.Response, st time.Time) string {
-	respMsg := fmt.Sprintf("[%s] size=%s waiting=%s", resp.Status, humanize.Bytes(uint64(resp.ContentLength)), time.Since(st))
+	respMsg := fmt.Sprintf("[%s] size=%s duration=%s", resp.Status, humanize.Bytes(uint64(resp.ContentLength)), time.Since(st))
 	return respMsg
 }
 

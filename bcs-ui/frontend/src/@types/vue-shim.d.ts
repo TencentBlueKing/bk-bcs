@@ -11,3 +11,11 @@ declare module 'vue/types/vue' {
     $chainable: (obj: any, path: string) => any;
   }
 }
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    menuId?: string // 父菜单ID
+    id?: string // 当前菜单ID
+    title?: string // 标题
+  }
+}

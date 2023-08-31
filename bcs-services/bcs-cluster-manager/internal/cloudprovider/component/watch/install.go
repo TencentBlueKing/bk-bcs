@@ -20,14 +20,14 @@ import (
 )
 
 // GetWatchInstaller watch installer
-func GetWatchInstaller(projectID string) (install.Installer, error) {
+func GetWatchInstaller(projectID string, namespace string) (install.Installer, error) {
 	op := cmoptions.GetGlobalCMOptions()
 
 	return component.GetComponentInstaller(component.InstallOptions{
 		InstallType:      op.ComponentDeploy.DeployService,
 		ProjectID:        projectID,
 		ChartName:        op.ComponentDeploy.Watch.ChartName,
-		ReleaseNamespace: op.ComponentDeploy.Watch.ReleaseNamespace,
+		ReleaseNamespace: namespace,
 		ReleaseName:      op.ComponentDeploy.Watch.ReleaseName,
 		IsPublicRepo:     op.ComponentDeploy.Watch.IsPublicRepo,
 	})

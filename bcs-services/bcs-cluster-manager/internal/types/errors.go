@@ -34,6 +34,7 @@ const (
 	BcsErrClusterManagerDatabaseRecordNotFound = common.BCSErrClusterManager + 4
 	// BcsErrClusterManagerDatabaseRecordDuplicateKey database index key is duplicate
 	BcsErrClusterManagerDatabaseRecordDuplicateKey = common.BCSErrClusterManager + 5
+
 	// BcsErrClusterManagerDBOperation xxx
 	// 6~19 is reserved error for database
 	// BcsErrClusterManagerDBOperation db operation error

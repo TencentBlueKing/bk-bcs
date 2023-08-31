@@ -28,7 +28,7 @@ import (
 // Storage 提供了数据库操作的接口
 type Storage interface {
 	// LogRule operation
-	CreateLogRule(ctx context.Context, lc *entity.LogRule) error
+	CreateLogRule(ctx context.Context, lc *entity.LogRule) (string, error)
 	UpdateLogRule(ctx context.Context, id string, lc entity.M) error
 	DeleteLogRule(ctx context.Context, id string) error
 	ListLogRules(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (

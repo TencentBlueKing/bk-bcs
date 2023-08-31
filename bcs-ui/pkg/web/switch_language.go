@@ -16,6 +16,7 @@ package web
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/render"
 
@@ -48,15 +49,21 @@ func (s *WebServer) CookieSwitchLanguage(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	cookie := &http.Cookie{
+		Name:   constants.BluekingLanguage,
+		Value:  req.Lang,
+		Domain: config.G.Base.Domain,
+		Path:   "/",
+	}
+
+	// set secure if bcs api is https schema
+	if strings.HasPrefix("https://", config.G.BCS.Host) {
+		cookie.Secure = true
+		cookie.SameSite = http.SameSiteNoneMode
+	}
+
 	// set cookie message
 	if config.G.Base.Domain != "" {
-		http.SetCookie(w, &http.Cookie{
-			Name:     constants.BluekingLanguage,
-			Value:    req.Lang,
-			Domain:   config.G.Base.Domain,
-			Path:     "/",
-			SameSite: http.SameSiteNoneMode,
-			Secure:   true,
-		})
+		http.SetCookie(w, cookie)
 	}
 }

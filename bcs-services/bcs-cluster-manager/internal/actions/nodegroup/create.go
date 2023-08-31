@@ -14,19 +14,17 @@ package nodegroup
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -50,7 +48,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 }
 
 func (ca *CreateAction) getRelativeResource() error {
-	// get relative cluster for information injection
+	//get relative cluster for information injection
 	cluster, err := ca.model.GetCluster(ca.ctx, ca.req.ClusterID)
 	if err != nil {
 		blog.Errorf("can not get relative Cluster %s when create NodeGroup", ca.req.ClusterID)
@@ -58,7 +56,7 @@ func (ca *CreateAction) getRelativeResource() error {
 	}
 	ca.cluster = cluster
 
-	// clusterManager and nodeGroup is different, clusterManager tencent_cloud, nodeGroup yunti
+	// clusterManager and nodeGroup is different, clusterManager tencent_cloud, nodeGroup other provider
 	// if nodeGroup provider is null, use cluster provider
 	if len(ca.req.Provider) == 0 {
 		ca.req.Provider = cluster.Provider
@@ -79,6 +77,7 @@ func (ca *CreateAction) getRelativeResource() error {
 func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 	timeStr := time.Now().Format(time.RFC3339)
 	group := &cmproto.NodeGroup{
+		NodeGroupID:     ca.generateNodeGroupID(),
 		Name:            ca.req.Name,
 		ClusterID:       ca.req.ClusterID,
 		Region:          ca.req.Region,
@@ -101,7 +100,16 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 			BkCloudID:   ca.req.BkCloudID,
 			BkCloudName: ca.req.CloudAreaName,
 		},
+		NodeGroupType: func() string {
+			// default cloud nodePool
+			_, ok := common.NodeGroupTypeMap[common.NodeGroupType(ca.req.NodeGroupType)]
+			if ok {
+				return ca.req.NodeGroupType
+			}
+			return common.Normal.String()
+		}(),
 	}
+	// set default parameters
 	if group.Region == "" {
 		group.Region = ca.cluster.Region
 	}
@@ -112,9 +120,18 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		group.Provider = ca.cluster.Provider
 	}
 
-	// base64 userscript
+	// base64 encode secret file
+	if group.LaunchTemplate != nil && group.LaunchTemplate.KeyPair != nil &&
+		len(group.LaunchTemplate.KeyPair.KeySecret) > 0 {
+		group.LaunchTemplate.KeyPair.KeySecret = utils.Base64Encode(group.LaunchTemplate.KeyPair.KeySecret)
+	}
+
+	// base64 encode script file
 	if group.NodeTemplate != nil {
-		group.NodeTemplate.UserScript = base64.StdEncoding.EncodeToString([]byte(group.NodeTemplate.UserScript))
+		group.NodeTemplate.UserScript = utils.Base64Encode(group.NodeTemplate.UserScript)
+		group.NodeTemplate.PreStartUserScript = utils.Base64Encode(group.NodeTemplate.PreStartUserScript)
+		group.NodeTemplate.ScaleInPreScript = utils.Base64Encode(group.NodeTemplate.ScaleInPreScript)
+		group.NodeTemplate.ScaleInPostScript = utils.Base64Encode(group.NodeTemplate.ScaleInPostScript)
 	}
 
 	return group
@@ -147,20 +164,17 @@ func (ca *CreateAction) validate() error {
 	if ca.req.NodeTemplate == nil {
 		return fmt.Errorf("nodeTemplate is empty")
 	}
-	if err := validateDiskSize(ca.req.NodeTemplate.DataDisks...); err != nil {
-		return err
-	}
-	if err := validateDiskSize(ca.req.LaunchTemplate.DataDisks...); err != nil {
-		return err
-	}
-	if err := validateDiskSize(ca.req.LaunchTemplate.SystemDisk); err != nil {
-		return err
-	}
-	if err := validateInternet(ca.req.LaunchTemplate.InternetAccess); err != nil {
-		return err
-	}
+	// not external nodeGroup check launchTemplate
+	/*
+		if ca.req.NodeGroupType != common.External.String() {
+			err := validateLaunchTemplate(ca.req.LaunchTemplate)
+			if err != nil {
+				return err
+			}
+		}
+	*/
 
-	// cloud validate
+	// cloud special validate info
 	cloudValidate, err := cloudprovider.GetCloudValidateMgr(ca.cloud.CloudProvider)
 	if err != nil {
 		return err
@@ -181,14 +195,12 @@ func (ca *CreateAction) validate() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (ca *CreateAction) save() error {
+func (ca *CreateAction) saveNodeGroup() error {
 	group := ca.constructNodeGroup()
-
-	// generate nodeGroupID
-	group.NodeGroupID = ca.generateNodeGroupID()
 
 	// store NodeGroup information to DB
 	if err := ca.model.CreateNodeGroup(ca.ctx, group); err != nil {
@@ -197,7 +209,9 @@ func (ca *CreateAction) save() error {
 	}
 	ca.group = removeSensitiveInfo(group)
 	ca.resp.Data.NodeGroup = group
+
 	blog.Infof("create nodegroup %s information for Cluster %s to DB successfully", group, ca.cluster.ClusterID)
+
 	return nil
 }
 
@@ -216,42 +230,72 @@ func (ca *CreateAction) createNodeGroup() error {
 	})
 	if err != nil {
 		blog.Errorf("get Credential for Cloud %s/%s when create NodeGroup for cluster %s failed, %s",
-			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.cluster.ClusterID, err.Error(),
-		)
+			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.cluster.ClusterID, err.Error())
 		return err
 	}
 	cmOption.Region = ca.cluster.Region
 	// cloud provider nodeGroup
-	task, err := mgr.CreateNodeGroup(ca.group, &cloudprovider.CreateNodeGroupOption{CommonOption: *cmOption})
+	task, err := mgr.CreateNodeGroup(ca.group, &cloudprovider.CreateNodeGroupOption{
+		CommonOption: *cmOption,
+		Cluster:      ca.cluster,
+		PoolInfo: cloudprovider.ResourcePoolData{
+			Provider: func() string {
+				if ca.req.Extra != nil {
+					return ca.req.Extra.Provider
+				}
+				return ""
+			}(),
+			ResourcePoolID: func() string {
+				if ca.req.Extra != nil {
+					return ca.req.Extra.PoolID
+				}
+				return ""
+			}(),
+		},
+		OnlyData: ca.req.OnlyCreateInfo,
+	})
 	if err != nil {
 		blog.Errorf("create NodeGroup in cloudprovider %s/%s for Cluster %s failed, %s",
 			ca.cloud.CloudID, ca.cloud.CloudProvider, ca.cluster.ClusterID, err.Error(),
 		)
 		return err
 	}
-
-	// create task and dispatch task
-	ca.resp.Data.Task = task
-	if err = ca.model.CreateTask(ca.ctx, task); err != nil {
-		blog.Errorf("save create node group task for cluster %s failed, %s",
-			ca.group.ClusterID, err.Error(),
-		)
-		return err
+	// create task and dispatch task, generate task entity need to create and dispatch task
+	taskID := ""
+	if task != nil {
+		taskID = task.TaskID
+		ca.resp.Data.Task = task
+		if err = ca.model.CreateTask(ca.ctx, task); err != nil {
+			blog.Errorf("save create node group task for cluster %s failed, %s",
+				ca.group.ClusterID, err.Error(),
+			)
+			return err
+		}
+		if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
+			blog.Errorf("dispatch create node group task for cluster %s failed, %s",
+				ca.group.ClusterID, err.Error(),
+			)
+			return err
+		}
+	} else {
+		ca.group.Status = common.StatusRunning
+		err = ca.model.UpdateNodeGroup(ca.ctx, ca.group)
+		if err != nil {
+			blog.Errorf("updateNodeGroup cluster[%s] %s failed, %s", ca.group.ClusterID, ca.group.Name, err.Error())
+			return err
+		}
 	}
-	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
-		blog.Errorf("dispatch create node group task for cluster %s failed, %s",
-			ca.group.ClusterID, err.Error(),
-		)
-		return err
-	}
 
+	// record operation log
 	err = ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ca.group.NodeGroupID,
-		TaskID:       task.TaskID,
-		Message:      fmt.Sprintf("集群%s创建节点池%s", ca.cluster.ClusterID, ca.group.NodeGroupID),
+		TaskID:       taskID,
+		Message:      fmt.Sprintf("集群%s创建节点规格%s", ca.cluster.ClusterID, ca.group.NodeGroupID),
 		OpUser:       ca.req.Creator,
 		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ca.cluster.ClusterID,
+		ProjectID:    ca.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("CreateNodeGroup[%s] CreateOperationLog failed: %v", ca.cluster.ClusterID, err)
@@ -283,7 +327,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	}
 
 	// save nodegroup to storage
-	if err := ca.save(); err != nil {
+	if err := ca.saveNodeGroup(); err != nil {
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
@@ -297,11 +341,24 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	return
 }
 
+func validateLaunchTemplate(launch *cmproto.LaunchConfiguration) error {
+	if launch == nil {
+		return fmt.Errorf("nodeGroup launchTemplate is null")
+	}
+
+	if launch.InstanceType == "" && (launch.CPU <= 0 && launch.Mem <= 0) && len(launch.Selector) == 0 {
+		return fmt.Errorf("NodeGroup launchTemplate InstanceType selector is empty")
+	}
+
+	return nil
+}
+
 func validateDiskSize(disks ...*cmproto.DataDisk) error {
 	for _, v := range disks {
 		if v == nil {
 			continue
 		}
+
 		size, _ := strconv.Atoi(v.DiskSize)
 		if size < 50 || size > 32000 {
 			return fmt.Errorf("disk size is invalid, it should >=50 and <=32000")

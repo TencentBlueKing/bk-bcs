@@ -31,6 +31,18 @@ func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClu
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// CreateVirtualCluster create virtual cluster by cloud provider
+func (c *Cluster) CreateVirtualCluster(cls *proto.Cluster,
+	opt *cloudprovider.CreateVirtualClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteVirtualCluster delete virtual cluster
+func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
+	opt *cloudprovider.DeleteVirtualClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // ImportCluster import cluster according cloudprovider
 func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
 	// call qcloud interface to create cluster
@@ -70,8 +82,8 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 }
 
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
-func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool,
-	error) {
+func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster,
+	opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
 	if cls == nil || opt == nil {
 		return true, nil
 	}
@@ -79,7 +91,18 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovid
 	return true, nil
 }
 
+// EnableExternalNodeSupport enable cluster support external node
+func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovider.EnableExternalNodeOption) error {
+	return nil
+}
+
 // ListOsImage list image os
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// CheckClusterEndpointStatus check cluster endpoint status
+func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
+	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
+	return false, cloudprovider.ErrCloudNotImplemented
 }

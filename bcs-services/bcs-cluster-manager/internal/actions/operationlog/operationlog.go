@@ -11,19 +11,24 @@
  *
  */
 
-// Package operationlog xxx
 package operationlog
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // ListOperationLogsAction action for list operation logs
@@ -55,19 +60,121 @@ func (ua *ListOperationLogsAction) setResp(code uint32, msg string) {
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (ua *ListOperationLogsAction) fetchOperationLogs() error {
+func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
+	var (
+		conds   = make([]bson.E, 0)
+		condDst = make([]bson.E, 0)
+	)
+	if ua.req.ResourceType != "" {
+		conds = append(conds, util.Condition(operator.Eq, "resourcetype", []string{ua.req.ResourceType}))
+	}
+	if ua.req.ResourceID != "" {
+		conds = append(conds, util.Condition(operator.Eq, "resourceid", []string{ua.req.ResourceID}))
+	}
+	if ua.req.ClusterID != "" {
+		conds = append(conds, util.Condition(operator.Eq, "clusterid", []string{ua.req.ClusterID}))
+	}
+	if ua.req.ProjectID != "" {
+		conds = append(conds, util.Condition(operator.Eq, "projectid", []string{ua.req.ProjectID}))
+	}
+
+	// time range condition
+	start := time.Unix(int64(ua.req.StartTime), 0).Format(time.RFC3339)
+	end := time.Unix(int64(ua.req.EndTime), 0).Format(time.RFC3339)
+	conds = append(conds, util.Condition(util.Range, "createtime", []string{start, end}))
+
+	// default taskID empty filter
+	if !ua.req.TaskIDNull {
+		conds = append(conds, util.Condition(operator.Ne, "taskid", []string{""}))
+	}
+	if ua.req.Status != "" {
+		conds = append(conds, util.Condition(operator.Eq, "status", []string{ua.req.Status}))
+	}
+	if ua.req.TaskType != "" {
+		conds = append(conds, util.Condition(util.Regex, "tasktype", []string{ua.req.TaskType}))
+	}
+
+	if len(ua.req.IpList) > 0 {
+		ipList := strings.Split(ua.req.IpList, ",")
+		condDst = append(condDst, util.Condition(operator.In, "nodeiplist", ipList))
+	}
+
+	sumLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, condDst, &options.ListOption{
+		Count: true,
+	})
+	if err != nil {
+		return err
+	}
+	count := len(sumLogs)
+
+	offset := (ua.req.Page - 1) * ua.req.Limit
+	sort := map[string]int{"createtime": -1}
+
+	opLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, condDst, &options.ListOption{
+		Limit: int64(ua.req.Limit), Offset: int64(offset), Sort: sort})
+	if err != nil {
+		return err
+	}
+
+	ua.resp.Data = &cmproto.ListOperationLogsResponseData{
+		Count:   uint32(count),
+		Results: []*cmproto.OperationLogDetail{},
+	}
+	var taskIDs []string
+	for _, v := range opLogs {
+		if len(v.TaskID) == 0 {
+			continue
+		}
+		taskIDs = append(taskIDs, v.TaskID)
+
+		createTime := utils.TransTimeFormat(v.CreateTime)
+		ua.resp.Data.Results = append(ua.resp.Data.Results, &cmproto.OperationLogDetail{
+			ResourceType: v.ResourceType,
+			ResourceID:   v.ResourceID,
+			TaskID:       v.TaskID,
+			Message:      v.Message,
+			OpUser:       v.OpUser,
+			CreateTime:   createTime,
+			TaskType:     v.TaskType,
+			Status:       v.Status,
+		})
+	}
+
+	// get task
+	if len(taskIDs) == 0 || ua.req.Simple {
+		return nil
+	}
+	return ua.appendTasks(taskIDs)
+}
+
+func (ua *ListOperationLogsAction) fetchV1OperationLogs() error {
 	// resource condition
 	cond := operator.M{"resourcetype": ua.req.ResourceType}
 	if len(ua.req.ResourceID) != 0 {
 		cond["resourceid"] = ua.req.ResourceID
 	}
+	if len(ua.req.ProjectID) != 0 {
+		cond["projectid"] = ua.req.ProjectID
+	}
+	if len(ua.req.ClusterID) != 0 {
+		cond["clusterid"] = ua.req.ClusterID
+	}
+
 	resourceCond := operator.NewLeafCondition(operator.Eq, cond)
 	// time range condition
 	start := time.Unix(int64(ua.req.StartTime), 0).Format(time.RFC3339)
 	end := time.Unix(int64(ua.req.EndTime), 0).Format(time.RFC3339)
+
 	startTimeCond := operator.NewLeafCondition(operator.Gte, operator.M{"createtime": start})
 	endTimeCond := operator.NewLeafCondition(operator.Lte, operator.M{"createtime": end})
-	logsCond := operator.NewBranchCondition(operator.And, resourceCond, startTimeCond, endTimeCond)
+	conds := []*operator.Condition{resourceCond, startTimeCond, endTimeCond}
+
+	// default taskID empty filter
+	if !ua.req.TaskIDNull {
+		taskCond := operator.NewLeafCondition(operator.Ne, operator.M{"taskid": ""})
+		conds = append(conds, taskCond)
+	}
+	logsCond := operator.NewBranchCondition(operator.And, conds...)
 
 	// list operation logs
 	count, err := ua.model.CountOperationLog(ua.ctx, logsCond)
@@ -87,13 +194,12 @@ func (ua *ListOperationLogsAction) fetchOperationLogs() error {
 	}
 	var taskIDs []string
 	for _, v := range opLogs {
-		if len(v.TaskID) != 0 {
-			taskIDs = append(taskIDs, v.TaskID)
+		if len(v.TaskID) == 0 {
+			continue
 		}
-		createTime, err := common.Format3399ToLocalTime(v.CreateTime)
-		if err != nil {
-			blog.Warnf("parse time failed, err: %s", err.Error())
-		}
+		taskIDs = append(taskIDs, v.TaskID)
+
+		createTime := utils.TransTimeFormat(v.CreateTime)
 		ua.resp.Data.Results = append(ua.resp.Data.Results, &cmproto.OperationLogDetail{
 			ResourceType: v.ResourceType,
 			ResourceID:   v.ResourceID,
@@ -122,23 +228,26 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 		taskMap[tasks[i].TaskID] = &tasks[i]
 	}
 	for i, v := range ua.resp.Data.Results {
-		if len(v.TaskID) == 0 {
-			continue
-		}
 		if t, ok := taskMap[v.TaskID]; ok {
 			// remove sensitive info
 			t.CommonParams = nil
 			for i := range t.Steps {
-				t.Steps[i].Params = nil
+				for k := range t.Steps[i].Params {
+					if utils.StringInSlice(k,
+						[]string{cloudprovider.BkSopsTaskUrlKey.String(), cloudprovider.ShowSopsUrlKey.String()}) {
+						continue
+					}
+					delete(t.Steps[i].Params, k)
+				}
+				if t.Steps[i].Start != "" {
+					t.Steps[i].Start = utils.TransTimeFormat(t.Steps[i].Start)
+				}
+				if t.Steps[i].End != "" {
+					t.Steps[i].End = utils.TransTimeFormat(t.Steps[i].End)
+				}
 			}
-			startTime, err := common.Format3399ToLocalTime(t.Start)
-			if err != nil {
-				blog.Warnf("parse time failed, err: %s", err.Error())
-			}
-			endTime, err := common.Format3399ToLocalTime(t.End)
-			if err != nil {
-				blog.Warnf("parse time failed, err: %s", err.Error())
-			}
+			startTime := utils.TransTimeFormat(t.Start)
+			endTime := utils.TransTimeFormat(t.End)
 			t.Start = startTime
 			t.End = endTime
 			ua.resp.Data.Results[i].Task = t
@@ -148,8 +257,7 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 }
 
 // Handle handles list operation logs
-func (ua *ListOperationLogsAction) Handle(ctx context.Context, req *cmproto.ListOperationLogsRequest,
-	resp *cmproto.ListOperationLogsResponse) {
+func (ua *ListOperationLogsAction) Handle(ctx context.Context, req *cmproto.ListOperationLogsRequest, resp *cmproto.ListOperationLogsResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("list operation logs failed, req or resp is empty")
 		return
@@ -158,12 +266,18 @@ func (ua *ListOperationLogsAction) Handle(ctx context.Context, req *cmproto.List
 	ua.req = req
 	ua.resp = resp
 
-	if err := ua.validate(); err != nil {
+	err := ua.validate()
+	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 
-	if err := ua.fetchOperationLogs(); err != nil {
+	if ua.req.V2 {
+		err = ua.fetchV2OperationLogs()
+	} else {
+		err = ua.fetchV1OperationLogs()
+	}
+	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

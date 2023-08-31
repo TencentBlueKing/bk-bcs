@@ -26,8 +26,11 @@ import (
 type Hook interface {
 	// CreateWithTx create one hook instance with transaction.
 	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, hook *table.Hook) (uint32, error)
-	// List hooks with options.
-	List(kit *kit.Kit, opt *types.ListHooksOption) ([]*table.Hook, int64, error)
+	// ListWithRefer hooks with refer info.
+	ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOption) ([]*types.ListHooksWithReferDetail, int64, error)
+	// ListHookReferences list hook references.
+	ListHookReferences(kit *kit.Kit, opt *types.ListHookReferencesOption) (
+		[]*types.ListHookReferencesDetail, int64, error)
 	// CountHookTag count hook tag
 	CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCount, error)
 	// DeleteWithTx delete hook instance with transaction.
@@ -79,39 +82,77 @@ func (dao *hookDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) (
 	return g.ID, nil
 }
 
-// List hooks with options.
-func (dao *hookDao) List(kit *kit.Kit, opt *types.ListHooksOption) ([]*table.Hook, int64, error) {
+// ListWithRefer hooks with options.
+func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOption) (
+	[]*types.ListHooksWithReferDetail, int64, error) {
 
-	m := dao.genQ.Hook
-	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID)).Order(m.ID.Desc())
+	h := dao.genQ.Hook
+	hr := dao.genQ.HookRevision
+	rh := dao.genQ.ReleasedHook
+	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(opt.BizID)).Order(h.ID.Desc())
 
 	if opt.Name != "" {
-		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.Name)))
+		q = q.Where(h.Name.Like(fmt.Sprintf("%%%s%%", opt.Name)))
 	}
 	if opt.Tag != "" {
-		q = q.Where(m.Tag.Eq(opt.Tag))
+		q = q.Where(h.Tag.Eq(opt.Tag))
 	} else {
 		if opt.NotTag {
-			q = q.Where(m.Tag.Eq(""))
+			q = q.Where(h.Tag.Eq(""))
 		}
 	}
+
+	details := make([]*types.ListHooksWithReferDetail, 0)
+
+	q = q.Select(h.ALL, rh.ID.Count().As("refer_count"), rh.ReleaseID.Min().Eq(0).As("refer_editing_release"),
+		hr.ID.Max().As("published_revision_id")).
+		LeftJoin(rh, h.ID.EqCol(rh.HookID)).
+		LeftJoin(hr, h.ID.EqCol(hr.HookID), hr.State.Eq(table.HookRevisionStatusDeployed.String())).
+		Group(h.ID)
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
-		result, err := q.Find()
-		if err != nil {
+		if err := q.Scan(&details); err != nil {
 			return nil, 0, err
 		}
-
-		return result, int64(len(result)), err
-
+		return details, int64(len(details)), nil
 	}
 
-	result, count, err := q.FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
+	count, err := q.ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return result, count, err
+	return details, count, err
+}
+
+// ListHookReferences list hook references.
+func (dao *hookDao) ListHookReferences(kit *kit.Kit, opt *types.ListHookReferencesOption) (
+	[]*types.ListHookReferencesDetail, int64, error) {
+
+	rh := dao.genQ.ReleasedHook
+	r := dao.genQ.Release
+	a := dao.genQ.App
+
+	details := make([]*types.ListHookReferencesDetail, 0)
+	var count int64
+	var err error
+
+	count, err = rh.WithContext(kit.Ctx).
+		Select(rh.ID.As("hook_revision_id"), rh.HookRevisionName.As("hook_revision_name"), rh.HookType.As("hook_type"),
+			a.ID.As("app_id"), a.Name.As("app_name"), r.ID.As("release_id"), r.Name.As("release_name")).
+		LeftJoin(a, rh.AppID.EqCol(a.ID)).
+		LeftJoin(r, rh.ReleaseID.EqCol(r.ID)).
+		Where(rh.HookID.Eq(opt.HookID), rh.BizID.Eq(opt.BizID)).
+		Order(rh.ID.Desc()).
+		ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
+
+	for i := range details {
+		if details[i].ReleaseID == 0 {
+			details[i].ReleaseName = "未命名版本"
+		}
+	}
+
+	return details, count, err
 }
 
 // CountHookTag count hook tag

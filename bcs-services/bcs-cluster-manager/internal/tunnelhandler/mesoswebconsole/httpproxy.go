@@ -34,7 +34,7 @@ func NewHTTPReverseProxy(
 	reverseProxy := &httputil.ReverseProxy{Director: director}
 	// use the cluster tunnel dialer as transport Dial
 	tp := &http.Transport{
-		// Proxy: http.ProxyFromEnvironment,
+		//Proxy: http.ProxyFromEnvironment,
 		Dial: clusterDialer,
 	}
 	if target.Scheme == "https" {

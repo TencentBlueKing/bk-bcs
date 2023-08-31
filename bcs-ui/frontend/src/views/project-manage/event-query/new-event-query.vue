@@ -1,6 +1,6 @@
 <template>
-  <BcsContent :title="$t('事件查询')" hide-back>
-    <EventQueryTable :namespace="namespace" :cluster-id="clusterId"></EventQueryTable>
+  <BcsContent :title="$t('projects.eventQuery.title')" hide-back>
+    <EventQueryTable :namespace="namespace" :cluster-id="clusterId" ns-clearable :ns-required="false"></EventQueryTable>
   </BcsContent>
 </template>
 <script lang="ts">

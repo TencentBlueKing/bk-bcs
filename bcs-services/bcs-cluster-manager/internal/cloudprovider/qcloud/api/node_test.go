@@ -20,7 +20,6 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
 )
 
@@ -28,20 +27,30 @@ var nodeManager = &NodeManager{}
 
 var defaultCommonOption = &cloudprovider.CommonOption{
 	Account: &cmproto.Account{
-		SecretID:  os.Getenv(TencentCloudSecretIDEnv),
-		SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+		SecretID:  os.Getenv(TencentCloudSecretIDClusterEnv),
+		SecretKey: os.Getenv(TencentCloudSecretKeyClusterEnv),
+	},
+	CommonConf: cloudprovider.CloudConf{
+		CloudInternalEnable: true,
+		MachineDomain:       "cvm.internal.tencentcloudapi.com",
 	},
 }
 
+func TestGetImageInfoByImageID(t *testing.T) {
+	imageName1 := "img-xxx"
+	defaultCommonOption.Region = regions.Nanjing
+	image, err := nodeManager.GetImageInfoByImageID(imageName1, defaultCommonOption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("%+v", *image.OsName)
+}
+
 func TestGetCVMImageIDByImageName(t *testing.T) {
-	imageName1 := "Tencent tlinux xxx"
-	imageID, err := nodeManager.GetCVMImageIDByImageName(imageName1, &cloudprovider.CommonOption{
-		Account: &cmproto.Account{
-			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
-			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
-		},
-		Region: regions.Nanjing,
-	})
+	imageName1 := "TencentOS Server 2.6 (TK4)"
+	defaultCommonOption.Region = regions.Nanjing
+	imageID, err := nodeManager.GetCVMImageIDByImageName(imageName1, defaultCommonOption)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +71,6 @@ func TestNodeManager_GetRegionsInfo(t *testing.T) {
 
 func TestNodeManager_GetZoneList(t *testing.T) {
 	defaultCommonOption.Region = regions.Nanjing
-
 	zones, err := nodeManager.GetZoneList(defaultCommonOption)
 	if err != nil {
 		t.Fatal(err)
@@ -72,11 +80,11 @@ func TestNodeManager_GetZoneList(t *testing.T) {
 }
 
 func TestNodeManager_GetNodeByIP(t *testing.T) {
-	defaultCommonOption.Region = regions.Guangzhou
-
-	node, err := nodeManager.GetNodeByIP("10.0.xx", &cloudprovider.GetNodeOption{
+	defaultCommonOption.Region = "ap-nanjing"
+	node, err := nodeManager.GetNodeByIP("xxx", &cloudprovider.GetNodeOption{
 		Common:       defaultCommonOption,
-		ClusterVPCID: "vpc-6jhti3nx",
+		ClusterVPCID: "vpc-xxx",
+		ClusterID:    "BCS-K8S-xxx",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -85,10 +93,52 @@ func TestNodeManager_GetNodeByIP(t *testing.T) {
 	t.Log(node)
 }
 
+func TestListNodeInstancesByInstanceID(t *testing.T) {
+	idList := []string{"ins-xxx", "ins-xxx"}
+
+	defaultCommonOption.Region = regions.Nanjing
+	instances, err := nodeManager.ListNodeInstancesByInstanceID(idList, defaultCommonOption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range instances {
+		t.Log(*instances[i].InstanceId)
+		for _, address := range instances[i].PrivateIpAddresses {
+			t.Log(*address)
+		}
+		t.Log(*instances[i].SystemDisk.DiskType, *instances[i].SystemDisk.DiskSize)
+		for _, disk := range instances[i].DataDisks {
+			t.Log(*disk.DiskType, *disk.DiskSize)
+		}
+	}
+}
+
+func TestListNodeInstancesByIP(t *testing.T) {
+	IPList := []string{"xxx", "xxx", "xxx"}
+
+	defaultCommonOption.Region = regions.Nanjing
+	instances, err := nodeManager.ListNodeInstancesByIP(IPList, defaultCommonOption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range instances {
+		t.Log(*instances[i].InstanceId)
+		for _, address := range instances[i].PrivateIpAddresses {
+			t.Log(*address)
+		}
+		t.Log(*instances[i].SystemDisk.DiskType, *instances[i].SystemDisk.DiskSize)
+		for _, disk := range instances[i].DataDisks {
+			t.Log(*disk.DiskType, *disk.DiskSize)
+		}
+	}
+}
+
 func TestNodeManager_ListNodesByIP(t *testing.T) {
 	IPList := []string{"xxx"}
 
-	defaultCommonOption.Region = regions.Guangzhou
+	defaultCommonOption.Region = regions.Nanjing
 	nodes, err := nodeManager.ListNodesByIP(IPList, &cloudprovider.ListNodesOption{
 		Common:       defaultCommonOption,
 		ClusterVPCID: "vpc-xxx",
@@ -97,13 +147,15 @@ func TestNodeManager_ListNodesByIP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Log(nodes)
+	for i := range nodes {
+		t.Log(nodes[i].InnerIP, nodes[i].NodeID)
+	}
 }
 
 func TestNodeManager_ListNodesByInstance(t *testing.T) {
 	instanceList := []string{"ins-xxx", "ins-xxx"}
 
-	defaultCommonOption.Region = regions.Guangzhou
+	defaultCommonOption.Region = regions.Nanjing
 	nodes, err := nodeManager.ListNodesByInstanceID(instanceList, &cloudprovider.ListNodesOption{
 		Common:       defaultCommonOption,
 		ClusterVPCID: "vpc-xxx",
@@ -111,18 +163,12 @@ func TestNodeManager_ListNodesByInstance(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	t.Log(nodes)
 }
 
 func TestGetZoneInfoByRegion(t *testing.T) {
-	cli, err := GetCVMClient(&cloudprovider.CommonOption{
-		Account: &cmproto.Account{
-			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
-			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
-		},
-		Region: regions.Nanjing,
-	})
+	defaultCommonOption.Region = regions.Nanjing
+	cli, err := GetCVMClient(defaultCommonOption)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,12 +183,12 @@ func TestGetZoneInfoByRegion(t *testing.T) {
 
 func TestDescribeInstanceTypeConfigs(t *testing.T) {
 	filters := []*Filter{
-		{Name: "zone", Values: []string{"ap-guangzhou-3"}},
+		{Name: "zone", Values: []string{"ap-xxx-3"}},
 	}
 	instanceTypeConfigs, err := nodeManager.DescribeInstanceTypeConfigs(filters, &cloudprovider.CommonOption{
 		Account: &cmproto.Account{
-			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
-			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+			SecretID:  os.Getenv(TencentCloudSecretIDClusterEnv),
+			SecretKey: os.Getenv(TencentCloudSecretKeyClusterEnv),
 		},
 		Region: regions.Guangzhou,
 	})
@@ -154,16 +200,35 @@ func TestDescribeInstanceTypeConfigs(t *testing.T) {
 }
 
 func TestListNodeInstanceType(t *testing.T) {
-	instanceTypeConfigs, err := nodeManager.ListNodeInstanceType("", "", 4, 0, &cloudprovider.CommonOption{
-		Account: &cmproto.Account{
-			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
-			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
-		},
-		Region: regions.Guangzhou,
-	})
+	instanceTypeConfigs, err := nodeManager.ListNodeInstanceType(cloudprovider.InstanceInfo{}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Log(utils.ToJSONString(instanceTypeConfigs))
+}
+
+func TestNodeManager_DescribeImages(t *testing.T) {
+	defaultCommonOption.Region = regions.Nanjing
+	images, err := nodeManager.DescribeImages("PUBLIC_IMAGE", defaultCommonOption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range images {
+		t.Log(images[i].ImageID, images[i].OsName, images[i].Provider, images[i].Status, images[i].Alias)
+	}
+}
+
+func TestListKeyPairs(t *testing.T) {
+	defaultCommonOption.Region = regions.Nanjing
+
+	pairs, err := nodeManager.ListKeyPairs(defaultCommonOption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := range pairs {
+		t.Log(pairs[i].GetKeyID(), pairs[i].GetKeyName(), pairs[i].GetDescription())
+	}
 }

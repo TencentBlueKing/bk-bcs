@@ -17,6 +17,7 @@ import (
 	"crypto/tls"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 )
 
 // Options for project controller
@@ -38,6 +39,7 @@ type Options struct {
 	Interval uint
 	// gitops system storage
 	Storage store.Store
+	Secret  secretstore.SecretInterface
 }
 
 // Controller common definition

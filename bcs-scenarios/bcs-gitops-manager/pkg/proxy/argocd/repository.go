@@ -16,7 +16,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -25,12 +26,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
 // RepositoryPlugin for internal project authorization
 type RepositoryPlugin struct {
 	*mux.Router
-	middleware MiddlewareInterface
+	middleware mw.MiddlewareInterface
 }
 
 // Init all project sub path handler
@@ -60,20 +62,18 @@ func (plugin *RepositoryPlugin) Init() error {
 }
 
 // GET /api/v1/repositories?projects={projects}
-func (plugin *RepositoryPlugin) listRepositoryHandler(ctx context.Context, r *http.Request) *httpResponse {
-	projectName := r.URL.Query().Get("projects")
+func (plugin *RepositoryPlugin) listRepositoryHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
+	projects := r.URL.Query()["projects"]
+	if len(projects) == 0 {
+		return mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'projects' cannot be empty"))
+	}
 	repositoryList, statusCode, err := plugin.middleware.
-		ListRepositories(ctx, []string{projectName}, true)
+		ListRepositories(ctx, projects, true)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "list repositories for project '%s' failed", projectName),
-		}
+		return mw.ReturnErrorResponse(statusCode,
+			errors.Wrapf(err, "list repositories for project '%v' failed", projects))
 	}
-	return &httpResponse{
-		statusCode: http.StatusOK,
-		obj:        repositoryList,
-	}
+	return mw.ReturnJSONResponse(repositoryList)
 }
 
 // repository only for local json parse
@@ -85,55 +85,39 @@ type repository struct {
 }
 
 // POST /api/v1/repositories
-func (plugin *RepositoryPlugin) repositoryCreateHandler(ctx context.Context, r *http.Request) *httpResponse {
-	body, err := ioutil.ReadAll(r.Body)
+func (plugin *RepositoryPlugin) repositoryCreateHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return &httpResponse{
-			err:        errors.Wrapf(err, "read body failed"),
-			statusCode: http.StatusBadRequest,
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "read body failed"))
 	}
 	localRepo := &repository{}
 	if err = json.Unmarshal(body, localRepo); err != nil {
-		return &httpResponse{
-			err:        errors.Wrapf(err, "unmarshal body failed"),
-			statusCode: http.StatusBadRequest,
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "unmarshal body failed"))
 	}
 	if localRepo.Repo == "" || localRepo.Project == "" {
-		return &httpResponse{
-			err:        errors.Errorf("repo or project param is empty"),
-			statusCode: http.StatusBadRequest,
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("repo or project param is empty"))
 	}
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, localRepo.Project, iam.ProjectView)
+	r.Body = io.NopCloser(bytes.NewBuffer(body))
+	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, localRepo.Project, iam.ProjectEdit)
 	if err != nil {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project '%s' edit permission failed", localRepo.Project),
-		}
+		return mw.ReturnErrorResponse(statusCode,
+			errors.Wrapf(err, "check project '%s' edit permission failed", localRepo.Project))
 	}
 	return nil
 }
 
 // DELETE and Update /api/v1/repositories/{name}
-func (plugin *RepositoryPlugin) repositoryEditHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *RepositoryPlugin) repositoryEditHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	rawRepo := mux.Vars(r)["repo"]
 	repo, err := url.PathUnescape(rawRepo)
 	if err != nil {
-		return &httpResponse{
-			err:        errors.Wrapf(err, "parse repo param failed"),
-			statusCode: http.StatusBadRequest,
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "parse repo param failed"))
 	}
 
-	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check update repo '%s' permission failed", repo),
-		}
+		return mw.ReturnErrorResponse(statusCode,
+			errors.Wrapf(err, "check update repo '%s' permission failed", repo))
 	}
 	return nil
 }
@@ -144,22 +128,17 @@ func (plugin *RepositoryPlugin) repositoryEditHandler(ctx context.Context, r *ht
 // GET /api/v1/repositories/{repo}/helmcharts
 // GET /api/v1/repositories/{repo}/refs
 // GET /api/v1/repositories/{repo}/appdetails
-func (plugin *RepositoryPlugin) repositoryViewsHandler(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *RepositoryPlugin) repositoryViewsHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	rawRepo := mux.Vars(r)["repo"]
 	repo, err := url.PathUnescape(rawRepo)
 	if err != nil {
-		return &httpResponse{
-			err:        errors.Wrapf(err, "parse repo param failed"),
-			statusCode: http.StatusBadRequest,
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "parse repo param failed"))
 	}
 
 	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectView)
 	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check view repo '%s' permission failed", repo),
-		}
+		return mw.ReturnErrorResponse(statusCode,
+			errors.Wrapf(err, "check view repo '%s' permission failed", repo))
 	}
 	return nil
 }

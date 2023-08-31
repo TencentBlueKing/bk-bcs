@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package mesos xxx
 package mesos
 
 import (
@@ -31,11 +30,11 @@ import (
 )
 
 const (
-	// mediaHeader key for http media content type
+	//mediaHeader key for http media content type
 	medieTypeHeader = "Content-Type"
-	// mediaTypeApplicationJSON json payload for http body
+	//mediaTypeApplicationJSON json payload for http body
 	mediaTypeApplicationJSON = "application/json"
-	// mediaTypeApplicationYaml yaml payload for http body
+	//mediaTypeApplicationYaml yaml payload for http body
 	mediaTypeApplicationYaml = "application/x-yaml"
 )
 
@@ -64,7 +63,7 @@ func (th *TunnelHandler) request2mesosapi(req *restful.Request, uri, method stri
 		err1 := bhttp.InternalError(common.BcsErrCommHttpReadBodyFail, common.BcsErrCommHttpReadBodyFailStr)
 		return err1.Error(), nil
 	}
-	// check application media type
+	//check application media type
 	if mediaTypeApplicationYaml == req.Request.Header.Get(medieTypeHeader) {
 		data, err = yamlTOJSON(data)
 		if err != nil {

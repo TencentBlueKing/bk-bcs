@@ -52,4 +52,8 @@ const (
 
 	// InClusterName defines the cluster which is 'in-cluster', reserve cluster
 	InClusterName = "in-cluster"
+
+	// SecretKey defines the secretManager k8s secret namespace:name
+	// NOCC:gas/crypto(工具误报)
+	SecretKey = "bkbcs.tencent.com/secretManager"
 )

@@ -17,7 +17,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -26,7 +25,6 @@ import (
 )
 
 var clusterMgr sync.Once
-var defaultTimeout = 10 * time.Second
 
 func init() {
 	clusterMgr.Do(func() {
@@ -36,6 +34,18 @@ func init() {
 
 // Cluster kubernetes cluster management implementation
 type Cluster struct {
+}
+
+// CreateVirtualCluster create virtual cluster by cloud provider
+func (c *Cluster) CreateVirtualCluster(cls *proto.Cluster,
+	opt *cloudprovider.CreateVirtualClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteVirtualCluster delete virtual cluster
+func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
+	opt *cloudprovider.DeleteVirtualClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // CreateCluster create kubenretes cluster according cloudprovider
@@ -124,7 +134,18 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovid
 	return false, cloudprovider.ErrCloudNotImplemented
 }
 
+// EnableExternalNodeSupport enable cluster support external node
+func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovider.EnableExternalNodeOption) error {
+	return nil
+}
+
 // ListOsImage get osimage list
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// CheckClusterEndpointStatus check cluster endpoint status
+func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
+	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
+	return false, cloudprovider.ErrCloudNotImplemented
 }

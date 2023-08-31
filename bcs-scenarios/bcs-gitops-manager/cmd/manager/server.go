@@ -23,10 +23,10 @@ import (
 	ossync "sync"
 	"time"
 
-	grpccli "github.com/asim/go-micro/plugins/client/grpc/v4"
-	"github.com/asim/go-micro/plugins/registry/etcd/v4"
-	grpcsvr "github.com/asim/go-micro/plugins/server/grpc/v4"
 	etcdsync "github.com/asim/go-micro/plugins/sync/etcd/v4"
+	grpccli "github.com/go-micro/plugins/v4/client/grpc"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	grpcsvr "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
@@ -47,6 +47,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/tunnel"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
@@ -82,6 +83,7 @@ type Server struct {
 	gitops proxy.GitOpsProxy
 	// gitops data storage
 	storage store.Store
+	secret  secretstore.SecretInterface
 
 	jwtClient *jwt.JWTClient
 	iamClient iam.PermClient
@@ -91,7 +93,7 @@ type Server struct {
 func (s *Server) Init() error {
 	// 初始化所有进程
 	initializer := []func() error{
-		s.initIamJWTClient, s.initStorage, s.initController,
+		s.initSecret, s.initIamJWTClient, s.initStorage, s.initController,
 		s.initMicroService, s.initHTTPService, s.initLeaderElection,
 	}
 	for _, init := range initializer {
@@ -145,6 +147,14 @@ func (s *Server) initStorage() error {
 		return fmt.Errorf("gitops storage failure")
 	}
 	s.stops = append(s.stops, s.storage.Stop)
+	return nil
+}
+
+func (s *Server) initSecret() error {
+	s.secret = secretstore.NewSecretStore(&secretstore.SecretStoreOptions{
+		Address: s.option.SecretServer.Address,
+		Port:    s.option.SecretServer.Port,
+	})
 	return nil
 }
 
@@ -202,6 +212,7 @@ func (s *Server) initMicroService() error {
 		ProjectControl: s.projectCtl,
 		JwtClient:      s.jwtClient,
 		IamClient:      s.iamClient,
+		SecretClient:   s.secret,
 	}
 	gitopsHandler := handler.NewGitOpsHandler(opt)
 	if err := gitopsHandler.Init(); err != nil {
@@ -316,6 +327,14 @@ func (s *Server) initGitOpsProxy(router *mux.Router) error {
 		JWTDecoder: s.jwtClient,
 		IAMClient:  s.iamClient,
 		Storage:    s.storage,
+		SecretOption: &proxy.SecretOption{
+			Address: s.option.SecretServer.Address,
+			Port:    s.option.SecretServer.Port,
+		},
+		TraceOption: &proxy.TraceOption{
+			Endpoint: s.option.TraceConfig.Endpoint,
+			Token:    s.option.TraceConfig.Token,
+		},
 	}
 
 	s.gitops = argocd.NewGitOpsProxy(opt)
@@ -364,6 +383,7 @@ func (s *Server) initController() error {
 		APIToken:             s.option.APIGatewayToken,
 		Interval:             s.option.ClusterSyncInterval,
 		Storage:              s.storage,
+		Secret:               s.secret,
 	}
 	s.clusterCtl = controller.NewClusterController(opt)
 	if err := s.clusterCtl.Init(); err != nil {

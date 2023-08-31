@@ -63,6 +63,7 @@ if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
 }
 
 const store = new Vuex.Store<{
+  featureFlags: Record<string, boolean>
   curProject: IProject | Record<string, any>
   curCluster: any
   curSideMenu: IMenu | Record<string, any>
@@ -117,6 +118,7 @@ const store = new Vuex.Store<{
   ],
   // 公共 store
   state: {
+    featureFlags: {},
     curProject: {},
     curCluster: {},
     curSideMenu: {},
@@ -198,6 +200,9 @@ const store = new Vuex.Store<{
     updateClusterViewType(state, type) {
       state.clusterViewType = type;
     },
+    updateFeatureFlags(state, data) {
+      state.featureFlags = data;
+    },
   },
   actions: {
     /**
@@ -225,23 +230,6 @@ const store = new Vuex.Store<{
           return { data };
         })
         .catch(() => ({}));
-    },
-
-    /**
-     * 项目启用日志采集功能
-     *
-     * @param {Object} context store 上下文对象
-     * @param {string} projectId 项目 id
-     * @param {Object} config 请求的配置
-     *
-     * @return {Promise} promise 对象
-     */
-    enableLogPlans(context, projectId, config = {}) {
-      return http.post(
-        `${DEVOPS_BCS_API_URL}/api/datalog/projects/${projectId}/log_plans/`,
-        {},
-        config,
-      );
     },
 
     /**

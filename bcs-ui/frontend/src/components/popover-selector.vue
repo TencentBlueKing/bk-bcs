@@ -8,6 +8,7 @@
     :tippy-options="tippyOptions"
     :always="always"
     :on-hide="onHide"
+    :disabled="disabled"
     ref="popoverRef">
     <slot></slot>
     <template slot="content">
@@ -44,6 +45,10 @@ export default defineComponent({
       default: () => ({}),
     },
     onHide: Function,
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup() {
     const popoverRef = ref<any>(null);

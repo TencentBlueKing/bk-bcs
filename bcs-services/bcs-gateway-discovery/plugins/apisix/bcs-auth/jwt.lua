@@ -158,7 +158,7 @@ end
 local _M = {}
 
 
-function _M:get_jwt_from_redis(credential, conf, key_prefix, create_if_null, get_userinfo_handler)
+function _M:get_jwt_from_redis(credential, conf, ctx, key_prefix, create_if_null, get_userinfo_handler)
     local key = key_prefix
     if not credential.redis_key then
         key = key .. credential.user_token
@@ -174,7 +174,20 @@ function _M:get_jwt_from_redis(credential, conf, key_prefix, create_if_null, get
     -- redis 的 key 过期或者并未创建
 
     if (jwt_token == ngx.null and create_if_null) then
-        local userinfo = get_userinfo_handler(credential, conf.bk_login_host)
+        local userinfo
+        if conf.bk_login_host_esb then
+            local data = get_userinfo_handler(credential, conf)
+            if data["result"] then
+                userinfo = data["data"]["bk_username"]
+            end
+            if ctx ~= nil then
+                ctx.var["bk_login_code"] = data["code"]
+                ctx.var["bk_login_message"] = data["message"]
+            end
+        else
+            userinfo = get_userinfo_handler(credential, conf.bk_login_host)
+        end
+
         if userinfo then
             jwt_token = sign_jwt_with_RS256(userinfo, conf)
 

@@ -21,7 +21,7 @@ import (
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimid "github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"k8s.io/klog/v2"
@@ -30,7 +30,7 @@ import (
 	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/metrics"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/tracing"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/middleware"
 )
 
 // WebServer :
@@ -86,8 +86,8 @@ func (w *WebServer) Close() error {
 // newRoutes xxx
 func (w *WebServer) newRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(chimid.Logger)
+	r.Use(chimid.Recoverer)
 
 	// openapi 文档
 	// 访问 swagger/index.html, swagger/doc.json
@@ -105,6 +105,12 @@ func (w *WebServer) newRouter() http.Handler {
 		r.Mount("/bcsapi", ReverseAPIHandler("bcs_host", config.G.BCS.Host))
 	}
 
+	// 注册到网关的地址, 默认/bcsapi/v4/ui
+	routePrefix := config.G.Web.RoutePrefix
+	if routePrefix != "" && routePrefix != "/" {
+		r.Mount(routePrefix+"/", http.StripPrefix(routePrefix, w.subRouter()))
+	}
+
 	r.Mount("/", w.subRouter())
 
 	return r
@@ -112,26 +118,24 @@ func (w *WebServer) newRouter() http.Handler {
 
 func (w *WebServer) subRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(tracing.MiddleWareTracing)
+	r.Use(middleware.Tracing)
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
 
-	r.Route("/release_note", func(r chi.Router) {
-		// 单独使用metrics中间件的方式收集请求量、耗时
-		r.Use(metrics.RequestCollect("ReleaseNoteHandler"))
-		r.Get("/", w.ReleaseNoteHandler)
-	})
+	r.With(metrics.RequestCollect("FeatureFlagsHandler"), middleware.NeedProjectAuthorization).
+		Get("/feature_flags", w.FeatureFlagsHandler)
 
+	// 静态资源
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
+	r.With(metrics.RequestCollect("SwitchLanguageHandler")).Put("/switch_language", w.CookieSwitchLanguage)
+	r.With(metrics.RequestCollect("ReleaseNoteHandler")).Get("/release_note", w.ReleaseNoteHandler)
+
+	r.With(metrics.RequestCollect("no_permission")).Get("/403.html", w.embedWebServer.Render403Handler().ServeHTTP)
 
 	// vue 模版渲染
-	r.Route("/", func(r chi.Router) {
-		r.Use(metrics.RequestCollect("IndexHandler"))
-		r.Get("/", w.embedWebServer.IndexHandler().ServeHTTP)
-	})
-	r.NotFound(w.embedWebServer.IndexHandler().ServeHTTP)
+	r.With(metrics.RequestCollect("IndexHandler")).Get("/", w.embedWebServer.IndexHandler().ServeHTTP)
+	r.With(metrics.RequestCollect("IndexHandler")).NotFound(w.embedWebServer.IndexHandler().ServeHTTP)
 
-	r.Put("/switch_language", w.CookieSwitchLanguage)
 	return r
 }
 

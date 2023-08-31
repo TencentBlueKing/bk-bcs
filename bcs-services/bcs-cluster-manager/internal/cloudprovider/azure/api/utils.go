@@ -651,7 +651,6 @@ func (c *setToNodeGroup) setSystemDisk() {
 	if osDisk.ManagedDisk != nil && osDisk.ManagedDisk.StorageAccountType != nil {
 		lc.SystemDisk.DiskType = string(*osDisk.ManagedDisk.StorageAccountType)
 	}
-	lc.SystemDisk.AutoFormatAndMount = true
 	lc.SystemDisk.DiskSize = strconv.Itoa(int(*osDisk.DiskSizeGB))
 }
 
@@ -659,12 +658,14 @@ func (c *setToNodeGroup) setSystemDisk() {
 func (c *setToNodeGroup) setDataDisks() {
 	lc := c.group.LaunchTemplate
 	nt := c.group.NodeTemplate
+
 	lc.DataDisks = make([]*proto.DataDisk, 0)
-	nt.DataDisks = make([]*proto.DataDisk, 0)
+	nt.DataDisks = make([]*proto.CloudDataDisk, 0)
 	if c.set.Properties == nil || c.set.Properties.VirtualMachineProfile == nil || c.set.Properties.VirtualMachineProfile.
 		StorageProfile == nil || c.set.Properties.VirtualMachineProfile.StorageProfile.OSDisk == nil {
 		return
 	}
+
 	dataDisks := c.set.Properties.VirtualMachineProfile.StorageProfile.DataDisks
 	if len(dataDisks) == 0 {
 		return
@@ -674,11 +675,13 @@ func (c *setToNodeGroup) setDataDisks() {
 		if disk.ManagedDisk != nil {
 			d.DiskType = string(*disk.ManagedDisk.StorageAccountType)
 		}
-		d.AutoFormatAndMount = true
 		d.DiskSize = strconv.Itoa(int(*disk.DiskSizeGB))
-
 		lc.DataDisks = append(lc.DataDisks, d)
-		nt.DataDisks = append(nt.DataDisks, d)
+
+		nt.DataDisks = append(nt.DataDisks, &proto.CloudDataDisk{
+			DiskType: d.DiskType,
+			DiskSize: d.DiskSize,
+		})
 	}
 }
 
@@ -895,11 +898,12 @@ func (c *vmToNode) setPassword() {
 		*c.vm.Properties.OSProfile.LinuxConfiguration.DisablePasswordAuthentication {
 		return
 	}
+
 	// username 从 vm 对象获取
 	// password 从 nodeGroup.launchTemplate.initLoginPassword 对象获取
-	if c.vm.Properties.OSProfile.AdminUsername != nil && len(*c.vm.Properties.OSProfile.AdminUsername) != 0 {
-		c.node.Username = *c.vm.Properties.OSProfile.AdminUsername
-	}
+	//if c.vm.Properties.OSProfile.AdminUsername != nil && len(*c.vm.Properties.OSProfile.AdminUsername) != 0 {
+	//	c.node.Username = *c.vm.Properties.OSProfile.AdminUsername
+	//}
 	//if c.vm.Properties.OSProfile.AdminPassword != nil && len(*c.vm.Properties.OSProfile.AdminPassword) != 0 {
 	//	c.node.Passwd = *c.vm.Properties.OSProfile.AdminPassword
 	//}

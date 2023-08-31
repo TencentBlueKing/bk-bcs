@@ -10,10 +10,10 @@
  * limitations under the License.
  */
 
-// Package options xxx
 package options
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
@@ -87,13 +87,13 @@ type BrokerConfig struct {
 
 // BKOpsConfig for call bkops job
 type BKOpsConfig struct {
-	AppCode       string `json:"appCode"`
-	AppSecret     string `json:"appSecret"`
-	Debug         bool   `json:"debug"`
-	External      bool   `json:"external"`
-	CreateTaskURL string `json:"createTaskURL"`
-	TaskStatusURL string `json:"taskStatusURL"`
-	StartTaskURL  string `json:"startTaskURL"`
+	Server      string `json:"server"`
+	AppCode     string `json:"appCode"`
+	AppSecret   string `json:"appSecret"`
+	BkUserName  string `json:"bkUserName"`
+	Debug       bool   `json:"debug"`
+	TemplateURL string `json:"templateURL"`
+	FrontURL    string `json:"frontURL"`
 }
 
 // CmdbConfig for cloud different tags info
@@ -122,20 +122,26 @@ type ResourceManagerConfig struct {
 	Module string `json:"module"`
 }
 
-// SsmConfig for perm
-type SsmConfig struct {
+// CidrManagerConfig init cidr_module
+type CidrManagerConfig struct {
+	Enable bool   `json:"enable"`
+	TLS    bool   `json:"tls"`
+	Module string `json:"module"`
+}
+
+// AccessConfig for auth
+type AccessConfig struct {
+	Server string `json:"server"`
+	Debug  bool   `json:"debug"`
+}
+
+// PassConfig pass-cc config
+type PassConfig struct {
 	Server    string `json:"server"`
 	AppCode   string `json:"appCode"`
 	AppSecret string `json:"appSecret"`
 	Enable    bool   `json:"enable"`
 	Debug     bool   `json:"debug"`
-}
-
-// PassConfig pass-cc config
-type PassConfig struct {
-	Server string `json:"server"`
-	Enable bool   `json:"enable"`
-	Debug  bool   `json:"debug"`
 }
 
 // UserConfig userManager config
@@ -148,12 +154,13 @@ type UserConfig struct {
 
 // AlarmConfig for alarm interface
 type AlarmConfig struct {
-	Server     string `json:"server"`
-	AppCode    string `json:"appCode"`
-	AppSecret  string `json:"appSecret"`
-	BkUserName string `json:"bkUserName"`
-	Enable     bool   `json:"enable"`
-	Debug      bool   `json:"debug"`
+	Server        string `json:"server"`
+	MonitorServer string `json:"monitorServer"`
+	AppCode       string `json:"appCode"`
+	AppSecret     string `json:"appSecret"`
+	BkUserName    string `json:"bkUserName"`
+	Enable        bool   `json:"enable"`
+	Debug         bool   `json:"debug"`
 }
 
 // IAMConfig for perm interface
@@ -206,14 +213,25 @@ type BcsWatch struct {
 	StorageServer    string `json:"storageServer"`
 }
 
+// VirtualCluster config
+type VirtualCluster struct {
+	HttpServer    string `json:"httpServer"`
+	WsServer      string `json:"wsServer"`
+	DebugWsServer string `json:"debugWsServer"`
+	ChartName     string `json:"chartName"`
+	ReleaseName   string `json:"releaseName"`
+	IsPublicRepo  bool   `json:"isPublicRepo"`
+}
+
 // ComponentDeploy config
 type ComponentDeploy struct {
-	AutoScaler    AutoScaler `json:"autoScaler"`
-	Watch         BcsWatch   `json:"watch"`
-	Registry      string     `json:"registry"`
-	BCSAPIGateway string     `json:"bcsApiGateway"`
-	Token         string     `json:"token"`
-	DeployService string     `json:"deployService"`
+	AutoScaler    AutoScaler     `json:"autoScaler"`
+	Watch         BcsWatch       `json:"watch"`
+	Vcluster      VirtualCluster `json:"vcluster"`
+	Registry      string         `json:"registry"`
+	BCSAPIGateway string         `json:"bcsApiGateway"`
+	Token         string         `json:"token"`
+	DeployService string         `json:"deployService"`
 }
 
 // AuthConfig config for auth
@@ -239,6 +257,16 @@ type GseConfig struct {
 	Debug      bool   `json:"debug"`
 }
 
+// JobConfig for job
+type JobConfig struct {
+	AppCode     string `json:"appCode"`
+	AppSecret   string `json:"appSecret"`
+	BkUserName  string `json:"bkUserName"`
+	Server      string `json:"server"`
+	Debug       bool   `json:"debug"`
+	JobTaskLink string `json:"jobTaskLink"`
+}
+
 // ClusterManagerOptions options of cluster manager
 type ClusterManagerOptions struct {
 	Etcd               EtcdOption            `json:"etcd"`
@@ -251,19 +279,25 @@ type ClusterManagerOptions struct {
 	Cmdb               CmdbConfig            `json:"cmdb"`
 	NodeMan            NodeManConfig         `json:"nodeman"`
 	ResourceManager    ResourceManagerConfig `json:"resource"`
+	CidrManager        CidrManagerConfig     `json:"cidr"`
 	CloudTemplatePath  string                `json:"cloudTemplatePath"`
-	Ssm                SsmConfig             `json:"ssm"`
+	Access             AccessConfig          `json:"access"`
 	Passcc             PassConfig            `json:"passcc"`
 	UserManager        UserConfig            `json:"user"`
 	Alarm              AlarmConfig           `json:"alarm"`
 	IAM                IAMConfig             `json:"iam_config"`
 	Auth               AuthConfig            `json:"auth"`
 	Gse                GseConfig             `json:"gse"`
+	Job                JobConfig             `json:"job"`
+	Debug              bool                  `json:"debug"`
+	Version            BCSEdition            `json:"version"`
 	BCSAppConfig       BCSAppConfig          `json:"bcsapp"`
 	Helm               HelmConfig            `json:"helm"`
 	ComponentDeploy    ComponentDeploy       `json:"componentDeploy"`
 	ResourceSchemaPath string                `json:"resourceSchemaPath"`
-	Debug              bool                  `json:"debug"`
+	TagDepart          string                `json:"tagDepart"`
+	PrefixVcluster     string                `json:"prefixVcluster"`
+	Encrypt            encryptv2.Config      `json:"encrypt"`
 	ServerConfig
 	ClientConfig
 }
@@ -281,6 +315,15 @@ func SetGlobalCMOptions(opts *ClusterManagerOptions) {
 // GetGlobalCMOptions get global CM options
 func GetGlobalCMOptions() *ClusterManagerOptions {
 	return globalClusterManagerOption
+}
+
+// GetEditionInfo get edition
+func GetEditionInfo() BCSEdition {
+	if globalClusterManagerOption.Version == "" {
+		globalClusterManagerOption.Version = InnerEdition
+	}
+
+	return globalClusterManagerOption.Version
 }
 
 // CloudTemplateList cloud template init config

@@ -23,11 +23,11 @@ const (
 	Cache_GetAppID_FullMethodName                 = "/pbcs.Cache/GetAppID"
 	Cache_GetAppMeta_FullMethodName               = "/pbcs.Cache/GetAppMeta"
 	Cache_GetReleasedCI_FullMethodName            = "/pbcs.Cache/GetReleasedCI"
+	Cache_GetReleasedHook_FullMethodName          = "/pbcs.Cache/GetReleasedHook"
 	Cache_ListAppReleasedGroups_FullMethodName    = "/pbcs.Cache/ListAppReleasedGroups"
 	Cache_GetCurrentCursorReminder_FullMethodName = "/pbcs.Cache/GetCurrentCursorReminder"
 	Cache_ListEventsMeta_FullMethodName           = "/pbcs.Cache/ListEventsMeta"
 	Cache_GetCredential_FullMethodName            = "/pbcs.Cache/GetCredential"
-	Cache_ListCredentialMatchedCI_FullMethodName  = "/pbcs.Cache/ListCredentialMatchedCI"
 	Cache_BenchAppMeta_FullMethodName             = "/pbcs.Cache/BenchAppMeta"
 	Cache_BenchReleasedCI_FullMethodName          = "/pbcs.Cache/BenchReleasedCI"
 )
@@ -39,11 +39,11 @@ type CacheClient interface {
 	GetAppID(ctx context.Context, in *GetAppIDReq, opts ...grpc.CallOption) (*GetAppIDResp, error)
 	GetAppMeta(ctx context.Context, in *GetAppMetaReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	GetReleasedCI(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error)
+	GetReleasedHook(ctx context.Context, in *GetReleasedHookReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	ListAppReleasedGroups(ctx context.Context, in *ListAppReleasedGroupsReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	GetCurrentCursorReminder(ctx context.Context, in *base.EmptyReq, opts ...grpc.CallOption) (*CurrentCursorReminderResp, error)
 	ListEventsMeta(ctx context.Context, in *ListEventsReq, opts ...grpc.CallOption) (*ListEventsResp, error)
 	GetCredential(ctx context.Context, in *GetCredentialReq, opts ...grpc.CallOption) (*JsonRawResp, error)
-	ListCredentialMatchedCI(ctx context.Context, in *ListCredentialMatchedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	// only stress test use.
 	BenchAppMeta(ctx context.Context, in *BenchAppMetaReq, opts ...grpc.CallOption) (*BenchAppMetaResp, error)
 	BenchReleasedCI(ctx context.Context, in *BenchReleasedCIReq, opts ...grpc.CallOption) (*BenchReleasedCIResp, error)
@@ -78,6 +78,15 @@ func (c *cacheClient) GetAppMeta(ctx context.Context, in *GetAppMetaReq, opts ..
 func (c *cacheClient) GetReleasedCI(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error) {
 	out := new(JsonRawResp)
 	err := c.cc.Invoke(ctx, Cache_GetReleasedCI_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cacheClient) GetReleasedHook(ctx context.Context, in *GetReleasedHookReq, opts ...grpc.CallOption) (*JsonRawResp, error) {
+	out := new(JsonRawResp)
+	err := c.cc.Invoke(ctx, Cache_GetReleasedHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,15 +129,6 @@ func (c *cacheClient) GetCredential(ctx context.Context, in *GetCredentialReq, o
 	return out, nil
 }
 
-func (c *cacheClient) ListCredentialMatchedCI(ctx context.Context, in *ListCredentialMatchedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error) {
-	out := new(JsonRawResp)
-	err := c.cc.Invoke(ctx, Cache_ListCredentialMatchedCI_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *cacheClient) BenchAppMeta(ctx context.Context, in *BenchAppMetaReq, opts ...grpc.CallOption) (*BenchAppMetaResp, error) {
 	out := new(BenchAppMetaResp)
 	err := c.cc.Invoke(ctx, Cache_BenchAppMeta_FullMethodName, in, out, opts...)
@@ -154,11 +154,11 @@ type CacheServer interface {
 	GetAppID(context.Context, *GetAppIDReq) (*GetAppIDResp, error)
 	GetAppMeta(context.Context, *GetAppMetaReq) (*JsonRawResp, error)
 	GetReleasedCI(context.Context, *GetReleasedCIReq) (*JsonRawResp, error)
+	GetReleasedHook(context.Context, *GetReleasedHookReq) (*JsonRawResp, error)
 	ListAppReleasedGroups(context.Context, *ListAppReleasedGroupsReq) (*JsonRawResp, error)
 	GetCurrentCursorReminder(context.Context, *base.EmptyReq) (*CurrentCursorReminderResp, error)
 	ListEventsMeta(context.Context, *ListEventsReq) (*ListEventsResp, error)
 	GetCredential(context.Context, *GetCredentialReq) (*JsonRawResp, error)
-	ListCredentialMatchedCI(context.Context, *ListCredentialMatchedCIReq) (*JsonRawResp, error)
 	// only stress test use.
 	BenchAppMeta(context.Context, *BenchAppMetaReq) (*BenchAppMetaResp, error)
 	BenchReleasedCI(context.Context, *BenchReleasedCIReq) (*BenchReleasedCIResp, error)
@@ -177,6 +177,9 @@ func (UnimplementedCacheServer) GetAppMeta(context.Context, *GetAppMetaReq) (*Js
 func (UnimplementedCacheServer) GetReleasedCI(context.Context, *GetReleasedCIReq) (*JsonRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedCI not implemented")
 }
+func (UnimplementedCacheServer) GetReleasedHook(context.Context, *GetReleasedHookReq) (*JsonRawResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedHook not implemented")
+}
 func (UnimplementedCacheServer) ListAppReleasedGroups(context.Context, *ListAppReleasedGroupsReq) (*JsonRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppReleasedGroups not implemented")
 }
@@ -188,9 +191,6 @@ func (UnimplementedCacheServer) ListEventsMeta(context.Context, *ListEventsReq) 
 }
 func (UnimplementedCacheServer) GetCredential(context.Context, *GetCredentialReq) (*JsonRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCredential not implemented")
-}
-func (UnimplementedCacheServer) ListCredentialMatchedCI(context.Context, *ListCredentialMatchedCIReq) (*JsonRawResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListCredentialMatchedCI not implemented")
 }
 func (UnimplementedCacheServer) BenchAppMeta(context.Context, *BenchAppMetaReq) (*BenchAppMetaResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BenchAppMeta not implemented")
@@ -260,6 +260,24 @@ func _Cache_GetReleasedCI_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CacheServer).GetReleasedCI(ctx, req.(*GetReleasedCIReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cache_GetReleasedHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasedHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServer).GetReleasedHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Cache_GetReleasedHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServer).GetReleasedHook(ctx, req.(*GetReleasedHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -336,24 +354,6 @@ func _Cache_GetCredential_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Cache_ListCredentialMatchedCI_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListCredentialMatchedCIReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CacheServer).ListCredentialMatchedCI(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Cache_ListCredentialMatchedCI_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CacheServer).ListCredentialMatchedCI(ctx, req.(*ListCredentialMatchedCIReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Cache_BenchAppMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BenchAppMetaReq)
 	if err := dec(in); err != nil {
@@ -410,6 +410,10 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Cache_GetReleasedCI_Handler,
 		},
 		{
+			MethodName: "GetReleasedHook",
+			Handler:    _Cache_GetReleasedHook_Handler,
+		},
+		{
 			MethodName: "ListAppReleasedGroups",
 			Handler:    _Cache_ListAppReleasedGroups_Handler,
 		},
@@ -424,10 +428,6 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCredential",
 			Handler:    _Cache_GetCredential_Handler,
-		},
-		{
-			MethodName: "ListCredentialMatchedCI",
-			Handler:    _Cache_ListCredentialMatchedCI_Handler,
 		},
 		{
 			MethodName: "BenchAppMeta",

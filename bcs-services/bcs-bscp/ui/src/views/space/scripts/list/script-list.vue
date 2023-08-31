@@ -184,7 +184,7 @@
           <bk-table-column label="脚本语言" prop="hook.spec.type" width="120"></bk-table-column>
           <bk-table-column label="分类标签">
             <template #default="{ row }">
-              <span v-if="row.hook">{{ row.hook.tag || '--' }}</span>
+              <span v-if="row.hook">{{ row.hook.spec.tag || '--' }}</span>
             </template>
           </bk-table-column>
           <bk-table-column label="被引用" width="100">

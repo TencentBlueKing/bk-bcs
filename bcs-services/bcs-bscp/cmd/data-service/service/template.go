@@ -17,7 +17,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -129,14 +128,12 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq)
 func (s *Service) UpdateTemplate(ctx context.Context, req *pbds.UpdateTemplateReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	now := time.Now()
 	template := &table.Template{
 		ID:         req.Id,
 		Spec:       req.Spec.TemplateSpec(),
 		Attachment: req.Attachment.TemplateAttachment(),
 		Revision: &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: now,
+			Reviser: kt.User,
 		},
 	}
 	if err := s.dao.Template().Update(kt, template); err != nil {

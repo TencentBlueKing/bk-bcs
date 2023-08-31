@@ -6,7 +6,6 @@ import {
   businessList,
   createProject as handleCreateProject,
 } from '@/api/modules/project';
-import { userInfo } from '@/api/modules/user-manager';
 import { IProject } from '@/composables/use-app';
 import $store from '@/store';
 
@@ -75,7 +74,7 @@ export default function useProjects() {
   }
 
   async function fetchProjectInfo(params: { $projectId: string }) {
-    const { data, web_annotations, code } = await getProject(params, {
+    const { data, web_annotations, code, message } = await getProject(params, {
       needRes: true,
       globalError: false,
     }).catch(() => ({}));
@@ -98,6 +97,7 @@ export default function useProjects() {
       code,
       data: bcsProjectData as IProject,
       web_annotations,
+      message,
     };
   }
 
@@ -111,14 +111,7 @@ export default function useProjects() {
     return result;
   }
 
-  async function getUserInfo() {
-    const data = await userInfo().catch(() => ({}));
-    $store.commit('updateUser', data);
-    return data;
-  }
-
   return {
-    getUserInfo,
     fetchProjectInfo,
     getProjectList,
     getAllProjectList,

@@ -271,6 +271,7 @@ func TestFindUnneededGPUNodes(t *testing.T) {
 	assert.Equal(t, 3, len(sd.nodeUtilizationMap))
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestFindUnneededWithPerNodeGroupThresholds(t *testing.T) {
 	var autoscalererr autoscaler_errors.AutoscalerError
 
@@ -383,6 +384,7 @@ func TestFindUnneededWithPerNodeGroupThresholds(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestPodsWithPreemptionsFindUnneededNodes(t *testing.T) {
 	var autoscalererr autoscaler_errors.AutoscalerError
 
@@ -927,6 +929,7 @@ func TestDrainNodeWithRetries(t *testing.T) {
 	assert.Equal(t, p3.Name, deleted[3])
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestDrainNodeDaemonSetEvictionFailure(t *testing.T) {
 	fakeClient := &fake.Clientset{}
 
@@ -1364,6 +1367,7 @@ func TestDaemonSetEvictionForEmptyNodes(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleDownEmptyMultipleNodeGroups(t *testing.T) {
 	config := &scaleTestConfig{
 		nodes: []nodeConfig{
@@ -1463,6 +1467,7 @@ func TestScaleDownEmptyMinGpuLimitHit(t *testing.T) {
 	simpleScaleDownEmpty(t, config)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleDownEmptyMinGroupSizeLimitHit(t *testing.T) {
 	options := defaultScaleDownOptions
 	config := &scaleTestConfig{
@@ -1475,6 +1480,7 @@ func TestScaleDownEmptyMinGroupSizeLimitHit(t *testing.T) {
 	simpleScaleDownEmpty(t, config)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleDownEmptyMinGroupSizeLimitHitWhenOneNodeIsBeingDeleted(t *testing.T) {
 	nodeDeletionTracker := NewNodeDeletionTracker()
 	nodeDeletionTracker.StartDeletion("ng1")

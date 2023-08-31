@@ -16,9 +16,9 @@ package azure
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"sync"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -30,7 +30,7 @@ var cloudInfoMgr sync.Once
 
 func init() {
 	cloudInfoMgr.Do(func() {
-		// init Cluster
+		//init Cluster
 		cloudprovider.InitCloudInfoManager(cloudName, &CloudInfoManager{})
 	})
 }
@@ -51,21 +51,17 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
 	if c == nil || cls == nil {
 		return fmt.Errorf("%s SyncClusterCloudInfo request is empty", cloudName)
 	}
-
 	if opt == nil || opt.Cloud == nil {
 		return fmt.Errorf("%s SyncClusterCloudInfo option is empty", cloudName)
 	}
-
 	// get cloud cluster
 	cluster, err := getCloudCluster(opt)
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo failed: %v", err)
 	}
 	cls.SystemID = *cluster.Name
-
 	// cluster cloud basic setting
 	clusterBasicSettingByQCloud(cls, cluster)
-
 	// cluster cloud network setting
 	err = clusterNetworkSettingByQCloud(cls, cluster)
 	if err != nil {

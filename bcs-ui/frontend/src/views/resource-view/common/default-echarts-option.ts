@@ -17,6 +17,12 @@ export default function (unit) {
         const valueLen = String(value).length > 3 ? 3 : String(value).length;
         label = `${new Decimal(value).toPrecision(valueLen)}%`;
         break;
+      case 'percent-number':
+        label = `${Number(value).toFixed(2)}%`;
+        break;
+      case 'number':
+        label = Number(value).toFixed(2);
+        break;
     }
     return label;
   };

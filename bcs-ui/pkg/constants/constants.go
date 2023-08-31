@@ -22,6 +22,8 @@ const (
 	TracerName = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	// RequestIDHeaderKey request_id header key
 	RequestIDHeaderKey = "X-Request-Id"
+	// ClaimsKey claims key
+	ClaimsKey = "bcs-claims"
 
 	// BluekingLanguage switch cookies constant
 	BluekingLanguage = "blueking_language"

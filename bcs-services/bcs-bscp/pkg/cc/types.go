@@ -475,7 +475,7 @@ func (ds *Database) trySetDefault() {
 	}
 
 	if ds.MaxIdleTimeoutMin == 0 {
-		ds.MaxIdleTimeoutMin = 60
+		ds.MaxIdleTimeoutMin = 3
 	}
 }
 
@@ -765,6 +765,11 @@ type FSLocalCache struct {
 	CredentialCacheSize uint `yaml:"credentialCacheSize"`
 	// CredentialCacheTTLSec defines how long this credential can be cached in seconds.
 	CredentialCacheTTLSec uint `yaml:"credentialCacheTTLSec"`
+
+	// ReleasedHookCacheSize defines how many released hooks can be cached.
+	ReleasedHookCacheSize uint `yaml:"releasedHookCacheSize"`
+	// ReleasedHookCacheTTLSec defines how long will this released hooks can be cached in seconds.
+	ReleasedHookCacheTTLSec uint `yaml:"releasedHookCacheTTLSec"`
 }
 
 // validate if the feed server's local cache runtime is valid or not.
@@ -837,6 +842,14 @@ func (fc *FSLocalCache) trySetDefault() {
 
 	if fc.CredentialCacheTTLSec == 0 {
 		fc.CredentialCacheTTLSec = 1
+	}
+
+	if fc.ReleasedHookCacheSize == 0 {
+		fc.ReleasedHookCacheSize = 100
+	}
+
+	if fc.ReleasedHookCacheTTLSec == 0 {
+		fc.ReleasedHookCacheTTLSec = 120
 	}
 }
 

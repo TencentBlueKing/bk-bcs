@@ -18,8 +18,8 @@ import (
 	"bscp.io/pkg/dal/table"
 )
 
-// ListHooksOption defines options to list group.
-type ListHooksOption struct {
+// ListHooksWithReferOption defines options to list group.
+type ListHooksWithReferOption struct {
 	BizID  uint32    `json:"biz_id"`
 	Name   string    `json:"name"`
 	Tag    string    `json:"tag"`
@@ -29,7 +29,7 @@ type ListHooksOption struct {
 }
 
 // Validate the list group options
-func (opt *ListHooksOption) Validate(po *PageOption) error {
+func (opt *ListHooksWithReferOption) Validate(po *PageOption) error {
 	if opt.BizID <= 0 {
 		return errors.New("invalid biz id, should >= 1")
 	}
@@ -45,10 +45,47 @@ func (opt *ListHooksOption) Validate(po *PageOption) error {
 	return nil
 }
 
-// ListHookDetails defines the response details of requested ListHooksOption.
-type ListHookDetails struct {
-	Count   uint32        `json:"count"`
-	Details []*table.Hook `json:"details"`
+// ListHooksWithReferDetail defines the response details.
+type ListHooksWithReferDetail struct {
+	Hook                *table.Hook `json:"hook" gorm:"embedded"`
+	ReferCount          int64       `json:"refer_count" gorm:"column:refer_count"`
+	BoundEditingRelease bool        `json:"refer_editing_release" gorm:"column:refer_editing_release"`
+	PublishedRevisionID uint32      `json:"published_revision_id" gorm:"column:published_revision_id"`
+}
+
+// ListHookReferencesOption defines options to list hook references.
+type ListHookReferencesOption struct {
+	BizID  uint32 `json:"biz_id"`
+	HookID uint32 `json:"hook_id"`
+	Page   *BasePage
+}
+
+// Validate the list hook references options
+func (opt *ListHookReferencesOption) Validate(po *PageOption) error {
+	if opt.BizID <= 0 {
+		return errors.New("invalid biz id, should >= 1")
+	}
+
+	if opt.Page == nil {
+		return errors.New("page is null")
+	}
+
+	if err := opt.Page.Validate(po); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ListHookReferencesDetail defines the response details.
+type ListHookReferencesDetail struct {
+	HookRevisionID   uint32 `gorm:"column:hook_revision_id" json:"hook_revision_id"`
+	HookRevisionName string `gorm:"column:hook_revision_name" json:"hook_revision_name"`
+	AppID            uint32 `gorm:"column:app_id" json:"app_id"`
+	AppName          string `gorm:"column:app_name" json:"app_name"`
+	ReleaseID        uint32 `gorm:"column:release_id" json:"release_id"`
+	ReleaseName      string `gorm:"column:release_name" json:"release_name"`
+	HookType         string `gorm:"column:hook_type" json:"hook_type"`
 }
 
 // HookTagCount defines the response details of requested CountHookTag.

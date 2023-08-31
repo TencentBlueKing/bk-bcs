@@ -87,9 +87,6 @@ func (c ReleasedGroup) ValidateCreate() error {
 	if c.Mode == Debug && c.UID == "" {
 		return errors.New("uid should be set when mode is debug")
 	}
-	if c.UpdatedAt.IsZero() {
-		return errors.New("updated_at should be set")
-	}
 
 	return nil
 }
@@ -101,9 +98,6 @@ func (c ReleasedGroup) ValidateUpdate() error {
 	}
 	if c.BizID <= 0 {
 		return errors.New("biz id should be set")
-	}
-	if c.UpdatedAt.IsZero() {
-		return errors.New("updated_at should be set")
 	}
 
 	return nil

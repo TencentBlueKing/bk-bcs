@@ -102,6 +102,10 @@ func (r releasedAppTemplateBinding) TableName() string {
 
 func (r releasedAppTemplateBinding) Alias() string { return r.releasedAppTemplateBindingDo.Alias() }
 
+func (r releasedAppTemplateBinding) Columns(cols ...field.Expr) gen.Columns {
+	return r.releasedAppTemplateBindingDo.Columns(cols...)
+}
+
 func (r *releasedAppTemplateBinding) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := r.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -241,10 +245,6 @@ func (r releasedAppTemplateBindingDo) Select(conds ...field.Expr) IReleasedAppTe
 
 func (r releasedAppTemplateBindingDo) Where(conds ...gen.Condition) IReleasedAppTemplateBindingDo {
 	return r.withDO(r.DO.Where(conds...))
-}
-
-func (r releasedAppTemplateBindingDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IReleasedAppTemplateBindingDo {
-	return r.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (r releasedAppTemplateBindingDo) Order(conds ...field.Expr) IReleasedAppTemplateBindingDo {

@@ -1,1 +1,0 @@
-- TODO: add sidecar's configuration yaml version control convention.

@@ -91,10 +91,10 @@ export default defineComponent({
     } = toRefs(props);
     const defaultCustomObjectsMap = ref(['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com', 'hooktemplates.tkex.tencent.com']);
     const updateStrategyMap = ref({
-      RollingUpdate: $i18n.t('滚动升级'),
-      InplaceUpdate: $i18n.t('原地升级'),
-      OnDelete: $i18n.t('手动删除'),
-      Recreate: $i18n.t('重新创建'),
+      RollingUpdate: $i18n.t('k8s.updateStrategy.rollingUpdate'),
+      InplaceUpdate: $i18n.t('k8s.updateStrategy.inplaceUpdate'),
+      OnDelete: $i18n.t('k8s.updateStrategy.onDelete'),
+      Recreate: $i18n.t('k8s.updateStrategy.reCreate'),
     });
 
     // crd
@@ -111,7 +111,7 @@ export default defineComponent({
       return crdData.value?.manifestExt?.[item?.metadata?.uid] || {};
     });
     // 未选择crd时提示
-    const crdTips = computed(() => (type.value === 'crd' && !currentCrd.value ? $i18n.t('请选择CRD') : ''));
+    const crdTips = computed(() => (type.value === 'crd' && !currentCrd.value ? $i18n.t('dashboard.validate.selectCRD') : ''));
     // 自定义资源的kind类型是根据选择的crd确定的
     const crdKind = computed(() => currentCrdExt.value.kind);
     // 自定义CRD（GameStatefulSets、GameDeployments、CustomObjects）
@@ -151,10 +151,10 @@ export default defineComponent({
     const getJsonPathValue = (row, path: string) => jp.value(row, path.indexOf('$') === 0 ? path : `$.${path}`);
     // 状态
     const statusMap = {
-      normal: $i18n.t('正常'),
-      creating: $i18n.t('创建中'),
-      updating: $i18n.t('更新中'),
-      deleting: $i18n.t('删除中'),
+      normal: $i18n.t('generic.status.ready'),
+      creating: $i18n.t('generic.status.creating'),
+      updating: $i18n.t('generic.status.updating'),
+      deleting: $i18n.t('generic.status.deleting'),
     };
     const statusFilters = computed(() => Object.keys(statusMap).map(key => ({
       text: statusMap[key],
@@ -315,7 +315,7 @@ export default defineComponent({
       list: [
         {
           id: 'overview',
-          name: $i18n.t('总览'),
+          name: $i18n.t('dashboard.title.overview'),
         },
         {
           id: 'yaml',
@@ -361,7 +361,7 @@ export default defineComponent({
       }
       result && $bkMessage({
         theme: 'success',
-        message: $i18n.t('修改成功'),
+        message: $i18n.t('generic.msg.success.modify'),
       });
       handleGetTableData();
     };
@@ -465,7 +465,7 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认删除当前资源'),
+        title: $i18n.t('dashboard.title.confirmDelete'),
         subTitle: `${row.kind} ${name}`,
         defaultInfo: true,
         confirmFn: async () => {
@@ -489,7 +489,7 @@ export default defineComponent({
           };
           result && $bkMessage({
             theme: 'success',
-            message: $i18n.t('删除成功'),
+            message: $i18n.t('generic.msg.success.delete'),
           });
           handleGetTableData();
         },
@@ -582,14 +582,14 @@ export default defineComponent({
                         <bk-button
                             theme="primary"
                             icon-right="icon-angle-down">
-                            { this.$t('创建') }
+                            { this.$t('generic.button.create') }
                         </bk-button>
                 ),
                 'dropdown-content': () => (
                         <ul class="bk-dropdown-list">
-                            <li onClick={this.handleCreateFormResource}><a href="javascript:;">{this.$t('表单模式')}</a></li>
+                            <li onClick={this.handleCreateFormResource}><a href="javascript:;">{this.$t('dashboard.label.formMode')}</a></li>
                             <li onClick={this.handleCreateResource}>
-                                <a href="javascript:;">{this.$t('YAML模式')}</a>
+                                <a href="javascript:;">{this.$t('dashboard.label.yamlMode')}</a>
                             </li>
                         </ul>
                 ),
@@ -603,7 +603,7 @@ export default defineComponent({
               icon="plus"
               theme="primary"
               onClick={this.handleCreateResource}>
-              { this.$t('创建') }
+              { this.$t('generic.button.create') }
           </bk-button>
         );
       }
@@ -628,7 +628,7 @@ export default defineComponent({
                                 v-model={this.currentCrd}
                                 searchable
                                 clearable={false}
-                                placeholder={this.$t('选择CRD')}
+                                placeholder={this.$t('dashboard.placeholder.selectCRD')}
                                 onChange={this.handleCrdChange}>
                                 {
                                     this.crdList.map(option => (
@@ -649,12 +649,12 @@ export default defineComponent({
                       this.showNameSpace
                         ? (
                           <div class="select-wrapper">
-                              <span class="select-prefix">{this.$t('命名空间')}</span>
+                              <span class="select-prefix">{this.$t('k8s.namespace')}</span>
                               {
                                   this.namespaceDisabled
                                     ? <bcs-select
                                         class="w-[250px] mr-[5px] bg-[#fff]"
-                                        placeholder={this.$t('请选择命名空间')}
+                                        placeholder={this.$t('dashboard.ns.validate.emptyNs')}
                                         disabled />
                                     : <bcs-select
                                         v-bk-tooltips={{ disabled: !this.namespaceDisabled, content: this.crdTips }}
@@ -665,7 +665,7 @@ export default defineComponent({
                                         searchable
                                         clearable={false}
                                         disabled={this.namespaceDisabled}
-                                        placeholder={this.$t('请选择命名空间')}>
+                                        placeholder={this.$t('dashboard.ns.validate.emptyNs')}>
                                         {
                                             this.namespaceList.map(option => (
                                                 <bcs-option
@@ -686,7 +686,7 @@ export default defineComponent({
                       clearable
                       v-model={this.nameValue}
                       right-icon="bk-icon icon-search"
-                      placeholder={this.kind === 'Pod' ? this.$t('输入名称、创建人、IP搜索') : this.$t('输入名称、创建人搜索')}>
+                      placeholder={this.kind === 'Pod' ? this.$t('dashboard.placeholder.search3') : this.$t('dashboard.placeholder.search2')}>
                   </bk-input>
               </div>
           </div>
@@ -771,11 +771,11 @@ export default defineComponent({
         <bcs-dialog
           v-model={this.showCapacityDialog}
           mask-close={false}
-          title={`${this.curDetailRow?.data?.metadata?.name}${this.$t('扩缩容')}`}
+          title={`${this.curDetailRow?.data?.metadata?.name}${this.$t('deploy.templateset.scale')}`}
           on-confirm={this.handleConfirmChangeCapacity}
         >
           <span class="capacity-dialog-content">
-            { this.$t('实例数量') }
+            { this.$t('dashboard.workload.label.scaleNum') }
             <bk-input v-model={this.replicas} type="number" class="ml10" style="flex: 1;" min={0}></bk-input>
           </span>
         </bcs-dialog>

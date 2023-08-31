@@ -95,16 +95,16 @@ func (s *ServiceDiscovery) init() error {
 
 // initEtcdRegistry etcd 服务注册
 func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
-	endpoints := config.G.Viper.GetString("etcd.endpoints")
+	endpoints := config.G.Etcd.Endpoints
 	if endpoints == "" {
 		return nil, nil
 	}
 
 	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
 
-	ca := config.G.Viper.GetString("etcd.ca")
-	cert := config.G.Viper.GetString("etcd.cert")
-	key := config.G.Viper.GetString("etcd.key")
+	ca := config.G.Etcd.Ca
+	cert := config.G.Etcd.Cert
+	key := config.G.Etcd.Key
 	if ca != "" && cert != "" && key != "" {
 		tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
 		if err != nil {

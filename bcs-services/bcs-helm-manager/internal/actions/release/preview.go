@@ -18,9 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"gopkg.in/yaml.v2"
 	helmrelease "helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/releaseutil"
 	"helm.sh/helm/v3/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
@@ -149,35 +147,15 @@ func (r *ReleasePreviewAction) generateReleasePreview(oldRelease,
 
 	// get contents
 	var err error
-	preview.NewContents, err = r.generateFileContents(manifest)
+	preview.NewContents, err = generateFileContents(manifest)
 	if err != nil {
 		return nil, err
 	}
-	preview.OldContents, err = r.generateFileContents(preview.GetOldContent())
+	preview.OldContents, err = generateFileContents(preview.GetOldContent())
 	if err != nil {
 		return nil, err
 	}
 	return preview, nil
-}
-
-func (r *ReleasePreviewAction) generateFileContents(manifest string) (map[string]*helmmanager.FileContent, error) {
-	files := make(map[string]*helmmanager.FileContent, 0)
-	manifests := releaseutil.SplitManifests(manifest)
-	for i := range manifests {
-		content := manifests[i]
-		var entry releaseutil.SimpleHead
-		if err := yaml.Unmarshal([]byte(content), &entry); err != nil {
-			blog.Errorf("YAML parse error, %s", err)
-			return nil, err
-		}
-		path := fmt.Sprintf("%s/%s", entry.Kind, entry.Metadata.Name)
-		files[path] = &helmmanager.FileContent{
-			Name:    &entry.Metadata.Name,
-			Path:    &path,
-			Content: &content,
-		}
-	}
-	return files, nil
 }
 
 func (r *ReleasePreviewAction) setResp(err common.HelmManagerError, message string, rp *helmmanager.ReleasePreview) {

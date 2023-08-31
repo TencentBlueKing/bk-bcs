@@ -37,7 +37,8 @@ var (
 	deserializer  = codecs.UniversalDeserializer()
 )
 
-type webhookServer struct {
+// WebhookServer is the server of webhook
+type WebhookServer struct {
 	*http.Server
 }
 
@@ -48,14 +49,13 @@ func init() {
 }
 
 // NewWebhookServer new web hook server
-// NOCC:golint/ret(设计如此)
-func NewWebhookServer() *webhookServer {
-	return &webhookServer{}
+func NewWebhookServer() *WebhookServer {
+	return &WebhookServer{}
 }
 
 // mutate xxx
 // validate deployments and services
-func (whsvr *webhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
+func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
 
 	klog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v Operation=%v UserInfo=%v",
@@ -102,7 +102,7 @@ func (whsvr *webhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 }
 
 // Serve method for webhook server
-func (whsvr *webhookServer) Serve(w http.ResponseWriter, r *http.Request) {
+func (whsvr *WebhookServer) Serve(w http.ResponseWriter, r *http.Request) {
 	var body []byte
 	if r.Body != nil {
 		if data, err := ioutil.ReadAll(r.Body); err == nil {

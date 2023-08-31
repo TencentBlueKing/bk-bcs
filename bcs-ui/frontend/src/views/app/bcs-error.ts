@@ -22,8 +22,11 @@ export class BcsError extends Error {
 
 export function errorHandler(err, config: IConfig = {}) {
   const { filename, parentFileName, route, info } = config;
-  console.group('something is wrong with the bcs page, please contact assistant, sorry!');
-  console.group('info');
+  console.group(
+    '%csomething is wrong with the bcs page, please contact assistant, sorry!☠️',
+    'padding: 2px 5px; background: #ea3636; color: #fff; border-radius: 3px 0 0 3px;',
+  );
+  console.group('%cinfo', 'padding: 2px 5px; background: #ea3636; color: #fff; border-radius: 3px 0 0 3px;');
   console.error(`
   version: ${localStorage.getItem('__bcs_latest_version__')}
   filename: ${filename}
@@ -32,7 +35,7 @@ export function errorHandler(err, config: IConfig = {}) {
   info: ${info}
   `);
   console.groupEnd();
-  console.group('stack');
+  console.group('%cstack', 'padding: 2px 5px; background: #ea3636; color: #fff; border-radius: 3px 0 0 3px;');
   console.error(err);
   console.groupEnd();
   console.groupEnd();

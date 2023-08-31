@@ -3,7 +3,6 @@ syntax = "proto3";
 import "bscp.io/pkg/protocol/core/app/app.proto";
 import "bscp.io/pkg/protocol/core/app-template-binding/app_template_binding.proto";
 import "bscp.io/pkg/protocol/core/base/base.proto";
-import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
 import "bscp.io/pkg/protocol/core/commit/commit.proto";
 import "bscp.io/pkg/protocol/core/content/content.proto";
@@ -11,7 +10,7 @@ import "bscp.io/pkg/protocol/core/credential/credential.proto";
 import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
 import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
-import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
+import "bscp.io/pkg/protocol/core/hook-revision/hook_revision.proto";
 import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
@@ -49,9 +48,7 @@ service Data {
     rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {}
 
     // config hook related interface.
-    rpc CreateConfigHook(CreateConfigHookReq) returns (CreateResp) {}
     rpc UpdateConfigHook(UpdateConfigHookReq) returns (pbbase.EmptyResp) {}
-    rpc GetConfigHook(GetConfigHookReq) returns (pbch.ConfigHook) {}
 
     // content related interface.
     rpc CreateContent(CreateContentReq) returns (CreateResp) {}
@@ -64,6 +61,7 @@ service Data {
     // release related interface.
     rpc CreateRelease(CreateReleaseReq) returns (CreateResp) {}
     rpc ListReleases(ListReleasesReq) returns (ListReleasesResp) {}
+    rpc GetReleaseByName(GetReleaseByNameReq) returns (pbrelease.Release) {}
 
     // released config item related interface.
     rpc GetReleasedConfigItem(GetReleasedCIReq) returns (pbrci.ReleasedConfigItem) {}
@@ -73,17 +71,19 @@ service Data {
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
     rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
     rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
+    rpc ListHookReferences(ListHookReferencesReq) returns (ListHookReferencesResp) {}
     rpc GetHook(GetHookReq) returns (GetHookResp) {}
 
-    // hook release interface.
-    rpc CreateHookRelease(CreateHookReleaseReq) returns (CreateResp) {}
-    rpc ListHookReleases(ListHookReleasesReq) returns (ListHookReleasesResp) {}
-    rpc GetHookReleaseByID(GetHookReleaseByIdReq) returns (pbhr.HookRelease){}
-    rpc DeleteHookRelease(DeleteHookReleaseReq) returns (pbbase.EmptyResp){}
-    rpc PublishHookRelease(PublishHookReleaseReq) returns (pbbase.EmptyResp){}
-    rpc GetHookReleaseByPubState(GetByPubStateReq) returns (pbhr.HookRelease){}
-    rpc UpdateHookRelease(UpdateHookReleaseReq) returns (pbbase.EmptyResp) {}
-    rpc ListHookReleasesReferences(ListHookReleasesReferencesReq) returns (ListHookReleasesReferencesResp) {}
+    // hook revision related interface.
+    rpc CreateHookRevision(CreateHookRevisionReq) returns (CreateResp) {}
+    rpc ListHookRevisions(ListHookRevisionsReq) returns (ListHookRevisionsResp) {}
+    rpc GetHookRevisionByID(GetHookRevisionByIdReq) returns (pbhr.HookRevision){}
+    rpc DeleteHookRevision(DeleteHookRevisionReq) returns (pbbase.EmptyResp){}
+    rpc PublishHookRevision(PublishHookRevisionReq) returns (pbbase.EmptyResp){}
+    rpc GetHookRevisionByPubState(GetByPubStateReq) returns (pbhr.HookRevision){}
+    rpc UpdateHookRevision(UpdateHookRevisionReq) returns (pbbase.EmptyResp) {}
+    rpc ListHookRevisionReferences(ListHookRevisionReferencesReq) returns (ListHookRevisionReferencesResp) {}
+    rpc GetReleaseHook(GetReleaseHookReq) returns (GetReleaseHookResp) {}
 
     // template space related interface.
     rpc CreateTemplateSpace(CreateTemplateSpaceReq) returns (CreateResp) {}
@@ -170,6 +170,7 @@ service Data {
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
     rpc ListAllGroups(ListAllGroupsReq) returns (ListAllGroupsResp) {}
     rpc ListAppGroups(ListAppGroupsReq) returns (ListAppGroupsResp) {}
+    rpc GetGroupByName(GetGroupByNameReq) returns (pbgroup.Group) {}
     rpc UpdateGroup(UpdateGroupReq) returns (pbbase.EmptyResp) {}
     rpc DeleteGroup(DeleteGroupReq) returns (pbbase.EmptyResp) {}
 
@@ -272,9 +273,10 @@ message CreateResp {
 }
 
 message UpdateConfigHookReq {
-    uint32                    id         = 1;
-    pbch.ConfigHookAttachment attachment = 2;
-    pbch.ConfigHookSpec       spec       = 3;
+    uint32 biz_id       = 1;
+    uint32 app_id       = 2;
+    uint32 pre_hook_id  = 3;
+    uint32 post_hook_id = 4;
 }
 
 message GetConfigHookReq {
@@ -345,9 +347,10 @@ message BatchUpsertConfigItemsReq {
         pbci.ConfigItemSpec       config_item_spec       = 2;
         pbcontent.ContentSpec     content_spec           = 3;
     }
-    uint32              biz_id = 1;
-    uint32              app_id = 2;
-    repeated ConfigItem items  = 3;
+    uint32              biz_id      = 1;
+    uint32              app_id      = 2;
+    repeated ConfigItem items       = 3;
+    bool                replace_all = 4;
 }
 
 message UpdateConfigItemReq {
@@ -391,11 +394,6 @@ message ListConfigItemCountResp {
     repeated pbci.ListConfigItemCounts details = 1;
 }
 
-message CreateConfigHookReq {
-    pbch.ConfigHookAttachment attachment = 1;
-    pbch.ConfigHookSpec       spec       = 2;
-}
-
 message CreateContentReq {
     pbcontent.ContentAttachment attachment = 1;
     pbcontent.ContentSpec       spec       = 2;
@@ -437,6 +435,12 @@ message ListReleasesReq {
 message ListReleasesResp {
     uint32                     count   = 1;
     repeated pbrelease.Release details = 2;
+}
+
+message GetReleaseByNameReq {
+    uint32 biz_id       = 1;
+    uint32 app_id       = 2;
+    string release_name = 3;
 }
 
 message GetReleasedCIReq {
@@ -490,25 +494,53 @@ message ListHooksReq {
 }
 
 message ListHooksResp {
-    uint32               count   = 1;
-    repeated pbhook.Hook details = 2;
+    message Detail {
+        pbhook.Hook hook                  = 1;
+        uint32      bound_num             = 2;
+        bool        confirm_delete        = 3;
+        uint32      published_revision_id = 4;
+    }
+    uint32          count   = 1;
+    repeated Detail details = 2;
 }
 
 message ListHookTagResp {
     repeated pbhook.CountHookTags details = 1;
 }
 
+message ListHookReferencesReq {
+    uint32 biz_id      = 1;
+    uint32 hook_id     = 2;
+    uint32 start       = 3;
+    uint32 limit       = 4;
+}
+
+message ListHookReferencesResp {
+    message Detail {
+        uint32 hook_revision_id   = 1;
+        string hook_revision_name = 2;
+        uint32 app_id             = 3;
+        string app_name           = 4;
+        uint32 release_id         = 5;
+        string release_name       = 6;
+        string type               = 7;
+    }
+    uint32          count   = 1;
+    repeated Detail details = 2;
+}
+
 message DeleteHookReq {
-    uint32                id         = 1;
-    pbhook.HookAttachment attachment = 2;
+    uint32 biz_id  = 1;
+    uint32 hook_id = 2;
+    bool   force   = 3;
 }
 
-message CreateHookReleaseReq {
-    pbhr.HookReleaseAttachment attachment = 1;
-    pbhr.HookReleaseSpec       spec       = 2;
+message CreateHookRevisionReq {
+    pbhr.HookRevisionAttachment attachment = 1;
+    pbhr.HookRevisionSpec       spec       = 2;
 }
 
-message ListHookReleasesReq {
+message ListHookRevisionsReq {
     uint32 biz_id     = 1;
     uint32 hook_id    = 2;
     string search_key = 3;
@@ -518,24 +550,30 @@ message ListHookReleasesReq {
     string state      = 7;
 }
 
-message ListHookReleasesResp {
-    uint32                    count   = 1;
-    repeated pbhr.HookRelease details = 2;
+message ListHookRevisionsResp {
+    message ListHookRevisionsData {
+        pbhr.HookRevision hook_revision  = 1;
+        uint32            bound_num      = 2;
+        bool              confirm_delete = 3;
+    }
+    uint32                         count   = 1;
+    repeated ListHookRevisionsData details = 2;
 }
 
-message GetHookReleaseByIdReq {
+message GetHookRevisionByIdReq {
     uint32 biz_id  = 1;
     uint32 hook_id = 2;
     uint32 id      = 3;
 }
 
-message DeleteHookReleaseReq {
-    uint32 biz_id  = 1;
-    uint32 hook_id = 2;
-    uint32 id      = 3;
+message DeleteHookRevisionReq {
+    uint32 biz_id      = 1;
+    uint32 hook_id     = 2;
+    uint32 revision_id = 3;
+    bool   force       = 4;
 }
 
-message PublishHookReleaseReq {
+message PublishHookRevisionReq {
     uint32 biz_id  = 1;
     uint32 hook_id = 2;
     uint32 id      = 3;
@@ -547,23 +585,52 @@ message GetByPubStateReq {
     string state   = 3;
 }
 
-message UpdateHookReleaseReq {
+message UpdateHookRevisionReq {
     uint32                     id         = 1;
-    pbhr.HookReleaseAttachment attachment = 2;
-    pbhr.HookReleaseSpec       spec       = 3;
+    pbhr.HookRevisionAttachment attachment = 2;
+    pbhr.HookRevisionSpec       spec       = 3;
 }
 
-message ListHookReleasesReferencesReq {
+message ListHookRevisionReferencesReq {
     uint32 biz_id      = 1;
     uint32 hook_id     = 2;
-    uint32 releases_id = 3;
+    uint32 revision_id = 3;
     uint32 start       = 4;
     uint32 limit       = 5;
 }
 
-message ListHookReleasesReferencesResp {
-    uint32                                          count   = 1;
-    repeated pbhr.ListHookReleasesReferencesDetails details = 2;
+message ListHookRevisionReferencesResp {
+    message Detail {
+        uint32 revision_id   = 1;
+        string revision_name = 2;
+        uint32 app_id        = 3;
+        string app_name      = 4;
+        uint32 release_id    = 5;
+        string release_name  = 6;
+        string type          = 7;
+    }
+    uint32          count   = 1;
+    repeated Detail details = 2;
+}
+
+message GetReleaseHookReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message GetReleaseHookResp {
+    message Hook {
+        uint32 hook_id                 = 1;
+        string hook_name               = 2;
+        uint32 hook_revision_id        = 3;
+        string hook_revision_name      = 4;
+        string type                    = 5;
+        string memo                    = 6;
+        string content                 = 7;
+    }
+    Hook pre_hook  = 1;
+    Hook post_hook = 2;
 }
 
 message CreateTemplateSpaceReq {
@@ -1113,6 +1180,11 @@ message ListAppGroupsResp {
         bool                   edited       = 7;
     }
     repeated ListAppGroupsData details = 1;
+}
+
+message GetGroupByNameReq {
+    uint32 biz_id     = 1;
+    string group_name = 2;
 }
 
 message UpdateGroupReq {

@@ -23,23 +23,27 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
 	bcshttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/emicklei/go-restful"
 	"github.com/go-micro/plugins/v4/registry/etcd"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/migrations"
 )
 
 var (
@@ -52,9 +56,8 @@ type UserManager struct {
 	config   *config.UserMgrConfig
 	httpServ *httpserver.HttpServer
 
-	IamPermClient iam.PermClient
+	IamPermClient iam.PermMigrateClient
 	EtcdRegistry  registry.Registry
-	CmClient      *cmanager.ClusterManagerClient
 
 	permService *permission.PermVerifyClient
 }
@@ -135,12 +138,13 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 func (u *UserManager) initRouters(ws *restful.WebService) {
 	ws.Filter(middleware.RequestIDFilter)
 	ws.Filter(middleware.TracingFilter)
+	ws.Filter(middleware.LoggingFilter)
 	v1http.InitV1Routers(ws, u.permService)
 	// register pull resource API
 }
 
 func (u *UserManager) initPermService() error {
-	permService := permission.NewPermVerifyClient(u.config.PermissionSwitch, u.IamPermClient, u.CmClient)
+	permService := permission.NewPermVerifyClient(u.config.PermissionSwitch, u.IamPermClient)
 	u.permService = permService
 
 	return nil
@@ -180,23 +184,6 @@ func (u *UserManager) initPassCCService() error {
 	return nil
 }
 
-func (u *UserManager) initClusterManager() error {
-	opts := &cmanager.Options{
-		Module:          u.config.ClusterConfig.Module,
-		EtcdRegistry:    u.EtcdRegistry,
-		ClientTLSConfig: u.config.TlsClientConfig,
-	}
-
-	cli := cmanager.NewClusterManagerClient(opts)
-	if cli == nil {
-		errMsg := fmt.Errorf("initClusterManager failed")
-		return errMsg
-	}
-
-	u.CmClient = cli
-	return nil
-}
-
 func (u *UserManager) initIamPermClient() error {
 
 	opt := &iam.Options{
@@ -208,14 +195,16 @@ func (u *UserManager) initIamPermClient() error {
 		IAMHost:     u.config.IAMConfig.IAMHost,
 		BkiIAMHost:  u.config.IAMConfig.BkiIAMHost,
 		Metric:      u.config.IAMConfig.Metric,
+		Debug:       u.config.IAMConfig.ServerDebug,
 	}
-	iamCli, err := iam.NewIamClient(opt)
+	iamCli, err := iam.NewIamMigrateClient(opt)
 	if err != nil {
 		blog.Errorf("initIamPermClient failed: %v", err)
 		return err
 	}
 
 	u.IamPermClient = iamCli
+	config.GloablIAMClient = iamCli
 	return nil
 }
 
@@ -258,8 +247,78 @@ func (u *UserManager) initEtcdRegistry() error {
 	return nil
 }
 
+func (u *UserManager) initCryptor() error {
+	if !u.config.Encrypt.Enable {
+		return nil
+	}
+	conf := &encryptv2.Config{
+		Enabled:   u.config.Encrypt.Enable,
+		Algorithm: encryptv2.Algorithm(u.config.Encrypt.Algorithm),
+	}
+	switch conf.Algorithm {
+	case encryptv2.Sm4:
+		conf.Sm4 = &encryptv2.Sm4Conf{
+			Key: u.config.Encrypt.Secret.Key,
+			Iv:  u.config.Encrypt.Secret.Secret,
+		}
+	case encryptv2.AesGcm:
+		conf.AesGcm = &encryptv2.AesGcmConf{
+			Key:   u.config.Encrypt.Secret.Key,
+			Nonce: u.config.Encrypt.Secret.Secret,
+		}
+	case encryptv2.Normal:
+		conf.Normal = &encryptv2.NormalConf{
+			PriKey: static.EncryptionKey,
+		}
+	}
+	cryptor, err := encryptv2.NewCrypto(conf)
+	if err != nil {
+		return fmt.Errorf("init cryptor failed, %s", err.Error())
+	}
+	config.GlobalCryptor = cryptor
+	blog.Info("init cryptor successfully")
+	return nil
+}
+
+// Migrate migrates something.
+//
+// op is a pointer to options.Migration.
+// It is the description of the parameter.
+// The function does not return anything.
+func (u *UserManager) migrate() {
+	go func() {
+		blog.Info("start iam migration")
+		tempVar := map[string]string{
+			"BK_IAM_SYSTEM_ID": u.config.IAMConfig.SystemID,
+			"APP_CODE":         u.config.IAMConfig.AppCode,
+			"BCS_HOST":         u.config.BcsAPI.Host,
+		}
+		d, err := iofs.New(migrations.MigrationFS, ".")
+		if err != nil {
+			blog.Errorf("get migrations files error, %s", err.Error())
+			return
+		}
+		if err := u.IamPermClient.Migrate(sqlstore.GCoreDB.DB(), d, "bk_iam_migrations",
+			5*time.Minute, tempVar); err != nil {
+			if strings.Contains(err.Error(), "no change") {
+				blog.Info("iam migration success")
+				return
+			}
+			blog.Errorf("migrate iam failed, %s", err.Error())
+			return
+		}
+		blog.Info("iam migration success")
+	}()
+}
+
 func (u *UserManager) initUserManagerServer() error {
-	err := u.initEtcdRegistry()
+	var err error
+	err = u.initCryptor()
+	if err != nil {
+		return err
+	}
+
+	err = u.initEtcdRegistry()
 	if err != nil {
 		return err
 	}
@@ -279,15 +338,12 @@ func (u *UserManager) initUserManagerServer() error {
 		return err
 	}
 
-	err = u.initClusterManager()
-	if err != nil {
-		return err
-	}
-
 	err = u.initPermService()
 	if err != nil {
 		return err
 	}
+
+	u.migrate()
 
 	return nil
 }

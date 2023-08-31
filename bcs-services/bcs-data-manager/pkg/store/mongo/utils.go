@@ -14,6 +14,7 @@ package mongo
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -51,6 +52,9 @@ const (
 	PodAutoscalerTypeKey = "pod_autoscaler_type"
 	// PodAutoscalerNameKey xxx
 	PodAutoscalerNameKey = "pod_autoscaler_name"
+
+	// DtEventTimeKey key for bkbase data dtEventTime
+	DtEventTimeKey = "dtEventTime"
 )
 
 const (
@@ -199,4 +203,11 @@ func getPublicData(ctx context.Context, db drivers.DB, cond *operator.Condition)
 		blog.Errorf("get public data error: %v", err)
 	}
 	return result
+}
+
+func ensureSortAscending(v int64) (int64, error) {
+	if v == 1 || v == -1 {
+		return v, nil
+	}
+	return 0, fmt.Errorf("sort params must be 1 or -1")
 }

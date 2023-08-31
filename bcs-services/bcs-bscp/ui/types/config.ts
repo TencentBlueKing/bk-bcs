@@ -53,8 +53,8 @@ export interface IConfigItem {
 export interface IConfigDetail {
   config_item: IConfigItem;
   content: {
-      signature: string;
-      byte_size: string;
+    signature: string;
+    byte_size: string;
   }
 }
 
@@ -155,4 +155,3 @@ export interface IBoundTemplateDetail {
   creator: string;
   create_at: string;
 }
-

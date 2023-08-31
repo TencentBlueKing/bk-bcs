@@ -11,7 +11,6 @@
  *
  */
 
-// Package node xxx
 package node
 
 import (
@@ -21,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
@@ -29,8 +29,8 @@ import (
 )
 
 const (
-	// ! we don't setting bson tag in proto file,
-	// ! all struct key in mongo is lowcase in default
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	nodeIDKeyName         = "nodeid"
 	nodeIPKeyName         = "innerip"
 	nodeClusterIDKey      = "clusterid"
@@ -70,7 +70,6 @@ func New(db drivers.DB) *ModelNode {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelNode) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -126,8 +125,32 @@ func (m *ModelNode) DeleteNode(ctx context.Context, nodeID string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+	if len(nodeID) == 0 {
+		return nil
+	}
+
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		nodeIDKeyName: nodeID,
+	})
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteClusterNode delete node
+func (m *ModelNode) DeleteClusterNode(ctx context.Context, clusterID, nodeID string) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+	if len(nodeID) == 0 {
+		return nil
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		nodeClusterIDKey: clusterID,
+		nodeIDKeyName:    nodeID,
 	})
 	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
 	if err != nil {
@@ -140,6 +163,9 @@ func (m *ModelNode) DeleteNode(ctx context.Context, nodeID string) error {
 func (m *ModelNode) DeleteNodesByNodeIDs(ctx context.Context, nodeIDs []string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
+	}
+	if len(nodeIDs) == 0 {
+		return nil
 	}
 
 	cond := operator.NewLeafCondition(operator.In, operator.M{
@@ -158,6 +184,9 @@ func (m *ModelNode) DeleteNodesByIPs(ctx context.Context, ips []string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+	if len(ips) == 0 {
+		return nil
+	}
 
 	cond := operator.NewLeafCondition(operator.In, operator.M{
 		nodeIPKeyName: ips,
@@ -170,7 +199,7 @@ func (m *ModelNode) DeleteNodesByIPs(ctx context.Context, ips []string) error {
 	return nil
 }
 
-// DeleteNodesByClusterID deleteNodes by clusterID
+// DeleteNodesByClusterID xxx
 func (m *ModelNode) DeleteNodesByClusterID(ctx context.Context, clusterID string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
@@ -190,8 +219,32 @@ func (m *ModelNode) DeleteNodeByIP(ctx context.Context, ip string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+	if len(ip) == 0 {
+		return nil
+	}
+
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		nodeIPKeyName: ip,
+	})
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteClusterNodeByIP delete cluster node
+func (m *ModelNode) DeleteClusterNodeByIP(ctx context.Context, clusterID, ip string) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+	if len(ip) == 0 {
+		return nil
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		nodeClusterIDKey: clusterID,
+		nodeIPKeyName:    ip,
 	})
 	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
 	if err != nil {
@@ -222,6 +275,38 @@ func (m *ModelNode) GetNodeByIP(ctx context.Context, ip string) (*types.Node, er
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		nodeIPKeyName: ip,
+	})
+	retNode := &types.Node{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retNode); err != nil {
+		return nil, err
+	}
+	return retNode, nil
+}
+
+// GetClusterNode get cluster node
+func (m *ModelNode) GetClusterNode(ctx context.Context, clusterID, nodeID string) (*types.Node, error) {
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		nodeClusterIDKey: clusterID,
+		nodeIDKeyName:    nodeID,
+	})
+	retNode := &types.Node{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retNode); err != nil {
+		return nil, err
+	}
+	return retNode, nil
+}
+
+// GetClusterNodeByIP get node
+func (m *ModelNode) GetClusterNodeByIP(ctx context.Context, clusterID, ip string) (*types.Node, error) {
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		nodeClusterIDKey: clusterID,
+		nodeIPKeyName:    ip,
 	})
 	retNode := &types.Node{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retNode); err != nil {

@@ -49,12 +49,17 @@ func GetManagedClusterList(ctx context.Context, clusterID string) ([]string, err
 }
 
 // GetClusterNodeList 获取集群中节点列表
-func GetClusterNodeList(ctx context.Context, clusterId string) ([]v1.Node, error) {
+func GetClusterNodeList(ctx context.Context, clusterId string, excludeMasterRole bool) ([]v1.Node, error) {
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return nil, err
 	}
-	nodes, err := client.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+
+	listOptions := metav1.ListOptions{}
+	if excludeMasterRole {
+		listOptions.LabelSelector = "node-role.kubernetes.io/master!=true"
+	}
+	nodes, err := client.CoreV1().Nodes().List(ctx, listOptions)
 	if err != nil {
 		return nil, err
 	}

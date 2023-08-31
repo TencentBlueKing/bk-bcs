@@ -33,9 +33,10 @@ type CreateAction struct {
 	req   *cmproto.CreateAutoScalingOptionRequest
 	resp  *cmproto.CreateAutoScalingOptionResponse
 
-	// inner data for creation
+	//inner data for creation
 	cluster *cmproto.Cluster
-	// cloud for implementation
+	project *cmproto.Project
+	//cloud for implementation
 	cloud *cmproto.Cloud
 }
 
@@ -64,16 +65,31 @@ func (ca *CreateAction) generateClusterAutoScalingOption() *cmproto.ClusterAutoS
 		MaxTotalUnreadyPercentage:     ca.req.MaxTotalUnreadyPercentage,
 		ScaleDownUnreadyTime:          ca.req.ScaleDownUnreadyTime,
 		UnregisteredNodeRemovalTime:   ca.req.UnregisteredNodeRemovalTime,
-		Creator:                       ca.req.Creator,
-		Provider:                      ca.req.Provider,
-		CreateTime:                    timeStr,
-		UpdateTime:                    timeStr,
+		BufferResourceRatio:           ca.req.BufferResourceRatio,
+		BufferResourceCpuRatio:        ca.req.BufferResourceCpuRatio,
+		BufferResourceMemRatio:        ca.req.BufferResourceMemRatio,
+		ScaleUpFromZero: func() bool {
+			if ca.req.ScaleUpFromZero != nil {
+				return ca.req.ScaleUpFromZero.GetValue()
+			}
+			return true
+		}(),
+		ScaleDownDelayAfterFailure: func() uint32 {
+			if ca.req.ScaleDownDelayAfterFailure != nil {
+				return ca.req.ScaleDownDelayAfterFailure.GetValue()
+			}
+			return 180
+		}(),
+		Creator:    ca.req.Creator,
+		Provider:   ca.req.Provider,
+		CreateTime: timeStr,
+		UpdateTime: timeStr,
 	}
 }
 
 func (ca *CreateAction) createAutoScalingOption() error {
 	option := ca.generateClusterAutoScalingOption()
-	// check default value
+	//check default value
 	if len(option.Expander) == 0 {
 		option.Expander = "random"
 	}
@@ -114,6 +130,7 @@ func (ca *CreateAction) createAutoScalingOption() error {
 		blog.Errorf("AutoScalingOption %s store to DB failed, %s", option.ClusterID, err.Error())
 		return err
 	}
+
 	coption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
 		Cloud:     ca.cloud,
 		AccountID: ca.cluster.CloudAccountID,

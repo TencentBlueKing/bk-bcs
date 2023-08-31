@@ -19,11 +19,78 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/thirdparty"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 )
+
+// GetBkSopsTemplateList implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetBkSopsTemplateList(ctx context.Context,
+	req *cmproto.GetBkSopsTemplateListRequest, resp *cmproto.GetBkSopsTemplateListResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewListTemplateListAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetBkSopsTemplateList", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetBkSopsTemplateList, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: GetBkSopsTemplateList, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// GetBkSopsTemplateInfo implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetBkSopsTemplateInfo(ctx context.Context,
+	req *cmproto.GetBkSopsTemplateInfoRequest, resp *cmproto.GetBkSopsTemplateInfoResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ga := thirdparty.NewGetTemplateInfoAction()
+	ga.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetBkSopsTemplateInfo", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetBkSopsTemplateInfo, req %v, resp.Code %d, resp.Message %s",
+		reqID, req, resp.Code, resp.Message)
+	blog.V(5).Infof("reqID: %s, action: GetBkSopsTemplateInfo, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// GetInnerTemplateValues implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetInnerTemplateValues(ctx context.Context,
+	req *cmproto.GetInnerTemplateValuesRequest, resp *cmproto.GetInnerTemplateValuesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ga := thirdparty.NewGetTemplateValuesAction(cm.model)
+	ga.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetInnerTemplateValues", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetInnerTemplateValues, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: GetInnerTemplateValues, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// DebugBkSopsTask implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) DebugBkSopsTask(ctx context.Context,
+	req *cmproto.DebugBkSopsTaskRequest, resp *cmproto.DebugBkSopsTaskResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	da := thirdparty.NewDebugBkSopsTaskAction(cm.model)
+	da.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("DebugBkSopsTask", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: DebugBkSopsTask, req %v, resp.Code %d, resp.Message %s, resp.Data %v",
+		reqID, req, resp.Code, resp.Message, resp.Data)
+	blog.V(5).Infof("reqID: %s, action: DebugBkSopsTask, req %v, resp %v", reqID, req, resp)
+	return nil
+}
 
 // ListBKCloud implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListBKCloud(ctx context.Context,
@@ -52,5 +119,65 @@ func (cm *ClusterManager) ListCCTopology(ctx context.Context,
 	la.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCCTopology", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.V(3).Infof("reqID: %s, action: ListCCTopology, req %v", reqID, req)
+	return nil
+}
+
+// GetBatchCustomSetting implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetBatchCustomSetting(ctx context.Context,
+	req *cmproto.GetBatchCustomSettingRequest, resp *cmproto.GetBatchCustomSettingResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetCustomSettingAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetBatchCustomSetting", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetBatchCustomSetting, req %v", reqID, req)
+	return nil
+}
+
+// GetBizTopologyHost implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetBizTopologyHost(ctx context.Context,
+	req *cmproto.GetBizTopologyHostRequest, resp *cmproto.GetBizTopologyHostResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetBizInstanceTopoAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetBizTopologyHost", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetBizTopologyHost, req %v", reqID, req)
+	return nil
+}
+
+// GetTopologyNodes implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetTopologyNodes(ctx context.Context,
+	req *cmproto.GetTopologyNodesRequest, resp *cmproto.GetTopologyNodesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetTopoNodesAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetTopologyNodes", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetTopologyNodes, req %v", reqID, req)
+	return nil
+}
+
+// GetScopeHostCheck implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetScopeHostCheck(ctx context.Context,
+	req *cmproto.GetScopeHostCheckRequest, resp *cmproto.GetScopeHostCheckResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetScopeHostCheckAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetScopeHostCheck", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetScopeHostCheck, req %v", reqID, req)
 	return nil
 }

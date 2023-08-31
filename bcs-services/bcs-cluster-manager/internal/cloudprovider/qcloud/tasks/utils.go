@@ -37,19 +37,83 @@ func transImageNameToImageID(cmOption *cloudprovider.CommonOption, imageName str
 	return imageName, nil
 }
 
-func transIPsToInstanceID(cmOption *cloudprovider.ListNodesOption, ips []string) ([]string, error) {
+func transIPsToInstances(cmOption *cloudprovider.ListNodesOption, ips []string) (map[string]*cmproto.Node, error) {
 	nodeManager := &api.NodeManager{}
 	nodes, err := nodeManager.ListNodesByIP(ips, cmOption)
 	if err != nil {
 		return nil, err
 	}
 
-	instanceIDs := make([]string, 0)
+	instances := make(map[string]*cmproto.Node, 0)
 	for i := range nodes {
-		instanceIDs = append(instanceIDs, nodes[i].NodeID)
+		instances[nodes[i].InnerIP] = nodes[i]
 	}
 
-	return instanceIDs, nil
+	return instances, nil
+}
+
+// InstanceDisk xxx
+type InstanceDisk struct {
+	InstanceID string
+	InstanceIP string
+	DiskCount  int
+}
+
+// GetNodeInstanceDataDiskInfo get node instance dataDisks
+func GetNodeInstanceDataDiskInfo(instanceIDs []string, opt *cloudprovider.CommonOption) (map[string]InstanceDisk, error) {
+	nodeManager := &api.NodeManager{}
+	instanceList, err := nodeManager.ListNodeInstancesByInstanceID(instanceIDs, opt)
+	if err != nil {
+		blog.Errorf("GetNodeInstanceDataDiskInfo[%+v] failed: %v", instanceIDs, err)
+		return nil, err
+	}
+
+	instances := make(map[string]InstanceDisk, 0)
+	for _, cvm := range instanceList {
+		instances[*cvm.InstanceId] = InstanceDisk{
+			InstanceID: *cvm.InstanceId,
+			InstanceIP: *cvm.PrivateIpAddresses[0],
+			DiskCount:  len(cvm.DataDisks),
+		}
+	}
+
+	return instances, nil
+}
+
+// FilterInstanceByDataDisk xxx
+type FilterInstanceByDataDisk struct {
+	SingleDiskInstance   []string
+	SingleDiskInstanceIP []string
+	ManyDiskInstance     []string
+	ManyDiskInstanceIP   []string
+}
+
+// FilterNodesByDataDisk filter instance by data disks
+func FilterNodesByDataDisk(instanceIDs []string, opt *cloudprovider.CommonOption) (*FilterInstanceByDataDisk, error) {
+	instanceDisk, err := GetNodeInstanceDataDiskInfo(instanceIDs, opt)
+	if err != nil {
+		blog.Errorf("FilterNodesByDataDisk GetNodeInstanceDataDiskInfo failed: %v", err)
+		return nil, err
+	}
+
+	filter := &FilterInstanceByDataDisk{
+		SingleDiskInstance:   make([]string, 0),
+		SingleDiskInstanceIP: make([]string, 0),
+		ManyDiskInstance:     make([]string, 0),
+		ManyDiskInstanceIP:   make([]string, 0),
+	}
+
+	for i := range instanceDisk {
+		if instanceDisk[i].DiskCount <= 1 {
+			filter.SingleDiskInstance = append(filter.SingleDiskInstance, instanceDisk[i].InstanceID)
+			filter.SingleDiskInstanceIP = append(filter.SingleDiskInstanceIP, instanceDisk[i].InstanceIP)
+			continue
+		}
+		filter.ManyDiskInstance = append(filter.ManyDiskInstance, instanceDisk[i].InstanceID)
+		filter.ManyDiskInstanceIP = append(filter.ManyDiskInstanceIP, instanceDisk[i].InstanceIP)
+	}
+
+	return filter, nil
 }
 
 // updateClusterSystemID set cluster systemID
@@ -79,27 +143,6 @@ func updateClusterStatus(clusterID string, status string) error {
 	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cluster)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// updateNodeStatusByIP set node status
-func updateNodeStatusByIP(ipList []string, status string) error {
-	if len(ipList) == 0 {
-		return nil
-	}
-
-	for _, ip := range ipList {
-		node, err := cloudprovider.GetStorageModel().GetNodeByIP(context.Background(), ip)
-		if err != nil {
-			continue
-		}
-		node.Status = status
-		err = cloudprovider.GetStorageModel().UpdateNode(context.Background(), node)
-		if err != nil {
-			continue
-		}
 	}
 
 	return nil
@@ -178,8 +221,8 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 // releaseClusterCIDR release cluster CIDR
 func releaseClusterCIDR(cls *cmproto.Cluster) error {
 	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 {
-		cidr, err := cloudprovider.GetStorageModel().GetTkeCidr(context.Background(), cls.VpcID,
-			cls.NetworkSettings.ClusterIPv4CIDR)
+		cidr, err := cloudprovider.GetStorageModel().GetTkeCidr(context.Background(),
+			cls.VpcID, cls.NetworkSettings.ClusterIPv4CIDR)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			return err
 		}

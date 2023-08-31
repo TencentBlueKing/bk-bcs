@@ -11,7 +11,6 @@
  *
  */
 
-// Package user xxx
 package user
 
 import (
@@ -38,6 +37,8 @@ const (
 type UserManager interface {
 	// CreateUserToken create user token and return token
 	CreateUserToken(user CreateTokenReq) (string, error)
+	// CreateClientToken create user token and return token
+	CreateClientToken(client CreateClientTokenReq) (string, error)
 	// GetUserToken get user token
 	GetUserToken(user string) (string, error)
 	// DeleteUserToken delete user token
@@ -187,6 +188,48 @@ func (um *UserManagerClient) CreateUserToken(user CreateTokenReq) (string, error
 
 	if resp.Code != 0 || !resp.Result {
 		errMsg := fmt.Errorf("call CreateUserToken API error: code[%v], body[%v], err[%s]",
+			result.StatusCode, string(body), resp.Message)
+		return "", errMsg
+	}
+
+	return resp.Data.Token, nil
+}
+
+// CreateClientToken create client token and return token
+func (um *UserManagerClient) CreateClientToken(client CreateClientTokenReq) (string, error) {
+	if um == nil {
+		return "", errNotInited
+	}
+
+	var (
+		_    = "CreateClientToken"
+		path = usermanagerPrefixV1 + "/tokens/client"
+		resp = &CreateTokenResp{}
+	)
+
+	url, err := um.getUserManagerServerPath(path)
+	if err != nil {
+		return "", err
+	}
+
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		TLSClientConfig(um.opts.ClientTLSConfig).
+		Set("Authorization", fmt.Sprintf("Bearer %s", um.opts.Token)).
+		Set("Content-Type", "application/json").
+		Set("Connection", "close").
+		SetDebug(true).
+		Send(&client).
+		EndStruct(resp)
+
+	if len(errs) > 0 {
+		blog.Errorf("call api CreateClientToken failed: %v", errs[0])
+		return "", errs[0]
+	}
+
+	if resp.Code != 0 || !resp.Result {
+		errMsg := fmt.Errorf("call CreateClientToken API error: code[%v], body[%v], err[%s]",
 			result.StatusCode, string(body), resp.Message)
 		return "", errMsg
 	}

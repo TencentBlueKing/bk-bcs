@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package tke xxx
 package tke
 
 import (
@@ -21,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
@@ -30,8 +30,8 @@ import (
 
 const (
 	tkeCidrTableName = "tkecidrs"
-	// ! we don't setting bson tag in proto file,
-	// ! all struct key in mongo is lowcase in default
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	tkeCidrKeyVPC            = "vpc"
 	tkeCidrKeyCIDR           = "cidr"
 	defaultTkeCidrListLength = 3000
@@ -68,7 +68,6 @@ func New(db drivers.DB) *ModelTkeCidr {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelTkeCidr) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

@@ -101,7 +101,7 @@
                 </template>
               </ScriptEditor>
             </div>
-          </bk-form-item>
+          </bk-form-item> 
         </bk-form>
       </div>
     </template>

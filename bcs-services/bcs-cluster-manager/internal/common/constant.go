@@ -19,7 +19,7 @@ import (
 // ResourceType resource type
 type ResourceType string
 
-// String ()
+// String xxx
 func (rt ResourceType) String() string {
 	return string(rt)
 }
@@ -47,6 +47,42 @@ var (
 	Task ResourceType = "task"
 )
 
+// NodeType node type
+type NodeType string
+
+// String xxx
+func (nt NodeType) String() string {
+	return string(nt)
+}
+
+var (
+	// CVM cloud instance
+	CVM NodeType = "CVM"
+	// IDC instance
+	IDC NodeType = "IDC"
+)
+
+// NodeGroupType group type
+type NodeGroupType string
+
+// String xxx
+func (nt NodeGroupType) String() string {
+	return string(nt)
+}
+
+// NodeGroupTypeMap nodePool type
+var NodeGroupTypeMap = map[NodeGroupType]struct{}{
+	Normal:   {},
+	External: {},
+}
+
+var (
+	// Normal 普通云实例节点池
+	Normal NodeGroupType = "normal"
+	// External 第三方节点池
+	External NodeGroupType = "external"
+)
+
 const (
 	// MasterRole label
 	MasterRole = "node-role.kubernetes.io/master"
@@ -63,6 +99,10 @@ const (
 	Etcd = "Etcd"
 	// Kubelet cluster kubelet key
 	Kubelet = "kubelet"
+	// RootDir kubelet root-dir para
+	RootDir = "root-dir"
+	// RootDirValue kubelet root-dir value
+	RootDirValue = "/data/bcs/service/kubelet"
 )
 
 // DefaultClusterConfig cluster default service config
@@ -70,9 +110,63 @@ var DefaultClusterConfig = map[string]string{
 	Etcd: "node-data-dir=/data/bcs/lib/etcd;",
 }
 
+// DefaultNodeConfig default node config
+var DefaultNodeConfig = map[string]string{
+	Kubelet: "root-dir=/data/bcs/service/kubelet;",
+}
+
+var (
+	// DefaultDockerRuntime xxx
+	DefaultDockerRuntime = &RunTimeInfo{
+		Runtime: DockerContainerRuntime,
+		Version: DockerRuntimeVersion,
+	}
+
+	// DefaultContainerdRuntime xxx
+	DefaultContainerdRuntime = &RunTimeInfo{
+		Runtime: ContainerdRuntime,
+		Version: ContainerdRuntimeVersion,
+	}
+)
+
+// RunTimeInfo runtime
+type RunTimeInfo struct {
+	Runtime string
+	Version string
+}
+
+// IsDockerRuntime docker
+func IsDockerRuntime(runtime string) bool {
+	return runtime == DockerContainerRuntime
+}
+
+// IsContainerdRuntime containerd
+func IsContainerdRuntime(runtime string) bool {
+	return runtime == ContainerdRuntime
+}
+
 const (
+	// InitClusterID initClusterID
+	InitClusterID = "BCS-K8S-00000"
+	// RuntimeFlag xxx
+	RuntimeFlag = "runtime"
+
+	// ShowSharedCluster flag show shared cluster
+	ShowSharedCluster = "showSharedCluster"
+	// VClusterNetworkKey xxx
+	VClusterNetworkKey = "vclusterNetwork"
+	// VClusterNamespaceInfo xxx
+	VClusterNamespaceInfo = "namespaceInfo"
+	// VclusterNetworkMode xxx
+	VclusterNetworkMode = "vclusterMode"
+
 	// ClusterManager xxx
 	ClusterManager = "bcs-cluster-manager"
+
+	// Biz business
+	Biz = "biz"
+	// BizSet business set
+	BizSet = "biz_set"
 
 	// Prod prod env
 	Prod = "prod"
@@ -91,18 +185,26 @@ const (
 	// ClusterUnderlayNetwork underlay
 	ClusterUnderlayNetwork = "underlay"
 
+	// KubeletRootDirPath root-dir default path
+	KubeletRootDirPath = "/data/bcs/service/kubelet"
+
 	// DockerGraphPath docker path
 	DockerGraphPath = "/data/bcs/service/docker"
 	// MountTarget default mount path
 	MountTarget = "/data"
 
 	// DefaultImageName default image name
-	DefaultImageName = "Tencent Linux Release 2.2 (Final)"
+	DefaultImageName = "TencentOS Server 2.6 (TK4)"
 
 	// DockerContainerRuntime runtime
 	DockerContainerRuntime = "docker"
 	// DockerRuntimeVersion runtime version
 	DockerRuntimeVersion = "19.3"
+
+	// ContainerdRuntime runtime
+	ContainerdRuntime = "containerd"
+	// ContainerdRuntimeVersion runtime version
+	ContainerdRuntimeVersion = "1.4.3"
 
 	// ClusterEngineTypeMesos mesos cluster
 	ClusterEngineTypeMesos = "mesos"
@@ -113,13 +215,15 @@ const (
 	ClusterTypeFederation = "federation"
 	// ClusterTypeSingle single cluster
 	ClusterTypeSingle = "single"
+	// ClusterTypeVirtual virtual cluster
+	ClusterTypeVirtual = "virtual"
 
 	// MicroMetaKeyHTTPPort http port in micro service meta
 	MicroMetaKeyHTTPPort = "httpport"
 
-	// ClusterManageTypeManaged cloud manage cluster
+	//ClusterManageTypeManaged cloud manage cluster
 	ClusterManageTypeManaged = "MANAGED_CLUSTER"
-	// ClusterManageTypeIndependent BCS manage cluster
+	//ClusterManageTypeIndependent BCS manage cluster
 	ClusterManageTypeIndependent = "INDEPENDENT_CLUSTER"
 
 	// TkeCidrStatusAvailable available tke cidr status
@@ -129,23 +233,23 @@ const (
 	// TkeCidrStatusReserved reserved tke cidr status
 	TkeCidrStatusReserved = "reserved"
 
-	// StatusInitialization node/cluster/nodegroup status
+	//StatusInitialization node/cluster/nodegroup status
 	StatusInitialization = "INITIALIZATION"
-	// StatusCreateClusterFailed status create failed
+	//StatusCreateClusterFailed status create failed
 	StatusCreateClusterFailed = "CREATE-FAILURE"
-	// StatusImportClusterFailed status import failed
+	//StatusImportClusterFailed status import failed
 	StatusImportClusterFailed = "IMPORT-FAILURE"
-	// StatusRunning status running
+	//StatusRunning status running
 	StatusRunning = "RUNNING"
-	// StatusDeleting status deleting for scaling down
+	//StatusDeleting status deleting for scaling down
 	StatusDeleting = "DELETING"
-	// StatusDeleted status deleted
+	//StatusDeleted status deleted
 	StatusDeleted = "DELETED"
-	// StatusDeleteClusterFailed status delete failed
+	//StatusDeleteClusterFailed status delete failed
 	StatusDeleteClusterFailed = "DELETE-FAILURE"
-	// StatusAddNodesFailed status add nodes failed
+	//StatusAddNodesFailed status add nodes failed
 	StatusAddNodesFailed = "ADD-FAILURE"
-	// StatusRemoveNodesFailed status remove nodes failed
+	//StatusRemoveNodesFailed status remove nodes failed
 	StatusRemoveNodesFailed = "REMOVE-FAILURE"
 	// StatusNodeRemovable node is removable
 	StatusNodeRemovable = "REMOVABLE"
@@ -160,10 +264,24 @@ const (
 	StatusCreateNodeGroupCreating = "CREATING"
 	// StatusDeleteNodeGroupDeleting xxx
 	StatusDeleteNodeGroupDeleting = "DELETING"
+	// StatusUpdateNodeGroupUpdating xxx
+	StatusUpdateNodeGroupUpdating = "UPDATING"
 	// StatusCreateNodeGroupFailed xxx
 	StatusCreateNodeGroupFailed = "CREATE-FAILURE"
+
+	// StatusAddCANodesFailed status add CA nodes failed
+	StatusAddCANodesFailed = "ADD-CA-FAILURE"
+	// StatusRemoveCANodesFailed delete CA nodes failure
+	StatusRemoveCANodesFailed = "REMOVE-CA-FAILURE"
+
+	// StatusResourceApplying 申请资源状态
+	StatusResourceApplying = "APPLYING"
+	// StatusResourceApplyFailed 申请资源失败状态
+	StatusResourceApplyFailed = "APPLY-FAILURE"
+
 	// StatusNodeGroupUpdating xxx
 	StatusNodeGroupUpdating = "UPDATING"
+
 	// StatusNodeGroupUpdateFailed xxx
 	StatusNodeGroupUpdateFailed = "UPDATE-FAILURE"
 
@@ -224,23 +342,37 @@ const (
 	BcsErrClusterManagerSyncCloudErr = bcscommon.BCSErrClusterManager + 31
 	// BcsErrClusterManagerCheckKubeErr cloud config error
 	BcsErrClusterManagerCheckKubeErr = bcscommon.BCSErrClusterManager + 32
+	// BcsErrClusterManagerCheckCloudClusterResourceErr cloud/cluster resource error
+	BcsErrClusterManagerCheckCloudClusterResourceErr = bcscommon.BCSErrClusterManager + 33
+	// BcsErrClusterManagerBkSopsInterfaceErr cloud/cluster resource error
+	BcsErrClusterManagerBkSopsInterfaceErr = bcscommon.BCSErrClusterManager + 34
+	// BcsErrClusterManagerDecodeBase64ScriptErr base64 error
+	BcsErrClusterManagerDecodeBase64ScriptErr = bcscommon.BCSErrClusterManager + 35
+	// BcsErrClusterManagerDecodeActionErr decode action error
+	BcsErrClusterManagerDecodeActionErr = bcscommon.BCSErrClusterManager + 36
+	// BcsErrClusterManagerExternalNodeScriptErr get external script action error
+	BcsErrClusterManagerExternalNodeScriptErr = bcscommon.BCSErrClusterManager + 37
 	// BcsErrClusterManagerCheckPermErr cloud config error
-	BcsErrClusterManagerCheckPermErr = bcscommon.BCSErrClusterManager + 33
+	BcsErrClusterManagerCheckPermErr = bcscommon.BCSErrClusterManager + 38
 	// BcsErrClusterManagerGetPermErr cloud config error
-	BcsErrClusterManagerGetPermErr = bcscommon.BCSErrClusterManager + 34
+	BcsErrClusterManagerGetPermErr = bcscommon.BCSErrClusterManager + 39
+	// BcsErrClusterManagerCACleanNodesEmptyErr nodegroup clean nodes empty error
+	BcsErrClusterManagerCACleanNodesEmptyErr = bcscommon.BCSErrClusterManager + 40
+	// BcsErrClusterManagerCheckKubeConnErr cloud config error
+	BcsErrClusterManagerCheckKubeConnErr = bcscommon.BCSErrClusterManager + 41
 )
 
 // ClusterIDRange for generate clusterID range
 var ClusterIDRange = map[string][]int{
-	"mesos-stag":  {10000, 15000},
-	"mesos-debug": {20000, 25000},
-	"mesos-prod":  {30000, 399999},
-	"k8s-stag":    {15001, 19999},
-	"k8s-debug":   {25001, 29999},
-	"k8s-prod":    {40000, 1000000},
+	"mesos-stag":  []int{10000, 15000},
+	"mesos-debug": []int{20000, 25000},
+	"mesos-prod":  []int{30000, 399999},
+	"k8s-stag":    []int{15001, 19999},
+	"k8s-debug":   []int{25001, 29999},
+	"k8s-prod":    []int{40000, 1000000},
 }
 
-// Develop dev env
+// Develop run environment
 var Develop = "dev"
 
 // StagClusterENV stag env
@@ -248,13 +380,27 @@ var StagClusterENV = "stag"
 
 // ImageProvider
 const (
-	// 公共镜像
+	// ImageProvider 镜像提供方
+	ImageProvider = "IMAGE_PROVIDER"
+	// PublicImageProvider 公共镜像
 	PublicImageProvider = "PUBLIC_IMAGE"
-	// 市场镜像
+	// PrivateImageProvider 私有镜像
+	PrivateImageProvider = "PRIVATE_IMAGE"
+	// MarketImageProvider 市场镜像
 	MarketImageProvider = "MARKET_IMAGE"
 )
 
-// ContentType
+// Instance sell status
 const (
-	MIMEJSONOrigin = "application/json+origin"
+	// InstanceSell SELL status
+	InstanceSell = "SELL"
+	// InstanceSoldOut SOLD_OUT status
+	InstanceSoldOut = "SOLD_OUT"
+)
+
+const (
+	// True xxx
+	True = "true"
+	// False xxx
+	False = "false"
 )

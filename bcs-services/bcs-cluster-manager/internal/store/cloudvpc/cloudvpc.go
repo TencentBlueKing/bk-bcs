@@ -11,7 +11,6 @@
  *
  */
 
-// Package cloudvpc xxx
 package cloudvpc
 
 import (
@@ -30,8 +29,8 @@ import (
 
 const (
 	tableName = "cloudvpc"
-	// ! we don't setting bson tag in proto file,
-	// ! all struct key in mongo is lowcase in default
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	cloudKey                  = "cloudid"
 	vpcIDKey                  = "vpcid"
 	defaultCloudVPCListLength = 1000
@@ -68,7 +67,6 @@ func New(db drivers.DB) *ModelCloudVPC {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelCloudVPC) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

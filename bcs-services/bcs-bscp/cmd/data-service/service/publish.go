@@ -19,6 +19,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -64,12 +65,10 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	// step1: validate and query group ids.
 	groupIDs := make([]uint32, 0)
+
+	// step1: validate and query group ids.
 	if !req.All {
-		if len(req.Groups) == 0 {
-			return nil, fmt.Errorf("groups can't be empty when publish not all")
-		}
 		for _, name := range req.Groups {
 			group, e := s.dao.Group().GetByName(grpcKit, req.BizId, name)
 			if e != nil {
@@ -116,9 +115,8 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	}
 
 	// step4: begin transaction to create release and released config item.
-	//tx, err := s.dao.BeginTx(grpcKit, req.BizId)
 	tx := s.dao.GenQuery().Begin()
-	// step5: create release, and create release and released config item need to begin tx.
+	// step5: create release.
 	release := &table.Release{
 		// Spec:       req.Spec.ReleaseSpec(),
 		Spec: &table.ReleaseSpec{
@@ -139,8 +137,14 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		tx.Rollback()
 		return nil, err
 	}
+	// step6: create released hook.
+	if err = s.createReleasedHook(grpcKit, tx, req.BizId, req.AppId, releaseID); err != nil {
+		logs.Errorf("create released hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		tx.Rollback()
+		return nil, err
+	}
 
-	// step6: create released config item.
+	// step7: create released config item.
 	for _, rci := range releasedCIs {
 		rci.ReleaseID = releaseID
 	}
@@ -151,8 +155,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		return nil, err
 	}
 
-	// step7: publish with transaction.
-
+	// step8: publish with transaction.
 	kt := kit.FromGrpcContext(ctx)
 
 	opt := &types.PublishOption{
@@ -176,7 +179,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		return nil, err
 	}
 
-	// step8: commit transaction.
+	// step9: commit transaction.
 	if err = tx.Commit(); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -184,6 +187,34 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 
 	resp := &pbds.PublishResp{PublishedStrategyHistoryId: pshID}
 	return resp, nil
+}
+
+func (s *Service) createReleasedHook(grpcKit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error {
+	pre, err := s.dao.ReleasedHook().Get(grpcKit, bizID, appID, 0, table.PreHook)
+	if err == nil {
+		pre.ID = 0
+		pre.ReleaseID = releaseID
+		if _, e := s.dao.ReleasedHook().CreateWithTx(grpcKit, tx, pre); e != nil {
+			logs.Errorf("create released pre-hook failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return e
+		}
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("query released pre-hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return err
+	}
+	post, err := s.dao.ReleasedHook().Get(grpcKit, bizID, appID, 0, table.PostHook)
+	if err == nil {
+		post.ID = 0
+		post.ReleaseID = releaseID
+		if _, e := s.dao.ReleasedHook().CreateWithTx(grpcKit, tx, post); e != nil {
+			logs.Errorf("create released post-hook failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return e
+		}
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("query released post-hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return err
+	}
+	return nil
 }
 
 func (s *Service) validatePublishGroups(kt *kit.Kit, opt *types.PublishOption) error {

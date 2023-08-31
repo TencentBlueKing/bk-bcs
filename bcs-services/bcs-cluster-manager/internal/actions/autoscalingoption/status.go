@@ -4,10 +4,11 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 package autoscalingoption
@@ -51,7 +52,7 @@ func (ua *UpdateAutoScalingStatusAction) setResp(code uint32, msg string) {
 }
 
 func (ua *UpdateAutoScalingStatusAction) getRelativeResource() error {
-	// get relative cluster for information injection
+	//get relative cluster for information injection
 	asOption, err := ua.model.GetAutoScalingOption(ua.ctx, ua.req.ClusterID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -67,11 +68,15 @@ func (ua *UpdateAutoScalingStatusAction) getRelativeResource() error {
 	}
 	ua.cluster = cluster
 
-	cloud, err := actions.GetCloudByCloudID(ua.model, cluster.Provider)
+	// get cloud provider
+	provider := cluster.Provider
+	if ua.req.Provider != "" {
+		provider = ua.req.Provider
+	}
+	cloud, err := actions.GetCloudByCloudID(ua.model, provider)
 	if err != nil {
 		blog.Errorf("can not get relative Cloud %s when update autoScaling status for %s, %s",
-			cluster.Provider, ua.req.ClusterID, err.Error(),
-		)
+			provider, ua.req.ClusterID, err.Error())
 		return err
 	}
 	ua.cloud = cloud
@@ -146,10 +151,20 @@ func (ua *UpdateAutoScalingStatusAction) updateAutoScalingStatus() error {
 		Message:      fmt.Sprintf("修改集群[%s]扩缩容开启状态为 %v", ua.req.ClusterID, ua.req.Enable),
 		OpUser:       ua.req.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.req.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("UpdateAutoScalingStatus[%s] CreateOperationLog failed: %v", ua.req.ClusterID, err)
 	}
+	return nil
+}
+
+func (ua *UpdateAutoScalingStatusAction) validate() error {
+	if err := ua.req.Validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -165,14 +180,14 @@ func (ua *UpdateAutoScalingStatusAction) Handle(
 	ua.req = req
 	ua.resp = resp
 
-	if err := req.Validate(); err != nil {
-		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
-		return
-	}
-
 	// getRelativeResource get autoScalingOption / cloud provider
 	if err := ua.getRelativeResource(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	if err := ua.validate(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 

@@ -26,7 +26,7 @@ import (
 // AdaptAuthOptions convert bscp auth resource to iam action id and resources
 func AdaptAuthOptions(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	if a == nil {
-		return "", nil, errf.New(errf.InvalidParameter, fmt.Sprintf("resource attribute is not set"))
+		return "", nil, errf.New(errf.InvalidParameter, "resource attribute is not set")
 	}
 
 	// skip actions do not need to relate to resources
@@ -37,32 +37,35 @@ func AdaptAuthOptions(a *meta.ResourceAttribute) (client.ActionID, []client.Reso
 	switch a.Basic.Type {
 	case meta.Biz:
 		return genBizResource(a)
-	case meta.App, meta.Commit, meta.ConfigItem, meta.Content, meta.CRInstance, meta.Release, meta.ReleasedCI, meta.Strategy, meta.StrategySet, meta.PSH, meta.Repo, meta.Sidecar:
+	case meta.App, meta.Commit, meta.ConfigItem, meta.Content, meta.CRInstance, meta.Release, meta.ReleasedCI, meta.Strategy, meta.StrategySet, meta.PSH, meta.Repo, meta.Sidecar, meta.Credential:
 		return genSkipResource(a)
-	// case meta.App:
-	// 	return genAppResource(a)
-	// case meta.Commit:
-	// 	return genCommitResource(a)
-	// case meta.ConfigItem:
-	// 	return genConfigItemResource(a)
-	// case meta.Content:
-	// 	return genContentResource(a)
-	// case meta.CRInstance:
-	// 	return genCRInstanceResource(a)
-	// case meta.Release:
-	// 	return genReleaseRes(a)
-	// case meta.ReleasedCI:
-	// 	return genReleasedCIRes(a)
-	// case meta.Strategy:
-	// 	return genStrategyRes(a)
-	// case meta.StrategySet:
-	// 	return genStrategySetRes(a)
-	// case meta.PSH:
-	// 	return genPSHRes(a)
-	// case meta.Repo:
-	// 	return genRepoRes(a)
-	// case meta.Sidecar:
-	// 	return genSidecarRes(a)
+	//case meta.App:
+	//	return genAppResource(a)
+	//case meta.Commit:
+	//	return genCommitResource(a)
+	//case meta.ConfigItem:
+	//	return genConfigItemResource(a)
+	//case meta.Content:
+	//	return genContentResource(a)
+	//case meta.CRInstance:
+	//	return genCRInstanceResource(a)
+	//case meta.Release:
+	//	return genReleaseRes(a)
+	//case meta.ReleasedCI:
+	//	return genReleasedCIRes(a)
+	//case meta.Strategy:
+	//	return genStrategyRes(a)
+	//case meta.StrategySet:
+	//	return genStrategySetRes(a)
+	//case meta.PSH:
+	//	return genPSHRes(a)
+	//case meta.Repo:
+	//	return genRepoRes(a)
+	//case meta.Sidecar:
+	//	return genSidecarRes(a)
+	//case meta.Credential:
+	//	return genCredentialRes(a)
+
 	default:
 		return "", nil, errf.New(errf.InvalidParameter, fmt.Sprintf("unsupported bscp auth type: %s", a.Basic.Type))
 	}

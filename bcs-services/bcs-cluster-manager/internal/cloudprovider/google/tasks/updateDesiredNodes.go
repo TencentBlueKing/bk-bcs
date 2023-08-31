@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 
 	"github.com/avast/retry-go"
 )
@@ -48,7 +49,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	desiredNodes := step.Params[cloudprovider.ScalingKey.String()]
+	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	nodeNum, _ := strconv.Atoi(desiredNodes)
 	operator := step.Params[cloudprovider.OperatorKey.String()]
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 || len(operator) == 0 {
@@ -58,7 +59,11 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask GetClusterDependBasicInfo failed")
@@ -82,7 +87,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	_ = recordClusterInstanceToDB(ctx, state, dependInfo, uint64(nodeNum))
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
@@ -207,7 +212,7 @@ func transInstancesToNode(ctx context.Context, instanceID []string, info *cloudp
 		n.ClusterID = info.NodeGroup.ClusterID
 		n.NodeGroupID = info.NodeGroup.NodeGroupID
 		n.Status = common.StatusInitialization
-		err = cloudprovider.SaveNodeInfoToDB(n)
+		err = cloudprovider.SaveNodeInfoToDB(ctx, n, true)
 		if err != nil {
 			blog.Errorf("transInstancesToNode[%s] SaveNodeInfoToDB[%s] failed: %v", taskID, n.InnerIP, err)
 		}
@@ -236,7 +241,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	defer cancel()
 
 	// wait all nodes to be ready
-	err = cloudprovider.LoopDoFunc(timeCtx, func() error {
+	err = loop.LoopDoFunc(timeCtx, func() error {
 		instances, errFilter := cli.ListZoneInstanceWithFilter(ctx, api.InstanceNameFilter(instanceIDs))
 		if errFilter != nil {
 			blog.Errorf("checkClusterInstanceStatus[%s] ListZoneInstanceWithFilter failed: %v", taskID, errFilter)
@@ -253,11 +258,11 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 		if len(running) == len(instanceIDs) {
 			addSucessNodes = running
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		}
 
 		return nil
-	}, cloudprovider.LoopInterval(20*time.Second))
+	}, loop.LoopInterval(20*time.Second))
 	// other error
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
@@ -322,7 +327,11 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask GetClusterDependBasicInfo failed")
@@ -354,7 +363,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CheckClusterNodesStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}

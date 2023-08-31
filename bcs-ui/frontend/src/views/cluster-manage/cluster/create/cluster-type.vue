@@ -1,6 +1,6 @@
 <template>
   <BcsContent>
-    <div class="text-[#333C48] text-[16px] mb-[16px]">{{ $t('新建集群') }}</div>
+    <div class="text-[#333C48] text-[16px] mb-[16px]">{{ $t('cluster.create.title.newCluster') }}</div>
     <div class="flex flex-wrap">
       <div
         v-for="item in createList"
@@ -14,14 +14,14 @@
             </svg>
           </div>
           <div class="text-[14px] font-bold mt-[10px]">{{ item.title }}</div>
-          <div class="text-[14px] mt-[10px] bcs-ellipsis">{{ item.subTitle }}</div>
+          <div class="text-[14px] mt-[10px] bcs-ellipsis line-clamp-2">{{ item.subTitle }}</div>
         </div>
         <div class="flex-1 flex items-center justify-center text-[#979BA5] text-[12px] h-[78px]">
           {{ item.desc }}
         </div>
       </div>
     </div>
-    <div class="text-[#333C48] text-[16px] mb-[16px] mt-[16px]">{{ $t('导入外部集群') }}</div>
+    <div class="text-[#333C48] text-[16px] mb-[16px] mt-[16px]">{{ $t('cluster.create.title.importCluster') }}</div>
     <div class="flex flex-wrap">
       <div
         v-for="item in importList"
@@ -35,7 +35,7 @@
             </svg>
           </div>
           <div class="text-[14px] font-bold mt-[10px]">{{ item.title }}</div>
-          <div class="text-[14px] mt-[10px] bcs-ellipsis">{{ item.subTitle }}</div>
+          <div class="text-[14px] mt-[10px] bcs-ellipsis line-clamp-2">{{ item.subTitle }}</div>
         </div>
         <div class="flex-1 flex items-center justify-center text-[#979BA5] text-[12px] h-[78px]">
           {{ item.desc }}
@@ -49,63 +49,64 @@ import { computed, defineComponent, ref } from 'vue';
 import BcsContent from '../../components/bcs-content.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
-import { useConfig, useProject } from '@/composables/use-app';
+import { useConfig, useAppData } from '@/composables/use-app';
 
 export default defineComponent({
   name: 'CreateCluster',
   components: { BcsContent },
   setup() {
-    const { curProject } = useProject();
+    const { _INTERNAL_ } = useConfig();
+    const { flagsMap } = useAppData();
     const createList = ref([
       {
         icon: 'bcs-icon-color-vcluster',
         title: 'vCluster',
-        subTitle: $i18n.t('无需提供主机资源，即可部署工作负载'),
-        desc: $i18n.t('构建在共享集群资源之上的虚拟集群，可降低业务资源成本'),
+        subTitle: $i18n.t('cluster.create.type.vCluster.subTitle'),
+        desc: $i18n.t('cluster.create.type.vCluster.desc'),
         type: 'vCluster',
-        disabled: !curProject.value.enableVcluster,
+        disabled: !flagsMap.value.VCLUSTER,
       },
       {
         icon: 'bcs-icon-color-tencentcloud',
-        title: $i18n.t('腾讯云自研云集群'),
-        subTitle: $i18n.t('为腾讯内部创建 TKE 集群提供解决方案'),
-        desc: $i18n.t('提供独立集群与托管集群两种集群模式，独立集群需自行维护，托管集群由腾讯云代为维护控制面'),
+        title: $i18n.t('cluster.create.type.tencentCloud.title'),
+        subTitle: $i18n.t('cluster.create.type.tencentCloud.subTitle'),
+        desc: $i18n.t('cluster.create.type.tencentCloud.desc'),
         type: 'tke',
+        disabled: !_INTERNAL_.value,
       },
       {
         icon: 'bcs-icon-color-publiccloud',
-        title: $i18n.t('公有云集群'),
-        subTitle: $i18n.t('实现多云集群统一管理，降低业务管理成本'),
-        desc: $i18n.t('目前支持腾讯云、亚马逊云、谷歌云、微软云四种云服务商集群创建'),
+        title: $i18n.t('cluster.create.type.cloudProvider.title'),
+        subTitle: $i18n.t('cluster.create.type.cloudProvider.subTitle'),
+        desc: $i18n.t('cluster.create.type.cloudProvider.desc'),
         type: 'cloud',
         disabled: true,
       },
       {
         icon: 'bcs-icon-color-k8s',
-        title: $i18n.t('K8S原生集群'),
-        subTitle: $i18n.t('为私有环境搭建集群提供解决方案'),
-        desc: $i18n.t('如果业务环境无法使用任何云服务商产品，该功能可在私有化环境搭建K8S原生集群。'),
+        title: $i18n.t('cluster.create.type.k8s.title'),
+        subTitle: $i18n.t('cluster.create.type.k8s.subTitle'),
+        desc: $i18n.t('cluster.create.type.k8s.desc'),
         type: 'k8s',
-        disabled: true,
+        disabled: !flagsMap.value.k8s,
       },
     ]);
-    const { _INTERNAL_ } = useConfig();
     const importList = computed(() => [
       {
         icon: 'bcs-icon-color-kubeconfig',
-        title: $i18n.t('kubeconfig 集群导入'),
-        subTitle: $i18n.t('可以通过 kubeconfig 导入任意外部集群'),
-        desc: $i18n.t('使用具备 kube-admin 角色权限的 kubeconfig 即可使用蓝鲸容器管理平台纳管外部集群。'),
+        title: $i18n.t('cluster.create.type.kubeconfig.title'),
+        subTitle: $i18n.t('cluster.create.type.kubeconfig.subTitle'),
+        desc: $i18n.t('cluster.create.type.kubeconfig.desc'),
         type: 'kubeconfig',
         disabled: _INTERNAL_.value,
       },
       {
         icon: 'bcs-icon-color-publiccloud',
-        title: $i18n.t('公有云集群'),
-        subTitle: $i18n.t('实现多云集群统一管理，降低业务管理成本'),
-        desc: $i18n.t('目前支持腾讯云、亚马逊云、谷歌云、微软云四种云服务商集群创建。'),
-        type: 'cloud',
-        disabled: true,
+        title: $i18n.t('cluster.create.type.cloudProvider.title'),
+        subTitle: $i18n.t('cluster.create.type.cloudProvider.subTitle'),
+        desc: $i18n.t('cluster.create.type.cloudProvider.desc'),
+        type: 'import-cloud',
+        disabled: _INTERNAL_.value,
       },
     ]);
 
@@ -117,10 +118,22 @@ export default defineComponent({
           $router.push({ name: 'createVCluster' });
           break;
         case 'tke':
-          $router.push({ name: 'createFormCluster' });
+          $router.push({ name: 'createTencentCloudCluster' });
+          break;
+        case 'k8s':
+          $router.push({ name: 'createCluster' });
           break;
         case 'kubeconfig':
-          $router.push({ name: 'createImportCluster' });
+          $router.push({
+            name: 'importCluster',
+            params: { importType: 'kubeconfig' },
+          });
+          break;
+        case 'import-cloud':
+          $router.push({
+            name: 'importCluster',
+            params: { importType: 'provider' },
+          });
           break;
       }
     };

@@ -61,6 +61,13 @@ func generateInstanceAdvancedSetting(advancedSetting *InstanceAdvancedSettings) 
 				}
 				return common.StringPtr(advancedSetting.DockerGraphPath)
 			}(),
+			UserScript: func() *string {
+				if len(advancedSetting.UserScript) > 0 {
+					return common.StringPtr(advancedSetting.UserScript)
+				}
+
+				return nil
+			}(),
 			Unschedulable: func() *int64 {
 				if advancedSetting.Unschedulable != nil {
 					return advancedSetting.Unschedulable
@@ -86,13 +93,16 @@ func generateInstanceAdvancedSetting(advancedSetting *InstanceAdvancedSettings) 
 				if len(advancedSetting.DataDisks) == 0 {
 					return nil
 				}
-
+				// 多盘数据盘挂载信息：需要设置购买多个数据盘; 添加已有节点时, 请确保填写的分区信息在节点上真实存在
 				dataDisks := make([]*tke.DataDisk, 0)
 				for i := range advancedSetting.DataDisks {
 					dataDisks = append(dataDisks, &tke.DataDisk{
-						DiskType:    common.StringPtr(advancedSetting.DataDisks[i].DiskType),
-						DiskSize:    common.Int64Ptr(advancedSetting.DataDisks[i].DiskSize),
-						MountTarget: common.StringPtr(advancedSetting.DataDisks[i].MountTarget),
+						DiskType:           common.StringPtr(advancedSetting.DataDisks[i].DiskType),
+						DiskSize:           common.Int64Ptr(advancedSetting.DataDisks[i].DiskSize),
+						FileSystem:         common.StringPtr(advancedSetting.DataDisks[i].FileSystem),
+						MountTarget:        common.StringPtr(advancedSetting.DataDisks[i].MountTarget),
+						DiskPartition:      common.StringPtr(advancedSetting.DataDisks[i].DiskPartition),
+						AutoFormatAndMount: common.BoolPtr(advancedSetting.DataDisks[i].AutoFormatAndMount),
 					})
 				}
 				return dataDisks
@@ -103,11 +113,18 @@ func generateInstanceAdvancedSetting(advancedSetting *InstanceAdvancedSettings) 
 				}
 				return nil
 			}(),
-			UserScript: func() *string {
-				if len(advancedSetting.UserScript) > 0 {
-					return common.StringPtr(advancedSetting.UserScript)
+			Taints: func() []*tke.Taint {
+				if len(advancedSetting.TaintList) > 0 {
+					return generateTaint(advancedSetting.TaintList)
 				}
 
+				return nil
+			}(),
+			// base64 编码的用户脚本，在初始化节点之前执行，目前只对添加已有节点生效
+			PreStartUserScript: func() *string {
+				if len(advancedSetting.PreStartUserScript) > 0 {
+					return common.StringPtr(advancedSetting.PreStartUserScript)
+				}
 				return nil
 			}(),
 		}
@@ -161,6 +178,19 @@ func generateAddExistedInstancesReq(addReq *AddExistedInstanceReq) *tke.AddExist
 
 	if addReq.AdvancedSetting != nil {
 		req.InstanceAdvancedSettings = generateInstanceAdvancedSetting(addReq.AdvancedSetting)
+	}
+
+	if len(addReq.SkipValidateOptions) > 0 {
+		req.SkipValidateOptions = common.StringPtrs(addReq.SkipValidateOptions)
+	}
+
+	if len(addReq.InstanceAdvancedSettingsOverrides) > 0 {
+		req.InstanceAdvancedSettingsOverrides = make([]*tke.InstanceAdvancedSettings, 0)
+
+		for i := range addReq.InstanceAdvancedSettingsOverrides {
+			req.InstanceAdvancedSettingsOverrides = append(req.InstanceAdvancedSettingsOverrides,
+				generateInstanceAdvancedSetting(addReq.InstanceAdvancedSettingsOverrides[i]))
+		}
 	}
 
 	return req
@@ -233,15 +263,27 @@ func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClust
 			return nil, fmt.Errorf("CreateClusterRequest ExistedInstancesForNode instance is null")
 		}
 
-		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode, &tke.ExistedInstancesForNode{
+		existedInstanceNodes := &tke.ExistedInstancesForNode{
 			NodeRole: common.StringPtr(request.ExistedInstancesForNode[i].NodeRole),
 			ExistedInstancesPara: &tke.ExistedInstancesPara{
-				InstanceIds: common.StringPtrs(request.ExistedInstancesForNode[i].ExistedInstancesPara.InstanceIDs),
-				// InstanceAdvancedSettings: generateInstanceAdvancedSet(request.InstanceAdvanced),
-				// EnhancedService:          generateEnhancedService(request.ExistedInstancesForNode[i].ExistedInstancesPara.EnhancedService),
+				InstanceIds:   common.StringPtrs(request.ExistedInstancesForNode[i].ExistedInstancesPara.InstanceIDs),
 				LoginSettings: generateLoginSet(request.ExistedInstancesForNode[i].ExistedInstancesPara.LoginSettings),
-				// SecurityGroupIds:         request.ExistedInstancesForNode[i].ExistedInstancesPara.SecurityGroupIds,
+				InstanceAdvancedSettings: generateInstanceAdvancedSetting(
+					request.ExistedInstancesForNode[i].ExistedInstancesPara.InstanceAdvancedSettings),
 			},
+		}
+		if request.ExistedInstancesForNode[i].InstanceAdvancedSettingsOverride != nil {
+			existedInstanceNodes.InstanceAdvancedSettingsOverride =
+				generateInstanceAdvancedSetting(request.ExistedInstancesForNode[i].InstanceAdvancedSettingsOverride)
+		}
+
+		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode, existedInstanceNodes)
+	}
+
+	for i := range request.Addons {
+		req.ExtensionAddons = append(req.ExtensionAddons, &tke.ExtensionAddon{
+			AddonName:  common.StringPtr(request.Addons[i].AddonName),
+			AddonParam: common.StringPtr(request.Addons[i].AddonParam),
 		})
 	}
 
@@ -255,6 +297,9 @@ func generateClusterBasic(basic *ClusterBasicSettings) *tke.ClusterBasicSettings
 		ClusterVersion: common.StringPtr(basic.ClusterVersion),
 		ClusterName:    common.StringPtr(basic.ClusterName),
 		VpcId:          common.StringPtr(basic.VpcID),
+		AutoUpgradeClusterLevel: &tke.AutoUpgradeClusterLevel{
+			IsAutoUpgrade: common.BoolPtr(basic.IsAutoUpgradeClusterLevel),
+		},
 	}
 
 	tags := make([]*tke.TagSpecification, 0)
@@ -277,6 +322,12 @@ func generateClusterBasic(basic *ClusterBasicSettings) *tke.ClusterBasicSettings
 	if len(tags) > 0 {
 		tkeClusterBasic.TagSpecification = tags
 	}
+	if len(basic.SubnetID) > 0 {
+		tkeClusterBasic.SubnetId = common.StringPtr(basic.SubnetID)
+	}
+	if len(basic.ClusterLevel) > 0 {
+		tkeClusterBasic.ClusterLevel = common.StringPtr(basic.ClusterLevel)
+	}
 
 	return tkeClusterBasic
 }
@@ -288,9 +339,14 @@ func generateClusterAdvancedSet(request *ClusterAdvancedSettings) *tke.ClusterAd
 	}
 
 	clusterAdvance := &tke.ClusterAdvancedSettings{
-		IPVS:             common.BoolPtr(request.IPVS),
-		ContainerRuntime: common.StringPtr(request.ContainerRuntime),
-		RuntimeVersion:   common.StringPtr(request.RuntimeVersion),
+		IPVS:               common.BoolPtr(request.IPVS),
+		ContainerRuntime:   common.StringPtr(request.ContainerRuntime),
+		RuntimeVersion:     common.StringPtr(request.RuntimeVersion),
+		DeletionProtection: common.BoolPtr(request.DeletionProtection),
+		AuditEnabled:       common.BoolPtr(request.AuditEnabled),
+	}
+	if len(request.NetworkType) > 0 {
+		clusterAdvance.NetworkType = common.StringPtr(request.NetworkType)
 	}
 
 	if clusterAdvance.ExtraArgs == nil {
@@ -372,6 +428,7 @@ func generateEnhancedService(service *EnhancedService) *tke.EnhancedService {
 	if service == nil {
 		return nil
 	}
+
 	svc := &tke.EnhancedService{}
 	if service.SecurityService != nil && service.SecurityService.Enabled != nil {
 		svc.SecurityService = &tke.RunSecurityServiceEnabled{Enabled: common.BoolPtr(*service.SecurityService.Enabled)}

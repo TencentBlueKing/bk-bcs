@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ListCCTopologyAction action for list cc topology
@@ -55,25 +56,37 @@ func (la *ListCCTopologyAction) setResp(code uint32, msg string) {
 	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
+func (la *ListCCTopologyAction) filterInter() bool {
+	if la.req.FilterInter != nil {
+		return la.req.FilterInter.GetValue()
+	}
+
+	return false
+}
+
 func (la *ListCCTopologyAction) listTopology() error {
 	cluster, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
 	if err != nil {
 		blog.Errorf("GetBizInternalModule get cluster failed, err: %s", err.Error())
 		return fmt.Errorf("get cluster failed, err: %s", err.Error())
 	}
-	bkBizID, err := strconv.Atoi(cluster.BusinessID)
+	bizID := cluster.BusinessID
+	if len(la.req.BizID) > 0 {
+		bizID = la.req.BizID
+	}
+	bkBizID, err := strconv.Atoi(bizID)
 	if err != nil {
 		blog.Errorf("GetBizInternalModule get cluster bkBizID failed, err: %s", err.Error())
 		return fmt.Errorf("get cluster bkBizID failed, err: %s", err.Error())
 	}
 	cli := cmdb.GetCmdbClient()
-	internalModules, err := cli.ListTopology(bkBizID)
+	internalModules, err := cli.ListTopology(bkBizID, la.filterInter(), false)
 	if err != nil {
 		blog.Errorf("GetBizInternalModule failed, err %s", err.Error())
 		return err
 	}
 
-	result, err := common.MarshalInterfaceToValue(internalModules)
+	result, err := utils.MarshalInterfaceToValue(internalModules)
 	if err != nil {
 		blog.Errorf("marshal modules err, %s", err.Error())
 		la.setResp(common.BcsErrClusterManagerCommonErr, err.Error())

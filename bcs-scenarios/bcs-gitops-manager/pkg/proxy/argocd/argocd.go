@@ -17,18 +17,20 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
 )
 
 // NewGitOpsProxy create proxy instance
 func NewGitOpsProxy(opt *proxy.GitOpsOptions) proxy.GitOpsProxy {
 	return &ArgocdProxy{
-		option:  opt,
-		Router:  mux.NewRouter(),
-		session: &Session{option: opt},
+		option: opt,
+		Router: mux.NewRouter(),
 	}
 }
 
@@ -37,8 +39,7 @@ func NewGitOpsProxy(opt *proxy.GitOpsOptions) proxy.GitOpsProxy {
 type ArgocdProxy struct {
 	*mux.Router // for http handler implementation
 
-	option  *proxy.GitOpsOptions
-	session *Session
+	option *proxy.GitOpsOptions
 }
 
 // Init gitops essential session
@@ -68,7 +69,12 @@ func (ops *ArgocdProxy) Stop() {
 
 // initArgoPathHandler
 func (ops *ArgocdProxy) initArgoPathHandler() error {
-	middleware := NewMiddlewareHandler(ops.option, ops.session)
+	argoSession := session.NewArgoSession(ops.option)
+	secretSession := session.NewSecretSession(ops.option.SecretOption)
+	middleware := mw.NewMiddlewareHandler(ops.option, argoSession, secretSession)
+	if err := middleware.Init(); err != nil {
+		return errors.Wrapf(err, "middleware init failed")
+	}
 
 	projectPlugin := &ProjectPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/projects").Subrouter(),
@@ -89,6 +95,10 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
 		middleware: middleware,
 	}
+	secretPlugin := &SecretPlugin{
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/secrets").Subrouter(),
+		middleware: middleware,
+	}
 	streamPlugin := &StreamPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/stream/applications").Subrouter(),
 		appHandler: appPlugin,
@@ -104,9 +114,14 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 			"/{package:[a-z]+}.{service:[A-Z][a-zA-Z]+}/{method:[A-Z][a-zA-Z]+}").Subrouter(),
 		middleware: middleware,
 	}
+	metricPlugin := &MetricPlugin{
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/metric").Subrouter(),
+		middleware: middleware,
+	}
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
+		secretPlugin.Init, metricPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy

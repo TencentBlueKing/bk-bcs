@@ -40,15 +40,13 @@ func NewGetAction(model store.ClusterManagerModel) *GetAction {
 	}
 }
 
-func (ga *GetAction) setResp(code uint32, msg string) {
-	ga.resp.Code = code
-	ga.resp.Message = msg
-	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-}
-
 func (ga *GetAction) getOption() error {
 	option, err := ga.model.GetAutoScalingOption(ga.ctx, ga.req.ClusterID)
 	if err == nil {
+		// default parameter ExpendablePodsPriorityCutoff=-10
+		if option.ExpendablePodsPriorityCutoff == 0 {
+			option.ExpendablePodsPriorityCutoff = -10
+		}
 		ga.resp.Data = option
 		return nil
 	}
@@ -64,34 +62,59 @@ func (ga *GetAction) setDefaultOption() error {
 	if err != nil {
 		return err
 	}
+
+	provider := cluster.Provider
+	if ga.req.Provider != "" {
+		provider = ga.req.Provider
+	}
+
 	option := &cmproto.ClusterAutoScalingOption{
-		ProjectID:                        cluster.ProjectID,
-		ClusterID:                        cluster.ClusterID,
-		Creator:                          "admin",
-		Updater:                          "admin",
-		CreateTime:                       time.Now().Format(time.RFC3339),
-		UpdateTime:                       time.Now().Format(time.RFC3339),
-		Provider:                         cluster.Provider,
-		EnableAutoscale:                  false,
-		IsScaleDownEnable:                true,
-		Expander:                         "random",
-		MaxEmptyBulkDelete:               10,
-		ScaleDownDelay:                   600,
-		ScaleDownUnneededTime:            600,
-		ScaleDownUtilizationThreahold:    50,
-		ScaleDownGpuUtilizationThreshold: 50,
-		OkTotalUnreadyCount:              3,
-		MaxTotalUnreadyPercentage:        45,
+		ProjectID:  cluster.ProjectID,
+		ClusterID:  cluster.ClusterID,
+		Creator:    "admin",
+		Updater:    "admin",
+		CreateTime: time.Now().Format(time.RFC3339),
+		UpdateTime: time.Now().Format(time.RFC3339),
+		Provider:   provider,
+
+		EnableAutoscale:               false,
+		IsScaleDownEnable:             true,
+		Expander:                      "random",
+		MaxEmptyBulkDelete:            10,
+		ScaleDownDelay:                600,
+		ScaleDownUnneededTime:         600,
+		ScaleDownUtilizationThreahold: 50,
+
+		SkipNodesWithSystemPods:   true,
+		SkipNodesWithLocalStorage: true,
+
+		IgnoreDaemonSetsUtilization: true,
+
+		OkTotalUnreadyCount:       3,
+		MaxTotalUnreadyPercentage: 45,
+
 		ScaleDownUnreadyTime:             1200,
-		BufferResourceRatio:              100,
-		MaxGracefulTerminationSec:        600,
-		ScanInterval:                     10,
-		MaxNodeProvisionTime:             900,
-		ScaleUpFromZero:                  true,
-		ScaleDownDelayAfterAdd:           1200,
-		ScaleDownDelayAfterDelete:        0,
-		ScaleDownDelayAfterFailure:       180,
-		Status:                           common.StatusAutoScalingOptionStopped,
+		ScaleDownGpuUtilizationThreshold: 50,
+
+		BufferResourceRatio:       100,
+		MaxGracefulTerminationSec: 600,
+		ScanInterval:              10,
+
+		// max-node-startup-time / max-node-start-schedule-time
+		MaxNodeProvisionTime: 900,
+
+		ScaleUpFromZero:            true,
+		ScaleDownDelayAfterAdd:     1200,
+		ScaleDownDelayAfterDelete:  0,
+		ScaleDownDelayAfterFailure: 180,
+		Status:                     common.StatusAutoScalingOptionStopped,
+		BufferResourceCpuRatio:     100,
+		BufferResourceMemRatio:     100,
+		Module:                     &cmproto.ModuleInfo{},
+		Webhook:                    &cmproto.WebhookMode{},
+
+		ExpendablePodsPriorityCutoff: -2147483648,
+		NewPodScaleUpDelay:           0,
 	}
 	err = ga.model.CreateAutoScalingOption(ga.ctx, option)
 	if err != nil {
@@ -99,6 +122,12 @@ func (ga *GetAction) setDefaultOption() error {
 	}
 	ga.resp.Data = option
 	return nil
+}
+
+func (ga *GetAction) setResp(code uint32, msg string) {
+	ga.resp.Code = code
+	ga.resp.Message = msg
+	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle handle get cluster credential
@@ -116,7 +145,6 @@ func (ga *GetAction) Handle(
 		ga.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-
 	if err := ga.getOption(); err != nil {
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return

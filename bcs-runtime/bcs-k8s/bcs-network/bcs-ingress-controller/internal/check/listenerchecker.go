@@ -65,8 +65,18 @@ func (l *ListenerChecker) setMetric(listenerList *networkextensionv1.ListenerLis
 		status := listener.Status.Status
 
 		targetGroupType := networkextensionv1.LabelValueForTargetGroupNormal
-		if listener.Spec.TargetGroup == nil || len(listener.Spec.TargetGroup.Backends) == 0 {
-			targetGroupType = networkextensionv1.LabelValueForTargetGroupEmpty
+		switch strings.ToLower(listener.Spec.Protocol) {
+		case networkextensionv1.ProtocolTCP, networkextensionv1.ProtocolUDP:
+			if listener.Spec.TargetGroup == nil || len(listener.Spec.TargetGroup.Backends) == 0 {
+				targetGroupType = networkextensionv1.LabelValueForTargetGroupEmpty
+			}
+		case networkextensionv1.ProtocolHTTP, networkextensionv1.ProtocolHTTPS:
+			for _, rule := range listener.Spec.Rules {
+				if rule.TargetGroup == nil || len(rule.TargetGroup.Backends) == 0 {
+					targetGroupType = networkextensionv1.LabelValueForTargetGroupEmpty
+					break
+				}
+			}
 		}
 
 		cntMap[buildKey(status, targetGroupType)] = cntMap[buildKey(status, targetGroupType)] + 1

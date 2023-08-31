@@ -1,0 +1,171 @@
+#!/bin/bash
+
+#######################################
+# Tencent is pleased to support the open source community by making Blueking Container Service available.
+# Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+# http://opensource.org/licenses/MIT
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#######################################
+
+set -euo pipefail
+
+SELF_DIR=$(dirname "$(readlink -f "$0")")
+ROOT_DIR="${SELF_DIR}/.."
+
+safe_source() {
+  local source_file=$1
+  if [[ -f ${source_file} ]]; then
+    #shellcheck source=/dev/null
+    source "${source_file}"
+  else
+    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    exit 1
+  fi
+  return 0
+}
+
+_yum_docker() {
+  trap "utils::on_ERR;" ERR
+
+  local yum_repo repo_file
+  repo_file="${ROOT_DIR}/docker-ce.repo"
+  if [[ -n "${MIRROR_URL:-}" ]]; then
+    yum_repo="${MIRROR_URL}/docker-ce/linux/centos/docker-ce.repo"
+    utils::log "DEBUG" "docker yum repo: ${yum_repo}"
+    curl -fsSL "$yum_repo" \
+      | sed "s#https://download.docker.com#${MIRROR_URL}/docker-ce#g" \
+      | tee "${repo_file}"
+    [[ ! -f /etc/tlinux-release ]] \
+      || sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
+  else
+    yum_repo="https://download.docker.com/linux/centos/docker-ce.repo"
+    utils::log "DEBUG" "docker yum repo: ${yum_repo}"
+    curl -fsSL "$yum_repo" -O "${repo_file}"
+  fi
+  utils::log "DEBUG" "docker yum repo: ${yum_repo}"
+
+  [[ ! -f /etc/yum.repos.d/tlinux-docker-ce.repo ]] \
+    || mv /etc/yum.repos.d/tlinux-docker-ce.repo /etc/yum.repos.d/tlinux-docker-ce.repo.bak
+
+  yum install -y -q yum-utils
+  yum-config-manager --add-repo "${repo_file}"
+  yum clean all
+  [[ ! -f /etc/yum.repos.d/tlinux-docker-ce.repo ]] || mv /etc/yum.repos.d/tlinux-docker-ce.repo /etc/yum.repos.d/tlinux-docker-ce.repo.bak
+  yum makecache fast
+
+  local pkg_pat pkg_ver
+  pkg_pat="$(sed -e 's/-ce-/\\\\.ce.*/g' -e 's/-/.*/g' \
+    <<<"${DOCKER_VER}").*el"
+  pkg_ver=$(yum list --showduplicates 'docker-ce' \
+    | awk '/'"$pkg_pat"'/{last=$2} END{sub(/.*:/,"",last);print last}')
+  [[ -n $pkg_ver ]] \
+    || utils::log "ERROR" "$DOCKER_VER not found amongst yum list results"
+  cli_pkg_ver=$(yum list --showduplicates 'docker-ce-cli' \
+    | awk '/'"$pkg_pat"'/{last=$2} END{sub(/.*:/,"",last);print last}')
+
+  yum -y install docker-ce-cli-"$cli_pkg_ver" \
+    docker-ce-"$pkg_ver" containerd.io \
+    || utils::log "ERROR" "fail to yum install docker"
+  return 0
+}
+
+# ToDo: config separte
+render_docker() {
+  trap "utils::on_ERR;" ERR
+
+  local config_path
+  config_path="/etc/docker/daemon.json"
+
+  install -dv "${DOCKER_LIB}" "/etc/docker/" \
+    "/etc/systemd/system/docker.service.d/"
+
+  if [[ -s "${config_path}" ]] \
+    && [[ ! -f "${config_path}.bcs.bak" ]]; then
+    utils::log "WARN" "${config_path} exist, backing up"
+    cp -av "${config_path}"{,.bcs.bak} || utils::log "ERROR" "fail to backup ${config_path}"
+  fi
+  utils::log "INFO" "init docker config:"
+  cat <<EOF | tee ${config_path}
+{
+    "data-root": "${DOCKER_LIB}",
+    "exec-opts": ["native.cgroupdriver=systemd"],
+    "registry-mirrors": ["${REPO_MIRRORS}"],
+    "max-concurrent-downloads": 10,
+    "live-restore": ${DOCKER_LIVE_RESTORE},
+    "log-level": "info",
+    "log-opts": {
+        "max-size": "100m",
+        "max-file": "5"
+    },
+    "storage-driver": "overlay2",
+    "storage-opts": [
+        "overlay2.override_kernel_check=true"
+    ]
+}
+EOF
+  if [[ -n ${DOCKER_BRIDGE:-} ]]; then
+    ip link add name docker0 type bridge
+    ip addr add dev docker0 "${DOCKER_BRIDGE}"
+    sed -i "/\"data-root\":/i    \"bip\": \"${DOCKER_BRIDGE}\"," /etc/docker/daemon.json
+  fi
+
+  cat >/etc/systemd/system/docker.service.d/bcs-docker.conf <<EOF
+[Service]
+ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+EOF
+
+  utils::log "INFO" "Render Docker config complete"
+}
+
+main() {
+  trap "utils::on_ERR;" ERR
+
+  local source_files
+  source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+  for file in "${source_files[@]}"; do
+    safe_source "$file"
+  done
+
+  if docker info &>/dev/null; then
+    utils::log "WARN" "docker installed, $(docker -v)"
+  else
+    if [[ -n ${BCS_OFFLINE:-} ]]; then
+      # ToDo offline install docker
+      true
+    else
+      _yum_docker
+    fi
+  fi
+
+  render_docker
+  systemctl daemon-reload
+  systemctl enable --now docker
+  systemctl restart docker
+
+  # install testing
+  if ! docker --version; then
+    utils::log "ERROR" "Did docker get installed?"
+  fi
+
+  # function testing
+  local test_img_url
+  test_img_url=${BK_PUBLIC_REPO:-"docker.io"}/library/hello-world:latest
+  utils::log "DEBUG" "hello-world: ${test_img_url}"
+
+  if [[ -n ${BCS_OFFLINE:-} ]]; then
+    # ToDo hello world image offline install
+    true
+  fi
+
+  if ! docker run --rm "${test_img_url}"; then
+    utils::log "ERROR" "Count not get docker to run ${test_img_url}"
+  fi
+
+  return 0
+}
+main

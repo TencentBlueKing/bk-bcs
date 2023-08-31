@@ -14,19 +14,12 @@
 package azure
 
 import (
-	"context"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"time"
-
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
-	"github.com/pkg/errors"
+	"strconv"
+	"strings"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var (
@@ -56,151 +49,213 @@ const (
 // tasks
 var (
 	// import cluster task
-	importClusterNodesTask        = fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
-	registerClusterKubeConfigTask = fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName)
+	importClusterNodesStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-ImportClusterNodesTask", cloudName),
+		StepName:   "导入集群节点",
+	}
+	registerClusterKubeConfigStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName),
+		StepName:   "注册集群kubeConfig认证",
+	}
 
 	// delete cluster task
-	deleteAKSKEClusterTask = fmt.Sprintf("%s-deleteAKSKEClusterTask", cloudName)
-	cleanClusterDBInfoTask = fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName)
+	deleteAKSClusterStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-DeleteGKEClusterTask", cloudName),
+		StepName:   "删除集群",
+	}
+	cleanClusterDBInfoStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName),
+		StepName:   "清理集群数据",
+	}
 
 	// create nodeGroup task
-	createCloudNodeGroupTask        = fmt.Sprintf("%s-CreateCloudNodeGroupTask", cloudName)
-	checkCloudNodeGroupStatusTask   = fmt.Sprintf("%s-CheckCloudNodeGroupStatusTask", cloudName)
-	updateCreateNodeGroupDBInfoTask = fmt.Sprintf("%s-UpdateCreateNodeGroupDBInfoTask", cloudName)
-
-	// delete nodeGroup task
-	deleteNodeGroupTask = fmt.Sprintf("%s-DeleteNodeGroupTask", cloudName)
+	createCloudNodeGroupStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CreateCloudNodeGroupTask", cloudName),
+		StepName:   "创建云节点组",
+	}
+	checkCloudNodeGroupStatusStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckCloudNodeGroupStatusTask", cloudName),
+		StepName:   "检测云节点组状态",
+	}
 
 	// clean node in nodeGroup task
-	cleanNodeGroupNodesTask             = fmt.Sprintf("%s-CleanNodeGroupNodesTask", cloudName)
-	removeHostFromCMDBTask              = fmt.Sprintf("%s-RemoveHostFromCMDBTask", cloudName)
-	checkCleanNodeGroupNodesStatusTask  = fmt.Sprintf("%s-CheckCleanNodeGroupNodesStatusTask", cloudName)
-	updateCleanNodeGroupNodesDBInfoTask = fmt.Sprintf("%s-UpdateCleanNodeGroupNodesDBInfoTask", cloudName)
+	cleanNodeGroupNodesStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CleanNodeGroupNodesTask", cloudName),
+		StepName:   "下架节点组节点",
+	}
+
+	// delete nodeGroup task
+	deleteNodeGroupStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-DeleteNodeGroupTask", cloudName),
+		StepName:   "删除云节点组",
+	}
 
 	// update desired nodes task
-	applyInstanceMachinesTask    = fmt.Sprintf("%s-%s", cloudName, cloudprovider.ApplyInstanceMachinesTask)
-	checkClusterNodesStatusTask  = fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName)
-	installGSEAgentTask          = fmt.Sprintf("%s-InstallGSEAgentTask", cloudName)
-	transferHostModuleTask       = fmt.Sprintf("%s-TransferHostModuleTask", cloudName)
-	updateDesiredNodesDBInfoTask = fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName)
-
-	// auto scale task
-	ensureAutoScalerTask = fmt.Sprintf("%s-EnsureAutoScalerTask", cloudName)
+	applyInstanceMachinesStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-%s", cloudName, cloudprovider.ApplyInstanceMachinesTask),
+		StepName:   "申请节点任务",
+	}
+	checkClusterNodesStatusStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName),
+		StepName:   "检测节点状态",
+	}
+	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName),
+		StepName:   "更新节点数据",
+	}
 )
 
-// errors
-var (
-	nodePoolScaleUpErr  = errors.New("the status of the aks node pool is scale up, and currently no operations can be performed on it")
-	nodePoolUpdatingErr = errors.New("the aks node pool status is in the process of being updating and no operations can be performed on it right now")
-)
-
-// transAksNodeToNode 节点转换
-func transAksNodeToNode(node *armcompute.VirtualMachineScaleSetVM, vmIPMap map[string][]string) *proto.NodeGroupNode {
-	n := &proto.NodeGroupNode{NodeID: *node.InstanceID}
-	// azure 默认为节点，无法获取master
-	properties := node.Properties
-	if properties != nil && properties.ProvisioningState != nil {
-		switch *properties.ProvisioningState {
-		case api.NormalState:
-			n.Status = common.StatusRunning
-		case api.CreatingState:
-			n.Status = common.StatusInitialization
-		//case "failed":
-		//	n.Status = "FAILED"
-		default:
-			n.Status = *properties.ProvisioningState
-		}
-	}
-	if list, ok := vmIPMap[*node.Name]; ok && len(list) != 0 {
-		n.InnerIP = list[0]
-	}
-	return n
+// ImportClusterTaskOption 纳管集群
+type ImportClusterTaskOption struct {
+	Cluster *proto.Cluster
 }
 
-// updateAgentPoolProperties 更新 AKS 代理节点池 - update agent pool
-func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *proto.Cluster,
-	group *proto.NodeGroup) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+// BuildRegisterKubeConfigStep 注册集群kubeConfig
+func (ic *ImportClusterTaskOption) BuildRegisterKubeConfigStep(task *proto.Task) {
+	registerKubeConfigStep := cloudprovider.InitTaskStep(registerClusterKubeConfigStep)
+	registerKubeConfigStep.Params[cloudprovider.ClusterIDKey.String()] = ic.Cluster.ClusterID
+	registerKubeConfigStep.Params[cloudprovider.CloudIDKey.String()] = ic.Cluster.Provider
 
-	pool, err := client.GetPoolAndReturn(ctx, cluster.SystemID, group.CloudNodeGroupID)
-	if err != nil {
-		return errors.Wrapf(err, "UpdateNodeGroup: call GetAgentPool api failed")
-	}
-	if err = checkPoolState(pool); err != nil { // 更新前检查节点池的状态
-		return errors.Wrapf(err, "nodeGroupID: %s unable to update agent pool", group.NodeGroupID)
-	}
-
-	// 更新 pool
-	api.SetAgentPoolFromNodeGroup(group, pool)
-
-	// update agent pool
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-	if _, err = client.UpdatePoolAndReturn(ctx, pool, cluster.SystemID, *pool.Name); err != nil {
-		return errors.Wrapf(err, "UpdateNodeGroup: call UpdateAgentPool api failed")
-	}
-
-	return nil
+	task.Steps[registerClusterKubeConfigStep.StepMethod] = registerKubeConfigStep
+	task.StepSequence = append(task.StepSequence, registerClusterKubeConfigStep.StepMethod)
 }
 
-// updateVMSSProperties 更新虚拟机规模集 - update virtual machine scale set
-func (ng *NodeGroup) updateVMSSProperties(client api.AksService, group *proto.NodeGroup) error {
-	asg := group.AutoScaling
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+// BuildImportClusterNodesStep 纳管集群节点
+func (ic *ImportClusterTaskOption) BuildImportClusterNodesStep(task *proto.Task) {
+	importNodesStep := cloudprovider.InitTaskStep(importClusterNodesStep)
+	importNodesStep.Params[cloudprovider.ClusterIDKey.String()] = ic.Cluster.ClusterID
+	importNodesStep.Params[cloudprovider.CloudIDKey.String()] = ic.Cluster.Provider
 
-	set, err := client.GetSetWithName(ctx, asg.AutoScalingName, asg.AutoScalingID)
-	if err != nil {
-		return errors.Wrapf(err, "UpdateNodeGroup: call GetSetWithName api failed")
-	}
-
-	if group.LaunchTemplate != nil && len(group.LaunchTemplate.UserData) != 0 {
-		set.Properties.VirtualMachineProfile.UserData = to.Ptr(group.LaunchTemplate.UserData)
-	}
-	// 镜像引用-暂时置空处理，若不置空会导致无法更新set
-	api.SetImageReferenceNull(set)
-
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-	if _, err = client.UpdateSetWithName(ctx, set, asg.AutoScalingName, asg.AutoScalingID); err != nil {
-		return errors.Wrapf(err, "UpdateNodeGroup: call UpdateSetWithName api failed")
-	}
-
-	return nil
+	task.Steps[importClusterNodesStep.StepMethod] = importNodesStep
+	task.StepSequence = append(task.StepSequence, importClusterNodesStep.StepMethod)
 }
 
-// scaleUpPreCheck 扩容前置检查
-func (ng *NodeGroup) scaleUpPreCheck(clusterID, cloudID, nodeGroupID string) error {
-	info, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
-	if err != nil {
-		return errors.Wrapf(err, "call GetClusterDependBasicInfo failed")
-	}
-
-	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
-	if err != nil {
-		return errors.Wrapf(err, "new azure client failed")
-	}
-
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
-	defer cancel()
-	pool, err := client.GetPoolAndReturn(ctx, info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
-	if err != nil {
-		return errors.Wrapf(err, "call GetPoolAndReturn failed")
-	}
-
-	return checkPoolState(pool)
+// DeleteClusterTaskOption 删除集群
+type DeleteClusterTaskOption struct {
+	Cluster    *proto.Cluster
+	DeleteMode string
 }
 
-// checkPoolState 更新前，检查节点池的状态
-// 如果节点池正在 "更新中" 或 "扩容中"，将无法对其进行操作
-func checkPoolState(pool *armcontainerservice.AgentPool) error {
-	state := *pool.Properties.ProvisioningState
-	if state == api.UpdatingState {
-		return errors.Wrapf(nodePoolUpdatingErr, "cloudNodeGroupID: %s", *pool.Name)
-	}
-	if state == api.ScalingState {
-		return errors.Wrapf(nodePoolScaleUpErr, "cloudNodeGroupID: %s", *pool.Name)
-	}
-	return nil
+// BuildDeleteAKSClusterStep 删除集群
+func (dc *DeleteClusterTaskOption) BuildDeleteAKSClusterStep(task *proto.Task) {
+	deleteStep := cloudprovider.InitTaskStep(deleteAKSClusterStep)
+
+	deleteStep.Params[cloudprovider.ClusterIDKey.String()] = dc.Cluster.ClusterID
+	deleteStep.Params[cloudprovider.CloudIDKey.String()] = dc.Cluster.Provider
+	deleteStep.Params[cloudprovider.DeleteModeKey.String()] = dc.DeleteMode
+
+	task.Steps[deleteAKSClusterStep.StepMethod] = deleteStep
+	task.StepSequence = append(task.StepSequence, deleteAKSClusterStep.StepMethod)
+}
+
+// BuildCleanClusterDBInfoStep 清理集群数据
+func (dc *DeleteClusterTaskOption) BuildCleanClusterDBInfoStep(task *proto.Task) {
+	updateStep := cloudprovider.InitTaskStep(cleanClusterDBInfoStep)
+
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = dc.Cluster.ClusterID
+	updateStep.Params[cloudprovider.CloudIDKey.String()] = dc.Cluster.Provider
+
+	task.Steps[cleanClusterDBInfoStep.StepMethod] = updateStep
+	task.StepSequence = append(task.StepSequence, cleanClusterDBInfoStep.StepMethod)
+}
+
+// CreateNodeGroupTaskOption 创建节点组
+type CreateNodeGroupTaskOption struct {
+	Group *proto.NodeGroup
+}
+
+// BuildCreateCloudNodeGroupStep 通过云接口创建节点组
+func (cn *CreateNodeGroupTaskOption) BuildCreateCloudNodeGroupStep(task *proto.Task) {
+	createStep := cloudprovider.InitTaskStep(createCloudNodeGroupStep)
+
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Group.ClusterID
+	createStep.Params[cloudprovider.NodeGroupIDKey.String()] = cn.Group.NodeGroupID
+	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Group.Provider
+
+	task.Steps[createCloudNodeGroupStep.StepMethod] = createStep
+	task.StepSequence = append(task.StepSequence, createCloudNodeGroupStep.StepMethod)
+}
+
+// BuildCheckCloudNodeGroupStatusStep 检测节点组状态
+func (cn *CreateNodeGroupTaskOption) BuildCheckCloudNodeGroupStatusStep(task *proto.Task) {
+	checkStep := cloudprovider.InitTaskStep(checkCloudNodeGroupStatusStep)
+
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Group.ClusterID
+	checkStep.Params[cloudprovider.NodeGroupIDKey.String()] = cn.Group.NodeGroupID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = cn.Group.Provider
+
+	task.Steps[checkCloudNodeGroupStatusStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkCloudNodeGroupStatusStep.StepMethod)
+}
+
+// CleanNodeInGroupTaskOption 节点组缩容节点
+type CleanNodeInGroupTaskOption struct {
+	Group    *proto.NodeGroup
+	NodeIPs  []string
+	NodeIds  []string
+	Operator string
+}
+
+// BuildCleanNodeGroupNodesStep 清理节点池节点
+func (cn *CleanNodeInGroupTaskOption) BuildCleanNodeGroupNodesStep(task *proto.Task) {
+	cleanStep := cloudprovider.InitTaskStep(cleanNodeGroupNodesStep)
+
+	cleanStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Group.ClusterID
+	cleanStep.Params[cloudprovider.NodeGroupIDKey.String()] = cn.Group.NodeGroupID
+	cleanStep.Params[cloudprovider.CloudIDKey.String()] = cn.Group.Provider
+	cleanStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.NodeIPs, ",")
+	cleanStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(cn.NodeIds, ",")
+
+	task.Steps[cleanNodeGroupNodesStep.StepMethod] = cleanStep
+	task.StepSequence = append(task.StepSequence, cleanNodeGroupNodesStep.StepMethod)
+}
+
+// DeleteNodeGroupTaskOption 删除节点组
+type DeleteNodeGroupTaskOption struct {
+	Group *proto.NodeGroup
+}
+
+// BuildDeleteNodeGroupStep 删除云节点组
+func (dn *DeleteNodeGroupTaskOption) BuildDeleteNodeGroupStep(task *proto.Task) {
+	deleteStep := cloudprovider.InitTaskStep(deleteNodeGroupStep)
+
+	deleteStep.Params[cloudprovider.ClusterIDKey.String()] = dn.Group.ClusterID
+	deleteStep.Params[cloudprovider.NodeGroupIDKey.String()] = dn.Group.NodeGroupID
+	deleteStep.Params[cloudprovider.CloudIDKey.String()] = dn.Group.Provider
+
+	task.Steps[deleteNodeGroupStep.StepMethod] = deleteStep
+	task.StepSequence = append(task.StepSequence, deleteNodeGroupStep.StepMethod)
+}
+
+// UpdateDesiredNodesTaskOption 扩容节点组节点
+type UpdateDesiredNodesTaskOption struct {
+	Group    *proto.NodeGroup
+	Desired  uint32
+	Operator string
+}
+
+// BuildApplyInstanceMachinesStep 申请节点实例
+func (ud *UpdateDesiredNodesTaskOption) BuildApplyInstanceMachinesStep(task *proto.Task) {
+	applyInstanceStep := cloudprovider.InitTaskStep(applyInstanceMachinesStep)
+
+	applyInstanceStep.Params[cloudprovider.ClusterIDKey.String()] = ud.Group.ClusterID
+	applyInstanceStep.Params[cloudprovider.NodeGroupIDKey.String()] = ud.Group.NodeGroupID
+	applyInstanceStep.Params[cloudprovider.CloudIDKey.String()] = ud.Group.Provider
+	applyInstanceStep.Params[cloudprovider.ScalingNodesNumKey.String()] = strconv.Itoa(int(ud.Desired))
+	applyInstanceStep.Params[cloudprovider.OperatorKey.String()] = ud.Operator
+
+	task.Steps[applyInstanceMachinesStep.StepMethod] = applyInstanceStep
+	task.StepSequence = append(task.StepSequence, applyInstanceMachinesStep.StepMethod)
+}
+
+// BuildCheckClusterNodeStatusStep 检测节点实例状态
+func (ud *UpdateDesiredNodesTaskOption) BuildCheckClusterNodeStatusStep(task *proto.Task) {
+	checkClusterNodeStatusStep := cloudprovider.InitTaskStep(checkClusterNodesStatusStep)
+
+	checkClusterNodeStatusStep.Params[cloudprovider.ClusterIDKey.String()] = ud.Group.ClusterID
+	checkClusterNodeStatusStep.Params[cloudprovider.NodeGroupIDKey.String()] = ud.Group.NodeGroupID
+	checkClusterNodeStatusStep.Params[cloudprovider.CloudIDKey.String()] = ud.Group.Provider
+
+	task.Steps[checkClusterNodesStatusStep.StepMethod] = checkClusterNodeStatusStep
+	task.StepSequence = append(task.StepSequence, checkClusterNodesStatusStep.StepMethod)
 }

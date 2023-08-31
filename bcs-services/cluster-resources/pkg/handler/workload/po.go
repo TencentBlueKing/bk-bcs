@@ -193,7 +193,8 @@ func (h *Handler) ReschedulePo(
 }
 
 // ListPoByNode 获取指定集群运行于某 Node 上的 Pod
-// 注意，该接口权限为 "集群管理" 权限，而非命名空间域资源查看权限，返回的数据也不是 manifest，仅包含列表展示需要的数据
+// 注意，该接口权限为 "集群查看" 权限，而非命名空间域资源查看权限，返回的数据也不是 manifest，仅包含列表展示需要的数据
+// 返回仅 pod 部分数据，不需要集群管理权限，很多用户只有集群查看权限，没有集群管理权限
 func (h *Handler) ListPoByNode(
 	ctx context.Context, req *clusterRes.ListPoByNodeReq, resp *clusterRes.CommonListResp,
 ) error {

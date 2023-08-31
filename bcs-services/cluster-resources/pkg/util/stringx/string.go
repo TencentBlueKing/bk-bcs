@@ -17,6 +17,7 @@ package stringx
 import (
 	"math/rand"
 	"net"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -77,4 +78,9 @@ func IsIPv4(s string) bool {
 func IsIPv6(s string) bool {
 	ip := net.ParseIP(s)
 	return ip != nil && !ip.IsUnspecified() && strings.Contains(s, ":")
+}
+
+// GetInt64 string转换成int64
+func GetInt64(s string) (int64, error) {
+	return strconv.ParseInt(s, 10, 64)
 }

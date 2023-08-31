@@ -3,7 +3,7 @@
     class="item-node-template"
     v-bk-tooltips="{
       disabled: isTkeCluster,
-      content: $t('非TKE集群不支持节点模板')
+      content: $t('cluster.nodeTemplate.tips.tkeClusterCanNotUse')
     }">
     <bcs-select
       searchable
@@ -13,7 +13,7 @@
       :loading="loading"
       v-model="nodeTemplateID"
       @change="handleNodeTemplateIDChange">
-      <bcs-option id="" :name="$t('不使用节点模板')"></bcs-option>
+      <bcs-option id="" :name="$t('cluster.nodeTemplate.msg.notUseTemplate')"></bcs-option>
       <bcs-option
         v-for="item in templateList"
         :key="item.nodeTemplateID"
@@ -23,21 +23,21 @@
       <template #extension>
         <span style="cursor: pointer" @click="handleGotoNodeTemplate">
           <i class="bcs-icon bcs-icon-fenxiang mr5 !text-[12px]"></i>
-          {{$t('节点模板配置')}}
+          {{$t('cluster.nodeTemplate.title.templateConfig')}}
         </span>
       </template>
     </bcs-select>
     <template v-if="isTkeCluster">
       <span
         class="ml10 text-[12px] cursor-pointer"
-        v-bk-tooltips.top="$t('刷新列表')"
+        v-bk-tooltips.top="$t('generic.button.refresh')"
         @click="handleGetNodeTemplateList">
         <i class="bcs-icon bcs-icon-reset"></i>
       </span>
       <span class="text-[12px] cursor-pointer ml15" v-if="nodeTemplateID">
         <i
           class="bcs-icon bcs-icon-yulan"
-          v-bk-tooltips.top="$t('预览')"
+          v-bk-tooltips.top="$t('generic.title.preview')"
           @click="handleShowPreview"></i>
       </span>
     </template>
@@ -54,12 +54,13 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted, watch, toRefs } from 'vue';
-import NodeTemplateDetail from '@/views/cluster-manage/node-template/node-template-detail.vue';
-import $store from '@/store/index';
-import $router from '@/router';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
+
 import { NODE_TEMPLATE_ID } from '@/common/constant';
 import { useConfig } from '@/composables/use-app';
+import $router from '@/router';
+import $store from '@/store/index';
+import NodeTemplateDetail from '@/views/cluster-manage/node-template/node-template-detail.vue';
 
 export default defineComponent({
   name: 'TemplateSelector',

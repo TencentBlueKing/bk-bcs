@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	proto "github.com/golang/protobuf/proto"
+	_ "github.com/golang/protobuf/ptypes/any"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	math "math"
@@ -106,6 +107,13 @@ func NewDataManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "DataManager.GetPowerTrading",
+			Path:    []string{"/datamanager/v2/powertrading"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -123,6 +131,7 @@ type DataManagerService interface {
 	GetWorkloadInfo(ctx context.Context, in *GetWorkloadInfoRequest, opts ...client.CallOption) (*GetWorkloadInfoResponse, error)
 	GetPodAutoscalerList(ctx context.Context, in *GetPodAutoscalerListRequest, opts ...client.CallOption) (*GetPodAutoscalerListResponse, error)
 	GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, opts ...client.CallOption) (*GetPodAutoscalerResponse, error)
+	GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, opts ...client.CallOption) (*GetPowerTradingDataResponse, error)
 }
 
 type dataManagerService struct {
@@ -247,6 +256,16 @@ func (c *dataManagerService) GetPodAutoscaler(ctx context.Context, in *GetPodAut
 	return out, nil
 }
 
+func (c *dataManagerService) GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, opts ...client.CallOption) (*GetPowerTradingDataResponse, error) {
+	req := c.c.NewRequest(c.name, "DataManager.GetPowerTrading", in)
+	out := new(GetPowerTradingDataResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for DataManager service
 
 type DataManagerHandler interface {
@@ -261,6 +280,7 @@ type DataManagerHandler interface {
 	GetWorkloadInfo(context.Context, *GetWorkloadInfoRequest, *GetWorkloadInfoResponse) error
 	GetPodAutoscalerList(context.Context, *GetPodAutoscalerListRequest, *GetPodAutoscalerListResponse) error
 	GetPodAutoscaler(context.Context, *GetPodAutoscalerRequest, *GetPodAutoscalerResponse) error
+	GetPowerTrading(context.Context, *GetPowerTradingDataRequest, *GetPowerTradingDataResponse) error
 }
 
 func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts ...server.HandlerOption) error {
@@ -276,6 +296,7 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 		GetWorkloadInfo(ctx context.Context, in *GetWorkloadInfoRequest, out *GetWorkloadInfoResponse) error
 		GetPodAutoscalerList(ctx context.Context, in *GetPodAutoscalerListRequest, out *GetPodAutoscalerListResponse) error
 		GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, out *GetPodAutoscalerResponse) error
+		GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, out *GetPowerTradingDataResponse) error
 	}
 	type DataManager struct {
 		dataManager
@@ -347,6 +368,13 @@ func RegisterDataManagerHandler(s server.Server, hdlr DataManagerHandler, opts .
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "DataManager.GetPowerTrading",
+		Path:    []string{"/datamanager/v2/powertrading"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&DataManager{h}, opts...))
 }
 
@@ -396,4 +424,8 @@ func (h *dataManagerHandler) GetPodAutoscalerList(ctx context.Context, in *GetPo
 
 func (h *dataManagerHandler) GetPodAutoscaler(ctx context.Context, in *GetPodAutoscalerRequest, out *GetPodAutoscalerResponse) error {
 	return h.DataManagerHandler.GetPodAutoscaler(ctx, in, out)
+}
+
+func (h *dataManagerHandler) GetPowerTrading(ctx context.Context, in *GetPowerTradingDataRequest, out *GetPowerTradingDataResponse) error {
+	return h.DataManagerHandler.GetPowerTrading(ctx, in, out)
 }

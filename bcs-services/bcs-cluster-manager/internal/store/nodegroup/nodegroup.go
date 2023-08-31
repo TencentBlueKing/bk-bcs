@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package nodegroup xxx
 package nodegroup
 
 import (
@@ -20,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
@@ -29,8 +29,8 @@ import (
 
 const (
 	tableName = "nodegroup"
-	// ! we don't setting bson tag in proto file,
-	// ! all struct key in mongo is lowcase in default
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	tableKey                   = "nodegroupid"
 	clusterIDKey               = "clusterid"
 	defaultNodeGroupListLength = 1000
@@ -66,7 +66,6 @@ func New(db drivers.DB) *ModelNodeGroup {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelNodeGroup) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -174,6 +173,11 @@ func (m *ModelNodeGroup) ListNodeGroup(ctx context.Context, cond *operator.Condi
 	} else {
 		finder = finder.WithLimit(opt.Limit)
 	}
+
+	if opt.All {
+		finder = finder.WithLimit(0)
+	}
+
 	if err := finder.All(ctx, &groups); err != nil {
 		return nil, err
 	}

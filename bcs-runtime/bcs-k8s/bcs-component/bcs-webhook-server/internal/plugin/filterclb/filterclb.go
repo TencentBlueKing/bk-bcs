@@ -182,6 +182,7 @@ func (h *Handler) Handle(review v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 
 // DenyService deny the service
 func (h *Handler) DenyService(svc *corev1.Service) bool {
+	blog.Infof("filterclb: svc %s/%s annotations %v, type=%s", svc.Name, svc.Namespace, svc.Annotations, svc.Spec.Type)
 	if svc.Annotations[annotationSkipDenyFilterCLB] == constStringTrue {
 		return false
 	}

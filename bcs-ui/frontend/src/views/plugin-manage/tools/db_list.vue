@@ -1,18 +1,18 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header :title="$t('DB授权配置管理')" :desc="`(${$t('集群名称: {name}', { name: clusterName })})`" />
+    <Header :title="$t('plugin.tools.dbAtuh')" :desc="`(${$t('plugin.tools.cluster', { name: clusterName })})`" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button icon="plus" type="primary" @click.stop.prevent="createLoadBlance">
-              <span>{{$t('新建')}}</span>
+              <span>{{$t('plugin.tools.add')}}</span>
             </bk-button>
           </div>
           <div class="right">
             <ClusterSelectComb
-              :placeholder="$t('输入关键字，按Enter搜索')"
+              :placeholder="$t('generic.placeholder.search')"
               :search.sync="searchKeyword"
               :cluster-id.sync="clusterId"
               :show-cluster-select="false"
@@ -32,36 +32,36 @@
               :pagination="pageConf"
               @page-change="handlePageChange"
               @page-limit-change="handlePageSizeChange">
-              <bk-table-column :label="$t('名称')" prop="name" :show-overflow-tooltip="true" min-width="150">
+              <bk-table-column :label="$t('generic.label.name')" prop="name" :show-overflow-tooltip="true" min-width="150">
                 <template slot-scope="{ row }">
                   <a href="javascript: void(0)" class="bk-text-button biz-table-title biz-resource-title" @click.stop.prevent="editCrdInstance(row, true)">{{row.name || '--'}}</a>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('命名空间')" min-width="100">
+              <bk-table-column :label="$t('k8s.namespace')" min-width="100">
                 <template slot-scope="{ row }">
                   {{row.namespace || '--'}}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('状态')" min-width="100">
+              <bk-table-column :label="$t('generic.label.status')" min-width="100">
                 <template slot-scope="{ row }">
-                  <bk-tag type="filled" v-if="row.bind_success" theme="success">{{$t('正常')}}</bk-tag>
-                  <bk-tag type="filled" v-else theme="danger">{{$t('异常')}}</bk-tag>
+                  <bk-tag type="filled" v-if="row.bind_success" theme="success">{{$t('generic.status.ready')}}</bk-tag>
+                  <bk-tag type="filled" v-else theme="danger">{{$t('generic.status.error')}}</bk-tag>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('更新时间')" min-width="100">
+              <bk-table-column :label="$t('cluster.labels.updatedAt')" min-width="100">
                 <template slot-scope="{ row }">
                   {{row.updated || '--'}}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('更新人')" min-width="100">
+              <bk-table-column :label="$t('generic.label.updator')" min-width="100">
                 <template slot-scope="{ row }">
                   {{row.operator || '--'}}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('操作')" min-width="100">
+              <bk-table-column :label="$t('generic.label.action')" min-width="100">
                 <template slot-scope="{ row }">
-                  <a href="javascript:void(0);" class="bk-text-button" @click="editCrdInstance(row)">{{$t('更新')}}</a>
-                  <a href="javascript:void(0);" class="bk-text-button" @click="removeCrdInstance(row)">{{$t('删除')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click="editCrdInstance(row)">{{$t('generic.button.update')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click="removeCrdInstance(row)">{{$t('generic.button.delete')}}</a>
                 </template>
               </bk-table-column>
               <template #empty>
@@ -84,10 +84,10 @@
             <div class="bk-form-item">
               <div class="bk-form-content">
                 <div class="bk-form-inline-item is-required" style="width: 270px;">
-                  <label class="bk-label">{{$t('所属集群')}}：</label>
+                  <label class="bk-label">{{$t('generic.label.cluster1')}}：</label>
                   <div class="bk-form-content">
                     <bk-selector
-                      :placeholder="$t('请输入')"
+                      :placeholder="$t('generic.placeholder.input')"
                       :setting-key="'cluster_id'"
                       :display-key="'name'"
                       :selected.sync="clusterId"
@@ -98,11 +98,11 @@
                 </div>
 
                 <div class="bk-form-inline-item is-required" style="width: 270px; margin-left: 35px;">
-                  <label class="bk-label">{{$t('命名空间')}}：</label>
+                  <label class="bk-label">{{$t('k8s.namespace')}}：</label>
                   <div class="bk-form-content">
                     <bk-selector
                       :searchable="true"
-                      :placeholder="$t('请选择')"
+                      :placeholder="$t('generic.placeholder.select')"
                       :selected.sync="curCrdInstance.namespace_id"
                       :list="nameSpaceList"
                       :disabled="!!curCrdInstance.crd_id"
@@ -116,10 +116,10 @@
             <div class="bk-form-item">
               <div class="bk-form-content">
                 <div class="bk-form-inline-item is-required" style="width: 270px;">
-                  <label class="bk-label">{{$t('名称')}}：</label>
+                  <label class="bk-label">{{$t('generic.label.name')}}：</label>
                   <div class="bk-form-content">
                     <bkbcs-input
-                      :placeholder="$t('请输入')"
+                      :placeholder="$t('generic.placeholder.input')"
                       :value.sync="curCrdInstance.name"
                       :disabled="!!curCrdInstance.crd_id">
                     </bkbcs-input>
@@ -127,12 +127,12 @@
                 </div>
                 <div class="bk-form-inline-item is-required" style="width: 270px; margin-left: 35px;">
                   <label class="bk-label">
-                    {{$t('业务名称')}}：
-                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.left="$t('必须与GCS权限模板中的“业务名”相同')"></i>
+                    {{$t('plugin.tools.biz')}}：
+                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.left="$t('plugin.tools.bizTips')"></i>
                   </label>
                   <div class="bk-form-content">
                     <bkbcs-input
-                      :placeholder="$t('请输入')"
+                      :placeholder="$t('generic.placeholder.input')"
                       :value.sync="curCrdInstance.app_name">
                     </bkbcs-input>
                   </div>
@@ -143,19 +143,19 @@
             <div class="bk-form-item">
               <div class="bk-form-content">
                 <div class="bk-form-inline-item is-required" style="width: 270px;">
-                  <label class="bk-label">{{$t('DB访问地址')}}：</label>
+                  <label class="bk-label">{{$t('plugin.tools.DBAddress')}}：</label>
                   <div class="bk-form-content">
                     <bkbcs-input
-                      :placeholder="$t('请输入')"
+                      :placeholder="$t('generic.placeholder.input')"
                       :value.sync="curCrdInstance.db_host">
                     </bkbcs-input>
                   </div>
                 </div>
                 <div class="bk-form-inline-item is-required" style="width: 270px; margin-left: 35px;">
-                  <label class="bk-label">{{$t('DB类型')}}：</label>
+                  <label class="bk-label">{{$t('plugin.tools.DBType')}}：</label>
                   <div class="bk-form-content">
                     <bk-selector
-                      :placeholder="$t('请选择')"
+                      :placeholder="$t('generic.placeholder.select')"
                       :selected.sync="curCrdInstance.db_type"
                       :list="dbTypes">
                     </bk-selector>
@@ -168,24 +168,24 @@
               <div class="bk-form-content">
                 <div class="bk-form-inline-item is-required" style="width: 270px;">
                   <label class="bk-label">
-                    {{$t('帐号')}}：
-                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.right="$t('必须与GCS权限模板中的“帐号”相同')"></i>
+                    {{$t('plugin.tools.user')}}：
+                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.right="$t('plugin.tools.userTips')"></i>
                   </label>
                   <div class="bk-form-content">
                     <bkbcs-input
-                      :placeholder="$t('请输入')"
+                      :placeholder="$t('generic.placeholder.input')"
                       :value.sync="curCrdInstance.call_user">
                     </bkbcs-input>
                   </div>
                 </div>
                 <div class="bk-form-inline-item is-required" style="width: 270px; margin-left: 35px;">
                   <label class="bk-label">
-                    {{$t('DB名称')}}：
-                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.left="$t('必须与GCS权限模板中的“数据库名称”相同')"></i>
+                    {{$t('plugin.tools.DBName')}}：
+                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.left="$t('plugin.tools.DBTips')"></i>
                   </label>
                   <div class="bk-form-content">
                     <bkbcs-input
-                      :placeholder="$t('请输入')"
+                      :placeholder="$t('generic.placeholder.input')"
                       :value.sync="curCrdInstance.db_name">
                     </bkbcs-input>
                   </div>
@@ -195,8 +195,8 @@
 
             <div class="bk-form-item is-required">
               <label class="bk-label">
-                {{$t('标签管理')}}：
-                <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.right="{ width: 400, content: $t('bcs-webhook-server用labels过滤，相同labels的pod被选中注入用于DB授权的init-container') }"></i>
+                {{$t('generic.label.labelManage')}}：
+                <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.right="{ width: 400, content: $t('plugin.tools.DBAuthTips') }"></i>
               </label>
               <div class="bk-form-content">
                 <bk-keyer :key-list.sync="curLabelList" ref="labelKeyer" @change="changeLabels"></bk-keyer>
@@ -204,8 +204,8 @@
             </div>
 
             <div class="bk-form-item mt25">
-              <bk-button type="primary" :loading="isDataSaveing" @click.stop.prevent="saveCrdInstance">{{curCrdInstance.crd_id ? $t('更新') : $t('创建')}}</bk-button>
-              <bk-button @click.stop.prevent="hideCrdInstanceSlider" :disabled="isDataSaveing">{{$t('取消')}}</bk-button>
+              <bk-button type="primary" :loading="isDataSaveing" @click.stop.prevent="saveCrdInstance">{{curCrdInstance.crd_id ? $t('generic.button.update') : $t('generic.button.create')}}</bk-button>
+              <bk-button @click.stop.prevent="hideCrdInstanceSlider" :disabled="isDataSaveing">{{$t('generic.button.cancel')}}</bk-button>
             </div>
           </div>
         </div>
@@ -218,51 +218,51 @@
         :width="800">
         <div class="p30" slot="content">
           <p class="data-title">
-            {{$t('基础信息')}}
+            {{$t('generic.title.basicInfo')}}
           </p>
           <div class="biz-metadata-box mb15">
             <div class="data-item">
-              <p class="key">{{$t('所属集群')}}：</p>
+              <p class="key">{{$t('generic.label.cluster1')}}：</p>
               <p class="value">{{clusterName || '--'}}</p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('命名空间')}}：</p>
+              <p class="key">{{$t('k8s.namespace')}}：</p>
               <p class="value">{{curCrdInstance.namespace || '--'}}</p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('名称')}}：</p>
+              <p class="key">{{$t('generic.label.name')}}：</p>
               <p class="value">{{curCrdInstance.name || '--'}}</p>
             </div>
           </div>
 
           <p class="data-title">
-            {{$t('DB信息')}}
+            {{$t('plugin.tools.DBInfo')}}
           </p>
           <div class="biz-metadata-box">
             <div class="data-item">
-              <p class="key">{{$t('业务名称')}}：</p>
+              <p class="key">{{$t('plugin.tools.biz')}}：</p>
               <p class="value">{{curCrdInstance.app_name || '--'}}</p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('DB访问地址')}}：</p>
+              <p class="key">{{$t('plugin.tools.DBAddress')}}：</p>
               <p class="value">{{curCrdInstance.db_host || '--'}}</p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('DB类型')}}：</p>
+              <p class="key">{{$t('plugin.tools.DBType')}}：</p>
               <p class="value">{{curCrdInstance.db_type || '--'}}</p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('帐号')}}：</p>
+              <p class="key">{{$t('plugin.tools.user')}}：</p>
               <p class="value">{{curCrdInstance.call_user || '--'}}</p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('DB名称')}}：</p>
+              <p class="key">{{$t('plugin.tools.DBName')}}：</p>
               <p class="value">{{curCrdInstance.db_name || '--'}}</p>
             </div>
           </div>
 
           <div class="actions">
-            <span class="show-labels-btn bk-button bk-button-small bk-primary">{{$t('标签')}}</span>
+            <span class="show-labels-btn bk-button bk-button-small bk-primary">{{$t('k8s.label')}}</span>
           </div>
           <div class="point-box">
             <template v-if="curLabelList.length">
@@ -312,7 +312,7 @@ export default {
         show: true,
       },
       crdInstanceSlider: {
-        title: this.$t('新建'),
+        title: this.$t('plugin.tools.add'),
         isShow: false,
       },
       clusterIndex: 0,
@@ -533,7 +533,7 @@ export default {
           this.detailSliderConf.title = `${this.curCrdInstance.name}`;
           this.detailSliderConf.isShow = true;
         } else {
-          this.crdInstanceSlider.title = this.$t('编辑');
+          this.crdInstanceSlider.title = this.$t('generic.button.edit');
           this.crdInstanceSlider.isShow = true;
         }
       } catch (e) {
@@ -555,18 +555,18 @@ export default {
       const crdId = crdInstance.id;
 
       this.$bkInfo({
-        title: this.$t('确认删除'),
+        title: this.$t('generic.title.confirmDelete'),
         clsName: 'biz-remove-dialog',
         content: this.$createElement('p', {
           class: 'biz-confirm-desc',
-        }, `${this.$t('确定要删除')}【${crdInstance.name}】？`),
+        }, `${this.$t('plugin.tools.confirmDelete')}【${crdInstance.name}】？`),
         async confirmFn() {
           self.isPageLoading = true;
           try {
             await self.$store.dispatch('crdcontroller/deleteCrdInstance', { projectId, clusterId, crdKind, crdId });
             self.$bkMessage({
               theme: 'success',
-              message: self.$t('删除成功'),
+              message: self.$t('generic.msg.success.delete'),
             });
             self.getCrdInstanceList();
           } catch (e) {
@@ -751,7 +751,7 @@ export default {
       if (!this.curCrdInstance.namespace_id) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择命名空间'),
+          message: this.$t('dashboard.ns.validate.emptyNs'),
           delay: 5000,
         });
         return false;
@@ -760,7 +760,7 @@ export default {
       if (this.curCrdInstance.name === '') {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入名称'),
+          message: this.$t('deploy.templateset.validate.name1'),
         });
         return false;
       }
@@ -768,7 +768,7 @@ export default {
       if (!this.curCrdInstance.app_name) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入业务名称'),
+          message: this.$t('plugin.tools.input.biz'),
           delay: 5000,
         });
         return false;
@@ -777,7 +777,7 @@ export default {
       if (!this.curCrdInstance.db_host) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入DB访问地址'),
+          message: this.$t('plugin.tools.input.dbAddress'),
           delay: 5000,
         });
         return false;
@@ -786,7 +786,7 @@ export default {
       if (!this.curCrdInstance.call_user) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入帐号'),
+          message: this.$t('plugin.tools.input.user'),
           delay: 5000,
         });
         return false;
@@ -795,7 +795,7 @@ export default {
       if (!this.curCrdInstance.db_name) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入DB名称'),
+          message: this.$t('plugin.tools.input.dbName'),
           delay: 5000,
         });
         return false;
@@ -804,7 +804,7 @@ export default {
       if (JSON.stringify(this.curCrdInstance.pod_selector) === '{}') {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入标签'),
+          message: this.$t('plugin.tools.input.label'),
           delay: 5000,
         });
         return false;
@@ -816,7 +816,7 @@ export default {
           if (!/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/.test(item.value)) {
             this.$bkMessage({
               theme: 'error',
-              message: this.$t('第{index}组标签的值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$', { index: index + 1 }),
+              message: this.$t('plugin.tools.labelIndexRegex', { index: index + 1 }),
               delay: 5000,
             });
             result = false;
@@ -828,7 +828,7 @@ export default {
       if (!/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/.test(this.curCrdInstance.labels)) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('标签值不符合正则表达式^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$'),
+          message: this.$t('plugin.tools.labelRegex'),
           delay: 5000,
         });
         return false;
@@ -879,7 +879,7 @@ export default {
 
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('数据保存成功'),
+          message: this.$t('generic.msg.success.save1'),
         });
         this.getCrdInstanceList();
         this.hideCrdInstanceSlider();
@@ -905,7 +905,7 @@ export default {
 
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('数据保存成功'),
+          message: this.$t('generic.msg.success.save1'),
         });
         this.getCrdInstanceList();
         this.hideCrdInstanceSlider();

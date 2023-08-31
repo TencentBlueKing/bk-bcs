@@ -2,7 +2,7 @@
   <bk-dialog
     :is-show.sync="isVisible"
     :width="380"
-    :title="$t('扩缩容')"
+    :title="$t('deploy.templateset.scale')"
     :close-icon="!isUpdating"
     :quick-close="false"
     @cancel="hideScale">
@@ -10,7 +10,7 @@
       <div class="gamestatefulset-scale-wrapper" v-bkloading="{ isLoading: isLoading, opacity: 1 }">
         <div class="bk-form-item">
           <label class="bk-label">
-            {{$t('实例数量')}}
+            {{$t('dashboard.workload.label.scaleNum')}}
           </label>
           <div class="bk-form-content" style="display: inline-block; margin-left: 10px;">
             <bk-input
@@ -19,7 +19,7 @@
               :min="0"
               :max="5000"
               :style="{ 'width': '260px' }"
-              :placeholder="$t('请输入')">
+              :placeholder="$t('generic.placeholder.input')">
             </bk-input>
           </div>
         </div>
@@ -29,20 +29,20 @@
       <div class="bk-dialog-outer">
         <template v-if="isUpdating">
           <bk-button type="primary" disabled>
-            {{$t('更新中...')}}
+            {{$t('generic.status.updating')}}
           </bk-button>
           <bk-button type="button" class="bk-dialog-btn bk-dialog-btn-cancel disabled">
-            {{$t('取消')}}
+            {{$t('generic.button.cancel')}}
           </bk-button>
         </template>
         <template v-else>
           <bk-button
             type="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
             @click="confirmScale">
-            {{$t('确定')}}
+            {{$t('generic.button.confirm')}}
           </bk-button>
           <bk-button type="button" @click="hideScale">
-            {{$t('取消')}}
+            {{$t('generic.button.cancel')}}
           </bk-button>
         </template>
       </div>
@@ -142,7 +142,7 @@ export default {
         this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请填写内容'),
+          message: this.$t('deploy.templateset.input'),
         });
         return;
       }
@@ -166,7 +166,7 @@ export default {
         this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'success',
-          message: this.$t('扩缩容成功'),
+          message: this.$t('deploy.templateset.success'),
         });
         this.$emit('scale-success');
       } catch (e) {

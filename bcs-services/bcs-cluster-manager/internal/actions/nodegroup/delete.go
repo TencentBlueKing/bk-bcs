@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
@@ -83,7 +84,7 @@ func (da *DeleteAction) validate() error {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return err
 	}
-	// check
+	// check nodes exist
 	if len(nodes) != 0 && !da.req.IsForce {
 		blog.Warnf(
 			"NodeGroup %s for Cluster %s still has Nodes, no deletion execute. try isForce",
@@ -98,7 +99,7 @@ func (da *DeleteAction) validate() error {
 	return nil
 }
 
-// Handle handle delete cluster credential
+// Handle handle delete cluster nodeGroup
 func (da *DeleteAction) Handle(
 	ctx context.Context, req *cmproto.DeleteNodeGroupRequest, resp *cmproto.DeleteNodeGroupResponse) {
 	if req == nil || resp == nil {
@@ -118,7 +119,7 @@ func (da *DeleteAction) Handle(
 	}
 
 	// set nodeGroup status to deleting
-	da.group.Status = common.StatusDeleting
+	da.group.Status = common.StatusDeleteNodeGroupDeleting
 	if err := da.model.UpdateNodeGroup(da.ctx, da.group); err != nil {
 		blog.Errorf("update NodeGroup %s status to deleting failed, %s", da.group.NodeGroupID, err.Error())
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -134,7 +135,9 @@ func (da *DeleteAction) Handle(
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	// get dependency resource for cloudprovider operation
+	asOption, _ := actions.GetAsOptionByClusterID(da.model, da.group.ClusterID)
+
+	//get dependency resource for cloudprovider operation
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
 		Cloud:     cloud,
 		AccountID: cluster.CloudAccountID,
@@ -166,7 +169,10 @@ func (da *DeleteAction) Handle(
 		ReservedNodeInstance:   req.KeepNodesInstance,
 		CleanInstanceInCluster: !req.KeepNodesInstance,
 		Operator:               req.Operator,
+		AsOption:               asOption,
 		Cloud:                  cloud,
+		Cluster:                cluster,
+		OnlyData:               req.OnlyDeleteInfo,
 	})
 	if err != nil {
 		blog.Errorf("delete NodeGroup %s in Cluster %s with cloudprovider %s failed, %s",
@@ -193,6 +199,14 @@ func (da *DeleteAction) Handle(
 			return
 		}
 		blog.Infof("delete nodeGroup task successfully for %s", da.group.NodeGroupID)
+	} else {
+		// sync to delete nodeGroup
+		if err = da.model.DeleteNodeGroup(da.ctx, da.req.NodeGroupID); err != nil {
+			blog.Errorf("DeleteNodeGroup[%s] failed: %v", da.req.NodeGroupID, err)
+			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+			return
+		}
+		blog.Infof("DeleteNodeGroup[%s] successful", da.req.NodeGroupID)
 	}
 
 	resp.Data.NodeGroup = removeSensitiveInfo(da.group)
@@ -207,9 +221,11 @@ func (da *DeleteAction) Handle(
 			}
 			return task.TaskID
 		}(),
-		Message:    fmt.Sprintf("集群%s删除节点池%s", da.group.ClusterID, da.group.NodeGroupID),
+		Message:    fmt.Sprintf("集群%s删除节点规格%s", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:     req.Operator,
 		CreateTime: time.Now().Format(time.RFC3339),
+		ClusterID:  da.group.ClusterID,
+		ProjectID:  da.group.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("DeleteNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)
@@ -248,14 +264,14 @@ func (da *RemoveNodeAction) validate() error {
 		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return err
 	}
-	// get nodegroup for validation
+	//get nodegroup for validation
 	destGroup, err := da.model.GetNodeGroup(da.ctx, da.req.NodeGroupID)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		blog.Errorf("Get NodeGroup %s in pre-RemoveNode checking failed, err %s", da.req.NodeGroupID, err.Error())
 		return err
 	}
-	// check cluster info consistency
+	//check cluster info consistency
 	if destGroup.ClusterID != da.req.ClusterID {
 		blog.Errorf(
 			"request ClusterID %s is not same with NodeGroup.ClusterID %s when RemoveNode",
@@ -268,7 +284,7 @@ func (da *RemoveNodeAction) validate() error {
 		return err
 	}
 	da.group = destGroup
-	// check cluster existence
+	//check cluster existence
 	cluster, err := da.model.GetCluster(da.ctx, destGroup.ClusterID)
 	if err != nil {
 		blog.Errorf("get Cluster %s for NodeGroup %s to remove Node failed, %s",
@@ -278,7 +294,7 @@ func (da *RemoveNodeAction) validate() error {
 		return err
 	}
 	da.cluster = cluster
-	// get specified node for remove validation
+	//get specified node for remove validation
 	condM := make(operator.M)
 	condM["nodegroupid"] = da.group.NodeGroupID
 	condM["clusterid"] = da.group.ClusterID
@@ -325,7 +341,7 @@ func (da *RemoveNodeAction) Handle(
 		// validate already setting error message
 		return
 	}
-	// get dependency resource and release it
+	//get dependency resource and release it
 	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
 	if err != nil {
 		blog.Errorf("get Cloud %s for NodeGroup %s to remove Node failed, %s",
@@ -334,14 +350,14 @@ func (da *RemoveNodeAction) Handle(
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	// get dependency resource for cloudprovider operation
+	//get dependency resource for cloudprovider operation
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
 		Cloud:     cloud,
 		AccountID: cluster.CloudAccountID,
 	})
 	if err != nil {
-		blog.Errorf("get credential for NodeGroup %s cluster %s to remove Node failed, %s",
-			da.group.NodeGroupID, da.group.ClusterID, err.Error(),
+		blog.Errorf("get credential for cluster %s:%s to remove Node failed, %s",
+			da.group.ClusterID, da.group.NodeGroupID, err.Error(),
 		)
 		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
@@ -356,6 +372,7 @@ func (da *RemoveNodeAction) Handle(
 		return
 	}
 	cmOption.Region = da.group.Region
+
 	if err = mgr.RemoveNodesFromGroup(da.removeNodes, da.group, &cloudprovider.RemoveNodesOption{
 		CommonOption: *cmOption,
 		Cloud:        cloud,
@@ -371,6 +388,7 @@ func (da *RemoveNodeAction) Handle(
 		"Nodes %v remove out NodeGroup %s in cloudprovider %s/%s successfully",
 		req.Nodes, da.group.NodeGroupID, cloud.CloudID, cloud.CloudProvider,
 	)
+
 	// try to update Node
 	for _, node := range da.removeNodes {
 		node.NodeGroupID = ""
@@ -388,7 +406,7 @@ func (da *RemoveNodeAction) Handle(
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   da.group.NodeGroupID,
 		TaskID:       "",
-		Message:      fmt.Sprintf("集群%s节点池%s移除节点", da.group.ClusterID, da.group.NodeGroupID),
+		Message:      fmt.Sprintf("集群%s节点规格%s移除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       da.group.Creator,
 		CreateTime:   time.Now().Format(time.RFC3339),
 	})
@@ -408,17 +426,20 @@ type CleanNodesAction struct {
 	req   *cmproto.CleanNodesInGroupRequest
 	resp  *cmproto.CleanNodesInGroupResponse
 
+	locker     lock.DistributedLock
 	cloud      *cmproto.Cloud
 	cluster    *cmproto.Cluster
 	group      *cmproto.NodeGroup
+	asOption   *cmproto.ClusterAutoScalingOption
 	task       *cmproto.Task
 	cleanNodes []*cmproto.Node
 }
 
 // NewCleanNodesAction create delete action for online cluster credential
-func NewCleanNodesAction(model store.ClusterManagerModel) *CleanNodesAction {
+func NewCleanNodesAction(model store.ClusterManagerModel, locker lock.DistributedLock) *CleanNodesAction {
 	return &CleanNodesAction{
-		model: model,
+		model:  model,
+		locker: locker,
 	}
 }
 
@@ -450,6 +471,23 @@ func (da *CleanNodesAction) checkNodeGroupClusterID(groupID string) error {
 	return nil
 }
 
+func (da *CleanNodesAction) allowNodeIfDelete(ip string) bool {
+	node, err := da.model.GetNodeByIP(da.ctx, ip)
+	if err != nil {
+		blog.Errorf("CleanNodesAction allowNodeIfDelete[%s] failed: %v", ip, err)
+		return false
+	}
+
+	blog.Infof("CleanNodesAction allowNodeIfDelete[%s] status: %v", ip, node.Status)
+
+	if node.Status == common.StatusDeleting || node.Status == common.StatusInitialization {
+		blog.Infof("CleanNodesAction allowNodeIfDelete[%s:%s]: %v", ip, node.Status, false)
+		return false
+	}
+
+	return true
+}
+
 func (da *CleanNodesAction) checkCleanNodesExistInCluster() error {
 	// get specified node for clean validation
 	condM := make(operator.M)
@@ -464,20 +502,36 @@ func (da *CleanNodesAction) checkCleanNodesExistInCluster() error {
 		return err
 	}
 
-	allNodes := make(map[string]*cmproto.Node)
+	groupNodes := make(map[string]*cmproto.Node)
 	for i := range nodes {
-		allNodes[nodes[i].InnerIP] = nodes[i]
+		groupNodes[nodes[i].InnerIP] = nodes[i]
 	}
 
 	// Nodes validation for clean
+	// deleteNodes not exist in db or node DELETING/INITIALIZATION status
 	for _, ip := range da.req.Nodes {
-		node, ok := allNodes[ip]
-		if !ok {
-			blog.Errorf("clean Node %s is Not under NodeGroup %s control", ip, da.group.NodeGroupID)
+		// check different cluster clean nodes
+		allow := da.allowNodeIfDelete(ip)
+		if !allow {
 			continue
 		}
+
+		// check same cluster/nodeGroup exist node
+		node, ok := groupNodes[ip]
+		if !ok || node.Status == common.StatusDeleting || node.Status == common.StatusInitialization {
+			blog.Errorf("clean Node %s is Not under NodeGroup %s control or status "+
+				"DELETING/INITIALIZATION", ip, da.group.NodeGroupID)
+			continue
+		}
+
 		da.cleanNodes = append(da.cleanNodes, node)
 	}
+
+	if len(da.cleanNodes) == 0 {
+		da.setResp(common.BcsErrClusterManagerCACleanNodesEmptyErr, "cleanNodes empty")
+		return fmt.Errorf("NodeGroup[%s] cleanNodes empty", da.group.NodeGroupID)
+	}
+
 	return nil
 }
 
@@ -496,14 +550,14 @@ func (da *CleanNodesAction) validate() error {
 	// check clean nodes
 	err = da.checkCleanNodesExistInCluster()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return nil
 }
 
 func (da *CleanNodesAction) getRelativeData() error {
-	// get dependency resource
+	//get dependency resource
 	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
 	if err != nil {
 		blog.Errorf("get Cloud %s Project %s for NodeGroup %s to clean Node failed, %s",
@@ -514,6 +568,8 @@ func (da *CleanNodesAction) getRelativeData() error {
 	}
 	da.cluster = cluster
 	da.cloud = cloud
+
+	da.asOption, _ = actions.GetAsOptionByClusterID(da.model, da.group.ClusterID)
 
 	return nil
 }
@@ -550,6 +606,7 @@ func (da *CleanNodesAction) handleTask() error {
 	task, err := nodeGroupMgr.CleanNodesInGroup(da.cleanNodes, da.group, &cloudprovider.CleanNodesOption{
 		Cloud:    da.cloud,
 		Cluster:  da.cluster,
+		AsOption: da.asOption,
 		Operator: da.req.Operator,
 	})
 	if err != nil {
@@ -591,8 +648,14 @@ func (da *CleanNodesAction) Handle(
 	da.req = req
 	da.resp = resp
 
+	const (
+		cleanNodeGroupNodesLockKey = "/bcs-services/bcs-cluster-manager/CleanNodesAction"
+	)
+	da.locker.Lock(cleanNodeGroupNodesLockKey, []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
+	defer da.locker.Unlock(cleanNodeGroupNodesLockKey)
+
 	if err := da.validate(); err != nil {
-		// validate already sets response information
+		//validate already sets response information
 		return
 	}
 	if err := da.getRelativeData(); err != nil {
@@ -613,9 +676,11 @@ func (da *CleanNodesAction) Handle(
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   da.group.NodeGroupID,
 		TaskID:       da.task.TaskID,
-		Message:      fmt.Sprintf("集群%s节点池%s删除节点%v", da.group.ClusterID, da.group.NodeGroupID, da.req.Nodes),
+		Message:      fmt.Sprintf("集群%s节点规格%s删除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       req.Operator,
 		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    da.cluster.ClusterID,
+		ProjectID:    da.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("CleanNodesFromNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)

@@ -6,14 +6,14 @@
       form-type="vertical"
       ref="formRef">
       <bk-form-item
-        :label="$t('名称')"
+        :label="$t('generic.label.name')"
         property="name"
         error-display-type="normal"
         required>
         <bk-input :disabled="isEdit" class="max-w-[50%]" v-model="metricData.name"></bk-input>
       </bk-form-item>
       <bk-form-item
-        :label="$t('选择Service')"
+        :label="$t('plugin.metric.label.service')"
         property="service_name"
         error-display-type="normal"
         required>
@@ -44,7 +44,7 @@
       </bk-form-item>
       <template v-if="metricData.service_name">
         <bk-form-item
-          :label="$t('选择关联Label')"
+          :label="$t('plugin.metric.label.matchLabels')"
           property="selector"
           error-display-type="normal"
           required>
@@ -63,12 +63,12 @@
             </div>
           </div>
           <div class="text-[12px]" v-else>
-            {{ $t('当前Service没有设置Labels') }}
-            <bk-button text class="text-[12px]" @click="handleGotoService">{{ $t('前往添加') }}</bk-button>
+            {{ $t('plugin.metric.tips.noLabel') }}
+            <bk-button text class="text-[12px]" @click="handleGotoService">{{ $t('plugin.metric.action.add') }}</bk-button>
           </div>
         </bk-form-item>
         <bk-form-item
-          :label="$t('选择PortName')"
+          :label="$t('plugin.metric.label.portName')"
           property="port"
           error-display-type="normal"
           required>
@@ -83,18 +83,18 @@
         </bk-form-item>
       </template>
       <bk-form-item
-        :label="$t('Metric路径')"
+        :label="$t('plugin.metric.endpoints.path')"
         property="path"
         error-display-type="normal"
         required>
         <bk-input v-model="metricData.path"></bk-input>
       </bk-form-item>
-      <bk-form-item :label="$t('Metric参数')">
+      <bk-form-item :label="$t('plugin.metric.endpoints.params')">
         <KeyValue :min-item="0" v-model="metricData.params" />
       </bk-form-item>
       <div class="flex">
         <bk-form-item
-          :label="$t('采集周期（秒）')"
+          :label="$t('plugin.metric.endpoints.interval')"
           property="interval"
           error-display-type="normal"
           required
@@ -102,7 +102,7 @@
           <bcs-input type="number" v-model="metricData.interval"></bcs-input>
         </bk-form-item>
         <bk-form-item
-          :label="$t('允许最大Sample')"
+          :label="$t('plugin.metric.sampleLimit')"
           property="sample_limit"
           error-display-type="normal"
           required
@@ -112,8 +112,8 @@
       </div>
     </bk-form>
     <div class="flex mt-[30px]">
-      <bk-button :loading="saveLoading" theme="primary" @click="handleSubmit">{{ $t('提交') }}</bk-button>
-      <bk-button :disabled="saveLoading" @click="handleCancel">{{ $t('取消') }}</bk-button>
+      <bk-button :loading="saveLoading" theme="primary" @click="handleSubmit">{{ $t('generic.button.submit') }}</bk-button>
+      <bk-button :disabled="saveLoading" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </div>
   </div>
 </template>
@@ -159,20 +159,20 @@ const metricDataRules = ref({
   name: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],
   service_name: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],
   selector: [
     {
-      message: $i18n.t('至少关联一个Label'),
+      message: $i18n.t('plugin.metric.tips.needLabel'),
       trigger: 'blur',
       validator: () => Object.keys(metricData.value.selector).length >= 1,
     },
@@ -180,28 +180,28 @@ const metricDataRules = ref({
   port: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],
   path: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],
   interval: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],
   sample_limit: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],

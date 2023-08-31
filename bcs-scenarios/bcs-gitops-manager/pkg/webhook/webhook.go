@@ -24,29 +24,32 @@ import (
 	"strings"
 	"time"
 
-	grpccli "github.com/asim/go-micro/plugins/client/grpc/v4"
-	"github.com/asim/go-micro/plugins/registry/etcd/v4"
-	grpcsvr "github.com/asim/go-micro/plugins/server/grpc/v4"
+	grpccli "github.com/go-micro/plugins/v4/client/grpc"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	grpcsvr "github.com/go-micro/plugins/v4/server/grpc"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/server"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/grpc"
 	grpccred "google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/google/uuid"
-
-	"github.com/pkg/errors"
-
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	oteltrace "go.opentelemetry.io/otel/trace"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/webhook/options"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/webhook/homepage"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/webhook/transfer"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
 )
@@ -78,8 +81,12 @@ type Server struct {
 	httpServer   *http.Server
 	rpcServer    micro.Service
 	metricServer *http.Server
+	recorder     *homepage.Recorder
 
 	tgitHandler transfer.Interface
+
+	tracerShutdown func(context.Context) error
+	tracer         oteltrace.Tracer
 }
 
 // NewServer create the instance of Server
@@ -97,7 +104,8 @@ func NewServer(ctx context.Context, op *options.GitopsWebhookOptions) *Server {
 func (s *Server) Init() error {
 	s.initMetricServer()
 	initializer := []func() error{
-		s.initTLSConfig, s.initRpcServer, s.initHTTPServer,
+		s.initTLSConfig, s.initRpcServer, s.initTracer, s.initHTTPServer,
+		s.initHomePageRecorder,
 	}
 	for _, init := range initializer {
 		if err := init(); err != nil {
@@ -239,8 +247,6 @@ func (s *Server) initRpcServer() error {
 					requestID = uuid.New().String()
 				}
 				ctx = context.WithValue(ctx, traceconst.RequestIDHeaderKey, requestID)
-				//user := apis.GetAuthUserFromCtx(ctx)
-				//blog.Infof("RequestID[%s] received user '%s' action '%s'", requestID, user.Username, req.Method())
 				return handlerFunc(ctx, req, rsp)
 			}
 		}),
@@ -257,20 +263,23 @@ func (s *Server) initHTTPServer() error {
 	blog.Infof("init http server")
 	grpcDialOpts := make([]grpc.DialOption, 0)
 	gMux := runtime.NewServeMux(
-		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &rawJSONPb{&runtime.JSONPb{}}),
+		runtime.WithIncomingHeaderMatcher(func(s string) (string, bool) {
+			if strings.HasPrefix(s, "X-") {
+				return s, true
+			}
+			return runtime.DefaultHeaderMatcher(s)
+		}),
 	)
-
 	if s.serverTlsConfig != nil && s.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(s.clientTLSConfig)))
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
-
 	if err := pb.RegisterBcsGitopsWebhookGwFromEndpoint(s.ctx, gMux, net.JoinHostPort(s.op.Address,
 		strconv.Itoa(int(s.op.GRPCPort))), grpcDialOpts); err != nil {
 		return errors.Wrapf(err, "register http gateway failed")
 	}
-
 	mux := http.NewServeMux()
 	mux.Handle("/", gMux)
 	s.httpServer = &http.Server{
@@ -279,6 +288,23 @@ func (s *Server) initHTTPServer() error {
 		Addr:      net.JoinHostPort(s.op.Address, strconv.Itoa(int(s.op.HTTPPort))),
 	}
 	blog.Infof("init http server done")
+	return nil
+}
+
+func (s *Server) initTracer() error {
+	blog.Infof("init otel tracer")
+	opts := []trace.Option{
+		trace.OTLPEndpoint(s.op.TraceConfig.Endpoint),
+	}
+	attrs := make([]attribute.KeyValue, 0)
+	attrs = append(attrs, attribute.String("bk.data.token", s.op.TraceConfig.Token))
+	opts = append(opts, trace.ResourceAttrs(attrs))
+	tracerShutdown, err := trace.InitTracingProvider("bcs-gitops-webhook", opts...)
+	if err != nil {
+		return errors.Wrapf(err, "init tracer failed")
+	}
+	s.tracerShutdown = tracerShutdown
+	s.tracer = otel.Tracer("bcs-gitops-webhook")
 	return nil
 }
 
@@ -317,5 +343,14 @@ func (s *Server) initTLSConfig() error {
 	}
 
 	blog.Infof("init tls config done")
+	return nil
+}
+
+func (s *Server) initHomePageRecorder() error {
+	var err error
+	s.recorder, err = homepage.NewRecorder()
+	if err != nil {
+		return errors.Wrapf(err, "create homepage recorder failed")
+	}
 	return nil
 }

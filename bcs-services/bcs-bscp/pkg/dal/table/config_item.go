@@ -37,8 +37,8 @@ var ConfigItemColumnDescriptor = mergeColumnDescriptors("",
 const maxConfigItemsLimitForApp = 500
 
 // ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
-func ValidateAppCINumber(count uint32) error {
-	if count >= maxConfigItemsLimitForApp {
+func ValidateAppCINumber(count int64) error {
+	if count > maxConfigItemsLimitForApp {
 		return errf.New(errf.InvalidParameter, fmt.Sprintf("an application only create %d config items",
 			maxConfigItemsLimitForApp))
 	}

@@ -17,8 +17,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	any "github.com/golang/protobuf/ptypes/any"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
@@ -55,4 +56,6 @@ type Server interface {
 		request *datamanager.GetPodAutoscalerRequest) (*datamanager.PodAutoscaler, error)
 	GetRawPodAutoscalerInfo(ctx context.Context, opts *types.JobCommonOpts,
 		bucket string) ([]*types.PodAutoscalerData, error)
+	GetPowerTradingInfo(ctx context.Context,
+		req *datamanager.GetPowerTradingDataRequest) ([]*any.Any, int64, error)
 }

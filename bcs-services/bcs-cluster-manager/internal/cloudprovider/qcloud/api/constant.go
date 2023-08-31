@@ -35,3 +35,11 @@ const (
 	// InternetChargeTypeTrafficPostpaidByHour 按流量付费
 	InternetChargeTypeTrafficPostpaidByHour = "TRAFFIC_POSTPAID_BY_HOUR"
 )
+
+// Cluster Status
+const (
+	// ClusterStatusRunning running
+	ClusterStatusRunning = "Running"
+	// ClusterStatusAbnormal abnormal
+	ClusterStatusAbnormal = "Abnormal"
+)

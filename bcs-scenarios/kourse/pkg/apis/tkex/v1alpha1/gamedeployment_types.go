@@ -70,6 +70,7 @@ type GameDeploymentSpec struct {
 
 	// UpdateStrategy indicates the UpdateStrategy that will be employed to
 	// update Pods in the GameDeployment when a revision is made to Template.
+	// +kubebuilder:validation:Required
 	UpdateStrategy GameDeploymentUpdateStrategy `json:"updateStrategy,omitempty"`
 
 	// PreDeleteUpdateStrategy indicates the PreDeleteUpdateStrategy that will be employed to
@@ -133,6 +134,10 @@ type GameDeploymentScaleStrategy struct {
 	// PodsToDelete is the names of Pod should be deleted.
 	// Note that this list will be truncated for non-existing pod names.
 	PodsToDelete []string `json:"podsToDelete,omitempty"`
+	// CreateBatch is the batch size of pods should be created when the gamedeployment
+	// is first created. Defaults to 100%
+	// +kubebuilder:default="100%"
+	CreateBatch *intstr.IntOrString `json:"createBatch,omitempty"`
 }
 
 // GameDeploymentUpdateStrategy defines the update strategy of GameDeployment

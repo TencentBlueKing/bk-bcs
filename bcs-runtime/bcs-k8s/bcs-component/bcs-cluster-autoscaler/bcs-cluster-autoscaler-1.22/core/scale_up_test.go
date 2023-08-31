@@ -99,6 +99,7 @@ func TestScaleUpMaxCoresLimitHit(t *testing.T) {
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleUpMaxCoresLimitHitWithNotAutoscaledGroup(t *testing.T) {
 	options := defaultOptions
 	options.MaxCoresTotal = 9
@@ -152,6 +153,7 @@ func TestScaleUpMaxMemoryLimitHit(t *testing.T) {
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleUpMaxMemoryLimitHitWithNotAutoscaledGroup(t *testing.T) {
 	options := defaultOptions
 	options.MaxMemoryTotal = 1300 * MiB
@@ -206,6 +208,7 @@ func TestScaleUpCapToMaxTotalNodesLimit(t *testing.T) {
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleUpCapToMaxTotalNodesLimitWithNotAutoscaledGroup(t *testing.T) {
 	options := defaultOptions
 	options.MaxNodesTotal = 3
@@ -233,6 +236,7 @@ func TestScaleUpCapToMaxTotalNodesLimitWithNotAutoscaledGroup(t *testing.T) {
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestWillConsiderGpuAndStandardPoolForPodWhichDoesNotRequireGpu(t *testing.T) {
 	options := defaultOptions
 	options.MaxNodesTotal = 100
@@ -262,6 +266,7 @@ func TestWillConsiderGpuAndStandardPoolForPodWhichDoesNotRequireGpu(t *testing.T
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestWillConsiderOnlyGpuPoolForPodWhichDoesRequiresGpu(t *testing.T) {
 	options := defaultOptions
 	options.MaxNodesTotal = 100
@@ -290,6 +295,7 @@ func TestWillConsiderOnlyGpuPoolForPodWhichDoesRequiresGpu(t *testing.T) {
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestWillConsiderAllPoolsWhichFitTwoPodsRequiringGpus(t *testing.T) {
 	options := defaultOptions
 	options.MaxNodesTotal = 100

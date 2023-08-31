@@ -25,10 +25,11 @@ import (
 	"strings"
 	"time"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -36,6 +37,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
@@ -58,7 +60,7 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 // RegisterRoute xxx
 func (s service) RegisterRoute(router gin.IRoutes) {
-	api := router.Use(route.APIAuthRequired())
+	api := router.Use(route.APIAuthRequired(), gintrace.Middleware(tracing.ServiceName))
 
 	// 用户登入态鉴权, session鉴权
 	api.GET("/api/projects/:projectId/clusters/:clusterId/session/",
@@ -88,7 +90,13 @@ func (s *service) ListClusters(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
 	projectId := c.Param("projectId")
-	clusters, err := bcs.ListClusters(c.Request.Context(), projectId)
+	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
+	if err != nil {
+		APIError(c, i18n.GetMessage(c, "项目不正确"))
+		return
+	}
+
+	clusters, err := bcs.ListClusters(c.Request.Context(), project.ProjectId)
 	if err != nil {
 		APIError(c, i18n.GetMessage(c, err.Error()))
 		return
@@ -106,8 +114,6 @@ func (s *service) ListClusters(c *gin.Context) {
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
-	projectId := c.Param("projectId")
-	clusterId := c.Param("clusterId")
 	consoleQuery := new(podmanager.ConsoleQuery)
 	c.BindQuery(consoleQuery)
 
@@ -124,15 +130,15 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 			metrics.SetRequestIgnoreDuration(c, podReadyDuration)
 
 			metrics.CollectPodReady(
-				podmanager.GetAdminClusterId(clusterId),
+				podmanager.GetAdminClusterId(authCtx.ClusterId),
 				podmanager.GetNamespace(),
-				podmanager.GetPodName(clusterId, authCtx.Username),
+				podmanager.GetPodName(authCtx.ClusterId, authCtx.Username),
 				err,
 				podReadyDuration,
 			)
 		}()
 
-		podCtx, err = podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
+		podCtx, err = podmanager.QueryAuthPodCtx(c.Request.Context(), authCtx.ClusterId, authCtx.Username, consoleQuery)
 		return
 	}()
 	if err != nil {
@@ -140,7 +146,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	podCtx.ProjectId = projectId
+	podCtx.ProjectId = authCtx.ProjectId
 	podCtx.Username = authCtx.Username
 	podCtx.Source = consoleQuery.Source
 

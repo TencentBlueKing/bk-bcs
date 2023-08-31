@@ -362,6 +362,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func Test_getDesiredNumForNodeGroupWithTime(t *testing.T) {
 	utc, _ := time.LoadLocation("UTC")
 	timeutc, _ := time.ParseInLocation(TIME_LAYOUT, "2022-02-28 00:00:00", utc)

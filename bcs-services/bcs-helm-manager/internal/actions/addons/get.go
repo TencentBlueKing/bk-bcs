@@ -70,8 +70,6 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 	version, err := g.getLatestVersion(ctx, addons.ChartName)
 	if err != nil {
 		blog.Errorf("get addons latest version failed, %s", err.Error())
-		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
-		return nil
 	}
 	clusterAddons.Version = &version
 
@@ -91,6 +89,9 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 	clusterAddons.Message = &rl.Message
 	if len(rl.Values) > 0 {
 		clusterAddons.CurrentValues = &rl.Values[len(rl.Values)-1]
+	}
+	if version == "" {
+		clusterAddons.Version = &version
 	}
 
 	g.setResp(common.ErrHelmManagerSuccess, "ok", clusterAddons)

@@ -25,6 +25,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -83,6 +84,18 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		return errorx.NewDBErr(err.Error())
 	}
 	retData.Variables = variables
+	// get managers
+	managers := []string{}
+	if creator, exists := namespace.Annotations[constant.AnnotationKeyCreator]; exists {
+		managers = append(managers, creator)
+	} else {
+		cluster, err := clustermanager.GetCluster(req.ClusterID)
+		if err != nil {
+			return err
+		}
+		managers = append(managers, cluster.Creator)
+	}
+	retData.Managers = managers
 	if staging != nil {
 		retData.ItsmTicketType = staging.ItsmTicketType
 		retData.ItsmTicketSN = staging.ItsmTicketSN
@@ -127,6 +140,8 @@ func constructCreatingNamespace(staging *nsm.Namespace) *proto.NamespaceData {
 			Value: variable.Value,
 		})
 	}
+	// get managers
+	retData.Managers = []string{staging.Creator}
 	retData.Variables = variables
 	retData.ItsmTicketSN = staging.ItsmTicketSN
 	retData.ItsmTicketStatus = staging.ItsmTicketStatus

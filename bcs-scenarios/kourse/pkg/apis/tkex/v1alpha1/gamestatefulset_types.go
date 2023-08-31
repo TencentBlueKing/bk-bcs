@@ -84,6 +84,15 @@ const (
 	ParallelPodManagement = "Parallel"
 )
 
+// GameStatefulSetScaleStrategy defines the scale strategy of GameStatefulSet
+type GameStatefulSetScaleStrategy struct {
+	// CreateBatch is the batch size of pods should be created when the
+	// gamestatefulset is first created. Defaults to 100%
+	// Only effective when PodManagementPolicy is Parallel
+	// +kubebuilder:default="100%"
+	CreateBatch *intstr.IntOrString `json:"createBatch,omitempty"`
+}
+
 // GameStatefulSetUpdateStrategy indicates the strategy that the StatefulSet
 // controller will use to perform updates. It includes any additional parameters
 // necessary to perform the update for the indicated strategy.
@@ -214,6 +223,10 @@ type GameStatefulSetSpec struct {
 	// +kubebuilder:validation:Enum=OrderedReady;Parallel
 	// +kubebuilder:default=OrderedReady
 	PodManagementPolicy PodManagementPolicyType `json:"podManagementPolicy,omitempty" protobuf:"bytes,6,opt,name=podManagementPolicy,casttype=PodManagementPolicyType"`
+
+	// ScaleStrategy indicates the ScaleStrategy that will be employed to
+	// create Pods in the GameStatefulSet.
+	ScaleStrategy GameStatefulSetScaleStrategy `json:"scaleStrategy,omitempty"`
 
 	// updateStrategy indicates the StatefulSetUpdateStrategy that will be
 	// employed to update Pods in the StatefulSet when a revision is made to

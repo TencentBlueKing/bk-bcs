@@ -1,5 +1,5 @@
 <template>
-  <BcsContent :title="$t('Helm Release列表')" hide-back>
+  <BcsContent :title="$t('deploy.helm.releases')" hide-back>
     <Row>
       <template #right>
         <ClusterSelect v-model="clusterID" cluster-type="all" @change="handleClusterChange"></ClusterSelect>
@@ -13,7 +13,7 @@
         <bcs-input
           right-icon="bk-icon icon-search"
           class="w-[360px] ml-[5px]"
-          :placeholder="$t('输入名称搜索')"
+          :placeholder="$t('generic.placeholder.searchName')"
           clearable
           v-model="searchName">
         </bcs-input>
@@ -26,7 +26,7 @@
       v-bkloading="{ isLoading: loading }"
       @page-change="pageChange"
       @page-limit-change="pageSizeChange">
-      <bcs-table-column :label="$t('名称')" min-width="100">
+      <bcs-table-column :label="$t('generic.label.name')" min-width="100">
         <template #default="{ row }">
           <bcs-button
             text
@@ -47,7 +47,7 @@
             <span
               class="bcs-ellipsis"
               v-bk-tooltips="{
-                content: $t('非本平台部署release, 无法获取chart仓库信息, 暂不支持release更新'),
+                content: $t('deploy.helm.nonPlatformReleaseUpdate'),
                 disabled: row.repo
               }">
               {{row.name}}
@@ -55,7 +55,7 @@
           </bcs-button>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('状态')" prop="status" width="150">
+      <bcs-table-column :label="$t('generic.label.status')" prop="status" width="150">
         <template #default="{ row }">
           <StatusIcon
             :status="row.status"
@@ -97,19 +97,19 @@
           <span>{{`${row.chart}:${row.chartVersion}`}}</span>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('所属集群')" show-overflow-tooltip>
+      <bcs-table-column :label="$t('generic.label.cluster1')" show-overflow-tooltip>
         <template #default>
           <span>{{clusterName}}</span>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('命名空间')" prop="namespace" show-overflow-tooltip></bcs-table-column>
-      <bcs-table-column :label="$t('更新人')" prop="updateBy" width="130">
+      <bcs-table-column :label="$t('k8s.namespace')" prop="namespace" show-overflow-tooltip></bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.updator')" prop="updateBy" width="130">
         <template #default="{ row }">
           {{ row.updateBy || '--' }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('更新时间')" prop="updateTime" width="200"></bcs-table-column>
-      <bcs-table-column :label="$t('操作')" width="200">
+      <bcs-table-column :label="$t('cluster.labels.updatedAt')" prop="updateTime" width="200"></bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.action')" width="200">
         <template #default="{ row }">
           <bcs-button
             text
@@ -125,7 +125,7 @@
                 name: row.namespace
               }
             }"
-            @click="handleViewStatus(row)">{{ $t('状态') }}</bcs-button>
+            @click="handleViewStatus(row)">{{ $t('generic.label.status') }}</bcs-button>
           <bcs-button
             text
             class="ml-[10px]"
@@ -141,7 +141,7 @@
                 name: row.namespace
               }
             }"
-            @click="handleViewHistory(row)">{{ $t('更新记录') }}</bcs-button>
+            @click="handleViewHistory(row)">{{ $t('deploy.helm.history') }}</bcs-button>
           <bk-popover
             placement="bottom"
             theme="light dropdown"
@@ -168,13 +168,28 @@
                     }
                   }"
                   v-bk-tooltips="{
-                    content: $t('非本平台部署release无法操作'),
+                    content: $t('deploy.helm.disableAction'),
                     disabled: row.repo,
                     placement: 'left'
                   }"
                   @click="handleUpdate(row)">
-                  {{$t('更新')}}
+                  {{$t('generic.button.update')}}
                 </li>
+                <li
+                  class="bcs-dropdown-item"
+                  v-authority="{
+                    clickable: webAnnotationsPerms[row.iamNamespaceID]
+                      && webAnnotationsPerms[row.iamNamespaceID].namespace_scoped_view,
+                    actionId: 'namespace_scoped_view',
+                    resourceName: row.namespace,
+                    disablePerms: true,
+                    permCtx: {
+                      project_id: projectID,
+                      cluster_id: clusterID,
+                      name: row.namespace
+                    }
+                  }"
+                  @click="handleShowManifest(row)">Manifest</li>
                 <li
                   :class="['bcs-dropdown-item', { disabled: !row.repo }]"
                   v-authority="{
@@ -190,12 +205,12 @@
                     }
                   }"
                   v-bk-tooltips="{
-                    content: $t('非本平台部署release无法操作'),
+                    content: $t('deploy.helm.disableAction'),
                     disabled: row.repo,
                     placement: 'left'
                   }"
                   @click="handleShowRollback(row)">
-                  {{$t('回滚')}}
+                  {{$t('deploy.helm.rollback')}}
                 </li>
                 <li
                   :class="['bcs-dropdown-item', { disabled: !row.repo && row.namespace === 'kube-system' }]"
@@ -212,12 +227,12 @@
                     }
                   }"
                   v-bk-tooltips="{
-                    content: $t('无法删除kube-system下非本平台部署的release'),
+                    content: $t('deploy.helm.disableNS'),
                     disabled: row.repo || row.namespace !== 'kube-system',
                     placement: 'left'
                   }"
                   @click="handleDelete(row)">
-                  {{$t('删除')}}
+                  {{$t('generic.button.delete')}}
                 </li>
               </ul>
             </template>
@@ -240,7 +255,7 @@
             <bcs-input
               class="w-[300px]"
               right-icon="bk-icon icon-search"
-              :placeholder="$t('输入名称搜索')"
+              :placeholder="$t('generic.placeholder.searchName')"
               clearable
               v-model="resourceName">
             </bcs-input>
@@ -250,12 +265,12 @@
       <template #content>
         <div class="bcs-sideslider-content" v-bkloading="{ isLoading: statusLoading }">
           <bcs-table :data="filterStatusData">
-            <bcs-table-column :label="$t('名称')" prop="metadata.name">
+            <bcs-table-column :label="$t('generic.label.name')" prop="metadata.name">
               <template #default="{ row }">
                 <span
                   v-bk-tooltips="{
                     disabled: !!row.metadata.uid && categoryMap[row.kind],
-                    content: !categoryMap[row.kind] ? $t('资源不支持跳转') : $t('资源不存在')
+                    content: !categoryMap[row.kind] ? $t('deploy.helm.disableLink') : $t('deploy.helm.notFound')
                   }">
                   <bcs-button
                     text
@@ -266,7 +281,7 @@
                 </span>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('类型')" prop="kind">
+            <bcs-table-column :label="$t('generic.label.kind')" prop="kind">
               <template #default="{ row }">
                 <bcs-tag theme="info">{{row.kind}}</bcs-tag>
               </template>
@@ -286,10 +301,10 @@
     <!-- 回滚 -->
     <bcs-dialog
       header-position="left"
-      :title="$t('回滚 ({name})', { name: curRow.name })"
+      :title="$t('deploy.helm.rollbackName', { name: curRow.name })"
       :width="1000"
       v-model="showRollback">
-      <div class="mb-[5px]">{{ $t('回滚到版本') }}</div>
+      <div class="mb-[5px]">{{ $t('deploy.helm.rollbackToVer') }}</div>
       <bcs-select class="mb-[10px]" :clearable="false" :loading="historyLoading" v-model="revision">
         <bcs-option
           v-for="item in historyData"
@@ -297,7 +312,7 @@
           :id="item.revision"
           :name="item.revision">
           <span>{{
-            $t('版本: {version} (部署时间: {time}, chart版本: {chartVersion})',
+            $t('deploy.helm.releaseInfo',
                {
                  version: item.revision,
                  time: item.updateTime,
@@ -308,8 +323,8 @@
         </bcs-option>
       </bcs-select>
       <div class="flex mb-[5px]">
-        <span class="flex-1">{{$t('当前版本')}}</span>
-        <span class="flex-1">{{$t('回滚版本')}}</span>
+        <span class="flex-1">{{$t('generic.title.curVersion')}}</span>
+        <span class="flex-1">{{$t('deploy.helm.rollbackVer')}}</span>
       </div>
       <CodeEditor
         v-bkloading="{ isLoading: diffLoading }"
@@ -324,65 +339,131 @@
           theme="primary"
           :disabled="!revision"
           :loading="confirmRollbackLoading"
-          @click="handleConfirmRollback">{{$t('确定')}}</bcs-button>
+          @click="handleConfirmRollback">{{$t('generic.button.confirm')}}</bcs-button>
         <bcs-button
           :loading="confirmRollbackLoading
-          " @click="showRollback = false">{{$t('取消')}}</bcs-button>
+          " @click="showRollback = false">{{$t('generic.button.cancel')}}</bcs-button>
       </template>
     </bcs-dialog>
     <!-- 更新记录 -->
-    <bcs-dialog
-      header-position="left"
-      :title="$t('更新记录 ({name})', { name: curRow.name })"
-      :show-footer="false"
-      :width="900"
-      v-model="showReleaseHistory">
-      <bcs-table
-        :data="curPageHistoryData"
-        :pagination="historyPageConfig"
-        v-bkloading="{ isLoading: historyLoading }"
-        max-height="600"
-        @row-mouse-enter="handleMouseEnter"
-        @row-mouse-leave="handleMouseLeave"
-        @page-change="historyPageChange"
-        @page-limit-change="historyPageSizeChange">
-        <bcs-table-column label="Revision" prop="revision" width="100"></bcs-table-column>
-        <bcs-table-column :label="$t('更新时间')" prop="updateTime" width="180" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column :label="$t('状态')" prop="status" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column label="Chart" prop="chart" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{`${row.chart}:${row.chartVersion}`}}
-          </template>
-        </bcs-table-column>
-        <bcs-table-column label="App Version" width="120" prop="appVersion"></bcs-table-column>
-        <bcs-table-column label="Values" width="80">
-          <template #default="{ row }">
-            <bcs-button
-              text
-              @click="handleShowValuesDetail(row)"
-              v-if="row.values">{{$t('查看')}}</bcs-button>
-            <span v-else>--</span>
-            <span
-              class="bcs-icon-btn ml5"
-              v-if="activeRevision === row.revision"
-              v-bk-tooltips="$t('复制 Values')"
-              @click="handleCopyValues(row)">
-              <i class="bcs-icon bcs-icon-copy"></i>
-            </span>
-          </template>
-        </bcs-table-column>
-        <bcs-table-column
-          :label="$t('更新说明')"
-          prop="description"
-          min-width="160"
-          show-overflow-tooltip>
-        </bcs-table-column>
-      </bcs-table>
-    </bcs-dialog>
-    <!-- 更新记录values内容 -->
-    <bcs-dialog :width="860" v-model="showValuesDialog">
-      <CodeEditor class="!h-[600px]" v-model="curValues" readonly></CodeEditor>
-    </bcs-dialog>
+    <bcs-sideslider
+      :width="950"
+      quick-close
+      :is-show.sync="showReleaseHistory">
+      <template #header>
+        <div class="flex items-center">
+          <span class="text-[16px] text-[#313238]">{{ $t('deploy.helm.releaseHistory') }}</span>
+          <bcs-divider direction="vertical"></bcs-divider>
+          <span class="text-[#979BA5] text-[12px]">{{ curRow ? curRow.name : '--' }}</span>
+        </div>
+      </template>
+      <template #content>
+        <div class="px-[24px] py-[20px]">
+          <bcs-table
+            :data="curPageHistoryData"
+            :pagination="historyPageConfig"
+            v-bkloading="{ isLoading: historyLoading }"
+            max-height="600"
+            @row-mouse-enter="handleMouseEnter"
+            @row-mouse-leave="handleMouseLeave"
+            @page-change="historyPageChange"
+            @page-limit-change="historyPageSizeChange">
+            <bcs-table-column label="Revision" prop="revision" width="90"></bcs-table-column>
+            <bcs-table-column
+              :label="$t('cluster.labels.updatedAt')"
+              prop="updateTime"
+              width="180"
+              show-overflow-tooltip>
+            </bcs-table-column>
+            <bcs-table-column
+              :label="$t('generic.label.status')"
+              prop="status"
+              show-overflow-tooltip></bcs-table-column>
+            <bcs-table-column label="Chart" prop="chart" show-overflow-tooltip>
+              <template #default="{ row }">
+                {{`${row.chart}:${row.chartVersion}`}}
+              </template>
+            </bcs-table-column>
+            <bcs-table-column label="App Version" width="120" prop="appVersion"></bcs-table-column>
+            <bcs-table-column label="Values" width="90">
+              <template #default="{ row }">
+                <bcs-button
+                  text
+                  @click="handleShowValuesDetail(row)"
+                  v-if="row.values">{{$t('generic.button.view')}}</bcs-button>
+                <span v-else>--</span>
+                <span
+                  class="bcs-icon-btn ml5"
+                  v-if="activeRevision === row.revision"
+                  v-bk-tooltips="$t('deploy.helm.copyValues')"
+                  @click="handleCopyValues(row)">
+                  <i class="bcs-icon bcs-icon-copy"></i>
+                </span>
+              </template>
+            </bcs-table-column>
+            <bcs-table-column label="Manifest" width="90">
+              <template #default="{ row }">
+                <bcs-button
+                  text
+                  @click="handleShowManifest(row)"
+                  v-if="row.values">{{$t('generic.button.view')}}</bcs-button>
+              </template>
+            </bcs-table-column>
+            <bcs-table-column
+              :label="$t('deploy.helm.upgradeDesc')"
+              prop="description"
+              min-width="160"
+              show-overflow-tooltip>
+            </bcs-table-column>
+          </bcs-table>
+        </div>
+      </template>
+    </bcs-sideslider>
+    <!-- values内容 -->
+    <bcs-sideslider
+      :width="950"
+      quick-close
+      :is-show.sync="showValuesDialog">
+      <template #header>
+        <div class="flex items-center">
+          <span class="text-[16px] text-[#313238]">Values</span>
+          <bcs-divider direction="vertical"></bcs-divider>
+          <span class="text-[#979BA5] text-[12px]">{{ `Revision ${curRevision}` }}</span>
+        </div>
+      </template>
+      <template #content>
+        <div class="max-h-[calc(100vh-60px)] overflow-hidden px-[24px] py-[20px]">
+          <CodeEditor
+            class="min-h-[calc(100vh-100px)]"
+            v-model="curValues"
+            v-full-screen="{
+              tools: ['fullscreen', 'copy'],
+              content: curValues
+            }"
+            readonly />
+        </div>
+      </template>
+    </bcs-sideslider>
+    <!-- Manifest文件列表 -->
+    <bcs-sideslider
+      :width="950"
+      quick-close
+      :is-show.sync="showManifest">
+      <template #header>
+        <div class="flex items-center">
+          <span class="text-[16px] text-[#313238]">{{ $t('deploy.helm.title.manifestFile') }}</span>
+          <bcs-divider direction="vertical"></bcs-divider>
+          <span class="text-[#979BA5] text-[12px]">
+            {{ showReleaseHistory ? `Revision ${curRevision}` : curRow.name }}
+          </span>
+        </div>
+      </template>
+      <template #content>
+        <div class="max-h-[calc(100vh-60px)] overflow-hidden px-[24px] py-[20px]">
+          <ChartFileTree class="min-h-[calc(100vh-100px)]" :contents="manifest" />
+        </div>
+      </template>
+    </bcs-sideslider>
   </BcsContent>
 </template>
 <script lang="ts">
@@ -404,9 +485,14 @@ import $router from '@/router';
 import $store from '@/store';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import fullScreen from '@/directives/full-screen';
+import ChartFileTree from './chart-file-tree.vue';
 
 export default defineComponent({
   name: 'ReleaseList',
+  directives: {
+    'full-screen': fullScreen,
+  },
   components: {
     BcsContent,
     Row,
@@ -414,6 +500,7 @@ export default defineComponent({
     NamespaceSelect,
     CodeEditor,
     StatusIcon,
+    ChartFileTree,
   },
   props: {
     namespace: {
@@ -433,6 +520,7 @@ export default defineComponent({
       handleDeleteRelease,
       handleRollbackRelease,
       handlePreviewRelease,
+      handleGetManifest,
     } = useHelm();
 
     const { clusterList } = useCluster();
@@ -458,19 +546,19 @@ export default defineComponent({
       'failed-uninstall': 'red',
     });
     const statusTextMap = ref({
-      unknown: $i18n.t('异常'),
-      deployed: $i18n.t('正常'),
-      uninstalled: $i18n.t('已删除'),
-      superseded: $i18n.t('废弃'),
-      failed: $i18n.t('失败'),
-      uninstalling: $i18n.t('删除中'),
-      'pending-install': $i18n.t('部署中'),
-      'pending-upgrade': $i18n.t('更新中'),
-      'pending-rollback': $i18n.t('回滚中'),
-      'failed-install': $i18n.t('部署失败'),
-      'failed-upgrade': $i18n.t('更新失败'),
-      'failed-rollback': $i18n.t('回滚失败'),
-      'failed-uninstall': $i18n.t('删除失败'),
+      unknown: $i18n.t('generic.status.error'),
+      deployed: $i18n.t('generic.status.ready'),
+      uninstalled: $i18n.t('generic.status.deleted'),
+      superseded: $i18n.t('deploy.helm.invalidate'),
+      failed: $i18n.t('generic.status.failed'),
+      uninstalling: $i18n.t('generic.status.deleting'),
+      'pending-install': $i18n.t('deploy.helm.pending'),
+      'pending-upgrade': $i18n.t('generic.status.updating'),
+      'pending-rollback': $i18n.t('deploy.helm.pendingRollback'),
+      'failed-install': $i18n.t('deploy.helm.failed'),
+      'failed-upgrade': $i18n.t('generic.status.updateFailed'),
+      'failed-rollback': $i18n.t('deploy.helm.rollbackFailed'),
+      'failed-uninstall': $i18n.t('generic.status.deleteFailed'),
     });
     const pagination = ref({
       count: 0,
@@ -609,15 +697,17 @@ export default defineComponent({
     };
     const showValuesDialog = ref(false);
     const curValues = ref('');
+    const curRevision = ref('');
     const handleShowValuesDetail = (row) => {
       showValuesDialog.value = true;
       curValues.value = row.values;
+      curRevision.value = row.revision;
     };
     const handleCopyValues = (row) => {
       copyText(row.values);
       $bkMessage({
         theme: 'success',
-        message: $i18n.t('复制成功'),
+        message: $i18n.t('generic.msg.success.copy'),
       });
     };
 
@@ -634,6 +724,30 @@ export default defineComponent({
           namespace: row.namespace,
         },
       });
+    };
+
+    // manifest
+    const manifest = ref<Record<string, {
+      content: string
+      name: string
+      path: string
+    }>>({});
+    const manifestLoading = ref(false);
+    const showManifest = ref(false);
+    const handleShowManifest = async (row) => {
+      curRow.value = row;
+      curRevision.value = row.revision;
+      showManifest.value = true;
+
+      manifestLoading.value = true;
+      const { name, revision, namespace } = row;
+      manifest.value = await handleGetManifest({
+        $clusterId: clusterID.value,
+        $releaseName: name,
+        $namespaceId: namespace,
+        $revision: revision,
+      });
+      manifestLoading.value = false;
     };
 
     // 回滚
@@ -684,8 +798,8 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认删除'),
-        subTitle: $i18n.t('确认删除 {name}', { name: row.name }),
+        title: $i18n.t('generic.title.confirmDelete'),
+        subTitle: $i18n.t('generic.title.confirmDelete1', { name: row.name }),
         defaultInfo: true,
         confirmFn: async () => {
           const { namespace, name } = row;
@@ -756,6 +870,10 @@ export default defineComponent({
       handleClusterChange,
       handleResetList,
       handleClearSearchData,
+      handleShowManifest,
+      showManifest,
+      manifest,
+      curRevision,
     };
   },
 });

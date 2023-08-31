@@ -35,8 +35,9 @@ func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface,
 	bcsConf := k8sclient.GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	k8sconfig := &k8srest.Config{
-		Host:        host,
-		BearerToken: bcsConf.Token,
+		Host:            host,
+		BearerToken:     bcsConf.Token,
+		TLSClientConfig: k8srest.TLSClientConfig{Insecure: true},
 	}
 	config, err := v1client.NewForConfig(k8sconfig)
 	if err != nil {
@@ -51,9 +52,10 @@ func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface,
 // @Success 200 {string} string
 // @Router  /service_monitors/namespaces/:namespace [get]
 func ListServiceMonitors(c *rest.Context) (interface{}, error) {
+	serviceMonitors := make([]*v1.ServiceMonitor, 0)
 	// 共享集群不展示列表
 	if c.SharedCluster {
-		return nil, nil
+		return serviceMonitors, nil
 	}
 	limit := c.Query("limit")
 	offset := c.Query("offset")
@@ -80,7 +82,6 @@ func ListServiceMonitors(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	serviceMonitors := make([]*v1.ServiceMonitor, 0)
 	for _, v := range data.Items {
 		serviceMonitors = append(serviceMonitors, v)
 	}

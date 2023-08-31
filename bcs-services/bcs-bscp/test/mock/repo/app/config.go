@@ -15,8 +15,8 @@ package app
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 
 	"bscp.io/pkg/cc"
 
@@ -175,7 +175,7 @@ func LoadSettings(sys *cc.SysOption) (*Setting, error) {
 	}
 
 	// configure file is configured, then load configuration from file.
-	file, err := ioutil.ReadFile(sys.ConfigFiles[0])
+	file, err := os.ReadFile(sys.ConfigFiles[0])
 	if err != nil {
 		return nil, fmt.Errorf("load setting from file: %s failed, err: %v", sys.ConfigFiles[0], err)
 	}

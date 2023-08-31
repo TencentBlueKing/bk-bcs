@@ -32,14 +32,14 @@ var vpcMgr sync.Once
 
 func init() {
 	vpcMgr.Do(func() {
-		// init VPC manager
+		//init VPC manager
 		cloudprovider.InitVPCManager("qcloud", &VPCClient{})
 	})
 }
 
 // NewVPCClient init VPC client
 func NewVPCClient(opt *cloudprovider.CommonOption) (*VPCClient, error) {
-	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 	if len(opt.Region) == 0 {
@@ -47,6 +47,9 @@ func NewVPCClient(opt *cloudprovider.CommonOption) (*VPCClient, error) {
 	}
 	credential := common.NewCredential(opt.Account.SecretID, opt.Account.SecretKey)
 	cpf := profile.NewClientProfile()
+	if opt.CommonConf.CloudInternalEnable {
+		cpf.HttpProfile.Endpoint = opt.CommonConf.VpcDomain
+	}
 
 	cli, err := vpc.NewClient(credential, opt.Region, cpf)
 	if err != nil {
@@ -179,8 +182,10 @@ func (c *VPCClient) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*prot
 
 	sgs, err := vpcCli.DescribeSecurityGroups(nil, nil)
 	if err != nil {
+		blog.Errorf("ListSecurityGroups DescribeSecurityGroups failed: %v", err)
 		return nil, err
 	}
+
 	result := make([]*proto.SecurityGroup, 0)
 	for _, v := range sgs {
 		result = append(result, &proto.SecurityGroup{
@@ -189,5 +194,25 @@ func (c *VPCClient) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*prot
 			Description:       v.Desc,
 		})
 	}
+
 	return result, nil
+}
+
+// GetCloudNetworkAccountType 查询用户网络类型
+func (c *VPCClient) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
+	vpcCli, err := NewVPCClient(opt)
+	if err != nil {
+		blog.Errorf("create VPC client failed: %v", err)
+		return nil, err
+	}
+
+	req := vpc.NewDescribeNetworkAccountTypeRequest()
+
+	resp, err := vpcCli.vpc.DescribeNetworkAccountType(req)
+	if err != nil {
+		blog.Errorf("DescribeNetworkAccountType failed: %v", err)
+		return nil, err
+	}
+
+	return &proto.CloudAccountType{Type: *resp.Response.NetworkAccountType}, nil
 }

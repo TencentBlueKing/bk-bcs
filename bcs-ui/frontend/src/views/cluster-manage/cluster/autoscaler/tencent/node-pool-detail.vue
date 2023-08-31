@@ -6,106 +6,165 @@
     </template>
     <div class="node-pool-detail" v-bkloading="{ isLoading: loading }">
       <div class="mb15 panel-header">
-        <span class="title">{{$t('节点池详情')}}</span>
-        <bk-button theme="primary" @click="handleEditPool">{{ $t('编辑') }}</bk-button>
+        <span class="title">{{$t('generic.title.basicInfo')}}</span>
+        <bk-button theme="primary" @click="handleEditPool">{{ $t('generic.button.edit') }}</bk-button>
       </div>
-      <bk-form class="content-wrapper" v-if="nodePoolData">
-        <bk-form-item :label="$t('节点池名称')">
-          {{`${nodePoolData.nodeGroupID} (${nodePoolData.name}) `}}
-        </bk-form-item>
-        <bk-form-item :label="$t('节点池状态')">
-          <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(nodePoolData.status)">
-            {{ statusTextMap[nodePoolData.status] }}
-          </LoadingIcon>
-          <StatusIcon status="unknown" v-else-if="!nodePoolData.enableAutoscale && nodePoolData.status === 'RUNNING'">
-            {{$t('已关闭')}}
-          </StatusIcon>
-          <StatusIcon
-            :status="nodePoolData.status"
-            :status-color-map="statusColorMap"
-            v-else>
-            {{ statusTextMap[nodePoolData.status] }}
-          </StatusIcon>
-        </bk-form-item>
-        <!-- <bk-form-item :label="$t('是否启用自动扩缩容')">
-                    {{nodePoolData.enableAutoscale ? $t('是') : $t('否')}}
-                </bk-form-item> -->
-        <bk-form-item :label="$t('节点数量范围')">
-          {{`${nodePoolData.autoScaling.minSize} ~ ${nodePoolData.autoScaling.maxSize}`}}
-        </bk-form-item>
-        <bk-form-item :label="$t('是否开启调度')">
-          {{nodePoolData.nodeTemplate.unSchedulable ? $t('否') : $t('是')}}
-        </bk-form-item>
-        <bk-form-item label="Labels">
-          <bk-button
-            text
-            size="small"
-            style="padding: 0;"
-            @click="showLabels = true">{{$t('查看')}}</bk-button>
-        </bk-form-item>
-        <bk-form-item label="Taints">
-          <bk-button
-            text
-            size="small"
-            style="padding: 0;"
-            @click="showTaints = true">{{$t('查看')}}</bk-button>
-        </bk-form-item>
-        <bk-form-item :label="$t('扩缩容模式')">
-          {{scalingModeMap[nodePoolData.autoScaling.scalingMode]}}
-        </bk-form-item>
-        <bk-form-item :label="$t('实例创建策略')">
-          {{multiZoneSubnetPolicyMap[nodePoolData.autoScaling.multiZoneSubnetPolicy]}}
-        </bk-form-item>
-        <bk-form-item :label="$t('重试策略')">
-          {{retryPolicyMap[nodePoolData.autoScaling.retryPolicy]}}
-        </bk-form-item>
-        <bk-form-item :label="$t('操作系统')">
-          {{nodePoolData.launchTemplate.imageInfo.imageName}}
-        </bk-form-item>
-        <bk-form-item :label="$t('云区域')">
-          {{cloud.bk_cloud_name || '--'}}
-        </bk-form-item>
-        <bk-form-item :label="$t('运行时组件')">
-          {{`${nodePoolData.nodeTemplate.runtime
-            ? `${nodePoolData.nodeTemplate.runtime.containerRuntime} ${nodePoolData.nodeTemplate.runtime.runtimeVersion}`
-            : '--'}`
-          }}
-        </bk-form-item>
-        <bk-form-item :label="$t('容器目录')">
-          {{nodePoolData.nodeTemplate.dockerGraphPath || '--'}}
-        </bk-form-item>
-        <bk-form-item :label="$t('机型')">
-          {{nodePoolData.launchTemplate.instanceType}}
-        </bk-form-item>
-        <bk-form-item label="CPU">
-          {{`${nodePoolData.launchTemplate.CPU}${$t('核')}`}}
-        </bk-form-item>
-        <bk-form-item label="内存">
-          {{nodePoolData.launchTemplate.Mem}}G
-        </bk-form-item>
-        <bk-form-item :label="$t('支持子网')">
-          {{nodePoolData.autoScaling.subnetIDs.join(', ') || '--'}}
-        </bk-form-item>
-        <bk-form-item :label="$t('安全组')">
-          {{nodePoolData.launchTemplate.securityGroupIDs.join(', ') || '--'}}
-        </bk-form-item>
-        <bk-form-item :label="$t('自定义数据')">
-          <bk-button
-            text
-            size="small"
-            style="padding: 0;"
-            v-if="nodePoolData.nodeTemplate.userScript"
-            @click="showUserScript = true">{{$t('查看')}}</bk-button>
-          <span v-else>--</span>
-        </bk-form-item>
-      </bk-form>
+      <template v-if="nodePoolData">
+        <bk-form class="content-wrapper">
+          <bk-form-item :label="$t('cluster.ca.nodePool.label.name')">
+            {{`${nodePoolData.nodeGroupID} (${nodePoolData.name}) `}}
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.label.status')">
+            <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(nodePoolData.status)">
+              {{ statusTextMap[nodePoolData.status] }}
+            </LoadingIcon>
+            <StatusIcon status="unknown" v-else-if="!nodePoolData.enableAutoscale && nodePoolData.status === 'RUNNING'">
+              {{$t('cluster.ca.status.off')}}
+            </StatusIcon>
+            <StatusIcon
+              :status="nodePoolData.status"
+              :status-color-map="statusColorMap"
+              v-else>
+              {{ statusTextMap[nodePoolData.status] }}
+            </StatusIcon>
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.label.nodeQuota')">
+            {{ nodePoolData.autoScaling.maxSize }}
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.enableAutoscale.title')"
+            :desc="$t('cluster.ca.nodePool.create.enableAutoscale.tips')">
+            {{nodePoolData.enableAutoscale ? $t('units.boolean.true') : $t('units.boolean.false')}}
+          </bk-form-item>
+          <bk-form-item :label="$t('k8s.label')">
+            <bk-button
+              text
+              size="small"
+              style="padding: 0;"
+              v-if="labels.length"
+              @click="showLabels = true">{{$t('generic.button.view')}}</bk-button>
+            <span v-else>--</span>
+          </bk-form-item>
+          <bk-form-item :label="$t('k8s.taint')">
+            <bk-button
+              text
+              size="small"
+              style="padding: 0;"
+              v-if="taints.length"
+              @click="showTaints = true">{{$t('generic.button.view')}}</bk-button>
+            <span v-else>--</span>
+          </bk-form-item>
+          <bk-form-item :label="$t('k8s.annotation')">
+            <bk-button
+              text
+              size="small"
+              style="padding: 0;"
+              v-if="annotations.length"
+              @click="showAnnotations = true">{{$t('generic.button.view')}}</bk-button>
+            <span v-else>--</span>
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.scalingMode.title')"
+            :desc="$t('cluster.ca.nodePool.create.scalingMode.desc')">
+            {{scalingModeMap[nodePoolData.autoScaling.scalingMode]}}
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.title')"
+            :desc="$t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.desc')">
+            {{multiZoneSubnetPolicyMap[nodePoolData.autoScaling.multiZoneSubnetPolicy]}}
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.retryPolicy.title')"
+            :desc="$t('cluster.ca.nodePool.create.retryPolicy.desc')">
+            {{retryPolicyMap[nodePoolData.autoScaling.retryPolicy]}}
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.cloudArea.title')"
+            :desc="$t('cluster.ca.nodePool.create.cloudArea.desc')">
+            <LoadingIcon v-if="cloudAreaLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
+            <span v-else>{{ cloudAreaName || '--' }}</span>
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.imageProvider.title')">
+            {{ imageProvider || '--'}}
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.label.system')">
+            {{clusterOS || '--'}}
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')">
+            {{`${clusterData.clusterAdvanceSettings
+              ? `${clusterData.clusterAdvanceSettings.containerRuntime} ${clusterData.clusterAdvanceSettings.runtimeVersion}`
+              : '--'}`
+            }}
+          </bk-form-item>
+          <bk-form-item :label="$t('dashboard.workload.container.dataDir')">
+            {{nodePoolData.nodeTemplate.dockerGraphPath || '--'}}
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.az.title')" :desc="$t('cluster.ca.nodePool.create.az.desc')">
+            <LoadingIcon v-if="zoneLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
+            <span v-else>{{ zoneNames.join(',') || $t('cluster.ca.nodePool.create.az.random') }}</span>
+          </bk-form-item>
+          <bk-form-item :label="$t('generic.ipSelector.label.serverModel')">
+            {{nodePoolData.launchTemplate.instanceType}}
+          </bk-form-item>
+          <bk-form-item label="CPU">
+            {{`${nodePoolData.launchTemplate.CPU}${$t('units.suffix.cores')}`}}
+          </bk-form-item>
+          <bk-form-item label="内存">
+            {{nodePoolData.launchTemplate.Mem}}G
+          </bk-form-item>
+          <bk-form-item label="系统盘">
+            {{systemDisk || '--'}}
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')">
+            <bk-button
+              text
+              size="small"
+              style="padding: 0;"
+              @click="showDataDisks = true">{{$t('generic.button.view')}}</bk-button>
+          </bk-form-item>
+          <bk-form-item
+            :label="$t('cluster.ca.nodePool.create.subnet.title')"
+            :desc="$t('cluster.ca.nodePool.create.subnet.desc')">
+            {{nodePoolData.autoScaling.subnetIDs.join(', ') || $t('cluster.ca.nodePool.create.subnet.placeholder')}}
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.securityGroup')">
+            <LoadingIcon v-if="securityGroupLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
+            <span v-else>{{ securityGroupNames.join(',') || '--'}}</span>
+          </bk-form-item>
+        </bk-form>
+        <div class="mt20 mb10 panel-header">
+          <span class="title">{{$t('cluster.nodeTemplate.kubelet.title.argsConfig')}}</span>
+        </div>
+        <kubeletParams readonly v-model="nodePoolData.nodeTemplate.extraArgs.kubelet" />
+        <bcs-tab class="mt20">
+          <bcs-tab-panel :label="$t('cluster.ca.nodePool.create.scaleInitConfig.preStartUserScript')" name="scaleOutPreAction">
+            <UserAction
+              :script="nodePoolData.nodeTemplate.preStartUserScript"
+              key="scaleOutPreAction" />
+          </bcs-tab-panel>
+          <bcs-tab-panel :label="$t('cluster.ca.nodePool.create.scaleInitConfig.userScript')" name="scaleOutPostAction">
+            <UserAction
+              :script="nodePoolData.nodeTemplate.userScript"
+              :addons="nodePoolData.nodeTemplate.scaleOutExtraAddons"
+              actions-key="postActions"
+              key="scaleOutPostAction" />
+          </bcs-tab-panel>
+          <bcs-tab-panel :label="$t('cluster.ca.nodePool.create.scaleInitConfig.scaleInPreScript')" name="scaleInPreAction">
+            <UserAction
+              :script="nodePoolData.nodeTemplate.scaleInPreScript"
+              :addons="nodePoolData.nodeTemplate.scaleInExtraAddons"
+              actions-key="preActions"
+              key="scaleInPreAction" />
+          </bcs-tab-panel>
+        </bcs-tab>
+      </template>
     </div>
     <!-- 标签 -->
     <bcs-dialog
       theme="primary"
       v-model="showLabels"
       :show-footer="false"
-      title="Labels"
+      :title="$t('k8s.label')"
       header-position="left"
       width="600">
       <bcs-table
@@ -114,8 +173,8 @@
         :header-border="false"
         :header-cell-style="{ background: '#fff' }"
       >
-        <bcs-table-column :label="$t('键')" prop="key"></bcs-table-column>
-        <bcs-table-column :label="$t('值')" prop="value"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.key')" prop="key"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.value')" prop="value"></bcs-table-column>
       </bcs-table>
     </bcs-dialog>
     <!-- 污点 -->
@@ -123,7 +182,7 @@
       theme="primary"
       v-model="showTaints"
       :show-footer="false"
-      title="Taints"
+      :title="$t('k8s.taint')"
       header-position="left"
       width="600">
       <bcs-table
@@ -132,22 +191,56 @@
         :header-border="false"
         :header-cell-style="{ background: '#fff' }"
       >
-        <bcs-table-column :label="$t('键')" prop="key"></bcs-table-column>
-        <bcs-table-column :label="$t('值')" prop="value"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.key')" prop="key"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.value')" prop="value"></bcs-table-column>
         <bcs-table-column label="Effect" prop="effect"></bcs-table-column>
       </bcs-table>
     </bcs-dialog>
-    <!-- 自定义数据 -->
+    <!-- 注解 -->
     <bcs-dialog
       theme="primary"
-      v-model="showUserScript"
+      v-model="showAnnotations"
       :show-footer="false"
-      :title="$t('自定义数据')"
+      :title="$t('k8s.annotation')"
       header-position="left"
       width="600">
-      <div class="user-script-content">
-        {{nodePoolData && nodePoolData.nodeTemplate.userScript}}
-      </div>
+      <bcs-table
+        :data="annotations"
+        :outer-border="false"
+        :header-border="false"
+        :header-cell-style="{ background: '#fff' }"
+      >
+        <bcs-table-column :label="$t('generic.label.key')" prop="key"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.value')" prop="value"></bcs-table-column>
+      </bcs-table>
+    </bcs-dialog>
+    <!-- 数据盘 -->
+    <bcs-dialog
+      theme="primary"
+      v-model="showDataDisks"
+      :show-footer="false"
+      :title="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')"
+      header-position="left"
+      width="600">
+      <bcs-table
+        :data="dataDisks"
+        :outer-border="false"
+        :header-border="false"
+        :header-cell-style="{ background: '#fff' }"
+      >
+        <bcs-table-column :label="$t('generic.label.kind')" prop="diskType">
+          <template #default="{ row }">
+            {{ diskTypeMap[row.diskType] }}
+          </template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.size')" prop="diskSize">
+          <template #default="{ row }">
+            {{ `${row.diskSize} GiB` }}
+          </template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.fileSystem')" prop="fileSystem"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.mountTarget')" prop="mountTarget"></bcs-table-column>
+      </bcs-table>
     </bcs-dialog>
   </BcsContent>
 </template>
@@ -155,13 +248,17 @@
 import { defineComponent, computed, ref, onMounted } from 'vue';
 import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
-import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
+import { useClusterList, useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 import $router from '@/router';
 import StatusIcon from '@/components/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
 import useInterval from '@/composables/use-interval';
+import kubeletParams from '../kubelet-params.vue';
+import UserAction from '../user-action.vue';
+import useChainingRef from '@/composables/use-chaining';
+import { cloudsZones } from '@/api/modules/cluster-manager';
 import { nodemanCloudList } from '@/api/base';
 
 export default defineComponent({
@@ -170,6 +267,8 @@ export default defineComponent({
     HeaderNav,
     StatusIcon,
     LoadingIcon,
+    kubeletParams,
+    UserAction,
   },
   props: {
     clusterId: {
@@ -184,19 +283,28 @@ export default defineComponent({
   },
   setup(props) {
     const { clusterList } = useClusterList();
+    const showDataDisks = ref(false);
     const showLabels = ref(false);
     const showTaints = ref(false);
-    const showUserScript = ref(false);
-    const nodePoolData = ref<any>(null);
+    const nodePoolData = useChainingRef<any>({}, [
+      'autoScaling',
+      'nodeTemplate.extraArgs',
+      'launchTemplate.systemDisk',
+      {
+        path: 'subnetIDs',
+        type: 'array',
+      },
+    ]);
+    const showAnnotations = ref(false);
     const loading = ref(false);
-    const statusTextMap = { // 节点池状态
-      RUNNING: $i18n.t('正常'),
-      CREATING: $i18n.t('创建中'),
-      DELETING: $i18n.t('删除中'),
-      UPDATING: $i18n.t('更新中'),
-      DELETED: $i18n.t('已删除'),
-      'CREATE-FAILURE': $i18n.t('创建失败'),
-      'UPDATE-FAILURE': $i18n.t('更新失败'),
+    const statusTextMap = { // 节点规格状态
+      RUNNING: $i18n.t('generic.status.ready'),
+      CREATING: $i18n.t('generic.status.creating'),
+      DELETING: $i18n.t('generic.status.deleting'),
+      UPDATING: $i18n.t('generic.status.updating'),
+      DELETED: $i18n.t('generic.status.deleted'),
+      'CREATE-FAILURE': $i18n.t('generic.status.createFailed'),
+      'UPDATE-FAILURE': $i18n.t('generic.status.updateFailed'),
     };
     const statusColorMap = {
       RUNNING: 'green',
@@ -205,17 +313,22 @@ export default defineComponent({
       'UPDATE-FAILURE': 'red',
     };
     const scalingModeMap = {
-      CLASSIC_SCALING: $i18n.t('释放模式'),
-      WAKE_UP_STOPPED_SCALING: $i18n.t('关机模式'),
+      CLASSIC_SCALING: $i18n.t('cluster.ca.nodePool.create.scalingMode.classic_scaling'),
+      WAKE_UP_STOPPED_SCALING: $i18n.t('cluster.ca.nodePool.create.scalingMode.wake_up_stopped_scaling'),
     };
     const multiZoneSubnetPolicyMap = {
-      EQUALITY: $i18n.t('多可用区（子网）打散'),
-      PRIORITY: $i18n.t('首先可用区（子网）优先'),
+      EQUALITY: $i18n.t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.equality'),
+      PRIORITY: $i18n.t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.priority'),
     };
     const retryPolicyMap = {
-      IMMEDIATE_RETRY: $i18n.t('快速重试'),
-      INCREMENTAL_INTERVALS: $i18n.t('间隔递增重试'),
-      NO_RETRY: $i18n.t('不重试'),
+      IMMEDIATE_RETRY: $i18n.t('cluster.ca.nodePool.create.retryPolicy.immediate_retry'),
+      INCREMENTAL_INTERVALS: $i18n.t('cluster.ca.nodePool.create.retryPolicy.incremental_intervals'),
+      NO_RETRY: $i18n.t('cluster.ca.nodePool.create.retryPolicy.no_retry'),
+    };
+    const diskTypeMap = {
+      CLOUD_PREMIUM: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.premium'),
+      CLOUD_SSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
+      CLOUD_HSSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
     };
     const navList = computed(() => [
       {
@@ -234,7 +347,7 @@ export default defineComponent({
         },
       },
       {
-        title: $i18n.t('查看节点池详情'),
+        title: $i18n.t('cluster.ca.nodePool.label.detail'),
         link: null,
       },
     ]);
@@ -248,20 +361,15 @@ export default defineComponent({
         stop();
       }
     };
-    const cloudList = ref<any[]>([]);
-    const cloud = computed(() => cloudList.value.find(item => item.bk_cloud_id === nodePoolData.value.bkCloudID) || {});
     const handleGetNodeGroupDetail = async () => {
-      loading.value = true;
       await getNodeGroupDetail();
-      cloudList.value = await nodemanCloudList().catch(() => []);
       if (['CREATING', 'DELETING', 'UPDATING'].includes(nodePoolData.value.status)) {
         start();
       }
-      loading.value = false;
     };
     const { start, stop } = useInterval(getNodeGroupDetail);
 
-    // 编辑节点池详情
+    // 编辑节点规格详情
     const handleEditPool = () => {
       $router.push({
         name: 'editNodePool',
@@ -276,19 +384,98 @@ export default defineComponent({
       key,
       value: nodePoolData.value.nodeTemplate.labels[key],
     })));
+    const annotations = computed(() => Object.keys(nodePoolData.value?.nodeTemplate?.annotations || {}).map(key => ({
+      key,
+      value: nodePoolData.value.nodeTemplate.annotations[key],
+    })));
     const taints = computed(() => nodePoolData.value?.nodeTemplate?.taints || []);
+    const dataDisks = computed(() => nodePoolData.value?.nodeTemplate?.dataDisks || []);
 
-    onMounted(() => {
-      handleGetNodeGroupDetail();
+    // 集群详情
+    const { clusterOS, clusterData, getClusterDetail } = useClusterInfo();
+    const imageProvider = computed(() => {
+      const imageProviderMap = {
+        PUBLIC_IMAGE: $i18n.t('deploy.image.publicImage'),
+        PRIVATE_IMAGE: $i18n.t('cluster.ca.nodePool.create.imageProvider.private_image'),
+      };
+      return imageProviderMap[clusterData.value.extraInfo?.IMAGE_PROVIDER];
+    });
+
+    // 安全组信息
+    const securityGroupsList = ref<any[]>([]);
+    const securityGroupNames = computed(() => securityGroupsList.value
+      .filter(item => nodePoolData.value.launchTemplate.securityGroupIDs.includes(item.securityGroupID))
+      .map(item => item.securityGroupName));
+
+    const securityGroupLoading = ref(false);
+    const handleGetCloudSecurityGroups = async () => {
+      securityGroupLoading.value = true;
+      securityGroupsList.value = await $store.dispatch('clustermanager/cloudSecurityGroups', {
+        $cloudID: clusterData.value.provider,
+        region: clusterData.value.region,
+        accountID: clusterData.value.cloudAccountID,
+      });
+      securityGroupLoading.value = false;
+    };
+
+    // 系统盘信息
+    const systemDisk = computed(() => {
+      if (!diskTypeMap[nodePoolData.value.launchTemplate?.systemDisk?.diskType]) return '';
+      return `${diskTypeMap[nodePoolData.value.launchTemplate?.systemDisk?.diskType]} ${nodePoolData.value.launchTemplate?.systemDisk?.diskSize}G`;
+    });
+
+    // 可用区
+    const zoneList = ref<any[]>([]);
+    const zoneLoading = ref(false);
+    const zoneNames = computed(() => nodePoolData.value?.autoScaling?.zones
+      ?.map(zone => zoneList.value.find(item => item.zone === zone)?.zoneName) || []);
+    const handleGetZoneList = async () => {
+      zoneLoading.value = true;
+      zoneList.value = await cloudsZones({
+        $cloudId: clusterData.value.provider,
+        region: clusterData.value.region,
+        accountID: clusterData.value.cloudAccountID,
+      });
+      zoneLoading.value = false;
+    };
+
+    // 云区域列表
+    const cloudList = ref<any[]>([]);
+    const cloudAreaLoading = ref(false);
+    const handleGetCloudList = async () => {
+      cloudAreaLoading.value = true;
+      cloudList.value = await nodemanCloudList().catch(() => []);
+      cloudAreaLoading.value = false;
+    };
+    const cloudAreaName = computed(() => cloudList.value
+      .find(item => item.bk_cloud_id === nodePoolData.value.area?.bkCloudID)?.bk_cloud_name);
+
+    onMounted(async () => {
+      loading.value = true;
+      await handleGetNodeGroupDetail();
+      await getClusterDetail(props.clusterId, true);
+      loading.value = false;
+      handleGetCloudSecurityGroups();
+      handleGetZoneList();
+      handleGetCloudList();
     });
     return {
-      cloud,
+      systemDisk,
+      securityGroupLoading,
+      dataDisks,
+      showDataDisks,
+      diskTypeMap,
+      securityGroupNames,
+      imageProvider,
+      clusterData,
+      clusterOS,
       loading,
       showLabels,
       showTaints,
-      showUserScript,
+      showAnnotations,
       labels,
       taints,
+      annotations,
       navList,
       statusTextMap,
       statusColorMap,
@@ -297,6 +484,10 @@ export default defineComponent({
       scalingModeMap,
       multiZoneSubnetPolicyMap,
       retryPolicyMap,
+      zoneNames,
+      zoneLoading,
+      cloudAreaLoading,
+      cloudAreaName,
     };
   },
 });
@@ -336,11 +527,5 @@ export default defineComponent({
             align-items: center;
         }
     }
-}
-.user-script-content {
-    min-height: 200px;
-    background: #F5F7FA;
-    border-radius: 2px;
-    padding: 8px 16px;
 }
 </style>

@@ -177,17 +177,13 @@ func (bp BasePage) Validate(opt ...*PageOption) (err error) {
 		}
 	}
 
-	if enableUnlimited {
-		// allow the unlimited query, then valid this.
-		if bp.Start < 0 || bp.Limit < 0 {
-			return errors.New("page.start >= 0, page.limit value should >= 0")
-		}
-	} else if !bp.All {
-		// only validate when not query all the resources
+	// only validate when not query all the resources
+	if !enableUnlimited && !bp.All {
+		// not allow the unlimited query, then valid this.
 		// if the user is not allowed to query with unlimited limit, then
 		// 1. limit should >=1
 		// 2. validate whether the limit is larger than the max limit value
-		if bp.Limit <= 0 {
+		if bp.Limit == 0 {
 			return errors.New("page.limit value should >= 1")
 		}
 

@@ -292,3 +292,27 @@ func (s *Service) ListGroupReleasedApps(ctx context.Context, req *pbcs.ListGroup
 	resp.Count = lResp.Count
 	return resp, nil
 }
+
+// GetGroupByName get group by name
+func (s *Service) GetGroupByName(ctx context.Context, req *pbcs.GetGroupByNameReq) (*pbgroup.Group, error) {
+	kt := kit.FromGrpcContext(ctx)
+	resp := new(pbgroup.Group)
+
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetGroupByNameReq{
+		BizId:     req.BizId,
+		GroupName: req.GroupName,
+	}
+	rp, err := s.client.DS.GetGroupByName(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("get group by name %s failed, err: %v, rid: %s", req.GroupName, err, kt.Rid)
+		return nil, err
+	}
+
+	return rp, nil
+}

@@ -83,11 +83,12 @@ func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node
 }
 
 // UpdateNodeGroup update specified nodegroup configuration
-func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
-	computeCli, err := api.NewComputeServiceClient(opt)
+func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup,
+	opt *cloudprovider.UpdateNodeGroupOption) (*proto.Task, error) {
+	computeCli, err := api.NewComputeServiceClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create google compute client failed, err: %s", err.Error())
-		return err
+		return nil, err
 	}
 	// 1. 因为更新节点池OS镜像会导致vm实例被立即替换,暂时禁止替换OS镜像
 	// 2. 当前版本的google api不支持labels和taints更新,而较高版本的google api会导致与现在的grpc版本冲突,
@@ -96,9 +97,9 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 	// update instanceGroupManager
 	if o, err := api.PatchInstanceGroupManager(computeCli, group.AutoScaling.AutoScalingID,
 		ng.generatePatchInstanceGroupManager(group)); err != nil {
-		return fmt.Errorf("update node pool failed, operation: %s, err: %s", o.SelfLink, err.Error())
+		return nil, fmt.Errorf("update node pool failed, operation: %s, err: %s", o.SelfLink, err.Error())
 	}
-	return nil
+	return nil, nil
 }
 
 func (ng *NodeGroup) generatePatchInstanceGroupManager(group *proto.NodeGroup) *compute.InstanceGroupManager {
@@ -109,8 +110,14 @@ func (ng *NodeGroup) generatePatchInstanceGroupManager(group *proto.NodeGroup) *
 }
 
 // GetNodesInGroup get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode,
+func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node,
 	error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetNodesInGroupV2 get all nodes belong to NodeGroup
+func (ng *NodeGroup) GetNodesInGroupV2(group *proto.NodeGroup,
+	opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -269,4 +276,21 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 		return nil, err
 	}
 	return task, nil
+}
+
+// AddExternalNodeToCluster add external to cluster
+func (ng *NodeGroup) AddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.AddExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteExternalNodeFromCluster remove external node from cluster
+func (ng *NodeGroup) DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.DeleteExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetExternalNodeScript get nodegroup external node script
+func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, error) {
+	return "", cloudprovider.ErrCloudNotImplemented
 }

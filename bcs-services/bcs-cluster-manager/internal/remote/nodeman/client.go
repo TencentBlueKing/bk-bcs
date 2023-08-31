@@ -54,10 +54,6 @@ func NewNodeManClient(options Options) (*Client, error) {
 		serverDebug: options.Debug,
 	}
 
-	if !options.Enable {
-		return nil, nil
-	}
-
 	auth, err := c.generateGateWayAuth()
 	if err != nil {
 		return nil, err
@@ -117,7 +113,7 @@ func (c *Client) generateGateWayAuth() (string, error) {
 // CloudList get cloud list
 func (c *Client) CloudList() ([]CloudListData, error) {
 	var (
-		reqURL   = fmt.Sprintf("%s/api/c/compapi/v2/nodeman/api/cloud?RUN_VER=open&with_default_area=true", c.server)
+		reqURL   = fmt.Sprintf("%s/api/cloud?RUN_VER=open&with_default_area=true", c.server)
 		respData = &CloudListResponse{}
 	)
 
@@ -146,7 +142,7 @@ func (c *Client) CloudList() ([]CloudListData, error) {
 // JobInstall job install
 func (c *Client) JobInstall(jobType JobType, hosts []JobInstallHost) (*JobInstallData, error) {
 	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/nodeman/api/job/install/", c.server)
+		reqURL  = fmt.Sprintf("%s/api/job/install/", c.server)
 		request = &JobInstallRequest{
 			JobType:       jobType,
 			Hosts:         hosts,
@@ -182,7 +178,7 @@ func (c *Client) JobInstall(jobType JobType, hosts []JobInstallHost) (*JobInstal
 // JobDetails get job detail
 func (c *Client) JobDetails(jobID int) (*JobDetailsData, error) {
 	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/nodeman/api/job/details/", c.server)
+		reqURL  = fmt.Sprintf("%s/api/job/details/", c.server)
 		request = &JobDetailsRequest{
 			JobID:    jobID,
 			Page:     defaultPage,
@@ -217,7 +213,7 @@ func (c *Client) JobDetails(jobID int) (*JobDetailsData, error) {
 // ListHosts list hosts with bk_biz_id
 func (c *Client) ListHosts(bkBizID, page, pageSize int) (*ListHostsData, error) {
 	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/nodeman/api/host/search/", c.server)
+		reqURL  = fmt.Sprintf("%s/api/host/search/", c.server)
 		request = &ListHostsRequest{
 			BKBizIDs: []int{bkBizID},
 			Page:     page,

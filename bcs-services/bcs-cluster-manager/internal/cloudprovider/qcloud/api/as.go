@@ -26,7 +26,7 @@ import (
 
 // NewASClient init as client
 func NewASClient(opt *cloudprovider.CommonOption) (*ASClient, error) {
-	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 	if len(opt.Region) == 0 {

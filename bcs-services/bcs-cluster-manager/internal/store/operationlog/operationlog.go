@@ -11,7 +11,6 @@
  *
  */
 
-// Package operationlog xxx
 package operationlog
 
 import (
@@ -22,8 +21,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/task"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -70,7 +71,6 @@ func New(db drivers.DB) *ModelOperationLog {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelOperationLog) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -140,7 +140,7 @@ func (m *ModelOperationLog) DeleteOperationLogByResourceType(ctx context.Context
 	return nil
 }
 
-// ListOperationLog list operationLog
+// ListOperationLog list logs
 func (m *ModelOperationLog) ListOperationLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
 	[]types.OperationLog, error) {
 
@@ -173,4 +173,71 @@ func (m *ModelOperationLog) ListOperationLog(ctx context.Context, cond *operator
 func (m *ModelOperationLog) CountOperationLog(ctx context.Context, cond *operator.Condition) (
 	int64, error) {
 	return m.db.Table(m.tableName).Find(cond).Count(ctx)
+}
+
+// ListAggreOperationLog aggre logs
+func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, condSrc, condDst []bson.E, opt *options.ListOption) (
+	[]types.TaskOperationLog, error) {
+
+	retTaskOpLogs := make([]types.TaskOperationLog, 0)
+
+	const (
+		asField = "task"
+	)
+
+	pipeline := make([]map[string]interface{}, 0)
+
+	// from src table filter
+	if len(condSrc) > 0 {
+		pipeline = append(pipeline, util.BuildMatchCond(util.TransBsonEToMap(condSrc)))
+	}
+
+	pipeline = append(pipeline, util.BuildLookUpCond(util.UnionTable{
+		DstTable:   util.DataTableNamePrefix + task.TableName,
+		FromFields: taskID,
+		DstFields:  taskID,
+		AsField:    asField,
+	}))
+	pipeline = append(pipeline, util.BuildUnWindCond(asField))
+	pipeline = append(pipeline, util.BuildProjectOutput(util.BuildTaskOperationLogProject()))
+
+	// from dst table filter
+	if len(condDst) > 0 {
+		pipeline = append(pipeline, util.BuildMatchCond(util.TransBsonEToMap(condDst)))
+	}
+
+	if len(opt.Sort) != 0 {
+		pipeline = append(pipeline, map[string]interface{}{
+			"$sort": util.MapInt2MapIf(opt.Sort),
+		})
+	}
+
+	// count logs for conds
+	if opt.Count {
+		if err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &retTaskOpLogs); err != nil {
+			return nil, err
+		}
+
+		return retTaskOpLogs, nil
+	}
+
+	if opt.Offset >= 0 {
+		pipeline = append(pipeline, map[string]interface{}{
+			"$skip": opt.Offset,
+		})
+	}
+
+	if opt.Limit == 0 {
+		pipeline = append(pipeline, map[string]interface{}{
+			"$limit": 50,
+		})
+	} else {
+		pipeline = append(pipeline, map[string]interface{}{
+			"$limit": opt.Limit,
+		})
+	}
+	if err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &retTaskOpLogs); err != nil {
+		return nil, err
+	}
+	return retTaskOpLogs, nil
 }

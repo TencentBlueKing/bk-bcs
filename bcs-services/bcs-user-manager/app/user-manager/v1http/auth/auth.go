@@ -18,18 +18,20 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
-	jwt2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
+	jwt2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
-	"github.com/emicklei/go-restful"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 // TokenAuthenticater wrapper for http request
@@ -243,4 +245,51 @@ func GetUser(req *restful.Request) *models.BcsUser {
 	}
 
 	return nil
+}
+
+var (
+	// iam system token
+	iamToken    = ""
+	iamInstance = sync.Once{}
+)
+
+func getIAMToken() (string, error) {
+	var err error
+	iamInstance.Do(func() {
+		iamToken, err = config.GloablIAMClient.GetToken()
+	})
+	return iamToken, err
+}
+
+// BKIAMAuthFunc bkiam auth filter
+func BKIAMAuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	rb.Filter(BKIAMAuthenticate)
+	return rb
+}
+
+// BKIAMAuthenticate bkiam authenication
+func BKIAMAuthenticate(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
+	_, password, ok := request.Request.BasicAuth()
+	if !ok {
+		message := fmt.Sprintf("errcode: %d, no basic auth info", common.BcsErrApiUnauthorized)
+		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
+		return
+	}
+
+	// validate system token
+	token, err := getIAMToken()
+	if err != nil {
+		message := fmt.Sprintf("errcode: %d, get token from bkiam failed: %s", common.BcsErrApiUnauthorized,
+			err.Error())
+		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
+		return
+	}
+	if token != password {
+		message := fmt.Sprintf("errcode: %d, invalid token", common.BcsErrApiUnauthorized)
+		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
+		return
+	}
+
+	chain.ProcessFilter(request, response)
+	return
 }

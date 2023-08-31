@@ -15,8 +15,6 @@ package tasks
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -27,53 +25,35 @@ import (
 func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
 
-	// get task form database
-	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
-		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s get detail task information from storage failed: %s, task retry",
-			taskID, taskID, err.Error())
-		return err
-	}
-
-	// task state check
-	state := &cloudprovider.TaskState{
-		Task:      task,
-		JobResult: cloudprovider.NewJobSyncResult(task),
-	}
-	// check task already terminated
-	if state.IsTerminated() {
-		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s is terminated, step %s skip", taskID, taskID, stepName)
-		return fmt.Errorf("task %s terminated", taskID)
-	}
-	// workflow switch current step to stepName when previous task exec successful
-	step, err := state.IsReadyToStep(stepName)
-	if err != nil {
-		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName,
-			err.Error())
 		return err
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("UpdateRemoveNodeDBInfoTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("UpdateCreateClusterDBInfoTask[%s]: current step[%s] successful and skip",
+			taskID, stepName)
 		return nil
 	}
-
-	blog.Infof("UpdateRemoveNodeDBInfoTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
+	blog.Infof("UpdateRemoveNodeDBInfoTask[%] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// extract valid info
-	success := strings.Split(step.Params["NodeIPs"], ",")
+	success := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
+
 	if len(success) > 0 {
 		for i := range success {
 			err = cloudprovider.GetStorageModel().DeleteNodeByIP(context.Background(), success[i])
 			if err != nil {
-				blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s DeleteNodeByIP failed: %v", taskID, taskID, err)
+				blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] task %s DeleteNodeByIP failed: %v",
+					taskID, taskID, err)
 			}
 		}
 	}
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("UpdateNodeDBInfoTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}

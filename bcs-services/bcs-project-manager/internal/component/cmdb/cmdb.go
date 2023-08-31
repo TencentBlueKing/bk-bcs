@@ -19,7 +19,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -31,10 +33,13 @@ import (
 )
 
 var (
-	defaultTimeout         = 10
-	defaultSupplierAccount = "tencent"
-	searchBizPath          = "/api/c/compapi/v2/cc/search_business/"
-	getBizTopoPath         = "/api/c/compapi/v2/cc/search_biz_inst_topo/"
+	searchBusinessBatchSize = 200
+	defaultTimeout          = 10
+	defaultSupplierAccount  = "tencent"
+	searchBizPath           = "/api/c/compapi/v2/cc/search_business/"
+	getBizTopoPath          = "/api/c/compapi/v2/cc/search_biz_inst_topo/"
+	// CacheKeyBusinessPrefix cache key business prefix
+	CacheKeyBusinessPrefix = "BUSINESS_%s"
 )
 
 // SearchBusinessResp cmdb search business resp
@@ -109,6 +114,28 @@ func IsMaintainer(username string, bizID string) (bool, error) {
 	return false, errorx.NewNoMaintainerRoleErr()
 }
 
+// GetBusinessByID 通过业务ID获取业务信息
+func GetBusinessByID(bizID string, useCache bool) (BusinessData, error) {
+	// 先尝试从缓存中获取
+	c := cache.GetCache()
+	if useCache {
+		if biz, exists := c.Get(fmt.Sprintf(CacheKeyBusinessPrefix, bizID)); exists {
+			logging.Info("get business %s hit cache", bizID)
+			data := biz.(BusinessData)
+			return data, nil
+		}
+	}
+	data, err := SearchBusiness("", bizID)
+	if err != nil {
+		return BusinessData{}, err
+	}
+	if data.Count == 0 {
+		return BusinessData{}, fmt.Errorf("business %s not exists", bizID)
+	}
+	c.Add(fmt.Sprintf(CacheKeyBusinessPrefix, bizID), data.Info[0], time.Hour)
+	return data.Info[0], nil
+}
+
 // SearchBusiness 通过用户和业务ID，查询业务
 func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) {
 	// 获取超时时间
@@ -162,69 +189,107 @@ func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) 
 
 // GetBusinessMaintainers get maintainers by bizID
 func GetBusinessMaintainers(bizID string) ([]string, error) {
-	searchData, err := SearchBusiness("", bizID)
+	business, err := GetBusinessByID(bizID, false)
 	if err != nil {
 		return nil, err
 	}
 	// 判断是否存在当前用户为业务运维角色的业务
-	if searchData.Count == 0 {
-		return nil, fmt.Errorf("get business by id %s failed", bizID)
-	}
-	business := searchData.Info[0]
 	maintainers := stringx.SplitString(business.BKBizMaintainer)
 	return maintainers, nil
 }
 
 // BatchSearchBusinessByBizIDs batch search business by bizIDs
-func BatchSearchBusinessByBizIDs(bizIDs []int) (*SearchBusinessData, error) {
-	// 获取超时时间
+func BatchSearchBusinessByBizIDs(bizIDs []string) (map[string]BusinessData, error) {
+	if len(bizIDs) == 0 {
+		return nil, nil
+	}
+	bizIDs = stringx.RemoveDuplicateValues(bizIDs)
+	result := make(map[string]BusinessData, len(bizIDs))
+	// 先尝试从缓存中获取
+	c := cache.GetCache()
+	notHitBizIDs := make([]string, 0)
+	for _, bizID := range bizIDs {
+		if biz, exists := c.Get(fmt.Sprintf(CacheKeyBusinessPrefix, bizID)); exists {
+			logging.Info("get business %s hit cache", bizID)
+			result[bizID] = biz.(BusinessData)
+		} else {
+			notHitBizIDs = append(notHitBizIDs, bizID)
+		}
+	}
+	if len(notHitBizIDs) == 0 {
+		return result, nil
+	}
+	// 如果部分业务没有命中缓存，再去cmdb中查询并更新缓存
 	timeout := defaultTimeout
 	if config.GlobalConf.CMDB.Timeout != 0 {
 		timeout = config.GlobalConf.CMDB.Timeout
 	}
-	// 获取开发商账户
 	supplierAccount := defaultSupplierAccount
 	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
 		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
 	}
 	headers := map[string]string{"Content-Type": "application/json"}
-	// 组装请求参数
-	req := gorequest.SuperAgent{
-		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
-		Method: "POST",
-		Data: map[string]interface{}{
-			"biz_property_filter": map[string]interface{}{
-				"condition": "AND",
-				"rules": []map[string]interface{}{
-					{
-						"field":    "bk_biz_id",
-						"operator": "in",
-						"value":    bizIDs,
+	batchNum := len(notHitBizIDs) / searchBusinessBatchSize
+	if len(notHitBizIDs)%searchBusinessBatchSize > 0 {
+		batchNum++
+	}
+	for i := 0; i < batchNum; i++ {
+		start := i * searchBusinessBatchSize
+		end := (i + 1) * searchBusinessBatchSize
+		if end > len(notHitBizIDs) {
+			end = len(notHitBizIDs)
+		}
+		batchBizIDs := []int{}
+		for _, bizID := range notHitBizIDs[start:end] {
+			bizIDInt, err := strconv.Atoi(bizID)
+			if err != nil {
+				return nil, fmt.Errorf("bizID %s is invalid", bizID)
+			}
+			batchBizIDs = append(batchBizIDs, bizIDInt)
+		}
+
+		// 组装请求参数
+		req := gorequest.SuperAgent{
+			Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
+			Method: "POST",
+			Data: map[string]interface{}{
+				"biz_property_filter": map[string]interface{}{
+					"condition": "AND",
+					"rules": []map[string]interface{}{
+						{
+							"field":    "bk_biz_id",
+							"operator": "in",
+							"value":    batchBizIDs,
+						},
 					},
 				},
+				"bk_supplier_account": supplierAccount,
+				"bk_app_code":         config.GlobalConf.App.Code,
+				"bk_app_secret":       config.GlobalConf.App.Secret,
+				"bk_username":         config.GlobalConf.CMDB.BKUsername,
 			},
-			"bk_supplier_account": supplierAccount,
-			"bk_app_code":         config.GlobalConf.App.Code,
-			"bk_app_secret":       config.GlobalConf.App.Secret,
-			"bk_username":         config.GlobalConf.CMDB.BKUsername,
-		},
-		Debug: config.GlobalConf.CMDB.Debug,
+			Debug: config.GlobalConf.CMDB.Debug,
+		}
+		// 获取返回数据
+		body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
+		if err != nil {
+			return nil, errorx.NewRequestCMDBErr(err.Error())
+		}
+		// 解析返回的body
+		var resp SearchBusinessResp
+		if err := json.Unmarshal([]byte(body), &resp); err != nil {
+			logging.Error("parse search biz body error, body: %v", body)
+			return nil, err
+		}
+		if resp.Code != errorx.Success {
+			return nil, errorx.NewRequestCMDBErr(resp.Message)
+		}
+		for _, biz := range resp.Data.Info {
+			result[strconv.Itoa(int(biz.BKBizID))] = biz
+			c.Add(fmt.Sprintf(CacheKeyBusinessPrefix, strconv.Itoa(int(biz.BKBizID))), biz, time.Hour)
+		}
 	}
-	// 获取返回数据
-	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
-	if err != nil {
-		return nil, errorx.NewRequestCMDBErr(err.Error())
-	}
-	// 解析返回的body
-	var resp SearchBusinessResp
-	if err := json.Unmarshal([]byte(body), &resp); err != nil {
-		logging.Error("parse search biz body error, body: %v", body)
-		return nil, err
-	}
-	if resp.Code != errorx.Success {
-		return nil, errorx.NewRequestCMDBErr(resp.Message)
-	}
-	return &resp.Data, nil
+	return result, nil
 }
 
 // GetBusinessTopology get business topology by bizID

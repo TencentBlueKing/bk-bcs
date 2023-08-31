@@ -12,23 +12,44 @@
         <span
           class="title-desc cursor-pointer"
           @click="handleGoHome">
-          {{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}
+          {{ $INTERNAL ? $t('bcs.TKEx.title') : $t('bcs.intro.title') }}
         </span>
       </template>
       <template #header>
         <!-- 顶部菜单 -->
-        <ol class="flex text-[14px] text-[#96a2b9]">
+        <ol class="flex flex-1 w-[0] text-[14px] text-[#96a2b9] overflow-hidden" ref="navRef">
           <li
             v-for="(item, index) in menus"
             :class="[
-              'mr-[40px] hover:text-[#d3d9e4] cursor-pointer',
-              { 'text-[#d3d9e4]': activeNav.id === item.id }
+              'mr-[40px] hover:text-[#d3d9e4] cursor-pointer whitespace-nowrap',
+              {
+                'text-[#d3d9e4]': activeNav.id === item.id,
+                'opacity-0': (index >= breakIndex) && (breakIndex > -1)
+              }
             ]"
             :key="index"
+            ref="navItemRefs"
             @click="handleChangeMenu(item)">
             {{ item.title }}
           </li>
         </ol>
+        <!-- 折叠的菜单 -->
+        <PopoverSelector class="w-[24px] relative right-[24px]" v-show="breakIndex > -1">
+          <span class="text-[#fff] text-[18px] h-[52px] cursor-pointer">
+            <i class="bk-icon icon-ellipsis relative top-[-1px]"></i>
+          </span>
+          <template #content>
+            <ul>
+              <li
+                v-for="item in hiddenMenus"
+                :key="item.id"
+                :class="['bcs-dropdown-item', { active: activeNav.id === item.id }]"
+                @click="handleChangeMenu(item)">
+                {{ item.title }}
+              </li>
+            </ul>
+          </template>
+        </PopoverSelector>
         <!-- 项目选载 -->
         <ProjectSelector class="ml-auto w-[240px] mr-[18px]"></ProjectSelector>
         <!-- 语言切换 -->
@@ -56,9 +77,9 @@
           </span>
           <template #content>
             <ul>
-              <li class="bcs-dropdown-item" @click="handleGotoHelp">{{ $t('产品文档') }}</li>
-              <li class="bcs-dropdown-item" @click="handleShowSystemLog">{{ $t('版本日志') }}</li>
-              <li class="bcs-dropdown-item" @click="handleShowFeatures">{{ $t('功能特性') }}</li>
+              <li class="bcs-dropdown-item" @click="handleGotoHelp">{{ $t('blueking.docs') }}</li>
+              <li class="bcs-dropdown-item" @click="handleShowSystemLog">{{ $t('blueking.releaseNotes') }}</li>
+              <li class="bcs-dropdown-item" @click="handleShowFeatures">{{ $t('blueking.features') }}</li>
             </ul>
           </template>
         </PopoverSelector>
@@ -70,8 +91,8 @@
           </span>
           <template #content>
             <ul>
-              <li class="bcs-dropdown-item" @click="handleGotoUserToken">{{ $t('个人密钥') }}</li>
-              <li class="bcs-dropdown-item" @click="handleLogout">{{ $t('退出登录') }}</li>
+              <li class="bcs-dropdown-item" @click="handleGotoUserToken">{{ $t('blueking.apiToken') }}</li>
+              <li class="bcs-dropdown-item" @click="handleLogout">{{ $t('blueking.signOut') }}</li>
             </ul>
           </template>
         </PopoverSelector>
@@ -90,7 +111,7 @@
     <!-- 产品特性 -->
     <bcs-dialog
       v-model="showFeatures"
-      :title="$t('产品功能特性')"
+      :title="$t('blueking.features1')"
       :show-footer="false"
       width="480">
       <BcsMd :code="releaseData.feature.content" />
@@ -98,7 +119,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, toRef, reactive, onMounted } from 'vue';
+import { defineComponent, ref, computed, toRef, reactive, onMounted, onBeforeUnmount } from 'vue';
 import SystemLog from '@/views/app/log.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
 import ProjectSelector from '@/views/app/project-selector.vue';
@@ -107,7 +128,7 @@ import $store from '@/store';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import menusData, { IMenu } from './menus';
-import { releaseNode, switchLanguage } from '@/api/modules/project';
+import { releaseNote, switchLanguage } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
 
 export default defineComponent({
@@ -143,7 +164,30 @@ export default defineComponent({
     // path上有项目Code且项目开启了容器服务时才显示左侧菜单
     const needMenu = computed(() => {
       const { projectCode } = route.value.params;
-      return !!projectCode && route.value.fullPath.indexOf(projectCode) > -1 && !!curProject.value.kind;
+      return !!projectCode
+        && route.value.fullPath.indexOf(projectCode) > -1
+        && !!curProject.value.kind
+        && !['404', 'token'].includes(route.value.name);
+    });
+
+    // 导航自适应
+    const breakIndex = ref(-1);
+    const hiddenMenus = computed(() => {
+      if (breakIndex.value === -1) return [];
+      return menus.value.slice(breakIndex.value, menus.value.length);
+    });
+    const navRef = ref();
+    const navItemRefs = ref<any[]>([]);
+    const resizeObserver = new ResizeObserver(() => {
+      window.requestAnimationFrame(() => {
+        const navWrapperWidth = navRef.value?.clientWidth;
+        let tmpWidth = 24;// 最小宽度
+        const index = navItemRefs.value?.findIndex((item) => {
+          tmpWidth += (item.clientWidth + 40); // 40: margin-right: 40px
+          return tmpWidth >= navWrapperWidth;
+        });
+        breakIndex.value = index;
+      });
     });
 
     // 当前导航
@@ -218,11 +262,21 @@ export default defineComponent({
       changelog: [],
       feature: { content: '' },
     });
+
     onMounted(async () => {
-      releaseData.value = await releaseNode().catch(() => ({ changelog: [], feature: {} }));
+      navRef.value && resizeObserver.observe(navRef.value);
+      releaseData.value = await releaseNote().catch(() => ({ changelog: [], feature: {} }));
+    });
+
+    onBeforeUnmount(() => {
+      navRef.value && resizeObserver.unobserve(navRef.value);
     });
 
     return {
+      navRef,
+      navItemRefs,
+      breakIndex,
+      hiddenMenus,
       activeNav,
       needMenu,
       curProject,

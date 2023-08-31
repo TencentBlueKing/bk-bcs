@@ -26,7 +26,7 @@ var cloudInfoMgr sync.Once
 
 func init() {
 	cloudInfoMgr.Do(func() {
-		// init Cluster
+		//init Cluster
 		cloudprovider.InitCloudInfoManager(cloudName, &CloudInfoManager{})
 	})
 }
@@ -35,8 +35,7 @@ func init() {
 type CloudInfoManager struct {
 }
 
-// InitCloudClusterDefaultInfo xxx
-// ImportClusterValidate check importCluster operation
+// InitCloudClusterDefaultInfo check importCluster operation
 func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *proto.Cluster,
 	opt *cloudprovider.InitClusterConfigOption) error {
 	// call blueking interface to init cluster defaultConfig

@@ -25,6 +25,7 @@ import (
 	"github.com/thanos-io/thanos/pkg/api"
 	extpromhttp "github.com/thanos-io/thanos/pkg/extprom/http"
 	"github.com/thanos-io/thanos/pkg/store"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
@@ -95,6 +96,8 @@ func (t *TenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 		ctx := store.WithLabelMatchValue(r.Context(), labelMatchers)
 		ctx = store.WithScopeClusterIDValue(ctx, scopeClusteID)
 		ctx = store.WithRequestIDValue(ctx, requestID)
+		// Traceparent 透传给grpc
+		ctx = metadata.AppendToOutgoingContext(ctx, "Traceparent", r.Header.Get("traceparent"))
 		r = r.WithContext(ctx)
 		handleFunc(w, r)
 	}

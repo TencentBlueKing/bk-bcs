@@ -1,14 +1,14 @@
 <template>
-  <BcsContent :title="$t('项目信息')" hide-back>
+  <BcsContent :title="$t('projects.project.info')" hide-back>
     <bk-form class="project-info">
-      <bk-form-item :label="$t('项目名称')">
+      <bk-form-item :label="$t('projects.project.name')">
         <span class="text-[#313238] text-[12px]">{{ curProject.name }}</span>
       </bk-form-item>
-      <bk-form-item class="!mt-[0px]" :label="$t('项目英文名')">
+      <bk-form-item class="!mt-[0px]" :label="$t('projects.project.engName')">
         <span class="text-[#313238] text-[12px]">{{ curProject.projectCode }}</span>
       </bk-form-item>
-      <bk-form-item class="!mt-[0px]" :label="$t('项目说明')">
-        <span class="text-[#313238] text-[12px]">{{ curProject.description }}</span>
+      <bk-form-item class="!mt-[0px]" :label="$t('projects.project.intro')">
+        <span class="text-[#313238] text-[12px]">{{ curProject.description || '--' }}</span>
       </bk-form-item>
     </bk-form>
   </BcsContent>

@@ -150,6 +150,7 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 
 	result, count, err := q.Where(m.BizID.Eq(bizID)).
 		Where(conds...).
+		Order(m.ID.Desc()).
 		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err
@@ -213,7 +214,7 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Credential.WithContext(kit.Ctx)
 		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-			Select(m.Memo, m.Enable).Updates(g); err != nil {
+			Select(m.Memo, m.Enable, m.Reviser).Updates(g); err != nil {
 			return err
 		}
 

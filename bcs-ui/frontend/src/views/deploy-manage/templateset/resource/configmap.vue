@@ -2,18 +2,18 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header hide-back title="ConfigMaps" :desc="$t('请通过模板集或Helm创建ConfigMap')" />
+    <Header hide-back title="ConfigMaps" :desc="$t('deploy.templateset.createFromTemplateOrHelmConfigMap')" />
     <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading }">
 
       <div class="biz-panel-header">
         <div class="left">
           <bk-button @click.stop.prevent="removeConfigmaps" v-if="curPageData.length">
-            <span>{{$t('批量删除')}}</span>
+            <span>{{$t('generic.button.batchDelete')}}</span>
           </bk-button>
         </div>
         <div class="right">
           <ClusterSelectComb
-            :placeholder="$t('输入名称或命名空间，按Enter搜索')"
+            :placeholder="$t('deploy.templateset.searchNameOrNamespaceEnter')"
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
             cluster-type="all"
@@ -33,7 +33,7 @@
           @select="handlePageSelect"
           @select-all="handlePageSelectAll">
           <bk-table-column type="selection" width="60" :selectable="rowSelectable" />
-          <bk-table-column :label="$t('名称')" prop="name" :show-overflow-tooltip="true" min-width="150">
+          <bk-table-column :label="$t('generic.label.name')" prop="name" :show-overflow-tooltip="true" min-width="150">
             <template slot-scope="{ row }">
               <a
                 class="bk-text-button biz-resource-title biz-text-wrapper"
@@ -55,35 +55,35 @@
               </a>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('所属集群')" prop="cluster_name" min-width="150">
+          <bk-table-column :label="$t('generic.label.cluster1')" prop="cluster_name" min-width="150">
             <template slot-scope="{ row }">
               <bcs-popover :content="row.cluster_id || '--'" placement="top">
                 <p class="biz-text-wrapper">{{curSelectedCluster.name || '--'}}</p>
               </bcs-popover>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('命名空间')" prop="namespace" min-width="100" />
-          <bk-table-column :label="$t('来源')" prop="source_type" min-width="100">
+          <bk-table-column :label="$t('k8s.namespace')" prop="namespace" min-width="100" />
+          <bk-table-column :label="$t('deploy.templateset.sources')" prop="source_type" min-width="100">
             <template slot-scope="{ row }">
               {{ row.source_type || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('创建时间')" prop="createTime" min-width="150">
+          <bk-table-column :label="$t('cluster.labels.createdAt')" prop="createTime" min-width="150">
             <template slot-scope="{ row }">
               {{ formatDate(row.createTime) || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('更新时间')" prop="update_time" min-width="150">
+          <bk-table-column :label="$t('cluster.labels.updatedAt')" prop="update_time" min-width="150">
             <template slot-scope="{ row }">
               {{ formatDate(row.update_time) || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('更新人')" prop="updator">
+          <bk-table-column :label="$t('generic.label.updator')" prop="updator">
             <template slot-scope="{ row }">
               {{row.updator || '--'}}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('操作')" prop="permissions" min-width="150">
+          <bk-table-column :label="$t('generic.label.action')" prop="permissions" min-width="150">
             <template slot-scope="{ row }">
               <li>
                 <span
@@ -102,9 +102,9 @@
                   }"
                   @click.stop="updateConfigmap(row)"
                   class="biz-operate"
-                >{{$t('更新')}}</span>
+                >{{$t('generic.button.update')}}</span>
                 <bcs-popover :content="row.can_update_msg" v-else placement="left">
-                  <span class="biz-not-operate">{{$t('更新')}}</span>
+                  <span class="biz-not-operate">{{$t('generic.button.update')}}</span>
                 </bcs-popover>
                 <span
                   v-if="row.can_delete"
@@ -122,9 +122,9 @@
                   }"
                   @click.stop="removeConfigmap(row)"
                   class="biz-operate"
-                >{{$t('删除')}}</span>
-                <bcs-popover :content="row.can_delete_msg || $t('不可删除')" v-else placement="left">
-                  <span class="biz-not-operate">{{$t('删除')}}</span>
+                >{{$t('generic.button.delete')}}</span>
+                <bcs-popover :content="row.can_delete_msg || $t('deploy.templateset.cannotDelete')" v-else placement="left">
+                  <span class="biz-not-operate">{{$t('generic.button.delete')}}</span>
                 </bcs-popover>
               </li>
             </template>
@@ -145,8 +145,8 @@
           <table class="bk-table biz-data-table has-table-bordered">
             <thead>
               <tr>
-                <th style="width: 270px;">{{$t('键')}}</th>
-                <th>{{$t('值')}}<a href="javascript:void(0)" v-if="curConfigmapKeyList.length" class="bk-text-button display-text-btn" @click.stop.prevent="showKeyValue">{{isShowKeyValue ? $t('隐藏') : $t('明文显示')}}</a></th>
+                <th style="width: 270px;">{{$t('generic.label.key')}}</th>
+                <th>{{$t('generic.label.value')}}<a href="javascript:void(0)" v-if="curConfigmapKeyList.length" class="bk-text-button display-text-btn" @click.stop.prevent="showKeyValue">{{isShowKeyValue ? $t('deploy.templateset.hide') : $t('deploy.templateset.plaintextDisplay')}}</a></th>
               </tr>
             </thead>
             <tbody>
@@ -157,7 +157,7 @@
                     <div class="key-box-wrapper">
                       <template v-if="isShowKeyValue">
                         <div :class="['key-box', { 'expanded': item.isExpanded }]">{{item.value}}</div>
-                        <a href="javascript: void(0);" class="expand-btn" v-if="item.value.length > 40" @click="item.isExpanded = !item.isExpanded">{{item.isExpanded ? $t('收起') : $t('展开')}}</a>
+                        <a href="javascript: void(0);" class="expand-btn" v-if="item.value.length > 40" @click="item.isExpanded = !item.isExpanded">{{item.isExpanded ? $t('deploy.templateset.collapse') : $t('deploy.templateset.expand')}}</a>
                       </template>
                       <template v-else>
                         ******
@@ -175,7 +175,7 @@
           </table>
 
           <div class="actions">
-            <bk-button class="show-labels-btn bk-button bk-button-small bk-primary">{{$t('显示标签')}}</bk-button>
+            <bk-button class="show-labels-btn bk-button bk-button-small bk-primary">{{$t('deploy.templateset.displayLabel')}}</bk-button>
           </div>
 
           <div class="point-box">
@@ -203,7 +203,7 @@
           <div v-bkloading="{ isLoading: isUpdateLoading }">
             <div class="bk-form-item">
               <div class="bk-form-item" style="margin-bottom: 20px;">
-                <label class="bk-label">{{$t('名称')}}：</label>
+                <label class="bk-label">{{$t('generic.label.name')}}：</label>
                 <div class="bk-form-content" style="margin-left: 105px;">
                   <bk-input
                     name="configmapName"
@@ -212,7 +212,7 @@
                     v-model="curConfigmapName" />
                 </div>
               </div>
-              <label class="bk-label">{{$t('键')}}：</label>
+              <label class="bk-label">{{$t('generic.label.key')}}：</label>
               <div class="bk-form-content" style="margin-left: 105px;">
                 <div class="biz-list-operation">
                   <div class="item" v-for="(data, index) in configmapKeyList" :key="index">
@@ -221,7 +221,7 @@
                       style="width: 120px;"
                       :class="['bk-button bcs-button-ellipsis', { 'bk-primary': curKeyIndex === index }]"
                       @click.stop.prevent="setCurKey(data, index)">
-                      {{data.key || $t('未命名')}}
+                      {{data.key || $t('deploy.templateset.unnamed')}}
                     </bk-button>
                     <bkbcs-input
                       v-show="data.isEdit"
@@ -237,7 +237,7 @@
                     <span class="bcs-icon bcs-icon-edit" v-show="!data.isEdit" @click.stop.prevent="editKey(data, index)"></span>
                     <span class="bcs-icon bcs-icon-close" v-show="!data.isEdit" @click.stop.prevent="removeKey(data, index)"></span>
                   </div>
-                  <bcs-popover ref="keyTooltip" :content="$t('添加Key')" placement="top">
+                  <bcs-popover ref="keyTooltip" :content="$t('deploy.templateset.addKey')" placement="top">
                     <bk-button class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addKey">
                       <i class="bcs-icon bcs-icon-plus"></i>
                     </bk-button>
@@ -247,13 +247,13 @@
             </div>
             <template v-if="curKeyParams">
               <div class="bk-form-item" style="margin-top: 13px;">
-                <label class="bk-label">{{$t('值')}}：</label>
+                <label class="bk-label">{{$t('generic.label.value')}}：</label>
                 <div class="bk-form-content" style="margin-left: 105px;" v-if="curProject.kind === PROJECT_K8S">
                   <div v-full-screen="{ css: 'color: #333' }" class="h-[200px]">
                     <textarea
                       class="bk-form-textarea h-full"
                       v-model="curKeyParams.content"
-                      :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')">
+                      :placeholder="$t('deploy.templateset.enterKeyName') + curKeyParams.key + $t('deploy.templateset.keyContent')">
                   </textarea>
                   </div>
                 </div>
@@ -262,13 +262,13 @@
                     <textarea
                       class="bk-form-textarea h-full"
                       v-model="curKeyParams.content"
-                      :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')"
+                      :placeholder="$t('deploy.templateset.enterKeyName') + curKeyParams.key + $t('deploy.templateset.keyContent')"
                       v-if="curKeyParams.type === 'file'">
                   </textarea>
                     <textarea
                       class="bk-form-textarea h-full"
                       v-model="curKeyParams.content"
-                      :placeholder="$t('请输入在线文件地址，如http://www.example.com/config.txt')"
+                      :placeholder="$t('deploy.templateset.enterOnlineFileUrl')"
                       v-else>
                   </textarea>
                   </div>
@@ -277,10 +277,10 @@
             </template>
             <div class="action-inner" style="margin-top: 20px; margin-left: 105px;">
               <bk-button type="primary" :loading="isSaveBtnLoading" @click="submitUpdateConfigmap">
-                {{$t('保存')}}
+                {{$t('generic.button.save')}}
               </bk-button>
               <bk-button :disabled="isSaveBtnLoading" @click="cancleUpdateConfigmap">
-                {{$t('取消')}}
+                {{$t('generic.button.cancel')}}
               </bk-button>
             </div>
           </div>
@@ -292,12 +292,12 @@
         :width="600"
         :has-header="false"
         :quick-close="false"
-        :title="$t('确认删除')"
+        :title="$t('generic.title.confirmDelete')"
         @confirm="deleteConfigmaps(batchDialogConfig.data)"
         @cancel="batchDialogConfig.isShow = false">
         <template slot="content">
           <div class="biz-batch-wrapper">
-            <p class="batch-title">{{$t('确定要删除以下ConfigMap？')}}</p>
+            <p class="batch-title">{{$t('deploy.templateset.confirmDeleteConfigMap')}}</p>
             <ul class="batch-list">
               <li v-for="(item, index) of batchDialogConfig.list" :key="index" :title="item">{{item}}</li>
             </ul>
@@ -467,7 +467,7 @@ export default {
       if (!data.length) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择要删除的ConfigMap'),
+          message: this.$t('deploy.templateset.selectConfigMapToDelete'),
         });
         return false;
       }
@@ -496,7 +496,7 @@ export default {
 
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('删除成功'),
+          message: this.$t('generic.msg.success.delete'),
         });
         // 稍晚一点加载数据，接口不一定立即清除
         setTimeout(() => {
@@ -522,7 +522,7 @@ export default {
     async updateConfigmap(configmap) {
       this.addSlider.isShow = true;
       this.isUpdateLoading = true;
-      this.addSlider.title = `${this.$t('更新')}${configmap.name}`;
+      this.addSlider.title = `${this.$t('generic.button.update')}${configmap.name}`;
       this.curConfigmapName = configmap.name;
       this.namespaceId = configmap.namespace_id;
       this.instanceId = configmap.instance_id;
@@ -554,11 +554,11 @@ export default {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       me.$bkInfo({
-        title: me.$t('确认删除'),
+        title: me.$t('generic.title.confirmDelete'),
         clsName: 'biz-remove-dialog max-size',
         content: me.$createElement('p', {
           class: 'biz-confirm-desc',
-        }, `${this.$t('确定要删除ConfigMap')}【${configmap.cluster_id} / ${configmap.namespace} / ${configmap.name}】？`),
+        }, `${this.$t('deploy.templateset.confirmRemoveConfigMap')}【${configmap.cluster_id} / ${configmap.namespace} / ${configmap.name}】？`),
         confirmFn() {
           me.deleteConfigmap(configmap);
         },
@@ -582,7 +582,7 @@ export default {
         await this.$store.dispatch('resource/deleteConfigmap', { projectId, clusterId, namespace, name });
         me.$bkMessage({
           theme: 'success',
-          message: this.$t('删除成功'),
+          message: this.$t('generic.msg.success.delete'),
         });
         // 稍晚一点加载数据，接口不一定立即清除
         setTimeout(() => {
@@ -622,7 +622,7 @@ export default {
         if (aKey[i] === aKey[i + 1]) {
           this.bkMessageInstance = this.$bkMessage({
             theme: 'error',
-            message: `${this.$t('键')}【${aKey[i]}】${this.$t('重复')}`,
+            message: `${this.$t('generic.label.key')}【${aKey[i]}】${this.$t('deploy.templateset.duplicate')}`,
           });
           return;
         }
@@ -640,7 +640,7 @@ export default {
         this.isPageLoading = true;
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('更新成功'),
+          message: this.$t('generic.msg.success.update'),
         });
         this.getConfigmapList();
       } catch (e) {
@@ -699,7 +699,7 @@ export default {
         if (!nameReg.test(data.key.replace(varReg, 'key'))) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('键名错误，只能包含：字母、数字、连字符(-)、点(.)、下划线(_)，首字母必须是字母，长度小于30个字符'),
+            message: this.$t('deploy.templateset.msg.labelKey'),
             delay: 5000,
           });
           return false;
@@ -712,7 +712,7 @@ export default {
           } else {
             this.$bkMessage({
               theme: 'error',
-              message: this.$t('键不可重复'),
+              message: this.$t('deploy.templateset.keyNotDuplicate'),
               delay: 5000,
             });
             data.isEdit = false;

@@ -1,22 +1,25 @@
 <template>
   <div>
-    <ContentHeader :title="$t('节点模板')" hide-back>
+    <ContentHeader :title="$t('cluster.nodeTemplate.text')" hide-back>
       <template #right>
         <a
-          :href="PROJECT_CONFIG.nodetemplate"
+          :href="PROJECT_CONFIG.nodeTemplate"
           target="_blank"
           class="bk-text-button"
-        >{{$t('如何使用节点模板？')}}</a>
+        >{{$t('cluster.nodeTemplate.button.useLink')}}</a>
       </template>
     </ContentHeader>
     <div class="node-template bcs-content-wrapper">
       <div class="node-template-header">
-        <bk-button theme="primary" icon="plus" @click="handleAddTemplate">{{$t('新建节点模板')}}</bk-button>
+        <bk-button
+          theme="primary"
+          icon="plus"
+          @click="handleAddTemplate">{{$t('cluster.nodeTemplate.title.create')}}</bk-button>
         <bk-input
           class="search-input"
           v-model="searchValue"
           right-icon="bk-icon icon-search"
-          :placeholder="$t('输入名称、创建者、更新者搜索')"
+          :placeholder="$t('cluster.nodeTemplate.placeholder.searchTemplate')"
           clearable>
         </bk-input>
       </div>
@@ -27,7 +30,7 @@
         @page-change="pageChange"
         @page-limit-change="pageSizeChange">
         <!-- <bcs-table-column label="ID" prop="nodeTemplateID"></bcs-table-column> -->
-        <bcs-table-column :label="$t('模板名称')" prop="name">
+        <bcs-table-column :label="$t('cluster.nodeTemplate.label.templateName')" prop="name">
           <template #default="{ row }">
             <bcs-button
               text
@@ -37,19 +40,19 @@
             </bcs-button>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('描述')" prop="desc" show-overflow-tooltip>
+        <bcs-table-column :label="$t('cluster.create.label.desc')" prop="desc" show-overflow-tooltip>
           <template #default="{ row }">
             {{row.desc || '--'}}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('创建者')" prop="creator"></bcs-table-column>
-        <bcs-table-column :label="$t('更新者')" prop="updater"></bcs-table-column>
-        <bcs-table-column :label="$t('创建时间')" prop="createTime"></bcs-table-column>
-        <bcs-table-column :label="$t('更新时间')" prop="updateTime"></bcs-table-column>
-        <bcs-table-column :label="$t('操作')" width="180">
+        <bcs-table-column :label="$t('generic.label.createdBy1')" prop="creator"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.updator1')" prop="updater"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.labels.createdAt')" prop="createTime"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.labels.updatedAt')" prop="updateTime"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.action')" width="180">
           <template #default="{ row }">
-            <bk-button text @click="handleEdit(row)">{{$t('编辑')}}</bk-button>
-            <bk-button text class="ml10" @click="handleDelete(row)">{{$t('删除')}}</bk-button>
+            <bk-button text @click="handleEdit(row)">{{$t('generic.button.edit')}}</bk-button>
+            <bk-button text class="ml10" @click="handleDelete(row)">{{$t('generic.button.delete')}}</bk-button>
           </template>
         </bcs-table-column>
         <template #empty>
@@ -124,7 +127,7 @@ export default defineComponent({
         type: 'warning',
         clsName: 'custom-info-confirm',
         subTitle: row.name,
-        title: $i18n.t('确认删除配置模版？'),
+        title: $i18n.t('cluster.nodeTemplate.title.confirmDelete'),
         defaultInfo: true,
         confirmFn: async () => {
           loading.value = true;
@@ -134,7 +137,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('删除成功'),
+              message: $i18n.t('generic.msg.success.delete'),
             });
             handleNodeTemplateList();
           }

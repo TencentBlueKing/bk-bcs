@@ -16,7 +16,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -64,7 +63,7 @@ func (s *Service) queryMetadataInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	bytes, err := ioutil.ReadAll(file)
+	bytes, err := io.ReadAll(file)
 	if len(bytes) == 0 || err != nil {
 		resp.WriteResp(w, make(map[string]interface{}, 0))
 		return
@@ -154,7 +153,7 @@ func (s *Service) uploadNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		resp.Err(w, fmt.Errorf("read body failed, err: %v", err))
 		return
@@ -325,7 +324,7 @@ func (s *Service) downloadAll(w http.ResponseWriter, path string) error {
 	}
 	defer file.Close()
 
-	bytes, err := ioutil.ReadAll(file)
+	bytes, err := io.ReadAll(file)
 	if err != nil {
 		return fmt.Errorf("read node failed, err: %v", err)
 	}
@@ -341,7 +340,7 @@ func (s *Service) recordNodeDetail(path, sign, metadata string) error {
 	}
 	defer readFile.Close()
 
-	bytes, err := ioutil.ReadAll(readFile)
+	bytes, err := io.ReadAll(readFile)
 	if err != nil {
 		return fmt.Errorf("read node detail failed, err: %v", err)
 	}

@@ -4,7 +4,6 @@ go 1.17
 
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
-	github.com/Tencent/bk-bcs/bcs-common => ../../../../bcs-common
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common => github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220117082205-1fdc9e155811
 	github.com/Tencent/bk-bcs/bcs-scenarios/kourse => github.com/TencentBlueKing/bk-bcs/bcs-scenarios/kourse v0.0.0-20230620070606-922d3a7a9517
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
@@ -41,7 +40,7 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220919094211-a1b246e54e5a
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230707084844-155f32c8f606
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20220118090807-f41aacaffdf9
 	github.com/deckarep/golang-set v1.7.1
 	github.com/evanphx/json-patch v4.12.0+incompatible
@@ -63,6 +62,8 @@ require (
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d
 )
 
+require github.com/Tencent/bk-bcs/bcs-scenarios/kourse v0.0.0-00010101000000-000000000000
+
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
@@ -70,6 +71,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
+	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
@@ -78,6 +80,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
+	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
@@ -104,6 +107,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiserver v0.20.0 // indirect
 	k8s.io/cloud-provider v0.20.0 // indirect
 	k8s.io/component-base v0.20.0 // indirect
@@ -112,10 +116,4 @@ require (
 	sigs.k8s.io/controller-runtime v0.6.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
-)
-
-require (
-	github.com/Tencent/bk-bcs/bcs-scenarios/kourse v0.0.0-00010101000000-000000000000
-	github.com/imdario/mergo v0.3.13 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

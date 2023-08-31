@@ -7,7 +7,7 @@ replace (
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
-	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.12.1-tx.1
+	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.12.1-tx.2
 	k8s.io/api => k8s.io/api v0.27.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.27.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.27.0
@@ -28,7 +28,7 @@ require (
 	github.com/nats-io/nats.go v1.14.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/prometheus/client_golang v1.14.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.10.0
 	github.com/tidwall/pretty v1.0.0
 	github.com/ugorji/go/codec v1.2.6 // indirect
@@ -42,7 +42,9 @@ require (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607083304-55bca53fa223
+	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230811095616-815d33d32e2d
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230607083304-55bca53fa223
+	github.com/chartmuseum/helm-push v0.10.4
 	github.com/goccy/go-yaml v1.9.6
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/micro/go-micro/v2 v2.9.1
@@ -57,7 +59,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.3.6
 	gorm.io/gorm v1.23.8
-	helm.sh/helm/v3 v3.8.2
+	helm.sh/helm/v3 v3.11.2
 	k8s.io/api v0.27.2
 	k8s.io/apimachinery v0.27.2
 	k8s.io/cli-runtime v0.27.2
@@ -79,6 +81,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d // indirect
 	github.com/Tencent/bk-bcs/bcs-scenarios/kourse v0.0.0-20230620131944-108c92952073 // indirect
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 // indirect
+	github.com/TencentBlueKing/crypto-golang-sdk v1.0.0 // indirect
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
 	github.com/aws/aws-sdk-go v1.37.27 // indirect
@@ -94,7 +97,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
-	github.com/docker/cli v20.10.21+incompatible // indirect
+	github.com/docker/cli v20.10.24+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/docker v20.10.24+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
@@ -138,7 +141,7 @@ require (
 	github.com/hpcloud/tail v1.0.1-0.20180514194441-a1dbeea552b7 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
@@ -209,10 +212,10 @@ require (
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	golang.org/x/tools v0.7.0 // indirect
@@ -224,6 +227,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.27.2 // indirect
 	k8s.io/apiserver v0.27.2 // indirect
 	k8s.io/component-base v0.27.2 // indirect
+	k8s.io/helm v2.17.0+incompatible // indirect
 	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
 	k8s.io/kubectl v0.27.2 // indirect
 	k8s.io/kubernetes v1.13.0 // indirect

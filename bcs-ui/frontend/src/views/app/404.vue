@@ -2,7 +2,7 @@
   <bk-exception
     class="relative top-[20%]"
     type="404">
-    <span>{{$t('页面不存在')}}</span>
+    <span>{{$t('generic.msg.warning.404')}}</span>
   </bk-exception>
 </template>
 <script>

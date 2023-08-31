@@ -33,11 +33,16 @@ import (
 // 需要取指针, 不能用常量
 var (
 	// 最多返回 10W 条日志
-	MAX_TAIL_LINES  = 100 * 1000
+	MAX_TAIL_LINES  = int64(100 * 1000)
 	MAX_LIMIT_BYTES = 30 * 1024 * 1024 // 最多 30M 数据
 
 	// 默认返回 100 条日志
 	DEFAULT_TAIL_LINES = int64(100)
+)
+
+const (
+	Containers     = "Containers"
+	InitContainers = "InitContainers"
 )
 
 // LogQuery 日志查询参数， 精简后的 v1.PodLogOptions
@@ -60,7 +65,7 @@ func (q *LogQuery) makeOptions() (*v1.PodLogOptions, error) {
 
 	// 开始时间, 需要用做查询
 	if q.StartedAt != "" {
-		opt.TailLines = &DEFAULT_TAIL_LINES
+		opt.TailLines = &MAX_TAIL_LINES
 
 		t, err := time.Parse(time.RFC3339Nano, q.StartedAt)
 		if err != nil {
@@ -157,7 +162,8 @@ func calcSinceTime(startTime string, endTime string) (*time.Time, error) {
 
 // Container 格式化的容器, 精简后的 v1.Container
 type Container struct {
-	Name string `json:"name"`
+	Name          string `json:"name"`
+	ContainerType string `json:"container_type"`
 }
 
 // parseLog 解析Log
@@ -182,7 +188,11 @@ func GetPodContainers(ctx context.Context, clusterId, namespace, podname string)
 
 	containers := make([]*Container, 0, len(pod.Spec.Containers))
 	for _, container := range pod.Spec.Containers {
-		containers = append(containers, &Container{Name: container.Name})
+		containers = append(containers, &Container{Name: container.Name, ContainerType: Containers})
+	}
+	// 获取InitContainers name
+	for _, container := range pod.Spec.InitContainers {
+		containers = append(containers, &Container{Name: container.Name, ContainerType: InitContainers})
 	}
 	return containers, nil
 }
@@ -201,7 +211,8 @@ func GetPodLogByte(ctx context.Context, clusterId, namespace, podname string, op
 
 	result := client.CoreV1().Pods(namespace).GetLogs(podname, opts).Do(ctx)
 	if result.Error() != nil {
-		return nil, result.Error()
+		// 错误以log的方式输出
+		return []byte(result.Error().Error()), nil
 	}
 
 	body, err := result.Raw()
@@ -233,7 +244,7 @@ func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *L
 		}
 
 		// 只返回当前历史数据
-		if opt.FinishedAt != "" && log.Time == opt.FinishedAt {
+		if opt.FinishedAt != "" && log.Time >= opt.FinishedAt {
 			break
 		}
 

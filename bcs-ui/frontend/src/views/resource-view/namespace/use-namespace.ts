@@ -103,17 +103,19 @@ export function useSelectItemsNamespace() {
   const namespaceLoading = ref(false);
   const namespaceList = ref<any[]>([]);
 
-  const getNamespaceData = async ({ clusterId }) => {
+  const getNamespaceData = async ({ clusterId }, initNsValue = true) => {
     namespaceLoading.value = true;
     const data = await getNamespaceList({
       $clusterId: clusterId,
     });
     // 过滤未创建成功的命名空间
     namespaceList.value = (data || []).filter(item => item.itsmTicketType !== 'CREATE');
-    // 初始化默认选中命名空间
-    const defaultSelectNamespace = namespaceList.value
-      .find(data => data.name === $store.state.curNamespace);
-    namespaceValue.value = defaultSelectNamespace?.name || namespaceList.value[0]?.name;
+    if (initNsValue) {
+      // 初始化默认选中命名空间
+      const defaultSelectNamespace = namespaceList.value
+        .find(data => data.name === $store.state.curNamespace);
+      namespaceValue.value = defaultSelectNamespace?.name || namespaceList.value[0]?.name;
+    }
 
     namespaceLoading.value = false;
     return data;

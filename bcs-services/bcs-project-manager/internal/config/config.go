@@ -186,7 +186,6 @@ type ProjectConfig struct {
 	App                    AppConfig                    `yaml:"app"`
 	BcsGateway             BCSGatewayConfig             `yaml:"bcsGateway"`
 	ListForIAM             ListForIAMConfig             `yaml:"listForIAM"`
-	FeatureFlags           map[string]map[string]bool   `yaml:"featureFlags"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {
@@ -198,10 +197,13 @@ func (conf *ProjectConfig) initServerAddress() {
 	}
 }
 
-func (conf *ProjectConfig) initMongoPwd() {
-	// 若配置中密码为空，则使用环境变量中的密码
+func (conf *ProjectConfig) initFromEnv() {
+	// 若配置中值为空，则使用环境变量中的值
 	if conf.Mongo.Password == "" {
 		conf.Mongo.Password = envs.MongoPwd
+	}
+	if conf.BcsGateway.Token == "" {
+		conf.BcsGateway.Token = envs.BCSGatewayToken
 	}
 }
 
@@ -221,7 +223,7 @@ func LoadConfig(filePath string) (*ProjectConfig, error) {
 	// 初始化服务地址
 	conf.initServerAddress()
 	// 初始化mongo password
-	conf.initMongoPwd()
+	conf.initFromEnv()
 	// 用于后续的使用
 	GlobalConf = conf
 	return conf, nil

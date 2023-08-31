@@ -20,6 +20,7 @@ import (
 	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	ginTracing "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
@@ -32,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/logrule"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
+	podmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod_monitor"
 	service_monitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/servicemonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/telemetry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -131,6 +133,7 @@ func (a *APIServer) newRoutes(engine *gin.Engine) {
 func registerRoutes(engine *gin.RouterGroup) {
 	// 日志相关接口
 	engine.Use(middleware.AuthenticationRequired(), middleware.ProjectParse(), middleware.NsScopeAuthorization())
+	engine.Use(ginTracing.Middleware("bcs-monitor-api"))
 
 	route := engine.Group("/projects/:projectId/clusters/:clusterId")
 	{
@@ -161,6 +164,7 @@ func registerRoutes(engine *gin.RouterGroup) {
 func registerMetricsRoutes(engine *gin.RouterGroup) {
 
 	engine.Use(middleware.AuthenticationRequired(), middleware.ProjectParse(), middleware.ProjectAuthorization())
+	engine.Use(ginTracing.Middleware("bcs-monitor-api"))
 
 	// 命名规范
 	// usage 代表 百分比
@@ -219,6 +223,21 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 			rest.RestHandlerFunc(service_monitor.ListServiceMonitors))
 		route.POST("/service_monitors/batchdelete",
 			rest.RestHandlerFunc(service_monitor.BatchDeleteServiceMonitor))
+
+		route.GET("/namespaces/:namespace/pod_monitors",
+			rest.RestHandlerFunc(podmonitor.ListPodMonitors))
+		route.GET("/namespaces/:namespace/pod_monitors/:name",
+			rest.RestHandlerFunc(podmonitor.GetPodMonitor))
+		route.POST("/namespaces/:namespace/pod_monitors",
+			rest.RestHandlerFunc(podmonitor.CreatePodMonitor))
+		route.PUT("/namespaces/:namespace/pod_monitors/:name",
+			rest.RestHandlerFunc(podmonitor.UpdatePodMonitor))
+		route.DELETE("/namespaces/:namespace/pod_monitors/:name",
+			rest.RestHandlerFunc(podmonitor.DeletePodMonitor))
+		route.GET("/pod_monitors",
+			rest.RestHandlerFunc(podmonitor.ListPodMonitors))
+		route.POST("/pod_monitors/batchdelete",
+			rest.RestHandlerFunc(podmonitor.BatchDeletePodMonitor))
 	}
 }
 

@@ -64,7 +64,6 @@ export default defineComponent({
 
   &-label {
     padding-right: 2px;
-    white-space: pre;
     word-break: keep-all;
   }
   &-content {

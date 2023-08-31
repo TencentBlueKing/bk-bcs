@@ -14,7 +14,6 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -43,8 +42,7 @@ func (s *Service) CreateCommit(ctx context.Context, req *pbds.CreateCommitReq) (
 		},
 		Attachment: req.Attachment.CommitAttachment(),
 		Revision: &table.CreatedRevision{
-			Creator:   grpcKit.User,
-			CreatedAt: time.Now(),
+			Creator: grpcKit.User,
 		},
 	}
 	id, err := s.dao.Commit().Create(grpcKit, commit)

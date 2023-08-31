@@ -26,8 +26,14 @@ export default defineComponent({
       clusterID.value = currentRoute.value.params.clusterId;
     }
 
-    // 需要提前更新当前缓存的集群
-    $store.commit('updateCurCluster', clusterList.value.find(item => item.clusterID === clusterID.value));
+    if (clusterID.value) {
+      // 需要提前更新当前缓存的集群
+      $store.commit('updateCurCluster', clusterList.value.find(item => item.clusterID === clusterID.value));
+    } else {
+      $router.push({ name: 'clusterMain' });
+    }
+
+
     onBeforeMount(() => {
       if (
         !currentRoute.value.name

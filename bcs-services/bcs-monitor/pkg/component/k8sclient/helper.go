@@ -43,8 +43,9 @@ func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
 	bcsConf := GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	config := &rest.Config{
-		Host:        host,
-		BearerToken: bcsConf.Token,
+		Host:            host,
+		BearerToken:     bcsConf.Token,
+		TLSClientConfig: rest.TLSClientConfig{Insecure: true},
 	}
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -58,8 +59,9 @@ func GetDynamicClientByClusterId(clusterId string) (dynamic.Interface, error) {
 	bcsConf := GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	config := &rest.Config{
-		Host:        host,
-		BearerToken: bcsConf.Token,
+		Host:            host,
+		BearerToken:     bcsConf.Token,
+		TLSClientConfig: rest.TLSClientConfig{Insecure: true},
 	}
 	k8sClient, err := dynamic.NewForConfig(config)
 	if err != nil {
@@ -73,8 +75,9 @@ func GetClusterNetClientByClusterId(clusterId string) (*clusternet.Clientset, er
 	bcsConf := GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	config := &rest.Config{
-		Host:        host,
-		BearerToken: bcsConf.Token,
+		Host:            host,
+		BearerToken:     bcsConf.Token,
+		TLSClientConfig: rest.TLSClientConfig{Insecure: true},
 	}
 	k8sClient, err := clusternet.NewForConfig(config)
 	if err != nil {
@@ -88,8 +91,9 @@ func GetKubebkbcsClientByClusterID(clusterID string) (*bcsclientset.Clientset, e
 	bcsConf := GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterID)
 	config := &rest.Config{
-		Host:        host,
-		BearerToken: bcsConf.Token,
+		Host:            host,
+		BearerToken:     bcsConf.Token,
+		TLSClientConfig: rest.TLSClientConfig{Insecure: true},
 	}
 	k8sClient, err := bcsclientset.NewForConfig(config)
 	if err != nil {

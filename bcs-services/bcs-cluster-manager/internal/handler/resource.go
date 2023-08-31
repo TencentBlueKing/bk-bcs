@@ -36,7 +36,7 @@ func (cm *ClusterManager) GetCloudRegions(ctx context.Context,
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("GetCloudRegions", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: GetCloudRegions, req %v, resp.Code %d, resp.Message %s, resp.Data %v",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+		reqID, req, resp.Code, resp.Message, resp.Data)
 	blog.V(5).Infof("reqID: %s, action: GetCloudRegions, req %v, resp %v", reqID, req, resp)
 	return nil
 }
@@ -53,7 +53,7 @@ func (cm *ClusterManager) GetCloudRegionZones(ctx context.Context,
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("GetCloudRegionZones", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: GetCloudRegions, req %v, resp.Code %d, resp.Message %s, resp.Data %v",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+		reqID, req, resp.Code, resp.Message, resp.Data)
 	blog.V(5).Infof("reqID: %s, action: GetCloudRegionZones, req %v, resp %v", reqID, req, resp)
 	return nil
 }
@@ -70,7 +70,7 @@ func (cm *ClusterManager) ListCloudRegionCluster(ctx context.Context,
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudRegionCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: ListCloudRegionCluster, req %v, resp.Code %d, resp.Message %s, resp.Data %v",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+		reqID, req, resp.Code, resp.Message, resp.Data)
 	blog.V(5).Infof("reqID: %s, action: ListCloudRegionCluster, req %v, resp %v", reqID, req, resp)
 	return nil
 }
@@ -86,9 +86,26 @@ func (cm *ClusterManager) ListCloudInstanceTypes(ctx context.Context,
 	fa := cloudresource.NewListNodeTypeAction(cm.model)
 	fa.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudInstanceTypes", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudInstanceTypes, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListCloudInstanceTypes, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudInstanceTypes, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListCloudInstances implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudInstances(ctx context.Context,
+	req *cmproto.ListCloudInstancesRequest, resp *cmproto.ListCloudInstancesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := cloudresource.NewListCloudInstancesAction(cm.model)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudInstances", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudInstances, req %v, resp.Code %d, resp.Message %s, resp.Data.Length: %v",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudInstances, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 
@@ -103,8 +120,44 @@ func (cm *ClusterManager) ListCloudOsImage(ctx context.Context,
 	fa := cloudresource.NewListCloudOsImageAction(cm.model)
 	fa.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudOsImage", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudOsImage, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListCloudOsImage, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudOsImage, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListKeypairs implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListKeypairs(ctx context.Context,
+	req *cmproto.ListKeyPairsRequest, resp *cmproto.ListKeyPairsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := cloudresource.NewListKeyPairsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListKeypairs", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListKeypairs, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListKeypairs, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// GetCloudAccountType implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetCloudAccountType(ctx context.Context,
+	req *cmproto.GetCloudAccountTypeRequest, resp *cmproto.GetCloudAccountTypeResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	ca := cloudresource.NewGetCloudAccountTypeAction(cm.model)
+	ca.Handle(ctx, req, resp)
+
+	metrics.ReportAPIRequestMetric("GetCloudAccountType", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetCloudAccountType, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data %v", reqID, req, resp.Code, resp.Message, resp.Data)
+	blog.V(5).Infof("reqID: %s, action: GetCloudAccountType, req %v, resp %v", reqID, req, resp)
 	return nil
 }

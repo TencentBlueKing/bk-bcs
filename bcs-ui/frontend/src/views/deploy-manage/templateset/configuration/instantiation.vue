@@ -2,14 +2,14 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header :title="$t('模板实例化')" />
+    <Header :title="$t('deploy.templateset.templateInstantiation')" />
     <div class="biz-content-wrapper pt0">
       <div class="biz-configuration-instantiation-wrapper">
-        <div class="biz-tip mt20 mb15">{{$t('模板实例化操作即平台通过用户配置的模板，生成对应的资源YAML文件，并将它们下发到指定集群的命名空间下。资源创建成功后，可在 应用 和 网络 中查看资源实例详情。')}}</div>
+        <div class="biz-tip mt20 mb15">{{$t('deploy.templateset.noteTemplateInstantiation')}}</div>
         <div class="biz-configuration-instantiation-header">
           <div class="left">
             <svg style="display: none;">
-              <title>{{$t('模板集默认图标')}}</title>
+              <title>{{$t('deploy.templateset.icon')}}</title>
               <symbol id="biz-set-icon" viewBox="0 0 32 32">
                 <path d="M6 3v3h-3v23h23v-3h3v-23h-23zM24 24v3h-19v-19h19v16zM27 24h-1v-18h-18v-1h19v19z"></path>
                 <path d="M13.688 18.313h-6v6h6v-6z"></path>
@@ -20,10 +20,10 @@
             <div class="info">
               <svg class="logo"><use xlink:href="#biz-set-icon"></use></svg>
               <div class="title" :title="curTemplate.name">{{curTemplate.name || '--'}}</div>
-              <div class="creater" :title="curTemplate.creator">{{$t('创建人')}}：{{curTemplate.creator || '--'}}</div>
+              <div class="creater" :title="curTemplate.creator">{{$t('generic.label.createdBy')}}：{{curTemplate.creator || '--'}}</div>
             </div>
             <div class="desc" :title="curTemplate.desc">
-              <span>{{$t('简介')}}：</span>
+              <span>{{$t('plugin.tools.intro')}}：</span>
               {{curTemplate.desc || '--'}}
             </div>
           </div>
@@ -31,20 +31,20 @@
             <div class="top">
               <div class="inner">
                 <div class="inner-item" style="width: 180px;">
-                  <label class="title">{{$t('模板集版本')}}</label>
+                  <label class="title">{{$t('deploy.templateset.templatesetVer')}}</label>
                   <bk-selector
-                    :placeholder="$t('请选择')"
+                    :placeholder="$t('generic.placeholder.select')"
                     :selected.sync="tplsetVerIndex"
                     :list="tplsetVerList"
                     :setting-key="'show_version_id'"
                     @item-selected="changeTplset">
                   </bk-selector>
-                  <label class="tip">{{$t('创建后启动实例')}}</label>
+                  <label class="tip">{{$t('deploy.templateset.after')}}</label>
                 </div>
                 <div class="inner-item" style="width: 280px;">
-                  <label class="title">{{$t('模板')}}</label>
+                  <label class="title">{{$t('deploy.templateset.templateset')}}</label>
                   <bk-selector
-                    :placeholder="$t('请选择要实例化的模板')"
+                    :placeholder="$t('deploy.templateset.selectTpl')"
                     :searchable="true"
                     :selected.sync="tplIndex"
                     :setting-key="'settingKey'"
@@ -53,10 +53,10 @@
                     @item-selected="multiSelect">
                   </bk-selector>
                   <a href="javascript:void(0);" class="bk-text-button select-all-tpl is-disabled" v-if="tplList.length === 0">
-                    {{$t('全选模板')}}
+                    {{$t('deploy.templateset.allTpl')}}
                   </a>
                   <a href="javascript:void(0);" class="bk-text-button select-all-tpl" v-else @click="selectAllTpl">
-                    {{isSelectAllTpl ? $t('清空全选') : $t('全选模板')}}
+                    {{isSelectAllTpl ? $t('deploy.templateset.clearAll') : $t('deploy.templateset.allTpl')}}
                   </a>
                 </div>
               </div>
@@ -64,7 +64,7 @@
             <div class="bottom">
               <div class="inner">
                 <bk-button type="default" @click="showChooseDialog">
-                  {{$t('选择运行的集群及命名空间')}}
+                  {{$t('deploy.templateset.selectNS')}}
                 </bk-button>
                 <div class="selected-namespace-wrapper biz-configuration-instantiation-dialog">
                   <div class="content-inner m0 pl0 pb0">
@@ -73,13 +73,13 @@
                         <div class="left-area" style="border-right: none; width: auto;">
                           <div class="label">
                             <template v-if="cluster.environment !== 'prod'">
-                              <span class="biz-env-label mr5 stag">{{$t('测试')}}</span>
+                              <span class="biz-env-label mr5 stag">{{$t('cluster.tag.debug')}}</span>
                             </template>
                             <template v-else>
-                              <span class="biz-env-label mr5 prod">{{$t('正式')}}</span>
+                              <span class="biz-env-label mr5 prod">{{$t('cluster.tag.prod')}}</span>
                             </template>
                             <span class="biz-text-wrapper">{{cluster.cluster_name}}</span>
-                            <span class="choose-num">{{cluster.namespaceList.length}} {{ isEn ? '' : $t('个')}}</span>
+                            <span class="choose-num">{{cluster.namespaceList.length}} {{ isEn ? '' : $t('units.suffix.units')}}</span>
                           </div>
                         </div>
                       </div>
@@ -115,7 +115,7 @@
               <div class="form-wrapper">
                 <template v-if="invalidNsList.length && invalidNsList.indexOf(previewNs.name) > -1">
                   <div style="text-align: center; margin: 0 auto; margin-bottom: 20px; margin-top: -20px;">
-                    {{$t('命令空间')}} [{{previewNs.name}}] {{$t('没有相关联的 LoadBalance，请先到 网络 -> LoadBalance 页面关联')}}
+                    {{$t('k8s.namespace')}} [{{previewNs.name}}] {{$t('deploy.templateset.noAssociatedLoadBalance')}}
                   </div>
                 </template>
                 <template v-else>
@@ -126,7 +126,7 @@
                       </label>
                       <div class="form-item-inner">
                         <bk-selector
-                          :placeholder="$t('请选择')"
+                          :placeholder="$t('generic.placeholder.select')"
                           :ext-cls="'dropdown'"
                           :selected.sync="lbSelectData[previewNs.name][lb[0].key]"
                           :list="lb[0].value"
@@ -142,7 +142,7 @@
                       </label>
                       <div class="form-item-inner">
                         <bk-selector
-                          :placeholder="$t('请选择')"
+                          :placeholder="$t('generic.placeholder.select')"
                           :ext-cls="'dropdown'"
                           :selected.sync="lbSelectData[previewNs.name][lb[1].key]"
                           :list="lb[1].value"
@@ -156,14 +156,14 @@
                   <template v-if="previewNs.variableList && previewNs.variableList.length && !isYamlMode">
                     <div class="form-item">
                       <label class="form-label">
-                        {{$t('变量')}}：
+                        {{$t('generic.label.var')}}：
                       </label>
                       <div class="form-item-inner">
                         <div class="biz-key-value-item" v-for="(variable, index) in previewNs.variableList" :key="index">
                           <input type="text" class="bk-form-input" disabled :value="`${variable.name}(${variable.key})`">
                           <span class="equals-sign">=</span>
                           <input
-                            type="text" class="bk-form-input right" :placeholder="$t('值')"
+                            type="text" class="bk-form-input right" :placeholder="$t('generic.label.value')"
                             v-model="variable.value" @keyup="variableValChange" />
                         </div>
                       </div>
@@ -171,7 +171,7 @@
                   </template>
                   <div class="form-item" v-if="previewList.length">
                     <label class="form-label">
-                      {{$t('预览')}}：
+                      {{$t('generic.title.preview')}}：
                     </label>
                     <div class="form-item-inner" style="width: 100px">
                       <bk-tab
@@ -192,7 +192,7 @@
                           </template>
                           <div class="biz-code-wrapper">
                             <div
-                              class="build-code-fullscreen" :title="$t('全屏')"
+                              class="build-code-fullscreen" :title="$t('generic.button.fullScreen.text')"
                               @click="setFullScreen(index)">
                               <i class="bcs-icon bcs-icon-full-screen"></i>
                             </div>
@@ -223,11 +223,11 @@
           </div>
         </transition>
         <div class="create-wrapper">
-          <bk-button type="primary" :title="$t('创建')" @click="createInstance">
-            {{$t('创建')}}
+          <bk-button type="primary" :title="$t('generic.button.create')" @click="createInstance">
+            {{$t('generic.button.create')}}
           </bk-button>
-          <bk-button type="default" :title="$t('取消')" @click="goTemplateset(true)">
-            {{$t('取消')}}
+          <bk-button type="default" :title="$t('generic.button.cancel')" @click="goTemplateset(true)">
+            {{$t('generic.button.cancel')}}
           </bk-button>
         </div>
       </div>
@@ -238,8 +238,8 @@
       :width="dialogConf.width"
       :title="dialogConf.title"
       :close-icon="dialogConf.closeIcon"
-      :confirm="$t('提交')"
-      :cancel="$t('取消')"
+      :confirm="$t('generic.button.submit')"
+      :cancel="$t('generic.button.cancel')"
       :ext-cls="'biz-configuration-instantiation-dialog'"
       :quick-close="false"
       @confirm="confirmSelect"
@@ -247,23 +247,23 @@
       <template slot="content">
         <div class="content-inner" :style="{ 'max-height': '420px', 'overflow': 'auto' }" v-bkloading="{ isLoading: dialogConf.pageLoading }">
           <div class="namespace-types">
-            <span class="bk-outline"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('未实例化过')}}</span>
-            <span class="bk-default"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('已实例化过')}}</span>
+            <span class="bk-outline"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('deploy.templateset.unTemplate')}}</span>
+            <span class="bk-default"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('deploy.templateset.templated')}}</span>
           </div>
           <div :key="index" class="content-trigger-wrapper" :class="item.isOpen ? 'open' : ''" v-for="(item, index) in candidateNamespaceList">
             <div class="content-trigger" @click="triggerHandler(item, index)">
               <div class="left-area" style="border-right: none;">
                 <div class="label">
-                  <span :class="['biz-env-label mr5', { 'stag': item.environment !== 'prod', 'prod': item.environment === 'prod' }]">{{item.environment === 'prod' ? $t('正式') : $t('测试')}}</span>
+                  <span :class="['biz-env-label mr5', { 'stag': item.environment !== 'prod', 'prod': item.environment === 'prod' }]">{{item.environment === 'prod' ? $t('cluster.tag.prod') : $t('cluster.tag.debug')}}</span>
                   <span class="biz-text-wrapper" style="max-width: 300px;">{{item.name}}</span>
-                  <span class="choose-num">{{$t('已经选择')}} {{item.results.filter(ns => ns.isChoose).length}} {{$t('个')}}</span>
+                  <span class="choose-num">{{$t('deploy.templateset.alreadySelected')}} {{item.results.filter(ns => ns.isChoose).length}} {{$t('units.suffix.units')}}</span>
                 </div>
                 <div class="checker-inner" v-if="!isYamlMode">
-                  <a href="javascript:;" class="bk-text-button" @click.stop="selectAll(item, index)">{{$t('全选')}}</a>
-                  <a href="javascript:;" class="bk-text-button" @click.stop="selectInvert(item, index)">{{$t('反选')}}</a>
+                  <a href="javascript:;" class="bk-text-button" @click.stop="selectAll(item, index)">{{$t('generic.button.selectAll')}}</a>
+                  <a href="javascript:;" class="bk-text-button" @click.stop="selectInvert(item, index)">{{$t('deploy.templateset.reelection')}}</a>
                 </div>
                 <div class="checker-inner">
-                  <span v-bk-tooltips="$t('没有找到命名空间请点击`同步命名空间`按钮')">
+                  <span v-bk-tooltips="$t('deploy.templateset.noNamespaceClickSync')">
                     <!-- 权限详情接口目前暂不支持多个actionID -->
                     <bcs-button
                       text
@@ -279,7 +279,7 @@
                           cluster_id: item.cluster_id
                         }
                       }"
-                    >{{ $t('同步命名空间') }}</bcs-button>
+                    >{{ $t('deploy.templateset.syncNamespace') }}</bcs-button>
                   </span>
                 </div>
               </div>
@@ -310,28 +310,28 @@
                     </bcs-popover>
                   </div>
                 </template>
-                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')" v-if="!isSharedCluster(item.cluster_id)">
+                <div class="candidate-namespace add-namespace" :title="$t('deploy.templateset.addNs')" v-if="!isSharedCluster(item.cluster_id)">
                   <bcs-popover ref="addNamespaceNode" theme="light" :delay="120000" placement="top-end" ext-cls="add-namespace-popover" :controlled="true" @on-show="showAddNamespace(index)">
                     <div class="candidate-namespace-name" @click="triggerAddNamespace(index)">
                       <img src="@/images/plus.svg" class="add-btn" />
                     </div>
                     <template slot="content">
-                      <div class="title">{{$t('新增命名空间')}}</div>
-                      <input type="text" ref="addNamespaceInputNode" :placeholder="$t('输入名称')" class="bk-form-input ns-name" v-model="namespaceName" v-if="dialogConf.loading" disabled />
-                      <input type="text" ref="addNamespaceInputNode" :placeholder="$t('输入名称')" class="bk-form-input ns-name" v-model="namespaceName" v-else />
+                      <div class="title">{{$t('deploy.templateset.addNs')}}</div>
+                      <input type="text" ref="addNamespaceInputNode" :placeholder="$t('deploy.templateset.inputName')" class="bk-form-input ns-name" v-model="namespaceName" v-if="dialogConf.loading" disabled />
+                      <input type="text" ref="addNamespaceInputNode" :placeholder="$t('deploy.templateset.inputName')" class="bk-form-input ns-name" v-model="namespaceName" v-else />
                       <a href="javascript:;" class="bk-text-button link disabled" v-if="dialogConf.loading">
-                        {{$t('更多设置')}}
+                        {{$t('deploy.templateset.moreSettings')}}
                         <img src="@/images/link-disabled.svg" />
                       </a>
                       <a href="javascript:;" class="bk-text-button link" @click="goNamespace" v-else>
-                        {{$t('更多设置')}}
+                        {{$t('deploy.templateset.moreSettings')}}
                         <img src="@/images/link.svg" />
                       </a>
                       <div class="operate">
-                        <a href="javascript:;" class="bk-text-button disabled" v-if="dialogConf.loading">{{$t('保存中...')}}</a>
-                        <a href="javascript:;" class="bk-text-button" v-else @click="addNamespace(item, index)">{{$t('保存')}}</a>
-                        <a href="javascript:;" class="bk-text-button disabled" v-if="dialogConf.loading" @click="cancelNamespace">{{$t('取消')}}</a>
-                        <a href="javascript:;" class="bk-text-button" v-else @click="cancelNamespace">{{$t('取消')}}</a>
+                        <a href="javascript:;" class="bk-text-button disabled" v-if="dialogConf.loading">{{$t('deploy.templateset.saving')}}</a>
+                        <a href="javascript:;" class="bk-text-button" v-else @click="addNamespace(item, index)">{{$t('generic.button.save')}}</a>
+                        <a href="javascript:;" class="bk-text-button disabled" v-if="dialogConf.loading" @click="cancelNamespace">{{$t('generic.button.cancel')}}</a>
+                        <a href="javascript:;" class="bk-text-button" v-else @click="cancelNamespace">{{$t('generic.button.cancel')}}</a>
                       </div>
                     </template>
                   </bcs-popover>
@@ -351,7 +351,7 @@
       @cancel="goNamespaceDialogConf.isShow = false">
       <template slot="content">
         <div style="text-align: center; padding-bottom: 15px;">
-          {{$t('您没有可用的命名空间，请创建或申请已有命名空间使用')}}
+          {{$t('deploy.templateset.noAvailableNamespace')}}
         </div>
       </template>
       <div slot="footer">
@@ -359,17 +359,17 @@
           <bk-button
             type="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
             @click="goNamespace" style="width: 110px;">
-            {{$t('创建或申请')}}
+            {{$t('deploy.templateset.create')}}
           </bk-button>
           <bk-button type="primary" class="bk-dialog-btn bk-dialog-btn-cancel" @click="hideNamesapceDialog">
-            {{$t('取消')}}
+            {{$t('generic.button.cancel')}}
           </bk-button>
         </div>
       </div>
     </bk-dialog>
 
     <div
-      :title="$t('关闭全屏')" @click="cancelFullScreen" class="biz-configuration-instantiation-cancel-fullscreen"
+      :title="$t('deploy.templateset.quit')" @click="cancelFullScreen" class="biz-configuration-instantiation-cancel-fullscreen"
       v-if="editorConfig.fullScreen">
       <i class="bcs-icon bcs-icon-close"></i>
     </div>
@@ -431,7 +431,7 @@ export default {
         isShow: false,
         width: 912,
         // width: 895,
-        title: this.$t('选择运行的集群及命名空间'),
+        title: this.$t('deploy.templateset.selectNS'),
         closeIcon: false,
         loading: false,
         pageLoading: false,
@@ -478,7 +478,7 @@ export default {
       goNamespaceDialogConf: {
         isShow: false,
         width: 500,
-        title: this.$t('没有命名空间'),
+        title: this.$t('deploy.templateset.noNamespace'),
         closeIcon: true,
         hasFooter: false,
         hasHeader: false,
@@ -945,7 +945,7 @@ export default {
             if (existList.indexOf(String(ns.id)) > -1) {
               const message = existNamespaceList[ns.id].join(', ');
               ns.isExist = true;
-              ns.message = `${this.$t('命名空间')}【${ns.name}】${this.$t('下存在')} ${message.replace(/K8s/ig, '')}${this.$t('类型的同名实例')}, ${this.$t('无法再次实例化')}`;
+              ns.message = `${this.$t('k8s.namespace')}【${ns.name}】${this.$t('deploy.templateset.existsBelow')} ${message.replace(/K8s/ig, '')}${this.$t('deploy.templateset.sameTypeInstance')}, ${this.$t('deploy.templateset.cannotInstantiateAgain')}`;
             } else {
               ns.isExist = false;
             }
@@ -974,7 +974,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择模板集版本'),
+          message: this.$t('deploy.templateset.pleaseSelectTemplateVersion'),
         });
         return;
       }
@@ -983,7 +983,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择要实例化的模板'),
+          message: this.$t('deploy.templateset.selectTpl'),
         });
         return;
       }
@@ -1185,7 +1185,7 @@ export default {
           this.dialogConf.pageLoading = false;
           this.$bkMessage({
             theme: 'success',
-            message: this.$t('同步成功'),
+            message: this.$t('deploy.templateset.syncSuccess'),
           });
         });
       };
@@ -1200,7 +1200,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择命名空间'),
+          message: this.$t('dashboard.ns.validate.emptyNs'),
         });
         this.dialogConf.isShow = false;
         return;
@@ -1283,7 +1283,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择模板集版本'),
+          message: this.$t('deploy.templateset.pleaseSelectTemplateVersion'),
         });
         return false;
       }
@@ -1292,7 +1292,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择要实例化的模板'),
+          message: this.$t('deploy.templateset.selectTpl'),
         });
         return false;
       }
@@ -1379,7 +1379,7 @@ export default {
           });
         });
 
-        this.previewTitle = `${ns.cluster_name} / ${ns.name} ${this.$t('的详细配置')}`;
+        this.previewTitle = `${ns.cluster_name} / ${ns.name} ${this.$t('deploy.templateset.detailedConfig')}`;
         this.previewNs = Object.assign({}, ns);
 
         this.sortTplType(list, 'tag', true);
@@ -1435,7 +1435,7 @@ export default {
 
           // 当前这个 ns 没有 lb 信息，不需要展示变量了，也不能 preview 和提交
           if (!lbData.length) {
-            this.previewTitle = `${ns.cluster_name} / ${ns.name} ${this.$t('的详细配置')}`;
+            this.previewTitle = `${ns.cluster_name} / ${ns.name} ${this.$t('deploy.templateset.detailedConfig')}`;
             this.previewNs = Object.assign({}, ns);
             if (this.invalidNsList.indexOf(ns.name) < 0) {
               this.invalidNsList.splice(0, this.invalidNsList.length, ...[].concat(ns.name));
@@ -1481,7 +1481,7 @@ export default {
           this.lbServiceListInPage.splice(0, this.lbServiceListInPage.length, ...lbServiceListInPage);
           this.lbServiceListInPageTmp = Object.assign({}, lbServiceListInPageTmp);
 
-          this.previewTitle = `${ns.cluster_name} / ${ns.name} ${this.$t('的详细配置')}`;
+          this.previewTitle = `${ns.cluster_name} / ${ns.name} ${this.$t('deploy.templateset.detailedConfig')}`;
           this.previewNs = Object.assign({}, ns);
 
           if (!this.checkCurNamespacePreview(ns)) {
@@ -1519,7 +1519,7 @@ export default {
               });
             });
           });
-          this.previewTitle = `${ns.cluster_name} / ${ns.name} ${this.$t('的详细配置')}`;
+          this.previewTitle = `${ns.cluster_name} / ${ns.name} ${this.$t('deploy.templateset.detailedConfig')}`;
           this.previewNs = Object.assign({}, ns);
 
           this.sortTplType(list, 'tag', true);
@@ -1849,7 +1849,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择模板集版本'),
+          message: this.$t('deploy.templateset.pleaseSelectTemplateVersion'),
         });
         return;
       }
@@ -1858,7 +1858,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择要实例化的模板'),
+          message: this.$t('deploy.templateset.selectTpl'),
         });
         return;
       }
@@ -1867,7 +1867,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择命名空间'),
+          message: this.$t('dashboard.ns.validate.emptyNs'),
         });
         return;
       }
@@ -1885,7 +1885,7 @@ export default {
       const ns = me.selectedNamespaceList[0];
       me.$bkInfo({
         title: '',
-        content: me.$createElement('p', me.$t('请注意：命名空间{name}下的同名资源将会被覆盖更新，确认创建？', { name: ns.name })),
+        content: me.$createElement('p', me.$t('deploy.templateset.confirmCreateOverwriteNamespace', { name: ns.name })),
         async confirmFn() {
           me.createInstanceLoading = true;
           try {
@@ -1924,7 +1924,7 @@ export default {
       if (this.invalidNsList.length) {
         this.$bkMessage({
           theme: 'error',
-          message: `${this.$t('命令空间')} [${this.invalidNsList.join(',')}] ${this.$t('没有相关联的 LoadBalance，请先到 网络 -> LoadBalance 页面关联')}`,
+          message: `${this.$t('k8s.namespace')} [${this.invalidNsList.join(',')}] ${this.$t('deploy.templateset.noAssociatedLoadBalance')}`,
         });
         return;
       }
@@ -1995,8 +1995,8 @@ export default {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       me.$bkInfo({
-        title: me.$t('确认创建'),
-        content: me.$createElement('p', this.$t('确定要进行创建操作？')),
+        title: me.$t('deploy.templateset.confirmCreate'),
+        content: me.$createElement('p', this.$t('deploy.templateset.confirmCreateOperation')),
         async confirmFn() {
           me.createInstanceLoading = true;
           try {
@@ -2050,7 +2050,7 @@ export default {
           if (serviceObj[k] === -1) {
             this.$bkMessage({
               theme: 'error',
-              message: this.$t('请选择{key}命名空间的{k}'),
+              message: this.$t('deploy.templateset.selectNamespaceKeyValue'),
             });
             outloop = false;
             ret = false;
@@ -2072,8 +2072,8 @@ export default {
         const me = this;
         const h = me.$createElement;
         me.$bkInfo({
-          title: this.$t('确认取消'),
-          content: h('p', this.$t('确定要取消实例化操作？')),
+          title: this.$t('deploy.templateset.confirmCancel'),
+          content: h('p', this.$t('deploy.templateset.confirmCancelInstantiation')),
           async confirmFn() {
             me.$router.push({
               name: 'templateset',
@@ -2136,7 +2136,7 @@ export default {
           this.bkMessageInstance && this.bkMessageInstance.close();
           this.bkMessageInstance = this.$bkMessage({
             theme: 'error',
-            message: this.$t('请填写命名空间名称'),
+            message: this.$t('deploy.templateset.enterNamespaceName'),
           });
           return;
         }
@@ -2144,7 +2144,7 @@ export default {
         if (this.namespaceName.length < 2) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('命名空间名称不得小于2个字符'),
+            message: this.$t('deploy.templateset.namespaceNameMinLength'),
           });
           return;
         }
@@ -2152,7 +2152,7 @@ export default {
         if (!/^[a-z][a-z0-9-]+$/g.test(this.namespaceName)) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('命名空间名称只能包含小写字母、数字以及连字符(-)，且不能以数字开头'),
+            message: this.$t('deploy.templateset.namespaceNameCriteria'),
           });
           return;
         }
@@ -2161,7 +2161,7 @@ export default {
           this.bkMessageInstance && this.bkMessageInstance.close();
           this.bkMessageInstance = this.$bkMessage({
             theme: 'error',
-            message: this.$t('请选择所属集群'),
+            message: this.$t('deploy.templateset.selectCluster'),
           });
           return;
         }

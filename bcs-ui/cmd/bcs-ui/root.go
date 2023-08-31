@@ -164,7 +164,7 @@ func initConfig() {
 		os.Exit(1)
 	}
 
-	if err := config.G.ReadFromViper(viper.GetViper()); err != nil {
+	if err := config.G.ReadFromFile(cfgFile); err != nil {
 		klog.ErrorS(err, "readFrom config file failed")
 		os.Exit(1)
 	}

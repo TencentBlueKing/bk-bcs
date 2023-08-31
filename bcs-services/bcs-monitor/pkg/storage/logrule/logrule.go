@@ -91,9 +91,9 @@ func (m *ModelLogRule) ensureTable(ctx context.Context) error {
 }
 
 // CreateLogRule create log rule
-func (m *ModelLogRule) CreateLogRule(ctx context.Context, lc *entity.LogRule) error {
+func (m *ModelLogRule) CreateLogRule(ctx context.Context, lc *entity.LogRule) (string, error) {
 	if err := m.ensureTable(ctx); err != nil {
-		return err
+		return "", err
 	}
 
 	now := utils.JSONTime{Time: time.Now()}
@@ -103,9 +103,9 @@ func (m *ModelLogRule) CreateLogRule(ctx context.Context, lc *entity.LogRule) er
 		lc.ID = primitive.NewObjectIDFromTimestamp(now.Time)
 	}
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{lc}); err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return lc.ID.Hex(), nil
 }
 
 // UpdateLogRule update log rule

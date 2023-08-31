@@ -1,0 +1,349 @@
+#!/bin/bash
+
+#######################################
+# Tencent is pleased to support the open source community by making Blueking Container Service available.
+# Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+# http://opensource.org/licenses/MIT
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#######################################
+
+set -euo pipefail
+
+# common BASH CLI scaffold
+VERSION=0.1.0
+PROGRAM="$(basename "$0")"
+
+SELF_DIR=$(dirname "$(readlink -f "$0")")
+ROOT_DIR=${SELF_DIR}/..
+
+readonly VERSION PROGRAM SELF_DIR ROOT_DIR
+
+usage_and_exit() {
+  cat <<EOF
+Usage:
+    $PROGRAM
+      [ -h --help -?,  show usage ]
+      [ -v -V --version, show script version]
+      [ -c --config
+        init: READ CLUSTER_ENV and init bcs.env file
+        dump: print bcs.env file.
+        clean: clean bcs.env file ]
+EOF
+  exit "$1"
+}
+
+version() {
+  echo "$PROGRAM version $VERSION"
+}
+
+render_cluster() {
+  local image_registry config_file=$1
+  if [[ -n ${BK_PUBLIC_REPO:-} ]]; then
+    # ToDo: registry.k8s.io replace k8s.gcr.io
+    image_registry=${BK_PUBLIC_REPO}/registry.k8s.io
+  else
+    image_registry="registry.k8s.io"
+  fi
+
+  cat >"${config_file}" <<EOF
+apiVersion: kubeadm.k8s.io/$kubeadm_tag
+apiServer:
+  extraArgs:
+    authorization-mode: Node,RBAC
+$(
+    case "${ipv6_status}" in
+      "dualstack")
+        cat <<IPv6_EOF
+    bind-address: "::"
+    service-cluster-ip-range: "${K8S_SVC_CIDR},${K8S_SVC_CIDRv6}"
+IPv6_EOF
+        ;;
+      "singlestack")
+        cat <<IPv6_EOF
+    bind-address: "::"
+IPv6_EOF
+        ;;
+    esac
+  )
+  timeoutForControlPlane: 4m0s
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controlPlaneEndpoint: k8s-api.bcs.local:6443
+controllerManager: $(
+    case "${ipv6_status}" in
+      "dualstack")
+        cat <<IPv6EOF
+
+  extraArgs:
+    bind-address: "::"
+    service-cluster-ip-range: "${K8S_SVC_CIDR},${K8S_SVC_CIDRv6}"
+    cluster-cidr: "${K8S_POD_CIDR},${K8S_POD_CIDRv6}"
+    node-cidr-mask-size-ipv6: "$K8S_IPv6_MASK"
+IPv6EOF
+        ;;
+      "singlestack")
+        cat <<IPv6EOF
+
+  extraArgs:
+    bind-address: "::"
+    node-cidr-mask-size-ipv6: "$K8S_IPv6_MASK"
+IPv6EOF
+        ;;
+      "disable")
+        echo "{}"
+        ;;
+    esac
+  )
+$(
+    [[ $kubeadm_tag == "v1beta2" ]] && cat <<DNS_EOF
+dns:
+  type: CoreDNS
+DNS_EOF
+  )
+etcd:
+  local:
+    dataDir: ${ETCD_LIB}
+imageRepository: ${image_registry}
+kind: ClusterConfiguration
+kubernetesVersion: v${K8S_VER}
+networking:
+  dnsDomain: cluster.local
+$(
+    case "${ipv6_status}" in
+      "dualstack")
+        cat <<IPv6_EOF
+  podSubnet: ${K8S_POD_CIDR},${K8S_POD_CIDRv6}
+  serviceSubnet: ${K8S_SVC_CIDR},${K8S_SVC_CIDRv6}
+IPv6_EOF
+        ;;
+      *)
+        cat <<IPv6_EOF
+  podSubnet: ${K8S_POD_CIDR}
+  serviceSubnet: ${K8S_SVC_CIDR}
+IPv6_EOF
+        ;;
+    esac
+  )
+scheduler: $(
+    case "${ipv6_status}" in
+      "disable")
+        echo "{}"
+        ;;
+      *)
+        cat <<IPv6EOF
+
+  extraArgs:
+    bind-address: "::"
+IPv6EOF
+        ;;
+    esac
+  )
+---
+EOF
+}
+
+render_kubelet() {
+  true
+}
+
+render_init_join() {
+  local config_file=$1
+  local role node_name node_type join_cmd
+  if [[ -n ${JOIN_CMD:-} ]]; then
+    role="node"
+    node_type="JoinConfiguration"
+    join_cmd=$(base64 -d <<<"${JOIN_CMD}")
+  elif [[ -n ${MASTER_JOIN_CMD:-} ]]; then
+    role="master"
+    node_type="JoinConfiguration"
+    # shellcheck disable=SC2034
+    join_cmd=$(base64 -d <<<"${MASTER_JOIN_CMD}")
+  else
+    role=master
+    node_type="InitConfiguration"
+  fi
+
+  node_name="${role}-$(tr ":." "-" <<<"$LAN_IP")"
+
+  cat >"${config_file}" <<EOF
+apiVersion: kubeadm.k8s.io/$kubeadm_tag
+kind: ${node_type}
+$(
+    [[ $node_type == "InitConfiguration" ]] && cat <<MASTER_EOF
+localAPIEndpoint:
+  advertiseAddress: "${LAN_IP}"
+MASTER_EOF
+  )
+nodeRegistration:
+  name: $node_name
+$(
+    case "${cri_type}" in
+      "containerd")
+        cat <<CRI_EOF
+  criSocket: "/run/containerd/containerd.sock"
+CRI_EOF
+        ;;
+      "docker")
+        cat <<CRI_EOF
+  criSocket: "/var/run/dockershim.sock"
+CRI_EOF
+        ;;
+    esac
+  )
+  kubeletExtraArgs:
+    root-dir: ${KUBELET_LIB}
+$(
+    case "${ipv6_status}" in
+      "dualstack")
+        cat <<IPv6EOF
+    node-ip: "${LAN_IP},${LAN_IPv6}"
+IPv6EOF
+        ;;
+      *)
+        cat <<IPv6EOF
+    node-ip: "${LAN_IP}"
+IPv6EOF
+        ;;
+    esac
+  )
+$(
+    if [[ -n ${K8S_EXTRA_ARGS} ]]; then
+      cat <<KUBELET_EOF
+    ${K8S_EXTRA_ARGS}
+KUBELET_EOF
+    fi
+  )
+$(
+    if [[ $node_type == "JoinConfiguration" ]]; then
+      cat <<JOIN_EOF
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: k8s-api.bcs.local:6443
+    caCertHashes:
+    - $(grep -Po '(?<=discovery-token-ca-cert-hash )sha256:[a-z0-9]{64}' \
+        <<<"${join_cmd}")
+    token: $(grep -Po '(?<=token )[a-z0-9.]{23}' <<<"${join_cmd}")
+JOIN_EOF
+      if [[ $role == "master" ]]; then
+        cat <<MASTER_EOF
+controlPlane:
+  certificateKey: $(grep -Po '(?<=certificate-key )[a-z0-9]{64}' <<<"${join_cmd}")
+  localAPIEndpoint:
+    advertiseAddress: "${LAN_IP}"
+MASTER_EOF
+      fi
+    fi
+  )
+---
+EOF
+}
+
+render_proxy() {
+  local config_file=$1
+
+  cat >"${config_file}" <<EOF
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
+$(
+    if ! [[ $K8S_CTRL_IP =~ $LAN_IP ]]; then
+      cat <<EOFF
+ipvs:
+  excludeCIDRs:
+$(
+        case "${ipv6_status}" in
+          "dualstack")
+            cat <<IPv6EOF
+  - "${K8S_CTRL_IP%,*}/32"
+  - "${K8S_CTRL_IP#*,}/128"
+IPv6EOF
+            ;;
+          "singlestack")
+            cat <<IPv6EOF
+  - "$K8S_CTRL_IP/128"
+IPv6EOF
+            ;;
+          "disable")
+            cat <<IPv6EOF
+  - "$K8S_CTRL_IP/32"
+IPv6EOF
+            ;;
+
+        esac
+      )
+EOFF
+    fi
+  )
+$(
+    case "${ipv6_status}" in
+      "dualstack")
+        cat <<IPv6EOF
+bindAddress: "::"
+clusterCIDR: "${K8S_POD_CIDR},${K8S_POD_CIDRv6}"
+IPv6EOF
+        ;;
+      "singlestack")
+        cat <<IPv6EOF
+bindAddress: "::"
+IPv6EOF
+        ;;
+    esac
+  )
+---
+EOF
+}
+
+safe_source() {
+  local source_file=$1
+  if [[ -f ${source_file} ]]; then
+    #shellcheck source=/dev/null
+    source "${source_file}"
+  else
+    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    exit 1
+  fi
+}
+
+main() {
+  local source_files ipv6_status cri_type
+  source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+  for file in "${source_files[@]}"; do
+    safe_source "$file"
+  done
+
+  case ${K8S_VER} in
+    1.2[0-1].*)
+      kubeadm_tag="v1beta2"
+      ;;
+    1.2[2-4].*)
+      kubeadm_tag="v1beta3"
+      ;;
+    *)
+      utils::log "FATAL" \
+        "Only support 1.2[0-4].x, here is :${K8S_VER}"
+      ;;
+  esac
+
+  ipv6_status=${K8S_IPv6_STATUS:-}
+  ipv6_status=${ipv6_status,,}
+  cri_type=${CRI_TYPE:-}
+  cri_type=${cri_type,,}
+
+  local config_file
+  config_file=${ROOT_DIR}/kubeadm-config
+  utils::log "INFO" "rending ${config_file}"
+  render_cluster /tmp/cluster-config
+  render_init_join /tmp/init-join-config
+  render_proxy /tmp/proxy-config
+  cat /tmp/cluster-config /tmp/init-join-config /tmp/proxy-config >"${config_file}"
+  cat "${config_file}"
+  utils::log "OK" "${config_file} rendered"
+  rm -f /tmp/cluster-config /tmp/init-join-config /tmp/proxy-config
+}
+
+main

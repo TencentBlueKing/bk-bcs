@@ -227,3 +227,8 @@ func (aks *AksServiceImpl) CheckInstanceType(ctx context.Context, location, inst
 	// 机型不存在
 	return false, cloudprovider.ErrVmInstanceType
 }
+
+// ListKeyPairs keyPairs list
+func (aks *AksServiceImpl) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}

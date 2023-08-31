@@ -19,6 +19,7 @@ const (
 	FieldKeyProjectID          = "projectID"
 	FieldKeyProjectCode        = "projectCode"
 	FieldKeyClusterID          = "clusterID"
+	FieldKeyRule               = "rule"
 	FieldKeyName               = "name"
 	FieldKeyRuleID             = "ruleID"
 	FieldKeyRuleName           = "ruleName"

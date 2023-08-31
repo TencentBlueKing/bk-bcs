@@ -93,6 +93,7 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 		"disk_total":     `bcs:cluster:disk:total{cluster_id="%<clusterId>s", %<provider>s}`,
 		"diskio_used":    `bcs:cluster:diskio:used{cluster_id="%<clusterId>s", %<provider>s}`,
 		"diskio_total":   `bcs:cluster:diskio:total{cluster_id="%<clusterId>s", %<provider>s}`,
+		"pod_used":       `bcs:cluster:pod:used{cluster_id="%<clusterId>s", %<provider>s}`,
 		"pod_total":      `bcs:cluster:pod:total{cluster_id="%<clusterId>s", %<provider>s}`,
 	}
 
@@ -121,6 +122,7 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 			Total: result["diskio_total"],
 		},
 		PodUsage: &Usage{
+			Used:  result["pod_used"],
 			Total: result["pod_total"],
 		},
 	}
@@ -135,7 +137,7 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 // @Router  /pod_usage [get]
 func ClusterPodUsage(c *rest.Context) (interface{}, error) {
 	// 获取集群中节点列表
-	promql := `bcs:cluster:pod:used{cluster_id="%<clusterId>s", %<provider>s}`
+	promql := `bcs:cluster:pod:usage{cluster_id="%<clusterId>s", %<provider>s}`
 	return handleClusterMetric(c, promql)
 }
 

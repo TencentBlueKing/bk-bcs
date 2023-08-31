@@ -14,6 +14,7 @@ package bcsui
 
 import (
 	"embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -41,8 +42,6 @@ var (
 const (
 	confFilePath     = "frontend/dist/static/config.json"
 	defaultStaticURL = "/web"
-	// SITE_URL 前端Vue配置, 修改影响用户路由
-	defaultSiteURL = "/bcs"
 	// siteURLHeaderKey 前端前缀URL
 	siteURLHeaderKey = "X-BCS-SiteURL"
 )
@@ -50,6 +49,7 @@ const (
 // EmbedWebServer embed web server
 type EmbedWebServer interface {
 	IndexHandler() http.Handler
+	Render403Handler() http.Handler
 	FaviconHandler(w http.ResponseWriter, r *http.Request)
 	StaticFileHandler(prefix string) http.Handler
 	RootFS() embed.FS
@@ -79,7 +79,7 @@ func NewEmbedWeb() *EmbedWeb {
 	}
 
 	// 模版路径
-	tpl := template.Must(template.New("").ParseFS(frontendAssets, "frontend/dist/*.html"))
+	tpl := template.Must(template.New("").ParseFS(frontendAssets, "frontend/dist/*.html", "frontend/dist/static/*.html"))
 
 	root := http.FS(dist)
 
@@ -153,12 +153,13 @@ func (e *EmbedWeb) IndexHandler() http.Handler {
 		// 头部指定 SiteURL, 使用头部的， 多域名访问场景
 		siteURL := r.Header.Get(siteURLHeaderKey)
 		if siteURL == "" {
-			siteURL = path.Join(config.G.Web.RoutePrefix, defaultSiteURL)
+			siteURL = config.G.FrontendConf.Host.SiteURL
 		}
 
 		// 首页根路径下重定向跳转到 siteURL 前缀
-		if r.URL.Path == "/" {
+		if r.URL.Path == "/" && siteURL != "/" {
 			http.Redirect(w, r, siteURL, http.StatusMovedPermanently)
+			return
 		}
 
 		data := map[string]string{
@@ -170,9 +171,9 @@ func (e *EmbedWeb) IndexHandler() http.Handler {
 			"DEVOPS_HOST":             config.G.FrontendConf.Host.DevOpsHost,
 			"DEVOPS_BCS_API_URL":      config.G.FrontendConf.Host.DevOpsBCSAPIURL,
 			"DEVOPS_ARTIFACTORY_HOST": config.G.FrontendConf.Host.DevOpsArtifactoryHost,
-			"BK_IAM_APP_URL":          config.G.FrontendConf.Host.BKIAMAppURL,
 			"PAAS_HOST":               config.G.FrontendConf.Host.BKPaaSHost,
 			"BKMONITOR_HOST":          config.G.FrontendConf.Host.BKMonitorHost,
+			"BK_IAM_HOST":             config.G.FrontendConf.Host.BKIAMHost,
 			"BK_CC_HOST":              config.G.FrontendConf.Host.BKCCHost,
 			"BK_SRE_HOST":             config.G.FrontendConf.Host.BKSREHOST,
 			"BCS_API_HOST":            config.G.BCS.Host,
@@ -257,4 +258,33 @@ func (e *EmbedWeb) StaticFileHandler(prefix string) http.Handler {
 	}
 
 	return http.StripPrefix(prefix, http.HandlerFunc(fn))
+}
+
+// get403Msg base64 decode msg
+func get403Msg(r *http.Request) string {
+	rawMsg := r.URL.Query().Get("msg")
+	if rawMsg == "" {
+		return ""
+	}
+
+	b, err := base64.StdEncoding.DecodeString(rawMsg)
+	if err != nil {
+		return ""
+	}
+
+	return string(b)
+}
+
+// Render403Handler 403.html 页面
+func (e *EmbedWeb) Render403Handler() http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		tplData := map[string]string{
+			"MSG":        get403Msg(r),
+			"STATIC_URL": path.Join(config.G.Web.RoutePrefix, defaultStaticURL),
+		}
+
+		e.tpl.ExecuteTemplate(w, "403.html", tplData)
+	}
+
+	return http.HandlerFunc(fn)
 }

@@ -14,11 +14,9 @@ package task
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	"strings"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -45,7 +43,7 @@ func (ga *GetAction) setResp(code uint32, msg string) {
 	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-// Handle handle get cluster credential
+// Handle get cluster credential
 func (ga *GetAction) Handle(
 	ctx context.Context, req *cmproto.GetTaskRequest, resp *cmproto.GetTaskResponse) {
 	if req == nil || resp == nil {
@@ -65,12 +63,8 @@ func (ga *GetAction) Handle(
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	for k, v := range task.CommonParams {
-		if utils.StringInSlice(strings.ToLower(k), Passwd) || utils.StringContainInSlice(v, Passwd) {
-			delete(task.CommonParams, k)
-		}
-	}
-	hiddenTaskPassword(task)
+	utils.HiddenTaskPassword(task)
+	// actions.FormatTaskTime(task)
 
 	resp.Data = task
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

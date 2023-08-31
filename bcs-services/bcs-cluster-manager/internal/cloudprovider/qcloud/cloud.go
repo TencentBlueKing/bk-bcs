@@ -14,6 +14,7 @@
 package qcloud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -23,6 +24,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	putils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -33,7 +35,7 @@ var cloudInfoMgr sync.Once
 
 func init() {
 	cloudInfoMgr.Do(func() {
-		// init Cluster
+		//init Cluster
 		cloudprovider.InitCloudInfoManager(cloudName, &CloudInfoManager{})
 	})
 }
@@ -42,7 +44,7 @@ func init() {
 type CloudInfoManager struct {
 }
 
-// InitCloudClusterDefaultInfo init cloud defaultInfo
+// InitCloudClusterDefaultInfo check importCluster operation
 func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster,
 	opt *cloudprovider.InitClusterConfigOption) error {
 	// call qcloud interface to init cluster defaultConfig
@@ -54,12 +56,16 @@ func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster,
 		return fmt.Errorf("%s InitCloudClusterDefaultInfo option is empty", cloudName)
 	}
 
-	// cluster cloud advanced setting
-	clusterCloudDefaultAdvancedSetting(cls)
-	// cluster cloud node setting
-	clusterCloudDefaultNodeSetting(cls)
+	if len(cls.ManageType) == 0 {
+		cls.ManageType = common.ClusterManageTypeIndependent
+	}
+
 	// cluster cloud basic setting
 	clusterCloudDefaultBasicSetting(cls, opt.Cloud, opt.ClusterVersion)
+	// cluster cloud advanced setting
+	clusterCloudDefaultAdvancedSetting(cls, opt.Cloud, opt.ClusterVersion)
+	// cluster cloud node setting
+	clusterCloudDefaultNodeSetting(cls, true)
 
 	if cls.NetworkSettings.CidrStep <= 0 {
 		switch cls.Environment {
@@ -86,22 +92,25 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	}
 
 	// get cloud cluster
-	cluster, err := getCloudCluster(opt)
+	tkeCluster, masterNodes, err := getCloudClusterInfo(opt)
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo failed: %v", err)
 	}
-	cls.SystemID = *cluster.ClusterId
-	cls.VpcID = *cluster.ClusterNetworkSettings.VpcId
+
+	cls.SystemID = *tkeCluster.ClusterId
+	cls.VpcID = *tkeCluster.ClusterNetworkSettings.VpcId
+	cls.Master = masterNodes
+	cls.ManageType = *tkeCluster.ClusterType
 
 	// cluster cloud basic setting
-	clusterBasicSettingByQCloud(cls, cluster)
+	clusterBasicSettingByQCloud(cls, tkeCluster)
 	// cluster cloud node setting
-	clusterCloudDefaultNodeSetting(cls)
+	clusterCloudDefaultNodeSetting(cls, false)
 	// cluster cloud advanced setting
-	clusterAdvancedSettingByQCloud(cls, cluster)
+	clusterAdvancedSettingByQCloud(cls, tkeCluster)
 
 	// cluster cloud network setting
-	err = clusterNetworkSettingByQCloud(cls, cluster)
+	err = clusterNetworkSettingByQCloud(cls, tkeCluster)
 	if err != nil {
 		blog.Errorf("SyncClusterCloudInfo clusterNetworkSettingByQCloud failed: %v", err)
 	}
@@ -109,7 +118,8 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	return nil
 }
 
-func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*tke.Cluster, error) {
+func getCloudClusterInfo(opt *cloudprovider.SyncClusterCloudInfoOption) (
+	*tke.Cluster, map[string]*cmproto.Node, error) {
 	var (
 		cloudID = opt.ImportMode.CloudID
 		err     error
@@ -117,19 +127,90 @@ func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*tke.Cluste
 	if cloudID == "" {
 		cloudID, err = getCloudIDByKubeConfig(opt)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
+	tkeCluster, err := getTkeCluster(opt, cloudID)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	cli, err := api.NewTkeClient(opt.Common)
+	switch *tkeCluster.ClusterType {
+	case common.ClusterManageTypeManaged:
+		return tkeCluster, nil, nil
+	default:
+	}
+
+	masterNodes, err := getClusterMasterNodes(opt, tkeCluster)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return tkeCluster, masterNodes, nil
+}
+
+func getTkeCluster(opt *cloudprovider.SyncClusterCloudInfoOption, cloudID string) (*tke.Cluster, error) {
+	tkeCli, err := api.NewTkeClient(opt.Common)
 	if err != nil {
 		return nil, err
 	}
 
-	return cli.GetTKECluster(cloudID)
+	return tkeCli.GetTKECluster(cloudID)
 }
 
-// getCloudIDByKubeConfig xxx
+func getClusterMasterNodes(opt *cloudprovider.SyncClusterCloudInfoOption,
+	cluster *tke.Cluster) (map[string]*cmproto.Node, error) {
+	tkeCli, err := api.NewTkeClient(opt.Common)
+	if err != nil {
+		return nil, err
+	}
+
+	instancesList, err := tkeCli.QueryTkeClusterAllInstances(context.Background(), *cluster.ClusterId, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		masterIPs = make([]string, 0)
+	)
+	for _, ins := range instancesList {
+		switch ins.InstanceRole {
+		case api.MASTER_ETCD.String():
+			masterIPs = append(masterIPs, ins.InstanceIP)
+		default:
+			continue
+		}
+	}
+
+	masterNodes := make(map[string]*cmproto.Node)
+	nodes, err := transInstanceIPToNodes(masterIPs, &cloudprovider.ListNodesOption{
+		Common:       opt.Common,
+		ClusterVPCID: *cluster.ClusterNetworkSettings.VpcId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, node := range nodes {
+		node.Status = common.StatusRunning
+		masterNodes[node.InnerIP] = node
+	}
+
+	return masterNodes, nil
+}
+
+func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption) ([]*cmproto.Node, error) {
+	nodeMgr := api.NodeManager{}
+	nodes, err := nodeMgr.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
+		Common:       opt.Common,
+		ClusterVPCID: opt.ClusterVPCID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return nodes, nil
+}
+
 // kubeConfig cluster name must be cloud clusterID
 func getCloudIDByKubeConfig(opt *cloudprovider.SyncClusterCloudInfoOption) (string, error) {
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
@@ -146,16 +227,23 @@ func clusterAdvancedSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) 
 	cls.ClusterAdvanceSettings = &cmproto.ClusterAdvanceSetting{
 		IPVS:             *cluster.ClusterNetworkSettings.Ipvs,
 		ContainerRuntime: *cluster.ContainerRuntime,
-		RuntimeVersion:   common.DockerRuntimeVersion,
-		ExtraArgs:        common.DefaultClusterConfig,
+		RuntimeVersion: func() string {
+			if cluster != nil && cluster.RuntimeVersion != nil {
+				return *cluster.RuntimeVersion
+			}
+			return common.DockerRuntimeVersion
+		}(),
+		ExtraArgs: common.DefaultClusterConfig,
 	}
 }
 
 func clusterBasicSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) {
 	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
-		OS:          *cluster.ClusterOs,
-		Version:     *cluster.ClusterVersion,
-		VersionName: *cluster.ClusterVersion,
+		OS:                        *cluster.ClusterOs,
+		Version:                   *cluster.ClusterVersion,
+		VersionName:               *cluster.ClusterVersion,
+		ClusterLevel:              *cluster.ClusterLevel,
+		IsAutoUpgradeClusterLevel: *cluster.AutoUpgradeClusterLevel,
 	}
 }
 
@@ -190,21 +278,30 @@ func clusterNetworkSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) e
 	return nil
 }
 
-func clusterCloudDefaultAdvancedSetting(cls *cmproto.Cluster) {
+func clusterCloudDefaultAdvancedSetting(cls *cmproto.Cluster, cloud *cmproto.Cloud, version string) {
+	runtimeInfo, err := putils.GetCloudDefaultRuntimeVersion(cloud, version)
+	if err != nil {
+		blog.Errorf("clusterCloudDefaultAdvancedSetting[%s] getCloudDefaultRuntimeInfo "+
+			"failed: %v", cloud.CloudID, err)
+		runtimeInfo = &cmproto.RunTimeInfo{
+			ContainerRuntime: common.DockerContainerRuntime,
+			RuntimeVersion:   common.DockerRuntimeVersion,
+		}
+	}
+
 	if cls.ClusterAdvanceSettings == nil {
 		cls.ClusterAdvanceSettings = &cmproto.ClusterAdvanceSetting{
 			IPVS:             true,
-			ContainerRuntime: common.DockerContainerRuntime,
-			RuntimeVersion:   common.DockerRuntimeVersion,
+			ContainerRuntime: runtimeInfo.ContainerRuntime,
+			RuntimeVersion:   runtimeInfo.RuntimeVersion,
 			ExtraArgs:        common.DefaultClusterConfig,
 		}
-
 	} else {
 		if cls.ClusterAdvanceSettings.ContainerRuntime == "" {
-			cls.ClusterAdvanceSettings.ContainerRuntime = common.DockerContainerRuntime
+			cls.ClusterAdvanceSettings.ContainerRuntime = runtimeInfo.ContainerRuntime
 		}
 		if cls.ClusterAdvanceSettings.RuntimeVersion == "" {
-			cls.ClusterAdvanceSettings.RuntimeVersion = common.DockerRuntimeVersion
+			cls.ClusterAdvanceSettings.RuntimeVersion = runtimeInfo.RuntimeVersion
 		}
 		if cls.ClusterAdvanceSettings.ExtraArgs == nil {
 			cls.ClusterAdvanceSettings.ExtraArgs = common.DefaultClusterConfig
@@ -212,12 +309,15 @@ func clusterCloudDefaultAdvancedSetting(cls *cmproto.Cluster) {
 	}
 }
 
-func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster) {
+func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster, defaultNodeConfig bool) {
 	if cls.NodeSettings == nil {
 		cls.NodeSettings = &cmproto.NodeSetting{
 			DockerGraphPath: common.DockerGraphPath,
 			MountTarget:     common.MountTarget,
 			UnSchedulable:   1,
+		}
+		if defaultNodeConfig {
+			cls.NodeSettings.ExtraArgs = common.DefaultNodeConfig
 		}
 	} else {
 		if cls.NodeSettings.DockerGraphPath == "" {
@@ -229,6 +329,9 @@ func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster) {
 		if cls.NodeSettings.UnSchedulable == 0 {
 			cls.NodeSettings.UnSchedulable = 1
 		}
+		if cls.ClusterAdvanceSettings.ExtraArgs == nil && defaultNodeConfig {
+			cls.NodeSettings.ExtraArgs = common.DefaultNodeConfig
+		}
 	}
 }
 
@@ -236,6 +339,9 @@ func clusterCloudDefaultBasicSetting(cls *cmproto.Cluster, cloud *cmproto.Cloud,
 	defaultOSImage := common.DefaultImageName
 	if len(cloud.OsManagement.AvailableVersion) > 0 {
 		defaultOSImage = cloud.OsManagement.AvailableVersion[0]
+	}
+	if version == "" {
+		version = cloud.ClusterManagement.AvailableVersion[0]
 	}
 
 	if cls.ClusterBasicSettings == nil {

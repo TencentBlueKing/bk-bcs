@@ -51,6 +51,7 @@ func TestNewTokenAuth(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestGrpcTokenAuth_GetRequestMetadata(t *testing.T) {
 	type fields struct {
 		Token string
@@ -170,6 +171,7 @@ func TestCreateNodeGroupCache(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestCreateNodeGroupCacheWithoutEncryption(t *testing.T) {
 	os.Setenv("Encryption", "no")
 	os.Setenv("Operator", "bcs")

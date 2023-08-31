@@ -50,6 +50,7 @@ type UserManagerOptions struct {
 	PassCC           PassCCConfig         `json:"passcc"`
 	TracingConf      TracingConf          `json:"tracing_conf"`
 	BcsAPI           BcsAPI               `json:"bcs_api"`
+	Encrypt          Encrypt              `json:"encrypt" yaml:"encrypt"`
 }
 
 // TracingConf tracing config
@@ -91,7 +92,7 @@ type IAMConfig struct {
 
 // TKEOptions tke api option
 type TKEOptions struct {
-	SecretId  string `json:"secret_id" value:"" usage:"tke user account secret id"`
+	SecretID  string `json:"secret_id" value:"" usage:"tke user account secret id"`
 	SecretKey string `json:"secret_key" value:"" usage:"tke user account secret key"`
 	CcsHost   string `json:"ccs_host" value:"" usage:"tke ccs host domain"`
 	CcsPath   string `json:"ccs_path" value:"" usage:"tke ccs path"`
@@ -138,4 +139,23 @@ type CmdbConfig struct {
 	AppSecret  string `json:"app_secret"`
 	BkUserName string `json:"bk_user_name"`
 	Host       string `json:"host"`
+}
+
+// BcsAPI bcs api config
+type BcsAPI struct {
+	Host  string `json:"host" usage:"enable http host"`
+	Token string `json:"token" usage:"token for calling service"`
+}
+
+// Encrypt define encrypt config
+type Encrypt struct {
+	Enable    bool          `json:"enable" yaml:"enable"`
+	Algorithm string        `json:"algorithm" yaml:"algorithm"`
+	Secret    EncryptSecret `json:"secret" yaml:"secret"`
+}
+
+// EncryptSecret define encrypt secret
+type EncryptSecret struct {
+	Key    string `json:"key" yaml:"key"`
+	Secret string `json:"secret" yaml:"secret"`
 }

@@ -2,7 +2,7 @@
   <div class="cursor-default">
     <div class="cluster-view">
       <span :class="['cluster-view-type', { 'shared': isSharedCluster }]">
-        {{ isSharedCluster ? $t('共享') : $t('专用') }}
+        {{ isSharedCluster ? $t('bcs.cluster.publicIcon') : $t('bcs.cluster.privateIcon') }}
       </span>
       <span class="flex flex-1 flex-col ml-[10px]">
         <span
@@ -77,7 +77,7 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .side-menu-wrapper {
-  max-height: calc(100vh - 164px);
+  max-height: calc(100vh - 170px);
   overflow-y: auto;
   &::-webkit-scrollbar {
     display: none;

@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -30,6 +31,8 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 )
 
 type ctxKey int
@@ -49,6 +52,23 @@ var (
 	}
 	clientOnce   sync.Once
 	globalClient *resty.Client
+
+	// dialer with timeout
+	dialer = &net.Dialer{
+		Timeout:   timeout,
+		KeepAlive: timeout,
+	}
+	// defaultTransport default transport
+	defaultTransport http.RoundTripper = &http.Transport{
+		DialContext:           dialer.DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		// NOCC:gas/tls(设计如此)
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 )
 
 // WithRequestIDValue 设置 RequestId 值
@@ -162,8 +182,8 @@ func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
 	return nil
 }
 
-func restyBeforeRequestHook(c *resty.Client, r *http.Request) error {
-	SetRequestIDHeaderValue(r, RequestIDValue(r.Context()))
+func restyBeforeRequestHook(c *resty.Client, r *resty.Request) error {
+	SetRequestIDHeaderValue(r.RawRequest, RequestIDValue(r.Context()))
 	return nil
 }
 
@@ -173,14 +193,13 @@ func GetClient() *resty.Client {
 		clientOnce.Do(func() {
 			globalClient = resty.New().
 				SetTimeout(timeout).
-				SetDebug(false).   // 更多详情, 可以开启为 true
-				SetCookieJar(nil). // 后台API去掉 cookie 记录
+				SetTransport(tracing.NewTracingTransport(defaultTransport)). // 设置tracingTransport 传递tracing
+				SetDebug(false).                                             // 更多详情, 可以开启为 true
+				SetCookieJar(nil).                                           // 后台API去掉 cookie 记录
 				SetDebugBodyLimit(1024).
 				OnAfterResponse(restyAfterResponseHook).
 				SetPreRequestHook(restyBeforeRequestHook).
 				OnError(restyErrHook).
-				// NOCC:gas/tls(设计如此:)
-				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
 				SetHeader("User-Agent", userAgent)
 		})
 	}

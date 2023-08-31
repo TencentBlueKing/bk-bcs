@@ -91,7 +91,7 @@ export default defineComponent({
       if (!data.length) {
         $bkMessage({
           theme: 'error',
-          message: $i18n.t('请选择服务器'),
+          message: $i18n.t('generic.ipSelector.validate.emptyHost'),
         });
         return;
       }

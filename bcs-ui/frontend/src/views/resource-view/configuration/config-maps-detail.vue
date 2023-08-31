@@ -1,11 +1,11 @@
 <template>
   <div class="detail p30">
     <div class="detail-title">
-      {{ $t('基础信息') }}
+      {{ $t('generic.title.basicInfo') }}
     </div>
     <div class="detail-content basic-info">
       <div class="basic-info-item">
-        <label>{{ $t('命名空间') }}</label>
+        <label>{{ $t('k8s.namespace') }}</label>
         <span>{{ data.metadata.namespace }}</span>
       </div>
       <div class="basic-info-item">
@@ -13,16 +13,16 @@
         <span class="bcs-ellipsis">{{ data.metadata.uid }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('创建时间') }}</label>
+        <label>{{ $t('cluster.labels.createdAt') }}</label>
         <span>{{ extData.createTime }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('存在时间') }}</label>
+        <label>{{ $t('k8s.age') }}</label>
         <span>{{ extData.age }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('不可变更') }}</label>
-        <span>{{ extData.immutable ? $t('是') : $t('否') }}</span>
+        <label>{{ $t('k8s.immutable') }}</label>
+        <span>{{ extData.immutable ? $t('units.boolean.true') : $t('units.boolean.false') }}</span>
       </div>
     </div>
     <bcs-tab class="mt20" type="card" :label-height="42">
@@ -36,7 +36,7 @@
           <bk-table-column label="" width="40">
             <template #default="{ row, $index }">
               <span
-                v-bk-tooltips.top="$t('复制')"
+                v-bk-tooltips.top="$t('cluster.nodeList.button.copy.text')"
                 v-show="$index === ativeIndex"
                 @click="handleCopyContent(row.value)">
                 <i class="bcs-icon bcs-icon-copy"></i>
@@ -45,19 +45,19 @@
           </bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="lebel" :label="$t('标签')">
+      <bcs-tab-panel name="lebel" :label="$t('k8s.label')">
         <bk-table :data="handleTransformObjToArr(data.metadata.labels)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="annotation" :label="$t('注解')">
+      <bcs-tab-panel name="annotation" :label="$t('k8s.annotation')">
         <bk-table :data="handleTransformObjToArr(data.metadata.annotations)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="event" :label="$t('事件')">
+      <bcs-tab-panel name="event" :label="$t('generic.label.event')">
         <EventQueryTableVue
           hide-cluster-and-namespace
           :kinds="data.kind"

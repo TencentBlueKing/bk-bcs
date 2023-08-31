@@ -12,36 +12,39 @@
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('名称')" prop="metadata.name" min-width="100" sortable="custom">
+        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" min-width="100" sortable="custom">
           <template #default="{ row }">
             <bk-button class="bcs-button-ellipsis" text @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
           </template>
         </bk-table-column>
         <bk-table-column
-          :label="$t('命名空间')"
+          :label="$t('k8s.namespace')"
           prop="metadata.namespace"
           min-width="100"
           sortable="custom">
         </bk-table-column>
-        <bk-table-column :label="$t('升级策略')" min-width="100">
+        <bk-table-column :label="$t('k8s.updateStrategy.text')" min-width="115">
           <template slot-scope="{ row }">
             <span>
               <bk-popover placement="top" v-if="$chainable(row.spec, 'strategy.type') === 'RollingUpdate'">
-                <span class="border-bottom-tips">{{ $t('滚动升级') }}</span>
+                <span class="border-bottom-tips">{{ $t('k8s.updateStrategy.rollingUpdate') }}</span>
                 <div slot="content" v-if="$chainable(row.spec, 'strategy.rollingUpdate.maxSurge')">
                   <p>
-                    {{ $t('最大调度Pod数量（maxSurge）: {num}', {
-                      num: `${String(row.spec.strategy.rollingUpdate.maxSurge).split('%')[0]}%` }) }}
+                    {{ $t(
+                      'dashboard.workload.label.upgrade.maxSurg',
+                      { num: row.spec.strategy.rollingUpdate.maxSurge }
+                    ) }}
                   </p>
                   <p>
-                    {{ $t('最大不可用数量（maxUnavailable）: {num}', { num:
-                      `${String(row.spec.strategy.rollingUpdate.maxUnavailable)
-                        .split('%')[0]}%` }) }}
+                    {{ $t(
+                      'dashboard.workload.label.upgrade.maxUnavailable',
+                      { num: row.spec.strategy.rollingUpdate.maxUnavailable }
+                    ) }}
                   </p>
                 </div>
                 <div slot="content" v-else>
-                  <p>{{ $t('最大调度Pod数量（maxSurge）: {num}', { num: '--' }) }}</p>
-                  <p>{{ $t('最大不可用数量（maxUnavailable）: {num}', { num: '--' }) }}</p>
+                  <p>{{ $t('dashboard.workload.label.upgrade.maxSurg', { num: '--' }) }}</p>
+                  <p>{{ $t('dashboard.workload.label.upgrade.maxUnavailable', { num: '--' }) }}</p>
                 </div>
               </bk-popover>
               <span v-else>
@@ -51,7 +54,7 @@
           </template>
         </bk-table-column>
         <bk-table-column
-          :label="$t('状态')"
+          :label="$t('generic.label.status')"
           prop="status"
           :filters="statusFilters"
           :filter-method="statusFilterMethod"
@@ -80,33 +83,33 @@
             <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('创建人')">
+        <bk-table-column :label="$t('generic.label.createdBy')">
           <template slot-scope="{ row }">
             <span>{{handleGetExtData(row.metadata.uid, 'creator') || '--'}}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('编辑模式')" width="100">
+        <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
           <template slot-scope="{ row }">
             <span>
               {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
-                ? $t('表单') : 'YAML'}}
+                ? $t('generic.label.editMode.form') : 'YAML'}}
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('操作')" :resizable="false" width="240">
+        <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="250">
           <template #default="{ row }">
             <bk-button
               text
-              @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
+              @click="handleUpdateResource(row)">{{ $t('generic.button.update') }}</bk-button>
             <bk-button
               class="ml10" text
-              @click="handleEnlargeCapacity(row)">{{ $t('扩缩容') }}</bk-button>
+              @click="handleEnlargeCapacity(row)">{{ $t('deploy.templateset.scale') }}</bk-button>
             <bk-button
               class="ml10" text
-              @click="gotoDetail(row)">{{ $t('重新调度') }}</bk-button>
+              @click="gotoDetail(row)">{{ $t('dashboard.workload.pods.delete') }}</bk-button>
             <bk-button
               class="ml10" text
-              @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
+              @click="handleDeleteResource(row)">{{ $t('generic.button.delete') }}</bk-button>
           </template>
         </bk-table-column>
         <template #empty>

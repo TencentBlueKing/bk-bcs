@@ -27,10 +27,18 @@ type NodeOveriewMetric struct {
 	ContainerCount     string `json:"container_count"`
 	PodTotal           string `json:"pod_total"`
 	PodCount           string `json:"pod_count"`
+	CPUUsed            string `json:"cpu_used"`
+	CPURequest         string `json:"cpu_request"`
+	CPUTotal           string `json:"cpu_total"`
 	CPUUsage           string `json:"cpu_usage"`
 	CPURequestUsage    string `json:"cpu_request_usage"`
+	DiskUsed           string `json:"disk_used"`
+	DiskTotal          string `json:"disk_total"`
 	DiskUsage          string `json:"disk_usage"`
 	DiskioUsage        string `json:"diskio_usage"`
+	MemoryUsed         string `json:"memory_used"`
+	MemoryRequest      string `json:"memory_request"`
+	MemoryTotal        string `json:"memory_total"`
 	MemoryUsage        string `json:"memory_usage"`
 	MemoryRequestUsage string `json:"memory_request_usage"`
 }
@@ -106,8 +114,8 @@ func handleNodeMetric(c *rest.Context, promql string) (interface{}, error) {
 		"provider":  PROVIDER,
 	}
 
-	result, err := bcsmonitor.QueryRange(c.Request.Context(), c.ProjectCode, promql, params, queryTime.Start, queryTime.End,
-		queryTime.Step)
+	result, err := bcsmonitor.QueryRange(c.Request.Context(), c.ProjectCode, promql, params, queryTime.Start,
+		queryTime.End, queryTime.Step)
 	if err != nil {
 		return nil, err
 	}
@@ -147,15 +155,23 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 	}
 
 	promqlMap := map[string]string{
-		"cpu":             `bcs:node:cpu:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
-		"cpu_request":     `bcs:node:cpu_request:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
-		"memory":          `bcs:node:memory:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
-		"memory_request":  `bcs:node:memory_request:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
-		"disk":            `bcs:node:disk:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
-		"diskio":          `bcs:node:diskio:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
-		"container_count": `bcs:node:container_count{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
-		"pod_count":       `bcs:node:pod_count{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
-		"pod_total":       `bcs:node:pod_total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"container_count":      `bcs:node:container_count{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"pod_total":            `bcs:node:pod_total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"pod_count":            `bcs:node:pod_count{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"cpu_used":             `bcs:node:cpu:used{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"cpu_request":          `bcs:node:cpu:request{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"cpu_total":            `bcs:node:cpu:total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"cpu_usage":            `bcs:node:cpu:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"cpu_request_usage":    `bcs:node:cpu_request:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"memory_used":          `bcs:node:memory:used{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"memory_request":       `bcs:node:memory:request{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"memory_total":         `bcs:node:memory:total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"memory_usage":         `bcs:node:memory:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"memory_request_usage": `bcs:node:memory_request:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"disk_usage":           `bcs:node:disk:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"disk_used":            `bcs:node:disk:used{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"disk_total":           `bcs:node:disk:total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"diskio_usage":         `bcs:node:diskio:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
 	}
 
 	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params, time.Now())
@@ -164,15 +180,23 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 	}
 
 	overview := &NodeOveriewMetric{
-		CPUUsage:           result["cpu"],
-		CPURequestUsage:    result["cpu_request"],
-		MemoryUsage:        result["memory"],
-		MemoryRequestUsage: result["memory_request"],
-		DiskUsage:          result["disk"],
-		DiskioUsage:        result["diskio"],
 		ContainerCount:     result["container_count"],
-		PodCount:           result["pod_count"],
 		PodTotal:           result["pod_total"],
+		PodCount:           result["pod_count"],
+		CPUUsed:            result["cpu_used"],
+		CPURequest:         result["cpu_request"],
+		CPUTotal:           result["cpu_total"],
+		CPUUsage:           result["cpu_usage"],
+		CPURequestUsage:    result["cpu_request_usage"],
+		DiskUsed:           result["disk_used"],
+		DiskTotal:          result["disk_total"],
+		DiskUsage:          result["disk_usage"],
+		DiskioUsage:        result["diskio_usage"],
+		MemoryUsed:         result["memory_used"],
+		MemoryRequest:      result["memory_request"],
+		MemoryTotal:        result["memory_total"],
+		MemoryUsage:        result["memory_usage"],
+		MemoryRequestUsage: result["memory_request_usage"],
 	}
 
 	return overview, nil

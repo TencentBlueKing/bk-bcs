@@ -91,6 +91,10 @@ func (a appTemplateVariable) TableName() string { return a.appTemplateVariableDo
 
 func (a appTemplateVariable) Alias() string { return a.appTemplateVariableDo.Alias() }
 
+func (a appTemplateVariable) Columns(cols ...field.Expr) gen.Columns {
+	return a.appTemplateVariableDo.Columns(cols...)
+}
+
 func (a *appTemplateVariable) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := a.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -227,10 +231,6 @@ func (a appTemplateVariableDo) Select(conds ...field.Expr) IAppTemplateVariableD
 
 func (a appTemplateVariableDo) Where(conds ...gen.Condition) IAppTemplateVariableDo {
 	return a.withDO(a.DO.Where(conds...))
-}
-
-func (a appTemplateVariableDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IAppTemplateVariableDo {
-	return a.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (a appTemplateVariableDo) Order(conds ...field.Expr) IAppTemplateVariableDo {

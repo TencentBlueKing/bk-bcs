@@ -76,7 +76,7 @@ func (ts *TaskServer) Init(opt *options.BrokerConfig, backend *cmongo.Options) e
 		blog.Errorf("taskserver validate broker/backend Option failed, %s", err.Error())
 		return err
 	}
-	// init server & worker
+	//init server & worker
 	if err := ts.initServer(); err != nil {
 		blog.Errorf("task server init go-machinery server failed, %s", err.Error())
 		return err
@@ -100,12 +100,12 @@ func (ts *TaskServer) Stop() {
 
 // Dispatch dispatch task to worker
 func (ts *TaskServer) Dispatch(task *proto.Task) error {
-	// store all task information and then dispatch to remote worker
+	//store all task information and then dispatch to remote worker
 	if err := validateTask(task); err != nil {
 		blog.Errorf("task %s/%s is not validate, %s", task.TaskID, task.TaskType, err.Error())
 		return err
 	}
-	// create all task to signature
+	//create all task to signature
 	blog.Infof("task %s/%s with steps %v ready to dispatch worker", task.TaskID, task.TaskType, task.StepSequence)
 	var signatures []*tasks.Signature
 	for _, stepName := range task.StepSequence {
@@ -114,18 +114,18 @@ func (ts *TaskServer) Dispatch(task *proto.Task) error {
 			UUID: fmt.Sprintf("task-%s-%s", task.TaskID, stepName),
 			Name: step.TaskMethod,
 			// two parameters: taskID, stepName
-			Args: []tasks.Arg{{Type: "string", Value: task.TaskID}, {Type: "string", Value: stepName}},
+			Args:                        []tasks.Arg{{Type: "string", Value: task.TaskID}, {Type: "string", Value: stepName}},
+			IgnoreWhenTaskNotRegistered: true,
 		}
 		signatures = append(signatures, signature)
 	}
 	ts.lock.Lock()
 	defer ts.lock.Unlock()
 
-	// sending to workers
+	//sending to workers
 	chain, _ := tasks.NewChain(signatures...)
-	cxt, cancel := context.WithCancel(ts.cxt)
-	defer cancel()
-
+	// NOCC:vet/vet(设计如此)
+	cxt, _ := context.WithCancel(ts.cxt)
 	asyncResult, err := ts.server.SendChainWithContext(cxt, chain)
 	if err != nil {
 		// try to re-send tasks with back-off strategy in for loop?
@@ -134,14 +134,14 @@ func (ts *TaskServer) Dispatch(task *proto.Task) error {
 	}
 
 	go func(t *proto.Task, c *tasks.Chain) {
-		// check async results
+		//check async results
 		for retry := 3; retry > 0; retry-- {
 			results, err := asyncResult.Get(time.Second * 5)
 			if err != nil {
 				blog.Errorf("tracing task %s result failed, %s. retry %d", t.TaskID, err.Error(), retry)
 				continue
 			}
-			// check results
+			//check results
 			blog.Infof("tracing task %s result %s", t.TaskID, tasks.HumanReadableResults(results))
 		}
 	}(task, chain)
@@ -156,7 +156,6 @@ func (ts *TaskServer) validateOption() error {
 	return nil
 }
 
-// initServer xxx
 // init server
 func (ts *TaskServer) initServer() error {
 	mongoCli, err := NewMongoCli(ts.backendOption)
@@ -187,11 +186,12 @@ func (ts *TaskServer) initServer() error {
 	}
 	lock := eager.New()
 	ts.server = machinery.NewServer(config, broker, backend, lock)
-	// get all task for registry
+
+	// get all cloud actions for registry
 	allTasks := make(map[string]interface{})
 	for _, mgr := range cloudprovider.GetAllTaskManager() {
-		taskList := mgr.GetAllTask()
-		for name, task := range taskList {
+		actions := mgr.GetAllTask()
+		for name, task := range actions {
 			if _, ok := allTasks[name]; ok {
 				blog.Errorf("taskserver init failed, task %s duplicated", name)
 				return fmt.Errorf("task %s duplicated", name)
@@ -208,14 +208,13 @@ func (ts *TaskServer) initServer() error {
 		}
 		allTasks[name] = action
 	}
-	if err := ts.server.RegisterTasks(allTasks); err != nil {
+	if err = ts.server.RegisterTasks(allTasks); err != nil {
 		blog.Errorf("task server register tasks failed, %s", err.Error())
 		return err
 	}
 	return nil
 }
 
-// initWorker xxx
 // init worker
 func (ts *TaskServer) initWorker() error {
 	ts.worker = ts.server.NewWorker("", 100)

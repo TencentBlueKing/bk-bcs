@@ -15,18 +15,21 @@
 package config
 
 import (
-	"github.com/spf13/viper"
+	"os"
+
 	"gopkg.in/yaml.v3"
 )
 
 // Configuration 配置
 type Configuration struct {
-	Viper        *viper.Viper  `yaml:"-"`
-	Base         *BaseConf     `yaml:"base_conf"`
-	BCS          *BCSConf      `yaml:"bcs_conf"`
-	Web          *WebConf      `yaml:"web"`
-	FrontendConf *FrontendConf `yaml:"frontend_conf"`
-	Tracing      *TracingConf  `yaml:"tracing"`
+	Base         *BaseConf                    `yaml:"base_conf"`
+	BCS          *BCSConf                     `yaml:"bcs_conf"`
+	IAM          *IAMConf                     `yaml:"iam_conf"`
+	Web          *WebConf                     `yaml:"web"`
+	Tracing      *TracingConf                 `yaml:"tracing"`
+	FrontendConf *FrontendConf                `yaml:"frontend_conf"`
+	FeatureFlags map[string]FeatureFlagOption `yaml:"feature_flags"`
+	Etcd         *EtcdConf                    `yaml:"etcd"`
 }
 
 // init 初始化
@@ -57,10 +60,16 @@ func newConfiguration() (*Configuration, error) {
 	c.BCS = &BCSConf{}
 	c.BCS.Init()
 
+	c.IAM = &IAMConf{}
 	c.FrontendConf = defaultFrontendConf()
 
+	// 链路追踪初始化
 	c.Tracing = &TracingConf{}
 	c.Tracing.Init()
+
+	// etcdc初始化
+	c.Etcd = &EtcdConf{}
+	c.Etcd.Init()
 	return c, nil
 }
 
@@ -90,6 +99,42 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	if err := yaml.Unmarshal(content, c); err != nil {
 		return err
 	}
+
+	// 添加环境变量
+	if c.Base.AppCode == "" {
+		c.Base.AppCode = BK_APP_CODE
+	}
+	if c.Base.AppSecret == "" {
+		c.Base.AppSecret = BK_APP_SECRET
+	}
+	if c.Base.SystemID == "" {
+		c.Base.SystemID = BK_SYSTEM_ID
+	}
+	if c.Base.BKUsername == "" {
+		c.Base.BKUsername = BK_USERNAME
+	}
+	if c.Base.Domain == "" {
+		c.Base.Domain = BK_DOMAIN
+	}
+
+	// bcs env
+	if c.BCS.Token == "" {
+		c.BCS.Token = BCS_APIGW_TOKEN
+	}
+	if c.BCS.JWTPubKey == "" {
+		c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
+	}
+
+	// iam env
+	if c.IAM.GatewayServer == "" {
+		c.IAM.GatewayServer = BKIAM_GATEWAY_SERVER
+	}
+
+	// etcd env
+	if c.Etcd.Endpoints == "" {
+		c.Etcd.Endpoints = BCS_ETCD_HOST
+	}
+
 	if err := c.init(); err != nil {
 		return err
 	}
@@ -105,13 +150,12 @@ func (c *Configuration) BCSDebugAPIHost() string {
 	return c.BCS.Host
 }
 
-// ReadFromViper : read from viper
-func (c *Configuration) ReadFromViper(v *viper.Viper) error {
+// ReadFromFile : read from config file
+func (c *Configuration) ReadFromFile(cfgFile string) error {
 	// 不支持inline, 需要使用 yaml 库
-	content, err := yaml.Marshal(v.AllSettings())
+	content, err := os.ReadFile(cfgFile)
 	if err != nil {
 		return err
 	}
-	c.Viper = v
 	return c.ReadFrom(content)
 }

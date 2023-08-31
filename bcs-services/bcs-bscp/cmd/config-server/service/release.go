@@ -89,3 +89,28 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 	}
 	return resp, nil
 }
+
+// GetReleaseByName get release by name
+func (s *Service) GetReleaseByName(ctx context.Context, req *pbcs.GetReleaseByNameReq) (*pbrelease.Release, error) {
+	kt := kit.FromGrpcContext(ctx)
+	resp := new(pbrelease.Release)
+
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetReleaseByNameReq{
+		BizId:       req.BizId,
+		AppId:       req.AppId,
+		ReleaseName: req.ReleaseName,
+	}
+	rp, err := s.client.DS.GetReleaseByName(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("get release by name %s failed, err: %v, rid: %s", req.ReleaseName, err, kt.Rid)
+		return nil, err
+	}
+
+	return rp, nil
+}

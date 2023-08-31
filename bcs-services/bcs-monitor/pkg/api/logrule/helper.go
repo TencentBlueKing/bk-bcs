@@ -35,6 +35,7 @@ import (
 const (
 	spaceUIDFormat        = "bkci__%s"
 	bcsLogConfigSeparator = ":"
+	bkLogPrefix           = "bklog|"
 )
 
 // GetLogRuleResp log rule resp
@@ -74,6 +75,34 @@ func (l GetLogRuleRespSortByUpdateTime) Less(i, j int) bool {
 // Swap xxx
 func (l GetLogRuleRespSortByUpdateTime) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
+// GetLogRuleRespSortByName sort LogRule by name
+type GetLogRuleRespSortByName []*GetLogRuleResp
+
+// Len xxx
+func (l GetLogRuleRespSortByName) Len() int { return len(l) }
+
+// Less xxx
+func (l GetLogRuleRespSortByName) Less(i, j int) bool {
+	return l[i].Name < l[j].Name
+}
+
+// Swap xxx
+func (l GetLogRuleRespSortByName) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+
+// GetLogRuleRespSortByStatus sort LogRule by status
+type GetLogRuleRespSortByStatus []*GetLogRuleResp
+
+// Len xxx
+func (l GetLogRuleRespSortByStatus) Len() int { return len(l) }
+
+// Less xxx
+func (l GetLogRuleRespSortByStatus) Less(i, j int) bool {
+	return l[i].Status == entity.PendingStatus
+}
+
+// Swap xxx
+func (l GetLogRuleRespSortByStatus) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+
 // CreateLogRuleReq req
 type CreateLogRuleReq struct {
 	Name        string        `json:"name" form:"name" binding:"required" validate:"max=30,min=5,regexp=^[A-Za-z0-9_]+$"`
@@ -91,6 +120,7 @@ func (req *CreateLogRuleReq) toEntity(c *rest.Context) *entity.LogRule {
 		ProjectID:   c.ProjectId,
 		ProjectCode: c.ProjectCode,
 		ClusterID:   c.ClusterId,
+		Rule:        req.Rule,
 		Creator:     c.Username,
 		Updator:     c.Username,
 		Status:      entity.PendingStatus,
@@ -128,6 +158,7 @@ func (req *UpdateLogRuleReq) toEntity(username, projectCode string) entity.M {
 		entity.FieldKeyMessage:     "",
 		entity.FieldKeyUpdator:     username,
 		entity.FieldKeyProjectCode: projectCode,
+		entity.FieldKeyRule:        req.Rule,
 	}
 }
 
@@ -173,6 +204,18 @@ func getBcsLogConfigNamespaces(id string) (string, string) {
 		return "", ""
 	}
 	return s[0], s[1]
+}
+
+func isBKLogID(id string) bool {
+	return strings.HasPrefix(id, bkLogPrefix)
+}
+
+func toBKLogID(name string) string {
+	return fmt.Sprintf("%s%s", bkLogPrefix, name)
+}
+
+func getBKLogName(id string) string {
+	return strings.TrimPrefix(id, bkLogPrefix)
 }
 
 // 转换 bcslogconfig 到通用规则
@@ -254,6 +297,48 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 }
 
 // 转换 entity.LogRule 到通用规则
+func (resp *GetLogRuleResp) loadFromBkLog(rule bklog.ListBCSCollectorRespData, projectCode string) {
+	resp.ID = toBKLogID(rule.CollectorConfigNameEN)
+	resp.Name = rule.CollectorConfigName
+	// 从日志平台创建的规则禁止编辑
+	resp.RuleID = 0
+	resp.RuleName = rule.CollectorConfigNameEN
+	resp.Description = rule.Description
+	resp.FileIndexSetID = rule.FileIndexSetID
+	resp.STDIndexSetID = rule.STDIndexSetID
+	resp.RuleFileIndexSetID = rule.RuleFileIndexSetID
+	resp.RuleSTDIndexSetID = rule.RuleSTDIndexSetID
+	resp.CreatedAt = utils.JSONTime{Time: rule.CreatedAt}
+	resp.UpdatedAt = utils.JSONTime{Time: rule.UpdatedAt}
+	resp.Creator = rule.Creator
+	resp.Updator = rule.Updator
+	resp.Status = rule.Status()
+	resp.Message = rule.Message()
+	resp.Entrypoint = Entrypoint{
+		STDLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", strings.TrimRight(config.G.BKLog.Entrypoint, "/"),
+			rule.STDIndexSetID, projectCode),
+		FileLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", strings.TrimRight(config.G.BKLog.Entrypoint, "/"),
+			rule.FileIndexSetID, projectCode),
+	}
+	resp.Config = bklog.LogRule{
+		ExtraLabels: make([]bklog.Label, 0),
+		LogRuleContainer: bklog.LogRuleContainer{
+			Paths: make([]string, 0),
+		},
+	}
+	resp.Config = rule.ToLogRule()
+	// append bkbase info
+	if resp.Config.DataInfo.FileBKDataDataID != 0 {
+		resp.Entrypoint.FileBKBaseURL = getBKBaseEntrypoing(config.G.BKLog.BKBaseEntrypoint,
+			resp.Config.DataInfo.FileBKDataDataID)
+	}
+	if resp.Config.DataInfo.StdBKDataDataID != 0 {
+		resp.Entrypoint.STDBKBaseURL = getBKBaseEntrypoing(config.G.BKLog.BKBaseEntrypoint,
+			resp.Config.DataInfo.StdBKDataDataID)
+	}
+}
+
+// 转换 entity.LogRule 到通用规则
 func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBCSCollectorRespData) {
 	resp.ID = e.ID.Hex()
 	resp.Name = e.Name
@@ -271,15 +356,15 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 	resp.Status = e.Status
 	resp.Message = e.Message
 	resp.Entrypoint = Entrypoint{
-		STDLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", config.G.BKLog.Entrypoint,
+		STDLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", strings.TrimRight(config.G.BKLog.Entrypoint, "/"),
 			e.RuleSTDIndexSetID, e.ProjectCode),
-		FileLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", config.G.BKLog.Entrypoint,
+		FileLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", strings.TrimRight(config.G.BKLog.Entrypoint, "/"),
 			e.RuleFileIndexSetID, e.ProjectCode),
 	}
 	resp.Config = bklog.LogRule{
 		ExtraLabels: make([]bklog.Label, 0),
 		LogRuleContainer: bklog.LogRuleContainer{
-			Namespaces: make([]string, 0),
+			Namespaces: e.Rule.LogRuleContainer.Namespaces,
 			Paths:      make([]string, 0),
 		},
 	}
@@ -288,6 +373,15 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 	for _, v := range lcs {
 		if e.RuleID == v.RuleID {
 			resp.Config = v.ToLogRule()
+			// append bkbase info
+			if resp.Config.DataInfo.FileBKDataDataID != 0 {
+				resp.Entrypoint.FileBKBaseURL = getBKBaseEntrypoing(config.G.BKLog.BKBaseEntrypoint,
+					resp.Config.DataInfo.FileBKDataDataID)
+			}
+			if resp.Config.DataInfo.StdBKDataDataID != 0 {
+				resp.Entrypoint.STDBKBaseURL = getBKBaseEntrypoing(config.G.BKLog.BKBaseEntrypoint,
+					resp.Config.DataInfo.StdBKDataDataID)
+			}
 			if resp.Status == entity.FailedStatus || resp.Status == entity.PendingStatus {
 				break
 			}
@@ -323,7 +417,8 @@ func getContainerQueryLogLinks(containerIDs []string, stdIndexSetID, fileIndexSe
 	}
 
 	for _, v := range containerIDs {
-		addition := []addition{{Field: "__ext.container_id", Operator: "=", Value: v}}
+		id := strings.TrimPrefix(v, "containerd://")
+		addition := []addition{{Field: "__ext.container_id", Operator: "=", Value: id}}
 		additionData, _ := json.Marshal(addition)
 		query := url.Values{}
 		query.Add("spaceUid", GetSpaceID(projectCode))
@@ -443,4 +538,9 @@ func getClusterLogRules(ctx context.Context, projectID, clusterID string) ([]*en
 	listOption := &utils.ListOption{Sort: map[string]interface{}{"updatedAt": 1}}
 	_, listInDB, err := store.ListLogRules(ctx, cond, listOption)
 	return listInDB, err
+}
+
+func getBKBaseEntrypoing(host string, dataID int) string {
+	return fmt.Sprintf("%s/#/data-hub-detail/index/%d?data_scenario=custom",
+		strings.TrimRight(host, "/"), dataID)
 }

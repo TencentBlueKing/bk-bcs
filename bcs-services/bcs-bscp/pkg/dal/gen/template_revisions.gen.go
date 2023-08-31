@@ -118,6 +118,10 @@ func (t templateRevision) TableName() string { return t.templateRevisionDo.Table
 
 func (t templateRevision) Alias() string { return t.templateRevisionDo.Alias() }
 
+func (t templateRevision) Columns(cols ...field.Expr) gen.Columns {
+	return t.templateRevisionDo.Columns(cols...)
+}
+
 func (t *templateRevision) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := t.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -263,10 +267,6 @@ func (t templateRevisionDo) Select(conds ...field.Expr) ITemplateRevisionDo {
 
 func (t templateRevisionDo) Where(conds ...gen.Condition) ITemplateRevisionDo {
 	return t.withDO(t.DO.Where(conds...))
-}
-
-func (t templateRevisionDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) ITemplateRevisionDo {
-	return t.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (t templateRevisionDo) Order(conds ...field.Expr) ITemplateRevisionDo {

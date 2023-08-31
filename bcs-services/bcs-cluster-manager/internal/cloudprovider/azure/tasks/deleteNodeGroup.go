@@ -51,7 +51,11 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("DeleteCloudNodeGroupTask GetClusterDependBasicInfo failed")

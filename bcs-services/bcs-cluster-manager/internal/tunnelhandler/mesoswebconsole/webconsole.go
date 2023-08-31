@@ -100,7 +100,6 @@ func (w *WebconsoleProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	return
 }
 
-// lookupWsDialer xxx
 // lookup websocket dialer in cache
 func (w *WebconsoleProxy) lookupWsDialer(clusterID string) (string, websocketDialer.Dialer, bool) {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{

@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { computed, ref, watch, Ref, set, reactive, toRef } from 'vue';
 import useInterval from '@/composables/use-interval';
-import { clusterDetail, cloudNodes, sharedclusters, createVCluster, deleteVCluster } from '@/api/modules/cluster-manager';
+import { clusterDetail, cloudNodes, sharedclusters, createVCluster, deleteVCluster, cloudAccountType } from '@/api/modules/cluster-manager';
 import $store from '@/store';
 import $router from '@/router';
 import { ICluster } from '@/composables/use-app';
@@ -256,14 +256,16 @@ export function useVCluster() {
   const sharedClusterList = ref<ICluster[]>([]);
   async function getSharedclusters() {
     loading.value = true;
-    sharedClusterList.value = await sharedclusters().catch(() => []);
+    sharedClusterList.value = await sharedclusters({
+      showVCluster: true,
+    }).catch(() => []);
     loading.value = false;
   }
   async function handleCreateVCluster(params) {
     const result = await createVCluster(params).catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('任务下发成功'),
+      message: $i18n.t('generic.msg.success.deliveryTask'),
     });
     return result;
   }
@@ -280,5 +282,22 @@ export function useVCluster() {
     getSharedclusters,
     handleCreateVCluster,
     handleDeleteVCluster,
+  };
+}
+
+export function useCloud() {
+  const accountType = ref<'STANDARD'|'LEGACY'>();
+  const getCloudAccountType = async (params: {
+    $cloudId: string
+    accountID: string
+  }) => {
+    const data = await cloudAccountType(params).catch(() => ({}));
+    accountType.value = data.type;
+    return accountType.value;
+  };
+
+  return {
+    accountType,
+    getCloudAccountType,
   };
 }

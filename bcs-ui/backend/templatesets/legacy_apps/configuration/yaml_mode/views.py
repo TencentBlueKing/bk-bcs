@@ -74,6 +74,14 @@ class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
         }
         """
         data = self._request_data(request, project_id=project_id)
+        try:
+            for temp_files in data.get("template_files"):
+                duplicate = self.check_duplicate_template_files(temp_files.get("files"))
+                if duplicate:
+                    return Response({'code': 400,'message': f'{temp_files.get("resource_name")} 包含同名资源 {duplicate}'})
+        except Exception as err: # yaml 解析错误，则不检测同名资源
+            logger.info('check_duplicate_template_files failed, skip check, project_id: %s', project_id)
+
         serializer = serializers.CreateTemplateSLZ(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         template = serializer.save()
@@ -125,13 +133,17 @@ class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
             if f.get("action") == "delete":
                 continue
             for doc in yaml.safe_load_all(f.get("content")):
-                metadata = doc.get("metadata")
-                name = metadata.get("name")
-                if not name:
+                version = doc.get("apiVersion", "")
+                kind = doc.get("kind", "")
+                metadata = doc.get("metadata", {})
+                namespace = metadata.get("namespace", "")
+                name = metadata.get("name", "")
+                if not kind or not version or not name:
                     continue
-                if name_keys.get(name):
+                key = f'{version}_{kind}_{namespace}_{name}'
+                if name_keys.get(key):
                     return f.get("name")
-                name_keys[name] = True
+                name_keys[key] = True
         return ""
 
     def get_template_by_show_version(self, request, project_id, template_id, show_version_id):

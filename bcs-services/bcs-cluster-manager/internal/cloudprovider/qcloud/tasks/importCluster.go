@@ -24,29 +24,18 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 // ImportClusterNodesTask call tkeInterface or kubeConfig import cluster nodes
 func ImportClusterNodesTask(taskID string, stepName string) error {
 	start := time.Now()
-	// get task information and validate
-	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
-	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s get detail task information from storage failed, %s. "+
-			"task retry", taskID, taskID, err.Error())
-		return err
-	}
 
-	state := &cloudprovider.TaskState{Task: task, JobResult: cloudprovider.NewJobSyncResult(task)}
-	if state.IsTerminated() {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s is terminated, step %s skip", taskID, taskID, stepName)
-		return fmt.Errorf("task %s terminated", taskID)
-	}
-	step, err := state.IsReadyToStep(stepName)
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
-			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -59,9 +48,12 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	cloudID := step.Params["CloudID"]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
 	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -77,7 +69,6 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-
 	// update cluster masterNodes info
 	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
 
@@ -92,23 +83,9 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 // RegisterClusterKubeConfigTask register cluster kubeConfig connection
 func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	start := time.Now()
-	// get task information and validate
-	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
-		blog.Errorf("RegisterClusterKubeConfigTask[%s]: task %s get detail task information from storage failed, %s. "+
-			"task retry", taskID, taskID, err.Error())
-		return err
-	}
-
-	state := &cloudprovider.TaskState{Task: task, JobResult: cloudprovider.NewJobSyncResult(task)}
-	if state.IsTerminated() {
-		blog.Errorf("RegisterClusterKubeConfigTask[%s]: task %s is terminated, step %s skip", taskID, taskID, stepName)
-		return fmt.Errorf("task %s terminated", taskID)
-	}
-	step, err := state.IsReadyToStep(stepName)
-	if err != nil {
-		blog.Errorf("RegisterClusterKubeConfigTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
-			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -121,9 +98,12 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	cloudID := step.Params["CloudID"]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
 	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -133,8 +113,10 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	// 社区版本 TKE共有云导入获取集群kubeConfig并进行配置
-	err = registerTKEExternalClusterEndpoint(ctx, basicInfo)
+	// 社区版本 TKE公有云导入获取集群kubeConfig并进行配置
+	err = registerTKEClusterEndpoint(ctx, basicInfo, api.ClusterEndpointConfig{
+		IsExtranet: true,
+	})
 	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getTKEExternalClusterEndpoint failed: %v", taskID, err)
 		retErr := fmt.Errorf("getTKEExternalClusterEndpoint failed, %s", err.Error())
@@ -142,15 +124,26 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	err = importClusterCredential(ctx, basicInfo, true, true, "", "")
+	if err != nil {
+		blog.Errorf("RegisterClusterKubeConfigTask[%s]: importClusterCredential failed: %v", taskID, err)
+		retErr := fmt.Errorf("importClusterCredential failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("RegisterClusterKubeConfigTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("RegisterClusterKubeConfigTask[%s] task %s %s update to storage fatal",
+			taskID, taskID, stepName)
 		return err
 	}
 	return nil
 }
 
-func registerTKEExternalClusterEndpoint(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error {
+// registerTKEClusterEndpoint 开启内网或外网访问config: err = nil 已开启内/外网访问; err != nil 开启失败
+func registerTKEClusterEndpoint(ctx context.Context, data *cloudprovider.CloudDependBasicInfo,
+	config api.ClusterEndpointConfig) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	tkeCli, err := api.NewTkeClient(data.CmOption)
@@ -162,39 +155,42 @@ func registerTKEExternalClusterEndpoint(ctx context.Context, data *cloudprovider
 		return fmt.Errorf("taskID[%s] cluster[%s] systemID is null", taskID, data.Cluster.ClusterID)
 	}
 
-	endpointStatus, err := tkeCli.GetClusterEndpointStatus(data.Cluster.SystemID, true)
+	endpointStatus, err := tkeCli.GetClusterEndpointStatus(data.Cluster.SystemID, config.IsExtranet)
 	if err != nil {
-		return fmt.Errorf("taskID[%s] GetClusterEndpointStatus[%s] failed: %v", taskID, data.Cluster.ClusterID, err.Error())
+		return fmt.Errorf("taskID[%s] registerTKEClusterEndpoint[%s] failed: %v",
+			taskID, data.Cluster.ClusterID, err.Error())
 	}
 
-	blog.Infof("taskID[%s] registerTKEExternalClusterEndpoint endpointStatus[%s]", taskID, endpointStatus.Status())
+	blog.Infof("taskID[%s] registerTKEClusterEndpoint endpointStatus[%s]",
+		taskID, endpointStatus.Status())
 
 	switch {
 	case endpointStatus.Created():
-		return importClusterCredential(ctx, data)
+		return nil
 	case endpointStatus.NotFound(), endpointStatus.Deleted():
-		err = tkeCli.CreateClusterEndpoint(data.Cluster.SystemID)
+		err = tkeCli.CreateClusterEndpoint(data.Cluster.SystemID, config)
 		if err != nil {
 			return err
 		}
-		err = checkClusterEndpointStatus(ctx, data)
+		err = checkClusterEndpointStatus(ctx, data, config.IsExtranet)
 		if err != nil {
 			return err
 		}
-		return importClusterCredential(ctx, data)
+
+		return nil
 	case endpointStatus.Creating():
-		err = checkClusterEndpointStatus(ctx, data)
+		err = checkClusterEndpointStatus(ctx, data, config.IsExtranet)
 		if err != nil {
 			return err
 		}
-		return importClusterCredential(ctx, data)
+		return nil
 	default:
 	}
 
 	return fmt.Errorf("taskID[%s] GetClusterEndpointStatus not support status[%s]", taskID, endpointStatus)
 }
 
-func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error {
+func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDependBasicInfo, isExtranet bool) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	cli, err := api.NewTkeClient(data.CmOption)
 	if err != nil {
@@ -204,8 +200,8 @@ func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDe
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	err = cloudprovider.LoopDoFunc(ctx, func() error {
-		status, errStatus := cli.GetClusterEndpointStatus(data.Cluster.SystemID, true)
+	err = loop.LoopDoFunc(ctx, func() error {
+		status, errStatus := cli.GetClusterEndpointStatus(data.Cluster.SystemID, isExtranet)
 		if errStatus != nil {
 			blog.Errorf("taskID[%s] GetClusterEndpointStatus[%s] failed: %v",
 				taskID, data.Cluster.SystemID, errStatus)
@@ -219,11 +215,11 @@ func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDe
 		case status.Created():
 			blog.Infof("taskID[%s] GetClusterEndpointStatus[%s] status[%s]",
 				taskID, data.Cluster.SystemID, status)
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		default:
 			return nil
 		}
-	}, cloudprovider.LoopInterval(20*time.Second))
+	}, loop.LoopInterval(20*time.Second))
 	if err != nil {
 		blog.Errorf("taskID[%s] GetClusterEndpointStatus failed: %v", taskID, err)
 		return err
@@ -232,29 +228,55 @@ func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDe
 	return nil
 }
 
-func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error {
+// importClusterCredential import cluster kubeconfig to clustercredential
+func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDependBasicInfo,
+	isExtranet bool, syncCluster bool, token string, newKubeConfig string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	var (
+		kubeConfig string
+		err        error
+	)
+
 	cli, err := api.NewTkeClient(data.CmOption)
 	if err != nil {
+		blog.Errorf("importClusterCredential[%s] NewTkeClient failed: %v", taskID, err)
 		return err
 	}
 
-	kubeConfig, err := cli.GetTKEClusterKubeConfig(data.Cluster.SystemID, true)
-	if err != nil {
-		return err
+	if newKubeConfig != "" {
+		kubeConfig = newKubeConfig
+	} else {
+		kubeConfig, err = cli.GetTKEClusterKubeConfig(data.Cluster.SystemID, isExtranet)
+		if err != nil {
+			blog.Errorf("importClusterCredential[%s] GetTKEClusterKubeConfig failed: %v", taskID, err)
+			return err
+		}
 	}
-	// save cluster kubeConfig
-	data.Cluster.KubeConfig = kubeConfig
-	cloudprovider.UpdateCluster(data.Cluster)
 
 	kubeRet, err := base64.StdEncoding.DecodeString(kubeConfig)
 	if err != nil {
 		return err
 	}
+	blog.Infof("importClusterCredential[%s] kubeConfig[%s]", taskID, string(kubeRet))
+
+	// syncCluster sync kubeconfig to cluster
+	if syncCluster {
+		// save cluster kubeConfig
+		data.Cluster.KubeConfig, _ = encrypt.Encrypt(nil, string(kubeRet))
+		cloudprovider.UpdateCluster(data.Cluster)
+	}
+
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
 		YamlContent: string(kubeRet),
 	})
 	if err != nil {
 		return err
+	}
+
+	blog.Infof("importClusterCredential[%s] kubeConfig token[%s]", taskID, token)
+	if len(token) > 0 && len(config.AuthInfos) > 0 {
+		config.AuthInfos[0].AuthInfo.Token = token
 	}
 
 	err = cloudprovider.UpdateClusterCredentialByConfig(data.Cluster.ClusterID, config)
@@ -272,19 +294,21 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	}
 
 	// import cluster
-	masterNodes := make(map[string]*proto.Node)
-	nodes, err := transInstanceIPToNodes(masterIPs, &cloudprovider.ListNodesOption{
-		Common:       data.CmOption,
-		ClusterVPCID: data.Cluster.VpcID,
-	})
-	if err != nil {
-		return nil
+	if data.Cluster.ManageType == icommon.ClusterManageTypeIndependent {
+		masterNodes := make(map[string]*proto.Node)
+		nodes, errTrans := transInstanceIPToNodes(masterIPs, &cloudprovider.ListNodesOption{
+			Common:       data.CmOption,
+			ClusterVPCID: data.Cluster.VpcID,
+		})
+		if errTrans != nil {
+			return nil
+		}
+		for _, node := range nodes {
+			node.Status = icommon.StatusRunning
+			masterNodes[node.InnerIP] = node
+		}
+		data.Cluster.Master = masterNodes
 	}
-	for _, node := range nodes {
-		node.Status = icommon.StatusRunning
-		masterNodes[node.InnerIP] = node
-	}
-	data.Cluster.Master = masterNodes
 
 	err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
 		Common:       data.CmOption,
@@ -304,7 +328,7 @@ func getClusterInstancesByClusterID(data *cloudprovider.CloudDependBasicInfo) ([
 		return nil, nil, err
 	}
 
-	instancesList, err := tkeCli.QueryTkeClusterAllInstances(data.Cluster.SystemID, nil)
+	instancesList, err := tkeCli.QueryTkeClusterAllInstances(context.Background(), data.Cluster.SystemID, nil)
 	if err != nil {
 		return nil, nil, err
 	}

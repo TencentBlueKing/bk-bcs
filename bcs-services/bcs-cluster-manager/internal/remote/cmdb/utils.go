@@ -14,7 +14,10 @@
 package cmdb
 
 import (
+	"fmt"
+
 	"github.com/kirito41dd/xslice"
+	"github.com/patrickmn/go-cache"
 )
 
 func splitCountToPage(counts int, pageLimit int) []Page {
@@ -42,17 +45,126 @@ func splitCountToPage(counts int, pageLimit int) []Page {
 	return pages
 }
 
-func chunkSlice(slice []string, chunkSize int) [][]string {
-	var chunks [][]string
-	for i := 0; i < len(slice); i += chunkSize {
-		end := i + chunkSize
+const (
+	cacheBizTopoKeyPrefix             = "cached_biz_topo"
+	cacheBizHostTopoRelationKeyPrefix = "cached_biz_host_topo_relation"
+	cacheBizHostDataKeyPrefix         = "cached_biz_host_data"
+	cacheCloudIDPrefix                = "cached_cloud_id"
+)
 
-		if end > len(slice) {
-			end = len(slice)
+// CacheType xxx
+type CacheType string
+
+var (
+	bizTopo     CacheType = "bizTopo"
+	bizHostTopo CacheType = "bizHostTopo"
+	bizHostData CacheType = "bizHostData"
+)
+
+func cacheName(keyPrefix string, bizID int) string {
+	return fmt.Sprintf("%s_%v", keyPrefix, bizID)
+}
+
+// GetBizHostData get host data from biz
+func GetBizHostData(hostCache *cache.Cache, bizID int) ([]HostData, bool) {
+	cacheName := cacheName(cacheBizHostDataKeyPrefix, bizID)
+
+	val, ok := hostCache.Get(cacheName)
+	if ok && val != nil {
+		if hostData, ok1 := val.([]HostData); ok1 {
+			return hostData, true
 		}
-
-		chunks = append(chunks, slice[i:end])
 	}
 
-	return chunks
+	return nil, false
+}
+
+// SetBizHostData set biz hostData
+func SetBizHostData(hostCache *cache.Cache, bizID int, hostList []HostData) error {
+	cacheName := cacheName(cacheBizHostDataKeyPrefix, bizID)
+
+	err := hostCache.Add(cacheName, hostList, cache.DefaultExpiration)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetBizTopoData get topo data from biz
+func GetBizTopoData(topoCache *cache.Cache, bizID int) (*SearchBizInstTopoData, bool) {
+	cacheName := cacheName(cacheBizTopoKeyPrefix, bizID)
+
+	val, ok := topoCache.Get(cacheName)
+	if ok && val != nil {
+		if topoData, ok1 := val.(*SearchBizInstTopoData); ok1 {
+			return topoData, true
+		}
+	}
+
+	return nil, false
+}
+
+// SetBizTopoData set biz topoData
+func SetBizTopoData(topoCache *cache.Cache, bizID int, bizTopo *SearchBizInstTopoData) error {
+	cacheName := cacheName(cacheBizTopoKeyPrefix, bizID)
+
+	err := topoCache.Add(cacheName, bizTopo, cache.DefaultExpiration)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetBizHostTopoData get host topo data from biz
+func GetBizHostTopoData(topoCache *cache.Cache, bizID int) ([]HostTopoRelation, bool) {
+	cacheName := cacheName(cacheBizHostTopoRelationKeyPrefix, bizID)
+
+	val, ok := topoCache.Get(cacheName)
+	if ok && val != nil {
+		if topoData, ok1 := val.([]HostTopoRelation); ok1 {
+			return topoData, true
+		}
+	}
+
+	return nil, false
+}
+
+// SetBizHostTopoData set biz hostTopoData
+func SetBizHostTopoData(topoCache *cache.Cache, bizID int, bizHostTopo []HostTopoRelation) error {
+	cacheName := cacheName(cacheBizHostTopoRelationKeyPrefix, bizID)
+
+	err := topoCache.Add(cacheName, bizHostTopo, cache.DefaultExpiration)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetCloudData set cloud data by cloudID
+func SetCloudData(cloudIDCache *cache.Cache, cloudID int, cloudData *SearchCloudAreaInfo) error {
+	cacheName := cacheName(cacheCloudIDPrefix, cloudID)
+
+	err := cloudIDCache.Add(cacheName, cloudData, cache.DefaultExpiration)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetCloudData get cloud data by cloudID
+func GetCloudData(cloudCache *cache.Cache, cloudID int) (*SearchCloudAreaInfo, bool) {
+	cacheName := cacheName(cacheCloudIDPrefix, cloudID)
+
+	val, ok := cloudCache.Get(cacheName)
+	if ok && val != nil {
+		if cloud, ok1 := val.(*SearchCloudAreaInfo); ok1 {
+			return cloud, true
+		}
+	}
+
+	return nil, false
 }

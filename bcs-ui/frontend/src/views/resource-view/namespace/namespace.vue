@@ -1,7 +1,7 @@
 <template>
   <LayoutContent
     hide-back
-    :title="$t('命名空间')"
+    :title="$t('k8s.namespace')"
     v-bkloading="{ isLoading: namespaceLoading }">
     <div class="wrapper flex flex-col place-content-between">
       <div>
@@ -22,7 +22,7 @@
                 }
               }"
               @click="handleToCreatedPage">
-              {{ $t('创建') }}
+              {{ $t('generic.button.create') }}
             </bcs-button>
           </template>
           <template #right>
@@ -36,7 +36,7 @@
             <bcs-input
               class="search-input"
               right-icon="bk-icon icon-search"
-              :placeholder="$t('搜索名称')"
+              :placeholder="$t('dashboard.placeholder.search1')"
               clearable
               v-model="searchValue">
             </bcs-input>
@@ -48,7 +48,7 @@
           size="medium"
           @page-change="pageChange"
           @page-limit-change="pageSizeChange">
-          <bcs-table-column :label="$t('名称')" prop="name" min-width="200" show-overflow-tooltip>
+          <bcs-table-column :label="$t('generic.label.name')" prop="name" min-width="200" show-overflow-tooltip>
             <template #default="{ row }">
               <bk-button
                 class="bcs-button-ellipsis"
@@ -70,7 +70,7 @@
               </bk-button>
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('状态')">
+          <bcs-table-column :label="$t('generic.label.status')">
             <template #default="{ row }">
               <div v-if="!isSharedCluster">
                 <StatusIcon
@@ -87,13 +87,13 @@
                   v-if="row.itsmTicketURL"
                   class="text-[#3a84ff] cursor-pointer"
                   @click="handleToITSM(row.itsmTicketURL)">
-                  {{ $t('待审批') }}（{{ itsmTicketTypeMap[row.itsmTicketType] }})
+                  {{ $t('dashboard.ns.status.waitingApproval') }}（{{ itsmTicketTypeMap[row.itsmTicketType] }})
                 </span>
-                <span v-else>{{ $t('正常') }}</span>
+                <span v-else>{{ $t('generic.status.ready') }}</span>
               </div>
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('CPU使用率')" prop="cpuUseRate" :render-header="renderHeader">
+          <bcs-table-column :label="$t('metrics.cpuUsage')" prop="cpuUseRate" :render-header="renderHeader">
             <template #default="{ row }">
               <bcs-round-progress
                 v-if="row.quota"
@@ -110,16 +110,19 @@
                   width: '100%'
                 }"
                 v-bk-tooltips="{
-                  content: `${$t('{used}核 / {total}核 (已使用/总量)', {
+                  content: `${$t('dashboard.ns.quota.cpuUsageRatio', {
                     used: row.used ? row.used.cpuLimits : 0,
                     total: row.quota.cpuLimits,
                   })}`
                 }"
               ></bcs-round-progress>
-              <span class="ml-[16px]" v-else v-bk-tooltips="{ content: $t('未开启命名空间配额') }">--</span>
+              <span
+                class="ml-[16px]"
+                v-else
+                v-bk-tooltips="{ content: $t('dashboard.ns.tips.notEnabledNamespaceQuota') }">--</span>
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('内存使用率')" prop="memoryUseRate" :render-header="renderHeader">
+          <bcs-table-column :label="$t('metrics.memUsage')" prop="memoryUseRate" :render-header="renderHeader">
             <template #default="{ row }">
               <bcs-round-progress
                 v-if="row.quota"
@@ -136,21 +139,24 @@
                   width: '100%'
                 }"
                 v-bk-tooltips="{
-                  content: `${$t('{used} / {total} (已使用/总量)', {
+                  content: `${$t('dashboard.ns.quota.usageRatio', {
                     used: row.used ? `${unitConvert(row.used.memoryLimits, 'Gi', 'mem')}GiB` : 0,
                     total: `${row.quota.memoryLimits}B`,
                   })}`
                 }"
               ></bcs-round-progress>
-              <span class="ml-[16px]" v-else v-bk-tooltips="{ content: $t('未开启命名空间') }">--</span>
+              <span
+                class="ml-[16px]"
+                v-else
+                v-bk-tooltips="{ content: $t('dashboard.ns.tips.notEnabledNamespace') }">--</span>
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('创建时间')">
+          <bcs-table-column :label="$t('cluster.labels.createdAt')">
             <template #default="{ row }">
               {{ row.createTime ? timeZoneTransForm(row.createTime, false) : '--' }}
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('操作')" width="200">
+          <bcs-table-column :label="$t('generic.label.action')" width="200">
             <template #default="{ row }">
               <bk-button
                 text
@@ -169,14 +175,14 @@
                   }
                 }"
                 @click="showSetQuota(row)">
-                {{ $t('配额管理') }}
+                {{ $t('cluster.detail.title.quota') }}
               </bk-button>
               <bk-button
                 text
                 class="mr-[10px]"
                 :disabled="applyMap(row.itsmTicketType).setVar"
                 @click="showSetVariable(row)">
-                {{ $t('设置变量值') }}
+                {{ $t('dashboard.ns.action.setEnv') }}
               </bk-button>
               <bk-popover
                 placement="bottom"
@@ -202,7 +208,7 @@
                           }
                         }"
                         @click="handleSetLabel(row)">
-                        {{ $t('设置标签') }}
+                        {{ $t('cluster.nodeList.button.setLabel') }}
                       </li>
                       <li
                         class="bcs-dropdown-item"
@@ -219,14 +225,14 @@
                           }
                         }"
                         @click="handleSetAnnotations(row)">
-                        {{ $t('设置注解') }}
+                        {{ $t('dashboard.ns.action.setAnnotation') }}
                       </li>
                     </template>
                     <li
                       v-if="row.itsmTicketURL"
                       class="bcs-dropdown-item w-[80px]"
                       @click="withdrawNamespace(row)">
-                      {{ $t('撤回') }}
+                      {{ $t('dashboard.ns.action.undo') }}
                     </li>
                     <li
                       v-else
@@ -245,7 +251,7 @@
                         }
                       }"
                       @click="handleDeleteNamespace(row)">
-                      {{ $t('删除') }}
+                      {{ $t('generic.button.delete') }}
                     </li>
                   </ul>
                 </template>
@@ -270,24 +276,28 @@
       <div slot="content" class="py-5 px-5" v-bkloading="{ isLoading: variableLoading }">
         <div>
           <div class="bk-form-item text-[14px]">
-            {{$t('变量：')}}
+            {{$t('generic.label.var1')}}
           </div>
           <div class="bk-form-item text-[12px]">
-            <i18n path="可通过 {action} 创建更多作用在命名空间的变量">
-              <button place="action" class="bk-text-button" @click="handleGoVar">{{$t('变量管理')}}</button>
+            <i18n path="dashboard.ns.label.createMoreNamespaceVars">
+              <button place="action" class="bk-text-button" @click="handleGoVar">{{$t('deploy.variable.env')}}</button>
             </i18n>
           </div>
           <template v-if="variablesList.length">
             <div class="bk-form-item">
               <div class="bk-form-content">
                 <div class="flex items-center mb-[10px]" v-for="(variable, index) in variablesList" :key="index">
-                  <div class="flex-1" v-bk-tooltips="{ content: `${$t('变量名')}: ${variable.name}` }">
+                  <div
+                    class="flex-1"
+                    v-bk-tooltips="{
+                      content: `${$t('cluster.nodeTemplate.variable.label.var.text')}: ${variable.name}`
+                    }">
                     <bk-input disabled v-model="variable.key"></bk-input>
                   </div>
                   <span class="px-[5px]">=</span>
                   <bk-input
                     class="flex-1"
-                    :placeholder="$t('值')"
+                    :placeholder="$t('generic.label.value')"
                     v-model="variable.value"
                     @change="setChanged(true)">
                   </bk-input>
@@ -296,15 +306,15 @@
             </div>
             <div class="mt-[20px]">
               <bk-button type="primary" :loading="variableLoading" @click="updateVariable">
-                {{$t('保存')}}
+                {{$t('generic.button.save')}}
               </bk-button>
               <bk-button class="ml-[5px]" :loading="variableLoading" @click="hideSetVariable">
-                {{$t('取消')}}
+                {{$t('generic.button.cancel')}}
               </bk-button>
             </div>
           </template>
           <template v-else>
-            <div class="h-[100px] text-center leading-[100px]">{{ $t('暂无命名空间变量') }}</div>
+            <div class="h-[100px] text-center leading-[100px]">{{ $t('dashboard.ns.label.noNamespaceVariables') }}</div>
           </template>
         </div>
       </div>
@@ -313,12 +323,12 @@
     <bcs-dialog
       v-model="setQuotaConf.isShow"
       :width="650"
-      :title="$t('配额管理：{nsName}', { nsName: setQuotaConf.namespace })">
+      :title="$t('dashboard.ns.title.quotaManagement', { nsName: setQuotaConf.namespace })">
       <bk-form
         ref="setQuotaForm"
         :label-width="120"
         v-bkloading="{ isLoading: setQuotaConf.loading }">
-        <bk-form-item :label="$t('配额设置')">
+        <bk-form-item :label="$t('dashboard.ns.create.quota')">
           <bk-switcher
             v-model="showQuota"
             class="ml-[10px]"
@@ -343,9 +353,9 @@
               :min="1"
               :max="512000"
               :precision="0">
-              <div class="group-text" slot="append">{{ $t('核') }}</div>
+              <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
             </bcs-input>
-            <span class="mx-[10px]">MEN</span>
+            <span class="mx-[10px]">Mem</span>
             <bcs-input
               v-model="setQuotaConf.quota.memoryRequests"
               class="w-[200px]"
@@ -353,7 +363,7 @@
               :min="1"
               :max="1024000"
               :precision="0">
-              <div class="group-text" slot="append">Gi</div>
+              <div class="group-text" slot="append">GiB</div>
             </bcs-input>
           </div>
         </bk-form-item>
@@ -364,11 +374,11 @@
           :loading="setQuotaConf.loading"
           class="mr5"
           @click="updateNamespace"
-        >{{ $t('确定') }}</bcs-button>
+        >{{ $t('generic.button.confirm') }}</bcs-button>
         <bcs-button
           :disabled="setQuotaConf.loading"
           @click="cancelUpdateNamespace"
-        >{{ $t('取消') }}</bcs-button>
+        >{{ $t('generic.button.cancel') }}</bcs-button>
       </div>
     </bcs-dialog>
     <!-- 命名空间Detail -->
@@ -386,7 +396,7 @@
     <!-- 设置标签 -->
     <bk-sideslider
       :is-show.sync="showSetLabel"
-      :title="$t('设置标签')"
+      :title="$t('cluster.nodeList.button.setLabel')"
       :width="800"
       :before-close="handleBeforeClose"
       quick-close>
@@ -398,13 +408,13 @@
           :min-items="0"
           :key-rules="[
             {
-              message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
+              message: $i18n.t('generic.validate.labelKey1'),
               validator: KEY_REGEXP
             }
           ]"
           :value-rules="[
             {
-              message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
+              message: $i18n.t('generic.validate.labelKey1'),
               validator: VALUE_REGEXP
             }
           ]"
@@ -417,7 +427,7 @@
     <!-- 设置注解 -->
     <bk-sideslider
       :is-show.sync="showSetAnnotations"
-      :title="$t('设置注解')"
+      :title="$t('dashboard.ns.action.setAnnotation')"
       :width="800"
       :before-close="handleBeforeClose"
       quick-close>
@@ -429,13 +439,13 @@
           :min-items="0"
           :key-rules="[
             {
-              message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
+              message: $i18n.t('generic.validate.labelKey1'),
               validator: KEY_REGEXP
             }
           ]"
           :value-rules="[
             {
-              message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
+              message: $i18n.t('generic.validate.labelKey1'),
               validator: VALUE_REGEXP
             }
           ]"
@@ -513,7 +523,7 @@ export default defineComponent({
           return setQuotaConf.value.quota.cpuRequests && setQuotaConf.value.quota.memoryRequests
               && setQuotaConf.value.quota.cpuRequests !== 'NaN' && setQuotaConf.value.quota.memoryRequests !== 'NaN';
         },
-        message: $i18n.t('请设置MEN、CPU配额，且两者最小值不小于0'),
+        message: $i18n.t('dashboard.ns.validate.setMinMaxMemCpu'),
         trigger: 'blur',
       },
     ];
@@ -548,7 +558,7 @@ export default defineComponent({
         {
           name: 'bkTooltips',
           value: {
-            content: data.column.property === 'cpuUseRate' ? $i18n.t('所有容器CPU limits总和 / CPU配额') : $i18n.t('所有容器内存 limits总和 / 内存配额'),
+            content: data.column.property === 'cpuUseRate' ? $i18n.t('dashboard.ns.tips.totalCpuLimitsQuota') : $i18n.t('dashboard.ns.tips.totalMemoryLimitsQuota'),
           },
         },
       ],
@@ -572,8 +582,8 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认删除 {name}', { name: row.name }),
-        subTitle: $i18n.t('删除Namespace将销毁Namespace下的所有资源，销毁后所有数据将被清除且不可恢复，请提前备份好数据。'),
+        title: $i18n.t('generic.title.confirmDelete1', { name: row.name }),
+        subTitle: $i18n.t('dashboard.ns.title.deleteNamespaceWarning'),
         defaultInfo: true,
         confirmFn: async () => {
           const result = await handleDeleteNameSpace({
@@ -586,7 +596,7 @@ export default defineComponent({
             });
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('删除成功'),
+              message: $i18n.t('generic.msg.success.delete'),
             });
           }
         },
@@ -603,7 +613,7 @@ export default defineComponent({
       const namespace = row?.name;
       setVariableConf.value.isShow = true;
       setVariableConf.value.namespace = namespace;
-      setVariableConf.value.title = $i18n.t('设置变量值：') + namespace;
+      setVariableConf.value.title = $i18n.t('generic.title.setVar') + namespace;
       await handleGetVariablesList({
         $clusterId: clusterID.value,
         $namespace: namespace,
@@ -629,7 +639,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('保存成功'),
+          message: $i18n.t('generic.msg.success.save'),
         });
         hideSetVariable();
         getNamespaceData({
@@ -699,7 +709,7 @@ export default defineComponent({
         if (result) {
           $bkMessage({
             theme: 'success',
-            message: $i18n.t('更新成功'),
+            message: $i18n.t('generic.msg.success.update'),
           });
           getNamespaceData({
             $clusterId: clusterID.value,
@@ -754,9 +764,9 @@ export default defineComponent({
     };
 
     const itsmTicketTypeMap = {
-      CREATE: $i18n.t('创建命名空间'),
-      UPDATE: $i18n.t('配额调整'),
-      DELETE: $i18n.t('删除命名空间'),
+      CREATE: $i18n.t('dashboard.ns.status.createNamespace'),
+      UPDATE: $i18n.t('dashboard.ns.status.quotaAdjustment'),
+      DELETE: $i18n.t('dashboard.ns.status.deleteNamespace'),
     };
 
     const handleToITSM = (link) => {
@@ -846,7 +856,7 @@ export default defineComponent({
         handleLabelEditCancel();
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('保存成功'),
+          message: $i18n.t('generic.msg.success.save'),
         });
         getNamespaceData({
           $clusterId: clusterID.value,
@@ -882,7 +892,7 @@ export default defineComponent({
         handleAnnotationsEditCancel();
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('保存成功'),
+          message: $i18n.t('generic.msg.success.save'),
         });
         getNamespaceData({
           $clusterId: clusterID.value,
@@ -903,7 +913,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('撤回成功'),
+          message: $i18n.t('dashboard.ns.msg.undoSuccess'),
         });
         getNamespaceData({
           $clusterId: clusterID.value,

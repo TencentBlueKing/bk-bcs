@@ -102,8 +102,6 @@ func (m *Project) validate(all bool) error {
 
 	// no validation rules for BusinessName
 
-	// no validation rules for EnableVcluster
-
 	if len(errors) > 0 {
 		return ProjectMultiError(errors)
 	}
@@ -1589,6 +1587,8 @@ func (m *ListAuthorizedProjReq) validate(all bool) error {
 	var errors []error
 
 	// no validation rules for All
+
+	// no validation rules for Kind
 
 	// no validation rules for SearchKey
 

@@ -25,24 +25,28 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 const (
+	// createClusterIDLockKey clusterID locker
 	createClusterIDLockKey = "/bcs-services/bcs-cluster-manager/createClusterID"
-	defaultClaimTime       = 300
 )
 
 // CreateAction action for create cluster
 type CreateAction struct {
-	ctx    context.Context
-	locker lock.DistributedLock
-	model  store.ClusterManagerModel
-	cloud  *cmproto.Cloud
-	task   *cmproto.Task
-	req    *cmproto.CreateClusterReq
-	resp   *cmproto.CreateClusterResp
+	ctx          context.Context
+	locker       lock.DistributedLock
+	model        store.ClusterManagerModel
+	cloud        *cmproto.Cloud
+	nodeTemplate *cmproto.NodeTemplate
+	task         *cmproto.Task
+	req          *cmproto.CreateClusterReq
+	resp         *cmproto.CreateClusterResp
 }
 
 // NewCreateAction create cluster action
@@ -54,30 +58,53 @@ func NewCreateAction(model store.ClusterManagerModel, locker lock.DistributedLoc
 }
 
 func (ca *CreateAction) applyClusterCIDR(cls *cmproto.Cluster) error {
-	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 {
-		cidr, err := ca.model.GetTkeCidr(ca.ctx, cls.VpcID, cls.NetworkSettings.ClusterIPv4CIDR)
-		if err != nil {
-			blog.Errorf("create cluster update cidr status failed: %v", err)
-			return err
-		}
-		if cidr.Status == common.TkeCidrStatusUsed {
-			errMsg := fmt.Sprintf("create cluster update cidr status failed: cidr[%s] status[%s]", cidr.CIDR, cidr.Status)
-			blog.Errorf(errMsg)
-			return fmt.Errorf(errMsg)
-		}
-		// update cidr and save to DB
-		updateCidr := cidr
-		updateCidr.Status = common.TkeCidrStatusUsed
-		updateCidr.Cluster = cls.ClusterID
-		updateCidr.UpdateTime = time.Now().String()
-		err = ca.model.UpdateTkeCidr(ca.ctx, updateCidr)
-		if err != nil {
-			blog.Errorf("create cluster update cidr status failed: %v", err)
-			return err
-		}
+	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 || options.GetEditionInfo().IsCommunicationEdition() {
+		return nil
 	}
+	// auto update set cluster cidr
+	cidr, err := applyClusterCIDR(cls)
+	if err != nil {
+		return err
+	}
+	cls.NetworkSettings.ClusterIPv4CIDR = cidr
 
 	return nil
+}
+
+func applyClusterCIDR(cls *cmproto.Cluster) (string, error) {
+	cidrCli, conClose, err := cidrmanager.GetCidrClient().GetCidrManagerClient()
+	if err != nil {
+		return "", fmt.Errorf("获取组件cidr-manager客户端失败: %v", err)
+	}
+	defer func() {
+		if conClose != nil {
+			conClose()
+		}
+	}()
+
+	timeOutCtx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
+	req := &cidrmanager.GetAllocatableCidrRequest{
+		Region:   cls.Region,
+		CidrType: utils.GlobalRouter.String(),
+		VpcID:    cls.VpcID,
+		CidrLen:  utils.CalMaskLen(float64(cls.NetworkSettings.CidrStep)),
+	}
+	resp, err := cidrCli.GetAllocatableCidr(timeOutCtx, req)
+	if err != nil {
+		return "", fmt.Errorf("地域[%s]vpc[%s]获取cidr资源失败: %s", cls.Region, cls.VpcID, err)
+	}
+	if resp.Code != 0 {
+		return "", fmt.Errorf("地域[%s]vpc[%s]获取cidr资源失败: %s", cls.Region, cls.VpcID, resp.Message)
+	}
+
+	if resp.Data.Cidr == "" {
+		return "", fmt.Errorf("vpc[%s] GlobalRouter cidr资源不足", cls.VpcID)
+	}
+
+	blog.Infof("createCluster[%s] apply cidr[%s] successful", cls.ClusterID, resp.Data.Cidr)
+	return resp.Data.Cidr, nil
 }
 
 func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster, error) {
@@ -119,70 +146,62 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		CloudAccountID:          ca.req.CloudAccountID,
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
+		Status:                  common.StatusInitialization,
 	}
 
-	// default value setting
-	err := ca.defaultSetting(cls, cloud)
+	// set cloud default values
+	cloudInfoMgr, err := cloudprovider.GetCloudInfoMgr(cloud.CloudProvider)
 	if err != nil {
+		blog.Errorf("get cloudprovider %s CloudInfoMgr Cluster %s failed, %s",
+			cloud.CloudProvider, ca.req.ClusterID, err.Error())
 		return nil, err
+	}
+	err = cloudInfoMgr.InitCloudClusterDefaultInfo(cls, &cloudprovider.InitClusterConfigOption{
+		Cloud: cloud,
+		ClusterVersion: func() string {
+			if ca.req.ClusterBasicSettings != nil {
+				return ca.req.ClusterBasicSettings.Version
+			}
+			return ""
+		}(),
+	})
+	if err != nil {
+		blog.Errorf("Create Cloud[%s] Cluster set defaultInfo failed: %v", ca.cloud.CloudProvider, err)
+		return cls, err
+	}
+
+	// check cloud master nodes
+	err = ca.checkClusterMasterNodes(cls)
+	if err != nil {
+		return cls, err
 	}
 
 	return cls, err
 }
 
-func (ca *CreateAction) defaultSetting(cls *cmproto.Cluster, cloud *cmproto.Cloud) error {
-	// cluster manage style
-	if len(cls.ManageType) == 0 {
-		cls.ManageType = common.ClusterManageTypeIndependent
-	}
-	if cls.ClusterAdvanceSettings == nil {
-		cls.ClusterAdvanceSettings = &cmproto.ClusterAdvanceSetting{
-			IPVS:             true,
-			ContainerRuntime: "docker",
-			RuntimeVersion:   "19.3",
-			ExtraArgs: map[string]string{
-				"Etcd": "node-data-dir=/data/bcs/lib/etcd;",
-			},
+func (ca *CreateAction) checkClusterWorkerNodes(cls *cmproto.Cluster) error {
+	for _, nodeIP := range ca.req.Nodes {
+		n, err := ca.transNodeIPToCloudNode(nodeIP)
+		if err != nil {
+			blog.Errorf("createCluster checkClusterWorkerNodes[%s] failed: %v", nodeIP, err)
+			continue
 		}
-	} else {
-		if cls.ClusterAdvanceSettings.ContainerRuntime == "" {
-			cls.ClusterAdvanceSettings.ContainerRuntime = "docker"
-		}
-		if cls.ClusterAdvanceSettings.RuntimeVersion == "" {
-			cls.ClusterAdvanceSettings.RuntimeVersion = "19.3"
-		}
-		if cls.ClusterAdvanceSettings.ExtraArgs == nil {
-			cls.ClusterAdvanceSettings.ExtraArgs = map[string]string{
-				"Etcd": "node-data-dir=/data/bcs/lib/etcd;",
-			}
+		n.ClusterID = cls.ClusterID
+		n.Status = common.StatusInitialization
+		n.NodeTemplateID = ca.req.NodeTemplateID
+
+		err = importClusterNode(ca.model, n)
+		if err != nil {
+			blog.Errorf("createCluster checkClusterWorkerNodes[%s] failed: %v", nodeIP, err)
+			continue
 		}
 	}
 
-	if cls.NodeSettings == nil {
-		cls.NodeSettings = &cmproto.NodeSetting{
-			DockerGraphPath: "/data/bcs/service/docker",
-			MountTarget:     "/data",
-			UnSchedulable:   1,
-		}
-	} else {
-		if cls.NodeSettings.DockerGraphPath == "" {
-			cls.NodeSettings.DockerGraphPath = "/data/bcs/service/docker"
-		}
-		if cls.NodeSettings.MountTarget == "" {
-			cls.NodeSettings.MountTarget = "/data"
-		}
-		if cls.NodeSettings.UnSchedulable == 0 {
-			cls.NodeSettings.UnSchedulable = 1
-		}
-	}
-	if cls.ClusterBasicSettings != nil && cls.ClusterBasicSettings.OS == "" {
-		if len(cloud.OsManagement.AvailableVersion) > 0 {
-			cls.ClusterBasicSettings.OS = cloud.OsManagement.AvailableVersion[0]
-		} else {
-			cls.ClusterBasicSettings.OS = DefaultImageName
-		}
-	}
+	return nil
+}
 
+// checkClusterMasterNodes for check cloud node
+func (ca *CreateAction) checkClusterMasterNodes(cls *cmproto.Cluster) error {
 	// setting master node for storage
 	cls.Master = make(map[string]*cmproto.Node)
 	for _, masterIP := range ca.req.Master {
@@ -192,11 +211,8 @@ func (ca *CreateAction) defaultSetting(cls *cmproto.Cluster, cloud *cmproto.Clou
 			blog.Errorf(errMsg.Error())
 			return errMsg
 		}
-		node.Status = common.StatusRunning
 		cls.Master[masterIP] = node
 	}
-	// cluster status
-	cls.Status = common.StatusInitialization
 
 	return nil
 }
@@ -244,7 +260,7 @@ func (ca *CreateAction) validate() error {
 	}
 
 	// check masterIP
-	if len(ca.req.Master) == 0 {
+	if ca.req.ManageType == common.ClusterManageTypeIndependent && len(ca.req.Master) == 0 {
 		return fmt.Errorf("lost kubernetes cluster masterIP")
 	}
 
@@ -257,44 +273,16 @@ func (ca *CreateAction) validate() error {
 	}
 
 	// use existed instances
-	if !ca.req.AutoGenerateMasterNodes && len(ca.req.Master) == 0 {
-		return fmt.Errorf("invalid master config when AutoGenerateMasterNodes=false")
-	}
-
-	// check cidr
-	if len(ca.req.NetworkSettings.ClusterIPv4CIDR) > 0 {
-		cidr, err := ca.model.GetTkeCidr(ca.ctx, ca.req.VpcID, ca.req.NetworkSettings.ClusterIPv4CIDR)
-		if err != nil {
-			blog.Errorf("get cluster cidr[%s:%s] info failed: %v",
-				ca.req.VpcID, ca.req.NetworkSettings.ClusterIPv4CIDR, err)
-			return err
-		}
-		if cidr.Status == common.TkeCidrStatusUsed || cidr.Cluster != "" {
-			errMsg := fmt.Errorf("create cluster cidr[%s:%s] already used by cluster(%s)",
-				ca.req.VpcID, ca.req.NetworkSettings.ClusterIPv4CIDR, cidr.Cluster)
-			return errMsg
-		}
-	}
-	// check vpc-cni
-	if ca.req.NetworkSettings.EnableVPCCni {
-		if ca.req.NetworkSettings.SubnetSource == nil {
-			return fmt.Errorf("networkSetting.SubnetSource cannot be empty when enable vpc-cni")
-		}
-		subnetIDs := make([]string, 0)
-		switch {
-		case ca.req.NetworkSettings.SubnetSource.Existed != nil:
-			if len(ca.req.NetworkSettings.SubnetSource.Existed.Ids) == 0 {
-				return fmt.Errorf("existed subet ids cannot be empty")
+	if !ca.req.AutoGenerateMasterNodes {
+		switch ca.req.ManageType {
+		case common.ClusterManageTypeManaged:
+			if len(ca.req.Nodes) == 0 {
+				return fmt.Errorf("invalid node config when AutoGenerateMasterNodes false in MANAGED_CLUSTER")
 			}
-			subnetIDs = ca.req.NetworkSettings.SubnetSource.Existed.Ids
-		case ca.req.NetworkSettings.SubnetSource.New != nil:
-			// apply vpc cidr subnet by mask and zone
-			return fmt.Errorf("current not support apply vpc subnet cidr when vpc-cni mode")
-		}
-		ca.req.NetworkSettings.EniSubnetIDs = subnetIDs
-
-		if ca.req.NetworkSettings.IsStaticIpMode && ca.req.NetworkSettings.ClaimExpiredSeconds <= 0 {
-			ca.req.NetworkSettings.ClaimExpiredSeconds = defaultClaimTime
+		default:
+			if len(ca.req.Master) == 0 {
+				return fmt.Errorf("invalid master config when AutoGenerateMasterNodes false in INDEPENDENT_CLUSTER")
+			}
 		}
 	}
 
@@ -313,10 +301,19 @@ func (ca *CreateAction) validate() error {
 	}
 
 	// check operator host permission
-	canUse := CheckUseNodesPermForUser(ca.req.BusinessID, ca.req.Creator, ca.req.Master)
+	nodes := make([]string, 0)
+	nodes = append(nodes, ca.req.Master...)
+	nodes = append(nodes, ca.req.Nodes...)
+
+	if len(nodes) == 0 {
+		return nil
+	}
+
+	// check operator host permission
+	canUse := CheckUseNodesPermForUser(ca.req.BusinessID, ca.req.Creator, nodes)
 	if !canUse {
 		errMsg := fmt.Errorf("create cluster failed: user[%s] no perm to use nodes[%v] in bizID[%s]",
-			ca.req.Creator, ca.req.Master, ca.req.BusinessID)
+			ca.req.Creator, nodes, ca.req.BusinessID)
 		blog.Errorf(errMsg.Error())
 		return errMsg
 	}
@@ -336,37 +333,25 @@ func (ca *CreateAction) getCloudInfo(ctx context.Context, req *cmproto.CreateClu
 		blog.Errorf("get cluster %s relative Cloud %s failed, %s", req.ClusterID, req.CloudID, err.Error())
 		return err
 	}
-	ca.cloud = cloud
 
+	ca.cloud = cloud
 	return nil
 }
 
 func (ca *CreateAction) importClusterData(cls *cmproto.Cluster) error {
-
-	// generate clusterID when import cluster empty
-	if ca.req.ClusterID == "" {
-		clusterID, clusterNum, err := generateClusterID(cls, ca.model)
-		if err != nil {
-			blog.Errorf("generate clusterID failed when create cluster")
-			ca.resp.Data = cls
-			ca.setResp(common.BcsErrClusterManagerClusterIDBuildErr, err.Error())
-			return err
-		}
-
-		blog.Infof("generate clusterID[%v:%s] successful when create cluster", clusterNum, clusterID)
-		cls.ClusterID = clusterID
+	err := ca.generateClusterID(cls)
+	if err != nil {
+		return err
 	}
-
 	blog.Infof("Cluster %s only create information", ca.req.ClusterID)
 	cls.Status = common.StatusRunning
 
 	// save clusterInfo to DB
-	err := importClusterData(ca.model, cls)
+	err = importClusterData(ca.model, cls)
 	if err != nil {
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return err
 	}
-
 	ca.resp.Data = cls
 	// import cluster info to extra system
 	importClusterExtraOperation(cls)
@@ -381,6 +366,8 @@ func (ca *CreateAction) generateClusterID(cls *cmproto.Cluster) error {
 		clusterID, clusterNum, err := generateClusterID(cls, ca.model)
 		if err != nil {
 			blog.Errorf("generate clusterId failed when create cluster")
+			ca.resp.Data = cls
+			ca.setResp(common.BcsErrClusterManagerClusterIDBuildErr, err.Error())
 			return err
 		}
 
@@ -439,10 +426,12 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 	// generate clusterID
 	err = ca.generateClusterID(cls)
 	if err != nil {
-		ca.resp.Data = cls
-		ca.setResp(common.BcsErrClusterManagerClusterIDBuildErr, err.Error())
+		blog.Errorf("generateClusterID failed: %v", err)
 		return
 	}
+
+	// import cluster nodes
+	_ = ca.checkClusterWorkerNodes(cls)
 
 	// apply cluster CIDR Info
 	err = ca.applyClusterCIDR(cls)
@@ -469,6 +458,8 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 		Message:      fmt.Sprintf("创建%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
 		CreateTime:   time.Now().String(),
+		ClusterID:    cls.ClusterID,
+		ProjectID:    req.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("create cluster[%s] CreateOperationLog failed: %v", cls.ClusterID, err)
@@ -491,7 +482,7 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 			ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
 			return err
 		}
-		// other db operation error
+		//other db operation error
 		ca.resp.Data = cls
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return err
@@ -500,8 +491,8 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 	// Create Cluster by CloudProvider, underlay cloud cluster manager interface
 	provider, err := cloudprovider.GetClusterMgr(ca.cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("get cluster %s relative cloud provider %s failed, %s", ca.req.ClusterID, ca.cloud.CloudProvider,
-			err.Error())
+		blog.Errorf("get cluster %s relative cloud provider %s failed, %s",
+			ca.req.ClusterID, ca.cloud.CloudProvider, err.Error())
 		ca.resp.Data = cls
 		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return err
@@ -529,6 +520,20 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 		InitPassword: ca.req.InitLoginPassword,
 		Operator:     ca.req.Creator,
 		Cloud:        ca.cloud,
+		Nodes:        ca.req.Nodes,
+		NodeTemplate: func() *cmproto.NodeTemplate {
+			if ca.req.NodeTemplateID == "" {
+				return nil
+			}
+
+			template, errGet := ca.model.GetNodeTemplateByID(ca.ctx, ca.req.NodeTemplateID)
+			if errGet != nil {
+				blog.Errorf("CreateAction GetNodeTemplateByID[%s] failed: %v", cls.ClusterID, errGet)
+				return nil
+			}
+
+			return template
+		}(),
 	})
 	if err != nil {
 		blog.Errorf("create Cluster %s by Cloud %s with provider %s failed, %s",

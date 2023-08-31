@@ -61,7 +61,7 @@ BK_REGION = 'ieod'
 BK_SITE_URL = '/'
 
 # 权限中心地址
-BK_IAM_APP_URL = ''
+BK_IAM_HOST = ''
 
 # PaaS平台地址
 BK_PAAS_HOST = ''

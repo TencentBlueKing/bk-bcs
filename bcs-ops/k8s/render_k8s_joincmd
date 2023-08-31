@@ -1,0 +1,107 @@
+#!/bin/bash
+
+#######################################
+# Tencent is pleased to support the open source community by making Blueking Container Service available.
+# Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+# http://opensource.org/licenses/MIT
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#######################################
+
+set -euo pipefail
+# render k8s joincmd
+SELF_DIR=$(dirname "$(readlink -f "$0")")
+ROOT_DIR="${SELF_DIR}/.."
+
+readonly SELF_DIR ROOT_DIR
+
+check_k8s_status() {
+  if ! command -v kubectl &>/dev/null; then
+    utils::log "FATAL" "can not find kubectl"
+  fi
+
+  if ! command -v kubeadm &>/dev/null; then
+    utils::log "FATAL" "can not find kubeadm"
+  fi
+
+  if ! kubectl cluster-info 2>/dev/null; then
+    utils::log "FATAL" "fail to get k8s cluster info"
+  fi
+  return 0
+}
+
+safe_source() {
+  local source_file=$1
+  if [[ -f ${source_file} ]]; then
+    #shellcheck source=/dev/null
+    source "${source_file}"
+  else
+    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    exit 1
+  fi
+}
+
+main() {
+  local source_files
+  source_files=("${ROOT_DIR}/functions/utils.sh")
+  for file in "${source_files[@]}"; do
+    safe_source "$file"
+  done
+  check_k8s_status
+
+  local cert_key join_cmd master_join_cmd cluster_env
+
+  join_cmd="$(kubeadm token create --print-join-command)"
+  cert_key="$(kubeadm init phase upload-certs --upload-certs \
+    | grep -E '[a-z0-9]{64}')"
+  master_join_cmd="$join_cmd --control-plane --certificate-key $cert_key"
+  utils::log "DEBUG" "JOIN_CMD: ${join_cmd}"
+  utils::log "DEBUG" "MASTER_JOIN_CMD: ${master_join_cmd}"
+
+  [[ -n $join_cmd ]] || utils::log "FATAL" "kubeadm join cmd is null"
+  [[ -n $cert_key ]] || utils::log "FATAL" "kubeadm not found certificate key"
+
+  cluster_env=$(grep -vE "LAN_IP=|LAN_IPv6=|^#|^source |^export " \
+    "${ROOT_DIR}"/env/bcs.env)
+  [[ -n $cluster_env ]] \
+    || utils::log "FATAL" "env file: ${ROOT_DIR}/env/bcs.env is empty"
+  utils::log "DEBUG" "CLUSTER:ENV ${cluster_env}"
+
+  cluster_env=$(base64 -w 0 <<<"${cluster_env}")
+  join_cmd=$(base64 -w 0 <<<"${join_cmd}")
+  master_join_cmd=$(base64 -w 0 <<<"${master_join_cmd}")
+
+  # SOPS_VAR
+  cat <<SOPS_EOF
+======================
+$(utils::color_echo "bwhite" "Kubernetes Control Plane is running")
+<SOPS_VAR>CLUSTER_ENV:${cluster_env}</SOPS_VAR>
+<SOPS_VAR>JOIN_CMD:${join_cmd}</SOPS_VAR>
+<SOPS_VAR>MASTER_JOIN_CMD:${master_join_cmd}</SOPS_VAR>
+SOPS_EOF
+
+  cat <<EOF
+======================
+$(utils::color_echo "bwhite" \
+    "Expand Control Plane, run the following command on new machine")
+set -a
+CLUSTER_ENV=${cluster_env}
+MASTER_JOIN_CMD=${master_join_cmd}
+set +a
+./bcs-ops -i master
+======================
+$(utils::color_echo "bwhite" \
+      "Expand Worker Plane, run the following command on new machine")
+set -a
+CLUSTER_ENV=${cluster_env}
+JOIN_CMD=${join_cmd}
+set +a
+./bcs-ops -i node
+======================
+EOF
+}
+main

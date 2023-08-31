@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -60,7 +61,7 @@ func New(code int32, message string) error {
 
 // Newf create an error with error code and formatted message.
 func Newf(code int32, format string, args ...interface{}) error {
-	return &ErrorF{Code: code, Message: fmt.Sprintf(format, args)}
+	return &ErrorF{Code: code, Message: fmt.Sprintf(format, args...)}
 }
 
 const grpcErrPrefix = "rpc error: code = Unknown desc = "
@@ -119,4 +120,11 @@ func RPCAbortedErr(err error) error {
 // PRCPermissionDenied 无权限错误
 func PRCPermissionDenied() *status.Status {
 	return status.New(codes.PermissionDenied, ErrPermissionDenied.Error())
+}
+
+// GetErrMsg 获取 err wrap 的 msg
+func GetErrMsg(err error) string {
+	// 去除后缀字符规则 https://github.com/pkg/errors/blob/master/errors.go#L244
+	msg := strings.TrimSuffix(err.Error(), ": "+errors.Cause(err).Error())
+	return msg
 }

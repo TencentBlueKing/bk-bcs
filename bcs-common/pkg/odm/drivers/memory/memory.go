@@ -54,6 +54,11 @@ type DBTable struct {
 	data map[int64]bson.M
 }
 
+// Aggregation xxx
+func (t *DBTable) Aggregation(ctx context.Context, pipeline interface{}, result interface{}) error {
+	return nil
+}
+
 func newDBTable() *DBTable {
 	return &DBTable{
 		counter: 0,

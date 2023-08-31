@@ -10,11 +10,12 @@
  * limitations under the License.
  */
 
-// Package types xxx
 package types
 
 import (
 	"time"
+
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 const (
@@ -88,15 +89,6 @@ type NamespaceQuota struct {
 	Message             string    `bson:"message"`
 }
 
-const (
-	// TkeCidrStatusAvailable available tke cidr status
-	TkeCidrStatusAvailable = "available"
-	// TkeCidrStatusUsed used tke cidr status
-	TkeCidrStatusUsed = "used"
-	// TkeCidrStatusReserved reserved tke cidr status
-	TkeCidrStatusReserved = "reserved"
-)
-
 // TkeCidr tke cidr
 type TkeCidr struct {
 	Vpc      string    `bson:"vpc"`
@@ -121,4 +113,13 @@ type NodeAddress struct {
 	NodeName    string
 	IPv4Address string
 	IPv6Address string
+}
+
+// ResourceSchema resource schema
+type ResourceSchema struct {
+	Name        string              `json:"name"`
+	DisplayName string              `json:"displayName"`
+	Description string              `json:"description"`
+	Schema      *v1.JSONSchemaProps `json:"schema"`
+	CloudID     string              `json:"cloudID"`
 }

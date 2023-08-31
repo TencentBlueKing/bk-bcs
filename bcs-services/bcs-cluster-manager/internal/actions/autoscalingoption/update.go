@@ -61,10 +61,16 @@ func (ua *UpdateAction) getRelativeResource() error {
 	}
 	ua.cluster = cluster
 
-	cloud, err := actions.GetCloudByCloudID(ua.model, cluster.Provider)
+	// default cluster and autoscaler use same cloudProvider, but allow user to use different cloudProvider
+	// inter: use different cloudProvider to provider autoscaler
+	provider := cluster.Provider
+	if ua.req.Provider != "" {
+		provider = ua.req.Provider
+	}
+	cloud, err := actions.GetCloudByCloudID(ua.model, provider)
 	if err != nil {
 		blog.Errorf("can not get relative Cloud %s when update autoScaling for %s, %s",
-			cluster.Provider, ua.req.ClusterID, err.Error(),
+			provider, ua.req.ClusterID, err.Error(),
 		)
 		return err
 	}
@@ -96,6 +102,11 @@ func (ua *UpdateAction) updateAutoScaling() error {
 	if err := ua.saveAutoScalingOption(ua.asOption); err != nil {
 		blog.Errorf("update asOption %s failed, err %s", ua.req.ClusterID, err.Error())
 		return err
+	}
+
+	// only update autoScalingOption info
+	if ua.req.OnlyUpdateInfo {
+		return nil
 	}
 
 	// cloud provider
@@ -131,6 +142,8 @@ func (ua *UpdateAction) updateAutoScaling() error {
 		Message:      fmt.Sprintf("编辑集群[%s]扩缩容配置", ua.req.ClusterID),
 		OpUser:       ua.req.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.req.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("UpdateAutoScalingOption[%s] CreateOperationLog failed: %v", ua.req.ClusterID, err)
@@ -142,8 +155,12 @@ func (ua *UpdateAction) saveAutoScalingOption(option *cmproto.ClusterAutoScaling
 	timeStr := time.Now().Format(time.RFC3339)
 	// update field if required
 	option.Status = common.StatusAutoScalingOptionUpdating
+	if ua.req.OnlyUpdateInfo {
+		option.Status = common.StatusAutoScalingOptionNormal
+	}
 	option.UpdateTime = timeStr
 	option.Updater = ua.req.Updater
+
 	option.IsScaleDownEnable = ua.req.IsScaleDownEnable
 	if len(option.Expander) != 0 {
 		option.Expander = ua.req.Expander
@@ -152,18 +169,62 @@ func (ua *UpdateAction) saveAutoScalingOption(option *cmproto.ClusterAutoScaling
 	option.ScaleDownDelay = ua.req.ScaleDownDelay
 	option.ScaleDownUnneededTime = ua.req.ScaleDownUnneededTime
 	option.ScaleDownUtilizationThreahold = ua.req.ScaleDownUtilizationThreahold
-	option.ScaleDownGpuUtilizationThreshold = ua.req.ScaleDownGpuUtilizationThreshold
+
+	if ua.req.SkipNodesWithLocalStorage != nil {
+		option.SkipNodesWithLocalStorage = ua.req.SkipNodesWithLocalStorage.GetValue()
+	}
+	if ua.req.SkipNodesWithSystemPods != nil {
+		option.SkipNodesWithSystemPods = ua.req.SkipNodesWithSystemPods.GetValue()
+	}
+	if ua.req.IgnoreDaemonSetsUtilization != nil {
+		option.IgnoreDaemonSetsUtilization = ua.req.IgnoreDaemonSetsUtilization.GetValue()
+	}
+
 	option.OkTotalUnreadyCount = ua.req.OkTotalUnreadyCount
 	option.MaxTotalUnreadyPercentage = ua.req.MaxTotalUnreadyPercentage
 	option.ScaleDownUnreadyTime = ua.req.ScaleDownUnreadyTime
-	option.BufferResourceRatio = ua.req.BufferResourceRatio
+
+	if ua.req.BufferResourceRatio != nil {
+		option.BufferResourceRatio = ua.req.BufferResourceRatio.GetValue()
+	}
+
 	option.MaxGracefulTerminationSec = ua.req.MaxGracefulTerminationSec
 	option.ScanInterval = ua.req.ScanInterval
 	option.MaxNodeProvisionTime = ua.req.MaxNodeProvisionTime
-	option.ScaleUpFromZero = ua.req.ScaleUpFromZero
+
+	option.ScaleUpFromZero = func() bool {
+		if ua.req.ScaleUpFromZero != nil {
+			return ua.req.ScaleUpFromZero.GetValue()
+		}
+		return true
+	}()
+
 	option.ScaleDownDelayAfterAdd = ua.req.ScaleDownDelayAfterAdd
 	option.ScaleDownDelayAfterDelete = ua.req.ScaleDownDelayAfterDelete
-	option.ScaleDownDelayAfterFailure = ua.req.ScaleDownDelayAfterFailure
+	option.ScaleDownDelayAfterFailure = func() uint32 {
+		if ua.req.ScaleDownDelayAfterFailure != nil {
+			return ua.req.ScaleDownDelayAfterFailure.GetValue()
+		}
+		return 180
+	}()
+	option.ScaleDownGpuUtilizationThreshold = ua.req.ScaleDownGpuUtilizationThreshold
+
+	option.BufferResourceCpuRatio = ua.req.BufferResourceCpuRatio
+	option.BufferResourceMemRatio = ua.req.BufferResourceMemRatio
+
+	if ua.req.Module != nil {
+		option.Module = ua.req.Module
+	}
+	if ua.req.Webhook != nil {
+		option.Webhook = ua.req.Webhook
+	}
+
+	if ua.req.ExpendablePodsPriorityCutoff != nil {
+		option.ExpendablePodsPriorityCutoff = ua.req.ExpendablePodsPriorityCutoff.GetValue()
+	}
+	if ua.req.NewPodScaleUpDelay != nil {
+		option.NewPodScaleUpDelay = ua.req.NewPodScaleUpDelay.GetValue()
+	}
 
 	ua.asOption = option
 	ua.resp.Data = option
@@ -174,6 +235,15 @@ func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+func (ua *UpdateAction) validate() error {
+	err := ua.req.Validate()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Handle handle update cluster credential
@@ -188,7 +258,7 @@ func (ua *UpdateAction) Handle(
 	ua.req = req
 	ua.resp = resp
 
-	if err := req.Validate(); err != nil {
+	if err := ua.validate(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
@@ -200,6 +270,155 @@ func (ua *UpdateAction) Handle(
 	}
 
 	if err := ua.updateAutoScaling(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		return
+	}
+
+	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
+}
+
+// SyncAction update autoscalingOption for cluster
+type SyncAction struct {
+	ctx      context.Context
+	model    store.ClusterManagerModel
+	cluster  *cmproto.Cluster
+	asOption *cmproto.ClusterAutoScalingOption
+
+	req  *cmproto.SyncAutoScalingOptionRequest
+	resp *cmproto.SyncAutoScalingOptionResponse
+}
+
+// NewSyncAction create sync action for cluster autoscaling option
+func NewSyncAction(model store.ClusterManagerModel) *SyncAction {
+	return &SyncAction{
+		model: model,
+	}
+}
+
+func (ua *SyncAction) getRelativeResource() error {
+	// get relative cluster for information injection
+	asOption, err := ua.model.GetAutoScalingOption(ua.ctx, ua.req.ClusterID)
+	if err != nil {
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		blog.Errorf("find asOption %s failed when update autoScaling, err %s", ua.req.ClusterID, err.Error())
+		return err
+	}
+	ua.asOption = asOption
+
+	cluster, err := ua.model.GetCluster(ua.ctx, ua.req.ClusterID)
+	if err != nil {
+		blog.Errorf("can not get relative Cluster %s when update autoScaling", ua.req.ClusterID)
+		return fmt.Errorf("get relative cluster %s info err, %s", ua.req.ClusterID, err.Error())
+	}
+	ua.cluster = cluster
+
+	return nil
+}
+
+func (ua *SyncAction) syncClusterAutoScalingOption(option *cmproto.ClusterAutoScalingOption) error {
+	timeStr := time.Now().Format(time.RFC3339)
+	// update field if required
+	option.UpdateTime = timeStr
+	option.Updater = ua.req.Updater
+	option.IsScaleDownEnable = ua.req.IsScaleDownEnable
+	if len(option.Expander) != 0 {
+		option.Expander = ua.req.Expander
+	}
+	option.MaxEmptyBulkDelete = ua.req.MaxEmptyBulkDelete
+	option.ScaleDownDelay = ua.req.ScaleDownDelay
+	option.ScaleDownUnneededTime = ua.req.ScaleDownUnneededTime
+	option.ScaleDownUtilizationThreahold = ua.req.ScaleDownUtilizationThreahold
+
+	option.SkipNodesWithLocalStorage = ua.req.SkipNodesWithLocalStorage
+	option.SkipNodesWithSystemPods = ua.req.SkipNodesWithSystemPods
+	option.IgnoreDaemonSetsUtilization = ua.req.IgnoreDaemonSetsUtilization
+
+	option.OkTotalUnreadyCount = ua.req.OkTotalUnreadyCount
+	option.MaxTotalUnreadyPercentage = ua.req.MaxTotalUnreadyPercentage
+	option.ScaleDownUnreadyTime = ua.req.ScaleDownUnreadyTime
+
+	// option.UnregisteredNodeRemovalTime
+	option.BufferResourceRatio = ua.req.BufferResourceRatio
+	option.MaxGracefulTerminationSec = ua.req.MaxGracefulTerminationSec
+	option.ScanInterval = ua.req.ScanInterval
+	option.MaxNodeProvisionTime = ua.req.MaxNodeProvisionTime
+
+	option.ScaleUpFromZero = func() bool {
+		if ua.req.ScaleUpFromZero != nil {
+			return ua.req.ScaleUpFromZero.GetValue()
+		}
+		return true
+	}()
+	option.ScaleDownDelayAfterAdd = ua.req.ScaleDownDelayAfterAdd
+	option.ScaleDownDelayAfterDelete = ua.req.ScaleDownDelayAfterDelete
+	option.ScaleDownDelayAfterFailure = func() uint32 {
+		if ua.req.ScaleDownDelayAfterFailure != nil {
+			return ua.req.ScaleDownDelayAfterFailure.GetValue()
+		}
+		return 180
+	}()
+
+	option.ScaleDownGpuUtilizationThreshold = ua.req.ScaleDownGpuUtilizationThreshold
+
+	option.BufferResourceCpuRatio = ua.req.BufferResourceCpuRatio
+	option.BufferResourceMemRatio = ua.req.BufferResourceMemRatio
+
+	if ua.req.Webhook != nil && ua.req.Webhook.Mode != "" && ua.req.Webhook.Server != "" {
+		option.Webhook = ua.req.Webhook
+	}
+
+	if ua.req.ExpendablePodsPriorityCutoff != nil {
+		option.ExpendablePodsPriorityCutoff = ua.req.ExpendablePodsPriorityCutoff.GetValue()
+	}
+	if ua.req.NewPodScaleUpDelay != nil {
+		option.NewPodScaleUpDelay = ua.req.NewPodScaleUpDelay.GetValue()
+	}
+
+	ua.asOption = option
+	ua.resp.Data = option
+	return ua.model.UpdateAutoScalingOption(ua.ctx, option)
+}
+
+func (ua *SyncAction) setResp(code uint32, msg string) {
+	ua.resp.Code = code
+	ua.resp.Message = msg
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+func (ua *SyncAction) validate() error {
+	err := ua.req.Validate()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Handle handle sync cluster autoscaling option
+func (ua *SyncAction) Handle(
+	ctx context.Context, req *cmproto.SyncAutoScalingOptionRequest, resp *cmproto.SyncAutoScalingOptionResponse) {
+
+	if req == nil || resp == nil {
+		blog.Errorf("sync ClusterAutoScalingOption failed, req or resp is empty")
+		return
+	}
+	ua.ctx = ctx
+	ua.req = req
+	ua.resp = resp
+
+	if err := ua.validate(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	// getRelativeResource get autoScalingOption / cluster
+	if err := ua.getRelativeResource(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	if err := ua.syncClusterAutoScalingOption(ua.asOption); err != nil {
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}

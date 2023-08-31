@@ -30,7 +30,9 @@ type ConfigItem interface {
 	// CreateWithTx create one configItem instance.
 	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItem *table.ConfigItem) (uint32, error)
 	// BatchCreateWithTx batch create configItem instances with transaction.
-	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItems []*table.ConfigItem) error
+	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, configItems []*table.ConfigItem) error
+	// ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
+	ValidateAppCINumber(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) error
 	// Update one configItem instance.
 	Update(kit *kit.Kit, configItem *table.ConfigItem) error
 	// BatchUpdateWithTx batch update configItem instances with transaction.
@@ -99,7 +101,8 @@ func (dao *configItemDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.
 // BatchCreateWithTx batch create configItem instances with transaction.
 // NOTE: 1. this method won't audit, because it's batch operation.
 // 2. this method won't validate attachment resource exist, because it's batch operation.
-func (dao *configItemDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItems []*table.ConfigItem) error {
+func (dao *configItemDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	bizID, appID uint32, configItems []*table.ConfigItem) error {
 	// generate an config item id and update to config item.
 	if len(configItems) == 0 {
 		return nil
@@ -285,14 +288,6 @@ func (dao *configItemDao) Delete(kit *kit.Kit, ci *table.ConfigItem) error {
 		return err
 	}
 
-	// TODO: decrease the config item lock count after the deletion
-	// err = dao.sd.ShardingOne(ci.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-	// 	// decrease the config item lock count after the deletion
-	// 	lock := lockKey.ConfigItem(ci.Attachment.BizID, ci.Attachment.AppID)
-	// 	if err = dao.lock.DecreaseCount(kit, lock, &LockOption{Txn: txn}); err != nil {
-	// 		return err
-	// 	}
-
 	return nil
 }
 
@@ -320,18 +315,13 @@ func (dao *configItemDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.
 	}
 	ad := dao.auditDao.DecoratorV2(kit, ci.Attachment.BizID).PrepareDelete(oldOne)
 
-	if _, err = q.Where(m.ID.Eq(ci.ID), m.BizID.Eq(ci.Attachment.BizID)).Delete(); err != nil {
+	_, err = q.Where(m.ID.Eq(ci.ID), m.BizID.Eq(ci.Attachment.BizID)).Delete()
+	if err != nil {
 		return err
 	}
 	if err = ad.Do(tx.Query); err != nil {
 		return err
 	}
-
-	// TODO: decrease the config item lock count after the deletion
-	// lock := lockKey.ConfigItem(ci.Attachment.BizID, ci.Attachment.AppID)
-	// if err := dao.lock.DecreaseCount(kit, lock, &LockOption{Txn: tx.Tx()}); err != nil {
-	// 	return err
-	// }
 
 	return nil
 }
@@ -340,10 +330,8 @@ func (dao *configItemDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.
 func (dao *configItemDao) BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32, bizID, appID uint32) error {
 	m := dao.genQ.ConfigItem
 	q := tx.ConfigItem.WithContext(kit.Ctx)
-	if _, err := q.Where(m.ID.In(ids...), m.BizID.Eq(bizID), m.AppID.Eq(appID)).Delete(); err != nil {
-		return err
-	}
-	return nil
+	_, err := q.Where(m.ID.In(ids...), m.BizID.Eq(bizID), m.AppID.Eq(appID)).Delete()
+	return err
 }
 
 // validateAttachmentResExist validate if attachment resource exists before creating config item.
@@ -364,13 +352,12 @@ func (dao *configItemDao) validateAttachmentAppExist(kit *kit.Kit, am *table.Con
 	return nil
 }
 
-// validateAppCINumber verify whether the current number of app config items has reached the maximum.
-func (dao *configItemDao) validateAppCINumber(kt *kit.Kit, at *table.ConfigItemAttachment, lo *LockOption) error {
-	// try lock config item to ensure the number is limited when creating concurrently
-	lock := lockKey.ConfigItem(at.BizID, at.AppID)
-	count, err := dao.lock.IncreaseCount(kt, lock, lo)
+// ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
+func (dao *configItemDao) ValidateAppCINumber(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) error {
+	m := tx.ConfigItem
+	count, err := m.WithContext(kt.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Count()
 	if err != nil {
-		return err
+		return fmt.Errorf("count app %d's config items failed, err: %v", appID, err)
 	}
 
 	if err := table.ValidateAppCINumber(count); err != nil {

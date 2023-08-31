@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
@@ -119,6 +119,7 @@ func checkTokenCreateBy(request *restful.Request, targetUser string) (allow, isC
 }
 
 // CreateToken create a token for user.
+// NOCC:golint/fnsize(设计如此)
 func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	form := CreateTokenForm{}
@@ -298,6 +299,7 @@ func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.R
 }
 
 // UpdateToken update token
+// NOCC:golint/fnsize(设计如此)
 func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	token := request.PathParameter("token")
@@ -488,6 +490,7 @@ type CreateClientTokenForm struct {
 }
 
 // CreateClientToken create client token
+// NOCC:golint/fnsize(设计如此)
 func (t *TokenHandler) CreateClientToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	form := CreateClientTokenForm{}

@@ -10,22 +10,22 @@
           </div>
           <div class="left-content">
             <p class="image-name" :title="imageName">{{imageName}}</p>
-            <p class="download-count">{{downloadCount + $t('次下载')}}</p>
+            <p class="download-count">{{downloadCount + $t('deploy.image.counts')}}</p>
           </div>
         </div>
         <div class="right-wrapper">
           <div class="top-content">
             <div class="updator">
-              <p>{{$t('最近更新人')}}</p>
+              <p>{{$t('deploy.image.lastUpdatedBy')}}</p>
               <p>{{modifiedBy}}</p>
             </div>
             <div class="update-date">
-              <p>{{$t('最近更新时间')}}</p>
+              <p>{{$t('deploy.image.LastUpdatedAt')}}</p>
               <p>{{modified}}</p>
             </div>
           </div>
           <div class="bottom-content">
-            <p>{{$t('仓库相对地址')}}</p>
+            <p>{{$t('deploy.image.path')}}</p>
             <p>{{imagePath}}</p>
           </div>
         </div>
@@ -35,11 +35,11 @@
         <thead>
           <tr>
             <th style="width: 15%; text-align: left;padding-left: 30px;">
-              {{$t('名称')}}
+              {{$t('generic.label.name')}}
             </th>
-            <th>{{$t('大小')}}</th>
-            <th>{{$t('最近更新时间')}}</th>
-            <th>{{$t('地址')}}</th>
+            <th>{{$t('generic.label.size')}}</th>
+            <th>{{$t('deploy.image.LastUpdatedAt')}}</th>
+            <th>{{$t('deploy.image.repo')}}</th>
           </tr>
         </thead>
         <tbody>
@@ -54,7 +54,7 @@
                 <template v-if="$INTERNAL">
                   <template v-if="item.artifactorys.length">
                     <bk-tag type="filled" :theme="art === 'DEV' ? 'warning' : 'success'" v-for="(art, inx) in item.artifactorys" :key="inx">
-                      {{art === 'DEV' ? $t('研发仓库') : $t('生产仓库')}}
+                      {{art === 'DEV' ? $t('deploy.image.dev') : $t('deploy.image.prod')}}
                     </bk-tag>
                   </template>
                   <template v-else>
@@ -73,7 +73,7 @@
             </tr>
             <tr v-if="!hasNext" class="empty-row">
               <td colspan="4" class="tc">
-                {{$t('没有更多TAG')}}
+                {{$t('deploy.image.nomoreTag')}}
               </td>
             </tr>
           </template>

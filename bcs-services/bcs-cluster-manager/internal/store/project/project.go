@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package project xxx
 package project
 
 import (
@@ -21,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
@@ -30,8 +30,8 @@ import (
 
 const (
 	tableName = "project"
-	// ! we don't setting bson tag in proto file,
-	// ! all struct key in mongo is lowcase in default
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	tableKey                 = "projectid"
 	defaultProjectListLength = 1000
 )
@@ -66,7 +66,6 @@ func New(db drivers.DB) *ModelProject {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelProject) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -94,9 +93,6 @@ func (m *ModelProject) CreateProject(ctx context.Context, project *types.Project
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
-	if err := util.EncryptProjectCred(project); err != nil {
-		return err
-	}
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{project}); err != nil {
 		return err
 	}
@@ -112,9 +108,6 @@ func (m *ModelProject) UpdateProject(ctx context.Context, project *types.Project
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		tableKey: project.ProjectID,
 	})
-	if err := util.EncryptProjectCred(project); err != nil {
-		return err
-	}
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": project})
 }
 
@@ -148,9 +141,6 @@ func (m *ModelProject) GetProject(ctx context.Context, projectID string) (*types
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, pro); err != nil {
 		return nil, err
 	}
-	if err := util.DecryptProjectCred(pro); err != nil {
-		return nil, err
-	}
 	return pro, nil
 }
 
@@ -177,11 +167,6 @@ func (m *ModelProject) ListProject(ctx context.Context, cond *operator.Condition
 
 	if err := finder.All(ctx, &projectList); err != nil {
 		return nil, err
-	}
-	for _, project := range projectList {
-		if err := util.DecryptProjectCred(&project); err != nil {
-			return nil, err
-		}
 	}
 	return projectList, nil
 }

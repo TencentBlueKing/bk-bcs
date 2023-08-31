@@ -34,7 +34,7 @@ import (
 	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/tracing"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/job/notify"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )

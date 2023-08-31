@@ -18,8 +18,6 @@ const (
 	// EnvMaxDownloadFileGoroutines is the env of sidecar maximum combined weight for concurrent download access.
 	// the minimum value is 1 and the maximum value is 15.
 	EnvMaxDownloadFileGoroutines = "ENV_BK_BSCP_MAX_DOWNLOAD_FILE_GOROUTINES"
-	// EnvUnitTestDownloadAddr is the env of sidecar downloader download file endpoint, only sidecar scheduler test use.
-	EnvUnitTestDownloadAddr = "ENV_BSCP_TEST_DWONLOAD_ADDR"
 	// EnvSuitTestSidecarWorkspace is the env of sidecar workspace, only sidecar suite use.
 	EnvSuitTestSidecarWorkspace = "ENV_BSCP_TEST_SIDECAR_WORKSPACE"
 )

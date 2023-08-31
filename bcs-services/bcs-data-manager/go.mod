@@ -21,6 +21,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/json-iterator/go v1.1.12
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/panjf2000/ants/v2 v2.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -67,7 +68,6 @@ require (
 	github.com/hpcloud/tail v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/juju/ratelimit v1.0.1 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
@@ -101,6 +101,7 @@ require (
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/ugorji/go/codec v1.2.3 // indirect
 	github.com/xanzy/ssh-agent v0.2.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
@@ -112,9 +113,11 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.17.0 // indirect
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/net v0.0.0-20220706163947-c90051bbdb60 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
@@ -149,9 +152,6 @@ require (
 	github.com/onsi/gomega v1.18.1 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/streadway/amqp v1.0.0 // indirect
-	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200427203606-3cfed13b9966 // indirect
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	k8s.io/api v0.23.1
 )

@@ -15,14 +15,14 @@
           <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
             <bk-alert type="info" class="mb20">
               <div slot="title">
-                {{$t('Secret是一种包含少量敏感信息例如密码、token 或 key 的对象，与ConfigMap相比更加安全')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sSecret" target="_blank">{{$t('详情查看文档')}}</a>
+                {{$t('deploy.templateset.secretDescription')}}，
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sSecret" target="_blank">{{$t('plugin.tools.docs')}}</a>
               </div>
             </bk-alert>
             <template v-if="!secrets.length">
               <div class="biz-guide-box mt0">
                 <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalSecret">
-                  <span style="margin-left: 0;">{{$t('添加')}}Secret</span>
+                  <span style="margin-left: 0;">{{$t('generic.button.add')}}Secret</span>
                 </bk-button>
               </div>
             </template>
@@ -31,13 +31,13 @@
                 <div class="biz-list-operation">
                   <div class="item" v-for="(secret, index) in secrets" :key="secret.id">
                     <bk-button :class="['bk-button', { 'bk-primary': curSecret.id === secret.id }]" @click.stop="setCurSecret(secret, index)">
-                      {{(secret && secret.config.metadata.name) || $t('未命名')}}
+                      {{(secret && secret.config.metadata.name) || $t('deploy.templateset.unnamed')}}
                       <span class="biz-update-dot" v-show="secret.isEdited"></span>
                     </bk-button>
                     <span class="bcs-icon bcs-icon-close" @click.stop="removeSecret(secret, index)"></span>
                   </div>
 
-                  <bcs-popover ref="secretTooltip" :content="$t('添加Secret')" placement="top">
+                  <bcs-popover ref="secretTooltip" :content="$t('deploy.templateset.addSecret')" placement="top">
                     <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalSecret">
                       <i class="bcs-icon bcs-icon-plus"></i>
                     </bk-button>
@@ -47,7 +47,7 @@
 
               <div class="biz-configuration-content" style="position: relative; margin-bottom: 105px;">
                 <div class="bk-form biz-configuration-form">
-                  <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('导入YAML')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
 
                   <bk-sideslider
                     :is-show.sync="toJsonDialogConf.isShow"
@@ -58,8 +58,8 @@
                     @hidden="closeToJson">
                     <div slot="content" style="position: relative;">
                       <div class="biz-log-box" :style="{ height: `${winHeight - 60}px` }" v-bkloading="{ isLoading: toJsonDialogConf.loading }">
-                        <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('导入')}}</bk-button>
-                        <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('取消')}}</bk-button>
+                        <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
+                        <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
                         <ace
                           :value="editorConfig.value"
                           :width="editorConfig.width"
@@ -74,21 +74,21 @@
                   </bk-sideslider>
 
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 105px;">{{$t('名称')}}：</label>
+                    <label class="bk-label" style="width: 105px;">{{$t('generic.label.name')}}：</label>
                     <div class="bk-form-content" style="margin-left: 105px;">
-                      <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('secretName') }]" :placeholder="$t('请输入64个以内的字符')" style="width: 310px;" maxlength="64" v-model="curSecret.config.metadata.name" name="secretName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
+                      <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('secretName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit')" style="width: 310px;" maxlength="64" v-model="curSecret.config.metadata.name" name="secretName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
                       <div class="bk-form-tip" v-if="errors.has('secretName')">
-                        <p class="bk-tip-text">{{$t('名称必填，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)')}}</p>
+                        <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
                       </div>
                     </div>
                   </div>
 
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 105px;">{{$t('类型')}}：</label>
+                    <label class="bk-label" style="width: 105px;">{{$t('generic.label.kind')}}：</label>
                     <div class="bk-form-content" style="margin-left: 105px;">
                       <bk-selector
                         style="width: 310px;"
-                        :placeholder="$t('请选择')"
+                        :placeholder="$t('generic.placeholder.select')"
                         :setting-key="'id'"
                         :display-key="'name'"
                         :selected.sync="curSecret.config.type"
@@ -100,13 +100,13 @@
 
                   <template>
                     <div class="bk-form-item is-required">
-                      <label class="bk-label" style="width: 105px;">{{$t('键')}}：</label>
+                      <label class="bk-label" style="width: 105px;">{{$t('generic.label.key')}}：</label>
                       <div class="bk-form-content" style="margin-left: 105px;">
                         <div class="biz-list-operation">
                           <template v-if="curSecret.config.type === 'Opaque'">
                             <div class="item" v-for="(data, index) in curSecret.secretKeyList" :key="index">
                               <bk-button :class="['bk-button', { 'bk-primary': curKeyIndex === index }]" @click.stop.prevent="setCurKey(data, index)" v-if="!data.isEdit">
-                                {{data.key || $t('未命名')}}
+                                {{data.key || $t('deploy.templateset.unnamed')}}
                               </bk-button>
                               <bkbcs-input
                                 type="text"
@@ -121,7 +121,7 @@
                               <span class="bcs-icon bcs-icon-edit" v-show="!data.isEdit" @click.stop.prevent="editKey(data, index)"></span>
                               <span class="bcs-icon bcs-icon-close" v-show="!data.isEdit" @click.stop.prevent="removeKey(data, index)"></span>
                             </div>
-                            <bcs-popover ref="keyTooltip" :content="$t('添加Key')" placement="top">
+                            <bcs-popover ref="keyTooltip" :content="$t('deploy.templateset.addKey')" placement="top">
                               <bk-button class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addKey">
                                 <i class="bcs-icon bcs-icon-plus"></i>
                               </bk-button>
@@ -130,7 +130,7 @@
                           <template v-else>
                             <div class="item" v-for="(data, index) in curSecret.secretKeyList" :key="index">
                               <bk-button :class="['bk-button', { 'bk-primary': curKeyIndex === index }]" style="cursor: default;">
-                                {{data.key || $t('未命名')}}
+                                {{data.key || $t('deploy.templateset.unnamed')}}
                               </bk-button>
                             </div>
                           </template>
@@ -139,10 +139,10 @@
                     </div>
                     <template v-if="curKeyParams">
                       <div class="bk-form-item">
-                        <label class="bk-label" style="width: 105px;">{{$t('值')}}：</label>
+                        <label class="bk-label" style="width: 105px;">{{$t('generic.label.value')}}：</label>
                         <div class="bk-form-content" style="margin-left: 105px;">
                           <textarea class="bk-form-textarea biz-resize-textarea" style="height: 300px;" v-model="curKeyParams.content" :placeholder="valuePlaceholder"></textarea>
-                          <p class="biz-tip mt5">{{$t('实例化时会将值的内容做base64编码')}}</p>
+                          <p class="biz-tip mt5">{{$t('deploy.templateset.base64Encoding')}}</p>
                         </div>
                       </div>
                     </template>
@@ -273,7 +273,7 @@ export default {
     },
     valuePlaceholder() {
       if (this.curSecret.config.type === 'Opaque') {
-        return this.$t('请输入键') + this.curKeyParams.key + this.$t('的内容');
+        return this.$t('deploy.templateset.enterKeyName') + this.curKeyParams.key + this.$t('deploy.templateset.keyContent');
       }
       return '{"auths": {"mirrors.tencent.com": {"auth": "***"}';
     },
@@ -320,7 +320,7 @@ export default {
         if (!nameReg.test(data.key)) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('键名错误，只能包含：字母、数字、连字符(-)、点(.)、下划线(_)，长度小于30个字符'),
+            message: this.$t('deploy.templateset.domainRegex'),
             delay: 5000,
           });
           return false;
@@ -333,7 +333,7 @@ export default {
           } else {
             this.$bkMessage({
               theme: 'error',
-              message: this.$t('键不可重复'),
+              message: this.$t('deploy.templateset.keyNotDuplicate'),
               delay: 5000,
             });
             return false;
@@ -475,8 +475,8 @@ export default {
       const secretId = secret.id;
 
       this.$bkInfo({
-        title: this.$t('确认删除'),
-        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('删除Secret')}：${secret.config.metadata.name || this.$t('未命名')}`),
+        title: this.$t('generic.title.confirmDelete'),
+        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('deploy.templateset.deleteSecret')}：${secret.config.metadata.name || this.$t('deploy.templateset.unnamed')}`),
         confirmFn() {
           if (secretId.indexOf && secretId.indexOf('local_') > -1) {
             self.removeLocalSecret(secret, index);
@@ -618,7 +618,7 @@ export default {
         if (!appParamKeys.includes(key)) {
           this.$bkMessage({
             theme: 'error',
-            message: `${key}${this.$t('为无效字段')}`,
+            message: `${key}${this.$t('deploy.templateset.invalidField')}`,
           });
           const match = editor.find(`${key}`);
           if (match) {
@@ -639,7 +639,7 @@ export default {
       if (!yaml) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入YAML'),
+          message: this.$t('deploy.templateset.enterYAML'),
         });
         return false;
       }
@@ -649,7 +649,7 @@ export default {
       } catch (err) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入合法的YAML'),
+          message: this.$t('deploy.templateset.enterValidYAML'),
         });
         return false;
       }

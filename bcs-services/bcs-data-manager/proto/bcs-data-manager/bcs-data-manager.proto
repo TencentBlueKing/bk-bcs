@@ -5,6 +5,7 @@ option go_package = "proto/bcs-data-manager;datamanager";
 import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
+import "google/protobuf/any.proto";
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   info : {
@@ -115,6 +116,16 @@ service DataManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询某个podAutoscaler"
       summary : "查询某个podAutoscaler"
+    };
+  }
+  rpc GetPowerTrading(GetPowerTradingDataRequest) returns (GetPowerTradingDataResponse){
+    option (google.api.http) = {
+      post: "/datamanager/v2/powertrading"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询算力运营数据"
+      summary : "查询算力运营数据"
     };
   }
 }
@@ -1698,3 +1709,70 @@ message PodAutoscalerMetrics {
   }];
 }
 
+message GetPowerTradingDataRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetPowerTradingDataRequest"
+      description : "查询集群列表请求"
+      required : []
+    }
+  };
+  string table = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "table",
+      description : "查询的表名"
+    }
+  ];
+  string startTime = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，yyyy-MM-dd HH:mm:ss格式"
+    }
+  ];
+  string endTime = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，yyyy-MM-dd HH:mm:ss格式"
+    }
+  ];
+  map<string, string> params = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "params",
+      description : "查询筛选条件"
+    }
+  ];
+  map<string, int64> sort = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "sort",
+      description : "排序策略，1表示升序，-1表示降序"
+    }];
+}
+
+message GetPowerTradingDataResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterListResponse"
+      description : "查询集群列表返回"
+      required : ["code", "message", "data"]
+    }
+  };
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
+    title : "code", 
+    description : "返回错误码"
+  }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  uint32 total = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "总数"
+    }];
+  repeated google.protobuf.Any data = 3 [
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "运营数据列表信息"
+  }];
+}

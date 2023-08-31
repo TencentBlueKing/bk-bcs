@@ -27,6 +27,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 )
 
 // CreateCloudNodeGroupTask 创建节点池 - create cloud node group task
@@ -50,7 +51,11 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CreateCloudNodeGroupTask GetClusterDependBasicInfo failed")
@@ -133,7 +138,11 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CheckCloudNodeGroupStatusTask GetClusterDependBasicInfo failed")
@@ -334,7 +343,7 @@ func checkNodeGroup(rootCtx context.Context, info *cloudprovider.CloudDependBasi
 	// wait node group state to normal
 	ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 	defer cancel()
-	err = cloudprovider.LoopDoFunc(ctx, func() error {
+	err = loop.LoopDoFunc(ctx, func() error {
 		pool, err = client.GetPoolAndReturn(ctx, cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
 			blog.Errorf("checkNodeGroup[%s] poll GetAgentPool[%s][%s] failed: %v", taskID, cluster.SystemID,
@@ -346,7 +355,7 @@ func checkNodeGroup(rootCtx context.Context, info *cloudprovider.CloudDependBasi
 		}
 		switch {
 		case *pool.Properties.ProvisioningState == api.NormalState:
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		case *pool.Properties.ProvisioningState == api.CreatingState:
 			blog.Infof("checkNodeGroup[%s] poll GetAgentPool[%s] still creating, status[%s]", taskID,
 				group.CloudNodeGroupID, *pool.Properties.ProvisioningState)
@@ -354,7 +363,7 @@ func checkNodeGroup(rootCtx context.Context, info *cloudprovider.CloudDependBasi
 		default:
 			return nil
 		}
-	}, cloudprovider.LoopInterval(5*time.Second))
+	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
 		return errors.Wrapf(err, "checkNodeGroup[%s] poll GetPoolAndReturn failed.", taskID)
 	}

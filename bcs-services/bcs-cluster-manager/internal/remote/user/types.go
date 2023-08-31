@@ -61,6 +61,16 @@ type CreateTokenReq struct {
 	Expiration int `json:"expiration" validate:"required"`
 }
 
+// CreateClientTokenReq is the form of creating client token
+type CreateClientTokenReq struct {
+	// ClientName name
+	ClientName string `json:"clientName" validate:"required"`
+	// ClientSecret secret
+	ClientSecret string `json:"clientSecret"`
+	// Expiration token expiration second, -1: never expire
+	Expiration int `json:"expiration" validate:"required"`
+}
+
 // CommonResp common resp
 type CommonResp struct {
 	Result  bool   `json:"result"`

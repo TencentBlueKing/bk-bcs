@@ -144,7 +144,7 @@ func (t *tkeCluster) SyncClusterCredentials() error {
 
 // NewClient init tkeCluster client
 func NewClient(tkeClusterRegion, method string) (*Client, error) {
-	tkeSecretID := config.Tke.SecretId
+	tkeSecretID := config.Tke.SecretID
 	tkeSecretKey := config.Tke.SecretKey
 	tkeCcsHost := config.Tke.CcsHost
 	tkeCcsPath := config.Tke.CcsPath

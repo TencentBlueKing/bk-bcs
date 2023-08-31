@@ -342,49 +342,32 @@ func (w *Watcher) DeleteEvent(obj interface{}) {
 
 // UpdateEvent is event handler for update resource event.
 func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
-	nMeta, ok := newObj.(metav1.Object)
-	if !ok {
-		glog.Errorf("Error casting to k8s metav1 object, new obj: %+v", newObj)
+	// convert to unstructured object
+	oldUnstructuredObj, oOk := oldObj.(*unstructured.Unstructured)
+	newUnstructuredObj, nOk := newObj.(*unstructured.Unstructured)
+	if !oOk || !nOk {
+		glog.Errorf("Error casting to k8s metav1 unstructured object, new obj: %+v", newObj)
 		return
-	}
-	oMeta, ok := oldObj.(metav1.Object)
-	if !ok {
-		glog.Errorf("Error casting to k8s metav1 object, old obj: %+v", oldObj)
-		return
-	}
-
-	// ignore managedFields field
-	if !options.IsWatchManagedFields {
-		nMeta.SetManagedFields(nil)
-		oMeta.SetManagedFields(nil)
 	}
 
 	// compare the object changes for update.
 	if reflect.DeepEqual(oldObj, newObj) {
 		// there is no changes, no need to update.
 		glog.V(2).Infof("watcher got the same ResourceType[%s]: %s/%s",
-			w.resourceType, nMeta.GetNamespace(), nMeta.GetName())
+			w.resourceType, newUnstructuredObj.GetNamespace(), newUnstructuredObj.GetName())
 		return
 	}
 
 	// skip unnecessary node update event to reduce writer-queues pressure.
 	if w.resourceType == "Node" {
-		// convert to unstructured object
-		oldNodeUnstructured, oOk := oldObj.(*unstructured.Unstructured)
-		newNodeUnstructured, nOk := newObj.(*unstructured.Unstructured)
-		if !oOk || !nOk {
-			glog.Errorf("Error casting to k8s metav1 unstructured object, new obj: %+v", newObj)
-			return
-		}
-
 		// convert to corev1 object
 		oldNode, newNode := &v1.Node{}, &v1.Node{}
-		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(oldNodeUnstructured.UnstructuredContent(), oldNode); err != nil {
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(oldUnstructuredObj.UnstructuredContent(), oldNode); err != nil {
 			glog.Errorf("Error casting to k8s corev1 object, old obj: %+v", oldObj)
 			return
 		}
 
-		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(newNodeUnstructured.UnstructuredContent(), newNode); err != nil {
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(newUnstructuredObj.UnstructuredContent(), newNode); err != nil {
 			glog.Errorf("Error casting to k8s corev1 object, new obj: %+v", newObj)
 			return
 		}
@@ -415,8 +398,8 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 		}
 	}
 	item := types.NamespacedName{
-		Name:      nMeta.GetName(),
-		Namespace: nMeta.GetNamespace(),
+		Name:      newUnstructuredObj.GetName(),
+		Namespace: newUnstructuredObj.GetNamespace(),
 	}
 	w.eventQueue.Forget(item)
 	w.eventQueue.Add(item)
@@ -509,12 +492,17 @@ func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, ev
 		return nil
 	}
 
+	var dMeta *unstructured.Unstructured
+	var isObj bool
 	if obj != nil {
-		dMeta, isObj := obj.(metav1.Object)
+		dMeta, isObj = obj.(*unstructured.Unstructured)
 		if !isObj {
-			glog.Errorf("Error casting to metav1 Object, obj: %+v", obj)
+			glog.Errorf("Error casting to unstructured Object, obj: %+v", obj)
 			return nil
 		}
+		// must deepcopy obj before modify it, otherwise will panic
+		dMeta = dMeta.DeepCopy()
+
 		// don't remove this code
 		// in a specific scenario, when using label selector to watch multiple sub-clusters of a karmada federated cluster,
 		// returned data may not carry the label selector, so we add label selector into object returned.
@@ -528,6 +516,10 @@ func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, ev
 			}
 			dMeta.SetLabels(tmpLabels)
 		}
+
+		if !options.IsWatchManagedFields {
+			dMeta.SetManagedFields(nil)
+		}
 	}
 
 	ownerUID := ""
@@ -537,7 +529,7 @@ func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, ev
 		Namespace: namespace,
 		Name:      name,
 		Action:    eventAction,
-		Data:      obj,
+		Data:      dMeta,
 		OwnerUID:  ownerUID,
 		RequeueQ:  w.GetTriggerQueue(),
 	}

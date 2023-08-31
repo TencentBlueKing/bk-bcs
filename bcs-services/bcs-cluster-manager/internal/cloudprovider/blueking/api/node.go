@@ -19,13 +19,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var nodeMgr sync.Once
 
 func init() {
 	nodeMgr.Do(func() {
-		// init Node
+		//init Node
 		cloudprovider.InitNodeManager("blueking", &NodeManager{})
 	})
 }
@@ -37,6 +38,7 @@ type NodeManager struct {
 // GetNodeByIP get specified Node by innerIP address
 func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
 	node := &proto.Node{}
+	node.InnerIP = ip
 
 	if util.IsIPv6(ip) {
 		node.InnerIPv6 = ip
@@ -44,6 +46,7 @@ func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) 
 	if util.IsIPv4(ip) {
 		node.InnerIP = ip
 	}
+
 	node.Region = opt.Common.Region
 	return node, nil
 }
@@ -79,8 +82,7 @@ func (nm *NodeManager) ListNodesByIP(ips []string, opt *cloudprovider.ListNodesO
 }
 
 // ListNodeInstanceType list node type by zone and node family
-func (nm *NodeManager) ListNodeInstanceType(zone, nodeFamily string, cpu, memory uint32,
-	opt *cloudprovider.CommonOption) (
+func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
@@ -88,5 +90,32 @@ func (nm *NodeManager) ListNodeInstanceType(zone, nodeFamily string, cpu, memory
 // ListOsImage list image os
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) (
 	[]*proto.OsImage, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetExternalNodeByIP get specified Node by innerIP address
+func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
+	node := &proto.Node{}
+	node.InnerIP = ip
+	node.Region = opt.Common.Region
+	node.NodeType = common.IDC.String()
+	return node, nil
+}
+
+// ListExternalNodesByIP list node by IP set
+func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+	var nodes []*proto.Node
+	for _, ip := range ips {
+		node := &proto.Node{}
+		node.InnerIP = ip
+		node.Region = opt.Common.Region
+		node.NodeType = common.IDC.String()
+		nodes = append(nodes, node)
+	}
+	return nodes, nil
+}
+
+// ListKeyPairs keyPairs list
+func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

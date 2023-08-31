@@ -1,0 +1,126 @@
+{
+  "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+  "enabled": true,
+  "operations": [
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cloud_account",
+        "name": "云账号",
+        "name_en": "cloud_account",
+        "description": "云账号",
+        "description_en": "cloud_account",
+        "provider_config": {
+          "path": "/bcsapi/v4/iam-provider/v1/cloud_accounts/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "account_list",
+        "name": "云账号",
+        "name_en": "cloud_account",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          },
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cloud_account"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cloud_account_create",
+        "name": "云账号创建",
+        "name_en": "cloud account create",
+        "description": "用户创建云账号",
+        "description_en": "user create cloud account",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cloud_account_manage",
+        "name": "云账号管理",
+        "name_en": "cloud account manage",
+        "description": "用户更新删除云账号",
+        "description_en": "user create/update/delete cloud account",
+        "type": "manage",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cloud_account",
+            "name_alias": "",
+            "name_alias_en": "",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "account_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cloud_account_use",
+        "name": "云账号使用",
+        "name_en": "use cloud account",
+        "description": "用户使用云账号",
+        "description_en": "user use cloud account",
+        "type": "use",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "cloud_account",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "account_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    }
+  ]
+}

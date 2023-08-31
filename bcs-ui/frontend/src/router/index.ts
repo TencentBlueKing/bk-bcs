@@ -32,6 +32,7 @@ import ClusterManage from './cluster-manage';
 import DeployManage from './deployment-manage';
 import ProjectManage from './project-manage';
 import PluginManage from './plugin-manage';
+import useMenu from '@/views/app/use-menu';
 
 Vue.use(VueRouter);
 
@@ -41,6 +42,7 @@ const DashboardSideMenu = () => import(/* webpackChunkName: 'entry' */'@/views/r
 const NotFound = () => import(/* webpackChunkName: 'entry' */'@/views/app/404.vue');
 const Forbidden = () => import(/* webpackChunkName: 'entry' */'@/views/app/403.vue');
 const Token = () => import(/* webpackChunkName: 'entry' */'@/views/user-token/token.vue');
+const ProjectList = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/project/project.vue');
 
 const router = new VueRouter({
   mode: 'history',
@@ -57,15 +59,18 @@ const router = new VueRouter({
     },
     // 403和user-token路由优先级比 ${SITE_URL}/:projectCode 高
     {
-      path: `${SITE_URL}/403`,
+      path: `${SITE_URL}/:projectCode/403`,
       name: '403',
       props: route => ({ ...route.params, ...route.query }),
       component: Forbidden,
     },
     {
-      path: `${SITE_URL}/user-token`,
-      name: 'token',
-      component: Token,
+      path: `${SITE_URL}/projects`,
+      name: 'projectManage',
+      component: ProjectList,
+      meta: {
+        menuId: 'PROJECT_LIST',
+      },
     },
     {
       path: `${SITE_URL}/:projectCode`,
@@ -83,6 +88,11 @@ const router = new VueRouter({
         name: 'clusterMain',
       },
       children: [
+        {
+          path: 'user-token',
+          name: 'token',
+          component: Token,
+        },
         ...ClusterManage,
         ...DeployManage,
         ...ProjectManage,
@@ -128,7 +138,7 @@ const cancelRequest = async () => {
 };
 
 router.beforeEach(async (to, from, next) => {
-  // // 设置必填路由参数
+  // 设置必填路由参数
   if (!to.params.projectId && $store.getters.curProjectId) {
     to.params.projectId = $store.getters.curProjectId;
   }
@@ -136,7 +146,14 @@ router.beforeEach(async (to, from, next) => {
     to.params.projectCode = $store.getters.curProjectCode;
   }
   await cancelRequest();
-  next();
+  const { validateRouteEnable } = useMenu();
+  const result = await validateRouteEnable(to);
+  if (!result) {
+    // 未开启菜单项
+    next({ name: '404' });
+  } else {
+    next();
+  }
 });
 
 export default router;

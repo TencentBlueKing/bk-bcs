@@ -16,15 +16,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 )
 
@@ -60,7 +64,7 @@ func (ua *EnableNodeGroupAutoScaleAction) validate() error {
 }
 
 func (ua *EnableNodeGroupAutoScaleAction) getRelativeResource() error {
-	// get relative cluster for information injection
+	//get relative cluster for information injection
 	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -88,12 +92,60 @@ func (ua *EnableNodeGroupAutoScaleAction) getRelativeResource() error {
 	return nil
 }
 
+func (ua *EnableNodeGroupAutoScaleAction) handleNodeGroupVirtualNodes() error {
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		"clusterid":   ua.cluster.ClusterID,
+		"nodegroupid": ua.group.NodeGroupID,
+	})
+	nodes, err := ua.model.ListNode(ua.ctx, cond, &storeopt.ListOption{})
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		blog.Errorf("get Cluster %s Nodes failed, %s", ua.cluster.ClusterID, err.Error())
+		return err
+	}
+
+	if len(nodes) == 0 {
+		return nil
+	}
+
+	var (
+		virtualNodeNum = 0
+	)
+	for i := range nodes {
+		if nodes[i].Status == common.StatusResourceApplyFailed && strings.HasPrefix(nodes[i].NodeID, "bcs") {
+			virtualNodeNum++
+			err = ua.model.DeleteClusterNode(ua.ctx, ua.cluster.ClusterID, nodes[i].NodeID)
+			if err != nil {
+				blog.Errorf("EnableNodeGroupAutoScaleAction[%s:%s] DeleteClusterNode[%s] failed: %v",
+					ua.cluster.ClusterID, ua.req.NodeGroupID, nodes[i].GetNodeID())
+			}
+		}
+	}
+
+	if virtualNodeNum > 0 {
+		err = actions.UpdateNodeGroupDesiredSize(ua.model, ua.req.NodeGroupID, virtualNodeNum, true)
+		if err != nil {
+			blog.Errorf("EnableNodeGroupAutoScaleAction[%s:%s] UpdateNodeGroupDesiredSize[%v] failed: %v",
+				ua.cluster.ClusterID, ua.req.NodeGroupID, virtualNodeNum)
+		}
+	}
+
+	return nil
+}
+
 func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 	// check auto scale state, if enable, return success
 	if ua.group.EnableAutoscale {
 		blog.Infof("nodegroup %s is already enable auto scale", ua.group.Name)
 		return nil
 	}
+
+	// handle virtual nodes to keep data consistency when notEnableCA nodegroup enable CA
+	err := ua.handleNodeGroupVirtualNodes()
+	if err != nil {
+		blog.Errorf("EnableNodeGroupAutoScaleAction[%s:%s] handleNodeGroupVirtualNodes failed: %v",
+			ua.cluster.ClusterID, ua.req.NodeGroupID, err)
+	}
+
 	mgr, err := cloudprovider.GetNodeGroupMgr(ua.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get NodeGroup Manager cloudprovider %s/%s for enable nodegroup auto scale in Cluster %s failed, %s",
@@ -123,12 +175,17 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 
 	// cloud provider nodeGroup
 	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, true, &cloudprovider.SwitchNodeGroupAutoScalingOption{
-		CommonOption: *cmOption})
+		CommonOption: *cmOption,
+		Cluster:      ua.cluster,
+		Cloud:        ua.cloud,
+	})
 	if err != nil {
 		blog.Errorf("enable nodegroup auto scale in cloudprovider %s/%s for group %s failed, %s",
 			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.group.NodeGroupID, err.Error())
 		return err
 	}
+
+	// create task and dispatch task
 	taskID := ""
 	if task != nil {
 		taskID = task.TaskID
@@ -151,9 +208,11 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.group.NodeGroupID,
 		TaskID:       taskID,
-		Message:      fmt.Sprintf("%s 开启节点池", ua.group.NodeGroupID),
+		Message:      fmt.Sprintf("%s 开启节点规格 ", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.cluster.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("EnableNodeGroupAutoScale[%s] CreateOperationLog failed: %v", ua.group.NodeGroupID, err)
@@ -232,7 +291,7 @@ func (ua *DisableNodeGroupAutoScaleAction) validate() error {
 }
 
 func (ua *DisableNodeGroupAutoScaleAction) getRelativeResource() error {
-	// get relative cluster for information injection
+	//get relative cluster for information injection
 	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -294,13 +353,14 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 	}
 
 	// cloud provider nodeGroup
-	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, false, &cloudprovider.SwitchNodeGroupAutoScalingOption{
-		CommonOption: *cmOption})
+	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, false, &cloudprovider.SwitchNodeGroupAutoScalingOption{CommonOption: *cmOption})
 	if err != nil {
 		blog.Errorf("disable nodegroup auto scale in cloudprovider %s/%s for group %s failed, %s",
 			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.group.NodeGroupID, err.Error())
 		return err
 	}
+
+	// create task and dispatch task
 	taskID := ""
 
 	if task != nil {
@@ -324,9 +384,11 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.group.NodeGroupID,
 		TaskID:       taskID,
-		Message:      fmt.Sprintf("%s 关闭节点池", ua.group.NodeGroupID),
+		Message:      fmt.Sprintf("%s 关闭节点规格", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.cluster.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("DisableNodeGroupAutoScale[%s] CreateOperationLog failed: %v", ua.group.NodeGroupID, err)
@@ -357,7 +419,7 @@ func (ua *DisableNodeGroupAutoScaleAction) Handle(
 		return
 	}
 
-	// if nodegroup is updating, return error
+	// if nodegroup is updating, return error  ua.group.Status != common.StatusRunning
 	if ua.group.Status == common.StatusNodeGroupUpdating {
 		blog.Errorf("nodegroup %s status is updating, can not disable auto scale", ua.group.Name)
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, errors.New("nodegroup is updating").Error())

@@ -14,6 +14,7 @@ package argocd
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
 // * addinational stream path, application wrapper
@@ -32,7 +34,7 @@ type StreamPlugin struct {
 	*mux.Router
 
 	appHandler *AppPlugin
-	middleware MiddlewareInterface
+	middleware mw.MiddlewareInterface
 }
 
 // Init all project sub path handler
@@ -49,14 +51,18 @@ func (plugin *StreamPlugin) Init() error {
 	return nil
 }
 
-func (plugin *StreamPlugin) projectViewHandler(ctx context.Context, r *http.Request) *httpResponse {
-	projectName := r.URL.Query().Get("projects")
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
-	if statusCode != http.StatusOK {
-		return &httpResponse{
-			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project '%s' permission failed", projectName),
+func (plugin *StreamPlugin) projectViewHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
+	projects := r.URL.Query()["projects"]
+	if len(projects) == 0 {
+		return mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'projects' cannot be empty"))
+	}
+	for i := range projects {
+		projectName := projects[i]
+		_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
+		if statusCode != http.StatusOK {
+			return mw.ReturnErrorResponse(statusCode,
+				errors.Wrapf(err, "check project '%s' permission failed", projectName))
 		}
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }

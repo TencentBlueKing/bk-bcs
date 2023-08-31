@@ -16,7 +16,6 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -26,6 +25,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/container/v1"
@@ -48,7 +49,11 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -103,7 +108,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 
 	state.Task.CommonParams["CloudNodeGroupID"] = group.CloudNodeGroupID
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
@@ -148,7 +153,11 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -176,7 +185,8 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	defer cancel()
 
 	cloudNodeGroup := &container.NodePool{}
-	err = cloudprovider.LoopDoFunc(ctx, func() error {
+
+	err = loop.LoopDoFunc(ctx, func() error {
 		np, errPool := containerCli.GetClusterNodePool(context.Background(), cluster.SystemID, group.CloudNodeGroupID)
 		if errPool != nil {
 			blog.Errorf("taskID[%s] GetClusterNodePool[%s/%s] failed: %v", taskID, cluster.SystemID,
@@ -193,11 +203,11 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 				taskID, group.CloudNodeGroupID, np.Status)
 			return nil
 		case np.Status == api.NodeGroupStatusRunning:
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		default:
 			return nil
 		}
-	}, cloudprovider.LoopInterval(5*time.Second))
+	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: GetClusterNodePool failed: %v", taskID, err)
 		retErr := fmt.Errorf("GetClusterNodePool failed, %s", err.Error())
@@ -266,7 +276,7 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 
 	if newIt.Name != it.Name {
 		// 如果使用了新模版,则删除旧模版
-		_, err := computeCli.DeleteInstanceTemplate(context.Background(), it.Name)
+		_, err = computeCli.DeleteInstanceTemplate(context.Background(), it.Name)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -400,7 +410,7 @@ func UpdateCreateNodeGroupDBInfoTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("UpdateCreateNodeGroupDBInfoTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}

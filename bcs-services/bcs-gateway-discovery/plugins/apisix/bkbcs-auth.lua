@@ -125,7 +125,7 @@ local function get_username_from_redis(token, conf, ctx)
     local jwt_str = bcs_jwt:get_jwt_from_redis(
         {
             user_token = token,
-        }, conf, "bcs_auth:token:", false
+        }, conf, ctx, "bcs_auth:token:", false
     )
     if not jwt_str then
         return nil, ""

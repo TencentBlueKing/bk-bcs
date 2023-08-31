@@ -3,7 +3,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager
 go 1.17
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../../bcs-common
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
@@ -34,7 +33,7 @@ require (
 	github.com/elazarl/goproxy v0.0.0-20210110162100-a92cc753f88e // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.4.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
-	github.com/go-logr/logr v1.2.1 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect

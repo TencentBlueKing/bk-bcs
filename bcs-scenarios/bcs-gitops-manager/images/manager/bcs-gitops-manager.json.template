@@ -12,6 +12,10 @@
     "key": "${bcsEtcdKeyFile}",
     "ca": "${bcsEtcdCAFile}"
   },
+  "secretserver": {
+    "address": "${secretServerAddress}",
+    "port": "${secretServerPort}"
+  },
   "address": "${localIp}",
   "port": ${bcsGitOpsManagerPort},
   "httpport": ${bcsGitOpsManagerHTTPPort},
@@ -46,5 +50,9 @@
     "gateway": "${bcsIAMGateWayHost}",
     "iamhost": "${bcsIAMHost}",
     "bkiam": "${bcsIAMbkiHost}"
+  },
+  "traceConfig": {
+     "endpoint": "${bcsTraceEndpoint}",
+     "token": "${bcsTraceToken}"
   }
 }

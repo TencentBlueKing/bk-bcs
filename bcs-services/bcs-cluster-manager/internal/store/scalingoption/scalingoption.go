@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package scalingoption xxx
 package scalingoption
 
 import (
@@ -20,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
@@ -29,8 +29,8 @@ import (
 
 const (
 	tableName = "clusterautoscalingoption"
-	// ! we don't setting bson tag in proto file,
-	// ! all struct key in mongo is lowcase in default
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	tableKey                = "clusterid"
 	defaultOptionListLength = 1000
 )
@@ -65,7 +65,6 @@ func New(db drivers.DB) *ModelAutoScalingOption {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelAutoScalingOption) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -86,8 +85,7 @@ func (m *ModelAutoScalingOption) ensureTable(ctx context.Context) error {
 }
 
 // CreateAutoScalingOption create cluster autoscaling option
-func (m *ModelAutoScalingOption) CreateAutoScalingOption(ctx context.Context,
-	option *types.ClusterAutoScalingOption) error {
+func (m *ModelAutoScalingOption) CreateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error {
 	if option == nil {
 		return fmt.Errorf("ClusterAutoScalingOption to be created cannot be empty")
 	}
@@ -103,8 +101,7 @@ func (m *ModelAutoScalingOption) CreateAutoScalingOption(ctx context.Context,
 
 // UpdateAutoScalingOption update option with all fileds, if some fields are nil
 // that field will be overwrite with empty
-func (m *ModelAutoScalingOption) UpdateAutoScalingOption(ctx context.Context,
-	option *types.ClusterAutoScalingOption) error {
+func (m *ModelAutoScalingOption) UpdateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
@@ -130,8 +127,7 @@ func (m *ModelAutoScalingOption) DeleteAutoScalingOption(ctx context.Context, cl
 }
 
 // GetAutoScalingOption get option
-func (m *ModelAutoScalingOption) GetAutoScalingOption(ctx context.Context, clusterID string) (
-	*types.ClusterAutoScalingOption, error) {
+func (m *ModelAutoScalingOption) GetAutoScalingOption(ctx context.Context, clusterID string) (*types.ClusterAutoScalingOption, error) {
 	if err := m.ensureTable(ctx); err != nil {
 		return nil, err
 	}
@@ -146,8 +142,7 @@ func (m *ModelAutoScalingOption) GetAutoScalingOption(ctx context.Context, clust
 }
 
 // ListAutoScalingOption list cluster autoscaling option according search condition
-func (m *ModelAutoScalingOption) ListAutoScalingOption(ctx context.Context, cond *operator.Condition,
-	opt *options.ListOption) (
+func (m *ModelAutoScalingOption) ListAutoScalingOption(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
 	[]types.ClusterAutoScalingOption, error) {
 	optionList := make([]types.ClusterAutoScalingOption, 0)
 	finder := m.db.Table(m.tableName).Find(cond)

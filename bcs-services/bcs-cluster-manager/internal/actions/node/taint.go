@@ -57,8 +57,9 @@ func (ua *UpdateNodeTaintsAction) updateNodeTaints() error {
 
 	barrier := utils.NewRoutinePool(50)
 	defer barrier.Close()
-	barrier.Add(len(ua.req.Nodes))
+
 	for i := range ua.req.Nodes {
+		barrier.Add(1)
 		go func(node *cmproto.NodeTaint) {
 			defer barrier.Done()
 			ctx, cancel := context.WithTimeout(context.Background(), clusterops.DefaultTimeout)

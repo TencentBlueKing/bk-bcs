@@ -16,88 +16,97 @@ package webhook
 import (
 	"bytes"
 	"context"
-	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/pkg/errors"
 	"go-micro.dev/v4/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
 )
 
 // TGitWebhook defines the webhook handler of tgit, there will transfer tgit webhook
 // to gitlab webhook
 func (s *Server) TGitWebhook(ctx context.Context, req *pb.TGitWebhookRequest, resp *pb.TGitWebhookResponse) error {
-	blog.Infof("tgit received webhook")
-	bs, err := json.Marshal(req.Body)
-	if err != nil {
-		blog.Errorf("tgit marshal request body failed: %s", err.Error())
-		return err
-	}
-	blog.V(5).Infof("received tgit webhook: %s", string(bs))
+	_, span := s.tracer.Start(ctx, "tgit")
+	defer span.End()
 
-	var result []byte
-	result, err = s.tgitHandler.Transfer(ctx, bs)
+	blog.Infof("RequestID[%s] tgit received webhook", utils.RequestID(ctx))
+	result, err := s.tgitHandler.Transfer(ctx, req.Data)
 	if err != nil {
-		blog.Errorf("tagit handle transfer failed with body '%s': %s", string(bs), err.Error())
+		blog.Errorf("RequestID[%s] tagit handle transfer failed with body '%s': %s",
+			utils.RequestID(ctx), string(req.Data), err.Error())
+		return err
 	}
 	var respBody []byte
 	respBody, err = s.sendToGitops(ctx, result)
 	if err != nil {
-		blog.Errorf("tgit send to gitops with body '%s' failed: %s", string(result), err.Error())
+		blog.Errorf("RequestID[%s] tgit send to gitops with body '%s' failed: %s",
+			utils.RequestID(ctx), string(result), err.Error())
 		return err
 	}
-	blog.V(5).Infof("tgit webhook response: %s", string(respBody))
+	blog.V(5).Infof("RequestID[%s] tgit webhook response: %s", utils.RequestID(ctx), string(respBody))
 	return nil
 }
 
 // GeneralWebhook defines the handler of general webhook, it will add the authorization header
-func (s *Server) GeneralWebhook(ctx context.Context, req *pb.GeneralWebhookRequest,
-	resp *pb.GeneralWebhookResponse) error {
-	blog.Infof("general received webhook")
-	bs, err := json.Marshal(req.Body)
-	if err != nil {
-		blog.Errorf("general marshal request body failed: %s", err.Error())
-		return err
-	}
-	blog.V(5).Infof("received general webhook: %s", string(bs))
+func (s *Server) GeneralWebhook(ctx context.Context, req *pb.GeneralWebhookRequest, resp *pb.GeneralWebhookResponse) error {
+	_, span := s.tracer.Start(ctx, "general")
+	defer span.End()
 
-	var respBody []byte
-	respBody, err = s.sendToGitops(ctx, bs)
+	blog.Infof("RequestID[%s] general received webhook", utils.RequestID(ctx))
+	respBody, err := s.sendToGitops(ctx, req.Data)
 	if err != nil {
-		blog.Errorf("general send to gitops with body '%s' failed: %s", string(bs), err.Error())
+		blog.Errorf("RequestID[%s] general send to gitops with body '%s' failed: %s",
+			utils.RequestID(ctx), string(req.Data), err.Error())
 		return err
 	}
-	blog.V(5).Infof("general webhook response: %s", string(respBody))
+	blog.V(5).Infof("RequestID[%s] general webhook response: %s", utils.RequestID(ctx), string(respBody))
 	return nil
 }
 
-func (s *Server) sendToGitops(ctx context.Context, body []byte) ([]byte, error) {
+func (s *Server) createWebhookRequest(ctx context.Context, body []byte) (*http.Request, error) {
 	req, err := http.NewRequest(http.MethodPost, s.op.GitOpsWebhook, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, errors.Wrapf(err, "create http request failed")
 	}
-
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
 		blog.Warnf("parse request header from context failed")
 	} else {
 		for k, v := range md {
-			req.Header.Set(k, v)
+			if k == ":Authority" {
+				continue
+			}
+			req.Header.Add(k, v)
 		}
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+s.op.GitOpsToken)
+	return req, nil
+}
 
-	httpClient := http.DefaultClient
+func (s *Server) sendToGitops(ctx context.Context, body []byte) ([]byte, error) {
+	recordReq, err := s.createWebhookRequest(ctx, body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "create webhook request for record failed")
+	}
+	if err = s.recorder.RecordEvent(ctx, recordReq); err != nil {
+		return nil, errors.Wrapf(err, "record event failed")
+	}
+
+	req, err := s.createWebhookRequest(ctx, body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "create webhook request failed")
+	}
 	var resp *http.Response
-	if resp, err = httpClient.Do(req); err != nil {
+	if resp, err = http.DefaultClient.Do(req); err != nil {
 		return nil, errors.Wrapf(err, "http request failed")
 	}
 	defer resp.Body.Close()
-	bs, err := ioutil.ReadAll(resp.Body)
+	bs, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrapf(err, "read response body failed")
 	}

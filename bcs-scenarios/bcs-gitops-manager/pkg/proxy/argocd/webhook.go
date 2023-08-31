@@ -20,13 +20,13 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
 // WebhookPlugin defines the webhook plugin
 type WebhookPlugin struct {
 	*mux.Router
-	middleware MiddlewareInterface
+	middleware mw.MiddlewareInterface
 }
 
 // Init initialize webhook plugin
@@ -38,8 +38,8 @@ func (plugin *WebhookPlugin) Init() error {
 	return nil
 }
 
-func (plugin *WebhookPlugin) executeWebhook(ctx context.Context, r *http.Request) *httpResponse {
-	user := ctx.Value("user").(*proxy.UserInfo)
-	blog.Infof("user %s request webhook", user.GetUser())
+func (plugin *WebhookPlugin) executeWebhook(ctx context.Context, r *http.Request) *mw.HttpResponse {
+	user := mw.User(ctx)
+	blog.Infof("RequestID[%s], user %s request webhook", mw.RequestID(ctx), user.GetUser())
 	return nil
 }

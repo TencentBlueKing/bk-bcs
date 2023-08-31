@@ -14,13 +14,20 @@
 package api
 
 import (
+	"context"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -33,14 +40,14 @@ var nodeMgr sync.Once
 
 func init() {
 	nodeMgr.Do(func() {
-		// init Node
+		//init Node
 		cloudprovider.InitNodeManager("qcloud", &NodeManager{})
 	})
 }
 
 // GetCVMClient get cvm client from common option
 func GetCVMClient(opt *cloudprovider.CommonOption) (*cvm.Client, error) {
-	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 	if len(opt.Region) == 0 {
@@ -68,6 +75,7 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.Zo
 		return nil, err
 	}
 
+	// DescribeZones
 	req := cvm.NewDescribeZonesRequest()
 	resp, err := client.DescribeZones(req)
 	if err != nil {
@@ -75,18 +83,18 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.Zo
 		return nil, err
 	}
 
-	// check response
+	//check response
 	response := resp.Response
 	if response == nil {
 		blog.Errorf("cvm client GetZoneList but lost response information")
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	// check response data
+	//check response data
 	blog.Infof("RequestId[%s] cvm client GetZoneList response num %d",
 		response.RequestId, *response.TotalCount)
 
 	if *response.TotalCount == 0 || len(response.ZoneSet) == 0 {
-		// * no data response
+		//* no data response
 		return nil, nil
 	}
 
@@ -111,6 +119,7 @@ func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*prot
 		return nil, err
 	}
 
+	// DescribeRegions
 	req := cvm.NewDescribeRegionsRequest()
 	resp, err := client.DescribeRegions(req)
 	if err != nil {
@@ -118,18 +127,18 @@ func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*prot
 		return nil, err
 	}
 
-	// check response
+	//check response
 	response := resp.Response
 	if response == nil {
 		blog.Errorf("cvm client DescribeRegions but lost response information")
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	// check response data
+	//check response data
 	blog.Infof("RequestId[%s] cvm client DescribeRegions response num %d",
 		response.RequestId, *response.TotalCount)
 
 	if *response.TotalCount == 0 || len(response.RegionSet) == 0 {
-		// * no data response
+		//* no data response
 		return nil, nil
 	}
 
@@ -145,7 +154,45 @@ func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*prot
 	return regions, nil
 }
 
-// GetNodeByIP get specified Node by innerIP address - 通过IP查询节点
+// GetNodeInstanceByIP get specified Node by innerIP address
+func (nm *NodeManager) GetNodeInstanceByIP(ip string, opt *cloudprovider.CommonOption) (*cvm.Instance, error) {
+	client, err := GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when GetNodeInstanceByIP failed, %s", err.Error())
+		return nil, err
+	}
+	req := cvm.NewDescribeInstancesRequest()
+	var ips []*string
+	ips = append(ips, common.StringPtr(ip))
+	req.Filters = append(req.Filters, &cvm.Filter{
+		Name:   common.StringPtr("private-ip-address"),
+		Values: ips,
+	})
+	// DescribeInstances
+	resp, err := client.DescribeInstances(req)
+	if err != nil {
+		blog.Errorf("cvm client DescribeInstance %s failed, %s", ip, err.Error())
+		return nil, err
+	}
+	//check response
+	response := resp.Response
+	if response == nil {
+		blog.Errorf("cvm client DescribeInstance %s but lost response information", ip)
+		return nil, cloudprovider.ErrCloudLostResponse
+	}
+	//check response data
+	blog.Infof("RequestId[%s] cvm client DescribeInstance %s response num %d",
+		response.RequestId, ip, *response.TotalCount,
+	)
+	if *response.TotalCount == 0 || len(response.InstanceSet) == 0 {
+		//* no data response
+		return nil, cloudprovider.ErrCloudNoHost
+	}
+
+	return response.InstanceSet[0], nil
+}
+
+// GetNodeByIP get specified Node by innerIP address
 func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
 	client, err := GetCVMClient(opt.Common)
 	if err != nil {
@@ -159,23 +206,24 @@ func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) 
 		Name:   common.StringPtr("private-ip-address"),
 		Values: ips,
 	})
+	// DescribeInstances
 	resp, err := client.DescribeInstances(req)
 	if err != nil {
 		blog.Errorf("cvm client DescribeInstance %s failed, %s", ip, err.Error())
 		return nil, err
 	}
-	// check response
+	//check response
 	response := resp.Response
 	if response == nil {
 		blog.Errorf("cvm client DescribeInstance %s but lost response information", ip)
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	// check response data
+	//check response data
 	blog.Infof("RequestId[%s] cvm client DescribeInstance %s response num %d",
 		response.RequestId, ip, *response.TotalCount,
 	)
 	if *response.TotalCount == 0 || len(response.InstanceSet) == 0 {
-		// * no data response
+		//* no data response
 		return nil, cloudprovider.ErrCloudNoHost
 	}
 	zoneInfo, err := GetZoneInfoByRegion(client, opt.Common.Region)
@@ -188,11 +236,43 @@ func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) 
 	node.Region = opt.Common.Region
 
 	// check node vpc and cluster vpc
-	if !strings.EqualFold(node.VPC, opt.ClusterVPCID) {
+	if opt.ClusterVPCID != "" && !strings.EqualFold(node.VPC, opt.ClusterVPCID) {
 		return nil, fmt.Errorf(cloudprovider.ErrCloudNodeVPCDiffWithClusterResponse, node.InnerIP)
 	}
 
 	return node, nil
+}
+
+// GetImageInfoByImageID xxx
+func (nm *NodeManager) GetImageInfoByImageID(imageID string, opt *cloudprovider.CommonOption) (*cvm.Image, error) {
+	client, err := GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when GetImageInfoByImageID failed, %s", err.Error())
+		return nil, err
+	}
+
+	req := cvm.NewDescribeImagesRequest()
+	req.ImageIds = append(req.ImageIds, common.StringPtr(imageID))
+
+	// DescribeImages
+	resp, err := client.DescribeImages(req)
+	if err != nil {
+		blog.Errorf("cvm client DescribeImages %s failed, %s", imageID, err.Error())
+		return nil, err
+	}
+	//check response
+	response := resp.Response
+	if response == nil {
+		blog.Errorf("cvm client DescribeImages %s but lost response information", imageID)
+		return nil, cloudprovider.ErrCloudLostResponse
+	}
+
+	if len(response.ImageSet) <= 0 {
+		blog.Errorf("cvm client DescribeImages %s failed", imageID)
+		return nil, fmt.Errorf("not found image[%s]", imageID)
+	}
+
+	return response.ImageSet[0], nil
 }
 
 // GetCVMImageIDByImageName xxx
@@ -214,12 +294,6 @@ func (nm *NodeManager) GetCVMImageIDByImageName(imageName string, opt *cloudprov
 			break
 		}
 		req := cvm.NewDescribeImagesRequest()
-		req.Filters = []*cvm.Filter{
-			{
-				Name:   common.StringPtr("image-type"),
-				Values: common.StringPtrs([]string{"PRIVATE_IMAGE"}),
-			},
-		}
 		req.Offset = common.Uint64Ptr(initOffset)
 		req.Limit = common.Uint64Ptr(uint64(100))
 
@@ -228,7 +302,7 @@ func (nm *NodeManager) GetCVMImageIDByImageName(imageName string, opt *cloudprov
 			blog.Errorf("cvm client DescribeImages %s failed, %s", imageName, err.Error())
 			return "", err
 		}
-		// check response
+		//check response
 		response := resp.Response
 		if response == nil {
 			blog.Errorf("cvm client DescribeImages %s but lost response information", imageName)
@@ -253,6 +327,42 @@ func (nm *NodeManager) GetCVMImageIDByImageName(imageName string, opt *cloudprov
 	return imageIDList[0], nil
 }
 
+// ListNodeInstancesByIP get cloud node instance by ips
+func (nm *NodeManager) ListNodeInstancesByIP(ips []string, opt *cloudprovider.CommonOption) ([]*cvm.Instance, error) {
+	ipChunks := utils.SplitStringsChunks(ips, maxFilterValues)
+	blog.Infof("ListNodeInstancesByIP ipChunks %+v", ipChunks)
+
+	var (
+		instanceList = make([]*cvm.Instance, 0)
+		lock         = sync.Mutex{}
+	)
+	barrier := utils.NewRoutinePool(20)
+	defer barrier.Close()
+
+	for _, chunk := range ipChunks {
+		if len(chunk) > 0 {
+			barrier.Add(1)
+			go func(ips []string) {
+				defer barrier.Done()
+				nodes, err := nm.transIPsToInstances(ips, opt)
+				if err != nil {
+					blog.Errorf("ListNodeInstancesByIP failed: %v", err)
+					return
+				}
+				if len(nodes) == 0 {
+					return
+				}
+				lock.Lock()
+				instanceList = append(instanceList, nodes...)
+				lock.Unlock()
+			}(chunk)
+		}
+	}
+
+	barrier.Wait()
+	return instanceList, nil
+}
+
 // ListNodesByIP list node by IP set
 func (nm *NodeManager) ListNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	ipChunks := utils.SplitStringsChunks(ips, maxFilterValues)
@@ -270,7 +380,7 @@ func (nm *NodeManager) ListNodesByIP(ips []string, opt *cloudprovider.ListNodesO
 			barrier.Add(1)
 			go func(ips []string) {
 				defer barrier.Done()
-				nodes, err := nm.transIPsToNodes(chunk, opt)
+				nodes, err := nm.transIPsToNodes(ips, opt)
 				if err != nil {
 					blog.Errorf("ListNodesByIP failed: %v", err)
 					return
@@ -289,6 +399,28 @@ func (nm *NodeManager) ListNodesByIP(ips []string, opt *cloudprovider.ListNodesO
 	return nodeList, nil
 }
 
+// ListNodeInstancesByInstanceID list cloud node instance by instanceID
+func (nm *NodeManager) ListNodeInstancesByInstanceID(ids []string, opt *cloudprovider.CommonOption) ([]*cvm.Instance, error) {
+	idChunks := utils.SplitStringsChunks(ids, limit)
+	instanceList := make([]*cvm.Instance, 0)
+
+	blog.Infof("ListNodeInstancesByInstanceID ipChunks %+v", idChunks)
+	for _, chunk := range idChunks {
+		if len(chunk) > 0 {
+			nodes, err := nm.transInstanceIDsToInstances(chunk, opt)
+			if err != nil {
+				blog.Errorf("ListNodeInstancesByInstanceID failed: %v", err)
+				return nil, err
+			}
+			if len(nodes) == 0 {
+				continue
+			}
+			instanceList = append(instanceList, nodes...)
+		}
+	}
+	return instanceList, nil
+}
+
 // ListNodesByInstanceID list node by instanceIDs
 func (nm *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	idChunks := utils.SplitStringsChunks(ids, limit)
@@ -305,17 +437,59 @@ func (nm *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.Li
 			if len(nodes) == 0 {
 				continue
 			}
-
 			nodeList = append(nodeList, nodes...)
 		}
 	}
-
 	return nodeList, nil
 }
 
+// transInstanceIDsToInstances trans IDList to cloud node instances
+func (nm *NodeManager) transInstanceIDsToInstances(ids []string, opt *cloudprovider.CommonOption) ([]*cvm.Instance, error) {
+	client, err := GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when transInstanceIDsToInstances failed, %s", err.Error())
+		return nil, err
+	}
+	req := cvm.NewDescribeInstancesRequest()
+	req.Limit = common.Int64Ptr(limit)
+
+	var idList []*string
+	for _, id := range ids {
+		idList = append(idList, common.StringPtr(id))
+	}
+	// instanceIDs max 100
+	req.InstanceIds = append(req.InstanceIds, idList...)
+
+	// DescribeInstances
+	resp, err := client.DescribeInstances(req)
+	if err != nil {
+		blog.Errorf("cvm client DescribeInstance len(%d) ip address failed, %s", len(ids), err.Error())
+		return nil, err
+	}
+	//check response
+	response := resp.Response
+	if response == nil {
+		blog.Errorf("cvm client DescribeInstance len(%d) ip but lost response information", len(ids))
+		return nil, cloudprovider.ErrCloudLostResponse
+	}
+	//check response data
+	blog.Infof("RequestId[%s] cvm client DescribeInstance len(%d) ip response num %d",
+		*response.RequestId, len(ids), *response.TotalCount)
+
+	if *response.TotalCount == 0 || len(response.InstanceSet) == 0 {
+		//* no data response
+		return nil, nil
+	}
+	if len(response.InstanceSet) != len(ids) {
+		blog.Warnf("RequestId[%s] DescribeInstance, expect %d, but got %d", *response.RequestId,
+			len(ids), len(response.InstanceSet))
+	}
+
+	return response.InstanceSet, nil
+}
+
 // transInstanceIDsToNodes trans IDList to Nodes
-func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node,
-	error) {
+func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	client, err := GetCVMClient(opt.Common)
 	if err != nil {
 		blog.Errorf("create CVM client when GetNodeByIP failed, %s", err.Error())
@@ -331,24 +505,25 @@ func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.
 	// instanceIDs max 100
 	req.InstanceIds = append(req.InstanceIds, idList...)
 
+	// DescribeInstances
 	resp, err := client.DescribeInstances(req)
 	if err != nil {
 		blog.Errorf("cvm client DescribeInstance len(%d) ip address failed, %s", len(ids), err.Error())
 		return nil, err
 	}
-	// check response
+	//check response
 	response := resp.Response
 	if response == nil {
 		blog.Errorf("cvm client DescribeInstance len(%d) ip but lost response information", len(ids))
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	// check response data
+	//check response data
 	blog.Infof("RequestId[%s] cvm client DescribeInstance len(%d) ip response num %d",
 		response.RequestId, len(ids), *response.TotalCount,
 	)
 
 	if *response.TotalCount == 0 || len(response.InstanceSet) == 0 {
-		// * no data response
+		//* no data response
 		return nil, nil
 	}
 	if len(response.InstanceSet) != len(ids) {
@@ -375,7 +550,7 @@ func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.
 		node.Region = opt.Common.Region
 
 		// check node vpc and cluster vpc
-		if !strings.EqualFold(node.VPC, opt.ClusterVPCID) {
+		if opt.ClusterVPCID != "" && !strings.EqualFold(node.VPC, opt.ClusterVPCID) {
 			return nil, fmt.Errorf(cloudprovider.ErrCloudNodeVPCDiffWithClusterResponse, node.InnerIP)
 		}
 
@@ -385,11 +560,60 @@ func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.
 	return nodes, nil
 }
 
-// transIPsToNodes trans IPList to Nodes
+// transIPsToInstances trans IPList to cloud Instance, filter max 5 values
+func (nm *NodeManager) transIPsToInstances(ips []string, opt *cloudprovider.CommonOption) ([]*cvm.Instance, error) {
+	client, err := GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when transIPsToInstances failed, %s", err.Error())
+		return nil, err
+	}
+	req := cvm.NewDescribeInstancesRequest()
+	req.Limit = common.Int64Ptr(limit)
+
+	var ipList []*string
+	for _, ip := range ips {
+		ipList = append(ipList, common.StringPtr(ip))
+	}
+
+	// filters values max 5
+	req.Filters = append(req.Filters, &cvm.Filter{
+		Name:   common.StringPtr("private-ip-address"),
+		Values: ipList,
+	})
+
+	// DescribeInstances
+	resp, err := client.DescribeInstances(req)
+	if err != nil {
+		blog.Errorf("cvm client DescribeInstance len(%d) ip address failed, %s", len(ips), err.Error())
+		return nil, err
+	}
+	// check response
+	response := resp.Response
+	if response == nil {
+		blog.Errorf("cvm client DescribeInstance len(%d) ip but lost response information", len(ips))
+		return nil, cloudprovider.ErrCloudLostResponse
+	}
+	//check response data
+	blog.Infof("RequestId[%s] cvm client DescribeInstance len(%d) ip response num %d",
+		*response.RequestId, len(ips), *response.TotalCount)
+
+	if *response.TotalCount == 0 || len(response.InstanceSet) == 0 {
+		//* no data response
+		return nil, nil
+	}
+	if len(response.InstanceSet) != len(ips) {
+		blog.Warnf("RequestId[%s] DescribeInstance, expect %d, but got %d", *response.RequestId,
+			len(ips), len(response.InstanceSet))
+	}
+
+	return response.InstanceSet, nil
+}
+
+// transIPsToNodes trans IPList to Nodes, filter max 5 values
 func (nm *NodeManager) transIPsToNodes(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	client, err := GetCVMClient(opt.Common)
 	if err != nil {
-		blog.Errorf("create CVM client when GetNodeByIP failed, %s", err.Error())
+		blog.Errorf("create CVM client when transIPsToNodes failed, %s", err.Error())
 		return nil, err
 	}
 	req := cvm.NewDescribeInstancesRequest()
@@ -411,19 +635,19 @@ func (nm *NodeManager) transIPsToNodes(ips []string, opt *cloudprovider.ListNode
 		blog.Errorf("cvm client DescribeInstance len(%d) ip address failed, %s", len(ips), err.Error())
 		return nil, err
 	}
-	// check response
+	//check response
 	response := resp.Response
 	if response == nil {
 		blog.Errorf("cvm client DescribeInstance len(%d) ip but lost response information", len(ips))
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	// check response data
+	//check response data
 	blog.Infof("RequestId[%s] cvm client DescribeInstance len(%d) ip response num %d",
 		response.RequestId, len(ips), *response.TotalCount,
 	)
 
 	if *response.TotalCount == 0 || len(response.InstanceSet) == 0 {
-		// * no data response
+		//* no data response
 		return nil, nil
 	}
 	if len(response.InstanceSet) != len(ips) {
@@ -459,7 +683,7 @@ func (nm *NodeManager) transIPsToNodes(ips []string, opt *cloudprovider.ListNode
 			node.Region = opt.Common.Region
 
 			// check node vpc and cluster vpc
-			if !strings.EqualFold(node.VPC, opt.ClusterVPCID) {
+			if opt.ClusterVPCID != "" && !strings.EqualFold(node.VPC, opt.ClusterVPCID) {
 				return nil, fmt.Errorf(cloudprovider.ErrCloudNodeVPCDiffWithClusterResponse, node.InnerIP)
 			}
 
@@ -472,11 +696,13 @@ func (nm *NodeManager) transIPsToNodes(ips []string, opt *cloudprovider.ListNode
 // InstanceToNode parse Instance information in qcloud to Node in clustermanager
 // @param Instance: qcloud instance information, can not be nil;
 // @return Node: cluster-manager node information;
-func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]uint32) *proto.Node {
-	var zoneID uint32
+func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]*ZoneInfo) *proto.Node {
+	var zone *ZoneInfo
+	// zone may be nil when api qps limit exceed or zone not exist
 	if zoneInfo != nil {
-		zoneID = zoneInfo[*inst.Placement.Zone]
+		zone = zoneInfo[*inst.Placement.Zone]
 	}
+
 	node := &proto.Node{
 		NodeID:       *inst.InstanceId,
 		InstanceType: *inst.InstanceType,
@@ -485,14 +711,25 @@ func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]uint32) *proto.Node 
 		GPU:          0,
 		VPC:          *inst.VirtualPrivateCloud.VpcId,
 		ZoneID:       *inst.Placement.Zone,
-		Zone:         zoneID,
-		InnerIPv6:    utils.SlicePtrToString(inst.IPv6Addresses),
+		Zone: func() uint32 {
+			if zone != nil {
+				return uint32(zone.ZoneID)
+			}
+			return 0
+		}(),
+		InnerIPv6: utils.SlicePtrToString(inst.IPv6Addresses),
+		ZoneName: func() string {
+			if zone != nil {
+				return zone.ZoneName
+			}
+			return ""
+		}(),
 	}
 	return node
 }
 
 // GetZoneInfoByRegion region: ap-nanjing/ap-shenzhen
-func GetZoneInfoByRegion(client *cvm.Client, region string) (map[string]uint32, error) {
+func GetZoneInfoByRegion(client *cvm.Client, region string) (map[string]*ZoneInfo, error) {
 	if client == nil {
 		return nil, fmt.Errorf("getZoneInfoByRegion client is nil")
 	}
@@ -508,20 +745,24 @@ func GetZoneInfoByRegion(client *cvm.Client, region string) (map[string]uint32, 
 		blog.Errorf("cvm client DescribeZones lost response information")
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	// check response data
+	//check response data
 	blog.Infof("RequestId[%s] cvm client DescribeZones response num %d",
 		response.RequestId, *response.TotalCount)
 
 	if *response.TotalCount == 0 || len(response.ZoneSet) == 0 {
-		// * no data response
+		//* no data response
 		return nil, nil
 	}
 
-	zoneIDMap := make(map[string]uint32)
+	zoneIDMap := make(map[string]*ZoneInfo)
 	for i := range response.ZoneSet {
 		if _, ok := zoneIDMap[*response.ZoneSet[i].Zone]; !ok {
 			zoneID, _ := strconv.ParseUint(*response.ZoneSet[i].ZoneId, 10, 32)
-			zoneIDMap[*response.ZoneSet[i].Zone] = uint32(zoneID)
+			zoneIDMap[*response.ZoneSet[i].Zone] = &ZoneInfo{
+				ZoneID:   zoneID,
+				Zone:     *response.ZoneSet[i].Zone,
+				ZoneName: *response.ZoneSet[i].ZoneName,
+			}
 		}
 	}
 
@@ -529,29 +770,102 @@ func GetZoneInfoByRegion(client *cvm.Client, region string) (map[string]uint32, 
 }
 
 // ListNodeInstanceType list node type by zone and node family
-func (nm *NodeManager) ListNodeInstanceType(zone, nodeFamily string, cpu, memory uint32,
-	opt *cloudprovider.CommonOption) (
+func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
-	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d", zone, nodeFamily, cpu, memory)
-	list, err := nm.DescribeZoneInstanceConfigInfos(zone, nodeFamily, "", opt)
+	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
+		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
+
+	if options.GetEditionInfo().IsInnerEdition() {
+		return nm.getInnerInstanceTypes(info)
+	}
+
+	return nm.getCloudInstanceType(info, opt)
+}
+
+// getCloudInstanceType get cloud instance type and filter instanceType by cpu&mem size
+func (nm *NodeManager) getCloudInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
+	[]*proto.InstanceType, error) {
+	blog.Infof("getCloudInstanceType %+v", info)
+	list, err := nm.DescribeZoneInstanceConfigInfos(info.Zone, info.NodeFamily, "", opt)
 	if err != nil {
 		return nil, err
 	}
 	result := make([]*proto.InstanceType, 0)
 	for _, item := range list {
-		if cpu > 0 {
-			if item.Cpu != cpu {
+		if info.Cpu > 0 {
+			if item.Cpu != info.Cpu {
 				continue
 			}
 		}
-		if memory > 0 {
-			if item.Memory != memory {
+		if info.Memory > 0 {
+			if item.Memory != info.Memory {
 				continue
 			}
 		}
 		result = append(result, item)
 	}
 	return result, nil
+}
+
+// getInnerInstanceTypes get inner instance types info
+func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) (
+	[]*proto.InstanceType, error) {
+	blog.Infof("getInnerInstanceTypes %+v", info)
+
+	targetTypes, err := tresource.GetResourceManagerClient().GetInstanceTypes(context.Background(),
+		info.Region, resource.InstanceSpec{
+			ProjectID: info.ProjectID,
+			BizID:     info.BizID,
+			Version:   info.Version,
+			Cpu:       info.Cpu,
+			Mem:       info.Memory,
+			Provider:  info.Provider,
+		})
+	if err != nil {
+		blog.Errorf("resourceManager ListNodeInstanceType failed: %v", err)
+		return nil, err
+	}
+	blog.Infof("getInnerInstanceTypes successful[%+v]", targetTypes)
+
+	var instanceTypes = make([]*proto.InstanceType, 0)
+	for _, t := range targetTypes {
+		instanceTypes = append(instanceTypes, &proto.InstanceType{
+			NodeType:       t.NodeType,
+			TypeName:       t.TypeName,
+			NodeFamily:     t.NodeFamily,
+			Cpu:            t.Cpu,
+			Memory:         t.Memory,
+			Gpu:            t.Gpu,
+			Status:         t.Status, // SOLD_OUT
+			UnitPrice:      0,
+			Zones:          t.Zones,
+			Provider:       t.Provider,
+			ResourcePoolID: t.ResourcePoolID,
+			SystemDisk: func() *proto.DataDisk {
+				if t.SystemDisk == nil {
+					return nil
+				}
+
+				return &proto.DataDisk{
+					DiskType: t.SystemDisk.DiskType,
+					DiskSize: t.SystemDisk.DiskSize,
+				}
+			}(),
+			DataDisks: func() []*proto.DataDisk {
+				disks := make([]*proto.DataDisk, 0)
+				for i := range t.DataDisks {
+					disks = append(disks, &proto.DataDisk{
+						DiskType: t.DataDisks[i].DiskType,
+						DiskSize: t.DataDisks[i].DiskSize,
+					})
+				}
+				return disks
+			}(),
+		})
+	}
+
+	blog.Infof("getInnerInstanceTypes successful[%+v]", instanceTypes)
+	return instanceTypes, nil
 }
 
 // DescribeInstanceTypeConfigs describe instance type configs
@@ -597,11 +911,9 @@ func (nm *NodeManager) DescribeInstanceTypeConfigs(filters []*Filter, opt *cloud
 
 // DescribeZoneInstanceConfigInfos describe zone instance config infos
 // https://cloud.tencent.com/document/api/213/17378
-func (nm *NodeManager) DescribeZoneInstanceConfigInfos(zone, instanceFamily, instanceType string,
-	opt *cloudprovider.CommonOption) (
+func (nm *NodeManager) DescribeZoneInstanceConfigInfos(zone, instanceFamily, instanceType string, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
-	blog.Infof("DescribeZoneInstanceConfigInfos input: zone/%s, instanceFamily/%s, instanceType/%s", zone, instanceFamily,
-		instanceType)
+	blog.Infof("DescribeZoneInstanceConfigInfos input: zone/%s, instanceFamily/%s, instanceType/%s", zone, instanceFamily, instanceType)
 	client, err := GetCVMClient(opt)
 	if err != nil {
 		blog.Errorf("create CVM client when DescribeZoneInstanceConfigInfos failed: %v", err)
@@ -738,7 +1050,10 @@ func (nm *NodeManager) DescribeInstances(ins []string, filters []*Filter, opt *c
 			}
 			if v.Placement != nil && v.Placement.Zone != nil {
 				node.ZoneID = *v.Placement.Zone
-				node.Zone = zoneInfo[*v.Placement.Zone]
+				zone, ok := zoneInfo[*v.Placement.Zone]
+				if ok {
+					node.Zone = uint32(zone.ZoneID)
+				}
 			}
 			if v.VirtualPrivateCloud != nil && v.VirtualPrivateCloud.VpcId != nil {
 				node.VPC = *v.VirtualPrivateCloud.VpcId
@@ -754,7 +1069,7 @@ func (nm *NodeManager) DescribeInstances(ins []string, filters []*Filter, opt *c
 	return nodes, nil
 }
 
-// DescribeImages describe images
+// DescribeImages describe images: PRIVATE_IMAGE: 私有镜像; PUBLIC_IMAGE: 公共镜像 (腾讯云官方镜像)
 // https://cloud.tencent.com/document/api/213/15715
 func (nm *NodeManager) DescribeImages(imageType string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	blog.Infof("DescribeImages input: %s", imageType)
@@ -818,6 +1133,124 @@ func (nm *NodeManager) DescribeImages(imageType string, opt *cloudprovider.Commo
 	return images, nil
 }
 
+// DescribeKeyPairsByID describe ssh keyPairs https://cloud.tencent.com/document/product/213/15699
+func (nm *NodeManager) DescribeKeyPairsByID(keyIDs []string,
+	opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
+	client, err := GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when DescribeKeyPairs failed: %v", err)
+		return nil, err
+	}
+
+	idChunks := utils.SplitStringsChunks(keyIDs, limit)
+	blog.Infof("DescribeKeyPairsByID Chunks %+v", idChunks)
+
+	var (
+		keyPairs = make([]*proto.KeyPair, 0)
+		lock     = sync.Mutex{}
+	)
+
+	barrier := utils.NewRoutinePool(20)
+	defer barrier.Close()
+
+	for _, chunk := range idChunks {
+		if len(chunk) > 0 {
+			barrier.Add(1)
+			go func(ids []string) {
+				defer barrier.Done()
+
+				req := cvm.NewDescribeKeyPairsRequest()
+				req.KeyIds = common.StringPtrs(ids)
+				req.Limit = common.Int64Ptr(limit)
+
+				resp, err := client.DescribeKeyPairs(req)
+				if err != nil {
+					blog.Errorf("DescribeKeyPairs[%v] failed: %v", ids, err)
+					return
+				}
+				if len(resp.Response.KeyPairSet) == 0 {
+					return
+				}
+
+				for i := range resp.Response.KeyPairSet {
+					lock.Lock()
+					keyPairs = append(keyPairs, &proto.KeyPair{
+						KeyID:       *resp.Response.KeyPairSet[i].KeyId,
+						KeyName:     *resp.Response.KeyPairSet[i].KeyName,
+						Description: *resp.Response.KeyPairSet[i].Description,
+					})
+					lock.Unlock()
+				}
+			}(chunk)
+		}
+	}
+	barrier.Wait()
+
+	return keyPairs, nil
+}
+
+// ListKeyPairs describe all ssh keyPairs https://cloud.tencent.com/document/product/213/15699
+func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
+	client, err := GetCVMClient(opt)
+	if err != nil {
+		blog.Errorf("create CVM client when ListKeyPairs failed: %v", err)
+		return nil, err
+	}
+
+	var (
+		keyPairs = make([]*proto.KeyPair, 0)
+
+		initOffset int64
+		keyListLen = limit
+	)
+
+	for {
+		if keyListLen != limit {
+			break
+		}
+		req := cvm.NewDescribeKeyPairsRequest()
+		req.Offset = common.Int64Ptr(initOffset)
+		req.Limit = common.Int64Ptr(limit)
+
+		/*
+			for i := range filters {
+				req.Filters = append(req.Filters, &cvm.Filter{
+					Name:   common.StringPtr(filters[i].Name),
+					Values: common.StringPtrs(filters[i].Values),
+				})
+			}
+		*/
+
+		resp, err := client.DescribeKeyPairs(req)
+		if err != nil {
+			blog.Errorf("cvm client DescribeKeyPairs failed, %s", err.Error())
+			continue
+		}
+
+		// check response
+		response := resp.Response
+		if response == nil {
+			blog.Errorf("cvm client DescribeKeyPairs but lost response information")
+			continue
+		}
+
+		for i := range response.KeyPairSet {
+			keyPairs = append(keyPairs, &proto.KeyPair{
+				KeyID:       *response.KeyPairSet[i].KeyId,
+				KeyName:     *response.KeyPairSet[i].KeyName,
+				Description: *response.KeyPairSet[i].Description,
+			})
+		}
+
+		keyListLen = len(response.KeyPairSet)
+		initOffset = initOffset + limit
+	}
+
+	blog.Infof("ListKeyPairs successful")
+
+	return keyPairs, nil
+}
+
 // ListOsImage list image os
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	os := make([]*proto.OsImage, 0)
@@ -826,5 +1259,64 @@ func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOpt
 			os = append(os, v)
 		}
 	}
+
 	return os, nil
+}
+
+// GetExternalNodeByIP get specified Node by innerIP address
+func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
+	node := &proto.Node{}
+
+	ips := []string{ip}
+	hostData, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ips, cmdb.Page{
+		Start: 0,
+		Limit: len(ips),
+	})
+	if err != nil {
+		blog.Errorf("GetExternalNodeByIP failed: %v", err)
+		return nil, err
+	}
+
+	node.InnerIP = hostData[0].BKHostInnerIP
+	node.CPU = uint32(hostData[0].HostCpu)
+	node.Mem = uint32(math.Floor(float64(hostData[0].HostMem) / float64(1024)))
+	node.InstanceType = hostData[0].NormalDeviceType
+	node.Region = cmdb.GetCityZoneByCityName(hostData[0].IDCCityName)
+
+	node.NodeType = icommon.IDC.String()
+	return node, nil
+}
+
+// ListExternalNodesByIP list node by IP set
+func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+	var nodes []*proto.Node
+
+	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ips, cmdb.Page{
+		Start: 0,
+		Limit: len(ips),
+	})
+	if err != nil {
+		blog.Errorf("ListExternalNodesByIP failed: %v", err)
+		return nil, err
+	}
+	hostMap := make(map[string]cmdb.HostDetailData)
+	for i := range hostDataList {
+		hostMap[hostDataList[i].BKHostInnerIP] = hostDataList[i]
+	}
+
+	for _, ip := range ips {
+		if host, ok := hostMap[ip]; ok {
+			node := &proto.Node{}
+			node.InnerIP = host.BKHostInnerIP
+			node.CPU = uint32(host.HostCpu)
+			node.Mem = uint32(math.Floor(float64(host.HostMem) / float64(1024)))
+			node.InstanceType = host.NormalDeviceType
+			node.Region = cmdb.GetCityZoneByCityName(host.IDCCityName)
+			node.NodeType = icommon.IDC.String()
+
+			nodes = append(nodes, node)
+		}
+	}
+
+	return nodes, nil
 }

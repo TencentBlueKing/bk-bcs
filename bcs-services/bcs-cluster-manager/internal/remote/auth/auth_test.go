@@ -13,17 +13,22 @@
 
 package auth
 
-import "testing"
+import (
+	"testing"
 
-var server = &ClientSSM{
-	server:    "http://xxx.com",
-	appCode:   "xxx",
-	appSecret: "xxx",
-	debug:     true,
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
+)
+
+var server = &ClientAuth{
+	server: "xxx",
+	debug:  true,
 }
 
-func TestClientSSM_GetAccessToken(t *testing.T) {
-	token, err := server.GetAccessToken()
+func TestClientAuth_GetAccessToken(t *testing.T) {
+	token, err := server.GetAccessToken(utils.BkAppUser{
+		BkAppCode:   "xxx",
+		BkAppSecret: "xxx",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

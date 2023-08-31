@@ -15,6 +15,7 @@ package dao
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -41,7 +42,8 @@ type Set interface {
 	Release() Release
 	ReleasedCI() ReleasedCI
 	Hook() Hook
-	HookRelease() HookRelease
+	HookRevision() HookRevision
+	ReleasedHook() ReleasedHook
 	TemplateSpace() TemplateSpace
 	Template() Template
 	TemplateRevision() TemplateRevision
@@ -61,21 +63,30 @@ type Set interface {
 	Healthz() error
 	Credential() Credential
 	CredentialScope() CredentialScope
-	ConfigHook() ConfigHook
 }
 
 // NewDaoSet create the DAO set instance.
 func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 
+	// opt cc.Database
 	sd, err := sharding.InitSharding(&opt)
 	if err != nil {
 		return nil, fmt.Errorf("init sharding failed, err: %v", err)
 	}
 
-	adminDB, err := gorm.Open(mysql.Open(sharding.URI(opt.AdminDatabase)), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	adminDB, err := gorm.Open(mysql.Open(sharding.URI(opt.AdminDatabase)),
+		&gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 	if err != nil {
 		return nil, err
 	}
+
+	db, err := adminDB.DB()
+	if err != nil {
+		return nil, err
+	}
+	db.SetMaxOpenConns(int(opt.AdminDatabase.MaxOpenConn))
+	db.SetMaxIdleConns(int(opt.AdminDatabase.MaxIdleConn))
+	db.SetConnMaxLifetime(time.Duration(opt.AdminDatabase.MaxIdleTimeoutMin) * time.Minute)
 
 	if e := adminDB.Use(tracing.NewPlugin(tracing.WithoutMetrics())); e != nil {
 		return nil, err
@@ -109,7 +120,7 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
 	eventDao := &eventDao{genQ: genQ, idGen: idDao, auditDao: auditDao}
-	lockDao := &lockDao{orm: ormInst, idGen: idDao}
+	lockDao := &lockDao{genQ: genQ, idGen: idDao}
 
 	s := &set{
 		orm:               ormInst,
@@ -214,12 +225,21 @@ func (s *set) Hook() Hook {
 	}
 }
 
-// HookRelease returns the hookRelease's DAO
-func (s *set) HookRelease() HookRelease {
-	return &hookReleaseDao{
+// HookRevision returns the hookRevision's DAO
+func (s *set) HookRevision() HookRevision {
+	return &hookRevisionDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
+	}
+}
+
+// ReleasedHook returns the released hook's DAO
+func (s *set) ReleasedHook() ReleasedHook {
+	return &releasedHookDao{
+		genQ:     s.genQ,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
 	}
 }
 
@@ -395,14 +415,5 @@ func (s *set) CredentialScope() CredentialScope {
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
-	}
-}
-
-// ConfigHook returns the configHook's DAO
-func (s *set) ConfigHook() ConfigHook {
-	return &configHookDao{
-		genQ:     s.genQ,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
 	}
 }

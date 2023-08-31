@@ -16,7 +16,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
@@ -95,11 +95,17 @@ func (r *Registry) Complete() error {
 
 // LoadConfigFile loading json config file
 func LoadConfigFile(fileName string, opt interface{}) error {
-	content, err := ioutil.ReadFile(fileName)
+	content, err := os.ReadFile(fileName)
 	if err != nil {
 		return err
 	}
 	return json.Unmarshal(content, opt)
+}
+
+// TraceConfig defines the config of trace from config file
+type TraceConfig struct {
+	Endpoint string `json:"endpoint,omitempty"`
+	Token    string `json:"token,omitempty"`
 }
 
 // AuthConfig for AuthCenter

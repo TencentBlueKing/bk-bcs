@@ -17,6 +17,7 @@ WORKSPACE=$(shell pwd)
 
 BCS_UI_PATH=${WORKSPACE}/bcs-ui
 BCS_SERVICES_PATH=${WORKSPACE}/bcs-services
+BCS_INSTALL_PATH=${WORKSPACE}/install
 BCS_NETWORK_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-network
 BCS_COMPONENT_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-component
 BCS_MESOS_PATH=${WORKSPACE}/bcs-runtime/bcs-mesos
@@ -47,6 +48,18 @@ export SCENARIOSPACKAGE=${WORKSPACE}/${PACKAGEPATH}/bcs-scenarios
 # bscp 应用自定义
 export BSCP_LDFLAG=-ldflags "-X bscp.io/pkg/version.BUILDTIME=${BUILDTIME} -X bscp.io/pkg/version.GITHASH=${GITHASH}"
 
+# tongsuo related environment variables
+export TONGSUO_PATH?=$(WORKSPACE)/build/bcs.${VERSION}/tongsuo
+export IS_STATIC?=true
+
+ifeq ($(IS_STATIC),true)
+        CGO_BUILD_FLAGS= CGO_ENABLED=1 CGO_CFLAGS="-I${TONGSUO_PATH}/include -Wno-deprecated-declarations" \
+        CGO_LDFLAGS="-L${TONGSUO_PATH}/lib -lssl -lcrypto -ldl -lpthread -static-libgcc -static-libstdc++"
+else
+        CGO_BUILD_FLAGS= CGO_ENABLED=1 CGO_CFLAGS="-I${TONGSUO_PATH}/include -Wno-deprecated-declarations" \
+        CGO_LDFLAGS="-L${TONGSUO_PATH}/lib -lssl -lcrypto"
+endif
+
 # options
 default:bcs-runtime bcs-scenarios bcs-services #TODO: bcs-resources
 
@@ -56,8 +69,9 @@ bcs-k8s: bcs-component bcs-network
 
 bcs-component:k8s-driver \
 	cc-agent kube-sche apiserver-proxy \
-	apiserver-proxy-tools logbeat-sidecar webhook-server \
-	general-pod-autoscaler cluster-autoscaler
+	logbeat-sidecar webhook-server \
+	general-pod-autoscaler cluster-autoscaler \
+	netservice-controller
 
 bcs-network:network networkpolicy cloud-netservice cloud-netcontroller cloud-netagent
 
@@ -69,7 +83,7 @@ bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
 	helm-manager project-manager nodegroup-manager
 
-bcs-scenarios: kourse
+bcs-scenarios: kourse gitops
 
 kourse: gamedeployment gamestatefulset hook-operator
 
@@ -110,6 +124,7 @@ pre:
 	go mod tidy
 	go fmt ./...
 	cd ./scripts && chmod +x vet.sh && ./vet.sh
+	cd ./scripts && chmod +x tongsuo.sh && ./tongsuo.sh
 
 api:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -262,8 +277,9 @@ detection:pre
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-network-detection ${PACKAGEPATH}/bcs-services
 	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-network-detection/bcs-network-detection ./bcs-services/bcs-network-detection/main.go
 
-tools:
-	go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
+tools:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services
+	cd ${BCS_INSTALL_PATH}/cryptool && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o  ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cryptools main.go
 
 ui:pre
 	mkdir -p ${PACKAGEPATH}/bcs-ui
@@ -273,7 +289,7 @@ ui:pre
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-user-manager ${PACKAGEPATH}/bcs-services
-	cd bcs-services/bcs-user-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./main.go
+	cd bcs-services/bcs-user-manager/ && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./main.go
 
 webconsole:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webconsole
@@ -324,6 +340,11 @@ cluster-autoscaler:pre
 	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16 && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/hyper/bcs-cluster-autoscaler-1.16 ./main.go
 	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22 && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/hyper/bcs-cluster-autoscaler-1.22 ./main.go
 	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler && ls -la ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/hyper
+
+netservice-controller:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-netservice-controller ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-netservice-controller && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/bcs-netservice-controller ./main.go
 
 # network plugins section
 networkpolicy:pre
@@ -378,7 +399,7 @@ cluster-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger
 	cp -R ${BCS_SERVICES_PATH}/bcs-cluster-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/
 	cp ${BCS_SERVICES_PATH}/bcs-cluster-manager/api/clustermanager/clustermanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/swagger-ui/clustermanager.swagger.json
-	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy -compat=1.17 && go build ${GITHUB_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
+	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy && ${CGO_BUILD_FLAGS} go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
 
 alert-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger
@@ -406,10 +427,6 @@ cluster-resources:pre
 	# etc config files
 	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/etc
 	cp -R ${BCS_SERVICES_PATH}/cluster-resources/etc/ ${PACKAGEPATH}/bcs-services/cluster-resources/etc/
-	# swagger files
-	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/swagger
-	cp -R ${BCS_SERVICES_PATH}/cluster-resources/third_party/swagger-ui/ ${PACKAGEPATH}/bcs-services/cluster-resources/swagger/swagger-ui/
-	cp ${BCS_SERVICES_PATH}/cluster-resources/swagger/data/cluster-resources.swagger.json ${PACKAGEPATH}/bcs-services/cluster-resources/swagger/cluster-resources.swagger.json
 	# example files
 	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/example/
 	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/example/config/ ${PACKAGEPATH}/bcs-services/cluster-resources/example/config/
@@ -427,13 +444,8 @@ cluster-resources:pre
 apiserver-proxy:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-apiserver-proxy/* ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
+	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy/ipvs_tools && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/bcs-apiserver-proxy-tools .
 	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/bcs-apiserver-proxy ./main.go
-	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy/ipvs_tools && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/apiserver-proxy-tools .
-
-apiserver-proxy-tools:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
-	cd ${BCS_COMPONENT_PATH}/bcs-apiserver-proxy/ipvs_tools && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/apiserver-proxy-tools .
-
 
 data-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-data-manager
@@ -453,8 +465,8 @@ helm-manager:pre
 	# i18n files
 	cp ${BCS_SERVICES_PATH}/bcs-helm-manager/internal/i18n/locale/lc_msgs.yaml ${PACKAGEPATH}/bcs-services/bcs-helm-manager/lc_msgs.yaml
 	# build
-	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager ./main.go
-	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager-migrator ./cmd/bcs-helm-manager-migrator/main.go
+	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager ./main.go
+	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager-migrator ./cmd/bcs-helm-manager-migrator/main.go
 
 
 nodegroup-manager:pre
@@ -473,6 +485,10 @@ gitops-manager:
 gitops-webhook:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-webhook
 	cd bcs-scenarios/bcs-gitops-manager && make webhook && cd -
+
+gitops-vaultplugin-server:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-vaultplugin-server
+	cd bcs-scenarios/bcs-gitops-manager && make vaultplugin && cd -
 
 test: test-bcs-runtime
 

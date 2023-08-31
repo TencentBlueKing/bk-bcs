@@ -318,10 +318,9 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, erro
 		return nil, errors.Errorf("metadata status %d != 200", resp.StatusCode)
 	}
 
-	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
-		ByteSize: 0,
-		Sha256:   resp.Header.Get("Etag"),
+		ByteSize: resp.ContentLength,
+		Sha256:   sign,
 	}
 
 	return metadata, nil

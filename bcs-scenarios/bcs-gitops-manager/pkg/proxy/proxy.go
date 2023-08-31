@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
@@ -41,7 +42,21 @@ type GitOpsOptions struct {
 	// JWTClient for authentication
 	JWTDecoder *jwt.JWTClient
 	// IAMClient is basic client
-	IAMClient iam.PermClient
+	IAMClient    iam.PermClient
+	SecretOption *SecretOption
+	TraceOption  *TraceOption
+}
+
+// TraceOption defines the config of bkmonitor APM
+type TraceOption struct {
+	Endpoint string
+	Token    string
+}
+
+// SecretOption defines the config of secret
+type SecretOption struct {
+	Address string
+	Port    string
 }
 
 // Validate options
@@ -79,13 +94,27 @@ func (user *UserInfo) GetUser() string {
 	return ""
 }
 
+const (
+	headerBKUserName = "bkUserName"
+	AdminClientUser  = "admin"
+	AdminGitOpsUser  = "bcs-gitops-manager"
+)
+
 // GetJWTInfo from request
 func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 	raw := req.Header.Get("Authorization")
-	return GetJWTInfoWithAuthorization(raw, client)
+	user, err := GetJWTInfoWithAuthorization(raw, client)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get authorization user failed")
+	}
+	if user.ClientID == AdminGitOpsUser || user.ClientID == AdminClientUser {
+		userName := req.Header.Get(headerBKUserName)
+		user.UserName = userName
+	}
+	return user, nil
 }
 
-//GetJWTInfoWithAuthorization 根据 token 获取用户信息
+// GetJWTInfoWithAuthorization 根据 token 获取用户信息
 func GetJWTInfoWithAuthorization(authorization string, client *jwt.JWTClient) (*UserInfo, error) {
 	if len(authorization) == 0 {
 		return nil, fmt.Errorf("lost 'Authorization' header")
@@ -121,6 +150,11 @@ func JSONResponse(w http.ResponseWriter, obj interface{}) {
 	fmt.Fprintln(w, string(content))
 }
 
+func DirectlyResponse(w http.ResponseWriter, obj interface{}) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, obj)
+}
+
 var (
 	grpcSuffixBytes = []byte{128, 0, 0, 0, 54, 99, 111, 110, 116, 101, 110, 116, 45, 116, 121, 112, 101, 58, 32, 97,
 		112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 47, 103, 114, 112, 99, 43, 112, 114, 111, 116, 111, 13, 10,
@@ -129,10 +163,11 @@ var (
 
 // GRPCResponse 将对象通过 grpc 的数据格式返回
 // grpc 返回的 proto 数据格式规定如下：
-// - 第 1 个 byte 表明是否是 compressed, 参见: google.golang.org/grpc/rpc_util.go 中的 compressed
-// - 第 2-5 个 byte 表明 body 的长度，参见: google.golang.org/grpc/rpc_util.go 的 recvMsg 方法
-//   长度需要用到大端转换来获取实际值
-// - 后续的 byte 位是 body + content-type
+//   - 第 1 个 byte 表明是否是 compressed, 参见: google.golang.org/grpc/rpc_util.go 中的 compressed
+//   - 第 2-5 个 byte 表明 body 的长度，参见: google.golang.org/grpc/rpc_util.go 的 recvMsg 方法
+//     长度需要用到大端转换来获取实际值
+//   - 后续的 byte 位是 body + content-type
+//
 // 在获取到 body 字节后，可以通过 grpc.encoding 来反序列化
 func GRPCResponse(w http.ResponseWriter, obj interface{}) {
 	w.Header().Set("Content-Type", "application/grpc+proto")

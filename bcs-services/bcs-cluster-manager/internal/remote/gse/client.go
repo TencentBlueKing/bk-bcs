@@ -17,17 +17,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
+	"github.com/kirito41dd/xslice"
 	"github.com/parnurzeal/gorequest"
 )
 
 // Interface for gse api
 type Interface interface {
-	// GetAgentStatus get agent status
-	GetAgentStatus(req *GetAgentStatusReq) (*GetAgentStatusResp, error)
+	// GetAgentStatusV1 get agent status for version 1
+	GetAgentStatusV1(req *GetAgentStatusReq) (*GetAgentStatusResp, error)
+	// GetAgentStatusV2 get agent status for version 2
+	GetAgentStatusV2(req *GetAgentStatusReqV2) (*GetAgentStatusRespV2, error)
+	// GetHostsGseAgentStatus get hosts agent status
+	GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]HostAgentStatus, error)
 }
 
 // GseClient global gse client
@@ -123,8 +131,87 @@ func (c *Client) generateGateWayAuth() (string, error) {
 	return string(userAuth), nil
 }
 
-// GetAgentStatus get host agent status
-func (c *Client) GetAgentStatus(req *GetAgentStatusReqV2) (*GetAgentStatusRespV2, error) {
+// GetHostsGseAgentStatus get host agent status
+func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]HostAgentStatus, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	chunksHost := xslice.SplitToChunks(hosts, limit)
+	hostList, ok := chunksHost.([][]Host)
+	if !ok {
+		return nil, fmt.Errorf("GetHostsGseAgentStatus SplitToChunks failed")
+	}
+
+	var (
+		hostAgentStatus = make([]HostAgentStatus, 0)
+		agentLock       = &sync.RWMutex{}
+	)
+
+	con := utils.NewRoutinePool(20)
+	defer con.Close()
+
+	for i := range hostList {
+		con.Add(1)
+		go func(hosts []Host) {
+			defer con.Done()
+
+			if options.GetEditionInfo().IsInnerEdition() {
+				resp, err := c.GetAgentStatusV1(&GetAgentStatusReq{
+					BKSupplierAccount: supplyAccount,
+					Hosts:             hosts,
+				})
+				if err != nil {
+					blog.Errorf("GetHostsGseAgentStatus %v failed, %s", supplyAccount, err.Error())
+					return
+				}
+				for _, agent := range resp.Data {
+					agentLock.Lock()
+					hostAgentStatus = append(hostAgentStatus, HostAgentStatus{
+						Host: Host{
+							IP:        agent.IP,
+							BKCloudID: agent.BKCloudID,
+						},
+						Alive: agent.BKAgentAlive,
+					})
+					agentLock.Unlock()
+				}
+
+				return
+			}
+
+			agentIDs := make([]string, 0)
+			for i := range hosts {
+				agentIDs = append(agentIDs, hosts[i].AgentID)
+			}
+
+			resp, err := c.GetAgentStatusV2(&GetAgentStatusReqV2{AgentIDList: agentIDs})
+			if err != nil {
+				blog.Errorf("GetHostsGseAgentStatus %v failed, %s", supplyAccount, err.Error())
+				return
+			}
+			for _, agent := range resp.Data {
+				agentLock.Lock()
+				hostAgentStatus = append(hostAgentStatus, HostAgentStatus{
+					Host: Host{
+						AgentID:   agent.BkAgentID,
+						BKCloudID: agent.BKCloudID,
+					},
+					Alive: agent.BKAgentAlive,
+				})
+				agentLock.Unlock()
+			}
+
+			return
+		}(hostList[i])
+	}
+	con.Wait()
+
+	return hostAgentStatus, nil
+}
+
+// GetAgentStatusV2 get host agent status by agentID
+func (c *Client) GetAgentStatusV2(req *GetAgentStatusReqV2) (*GetAgentStatusRespV2, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
@@ -132,6 +219,47 @@ func (c *Client) GetAgentStatus(req *GetAgentStatusReqV2) (*GetAgentStatusRespV2
 	var (
 		reqURL   = fmt.Sprintf("%s/list_agent_state", c.server)
 		respData = &GetAgentStatusRespV2{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api GetAgentStatus failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if respData.Code != 0 {
+		blog.Errorf("call api GetAgentStatus failed: %s, request_id: %s", respData.Message,
+			respData.RequestID)
+		return nil, fmt.Errorf("%s", respData.Message)
+	}
+
+	if len(respData.Data) == 0 {
+		blog.Errorf("call api GetAgentStatus failed: %v, request_id: %s", respData.Message,
+			respData.RequestID)
+		return nil, fmt.Errorf("no agent found")
+	}
+
+	blog.Infof("call api GetAgentStatus with url(%s) successfully", reqURL)
+	return respData, nil
+}
+
+// GetAgentStatusV1 get host agent status by cloud:ip
+func (c *Client) GetAgentStatusV1(req *GetAgentStatusReq) (*GetAgentStatusResp, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	var (
+		reqURL   = fmt.Sprintf("%s/get_agent_status", c.server)
+		respData = &GetAgentStatusResp{}
 	)
 
 	_, _, errs := gorequest.New().

@@ -217,11 +217,34 @@ func (m *VCluster) GetClusterDiskioTotal(ctx context.Context, projectID, cluster
 // GetClusterPodUsed 获取集群pod使用量
 func (m *VCluster) GetClusterPodUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	return nil, nil
+	promql :=
+		`count(sum by (pod_name) (container_memory_working_set_bytes{%<cluster>s, container_name!="", ` +
+			`container_name!="POD", %<provider>s}))`
+
+	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
 
 // GetClusterPodTotal 获取集群最大允许pod数
 func (m *VCluster) GetClusterPodTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	return nil, nil
+	cluster, err := bcs.GetCluster(clusterID)
+	if err != nil {
+		return nil, err
+	}
+	return base.GetSameSeries(start, end, step, float64(cluster.NetworkSettings.MaxNodePodNum), nil), nil
+}
+
+// GetClusterPodUsage 获取集群pod使用率
+func (m *VCluster) GetClusterPodUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	usedSeries, err := m.GetClusterPodUsed(ctx, projectID, clusterID, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+
+	cluster, err := bcs.GetCluster(clusterID)
+	if err != nil {
+		return nil, err
+	}
+	return base.DivideSeriesByValue(usedSeries, float64(cluster.NetworkSettings.MaxNodePodNum)), nil
 }

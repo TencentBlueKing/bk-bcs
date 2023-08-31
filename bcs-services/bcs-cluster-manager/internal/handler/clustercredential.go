@@ -35,7 +35,7 @@ func (cm *ClusterManager) ListClusterCredential(ctx context.Context,
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("listclustercredential", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: listclustercredential", reqID)
-	blog.V(3).Infof("reqID: %s, action: listclustercredential, req %v", reqID, req)
+	blog.V(3).Infof("reqID: %s, action: listclustercredential, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 

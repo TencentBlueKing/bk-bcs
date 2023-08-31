@@ -125,6 +125,7 @@ export default defineComponent({
         $namespaceId,
         $podId,
         $containerName: container_name,
+        $previous: state.showLastContainer
       });
     };
 

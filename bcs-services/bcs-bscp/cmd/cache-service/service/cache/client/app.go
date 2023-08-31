@@ -184,6 +184,8 @@ func (c *client) refreshAppIDCache(kt *kit.Kit, bizID uint32, appName string) (u
 		return 0, err
 	}
 
+	c.mc.cacheItemByteSize.With(prm.Labels{"rsc": aiRes, "biz": tools.Itoa(bizID)}).Observe(float64(len(b)))
+
 	return app.ID, nil
 }
 
@@ -220,6 +222,8 @@ func (c *client) refreshAppMetaCache(kt *kit.Kit, bizID uint32, appID uint32) (s
 		logs.Errorf("set app: %d cache failed, err: %v, rid: %s", appID, err, kt.Rid)
 		return "", err
 	}
+
+	c.mc.cacheItemByteSize.With(prm.Labels{"rsc": amRes, "biz": tools.Itoa(bizID)}).Observe(float64(len(js)))
 
 	return string(js), nil
 }

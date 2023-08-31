@@ -30,6 +30,17 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
         "tags": [
           "BcsGitopsWebhook"
         ]
@@ -60,7 +71,8 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/bcsgitopsmanagerTGitWebhookRequest"
+              "type": "string",
+              "format": "byte"
             }
           }
         ],
@@ -73,14 +85,6 @@
   "definitions": {
     "bcsgitopsmanagerGeneralWebhookResponse": {
       "type": "object"
-    },
-    "bcsgitopsmanagerTGitWebhookRequest": {
-      "type": "object",
-      "properties": {
-        "body": {
-          "$ref": "#/definitions/protobufAny"
-        }
-      }
     },
     "bcsgitopsmanagerTGitWebhookResponse": {
       "type": "object"

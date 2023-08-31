@@ -62,14 +62,17 @@ func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*
 }
 
 func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
-	condM := make(operator.M)
 
 	var cond *operator.Condition
 	// 通过项目名称进行模糊查询
 	if la.req.SearchName != "" {
-		condM["name"] = primitive.Regex{Pattern: la.req.SearchName, Options: "i"}
-		cond = operator.NewLeafCondition(operator.Con, condM)
+		condName := operator.NewLeafCondition(operator.Con,
+			operator.M{"name": primitive.Regex{Pattern: la.req.SearchName, Options: "i"}})
+		condProjectCode := operator.NewLeafCondition(operator.Con,
+			operator.M{"projectCode": primitive.Regex{Pattern: la.req.SearchName, Options: "i"}})
+		cond = operator.NewBranchCondition(operator.Or, condName, condProjectCode)
 	} else {
+		condM := make(operator.M)
 		if la.req.ProjectIDs != "" {
 			condM["projectID"] = stringx.SplitString(la.req.ProjectIDs)
 		}
@@ -80,10 +83,10 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 			condM["projectCode"] = stringx.SplitString(la.req.ProjectCode)
 		}
 		if la.req.Kind != "" {
-			condM["kind"] = []string{la.req.Kind}
+			condM["kind"] = stringx.SplitString(la.req.Kind)
 		}
 		if la.req.BusinessID != "" {
-			condM["businessID"] = []string{la.req.GetBusinessID()}
+			condM["businessID"] = stringx.SplitString(la.req.GetBusinessID())
 		}
 		cond = operator.NewLeafCondition(operator.In, condM)
 	}
@@ -129,13 +132,17 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 		}
 		if req.All {
 			// all 为 true 时，返回所有项目并排序和分页，支持模糊查询
-			projects, total, err = lap.model.SearchProjects(ctx, ids, req.SearchKey,
+			projects, total, err = lap.model.SearchProjects(ctx, ids, req.SearchKey, req.Kind,
 				&page.Pagination{Offset: req.Offset, Limit: req.Limit})
 		} else if any {
 			// all 为 false 时，直接返回所有有权限的项目，分页和模糊查询无效
-			projects, total, err = lap.model.ListProjects(ctx, operator.EmptyCondition, &page.Pagination{All: true})
+			cond := operator.EmptyCondition
+			if req.Kind != "" {
+				cond = operator.NewLeafCondition(operator.Eq, operator.M{"kind": req.Kind})
+			}
+			projects, total, err = lap.model.ListProjects(ctx, cond, &page.Pagination{All: true})
 		} else {
-			projects, total, err = lap.model.ListProjectByIDs(ctx, ids, &page.Pagination{All: true})
+			projects, total, err = lap.model.ListProjectByIDs(ctx, req.Kind, ids, &page.Pagination{All: true})
 		}
 		if err != nil {
 			return nil, err

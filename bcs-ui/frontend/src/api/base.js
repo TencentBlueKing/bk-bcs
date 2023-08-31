@@ -24,15 +24,11 @@
 * IN THE SOFTWARE.
 */
 import { request } from './request';
-
-// app
-export const projectFeatureFlag = request('get', '/api/projects/$projectId/clusters/$clusterId/feature_flags/');
-
+// todo 当前文件要废弃，请使用modules下面的API定义文件 !!!
 // log
 export const LOG_API_URL = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId`;
 export const podContainersList = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/containers`);
 export const podLogs = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs`);
-export const podLogsDownloadURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName`;
 export const podLogsStreamURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/stream?container_name=$containerName&started_at=$startedAt`;
 
 // dashbord
@@ -113,10 +109,7 @@ export const createToken = request('post', `${prefix}/usermanager/v1/tokens`);
 export const updateToken = request('put', `${prefix}/usermanager/v1/tokens/$token`);
 export const deleteToken = request('delete', `${prefix}/usermanager/v1/tokens/$token`);
 export const getTokens = request('get', `${prefix}/usermanager/v1/users/$username/tokens`);
-// auth
-export const userPerms = request('post', '/api/iam/user_perms/');
-export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/');
-export const projectViewPerms = request('get', '/api/iam/user_perms/actions/project_view/apply_url/');
+
 // cluster tools
 export const clusterTools = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/');
 export const clusterToolsInstall = request('post', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/');
@@ -175,7 +168,6 @@ export const logCollectList = request('get', '/api/log_collect/projects/$project
 export const updateLogCollect = request('put', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
 export const deleteLogCollect = request('delete', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
 export const retrieveLogCollect = request('get', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
-export const getLogLinks = request('get', '/api/log_collect/projects/$projectId/log_links/');
 
 // node group(pool)
 export const nodeGroup = request('get', `${prefix}/clustermanager/v1/nodegroup`);
@@ -203,7 +195,6 @@ export const nodeUnCordon = request('put', `${prefix}/clustermanager/v1/node/unc
 
 export default {
   dashbordList,
-  projectFeatureFlag,
   podMetric,
   containerMetric,
   retrieveDetail,

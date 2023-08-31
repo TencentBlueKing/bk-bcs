@@ -34,7 +34,7 @@ func initAuditBuilder(kit *kit.Kit, bizID uint32, res enumor.AuditResourceType, 
 		toAudit: &table.Audit{
 			BizID:        bizID,
 			ResourceType: res,
-			CreatedAt:    time.Now(),
+			CreatedAt:    time.Now().UTC(),
 			Operator:     kit.User,
 			Rid:          kit.Rid,
 			AppCode:      kit.AppCode,

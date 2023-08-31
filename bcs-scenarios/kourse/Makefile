@@ -22,7 +22,7 @@ generate-code: pre
 generate-crd: pre
 	mkdir -p manifests
 	controller-gen paths=./... \
-	crd:crdVersions=v1,trivialVersions=true,maxDescLen=1000,generateEmbeddedObjectMeta=true \
+	crd:crdVersions=v1,maxDescLen=1000,generateEmbeddedObjectMeta=true \
 	rbac:roleName=operator \
 	output:crd:artifacts:config=./manifests
 

@@ -13,6 +13,10 @@
 
 package helm
 
+import (
+	"crypto/tls"
+)
+
 const (
 	// ModuleHelmManager default discovery helmmanager module
 	ModuleHelmManager = "helmmanager.bkbcs.tencent.com"
@@ -24,6 +28,9 @@ const (
 var (
 	// operator default operator
 	operator = "bcs-cluster-manager"
+
+	// FailedState failed
+	FailedState = "failed"
 
 	// Install status
 	// PendingInstall xxx
@@ -55,3 +62,19 @@ var (
 	// FailedUninstall xxx
 	FailedUninstall = "failed-uninstall"
 )
+
+// Config for bcsapi
+type Config struct {
+	// bcsapi host, available like 127.0.0.1:8080
+	Hosts []string
+	// tls configuratio
+	TLSConfig *tls.Config
+	// AuthToken for permission verification
+	AuthToken string
+	// clusterID for Kubernetes/Mesos operation
+	ClusterID string
+	// Header for request header
+	Header map[string]string
+	// InnerClientName for bcs inner auth, like bcs-cluster-manager
+	InnerClientName string
+}

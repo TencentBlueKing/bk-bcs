@@ -18,17 +18,17 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	spb "google.golang.org/protobuf/types/known/structpb"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -36,13 +36,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 )
 
 type clusterInfo struct {
@@ -53,7 +53,7 @@ type clusterInfo struct {
 const (
 	// Builder self builder cluster
 	Builder = "builder"
-	// Importer export external cluster
+	// Importer import external cluster
 	Importer = "importer"
 
 	// KubeConfig import
@@ -64,40 +64,6 @@ const (
 	// Prod environment
 	Prod = "prod"
 )
-
-const (
-	// DefaultImageName default image name
-	DefaultImageName = "Tencent Linux Release 2.2 (Final)"
-)
-
-const (
-	// ManagerCluster manage cluster
-	ManagerCluster = "MANAGED_CLUSTER"
-	// IndependentCluster independent cluster
-	IndependentCluster = "INDEPENDENT_CLUSTER"
-
-	// NodeRoleMaster master nodes
-	NodeRoleMaster = "node-role.kubernetes.io/master"
-)
-
-// ClusterManageTypeMap cluster manage type
-var ClusterManageTypeMap = map[string]struct{}{
-	"MANAGED_CLUSTER":     {},
-	"INDEPENDENT_CLUSTER": {},
-}
-
-// ClusterTypeMap cluster type
-var ClusterTypeMap = map[string]struct{}{
-	"mesos": {},
-	"k8s":   {},
-}
-
-// ClusterEnvMap cluster env map
-var ClusterEnvMap = map[string]struct{}{
-	"stag":  {},
-	"debug": {},
-	"prod":  {},
-}
 
 func generateClusterID(cls *proto.Cluster, model store.ClusterManagerModel) (string, int, error) {
 	clusterEnv := cls.Environment
@@ -115,7 +81,7 @@ func generateClusterID(cls *proto.Cluster, model store.ClusterManagerModel) (str
 }
 
 func getClusterMaxNum(clusterType string, env string, model store.ClusterManagerModel) (int, error) {
-	_, ok := ClusterTypeMap[clusterType]
+	_, ok := EngineTypeLookup[clusterType]
 	if !ok {
 		return 0, fmt.Errorf("clusterType[%s] failed", clusterType)
 	}
@@ -167,9 +133,52 @@ func getClusterList(model store.ClusterManagerModel) ([]proto.Cluster, error) {
 	return clusterList, nil
 }
 
+// VClusterHostFilterInfo xxx
+type VClusterHostFilterInfo struct {
+	Provider string
+	Region   string
+	Version  string
+}
+
+// selectVclusterHostCluster for select vcluster host cluster
+func selectVclusterHostCluster(model store.ClusterManagerModel, filter VClusterHostFilterInfo) (string, error) {
+	condCluster := operator.NewLeafCondition(operator.Eq, operator.M{
+		"isshared": true,
+		"region":   filter.Region,
+		"provider": filter.Provider,
+	})
+
+	filterHostClusters := make([]proto.Cluster, 0)
+
+	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+	branchCond := operator.NewBranchCondition(operator.And, condCluster, condStatus)
+
+	// region filter
+	clusterList, err := model.ListCluster(context.Background(), branchCond, &storeopt.ListOption{})
+	if err != nil {
+		return "", err
+	}
+	// version filter
+	for i := range clusterList {
+		if clusterList[i].GetClusterBasicSettings().Version == filter.Version {
+			filterHostClusters = append(filterHostClusters, clusterList[i])
+		}
+	}
+
+	if len(filterHostClusters) == 0 {
+		return "", fmt.Errorf("region[%s]无可用匹配的共享集群列表,请联系管理员", filter.Region)
+	}
+
+	rand.Seed(time.Now().Unix())
+	return filterHostClusters[rand.Intn(len(filterHostClusters))].ClusterID, nil
+}
+
 // getAllMasterIPs get cluster masterIPs
 func getAllMasterIPs(model store.ClusterManagerModel) map[string]clusterInfo {
-	clusterList, err := getClusterList(model)
+	clusterStatus := []string{common.StatusInitialization, common.StatusRunning, common.StatusDeleting}
+	condStatus := operator.NewLeafCondition(operator.In, operator.M{"status": clusterStatus})
+
+	clusterList, err := model.ListCluster(context.Background(), condStatus, &storeopt.ListOption{All: true})
 	if err != nil {
 		blog.Errorf("getAllIPList ListCluster failed: %v", err)
 		return nil
@@ -221,30 +230,6 @@ func getAllIPList(provider string, model store.ClusterManagerModel) map[string]s
 	}
 
 	return ipList
-}
-
-// GetUserClusterPermList get user cluster permission
-func GetUserClusterPermList(iam iam.PermClient, user actions.PermInfo, clusterList []string) (
-	map[string]map[string]interface{}, error) {
-	permissions := make(map[string]map[string]interface{})
-	clusterPerm := cluster.NewBCSClusterPermClient(iam)
-
-	actionIDs := []string{cluster.ClusterView.String(), cluster.ClusterManage.String(), cluster.ClusterDelete.String()}
-	perms, err := clusterPerm.GetMultiClusterMultiActionPermission(user.UserID, user.ProjectID, clusterList, actionIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	for clusterID, perm := range perms {
-		if permissions[clusterID] == nil {
-			permissions[clusterID] = make(map[string]interface{})
-		}
-		for action, res := range perm {
-			permissions[clusterID][action] = res
-		}
-	}
-
-	return permissions, nil
 }
 
 // GetProjectCommonClustersPerm get userPerm for cluster
@@ -304,7 +289,7 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	// 如果是业务运维，查询全量主机
 	if utils.StringInSlice(user, maintainers) {
 		var hostList []cmdb.HostData
-		hostList, err = cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID)
+		hostList, err = cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID, false)
 		if err != nil {
 			blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 			return nil
@@ -317,7 +302,7 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	}
 
 	// 查询有主机负责人权限的主机
-	hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID)
+	hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID, false)
 	if err != nil {
 		blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 		return nil
@@ -332,31 +317,19 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	return hostIPs
 }
 
-// importClusterExtraOperation extra operation (sync cluster to pass-cc)
+// importClusterExtraOperation extra operation (1. v0 perm register cluster resource 2. sync cluster to pass-cc)
 func importClusterExtraOperation(cluster *proto.Cluster) {
 	// sync cluster/cluster-snap info to pass-cc
 	err := passcc.GetCCClient().CreatePassCCCluster(cluster)
 	if err != nil {
-		blog.Errorf("ImportClusterExtraOperation[%s] CreatePassCCCluster failed: %v",
+		blog.Errorf("importClusterExtraOperation[%s] CreatePassCCCluster failed: %v",
 			cluster.ClusterID, err)
 	}
 	err = passcc.GetCCClient().CreatePassCCClusterSnapshoot(cluster)
 	if err != nil {
-		blog.Errorf("ImportClusterExtraOperation CreatePassCCClusterSnapshoot[%s] failed: %v",
+		blog.Errorf("importClusterExtraOperation[%s] CreatePassCCClusterSnapshoot failed: %v",
 			cluster.ClusterID, err)
 	}
-}
-
-// deleteClusterExtraOperation sync delete pass-cc cluster
-func deleteClusterExtraOperation(cluster *proto.Cluster) {
-	// sync delete clusterInfo info to pass-cc
-	err := passcc.GetCCClient().DeletePassCCCluster(cluster.ProjectID, cluster.ClusterID)
-	if err != nil {
-		blog.Errorf("deleteClusterExtraOperation DeletePassCCCluster[%s] failed: %v", cluster.ClusterID, err)
-		return
-	}
-
-	blog.V(4).Infof("deleteClusterExtraOperation DeletePassCCCluster[%s] successful", cluster.ClusterID)
 }
 
 // updatePassCCClusterInfo update cc clusterInfo when update cm cluster
@@ -370,15 +343,40 @@ func updatePassCCClusterInfo(cluster *proto.Cluster) {
 	blog.V(4).Infof("updatePassCCClusterInfo[%s] successful", cluster.ClusterID)
 }
 
-// deleteClusterCredentialInfo sync delete cluster credential
-func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID string) {
-	err := store.DeleteClusterCredential(context.Background(), clusterID)
+func deleteClusterExtraOperation(cluster *proto.Cluster) {
+	// sync delete clusterInfo info to pass-cc
+	err := passcc.GetCCClient().DeletePassCCCluster(cluster.ProjectID, cluster.ClusterID)
 	if err != nil {
-		blog.Errorf("deleteClusterCredentialInfo[%s] failed: %v", clusterID, err)
+		blog.Errorf("deleteClusterExtraOperation DeletePassCCCluster[%s] failed: %v", cluster.ClusterID, err)
 		return
 	}
 
-	blog.V(4).Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
+	blog.V(4).Infof("deleteClusterExtraOperation DeletePassCCCluster[%s] successful", cluster.ClusterID)
+}
+
+// importClusterNode record cluster node
+func importClusterNode(model store.ClusterManagerModel, node *proto.Node) error {
+	dstCls, err := model.GetNodeByIP(context.Background(), node.InnerIP)
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return err
+	}
+
+	// db not exist cluster
+	if dstCls == nil {
+		err = model.CreateNode(context.Background(), node)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	err = model.UpdateNode(context.Background(), node)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // importClusterData record cluster data
@@ -415,19 +413,15 @@ func importClusterData(model store.ClusterManagerModel, cls *proto.Cluster) erro
 	return nil
 }
 
-func asyncDeleteImportedClusterInfo(ctx context.Context, store store.ClusterManagerModel, cluster *proto.Cluster) {
-	ctx = cloudprovider.WithTaskIDForContext(ctx,
-		fmt.Sprintf("asyncDeleteImportedClusterInfo:%s", cluster.ClusterID))
-	err := provider.DeleteWatchComponentByHelm(ctx, cluster.ProjectID, cluster.ClusterID)
+// deleteClusterCredentialInfo sync delete cluster credential
+func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID string) {
+	err := store.DeleteClusterCredential(context.Background(), clusterID)
 	if err != nil {
-		blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] failed: %v",
-			cluster.ClusterID, err)
-	} else {
-		blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] successful", cluster.ClusterID)
+		blog.Errorf("deleteClusterCredentialInfo[%s] failed: %v", clusterID, err)
+		return
 	}
 
-	deleteClusterExtraOperation(cluster)
-	deleteClusterCredentialInfo(store, cluster.ClusterID)
+	blog.V(4).Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
 }
 
 func removeNodeSensitiveInfo(nodes []*proto.Node) {
@@ -468,39 +462,8 @@ func transNodeToClusterNode(model store.ClusterManagerModel, node *proto.Node) *
 		NodeName:      node.NodeName,
 		NodeGroupName: nodeGroupName,
 		InnerIPv6:     node.InnerIPv6,
+		TaskID:        node.TaskID,
 	}
-}
-
-// 转换节点状态
-func transNodeStatus(cmNodeStatus string, k8sNode *corev1.Node) string {
-	if cmNodeStatus == common.StatusInitialization || cmNodeStatus == common.StatusAddNodesFailed ||
-		cmNodeStatus == common.StatusDeleting || cmNodeStatus == common.StatusRemoveNodesFailed {
-		return cmNodeStatus
-	}
-	for _, v := range k8sNode.Status.Conditions {
-		if v.Type != corev1.NodeReady {
-			continue
-		}
-		if v.Status == corev1.ConditionTrue {
-			if k8sNode.Spec.Unschedulable {
-				return common.StatusNodeRemovable
-			}
-			return common.StatusRunning
-		}
-		return common.StatusNodeNotReady
-	}
-
-	return common.StatusNodeUnknown
-}
-
-func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
-	nodes := make([]*corev1.Node, 0)
-	for _, v := range k8sNodes {
-		if _, ok := v.Labels[common.MasterRole]; ok == master {
-			nodes = append(nodes, v)
-		}
-	}
-	return nodes
 }
 
 // transK8sNodesToClusterNodes parse master nodes to cluster nodes
@@ -535,6 +498,39 @@ func transK8sNodesToClusterNodes(clusterID string, k8sNodes []*corev1.Node) []*p
 	return nodes
 }
 
+// 转换节点状态
+func transNodeStatus(cmNodeStatus string, k8sNode *corev1.Node) string {
+	if cmNodeStatus == common.StatusInitialization || cmNodeStatus == common.StatusAddNodesFailed ||
+		cmNodeStatus == common.StatusDeleting || cmNodeStatus == common.StatusRemoveNodesFailed ||
+		cmNodeStatus == common.StatusRemoveCANodesFailed {
+		return cmNodeStatus
+	}
+	for _, v := range k8sNode.Status.Conditions {
+		if v.Type != corev1.NodeReady {
+			continue
+		}
+		if v.Status == corev1.ConditionTrue {
+			if k8sNode.Spec.Unschedulable {
+				return common.StatusNodeRemovable
+			}
+			return common.StatusRunning
+		}
+		return common.StatusNodeNotReady
+	}
+
+	return common.StatusNodeUnknown
+}
+
+func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
+	nodes := make([]*corev1.Node, 0)
+	for _, v := range k8sNodes {
+		if _, ok := v.Labels[common.MasterRole]; ok == master {
+			nodes = append(nodes, v)
+		}
+	}
+	return nodes
+}
+
 // mergeClusterNodes merge k8s nodes and db nodes
 // 1. 集群中不存在的节点，并且在cluster manager中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示cluster manager中数据
 // 2. 集群中存在的节点，则以集群中为准，注意状态的转换
@@ -545,7 +541,6 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 
 	cmNodesMap := make(map[string]*proto.ClusterNode, 0)
 	k8sNodesMap := make(map[string]*corev1.Node, 0)
-
 	for i := range cmNodes {
 		cmNodesMap[cmNodes[i].NodeName] = cmNodes[i]
 	}
@@ -598,6 +593,7 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 				}(node.Spec.Unschedulable),
 				InnerIPv6:     ipv6,
 				NodeGroupName: n.NodeGroupName,
+				Annotations:   node.Annotations,
 			})
 		} else {
 			nodes2 = append(nodes2, &proto.ClusterNode{
@@ -613,31 +609,14 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 					}
 					return 0
 				}(node.Spec.Unschedulable),
-				InnerIPv6: ipv6,
+				InnerIPv6:   ipv6,
+				Annotations: node.Annotations,
 			})
 		}
 	}
-	sort.Sort(NodeSlice(nodes2))
+	sort.Sort(utils.NodeSlice(nodes2))
 	nodes = append(nodes, nodes2...)
 	return nodes
-}
-
-// NodeSlice cluster node slice
-type NodeSlice []*proto.ClusterNode
-
-// Len xxx
-func (n NodeSlice) Len() int {
-	return len(n)
-}
-
-// Less xxx
-func (n NodeSlice) Less(i, j int) bool {
-	return n[i].NodeName < n[j].NodeName
-}
-
-// Swap xxx
-func (n NodeSlice) Swap(i, j int) {
-	n[i], n[j] = n[j], n[i]
 }
 
 // GetCmNodeNames get node name
@@ -651,7 +630,7 @@ func GetCmNodeNames(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) {
 		}
 
 		for _, node := range k8sNodes {
-			ipv4s, ipv6s := getNodeIPAddress(node)
+			ipv4s, ipv6s := utils.GetNodeIPAddress(node)
 			if utils.StringInSlice(ipv4, ipv4s) || utils.StringInSlice(ipv6, ipv6s) {
 				cmNodes[i].NodeName = node.Name
 			}
@@ -659,29 +638,40 @@ func GetCmNodeNames(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) {
 	}
 }
 
-func getNodeIPAddress(node *corev1.Node) ([]string, []string) {
-	ipv4Address := make([]string, 0)
-	ipv6Address := make([]string, 0)
+func getNodeDualAddress(node *corev1.Node) (string, string) {
+	ipv4s, ipv6s := utils.GetNodeIPAddress(node)
+	return utils.SliceToString(ipv4s), utils.SliceToString(ipv6s)
+}
 
-	for _, address := range node.Status.Addresses {
-		if address.Type == corev1.NodeInternalIP {
-			switch {
-			case util.IsIPv6(address.Address):
-				ipv6Address = append(ipv6Address, address.Address)
-			case util.IsIPv4(address.Address):
-				ipv4Address = append(ipv4Address, address.Address)
-			default:
-				blog.Errorf("unsupported ip type")
-			}
+// asyncDeleteImportedClusterInfo async delete depend info, because deleteWatchComponent need to sync wait
+func asyncDeleteImportedClusterInfo(ctx context.Context, store store.ClusterManagerModel, cluster *proto.Cluster) {
+	ctx = cloudprovider.WithTaskIDForContext(ctx,
+		fmt.Sprintf("asyncDeleteImportedClusterInfo:%s", cluster.ClusterID))
+
+	if options.GetEditionInfo().IsEnterpriseEdition() || options.GetEditionInfo().IsCommunicationEdition() {
+		err := provider.DeleteWatchComponentByHelm(ctx, cluster.ProjectID, cluster.ClusterID, "")
+		if err != nil {
+			blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] failed: %v",
+				cluster.ClusterID, err)
+		} else {
+			blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] successful", cluster.ClusterID)
 		}
 	}
 
-	return ipv4Address, ipv6Address
+	deleteClusterExtraOperation(cluster)
+	deleteClusterCredentialInfo(store, cluster.ClusterID)
 }
 
-func getNodeDualAddress(node *corev1.Node) (string, string) {
-	ipv4s, ipv6s := getNodeIPAddress(node)
-	return utils.SliceToString(ipv4s), utils.SliceToString(ipv6s)
+// IsSupportAutoScale support autoscale feat
+func IsSupportAutoScale(cls proto.Cluster) bool {
+	if cls.ClusterType == common.ClusterTypeVirtual {
+		return false
+	}
+	if cls.ClusterCategory == Importer && cls.ImportCategory == KubeConfig {
+		return false
+	}
+
+	return true
 }
 
 func shieldClusterInfo(cluster *proto.Cluster) *proto.Cluster {
@@ -690,4 +680,19 @@ func shieldClusterInfo(cluster *proto.Cluster) *proto.Cluster {
 	}
 
 	return cluster
+}
+
+// GetClusterStatusNodes get cluster status nodes
+func GetClusterStatusNodes(store store.ClusterManagerModel, cls *proto.Cluster, status []string) ([]*proto.Node, error) {
+	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": cls.ClusterID})
+	statusCond := operator.NewLeafCondition(operator.In, operator.M{"status": status})
+	cond := operator.NewBranchCondition(operator.And, clusterCond, statusCond)
+
+	nodes, err := store.ListNode(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("get Cluster %s all Nodes failed when AddNodesToCluster, %s", cls.ClusterID, err.Error())
+		return nil, err
+	}
+
+	return nodes, nil
 }

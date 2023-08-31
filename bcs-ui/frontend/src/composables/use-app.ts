@@ -1,19 +1,8 @@
 import { computed, ref } from 'vue';
+
+import { featureFlags as featureFlagsApi } from '@/api/modules/project';
+import { userInfo } from '@/api/modules/user-manager';
 import $store from '@/store';
-/**
- * 获取项目文档配置信息
- * @returns
- */
-export function useConfig() {
-  // 当前版本的文档链接信息
-  const PROJECT_CONFIG = ref(window.BCS_CONFIG);
-  // 是否是内部版
-  const _INTERNAL_ = computed(() => !['ce', 'ee'].includes(window.REGION));
-  return {
-    PROJECT_CONFIG,
-    _INTERNAL_,
-  };
-}
 
 // todo 完善类型
 export interface IProject {
@@ -52,6 +41,21 @@ export interface ICluster {
   clusterType: string
   is_shared: boolean
   cluster_id: string // 兼容旧版数据（不要再使用）
+  importCategory: string
+}
+/**
+ * 获取项目文档配置信息
+ * @returns
+ */
+export function useConfig() {
+  // 当前版本的文档链接信息
+  const PROJECT_CONFIG = ref(window.BCS_CONFIG);
+  // 是否是内部版
+  const _INTERNAL_ = computed(() => !['ce', 'ee'].includes(window.REGION));
+  return {
+    PROJECT_CONFIG,
+    _INTERNAL_,
+  };
 }
 /**
  * 获取项目相关配置
@@ -71,7 +75,6 @@ export function useProject() {
     projectCode,
   };
 }
-
 /**
  * 获取集群相关信息
  */
@@ -81,13 +84,13 @@ export function useCluster() {
   const isSharedCluster = computed<boolean>(() => $store.state.curCluster?.is_shared);
   const clusterList = computed<Partial<ICluster>[]>(() => $store.state.cluster.clusterList || []);
 
-  const { projectID } = useProject();
+  const { projectCode } = useProject();
   const terminalWins = ref<Window | null>(null);
   const handleGotoConsole = ({ clusterID, clusterName }: {
     clusterID: string
     clusterName?: string
   }) => {
-    const url = `${window.DEVOPS_BCS_API_URL}/web_console/projects/${projectID.value}/mgr/#cluster=${clusterID}`;
+    const url = `${window.BCS_API_HOST}/bcsapi/v4/webconsole/projects/${projectCode.value}/mgr/#cluster=${clusterID}`;
     // 缓存当前窗口，再次打开时重新进入
     if (terminalWins.value) {
       if (!terminalWins.value.closed) {
@@ -110,5 +113,34 @@ export function useCluster() {
     isSharedCluster,
     clusterList,
     handleGotoConsole,
+  };
+}
+/**
+ * APP相关信息,eg: 用户, feature_flag
+ */
+export function useAppData() {
+  const user = computed(() => $store.state.user);
+  async function getUserInfo() {
+    const data = await userInfo().catch(() => ({}));
+    $store.commit('updateUser', data);
+    return data;
+  }
+
+  const flagsMap = computed(() => $store.state.featureFlags);
+  // 默认菜单配置项
+  const defaultFlags = {
+    CLOUDTOKEN: false,
+    PROJECT_LIST: false,
+  };
+  async function getFeatureFlags(params: { projectCode: string }) {
+    const data = await featureFlagsApi(params).catch(() => ({}));
+    $store.commit('updateFeatureFlags', Object.assign(defaultFlags, data));
+    return data;
+  }
+  return {
+    user,
+    getUserInfo,
+    flagsMap,
+    getFeatureFlags,
   };
 }

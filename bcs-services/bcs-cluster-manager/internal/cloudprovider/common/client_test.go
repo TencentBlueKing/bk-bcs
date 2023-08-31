@@ -15,20 +15,19 @@ package common
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
 
 func getClient() *Client {
 	cli, err := NewClient(Options{
-		AppCode:   "xxx",
-		AppSecret: "xxx",
-		Debug:     true,
-		External:  true,
-
-		CreateTaskURL: "xxx",
-		TaskStatusURL: "xxx",
-		StartTaskURL:  "xxx",
+		Server:     "xxx",
+		AppCode:    "xxx",
+		BKUserName: "xxx",
+		AppSecret:  "xxx",
+		Debug:      true,
 	})
 	if err != nil {
 		return nil
@@ -44,14 +43,17 @@ func TestClient_CreateBkOpsTask(t *testing.T) {
 	}
 
 	response, err := cli.CreateBkOpsTask("", &CreateTaskPathParas{
-		BkBizID:    "2",
-		TemplateID: "10004",
+		BkBizID:    "3",
+		TemplateID: "xxx",
 		Operator:   "xxx",
 	}, &CreateTaskRequest{
-		TaskName: fmt.Sprintf("add node:%s", "BCS-K8S-xxxxx"),
+		// 模板来源
+		TemplateSource: string(CommonTpl),
+		TaskName:       fmt.Sprintf("add node:%s", "BCS-K8S-123"),
 		Constants: map[string]string{
-			"${ctrl_ip_list}": "1.2.3.4",
-			"${cluster_id}":   "BCS-K8S-15000",
+			"${biz_cc_id}":   "3",
+			"${job_ip_list}": "xxx,",
+			"${message}":     "xxxyyy",
 		},
 	})
 	if err != nil {
@@ -68,11 +70,13 @@ func TestClient_StartBkOpsTask(t *testing.T) {
 	}
 
 	req := &TaskPathParas{
-		BkBizID:  "2",
-		TaskID:   "17977",
+		BkBizID:  "3",
+		TaskID:   "26",
 		Operator: "xxx",
 	}
-	result, err := cli.StartBkOpsTask("", req, &StartTaskRequest{})
+	result, err := cli.StartBkOpsTask("", req, &StartTaskRequest{
+		Scope: "cmdb_biz",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +92,7 @@ func TestClient_StartBkOpsTask(t *testing.T) {
 		}
 
 		data, err := cli.GetTaskStatus("", req, &StartTaskRequest{
-			// Scope: "cmdb_biz",
+			Scope: "cmdb_biz",
 		})
 		if err != nil {
 			fmt.Printf("RunBKsopsJob GetTaskStatus failed: %v", err)
@@ -106,4 +110,79 @@ func TestClient_StartBkOpsTask(t *testing.T) {
 	}
 
 	t.Log("successful")
+}
+
+func TestClient_GetBusinessTemplateList(t *testing.T) {
+	cli := getClient()
+	if cli == nil {
+		t.Fatal("client nil")
+	}
+
+	path := &TemplateListPathPara{
+		BkBizID:  "100148",
+		Operator: "",
+	}
+	req := &TemplateRequest{}
+
+	templateList, err := cli.GetBusinessTemplateList(path, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(len(templateList))
+	for _, tmp := range templateList {
+		t.Log(tmp.BkBizID, tmp.ID, tmp.Name, tmp.BkBizName, tmp.Creator)
+	}
+}
+
+func TestClient_GetUserProjectDetailInfo(t *testing.T) {
+	cli := getClient()
+	if cli == nil {
+		t.Fatal("client nil")
+	}
+
+	p, err := cli.GetUserProjectDetailInfo("106")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(p)
+}
+
+func TestClient_GetBusinessTemplateInfo(t *testing.T) {
+	cli := getClient()
+	if cli == nil {
+		t.Fatal("client nil")
+	}
+
+	path := &TemplateDetailPathPara{
+		BkBizID:    "xx",
+		TemplateID: "xx",
+		Operator:   "",
+	}
+	req := &TemplateRequest{}
+
+	globalConstantValue, err := cli.GetBusinessTemplateInfo(path, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tmp := range globalConstantValue {
+		t.Log(tmp.Key, tmp.Name, tmp.Desc, tmp.SourceType)
+		t.Log(extractValue(tmp.Key))
+	}
+}
+
+func extractValue(value string) string {
+	if !strings.HasPrefix(value, "${") || !strings.HasSuffix(value, "}") {
+		return ""
+	}
+
+	holderRex := regexp.MustCompile(`^\$\{(.*?)\}`)
+	subMatch := holderRex.FindAllStringSubmatch(value, -1)
+	if len(subMatch) > 0 && len(subMatch[0]) >= 1 {
+		return subMatch[0][1]
+	}
+
+	return ""
 }

@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/klog"
-
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
 	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
@@ -49,6 +47,7 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/taints"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/tpu"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -98,6 +97,7 @@ func (callbacks *bufferedAutoscalerProcessorCallbacks) ResetUnneededNodes() {
 	callbacks.scaleDown.CleanUpUnneededNodes()
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func newBufferedAutoscalerProcessorCallbacks() *bufferedAutoscalerProcessorCallbacks {
 	callbacks := &bufferedAutoscalerProcessorCallbacks{}
 	callbacks.reset()
@@ -478,7 +478,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 
 	unschedulablePods = tpu.ClearTPURequests(unschedulablePods)
 
-	// NOTE: move split and append below to separate PodListProcessor
+	// DOTO: move split and append below to separate PodListProcessor
 	// Some unschedulable pods can be waiting for lower priority pods preemption so they have nominated node to run.
 	// Such pods don't require scale up but should be considered during scale down.
 	unschedulablePods, unschedulableWaitingForLowerPriorityPreemption := core_utils.FilterOutExpendableAndSplit(

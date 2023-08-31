@@ -59,8 +59,7 @@ type WebsocketProxy struct {
 
 // NewWebsocketProxy returns a new Websocket reverse proxy that rewrites the
 // URL's to the scheme, host and base path provider in target.
-func NewWebsocketProxy(clientTLSConfig *tls.Config, backendURL *url.URL,
-	clusterDialer websocketDialer.Dialer) *WebsocketProxy {
+func NewWebsocketProxy(clientTLSConfig *tls.Config, backendURL *url.URL, clusterDialer websocketDialer.Dialer) *WebsocketProxy {
 
 	// DefaultDialer is a dialer with all fields set to the default zero values.
 	defaultDialer := websocket.DefaultDialer

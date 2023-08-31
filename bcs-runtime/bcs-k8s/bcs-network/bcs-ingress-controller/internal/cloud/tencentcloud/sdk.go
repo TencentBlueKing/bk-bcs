@@ -14,6 +14,7 @@ package tencentcloud
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -86,7 +87,9 @@ type SdkWrapper struct {
 	throttler throttle.RateLimiter
 	// map of client for different region
 	// for ingress controller, it may control different cloud loadbalancer in different regions
-	clbCliMap map[string]*tclb.Client
+	clbCliMap sync.Map
+	// 加锁避免同时处理多个同Region的CLB时，触发concurrent write map错误
+	mu sync.Mutex
 }
 
 // NewSdkWrapper create sdk wrapper
@@ -107,7 +110,6 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	}
 	sw.credential = credential
 	sw.cpf = cpf
-	sw.clbCliMap = make(map[string]*tclb.Client)
 
 	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
 	return sw, nil
@@ -134,7 +136,6 @@ func NewSdkWrapperWithSecretIDKey(id, key string) (*SdkWrapper, error) {
 	}
 	sw.credential = credential
 	sw.cpf = cpf
-	sw.clbCliMap = make(map[string]*tclb.Client)
 
 	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
 	return sw, nil

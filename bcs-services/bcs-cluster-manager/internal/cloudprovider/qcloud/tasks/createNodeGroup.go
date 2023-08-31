@@ -22,12 +22,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -46,86 +46,67 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 
 	// step login started here
-	cloudID := step.Params["CloudID"]
-	nodeGroupID := step.Params["NodeGroupID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	// get cluster nodeGroup
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: get nodegroup for %s failed", taskID, nodeGroupID)
-		retErr := fmt.Errorf("get nodegroup information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// get cloud and cluster info
-	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, group.ClusterID)
-	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: get cloud/cluster for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
+		blog.Errorf("CheckCleanNodeGroupNodesStatusTask[%s]: GetClusterDependBasicInfo for nodegroup %s "+
+			"in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/cluster information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
-	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     cloud,
-		AccountID: cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: get credential for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	cmOption.Region = group.Region
-
 	// create node group
-	tkeCli, err := api.NewTkeClient(cmOption)
+	tkeCli, err := api.NewTkeClient(dependInfo.CmOption)
 	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: get tke client for nodegroup[%s] in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: get tke client for nodegroup[%s] in task %s "+
+			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return err
 	}
 
 	// set default value for nodegroup
-	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
-		group.AutoScaling.VpcID = cluster.VpcID
+	if dependInfo.NodeGroup.AutoScaling != nil && dependInfo.NodeGroup.AutoScaling.VpcID == "" {
+		dependInfo.NodeGroup.AutoScaling.VpcID = dependInfo.Cluster.VpcID
 	}
-	if group.LaunchTemplate != nil {
-		if group.LaunchTemplate.InstanceChargeType == "" {
-			group.LaunchTemplate.InstanceChargeType = "POSTPAID_BY_HOUR"
+	if dependInfo.NodeGroup.LaunchTemplate != nil {
+		if dependInfo.NodeGroup.LaunchTemplate.InstanceChargeType == "" {
+			dependInfo.NodeGroup.LaunchTemplate.InstanceChargeType = "POSTPAID_BY_HOUR"
 		}
 	}
 
-	// create tke nodePool
-	npID, err := tkeCli.CreateClusterNodePool(generateCreateNodePoolInput(group, cluster))
+	// create cloud nodePool
+	npID, err := tkeCli.CreateClusterNodePool(generateCreateNodePoolInput(dependInfo.NodeGroup, dependInfo.Cluster))
 	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool[%s] api in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool[%s] api in task %s "+
+			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call CreateClusterNodePool[%s] api err, %s", nodeGroupID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool successful", taskID)
-	group.CloudNodeGroupID = npID
+	dependInfo.NodeGroup.CloudNodeGroupID = npID
 
-	// update nodegroup cloudNodeGroupID
-	err = updateNodeGroupCloudNodeGroupID(nodeGroupID, group)
+	// update nodegorup cloudNodeGroupID
+	err = updateNodeGroupCloudNodeGroupID(nodeGroupID, dependInfo.NodeGroup)
 	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudNodeGroupID[%s] in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudNodeGroupID[%s] api err, %s", nodeGroupID,
-			err.Error())
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudNodeGroupID[%s] in task %s "+
+			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudNodeGroupID[%s] "+
+			"api err, %s", nodeGroupID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool updateNodeGroupCloudNodeGroupID successful",
-		taskID)
+	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool "+
+		"updateNodeGroupCloudNodeGroupID successful", taskID)
 
 	// update response information to task common params
 	if state.Task.CommonParams == nil {
@@ -153,9 +134,11 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 		Name:            &group.Name,
 		Tags:            api.MapToTags(group.Tags),
 	}
-	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID !=
-		"" {
-		nodePool.NodePoolOs = &group.LaunchTemplate.ImageInfo.ImageID
+
+	// 节点池Os 当为自定义镜像时，传镜像id；否则为公共镜像的osName; 若为空复用集群级别
+	// 示例值：ubuntu18.04.1x86_64
+	if group.NodeTemplate != nil && group.NodeTemplate.NodeOS != "" {
+		nodePool.NodePoolOs = &group.NodeTemplate.NodeOS
 	}
 	if group.NodeTemplate != nil {
 		nodePool.Taints = api.MapToTaints(group.NodeTemplate.Taints)
@@ -184,55 +167,38 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	}
 
 	// step login started here
-	nodeGroupID := step.Params["NodeGroupID"]
-	cloudID := step.Params["CloudID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	// nodeGroup
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get nodegroup for %s failed", taskID, nodeGroupID)
-		retErr := fmt.Errorf("get nodegroup information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// cloud & cluster
-	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, group.ClusterID)
-	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get cloud/cluster for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
+		blog.Errorf("CheckCleanNodeGroupNodesStatusTask[%s]: GetClusterDependBasicInfo for nodegroup %s "+
+			"in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/cluster information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
-	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     cloud,
-		AccountID: cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get credential for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	cmOption.Region = group.Region
-
 	// get qcloud client
-	tkeCli, err := api.NewTkeClient(cmOption)
+	tkeCli, err := api.NewTkeClient(dependInfo.CmOption)
 	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get tke client for nodegroup[%s] in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get tke client for nodegroup[%s] "+
+			"in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	asCli, err := api.NewASClient(cmOption)
+
+	// get as client
+	asCli, err := api.NewASClient(dependInfo.CmOption)
 	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get as client for nodegroup[%s] in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get as client for nodegroup[%s] "+
+			"in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud as client err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -241,16 +207,22 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	// wait node group state to normal
 	ctx, cancel := context.WithTimeout(context.TODO(), 20*time.Minute)
 	defer cancel()
-	asgID := ""
-	ascID := ""
+
+	var (
+		asgID = ""
+		ascID = ""
+	)
+
+	// cloud nodePool status check
 	cloudNodeGroup := &tke.NodePool{}
 
-	// loop nodePool status
-	err = cloudprovider.LoopDoFunc(ctx, func() error {
-		np, errPool := tkeCli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
+	// loop cluster nodePool status
+	err = loop.LoopDoFunc(ctx, func() error {
+		np, errPool := tkeCli.DescribeClusterNodePoolDetail(dependInfo.Cluster.SystemID,
+			dependInfo.NodeGroup.CloudNodeGroupID)
 		if errPool != nil {
-			blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v", taskID, cluster.SystemID,
-				group.CloudNodeGroupID, errPool)
+			blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v",
+				taskID, dependInfo.Cluster.SystemID, dependInfo.NodeGroup.CloudNodeGroupID, err)
 			return nil
 		}
 		if np == nil {
@@ -262,14 +234,14 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		switch {
 		case *np.LifeState == api.NodeGroupLifeStateCreating:
 			blog.Infof("taskID[%s] DescribeClusterNodePoolDetail[%s] still creating, status[%s]",
-				taskID, group.CloudNodeGroupID, *np.LifeState)
+				taskID, dependInfo.NodeGroup.CloudNodeGroupID, *np.LifeState)
 			return nil
 		case *np.LifeState == api.NodeGroupLifeStateNormal:
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		default:
 			return nil
 		}
-	}, cloudprovider.LoopInterval(5*time.Second))
+	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
 		blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail failed: %v", taskID, err)
 		return err
@@ -289,13 +261,15 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return err
 	}
 
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group,
-		cloudNodeGroup, asgArr, ascArr[0], cluster.BusinessID))
+	// update nodeGroup
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(),
+		generateNodeGroupFromAsgAndAsc(dependInfo.NodeGroup, cloudNodeGroup, asgArr, ascArr[0],
+			dependInfo.Cluster.BusinessID))
 	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] api err, %s", nodeGroupID,
-			err.Error())
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] "+
+			"in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] "+
+			"api err, %s", nodeGroupID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -307,7 +281,8 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s] task %s %s update to storage fatal",
+			taskID, taskID, stepName)
 		return err
 	}
 	return nil
@@ -317,6 +292,13 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup,
 	asc *as.LaunchConfiguration, bkBizIDString string) *proto.NodeGroup {
 	group = generateNodeGroupFromAsg(group, cloudNodeGroup, asg)
+
+	if group.Area == nil {
+		group.Area = &proto.CloudArea{}
+	}
+	cloudAreaName := cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
+	group.Area.BkCloudName = cloudAreaName
+
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
 		bkBizID, _ := strconv.Atoi(bkBizIDString)
@@ -329,6 +311,7 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 // generateNodeGroupFromAsg trans nodeGroup from asg
 func generateNodeGroupFromAsg(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool,
 	asg *as.AutoScalingGroup) *proto.NodeGroup {
+	// asg
 	if asg.AutoScalingGroupId != nil {
 		group.AutoScaling.AutoScalingID = *asg.AutoScalingGroupId
 	}
@@ -336,7 +319,7 @@ func generateNodeGroupFromAsg(group *proto.NodeGroup, cloudNodeGroup *tke.NodePo
 		group.AutoScaling.AutoScalingName = *asg.AutoScalingGroupName
 	}
 	if asg.MaxSize != nil {
-		group.AutoScaling.MinSize = uint32(*asg.MaxSize)
+		group.AutoScaling.MaxSize = uint32(*asg.MaxSize)
 	}
 	if asg.MinSize != nil {
 		group.AutoScaling.MinSize = uint32(*asg.MinSize)
@@ -369,12 +352,14 @@ func generateNodeGroupFromAsg(group *proto.NodeGroup, cloudNodeGroup *tke.NodePo
 	if asg.ServiceSettings != nil && asg.ServiceSettings.ScalingMode != nil {
 		group.AutoScaling.ScalingMode = *asg.ServiceSettings.ScalingMode
 	}
+
 	return group
 }
 
 // generateNodeGroupFromAsc trans nodeGroup from asc
 func generateNodeGroupFromAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool,
 	asc *as.LaunchConfiguration) *proto.NodeGroup {
+	// asc
 	if asc.LaunchConfigurationId != nil {
 		group.LaunchTemplate.LaunchConfigurationID = *asc.LaunchConfigurationId
 	}
@@ -402,9 +387,11 @@ func generateNodeGroupFromAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePo
 	if asc.ImageId != nil {
 		group.LaunchTemplate.ImageInfo = generateImageInfo(cloudNodeGroup, group, *asc.ImageId)
 	}
-	if asc.UserData != nil {
-		group.LaunchTemplate.UserData = *asc.UserData
-	}
+	/*
+		if asc.UserData != nil {
+			group.LaunchTemplate.UserData = *asc.UserData
+		}
+	*/
 	if asc.EnhancedService != nil {
 		if asc.EnhancedService.MonitorService != nil && asc.EnhancedService.MonitorService.Enabled != nil {
 			group.LaunchTemplate.IsMonitorService = *asc.EnhancedService.MonitorService.Enabled
@@ -422,12 +409,19 @@ func generateNodeGroupFromAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePo
 // generateInternetAccessible internet setting
 func generateInternetAccessible(asc *as.LaunchConfiguration) *proto.InternetAccessible {
 	internetAccess := &proto.InternetAccessible{}
+	// internet bandwidth
 	if asc.InternetAccessible.InternetMaxBandwidthOut != nil {
 		internetAccess.InternetMaxBandwidth = strconv.Itoa(int(*asc.InternetAccessible.InternetMaxBandwidthOut))
 	}
+	// publicIP assign
 	if asc.InternetAccessible.PublicIpAssigned != nil {
 		internetAccess.PublicIPAssigned = *asc.InternetAccessible.PublicIpAssigned
 	}
+	// internet chargeType
+	if asc.InternetAccessible.InternetChargeType != nil {
+		internetAccess.InternetChargeType = *asc.InternetAccessible.InternetChargeType
+	}
+
 	return internetAccess
 }
 
@@ -471,7 +465,8 @@ func UpdateCreateNodeGroupDBInfoTask(taskID string, stepName string) error {
 
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), np)
 	if err != nil {
-		blog.Errorf("UpdateCreateNodeGroupDBInfoTask[%s]: update nodegroup status for %s failed", taskID, np.Status)
+		blog.Errorf("UpdateCreateNodeGroupDBInfoTask[%s]: update nodegroup status for %s failed",
+			taskID, np.Status)
 	}
 
 	// update step
@@ -488,6 +483,8 @@ func generateAutoScalingGroupPara(as *proto.AutoScalingGroup) *api.AutoScalingGr
 	if as == nil {
 		return nil
 	}
+
+	// autoscaling group
 	asg := &api.AutoScalingGroup{
 		MaxSize:         common.Uint64Ptr(uint64(as.MaxSize)),
 		MinSize:         common.Uint64Ptr(uint64(as.MinSize)),
@@ -521,19 +518,31 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
 	if template == nil {
 		return nil
 	}
+	// launch config
 	conf := &api.LaunchConfiguration{
 		LaunchConfigurationName: &template.LaunchConfigureName,
 		InstanceType:            &template.InstanceType,
 		InstanceChargeType:      &template.InstanceChargeType,
-		LoginSettings:           &api.LoginSettings{Password: template.InitLoginPassword},
-		SecurityGroupIds:        common.StringPtrs(template.SecurityGroupIDs),
+		LoginSettings: &api.LoginSettings{
+			Password: template.InitLoginPassword,
+			KeyIds: func() []string {
+				if template.GetKeyPair() == nil || template.GetKeyPair().GetKeyID() == "" {
+					return nil
+				}
+
+				return []string{template.GetKeyPair().GetKeyID()}
+			}(),
+		},
+		SecurityGroupIds: common.StringPtrs(template.SecurityGroupIDs),
 	}
+	// system disks
 	if template.SystemDisk != nil {
 		conf.SystemDisk = &api.SystemDisk{
 			DiskType: &template.SystemDisk.DiskType}
 		diskSize, _ := strconv.Atoi(template.SystemDisk.DiskSize)
 		conf.SystemDisk.DiskSize = common.Uint64Ptr(uint64(diskSize))
 	}
+	// data disks
 	if template.DataDisks != nil {
 		conf.DataDisks = make([]*api.LaunchConfigureDataDisk, 0)
 		for _, v := range template.DataDisks {
@@ -544,6 +553,7 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
 			conf.DataDisks = append(conf.DataDisks, disk)
 		}
 	}
+	// internet access
 	if template.InternetAccess != nil {
 		bw, _ := strconv.Atoi(template.InternetAccess.InternetMaxBandwidth)
 		conf.InternetAccessible = &api.InternetAccessible{
@@ -557,6 +567,7 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
 			conf.InternetAccessible.InternetChargeType = common.StringPtr(template.InternetAccess.InternetChargeType)
 		}
 	}
+	// enhanced service
 	conf.EnhancedService = &api.EnhancedService{
 		SecurityService: &api.RunSecurityServiceEnabled{Enabled: common.BoolPtr(template.IsSecurityService)},
 		MonitorService:  &api.RunMonitorServiceEnabled{Enabled: common.BoolPtr(template.IsMonitorService)},
@@ -569,6 +580,8 @@ func generateInstanceAdvanceSettings(template *proto.NodeTemplate) *api.Instance
 	if template == nil {
 		return nil
 	}
+
+	// instance advanced setting
 	result := &api.InstanceAdvancedSettings{
 		Unschedulable: common.Int64Ptr(int64(template.UnSchedulable)),
 	}
@@ -578,8 +591,8 @@ func generateInstanceAdvanceSettings(template *proto.NodeTemplate) *api.Instance
 	if template.DockerGraphPath != "" {
 		result.DockerGraphPath = template.DockerGraphPath
 	}
-	if template.UserScript != "" {
-		result.UserScript = template.UserScript
+	if template.PreStartUserScript != "" {
+		result.UserScript = template.PreStartUserScript
 	}
 	if template.Labels != nil {
 		result.Labels = make([]*api.KeyValue, 0)
@@ -587,6 +600,7 @@ func generateInstanceAdvanceSettings(template *proto.NodeTemplate) *api.Instance
 			result.Labels = append(result.Labels, &api.KeyValue{Name: k, Value: v})
 		}
 	}
+	// data disks
 	if template.DataDisks != nil {
 		result.DataDisks = make([]api.DataDetailDisk, 0)
 		for _, v := range template.DataDisks {
@@ -600,12 +614,13 @@ func generateInstanceAdvanceSettings(template *proto.NodeTemplate) *api.Instance
 			})
 		}
 	}
-	if template.ExtraArgs != nil {
-		// parse kubelet extra args
-		kubeletArgs := strings.Split(template.ExtraArgs["kubelet"], ";")
-		if len(kubeletArgs) > 0 {
-			result.ExtraArgs = &api.InstanceExtraArgs{Kubelet: kubeletArgs}
-		}
+	// extra args
+	kubeletMap := cutils.GetKubeletParas(template)
+	// parse kubelet extra args
+	kubeletArgs := strings.Split(kubeletMap[Kubelet], ";")
+	if len(kubeletArgs) > 0 {
+		result.ExtraArgs = &api.InstanceExtraArgs{Kubelet: kubeletArgs}
 	}
+
 	return result
 }

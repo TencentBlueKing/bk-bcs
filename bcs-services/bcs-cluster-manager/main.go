@@ -15,6 +15,7 @@ package main
 import (
 	"flag"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/app"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/manager"
@@ -22,7 +23,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	mconfig "github.com/micro/go-micro/v2/config"
 	mfile "github.com/micro/go-micro/v2/config/source/file"
 	mflag "github.com/micro/go-micro/v2/config/source/flag"
@@ -104,9 +104,6 @@ func main() {
 	if err != nil {
 		blog.Fatalf("scan config failed, err %s", err.Error())
 	}
-	// init serverConfig Ipv6Address
-	opt.ServerConfig.Ipv6Address = util.InitIPv6Address(opt.ServerConfig.Ipv6Address)
-	blog.Infof("service ipv6 server address: %s", opt.ServerConfig.Ipv6Address)
 
 	blog.InitLogs(bcsconf.LogConfig{
 		LogDir:          opt.BcsLog.LogDir,
@@ -119,6 +116,10 @@ func main() {
 		VModule:         opt.BcsLog.VModule,
 		TraceLocation:   opt.BcsLog.TraceLocation,
 	})
+
+	// init serverConfig Ipv6Address
+	opt.ServerConfig.Ipv6Address = util.InitIPv6Address(opt.ServerConfig.Ipv6Address)
+	blog.Infof("service ipv6 server address: %s", opt.ServerConfig.Ipv6Address)
 
 	clusterManager := app.NewClusterManager(opt)
 	if err := clusterManager.Init(); err != nil {

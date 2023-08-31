@@ -70,7 +70,7 @@ export const getScriptTagList = (biz_id: string) => {
  * @returns
  */
 export const getScriptVersionList = (biz_id: string, hook_id: number, params: { start: number; limit?: number; searchKey?: string; all?: boolean }) => {
-  return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases`, { params }).then(res => res.data);
+  return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/hook_revisions`, { params }).then(res => res.data);
 }
 
 /**

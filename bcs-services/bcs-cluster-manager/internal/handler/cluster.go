@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	clusterac "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
@@ -38,6 +39,21 @@ func (cm *ClusterManager) CreateCluster(ctx context.Context,
 	return nil
 }
 
+// CreateVirtualCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) CreateVirtualCluster(ctx context.Context,
+	req *cmproto.CreateVirtualClusterReq, resp *cmproto.CreateVirtualClusterResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewCreateVirtualClusterAction(cm.model, cm.locker)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("CreateVirtualCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: CreateVirtualCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // CheckCloudKubeConfig implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) CheckCloudKubeConfig(ctx context.Context,
 	req *cmproto.KubeConfigReq, resp *cmproto.KubeConfigResp) error {
@@ -48,6 +64,22 @@ func (cm *ClusterManager) CheckCloudKubeConfig(ctx context.Context,
 
 	start := time.Now()
 	ca := clusterac.NewCheckKubeAction()
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("CheckCloudKubeConfig", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: CheckCloudKubeConfig, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// CheckCloudKubeConfigConnect implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) CheckCloudKubeConfigConnect(ctx context.Context,
+	req *cmproto.KubeConfigConnectReq, resp *cmproto.KubeConfigConnectResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	ca := clusterac.NewCheckKubeConnectAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("CheckCloudKubeConfig", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: CheckCloudKubeConfig, req %v, resp %v", reqID, req, resp)
@@ -114,6 +146,21 @@ func (cm *ClusterManager) AddNodesToCluster(ctx context.Context,
 	return nil
 }
 
+// BatchDeleteNodesFromCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) BatchDeleteNodesFromCluster(ctx context.Context,
+	req *cmproto.BatchDeleteClusterNodesRequest, resp *cmproto.BatchDeleteClusterNodesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewBatchDeleteClusterNodesAction(cm.model, cm.locker)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("BatchDeleteClusterNodes", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: BatchDeleteClusterNodes, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // DeleteNodesFromCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) DeleteNodesFromCluster(ctx context.Context,
 	req *cmproto.DeleteNodesRequest, resp *cmproto.DeleteNodesResponse) error {
@@ -137,10 +184,25 @@ func (cm *ClusterManager) DeleteCluster(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	ca := clusterac.NewDeleteAction(cm.model)
+	ca := clusterac.NewDeleteAction(cm.model, cm.kubeOp)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("DeleteCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: DeleteCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// DeleteVirtualCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) DeleteVirtualCluster(ctx context.Context,
+	req *cmproto.DeleteVirtualClusterReq, resp *cmproto.DeleteVirtualClusterResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewDeleteVirtualAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("DeleteVirtualCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: DeleteVirtualCluster, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 
@@ -169,25 +231,14 @@ func (cm *ClusterManager) ListProjectCluster(ctx context.Context,
 	if err != nil {
 		return err
 	}
+
 	start := time.Now()
-	ca := clusterac.NewListAction(cm.model, cm.iam)
-
-	newReq := &cmproto.ListClusterReq{
-		ProjectID: req.ProjectID,
-		Operator:  req.Operator,
-	}
-	newResp := &cmproto.ListClusterResp{}
-	ca.Handle(ctx, newReq, newResp)
-
-	resp.Code = newResp.Code
-	resp.Message = newResp.Message
-	resp.Data = newResp.Data
-	resp.ClusterExtraInfo = newResp.ClusterExtraInfo
-	resp.WebAnnotations = newResp.WebAnnotations
+	ca := clusterac.NewListProjectClusterAction(cm.model, cm.iam)
+	ca.Handle(ctx, req, resp)
 
 	metrics.ReportAPIRequestMetric("ListProjectCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListProjectCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListProjectCluster, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListProjectCluster, req %v, resp %v", reqID, req, resp)
 	return nil
 }
@@ -203,8 +254,8 @@ func (cm *ClusterManager) ListCluster(ctx context.Context,
 	ca := clusterac.NewListAction(cm.model, cm.iam)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListCluster, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCluster, req %v, resp %v", reqID, req, resp)
 	return nil
 }
@@ -220,8 +271,8 @@ func (cm *ClusterManager) ListCommonCluster(ctx context.Context,
 	ca := clusterac.NewListCommonClusterAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCommonCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCommonCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListCommonCluster, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCommonCluster, req %v, resp %v", reqID, req, resp)
 	return nil
 }
@@ -269,6 +320,21 @@ func (cm *ClusterManager) GetNode(ctx context.Context,
 	return nil
 }
 
+// GetNodeInfo implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetNodeInfo(ctx context.Context,
+	req *cmproto.GetNodeInfoRequest, resp *cmproto.GetNodeInfoResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewGetNodeInfoAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetNodeInfo", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetNoe, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // UpdateNode implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) UpdateNode(ctx context.Context,
 	req *cmproto.UpdateNodeRequest, resp *cmproto.UpdateNodeResponse) error {
@@ -292,7 +358,7 @@ func (cm *ClusterManager) CheckNodeInCluster(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	na := clusterac.NewCheckNodeAction(cm.model)
+	na := clusterac.NewCheckNodeAction(cm.model, cm.kubeOp)
 	na.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("CheckNodeInCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: CheckNodeInCluster, req %v, resp %v", reqID, req, resp)
@@ -310,8 +376,8 @@ func (cm *ClusterManager) ListNodesInCluster(ctx context.Context,
 	fa := clusterac.NewListNodesInClusterAction(cm.model, cm.kubeOp)
 	fa.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListNodesInCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListNodesInCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListNodesInCluster, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListNodesInCluster, req %v, resp %v", reqID, req, resp)
 	return nil
 }
@@ -327,8 +393,23 @@ func (cm *ClusterManager) ListMastersInCluster(ctx context.Context,
 	fa := clusterac.NewListMastersInClusterAction(cm.model, cm.kubeOp)
 	fa.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListMastersInCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListMastersInCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListMastersInCluster, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListMastersInCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// UpdateVirtualClusterQuota implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateVirtualClusterQuota(ctx context.Context,
+	req *cmproto.UpdateVirtualClusterQuotaReq, resp *cmproto.UpdateVirtualClusterQuotaResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewUpdateVirtualClusterQuotaAction(cm.model, cm.kubeOp)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateVirtualClusterQuota", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateVirtualClusterQuota, req %v, resp %v", reqID, req, resp)
 	return nil
 }

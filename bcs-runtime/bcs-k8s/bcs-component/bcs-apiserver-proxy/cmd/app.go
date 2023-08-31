@@ -124,6 +124,7 @@ func (pm *ProxyManager) Run() error {
 	coldStart <- struct{}{}
 
 	ticker := time.NewTicker(time.Duration(pm.options.SystemInterval.ManagerInterval) * time.Second)
+	blog.Infof("will sync servers every %d seconds", pm.options.SystemInterval.ManagerInterval)
 	defer ticker.Stop()
 
 	for {

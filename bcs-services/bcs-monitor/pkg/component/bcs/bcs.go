@@ -34,8 +34,8 @@ const (
 
 // Cluster 集群信息
 type Cluster struct {
-	ProjectId       string `json:"projectID"`
-	ClusterId       string `json:"clusterID"`
+	ProjectID       string `json:"projectID"`
+	ClusterID       string `json:"clusterID"`
 	ClusterName     string `json:"clusterName"`
 	BKBizID         string `json:"businessID"`
 	Status          string `json:"status"`
@@ -69,7 +69,7 @@ type VclusterQuota struct {
 
 // String :
 func (c *Cluster) String() string {
-	return fmt.Sprintf("cluster<%s, %s>", c.ClusterName, c.ClusterId)
+	return fmt.Sprintf("cluster<%s, %s>", c.ClusterName, c.ClusterID)
 }
 
 // IsVirtual check cluster is vcluster
@@ -121,11 +121,11 @@ func ListClusters() {
 		if cls.IsVirtual() {
 			cls.VclusterInfo, err = parseVClusterInfo(cls.ExtraInfo.NamespaceInfo)
 			if err != nil {
-				klog.Errorf("parse clusters %s namespaceInfo %s error, %s", cls.ClusterId, cls.ExtraInfo.NamespaceInfo,
+				klog.Errorf("parse clusters %s namespaceInfo %s error, %s", cls.ClusterID, cls.ExtraInfo.NamespaceInfo,
 					err.Error())
 			}
 		}
-		clusterMap[cluster.ClusterId] = cls
+		clusterMap[cluster.ClusterID] = cls
 	}
 
 	storage.LocalCache.Slot.Set(listClustersCacheKey, clusterMap, -1)

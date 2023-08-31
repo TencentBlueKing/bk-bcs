@@ -25,6 +25,15 @@ func SplitString(str string) []string {
 	return strings.Split(str, ",")
 }
 
+// Partition 从指定分隔符的第一个位置，将字符串分为两段
+func Partition(s string, sep string) (string, string) {
+	parts := strings.SplitN(s, sep, 2)
+	if len(parts) == 1 {
+		return parts[0], ""
+	}
+	return parts[0], parts[1]
+}
+
 // JoinString xxx
 // AddString 拼接字符串
 func JoinString(str ...string) string {

@@ -348,6 +348,7 @@ func TestNodePoolClient_GetPoolConfig(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestNodePoolClient_GetPoolNodeTemplate(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" && r.URL.EscapedPath() == "/nodegroup/test1" {
@@ -569,6 +570,7 @@ func TestNodePoolClient_GetNodes(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestNodePoolClient_GetAutoScalingNodes(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" && r.URL.EscapedPath() == "/nodegroup/test1" {
@@ -822,6 +824,7 @@ func TestNodePoolClient_GetNode(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestNodePoolClient_UpdateDesiredNode(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" && r.URL.EscapedPath() == "/nodegroup/test1/desirednode" {
@@ -1017,6 +1020,7 @@ func TestNodePoolClient_RemoveNodes(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestNodePoolClient_UpdateDesiredSize(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" && r.URL.EscapedPath() == "/nodegroup/test1/desiredsize" {

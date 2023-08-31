@@ -4,11 +4,11 @@
       <Validate
         :rules="[
           {
-            message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+            message: $i18n.t('generic.validate.labelKey'),
             validator: '^[A-Za-z0-9._/-]+$',
           },
           {
-            message: $i18n.t('重复键'),
+            message: $i18n.t('generic.validate.repeatKey'),
             validator: (value, meta) => taints.filter((_, i) => i !== meta).every(d => d.key !== value),
           },
         ]"
@@ -17,7 +17,7 @@
         class="flex-1">
         <bcs-input
           v-model="item.key"
-          :placeholder="$t('键')"
+          :placeholder="$t('generic.label.key')"
           @change="handleLabelKeyChange">
         </bcs-input>
       </Validate>
@@ -25,7 +25,7 @@
       <Validate
         :rules="[
           {
-            message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+            message: $i18n.t('generic.validate.labelKey'),
             validator: '^[A-Za-z0-9._/-]+$',
           },
         ]"
@@ -34,14 +34,14 @@
         class="flex-1">
         <bcs-input
           v-model="item.value"
-          :placeholder="$t('值')"
+          :placeholder="$t('generic.label.value')"
           @change="handleLabelValueChange">
         </bcs-input>
       </Validate>
       <bcs-select
         v-model="item.effect"
         class="effect ml15 flex-1"
-        :placeholder="$t('影响')"
+        :placeholder="$t('generic.label.effect')"
         :clearable="false">
         <bcs-option
           v-for="effect in effectOptions"

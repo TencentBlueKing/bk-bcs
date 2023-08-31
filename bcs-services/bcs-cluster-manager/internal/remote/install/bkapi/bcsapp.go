@@ -56,13 +56,11 @@ func (c *BCSAppClient) generateGateWayAuth() (string, error) {
 	if c == nil {
 		return "", ErrServerNotInit
 	}
-
 	auth := &AuthInfo{
 		BkAppCode:   c.appCode,
 		BkAppSecret: c.appSecret,
 		BkUserName:  c.bkUsername,
 	}
-
 	userAuth, err := json.Marshal(auth)
 	if err != nil {
 		return "", err
@@ -76,7 +74,6 @@ func (c *BCSAppClient) ListCharts(projectID string) (*ListChartsResponse, error)
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
-
 	url := fmt.Sprintf("%s/backend/apis/projects/%s/helm/charts", c.server, projectID)
 	userAuth, err := c.generateGateWayAuth()
 	if err != nil {
@@ -117,7 +114,6 @@ func (c *BCSAppClient) GetApp(projectID string, appID int) (*GetAppResponse, err
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
-
 	url := fmt.Sprintf("%s/backend/apis/projects/%s/helm/apps/%d", c.server, projectID, appID)
 	userAuth, err := c.generateGateWayAuth()
 	if err != nil {
@@ -208,7 +204,6 @@ func (c *BCSAppClient) ListNamespace(projectID, clusterID string) (*ListNamespac
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
-
 	url := fmt.Sprintf("%s/backend/apis/projects/%s/helm/namespaces?cluster_id=%s", c.server,
 		projectID, clusterID)
 	userAuth, err := c.generateGateWayAuth()
@@ -252,7 +247,6 @@ func (c *BCSAppClient) ListApps(projectID, clusterID, namespace string,
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
-
 	url := fmt.Sprintf("%s/backend/apis/projects/%s/helm/apps?cluster_id=%s&namespace=%s&page=%d&offset=%d&limit=%d",
 		c.server, projectID, clusterID, namespace, page, offset, limit)
 	userAuth, err := c.generateGateWayAuth()
@@ -294,7 +288,6 @@ func (c *BCSAppClient) CreateApp(req *CreateAppRequest) (*CreateAppResponse, err
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
-
 	url := fmt.Sprintf("%s/backend/apis/projects/%s/helm/apps", c.server, req.ProjectID)
 	userAuth, err := c.generateGateWayAuth()
 	if err != nil {
@@ -336,7 +329,6 @@ func (c *BCSAppClient) UpdateApp(req *UpdateAppRequest) (*UpdateAppResponse, err
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
-
 	url := fmt.Sprintf("%s/backend/apis/projects/%s/helm/apps/%d", c.server, req.ProjectID, req.AppID)
 	userAuth, err := c.generateGateWayAuth()
 	if err != nil {

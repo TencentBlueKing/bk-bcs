@@ -86,5 +86,35 @@ function _M.get_username_for_token(credential, bk_login_host)
     return data["data"]["username"]
 end
 
+-- get_username_for_token_esb used for LoginTokenAuthentication
+function _M.get_username_for_token_esb(credential, conf)
+    local httpc = http.new()
+    local res, err = httpc:request_uri(conf.bk_login_host_esb .. "/api/c/compapi/v2/bk_login/is_login/", {
+        method = "GET",
+        query = {bk_token = credential.user_token, bk_app_code = conf.bk_app_code, bk_app_secret = conf.bk_app_secret},
+        headers = {
+            ["Content-Type"] = "application/json",
+        },
+    })
+
+    if not res then
+        core.log.error("request login error: ", err)
+        return nil
+    end
+
+    if not res.body or res.status ~= 200 then
+        core.log.error("request login status: ", res.status)
+        return nil
+    end
+
+    local data, err = core.json.decode(res.body)
+    if not data then
+        core.log.error("request login decode body error: ", err)
+        return nil
+    end
+
+    return data
+end
+
 
 return _M

@@ -865,6 +865,40 @@
           "DataManager"
         ]
       }
+    },
+    "/datamanager/v2/powertrading": {
+      "post": {
+        "summary": "查询算力运营数据",
+        "description": "查询算力运营数据",
+        "operationId": "DataManager_GetPowerTrading",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetPowerTradingDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/datamanagerGetPowerTradingDataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DataManager"
+        ]
+      }
     }
   },
   "definitions": {
@@ -1350,6 +1384,78 @@
       },
       "description": "查询podAutoscaler返回",
       "title": "GetPodAutoscalerResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "datamanagerGetPowerTradingDataRequest": {
+      "type": "object",
+      "properties": {
+        "table": {
+          "type": "string",
+          "description": "查询的表名",
+          "title": "table"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "开始时间，yyyy-MM-dd HH:mm:ss格式",
+          "title": "startTime"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "结束时间，yyyy-MM-dd HH:mm:ss格式",
+          "title": "endTime"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "sort": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "int64"
+          }
+        }
+      },
+      "description": "查询集群列表请求",
+      "title": "GetPowerTradingDataRequest"
+    },
+    "datamanagerGetPowerTradingDataResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          },
+          "description": "运营数据列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询集群列表返回",
+      "title": "GetClusterListResponse",
       "required": [
         "code",
         "message",

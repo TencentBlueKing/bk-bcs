@@ -72,7 +72,7 @@ export default {
         isShow: false,
         width: 912,
         // width: 895,
-        title: this.$t('选择运行的集群及命名空间'),
+        title: this.$t('deploy.templateset.selectNS'),
         closeIcon: false,
         loading: false,
       },
@@ -506,7 +506,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择模板集版本'),
+          message: this.$t('deploy.templateset.pleaseSelectTemplateVersion'),
         });
         return;
       }
@@ -515,7 +515,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择要实例化的模板'),
+          message: this.$t('deploy.templateset.selectTpl'),
         });
         return;
       }
@@ -701,7 +701,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择命名空间'),
+          message: this.$t('dashboard.ns.validate.emptyNs'),
         });
         return;
       }
@@ -789,7 +789,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择模板集版本'),
+          message: this.$t('deploy.templateset.pleaseSelectTemplateVersion'),
         });
         return;
       }
@@ -798,7 +798,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择要实例化的模板'),
+          message: this.$t('deploy.templateset.selectTpl'),
         });
         return;
       }
@@ -833,7 +833,7 @@ export default {
 
           // 当前这个 ns 没有 lb 信息，不需要展示变量了，也不能 preview 和提交
           if (!lbData.length) {
-            this.previewTitle = this.$t('{nsName}的详细配置', { nsName: ns.name });
+            this.previewTitle = this.$t('deploy.templateset.nsNameDetailedConfig', { nsName: ns.name });
             this.previewNs = Object.assign({}, ns);
             if (this.invalidNsList.indexOf(ns.name) < 0) {
               this.invalidNsList.splice(0, this.invalidNsList.length, ...[].concat(ns.name));
@@ -879,7 +879,7 @@ export default {
           this.lbServiceListInPage.splice(0, this.lbServiceListInPage.length, ...lbServiceListInPage);
           this.lbServiceListInPageTmp = Object.assign({}, lbServiceListInPageTmp);
 
-          this.previewTitle = `${ns.cluster_name} / ${this.$t('{nsName}的详细配置', { nsName: ns.name })}`;
+          this.previewTitle = `${ns.cluster_name} / ${this.$t('deploy.templateset.nsNameDetailedConfig', { nsName: ns.name })}`;
           this.previewNs = Object.assign({}, ns);
 
           if (!this.checkCurNamespacePreview(ns)) {
@@ -916,7 +916,7 @@ export default {
               });
             });
           });
-          this.previewTitle = `${ns.cluster_name} / ${this.$t('{nsName}的详细配置', { nsName: ns.name })}`;
+          this.previewTitle = `${ns.cluster_name} / ${this.$t('deploy.templateset.nsNameDetailedConfig', { nsName: ns.name })}`;
           this.previewNs = Object.assign({}, ns);
 
           this.sortTplType(list, 'tag', true);
@@ -1132,7 +1132,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择模板集版本'),
+          message: this.$t('deploy.templateset.pleaseSelectTemplateVersion'),
         });
         return;
       }
@@ -1141,7 +1141,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择要实例化的模板'),
+          message: this.$t('deploy.templateset.selectTpl'),
         });
         return;
       }
@@ -1150,7 +1150,7 @@ export default {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请选择命名空间'),
+          message: this.$t('dashboard.ns.validate.emptyNs'),
         });
         return;
       }
@@ -1232,8 +1232,8 @@ export default {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const me = this;
       me.$bkInfo({
-        title: me.$t('确认创建'),
-        content: me.$createElement('p', this.$t('确定要进行创建操作？')),
+        title: me.$t('deploy.templateset.confirmCreate'),
+        content: me.$createElement('p', this.$t('deploy.templateset.confirmCreateOperation')),
         async confirmFn() {
           me.createInstanceLoading = true;
           try {
@@ -1274,7 +1274,7 @@ export default {
           if (serviceObj[k] === -1) {
             this.$bkMessage({
               theme: 'error',
-              message: this.$t('请选择{key}命名空间的{k}', { key, k }),
+              message: this.$t('deploy.templateset.selectNamespaceKeyValue', { key, k }),
             });
             outloop = false;
             ret = false;
@@ -1333,7 +1333,7 @@ export default {
           this.bkMessageInstance && this.bkMessageInstance.close();
           this.bkMessageInstance = this.$bkMessage({
             theme: 'error',
-            message: this.$t('请填写命名空间名称'),
+            message: this.$t('deploy.templateset.enterNamespaceName'),
           });
           return;
         }
@@ -1341,7 +1341,7 @@ export default {
         if (this.namespaceName.length < 2) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('命名空间名称不得小于2个字符'),
+            message: this.$t('deploy.templateset.namespaceNameMinLength'),
           });
           return;
         }
@@ -1349,7 +1349,7 @@ export default {
         if (!/^[a-z][a-z0-9-]+$/g.test(this.namespaceName)) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('命名空间名称只能包含小写字母、数字以及连字符(-)，且不能以数字开头'),
+            message: this.$t('deploy.templateset.namespaceNameCriteria'),
           });
           return;
         }
@@ -1358,7 +1358,7 @@ export default {
           this.bkMessageInstance && this.bkMessageInstance.close();
           this.bkMessageInstance = this.$bkMessage({
             theme: 'error',
-            message: this.$t('请选择所属集群'),
+            message: this.$t('deploy.templateset.selectCluster'),
           });
           return;
         }

@@ -20,19 +20,19 @@ import (
 // RandomRange return a random value which is between the value of between[0] and between[1].
 // so, do assure that between[0] < between[1].
 func RandomRange(between [2]int) int {
-	rand.Seed(time.Now().UnixNano())
-	return rand.Intn(between[1]-between[0]) + between[0]
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return r.Intn(between[1]-between[0]) + between[0]
 }
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 // RandString randomly generate a string of specified length.
 func RandString(n int) string {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+		b[i] = letterRunes[r.Intn(len(letterRunes))]
 	}
 
 	return string(b)

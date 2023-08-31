@@ -59,7 +59,7 @@ func (da *DeleteAction) Handle(
 		return
 	}
 
-	// try to get original data for return
+	//try to get original data for return
 	deleteOption, err := da.model.GetAutoScalingOption(da.ctx, da.req.ClusterID)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -70,9 +70,6 @@ func (da *DeleteAction) Handle(
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-
-	// delete AutoScalingOption means uninstalling cluster-autoscaler
-	// by cloudprovider implementation to delete AutoScalingOption
 
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return

@@ -14,19 +14,21 @@
 package v1http
 
 import (
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/esb/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/credential"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/tke"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/token"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/user"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
-	"github.com/emicklei/go-restful"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 // InitV1Routers init v1 version route,
@@ -38,6 +40,8 @@ func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient)
 	initPermissionRouters(ws, service)
 	initTokenRouters(ws)
 	initExtraTokenRouters(ws, service)
+	initIAMProviderRouters(ws)
+	initUserPermsRouters(ws)
 }
 
 // initUsersRouters init users api routers
@@ -79,7 +83,7 @@ func initPermissionRouters(ws *restful.WebService, service *permission.PermVerif
 
 // initTokenRouters init bcs token
 func initTokenRouters(ws *restful.WebService) {
-	tokenHandler := token.NewTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB),
+	tokenHandler := token.NewTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor),
 		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient)
 	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens").To(tokenHandler.CreateToken)))
 	ws.Route(auth.TokenAuthFunc(ws.GET("/v1/users/{username}/tokens").To(tokenHandler.GetToken)))
@@ -93,8 +97,8 @@ func initTokenRouters(ws *restful.WebService) {
 
 // initExtraTokenRouters init bcs extra token for third-party system
 func initExtraTokenRouters(ws *restful.WebService, service *permission.PermVerifyClient) {
-	tokenHandler := token.NewExtraTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB),
-		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient, service.ClusterClient, cmdb.CMDBClient)
+	tokenHandler := token.NewExtraTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor),
+		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient, cmdb.CMDBClient)
 	ws.Route(ws.GET("/v1/tokens/extra/getClusterUserToken").To(tokenHandler.GetTokenByUserAndClusterID))
 }
 
@@ -106,4 +110,15 @@ func initTkeRouters(ws *restful.WebService) {
 	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/tke/cidr/list_count")).To(tke.ListTkeCidr))
 
 	ws.Route(auth.AdminAuthFunc(ws.POST("/v1/tke/{cluster_id}/sync_credentials")).To(tke.SyncTkeClusterCredentials))
+}
+
+// initIAMProviderRouters init iam provider api routers
+func initIAMProviderRouters(ws *restful.WebService) {
+	ws.Route(auth.BKIAMAuthFunc(ws.POST("/v1/iam-provider/resources")).To(iam.ResourceDispatch))
+}
+
+// initUserPermsRouters init user perms api routers
+func initUserPermsRouters(ws *restful.WebService) {
+	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/iam/user_perms")).To(iam.GetPerms))
+	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/iam/user_perms/actions/{action_id}")).To(iam.GetPermByActionID))
 }

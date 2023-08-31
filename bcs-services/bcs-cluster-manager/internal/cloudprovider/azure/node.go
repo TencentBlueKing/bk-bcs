@@ -69,13 +69,28 @@ func (n *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.Zon
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// ListNodeInstanceType get node instance type list
-func (n *NodeManager) ListNodeInstanceType(zone, nodeFamily string, cpu, memory uint32,
-	opt *cloudprovider.CommonOption) ([]*proto.InstanceType, error) {
+// ListNodeInstanceType list node type by zone and node family
+func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
+	[]*proto.InstanceType, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // ListOsImage get osimage list
 func (n *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetExternalNodeByIP get specified Node by innerIP address
+func (n *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListExternalNodesByIP list node by IP set
+func (n *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListKeyPairs keyPairs list
+func (n *NodeManager) ListKeyPairs(opt *cloudprovider.CommonOption) ([]*proto.KeyPair, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
