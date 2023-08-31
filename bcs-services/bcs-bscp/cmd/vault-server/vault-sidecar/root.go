@@ -8,7 +8,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "vault-sidecar",
-	Short: "vault server auto unseal & ctl",
+	Short: "vault server auto unseal, plugin register & ctl",
 }
 
 func execute(ctx context.Context) error {

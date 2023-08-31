@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	port            = 8201
+	port            = 8202
 	bindAddr string = "0.0.0.0"
 	confPath string
 )
@@ -30,7 +30,7 @@ var (
 func serverCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server",
-		Short: "vault-sidecar server",
+		Short: "vault sidecar server",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := runServerCmd(); err != nil {
 				klog.ErrorS(err, "run server failed")
@@ -66,15 +66,21 @@ func runServerCmd() error {
 	r.Get("/-/ready", ReadyHandler)
 	r.Get("/healthz", HealthzHandler)
 
-	addr := net.JoinHostPort(bindAddr, getPort())
-	klog.InfoS("listening for requests and metrics", "addr", addr)
 	confIn, err := os.ReadFile(confPath)
 	if err != nil {
 		return err
 	}
-	conf := VaultConf{}
-	yaml.Unmarshal(confIn, &conf)
+	conf := vaultConf{}
+	if err := yaml.Unmarshal(confIn, conf); err != nil {
+		return err
+	}
 
+	plugins, err := getPlugins(conf)
+	if err != nil {
+		return err
+	}
+
+	// try auto unseal
 	go func() {
 		tick := time.NewTicker(time.Second * 5)
 		defer tick.Stop()
@@ -96,11 +102,7 @@ func runServerCmd() error {
 		}
 	}()
 
-	plugins, err := getPlugins(conf)
-	if err != nil {
-		return err
-	}
-
+	// try auto register plugin
 	go func() {
 		tick := time.NewTicker(time.Second * 5)
 		defer tick.Stop()
@@ -108,13 +110,13 @@ func runServerCmd() error {
 		for range tick.C {
 			klog.InfoS("try register plugin")
 
-			// already unsealed
+			// ensure already unsealed
 			if err := checkVaultStatus(); err != nil {
 				klog.InfoS("check vault status not ready", "reason", err)
 				continue
 			}
 
-			if err := autoRegisterPlugin(conf, plugins); err != nil {
+			if err := tryRegisterPlugin(conf, plugins); err != nil {
 				klog.Warningf("register failed, err: %s", err)
 				continue
 			}
@@ -124,17 +126,19 @@ func runServerCmd() error {
 		}
 	}()
 
+	addr := net.JoinHostPort(bindAddr, getPort())
+	klog.InfoS("listening for requests and metrics", "addr", addr)
 	return http.ListenAndServe(addr, r)
 }
 
 // HealthyHandler Healthz 接口
 func HealthzHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
+	w.Write([]byte("OK")) // nolint
 }
 
 // HealthyHandler 健康检查
 func HealthyHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
+	w.Write([]byte("OK")) // nolint
 }
 
 func checkVaultStatus() error {
@@ -173,10 +177,11 @@ func ReadyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("OK"))
+	w.Write([]byte("OK")) // nolint
 }
 
-func tryUnseal(conf VaultConf) error {
+// tryUnseal auto unseal by keys
+func tryUnseal(conf vaultConf) error {
 	c, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return err
@@ -220,13 +225,14 @@ func tryUnseal(conf VaultConf) error {
 	return fmt.Errorf("unseal with all keys failed")
 }
 
-func getPlugins(conf VaultConf) (map[string]string, error) {
+func getPlugins(conf vaultConf) (map[string]string, error) {
 	dir, err := os.ReadDir(conf.PluginDir)
 	if err != nil {
 		return nil, err
 	}
 
-	result := map[string]string{}
+	// plugins name:sha256 prepare for register
+	plugins := map[string]string{}
 	for _, v := range dir {
 		if v.IsDir() {
 			continue
@@ -240,18 +246,20 @@ func getPlugins(conf VaultConf) (map[string]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer f.Close()
+		defer f.Close() // nolint
 
 		h := sha256.New()
 		if _, err := io.Copy(h, f); err != nil {
 			return nil, err
 		}
-		result[info.Name()] = hex.EncodeToString(h.Sum(nil))
+		plugins[info.Name()] = hex.EncodeToString(h.Sum(nil))
 	}
 
-	return result, nil
+	return plugins, nil
 }
-func autoRegisterPlugin(conf VaultConf, plugins map[string]string) error {
+
+// tryRegisterPlugin auto register plugin in pluginDir
+func tryRegisterPlugin(conf vaultConf, plugins map[string]string) error {
 	c, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return err

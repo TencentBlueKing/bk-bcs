@@ -17,19 +17,7 @@ const (
 	secretThreshold = 3 // Number of key shares required to reconstruct the root key
 )
 
-func initCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "init",
-		Short: "take vault init operator",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(runVaultInitCmd())
-		},
-	}
-
-	return cmd
-}
-
-var secret = `global:
+var secretTmpl = `global:
   vault:
     unsealKeys:
     {{- range .KeysB64 }}
@@ -37,13 +25,25 @@ var secret = `global:
     {{- end }}
     rootToken: {{ .RootToken }}`
 
-// VaultConf ..
-type VaultConf struct {
+// vaultConf ..
+type vaultConf struct {
 	PluginDir       string   `yaml:"pluginDir"`
 	UnsealKeys      []string `yaml:"unsealKeys"`
 	RootToken       string   `yaml:"rootToken"`
 	SecretShares    int      `yaml:"secretShares"`
 	SecretThreshold int      `yaml:"secretThreshold"`
+}
+
+func initCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "init",
+		Short: "vault init operator",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(runVaultInitCmd())
+		},
+	}
+
+	return cmd
 }
 
 // runVaultInitCmd 初始化
@@ -55,6 +55,7 @@ func runVaultInitCmd() string {
 	if err != nil {
 		return err.Error()
 	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -75,7 +76,7 @@ func runVaultInitCmd() string {
 		return err.Error()
 	}
 
-	tmpl, err := template.New("").Parse(secret)
+	tmpl, err := template.New("").Parse(secretTmpl)
 	if err != nil {
 		return err.Error()
 	}
