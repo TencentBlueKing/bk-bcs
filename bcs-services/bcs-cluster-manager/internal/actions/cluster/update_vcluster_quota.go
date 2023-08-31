@@ -15,6 +15,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -23,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // UpdateVirtualClusterQuotaAction action for update virtual cluster namespace quota
@@ -86,10 +88,35 @@ func (ca *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmpr
 		return
 	}
 
+	//get namespace info
 	var nsInfo cmproto.NamespaceInfo
 	err = utils.ToStringObject([]byte(ca.cluster.ExtraInfo[common.VClusterNamespaceInfo]), &nsInfo)
 	if err != nil {
 		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		return
+	}
+
+	err = compareQuota(nsInfo.Quota.CpuRequests, ca.req.Quota.CpuRequests)
+	if err != nil {
+		ca.setResp(common.BcsErrClusterManagerInvalidParameter, fmt.Errorf("cpu requests: ").Error())
+		return
+	}
+
+	err = compareQuota(nsInfo.Quota.CpuLimits, ca.req.Quota.CpuLimits)
+	if err != nil {
+		ca.setResp(common.BcsErrClusterManagerInvalidParameter, fmt.Errorf("cpu limits: ").Error())
+		return
+	}
+
+	err = compareQuota(nsInfo.Quota.MemoryRequests, ca.req.Quota.MemoryRequests)
+	if err != nil {
+		ca.setResp(common.BcsErrClusterManagerInvalidParameter, fmt.Errorf("memory requests: ").Error())
+		return
+	}
+
+	err = compareQuota(nsInfo.Quota.MemoryLimits, ca.req.Quota.MemoryLimits)
+	if err != nil {
+		ca.setResp(common.BcsErrClusterManagerInvalidParameter, fmt.Errorf("memory limits: ").Error())
 		return
 	}
 
@@ -120,4 +147,24 @@ func (ca *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmpr
 
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
+}
+
+func compareQuota(old, new string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s", r)
+			return
+		}
+	}()
+
+	oldQuota := resource.MustParse(old)
+	newQuota := resource.MustParse(new)
+
+	result := oldQuota.Cmp(newQuota)
+
+	if result > 0 {
+		return fmt.Errorf("%s cannot be less then %s", old, new)
+	}
+
+	return nil
 }
