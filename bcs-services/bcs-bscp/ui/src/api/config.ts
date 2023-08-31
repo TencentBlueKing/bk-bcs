@@ -32,7 +32,7 @@ export const getConfigList = (biz_id: string, app_id: number, params: IConfigLis
  * @param params 配置参数内容
  * @returns
  */
- export const createServiceConfigItem = (app_id: number, biz_id: string, params: IConfigEditParams) => {
+export const createServiceConfigItem = (app_id: number, biz_id: string, params: IConfigEditParams) => {
   return http.post(`/config/create/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, params);
 }
 
@@ -44,7 +44,7 @@ export const getConfigList = (biz_id: string, app_id: number, params: IConfigLis
  * @param params 配置参数内容
  * @returns
  */
- export const updateServiceConfigItem = (id: number, app_id: number, biz_id: string, params: IConfigEditParams) => {
+export const updateServiceConfigItem = (id: number, app_id: number, biz_id: string, params: IConfigEditParams) => {
   return http.put(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params);
 }
 
@@ -55,7 +55,7 @@ export const getConfigList = (biz_id: string, app_id: number, params: IConfigLis
  * @param appId 应用ID
  * @returns
  */
- export const deleteServiceConfigItem = (id: number, bizId: string, appId: number) => {
+export const deleteServiceConfigItem = (id: number, bizId: string, appId: number) => {
   return http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
 }
 
