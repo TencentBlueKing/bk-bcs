@@ -10,6 +10,6 @@ COPY hyper/bk-bscp-cacheservice /bk-bscp/bk-bscp-cacheservice
 COPY hyper/bk-bscp-vaultserver /bk-bscp/bk-bscp-vaultserver
 COPY hyper/vault-barrier /bk-bscp/vault-barrier
 COPY hyper/vault-sidecar /bk-bscp/vault-sidecar
-COPY hyper/bk-bscp-vaultplugin /etc/vault/vault-plugins/bk-bscp-vaultplugin
+COPY hyper/bk-bscp-vaultplugin /etc/vault/vault_plugins/bk-bscp-vaultplugin
 ENTRYPOINT ["/bscp-ui"]
 CMD []
