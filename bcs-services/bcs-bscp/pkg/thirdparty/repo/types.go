@@ -278,18 +278,30 @@ func GenNodePath(opt *NodeOption) (string, error) {
 
 // NodeMeta node metadata info.
 type NodeMeta struct {
-	BizID uint32   `json:"biz_id"`
-	AppID []uint32 `json:"app_id"`
+	BizID       uint32   `json:"biz_id"`
+	AppID       []uint32 `json:"app_id"`
+	TmplSpaceID []uint32 `json:"template_space_id"`
 }
 
 // String get content meta repo request format.
 func (c NodeMeta) String() (string, error) {
-	appIDs, err := jsoni.Marshal(c.AppID)
+	var (
+		appIDs, tmplSpaceIDs []byte
+		err                  error
+	)
+
+	appIDs, err = jsoni.Marshal(c.AppID)
 	if err != nil {
-		return "", fmt.Errorf("marshal node metadata failed, err: %v", err)
+		return "", fmt.Errorf("marshal node metadata app ids failed, err: %v", err)
 	}
 
-	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("biz_id=%d&app_id=%s", c.BizID, appIDs))), nil
+	tmplSpaceIDs, err = jsoni.Marshal(c.TmplSpaceID)
+	if err != nil {
+		return "", fmt.Errorf("marshal node metadata tmplate space ids failed, err: %v", err)
+	}
+
+	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("biz_id=%d&app_id=%s&template_space_id=%s",
+		c.BizID, appIDs, tmplSpaceIDs))), nil
 }
 
 // GenS3NodeFullPath ..

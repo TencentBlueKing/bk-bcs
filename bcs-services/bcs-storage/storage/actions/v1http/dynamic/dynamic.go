@@ -358,6 +358,21 @@ func DeleteCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
+// ListMulticlusterResources 列出集群域资源，支持多集群
+func ListMulticlusterResources(req *restful.Request, resp *restful.Response) {
+	r, extra, err := listMulticlusterResources(req)
+	if err != nil {
+		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			Data:    []string{},
+			ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
+}
+
 // CleanDynamic dynamic 资源清除逻辑，创建清理器
 func CleanDynamic() {
 	// Get the dynamic database client.
@@ -446,6 +461,15 @@ func init() {
 		Path:    k8sListClusterResourcesPath,
 		Params:  nil,
 		Handler: lib.MarkProcess(DeleteBatchClusterResource)})
+
+	k8sListMulticlusterResourcesPath := urlPathK8S(
+		"/dynamic/multicluster_resources/{resourceType}")
+	actions.RegisterV1Action(actions.Action{
+		Verb:    "POST",
+		Path:    k8sListMulticlusterResourcesPath,
+		Params:  nil,
+		Handler: lib.MarkProcess(ListMulticlusterResources),
+	})
 
 	// All Ops.
 	k8sAllResourcesPath := urlPathK8S(

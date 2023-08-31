@@ -14,6 +14,7 @@ package store
 
 import (
 	"context"
+	"sync"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 )
@@ -28,7 +29,7 @@ type Options struct {
 
 // ListAppOptions for data filter
 type ListAppOptions struct {
-	Project string
+	Projects []string
 }
 
 // Store define data interface for argocd structure.
@@ -55,7 +56,6 @@ type Store interface {
 	GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error)
 	ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, error)
 
-	// Application interface
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
 	ListApplications(ctx context.Context, option *ListAppOptions) (*v1alpha1.ApplicationList, error)
 
@@ -68,6 +68,7 @@ type Store interface {
 // NewStore create storage client
 func NewStore(opt *Options) Store {
 	return &argo{
-		option: opt,
+		option:           opt,
+		cacheApplication: &sync.Map{},
 	}
 }

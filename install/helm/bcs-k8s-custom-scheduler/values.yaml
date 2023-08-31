@@ -1,0 +1,64 @@
+# Default values for bcs-k8s-custom-scheduler.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  registry: "hub.bktencent.com"
+  repository: blueking/bcs-k8s-custom-scheduler
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+# work mode for bcs-k8s-custom-scheduler, [netservice-controller]
+workMode: netservice-controller
+
+options:
+  # the pod annotation key for fixed ip schedule
+  fixedIPAnnotationKey: "netservicecontroller.bkbcs.tencent.com/ipclaim"
+  # server ca file path
+  caFile: ""
+  # server cert file path
+  serverCertFile: ""
+  # server key file path
+  serverKeyFile: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Annotations to add to the service account
+  annotations: {}
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

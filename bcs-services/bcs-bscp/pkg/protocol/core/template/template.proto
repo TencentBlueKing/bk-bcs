@@ -16,10 +16,9 @@ message Template {
 
 // TemplateSpec source resource reference: pkg/dal/table/template.go
 message TemplateSpec {
-    string name = 1;
-    string path = 2;
-    string memo = 3;
-
+    string          name             = 1;
+    string          path             = 2;
+    string          memo             = 3;
 }
 
 // TemplateAttachment source resource reference: pkg/dal/table/template.go

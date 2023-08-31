@@ -52,6 +52,27 @@ const (
 
 	// ContentIDHeaderKey is common content sha256 id.
 	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"
+	// AppIDHeaderKey is app id.
+	AppIDHeaderKey = "X-Bscp-App-Id"
+	// TmplSpaceIDHeaderKey is template space id.
+	TmplSpaceIDHeaderKey = "X-Bscp-Template-Space-Id"
+
+	// TemplateVariablePrefix is the prefix for template variable name
+	TemplateVariablePrefix = "bk_bscp_"
+)
+
+// default resource
+const (
+	// DefaultTmplSpaceName is default template space name
+	DefaultTmplSpaceName = "default_space"
+	// DefaultTmplSpaceCNName is default template space chinese name
+	DefaultTmplSpaceCNName = "默认空间"
+	// DefaultTmplSpaceMemo is default template space memo
+	DefaultTmplSpaceMemo = "this is default space"
+	// DefaultTmplSetName is default template set name
+	DefaultTmplSetName = "默认套餐"
+	// DefaultTmplSetMemo is default template set memo
+	DefaultTmplSetMemo = "当前空间下的所有模版"
 )
 
 // Note:

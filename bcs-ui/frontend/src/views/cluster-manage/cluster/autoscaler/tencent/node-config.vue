@@ -60,7 +60,8 @@
               searchable
               :loading="zoneListLoading"
               :disabled="isEdit"
-              :clearable="false">
+              :clearable="false"
+              selected-style="checkbox">
               <bcs-option
                 v-for="zone in zoneList"
                 :key="zone.zoneID"
@@ -384,7 +385,8 @@
             multiple
             searchable
             class="bg-[#fff]"
-            :disabled="isEdit">
+            :disabled="isEdit"
+            selected-style="checkbox">
             <bcs-option
               v-for="securityGroup in securityGroupsList"
               :key="securityGroup.securityGroupID"

@@ -15,8 +15,12 @@ all:
 	@cd credential-scope && make
 	@cd template-space && make
 	@cd template && make
-	@cd template-release && make
+	@cd template-revision && make
 	@cd template-set && make
+	@cd app-template-binding && make
+	@cd template-binding-relation && make
+	@cd template-variable && make
+	@cd app-template-variable && make
 
 clean:
 	@cd base && make clean
@@ -35,5 +39,9 @@ clean:
 	@cd credential-scope && make clean
 	@cd template-space && make clean
 	@cd template && make clean
-	@cd template-release && make clean
+	@cd template-revision && make clean
 	@cd template-set && make clean
+	@cd app-template-binding && make clean
+	@cd template-binding-relation && make clean
+	@cd template-variable && make clean
+	@cd app-template-variable && make clean

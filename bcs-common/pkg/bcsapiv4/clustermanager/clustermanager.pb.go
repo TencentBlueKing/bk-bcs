@@ -5229,7 +5229,7 @@ func (x *InstanceTemplateConfig) GetIsMonitorService() bool {
 	return false
 }
 
-//LaunchConfigure template for scaling node
+// LaunchConfigure template for scaling node
 type LaunchConfiguration struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -50,14 +51,11 @@ func ApplyCVMFromResourcePoolTask(taskID, stepName string) error {
 	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	operator := step.Params[cloudprovider.OperatorKey.String()]
 	passwd := state.Task.CommonParams[cloudprovider.PasswordKey.String()]
-	scalingNum, err := strconv.Atoi(desiredNodes)
-	if err != nil {
-		blog.Errorf("ApplyCVMFromResourcePoolTask[%s] strconv desiredNodes failed: %v", taskID, err)
-		retErr := fmt.Errorf("strconv desiredNodes failed: %v", err.Error())
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return err
-	}
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
+	scalingNum, _ := strconv.Atoi(desiredNodes)
+
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
@@ -68,6 +66,8 @@ func ApplyCVMFromResourcePoolTask(taskID, stepName string) error {
 		blog.Errorf("ApplyCVMFromResourcePoolTask[%s] GetClusterDependBasicInfo for NodeGroup %s to clean Node in task %s "+
 			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
+		blog.Infof("ApplyCVMFromResourceManagerTask[%s] begin DeleteVirtualNodes", taskID)
+		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -78,16 +78,17 @@ func ApplyCVMFromResourcePoolTask(taskID, stepName string) error {
 		state.Task.CommonParams = make(map[string]string)
 	}
 
-	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-
 	recordInstanceList, orderID, err := applyInstanceFromResourcePool(ctx, dependInfo, scalingNum, operator)
 	if err != nil {
 		blog.Errorf("ApplyCVMFromResourcePoolTask[%s] applyInstanceFromResourcePool for group %s orderID %s failed, %s",
 			taskID, nodeGroupID, orderID, err.Error())
 		state.Task.CommonParams[cloudprovider.DeviceRecordIDKey.String()] = orderID
 		retErr := fmt.Errorf("applyInstanceFromResourcePool[%s] failed, %s", orderID, err.Error())
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -130,10 +131,20 @@ func ApplyCVMFromResourcePoolTask(taskID, stepName string) error {
 		blog.Errorf("ApplyCVMFromResourcePoolTask[%s] applyInstanceFromResourcePool for NodeGroup %s step %s failed, %s",
 			taskID, nodeGroupID, stepName, err.Error())
 		retErr := fmt.Errorf("applyInstanceFromResourcePool[%s] failed, %s", orderID, err.Error())
-		destroyDeviceList(ctx, dependInfo, recordInstanceList.DeviceIDList, operator)
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			destroyDeviceList(ctx, dependInfo, recordInstanceList.DeviceIDList, operator)
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
+	}
+
+	// destroy virtual nodes
+	if manual == common.True {
+		blog.Infof("ApplyCVMFromResourceManagerTask[%s] begin DeleteVirtualNodes", taskID)
+		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
 	}
 
 	// update step
@@ -169,6 +180,7 @@ func AddNodesToClusterTask(taskID, stepName string) error {
 	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	nodeNum, _ := strconv.Atoi(desiredNodes)
 	operator := step.Params[cloudprovider.OperatorKey.String()]
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 
 	passwd := state.Task.CommonParams[cloudprovider.PasswordKey.String()]
 	if passwd == "" {
@@ -200,7 +212,9 @@ func AddNodesToClusterTask(taskID, stepName string) error {
 	if len(instanceIDs) == 0 || len(instanceIDs) != len(instanceIPs) {
 		blog.Errorf("AddNodesToClusterTask[%s] strconv desiredNodes failed: %v", taskID, err)
 		retErr := fmt.Errorf("strconv desiredNodes failed: %v", err.Error())
-		_ = returnDevicesToRMAndCleanNodes(ctx, dependInfo, instanceIDs, false, operator)
+		if manual != common.True {
+			_ = returnDevicesToRMAndCleanNodes(ctx, dependInfo, instanceIDs, false, operator)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return err
 	}
@@ -214,9 +228,11 @@ func AddNodesToClusterTask(taskID, stepName string) error {
 		passwd, true, idToIPMap, operator)
 	if err != nil {
 		// rollback nodes when addNodes failed
-		errMsg := returnDevicesToRMAndCleanNodes(ctx, dependInfo, instanceIDs, true, operator)
-		if errMsg != nil {
-			blog.Errorf("AddNodesToClusterTask[%s] returnDevicesToRMAndCleanNodes failed: %v", taskID, errMsg)
+		if manual != common.True {
+			errMsg := returnDevicesToRMAndCleanNodes(ctx, dependInfo, instanceIDs, true, operator)
+			if errMsg != nil {
+				blog.Errorf("AddNodesToClusterTask[%s] returnDevicesToRMAndCleanNodes failed: %v", taskID, errMsg)
+			}
 		}
 		blog.Errorf("AddNodesToClusterTask[%s] nodegroupId[%s] failed: %v", taskID, nodeGroupID, err)
 		retErr := fmt.Errorf("AddNodesToClusterTask err, %s", err.Error())
@@ -235,9 +251,11 @@ func AddNodesToClusterTask(taskID, stepName string) error {
 	}
 	if len(result.SuccessNodes) == 0 {
 		blog.Errorf("AddNodesToClusterTask[%s] AddNodesToCluster failed: succeedNodes empty", taskID)
-		errMsg := returnDevicesToRMAndCleanNodes(ctx, dependInfo, instanceIDs, true, operator)
-		if errMsg != nil {
-			blog.Errorf("AddNodesToClusterTask[%s] returnDevicesToRMAndCleanNodes failed: %v", taskID, errMsg)
+		if manual != common.True {
+			errMsg := returnDevicesToRMAndCleanNodes(ctx, dependInfo, instanceIDs, true, operator)
+			if errMsg != nil {
+				blog.Errorf("AddNodesToClusterTask[%s] returnDevicesToRMAndCleanNodes failed: %v", taskID, errMsg)
+			}
 		}
 		retErr := fmt.Errorf("AddNodesToCluster err, %s", "successNodes empty")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -287,6 +305,7 @@ func CheckClusterNodeStatusTask(taskID, stepName string) error {
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	operator := step.Params[cloudprovider.OperatorKey.String()]
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
@@ -309,7 +328,9 @@ func CheckClusterNodeStatusTask(taskID, stepName string) error {
 	if len(successNodes) == 0 {
 		blog.Errorf("CheckClusterNodeStatusTask[%s] failed: succeedNodes empty", taskID)
 		retErr := fmt.Errorf("CheckClusterNodeStatusTask succeedNodes empty")
-		_ = returnDevicesToRMAndCleanNodes(ctx, dependInfo, successNodes, true, operator)
+		if manual != common.True {
+			_ = returnDevicesToRMAndCleanNodes(ctx, dependInfo, successNodes, true, operator)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return err
 	}
@@ -318,10 +339,12 @@ func CheckClusterNodeStatusTask(taskID, stepName string) error {
 	success, failed, err := tasks.CheckClusterInstanceStatus(ctx, dependInfo, successNodes)
 	if err != nil || len(success) == 0 {
 		// rollback failed nodes
-		errMsg := returnDevicesToRMAndCleanNodes(ctx, dependInfo, successNodes, true, operator)
-		if errMsg != nil {
-			blog.Errorf("CheckClusterNodeStatusTask[%s] nodes[%+v] failed: %v",
-				taskID, successNodes, errMsg)
+		if manual != common.True {
+			errMsg := returnDevicesToRMAndCleanNodes(ctx, dependInfo, successNodes, true, operator)
+			if errMsg != nil {
+				blog.Errorf("CheckClusterNodeStatusTask[%s] nodes[%+v] failed: %v",
+					taskID, successNodes, errMsg)
+			}
 		}
 		blog.Errorf("CheckClusterNodeStatusTask[%s] nodegroupId[%s] failed: %v", taskID, nodeGroupID, err)
 		retErr := fmt.Errorf("CheckClusterNodeStatusTask err, %v", err)

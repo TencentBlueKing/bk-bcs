@@ -162,7 +162,7 @@ func TestClient_GetBizInternalModule(t *testing.T) {
 func TestClient_ListTopology(t *testing.T) {
 	cli := getNewClient()
 
-	topoData, err := cli.ListTopology(100148, true)
+	topoData, err := cli.ListTopology(100148, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}

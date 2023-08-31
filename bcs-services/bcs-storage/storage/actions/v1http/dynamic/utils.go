@@ -15,8 +15,14 @@ package dynamic
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
+
+	"github.com/emicklei/go-restful"
+	"go-micro.dev/v4/broker"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
@@ -27,9 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/emicklei/go-restful"
-	"go-micro.dev/v4/broker"
-	"go.mongodb.org/mongo-driver/bson"
+	storagetypes "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/types"
 )
 
 const (
@@ -59,6 +63,9 @@ const (
 
 	databaseFieldNameForDeletionFlag    = "_isBcsObjectDeleted"
 	getDatabaseFieldNameForDeletionFlag = "getDeletionFlag"
+
+	labelSelectorTag    = "labelSelector"
+	labelSelectorPrefix = "data.metadata.labels."
 )
 
 var needTimeFormatList = []string{updateTimeTag, createTimeTag}
@@ -414,6 +421,129 @@ func deleteCustomResourcesIndex(req *restful.Request) error {
 	indexName := req.PathParameter(indexNameTag)
 
 	return DeleteCustomResourceIndex(req.Request.Context(), resourceType, indexName)
+}
+
+func listMulticlusterResources(req *restful.Request) ([]operator.M, operator.M, error) {
+	// resourceType
+	resourceType := getTable(req)
+
+	// options
+	opt, err := getMulticlusterStoreOption(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// count info
+	count, err := Count(req.Request.Context(), resourceType, opt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// data list
+	mList, err := GetData(req.Request.Context(), resourceType, opt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// count info
+	extra := operator.M{
+		"total":    count,
+		"pageSize": opt.Limit,
+		"offset":   opt.Offset,
+	}
+
+	lib.FormatTime(mList, needTimeFormatList)
+	return mList, extra, err
+}
+
+func getMulticlusterStoreOption(req *restful.Request) (*lib.StoreGetOption, error) {
+	multiClusterReq := &storagetypes.MulticlusterListReqParams{}
+	if err := codec.DecJsonReader(req.Request.Body, multiClusterReq); err != nil {
+		return nil, err
+	}
+
+	condition, err := getMultiClusterConditions(multiClusterReq)
+	if err != nil {
+		return nil, err
+	}
+
+	var fields []string
+	if multiClusterReq.Field != "" {
+		fields = strings.Split(multiClusterReq.Field, ",")
+	}
+
+	// option
+	return &lib.StoreGetOption{
+		Fields: fields,
+		Sort: map[string]int{
+			updateTimeTag: -1,
+		},
+		Cond:   condition,
+		Offset: multiClusterReq.Offset,
+		Limit:  multiClusterReq.Limit,
+	}, nil
+}
+
+func getMultiClusterConditions(req *storagetypes.MulticlusterListReqParams) (*operator.Condition, error) {
+	conditions := []*operator.Condition{}
+
+	// cluster and namespace conditions
+	clusterNsConds, err := getClusteredNamespacesCondition(req.ClusteredNamespaces)
+	if err != nil {
+		return nil, err
+	}
+	conditions = append(conditions, clusterNsConds)
+
+	// custom conditions
+	if len(req.Conditions) != 0 {
+		if err := req.EnsureConditions(); err != nil {
+			return nil, err
+		}
+		conditions = append(conditions, req.Conditions...)
+	}
+
+	// labelSelector conditions
+	if len(req.LabelSelector) != 0 {
+		selector := &lib.Selector{Prefix: labelSelectorPrefix, SelectorStr: req.LabelSelector}
+		selectorConds := selector.GetAllConditions()
+		conditions = append(conditions, selectorConds...)
+	}
+
+	cond := operator.NewBranchCondition(operator.And, conditions...)
+
+	by, _ := json.Marshal(cond)
+	blog.Infof("condition: %s", string(by))
+
+	return cond, nil
+}
+
+func getClusteredNamespacesCondition(clusteredNamespaces []*storagetypes.ClusteredNamespace) (*operator.Condition, error) {
+	if len(clusteredNamespaces) == 0 {
+		return nil, fmt.Errorf("could not find clusters and namespaces")
+	}
+	conditions := []*operator.Condition{}
+	for _, cn := range clusteredNamespaces {
+		if cn.ClusterId == "" {
+			return nil, fmt.Errorf("clusterId is not allowed to be empty")
+		}
+
+		subConds := []*operator.Condition{}
+		// clusterId
+		clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{
+			clusterIDTag: cn.ClusterId,
+		})
+		subConds = append(subConds, clusterCond)
+		// namespaces
+		if len(cn.Namespaces) != 0 {
+			nsCond := operator.NewLeafCondition(operator.In, operator.M{
+				namespaceTag: cn.Namespaces,
+			})
+			subConds = append(subConds, nsCond)
+		}
+		conditions = append(conditions, operator.NewBranchCondition(operator.And, subConds...))
+	}
+
+	return operator.NewBranchCondition(operator.Or, conditions...), nil
 }
 
 func urlPathK8S(oldURL string) string {

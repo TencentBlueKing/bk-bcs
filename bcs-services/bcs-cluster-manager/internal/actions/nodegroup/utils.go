@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // filterNodeGroupOption options
@@ -64,4 +65,8 @@ func listNodeGroupByConds(model store.ClusterManagerModel, options filterNodeGro
 		groupList = append(groupList, removeSensitiveInfo(&groups[i]))
 	}
 	return groupList, nil
+}
+
+func virtualNodeID() string {
+	return "bcs-" + utils.RandomHexString(8)
 }

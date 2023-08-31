@@ -87,6 +87,8 @@ const (
 	DeleteResourceQuotaAction = "deleteResourceQuota"
 	// ResourcePoolLabelAction 设置资源池标签
 	ResourcePoolLabelAction = "resourcePoolLabel"
+	// LadderResourcePoolLabelAction 标签设置
+	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
 )
 
 var (
@@ -356,7 +358,8 @@ func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, er
 	)
 	for _, node := range nodes {
 		if node.Status == common.StatusRunning || node.Status == common.StatusInitialization ||
-			node.Status == common.StatusAddNodesFailed {
+			node.Status == common.StatusAddNodesFailed || node.Status == common.StatusResourceApplyFailed ||
+			node.Status == common.StatusDeleting {
 			goodNodes = append(goodNodes, node)
 		}
 	}
@@ -816,7 +819,7 @@ func GetModuleName(bkBizID, bkModuleID int) string {
 	if cli == nil {
 		return ""
 	}
-	list, err := cli.ListTopology(bkBizID, false)
+	list, err := cli.ListTopology(bkBizID, false, true)
 	if err != nil {
 		blog.Errorf("list topology failed, err %s", err.Error())
 		return ""
@@ -995,18 +998,6 @@ func IsManagedCluster(cluster *proto.Cluster) bool {
 	return cluster.ManageType == common.ClusterManageTypeManaged
 }
 
-// CheckManagedClusterExistNode if exist nodes
-func CheckManagedClusterExistNode(cluster *proto.Cluster) bool {
-	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": cluster.ClusterID})
-	nodes, err := GetStorageModel().ListNode(context.Background(), clusterCond, &storeopt.ListOption{})
-	if err != nil {
-		blog.Errorf("CheckManagedClusterNodeNum %s Nodes failed, %s", cluster.ClusterID, err.Error())
-		return true
-	}
-
-	return len(nodes) > 0
-}
-
 // GetCRDByKubeConfig get crd by kubeConfig
 func GetCRDByKubeConfig(kubeConfig string) (*v1.CustomResourceDefinitionList, error) {
 	_, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
@@ -1041,4 +1032,67 @@ func GetCRDByKubeConfig(kubeConfig string) (*v1.CustomResourceDefinitionList, er
 	defer cancel()
 
 	return cli.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
+}
+
+// UpdateVirtualNodeStatus update virtual nodes status
+func UpdateVirtualNodeStatus(clusterId, nodeGroupId, taskID string) error {
+	if clusterId == "" || nodeGroupId == "" || taskID == "" {
+		blog.Infof("UpdateVirtualNodeStatus[%s] validate data", taskID)
+		return nil
+	}
+
+	condM := make(operator.M)
+	condM["nodegroupid"] = nodeGroupId
+	condM["clusterid"] = clusterId
+	condM["taskid"] = taskID
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+
+	nodes, err := GetStorageModel().ListNode(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("UpdateVirtualNodeStatus[%s] NodeGroup %s all Nodes failed, %s",
+			taskID, nodeGroupId, err.Error())
+		return err
+	}
+
+	blog.Infof("UpdateVirtualNodeStatus[%s] ListNodes[%+v] success", taskID, nodes)
+	for i := range nodes {
+		blog.Infof("UpdateVirtualNodeStatus[%s] node status", nodes[i].NodeID)
+		nodes[i].Status = common.StatusResourceApplyFailed
+		GetStorageModel().UpdateNode(context.Background(), nodes[i])
+	}
+
+	return nil
+}
+
+// DeleteVirtualNodes delete virtual nodes
+func DeleteVirtualNodes(clusterId, nodeGroupId, taskID string) error {
+	if clusterId == "" || nodeGroupId == "" || taskID == "" {
+		blog.Infof("DeleteVirtualNodes[%s] validate data", taskID)
+		return nil
+	}
+
+	condM := make(operator.M)
+	condM["nodegroupid"] = nodeGroupId
+	condM["clusterid"] = clusterId
+	condM["taskid"] = taskID
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+
+	nodes, err := GetStorageModel().ListNode(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("ListNodesInClusterNodePool[%s] NodeGroup %s all Nodes failed, %s",
+			taskID, nodeGroupId, err.Error())
+		return err
+	}
+
+	blog.Infof("DeleteVirtualNodes[%s] ListNodes[%+v] success", taskID, nodes)
+	for i := range nodes {
+		blog.Infof("DeleteVirtualNodes[%s] node[%s] status", taskID, nodes[i].NodeID)
+
+		if !strings.HasPrefix(nodes[i].GetNodeID(), "bcs") {
+			continue
+		}
+		GetStorageModel().DeleteNode(context.Background(), nodes[i].GetNodeID())
+	}
+
+	return nil
 }

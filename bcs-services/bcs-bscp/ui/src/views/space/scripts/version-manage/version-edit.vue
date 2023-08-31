@@ -19,7 +19,7 @@
   })
 
   const emits = defineEmits(['close', 'submitted'])
-  
+
   const localVal = ref<IScriptVersionForm>({
     id: 0,
     name: '',

@@ -146,6 +146,21 @@ func (cm *ClusterManager) AddNodesToCluster(ctx context.Context,
 	return nil
 }
 
+// BatchDeleteNodesFromCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) BatchDeleteNodesFromCluster(ctx context.Context,
+	req *cmproto.BatchDeleteClusterNodesRequest, resp *cmproto.BatchDeleteClusterNodesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewBatchDeleteClusterNodesAction(cm.model, cm.locker)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("BatchDeleteClusterNodes", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: BatchDeleteClusterNodes, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // DeleteNodesFromCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) DeleteNodesFromCluster(ctx context.Context,
 	req *cmproto.DeleteNodesRequest, resp *cmproto.DeleteNodesResponse) error {
@@ -381,5 +396,20 @@ func (cm *ClusterManager) ListMastersInCluster(ctx context.Context,
 	blog.Infof("reqID: %s, action: ListMastersInCluster, req %v, resp.Code %d, "+
 		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListMastersInCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// UpdateVirtualClusterQuota implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateVirtualClusterQuota(ctx context.Context,
+	req *cmproto.UpdateVirtualClusterQuotaReq, resp *cmproto.UpdateVirtualClusterQuotaResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewUpdateVirtualClusterQuotaAction(cm.model, cm.kubeOp)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateVirtualClusterQuota", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateVirtualClusterQuota, req %v, resp %v", reqID, req, resp)
 	return nil
 }

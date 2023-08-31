@@ -139,3 +139,14 @@ const (
 // 注意：该行为相当于强制更新，会覆盖集群中的该资源，另外需要注意的是 service 这类资源必须指定 resourceVersion，否则报错如下：
 // Service "service-xxx" is invalid: metadata.resourceVersion: Invalid value: "": must be specified for an update
 var RemoveResVersionKinds = []string{HPA}
+
+const (
+	// CurrentRevision 当前deployment 版本
+	CurrentRevision = "current_revision"
+	// RolloutRevision 要回滚的deployment 版本
+	RolloutRevision = "rollout_revision"
+	// Revision deployment 版本
+	Revision = "deployment.kubernetes.io/revision"
+	// ChangeCause deployment更新原因
+	ChangeCause = "deployment.kubernetes.io/change-cause"
+)

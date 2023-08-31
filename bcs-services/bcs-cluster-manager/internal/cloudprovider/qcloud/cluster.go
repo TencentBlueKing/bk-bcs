@@ -270,17 +270,71 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 	return updateClusterInfo(cloudID, opt)
 }
 
-func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	cli, err := api.NewTkeClient(&opt.CommonOption)
+func getCloudCluster(cloudID string, opt *cloudprovider.CommonOption) (*tke.Cluster, error) {
+	cli, err := api.NewTkeClient(opt)
 	if err != nil {
-		blog.Errorf("%s updateClusterInfo NewTkeClient failed: %v", cloudName, err)
+		blog.Errorf("%s getCloudCluster NewTkeClient failed: %v", cloudName, err)
 		return nil, err
 	}
 	cls, err := cli.GetTKECluster(cloudID)
 	if err != nil {
-		blog.Errorf("%s updateClusterInfo GetTKECluster failed: %v", cloudName, err)
+		blog.Errorf("%s getCloudCluster GetTKECluster failed: %v", cloudName, err)
 		return nil, err
 	}
+
+	return cls, err
+}
+
+// checkIfWhiteImageOsNames check cluster osName if it is white image osName
+func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
+	if opt == nil || opt.Cluster == nil || opt.Group == nil {
+		blog.Errorf("checkIfWhiteImageOsNames failed: %v", "option empty")
+		return false
+	}
+
+	if opt.Cluster.SystemID == "" {
+		blog.Errorf("checkIfWhiteImageOsNames[%s] failed: systemID empty", opt.Cluster.ClusterID)
+		return false
+	}
+
+	cls, err := getCloudCluster(opt.Cluster.SystemID, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("%s checkIfWhiteImageOsNames[%s] getCloudCluster failed: %v",
+			cloudName, opt.Cluster.ClusterID, err)
+		return false
+	}
+
+	osName := ""
+	if opt.Group.NodeTemplate != nil && opt.Group.NodeTemplate.NodeOS != "" {
+		osName = opt.Group.NodeTemplate.NodeOS
+		blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
+		return utils.StringInSlice(osName, utils.WhiteImageOsName)
+	}
+
+	if cls.ImageId != nil && *cls.ImageId != "" {
+		nodeMgr := &api.NodeManager{}
+		image, errGet := nodeMgr.GetImageInfoByImageID(*cls.ImageId, &opt.CommonOption)
+		if errGet != nil {
+			blog.Errorf("%s checkIfWhiteImageOsNames GetImageInfoByImageID failed: %v", cloudName, errGet)
+			osName = *cls.ClusterOs
+		} else {
+			osName = *image.OsName
+		}
+	} else {
+		osName = *cls.ClusterOs
+	}
+
+	blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
+	return utils.StringInSlice(osName, utils.WhiteImageOsName)
+}
+
+func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
+	cls, err := getCloudCluster(cloudID, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("%s updateClusterInfo getCloudCluster failed: %v", cloudName, err)
+		return nil, err
+	}
+
 	if opt.Cluster.ClusterAdvanceSettings != nil {
 		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = *cls.ContainerRuntime
 		opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = *cls.RuntimeVersion
