@@ -16,7 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"sort"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -29,6 +29,7 @@ import (
 	iauth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
@@ -332,14 +333,32 @@ func (la *ListProjectClusterAction) listProjectCluster() error {
 		return err
 	}
 
-	clusterIDList := make([]string, 0)
+	// cluster sort
+	var (
+		otherCluster   = make([]*cmproto.Cluster, 0)
+		runningCluster = make([]*cmproto.Cluster, 0)
+		clusterIDList  = make([]string, 0)
+	)
 	for i := range clusterList {
 		if clusterList[i].IsShared {
 			clusterList[i].IsShared = false
 		}
-		la.clusterList = append(la.clusterList, shieldClusterInfo(&clusterList[i]))
+
+		if clusterList[i].Status == common.StatusRunning {
+			runningCluster = append(runningCluster, shieldClusterInfo(&clusterList[i]))
+		} else {
+			otherCluster = append(otherCluster, shieldClusterInfo(&clusterList[i]))
+		}
 		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
 	}
+	if len(otherCluster) > 0 {
+		sort.Sort(utils.ClusterSlice(otherCluster))
+	}
+	if len(runningCluster) > 0 {
+		sort.Sort(utils.ClusterSlice(runningCluster))
+	}
+	la.clusterList = append(la.clusterList, otherCluster...)
+	la.clusterList = append(la.clusterList, runningCluster...)
 
 	// return cluster extraInfo
 	la.resp.ClusterExtraInfo = returnClusterExtraInfo(la.model, clusterList)
