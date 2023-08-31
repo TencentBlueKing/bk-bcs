@@ -90,7 +90,7 @@
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
         @page-change="getList">
-        <bk-table-column label="配置项版本" prop="template_revision_name"></bk-table-column>
+        <bk-table-column label="配置项版本">{{ props.config.name }}</bk-table-column>
         <bk-table-column label="引用此配置项的服务">
           <template #default="{ row }">
             <bk-link
@@ -135,6 +135,10 @@
     padding: 0 24px;
     height: calc(100vh - 180px);
     overflow: auto;
+  }
+  .link-btn {
+    font-size: 12px;
+    color: #3a84ff;
   }
   .action-btn {
     padding: 8px 24px;

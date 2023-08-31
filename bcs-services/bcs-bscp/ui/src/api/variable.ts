@@ -71,5 +71,29 @@ export const updateUnReleasedAppVariables = (biz_id: string, app_id: number, var
  * @returns
  */
 export const getReleasedAppVariables = (biz_id: string, app_id: number, release_id: number) => {
-  return http.get(`/config/biz/${biz_id}/apps/${app_id}/released_template_variable`, { params: { release_id } }).then(res => res.data)
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/template_variables`).then(res => res.data)
+  // @todo 待接口支持
+  // return http.get(`/config/biz/${biz_id}/apps/${app_id}/released_template_variable`, { params: { release_id } }).then(res => res.data)
+}
+
+/**
+ * 查询未命名版本服务中变量被配置项引用详情
+ * @param biz_id 业务ID
+ * @param app_id 应用ID
+ * @returns
+ */
+export const getUnReleasedAppVariablesCitedDetail = (biz_id: string, app_id: number) => {
+  return  http.get(`/config/biz/${biz_id}/apps/${app_id}/template_variables_references`).then(res => res.data)
+}
+
+/**
+ * 查询服务某个版本的变量被配置项引用详情
+ * @param biz_id 业务ID
+ * @param app_id 应用ID
+ * @param release_id 服务版本ID
+ * @returns
+ */
+export const getReleasedAppVariablesCitedDetail = (biz_id: string, app_id: number, release_id: number) => {
+  return  http.get(`/config/biz/${biz_id}/apps/${app_id}/template_variables_references`).then(res => res.data)
+  // @todo 待接口支持
 }

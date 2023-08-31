@@ -1,8 +1,8 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
   import VariablesTable from './variables-table.vue';
-  import { IVariableEditParams } from '../../../../../../../../../types/variable';
-  import { getReleasedAppVariables } from '../../../../../../../../api/variable'
+  import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
+  import { getReleasedAppVariables, getReleasedAppVariablesCitedDetail } from '../../../../../../../../api/variable'
 
   const props = defineProps<{
     bkBizId: string;
@@ -13,11 +13,17 @@
   const isSliderShow = ref(false)
   const loading = ref(false)
   const variableList = ref<IVariableEditParams[]>([])
+  const citedList = ref<IVariableCitedByConfigDetailItem[]>([])
+
 
   const getVariableList = async() => {
     loading.value = true
-    const res = await getReleasedAppVariables(props.bkBizId, props.appId, props.verisionId)
-    variableList.value = res.details
+    const [variableListRes, citedListRes] = await Promise.all([
+      getReleasedAppVariables(props.bkBizId, props.appId, props.verisionId),
+      getReleasedAppVariablesCitedDetail(props.bkBizId, props.appId, props.verisionId)
+    ])
+    variableList.value = variableListRes.details
+    citedList.value = citedListRes.details
     loading.value = false
   }
 
@@ -41,6 +47,7 @@
     <VariablesTable
       class="variables-table-content"
       :list="variableList"
+      :cited-list="citedList"
       :editable="false"
       :show-cited="true" />
     <section class="action-btns">

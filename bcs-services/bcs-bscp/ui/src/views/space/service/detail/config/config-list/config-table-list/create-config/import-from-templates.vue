@@ -128,7 +128,7 @@
       <div class="selected-result-wrapper">
         <h4>结果预览</h4>
         <p class="tips-text">已选择导入 <span class="num">{{ importedPkgs.length + selectedPkgs.length }}</span> 个模板套餐，可按需要切换模板版本</p>
-        <div class="packages-list">
+        <div v-if="!pkgListLoading" class="packages-list">
           <template v-if="importedPkgs.length + selectedPkgs.length > 0">
             <PkgTemplatesTable
               v-for="pkg in importedPkgs"
