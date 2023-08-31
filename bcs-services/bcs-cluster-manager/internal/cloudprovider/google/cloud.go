@@ -63,7 +63,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	}
 	cls.SystemID = cluster.Name
 
-	cls.VpcID = cluster.NetworkConfig.Subnetwork
+	cls.VpcID = cluster.Subnetwork
 	// 记录gke集群发布类型
 	if cluster.ReleaseChannel != nil {
 		if cls.ExtraInfo == nil {

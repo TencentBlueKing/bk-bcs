@@ -923,6 +923,16 @@ service ClusterManager {
       summary : "查询Cloud 账号列表, 主要用于权限资源查询"
     };
   }
+  rpc VerifyCloudAccount(VerifyCloudAccountRequest) returns (VerifyCloudAccountResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/clouds/{cloudID}/accounts/available"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "检查云账号可用性"
+      summary : "检查云账号可用性"
+    };
+  }
 
   // Cloud Resource management
   rpc GetCloudRegions(GetCloudRegionsRequest) returns (GetCloudRegionsResponse) {
@@ -2242,6 +2252,46 @@ message ListCloudAccountRequest {
   string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "operator",
     description: "operator云账号权限列表"
+  }];
+}
+
+message VerifyCloudAccountRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "VerifyCloudAccountRequest"
+      description : "检查cloud account可用性"
+      required : [
+        "cloudID", "account"
+      ]
+    }
+  };
+
+  string cloudID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cloudID",
+    description: "cloud云类型"
+  }, (validate.rules).string = {min_len : 2, max_len : 1024, pattern : "^[0-9a-zA-Z-]+$"}];
+  string desc = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "desc",
+    description: "cloud账号描述信息"
+  }];
+  Account account = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "account",
+    description: "cloud云账号信息,不同cloud进行有效性及兼容处理"
+  }];
+}
+
+message VerifyCloudAccountResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result",
+    description : "返回结果"
   }];
 }
 

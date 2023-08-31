@@ -14,8 +14,11 @@
 package google
 
 import (
+	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -85,6 +88,53 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 	return nil
 }
 
+// ServiceAccountSecret for gcp service account secret
+type ServiceAccountSecret struct {
+	accountType         string
+	projectID           string
+	privateKeyID        string
+	privateDey          string
+	clientEmail         string
+	clientID            string
+	authURI             string
+	tokenURI            string
+	authProviderCertURL string
+	clientCertURL       string
+}
+
+// CreateCloudAccountValidate create cloudAccount validation
+func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
+	// call cloud interface to check account
+	if c == nil || account == nil {
+		return fmt.Errorf("%s CreateCloudAccountValidate request is empty", cloudName)
+	}
+
+	if len(account.ServiceAccountSecret) == 0 {
+		return fmt.Errorf("%s CreateCloudAccountValidate request lost valid crendential info", cloudName)
+	}
+
+	sas := &ServiceAccountSecret{}
+	err := json.Unmarshal([]byte(account.ServiceAccountSecret), sas)
+	if err != nil {
+		return fmt.Errorf("%s CreateCloudAccountValidate decode service account secret failed, %v",
+			cloudName, err)
+	}
+	account.GkeProjectID = sas.projectID
+
+	gceCli, err := api.NewComputeServiceClient(&cloudprovider.CommonOption{Account: account})
+	if err != nil {
+		return err
+	}
+
+	// 测试云凭证可用性
+	_, err = gceCli.ListRegions(context.Background())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ImportCloudAccountValidate create cloudAccount account validation
 func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error {
 	// call cloud interface to check account
@@ -96,9 +146,17 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid crendential info", cloudName)
 	}
 
-	if len(account.GkeProjectID) == 0 {
-		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid gkeProjectID info", cloudName)
+	//if len(account.GkeProjectID) == 0 {
+	//	return fmt.Errorf("%s ImportCloudAccountValidate request lost valid gkeProjectID info", cloudName)
+	//}
+
+	sas := &ServiceAccountSecret{}
+	err := json.Unmarshal([]byte(account.ServiceAccountSecret), sas)
+	if err != nil {
+		return fmt.Errorf("%s CreateCloudAccountValidate decode service account secret failed, %v",
+			cloudName, err)
 	}
+	account.GkeProjectID = sas.projectID
 
 	return nil
 }

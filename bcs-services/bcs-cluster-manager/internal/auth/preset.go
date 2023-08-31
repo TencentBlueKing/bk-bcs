@@ -211,6 +211,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DeleteCloudAccount":  cloudaccount.CanManageCloudAccountOperation,
 	"ClusterManager.ListCloudAccount":    cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.MigrateCloudAccount": "",
+	"ClusterManager.VerifyCloudAccount":  "",
 
 	// cloud component paras
 	"ClusterManager.CreateCloudModuleFlag": "",

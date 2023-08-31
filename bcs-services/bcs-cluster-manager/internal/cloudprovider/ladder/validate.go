@@ -34,6 +34,11 @@ func init() {
 type CloudValidate struct {
 }
 
+// CreateCloudAccountValidate create cloud account validate
+func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
 // ImportClusterValidate check importCluster operation
 func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *cloudprovider.CommonOption) error {
 	// yunti cloud not import cluster

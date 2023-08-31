@@ -18,6 +18,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -155,6 +157,21 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	nodes, err := kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("list nodes failed, %s", err.Error())
+	}
+
+	// get container runtime info here due to GKE API is not support
+	if len(nodes.Items) > 0 {
+		crv := strings.Split(nodes.Items[0].Status.NodeInfo.ContainerRuntimeVersion, "://")
+		if len(crv) == 2 {
+			data.Cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
+				ContainerRuntime: crv[0],
+				RuntimeVersion:   crv[1],
+			}
+			err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), data.Cluster)
+			if err != nil {
+				blog.Errorf("importClusterInstances update cluster[%s] failed: %v", data.Cluster.ClusterName, err)
+			}
+		}
 	}
 
 	err = importClusterNodesToCM(context.Background(), gceCli, nodes.Items, data.Cluster.ClusterID)

@@ -374,7 +374,8 @@ func generateNodeGroupFromIt(group *proto.NodeGroup, it *compute.InstanceTemplat
 			if group.AutoScaling == nil {
 				group.AutoScaling = &proto.AutoScalingGroup{}
 			}
-			group.AutoScaling.VpcID = prop.NetworkInterfaces[0].Network
+			networkInfo := strings.Split(prop.NetworkInterfaces[0].Subnetwork, "/")
+			group.AutoScaling.VpcID = networkInfo[len(networkInfo)-1]
 			group.AutoScaling.SubnetIDs = append(group.AutoScaling.SubnetIDs, prop.NetworkInterfaces[0].Subnetwork)
 		}
 		if prop.Disks != nil {
