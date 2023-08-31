@@ -194,6 +194,7 @@
   .template-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
     th,td {
       line-height: 20px;
       font-size: 12px;
