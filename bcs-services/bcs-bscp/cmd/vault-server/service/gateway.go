@@ -14,6 +14,7 @@ package service
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -22,6 +23,7 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest"
+	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 )
@@ -50,6 +52,13 @@ func (g *gateway) handler() http.Handler {
 	r.Get("/-/healthy", g.HealthyHandler)
 	r.Get("/-/ready", g.ReadyHandler)
 	r.Get("/healthz", g.Healthz)
+
+	// for test
+	vaultAddr := os.Getenv("VAULT_ADDR")
+	if vaultAddr == "" {
+		vaultAddr = "http://bk-bscp-vault-barrier:8200"
+	}
+	r.Mount("/vault", http.StripPrefix("/vault", handler.ReverseProxyHandler("vault", vaultAddr)))
 
 	return r
 }
