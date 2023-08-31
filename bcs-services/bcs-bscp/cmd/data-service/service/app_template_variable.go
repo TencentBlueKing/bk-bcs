@@ -247,6 +247,8 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAp
 		if v, ok := bizVarMap[name]; ok {
 			finalVar = append(finalVar, pbtv.PbTemplateVariableSpec(v))
 		}
+		// for unset variable, just return its name, other fields keep empty
+		finalVar = append(finalVar, &pbtv.TemplateVariableSpec{Name: name})
 	}
 
 	return &pbds.ListAppTemplateVariablesResp{
