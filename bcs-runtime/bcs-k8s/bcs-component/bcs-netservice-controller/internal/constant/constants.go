@@ -32,6 +32,9 @@ const (
 	// BCSNetIPClaimExpiredStatus for BCSNetIPClaim Expired status
 	BCSNetIPClaimExpiredStatus = "Expired"
 
+	// PodLabelKeyForPool pod label key for pool
+	PodLabelKeyForPool = "pool"
+
 	// PodAnnotationKeyForIPClaim pod annotation key for IP claim
 	PodAnnotationKeyForIPClaim = "netservicecontroller.bkbcs.tencent.com/ipclaim"
 

@@ -2,9 +2,16 @@ module github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservic
 
 go 1.18
 
+replace (
+	github.com/containernetworking/cni => github.com/containernetworking/cni v0.6.0
+	github.com/containernetworking/plugins => github.com/containernetworking/plugins v0.6.0
+)
+
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230808080908-7c46cf1bd956
+	github.com/containernetworking/cni v0.0.0-00010101000000-000000000000
 	github.com/emicklei/go-restful v2.15.0+incompatible
+	github.com/go-resty/resty/v2 v2.7.0
 	k8s.io/api v0.24.0
 	k8s.io/apimachinery v0.24.0
 	k8s.io/client-go v0.24.0
