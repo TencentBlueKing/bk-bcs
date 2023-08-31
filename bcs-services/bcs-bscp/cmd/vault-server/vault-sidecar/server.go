@@ -40,7 +40,7 @@ func serverCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&bindAddr, "bind-addr", "0.0.0.0", "the IP address on which to listen")
-	cmd.Flags().IntVar(&port, "port", 8201, "listen http/metrics port")
+	cmd.Flags().IntVar(&port, "port", 8202, "listen http/metrics port")
 	cmd.Flags().StringVar(&confPath, "config", "", "config path")
 	return cmd
 }
