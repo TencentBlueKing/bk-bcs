@@ -18,6 +18,7 @@ export interface IVariableItem {
   };
 }
 
+// 服务中使用的变量详情
 export interface IVariableEditParams {
   name: string;
   type: string;
