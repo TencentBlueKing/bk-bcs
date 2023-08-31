@@ -56,7 +56,7 @@
       console.error(e)
     } finally {
       pending.value = false
-    }    
+    }
   }
 
   const handleClose = () => {
@@ -126,7 +126,7 @@
   .script-content-wrapper {
     min-width: 520px;
   }
-  
+
   .language-tabs {
     display: flex;
     align-items: center;

@@ -5399,7 +5399,7 @@ func (m *InstanceTemplateConfig) GetIsMonitorService() bool {
 	return false
 }
 
-//LaunchConfigure template for scaling node
+// LaunchConfigure template for scaling node
 type LaunchConfiguration struct {
 	LaunchConfigurationID string              `protobuf:"bytes,1,opt,name=launchConfigurationID,proto3" json:"launchConfigurationID,omitempty"`
 	LaunchConfigureName   string              `protobuf:"bytes,2,opt,name=launchConfigureName,proto3" json:"launchConfigureName,omitempty"`

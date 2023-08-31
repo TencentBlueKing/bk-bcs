@@ -130,6 +130,10 @@ func (r releasedConfigItem) TableName() string { return r.releasedConfigItemDo.T
 
 func (r releasedConfigItem) Alias() string { return r.releasedConfigItemDo.Alias() }
 
+func (r releasedConfigItem) Columns(cols ...field.Expr) gen.Columns {
+	return r.releasedConfigItemDo.Columns(cols...)
+}
+
 func (r *releasedConfigItem) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := r.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -279,10 +283,6 @@ func (r releasedConfigItemDo) Select(conds ...field.Expr) IReleasedConfigItemDo 
 
 func (r releasedConfigItemDo) Where(conds ...gen.Condition) IReleasedConfigItemDo {
 	return r.withDO(r.DO.Where(conds...))
-}
-
-func (r releasedConfigItemDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IReleasedConfigItemDo {
-	return r.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (r releasedConfigItemDo) Order(conds ...field.Expr) IReleasedConfigItemDo {

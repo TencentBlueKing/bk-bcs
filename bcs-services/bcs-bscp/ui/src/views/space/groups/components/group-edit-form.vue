@@ -31,7 +31,7 @@
   const rules = {
     name: [
       {
-        validator: (value: string) => value.length < 128,
+        validator: (value: string) => value.length <= 128,
         message: '最大长度128个字符'
       },
       {
@@ -114,7 +114,7 @@
 
   const validate = () => {
     const isRulesValid = validateRules()
-    
+
     return formRef.value.validate().then(() => {
       return isRulesValid
     })
@@ -158,7 +158,7 @@
         <bk-option v-for="service in serviceList" :key="service.id" :label="service.spec.name" :value="service.id"></bk-option>
       </bk-select>
     </bk-form-item>
-    <bk-form-item class="radio-group-form" label="分组规则" required property="rules"> 
+    <bk-form-item class="radio-group-form" label="分组规则" required property="rules">
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
         <bk-input v-model="rule.key" style="width: 176px;" placeholder="" @change="change"></bk-input>
         <bk-select :model-value="rule.op" style="width: 82px;" :clearable="false" @change="handleLogicChange(index, $event)">

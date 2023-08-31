@@ -15,9 +15,9 @@ auth().then(() => {
   const app = createApp(App)
   app.directive('bkTooltips', bkTooltips)
   app.directive('bkEllipsis', bkEllipsis)
-  app.directive('bkOverflowTitle', overflowTitle)
+  app.directive('overflowTitle', overflowTitle)
   app.directive('cursor', cursor)
-  
+
   app
   .use(pinia)
   .use(i18n)

@@ -70,6 +70,38 @@ const routes = [
         component: () => import('./views/space/groups/index.vue')
       },
       {
+        path: 'variables',
+        name: 'variables-management',
+        meta: {
+          navModule: 'variables'
+        },
+        component: () => import('./views/space/variables/index.vue')
+      },
+      {
+        path: 'templates',
+        meta: {
+          navModule: 'templates'
+        },
+        children: [
+          {
+            path: 'list/:templateSpaceId?/:packageId?',
+            name: 'templates-list',
+            meta: {
+              navModule: 'templates'
+            },
+            component: () => import('./views/space/templates/list/index.vue'),
+          },
+          {
+            path: ':templateSpaceId/:packageId/version_manage/:templateId',
+            name: 'template-version-manange',
+            meta: {
+              navModule: 'templates'
+            },
+            component: () => import('./views/space/templates/version-manage/index.vue'),
+          }
+        ]
+      },
+      {
         path: 'scripts',
         name: 'scripts-management',
         meta: {

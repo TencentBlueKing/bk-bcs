@@ -16,36 +16,42 @@ import (
 )
 
 var (
-	Q                  = new(Query)
-	App                *app
-	ArchivedApp        *archivedApp
-	Audit              *audit
-	Commit             *commit
-	ConfigItem         *configItem
-	Content            *content
-	Credential         *credential
-	CredentialScope    *credentialScope
-	Event              *event
-	Group              *group
-	GroupAppBind       *groupAppBind
-	Hook               *hook
-	HookRevision       *hookRevision
-	IDGenerator        *iDGenerator
-	Release            *release
-	ReleasedConfigItem *releasedConfigItem
-	ReleasedGroup      *releasedGroup
-	ReleasedHook       *releasedHook
-	ResourceLock       *resourceLock
-	Strategy           *strategy
-	Template           *template
-	TemplateRelease    *templateRelease
-	TemplateSet        *templateSet
-	TemplateSpace      *templateSpace
+	Q                          = new(Query)
+	App                        *app
+	AppTemplateBinding         *appTemplateBinding
+	AppTemplateVariable        *appTemplateVariable
+	ArchivedApp                *archivedApp
+	Audit                      *audit
+	Commit                     *commit
+	ConfigItem                 *configItem
+	Content                    *content
+	Credential                 *credential
+	CredentialScope            *credentialScope
+	Event                      *event
+	Group                      *group
+	GroupAppBind               *groupAppBind
+	Hook                       *hook
+	HookRevision               *hookRevision
+	IDGenerator                *iDGenerator
+	Release                    *release
+	ReleasedAppTemplateBinding *releasedAppTemplateBinding
+	ReleasedConfigItem         *releasedConfigItem
+	ReleasedGroup              *releasedGroup
+	ReleasedHook               *releasedHook
+	ResourceLock               *resourceLock
+	Strategy                   *strategy
+	Template                   *template
+	TemplateRevision           *templateRevision
+	TemplateSet                *templateSet
+	TemplateSpace              *templateSpace
+	TemplateVariable           *templateVariable
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	App = &Q.App
+	AppTemplateBinding = &Q.AppTemplateBinding
+	AppTemplateVariable = &Q.AppTemplateVariable
 	ArchivedApp = &Q.ArchivedApp
 	Audit = &Q.Audit
 	Commit = &Q.Commit
@@ -60,105 +66,119 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	HookRevision = &Q.HookRevision
 	IDGenerator = &Q.IDGenerator
 	Release = &Q.Release
+	ReleasedAppTemplateBinding = &Q.ReleasedAppTemplateBinding
 	ReleasedConfigItem = &Q.ReleasedConfigItem
 	ReleasedGroup = &Q.ReleasedGroup
 	ReleasedHook = &Q.ReleasedHook
 	ResourceLock = &Q.ResourceLock
 	Strategy = &Q.Strategy
 	Template = &Q.Template
-	TemplateRelease = &Q.TemplateRelease
+	TemplateRevision = &Q.TemplateRevision
 	TemplateSet = &Q.TemplateSet
 	TemplateSpace = &Q.TemplateSpace
+	TemplateVariable = &Q.TemplateVariable
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:                 db,
-		App:                newApp(db, opts...),
-		ArchivedApp:        newArchivedApp(db, opts...),
-		Audit:              newAudit(db, opts...),
-		Commit:             newCommit(db, opts...),
-		ConfigItem:         newConfigItem(db, opts...),
-		Content:            newContent(db, opts...),
-		Credential:         newCredential(db, opts...),
-		CredentialScope:    newCredentialScope(db, opts...),
-		Event:              newEvent(db, opts...),
-		Group:              newGroup(db, opts...),
-		GroupAppBind:       newGroupAppBind(db, opts...),
-		Hook:               newHook(db, opts...),
-		HookRevision:       newHookRevision(db, opts...),
-		IDGenerator:        newIDGenerator(db, opts...),
-		Release:            newRelease(db, opts...),
-		ReleasedConfigItem: newReleasedConfigItem(db, opts...),
-		ReleasedGroup:      newReleasedGroup(db, opts...),
-		ReleasedHook:       newReleasedHook(db, opts...),
-		ResourceLock:       newResourceLock(db, opts...),
-		Strategy:           newStrategy(db, opts...),
-		Template:           newTemplate(db, opts...),
-		TemplateRelease:    newTemplateRelease(db, opts...),
-		TemplateSet:        newTemplateSet(db, opts...),
-		TemplateSpace:      newTemplateSpace(db, opts...),
+		db:                         db,
+		App:                        newApp(db, opts...),
+		AppTemplateBinding:         newAppTemplateBinding(db, opts...),
+		AppTemplateVariable:        newAppTemplateVariable(db, opts...),
+		ArchivedApp:                newArchivedApp(db, opts...),
+		Audit:                      newAudit(db, opts...),
+		Commit:                     newCommit(db, opts...),
+		ConfigItem:                 newConfigItem(db, opts...),
+		Content:                    newContent(db, opts...),
+		Credential:                 newCredential(db, opts...),
+		CredentialScope:            newCredentialScope(db, opts...),
+		Event:                      newEvent(db, opts...),
+		Group:                      newGroup(db, opts...),
+		GroupAppBind:               newGroupAppBind(db, opts...),
+		Hook:                       newHook(db, opts...),
+		HookRevision:               newHookRevision(db, opts...),
+		IDGenerator:                newIDGenerator(db, opts...),
+		Release:                    newRelease(db, opts...),
+		ReleasedAppTemplateBinding: newReleasedAppTemplateBinding(db, opts...),
+		ReleasedConfigItem:         newReleasedConfigItem(db, opts...),
+		ReleasedGroup:              newReleasedGroup(db, opts...),
+		ReleasedHook:               newReleasedHook(db, opts...),
+		ResourceLock:               newResourceLock(db, opts...),
+		Strategy:                   newStrategy(db, opts...),
+		Template:                   newTemplate(db, opts...),
+		TemplateRevision:           newTemplateRevision(db, opts...),
+		TemplateSet:                newTemplateSet(db, opts...),
+		TemplateSpace:              newTemplateSpace(db, opts...),
+		TemplateVariable:           newTemplateVariable(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	App                app
-	ArchivedApp        archivedApp
-	Audit              audit
-	Commit             commit
-	ConfigItem         configItem
-	Content            content
-	Credential         credential
-	CredentialScope    credentialScope
-	Event              event
-	Group              group
-	GroupAppBind       groupAppBind
-	Hook               hook
-	HookRevision       hookRevision
-	IDGenerator        iDGenerator
-	Release            release
-	ReleasedConfigItem releasedConfigItem
-	ReleasedGroup      releasedGroup
-	ReleasedHook       releasedHook
-	ResourceLock       resourceLock
-	Strategy           strategy
-	Template           template
-	TemplateRelease    templateRelease
-	TemplateSet        templateSet
-	TemplateSpace      templateSpace
+	App                        app
+	AppTemplateBinding         appTemplateBinding
+	AppTemplateVariable        appTemplateVariable
+	ArchivedApp                archivedApp
+	Audit                      audit
+	Commit                     commit
+	ConfigItem                 configItem
+	Content                    content
+	Credential                 credential
+	CredentialScope            credentialScope
+	Event                      event
+	Group                      group
+	GroupAppBind               groupAppBind
+	Hook                       hook
+	HookRevision               hookRevision
+	IDGenerator                iDGenerator
+	Release                    release
+	ReleasedAppTemplateBinding releasedAppTemplateBinding
+	ReleasedConfigItem         releasedConfigItem
+	ReleasedGroup              releasedGroup
+	ReleasedHook               releasedHook
+	ResourceLock               resourceLock
+	Strategy                   strategy
+	Template                   template
+	TemplateRevision           templateRevision
+	TemplateSet                templateSet
+	TemplateSpace              templateSpace
+	TemplateVariable           templateVariable
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:                 db,
-		App:                q.App.clone(db),
-		ArchivedApp:        q.ArchivedApp.clone(db),
-		Audit:              q.Audit.clone(db),
-		Commit:             q.Commit.clone(db),
-		ConfigItem:         q.ConfigItem.clone(db),
-		Content:            q.Content.clone(db),
-		Credential:         q.Credential.clone(db),
-		CredentialScope:    q.CredentialScope.clone(db),
-		Event:              q.Event.clone(db),
-		Group:              q.Group.clone(db),
-		GroupAppBind:       q.GroupAppBind.clone(db),
-		Hook:               q.Hook.clone(db),
-		HookRevision:       q.HookRevision.clone(db),
-		IDGenerator:        q.IDGenerator.clone(db),
-		Release:            q.Release.clone(db),
-		ReleasedConfigItem: q.ReleasedConfigItem.clone(db),
-		ReleasedGroup:      q.ReleasedGroup.clone(db),
-		ReleasedHook:       q.ReleasedHook.clone(db),
-		ResourceLock:       q.ResourceLock.clone(db),
-		Strategy:           q.Strategy.clone(db),
-		Template:           q.Template.clone(db),
-		TemplateRelease:    q.TemplateRelease.clone(db),
-		TemplateSet:        q.TemplateSet.clone(db),
-		TemplateSpace:      q.TemplateSpace.clone(db),
+		db:                         db,
+		App:                        q.App.clone(db),
+		AppTemplateBinding:         q.AppTemplateBinding.clone(db),
+		AppTemplateVariable:        q.AppTemplateVariable.clone(db),
+		ArchivedApp:                q.ArchivedApp.clone(db),
+		Audit:                      q.Audit.clone(db),
+		Commit:                     q.Commit.clone(db),
+		ConfigItem:                 q.ConfigItem.clone(db),
+		Content:                    q.Content.clone(db),
+		Credential:                 q.Credential.clone(db),
+		CredentialScope:            q.CredentialScope.clone(db),
+		Event:                      q.Event.clone(db),
+		Group:                      q.Group.clone(db),
+		GroupAppBind:               q.GroupAppBind.clone(db),
+		Hook:                       q.Hook.clone(db),
+		HookRevision:               q.HookRevision.clone(db),
+		IDGenerator:                q.IDGenerator.clone(db),
+		Release:                    q.Release.clone(db),
+		ReleasedAppTemplateBinding: q.ReleasedAppTemplateBinding.clone(db),
+		ReleasedConfigItem:         q.ReleasedConfigItem.clone(db),
+		ReleasedGroup:              q.ReleasedGroup.clone(db),
+		ReleasedHook:               q.ReleasedHook.clone(db),
+		ResourceLock:               q.ResourceLock.clone(db),
+		Strategy:                   q.Strategy.clone(db),
+		Template:                   q.Template.clone(db),
+		TemplateRevision:           q.TemplateRevision.clone(db),
+		TemplateSet:                q.TemplateSet.clone(db),
+		TemplateSpace:              q.TemplateSpace.clone(db),
+		TemplateVariable:           q.TemplateVariable.clone(db),
 	}
 }
 
@@ -172,87 +192,99 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:                 db,
-		App:                q.App.replaceDB(db),
-		ArchivedApp:        q.ArchivedApp.replaceDB(db),
-		Audit:              q.Audit.replaceDB(db),
-		Commit:             q.Commit.replaceDB(db),
-		ConfigItem:         q.ConfigItem.replaceDB(db),
-		Content:            q.Content.replaceDB(db),
-		Credential:         q.Credential.replaceDB(db),
-		CredentialScope:    q.CredentialScope.replaceDB(db),
-		Event:              q.Event.replaceDB(db),
-		Group:              q.Group.replaceDB(db),
-		GroupAppBind:       q.GroupAppBind.replaceDB(db),
-		Hook:               q.Hook.replaceDB(db),
-		HookRevision:       q.HookRevision.replaceDB(db),
-		IDGenerator:        q.IDGenerator.replaceDB(db),
-		Release:            q.Release.replaceDB(db),
-		ReleasedConfigItem: q.ReleasedConfigItem.replaceDB(db),
-		ReleasedGroup:      q.ReleasedGroup.replaceDB(db),
-		ReleasedHook:       q.ReleasedHook.replaceDB(db),
-		ResourceLock:       q.ResourceLock.replaceDB(db),
-		Strategy:           q.Strategy.replaceDB(db),
-		Template:           q.Template.replaceDB(db),
-		TemplateRelease:    q.TemplateRelease.replaceDB(db),
-		TemplateSet:        q.TemplateSet.replaceDB(db),
-		TemplateSpace:      q.TemplateSpace.replaceDB(db),
+		db:                         db,
+		App:                        q.App.replaceDB(db),
+		AppTemplateBinding:         q.AppTemplateBinding.replaceDB(db),
+		AppTemplateVariable:        q.AppTemplateVariable.replaceDB(db),
+		ArchivedApp:                q.ArchivedApp.replaceDB(db),
+		Audit:                      q.Audit.replaceDB(db),
+		Commit:                     q.Commit.replaceDB(db),
+		ConfigItem:                 q.ConfigItem.replaceDB(db),
+		Content:                    q.Content.replaceDB(db),
+		Credential:                 q.Credential.replaceDB(db),
+		CredentialScope:            q.CredentialScope.replaceDB(db),
+		Event:                      q.Event.replaceDB(db),
+		Group:                      q.Group.replaceDB(db),
+		GroupAppBind:               q.GroupAppBind.replaceDB(db),
+		Hook:                       q.Hook.replaceDB(db),
+		HookRevision:               q.HookRevision.replaceDB(db),
+		IDGenerator:                q.IDGenerator.replaceDB(db),
+		Release:                    q.Release.replaceDB(db),
+		ReleasedAppTemplateBinding: q.ReleasedAppTemplateBinding.replaceDB(db),
+		ReleasedConfigItem:         q.ReleasedConfigItem.replaceDB(db),
+		ReleasedGroup:              q.ReleasedGroup.replaceDB(db),
+		ReleasedHook:               q.ReleasedHook.replaceDB(db),
+		ResourceLock:               q.ResourceLock.replaceDB(db),
+		Strategy:                   q.Strategy.replaceDB(db),
+		Template:                   q.Template.replaceDB(db),
+		TemplateRevision:           q.TemplateRevision.replaceDB(db),
+		TemplateSet:                q.TemplateSet.replaceDB(db),
+		TemplateSpace:              q.TemplateSpace.replaceDB(db),
+		TemplateVariable:           q.TemplateVariable.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	App                IAppDo
-	ArchivedApp        IArchivedAppDo
-	Audit              IAuditDo
-	Commit             ICommitDo
-	ConfigItem         IConfigItemDo
-	Content            IContentDo
-	Credential         ICredentialDo
-	CredentialScope    ICredentialScopeDo
-	Event              IEventDo
-	Group              IGroupDo
-	GroupAppBind       IGroupAppBindDo
-	Hook               IHookDo
-	HookRevision       IHookRevisionDo
-	IDGenerator        IIDGeneratorDo
-	Release            IReleaseDo
-	ReleasedConfigItem IReleasedConfigItemDo
-	ReleasedGroup      IReleasedGroupDo
-	ReleasedHook       IReleasedHookDo
-	ResourceLock       IResourceLockDo
-	Strategy           IStrategyDo
-	Template           ITemplateDo
-	TemplateRelease    ITemplateReleaseDo
-	TemplateSet        ITemplateSetDo
-	TemplateSpace      ITemplateSpaceDo
+	App                        IAppDo
+	AppTemplateBinding         IAppTemplateBindingDo
+	AppTemplateVariable        IAppTemplateVariableDo
+	ArchivedApp                IArchivedAppDo
+	Audit                      IAuditDo
+	Commit                     ICommitDo
+	ConfigItem                 IConfigItemDo
+	Content                    IContentDo
+	Credential                 ICredentialDo
+	CredentialScope            ICredentialScopeDo
+	Event                      IEventDo
+	Group                      IGroupDo
+	GroupAppBind               IGroupAppBindDo
+	Hook                       IHookDo
+	HookRevision               IHookRevisionDo
+	IDGenerator                IIDGeneratorDo
+	Release                    IReleaseDo
+	ReleasedAppTemplateBinding IReleasedAppTemplateBindingDo
+	ReleasedConfigItem         IReleasedConfigItemDo
+	ReleasedGroup              IReleasedGroupDo
+	ReleasedHook               IReleasedHookDo
+	ResourceLock               IResourceLockDo
+	Strategy                   IStrategyDo
+	Template                   ITemplateDo
+	TemplateRevision           ITemplateRevisionDo
+	TemplateSet                ITemplateSetDo
+	TemplateSpace              ITemplateSpaceDo
+	TemplateVariable           ITemplateVariableDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		App:                q.App.WithContext(ctx),
-		ArchivedApp:        q.ArchivedApp.WithContext(ctx),
-		Audit:              q.Audit.WithContext(ctx),
-		Commit:             q.Commit.WithContext(ctx),
-		ConfigItem:         q.ConfigItem.WithContext(ctx),
-		Content:            q.Content.WithContext(ctx),
-		Credential:         q.Credential.WithContext(ctx),
-		CredentialScope:    q.CredentialScope.WithContext(ctx),
-		Event:              q.Event.WithContext(ctx),
-		Group:              q.Group.WithContext(ctx),
-		GroupAppBind:       q.GroupAppBind.WithContext(ctx),
-		Hook:               q.Hook.WithContext(ctx),
-		HookRevision:       q.HookRevision.WithContext(ctx),
-		IDGenerator:        q.IDGenerator.WithContext(ctx),
-		Release:            q.Release.WithContext(ctx),
-		ReleasedConfigItem: q.ReleasedConfigItem.WithContext(ctx),
-		ReleasedGroup:      q.ReleasedGroup.WithContext(ctx),
-		ReleasedHook:       q.ReleasedHook.WithContext(ctx),
-		ResourceLock:       q.ResourceLock.WithContext(ctx),
-		Strategy:           q.Strategy.WithContext(ctx),
-		Template:           q.Template.WithContext(ctx),
-		TemplateRelease:    q.TemplateRelease.WithContext(ctx),
-		TemplateSet:        q.TemplateSet.WithContext(ctx),
-		TemplateSpace:      q.TemplateSpace.WithContext(ctx),
+		App:                        q.App.WithContext(ctx),
+		AppTemplateBinding:         q.AppTemplateBinding.WithContext(ctx),
+		AppTemplateVariable:        q.AppTemplateVariable.WithContext(ctx),
+		ArchivedApp:                q.ArchivedApp.WithContext(ctx),
+		Audit:                      q.Audit.WithContext(ctx),
+		Commit:                     q.Commit.WithContext(ctx),
+		ConfigItem:                 q.ConfigItem.WithContext(ctx),
+		Content:                    q.Content.WithContext(ctx),
+		Credential:                 q.Credential.WithContext(ctx),
+		CredentialScope:            q.CredentialScope.WithContext(ctx),
+		Event:                      q.Event.WithContext(ctx),
+		Group:                      q.Group.WithContext(ctx),
+		GroupAppBind:               q.GroupAppBind.WithContext(ctx),
+		Hook:                       q.Hook.WithContext(ctx),
+		HookRevision:               q.HookRevision.WithContext(ctx),
+		IDGenerator:                q.IDGenerator.WithContext(ctx),
+		Release:                    q.Release.WithContext(ctx),
+		ReleasedAppTemplateBinding: q.ReleasedAppTemplateBinding.WithContext(ctx),
+		ReleasedConfigItem:         q.ReleasedConfigItem.WithContext(ctx),
+		ReleasedGroup:              q.ReleasedGroup.WithContext(ctx),
+		ReleasedHook:               q.ReleasedHook.WithContext(ctx),
+		ResourceLock:               q.ResourceLock.WithContext(ctx),
+		Strategy:                   q.Strategy.WithContext(ctx),
+		Template:                   q.Template.WithContext(ctx),
+		TemplateRevision:           q.TemplateRevision.WithContext(ctx),
+		TemplateSet:                q.TemplateSet.WithContext(ctx),
+		TemplateSpace:              q.TemplateSpace.WithContext(ctx),
+		TemplateVariable:           q.TemplateVariable.WithContext(ctx),
 	}
 }
 

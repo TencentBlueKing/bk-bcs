@@ -39,6 +39,8 @@ type ConfigItem interface {
 	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItems []*table.ConfigItem) error
 	// Get configItem by id
 	Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem, error)
+	// GetByUniqueKey get config item by unique key
+	GetByUniqueKey(kit *kit.Kit, bizID, appID uint32, name, path string) (*table.ConfigItem, error)
 	// SearchAll search all configItem with searchKey.
 	SearchAll(kit *kit.Kit, searchKey string, appID, bizID uint32) ([]*table.ConfigItem, error)
 	// ListAllByAppID list all configItem by appID
@@ -201,6 +203,21 @@ func (dao *configItemDao) Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem
 
 	m := dao.genQ.ConfigItem
 	return dao.genQ.ConfigItem.WithContext(kit.Ctx).Where(m.ID.Eq(id), m.BizID.Eq(bizID)).Take()
+}
+
+// GetByUniqueKey get config item by unique key
+func (dao *configItemDao) GetByUniqueKey(kit *kit.Kit, bizID, appID uint32, name, path string) (
+	*table.ConfigItem, error) {
+	m := dao.genQ.ConfigItem
+	q := dao.genQ.ConfigItem.WithContext(kit.Ctx)
+
+	configItem, err := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.Name.Eq(name),
+		m.Path.Eq(path)).Take()
+	if err != nil {
+		return nil, fmt.Errorf("get config item failed, err: %v", err)
+	}
+
+	return configItem, nil
 }
 
 // SearchAll search all configItem by searchKey

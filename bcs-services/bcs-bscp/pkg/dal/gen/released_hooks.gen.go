@@ -106,6 +106,10 @@ func (r releasedHook) TableName() string { return r.releasedHookDo.TableName() }
 
 func (r releasedHook) Alias() string { return r.releasedHookDo.Alias() }
 
+func (r releasedHook) Columns(cols ...field.Expr) gen.Columns {
+	return r.releasedHookDo.Columns(cols...)
+}
+
 func (r *releasedHook) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := r.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -247,10 +251,6 @@ func (r releasedHookDo) Select(conds ...field.Expr) IReleasedHookDo {
 
 func (r releasedHookDo) Where(conds ...gen.Condition) IReleasedHookDo {
 	return r.withDO(r.DO.Where(conds...))
-}
-
-func (r releasedHookDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IReleasedHookDo {
-	return r.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (r releasedHookDo) Order(conds ...field.Expr) IReleasedHookDo {
