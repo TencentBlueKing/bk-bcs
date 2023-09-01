@@ -870,6 +870,7 @@ message CreateReleaseReq {
     uint32 app_id = 2;
     string name   = 3;
     string memo   = 4;
+    repeated pbtv.TemplateVariableSpec variables = 5;
 }
 
 message CreateReleaseResp {

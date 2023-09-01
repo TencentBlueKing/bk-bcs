@@ -418,8 +418,9 @@ message GetLatestCommitReq {
 }
 
 message CreateReleaseReq {
-    pbrelease.ReleaseAttachment attachment = 1;
-    pbrelease.ReleaseSpec       spec       = 2;
+    pbrelease.ReleaseAttachment        attachment = 1;
+    pbrelease.ReleaseSpec              spec       = 2;
+    repeated pbtv.TemplateVariableSpec variables  = 3;
 }
 
 message ListReleasesReq {
@@ -509,10 +510,10 @@ message ListHookTagResp {
 }
 
 message ListHookReferencesReq {
-    uint32 biz_id      = 1;
-    uint32 hook_id     = 2;
-    uint32 start       = 3;
-    uint32 limit       = 4;
+    uint32 biz_id  = 1;
+    uint32 hook_id = 2;
+    uint32 start   = 3;
+    uint32 limit   = 4;
 }
 
 message ListHookReferencesResp {
@@ -586,7 +587,7 @@ message GetByPubStateReq {
 }
 
 message UpdateHookRevisionReq {
-    uint32                     id         = 1;
+    uint32                      id         = 1;
     pbhr.HookRevisionAttachment attachment = 2;
     pbhr.HookRevisionSpec       spec       = 3;
 }
@@ -621,13 +622,13 @@ message GetReleaseHookReq {
 
 message GetReleaseHookResp {
     message Hook {
-        uint32 hook_id                 = 1;
-        string hook_name               = 2;
-        uint32 hook_revision_id        = 3;
-        string hook_revision_name      = 4;
-        string type                    = 5;
-        string memo                    = 6;
-        string content                 = 7;
+        uint32 hook_id            = 1;
+        string hook_name          = 2;
+        uint32 hook_revision_id   = 3;
+        string hook_revision_name = 4;
+        string type               = 5;
+        string memo               = 6;
+        string content            = 7;
     }
     Hook pre_hook  = 1;
     Hook post_hook = 2;
