@@ -29,6 +29,7 @@
 </template>
 <style lang="scss" scoped>
   .reset-default-value-btn {
+    font-size: 12px;
     .help-icon {
       margin-left: 4px;
     }

@@ -110,12 +110,16 @@ export const getConfigContent = (bizId: string, appId: number, SHA256Str: string
  * 创建配置版本
  * @param bizId 业务ID
  * @param appId 应用ID
- * @param name 版本名称
- * @param memo 版本描述
+ * @param params 请求参数
  * @returns
  */
-export const createVersion = (bizId: string, appId: number, name: string, memo: string) => {
-  return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, { name, memo })
+interface ICreateVersionParams {
+  name: string;
+  memo: string;
+  variables: { [key: string]: string }
+}
+export const createVersion = (bizId: string, appId: number, params: ICreateVersionParams) => {
+  return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, params)
 }
 
 /**
