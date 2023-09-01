@@ -10,7 +10,7 @@
   const props = defineProps<{
     show: boolean;
     showPublishBtn?: boolean; // 是否显示发布按钮
-    currentVersion: IConfigVersion; // 当前版本
+    currentVersion: IConfigVersion; // 当前版本详情
     currentConfigId?: number; // 配置项id
     baseVersionId?: number; // 默认选中的基准版本id
   }>()
@@ -127,8 +127,10 @@
     </bk-loading>
     <template #footer>
       <div class="actions-btns">
-        <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')">上线版本</bk-button>
-        <bk-button @click="handleClose">关闭</bk-button>
+        <slot name="footerActions">
+          <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')">上线版本</bk-button>
+          <bk-button @click="handleClose">关闭</bk-button>
+        </slot>
       </div>
     </template>
   </bk-sideslider>

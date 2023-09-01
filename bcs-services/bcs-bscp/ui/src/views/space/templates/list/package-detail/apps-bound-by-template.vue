@@ -136,6 +136,10 @@
     height: calc(100vh - 180px);
     overflow: auto;
   }
+  .link-btn {
+    font-size: 12px;
+    color: #3a84ff;
+  }
   .action-btn {
     padding: 8px 24px;
     background: #fafbfd;

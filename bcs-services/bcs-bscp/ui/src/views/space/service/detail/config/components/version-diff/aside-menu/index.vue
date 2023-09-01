@@ -39,7 +39,6 @@
     width: 264px;
     height: 100%;
     background: #fafbfd;
-    border-right: 1px solid #dcded5;
     .configs-menu {
       height: calc(100% - 132px);
       :deep(.list-wrapper) {
