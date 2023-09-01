@@ -48,6 +48,7 @@ export const cloudDetail = request('get', '/cloud/$cloudId');
 export const cloudNodes = request('get', '/clouds/$cloudId/instances');
 export const cloudKeyPairs = request('get', '/clouds/$cloudId/keypairs');
 export const cloudAccountType = request('get', '/clouds/$cloudId/accounttype');
+export const cloudBwps = request('get', '/clouds/$cloudId/bwps');
 
 // node 操作
 export const getK8sNodes = request('get', '/cluster/$clusterId/node');

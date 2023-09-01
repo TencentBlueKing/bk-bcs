@@ -88,7 +88,8 @@
         :clearable="false"
         :loading="cloudLoading"
         searchable
-        v-model="nodePoolInfo.bkCloudID">
+        v-model="nodePoolInfo.bkCloudID"
+        @change="handleCloudIDChange">
         <bcs-option
           v-for="item in cloudList"
           :key="item.bk_cloud_id"
@@ -100,13 +101,14 @@
   </bk-form>
 </template>
 <script lang="ts">
+import { sortBy } from 'lodash';
 import { defineComponent, onMounted, ref, toRefs } from 'vue';
-import KeyValue from '@/views/cluster-manage/components/key-value.vue';
-import Taints from '@/views/cluster-manage/components/new-taints.vue';
+
+import { nodemanCloudList } from '@/api/base';
 import $i18n from '@/i18n/i18n-setup';
 import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
-import { sortBy } from 'lodash';
-import { nodemanCloudList } from '@/api/base';
+import KeyValue from '@/views/cluster-manage/components/key-value.vue';
+import Taints from '@/views/cluster-manage/components/new-taints.vue';
 
 export default defineComponent({
   name: 'BasciPoolInfo',
@@ -156,6 +158,7 @@ export default defineComponent({
         // },
       },
       bkCloudID: defaultValues.value.area?.bkCloudID || 0,
+      bkCloudName: defaultValues.value.area?.bkCloudName || '',
     });
 
     const nodePoolInfoRules = ref({
@@ -255,6 +258,12 @@ export default defineComponent({
       });
       cloudLoading.value = false;
     };
+    const handleCloudIDChange = (id: string) => {
+      const data = cloudList.value.find(item => item.bk_cloud_id === id);
+      if (data) {
+        nodePoolInfo.value.bkCloudName = data.bk_cloud_name;
+      }
+    };
 
     onMounted(() => {
       handleGetCloudList();
@@ -269,6 +278,7 @@ export default defineComponent({
       validate,
       cloudLoading,
       cloudList,
+      handleCloudIDChange,
     };
   },
 });
