@@ -49,7 +49,9 @@ type Set interface {
 	TemplateRevision() TemplateRevision
 	TemplateSet() TemplateSet
 	AppTemplateBinding() AppTemplateBinding
+	ReleasedAppTemplate() ReleasedAppTemplate
 	AppTemplateVariable() AppTemplateVariable
+	ReleasedAppTemplateVariable() ReleasedAppTemplateVariable
 	TemplateBindingRelation() TemplateBindingRelation
 	TemplateVariable() TemplateVariable
 	Validator() Validator
@@ -288,9 +290,27 @@ func (s *set) AppTemplateBinding() AppTemplateBinding {
 	}
 }
 
+// ReleasedAppTemplate returns the released app template's DAO
+func (s *set) ReleasedAppTemplate() ReleasedAppTemplate {
+	return &releasedAppTemplateDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
 // AppTemplateVariable returns the app template variable's DAO
 func (s *set) AppTemplateVariable() AppTemplateVariable {
 	return &appTemplateVariableDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// ReleasedAppTemplateVariable returns the released app template variable's DAO
+func (s *set) ReleasedAppTemplateVariable() ReleasedAppTemplateVariable {
+	return &releasedAppTemplateVariableDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

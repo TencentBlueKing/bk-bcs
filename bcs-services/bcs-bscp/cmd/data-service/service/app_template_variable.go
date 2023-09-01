@@ -15,9 +15,6 @@ package service
 import (
 	"bytes"
 	"context"
-	"fmt"
-	"io/ioutil"
-	"sync"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -60,77 +57,6 @@ func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbds.Ext
 	return &pbds.ExtractAppTemplateVariablesResp{
 		Details: variables,
 	}, nil
-}
-
-// getAppTmplRevisions get app template revision details
-func (s *Service) getAppTmplRevisions(kt *kit.Kit, bizID, appID uint32) ([]*table.TemplateRevision, error) {
-	opt := &types.BasePage{All: true}
-	details, _, err := s.dao.AppTemplateBinding().List(kt, bizID, appID, opt)
-	if err != nil {
-		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	// so far, no any template config item exists for the app
-	if len(details) == 0 {
-		return nil, nil
-	}
-
-	// get template revision details
-	tmplRevisions, err := s.dao.TemplateRevision().
-		ListByIDs(kt, details[0].Spec.TemplateRevisionIDs)
-	if err != nil {
-		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	return tmplRevisions, nil
-}
-
-// downloadTmplContent download template config item content from repo.
-// the order of elements in slice contents and slice tmplRevisions is consistent
-func (s *Service) downloadTmplContent(kt *kit.Kit, tmplRevisions []*table.TemplateRevision) ([][]byte, error) {
-	contents := make([][]byte, len(tmplRevisions))
-	var hitError error
-	pipe := make(chan struct{}, 10)
-	wg := sync.WaitGroup{}
-
-	for idx, r := range tmplRevisions {
-		wg.Add(1)
-
-		pipe <- struct{}{}
-		go func(idx int, r *table.TemplateRevision) {
-			defer func() {
-				wg.Done()
-				<-pipe
-			}()
-
-			k := kt.GetKitForRepoTmpl(r.Attachment.TemplateSpaceID)
-			body, _, err := s.repo.Download(k, r.Spec.ContentSpec.Signature)
-			if err != nil {
-				hitError = fmt.Errorf("download template config content from repo failed, "+
-					"template id: %d, name: %s, path: %s, error: %v",
-					r.Attachment.TemplateID, r.Spec.Name, r.Spec.Path, err)
-				return
-			}
-			content, err := ioutil.ReadAll(body)
-			if err != nil {
-				hitError = fmt.Errorf("read template config content from body failed, "+
-					"template id: %d, name: %s, path: %s, error: %v",
-					r.Attachment.TemplateID, r.Spec.Name, r.Spec.Path, err)
-				return
-			}
-
-			contents[idx] = content
-		}(idx, r)
-	}
-	wg.Wait()
-
-	if hitError != nil {
-		logs.Errorf("download template content failed, err: %v, rid: %s", hitError, kt.Rid)
-		return nil, hitError
-	}
-
-	return contents, nil
 }
 
 // GetAppTemplateVariableReferences get app template variable references.
@@ -246,6 +172,7 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAp
 		}
 		if v, ok := bizVarMap[name]; ok {
 			finalVar = append(finalVar, pbtv.PbTemplateVariableSpec(v))
+			continue
 		}
 		// for unset variable, just return its name, other fields keep empty
 		finalVar = append(finalVar, &pbtv.TemplateVariableSpec{Name: name})

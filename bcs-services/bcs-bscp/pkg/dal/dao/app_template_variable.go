@@ -22,10 +22,12 @@ import (
 	"bscp.io/pkg/kit"
 )
 
-// AppTemplateVariable supplies all the app template binding related operations.
+// AppTemplateVariable supplies all the app template variable related operations.
 type AppTemplateVariable interface {
 	// Upsert create or update one template variable instance.
 	Upsert(kit *kit.Kit, appVar *table.AppTemplateVariable) error
+	// UpsertWithTx create or update one template variable instance with transaction.
+	UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, appVar *table.AppTemplateVariable) error
 	// Get gets app template variables
 	Get(kit *kit.Kit, bizID, appID uint32) (*table.AppTemplateVariable, error)
 	// ListVariables lists all variables in app template variable
@@ -81,6 +83,45 @@ func (dao *appTemplateVariableDao) Upsert(kit *kit.Kit, g *table.AppTemplateVari
 	if err := dao.genQ.Transaction(upsertTx); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// UpsertWithTx create or update one template variable instance with transaction.
+func (dao *appTemplateVariableDao) UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.AppTemplateVariable) error {
+	if err := g.ValidateUpsert(); err != nil {
+		return err
+	}
+
+	m := dao.genQ.AppTemplateVariable
+	q := dao.genQ.AppTemplateVariable.WithContext(kit.Ctx)
+	old, findErr := q.Where(m.BizID.Eq(g.Attachment.BizID), m.AppID.Eq(g.Attachment.AppID)).Take()
+
+	var ad AuditDo
+	// if old exists, update it.
+	if findErr == nil {
+		g.ID = old.ID
+		if _, err := tx.AppTemplateVariable.WithContext(kit.Ctx).
+			Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+			Select(m.Variables, m.Reviser).
+			Updates(g); err != nil {
+			return err
+		}
+		ad = dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, old)
+	} else if errors.Is(findErr, gorm.ErrRecordNotFound) {
+		// if old not exists, create it.
+		id, err := dao.idGen.One(kit, table.Name(g.TableName()))
+		if err != nil {
+			return err
+		}
+		g.ID = id
+		if err := tx.AppTemplateVariable.WithContext(kit.Ctx).Create(g); err != nil {
+			return err
+		}
+		ad = dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
+	}
+
+	return ad.Do(tx.Query)
 
 	return nil
 }

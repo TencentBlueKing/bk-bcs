@@ -22,9 +22,9 @@ type TmplBoundUnnamedAppDetail struct {
 
 // TmplBoundNamedAppDetail defines struct of template bound named app detail.
 type TmplBoundNamedAppDetail struct {
-	AppID               uint32            `json:"app_id"`
-	ReleaseID           uint32            `json:"release_id"`
-	TemplateRevisionIDs types.Uint32Slice `json:"template_revision_ids"`
+	AppID              uint32 `json:"app_id"`
+	ReleaseID          uint32 `json:"release_id"`
+	TemplateRevisionID uint32 `json:"template_revision_id"`
 }
 
 // TmplRevisionBoundNamedAppDetail defines struct of template release bound named app detail.
