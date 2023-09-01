@@ -94,6 +94,10 @@ func (c credentialScope) TableName() string { return c.credentialScopeDo.TableNa
 
 func (c credentialScope) Alias() string { return c.credentialScopeDo.Alias() }
 
+func (c credentialScope) Columns(cols ...field.Expr) gen.Columns {
+	return c.credentialScopeDo.Columns(cols...)
+}
+
 func (c *credentialScope) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := c.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -231,10 +235,6 @@ func (c credentialScopeDo) Select(conds ...field.Expr) ICredentialScopeDo {
 
 func (c credentialScopeDo) Where(conds ...gen.Condition) ICredentialScopeDo {
 	return c.withDO(c.DO.Where(conds...))
-}
-
-func (c credentialScopeDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) ICredentialScopeDo {
-	return c.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (c credentialScopeDo) Order(conds ...field.Expr) ICredentialScopeDo {

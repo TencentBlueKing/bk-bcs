@@ -89,6 +89,8 @@ func (c content) TableName() string { return c.contentDo.TableName() }
 
 func (c content) Alias() string { return c.contentDo.Alias() }
 
+func (c content) Columns(cols ...field.Expr) gen.Columns { return c.contentDo.Columns(cols...) }
+
 func (c *content) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := c.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -225,10 +227,6 @@ func (c contentDo) Select(conds ...field.Expr) IContentDo {
 
 func (c contentDo) Where(conds ...gen.Condition) IContentDo {
 	return c.withDO(c.DO.Where(conds...))
-}
-
-func (c contentDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IContentDo {
-	return c.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (c contentDo) Order(conds ...field.Expr) IContentDo {

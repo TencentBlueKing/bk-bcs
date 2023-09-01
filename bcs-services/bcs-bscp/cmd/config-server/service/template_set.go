@@ -16,12 +16,14 @@ import (
 	"context"
 	"fmt"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbtset "bscp.io/pkg/protocol/core/template-set"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/tools"
 )
 
 // CreateTemplateSet create a template set
@@ -29,10 +31,11 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplat
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateTemplateSetResp)
 
-	templateIDsLen := len(req.TemplateIds)
-	if templateIDsLen <= 0 || templateIDsLen > 500 {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
-			templateIDsLen)
+	// validate input param
+	idsLen := len(req.TemplateIds)
+	if idsLen > 500 {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [0,500]",
+			idsLen)
 	}
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSet, Action: meta.Create,
@@ -83,6 +86,7 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbcs.DeleteTemplat
 			BizId:           grpcKit.BizID,
 			TemplateSpaceId: req.TemplateSpaceId,
 		},
+		Force: req.Force,
 	}
 	if _, err := s.client.DS.DeleteTemplateSet(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("delete template set failed, err: %v, rid: %s", err, grpcKit.Rid)
@@ -110,11 +114,13 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbcs.UpdateTemplat
 			TemplateSpaceId: req.TemplateSpaceId,
 		},
 		Spec: &pbtset.TemplateSetSpec{
+			Name:        req.Name,
 			Memo:        req.Memo,
 			TemplateIds: req.TemplateIds,
 			Public:      req.Public,
 			BoundApps:   req.BoundApps,
 		},
+		Force: req.Force,
 	}
 	if _, err := s.client.DS.UpdateTemplateSet(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("update template set failed, err: %v, rid: %s", err, grpcKit.Rid)
@@ -137,8 +143,11 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbcs.ListTemplateSe
 	r := &pbds.ListTemplateSetsReq{
 		BizId:           grpcKit.BizID,
 		TemplateSpaceId: req.TemplateSpaceId,
+		SearchFields:    req.SearchFields,
+		SearchValue:     req.SearchValue,
 		Start:           req.Start,
 		Limit:           req.Limit,
+		All:             req.All,
 	}
 
 	rp, err := s.client.DS.ListTemplateSets(grpcKit.RpcCtx(), r)
@@ -149,6 +158,102 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbcs.ListTemplateSe
 
 	resp = &pbcs.ListTemplateSetsResp{
 		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListAppTemplateSets list app template sets
+func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbcs.ListAppTemplateSetsReq) (*pbcs.
+	ListAppTemplateSetsResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAppTemplateSetsResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSet, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListAppTemplateSetsReq{
+		BizId: grpcKit.BizID,
+		AppId: req.AppId,
+	}
+
+	rp, err := s.client.DS.ListAppTemplateSets(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list app template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListAppTemplateSetsResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListTemplateSetsByIDs list template sets by ids
+func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbcs.ListTemplateSetsByIDsReq) (*pbcs.
+	ListTemplateSetsByIDsResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListTemplateSetsByIDsResp)
+
+	// validate input param
+	ids := tools.SliceRepeatedElements(req.Ids)
+	if len(ids) > 0 {
+		return nil, fmt.Errorf("repeated ids: %v, id must be unique", ids)
+	}
+	idsLen := len(req.Ids)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSet, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListTemplateSetsByIDsReq{
+		Ids: req.Ids,
+	}
+
+	rp, err := s.client.DS.ListTemplateSetsByIDs(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list template sets by ids failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListTemplateSetsByIDsResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListTemplateSetsOfBiz list template sets of one biz
+func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbcs.ListTemplateSetsOfBizReq) (*pbcs.
+	ListTemplateSetsOfBizResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListTemplateSetsOfBizResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSet, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListTemplateSetsOfBizReq{
+		BizId: req.BizId,
+	}
+
+	rp, err := s.client.DS.ListTemplateSetsOfBiz(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list template sets of biz failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListTemplateSetsOfBizResp{
 		Details: rp.Details,
 	}
 	return resp, nil

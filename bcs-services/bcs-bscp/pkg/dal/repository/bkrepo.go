@@ -18,6 +18,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"github.com/pkg/errors"
 
@@ -62,7 +63,27 @@ type bkrepoClient struct {
 	project     string
 	client      *http.Client
 	cli         *repo.Client
-	repoCreated map[string]struct{}
+	repoCreated *RepoCreated
+}
+
+type RepoCreated struct {
+	sync.Mutex
+	created map[string]struct{}
+}
+
+// Set sets kv
+func (r *RepoCreated) Set(name string) {
+	r.Lock()
+	defer r.Unlock()
+	r.created[name] = struct{}{}
+}
+
+// Exist check kv
+func (r *RepoCreated) Exist(name string) bool {
+	r.Lock()
+	defer r.Unlock()
+	_, ok := r.created[name]
+	return ok
 }
 
 func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
@@ -70,9 +91,11 @@ func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
 	if err != nil {
 		return err
 	}
-	if _, ok := c.repoCreated[repoName]; ok {
+
+	if c.repoCreated.Exist(repoName) {
 		return nil
 	}
+
 	repoReq := &repo.CreateRepoReq{
 		ProjectID:     cc.ApiServer().Repo.BkRepo.Project,
 		Name:          repoName,
@@ -85,13 +108,13 @@ func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
 		return err
 	}
 
-	c.repoCreated[repoName] = struct{}{}
+	c.repoCreated.Set(repoName)
 	return nil
 }
 
-// getNodeMetadata If the node already exists, this appID will be added to the metadata of the current node.
-// If not exist, will create new metadata with this bizID and appID.
-func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID uint32) (string, error) {
+// getNodeMetadata If the node already exists, appID or tmplSpaceID will be added to the metadata of the current node.
+// If not exist, will create new metadata with this bizID and related appID, tmplSpaceID.
+func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption) (string, error) {
 	metadata, err := cli.QueryMetadata(kt.Ctx, opt)
 	if err != nil {
 		return "", err
@@ -99,8 +122,15 @@ func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID 
 
 	if len(metadata) == 0 {
 		meta := repo.NodeMeta{
-			BizID: opt.BizID,
-			AppID: []uint32{appID},
+			BizID:       opt.BizID,
+			AppID:       []uint32{},
+			TmplSpaceID: []uint32{},
+		}
+		if kt.AppID != 0 {
+			meta.AppID = append(meta.AppID, kt.AppID)
+		}
+		if kt.TmplSpaceID != 0 {
+			meta.TmplSpaceID = append(meta.TmplSpaceID, kt.TmplSpaceID)
 		}
 
 		return meta.String()
@@ -116,33 +146,59 @@ func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID 
 		return "", fmt.Errorf("node metadata %s biz id is different from the request %d biz id", bizID, opt.BizID)
 	}
 
-	appIDStr, exist := metadata["app_id"]
-	if !exist {
-		return "", errors.New("node metadata not has app id")
-	}
-
 	appIDs := make([]uint32, 0)
-	if err = json.Unmarshal([]byte(appIDStr), &appIDs); err != nil {
-		return "", fmt.Errorf("unmarshal node metadata appID failed, err: %v", err)
-	}
-
-	// judge current app if already upload this node.
-	var idExist bool
-	for index := range appIDs {
-		if appIDs[index] == appID {
-			idExist = true
-			break
+	appIDStr := metadata["app_id"]
+	if appIDStr != "" {
+		if err = json.Unmarshal([]byte(appIDStr), &appIDs); err != nil {
+			return "", fmt.Errorf("unmarshal node metadata app ids failed, err: %v", err)
 		}
 	}
 
-	if !idExist {
-		appIDs = append(appIDs, appID)
+	tmplSpaceIDs := make([]uint32, 0)
+	tmplSpaceIDStr := metadata["template_space_id"]
+	if tmplSpaceIDStr != "" {
+		if err = json.Unmarshal([]byte(tmplSpaceIDStr), &tmplSpaceIDs); err != nil {
+			return "", fmt.Errorf("unmarshal node metadata template space ids failed, err: %v", err)
+		}
+
 	}
 
-	meta := &repo.NodeMeta{
-		BizID: opt.BizID,
-		AppID: appIDs,
+	meta := repo.NodeMeta{
+		BizID:       opt.BizID,
+		AppID:       appIDs,
+		TmplSpaceID: tmplSpaceIDs,
 	}
+
+	if kt.AppID != 0 {
+		// judge whether current app already uploaded to this node.
+		var isExist bool
+		for _, id := range meta.AppID {
+			if id == kt.AppID {
+				isExist = true
+				break
+			}
+		}
+
+		if !isExist {
+			meta.AppID = append(meta.AppID, kt.AppID)
+		}
+	}
+
+	if kt.TmplSpaceID != 0 {
+		// judge whether current template space already uploaded to this node.
+		var isExist bool
+		for _, id := range meta.TmplSpaceID {
+			if id == kt.TmplSpaceID {
+				isExist = true
+				break
+			}
+		}
+
+		if !isExist {
+			meta.TmplSpaceID = append(meta.TmplSpaceID, kt.TmplSpaceID)
+		}
+	}
+
 	return meta.String()
 }
 
@@ -153,7 +209,7 @@ func (c *bkrepoClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*Object
 	}
 
 	opt := &repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign}
-	nodeMeta, err := getNodeMetadata(kt, c.cli, opt, kt.AppID)
+	nodeMeta, err := getNodeMetadata(kt, c.cli, opt)
 	if err != nil {
 		return nil, errors.Wrap(err, "get node metadata")
 	}
@@ -324,10 +380,12 @@ func newBKRepoProvider(settings cc.Repository) (Provider, error) {
 	host := settings.BkRepo.Endpoints[0]
 
 	p := &bkrepoClient{
-		cli:         cli,
-		host:        host,
-		project:     settings.BkRepo.Project,
-		repoCreated: map[string]struct{}{},
+		cli:     cli,
+		host:    host,
+		project: settings.BkRepo.Project,
+		repoCreated: &RepoCreated{
+			created: make(map[string]struct{}),
+		},
 	}
 
 	transport := &bkrepoAuthTransport{

@@ -95,6 +95,8 @@ func (t template) TableName() string { return t.templateDo.TableName() }
 
 func (t template) Alias() string { return t.templateDo.Alias() }
 
+func (t template) Columns(cols ...field.Expr) gen.Columns { return t.templateDo.Columns(cols...) }
+
 func (t *template) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := t.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -233,10 +235,6 @@ func (t templateDo) Select(conds ...field.Expr) ITemplateDo {
 
 func (t templateDo) Where(conds ...gen.Condition) ITemplateDo {
 	return t.withDO(t.DO.Where(conds...))
-}
-
-func (t templateDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) ITemplateDo {
-	return t.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (t templateDo) Order(conds ...field.Expr) ITemplateDo {

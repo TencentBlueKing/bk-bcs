@@ -82,6 +82,10 @@ func (r resourceLock) TableName() string { return r.resourceLockDo.TableName() }
 
 func (r resourceLock) Alias() string { return r.resourceLockDo.Alias() }
 
+func (r resourceLock) Columns(cols ...field.Expr) gen.Columns {
+	return r.resourceLockDo.Columns(cols...)
+}
+
 func (r *resourceLock) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := r.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -215,10 +219,6 @@ func (r resourceLockDo) Select(conds ...field.Expr) IResourceLockDo {
 
 func (r resourceLockDo) Where(conds ...gen.Condition) IResourceLockDo {
 	return r.withDO(r.DO.Where(conds...))
-}
-
-func (r resourceLockDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IResourceLockDo {
-	return r.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (r resourceLockDo) Order(conds ...field.Expr) IResourceLockDo {

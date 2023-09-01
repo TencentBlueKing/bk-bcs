@@ -72,15 +72,24 @@ func Middleware(server string, opts ...Option) gin.HandlerFunc {
 			}
 		}
 		c.Set(constants.TracerKey, tracer)
+
 		savedCtx := c.Request.Context()
 		defer func() {
 			c.Request = c.Request.WithContext(savedCtx)
 		}()
-		ctx := cfg.Propagators.Extract(savedCtx, propagation.HeaderCarrier(c.Request.Header))
-		requestID, _ := ctx.Value(constants.RequestIDHeaderKey).(string)
-		// 使用requestID当作TraceID
-		ctx = context.WithValue(ctx, constants.RequestIDKey, requestID)
-		ctx = utils.ContextWithRequestID(ctx, requestID)
+
+		// 判断Header 是否有放置Transparent
+		traceparent := c.Request.Header.Get(constants.Traceparent)
+		if traceparent != "" {
+			// 有则从上游解析Transparent
+			savedCtx = cfg.Propagators.Extract(savedCtx, propagation.HeaderCarrier(c.Request.Header))
+		} else {
+			// 没有则从request id截取生成
+			requestID := c.Request.Header.Get(constants.RequestIDHeaderKey)
+			// 使用requestID当作TraceID
+			savedCtx = context.WithValue(savedCtx, constants.RequestIDKey, requestID)
+			savedCtx = utils.ContextWithRequestID(savedCtx, requestID)
+		}
 
 		// 记录额外的信息
 		commonAttrs := semconv.NetAttributesFromHTTPRequest("tcp", c.Request)
@@ -98,7 +107,7 @@ func Middleware(server string, opts ...Option) gin.HandlerFunc {
 			spanName = fmt.Sprintf("HTTP %s route not found", c.Request.Method)
 		}
 
-		ctx, span := tracer.Start(ctx, spanName, opts...)
+		ctx, span := tracer.Start(savedCtx, spanName, opts...)
 		defer span.End()
 
 		// 记录query参数
