@@ -2,9 +2,10 @@
   import { ref } from 'vue'
   import { Message } from 'bkui-vue';
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation'
-  import VariablesTable from './variables-table.vue';
   import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
   import { getUnReleasedAppVariables, getUnReleasedAppVariablesCitedDetail, updateUnReleasedAppVariables } from '../../../../../../../../api/variable'
+  import VariablesTable from './variables-table.vue';
+  import ResetDefaultValue from './reset-default-value.vue';
 
   const props = defineProps<{
     bkBizId: string;
@@ -13,6 +14,7 @@
 
   const isSliderShow = ref(false)
   const loading = ref(false)
+  const initialVariables = ref<IVariableEditParams[]>([]) // 变量列表默认配置，用来恢复默认值
   const variableList = ref<IVariableEditParams[]>([])
   const citedList = ref<IVariableCitedByConfigDetailItem[]>([])
   const tableRef = ref()
@@ -25,7 +27,8 @@
       getUnReleasedAppVariables(props.bkBizId, props.appId),
       getUnReleasedAppVariablesCitedDetail(props.bkBizId, props.appId)
     ])
-    variableList.value = variableListRes.details
+    initialVariables.value = variableListRes.details.slice()
+    variableList.value = variableListRes.details.slice()
     citedList.value = citedListRes.details
     loading.value = false
   }
@@ -38,6 +41,10 @@
   const handleVariablesChange = (variables: IVariableEditParams[]) => {
     isFormChange.value = true
     variableList.value = variables
+  }
+
+  const handleResetDefault = (list: IVariableEditParams[]) => {
+    variableList.value = list
   }
 
   const handleSubmit = async() => {
@@ -80,6 +87,10 @@
     :before-close="handleBeforeClose"
     @closed="close">
     <div v-bkloading="{ loading: loading }" class="variables-table-content">
+      <ResetDefaultValue
+        class="reset-default"
+        :list="initialVariables"
+        @reset="handleResetDefault" />
       <VariablesTable
         ref="tableRef"
         :list="variableList"
@@ -96,9 +107,15 @@
 </template>
 <style lang="scss" scoped>
   .variables-table-content {
+    position: relative;
     padding: 48px 24px;
     height: calc(100vh - 101px);
     overflow: auto;
+  }
+  .reset-default {
+    position: absolute;
+    top: 20px;
+    right: 24px;
   }
   .action-btns {
     border-top: 1px solid #dcdee5;
