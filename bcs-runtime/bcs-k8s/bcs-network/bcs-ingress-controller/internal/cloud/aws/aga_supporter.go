@@ -107,11 +107,18 @@ func (a *AgaSupporter) getRegionSession(region string) (*session.Session, error)
 }
 
 // ListCustomRoutingByDefinition param
-func (a *AgaSupporter) ListCustomRoutingByDefinition(region, instanceID, destAddress string) ([]*AgaMappingInfo,
+func (a *AgaSupporter) ListCustomRoutingByDefinition(agaHostRegion, region, instanceID,
+	destAddress string) ([]*AgaMappingInfo,
 	error) {
 	blog.Infof("ListCustomRoutingByDefinition req[region=%s, instanceID=%s, destAddress=%s]", region, instanceID,
 		destAddress)
 	sess, err := a.getRegionSession(region)
+	if err != nil {
+		return nil, err
+	}
+
+	// aga host can only be called in us-west region now, use a differentregion here
+	agaSess, err := a.getRegionSession(agaHostRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -121,12 +128,12 @@ func (a *AgaSupporter) ListCustomRoutingByDefinition(region, instanceID, destAdd
 		return nil, err
 	}
 
-	portMappingResp, err := a.listCustomRoutingPortMappingsByDest(sess, subnetID, destAddress)
+	portMappingResp, err := a.listCustomRoutingPortMappingsByDest(agaSess, subnetID, destAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := a.mergeCustomRouting(sess, portMappingResp)
+	resp, err := a.mergeCustomRouting(agaSess, portMappingResp)
 	if err != nil {
 		return nil, err
 	}
