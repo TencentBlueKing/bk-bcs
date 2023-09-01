@@ -1169,7 +1169,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3096,8 +3096,7 @@
             "description": "enableFilter. enableFilter为true时, 输出结果按照是否开启弹性伸缩排序(开启的排序在后面)",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -3118,7 +3117,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -5130,7 +5129,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -5863,7 +5862,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -5898,8 +5896,7 @@
           }
         },
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "message": {
           "type": "string"
@@ -10086,7 +10083,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -15741,7 +15737,6 @@
         },
         "manual": {
           "type": "boolean",
-          "format": "boolean",
           "description": "手动扩容操作,用户手动扩容操作不做数据回退清理，展示具体的步骤，支持用户重试",
           "title": "manual"
         }
@@ -16549,7 +16544,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
