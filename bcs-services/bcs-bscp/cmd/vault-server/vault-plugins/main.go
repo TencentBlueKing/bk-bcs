@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/sdk/plugin"
 
-	"bscp.io/cmd/vault-server/plugins/service"
+	"bscp.io/cmd/vault-server/vault-plugins/service"
 )
 
 func main() {
