@@ -91,6 +91,10 @@ func (t templateSpace) TableName() string { return t.templateSpaceDo.TableName()
 
 func (t templateSpace) Alias() string { return t.templateSpaceDo.Alias() }
 
+func (t templateSpace) Columns(cols ...field.Expr) gen.Columns {
+	return t.templateSpaceDo.Columns(cols...)
+}
+
 func (t *templateSpace) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := t.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -227,10 +231,6 @@ func (t templateSpaceDo) Select(conds ...field.Expr) ITemplateSpaceDo {
 
 func (t templateSpaceDo) Where(conds ...gen.Condition) ITemplateSpaceDo {
 	return t.withDO(t.DO.Where(conds...))
-}
-
-func (t templateSpaceDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) ITemplateSpaceDo {
-	return t.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (t templateSpaceDo) Order(conds ...field.Expr) ITemplateSpaceDo {

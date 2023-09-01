@@ -91,6 +91,8 @@ type TaskState struct {
 	JobResult *SyncJobResult
 	// inject task url for bksops
 	TaskUrl string
+	// Manual CA scale nodes
+	Manual bool
 }
 
 // IsTerminated check task already terminated

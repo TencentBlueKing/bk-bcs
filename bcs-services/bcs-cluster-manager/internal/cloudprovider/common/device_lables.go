@@ -43,6 +43,12 @@ func BuildResourcePoolLabelTaskStep(task *proto.Task, clusterID string) {
 	task.StepSequence = append(task.StepSequence, resourcePoolLabelStep.StepMethod)
 }
 
+// EmptyAction empty action
+func EmptyAction(taskID, stepName string) error {
+	blog.Infof("EmptyAction[%s] %s", taskID, stepName)
+	return nil
+}
+
 // SetResourcePoolDeviceLabels set resourcePool device labels
 func SetResourcePoolDeviceLabels(taskID, stepName string) error {
 	start := time.Now()

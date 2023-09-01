@@ -208,7 +208,7 @@ func genApplicationActions() []client.ResourceAction {
 		NameEn:               "View App",
 		Type:                 View,
 		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
+		RelatedActions:       []client.ActionID{BusinessViewResource},
 		Version:              1,
 	})
 
@@ -218,7 +218,7 @@ func genApplicationActions() []client.ResourceAction {
 		NameEn:               "Edit App",
 		Type:                 Edit,
 		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
+		RelatedActions:       []client.ActionID{BusinessViewResource, AppView},
 		Version:              1,
 	})
 
@@ -228,27 +228,27 @@ func genApplicationActions() []client.ResourceAction {
 		NameEn:               "Delete App",
 		Type:                 Delete,
 		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
+		RelatedActions:       []client.ActionID{BusinessViewResource, AppView},
 		Version:              1,
 	})
 
 	actions = append(actions, client.ResourceAction{
 		ID:                   GenerateRelease,
 		Name:                 ActionIDNameMap[GenerateRelease],
-		NameEn:               "Packing ConfigItem",
+		NameEn:               "Generate Release",
 		Type:                 Edit,
 		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
+		RelatedActions:       []client.ActionID{BusinessViewResource, AppView},
 		Version:              1,
 	})
 
 	actions = append(actions, client.ResourceAction{
 		ID:                   ReleasePublish,
 		Name:                 ActionIDNameMap[ReleasePublish],
-		NameEn:               "Publish ConfigItem",
+		NameEn:               "Publish Release",
 		Type:                 Edit,
 		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
+		RelatedActions:       []client.ActionID{BusinessViewResource, AppView},
 		Version:              1,
 	})
 
@@ -282,32 +282,32 @@ func genCredentialActions() []client.ResourceAction {
 	}}
 
 	actions = append(actions, client.ResourceAction{
+		ID:                   CredentialView,
+		Name:                 ActionIDNameMap[CredentialView],
+		NameEn:               "View Credential",
+		Type:                 View,
+		RelatedResourceTypes: relatedResource,
+		RelatedActions:       []client.ActionID{BusinessViewResource},
+		Version:              1,
+	})
+
+	actions = append(actions, client.ResourceAction{
 		ID:                   CredentialEdit,
 		Name:                 ActionIDNameMap[CredentialEdit],
 		NameEn:               "Edit Credential",
 		Type:                 Edit,
 		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
+		RelatedActions:       []client.ActionID{BusinessViewResource, CredentialView},
 		Version:              1,
 	})
 
 	actions = append(actions, client.ResourceAction{
 		ID:                   CredentialDelete,
 		Name:                 ActionIDNameMap[CredentialDelete],
-		NameEn:               "Credential Group",
+		NameEn:               "Delete Credential",
 		Type:                 Delete,
 		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
-		Version:              1,
-	})
-
-	actions = append(actions, client.ResourceAction{
-		ID:                   CredentialView,
-		Name:                 ActionIDNameMap[CredentialView],
-		NameEn:               "View Credential",
-		Type:                 View,
-		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
+		RelatedActions:       []client.ActionID{BusinessViewResource, CredentialView},
 		Version:              1,
 	})
 
@@ -380,7 +380,7 @@ func genBusinessActions() []client.ResourceAction {
 	actions = append(actions, client.ResourceAction{
 		ID:                   BusinessViewResource,
 		Name:                 ActionIDNameMap[BusinessViewResource],
-		NameEn:               "View Business Resource",
+		NameEn:               "View Business",
 		Type:                 View,
 		RelatedResourceTypes: businessResource,
 		RelatedActions:       nil,

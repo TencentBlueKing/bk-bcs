@@ -48,3 +48,10 @@ const (
 	// NamespaceSyncLockPrefix etcd distributed lock prefix for sync namespace
 	NamespaceSyncLockPrefix = "namespace-sync"
 )
+
+const (
+	// MetadataCookiesKey 在 GoMicro Metadata 中，Cookie 的键名
+	MetadataCookiesKey = "Grpcgateway-Cookie"
+	// LangCookieName 语言版本 Cookie 名称
+	LangCookieName = "blueking_language"
+)

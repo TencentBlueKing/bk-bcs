@@ -13,8 +13,8 @@
       <bk-form class="node-config" :model="nodePoolConfig" :rules="nodePoolConfigRules" ref="formRef">
         <bk-form-item :label="$t('cluster.ca.nodePool.create.imageProvider.title')">
           <bk-radio-group v-model="nodePoolConfig.launchTemplate.imageInfo.imageType">
-            <bk-radio value="PUBLIC_IMAGE" :disabled="isEdit">{{$t('deploy.image.publicImage')}}</bk-radio>
-            <bk-radio value="MARKET_IMAGE" :disabled="isEdit">{{$t('deploy.image.marketImage')}}</bk-radio>
+            <bk-radio value="PUBLIC_IMAGE" disabled>{{$t('deploy.image.publicImage')}}</bk-radio>
+            <bk-radio value="MARKET_IMAGE" disabled>{{$t('deploy.image.marketImage')}}</bk-radio>
           </bk-radio-group>
         </bk-form-item>
         <bk-form-item
@@ -23,18 +23,7 @@
           error-display-type="normal"
           required
           :desc="$t('cluster.ca.nodePool.create.image.desc')">
-          <bcs-select
-            :loading="osImageLoading"
-            v-model="nodePoolConfig.launchTemplate.imageInfo.imageID"
-            searchable
-            :disabled="isEdit"
-            :clearable="false">
-            <bcs-option
-              v-for="imageItem in osImageList"
-              :key="imageItem.imageID"
-              :id="imageItem.imageID"
-              :name="imageItem.alias" />
-          </bcs-select>
+          <bcs-input disabled :value="clusterOS"></bcs-input>
         </bk-form-item>
         <bk-form-item
           :label="$t('cluster.ca.nodePool.create.az.title')"
@@ -60,7 +49,8 @@
               searchable
               :loading="zoneListLoading"
               :disabled="isEdit"
-              :clearable="false">
+              :clearable="false"
+              selected-style="checkbox">
               <bcs-option
                 v-for="zone in zoneList"
                 :key="zone.zoneID"
@@ -254,44 +244,92 @@
             </div>
           </template>
           <span class="inline-flex mt15">
-            <bk-popover theme="light" :disabled="accountType !== 'LEGACY'">
-              <bk-checkbox
-                :disabled="isEdit || accountType === 'LEGACY'"
-                v-model="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
-                {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
-              </bk-checkbox>
-              <template #content>
-                <i18n
-                  path="cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.tips1">
-                  <bk-link
-                    theme="primary"
-                    target="_blank"
-                    href="https://cloud.tencent.com/document/product/1199/49090">
-                    <span class="text-[12px] ml-[4px] relative top-[-1px]">
-                      {{ $t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.accountLink') }}
-                    </span>
-                  </bk-link>
-                </i18n>
-              </template>
-            </bk-popover>
+            <bk-checkbox
+              :disabled="isEdit"
+              v-model="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
+              {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
+            </bk-checkbox>
           </span>
           <div class="panel" v-if="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
             <div class="panel-item">
               <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.text')}}</label>
-              <bk-radio-group v-model="nodePoolConfig.launchTemplate.internetAccess.internetChargeType">
-                <bk-radio :disabled="isEdit" value="TRAFFIC_POSTPAID_BY_HOUR">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.traffic_postpaid_by_hour')}}</bk-radio>
-                <bk-radio :disabled="isEdit" value="BANDWIDTH_PREPAID">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.bandwidth_prepaid')}}</bk-radio>
+              <bk-radio-group
+                v-model="nodePoolConfig.launchTemplate.internetAccess.internetChargeType"
+                @change="handleChargeTypeChange">
+                <bk-radio :disabled="isEdit || accountType === 'LEGACY'" value="TRAFFIC_POSTPAID_BY_HOUR">
+                  <span
+                    v-bk-tooltips="{
+                      content: $t('ca.internetAccess.tips.accountNotAvailable'),
+                      disabled: accountType !== 'LEGACY'
+                    }">
+                    {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.traffic_postpaid_by_hour')}}
+                  </span>
+                </bk-radio>
+                <bk-radio :disabled="isEdit || accountType === 'LEGACY'" value="BANDWIDTH_PREPAID">
+                  <span
+                    v-bk-tooltips="{
+                      content: $t('ca.internetAccess.tips.accountNotAvailable'),
+                      disabled: accountType !== 'LEGACY'
+                    }">
+                    {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.bandwidth_prepaid')}}
+                  </span>
+                </bk-radio>
+                <bk-radio :disabled="isEdit" value="BANDWIDTH_PACKAGE">
+                  {{ $t('ca.internetAccess.bandwidthPackage') }}
+                </bk-radio>
               </bk-radio-group>
+            </div>
+            <div
+              class="panel-item mt10"
+              v-if="accountType === 'STANDARD'
+                && nodePoolConfig.launchTemplate.internetAccess.internetChargeType === 'BANDWIDTH_PACKAGE'">
+              <label class="label">{{ $t('ca.internetAccess.label.selectBandwidthPackage') }}</label>
+              <bcs-select
+                :loading="bandwidthLoading"
+                :disabled="isEdit"
+                class="w-[200px] bg-[#fff]"
+                v-model="nodePoolConfig.launchTemplate.internetAccess.bandwidthPackageId">
+                <bcs-option
+                  v-for="item in bandwidthList"
+                  :key="item.id"
+                  :id="item.id"
+                  :name="`${item.name}(${item.id})`" />
+                <span slot="extension" class="cursor-pointer" @click="createBandWidth">
+                  <i class="bcs-icon bcs-icon-fenxiang mr5 !text-[12px]"></i>
+                  {{ $t('ca.internetAccess.button.createBandWidth') }}
+                </span>
+              </bcs-select>
+              <span
+                class="ml10 text-[12px] cursor-pointer"
+                v-bk-tooltips.top="$t('generic.button.refresh')"
+                @click="getBandwidthList">
+                <i class="bcs-icon bcs-icon-reset"></i>
+              </span>
             </div>
             <div class="panel-item mt10">
               <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.maxBandWidth')}}</label>
-              <bk-input
-                class="max-width-150"
-                type="number"
-                :disabled="isEdit"
-                v-model="nodePoolConfig.launchTemplate.internetAccess.internetMaxBandwidth">
-              </bk-input>
-              <span :class="['company', { disabled: isEdit }]">Mbps</span>
+              <bk-radio-group v-model="maxBandwidthType">
+                <bk-radio :disabled="isEdit" value="limit">
+                  <div class="flex items-center">
+                    <span class="mr-[8px]">{{ $t('ca.internetAccess.label.limit') }}</span>
+                    <bk-input
+                      class="max-w-[80px]"
+                      type="number"
+                      :min="1"
+                      :max="nodePoolConfig.launchTemplate.internetAccess.internetChargeType === 'BANDWIDTH_PACKAGE' ? 2000 : 100"
+                      :disabled="isEdit"
+                      v-model="nodePoolConfig.launchTemplate.internetAccess.internetMaxBandwidth">
+                    </bk-input>
+                    <span :class="['company', { disabled: isEdit }]">Mbps</span>
+                  </div>
+                </bk-radio>
+                <bk-radio 
+                  :disabled="isEdit" 
+                  value="un-limit" 
+                  v-if="nodePoolConfig.launchTemplate.internetAccess.internetChargeType === 'BANDWIDTH_PACKAGE'">
+                  <span>{{ $t('ca.internetAccess.label.unLimit') }}</span>
+                </bk-radio>
+              </bk-radio-group>
             </div>
           </div>
         </bk-form-item>
@@ -384,7 +422,8 @@
             multiple
             searchable
             class="bg-[#fff]"
-            :disabled="isEdit">
+            :disabled="isEdit"
+            selected-style="checkbox">
             <bcs-option
               v-for="securityGroup in securityGroupsList"
               :key="securityGroup.securityGroupID"
@@ -444,17 +483,18 @@
   </div>
 </template>
 <script lang="ts">
+import { sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
-import $router from '@/router';
-import $i18n from '@/i18n/i18n-setup';
-import $store from '@/store/index';
-import usePage from '@/composables/use-page';
-import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
-import { useClusterInfo, useCloud } from '@/views/cluster-manage/cluster/use-cluster';
-import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+
 import { cloudsZones } from '@/api/modules/cluster-manager';
 import TextTips from '@/components/layout/TextTips.vue';
-import { sortBy } from 'lodash';
+import usePage from '@/composables/use-page';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store/index';
+import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+import { useCloud, useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 
 export default defineComponent({
   components: { FormGroup, TextTips },
@@ -527,6 +567,7 @@ export default defineComponent({
           internetChargeType: defaultValues.value.launchTemplate?.internetAccess?.internetChargeType, // 计费方式
           internetMaxBandwidth: defaultValues.value.launchTemplate?.internetAccess?.internetMaxBandwidth, // 购买带宽
           publicIPAssigned: defaultValues.value.launchTemplate?.internetAccess?.publicIPAssigned, // 分配免费公网IP
+          bandwidthPackageId: defaultValues.value.launchTemplate?.internetAccess?.bandwidthPackageId, // 带宽包ID
         },
         // 密钥信息
         keyPair: {
@@ -822,8 +863,35 @@ export default defineComponent({
 
     // 免费分配公网IP
     watch(() => nodePoolConfig.value.launchTemplate.internetAccess.publicIPAssigned, (publicIPAssigned) => {
-      nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = publicIPAssigned ? '1' : '0';
+      nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = publicIPAssigned ? '10' : '0';
     });
+    const maxBandwidth = 65535;
+    const maxBandwidthType = ref<'limit'|'un-limit'>(Number(nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth) === maxBandwidth
+      ? 'un-limit'
+      : 'limit');
+    const bandwidthLoading = ref(false);
+    const bandwidthList = ref<any[]>([]);
+    const getBandwidthList = async () => {
+      bandwidthLoading.value = true;
+      bandwidthList.value = await getCloudBwps({
+        $cloudId: cluster.value.provider,
+        accountID: cluster.value.cloudAccountID,
+        region: cluster.value.region,
+      });
+      bandwidthLoading.value = false;
+    };
+    const handleChargeTypeChange = (value: 'TRAFFIC_POSTPAID_BY_HOUR' | 'BANDWIDTH_PREPAID' | 'BANDWIDTH_PACKAGE') => {
+      if (value !== 'BANDWIDTH_PACKAGE' && Number(nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth) > 100) {
+        // 'TRAFFIC_POSTPAID_BY_HOUR' | 'BANDWIDTH_PREPAID' 类型最大带宽为 100
+        nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = '100';
+      }
+      if (value !== 'BANDWIDTH_PACKAGE' && maxBandwidthType.value === 'un-limit') {
+        maxBandwidthType.value = 'limit'
+      }
+    };
+    const createBandWidth = () => {
+      window.open('https://console.cloud.tencent.com/vpc/package');
+    };
 
     // 登录方式
     const loginType = ref<'ssh'|'password'>(nodePoolConfig.value.launchTemplate.keyPair.keyID
@@ -911,6 +979,9 @@ export default defineComponent({
       }));
       // eslint-disable-next-line max-len
       nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = String(nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth);
+      if (maxBandwidthType.value === 'un-limit') {
+        nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = '65535';
+      }
       // 数据盘后端存了两个地方
       nodePoolConfig.value.launchTemplate.dataDisks = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => ({
         diskType: item.diskType,
@@ -971,7 +1042,7 @@ export default defineComponent({
 
     // 集群详情
     const clusterDetailLoading = ref(false);
-    const { clusterData, clusterAdvanceSettings, getClusterDetail } = useClusterInfo();
+    const { clusterData, clusterOS, clusterAdvanceSettings, getClusterDetail } = useClusterInfo();
     const handleGetClusterDetail = async () => {
       clusterDetailLoading.value = true;
       await getClusterDetail(cluster.value?.clusterID, true);
@@ -979,7 +1050,8 @@ export default defineComponent({
       clusterDetailLoading.value = false;
     };
 
-    const { accountType, getCloudAccountType } = useCloud();
+    // 账户类型
+    const { accountType, getCloudAccountType, getCloudBwps } = useCloud();
 
     onMounted(async () => {
       await handleGetClusterDetail(); // 优选获取集群详情信息
@@ -992,10 +1064,16 @@ export default defineComponent({
       getCloudAccountType({
         $cloudId: cluster.value.provider,
         accountID: cluster.value.cloudAccountID,
+      }).then(() => {
+        if (accountType.value === 'LEGACY') { // 传统账户只能选择带宽包
+          nodePoolConfig.value.launchTemplate.internetAccess.internetChargeType = 'BANDWIDTH_PACKAGE';
+        }
       });
+      getBandwidthList();
     });
 
     return {
+      clusterOS,
       isSpecifiedZoneList,
       zoneListLoading,
       zoneList,
@@ -1049,6 +1127,12 @@ export default defineComponent({
       handleGetKeyPairs,
       handleCreateKeyPair,
       accountType,
+      maxBandwidthType,
+      bandwidthList,
+      bandwidthLoading,
+      getBandwidthList,
+      handleChargeTypeChange,
+      createBandWidth,
     };
   },
 });
@@ -1120,6 +1204,7 @@ export default defineComponent({
         min-width: 30px;
         padding: 0 4px 0 4px;
         height: 32px;
+        line-height: 30px;
         border: 1px solid #C4C6CC;
         text-align: center;
         border-left: none;

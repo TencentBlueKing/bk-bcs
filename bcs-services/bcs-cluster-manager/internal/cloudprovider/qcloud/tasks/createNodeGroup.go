@@ -421,6 +421,9 @@ func generateInternetAccessible(asc *as.LaunchConfiguration) *proto.InternetAcce
 	if asc.InternetAccessible.InternetChargeType != nil {
 		internetAccess.InternetChargeType = *asc.InternetAccessible.InternetChargeType
 	}
+	if asc.InternetAccessible.BandwidthPackageId != nil {
+		internetAccess.BandwidthPackageId = *asc.InternetAccessible.BandwidthPackageId
+	}
 
 	return internetAccess
 }
@@ -565,6 +568,9 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
 		}
 		if template.InternetAccess.InternetChargeType != "" {
 			conf.InternetAccessible.InternetChargeType = common.StringPtr(template.InternetAccess.InternetChargeType)
+		}
+		if template.InternetAccess.BandwidthPackageId != "" {
+			conf.InternetAccessible.BandwidthPackageID = common.StringPtr(template.InternetAccess.BandwidthPackageId)
 		}
 	}
 	// enhanced service

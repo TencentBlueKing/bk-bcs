@@ -14,6 +14,7 @@ package argocd
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -51,11 +52,17 @@ func (plugin *StreamPlugin) Init() error {
 }
 
 func (plugin *StreamPlugin) projectViewHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
-	projectName := r.URL.Query().Get("projects")
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
-	if statusCode != http.StatusOK {
-		return mw.ReturnErrorResponse(statusCode,
-			errors.Wrapf(err, "check project '%s' permission failed", projectName))
+	projects := r.URL.Query()["projects"]
+	if len(projects) == 0 {
+		return mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'projects' cannot be empty"))
+	}
+	for i := range projects {
+		projectName := projects[i]
+		_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectView)
+		if statusCode != http.StatusOK {
+			return mw.ReturnErrorResponse(statusCode,
+				errors.Wrapf(err, "check project '%s' permission failed", projectName))
+		}
 	}
 	return mw.ReturnArgoReverse()
 }

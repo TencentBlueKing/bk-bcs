@@ -352,6 +352,8 @@ type VPCManager interface {
 	ListSecurityGroups(opt *CommonOption) ([]*proto.SecurityGroup, error)
 	// GetCloudNetworkAccountType get cloud account type
 	GetCloudNetworkAccountType(opt *CommonOption) (*proto.CloudAccountType, error)
+	// ListBandwidthPacks list bandWidthPacks
+	ListBandwidthPacks(opt *CommonOption) ([]*proto.BandwidthPackageInfo, error)
 }
 
 // TaskManager backgroup back management

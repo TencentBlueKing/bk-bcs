@@ -52,3 +52,39 @@ func (n NodeSlice) Less(i, j int) bool {
 func (n NodeSlice) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }
+
+// NodeGroupSlice cluster nodeGroup slice
+type NodeGroupSlice []*cmproto.NodeGroup
+
+// Len xxx
+func (n NodeGroupSlice) Len() int {
+	return len(n)
+}
+
+// Less xxx
+func (n NodeGroupSlice) Less(i, j int) bool {
+	return n[i].NodeGroupID < n[j].NodeGroupID
+}
+
+// Swap xxx
+func (n NodeGroupSlice) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
+}
+
+// ClusterSlice cluster slice
+type ClusterSlice []*cmproto.Cluster
+
+// Len xxx
+func (n ClusterSlice) Len() int {
+	return len(n)
+}
+
+// Less xxx
+func (n ClusterSlice) Less(i, j int) bool {
+	return n[i].ClusterName < n[j].ClusterName
+}
+
+// Swap xxx
+func (n ClusterSlice) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
+}

@@ -78,10 +78,6 @@ func (opt *ListGroupRleasesdAppsOption) Validate() error {
 		return errf.New(errf.InvalidParameter, "invalid group id, should >= 1")
 	}
 
-	if opt.Start == 0 {
-		return errf.New(errf.InvalidParameter, "invalid start, should >= 0")
-	}
-
 	if opt.Limit == 0 {
 		return errf.New(errf.InvalidParameter, "invalid limit, should >= 1")
 	}

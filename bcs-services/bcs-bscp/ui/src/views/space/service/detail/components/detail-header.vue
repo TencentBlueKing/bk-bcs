@@ -27,14 +27,14 @@
     { name: 'script', label: '前/后置脚本', routeName: 'init-script' },
   ])
 
-  
+
   const getDefaultTab = () => {
     const tab = tabs.value.find(item => item.routeName === route.name)
     return tab ? tab.name : 'config'
   }
   const activeTab = ref(getDefaultTab())
   const publishVersionRef = ref()
-  
+
   watch(() => route.name, () => {
     activeTab.value = getDefaultTab()
   })

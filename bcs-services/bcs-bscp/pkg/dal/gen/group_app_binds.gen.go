@@ -79,6 +79,10 @@ func (g groupAppBind) TableName() string { return g.groupAppBindDo.TableName() }
 
 func (g groupAppBind) Alias() string { return g.groupAppBindDo.Alias() }
 
+func (g groupAppBind) Columns(cols ...field.Expr) gen.Columns {
+	return g.groupAppBindDo.Columns(cols...)
+}
+
 func (g *groupAppBind) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := g.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -211,10 +215,6 @@ func (g groupAppBindDo) Select(conds ...field.Expr) IGroupAppBindDo {
 
 func (g groupAppBindDo) Where(conds ...gen.Condition) IGroupAppBindDo {
 	return g.withDO(g.DO.Where(conds...))
-}
-
-func (g groupAppBindDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IGroupAppBindDo {
-	return g.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (g groupAppBindDo) Order(conds ...field.Expr) IGroupAppBindDo {

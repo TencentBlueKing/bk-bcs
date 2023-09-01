@@ -153,3 +153,23 @@ func (cm *ClusterManager) ListCloudSecurityGroups(ctx context.Context,
 	blog.V(5).Infof("reqID: %s, action: ListCloudSecurityGroups, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// GetCloudBandwidthPackages implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetCloudBandwidthPackages(ctx context.Context,
+	req *cmproto.GetCloudBandwidthPackagesRequest, resp *cmproto.GetCloudBandwidthPackagesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	ca := cloudvpc.NewGGetCloudBandwidthPackagesAction(cm.model)
+	ca.Handle(ctx, req, resp)
+
+	metrics.ReportAPIRequestMetric("GetCloudBandwidthPackages", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetCloudBandwidthPackages, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data %v", reqID, req, resp.Code, resp.Message, resp.Data)
+	blog.V(5).Infof("reqID: %s, action: GetCloudBandwidthPackages, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+

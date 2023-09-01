@@ -66,7 +66,7 @@ func (pf *PodFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterfa
 		blog.Warnf("recv create object is not Pod, event %+v", e)
 		return
 	}
-	if !checkPortPoolAnnotationForPod(pod) {
+	if !checkPortPoolAnnotation(pod.Annotations) {
 		return
 	}
 	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
@@ -75,26 +75,21 @@ func (pf *PodFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterfa
 	}})
 
 	// check if related portBinding created success
-	go pf.checkPortBindingCreate(pod)
+	go checkPortBindingCreate(pf.cli, pod.GetNamespace(), pod.GetName())
 }
 
 // Update implement EventFilter
 func (pf *PodFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	metrics.IncreaseEventCounter(pf.filterName, metrics.EventTypeUpdate)
 
-	oldPod, ok := e.ObjectOld.(*k8scorev1.Pod)
-	if !ok {
-		blog.Warnf("recv create old object is not Pod, event %+v", e)
-		return
-	}
-	newPod, ok := e.ObjectNew.(*k8scorev1.Pod)
-	if !ok {
-		blog.Warnf("recv create new object is not Pod, event %+v", e)
+	oldPod, okOld := e.ObjectOld.(*k8scorev1.Pod)
+	newPod, okNew := e.ObjectNew.(*k8scorev1.Pod)
+	if !okOld || !okNew {
+		blog.Warnf("recv create object is not Pod, event %+v", e)
 		return
 	}
 
-	if !checkPortPoolAnnotationForPod(newPod) {
-		blog.V(4).Infof("ignore pod[%s/%s] update", newPod.GetNamespace(), newPod.Name)
+	if !checkPortPoolAnnotation(newPod.Annotations) && !checkPortPoolAnnotation(oldPod.Annotations) {
 		return
 	}
 
@@ -124,6 +119,11 @@ func (pf *PodFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterfa
 		Name:      newPod.GetName(),
 		Namespace: newPod.GetNamespace(),
 	}})
+
+	// 如果删除portpool相关annotation，认为用户不再需要绑定端口，会在portBinding reconcile过程中删除相关PortBinding
+	if !checkPortPoolAnnotation(newPod.Annotations) && checkPortPoolAnnotation(oldPod.Annotations) {
+		go checkPortBindingDelete(pf.cli, newPod.GetNamespace(), newPod.GetName())
+	}
 }
 
 // Delete implement EventFilter
@@ -135,7 +135,7 @@ func (pf *PodFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterfa
 		blog.Warnf("recv delete object is not Pod, event %+v", e)
 		return
 	}
-	if !checkPortPoolAnnotationForPod(pod) {
+	if !checkPortPoolAnnotation(pod.Annotations) {
 		return
 	}
 	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
@@ -143,7 +143,7 @@ func (pf *PodFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterfa
 		Namespace: pod.GetNamespace(),
 	}})
 
-	go pf.checkPortBindingDelete(pod)
+	go checkPortBindingDelete(pf.cli, pod.GetNamespace(), pod.GetName())
 }
 
 // Generic implement EventFilter
@@ -154,7 +154,7 @@ func (pf *PodFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInter
 		blog.Warnf("recv delete object is not Pod, event %+v", e)
 		return
 	}
-	if !checkPortPoolAnnotationForPod(pod) {
+	if !checkPortPoolAnnotation(pod.Annotations) {
 		return
 	}
 	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{

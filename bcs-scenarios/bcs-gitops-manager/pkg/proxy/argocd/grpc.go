@@ -460,7 +460,8 @@ func (plugin *GrpcPlugin) handleAppCreate(ctx context.Context, req *http.Request
 	}
 	argoProject, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, projectName, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
-		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check application '%s' permission failed", projectName))
+		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check application '%s' permission failed",
+			projectName))
 	}
 	// setting application name with project prefix
 	if !strings.HasPrefix(appCreate.Application.Name, projectName+"-") {
@@ -684,7 +685,8 @@ func (plugin *GrpcPlugin) handleAppListResourceLinks(ctx context.Context, req *h
 func (plugin *GrpcPlugin) handleAppCommon(ctx context.Context, appName string, actionID iam.ActionID) *mw.HttpResponse {
 	_, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, appName, actionID)
 	if statusCode != http.StatusOK {
-		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check application '%s' permission failed", appName))
+		return mw.ReturnErrorResponse(statusCode,
+			errors.Wrapf(err, "check application '%s' permission failed", appName))
 	}
 	return nil
 }

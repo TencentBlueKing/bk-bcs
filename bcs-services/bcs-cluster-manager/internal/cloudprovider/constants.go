@@ -157,12 +157,14 @@ var (
 	ProjectIDKey ParamKey = "projectID"
 	// ClusterIDKey xxx
 	ClusterIDKey ParamKey = "clusterID"
-	// hostClusterIDKey xxx
+	// HostClusterIDKey xxx
 	HostClusterIDKey ParamKey = "hostClusterID"
 	// NodeGroupIDKey xxx
 	NodeGroupIDKey ParamKey = "nodeGroupID"
 	// DeviceRecordIDKey deviceRecord key
 	DeviceRecordIDKey ParamKey = "deviceRecordKey"
+	// ManualKey xxx
+	ManualKey ParamKey = "manual"
 
 	// PoolProvider xxx
 	PoolProvider ParamKey = "poolProvider"
@@ -180,8 +182,10 @@ var (
 	UsernameKey ParamKey = "username"
 	// SecretKey xxx
 	SecretKey ParamKey = "secret"
+	// PortKey xxx
+	PortKey ParamKey = "port"
 
-	// ScalingKey xxx
+	// ScalingNodesNumKey xxx
 	ScalingNodesNumKey ParamKey = "scalingNodesNum"
 	// OperatorKey xxx
 	OperatorKey ParamKey = "operator"

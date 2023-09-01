@@ -33,12 +33,12 @@ var vpcMgr sync.Once
 func init() {
 	vpcMgr.Do(func() {
 		//init VPC manager
-		cloudprovider.InitVPCManager("qcloud", &VPCClient{})
+		cloudprovider.InitVPCManager("qcloud", &VPCManager{})
 	})
 }
 
-// NewVPCClient init VPC client
-func NewVPCClient(opt *cloudprovider.CommonOption) (*VPCClient, error) {
+// newVPCClient init VPC client
+func newVPCClient(opt *cloudprovider.CommonOption) (*vpcClient, error) {
 	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
@@ -56,20 +56,19 @@ func NewVPCClient(opt *cloudprovider.CommonOption) (*VPCClient, error) {
 		return nil, cloudprovider.ErrCloudInitFailed
 	}
 
-	return &VPCClient{vpc: cli}, nil
+	return &vpcClient{client: cli}, nil
 }
 
-// VPCClient is the client for VPC
-type VPCClient struct {
-	vpc *vpc.Client
+type vpcClient struct {
+	client *vpc.Client
 }
 
-// DescribeSecurityGroups describe security groups
-// https://cloud.tencent.com/document/api/215/15808
-func (c *VPCClient) DescribeSecurityGroups(securityGroupIds []string, filters []*Filter) (
+// describeSecurityGroups describe security groups (https://cloud.tencent.com/document/api/215/15808)
+func (v *vpcClient) describeSecurityGroups(securityGroupIds []string, filters []*Filter) (
 	[]*SecurityGroup, error) {
 	blog.Infof("DescribeSecurityGroups input: %s, %s", utils.ToJSONString(securityGroupIds),
 		utils.ToJSONString(filters))
+
 	req := vpc.NewDescribeSecurityGroupsRequest()
 	if securityGroupIds != nil {
 		req.SecurityGroupIds = common.StringPtrs(securityGroupIds)
@@ -86,7 +85,7 @@ func (c *VPCClient) DescribeSecurityGroups(securityGroupIds []string, filters []
 	for got < total || first {
 		first = false
 		req.Offset = common.StringPtr(strconv.Itoa(got))
-		resp, err := c.vpc.DescribeSecurityGroups(req)
+		resp, err := v.client.DescribeSecurityGroups(req)
 		if err != nil {
 			blog.Errorf("DescribeSecurityGroups failed, err: %s", err.Error())
 			return nil, err
@@ -105,9 +104,8 @@ func (c *VPCClient) DescribeSecurityGroups(securityGroupIds []string, filters []
 	return sg, nil
 }
 
-// DescribeSubnets describe subnets
-// https://cloud.tencent.com/document/api/215/15784
-func (c *VPCClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
+// describeSubnets describe subnets (https://cloud.tencent.com/document/api/215/15784)
+func (v *vpcClient) describeSubnets(subnetIds []string, filters []*Filter) (
 	[]*Subnet, error) {
 	blog.Infof("DescribeSubnets input: %s, %s", utils.ToJSONString(subnetIds),
 		utils.ToJSONString(filters))
@@ -125,7 +123,7 @@ func (c *VPCClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 	for got < total || first {
 		first = false
 		req.Offset = common.StringPtr(strconv.Itoa(got))
-		resp, err := c.vpc.DescribeSubnets(req)
+		resp, err := v.client.DescribeSubnets(req)
 		if err != nil {
 			blog.Errorf("DescribeSubnets failed, err: %s", err.Error())
 			return nil, err
@@ -142,10 +140,72 @@ func (c *VPCClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 	return subnets, nil
 }
 
+// describeBandwidthPackages describe 带宽包资源 (https://cloud.tencent.com/document/product/215/19209)
+func (v *vpcClient) describeBandwidthPackages(bwpIds []string, filters []*Filter) (
+	[]*vpc.BandwidthPackage, error) {
+	blog.Infof("DescribeBandwidthPackages input: %s, %s", utils.ToJSONString(bwpIds),
+		utils.ToJSONString(filters))
+
+	req := vpc.NewDescribeBandwidthPackagesRequest()
+	req.BandwidthPackageIds = common.StringPtrs(bwpIds)
+	req.Limit = common.Uint64Ptr(uint64(limit))
+
+	req.Filters = make([]*vpc.Filter, 0)
+	for _, v := range filters {
+		req.Filters = append(req.Filters, &vpc.Filter{
+			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+	}
+
+	var (
+		got, total = 0, 0
+		first      = true
+		bwps       = make([]*vpc.BandwidthPackage, 0)
+	)
+
+	for got < total || first {
+		first = false
+		req.Offset = common.Uint64Ptr(uint64(got))
+
+		resp, err := v.client.DescribeBandwidthPackages(req)
+		if err != nil {
+			blog.Errorf("DescribeBandwidthPackages failed, err: %s", err.Error())
+			return nil, err
+		}
+		if resp == nil || resp.Response == nil {
+			blog.Errorf("DescribeBandwidthPackages resp is nil")
+			return nil, fmt.Errorf("DescribeBandwidthPackages resp is nil")
+		}
+		blog.Infof("DescribeBandwidthPackages success, requestID: %s", resp.Response.RequestId)
+
+		bwps = append(bwps, resp.Response.BandwidthPackageSet...)
+		got += len(resp.Response.BandwidthPackageSet)
+
+		total = int(*resp.Response.TotalCount)
+	}
+
+	return bwps, nil
+}
+
+// describeNetworkAccountTypeRequest 查询用户网络类型
+func (v *vpcClient) describeNetworkAccountTypeRequest() (string, error) {
+	req := vpc.NewDescribeNetworkAccountTypeRequest()
+
+	resp, err := v.client.DescribeNetworkAccountType(req)
+	if err != nil {
+		blog.Errorf("DescribeNetworkAccountType failed: %v", err)
+		return "", err
+	}
+
+	return *resp.Response.NetworkAccountType, nil
+}
+
+// VPCManager is the manager for VPC
+type VPCManager struct{}
+
 // ListSubnets list vpc subnets
-func (c *VPCClient) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
+func (c *VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
 	blog.Infof("ListSubnets input: vpcID/%s", vpcID)
-	vpcCli, err := NewVPCClient(opt)
+	vpcCli, err := newVPCClient(opt)
 	if err != nil {
 		blog.Errorf("create VPC client when failed: %v", err)
 		return nil, err
@@ -153,7 +213,7 @@ func (c *VPCClient) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) (
 
 	filter := make([]*Filter, 0)
 	filter = append(filter, &Filter{Name: "vpc-id", Values: []string{vpcID}})
-	subnets, err := vpcCli.DescribeSubnets(nil, filter)
+	subnets, err := vpcCli.describeSubnets(nil, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -173,14 +233,14 @@ func (c *VPCClient) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) (
 }
 
 // ListSecurityGroups list security groups
-func (c *VPCClient) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
-	vpcCli, err := NewVPCClient(opt)
+func (c *VPCManager) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
+	vpcCli, err := newVPCClient(opt)
 	if err != nil {
 		blog.Errorf("create VPC client when failed: %v", err)
 		return nil, err
 	}
 
-	sgs, err := vpcCli.DescribeSecurityGroups(nil, nil)
+	sgs, err := vpcCli.describeSecurityGroups(nil, nil)
 	if err != nil {
 		blog.Errorf("ListSecurityGroups DescribeSecurityGroups failed: %v", err)
 		return nil, err
@@ -199,20 +259,50 @@ func (c *VPCClient) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*prot
 }
 
 // GetCloudNetworkAccountType 查询用户网络类型
-func (c *VPCClient) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
-	vpcCli, err := NewVPCClient(opt)
+func (c *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
+	vpcCli, err := newVPCClient(opt)
 	if err != nil {
 		blog.Errorf("create VPC client failed: %v", err)
 		return nil, err
 	}
 
-	req := vpc.NewDescribeNetworkAccountTypeRequest()
-
-	resp, err := vpcCli.vpc.DescribeNetworkAccountType(req)
+	accountType, err := vpcCli.describeNetworkAccountTypeRequest()
 	if err != nil {
 		blog.Errorf("DescribeNetworkAccountType failed: %v", err)
 		return nil, err
 	}
 
-	return &proto.CloudAccountType{Type: *resp.Response.NetworkAccountType}, nil
+	return &proto.CloudAccountType{Type: accountType}, nil
+}
+
+func (c *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*proto.BandwidthPackageInfo, error) {
+	vpcCli, err := newVPCClient(opt)
+	if err != nil {
+		blog.Errorf("create VPC client failed: %v", err)
+		return nil, err
+	}
+
+	bwps, err := vpcCli.describeBandwidthPackages(nil, nil)
+	if err != nil {
+		blog.Errorf("ListBandwidthPacks describeBandwidthPackages failed: %v", err)
+		return nil, err
+	}
+
+	result := make([]*proto.BandwidthPackageInfo, 0)
+	for _, v := range bwps {
+		result = append(result, &proto.BandwidthPackageInfo{
+			Id:          *v.BandwidthPackageId,
+			Name:        *v.BandwidthPackageName,
+			NetworkType: *v.NetworkType,
+			Status:      *v.Status,
+			Bandwidth: func() int32 {
+				if v != nil && v.Bandwidth != nil {
+					return int32(*v.Bandwidth)
+				}
+				return 0
+			}(),
+		})
+	}
+
+	return result, nil
 }

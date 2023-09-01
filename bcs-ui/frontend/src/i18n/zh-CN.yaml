@@ -874,8 +874,6 @@ cluster:
           publicIPAssigned:
             text: 分配免费公网IP
             tips: 内部上云环境禁用公网IP，如需提供公网服务请使用腾讯云负载均衡（CLB）
-            tips1: '此腾讯云账户为传统账户类型（带宽非上移），暂不支持分配免费公网IP，详情请见{0}'
-            accountLink: 帐户类型说明
             chargeMode:
               text: 计费方式
               traffic_postpaid_by_hour: 按使用流量计费
@@ -1141,6 +1139,7 @@ cluster:
       max10NodeDrain: 最多只能批量驱逐10个节点
     tips:
       disableImportClusterAction: 导入集群，节点管理功能不可用
+      disableImportClusterAddNode: 导入集群不支持从已有服务器添加节点 
       hasNotNodePoolNode: 选择的节点中有非节点池添加的节点
     placeholder:
       searchNode: 搜索IP、标签、污点、注解、状态、可用区、节点来源、所属节点池
@@ -2395,3 +2394,14 @@ manualNode:
   tips:
     insufficientNode: '节点数量不足, 前往节点池修改'
     desiredSize: '此节点池最多可添加 {0} 个节点；如有需要，请前往调整节点池配额'
+ca:
+  internetAccess:
+    label:
+      limit: 有上限
+      unLimit: 无上限
+      selectBandwidthPackage: 选择带宽包
+    tips:
+      accountNotAvailable: 传统账户不适用
+    bandwidthPackage: 带宽包
+    button:
+      createBandWidth: 新建带宽包

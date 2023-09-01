@@ -68,7 +68,7 @@ func (r *BCSNetPoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	// netPool is deleted
 	if netPool.DeletionTimestamp != nil {
 		netIPList := &netservicev1.BCSNetIPList{}
-		if err := r.listIPWithSelector(ctx, netIPList, map[string]string{"pool": netPool.Name}); err != nil {
+		if err := r.listIPWithSelector(ctx, netIPList, map[string]string{constant.PodLabelKeyForPool: netPool.Name}); err != nil {
 			return ctrl.Result{
 				Requeue:      true,
 				RequeueAfter: 5 * time.Second,
@@ -203,7 +203,7 @@ func (r *BCSNetPoolReconciler) syncBCSNetIP(ctx context.Context, netPool *netser
 func (r *BCSNetPoolReconciler) syncReservedBCSNetIP(ctx context.Context, netPool *netservicev1.BCSNetPool) error {
 	netIPList := &netservicev1.BCSNetIPList{}
 	if err := r.listIPWithSelector(ctx, netIPList, map[string]string{
-		"pool": netPool.Name, constant.FixIPLabel: "true"}); err != nil {
+		constant.PodLabelKeyForPool: netPool.Name, constant.FixIPLabel: "true"}); err != nil {
 		return err
 	}
 	var ipList []netservicev1.BCSNetIP
@@ -289,7 +289,7 @@ func (r *BCSNetPoolReconciler) createBCSNetIP(ctx context.Context, netPool *nets
 			newNetIP := &netservicev1.BCSNetIP{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:   ip,
-					Labels: map[string]string{"pool": netPool.Name, constant.FixIPLabel: "false"},
+					Labels: map[string]string{constant.PodLabelKeyForPool: netPool.Name, constant.FixIPLabel: "false"},
 				},
 				Spec: netservicev1.BCSNetIPSpec{
 					Net:     netPool.Spec.Net,
@@ -319,7 +319,7 @@ func (r *BCSNetPoolReconciler) createBCSNetIP(ctx context.Context, netPool *nets
 // deleteBCSNetIP deletes IP not belongs to any Pools anymore
 func (r *BCSNetPoolReconciler) deleteBCSNetIP(ctx context.Context, netPool *netservicev1.BCSNetPool) error {
 	netIPList := &netservicev1.BCSNetIPList{}
-	if err := r.listIPWithSelector(ctx, netIPList, map[string]string{"pool": netPool.Name}); err != nil {
+	if err := r.listIPWithSelector(ctx, netIPList, map[string]string{constant.PodLabelKeyForPool: netPool.Name}); err != nil {
 		return err
 	}
 

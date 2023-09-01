@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted, nextTick } from 'vue'
+  import { ref, watch, onMounted, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Plus, Search, DownShape } from 'bkui-vue/lib/icon'
   import { InfoBox } from 'bkui-vue/lib'
@@ -10,7 +10,7 @@
   import EditGroup from './edit-group.vue'
   import RuleTag from './components/rule-tag.vue'
   import ServicesToPublished from './services-to-published.vue'
-  
+
   const { spaceId } = storeToRefs(useGlobalStore())
 
   const listLoading = ref(false)
@@ -37,6 +37,12 @@
     }
   })
   const isPublishedSliderShow = ref(false)
+
+  watch(() => spaceId.value, async() => {
+    pagination.value.current = 1
+    await loadGroupList()
+    refreshTableData()
+  })
 
   onMounted(async() => {
     await loadGroupList()
@@ -146,7 +152,7 @@
   }
 
   // 删除分组
-  const handleDeleteGroup = (group: IGroupItem) => { 
+  const handleDeleteGroup = (group: IGroupItem) => {
     InfoBox({
       title: `确认是否删除分组【${group.name}?】`,
       infoType: "danger",

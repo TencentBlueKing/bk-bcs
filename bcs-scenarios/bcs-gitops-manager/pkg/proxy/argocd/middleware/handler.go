@@ -373,17 +373,10 @@ func (h *handler) ListRepositories(ctx context.Context, projectNames []string,
 }
 
 // ListApplications 根据项目名称获取所有应用
-func (h *handler) ListApplications(ctx context.Context,
-	projectNames []string) (*v1alpha1.ApplicationList, error) {
-	appList := make([]v1alpha1.Application, 0)
-	for _, name := range projectNames {
-		apps, err := h.option.Storage.ListApplications(ctx, &store.ListAppOptions{Project: name})
-		if err != nil {
-			return nil, errors.Wrapf(err, "list applications with project '%s' failed", name)
-		}
-		appList = append(appList, apps.Items...)
+func (h *handler) ListApplications(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationList, error) {
+	apps, err := h.option.Storage.ListApplications(ctx, &store.ListAppOptions{Projects: projectNames})
+	if err != nil {
+		return nil, errors.Wrapf(err, "list application swith project '%v' failed", projectNames)
 	}
-	return &v1alpha1.ApplicationList{
-		Items: appList,
-	}, nil
+	return apps, nil
 }

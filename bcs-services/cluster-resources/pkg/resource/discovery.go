@@ -22,13 +22,14 @@ import (
 	"sync"
 	"time"
 
-	openapiv2 "github.com/googleapis/gnostic/openapiv2"
+	openapi_v2 "github.com/google/gnostic-models/openapiv2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/openapi"
 	"k8s.io/client-go/rest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
@@ -68,6 +69,16 @@ type RedisCacheClient struct {
 
 	// cacheValid 为 false 则缓存无效
 	cacheValid bool
+}
+
+// OpenAPIV3 获取 openapi client
+func (d *RedisCacheClient) OpenAPIV3() openapi.Client {
+	return d.delegate.OpenAPIV3()
+}
+
+// WithLegacy 获取 discovery DiscoveryInterface
+func (d *RedisCacheClient) WithLegacy() discovery.DiscoveryInterface {
+	return d.delegate
 }
 
 // RESTClient xxx
@@ -110,7 +121,7 @@ func (d *RedisCacheClient) ServerVersion() (*version.Info, error) {
 }
 
 // OpenAPISchema 获取集群支持的 Swagger API Schema
-func (d *RedisCacheClient) OpenAPISchema() (*openapiv2.Document, error) {
+func (d *RedisCacheClient) OpenAPISchema() (*openapi_v2.Document, error) {
 	return d.delegate.OpenAPISchema()
 }
 

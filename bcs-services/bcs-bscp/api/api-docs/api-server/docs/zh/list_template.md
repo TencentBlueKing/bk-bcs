@@ -6,12 +6,13 @@
 
 #### 输入参数
 
-| 参数名称          | 参数类型 | 必选 | 描述       |
-| ----------------- | -------- | ---- | ---------- |
-| biz_id            | uint32   | 是   | 业务ID     |
-| template_space_id | uint32   | 是   | 模版空间ID |
-| start             | uint32   | 是   | 分页起始值 |
-| limit             | uint32   | 是   | 分页大小   |
+| 参数名称          | 参数类型 | 必选 | 描述             |
+| ----------------- | -------- | ---- |----------------|
+| biz_id            | uint32   | 是   | 业务ID           |
+| template_space_id | uint32   | 是   | 模版空间ID         |
+| search_key | string | 否   | 搜索条件（名称、描述、路径） |
+| start             | uint32   | 是   | 分页起始值          |
+| limit             | uint32   | 是   | 分页大小           |
 
 #### 调用示例
 
@@ -77,8 +78,8 @@
 | 参数名称     | 参数类型 | 描述         |
 | ------------ | -------- | ------------ |
 | name         | string   | 模版名称     |
-| release_name | string   | 模版版本名称 |
-| release_memo | string   | 模版版本描述 |
+| path | string   | 模版路径 |
+| memo | string   | 模版描述 |
 
 #### attachment
 

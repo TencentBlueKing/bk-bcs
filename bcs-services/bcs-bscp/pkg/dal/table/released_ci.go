@@ -116,20 +116,23 @@ func (r *ReleasedConfigItem) Validate() error {
 		return errors.New("invalid release id")
 	}
 
-	if r.CommitID <= 0 {
-		return errors.New("invalid commit id")
-	}
-
-	if r.ConfigItemID <= 0 {
-		return errors.New("invalid config item id")
-	}
-
 	if r.CommitSpec == nil {
 		return errors.New("commit spec is empty")
 	}
 
-	if err := r.CommitSpec.Validate(); err != nil {
-		return err
+	// when config item id = 0 ,it is a rendered template config item
+	// when config item id > 0, it is a normal config item (not rendered from template)
+	if r.ConfigItemID > 0 {
+		if r.CommitID <= 0 {
+			return errors.New("invalid commit id")
+		}
+
+		if err := r.CommitSpec.Validate(); err != nil {
+			return err
+		}
+	} else {
+		// for rendered template config item, need to validate content signature
+		r.CommitSpec.Content.Validate()
 	}
 
 	if r.ConfigItemSpec == nil {

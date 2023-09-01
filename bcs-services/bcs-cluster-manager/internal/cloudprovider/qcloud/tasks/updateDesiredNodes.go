@@ -51,12 +51,14 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 
 	nodeNum, _ := strconv.Atoi(desiredNodes)
 	operator := step.Params[cloudprovider.OperatorKey.String()]
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 || len(operator) == 0 {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask check parameters failed")
+		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -70,7 +72,11 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask GetClusterDependBasicInfo failed")
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -81,7 +87,11 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: applyInstanceMachines failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed %s", err.Error())
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -92,8 +102,19 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: recordClusterInstanceToDB failed: %s",
 			taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed %s", err.Error())
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
+	}
+
+	// destroy virtual nodes
+	if manual == common.True {
+		blog.Infof("ApplyInstanceMachinesTask[%s] begin DeleteVirtualNodes", taskID)
+		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
 	}
 
 	// update step
@@ -219,6 +240,7 @@ func recordClusterInstanceToDB(ctx context.Context, activity *as.Activity, state
 		blog.Errorf("recordClusterInstanceToDB[%s] failed: %v", taskID, err)
 	}
 	if len(nodeIPs) > 0 {
+		state.Task.NodeIPList = nodeIPs
 		state.Task.CommonParams[cloudprovider.OriginNodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 	}
@@ -338,6 +360,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	successInstanceID := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.SuccessNodeIDsKey.String(), ",")
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(successInstanceID) == 0 {
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: check parameter validate failed", taskID)
@@ -361,8 +384,10 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	successInstances, failureInstances, err := CheckClusterInstanceStatus(ctx, dependInfo, successInstanceID)
 	if err != nil || len(successInstances) == 0 {
-		// rollback failed nodes
-		_ = returnInstancesAndCleanNodes(ctx, dependInfo, successInstanceID)
+		if manual != common.True {
+			// rollback failed nodes
+			_ = returnInstancesAndCleanNodes(ctx, dependInfo, successInstanceID)
+		}
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask checkClusterInstanceStatus failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)

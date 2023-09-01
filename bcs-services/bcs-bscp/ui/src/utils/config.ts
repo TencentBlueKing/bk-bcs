@@ -33,3 +33,17 @@ export function getDefaultConfigItem () {
     }
   }
 }
+
+// 配置项编辑参数
+export function getConfigEditParams () {
+  return {
+    name: '',
+    memo: '',
+    path: '',
+    file_type: 'text',
+    file_mode: 'unix',
+    user: '',
+    user_group: '',
+    privilege: '',
+  }
+}

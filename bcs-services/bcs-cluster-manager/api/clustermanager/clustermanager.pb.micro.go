@@ -98,6 +98,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.BatchDeleteNodesFromCluster",
+			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes/-/batch"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
 			Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
 			Method:  []string{"GET"},
@@ -158,6 +165,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Path:    []string{"/clustermanager/v1/vcluster/{clusterID}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateVirtualClusterQuota",
+			Path:    []string{"/clustermanager/v1/vcluster/{clusterID}/quota"},
+			Method:  []string{"PUT"},
+			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
@@ -689,6 +703,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.GetCloudBandwidthPackages",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/bwps"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ListOperationLogs",
 			Path:    []string{"/clustermanager/v1/operationlogs"},
 			Method:  []string{"GET"},
@@ -826,6 +846,7 @@ type ClusterManagerService interface {
 	UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...client.CallOption) (*UpdateClusterResp, error)
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
 	DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error)
+	BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error)
 	GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error)
 	ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error)
 	ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error)
@@ -836,6 +857,7 @@ type ClusterManagerService interface {
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
 	CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, opts ...client.CallOption) (*CreateVirtualClusterResp, error)
 	DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...client.CallOption) (*DeleteVirtualClusterResp, error)
+	UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, opts ...client.CallOption) (*UpdateVirtualClusterQuotaResp, error)
 	//* node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
 	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error)
@@ -927,6 +949,7 @@ type ClusterManagerService interface {
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error)
 	ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error)
 	GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...client.CallOption) (*GetCloudAccountTypeResponse, error)
+	GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...client.CallOption) (*GetCloudBandwidthPackagesResponse, error)
 	// Operation logs
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
 	// ** ResourceSchema **
@@ -1053,6 +1076,16 @@ func (c *clusterManagerService) DeleteNodesFromCluster(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *clusterManagerService) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.BatchDeleteNodesFromCluster", in)
+	out := new(BatchDeleteClusterNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetExternalNodeScriptByGroupID", in)
 	out := new(GetExternalNodeScriptResponse)
@@ -1146,6 +1179,16 @@ func (c *clusterManagerService) CreateVirtualCluster(ctx context.Context, in *Cr
 func (c *clusterManagerService) DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...client.CallOption) (*DeleteVirtualClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DeleteVirtualCluster", in)
 	out := new(DeleteVirtualClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, opts ...client.CallOption) (*UpdateVirtualClusterQuotaResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateVirtualClusterQuota", in)
+	out := new(UpdateVirtualClusterQuotaResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1953,6 +1996,16 @@ func (c *clusterManagerService) GetCloudAccountType(ctx context.Context, in *Get
 	return out, nil
 }
 
+func (c *clusterManagerService) GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...client.CallOption) (*GetCloudBandwidthPackagesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetCloudBandwidthPackages", in)
+	out := new(GetCloudBandwidthPackagesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListOperationLogs", in)
 	out := new(ListOperationLogsResponse)
@@ -2155,6 +2208,7 @@ type ClusterManagerHandler interface {
 	UpdateCluster(context.Context, *UpdateClusterReq, *UpdateClusterResp) error
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
 	DeleteNodesFromCluster(context.Context, *DeleteNodesRequest, *DeleteNodesResponse) error
+	BatchDeleteNodesFromCluster(context.Context, *BatchDeleteClusterNodesRequest, *BatchDeleteClusterNodesResponse) error
 	GetExternalNodeScriptByGroupID(context.Context, *GetExternalNodeScriptRequest, *GetExternalNodeScriptResponse) error
 	ListNodesInCluster(context.Context, *ListNodesInClusterRequest, *ListNodesInClusterResponse) error
 	ListMastersInCluster(context.Context, *ListMastersInClusterRequest, *ListMastersInClusterResponse) error
@@ -2165,6 +2219,7 @@ type ClusterManagerHandler interface {
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
 	CreateVirtualCluster(context.Context, *CreateVirtualClusterReq, *CreateVirtualClusterResp) error
 	DeleteVirtualCluster(context.Context, *DeleteVirtualClusterReq, *DeleteVirtualClusterResp) error
+	UpdateVirtualClusterQuota(context.Context, *UpdateVirtualClusterQuotaReq, *UpdateVirtualClusterQuotaResp) error
 	//* node management
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
 	GetNodeInfo(context.Context, *GetNodeInfoRequest, *GetNodeInfoResponse) error
@@ -2256,6 +2311,7 @@ type ClusterManagerHandler interface {
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest, *ListCloudOsImageResponse) error
 	ListCloudInstances(context.Context, *ListCloudInstancesRequest, *ListCloudInstancesResponse) error
 	GetCloudAccountType(context.Context, *GetCloudAccountTypeRequest, *GetCloudAccountTypeResponse) error
+	GetCloudBandwidthPackages(context.Context, *GetCloudBandwidthPackagesRequest, *GetCloudBandwidthPackagesResponse) error
 	// Operation logs
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
 	// ** ResourceSchema **
@@ -2300,6 +2356,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateCluster(ctx context.Context, in *UpdateClusterReq, out *UpdateClusterResp) error
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
 		DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error
+		BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error
 		GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error
 		ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error
 		ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error
@@ -2310,6 +2367,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error
 		CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, out *CreateVirtualClusterResp) error
 		DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, out *DeleteVirtualClusterResp) error
+		UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, out *UpdateVirtualClusterQuotaResp) error
 		GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error
 		GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, out *GetNodeInfoResponse) error
 		RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, out *CommonResp) error
@@ -2390,6 +2448,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
 		ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error
 		GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error
+		GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
 		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error
 		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error
@@ -2470,6 +2529,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.BatchDeleteNodesFromCluster",
+		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes/-/batch"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
 		Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
 		Method:  []string{"GET"},
@@ -2530,6 +2596,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Path:    []string{"/clustermanager/v1/vcluster/{clusterID}"},
 		Method:  []string{"DELETE"},
 		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateVirtualClusterQuota",
+		Path:    []string{"/clustermanager/v1/vcluster/{clusterID}/quota"},
+		Method:  []string{"PUT"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -3061,6 +3134,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetCloudBandwidthPackages",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/bwps"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListOperationLogs",
 		Path:    []string{"/clustermanager/v1/operationlogs"},
 		Method:  []string{"GET"},
@@ -3222,6 +3301,10 @@ func (h *clusterManagerHandler) DeleteNodesFromCluster(ctx context.Context, in *
 	return h.ClusterManagerHandler.DeleteNodesFromCluster(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error {
+	return h.ClusterManagerHandler.BatchDeleteNodesFromCluster(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error {
 	return h.ClusterManagerHandler.GetExternalNodeScriptByGroupID(ctx, in, out)
 }
@@ -3260,6 +3343,10 @@ func (h *clusterManagerHandler) CreateVirtualCluster(ctx context.Context, in *Cr
 
 func (h *clusterManagerHandler) DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, out *DeleteVirtualClusterResp) error {
 	return h.ClusterManagerHandler.DeleteVirtualCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, out *UpdateVirtualClusterQuotaResp) error {
+	return h.ClusterManagerHandler.UpdateVirtualClusterQuota(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error {
@@ -3580,6 +3667,10 @@ func (h *clusterManagerHandler) ListCloudInstances(ctx context.Context, in *List
 
 func (h *clusterManagerHandler) GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error {
 	return h.ClusterManagerHandler.GetCloudAccountType(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error {
+	return h.ClusterManagerHandler.GetCloudBandwidthPackages(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {

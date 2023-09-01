@@ -269,10 +269,15 @@ const (
 	// StatusCreateNodeGroupFailed xxx
 	StatusCreateNodeGroupFailed = "CREATE-FAILURE"
 
-	//StatusAddCANodesFailed status add CA nodes failed
+	// StatusAddCANodesFailed status add CA nodes failed
 	StatusAddCANodesFailed = "ADD-CA-FAILURE"
 	// StatusRemoveCANodesFailed delete CA nodes failure
 	StatusRemoveCANodesFailed = "REMOVE-CA-FAILURE"
+
+	// StatusResourceApplying 申请资源状态
+	StatusResourceApplying = "APPLYING"
+	// StatusResourceApplyFailed 申请资源失败状态
+	StatusResourceApplyFailed = "APPLY-FAILURE"
 
 	// StatusNodeGroupUpdating xxx
 	StatusNodeGroupUpdating = "UPDATING"

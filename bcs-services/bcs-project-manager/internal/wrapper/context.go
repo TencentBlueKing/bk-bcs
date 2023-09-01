@@ -17,8 +17,11 @@ package wrapper
 import (
 	"context"
 
+	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 )
@@ -33,4 +36,30 @@ func NewInjectContextWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		}
 		return fn(ctx, req, rsp)
 	}
+}
+
+// HandleLanguageWrapper 从上下文获取语言
+func HandleLanguageWrapper(fn server.HandlerFunc) server.HandlerFunc {
+	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
+		md, _ := metadata.FromContext(ctx)
+		ctx = i18n.WithLanguage(ctx, getLangFromCookies(md))
+		return fn(ctx, req, rsp)
+	}
+}
+
+// getLangFromCookies 从 Cookies 中获取语言版本
+func getLangFromCookies(md metadata.Metadata) string {
+	cookies, ok := md.Get(constant.MetadataCookiesKey)
+
+	if !ok {
+		return i18n.DefaultLanguage
+	}
+	for _, c := range stringx.SplitString(cookies) {
+		k, v := stringx.Partition(c, "=")
+		if k != constant.LangCookieName {
+			continue
+		}
+		return v
+	}
+	return i18n.DefaultLanguage
 }

@@ -33,6 +33,7 @@
               :clearable="false"
               multiple
               :disabled="fromOldRule"
+              selected-style="checkbox"
               @selected="handleNsChange">
               <bcs-option key="all" id="" :name="$t('plugin.tools.all')" v-if="!curCluster.is_shared"></bcs-option>
               <bcs-option

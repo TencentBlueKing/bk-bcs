@@ -86,6 +86,8 @@ const (
 
 	// DefaultPort default port
 	DefaultPort = 22
+	// SpecialPort special port
+	SpecialPort = 36000
 
 	// JobSuccess job success
 	JobSuccess JobStatus = "SUCCESS"

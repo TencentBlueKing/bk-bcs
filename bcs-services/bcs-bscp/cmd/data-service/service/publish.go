@@ -66,7 +66,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	groupIDs := make([]uint32, 0)
-	
+
 	// step1: validate and query group ids.
 	if !req.All {
 		for _, name := range req.Groups {

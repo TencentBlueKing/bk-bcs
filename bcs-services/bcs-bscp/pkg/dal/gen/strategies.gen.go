@@ -113,6 +113,8 @@ func (s strategy) TableName() string { return s.strategyDo.TableName() }
 
 func (s strategy) Alias() string { return s.strategyDo.Alias() }
 
+func (s strategy) Columns(cols ...field.Expr) gen.Columns { return s.strategyDo.Columns(cols...) }
+
 func (s *strategy) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := s.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -257,10 +259,6 @@ func (s strategyDo) Select(conds ...field.Expr) IStrategyDo {
 
 func (s strategyDo) Where(conds ...gen.Condition) IStrategyDo {
 	return s.withDO(s.DO.Where(conds...))
-}
-
-func (s strategyDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IStrategyDo {
-	return s.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (s strategyDo) Order(conds ...field.Expr) IStrategyDo {

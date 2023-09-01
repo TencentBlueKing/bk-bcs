@@ -12,6 +12,11 @@
 
 package utils
 
+import (
+	"fmt"
+	"strings"
+)
+
 // StringInSlice split string to slice
 func StringInSlice(strs []string, str string) bool {
 	for _, item := range strs {
@@ -31,4 +36,18 @@ func RemoveStringInSlice(strs []string, str string) []string {
 		}
 	}
 	return newSlice
+}
+
+// GetNamespacedNameKey return key by namespace and name
+func GetNamespacedNameKey(ns, name string) string {
+	return fmt.Sprintf("%s/%s", ns, name)
+}
+
+// ParseNamespacedNameKey return key by namespace and name
+func ParseNamespacedNameKey(key string) (string, string, error) {
+	strs := strings.Split(key, "/")
+	if len(strs) != 2 {
+		return "", "", fmt.Errorf("invalid key %s", key)
+	}
+	return strs[0], strs[1], nil
 }
