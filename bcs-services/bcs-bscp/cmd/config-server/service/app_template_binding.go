@@ -246,6 +246,45 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 	return resp, nil
 }
 
+// ListReleasedAppBoundTemplateRevisions list released app bound template revisions
+func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
+	req *pbcs.ListReleasedAppBoundTemplateRevisionsReq) (
+	*pbcs.
+		ListReleasedAppBoundTemplateRevisionsResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListReleasedAppBoundTemplateRevisionsResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
+		BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListReleasedAppBoundTemplateRevisionsReq{
+		BizId:        req.BizId,
+		AppId:        req.AppId,
+		ReleaseId:    req.ReleaseId,
+		SearchFields: req.SearchFields,
+		SearchValue:  req.SearchValue,
+		Start:        req.Start,
+		Limit:        req.Limit,
+		All:          req.All,
+	}
+
+	rp, err := s.client.DS.ListReleasedAppBoundTemplateRevisions(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list released app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListReleasedAppBoundTemplateRevisionsResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
 // UpdateAppBoundTemplateRevisions update app bound template revisions
 func (s *Service) UpdateAppBoundTemplateRevisions(ctx context.Context, req *pbcs.UpdateAppBoundTemplateRevisionsReq) (
 	*pbcs.

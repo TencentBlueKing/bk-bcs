@@ -281,6 +281,36 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.L
 	return resp, nil
 }
 
+// ListReleasedAppBoundTemplateRevisions list app bound template revisions.
+func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
+	req *pbds.ListReleasedAppBoundTemplateRevisionsReq) (
+	*pbds.ListReleasedAppBoundTemplateRevisionsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	// validate the page params
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
+
+	searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.ReleasedAppTemplate)
+	if err != nil {
+		return nil, err
+	}
+
+	details, count, err := s.dao.ReleasedAppTemplate().List(kt, req.BizId, req.AppId, req.ReleaseId, searcher, opt)
+	if err != nil {
+		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListReleasedAppBoundTemplateRevisionsResp{
+		Count:   uint32(count),
+		Details: pbatb.PbAppBoundTmplRevisions(details),
+	}
+	return resp, nil
+}
+
 // genFinalATB generate the final app template binding.
 func (s *Service) genFinalATB(kt *kit.Kit, atb *table.AppTemplateBinding, validateRevision bool) error {
 	pbs := parseBindings(atb.Spec.Bindings)

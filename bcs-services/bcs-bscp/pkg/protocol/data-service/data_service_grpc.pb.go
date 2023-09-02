@@ -101,6 +101,7 @@ const (
 	Data_UpdateAppTemplateBinding_FullMethodName                   = "/pbds.Data/UpdateAppTemplateBinding"
 	Data_DeleteAppTemplateBinding_FullMethodName                   = "/pbds.Data/DeleteAppTemplateBinding"
 	Data_ListAppBoundTemplateRevisions_FullMethodName              = "/pbds.Data/ListAppBoundTemplateRevisions"
+	Data_ListReleasedAppBoundTemplateRevisions_FullMethodName      = "/pbds.Data/ListReleasedAppBoundTemplateRevisions"
 	Data_ExtractAppTemplateVariables_FullMethodName                = "/pbds.Data/ExtractAppTemplateVariables"
 	Data_GetAppTemplateVariableReferences_FullMethodName           = "/pbds.Data/GetAppTemplateVariableReferences"
 	Data_UpdateAppTemplateVariables_FullMethodName                 = "/pbds.Data/UpdateAppTemplateVariables"
@@ -233,6 +234,7 @@ type DataClient interface {
 	UpdateAppTemplateBinding(ctx context.Context, in *UpdateAppTemplateBindingReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListAppBoundTemplateRevisions(ctx context.Context, in *ListAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTemplateRevisionsResp, error)
+	ListReleasedAppBoundTemplateRevisions(ctx context.Context, in *ListReleasedAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListReleasedAppBoundTemplateRevisionsResp, error)
 	// app template variables related interface.
 	ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(ctx context.Context, in *GetAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetAppTemplateVariableReferencesResp, error)
@@ -949,6 +951,15 @@ func (c *dataClient) ListAppBoundTemplateRevisions(ctx context.Context, in *List
 	return out, nil
 }
 
+func (c *dataClient) ListReleasedAppBoundTemplateRevisions(ctx context.Context, in *ListReleasedAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListReleasedAppBoundTemplateRevisionsResp, error) {
+	out := new(ListReleasedAppBoundTemplateRevisionsResp)
+	err := c.cc.Invoke(ctx, Data_ListReleasedAppBoundTemplateRevisions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error) {
 	out := new(ExtractAppTemplateVariablesResp)
 	err := c.cc.Invoke(ctx, Data_ExtractAppTemplateVariables_FullMethodName, in, out, opts...)
@@ -1391,6 +1402,7 @@ type DataServer interface {
 	UpdateAppTemplateBinding(context.Context, *UpdateAppTemplateBindingReq) (*base.EmptyResp, error)
 	DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*base.EmptyResp, error)
 	ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error)
+	ListReleasedAppBoundTemplateRevisions(context.Context, *ListReleasedAppBoundTemplateRevisionsReq) (*ListReleasedAppBoundTemplateRevisionsResp, error)
 	// app template variables related interface.
 	ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error)
@@ -1664,6 +1676,9 @@ func (UnimplementedDataServer) DeleteAppTemplateBinding(context.Context, *Delete
 }
 func (UnimplementedDataServer) ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppBoundTemplateRevisions not implemented")
+}
+func (UnimplementedDataServer) ListReleasedAppBoundTemplateRevisions(context.Context, *ListReleasedAppBoundTemplateRevisionsReq) (*ListReleasedAppBoundTemplateRevisionsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedAppBoundTemplateRevisions not implemented")
 }
 func (UnimplementedDataServer) ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExtractAppTemplateVariables not implemented")
@@ -3108,6 +3123,24 @@ func _Data_ListAppBoundTemplateRevisions_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListReleasedAppBoundTemplateRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReleasedAppBoundTemplateRevisionsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListReleasedAppBoundTemplateRevisions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListReleasedAppBoundTemplateRevisions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListReleasedAppBoundTemplateRevisions(ctx, req.(*ListReleasedAppBoundTemplateRevisionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ExtractAppTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ExtractAppTemplateVariablesReq)
 	if err := dec(in); err != nil {
@@ -4108,6 +4141,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAppBoundTemplateRevisions",
 			Handler:    _Data_ListAppBoundTemplateRevisions_Handler,
+		},
+		{
+			MethodName: "ListReleasedAppBoundTemplateRevisions",
+			Handler:    _Data_ListReleasedAppBoundTemplateRevisions_Handler,
 		},
 		{
 			MethodName: "ExtractAppTemplateVariables",

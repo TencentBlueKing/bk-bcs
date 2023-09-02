@@ -67,7 +67,6 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplate
 	}
 
 	details, count, err := s.dao.TemplateSpace().List(kt, req.BizId, searcher, opt)
-
 	if err != nil {
 		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
