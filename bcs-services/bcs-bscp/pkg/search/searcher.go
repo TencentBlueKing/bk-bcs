@@ -35,33 +35,38 @@ const (
 	TemplateSet TableName = "template_sets"
 	// TemplateVariable is template space table
 	TemplateVariable TableName = "template_variables"
+	// ReleasedAppTemplate is released app template table
+	ReleasedAppTemplate TableName = "released_app_templates"
 )
 
 // supportedFields is supported search fields of tables
 var supportedFields = map[TableName][]string{
-	TemplateSpace:    {"name", "memo", "creator", "reviser"},
-	Template:         {"name", "path", "memo", "creator", "reviser"},
-	TemplateRevision: {"revision_name", "revision_memo", "name", "path", "creator"},
-	TemplateSet:      {"name", "memo", "creator", "reviser"},
-	TemplateVariable: {"name", "memo", "creator", "reviser"},
+	TemplateSpace:       {"name", "memo", "creator", "reviser"},
+	Template:            {"name", "path", "memo", "creator", "reviser"},
+	TemplateRevision:    {"revision_name", "revision_memo", "name", "path", "creator"},
+	TemplateSet:         {"name", "memo", "creator", "reviser"},
+	TemplateVariable:    {"name", "memo", "creator", "reviser"},
+	ReleasedAppTemplate: {"revision_name", "revision_memo", "name", "path", "creator"},
 }
 
 // supportedFieldsMap is supported search fields map of tables
 var supportedFieldsMap = map[TableName]map[string]struct{}{
-	TemplateSpace:    {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
-	Template:         {"name": {}, "path": {}, "memo": {}, "creator": {}, "reviser": {}},
-	TemplateRevision: {"revision_name": {}, "revision_memo": {}, "name": {}, "path": {}, "creator": {}},
-	TemplateSet:      {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
-	TemplateVariable: {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
+	TemplateSpace:       {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
+	Template:            {"name": {}, "path": {}, "memo": {}, "creator": {}, "reviser": {}},
+	TemplateRevision:    {"revision_name": {}, "revision_memo": {}, "name": {}, "path": {}, "creator": {}},
+	TemplateSet:         {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
+	TemplateVariable:    {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
+	ReleasedAppTemplate: {"revision_name": {}, "revision_memo": {}, "name": {}, "path": {}, "creator": {}},
 }
 
 // defaultFields is default search fields when field is not specified
 var defaultFields = map[TableName][]string{
-	TemplateSpace:    {"name"},
-	Template:         {"name"},
-	TemplateRevision: {"revision_name"},
-	TemplateSet:      {"name"},
-	TemplateVariable: {"name"},
+	TemplateSpace:       {"name"},
+	Template:            {"name"},
+	TemplateRevision:    {"revision_name"},
+	TemplateSet:         {"name"},
+	TemplateVariable:    {"name"},
+	ReleasedAppTemplate: {"revision_name"},
 }
 
 // getGenFieldsMap get the map for `table column name` => `gorm/gen field object`
@@ -83,6 +88,8 @@ func getGenFieldsMap(q *gen.Query) map[TableName]map[string]field.String {
 		TemplateRevision: {
 			"revision_name": q.TemplateRevision.RevisionName,
 			"revision_memo": q.TemplateRevision.RevisionMemo,
+			"name":          q.TemplateRevision.Name,
+			"path":          q.TemplateRevision.Path,
 			"creator":       q.TemplateRevision.Creator,
 		},
 		TemplateSet: {
@@ -96,6 +103,13 @@ func getGenFieldsMap(q *gen.Query) map[TableName]map[string]field.String {
 			"memo":    q.TemplateVariable.Memo,
 			"creator": q.TemplateVariable.Creator,
 			"reviser": q.TemplateVariable.Reviser,
+		},
+		ReleasedAppTemplate: {
+			"revision_name": q.ReleasedAppTemplate.TemplateRevisionName,
+			"revision_memo": q.ReleasedAppTemplate.TemplateRevisionMemo,
+			"name":          q.ReleasedAppTemplate.Name,
+			"path":          q.ReleasedAppTemplate.Path,
+			"creator":       q.ReleasedAppTemplate.Creator,
 		},
 	}
 }

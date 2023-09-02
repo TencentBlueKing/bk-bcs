@@ -128,12 +128,15 @@ service Data {
     rpc UpdateAppTemplateBinding(UpdateAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
     rpc DeleteAppTemplateBinding(DeleteAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
     rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {}
+    rpc ListReleasedAppBoundTemplateRevisions(ListReleasedAppBoundTemplateRevisionsReq) returns
+        (ListReleasedAppBoundTemplateRevisionsResp) {}
 
     // app template variables related interface.
     rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {}
     rpc GetAppTemplateVariableReferences(GetAppTemplateVariableReferencesReq) returns (GetAppTemplateVariableReferencesResp) {}
     rpc UpdateAppTemplateVariables(UpdateAppTemplateVariablesReq) returns (pbbase.EmptyResp) {}
     rpc ListAppTemplateVariables(ListAppTemplateVariablesReq) returns (ListAppTemplateVariablesResp) {}
+    rpc ListReleasedAppTemplateVariables(ListReleasedAppTemplateVariablesReq) returns (ListReleasedAppTemplateVariablesResp) {}
 
     // template binding relation related interface.
     rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {}
@@ -917,6 +920,22 @@ message ListAppBoundTemplateRevisionsResp {
     repeated pbatb.AppBoundTmplRevision details = 2;
 }
 
+message ListReleasedAppBoundTemplateRevisionsReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    uint32 release_id    = 3;
+    string search_fields = 4;
+    string search_value  = 5;
+    uint32 start         = 6;
+    uint32 limit         = 7;
+    bool   all           = 8;
+}
+
+message ListReleasedAppBoundTemplateRevisionsResp {
+    uint32                              count   = 1;
+    repeated pbatb.AppBoundTmplRevision details = 2;
+}
+
 message ExtractAppTemplateVariablesReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
@@ -946,6 +965,16 @@ message ListAppTemplateVariablesReq {
 }
 
 message ListAppTemplateVariablesResp {
+    repeated pbtv.TemplateVariableSpec details = 1;
+}
+
+message ListReleasedAppTemplateVariablesReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message ListReleasedAppTemplateVariablesResp {
     repeated pbtv.TemplateVariableSpec details = 1;
 }
 
