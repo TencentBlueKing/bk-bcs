@@ -106,6 +106,7 @@ const (
 	Data_GetAppTemplateVariableReferences_FullMethodName           = "/pbds.Data/GetAppTemplateVariableReferences"
 	Data_UpdateAppTemplateVariables_FullMethodName                 = "/pbds.Data/UpdateAppTemplateVariables"
 	Data_ListAppTemplateVariables_FullMethodName                   = "/pbds.Data/ListAppTemplateVariables"
+	Data_ListReleasedAppTemplateVariables_FullMethodName           = "/pbds.Data/ListReleasedAppTemplateVariables"
 	Data_ListTemplateBoundCounts_FullMethodName                    = "/pbds.Data/ListTemplateBoundCounts"
 	Data_ListTemplateRevisionBoundCounts_FullMethodName            = "/pbds.Data/ListTemplateRevisionBoundCounts"
 	Data_ListTemplateSetBoundCounts_FullMethodName                 = "/pbds.Data/ListTemplateSetBoundCounts"
@@ -240,6 +241,7 @@ type DataClient interface {
 	GetAppTemplateVariableReferences(ctx context.Context, in *GetAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetAppTemplateVariableReferencesResp, error)
 	UpdateAppTemplateVariables(ctx context.Context, in *UpdateAppTemplateVariablesReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListAppTemplateVariables(ctx context.Context, in *ListAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListAppTemplateVariablesResp, error)
+	ListReleasedAppTemplateVariables(ctx context.Context, in *ListReleasedAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListReleasedAppTemplateVariablesResp, error)
 	// template binding relation related interface.
 	ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error)
 	ListTemplateRevisionBoundCounts(ctx context.Context, in *ListTemplateRevisionBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundCountsResp, error)
@@ -996,6 +998,15 @@ func (c *dataClient) ListAppTemplateVariables(ctx context.Context, in *ListAppTe
 	return out, nil
 }
 
+func (c *dataClient) ListReleasedAppTemplateVariables(ctx context.Context, in *ListReleasedAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListReleasedAppTemplateVariablesResp, error) {
+	out := new(ListReleasedAppTemplateVariablesResp)
+	err := c.cc.Invoke(ctx, Data_ListReleasedAppTemplateVariables_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error) {
 	out := new(ListTemplateBoundCountsResp)
 	err := c.cc.Invoke(ctx, Data_ListTemplateBoundCounts_FullMethodName, in, out, opts...)
@@ -1408,6 +1419,7 @@ type DataServer interface {
 	GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error)
 	UpdateAppTemplateVariables(context.Context, *UpdateAppTemplateVariablesReq) (*base.EmptyResp, error)
 	ListAppTemplateVariables(context.Context, *ListAppTemplateVariablesReq) (*ListAppTemplateVariablesResp, error)
+	ListReleasedAppTemplateVariables(context.Context, *ListReleasedAppTemplateVariablesReq) (*ListReleasedAppTemplateVariablesResp, error)
 	// template binding relation related interface.
 	ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error)
 	ListTemplateRevisionBoundCounts(context.Context, *ListTemplateRevisionBoundCountsReq) (*ListTemplateRevisionBoundCountsResp, error)
@@ -1691,6 +1703,9 @@ func (UnimplementedDataServer) UpdateAppTemplateVariables(context.Context, *Upda
 }
 func (UnimplementedDataServer) ListAppTemplateVariables(context.Context, *ListAppTemplateVariablesReq) (*ListAppTemplateVariablesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppTemplateVariables not implemented")
+}
+func (UnimplementedDataServer) ListReleasedAppTemplateVariables(context.Context, *ListReleasedAppTemplateVariablesReq) (*ListReleasedAppTemplateVariablesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedAppTemplateVariables not implemented")
 }
 func (UnimplementedDataServer) ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateBoundCounts not implemented")
@@ -3213,6 +3228,24 @@ func _Data_ListAppTemplateVariables_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListReleasedAppTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReleasedAppTemplateVariablesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListReleasedAppTemplateVariables(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListReleasedAppTemplateVariables_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListReleasedAppTemplateVariables(ctx, req.(*ListReleasedAppTemplateVariablesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListTemplateBoundCounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateBoundCountsReq)
 	if err := dec(in); err != nil {
@@ -4161,6 +4194,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAppTemplateVariables",
 			Handler:    _Data_ListAppTemplateVariables_Handler,
+		},
+		{
+			MethodName: "ListReleasedAppTemplateVariables",
+			Handler:    _Data_ListReleasedAppTemplateVariables_Handler,
 		},
 		{
 			MethodName: "ListTemplateBoundCounts",

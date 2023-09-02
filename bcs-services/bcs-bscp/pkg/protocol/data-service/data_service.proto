@@ -136,6 +136,7 @@ service Data {
     rpc GetAppTemplateVariableReferences(GetAppTemplateVariableReferencesReq) returns (GetAppTemplateVariableReferencesResp) {}
     rpc UpdateAppTemplateVariables(UpdateAppTemplateVariablesReq) returns (pbbase.EmptyResp) {}
     rpc ListAppTemplateVariables(ListAppTemplateVariablesReq) returns (ListAppTemplateVariablesResp) {}
+    rpc ListReleasedAppTemplateVariables(ListReleasedAppTemplateVariablesReq) returns (ListReleasedAppTemplateVariablesResp) {}
 
     // template binding relation related interface.
     rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {}
@@ -964,6 +965,16 @@ message ListAppTemplateVariablesReq {
 }
 
 message ListAppTemplateVariablesResp {
+    repeated pbtv.TemplateVariableSpec details = 1;
+}
+
+message ListReleasedAppTemplateVariablesReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message ListReleasedAppTemplateVariablesResp {
     repeated pbtv.TemplateVariableSpec details = 1;
 }
 

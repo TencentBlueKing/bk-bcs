@@ -249,11 +249,13 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 // ListReleasedAppBoundTemplateRevisions list released app bound template revisions
 func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 	req *pbcs.ListReleasedAppBoundTemplateRevisionsReq) (
-	*pbcs.
-		ListReleasedAppBoundTemplateRevisionsResp,
-	error) {
+	*pbcs.ListReleasedAppBoundTemplateRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListReleasedAppBoundTemplateRevisionsResp)
+
+	if req.ReleaseId <= 0 {
+		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
+	}
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
 		BizID: req.BizId}

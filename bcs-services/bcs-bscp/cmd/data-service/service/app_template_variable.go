@@ -183,6 +183,22 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAp
 	}, nil
 }
 
+// ListReleasedAppTemplateVariables get app template variable references.
+func (s *Service) ListReleasedAppTemplateVariables(ctx context.Context, req *pbds.ListReleasedAppTemplateVariablesReq) (
+	*pbds.ListReleasedAppTemplateVariablesResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	details, err := s.dao.ReleasedAppTemplateVariable().ListVariables(kt, req.BizId, req.AppId, req.ReleaseId)
+	if err != nil {
+		logs.Errorf("list released app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return &pbds.ListReleasedAppTemplateVariablesResp{
+		Details: pbtv.PbTemplateVariableSpecs(details),
+	}, nil
+}
+
 // UpdateAppTemplateVariables update app template variables.
 func (s *Service) UpdateAppTemplateVariables(ctx context.Context, req *pbds.UpdateAppTemplateVariablesReq) (
 	*pbbase.EmptyResp, error) {
