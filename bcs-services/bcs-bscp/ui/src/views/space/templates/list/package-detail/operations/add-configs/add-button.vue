@@ -4,7 +4,7 @@
   import { useTemplateStore } from '../../../../../../../store/template'
   import AddFromExistingConfigs from './add-from-existing-configs/index.vue';
   import CreateNewConfig from './create-new-config/index.vue'
-  import ImportConfigs from './import-configs.vue'
+  import ImportConfigs from './import-configs/index.vue'
 
   const templateStore = useTemplateStore()
 
