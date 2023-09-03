@@ -10,6 +10,7 @@
   import { getAppPkgBindingRelations } from '../../../../../../../../api/template'
   import StatusTag from './status-tag'
   import EditConfig from '../edit-config.vue'
+  import ViewConfig from '../view-config.vue'
   import VersionDiff from '../../../components/version-diff/index.vue'
   import ReplaceTemplateVersion from '../replace-template-version.vue';
 
@@ -51,6 +52,10 @@
   const editPanelShow = ref(false)
   const activeConfig = ref(0)
   const isDiffPanelShow = ref(false)
+  const viewConfigSliderData = ref({
+    open: false,
+    data: { id: 0, type: '' }
+  })
   const replaceDialogData = ref({
     open: false,
     data: {
@@ -61,6 +66,11 @@
     }
   })
   const diffConfig = ref(0)
+
+  // 是否为未命名版本
+  const isUnNamedVersion = computed(() => {
+    return versionData.value.id === 0
+  })
 
   watch(() => versionData.value.id, async() => {
     await getBindingId()
@@ -100,7 +110,7 @@
       if (props.searchStr) {
         params.searchKey = props.searchStr
       }
-      if (versionData.value.id !== 0) {
+      if (!isUnNamedVersion.value) {
         params.release_id = versionData.value.id
       }
       const res = await getConfigList(props.bkBizId, props.appId, params)
@@ -185,6 +195,14 @@
   const handleEditConfigConfirm = async() => {
     await getCommonConfigList()
     tableGroupsData.value = transListToTableData()
+  }
+
+  // 查看配置项或模板版本
+  const handleViewConfig = (id: number, type: string) => {
+    viewConfigSliderData.value = {
+      open: true,
+      data: { id, type }
+    }
   }
 
   const handleOpenReplaceVersionDialog = (config: IConfigTableItem) => {
@@ -288,11 +306,30 @@
                     <tbody>
                       <tr v-for="config in group.configs" :key="config.id" class="config-row">
                         <td>
+                          <template v-if="group.id === 0">
+                            <bk-button
+                              v-if="isUnNamedVersion"
+                              text
+                              theme="primary"
+                              :disabled="config.file_state === 'DELETE'"
+                              @click="handleEditOpen(config)">
+                              {{ config.name }}
+                            </bk-button>
+                            <bk-button
+                              v-else
+                              text
+                              theme="primary"
+                              :disabled="config.file_state === 'DELETE'"
+                              @click="handleViewConfig(config.id, 'config')">
+                              {{ config.name }}
+                            </bk-button>
+                          </template>
                           <bk-button
+                            v-else
                             text
                             theme="primary"
                             :disabled="config.file_state === 'DELETE'"
-                            @click="handleEditOpen(config)">
+                            @click="handleViewConfig(config.versionId, 'template')">
                             {{ config.name }}
                           </bk-button>
                         </td>
@@ -304,14 +341,24 @@
                         <td class="status"><StatusTag :status="config.file_state" /></td>
                         <td class="operation">
                           <div class="config-actions">
+                            <!-- 非套餐配置项 -->
                             <template v-if="group.id === 0">
-                              <bk-button text theme="primary" @click="handleEditOpen(config)">{{ versionData.id === 0 ? '编辑' : '查看' }}</bk-button>
-                              <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleConfigDiff(config)">对比</bk-button>
-                              <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(config)">删除</bk-button>
+                              <template v-if="isUnNamedVersion">
+                                <bk-button text theme="primary" @click="handleEditOpen(config)">编辑</bk-button>
+                                <bk-button text theme="primary" @click="handleDel(config)">删除</bk-button>
+                              </template>
+                              <template v-else>
+                                <bk-button text theme="primary" @click="handleViewConfig(config.id, 'config')">查看</bk-button>
+                                <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleConfigDiff(config)">对比</bk-button>
+                              </template>
                             </template>
+                            <!-- 套餐模板 -->
                             <template v-else>
-                              <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleOpenReplaceVersionDialog(config)">替换版本</bk-button>
-                              <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleTplDiff(config)">对比</bk-button>
+                              <bk-button v-if="isUnNamedVersion" text theme="primary" @click="handleOpenReplaceVersionDialog(config)">替换版本</bk-button>
+                              <template v-else>
+                                <bk-button text theme="primary" @click="handleViewConfig(config.versionId, 'template')">查看</bk-button>
+                                <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleTplDiff(config)">对比</bk-button>
+                              </template>
                             </template>
                           </div>
                         </td>
@@ -319,7 +366,7 @@
                     </tbody>
                   </table>
                 </div>
-                <bk-exception v-if="group.configs.length === 0" class="exception-tips" scene="part" type="empty">暂无数据</bk-exception>
+                <bk-exception v-if="group.configs.length === 0" class="exception-tips" scene="part" type="empty">暂无配置项</bk-exception>
               </td>
             </tr>
           </template>
@@ -333,6 +380,11 @@
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
     @confirm="handleEditConfigConfirm" />
+  <ViewConfig
+    v-model:show="viewConfigSliderData.open"
+    v-bind="viewConfigSliderData.data"
+    :bk-biz-id="props.bkBizId"
+    :app-id="props.appId" />
   <VersionDiff
     v-model:show="isDiffPanelShow"
     :current-version="versionData"

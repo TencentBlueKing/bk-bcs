@@ -38,6 +38,7 @@
     }
   })
 
+  // 调用列表接口查询配置项数量
   const getconfigsCountData = async () => {
     loading.value = true
     try {

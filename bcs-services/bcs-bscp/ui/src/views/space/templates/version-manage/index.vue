@@ -205,7 +205,8 @@
         :type="versionDetailModeData.type"
         :version-id="versionDetailModeData.id"
         @created="handleCreatedVersion"
-        @close="versionDetailModeData.open = false" />
+        @close="versionDetailModeData.open = false"
+        @select="handleOpenDetailTable($event, 'view')" />
     </div>
     <bk-dialog
       title="新建版本"

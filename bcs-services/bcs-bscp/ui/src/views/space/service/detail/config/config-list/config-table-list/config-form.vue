@@ -25,11 +25,11 @@
 
   const props = withDefaults(defineProps<{
     config: IConfigEditParams;
-    fileUploading: boolean;
     editable: boolean;
     content: string|IFileConfigContentSummary;
     bkBizId: string;
     appId: number;
+    fileUploading?: boolean;
   }>(), {
     editable: true
   })

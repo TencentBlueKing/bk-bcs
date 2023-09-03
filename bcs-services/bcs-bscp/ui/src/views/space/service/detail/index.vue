@@ -9,7 +9,7 @@
   import { GET_UNNAMED_VERSION_DATE } from '../../../../constants/config'
   import ServiceSelector from './components/service-selector.vue'
   import DetailHeader from "./components/detail-header.vue"
-  import VersionListAside from './components/version-list-aside/index.vue'
+  import VersionListAside from './config/version-list-aside/index.vue'
 
   const route = useRoute()
   const router = useRouter()
