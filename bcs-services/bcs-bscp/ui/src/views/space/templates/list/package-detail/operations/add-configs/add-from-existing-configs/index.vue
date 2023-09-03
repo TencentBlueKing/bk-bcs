@@ -9,6 +9,7 @@
   import { PACKAGE_MENU_OTHER_TYPE_MAP } from '../../../../../../../../constants/template'
   import { updateTemplatePackage } from '../../../../../../../../api/template'
   import PackageTable from './package-table.vue'
+  import SearchInput from '../../../../../../../../components/search-input.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const { currentTemplateSpace, currentPkg, packageList } = storeToRefs(useTemplateStore())
@@ -45,6 +46,9 @@
       selectedConfigs.value = []
     }
   })
+
+  // @todo 配置项列表是在table展开之后加载的，需要确定搜索交互，及接口支持
+  const handleSearch = () => {}
 
   const handleToggleOpenTable = (id: string|number) => {
     openedPkgTable.value = openedPkgTable.value === id ? '' : id
@@ -109,15 +113,7 @@
     <div class="slider-content-container">
       <div class="package-configs-pick">
         <div class="search-wrapper">
-          <bk-input
-            v-model="searchStr"
-            class="search-input"
-            placeholder="配置项名称/路径/描述"
-            :clearable="true">
-              <template #suffix>
-                <Search class="search-input-icon" />
-              </template>
-          </bk-input>
+          <SearchInput v-model="searchStr" @search="handleSearch" />
         </div>
         <div class="package-tables">
           <PackageTable

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, watch } from 'vue'
+  import { computed, ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue/lib'
   import { useGlobalStore } from '../../../../../store/global'
@@ -21,6 +21,11 @@
   const appsLoading = ref(false)
   const appList = ref<IPackageCitedByApps[]>([])
   const pending = ref(false)
+
+  const maxTableHeight = computed(() => {
+    const windowHeight = window.innerHeight
+    return windowHeight * 0.6 - 200
+  })
 
   watch(() => props.show, val => {
     isShow.value = val
@@ -71,12 +76,12 @@
     <p v-if="appList.length > 0" class="tips">以下服务的未命名版本中引用此套餐的内容也将删除</p>
     <div class="service-table">
       <bk-loading style="min-height: 200px;" :loading="appsLoading">
-        <bk-table :data="appList" empty-text="暂无未命名版本引用此套餐">
+        <bk-table :data="appList" :max-height="maxTableHeight" empty-text="暂无未命名版本引用此套餐">
           <bk-table-column label="引用此套餐的服务">
             <template #default="{ row }">
               <div class="app-info">
-                <div class="name">{{ row.app_name }}</div>
-                <LinkToApp :id="row.app_id" />
+                <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+                <LinkToApp class="link-icon" :id="row.app_id" :auto-jump="true" />
               </div>
             </template>
           </bk-table-column>
@@ -97,10 +102,24 @@
     color: #63656e;
     text-align: center;
   }
+  .app-info {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    .name-text {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .link-icon {
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+  }
   .action-btns {
     padding-top: 32px;
     text-align: center;
-    border-top: 1px solid #dcdee5;
+    /* border-top: 1px solid #dcdee5; */
     .delete-btn {
       margin-right: 8px;
     }

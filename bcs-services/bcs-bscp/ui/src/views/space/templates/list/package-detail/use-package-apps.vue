@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue';
+  import { computed, onMounted, ref, watch } from 'vue';
+  import { useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { Plus } from 'bkui-vue/lib/icon';
   import { useGlobalStore } from '../../../../../store/global'
@@ -11,15 +12,25 @@
   import { IPackageCitedByApps } from '../../../../../../types/template'
   import LinkToApp from '../components/link-to-app.vue'
 
+  const router = useRouter()
+
+  const emits = defineEmits(['toggle-open'])
+
   const { spaceId } = storeToRefs(useGlobalStore())
   const { userInfo } = storeToRefs(useUserStore())
   const templateStore = useTemplateStore()
   const { currentTemplateSpace, currentPkg } = storeToRefs(templateStore)
 
-  const userAppList = ref<IAppItem[]>([])
+  const userApps = ref<IAppItem[]>([])
   const userAppListLoading = ref(false)
   const boundApps = ref<IPackageCitedByApps[]>([])
   const boundAppsLoading = ref(false)
+
+  const unBoundApps = computed(() => {
+    return userApps.value.filter(app => {
+      return boundApps.value.findIndex(item => item.app_id === app.id) === -1
+    })
+  })
 
   watch(() => currentPkg.value, () => {
     boundApps.value = []
@@ -39,7 +50,7 @@
       all: true
     }
     const res = await getAppList(spaceId.value, params)
-    userAppList.value = res.details
+    userApps.value = res.details
     userAppListLoading.value = false
   }
 
@@ -48,18 +59,24 @@
     boundAppsLoading.value = true
     const params = {
       start: 0,
-      limit: 1000
-      // all: true
+      all: true
     }
     const res = await getUnNamedVersionAppsBoundByPackage(spaceId.value, currentTemplateSpace.value, <number>currentPkg.value, params)
     boundApps.value = res.details
     boundAppsLoading.value = false
+    emits('toggle-open', boundApps.value.length > 0)
+  }
+
+  const goToConfigPageImport = (id: number) => {
+    const { href } = router.resolve({ name: 'service-config', params: { appId: id }, query: { pkg_id: currentTemplateSpace.value } })
+    window.open(href, '_blank')
   }
 
 </script>
 <template>
   <div class="use-package-apps">
     <bk-select
+      :value="''"
       :filterable="true"
       :inputSearch="false">
       <template #trigger>
@@ -68,15 +85,20 @@
           新服务中使用
         </div>
       </template>
-      <bk-option v-for="app in userAppList" :key="app.id" :id="app.id">{{ app.spec.name }}</bk-option>
+      <bk-option v-for="app in unBoundApps" :key="app.id" :id="app.id">
+        <div class="app-option" @click.stop>
+          <div class="name-text">{{ app.spec.name }}</div>
+          <LinkToApp class="link-icon" :id="(app.id as number)" @custom-click="goToConfigPageImport(app.id as number)" />
+        </div>
+      </bk-option>
     </bk-select>
     <div class="table-wrapper">
       <bk-table :border="['outer']" :data="boundApps">
         <bk-table-column label="当前使用此套餐的服务">
           <template #default="{ row }">
             <div class="app-info">
-              <div class="name">{{ row.app_name }}</div>
-              <LinkToApp :id="row.app_id" />
+              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+              <LinkToApp class="link-icon" :id="row.app_id" @custom-click="goToConfigPageImport(row.app_id)" />
             </div>
           </template>
         </bk-table-column>
@@ -116,10 +138,30 @@
       font-size: 20px;
     }
   }
+  .app-option,
+  .app-info {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
   .table-wrapper {
     margin-top: 16px;
+    .app-info {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
     .table-pagination {
       margin-top: 16px;
     }
+  }
+  .name-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .link-icon {
+    flex-shrink: 0;
+    margin-left: 10px;
   }
 </style>
