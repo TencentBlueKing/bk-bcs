@@ -21,7 +21,6 @@
 
   const emits = defineEmits(['update:show', 'added'])
 
-  const isShow = ref(false)
   const isFormChanged = ref(false)
   const configForm = ref<IConfigEditParams>(getConfigEditParams())
   const fileUploading = ref(false)
@@ -31,8 +30,10 @@
   const isSelectPkgDialogShow = ref(false)
 
   watch(() => props.show, val => {
-    isShow.value = val
-    isFormChanged.value = false
+    if (val) {
+      configForm.value = getConfigEditParams()
+      isFormChanged.value = false
+    }
   })
 
   const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary|string) => {
@@ -96,7 +97,8 @@
   <bk-sideslider
     title="新建配置项"
     :width="640"
-    :is-show="isShow"
+    :is-show="props.show"
+    :quick-close="!isSelectPkgDialogShow"
     :before-close="handleBeforeClose"
     @closed="close">
     <div class="slider-content-container">
@@ -111,11 +113,11 @@
         @change="handleFormChange"/>
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" :loading="pending" @click="handleCreateClick">去创建</bk-button>
+      <bk-button theme="primary" @click="handleCreateClick">去创建</bk-button>
       <bk-button @click="close">取消</bk-button>
     </div>
   </bk-sideslider>
-  <SelectPackage v-model:show="isSelectPkgDialogShow" :config-form="configForm" @confirm="handleCreateConfirm" />
+  <SelectPackage v-model:show="isSelectPkgDialogShow" :pending="pending" :config-form="configForm" @confirm="handleCreateConfirm" />
 </template>
 <style lang="scss" scoped>
   .slider-content-container {

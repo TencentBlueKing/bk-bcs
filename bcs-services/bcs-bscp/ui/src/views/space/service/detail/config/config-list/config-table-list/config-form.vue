@@ -59,6 +59,10 @@
     ],
     privilege: [{
       required: true,
+      validator: () => {
+        const type = typeof privilegeInputVal.value
+        return type === 'number' || (type === 'string' && privilegeInputVal.value.length > 0)
+      },
       message: '文件权限 不能为空',
       trigger: 'change'
     }],
@@ -101,12 +105,13 @@
 
   // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
   const handlePrivilegeInputBlur = () => {
-    if (/^[0-7]{3}$/.test(privilegeInputVal.value)) {
-      localVal.value.privilege = privilegeInputVal.value
+    const val = String(privilegeInputVal.value)
+    if (/^[0-7]{3}$/.test(val)) {
+      localVal.value.privilege = val
       showPrivilegeErrorTips.value = false
       change()
     } else {
-      privilegeInputVal.value = <string>localVal.value.privilege
+      privilegeInputVal.value = String(localVal.value.privilege)
       showPrivilegeErrorTips.value = true
     }
   }
@@ -215,10 +220,18 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item label="配置项名称" property="name" :required="true">
-      <bk-input v-model="localVal.name" placeholder="请输入1~64个字符，只允许英文、数字、下划线、中划线或点" :disabled="!editable" @change="change"></bk-input>
+      <bk-input
+        v-model="localVal.name"
+        placeholder="请输入1~64个字符，只允许英文、数字、下划线、中划线或点"
+        :disabled="!editable"
+        @change="change" />
     </bk-form-item>
     <bk-form-item label="配置项路径" property="path" :required="true">
-      <bk-input v-model="localVal.path" placeholder="请输入绝对路径，下载路径为前缀+配置路径" :disabled="!editable" @change="change"></bk-input>
+      <bk-input
+        v-model="localVal.path"
+        placeholder="请输入绝对路径，下载路径为前缀+配置路径"
+        :disabled="!editable"
+        @change="change" />
     </bk-form-item>
     <bk-form-item label="配置项描述" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change"></bk-input>

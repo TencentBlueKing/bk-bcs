@@ -1,23 +1,47 @@
 <script lang="ts" setup>
-  import { ref } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue';
   import { useGlobalStore } from '../../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../../store/template'
-  import { ITemplateConfigItem } from '../../../../../../../../types/template';
-  import { updateTemplatePackage } from '../../../../../../../api/template'
+  import { ITemplateConfigItem, IPackagesCitedByApps } from '../../../../../../../../types/template';
+  import { moveOutTemplateFromPackage, getUnNamedVersionAppsBoundByPackages } from '../../../../../../../api/template'
+  import LinkToApp from '../../../components/link-to-app.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
 
   const props = defineProps<{
     show: boolean;
+    currentPkg: number;
     value: ITemplateConfigItem[];
   }>()
 
   const emits = defineEmits(['update:show', 'movedOut'])
 
+  const loading = ref(false)
+  const citedList = ref<IPackagesCitedByApps[]>([])
   const pending = ref(false)
+
+  const maxTableHeight = computed(() => {
+    const windowHeight = window.innerHeight
+    return windowHeight * 0.6 - 200
+  })
+
+  watch(() => props.show, () => {
+    getCitedData()
+  })
+
+  const getCitedData = async() => {
+    loading.value = true
+    const params = {
+      start: 0,
+      all: true
+    }
+    const res = await getUnNamedVersionAppsBoundByPackages(spaceId.value, currentTemplateSpace.value, [props.currentPkg], params)
+    citedList.value = res.details
+    loading.value = false
+  }
 
   const handleConfirm = async() => {
     const pkg = packageList.value.find(item => item.id === currentPkg.value)
@@ -25,16 +49,8 @@
 
     try {
       pending.value = true
-      const { name, memo, public: isPublic, bound_apps, template_ids } = pkg.spec
-      const ids = template_ids.filter(id => props.value.findIndex(item => item.id === id) === -1)
-      const params = {
-        name,
-        memo,
-        template_ids: ids,
-        bound_apps,
-        public: isPublic
-      }
-      await updateTemplatePackage(spaceId.value, currentTemplateSpace.value, <number>currentPkg.value, params)
+      const ids = props.value.map(item => item.id)
+      await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, ids, [<number>currentPkg.value])
       emits('movedOut')
       close()
       Message({
@@ -66,10 +82,19 @@
     @closed="close">
     <div class="selected-mark">已选 <span class="num">{{ props.value.length }}</span> 个配置项</div>
     <p class="tips">以下服务配置的未命名版本中引用此套餐的内容也将更新</p>
-    <bk-table>
-      <bk-table-column label="所在模板套餐"></bk-table-column>
-      <bk-table-column label="使用此套餐的服务"></bk-table-column>
-    </bk-table>
+    <bk-loading style="min-height: 100px;" :loading="loading">
+      <bk-table :data="citedList" :max-height="maxTableHeight">
+        <bk-table-column label="所在模板套餐" prop="template_set_name"></bk-table-column>
+        <bk-table-column label="使用此套餐的服务">
+          <template #default="{ row }">
+            <div v-if="row.app_id" class="app-info">
+              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+              <LinkToApp class="link-icon" :id="row.app_id" />
+            </div>
+          </template>
+        </bk-table-column>
+      </bk-table>
+    </bk-loading>
   </bk-dialog>
 </template>
 <style lang="scss" scoped>
@@ -85,6 +110,20 @@
     background: #f0f1f5;
     .num {
       color: #3a84ff;
+    }
+  }
+  .app-info {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    .name-text {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .link-icon {
+      flex-shrink: 0;
+      margin-left: 10px;
     }
   }
 </style>

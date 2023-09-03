@@ -96,7 +96,7 @@
       <bk-table :border="['outer']" :data="boundApps">
         <bk-table-column label="当前使用此套餐的服务">
           <template #default="{ row }">
-            <div class="app-info">
+            <div v-if="row.app_id" class="app-info">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
               <LinkToApp class="link-icon" :id="row.app_id" @custom-click="goToConfigPageImport(row.app_id)" />
             </div>
