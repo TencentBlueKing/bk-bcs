@@ -147,11 +147,6 @@ import search from 'bkui-vue/lib/icon/search'
     emits('update:show', false)
   }
 
-  const handleSelect = () => {
-    debugger
-    isFormChange.value = true
-  }
-
 </script>
 <template>
   <bk-sideslider

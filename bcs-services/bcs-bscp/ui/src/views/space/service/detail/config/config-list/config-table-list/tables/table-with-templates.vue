@@ -46,8 +46,10 @@
   const commonConfigListLoading = ref(false)
   const bindingId = ref(0)
   const configList = ref<IConfigItem[]>([]) // 非模板配置项
+  const configsCount = ref(0)
   const boundTemplateListLoading = ref(false)
   const templateList = ref<IBoundTemplateDetail[]>([]) // 配置项模板
+  const templatesCount = ref(0)
   const tableGroupsData = ref<IConfigsGroupData[]>([])
   const editPanelShow = ref(false)
   const activeConfig = ref(0)
@@ -79,6 +81,12 @@
 
   watch(() => props.searchStr, () => {
     getAllConfigList()
+  })
+
+  watch([() => configsCount.value, () => templatesCount.value], () => {
+    configStore.$patch((state) => {
+      state.allConfigCount = configsCount.value + templatesCount.value
+    })
   })
 
   onMounted(async() => {
@@ -115,6 +123,7 @@
       }
       const res = await getConfigList(props.bkBizId, props.appId, params)
       configList.value = res.details
+      configsCount.value = res.count
     } catch (e) {
       console.error(e)
     } finally {
@@ -142,6 +151,7 @@
         res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id)
       }
       templateList.value = res.details
+      templatesCount.value = res.count
     } catch (e) {
       console.error(e)
     } finally {
