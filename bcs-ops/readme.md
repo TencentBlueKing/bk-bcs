@@ -10,82 +10,46 @@ Usage:
     [ -i --install     support: master node helm op]
     [ -r --render      suppport: bcsenv kubeadm joincmd]
     [ -c --clean       support: master node bcsenv op]
+	[ -e --check       support: all]
+    [ -e --check ]
 ```
 
-## 示例
+## 预置检查（可选）
 
-### 集群创建与节点添加
+机器执行`./bcs-ops --check all`，脚本将对这些 `check_kernel check_swap check_selinux check_firewalld check_yum_proxy check_http_proxy check_openssl check_hostname check_tools` 项目进行统一检查。您应当注意检查结果为 `[FATAL]` 项目，并在准备环境的过程中进行调整。
 
-1. 在第一台主机（后称中控机）上启动集群控制平面：`./bcs-ops --instal master`，集群启动成功后会显示加入集群的指令
-2. 集群加入指令有效期为 1 小时，中控机执行 `./bcs-ops --render joincmd` 可再次渲染生成加入集群的指令，渲染结果如下所示
+## 准备环境（可选）
 
-```plaintext
-======================
-# Expand Control Plane, run the following command on new machine
-set -a
-CLUSTER_ENV=xxxx
-MASTER_JOIN_CMD=xxxx
-set +a
-./bcs-ops -i master
-======================
-# Expand Worker Plane, run the following command on new machine
-set -a
-CLUSTER_ENV=xxxx
-JOIN_CMD=xxxx
-set +a
-./bcs-ops -i node
-======================
-```
+### iptables 策略
 
-3. 添加控制平面节点(master node)，以及添加工作节点(wroker node)，执行第二步渲染生成的的加入集群指令
+> 在安装的过程中`bcs-ops`会关闭机器的防火墙，`systemctl stop firewalld;systemctl disable firewalld`。
 
-### 集群 node 节点移除
+集群的机器之间应该放通如下的端口，可以使用`system/config_iptables.sh <src_cidr4> <src_cidr6>` 对集群 cidr 网段的相关协议/端口进行放通。使用`system/config_iptables.sh -h` 查看使用方法。
 
-1. 在中控机上先移除 ip 地址为 `$IP` 节点
+如果机器并没有拦截这些协议/端口，可以忽略这一步。
 
-```bash
-node_name="node-$(tr ":." "-" <<<"$IP")"
-# https://kubernetes.io/zh-cn/docs/tasks/administer-cluster/safely-drain-node/
-kubectl drain --ignore-daemonsets $node_name
-kubectl delete node $node_name
-```
+#### k8s
 
-2. 被移除的节点上执行 `./bcs-ops --clean node`
+| **组件**   | **协议/端口**      | **说明**                  |
+| ---------- | ------------------ | ------------------------- |
+| apiserver  | tcp/6443           | secure-port               |
+| controller | tcp/10257          | secure-port               |
+| scheduler  | tcp/10259          | secure-port               |
+| etcd       | tcp/2379, tcp/2380 | advertise_port, peer-port |
+| kubelet    | tcp/10250          | metric-server need        |
 
-### 中控机安装 helm 工具
+#### flannel
 
-`./bcs-ops --install helm`
+| 模式    | 平台    | 协议端口             | 说明                              |
+| ------- | ------- | -------------------- | --------------------------------- |
+| vxlan   | linux   | udp/8472             |                                   |
+| vxlan   | windows | udp/4789             |                                   |
+| host-gw | linux   | udp/51820, udp/51821 | 前者为 ipv4，后者为 ipv6          |
+| udp     |         | 8285                 | 仅当内核/网络不支持 vxlan/host-gw |
 
-### 部署 localpv
+### bcs-ops 获取 IP / IP6 的方式
 
-> 注意：localpv 部署依赖 helm。在添加 node 节点的过程中，并没有执行 `mount localpv` 动作。
-> $BK_HOME 默认路径为`/data/bcs/`，
-
-1. node 节点执行`./system/mount_localpv /mnt/blueking 20`。该工具会在`/$BK_HOME/localpv`目录下创建 20 个子目录，并通过 mount bind 挂载到对应的`/mnt/blueking/localpv`路径下。若使用节点上已有的挂载点目录，这一步可以跳过。
-
-2. 中控机执行`./k8s/install_localpv /mnt/blueking`，localpv 会寻找节点`/mnt/blueking`下所有的挂载点，创建相应的`Persistentvolumes`资源。
-
-3. 当步骤 2 执行后，新的加入的 node 节点如果要添加`Persistentvolumes`资源，重新执行步骤 1、2，即可重启 localpv 的 pod 实现挂载。
-
-## 环境变量
-
-通过配置环境变量来设置集群相关的参数。在中控机创建集群前，通过 `set -a` 设置环境变量。
-
-### 示例：创建 ipv6 双栈集群
-
-> k8s 1.23 ipv6 特性为稳定版
-
-```bash
-set -a
-K8S_VER="1.23.17"
-K8S_IPv6_STATUS="DualStack"
-set +a
-./bcs-ops -i master
-```
-
-## IP 的获取方式
-
-对于裸金属服务器，ipv4 通过 `10/8` 的默认路由源地址获取，ipv6 则通过 `fd00::/8` 的默认路由源地址获取。如果有多个网卡，可以手动配置该路由的源地址来选择
+对于裸金属服务器，ipv4 通过 `10/8` 的默认路由源地址获取，ipv6 则通过 `fd00::/8` 的默认路由源地址获取。如果有多个网卡，可以手动配置该路由的源地址。
 
 ```bash
 # 如果存在则先删除
@@ -97,6 +61,119 @@ ip -6 route add fd00::/8 via <next hop> dev <interface> src <lan_ipv6>
 ```
 
 > 注意：`fe80::/10` link-local 地址不能用于 k8s 的 node-ip。
+
+## 安装示例
+
+### 集群创建与节点添加
+
+1. 在第一台主机（后称中控机）上启动集群控制平面：`./bcs-ops --instal master`，集群启动成功后会显示加入集群的指令
+2. 集群加入指令有效期为 1 小时，中控机执行 `./bcs-ops --render joincmd` 可再次渲染生成加入集群的指令，渲染结果如下所示
+
+   ```plaintext
+   ======================
+   # Expand Control Plane, run the following command on new machine
+   set -a
+   CLUSTER_ENV=xxxx
+   MASTER_JOIN_CMD=xxxx
+   set +a
+   ./bcs-ops -i master
+   ======================
+   # Expand Worker Plane, run the following command on new machine
+   set -a
+   CLUSTER_ENV=xxxx
+   JOIN_CMD=xxxx
+   set +a
+   ./bcs-ops -i node
+   ======================
+   ```
+
+3. 添加控制平面节点(master node)，以及添加工作节点(wroker node)，执行第二步渲染生成的的加入集群指令
+
+### 集群 node 节点移除
+
+1. 在中控机上先移除 ip 地址为 `$IP` 节点
+
+   ```bash
+   node_name="node-$(tr ":." "-" <<<"$IP")"
+   # https://kubernetes.io/zh-cn/docs/tasks/administer-cluster/safely-drain-node/
+   kubectl drain --ignore-daemonsets $node_name
+   kubectl delete node $node_name
+   ```
+
+2. 被移除的节点上执行 `./bcs-ops --clean node`
+
+## 环境变量
+
+通过配置环境变量来设置集群相关的参数。在中控机创建集群前，通过 `set -a` 设置环境变量。 你可以执行 `system/config_envfile.sh -init` 查看默认的环境变量。
+
+### 示例：创建 ipv6 双栈集群
+
+> k8s 1.23 ipv6 特性为稳定版，仅支持 >=1.23.x 版本开启 ipv6 特性
+
+```bash
+set -a
+K8S_VER="1.23.17"
+K8S_IPv6_STATUS="DualStack"
+set +a
+./bcs-ops -i master
+```
+
+### 示例：离线安装
+
+离线安装资源清单见 `env/offline-manifest.yaml`。目前仅支持 k8s `1.20.15`, `1.23.17` 和 `1.24.15` 版本。
+
+你需要把对应的离线包解压到 bcs-ops 的工作根目录下 `tar xfvz bcs-ops-offline-${version}.tgz`，并且安装对应的版本 `${VERSION}`。
+
+```bash
+set -a
+BCS_OFFLINE="1"
+K8S_VER="${VERSION}"
+./bcs-ops -i master
+set +a
+```
+
+## k8s 插件
+
+bcs-ops 脚本工具集也支持安装 k8s 相关插件。多数的插件需要通过 `helm` 的方式安装。因此，你需要在中控机上执行 `./bcs-ops --install helm`。
+
+### csi
+
+安装的 k8s 组件由 `K8S_CSI` 环境变量决定，目前默认且只支持 `localpv`
+
+#### localpv
+
+```bash
+# localpv 挂载点，默认为${BK_HOME}/localpv
+LOCALPV_DIR=${LOCALPV_DIR:-${BK_HOME}/localpv}
+# 创建的 localpv 数量，默认为20个
+LOCALPV_COUNT=${LOCALPV_COUNT:-20}
+# localpv 回收策略，默认为pvc删除后清理
+LOCALPV_reclaimPolicy=${LOCALPV_reclaimPolicy:-"Delete"}
+```
+
+当 `K8S_CSI` 为 `localpv` 时。在部署的时候，将以挂载点进行自身绑定挂载，并把规则写入到 `/etc/fstab` 中，如下所示
+
+```plaintext
+${BK_HOME}/localpv/volxx ${BK_HOME}/localpv/volxx none defaults,bind 0 0
+```
+
+如果你需要安装 `localpv`，中控机执行：`./k8s/install_localpv`
+
+### ingress-controller
+
+#### nginx-ingress-controller
+
+中控机执行 `bcs-ops/k8s/install_nginx_ingress.sh`
+note: 默认 nodePort 为 32080 和 32443。不启用 hostNetwork 模式。
+
+```yaml
+service:
+  type: NodePort
+  nodePorts:
+    http: 32080
+    https: 32443
+hostNetwork: false
+```
 
 ---
 

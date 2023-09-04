@@ -46,7 +46,6 @@ safe_source "${ROOT_DIR}/functions/k8s.sh"
 
 "${ROOT_DIR}"/system/config_envfile.sh -c init
 "${ROOT_DIR}"/system/config_system.sh -c dns sysctl
-"${ROOT_DIR}"/system/config_iptables.sh add
 "${ROOT_DIR}"/k8s/install_cri.sh
 "${ROOT_DIR}"/k8s/install_k8s_tools
 "${ROOT_DIR}"/k8s/render_kubeadm
@@ -89,9 +88,12 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
 else
   kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
     || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
+  install -dv "$HOME/.kube"
   install -v -m 600 -o "$(id -u)" -g "$(id -g)" \
     /etc/kubernetes/admin.conf "$HOME/.kube/config"
   "${ROOT_DIR}"/system/config_bcs_dns -u "${LAN_IP}" k8s-api.bcs.local
+  "${ROOT_DIR}"/system/config_envfile.sh -c clean
+  K8S_CTRL_IP=$LAN_IP "${ROOT_DIR}"/system/config_envfile.sh -c init
   k8s::restart_kubelet
   if [[ ${ENABLE_APISERVER_HA} == "true" ]]; then
     [[ -z ${VIP} ]] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"

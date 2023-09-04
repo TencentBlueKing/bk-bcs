@@ -79,7 +79,7 @@ init_bap_rule() {
         utils::log "ERROR" "containerd client: ctr is not found"
       fi
       if ctr i pull --hosts-dir "/etc/containerd/certs.d" "${bap_image}"; then
-        if ! ctr run --rm --mount type=bind,src="${PROXY_TOOL_PATH}",dst=/tmp,options=rbind:rw "${bap_image}" \
+        if ! ctr -n k8s.io run --rm --mount type=bind,src="${PROXY_TOOL_PATH}",dst=/tmp,options=rbind:rw "${bap_image}" \
           bap-copy."$(date +%s)" /bin/cp -f /data/bcs/bcs-apiserver-proxy/apiserver-proxy-tools /tmp/; then
           utils::log "ERROR" "containerd fail to run ${bap_image}"
         fi
@@ -106,7 +106,6 @@ safe_source "${ROOT_DIR}/functions/k8s.sh"
 
 "${ROOT_DIR}"/system/config_envfile.sh -c init
 "${ROOT_DIR}"/system/config_system.sh -c dns sysctl
-"${ROOT_DIR}"/system/config_iptables.sh add
 "${ROOT_DIR}"/k8s/install_cri.sh
 "${ROOT_DIR}"/k8s/install_k8s_tools
 "${ROOT_DIR}"/k8s/render_kubeadm

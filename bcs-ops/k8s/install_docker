@@ -74,6 +74,19 @@ _yum_docker() {
   return 0
 }
 
+_offline_docker() {
+  local bin_path tar_name
+  bin_path=${ROOT_DIR}/version-${VERSION}/bin-tools/
+  tar_name=$(find "$bin_path" -iname "docker-*.tgz" -type f | head -1)
+
+  if [[ -z ${tar_name} ]]; then
+    utils::log "FATAL" "can't find docker installation package in ${bin_path}"
+  else
+    tar xvzf "${tar_name}" -C /usr/bin/ --strip-components=1 bin/
+    tar xvzf "${tar_name}" -C /etc/systemd/system/ --strip-components=1 systemd/
+  fi
+}
+
 # ToDo: config separte
 render_docker() {
   trap "utils::on_ERR;" ERR
@@ -135,8 +148,7 @@ main() {
     utils::log "WARN" "docker installed, $(docker -v)"
   else
     if [[ -n ${BCS_OFFLINE:-} ]]; then
-      # ToDo offline install docker
-      true
+      _offline_docker
     else
       _yum_docker
     fi
@@ -150,6 +162,12 @@ main() {
   # install testing
   if ! docker --version; then
     utils::log "ERROR" "Did docker get installed?"
+  fi
+
+  # load image
+  if [[ -n ${BCS_OFFLINE:-} ]]; then
+    find "${ROOT_DIR}"/version-"${VERSION}"/images -name '*.tar' -type f -print0 \
+      | xargs -0 -I {} docker load -i {}
   fi
 
   # function testing

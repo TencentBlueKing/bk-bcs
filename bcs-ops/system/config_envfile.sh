@@ -52,10 +52,10 @@ init_env() {
   LAN_IP=${LAN_IP:-}
   LAN_IPv6=${LAN_IPv6:-}
   BCS_SYSCTL=${BCS_SYSCTL:=1}
-  if [[ ${K8S_IPv6_STATUS,,} != "singlestack" ]]; then
+  if [[ -z ${LAN_IP} ]] && [[ ${K8S_IPv6_STATUS,,} != "singlestack" ]]; then
     LAN_IP="$("${ROOT_DIR}"/system/get_lan_ip -4)"
   fi
-  if [[ ${K8S_IPv6_STATUS,,} != "disable" ]]; then
+  if [[ -z $LAN_IPv6 ]] && [[ ${K8S_IPv6_STATUS,,} != "disable" ]]; then
     LAN_IPv6="$("${ROOT_DIR}"/system/get_lan_ip -6)"
   fi
   BCS_OFFLINE=${BCS_OFFLINE:-}
@@ -96,6 +96,10 @@ init_env() {
 
   # csi
   K8S_CSI=${K8S_CSI:-"localpv"}
+  ## localpv
+  LOCALPV_DIR=${LOCALPV_DIR:-${BK_HOME}/localpv}
+  LOCALPV_COUNT=${LOCALPV_COUNT:-20}
+  LOCALPV_reclaimPolicy=${LOCALPV_reclaimPolicy:-"Delete"}
 
   # mirror
   ## yum_mirror
