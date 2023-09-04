@@ -40,6 +40,8 @@ type TemplateRevision interface {
 	GetByUniqueKey(kit *kit.Kit, bizID, templateID uint32, revisionName string) (*table.TemplateRevision, error)
 	// ListByIDs list template revisions by template revision ids.
 	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateRevision, error)
+	// ListByIDsWithTx list template revisions by template revision ids with transaction.
+	ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) ([]*table.TemplateRevision, error)
 	// ListByTemplateIDs list template revisions by template ids.
 	ListByTemplateIDs(kit *kit.Kit, bizID uint32, templateIDs []uint32) ([]*table.TemplateRevision, error)
 	// DeleteForTmplWithTx delete template revision for one template with transaction.
@@ -207,6 +209,14 @@ func (dao *templateRevisionDao) GetByUniqueKey(kit *kit.Kit, bizID, templateID u
 func (dao *templateRevisionDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateRevision, error) {
 	m := dao.genQ.TemplateRevision
 	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
+	return q.Where(m.ID.In(ids...)).Find()
+}
+
+// ListByIDsWithTx list template revisions by template revision ids with transaction.
+func (dao *templateRevisionDao) ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) (
+	[]*table.TemplateRevision, error) {
+	m := tx.TemplateRevision
+	q := tx.TemplateRevision.WithContext(kit.Ctx)
 	return q.Where(m.ID.In(ids...)).Find()
 }
 

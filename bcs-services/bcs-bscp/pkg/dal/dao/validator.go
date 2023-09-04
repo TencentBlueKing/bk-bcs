@@ -32,6 +32,8 @@ type Validator interface {
 	ValidateTemplatesExist(kit *kit.Kit, templateIDs []uint32) error
 	// ValidateTemplateRevisionsExist validate if template releases exists
 	ValidateTemplateRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error
+	// ValidateTemplateRevisionsExistWithTx validate if template releases exists with transaction
+	ValidateTemplateRevisionsExistWithTx(kit *kit.Kit, tx *gen.QueryTx, templateRevisionIDs []uint32) error
 	// ValidateTemplateSetsExist validate if template sets exists
 	ValidateTemplateSetsExist(kit *kit.Kit, templateSetIDs []uint32) error
 	// ValidateTemplateExist validate if one template exists
@@ -92,6 +94,24 @@ func (dao *validatorDao) ValidateTemplatesExist(kit *kit.Kit, templateIDs []uint
 func (dao *validatorDao) ValidateTemplateRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error {
 	m := dao.genQ.TemplateRevision
 	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
+	var existIDs []uint32
+	if err := q.Where(m.ID.In(templateRevisionIDs...)).Pluck(m.ID, &existIDs); err != nil {
+		return fmt.Errorf("validate template releases exist failed, err: %v", err)
+	}
+
+	diffIDs := tools.SliceDiff(templateRevisionIDs, existIDs)
+	if len(diffIDs) > 0 {
+		return fmt.Errorf("template release id in %v is not exist", diffIDs)
+	}
+
+	return nil
+}
+
+// ValidateTemplateRevisionsExistWithTx validate if template releases exists with transaction
+func (dao *validatorDao) ValidateTemplateRevisionsExistWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	templateRevisionIDs []uint32) error {
+	m := tx.TemplateRevision
+	q := tx.TemplateRevision.WithContext(kit.Ctx)
 	var existIDs []uint32
 	if err := q.Where(m.ID.In(templateRevisionIDs...)).Pluck(m.ID, &existIDs); err != nil {
 		return fmt.Errorf("validate template releases exist failed, err: %v", err)
