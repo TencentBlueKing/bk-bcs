@@ -2,27 +2,30 @@
 <html>
 <head>
     <link rel="icon" href="{{ .SITE_STATIC_URL }}/web/static/images/favicon.ico" />
-    <title>BCS Asciinema Player</title>
-    <link rel="stylesheet" type="text/css" href="{{ .SITE_STATIC_URL }}/web/static/assets/asciinema-player.css">
+    <title>BCS Asciinema Recorder File</title>
 </head>
 <body>
-    <h1>Asciinema Player</h1>
+    <h1>Recorder File</h1>
     {{range $k,$fn:=.file_name}}
     <ul>
-        <li><a href="javascript:void(0)" onclick="playFile('{{$fn}}')">{{$fn}}</a></li>
+        <li><a href="/replay/fileName={{$fn}}" id="goToReplay" >{{$fn}}</a></li>
     </ul>
     {{end}}
-    <!-- 用于显示播放器的容器 -->
-    <div id="player"></div>
 
-    <script src="{{ .SITE_STATIC_URL }}/web/static/assets/asciinema-player.min.js"></script>
-    <script type="text/javascript" defer>
-        const player = document.getElementById('player')
-        function playFile(data) {
-            player.innerHTML = '';
-            const d = 'casts/replay/' + data
-            AsciinemaPlayer.create(d, player);
-        }
+    <script>
+        const ToLink = document.getElementById('goToReplay');
+        ToLink.addEventListener('click', function(event) {
+            event.preventDefault(); // 阻止默认的链接跳转行为
+
+            // 获取链接的文本内容，作为变量的值
+            const message = ToLink.textContent;
+
+            // 构建带有 URL 参数的链接
+            const url = '/webconsole/replay/' + encodeURIComponent(message);
+
+            // 在新标签页中打开链接
+            window.open(url, '_blank');
+        });
     </script>
 
 </body>

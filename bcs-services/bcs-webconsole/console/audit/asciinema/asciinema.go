@@ -108,6 +108,7 @@ func (w *Writer) WriteStdout(ts float64, data []byte, event EventType) error {
 		return err
 	}
 
+	// buff 做批量写入文件
 	if len(raw) > maxBuffSize { //读取的数据大于最大缓存
 		//先缓存写入再将读取的数据写入文件
 		_, err := w.Write(w.WriteBuff)
@@ -135,6 +136,17 @@ func (w *Writer) WriteStdout(ts float64, data []byte, event EventType) error {
 		w.WriteBuff = append(w.WriteBuff, raw...)
 	}
 	return nil
+}
+
+// WriteFileInterval 检查buff是否为空,不为空则写入文件
+func (w *Writer) WriteFileInterval() error {
+	if len(w.WriteBuff) > 0 {
+		_, err := w.writer.Write(w.WriteBuff)
+		w.WriteBuff = w.WriteBuff[:0]
+		return err
+	} else {
+		return nil
+	}
 }
 
 type Header struct {

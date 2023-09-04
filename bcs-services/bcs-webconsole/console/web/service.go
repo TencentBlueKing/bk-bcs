@@ -54,7 +54,8 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web.GET("/projects/:projectId/mgr/", metrics.RequestCollect("MgrPage"), s.MgrPageHandler)
 	web.GET("/portal/container/", metrics.RequestCollect("ContainerGatePage"), s.ContainerGatePageHandler)
 	web.GET("/portal/cluster/", metrics.RequestCollect("ClusterGatePage"), s.ClusterGatePageHandler)
-	web.GET("/replay/", metrics.RequestCollect("ReplayPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayPageHandler)
+	web.GET("/replay/files", metrics.RequestCollect("ReplayFilesPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFilesPageHandler)
+	web.GET("/replay/:fileName", metrics.RequestCollect("ReplayDetailPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayDetailPageHandler)
 
 	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
@@ -62,7 +63,8 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web.GET("/metrics", metrics.PromMetricHandler())
 }
 
-func (s *service) ReplayPageHandler(c *gin.Context) {
+// ReplayFilesPageHandler 回放文件
+func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 	dirname := config.G.TerminalRecord.FilePath
 	entries, err := os.ReadDir(dirname)
 	if err != nil {
@@ -80,6 +82,16 @@ func (s *service) ReplayPageHandler(c *gin.Context) {
 		"SITE_STATIC_URL": s.opts.RoutePrefix,
 	}
 	c.HTML(http.StatusOK, "replay.html", data)
+}
+
+// ReplayDetailPageHandler 回放终端记录文件
+func (s service) ReplayDetailPageHandler(c *gin.Context) {
+	file := c.Param("fileName")
+	data := gin.H{
+		"file":            file,
+		"SITE_STATIC_URL": s.opts.RoutePrefix,
+	}
+	c.HTML(http.StatusOK, "asciinema.html", data)
 }
 
 // IndexPageHandler index 页面

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="icon" href="{{ .SITE_STATIC_URL }}/web/static/images/favicon.ico" />
+  <title>BCS Asciinema Player</title>
+  <link rel="stylesheet" type="text/css" href="{{ .SITE_STATIC_URL }}/web/static/assets/asciinema-player.css" />
+  <style>
+    /* 使用 CSS 设置容器元素的高度 */
+    .fixed-height-container {
+      height: 500px; /* 设置高度为 500 像素 */
+      background-color: lightblue;
+    }
+  </style>
+</head>
+<body>
+  <div id="demo" class="fixed-height-container"></div>
+  <script src="{{ .SITE_STATIC_URL }}/web/static/assets/asciinema-player.min.js"></script>
+  <script>
+    //本地文件系统路径,避免跨域问题
+    const d = 'casts/replay/' + "{{ .file }}";
+    //回放文件
+    AsciinemaPlayer.create(d, document.getElementById('demo'),{
+      fit: "both"
+      // terminalFontSize: "big"
+    });
+  </script>
+</body>
+</html>

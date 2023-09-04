@@ -95,7 +95,7 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 		orgInfo.Height = DefaultRows
 	}
 	//初始化terminal record
-	conn.ReplayRecord = terminalRecord.NewReplayRecord(mgr.PodCtx, orgInfo)
+	conn.ReplayRecord = terminalRecord.NewReplayRecord(ctx, mgr.PodCtx, orgInfo)
 
 	return conn
 }
@@ -267,6 +267,7 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 	for {
 		select {
 		case <-r.ctx.Done():
+			r.ReplayRecord.GracefulShutdownRecorder()
 			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.PodCtx.PodName)
 			return nil
 		case output, ok := <-r.outputMsgChan:
@@ -291,6 +292,10 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 		case <-pingInterval.C: // 定时主动发送 ping
 			if err := r.wsConn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return errors.Wrap(err, "ping")
+			}
+			//终端记录buff定时写入回放文件
+			if err := r.ReplayRecord.Writer.WriteFileInterval(); err != nil {
+				r.ReplayRecord.Err = err
 			}
 		}
 	}
