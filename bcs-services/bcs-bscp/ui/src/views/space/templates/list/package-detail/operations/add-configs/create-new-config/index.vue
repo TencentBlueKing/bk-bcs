@@ -21,16 +21,17 @@
 
   const emits = defineEmits(['update:show', 'added'])
 
-  const isFormChanged = ref(false)
   const configForm = ref<IConfigEditParams>(getConfigEditParams())
   const fileUploading = ref(false)
   const content = ref<IFileConfigContentSummary|string>('')
   const formRef = ref()
   const pending = ref(false)
   const isSelectPkgDialogShow = ref(false)
+  const isFormChanged = ref(false)
 
   watch(() => props.show, val => {
     if (val) {
+      content.value = ''
       configForm.value = getConfigEditParams()
       isFormChanged.value = false
     }

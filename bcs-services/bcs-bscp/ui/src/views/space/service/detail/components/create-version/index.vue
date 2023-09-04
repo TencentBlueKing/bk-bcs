@@ -1,11 +1,10 @@
 <script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue'
+  import { ref } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue'
   import { useConfigStore } from '../../../../../../store/config'
-  import { IConfigListQueryParams, IConfigVersion } from '../../../../../../../types/config'
+  import { IConfigVersion } from '../../../../../../../types/config'
   import { IVariableEditParams } from '../../../../../../../types/variable';
-  import { getConfigList } from '../../../../../../api/config'
   import CreateVersionSlider from './create-version-slider.vue'
   import VersionDiff from '../../config/components/version-diff/index.vue'
 
@@ -16,44 +15,13 @@
 
   const emits = defineEmits(['confirm'])
 
-  const { versionData } = storeToRefs(useConfigStore())
+  const { allConfigCount, versionData } = storeToRefs(useConfigStore())
 
   const isVersionSliderShow = ref(false)
   const isDiffSliderShow = ref(false)
-  const configCount = ref(0)
   const variableList = ref<IVariableEditParams[]>([])
-  const loading = ref(false)
   const createPending = ref(false)
   const createSliderRef = ref()
-
-  watch(() => versionData.value.id, val => {
-    if (val === 0) {
-      getconfigsCountData()
-    }
-  })
-
-  onMounted(() => {
-    if (versionData.value.id === 0) {
-      getconfigsCountData()
-    }
-  })
-
-  // 调用列表接口查询配置项数量
-  const getconfigsCountData = async () => {
-    loading.value = true
-    try {
-      const params: IConfigListQueryParams = {
-        start: 0,
-        limit: 1
-      }
-      const res = await getConfigList(props.bkBizId, props.appId, params)
-      configCount.value = res.count
-    } catch (e) {
-      console.error(e)
-    } finally {
-      loading.value = false
-    }
-  }
 
   const handleVersionSliderOpen = () => {
     isVersionSliderShow.value = true
@@ -89,8 +57,7 @@
     v-if="versionData.id === 0"
     class="trigger-button"
     theme="primary"
-    :loading="loading"
-    :disabled="configCount === 0"
+    :disabled="allConfigCount === 0"
     @click="handleVersionSliderOpen">
     生成版本
   </bk-button>
