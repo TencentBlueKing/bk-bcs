@@ -1,57 +1,25 @@
 <script lang="ts" setup>
-  import { ref, computed, watch } from 'vue'
-  import { storeToRefs } from 'pinia'
+  import { computed } from 'vue'
   import { RightShape } from 'bkui-vue/lib/icon';
-  import { useGlobalStore } from '../../../../../../../../store/global'
-  import { useTemplateStore } from '../../../../../../../../store/template'
   import { ITemplateConfigItem } from '../../../../../../../../../types/template';
-  import { getTemplatesByPackageId, getTemplatesBySpaceId } from '../../../../../../../../api/template';
-
-  const { spaceId } = storeToRefs(useGlobalStore())
-  const { currentTemplateSpace } = storeToRefs(useTemplateStore())
 
   const props = defineProps<{
     pkg: { id: number|string; name: string; };
     open: boolean;
+    configList: ITemplateConfigItem[];
     selectedConfigs: { id: number; name: string; }[]
   }>()
 
-  const emits = defineEmits(['toggleOpen', 'update:selectedConfigs'])
+  const emits = defineEmits(['toggleOpen', 'update:selectedConfigs', 'change'])
 
-  const loading = ref(false)
-  const configList = ref<ITemplateConfigItem[]>([])
-  const page = ref(1)
 
   const isAllSelected = computed(() => {
-    return configList.value.length > 0 && configList.value.every(item => isConfigSelected(item.id))
+    return props.configList.length > 0 && props.configList.every(item => isConfigSelected(item.id))
   })
 
   const isIndeterminate = computed(() => {
-    return configList.value.length > 0 && props.selectedConfigs.length > 0 && !isAllSelected.value
+    return props.configList.length > 0 && props.selectedConfigs.length > 0 && !isAllSelected.value
   })
-
-  watch(() => props.open, val => {
-    if (val) {
-      page.value = 1
-      getConfigList()
-    }
-  })
-
-  const getConfigList = async () => {
-    loading.value = true
-    let res
-    const params = {
-      start: (page.value - 1) * 10,
-      all: true
-    }
-    if (typeof props.pkg.id === 'number') {
-      res = await getTemplatesByPackageId(spaceId.value, currentTemplateSpace.value, props.pkg.id, params)
-    } else {
-      res = await getTemplatesBySpaceId(spaceId.value, currentTemplateSpace.value, params)
-    }
-    configList.value = res.details
-    loading.value = false
-  }
 
   const isConfigSelected = (id: number) => {
     return props.selectedConfigs.findIndex(item => item.id === id) > -1
@@ -60,14 +28,14 @@
   const handleAllSelectionChange = (checked: boolean) => {
     const configs = props.selectedConfigs.slice()
     if (checked) {
-      configList.value.forEach(config => {
+      props.configList.forEach(config => {
         if(!configs.find(item => item.id === config.id)) {
           const { id, spec } = config
           configs.push({ id, name: spec.name })
         }
       })
     } else {
-      configList.value.forEach(config => {
+      props.configList.forEach(config => {
         const index = configs.findIndex(item => item.id === config.id)
         if(index > -1) {
           configs.splice(index, 1)
@@ -75,6 +43,7 @@
       })
     }
     emits('update:selectedConfigs', configs)
+    emits('change')
   }
 
   const handleConfigSelectionChange = (checked: boolean, config: ITemplateConfigItem) => {
@@ -91,6 +60,7 @@
       }
     }
     emits('update:selectedConfigs', configs)
+    emits('change')
   }
 
 </script>
@@ -100,7 +70,7 @@
       <RightShape class="triangle-icon" />
       <div class="title">{{ props.pkg.name }}</div>
     </div>
-    <div v-show="props.open" v-bkloading="{ loading }" class="config-table-wrapper">
+    <div v-show="props.open" class="config-table-wrapper">
       <table class="config-table">
         <thead>
           <tr>
@@ -118,7 +88,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="config in configList" :key="config.id">
+          <tr v-for="config in props.configList" :key="config.id">
             <td class="td-cell name">
               <div class="cell name-info">
                 <bk-checkbox
@@ -138,7 +108,7 @@
               </div>
             </td>
           </tr>
-          <tr v-if="configList.length === 0">
+          <tr v-if="props.configList.length === 0">
             <td  class="td-cell" :colspan="3">
               <bk-exception class="empty-tips" type="empty" scene="part">暂无配置项</bk-exception>
             </td>
@@ -226,6 +196,8 @@
     }
     .empty-tips {
       margin-bottom: 20px;
+      font-size: 12px;
+      color: #63656e;
     }
   }
 </style>

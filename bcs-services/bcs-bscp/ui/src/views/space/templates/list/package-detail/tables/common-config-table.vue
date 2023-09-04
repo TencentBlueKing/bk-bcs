@@ -230,7 +230,11 @@
           </template>
         </bk-table-column>
         <bk-table-column label="配置项路径" prop="spec.path"></bk-table-column>
-        <bk-table-column label="配置项描述" prop="spec.memo"></bk-table-column>
+        <bk-table-column label="配置项描述" prop="spec.memo">
+          <template #default="{ row }">
+            <span v-if="row.spec">{{ row.spec.memo || '--' }}</span>
+          </template>
+        </bk-table-column>
         <template v-if="showCitedByPkgsCol">
           <bk-table-column label="所在套餐">
             <template #default="{ index }">

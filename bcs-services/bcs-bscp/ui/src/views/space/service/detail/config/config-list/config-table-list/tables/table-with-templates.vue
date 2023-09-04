@@ -6,7 +6,7 @@
   import { useConfigStore } from '../../../../../../../../store/config'
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import { IConfigItem, IConfigListQueryParams, IBoundTemplateDetail } from '../../../../../../../../../types/config'
-  import { getConfigList, getBoundTemplates, deleteServiceConfigItem, deleteBoundPkg } from '../../../../../../../../api/config'
+  import { getConfigList, getBoundTemplates, getBoundTemplatesByAppVersion, deleteServiceConfigItem, deleteBoundPkg } from '../../../../../../../../api/config'
   import { getAppPkgBindingRelations } from '../../../../../../../../api/template'
   import StatusTag from './status-tag'
   import EditConfig from '../edit-config.vue'
@@ -134,7 +134,13 @@
         params.search_fields = 'revision_name,revision_memo,name,path,creator'
         params.search_value = props.searchStr
       }
-      const res = await getBoundTemplates(props.bkBizId, props.appId, params)
+
+      let res
+      if (isUnNamedVersion.value) {
+        res = await getBoundTemplates(props.bkBizId, props.appId, params)
+      } else {
+        res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id)
+      }
       templateList.value = res.details
     } catch (e) {
       console.error(e)
