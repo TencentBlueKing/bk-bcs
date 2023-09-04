@@ -84,7 +84,7 @@
     return ''
   }
 
-  const handleSelectVersion = (tplId: number,versions: { id: number; name: string; isLatest: boolean; }[], val: number) => {
+  const handleSelectVersion = (tplId: number, versions: { id: number; name: string; isLatest: boolean; }[], val: number) => {
     const isLatest = val === 0
     const versionId = isLatest ? versions.find(item => item.isLatest)?.id : val
     const versionData = {

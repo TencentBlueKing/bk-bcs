@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-  import { ref, watch } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import { IPackagesCitedByApps } from '../../../../../../types/template';
-  import { getUnNamedVersionAppsBoundByTemplateVersion } from '../../../../../api/template'
+  import { getUnNamedVersionAppsBoundByLatestTemplateVersion } from '../../../../../api/template'
+  import LinkToApp from '../../list/components/link-to-app.vue'
 
   const props = defineProps<{
     show: boolean;
@@ -14,21 +15,31 @@
 
   const emits = defineEmits(['update:show', 'confirm'])
 
-  const listLoading = ref(false)
-  const appList = ref<IPackagesCitedByApps[]>([])
+  const loading = ref(false)
+  const citedList = ref<IPackagesCitedByApps[]>([])
+
+  const maxTableHeight = computed(() => {
+    const windowHeight = window.innerHeight
+    return windowHeight * 0.6 - 200
+  })
 
   watch(() => props.show, val => {
     if (val) {
-      getBoundApps()
+      getCitedData()
     }
   })
 
-  const getBoundApps = async() => {
-    listLoading.value = true
-    const res = await getUnNamedVersionAppsBoundByTemplateVersion(props.spaceId, props.templateSpaceId, props.templateId, props.versionId, { start: 0, all: true })
-    appList.value = res.details
-    listLoading.value = false
+  const getCitedData = async() => {
+    loading.value = true
+    const params = {
+      start: 0,
+      all: true
+    }
+    const res = await getUnNamedVersionAppsBoundByLatestTemplateVersion(props.spaceId, props.templateSpaceId, props.templateId, params)
+    citedList.value = res.details
+    loading.value = false
   }
+
 
   const close = () => {
     emits('update:show', false)
@@ -50,10 +61,19 @@
     :quick-close="false"
     @closed="close">
     <p class="tips">以下套餐及服务未命名版本中引用的此配置项也将更新</p>
-    <bk-table :data="appList">
-      <bk-table-column label="所在模板套餐" prop="template_set_name"></bk-table-column>
-      <bk-table-column label="使用此套餐的服务" prop="app_name"></bk-table-column>
-    </bk-table>
+    <bk-loading style="min-height: 100px;" :loading="loading">
+      <bk-table :data="citedList" :max-height="maxTableHeight">
+        <bk-table-column label="所在套餐" prop="template_set_name"></bk-table-column>
+        <bk-table-column label="引用此模板的服务">
+          <template #default="{ row }">
+            <div v-if="row.app_id" class="app-info">
+              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+              <LinkToApp class="link-icon" :id="row.app_id" />
+            </div>
+          </template>
+        </bk-table-column>
+      </bk-table>
+    </bk-loading>
     <template #footer>
       <div class="actions-wrapper">
         <bk-button theme="primary" :loading="pending" @click="emits('confirm')">确定</bk-button>
@@ -63,6 +83,20 @@
   </bk-dialog>
 </template>
 <style lang="scss" scoped>
+  .app-info {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    .name-text {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .link-icon {
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+  }
   .actions-wrapper {
     padding-bottom: 20px;
     .bk-button:not(:last-of-type) {

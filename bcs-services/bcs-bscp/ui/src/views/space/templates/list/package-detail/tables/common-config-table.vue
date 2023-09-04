@@ -6,7 +6,7 @@
   import { useGlobalStore } from '../../../../../../store/global';
   import { useTemplateStore } from '../../../../../../store/template';
   import { ICommonQuery } from '../../../../../../../types/index';
-  import { ITemplateConfigItem, ITemplateCitedCountDetailItem } from '../../../../../../../types/template';
+  import { ITemplateConfigItem, ITemplateCitedCountDetailItem, ITemplateCitedByPkgs } from '../../../../../../../types/template';
   import { getPackagesByTemplateIds, getCountsByTemplateIds } from '../../../../../../api/template'
   import AddToDialog from '../operations/add-to-pkgs/add-to-dialog.vue'
   import MoveOutFromPkgsDialog from '../operations/move-out-from-pkg/move-out-from-pkgs-dialog.vue'
@@ -33,7 +33,7 @@
   const listLoading = ref(false)
   const list = ref<ITemplateConfigItem[]>([])
   const citedByPkgsLoading = ref(false)
-  const citeByPkgsList = ref<{template_set_id: number; template_set_name: string;}[][]>([])
+  const citeByPkgsList = ref<ITemplateCitedByPkgs[][]>([])
   const boundByAppsCountLoading = ref(false)
   const boundByAppsCountList = ref<ITemplateCitedCountDetailItem[]>([])
   const searchStr = ref('')
@@ -226,7 +226,7 @@
         <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column>
         <bk-table-column label="配置项名称">
           <template #default="{ row }">
-            <bk-button v-if="row.spec" text theme="primary" @click="goToVersionManage(row.id)">{{ row.spec.name }}</bk-button>
+            <div v-if="row.spec" v-overflow-title class="config-name" @click="goToVersionManage(row.id)">{{ row.spec.name }}</div>
           </template>
         </bk-table-column>
         <bk-table-column label="配置项路径" prop="spec.path"></bk-table-column>
@@ -292,6 +292,7 @@
       v-model:show="isMoveOutFromPkgsDialogShow"
       :id="crtConfig.length > 0 ? crtConfig[0].id : 0"
       :name="crtConfig.length > 0 ? crtConfig[0].spec.name : ''"
+      :currentPkg="props.currentPkg"
       @moved-out="handleMovedOut" />
     <AppsBoundByTemplate
       v-model:show="appBoundByTemplateSliderData.open"
@@ -321,6 +322,13 @@
     padding-right: 10px;
     color: #979ba5;
     background: #ffffff;
+  }
+  .config-name {
+    color: #3a84ff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
   }
   .actions-wrapper {
     display: flex;

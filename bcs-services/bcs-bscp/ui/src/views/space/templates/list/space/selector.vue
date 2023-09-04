@@ -119,6 +119,7 @@
     } else {
       InfoBox({
         title: `确认删除【${space.spec.name}】`,
+        infoType: 'warning',
         extCls: 'delete-space-infobox',
         onConfirm: async () => {
           await deleteTemplateSpace(spaceId.value, space.id)

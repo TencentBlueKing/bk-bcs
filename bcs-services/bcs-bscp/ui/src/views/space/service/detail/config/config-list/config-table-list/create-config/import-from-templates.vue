@@ -1,5 +1,6 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
   import { Message } from 'bkui-vue';
   import { ITemplateBoundByAppData } from '../../../../../../../../../types/config'
   import { IAllPkgsGroupBySpaceInBiz } from '../../../../../../../../../types/template'
@@ -7,6 +8,9 @@
   import { getAllPackagesGroupBySpace, getAppPkgBindingRelations } from '../../../../../../../../api/template';
   import PkgTree from './pkg-tree.vue';
   import PkgTemplatesTable from './pkg-templates-table.vue';
+
+  const route = useRoute()
+  const router = useRouter()
 
   const props = defineProps<{
     show: boolean;
@@ -25,14 +29,28 @@
   const expandedPkg = ref(0)
   const pending = ref(false)
 
-  watch(() => props.show, val => {
+  watch(() => props.show, async(val) => {
     if (val) {
       bindingId.value = 0
       expandedPkg.value = 0
       importedPkgs.value = []
       selectedPkgs.value = []
-      getPkgList()
       getImportedPkgsData()
+      await getPkgList()
+      if (route.query.pkg_id && /\d+/.test(<string>route.query.pkg_id)) {
+        const id = Number(route.query.pkg_id)
+        pkgList.value.some(spaceGroup => {
+          return spaceGroup.template_sets.some(pkg => {
+            if (pkg.template_set_id === id && importedPkgs.value.findIndex(item => item.template_set_id === id) === -1) {
+              selectedPkgs.value.push({
+                template_set_id: id,
+                template_revisions: []
+              })
+              return true
+            }
+          })
+        })
+      }
     }
   })
 
@@ -105,6 +123,9 @@
   }
 
   const close = () => {
+    if (route.query.pkg_id) {
+      router.replace({ name: 'service-config', params: route.params })
+    }
     emits('update:show', false)
   }
 </script>
@@ -131,16 +152,6 @@
         <div v-if="!pkgListLoading" class="packages-list">
           <template v-if="importedPkgs.length + selectedPkgs.length > 0">
             <PkgTemplatesTable
-              v-for="pkg in importedPkgs"
-              :key="pkg.template_set_id"
-              :bk-biz-id="props.bkBizId"
-              :pkg-list="pkgList"
-              :disabled="true"
-              :expanded="expandedPkg === pkg.template_set_id"
-              :pkg-id="pkg.template_set_id"
-              :selected-versions="pkg.template_revisions"
-              @expand="handleExpandTable" />
-            <PkgTemplatesTable
               v-for="pkg in selectedPkgs"
               :key="pkg.template_set_id"
               :bk-biz-id="props.bkBizId"
@@ -151,6 +162,16 @@
               @delete="handleDeletePkg"
               @expand="handleExpandTable"
               @select-version="handleSelectTplVersion(pkg.template_set_id, $event)" />
+            <PkgTemplatesTable
+              v-for="pkg in importedPkgs"
+              :key="pkg.template_set_id"
+              :bk-biz-id="props.bkBizId"
+              :pkg-list="pkgList"
+              :disabled="true"
+              :expanded="expandedPkg === pkg.template_set_id"
+              :pkg-id="pkg.template_set_id"
+              :selected-versions="pkg.template_revisions"
+              @expand="handleExpandTable" />
           </template>
           <bk-exception v-else scene="part" type="empty">
             <div class="empty-tips">

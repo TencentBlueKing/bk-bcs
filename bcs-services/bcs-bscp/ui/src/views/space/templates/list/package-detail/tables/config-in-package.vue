@@ -49,7 +49,7 @@
     <template #tableOperations>
       <AddConfigs :show-add-existing-config-option="true" @added="refreshConfigList" />
       <BatchAddTo :configs="selectedConfigs" @added="refreshConfigList" />
-      <BatchMoveOutFromPkg :configs="selectedConfigs" @movedOut="handleMovedOut" />
+      <BatchMoveOutFromPkg :configs="selectedConfigs" :current-pkg="(currentPkg as number)" @movedOut="handleMovedOut" />
     </template>
   </CommonConfigTable>
 </template>

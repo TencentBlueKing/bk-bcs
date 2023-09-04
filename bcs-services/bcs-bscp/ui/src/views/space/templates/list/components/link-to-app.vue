@@ -6,16 +6,28 @@
 
   const props = defineProps<{
     id: number;
+    autoJump?: boolean;
   }>()
 
-  const goToApp = () => {
-    const { href } = router.resolve({ name: 'service-config', params: { appId: props.id } })
-    window.open(href, '_blank')
+  const emits = defineEmits(['custom-click'])
+
+  const handleClick = () => {
+    if (props.autoJump) {
+      const { href } = router.resolve({ name: 'service-config', params: { appId: props.id } })
+      window.open(href, '_blank')
+    } else {
+      emits('custom-click')
+    }
   }
 
 </script>
 <template>
-  <Share @click="goToApp" />
+  <Share class="share-icon" @click="handleClick" />
 </template>
 <style lang="scss" scoped>
+  .share-icon {
+    font-size: 12px;
+    color: #3a84ff;
+    cursor: pointer;
+  }
 </style>
