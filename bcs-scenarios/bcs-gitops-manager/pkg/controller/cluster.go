@@ -25,6 +25,8 @@ import (
 
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 
+	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
@@ -131,7 +133,9 @@ func (control *cluster) ForceSync(projectCode, clusterID string) {
 	}
 
 	cls := response.Data
-	argoCluster, err := control.option.Storage.GetCluster(context.Background(), cls.ClusterID)
+	argoCluster, err := control.option.Storage.GetCluster(context.Background(), &clusterclient.ClusterQuery{
+		Name: cls.ClusterID,
+	})
 	if err != nil {
 		blog.Errorf("query cluster '%s' from storage failed: %s", cls.ClusterID, err.Error())
 		return

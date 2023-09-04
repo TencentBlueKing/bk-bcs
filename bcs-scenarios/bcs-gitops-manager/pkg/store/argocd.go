@@ -21,6 +21,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -38,6 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 
 	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	clusterpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	projectpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/project"
 	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
@@ -55,6 +57,7 @@ type argo struct {
 	conn          *grpc.ClientConn
 	connCloser    io.Closer
 	appClient     applicationpkg.ApplicationServiceClient
+	appsetClient  appsetpkg.ApplicationSetServiceClient
 	repoClient    repositorypkg.RepositoryServiceClient
 	projectClient projectpkg.ProjectServiceClient
 	clusterClient clusterpkg.ClusterServiceClient
@@ -68,13 +71,13 @@ func (cd *argo) Init() error {
 	initializer := []func() error{
 		cd.initToken, cd.initBasicClient, cd.initCache,
 	}
-	if err := cd.handleApplicationWatch(); err != nil {
-		return errors.Wrapf(err, "handle application watch failed")
-	}
 	for _, init := range initializer {
 		if err := init(); err != nil {
 			return err
 		}
+	}
+	if err := cd.handleApplicationWatch(); err != nil {
+		return errors.Wrapf(err, "handle application watch failed")
 	}
 	return nil
 }
@@ -152,16 +155,17 @@ func (cd *argo) DeleteCluster(ctx context.Context, name string) error {
 }
 
 // GetCluster interface
-func (cd *argo) GetCluster(ctx context.Context, name string) (*v1alpha1.Cluster, error) {
-	cls, err := cd.clusterClient.Get(ctx, &cluster.ClusterQuery{Name: name})
+func (cd *argo) GetCluster(ctx context.Context, query *cluster.ClusterQuery) (*v1alpha1.Cluster, error) {
+	cls, err := cd.clusterClient.Get(ctx, query)
 	if err != nil {
 		// argocd return 403(PermissionDenied) when cluster do not exist
 		// !make sure that gitops-manager has admin access
 		if strings.Contains(err.Error(), "code = PermissionDenied") {
-			blog.Warnf("argocd get cluster %s warning, No Cluster Found if admin access, %s", name, err.Error())
+			blog.Warnf("argocd get cluster '%v' warning, No Cluster Found if admin access, %s",
+				*query, err.Error())
 			return nil, nil
 		}
-		return nil, errors.Wrapf(err, "argocd get cluster '%s' failed", name)
+		return nil, errors.Wrapf(err, "argocd get cluster '%v' failed", *query)
 	}
 	return cls, nil
 }
@@ -320,6 +324,32 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 	return nil
 }
 
+// GetApplicationSet query the ApplicationSet by name
+func (cd *argo) GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error) {
+	appset, err := cd.appsetClient.Get(ctx, &appsetpkg.ApplicationSetGetQuery{
+		Name: name,
+	})
+	if err != nil {
+		os.IsExist(err)
+		if strings.Contains(err.Error(), "code = NotFound") {
+			return nil, nil
+		}
+		return nil, errors.Wrapf(err, "get applicationset '%s' failed", name)
+	}
+	return appset, nil
+}
+
+// ListApplicationSets list applicationsets by projects
+func (cd *argo) ListApplicationSets(ctx context.Context, projects []string) (*v1alpha1.ApplicationSetList, error) {
+	appsets, err := cd.appsetClient.List(ctx, &appsetpkg.ApplicationSetListQuery{
+		Projects: projects,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "list applicationsets by project '%v' failed", projects)
+	}
+	return appsets, nil
+}
+
 func (cd *argo) initToken() error {
 	// authorization doc: https://argo-cd.readthedocs.io/en/stable/developer-guide/api-docs/
 	//$ curl $ARGOCD_SERVER/api/v1/session -d $'{"username":"admin","password":"password"}'
@@ -417,6 +447,7 @@ func (cd *argo) connect() error {
 	cd.repoClient = repositorypkg.NewRepositoryServiceClient(cd.conn)
 	cd.projectClient = projectpkg.NewProjectServiceClient(cd.conn)
 	cd.clusterClient = clusterpkg.NewClusterServiceClient(cd.conn)
+	cd.appsetClient = appsetpkg.NewApplicationSetServiceClient(cd.conn)
 	return nil
 }
 

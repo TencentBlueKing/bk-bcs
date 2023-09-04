@@ -16,6 +16,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 )
 
@@ -44,9 +45,10 @@ type Store interface {
 	UpdateProject(ctx context.Context, pro *v1alpha1.AppProject) error
 	GetProject(ctx context.Context, name string) (*v1alpha1.AppProject, error)
 	ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, error)
+
 	// Cluster interface
 	CreateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
-	GetCluster(ctx context.Context, name string) (*v1alpha1.Cluster, error)
+	GetCluster(ctx context.Context, query *cluster.ClusterQuery) (*v1alpha1.Cluster, error)
 	ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error)
 	ListClustersByProject(ctx context.Context, project string) (*v1alpha1.ClusterList, error)
 	UpdateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
@@ -58,11 +60,13 @@ type Store interface {
 
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
 	ListApplications(ctx context.Context, option *ListAppOptions) (*v1alpha1.ApplicationList, error)
+	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application) error
+
+	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
+	ListApplicationSets(ctx context.Context, projects []string) (*v1alpha1.ApplicationSetList, error)
 
 	// authentication token
 	GetToken(ctx context.Context) string
-
-	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application) error
 }
 
 // NewStore create storage client
