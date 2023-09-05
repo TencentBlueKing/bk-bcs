@@ -1952,19 +1952,6 @@ message Account {
   }];
 }
 
-message GkeServiceAccount {
-  string type = 1 [json_name = "type"];
-  string projectID = 2 [json_name = "project_id"];
-  string privateKeyID = 3 [json_name = "private_key_id"];
-  string PrivateKey = 4 [json_name = "private_key"];
-  string ClientEmail = 5 [json_name = "client_email"];
-  string ClientID = 6 [json_name = "client_id"];
-  string AuthURI = 7 [json_name = "auth_uri"];
-  string TokenURI = 8 [json_name = "token_uri"];
-  string AuthProviderCertURL = 9 [json_name = "auth_provider_x509_cert_url"];
-  string ClientCertURL = 10 [json_name = "client_x509_cert_url"];
-}
-
 // cloud account manage
 message CloudAccount {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {

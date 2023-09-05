@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -183,7 +184,7 @@ func shieldCloudSecretKey(account *cmproto.Account) (*cmproto.Account, error) {
 	account.ClientSecret = shield(account.ClientSecret)
 
 	if account.ServiceAccountSecret != "" {
-		sa := &cmproto.GkeServiceAccount{}
+		sa := &types.GCPServiceAccount{}
 		if err := json.Unmarshal([]byte(account.ServiceAccountSecret), sa); err != nil {
 			return nil, err
 		}

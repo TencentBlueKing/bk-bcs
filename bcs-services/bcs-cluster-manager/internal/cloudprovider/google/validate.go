@@ -18,12 +18,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
@@ -88,20 +88,6 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 	return nil
 }
 
-// ServiceAccountSecret for gcp service account secret
-type ServiceAccountSecret struct {
-	accountType         string
-	projectID           string
-	privateKeyID        string
-	privateDey          string
-	clientEmail         string
-	clientID            string
-	authURI             string
-	tokenURI            string
-	authProviderCertURL string
-	clientCertURL       string
-}
-
 // CreateCloudAccountValidate create cloudAccount validation
 func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
 	// call cloud interface to check account
@@ -113,13 +99,13 @@ func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error
 		return fmt.Errorf("%s CreateCloudAccountValidate request lost valid crendential info", cloudName)
 	}
 
-	sas := &ServiceAccountSecret{}
+	sas := &types.GCPServiceAccount{}
 	err := json.Unmarshal([]byte(account.ServiceAccountSecret), sas)
 	if err != nil {
 		return fmt.Errorf("%s CreateCloudAccountValidate decode service account secret failed, %v",
 			cloudName, err)
 	}
-	account.GkeProjectID = sas.projectID
+	account.GkeProjectID = sas.ProjectID
 
 	gceCli, err := api.NewComputeServiceClient(&cloudprovider.CommonOption{Account: account})
 	if err != nil {
@@ -150,13 +136,13 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 	//	return fmt.Errorf("%s ImportCloudAccountValidate request lost valid gkeProjectID info", cloudName)
 	//}
 
-	sas := &ServiceAccountSecret{}
+	sas := &types.GCPServiceAccount{}
 	err := json.Unmarshal([]byte(account.ServiceAccountSecret), sas)
 	if err != nil {
 		return fmt.Errorf("%s CreateCloudAccountValidate decode service account secret failed, %v",
 			cloudName, err)
 	}
-	account.GkeProjectID = sas.projectID
+	account.GkeProjectID = sas.ProjectID
 
 	return nil
 }
