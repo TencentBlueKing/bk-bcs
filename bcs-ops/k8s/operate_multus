@@ -16,7 +16,7 @@ set -euo pipefail
 # apply or delete mutuls
 
 PROGRAM="$(basename "$0")"
-MULTUS_VERSION="snap"
+MULTUS_VERSION="snapshot"
 SELF_DIR=$(dirname "$(readlink -f "$0")")
 ROOT_DIR="${SELF_DIR}/.."
 
