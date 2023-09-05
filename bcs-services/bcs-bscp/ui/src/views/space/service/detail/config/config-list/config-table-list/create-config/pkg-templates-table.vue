@@ -84,7 +84,7 @@
     return ''
   }
 
-  const handleSelectVersion = (tplId: number,versions: { id: number; name: string; isLatest: boolean; }[], val: number) => {
+  const handleSelectVersion = (tplId: number, versions: { id: number; name: string; isLatest: boolean; }[], val: number) => {
     const isLatest = val === 0
     const versionId = isLatest ? versions.find(item => item.isLatest)?.id : val
     const versionData = {
@@ -124,7 +124,6 @@
               <bk-select
                 :clearable="false"
                 :model-value="getVersionSelectVal(tpl.id)"
-                :disabled="props.disabled"
                 @change="handleSelectVersion(tpl.id, tpl.versions, $event)">
                 <bk-option
                   v-for="version in tpl.versions"
@@ -229,6 +228,8 @@
     }
     .empty-tips {
       margin: 20px 0;
+      font-size: 12px;
+      color: #3a84ff;
     }
   }
 </style>

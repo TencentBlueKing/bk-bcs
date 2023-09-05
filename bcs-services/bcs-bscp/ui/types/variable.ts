@@ -25,3 +25,13 @@ export interface IVariableEditParams {
   default_val: string;
   memo: string;
 }
+
+// 变量被配置项引用详情
+export interface IVariableCitedByConfigDetailItem {
+  variable_name: string;
+  references: {
+    template_id: number;
+    template_revision_id: number;
+    name: string
+  }[]
+}

@@ -32,6 +32,8 @@ const (
 	RequestIDHeaderKey = "X-Request-Id"
 	// RequestIDKey requestID
 	RequestIDKey = "requestID"
+	// Traceparent Traceparent
+	Traceparent = "Traceparent"
 	// TracerName go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
 	TracerName = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )

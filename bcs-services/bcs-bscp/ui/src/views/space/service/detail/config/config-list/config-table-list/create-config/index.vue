@@ -1,8 +1,11 @@
 <script lang="ts" setup>
-  import { ref } from 'vue'
+  import { onMounted, ref } from 'vue'
+  import { useRoute } from 'vue-router'
   import { AngleDown } from 'bkui-vue/lib/icon'
   import ManualCreate from './manual-create.vue';
   import ImportFromTemplate from './import-from-templates.vue'
+
+  const route = useRoute()
 
   const props = defineProps<{
     bkBizId: string,
@@ -15,6 +18,12 @@
   const isPopoverOpen = ref(false)
   const isManualCreateSliderOpen = ref(false)
   const isImportTemplatesDialogOpen = ref(false)
+
+  onMounted(() => {
+    if (route.query.pkg_id) {
+      isImportTemplatesDialogOpen.value = true
+    }
+  })
 
   const handleManualCreateSlideOpen = () => {
     isManualCreateSliderOpen.value = true

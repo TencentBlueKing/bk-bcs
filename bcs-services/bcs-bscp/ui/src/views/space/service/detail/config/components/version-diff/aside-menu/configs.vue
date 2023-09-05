@@ -3,7 +3,7 @@
   import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useServiceStore } from '../../../../../../../../store/service'
-  import { IConfigVersion, IConfigListQueryParams, IConfigDiffDetail, IConfigDetail } from '../../../../../../../../../types/config'
+  import { IConfigItem, IConfigVersion, IConfigListQueryParams, IConfigDiffDetail, IConfigDetail } from '../../../../../../../../../types/config'
   import { IFileConfigContentSummary } from '../../../../../../../../../types/config';
   import { getConfigList, getConfigItemDetail, getConfigContent } from '../../../../../../../../api/config'
   import { byteUnitConverse } from '../../../../../../../../utils'
@@ -40,7 +40,7 @@
       selectConfig(id)
     }
   })
-  
+
   watch(() => props.currentConfigId, (val) => {
     selected.value = val
   }, {
@@ -50,7 +50,7 @@
   onMounted(async() => {
     await getAllConfigList()
     calcDiff()
-    if (props.currentVersionId && aggregatedList.value.length > 0) {
+    if (typeof props.currentVersionId === 'number' && aggregatedList.value.length > 0) {
       selectConfig(aggregatedList.value[0].id)
     }
   })
@@ -70,14 +70,15 @@
     }
 
     const res = await getConfigList(bkBizId.value, <number>appData.value.id, listQueryParams)
-
+    // @todo 待确认，未命名版本中的配置项被删除后，请求配置项详情接口会报400错误，暂时过滤掉被删除的配置项
+    const list: IConfigItem[] = res.details.filter((item: IConfigItem) => item.file_state !== 'DELETE')
     // 遍历配置项列表，拿到每个配置项的signature
-    return Promise.all(res.details.map((item: IConfigVersion) => getConfigItemDetail(bkBizId.value, item.id, <number>appData.value.id, listDetailQueryParams)))
+    return Promise.all(list.map(item => getConfigItemDetail(bkBizId.value, item.id, <number>appData.value.id, listDetailQueryParams)))
   }
 
   // 获取当前版本和基准版本的所有配置项列表
   const getAllConfigList = async () => {
-    if (props.currentVersionId) {
+    if (typeof props.currentVersionId === 'number') {
       currentList.value = await getConfigsOfVersion(props.currentVersionId)
     }
     if (props.baseVersionId) {

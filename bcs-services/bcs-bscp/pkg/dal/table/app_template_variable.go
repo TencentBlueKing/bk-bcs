@@ -18,7 +18,7 @@ import (
 	"errors"
 )
 
-// AppTemplateVariable 应用模版绑定
+// AppTemplateVariable 未命名版本服务的模版变量
 type AppTemplateVariable struct {
 	ID         uint32                         `json:"id" gorm:"primaryKey"`
 	Spec       *AppTemplateVariableSpec       `json:"spec" gorm:"embedded"`

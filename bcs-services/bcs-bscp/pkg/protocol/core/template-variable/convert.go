@@ -44,6 +44,20 @@ func (m *TemplateVariableSpec) TemplateVariableSpec() *table.TemplateVariableSpe
 	}
 }
 
+// PbTemplateVariableSpecs convert table TemplateVariableSpec to pb TemplateVariableSpec
+func PbTemplateVariableSpecs(s []*table.TemplateVariableSpec) []*TemplateVariableSpec {
+	if len(s) == 0 {
+		return make([]*TemplateVariableSpec, 0)
+	}
+
+	result := make([]*TemplateVariableSpec, 0)
+	for _, one := range s {
+		result = append(result, PbTemplateVariableSpec(one))
+	}
+
+	return result
+}
+
 // PbTemplateVariableSpec convert table TemplateVariableSpec to pb TemplateVariableSpec
 func PbTemplateVariableSpec(spec *table.TemplateVariableSpec) *TemplateVariableSpec {
 	if spec == nil {

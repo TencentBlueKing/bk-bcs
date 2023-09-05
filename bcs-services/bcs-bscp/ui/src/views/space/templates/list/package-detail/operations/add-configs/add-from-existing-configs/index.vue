@@ -1,17 +1,25 @@
 <script lang="ts" setup>
   import { ref, computed, watch } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { Search } from 'bkui-vue/lib/icon'
   import { Message } from 'bkui-vue'
   import { useGlobalStore } from '../../../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../../../store/template'
+  import { ITemplatePackageItem, ITemplateConfigItem } from '../../../../../../../../../types/template';
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation'
   import { PACKAGE_MENU_OTHER_TYPE_MAP } from '../../../../../../../../constants/template'
-  import { updateTemplatePackage } from '../../../../../../../../api/template'
+  import { addTemplateToPackage, getTemplatesBySpaceId, getTemplatePackageList } from '../../../../../../../../api/template'
   import PackageTable from './package-table.vue'
+  import SearchInput from '../../../../../../../../components/search-input.vue'
+import search from 'bkui-vue/lib/icon/search'
+
+  interface IPackageTableGroup {
+    id: number|string;
+    name: string;
+    configs: ITemplateConfigItem[];
+  }
 
   const { spaceId } = storeToRefs(useGlobalStore())
-  const { currentTemplateSpace, currentPkg, packageList } = storeToRefs(useTemplateStore())
+  const { currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
 
   const props = defineProps<{
     show: boolean;
@@ -21,30 +29,82 @@
 
   const isShow = ref(false)
   const isFormChange = ref(false)
+  const loading = ref(false)
+  const packageGroups = ref<IPackageTableGroup[]>([]) // 所有套餐配置项数据
+  const packageGroupsOnShow = ref<IPackageTableGroup[]>([]) // 实际展示的数据，处理搜索的场景
   const pending = ref(false)
   const searchStr = ref('')
   const openedPkgTable = ref<number|string>('')
   const selectedConfigs = ref<{ id: number; name: string; }[]>([])
 
-  const allPackages = computed(() => {
-    const packages: { id: number|string; name: string; }[] = [{ id: 'all', name: PACKAGE_MENU_OTHER_TYPE_MAP['all'] }]
-    packageList.value.forEach(item => {
-      if (item.id !== currentPkg.value) {
-        const { id, spec } = item
-        packages.push({ id, name: spec.name })
-      }
-    })
-    return packages
-  })
-
   watch(() => props.show, val => {
     isShow.value = val
     if (val) {
       openedPkgTable.value = ''
-      isFormChange.value = false
       selectedConfigs.value = []
+      isFormChange.value = false
+      getGroupConfigs()
     }
   })
+
+  // 加载全部配置项
+  const getGroupConfigs = async () => {
+    loading.value = true
+    const params = {
+      start: 0,
+      all: true
+    }
+    const [packagesRes, configsRes] = await Promise.all([
+      getTemplatePackageList(spaceId.value, currentTemplateSpace.value, params),
+      getTemplatesBySpaceId(spaceId.value, currentTemplateSpace.value, params)
+    ])
+    // 第一个分组默认为“全部配置项”
+    const packages: IPackageTableGroup[] = [{
+      id: 0,
+      name: '全部配置项',
+      configs: configsRes.details
+    }]
+    packagesRes.details.filter((pkg: ITemplatePackageItem) => pkg.id !== currentPkg.value).forEach((pkg: ITemplatePackageItem) => {
+      const { name, template_ids } = pkg.spec
+      const pkgGroup: IPackageTableGroup = {
+        id: pkg.id,
+        name,
+        configs: []
+      }
+      template_ids.forEach(id => {
+        const config = configsRes.details.find((item: ITemplateConfigItem) => item.id === id)
+        if (config) {
+          pkgGroup.configs.push(config)
+        }
+      })
+      packages.push(pkgGroup)
+    })
+    packageGroups.value = packages.slice()
+    packageGroupsOnShow.value = packages.slice()
+    loading.value = false
+  }
+
+  const handleSearch = () => {
+    if (searchStr.value) {
+      const list: IPackageTableGroup[] = []
+      packageGroups.value.forEach(pkg => {
+        const matchedConfigs = pkg.configs.filter(config => {
+          const { name, path, memo } = config.spec
+          const lowerSearchStr = searchStr.value.toLocaleLowerCase()
+          return name.toLocaleLowerCase().includes(lowerSearchStr)
+            || path.toLocaleLowerCase().includes(lowerSearchStr)
+            || memo.toLocaleLowerCase().includes(lowerSearchStr)
+        })
+        if (matchedConfigs.length > 0) {
+          const { id, name } = pkg
+          list.push({ id, name, configs: matchedConfigs })
+        }
+      })
+      packageGroupsOnShow.value = list
+    } else {
+      packageGroupsOnShow.value = packageGroups.value.slice()
+    }
+  }
 
   const handleToggleOpenTable = (id: string|number) => {
     openedPkgTable.value = openedPkgTable.value === id ? '' : id
@@ -58,21 +118,10 @@
   }
 
   const handleAddConfigs = async() => {
-    const pkg = packageList.value.find(item => item.id === currentPkg.value)
-    if (!pkg) return
-
     try {
       pending.value = true
-      const { name, memo, public: isPublic, bound_apps, template_ids } = pkg.spec
-      const ids = selectedConfigs.value.map(item => item.id).concat(template_ids)
-      const params = {
-        name,
-        memo,
-        template_ids: Array.from(new Set(ids)),
-        bound_apps,
-        public: isPublic
-      }
-      await updateTemplatePackage(spaceId.value, currentTemplateSpace.value, <number>currentPkg.value, params)
+      const configIds = selectedConfigs.value.map(item => item.id)
+      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, configIds, [<number>currentPkg.value])
       emits('added')
       close()
       Message({
@@ -106,26 +155,20 @@
     :is-show="isShow"
     :before-close="handleBeforeClose"
     @closed="close">
-    <div class="slider-content-container">
+    <div v-bkloading="{ loading }" class="slider-content-container">
       <div class="package-configs-pick">
         <div class="search-wrapper">
-          <bk-input
-            v-model="searchStr"
-            class="search-input"
-            placeholder="配置项名称/路径/描述"
-            :clearable="true">
-              <template #suffix>
-                <Search class="search-input-icon" />
-              </template>
-          </bk-input>
+          <SearchInput v-model="searchStr" placeholder="配置项名称/路径/描述" @search="handleSearch" />
         </div>
         <div class="package-tables">
           <PackageTable
-            v-for="pkg in allPackages"
+            v-for="pkg in packageGroupsOnShow"
             v-model:selected-configs="selectedConfigs"
             :key="pkg.id"
             :pkg="pkg"
             :open="openedPkgTable === pkg.id"
+            :config-list="pkg.configs"
+            @change="isFormChange = true"
             @toggleOpen="handleToggleOpenTable" />
         </div>
       </div>
@@ -144,6 +187,7 @@
       <bk-button
         theme="primary"
         :loading="pending"
+        :disabled="loading || selectedConfigs.length === 0"
         @click="handleAddConfigs">
         添加
       </bk-button>

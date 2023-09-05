@@ -13,6 +13,7 @@ limitations under the License.
 package pbatb
 
 import (
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 )
@@ -181,5 +182,49 @@ func PbAppTemplateBinding(s *table.AppTemplateBinding) *AppTemplateBinding {
 		Spec:       PbAppTemplateBindingSpec(s.Spec),
 		Attachment: PbAppTemplateBindingAttachment(s.Attachment),
 		Revision:   pbbase.PbRevision(s.Revision),
+	}
+}
+
+// PbAppBoundTmplRevisions convert table ReleasedAppTemplate to pb AppBoundTmplRevision
+func PbAppBoundTmplRevisions(s []*table.ReleasedAppTemplate) []*AppBoundTmplRevision {
+	if s == nil {
+		return make([]*AppBoundTmplRevision, 0)
+	}
+
+	result := make([]*AppBoundTmplRevision, 0)
+	for _, one := range s {
+		result = append(result, PbAppBoundTmplRevision(one))
+	}
+
+	return result
+}
+
+// PbAppBoundTmplRevision convert table ReleasedAppTemplate to pb AppBoundTmplRevision
+func PbAppBoundTmplRevision(s *table.ReleasedAppTemplate) *AppBoundTmplRevision {
+	if s == nil {
+		return nil
+	}
+
+	return &AppBoundTmplRevision{
+		TemplateSpaceId:      s.Spec.TemplateSpaceID,
+		TemplateSpaceName:    s.Spec.TemplateSpaceName,
+		TemplateSetId:        s.Spec.TemplateSetID,
+		TemplateSetName:      s.Spec.TemplateSetName,
+		TemplateId:           s.Spec.TemplateID,
+		Name:                 s.Spec.Name,
+		Path:                 s.Spec.Path,
+		TemplateRevisionId:   s.Spec.TemplateRevisionID,
+		IsLatest:             s.Spec.IsLatest,
+		TemplateRevisionName: s.Spec.TemplateRevisionName,
+		TemplateRevisionMemo: s.Spec.TemplateRevisionMemo,
+		FileType:             s.Spec.FileType,
+		FileMode:             s.Spec.FileMode,
+		User:                 s.Spec.User,
+		UserGroup:            s.Spec.UserGroup,
+		Privilege:            s.Spec.Privilege,
+		Signature:            s.Spec.Signature,
+		ByteSize:             s.Spec.ByteSize,
+		Creator:              s.Revision.Creator,
+		CreateAt:             s.Revision.CreatedAt.Format(constant.TimeStdFormat),
 	}
 }

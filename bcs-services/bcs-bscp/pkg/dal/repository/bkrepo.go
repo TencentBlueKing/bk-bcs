@@ -97,7 +97,7 @@ func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
 	}
 
 	repoReq := &repo.CreateRepoReq{
-		ProjectID:     cc.ApiServer().Repo.BkRepo.Project,
+		ProjectID:     c.project,
 		Name:          repoName,
 		Type:          repo.RepositoryType,
 		Category:      repo.CategoryType,

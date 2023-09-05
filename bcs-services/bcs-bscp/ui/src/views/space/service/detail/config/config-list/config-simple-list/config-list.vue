@@ -1,11 +1,11 @@
 <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { useConfigStore } from '../../../../../../store/config'
-  import { IConfigItem, IConfigListQueryParams } from '../../../../../../../types/config'
-  import { getConfigList } from '../../../../../../api/config'
-  import { getConfigTypeName } from '../../../../../../utils/config'
-  import EditConfig from './config-table-list/edit-config.vue'
+  import { useConfigStore } from '../../../../../../../store/config'
+  import { IConfigItem, IConfigListQueryParams } from '../../../../../../../../types/config'
+  import { getConfigList } from '../../../../../../../api/config'
+  import { getConfigTypeName } from '../../../../../../../utils/config'
+  import EditConfig from '../config-table-list/edit-config.vue'
 
   const store = useConfigStore()
   const { versionData } = storeToRefs(store)

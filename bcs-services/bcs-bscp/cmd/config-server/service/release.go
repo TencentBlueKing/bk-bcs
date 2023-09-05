@@ -44,6 +44,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 			Name: req.Name,
 			Memo: req.Memo,
 		},
+		Variables: req.Variables,
 	}
 	rp, err := s.client.DS.CreateRelease(grpcKit.RpcCtx(), r)
 	if err != nil {

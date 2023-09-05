@@ -150,6 +150,13 @@
     getVersionList()
   }
 
+  // 新建版本成功后，重新拉取版本列表，并选中最新版本
+  const handleCreatedVersion = async(id: number) => {
+    pagination.value.current = 1
+    await getVersionList()
+    handleVersionMenuSelect(id)
+  }
+
   const refreshList = (current: number = 1) => {
     pagination.value.current = current
     getVersionList()
@@ -197,9 +204,9 @@
         :pagination="pagination"
         :type="versionDetailModeData.type"
         :version-id="versionDetailModeData.id"
-        @select="handleVersionMenuSelect"
-        @refresh="refreshList()"
-        @close="versionDetailModeData.open = false" />
+        @created="handleCreatedVersion"
+        @close="versionDetailModeData.open = false"
+        @select="handleOpenDetailTable($event, 'view')" />
     </div>
     <bk-dialog
       title="新建版本"

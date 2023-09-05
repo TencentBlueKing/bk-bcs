@@ -54,33 +54,43 @@ safe_source() {
 }
 
 install_localpv() {
-  local namespace="bk-system" mount_path="$1"
+  local namespace="bk-system"
   kubectl get ns "$namespace" || kubectl create ns $namespace
 
-  # ToDo helm chart offline install
   if [[ -n ${BCS_OFFLINE:-} ]]; then
-    true
+    chart_path="$(find "${ROOT_DIR}/version-${VERSION}/charts/" -iname "provisioner-*.tgz" -type f | head -1)"
+    if [[ -z $chart_path ]]; then
+      utils::log "FATAL" "can't find provisioner chart in ${ROOT_DIR}/version-${VERSION}/charts/"
+    fi
   else
     [[ -n ${BKREPO_URL:-} ]] || utils::log "FAIL" "missing bkrepo url ${BKREPO_URL}"
     if ! k8s::safe_add_helmrepo blueking "${BKREPO_URL}"; then
-      utils::log "WARNING" "something wrong with helm, skip install localpv"
+      utils::log "WARNING" "something wrong with helm, skip install provisioner"
       return 1
     fi
+    chart_path="blueking/provisioner"
+  fi
 
-    utils::log "INFO" "installing localpv"
-    cat <<EOF | helm upgrade --install provisioner blueking/provisioner -n $namespace --version ${VERSION} --debug -f - || utils::log "FATAL" "helm upgrade localpv failed"
+  local image
+  if [[ -n ${BK_PUBLIC_REPO:-} ]];then
+	image="${BK_PUBLIC_REPO}/k8s.gcr.io/sig-storage/local-volume-provisioner:${VERSION}"
+  else
+    image="registry.k8s.io/sig-storage/local-volume-provisioner:${VERSION}"
+  fi
+
+  utils::log "INFO" "installing localpv"
+  cat <<EOF | helm upgrade --install provisioner blueking/provisioner -n $namespace --version ${VERSION} --debug -f - || utils::log "FATAL" "helm upgrade localpv failed"
 daemonset:
-  image: ${BK_PUBLIC_REPO}/k8s.gcr.io/sig-storage/local-volume-provisioner:${VERSION}
+  image: ${image}
 classes:
 - name: local-storage
-  hostDir: $mount_path
+  hostDir: "${LOCALPV_DIR}"
   volumeMode: Filesystem
   storageClass:
     # create and set storage class as default
     isDefaultClass: true
-    reclaimPolicy: Delete
+    reclaimPolicy: "${LOCALPV_reclaimPolicy:-"Delete"}"
 EOF
-  fi
   kubectl -n $namespace get daemonset -l app.kubernetes.io/instance=localpv --output name \
     | xargs -I{} kubectl -n $namespace rollout status --timeout=600s {}
   utils::log "OK" "localpv installed"
@@ -92,6 +102,6 @@ main() {
   for file in "${source_files[@]}"; do
     safe_source "$file"
   done
-  install_localpv "$1"
+  install_localpv
 }
-main "${1:-/mnt/blueking}"
+main

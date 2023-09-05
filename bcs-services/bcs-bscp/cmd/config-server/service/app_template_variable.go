@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -105,6 +106,40 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbcs.ListAp
 	}
 
 	resp = &pbcs.ListAppTemplateVariablesResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListReleasedAppTemplateVariables list released app template variables
+func (s *Service) ListReleasedAppTemplateVariables(ctx context.Context, req *pbcs.ListReleasedAppTemplateVariablesReq) (
+	*pbcs.ListReleasedAppTemplateVariablesResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListReleasedAppTemplateVariablesResp)
+
+	if req.ReleaseId <= 0 {
+		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find},
+		BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListReleasedAppTemplateVariablesReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+	}
+
+	rp, err := s.client.DS.ListReleasedAppTemplateVariables(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list released app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListReleasedAppTemplateVariablesResp{
 		Details: rp.Details,
 	}
 	return resp, nil

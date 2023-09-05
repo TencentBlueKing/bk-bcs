@@ -43,8 +43,9 @@
 
   // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
   const handleInputBlur = () => {
-    if (/^[0-7]{3}$/.test(privilegeInputVal.value)) {
-      localVal.value = privilegeInputVal.value
+    const val = String(privilegeInputVal.value)
+    if (/^[0-7]{3}$/.test(val)) {
+      localVal.value = val
       showPrivilegeErrorTips.value = false
       change()
     } else {

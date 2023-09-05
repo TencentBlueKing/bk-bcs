@@ -145,6 +145,13 @@ func (c *Kit) GetKitForRepoTmpl(TmplSpaceID uint32) *Kit {
 	return c2
 }
 
+// GetKitForRepoCfg get a kit for repo config item operations
+func (c *Kit) GetKitForRepoCfg() *Kit {
+	c2 := c.Clone()
+	c2.TmplSpaceID = 0
+	return c2
+}
+
 // ContextWithRid NOTES
 func (c *Kit) ContextWithRid() context.Context {
 	return context.WithValue(c.Ctx, constant.RidKey, c.Rid)

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-  import { ref, watch } from 'vue'
+  import { ref, computed, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
   import { Message } from 'bkui-vue';
   import { ITemplateBoundByAppData } from '../../../../../../../../../types/config'
   import { IAllPkgsGroupBySpaceInBiz } from '../../../../../../../../../types/template'
@@ -7,6 +8,9 @@
   import { getAllPackagesGroupBySpace, getAppPkgBindingRelations } from '../../../../../../../../api/template';
   import PkgTree from './pkg-tree.vue';
   import PkgTemplatesTable from './pkg-templates-table.vue';
+
+  const route = useRoute()
+  const router = useRouter()
 
   const props = defineProps<{
     show: boolean;
@@ -25,14 +29,32 @@
   const expandedPkg = ref(0)
   const pending = ref(false)
 
-  watch(() => props.show, val => {
+  const isImportBtnDisabled = computed(() => {
+    return pkgListLoading.value || (importedPkgs.value.length + selectedPkgs.value.length) === 0
+  })
+
+  watch(() => props.show, async(val) => {
     if (val) {
       bindingId.value = 0
       expandedPkg.value = 0
       importedPkgs.value = []
       selectedPkgs.value = []
-      getPkgList()
       getImportedPkgsData()
+      await getPkgList()
+      if (route.query.pkg_id && /\d+/.test(<string>route.query.pkg_id)) {
+        const id = Number(route.query.pkg_id)
+        pkgList.value.some(spaceGroup => {
+          return spaceGroup.template_sets.some(pkg => {
+            if (pkg.template_set_id === id && importedPkgs.value.findIndex(item => item.template_set_id === id) === -1) {
+              selectedPkgs.value.push({
+                template_set_id: id,
+                template_revisions: []
+              })
+              return true
+            }
+          })
+        })
+      }
     }
   })
 
@@ -71,8 +93,9 @@
     expandedPkg.value = expandedPkg.value === id ? 0 : id
   }
 
-  const handleSelectTplVersion = (pkgId: number, version: { template_id: number; template_revision_id: number; is_latest: boolean; }) => {
-    const pkgData = selectedPkgs.value.find(item => item.template_set_id === pkgId)
+  const handleSelectTplVersion = (pkgId: number, version: { template_id: number; template_revision_id: number; is_latest: boolean; }, type: string) => {
+    const pkgs = type === 'imported' ? importedPkgs.value : selectedPkgs.value
+    const pkgData = pkgs.find(item => item.template_set_id === pkgId)
     if (pkgData) {
       const index = pkgData.template_revisions.findIndex(item => item.template_id === version.template_id)
       if (index > -1) {
@@ -105,6 +128,9 @@
   }
 
   const close = () => {
+    if (route.query.pkg_id) {
+      router.replace({ name: 'service-config', params: route.params })
+    }
     emits('update:show', false)
   }
 </script>
@@ -128,18 +154,8 @@
       <div class="selected-result-wrapper">
         <h4>结果预览</h4>
         <p class="tips-text">已选择导入 <span class="num">{{ importedPkgs.length + selectedPkgs.length }}</span> 个模板套餐，可按需要切换模板版本</p>
-        <div class="packages-list">
+        <div v-if="!pkgListLoading" class="packages-list">
           <template v-if="importedPkgs.length + selectedPkgs.length > 0">
-            <PkgTemplatesTable
-              v-for="pkg in importedPkgs"
-              :key="pkg.template_set_id"
-              :bk-biz-id="props.bkBizId"
-              :pkg-list="pkgList"
-              :disabled="true"
-              :expanded="expandedPkg === pkg.template_set_id"
-              :pkg-id="pkg.template_set_id"
-              :selected-versions="pkg.template_revisions"
-              @expand="handleExpandTable" />
             <PkgTemplatesTable
               v-for="pkg in selectedPkgs"
               :key="pkg.template_set_id"
@@ -150,7 +166,18 @@
               :selected-versions="pkg.template_revisions"
               @delete="handleDeletePkg"
               @expand="handleExpandTable"
-              @select-version="handleSelectTplVersion(pkg.template_set_id, $event)" />
+              @select-version="handleSelectTplVersion(pkg.template_set_id, $event, 'new')" />
+            <PkgTemplatesTable
+              v-for="pkg in importedPkgs"
+              :key="pkg.template_set_id"
+              :bk-biz-id="props.bkBizId"
+              :pkg-list="pkgList"
+              :disabled="true"
+              :expanded="expandedPkg === pkg.template_set_id"
+              :pkg-id="pkg.template_set_id"
+              :selected-versions="pkg.template_revisions"
+              @expand="handleExpandTable"
+              @select-version="handleSelectTplVersion(pkg.template_set_id, $event, 'imported')" />
           </template>
           <bk-exception v-else scene="part" type="empty">
             <div class="empty-tips">
@@ -163,7 +190,7 @@
     </div>
     <template #footer>
       <div class="action-btns">
-        <bk-button theme="primary" :disabled="pkgListLoading || selectedPkgs.length === 0" :loading="pending" @click="handleImportConfirm">导入</bk-button>
+        <bk-button theme="primary" :disabled="isImportBtnDisabled" :loading="pending" @click="handleImportConfirm">导入</bk-button>
         <bk-button @click="close">取消</bk-button>
       </div>
     </template>

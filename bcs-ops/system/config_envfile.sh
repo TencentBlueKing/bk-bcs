@@ -52,10 +52,10 @@ init_env() {
   LAN_IP=${LAN_IP:-}
   LAN_IPv6=${LAN_IPv6:-}
   BCS_SYSCTL=${BCS_SYSCTL:=1}
-  if [[ ${K8S_IPv6_STATUS,,} != "singlestack" ]]; then
+  if [[ -z ${LAN_IP} ]] && [[ ${K8S_IPv6_STATUS,,} != "singlestack" ]]; then
     LAN_IP="$("${ROOT_DIR}"/system/get_lan_ip -4)"
   fi
-  if [[ ${K8S_IPv6_STATUS,,} != "disable" ]]; then
+  if [[ -z $LAN_IPv6 ]] && [[ ${K8S_IPv6_STATUS,,} != "disable" ]]; then
     LAN_IPv6="$("${ROOT_DIR}"/system/get_lan_ip -6)"
   fi
   BCS_OFFLINE=${BCS_OFFLINE:-}
@@ -96,6 +96,10 @@ init_env() {
 
   # csi
   K8S_CSI=${K8S_CSI:-"localpv"}
+  ## localpv
+  LOCALPV_DIR=${LOCALPV_DIR:-${BK_HOME}/localpv}
+  LOCALPV_COUNT=${LOCALPV_COUNT:-20}
+  LOCALPV_reclaimPolicy=${LOCALPV_reclaimPolicy:-"Delete"}
 
   # mirror
   ## yum_mirror
@@ -116,7 +120,7 @@ init_env() {
   APISERVER_HA_MODE=${APISERVER_HA_MODE:-"bcs-apiserver-proxy"}
   VIP=${VIP:-}
   ## bcs apiserver proxy
-  APISERVER_PROXY_VERSION=${APISERVER_PROXY_VERSION:-"v1.28.0"}
+  APISERVER_PROXY_VERSION=${APISERVER_PROXY_VERSION:-"v1.29.0-alpha.130-tencent"}
   PROXY_TOOL_PATH=${PROXY_TOOL_PATH:-"/usr/bin"}
   VS_PORT=${VS_PORT:-"6443"}
   LVS_SCHEDULER=${LVS_SCHEDULER:-"rr"}

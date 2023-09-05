@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue'
-  import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation'
+  import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation'
 
   const props = defineProps<{
     show: boolean;
@@ -9,6 +9,7 @@
   const emits = defineEmits(['update:show'])
 
   const isShow = ref(false)
+  const fileList = ref<File[]>([])
   const isFormChange = ref(false)
   const pending = ref(false)
 
@@ -16,6 +17,8 @@
     isShow.value = val
     isFormChange.value = false
   })
+
+  const handleFileUpload = () => {}
 
   const handleBeforeClose = async() => {
     if (isFormChange.value) {
@@ -37,9 +40,24 @@
     :is-show="isShow"
     :before-close="handleBeforeClose"
     @closed="close">
-    <div class="slider-content-container"></div>
+    <div class="slider-content-container">
+      <bk-form form-type="vertical">
+        <bk-form-item label="上传配置包" required property="package">
+          <bk-upload
+            class="config-uploader"
+            url=""
+            theme="button"
+            tip="支持扩展名：.zip  .tar  .gz"
+            :size="100"
+            :multiple="false"
+            :files="fileList"
+            :custom-request="handleFileUpload">
+          </bk-upload>
+        </bk-form-item>
+      </bk-form>
+    </div>
     <div class="action-btns">
-      <bk-button theme="primary" :loading="pending">去导入</bk-button>
+      <bk-button theme="primary" :loading="pending" :disabled="fileList.length === 0">去导入</bk-button>
       <bk-button @click="close">取消</bk-button>
     </div>
   </bk-sideslider>

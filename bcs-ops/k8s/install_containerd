@@ -63,9 +63,29 @@ _yum_containerd() {
     || utils::log "ERROR" "${CONTAINERD_VER} not found amongst yum list results"
 
   yum -y install containerd.io-"$pkg_ver" \
-    || utils::log "ERROR" "fail to yum install docker"
+    || utils::log "ERROR" "fail to yum install containerd"
   "${ROOT_DIR}"/k8s/operate_completion ctr
   return 0
+}
+
+_offline_containerd() {
+  local bin_path tar_name
+  bin_path=${ROOT_DIR}/version-${VERSION}/bin-tools/
+
+  tar_name=$(find "$bin_path" -iname "containerd-*.tgz" -type f | head -1)
+  if [[ -z ${tar_name} ]]; then
+    utils::log "FATAL" "can't find docker installation package in ${bin_path}"
+  else
+    tar xvzf "${tar_name}" -C /usr/bin/ --strip-components=1 bin/
+    tar xvzf "${tar_name}" -C /etc/systemd/system/ --strip-components=1 systemd/
+  fi
+
+  tar_name=$(find "$bin_path" -iname "runc-*.tgz" -type f | head -1)
+  if [[ -z ${tar_name} ]]; then
+    utils::log "FATAL" "can't find docker installation package in ${bin_path}"
+  else
+    tar xvzf "${tar_name}" -C /usr/bin/ --strip-components=1 bin/
+  fi
 }
 
 # ToDo: config separte
@@ -87,7 +107,7 @@ render_containerd() {
 
   local sandbox_img_url
   if [[ -n ${BK_PUBLIC_REPO:-} ]]; then
-    sandbox_img_url="${BK_PUBLIC_REPO}/k8s.gcr.io/pause:3.6"
+    sandbox_img_url="${BK_PUBLIC_REPO}/registry.k8s.io/pause:3.6"
   else
     sandbox_img_url="registry.k8s.io/pause:3.6"
   fi
@@ -145,8 +165,7 @@ main() {
     utils::log "WARN" "containerd installed, $(ctr -v)"
   else
     if [[ -n ${BCS_OFFLINE:-} ]]; then
-      # ToDo offline install containerd
-      true
+	  _offline_containerd
     else
       _yum_containerd
     fi
@@ -162,18 +181,19 @@ main() {
     utils::log "ERROR" "Did containerd get installed?"
   fi
 
+  if [[ -n ${BCS_OFFLINE:-} ]]; then
+    find "${ROOT_DIR}"/version-"${VERSION}"/images -name '*.tar' -type f -print0 \
+      | xargs -0 -I {} ctr -n k8s.io image import {}
+  fi
+
   # function testing
   local test_img_url
   test_img_url=${BK_PUBLIC_REPO:-"docker.io"}/library/hello-world:latest
   utils::log "DEBUG" "hello-world: ${test_img_url}"
 
-  if [[ -n ${BCS_OFFLINE:-} ]]; then
-    # ToDo hello world image offline install
-    true
-  fi
 
-  if ! (ctr i pull --hosts-dir "/etc/containerd/certs.d" "$test_img_url" \
-    && ctr run --rm "$test_img_url" hello-world."$(date +%s)"); then
+  if ! (ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "$test_img_url" \
+    && ctr -n k8s.io run --rm "$test_img_url" hello-world."$(date +%s)"); then
     utils::log "ERROR" "Could not get containerd to run ${test_img_url}"
   fi
   return 0
