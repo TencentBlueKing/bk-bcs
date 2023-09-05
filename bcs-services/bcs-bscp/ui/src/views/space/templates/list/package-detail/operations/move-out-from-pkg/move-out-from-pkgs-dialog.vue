@@ -52,7 +52,7 @@
         start: 0,
         all: true
       }
-      const list: ICitedItem[] = []
+      let list: ICitedItem[] = []
       const citedAppsRes = await getUnNamedVersionAppsBoundByPackages(spaceId.value, currentTemplateSpace.value, pkgs, params)
       citedPkgsRes.details[0].forEach(item => {
         const { template_set_id, template_set_name } = item
@@ -64,14 +64,22 @@
           appNames
         })
       })
+      const index = list.findIndex(item => item.id === props.currentPkg)
+      const currentPkgData = list.splice(index, 1)
+      list = currentPkgData.concat(list)
       citedList.value = list
     }
 
-    if (citedList.value.length === 1) {
-      selectedPkgs.value = [citedList.value[0].id]
+    if (typeof props.currentPkg === 'number') {
+      selectedPkgs.value = [props.currentPkg]
     }
 
     loading.value = false
+  }
+
+  const getSelectionStatus = ({ row }: { row: ICitedItem }) => {
+    console.log(row.name, selectedPkgs.value.includes(row.id))
+    return selectedPkgs.value.includes(row.id)
   }
 
   const handleSelectionChange = ({ checked, isAll, row }: { checked: boolean, isAll: boolean; row: ICitedItem }) => {
@@ -129,7 +137,12 @@
     @confirm="handleConfirm"
     @closed="close">
     <bk-loading style="min-height: 100px;" :loading="loading">
-      <bk-table v-if="!loading" :data="citedList" :max-height="maxTableHeight" @selection-change="handleSelectionChange">
+      <bk-table
+        v-if="!loading"
+        :data="citedList"
+        :max-height="maxTableHeight"
+        :is-selected-fn="getSelectionStatus"
+        @selection-change="handleSelectionChange">
         <bk-table-column v-if="citedList.length > 1" type="selection" min-width="30" width="40" />
         <bk-table-column label="所在模板套餐">
           <template #default="{ row }">

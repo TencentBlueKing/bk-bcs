@@ -228,6 +228,8 @@
     }
     .empty-tips {
       margin: 20px 0;
+      font-size: 12px;
+      color: #3a84ff;
     }
   }
 </style>

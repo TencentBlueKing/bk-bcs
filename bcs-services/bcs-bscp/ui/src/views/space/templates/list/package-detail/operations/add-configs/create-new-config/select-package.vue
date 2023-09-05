@@ -125,7 +125,7 @@
       </div>
     </template>
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
-      <bk-form-item label="模板空间描述" property="pkgs" required>
+      <bk-form-item label="模板套餐" property="pkgs" required>
         <bk-select
           multiple
           :model-value="selectedPkgs"

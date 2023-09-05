@@ -68,7 +68,7 @@
 
   const close = () => {
     emits('update:show', false)
-    data.value = { name: '', memo: '', public: true, template_ids: [1], bound_apps: [] }
+    data.value = { name: '', memo: '', public: true, template_ids: [], bound_apps: [] }
   }
 
 </script>
