@@ -14,6 +14,7 @@ package store
 
 import (
 	"context"
+	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"sync"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
@@ -26,11 +27,6 @@ type Options struct {
 	User    string // storage user
 	Pass    string // storage pass
 	Cache   bool   // init cache for performance
-}
-
-// ListAppOptions for data filter
-type ListAppOptions struct {
-	Projects []string
 }
 
 // Store define data interface for argocd structure.
@@ -59,7 +55,7 @@ type Store interface {
 	ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, error)
 
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
-	ListApplications(ctx context.Context, option *ListAppOptions) (*v1alpha1.ApplicationList, error)
+	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)
 	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application) error
 
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)

@@ -16,6 +16,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"net/http"
 	"reflect"
 	"runtime"
@@ -34,7 +35,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
@@ -65,7 +65,7 @@ type MiddlewareInterface interface {
 	ListClusters(ctx context.Context, projectNames []string) (*v1alpha1.ClusterList, int, error)
 	ListRepositories(ctx context.Context, projectNames []string,
 		needCheckPermission bool) (*v1alpha1.RepositoryList, int, error)
-	ListApplications(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationList, error)
+	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)
 
 	CheckCreateApplicationSet(ctx context.Context, appset *v1alpha1.ApplicationSet) (int, error)
 	CheckDeleteApplicationSet(ctx context.Context, appsetName string) (int, error)
@@ -424,10 +424,11 @@ func (h *handler) ListRepositories(ctx context.Context, projectNames []string,
 }
 
 // ListApplications 根据项目名称获取所有应用
-func (h *handler) ListApplications(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationList, error) {
-	apps, err := h.option.Storage.ListApplications(ctx, &store.ListAppOptions{Projects: projectNames})
+func (h *handler) ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (
+	*v1alpha1.ApplicationList, error) {
+	apps, err := h.option.Storage.ListApplications(ctx, query)
 	if err != nil {
-		return nil, errors.Wrapf(err, "list application swith project '%v' failed", projectNames)
+		return nil, errors.Wrapf(err, "list application swith project '%v' failed", query.Projects)
 	}
 	return apps, nil
 }

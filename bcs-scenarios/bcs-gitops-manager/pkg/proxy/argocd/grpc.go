@@ -500,27 +500,12 @@ func (plugin *GrpcPlugin) handleAppList(ctx context.Context, req *http.Request) 
 			names = append(names, item.Name)
 		}
 	}
-	appList, err := plugin.middleware.ListApplications(ctx, names)
+	query.Projects = names
+	appList, err := plugin.middleware.ListApplications(ctx, query)
 	if err != nil {
 		return mw.ReturnGRPCErrorResponse(http.StatusInternalServerError,
 			errors.Wrapf(err, "list applications by project '%s' from storage failed", names))
 	}
-	result := make([]v1alpha1.Application, 0, len(appList.Items))
-	for i := range appList.Items {
-		item := appList.Items[i]
-		if query.Name != nil && (*query.Name != "" && *query.Name != item.Name) {
-			continue
-		}
-		if query.Repo != nil && (*query.Repo != "" && *query.Repo != item.Spec.Source.RepoURL) {
-			continue
-		}
-		if query.AppNamespace != nil && (*query.AppNamespace != "" && *query.AppNamespace !=
-			item.Spec.Destination.Namespace) {
-			continue
-		}
-		result = append(result, item)
-	}
-	appList.Items = result
 	return mw.ReturnGRPCResponse(appList)
 }
 

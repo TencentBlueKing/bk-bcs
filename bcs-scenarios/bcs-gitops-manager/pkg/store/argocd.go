@@ -36,6 +36,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/watch"
 
 	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
@@ -267,24 +268,48 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 }
 
 // ListApplications interface
-func (cd *argo) ListApplications(ctx context.Context, option *ListAppOptions) (*v1alpha1.ApplicationList, error) {
+func (cd *argo) ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (
+	*v1alpha1.ApplicationList, error) {
 	if !cd.cacheSynced.Load() {
-		apps, err := cd.appClient.List(ctx, &appclient.ApplicationQuery{Projects: option.Projects})
+		apps, err := cd.appClient.List(ctx, query)
 		if err != nil {
-			return nil, errors.Wrapf(err, "argocd list application for project '%v' failed", option.Projects)
+			return nil, errors.Wrapf(err, "argocd list application for project '%v' failed", query.Projects)
 		}
 		return apps, nil
+	}
+	var (
+		selector labels.Selector
+		err      error
+	)
+	if query.Selector != nil && *query.Selector != "" {
+		selector, err = labels.Parse(*query.Selector)
+		if err != nil {
+			return nil, errors.Wrapf(err, "argocd list application for project '%v' failed", query.Projects)
+		}
 	}
 	result := &v1alpha1.ApplicationList{
 		Items: make([]v1alpha1.Application, 0),
 	}
-	for i := range option.Projects {
-		projName := option.Projects[i]
+	for i := range query.Projects {
+		projName := query.Projects[i]
 		projApps, ok := cd.cacheApplication.Load(projName)
 		if !ok {
 			continue
 		}
 		for _, v := range projApps.(map[string]*v1alpha1.Application) {
+			if query.Name != nil && (*query.Name != "" && *query.Name != v.Name) {
+				continue
+			}
+			if query.Repo != nil && (*query.Repo != "" && *query.Repo != v.Spec.Source.RepoURL) {
+				continue
+			}
+			if query.AppNamespace != nil && (*query.AppNamespace != "" && *query.AppNamespace !=
+				v.Spec.Destination.Namespace) {
+				continue
+			}
+			if query.Selector != nil && (*query.Selector != "" && !selector.Matches(labels.Set(v.Labels))) {
+				continue
+			}
 			result.Items = append(result.Items, *v)
 		}
 	}

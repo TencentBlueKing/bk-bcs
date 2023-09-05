@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"io"
 	"net/http"
 	"strconv"
@@ -141,7 +142,7 @@ func (plugin *AppPlugin) listApplicationsHandler(ctx context.Context, r *http.Re
 				errors.Wrapf(err, "check project '%s' permission failed", projectName))
 		}
 	}
-	appList, err := plugin.middleware.ListApplications(ctx, projects)
+	appList, err := plugin.middleware.ListApplications(ctx, &appclient.ApplicationQuery{Projects: projects})
 	if err != nil {
 		return mw.ReturnErrorResponse(http.StatusInternalServerError,
 			errors.Wrapf(err, "list applications by project '%v' from storage failed", projects))
