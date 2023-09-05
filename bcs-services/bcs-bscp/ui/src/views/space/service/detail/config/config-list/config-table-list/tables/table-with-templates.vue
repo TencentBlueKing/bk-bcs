@@ -184,9 +184,9 @@
       const {
         template_space_name, template_set_id, template_set_name,
         template_id: id, name, template_revision_id: versionId,
-        template_revision_name: versionName, path, creator
+        template_revision_name: versionName, path, creator, file_state
       } = tpl
-      const config = { id, name, versionId, versionName, path, creator, reviser: '--', update_at: '--', file_state: '' }
+      const config = { id, name, versionId, versionName, path, creator, reviser: '--', update_at: '--', file_state }
       const group = groups.find(item => item.id === template_set_id)
       if (group) {
         group.configs.push(config)
