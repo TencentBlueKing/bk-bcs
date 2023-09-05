@@ -63,7 +63,7 @@ _yum_containerd() {
     || utils::log "ERROR" "${CONTAINERD_VER} not found amongst yum list results"
 
   yum -y install containerd.io-"$pkg_ver" \
-    || utils::log "ERROR" "fail to yum install docker"
+    || utils::log "ERROR" "fail to yum install containerd"
   "${ROOT_DIR}"/k8s/operate_completion ctr
   return 0
 }
@@ -191,12 +191,8 @@ main() {
   test_img_url=${BK_PUBLIC_REPO:-"docker.io"}/library/hello-world:latest
   utils::log "DEBUG" "hello-world: ${test_img_url}"
 
-  if [[ -n ${BCS_OFFLINE:-} ]]; then
-    # ToDo hello world image offline install
-    true
-  fi
 
-  if ! (ctr i pull --hosts-dir "/etc/containerd/certs.d" "$test_img_url" \
+  if ! (ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "$test_img_url" \
     && ctr -n k8s.io run --rm "$test_img_url" hello-world."$(date +%s)"); then
     utils::log "ERROR" "Could not get containerd to run ${test_img_url}"
   fi
