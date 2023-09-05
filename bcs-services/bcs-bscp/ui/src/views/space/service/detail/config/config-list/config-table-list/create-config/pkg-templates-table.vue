@@ -124,7 +124,6 @@
               <bk-select
                 :clearable="false"
                 :model-value="getVersionSelectVal(tpl.id)"
-                :disabled="props.disabled"
                 @change="handleSelectVersion(tpl.id, tpl.versions, $event)">
                 <bk-option
                   v-for="version in tpl.versions"
