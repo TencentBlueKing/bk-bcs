@@ -79,7 +79,7 @@ func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items 
 
 	q := tx.ReleasedConfigItem.WithContext(kit.Ctx)
 	if err := q.CreateInBatches(items, batchSize); err != nil {
-		return fmt.Errorf("insert events failed, err: %v", err)
+		return fmt.Errorf("create released config items in batch failed, err: %v", err)
 	}
 
 	ad := dao.auditDao.DecoratorV2(kit, items[0].Attachment.BizID).PrepareCreate(table.RciList(items))
