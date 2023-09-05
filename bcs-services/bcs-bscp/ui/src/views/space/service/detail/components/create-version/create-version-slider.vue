@@ -83,14 +83,10 @@
   const confirm = async() => {
     try {
       pending.value = true
-      const variables: { [key: string]: string; } = {}
-      variableList.value.forEach(item => {
-        variables[item.name] = item.default_val
-      })
       const params = {
         name: formData.value.name,
         memo: formData.value.memo,
-        variables
+        variables: variableList.value
       }
       const res = await createVersion(props.bkBizId, props.appId, params)
       // 创建接口未返回完整的版本详情数据，在前端拼接最新版本数据，加载完版本列表后再更新
@@ -101,6 +97,10 @@
     } finally {
       pending.value = false
     }
+  }
+
+  const handleResetDefault = (list: IVariableEditParams[]) => {
+    variableList.value = list
   }
 
   const handleBeforeClose = async () => {
@@ -150,7 +150,10 @@
         </div>
         <div class="variable-form">
           <div v-bkloading="{ loading }" class="section-title">服务变量赋值</div>
-            <ResetDefaultValue :list="initialVariables" class="reset-default-btn" />
+            <ResetDefaultValue
+              class="reset-default-btn"
+              :list="initialVariables"
+              @reset="handleResetDefault" />
             <VariablesTable
               ref="tableRef"
               :list="variableList"

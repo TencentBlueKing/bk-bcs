@@ -1,5 +1,6 @@
 import http from "../request"
 import { IConfigEditParams, IConfigListQueryParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config'
+import { IVariableEditParams } from '../../types/variable'
 import { ICommonQuery } from "../../types/index"
 
 // 配置项版本下脚本配置接口可能会返回null，做数据兼容处理
@@ -116,7 +117,7 @@ export const getConfigContent = (bizId: string, appId: number, SHA256Str: string
 interface ICreateVersionParams {
   name: string;
   memo: string;
-  variables: { [key: string]: string }
+  variables: IVariableEditParams[];
 }
 export const createVersion = (bizId: string, appId: number, params: ICreateVersionParams) => {
   return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, params)
