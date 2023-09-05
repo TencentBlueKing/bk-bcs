@@ -115,10 +115,11 @@ type HelmManager struct {
 	ctxCancelFunc context.CancelFunc
 	stopCh        chan struct{}
 	credConf      microCfg.Config
+	addonsConf    microCfg.Config
 }
 
 // NewHelmManager create a new helm manager
-func NewHelmManager(opt *options.HelmManagerOptions, credConf microCfg.Config) *HelmManager {
+func NewHelmManager(opt *options.HelmManagerOptions, credConf, addonsConf microCfg.Config) *HelmManager {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &HelmManager{
 		opt:           opt,
@@ -126,6 +127,7 @@ func NewHelmManager(opt *options.HelmManagerOptions, credConf microCfg.Config) *
 		ctxCancelFunc: cancel,
 		stopCh:        make(chan struct{}),
 		credConf:      credConf,
+		addonsConf:    addonsConf,
 	}
 }
 
@@ -166,6 +168,9 @@ func (hm *HelmManager) Run() error {
 
 	eg.Go(func() error {
 		return hm.watch()
+	})
+	eg.Go(func() error {
+		return hm.addonsWatch()
 	})
 	eg.Go(func() error {
 		// run the service
@@ -411,7 +416,7 @@ func (hm *HelmManager) initMicro() error {
 	}
 	// register cluster addons handler
 	if err := helmmanager.RegisterClusterAddonsHandler(
-		svc.Server(), handler.NewAddonsHandler(hm.model, hm.opt, hm.platform, hm.addons,
+		svc.Server(), handler.NewAddonsHandler(hm.model, hm.opt, hm.platform, &hm.addons,
 			hm.releaseHandler)); err != nil {
 		blog.Errorf("register addons handler to micro failed: %s", err.Error())
 		return nil
@@ -709,6 +714,39 @@ func (hm *HelmManager) watch() error {
 			}
 			options.GlobalOptions.Credentials = cred
 			blog.Infof("reload credential conf from %s", string(value.Bytes()))
+		}
+	})
+	return nil
+}
+
+// addonsWatch 监听addons配置文件
+func (hm *HelmManager) addonsWatch() error {
+	var eg errgroup.Group
+	w, err := hm.addonsConf.Watch("addons")
+	if err != nil {
+		return err
+	}
+
+	eg.Go(func() error {
+		for {
+			value, err := w.Next()
+			if err != nil {
+				if err.Error() == source.ErrWatcherStopped.Error() {
+					return nil
+				}
+				return err
+			}
+			// watch 会传入 null 空值
+			if string(value.Bytes()) == "null" {
+				continue
+			}
+			addonsContent := []*release.Addons{}
+			err = value.Scan(&addonsContent)
+			if err != nil {
+				blog.Errorf("reload addons error, %s", err)
+			}
+			hm.addons.Addons = addonsContent
+			blog.Infof("reload addons conf from %s", string(value.Bytes()))
 		}
 	})
 	return nil
