@@ -16,6 +16,8 @@ package constant
 const (
 	// CurrentUserAttr user header
 	CurrentUserAttr = "current-user"
+	// ProjectAttr project header
+	ProjectAttr = "project"
 
 	// DefaultTokenLength user token default length
 	// token is consisted of digital and alphabet(case sensetive)

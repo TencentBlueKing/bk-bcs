@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/esb/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/auth"
@@ -34,6 +35,10 @@ import (
 // InitV1Routers init v1 version route,
 // it's compatible with bcs-api
 func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient) {
+	ws.Filter(middleware.RequestIDFilter)
+	ws.Filter(middleware.TracingFilter)
+	ws.Filter(middleware.LoggingFilter)
+
 	initUsersRouters(ws)
 	initClustersRouters(ws)
 	initTkeRouters(ws)

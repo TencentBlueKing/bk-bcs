@@ -49,6 +49,7 @@ func SetupStore(conf *config.UserMgrConfig) error {
 		&models.BcsOperationLog{},
 		&models.BcsTokenNotify{},
 		&models.BcsTempToken{},
+		&models.Activity{},
 	)
 
 	// remove user name Constraints, because we will soft delete token on db when user destroy there token,
