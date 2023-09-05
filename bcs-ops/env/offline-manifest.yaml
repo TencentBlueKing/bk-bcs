@@ -14,6 +14,7 @@ bcs-ops:
       - hub.bktencent.com/registry.k8s.io/kube-scheduler:v1.20.15
       - hub.bktencent.com/registry.k8s.io/kube-proxy:v1.20.15
       - hub.bktencent.com/registry.k8s.io/pause:3.2
+      - hub.bktencent.com/registry.k8s.io/pause:3.6
       - hub.bktencent.com/registry.k8s.io/etcd:3.4.13-0
       - hub.bktencent.com/registry.k8s.io/coredns:1.7.0
       - hub.bktencent.com/library/hello-world:latest
@@ -21,6 +22,9 @@ bcs-ops:
       - hub.bktencent.com/flannel/flannel:v0.22.0
       - hub.bktencent.com/k8s.gcr.io/sig-storage/local-volume-provisioner:v2.4.0
       - hub.bktencent.com/registry.k8s.io/metrics-server/metrics-server:v0.6.3
+      - hub.bktencent.com/registry.k8s.io/multus-cni:snapshot
+      - hub.bktencent.com/registry.k8s.io/kube-vip:v0.5.12
+      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.29.0-alpha.130-tencent
       - hub.bktencent.com/alpine/helm:3.7.2
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
@@ -54,6 +58,9 @@ bcs-ops:
       - hub.bktencent.com/flannel/flannel:v0.22.0
       - hub.bktencent.com/k8s.gcr.io/sig-storage/local-volume-provisioner:v2.4.0
       - hub.bktencent.com/registry.k8s.io/metrics-server/metrics-server:v0.6.3
+      - hub.bktencent.com/registry.k8s.io/multus-cni:snapshot
+      - hub.bktencent.com/registry.k8s.io/kube-vip:v0.5.12
+      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.29.0-alpha.130-tencent
       - hub.bktencent.com/alpine/helm:3.7.2
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
@@ -78,6 +85,7 @@ bcs-ops:
       - hub.bktencent.com/registry.k8s.io/kube-controller-manager:v1.24.15
       - hub.bktencent.com/registry.k8s.io/kube-scheduler:v1.24.15
       - hub.bktencent.com/registry.k8s.io/kube-proxy:v1.24.15
+      - hub.bktencent.com/registry.k8s.io/pause:3.6
       - hub.bktencent.com/registry.k8s.io/pause:3.7
       - hub.bktencent.com/registry.k8s.io/etcd:3.5.6-0
       - hub.bktencent.com/registry.k8s.io/coredns:v1.8.6
@@ -86,6 +94,9 @@ bcs-ops:
       - hub.bktencent.com/flannel/flannel:v0.22.0
       - hub.bktencent.com/k8s.gcr.io/sig-storage/local-volume-provisioner:v2.4.0
       - hub.bktencent.com/registry.k8s.io/metrics-server/metrics-server:v0.6.3
+      - hub.bktencent.com/registry.k8s.io/multus-cni:snapshot
+      - hub.bktencent.com/registry.k8s.io/kube-vip:v0.5.12
+      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.29.0-alpha.130-tencent
       - hub.bktencent.com/alpine/helm:3.7.2
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0

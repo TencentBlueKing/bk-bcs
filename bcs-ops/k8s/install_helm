@@ -56,7 +56,7 @@ if ! helm version --short /dev/null | grep -qoE "^v${HELM_VER}"; then
       if ! command -v ctr &>/dev/null; then
         utils::log "ERROR" "containerd client: ctr is not found"
       fi
-      if ctr i pull --hosts-dir "/etc/containerd/certs.d" "${helm_image}"; then
+      if ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "${helm_image}"; then
         if ! ctr -n k8s.io run --rm --mount type=bind,src=/usr/bin,dst=/tmp,options=rbind:rw \
           "${helm_image}" helm-copy."$(date +%s)" /bin/cp -f /usr/bin/helm /tmp/; then
           utils::log "ERROR" "containerd fail to run ${helm_image}"

@@ -78,7 +78,7 @@ init_bap_rule() {
       if ! command -v ctr &>/dev/null; then
         utils::log "ERROR" "containerd client: ctr is not found"
       fi
-      if ctr i pull --hosts-dir "/etc/containerd/certs.d" "${bap_image}"; then
+      if ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "${bap_image}"; then
         if ! ctr -n k8s.io run --rm --mount type=bind,src="${PROXY_TOOL_PATH}",dst=/tmp,options=rbind:rw "${bap_image}" \
           bap-copy."$(date +%s)" /bin/cp -f /data/bcs/bcs-apiserver-proxy/apiserver-proxy-tools /tmp/; then
           utils::log "ERROR" "containerd fail to run ${bap_image}"
