@@ -278,19 +278,10 @@ func (s *Service) doTemplateActionForCreateRelease(kt *kit.Kit, req *pbds.Create
 // createReleasedRenderedTemplateCIs create released rendered templates config items.
 func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
 	tmplRevisions []*table.TemplateRevision, renderedContentMap map[uint32][]byte, signatureMap map[uint32]string) error {
-	// released_config_items table has unique key `idx_releaseID_commitID` (`release_id`, `commit_id`)
-	// so we must set commit id to create following records
-	commitIDs, err := s.dao.ID().Batch(kt, table.CommitsTable, len(tmplRevisions))
-	if err != nil {
-		logs.Errorf("batch create commit ids failed, err: %v, rid: %s", err, kt.Rid)
-		return err
-	}
-
 	releasedCIs := make([]*table.ReleasedConfigItem, len(tmplRevisions))
 	for idx, r := range tmplRevisions {
 		releasedCIs[idx] = &table.ReleasedConfigItem{
 			ReleaseID: releaseID,
-			CommitID:  commitIDs[idx],
 			CommitSpec: &table.CommitSpec{
 				ContentID: 0,
 				Content: &table.ContentSpec{
