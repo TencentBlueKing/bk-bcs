@@ -68,11 +68,7 @@ check_k8s_status() {
 op_bap() {
   check_k8s_status
   action=$1
-  if [[ -z ${BK_PUBLIC_REPO} ]]; then
-    utils::log "ERROR" "${action} bcs-apiserver-proxy failed, empty BK_PUBLIC_REPO"
-  else
-    bap_image="${BK_PUBLIC_REPO}/blueking/bcs-apiserver-proxy:${APISERVER_PROXY_VERSION}"
-  fi
+  bap_image=${BK_PUBLIC_REPO:-"hub.bktencent.com"}/blueking/bcs-apiserver-proxy:${APISERVER_PROXY_VERSION}
 
   utils::log "INFO" "${action}ing bcs-apiserver-proxy"
   cat <<EOF | kubectl "${action}" -f -

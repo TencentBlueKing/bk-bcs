@@ -77,7 +77,7 @@ op_multus() {
   if [[ -z ${BK_PUBLIC_REPO} ]]; then
     multus_image="ghcr.io/k8snetworkplumbingwg/multus-cni:${MULTUS_VERSION}"
   else
-    multus_image="${BK_PUBLIC_REPO}/k8snetworkplumbingwg/multus-cni:${MULTUS_VERSION}"
+    multus_image="${BK_PUBLIC_REPO}/registry.k8s.io/multus-cni:${MULTUS_VERSION}"
   fi
 
   utils::log "INFO" "${action}ing multus"
