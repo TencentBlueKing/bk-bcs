@@ -932,8 +932,8 @@ message ListReleasedAppBoundTemplateRevisionsReq {
 }
 
 message ListReleasedAppBoundTemplateRevisionsResp {
-    uint32                              count   = 1;
-    repeated pbatb.AppBoundTmplRevision details = 2;
+    uint32                                      count   = 1;
+    repeated pbatb.ReleasedAppBoundTmplRevision details = 2;
 }
 
 message ExtractAppTemplateVariablesReq {

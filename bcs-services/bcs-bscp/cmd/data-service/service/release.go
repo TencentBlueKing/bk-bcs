@@ -257,7 +257,7 @@ func (s *Service) doTemplateActionForCreateRelease(kt *kit.Kit, req *pbds.Create
 		return err
 	}
 
-	if err := s.createReleasedAppTemplates(kt, tx, releaseID); err != nil {
+	if err := s.createReleasedAppTemplates(kt, tx, releaseID, renderedContentMap, signatureMap); err != nil {
 		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
@@ -317,7 +317,8 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 }
 
 // createReleasedAppTemplates create released app templates.
-func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32) error {
+func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
+	renderedContentMap map[uint32][]byte, signatureMap map[uint32]string) error {
 	revisionsResp, err := s.ListAppBoundTemplateRevisions(kt.Ctx, &pbds.ListAppBoundTemplateRevisionsReq{
 		BizId: kt.BizID,
 		AppId: kt.AppID,
@@ -352,6 +353,8 @@ func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, relea
 				Privilege:            r.Privilege,
 				Signature:            r.Signature,
 				ByteSize:             r.ByteSize,
+				RenderedSignature:    signatureMap[r.TemplateRevisionId],
+				RenderedByteSize:     uint64(len(renderedContentMap[r.TemplateRevisionId])),
 			},
 			Attachment: &table.ReleasedAppTemplateAttachment{
 				BizID: kt.BizID,
