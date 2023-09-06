@@ -46,9 +46,26 @@ const (
 	InstanceStatusRepairing = "REPAIRING"
 	// InstanceStatusTerminated indicates the instance is terminated
 	InstanceStatusTerminated = "TERMINATED"
+	
+	// UpdatePolicyProactive update is proactive
+	UpdatePolicyProactive = "PROACTIVE"
+	// UpdatePolicyOpportunistic update is opportunistic
+	UpdatePolicyOpportunistic = "OPPORTUNISTIC"
+	UpdatePolicyActionNone    = "None"
+	// UpdatePolicyActionRefresh update action refresh
+	UpdatePolicyActionRefresh = "REFRESH"
+	UpdatePolicyActionRestart = "RESTART"
+	UpdatePolicyActionReplace = "REPLACE"
 
 	// GKEClusterReleaseChannel for GKE cluster release channel
 	GKEClusterReleaseChannel = "releaseChannel"
 	// GKEClusterLocationType for GKE cluster location type
 	GKEClusterLocationType = "locationType"
+
+	// MetadataKeySshKey is key name for ssh public keys
+	MetadataKeySshKey = "ssh-keys"
+	// MetadataKeyBlockProjectSshKey is key name for blocking project ssh public keys
+	MetadataKeyBlockProjectSshKey = "block-project-ssh-keys"
+	// MetadataKeyStartupScript is key name for startup script
+	MetadataKeyStartupScript = "startup-script"
 )

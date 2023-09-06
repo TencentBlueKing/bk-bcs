@@ -11239,6 +11239,11 @@
           "type": "string",
           "description": "key私钥信息(base64存储)",
           "title": "keySecret"
+        },
+        "keyPublic": {
+          "type": "string",
+          "description": "key公钥信息(base64存储)",
+          "title": "keyPublic"
         }
       }
     },

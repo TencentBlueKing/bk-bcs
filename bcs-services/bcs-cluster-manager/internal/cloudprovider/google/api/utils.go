@@ -37,17 +37,9 @@ import (
 
 const (
 	gceURLPrefix = "https://www.googleapis.com/compute/v1/"
-)
 
-const (
-	UpdatePolicyProactive = "PROACTIVE"
-	// UpdatePolicyOpportunistic update is opportunistic
-	UpdatePolicyOpportunistic = "OPPORTUNISTIC"
-	UpdatePolicyActionNone    = "None"
-	// UpdatePolicyActionRefresh update action refresh
-	UpdatePolicyActionRefresh = "REFRESH"
-	UpdatePolicyActionRestart = "RESTART"
-	UpdatePolicyActionReplace = "REPLACE"
+	BCSNodeGroupTaintKey    = "bcs-cluster-manager"
+	BCSNodeGroupTaintEffect = "NO_EXECUTE"
 )
 
 // GCPClientSet google cloud platform client set
@@ -169,6 +161,12 @@ func MapTaints(cmt []*cmproto.Taint) []*Taint {
 			Effect: v.Effect,
 		})
 	}
+
+	t = append(t, &Taint{
+		Key:    BCSNodeGroupTaintKey,
+		Value:  "",
+		Effect: BCSNodeGroupTaintEffect})
+
 	return t
 }
 
@@ -180,6 +178,7 @@ func genCreateNodePoolRequest(req *CreateNodePoolRequest) *container.CreateNodeP
 		NodePool: &container.NodePool{
 			Name:             req.NodePool.Name,
 			InitialNodeCount: req.NodePool.InitialNodeCount,
+			Locations:        req.NodePool.Locations,
 			MaxPodsConstraint: &container.MaxPodsConstraint{
 				MaxPodsPerNode: req.NodePool.MaxPodsConstraint.MaxPodsPerNode,
 			},
@@ -240,7 +239,7 @@ func GetInstanceGroupManager(computeCli *ComputeServiceClient, url string) (*com
 	}
 	var igm *compute.InstanceGroupManager
 	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
-		igm, err = computeCli.GetInstanceGroupManager(context.Background(), igmInfo[2], igmInfo[(len(igmInfo)-1)])
+		igm, err = computeCli.GetInstanceGroupManager(context.Background(), igmInfo[3], igmInfo[(len(igmInfo)-1)])
 		if err != nil {
 			blog.Errorf("GetInstanceGroupManager failed: %v", err)
 			return nil, err
@@ -259,9 +258,9 @@ func PatchInstanceGroupManager(computeCli *ComputeServiceClient, url string, igm
 		return nil, err
 	}
 	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
-		o, err := computeCli.PatchInstanceGroupManager(context.Background(), igmInfo[2], igmInfo[(len(igmInfo)-1)], igm)
+		o, err := computeCli.PatchInstanceGroupManager(context.Background(), igmInfo[3], igmInfo[(len(igmInfo)-1)], igm)
 		if err != nil {
-			blog.Errorf("PatchInstanceGroupManager failed, operation: %s, err: %v", o.SelfLink, err)
+			blog.Errorf("PatchInstanceGroupManager failed, err: %v", err)
 			return nil, err
 		}
 		return o, nil
@@ -278,10 +277,9 @@ func ResizeInstanceGroupManager(computeCli *ComputeServiceClient, url string, si
 	}
 	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
 		var o *compute.Operation
-		o, err = computeCli.ResizeInstanceGroupManager(context.Background(), igmInfo[2],
-			igmInfo[(len(igmInfo)-1)], size)
+		o, err = computeCli.ResizeInstanceGroupManager(context.Background(), igmInfo[3], igmInfo[(len(igmInfo)-1)], size)
 		if err != nil {
-			blog.Errorf("ResizeInstanceGroupManager failed, operation: %s, err: %v", o.SelfLink, err)
+			blog.Errorf("ResizeInstanceGroupManager failed, err: %v", err)
 			return nil, err
 		}
 		return o, nil
@@ -318,9 +316,9 @@ func GetOperation(computeCli *ComputeServiceClient, url string) (*compute.Operat
 	}
 	var o *compute.Operation
 	if utils.StringInSlice("operations", opInfo) && len(opInfo) >= 5 {
-		o, err = computeCli.GetOperation(context.Background(), opInfo[2], opInfo[(len(opInfo)-1)])
+		o, err = computeCli.GetOperation(context.Background(), opInfo[3], opInfo[(len(opInfo)-1)])
 		if err != nil {
-			blog.Errorf("GetOperation failed, operation: %s, err: %v", o, err)
+			blog.Errorf("GetOperation[%s] status failed, err: %v", url, err)
 			return nil, err
 		}
 		return o, nil
@@ -339,8 +337,7 @@ func ListInstanceGroupsInstances(computeCli *ComputeServiceClient, url string) (
 	var instances []*compute.InstanceWithNamedPorts
 	if (utils.StringInSlice("instanceGroups", igInfo) || utils.StringInSlice("instanceGroupManagers", igInfo)) &&
 		len(igInfo) >= 6 {
-		instances, err = computeCli.ListInstanceGroupsInstances(context.Background(), igInfo[2],
-			igInfo[(len(igInfo)-1)])
+		instances, err = computeCli.ListInstanceGroupsInstances(context.Background(), igInfo[3], igInfo[(len(igInfo)-1)])
 		if err != nil {
 			blog.Errorf("ListInstanceGroupsInstances failed: %v", err)
 			return nil, err
@@ -351,13 +348,10 @@ func ListInstanceGroupsInstances(computeCli *ComputeServiceClient, url string) (
 }
 
 // GenerateUpdatePolicy generate update policy
-func GenerateUpdatePolicy(group *cmproto.NodeGroup) *compute.InstanceGroupManagerUpdatePolicy {
+func GenerateUpdatePolicy() *compute.InstanceGroupManagerUpdatePolicy {
 	p := &compute.InstanceGroupManagerUpdatePolicy{
 		Type:          UpdatePolicyOpportunistic,
 		MinimalAction: UpdatePolicyActionRefresh,
-	}
-	if group.AutoScaling == nil {
-		return p
 	}
 
 	return p

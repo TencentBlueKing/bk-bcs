@@ -139,7 +139,7 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
 func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool,
 	error) {
-	return false, cloudprovider.ErrCloudNotImplemented
+	return true, nil
 }
 
 // EnableExternalNodeSupport enable cluster support external node
@@ -147,7 +147,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 	return nil
 }
 
-// ListOsImage get osimage list
+// ListOsImage get osi  mage list
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

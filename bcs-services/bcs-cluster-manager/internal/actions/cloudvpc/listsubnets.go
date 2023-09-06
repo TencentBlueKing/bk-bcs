@@ -114,25 +114,38 @@ func (la *ListSubnetsAction) ListCloudSubnets() error {
 	}
 	cmOption.Region = la.req.Region
 
-	// region zone info
-	zoneMap := make(map[string]string, 0)
-	zoneList, err := nodeMgr.GetZoneList(cmOption)
-	if err != nil {
-		return err
-	}
-	for i := range zoneList {
-		zoneMap[zoneList[i].Zone] = zoneList[i].ZoneName
-	}
+	if la.cloud.CloudProvider == "qcloud" {
+		// region zone info
+		zoneMap := make(map[string]string, 0)
+		zoneList, err := nodeMgr.GetZoneList(cmOption)
+		if err != nil {
+			return err
+		}
+		for i := range zoneList {
+			zoneMap[zoneList[i].Zone] = zoneList[i].ZoneName
+		}
 
-	// get subnet list
-	subnets, err := vpcMgr.ListSubnets(la.req.VpcID, cmOption)
-	if err != nil {
-		return err
+		// get subnet list
+		subnets, err := vpcMgr.ListSubnets(la.req.VpcID, cmOption)
+		if err != nil {
+			return err
+		}
+		for i := range subnets {
+			subnets[i].ZoneName = zoneMap[subnets[i].Zone]
+		}
+		la.subnets = subnets
+
+		return nil
 	}
-	for i := range subnets {
-		subnets[i].ZoneName = zoneMap[subnets[i].Zone]
+	if la.cloud.CloudProvider == "google" {
+		subnets, err := vpcMgr.ListSubnets(la.req.VpcID, cmOption)
+		if err != nil {
+			return err
+		}
+		la.subnets = subnets
+
+		return nil
 	}
-	la.subnets = subnets
 
 	return nil
 }

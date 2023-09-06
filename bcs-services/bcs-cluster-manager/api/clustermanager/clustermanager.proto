@@ -3386,6 +3386,10 @@ message KeyInfo {
     title: "keySecret",
     description: "key私钥信息(base64存储)"
   }];
+  string keyPublic = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "keyPublic",
+    description: "key公钥信息(base64存储)"
+  }];
 }
 
 // ImageInfo 创建cvm实例的镜像信息

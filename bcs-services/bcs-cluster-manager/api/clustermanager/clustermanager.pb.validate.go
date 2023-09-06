@@ -9929,6 +9929,8 @@ func (m *KeyInfo) validate(all bool) error {
 
 	// no validation rules for KeySecret
 
+	// no validation rules for KeyPublic
+
 	if len(errors) > 0 {
 		return KeyInfoMultiError(errors)
 	}

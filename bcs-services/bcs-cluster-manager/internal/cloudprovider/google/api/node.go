@@ -16,6 +16,8 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -89,12 +91,71 @@ func (n *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.Zon
 // ListNodeInstanceType list node type by zone and node family
 func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
+		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
+	client, err := NewComputeServiceClient(opt)
+	if err != nil {
+		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
+	}
+
+	var filter string
+	if info.NodeFamily != "" {
+		filter = fmt.Sprintf("name eq %s-*", info.NodeFamily)
+	}
+	list, err := client.ListMachineTypes(context.Background(), opt.Region, filter)
+	if err != nil {
+		return nil, err
+	}
+	result := convertToInstanceType(list.Items, info.NodeFamily)
+	for _, item := range result {
+		if info.Cpu > 0 {
+			if item.Cpu != info.Cpu {
+				continue
+			}
+		}
+		if info.Memory > 0 {
+			if item.Memory != info.Memory {
+				continue
+			}
+		}
+		result = append(result, item)
+	}
+
+	return result, nil
+}
+
+func convertToInstanceType(mt []*compute.MachineType, family string) []*proto.InstanceType {
+	result := make([]*proto.InstanceType, len(mt))
+	for _, m := range mt {
+		mlist := strings.Split(m.Name, "-")
+		memGb := math.Ceil(float64(m.MemoryMb / 1024))
+		insType := &proto.InstanceType{}
+		insType.Status = common.InstanceSell
+		if m.Deprecated != nil {
+			insType.Status = common.InstanceSoldOut
+		}
+		insType.NodeType = mlist[1]
+		insType.TypeName = m.Name
+		insType.NodeFamily = family
+		insType.Cpu = uint32(m.GuestCpus)
+		insType.Memory = uint32(memGb)
+		insType.Zones = []string{m.Zone}
+		result = append(result, insType)
+	}
+
+	return result
 }
 
 // ListOsImage get osimage list
 func (n *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// 先返回固定的UBUNTU_CONTAINERD
+	images := make([]*proto.OsImage, 0)
+	images = append(images, &proto.OsImage{
+		ImageID:  "UBUNTU_CONTAINERD",
+		Status:   "NORMAL",
+		Provider: common.PublicImageProvider,
+	})
+	return images, nil
 }
 
 // GetExternalNodeByIP get specified Node by innerIP address
