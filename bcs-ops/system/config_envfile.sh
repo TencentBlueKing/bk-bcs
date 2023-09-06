@@ -263,6 +263,17 @@ BCS_CP_WORKER="${BCS_CP_WORKER}"
 
 # csi
 K8S_CSI="${K8S_CSI}"
+$(
+    case "${K8S_CSI,,}" in
+      "localpv")
+        cat <<CSI_EOF
+LOCALPV_DIR="${LOCALPV_DIR}"
+LOCALPV_COUNT="${LOCALPV_COUNT}"
+LOCALPV_reclaimPolicy="${LOCALPV_reclaimPolicy}"
+CSI_EOF
+        ;;
+    esac
+  )
 
 ## yum_mirror
 MIRROR_URL="${MIRROR_URL}"

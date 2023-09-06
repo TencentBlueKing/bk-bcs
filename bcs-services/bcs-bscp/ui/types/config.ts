@@ -80,15 +80,6 @@ export interface IFileConfigContentSummary {
   update_at?: string;
 }
 
-// 配置对比差异详情
-export interface IConfigDiffDetail {
-  id: number;
-  name: string;
-  type: string;
-  current: string;
-  base: string;
-}
-
 // 配置项列表查询接口请求参数
 export interface IConfigListQueryParams {
   searchKey?: string;
@@ -147,6 +138,7 @@ export interface IBoundTemplateDetail {
   template_revision_memo: string;
   file_type: string;
   file_mode: string;
+  file_state: string;
   user: string;
   user_group: string;
   privilege: string;
