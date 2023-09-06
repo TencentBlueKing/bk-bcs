@@ -178,7 +178,7 @@
       <template #trigger>
         <div class="select-trigger">
           <h5 class="space-name" :title="spaceName">{{ spaceName }}</h5>
-          <div class="space-desc">{{ templateSpaceDetail.memo }}</div>
+          <div class="space-desc">{{ templateSpaceDetail.memo || '--' }}</div>
           <DownShape :class="['triangle-icon', { up: selectorOpen }]" />
         </div>
       </template>
