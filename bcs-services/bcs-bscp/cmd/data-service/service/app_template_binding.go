@@ -307,7 +307,7 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 
 	resp := &pbds.ListReleasedAppBoundTemplateRevisionsResp{
 		Count:   uint32(count),
-		Details: pbatb.PbAppBoundTmplRevisions(details),
+		Details: pbatb.PbReleasedAppBoundTmplRevisions(details),
 	}
 	return resp, nil
 }
