@@ -788,6 +788,9 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	}
+	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(
+		grpc.MaxCallRecvMsgSize(utils.MaxBodySize), grpc.MaxCallSendMsgSize(utils.MaxBodySize)))
+
 	err := cmproto.RegisterClusterManagerGwFromEndpoint(
 		context.TODO(),
 		gwmux,
@@ -930,6 +933,7 @@ func (cm *ClusterManager) initMicro() error {
 		microsvc.RegisterTTL(30*time.Second),
 		microsvc.RegisterInterval(25*time.Second),
 		microsvc.Context(cm.ctx),
+		utils.MaxMsgSize(utils.MaxBodySize),
 		microsvc.BeforeStart(func() error {
 			return nil
 		}),

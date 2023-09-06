@@ -23,12 +23,26 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
+	"github.com/micro/go-micro/v2/server/grpc"
+	microSvc "github.com/micro/go-micro/v2/service"
 )
 
 const (
 	// NoPermissionErr auth failed
 	NoPermissionErr = 40403
 )
+
+var (
+	// MaxBodySize define maximum message size that grpc server can send or receive. Default value is 50MB.
+	MaxBodySize = 1024 * 1024 * 50
+)
+
+// MaxMsgSize of the max msg size
+func MaxMsgSize(s int) microSvc.Option {
+	return func(o *microSvc.Options) {
+		o.Server.Init(grpc.MaxMsgSize(s))
+	}
+}
 
 // RequestLogWarpper log request
 func RequestLogWarpper(fn server.HandlerFunc) server.HandlerFunc {
