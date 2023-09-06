@@ -52,16 +52,17 @@ safe_source "${ROOT_DIR}/functions/k8s.sh"
 
 safe_source "${ROOT_DIR}/env/bcs.env"
 
-# ToDo: import image: cni\metric
-if [[ -n ${BCS_OFFLINE:-} ]]; then
-  true
-fi
 # pull image
 kubeadm --config="${ROOT_DIR}/kubeadm-config" config images pull \
   || utils::log "FATAL" "fail to pull k8s image"
 
 if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
-  kubeadm init --config="${ROOT_DIR}/kubeadm-config" -v 11
+  if systemctl is-active kubelet.service -q; then
+    utils::log "WARN" "kubelet service is active now, skip kubeadm init"
+  else
+    kubeadm init --config="${ROOT_DIR}/kubeadm-config" -v 11 \
+      || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
+  fi
   install -dv "$HOME/.kube"
   install -v -m 600 -o "$(id -u)" -g "$(id -g)" \
     /etc/kubernetes/admin.conf "$HOME/.kube/config"
@@ -81,13 +82,17 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   fi
 
   if [[ ${ENABLE_MULTUS_HA} == "true" ]]; then
-    if ! "${ROOT_DIR}"/k8s/operate_multus apply;then
+    if ! "${ROOT_DIR}"/k8s/operate_multus apply; then
       utils::log "FATAL" "fail to apply multus"
     fi
   fi
 else
-  kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
-    || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
+  if systemctl is-active kubelet.service -q; then
+    utils::log "WARN" "kubelet service is active now, skip kubeadm join"
+  else
+    kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
+      || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
+  fi
   install -dv "$HOME/.kube"
   install -v -m 600 -o "$(id -u)" -g "$(id -g)" \
     /etc/kubernetes/admin.conf "$HOME/.kube/config"
