@@ -294,8 +294,10 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 				return errors.Wrap(err, "ping")
 			}
 			//终端记录buff定时写入回放文件
-			if err := r.ReplayRecord.Writer.WriteFileInterval(); err != nil {
-				r.ReplayRecord.Err = err
+			if r.ReplayRecord != nil {
+				if err := r.ReplayRecord.Writer.WriteFileInterval(); err != nil {
+					r.ReplayRecord.Err = err
+				}
 			}
 		}
 	}
