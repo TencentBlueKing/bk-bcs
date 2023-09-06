@@ -73,17 +73,8 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 	}
 	if len(atbs) > 0 {
 		for _, atb := range atbs {
-			updateBindingsWithLatest(atb.Spec.Bindings, req.Attachment.TemplateId, id)
-			// no need to validate the template revision which just created
-			// the query operation in genFinalATB method are not in the same transaction with the update operation
-			// query it will cause error: `template release id is not exist`
-			if err := s.genFinalATBWithTx(kt, tx, atb, []uint32{req.Attachment.TemplateId}); err != nil {
-				logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
-				tx.Rollback()
-				return nil, err
-			}
-			if err := s.dao.AppTemplateBinding().UpdateWithTx(kt, tx, atb); err != nil {
-				logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
+			if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
+				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
 				tx.Rollback()
 				return nil, err
 			}
@@ -94,18 +85,6 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 
 	resp := &pbds.CreateResp{Id: id}
 	return resp, nil
-}
-
-// updateBindingsWithLatest get the final template bindings after update with the latest template revision
-func updateBindingsWithLatest(bindings []*table.TemplateBinding, tmplID, latestRevisionID uint32) {
-	for _, b := range bindings {
-		for _, r := range b.TemplateRevisions {
-			if r.TemplateID == tmplID {
-				// update the latest template revision
-				r.TemplateRevisionID = latestRevisionID
-			}
-		}
-	}
 }
 
 // ListTemplateRevisions list template revision.
@@ -176,8 +155,7 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbds.List
 // ListTemplateRevisionNamesByTemplateIDs list template revision by ids.
 func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
 	req *pbds.ListTemplateRevisionNamesByTemplateIDsReq) (
-	*pbds.
-		ListTemplateRevisionNamesByTemplateIDsResp, error) {
+	*pbds.ListTemplateRevisionNamesByTemplateIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplatesExist(kt, req.TemplateIds); err != nil {
@@ -194,18 +172,10 @@ func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
 	}
 
 	// get the map of template id => the latest template revision id
-	latestRevisionMap := make(map[uint32]uint32)
+	latestRevisionMap := getLatestTmplRevisions(tmplRevisions)
 	// get the map of template id => template revision detail
 	tmplRevisionMap := make(map[uint32]*pbtr.TemplateRevisionNamesDetail)
 	for _, t := range tmplRevisions {
-		if _, ok := latestRevisionMap[t.Attachment.TemplateID]; !ok {
-			latestRevisionMap[t.Attachment.TemplateID] = t.ID
-		} else {
-			if t.ID > latestRevisionMap[t.Attachment.TemplateID] {
-				latestRevisionMap[t.Attachment.TemplateID] = t.ID
-			}
-		}
-
 		if _, ok := tmplRevisionMap[t.Attachment.TemplateID]; !ok {
 			tmplRevisionMap[t.Attachment.TemplateID] = &pbtr.TemplateRevisionNamesDetail{}
 		}
@@ -216,12 +186,8 @@ func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
 				TemplateRevisionName: t.Spec.RevisionName,
 			})
 	}
-	tmplIDs := make([]uint32, 0, len(tmplRevisionMap))
-	for tmplID := range tmplRevisionMap {
-		tmplIDs = append(tmplIDs, tmplID)
-	}
 
-	tmpls, err := s.dao.Template().ListByIDs(kt, tmplIDs)
+	tmpls, err := s.dao.Template().ListByIDs(kt, req.TemplateIds)
 	if err != nil {
 		logs.Errorf("list template sets of biz failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -241,6 +207,22 @@ func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
 		Details: details,
 	}
 	return resp, nil
+}
+
+// getLatestTmplRevisions get the map: tmplID => latest tmplRevisionID
+func getLatestTmplRevisions(tmplRevisions []*table.TemplateRevision) map[uint32]uint32 {
+	latestRevisionMap := make(map[uint32]uint32)
+	for _, t := range tmplRevisions {
+		if _, ok := latestRevisionMap[t.Attachment.TemplateID]; !ok {
+			latestRevisionMap[t.Attachment.TemplateID] = t.ID
+		} else {
+			if t.ID > latestRevisionMap[t.Attachment.TemplateID] {
+				latestRevisionMap[t.Attachment.TemplateID] = t.ID
+			}
+		}
+	}
+
+	return latestRevisionMap
 }
 
 func generateRevisionName() string {
