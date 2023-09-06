@@ -75,7 +75,6 @@ const (
 	Config_ListTemplatesOfTemplateSet_FullMethodName                 = "/pbcs.Config/ListTemplatesOfTemplateSet"
 	Config_CreateTemplateRevision_FullMethodName                     = "/pbcs.Config/CreateTemplateRevision"
 	Config_ListTemplateRevisions_FullMethodName                      = "/pbcs.Config/ListTemplateRevisions"
-	Config_DeleteTemplateRevision_FullMethodName                     = "/pbcs.Config/DeleteTemplateRevision"
 	Config_ListTemplateRevisionsByIDs_FullMethodName                 = "/pbcs.Config/ListTemplateRevisionsByIDs"
 	Config_ListTemplateRevisionNamesByTemplateIDs_FullMethodName     = "/pbcs.Config/ListTemplateRevisionNamesByTemplateIDs"
 	Config_CreateTemplateSet_FullMethodName                          = "/pbcs.Config/CreateTemplateSet"
@@ -191,7 +190,12 @@ type ConfigClient interface {
 	ListTemplatesOfTemplateSet(ctx context.Context, in *ListTemplatesOfTemplateSetReq, opts ...grpc.CallOption) (*ListTemplatesOfTemplateSetResp, error)
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
-	DeleteTemplateRevision(ctx context.Context, in *DeleteTemplateRevisionReq, opts ...grpc.CallOption) (*DeleteTemplateRevisionResp, error)
+	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTemplateRevisionNamesByTemplateIDs(ctx context.Context, in *ListTemplateRevisionNamesByTemplateIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionNamesByTemplateIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -709,15 +713,6 @@ func (c *configClient) CreateTemplateRevision(ctx context.Context, in *CreateTem
 func (c *configClient) ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error) {
 	out := new(ListTemplateRevisionsResp)
 	err := c.cc.Invoke(ctx, Config_ListTemplateRevisions_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) DeleteTemplateRevision(ctx context.Context, in *DeleteTemplateRevisionReq, opts ...grpc.CallOption) (*DeleteTemplateRevisionResp, error) {
-	out := new(DeleteTemplateRevisionResp)
-	err := c.cc.Invoke(ctx, Config_DeleteTemplateRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1269,7 +1264,12 @@ type ConfigServer interface {
 	ListTemplatesOfTemplateSet(context.Context, *ListTemplatesOfTemplateSetReq) (*ListTemplatesOfTemplateSetResp, error)
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
-	DeleteTemplateRevision(context.Context, *DeleteTemplateRevisionReq) (*DeleteTemplateRevisionResp, error)
+	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTemplateRevisionNamesByTemplateIDs(context.Context, *ListTemplateRevisionNamesByTemplateIDsReq) (*ListTemplateRevisionNamesByTemplateIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1482,9 +1482,6 @@ func (UnimplementedConfigServer) CreateTemplateRevision(context.Context, *Create
 }
 func (UnimplementedConfigServer) ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisions not implemented")
-}
-func (UnimplementedConfigServer) DeleteTemplateRevision(context.Context, *DeleteTemplateRevisionReq) (*DeleteTemplateRevisionResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplateRevision not implemented")
 }
 func (UnimplementedConfigServer) ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisionsByIDs not implemented")
@@ -2574,24 +2571,6 @@ func _Config_ListTemplateRevisions_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListTemplateRevisions(ctx, req.(*ListTemplateRevisionsReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_DeleteTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTemplateRevisionReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).DeleteTemplateRevision(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_DeleteTemplateRevision_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).DeleteTemplateRevision(ctx, req.(*DeleteTemplateRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3778,10 +3757,6 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateRevisions",
 			Handler:    _Config_ListTemplateRevisions_Handler,
-		},
-		{
-			MethodName: "DeleteTemplateRevision",
-			Handler:    _Config_DeleteTemplateRevision_Handler,
 		},
 		{
 			MethodName: "ListTemplateRevisionsByIDs",

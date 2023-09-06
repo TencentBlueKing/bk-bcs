@@ -452,6 +452,7 @@ func parseBindings(bindings []*table.TemplateBinding) *parsedBindings {
 			pbs.TemplateIDs = append(pbs.TemplateIDs, r.TemplateID)
 			if r.IsLatest {
 				pbs.LatestTemplateIDs = append(pbs.LatestTemplateIDs, r.TemplateID)
+				pbs.LatestTemplateRevisionIDs = append(pbs.LatestTemplateRevisionIDs, r.TemplateRevisionID)
 			}
 
 			b2.TemplateRevisions = append(b2.TemplateRevisions, &table.TemplateRevisionBinding{
@@ -522,11 +523,12 @@ func (s *Service) fillUnspecifiedTemplates(kit *kit.Kit, pbs *parsedBindings) er
 
 // parsedBindings is parsed bindings which suits to save in db
 type parsedBindings struct {
-	TemplateIDs         []uint32
-	TemplateSetIDs      []uint32
-	TemplateRevisionIDs []uint32
-	LatestTemplateIDs   []uint32
-	TemplateBindings    []*table.TemplateBinding
+	TemplateIDs               []uint32
+	TemplateSetIDs            []uint32
+	TemplateRevisionIDs       []uint32
+	LatestTemplateIDs         []uint32
+	LatestTemplateRevisionIDs []uint32
+	TemplateBindings          []*table.TemplateBinding
 }
 
 func convertToSlice(m map[uint32]struct{}) []uint32 {
@@ -544,10 +546,8 @@ func (s *Service) validateATBUpsert(kit *kit.Kit, b *parsedBindings, ignoredTmpl
 	}
 
 	tmplIDs := tools.SliceDiff(b.TemplateIDs, ignoredTmplIDs)
-	if len(tmplIDs) > 0 {
-		if err := s.dao.Validator().ValidateTemplatesExist(kit, tmplIDs); err != nil {
-			return err
-		}
+	if len(tmplIDs) == 0 {
+		return nil
 	}
 
 	if err := s.validateATBLatestRevisions(kit, b, ignoredTmplIDs); err != nil {
@@ -564,6 +564,7 @@ func (s *Service) validateATBLatestRevisions(kit *kit.Kit, b *parsedBindings, ig
 		return nil
 	}
 
+	// the method will validate whether template ids exist as well
 	templateRevisions, err := s.ListTemplateRevisionNamesByTemplateIDs(
 		kit.Ctx,
 		&pbds.ListTemplateRevisionNamesByTemplateIDsReq{
@@ -582,7 +583,7 @@ func (s *Service) validateATBLatestRevisions(kit *kit.Kit, b *parsedBindings, ig
 
 	// validate whether the latest revision specified by user is latest
 	nonLatest := make([]uint32, 0)
-	for _, id := range b.LatestTemplateIDs {
+	for _, id := range b.LatestTemplateRevisionIDs {
 		if !latestMap[id] {
 			nonLatest = append(nonLatest, id)
 
@@ -590,8 +591,8 @@ func (s *Service) validateATBLatestRevisions(kit *kit.Kit, b *parsedBindings, ig
 	}
 
 	if len(nonLatest) > 0 {
-		return fmt.Errorf("template revision id in %v is not the latest revision, please confirm it carefully",
-			nonLatest)
+		return fmt.Errorf("template revision id in %v is not the latest revision, please confirm it carefully, "+
+			"refresh the page to get the latest revision if you are using with browser", nonLatest)
 	}
 
 	return nil
