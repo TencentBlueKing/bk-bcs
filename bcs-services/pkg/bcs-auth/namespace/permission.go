@@ -17,7 +17,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
@@ -90,11 +89,6 @@ func (bnp *BCSNamespacePerm) CanCreateNamespace(user,
 		Operation: CanCreateNamespaceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-	}
-	defer audit.AddEvent(NameSpaceCreate.String(), string(cluster.SysCluster), clusterID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -177,12 +171,6 @@ func (bnp *BCSNamespacePerm) CanViewNamespace(user,
 		Operation: CanViewNamespaceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-		"Namespace": namespace,
-	}
-	defer audit.AddEvent(NameSpaceView.String(), string(SysNamespace), namespaceID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -264,11 +252,6 @@ func (bnp *BCSNamespacePerm) CanListNamespace(user,
 		Operation: CanListNamespaceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-	}
-	defer audit.AddEvent(NameSpaceList.String(), string(cluster.SysCluster), clusterID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -348,12 +331,6 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespace(user,
 		Operation: CanUpdateNamespaceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-		"Namespace": namespace,
-	}
-	defer audit.AddEvent(NameSpaceUpdate.String(), string(SysNamespace), namespaceID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -435,12 +412,6 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespace(user,
 		Operation: CanDeleteNamespaceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-		"Namespace": namespace,
-	}
-	defer audit.AddEvent(NameSpaceDelete.String(), string(SysNamespace), namespaceID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -523,12 +494,6 @@ func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user, projectID, c
 		Operation: CanCreateNamespaceScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-		"Namespace": namespace,
-	}
-	defer audit.AddEvent(NameSpaceScopedCreate.String(), string(SysNamespace), namespaceID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -606,12 +571,6 @@ func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user, projectID, clu
 		Operation: CanViewNamespaceScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-		"Namespace": namespace,
-	}
-	defer audit.AddEvent(NameSpaceScopedView.String(), string(SysNamespace), namespaceID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -691,12 +650,6 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user, projectID, c
 		Operation: CanUpdateNamespaceScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-		"Namespace": namespace,
-	}
-	defer audit.AddEvent(NameSpaceScopedUpdate.String(), string(SysNamespace), namespaceID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -776,12 +729,6 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user, projectID, c
 		Operation: CanDeleteNamespaceScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-		"Namespace": namespace,
-	}
-	defer audit.AddEvent(NameSpaceScopedDelete.String(), string(SysNamespace), namespaceID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
