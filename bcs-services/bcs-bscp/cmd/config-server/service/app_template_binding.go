@@ -228,9 +228,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		AppId:        req.AppId,
 		SearchFields: req.SearchFields,
 		SearchValue:  req.SearchValue,
-		Start:        req.Start,
-		Limit:        req.Limit,
-		All:          req.All,
+		All:          true,
 	}
 
 	rp, err := s.client.DS.ListAppBoundTemplateRevisions(grpcKit.RpcCtx(), r)
@@ -239,9 +237,46 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		return nil, err
 	}
 
+	// group by template set
+	tmplSetMap := make(map[uint32][]*pbatb.AppBoundTmplRevision)
+	for _, d := range rp.Details {
+		tmplSetMap[d.TemplateSetId] = append(tmplSetMap[d.TemplateSetId], d)
+	}
+
+	details := make([]*pbatb.AppBoundTmplRevisionGroupBySet, 0)
+	for id, revisions := range tmplSetMap {
+		group := &pbatb.AppBoundTmplRevisionGroupBySet{
+			TemplateSpaceId:   revisions[0].TemplateSpaceId,
+			TemplateSpaceName: revisions[0].TemplateSpaceName,
+			TemplateSetId:     id,
+			TemplateSetName:   revisions[0].TemplateSetName,
+		}
+		for _, r := range revisions {
+			group.TemplateRevisions = append(group.TemplateRevisions,
+				&pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail{
+					TemplateId:           r.TemplateId,
+					Name:                 r.Name,
+					Path:                 r.Path,
+					TemplateRevisionId:   r.TemplateRevisionId,
+					IsLatest:             r.IsLatest,
+					TemplateRevisionName: r.TemplateRevisionName,
+					TemplateRevisionMemo: r.TemplateRevisionMemo,
+					FileType:             r.FileType,
+					FileMode:             r.FileMode,
+					User:                 r.User,
+					UserGroup:            r.UserGroup,
+					Privilege:            r.Privilege,
+					Signature:            r.Signature,
+					ByteSize:             r.ByteSize,
+					Creator:              r.Creator,
+					CreateAt:             r.CreateAt,
+				})
+		}
+		details = append(details, group)
+	}
+
 	resp = &pbcs.ListAppBoundTemplateRevisionsResp{
-		Count:   rp.Count,
-		Details: rp.Details,
+		Details: details,
 	}
 	return resp, nil
 }
@@ -269,9 +304,7 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 		ReleaseId:    req.ReleaseId,
 		SearchFields: req.SearchFields,
 		SearchValue:  req.SearchValue,
-		Start:        req.Start,
-		Limit:        req.Limit,
-		All:          req.All,
+		All:          true,
 	}
 
 	rp, err := s.client.DS.ListReleasedAppBoundTemplateRevisions(grpcKit.RpcCtx(), r)
@@ -280,9 +313,48 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 		return nil, err
 	}
 
+	// group by template set
+	tmplSetMap := make(map[uint32][]*pbatb.ReleasedAppBoundTmplRevision)
+	for _, d := range rp.Details {
+		tmplSetMap[d.TemplateSetId] = append(tmplSetMap[d.TemplateSetId], d)
+	}
+
+	details := make([]*pbatb.ReleasedAppBoundTmplRevisionGroupBySet, 0)
+	for id, revisions := range tmplSetMap {
+		group := &pbatb.ReleasedAppBoundTmplRevisionGroupBySet{
+			TemplateSpaceId:   revisions[0].TemplateSpaceId,
+			TemplateSpaceName: revisions[0].TemplateSpaceName,
+			TemplateSetId:     id,
+			TemplateSetName:   revisions[0].TemplateSetName,
+		}
+		for _, r := range revisions {
+			group.TemplateRevisions = append(group.TemplateRevisions,
+				&pbatb.ReleasedAppBoundTmplRevisionGroupBySetTemplateRevisionDetail{
+					TemplateId:           r.TemplateId,
+					Name:                 r.Name,
+					Path:                 r.Path,
+					TemplateRevisionId:   r.TemplateRevisionId,
+					IsLatest:             r.IsLatest,
+					TemplateRevisionName: r.TemplateRevisionName,
+					TemplateRevisionMemo: r.TemplateRevisionMemo,
+					FileType:             r.FileType,
+					FileMode:             r.FileMode,
+					User:                 r.User,
+					UserGroup:            r.UserGroup,
+					Privilege:            r.Privilege,
+					Signature:            r.Signature,
+					ByteSize:             r.ByteSize,
+					RenderedSignature:    r.RenderedSignature,
+					RenderedByteSize:     r.RenderedByteSize,
+					Creator:              r.Creator,
+					CreateAt:             r.CreateAt,
+				})
+		}
+		details = append(details, group)
+	}
+
 	resp = &pbcs.ListReleasedAppBoundTemplateRevisionsResp{
-		Count:   rp.Count,
-		Details: rp.Details,
+		Details: details,
 	}
 	return resp, nil
 }

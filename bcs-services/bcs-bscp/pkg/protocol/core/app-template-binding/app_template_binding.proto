@@ -43,6 +43,62 @@ message AppTemplateBindingAttachment {
     uint32 app_id = 2;
 }
 
+// AppBoundTmplRevisionGroupBySet is app bound template revision group by template set
+message AppBoundTmplRevisionGroupBySet {
+    message template_revision_detail {
+        uint32 template_id            = 1;
+        string name                   = 2;
+        string path                   = 3;
+        uint32 template_revision_id   = 4;
+        bool   is_latest              = 5;
+        string template_revision_name = 6;
+        string template_revision_memo = 7;
+        string file_type              = 8;
+        string file_mode              = 9;
+        string user                   = 10;
+        string user_group             = 11;
+        string privilege              = 12;
+        string signature              = 13;
+        uint64 byte_size              = 14;
+        string creator                = 15;
+        string create_at              = 16;
+    }
+    uint32                            template_space_id   = 1;
+    string                            template_space_name = 2;
+    uint32                            template_set_id     = 3;
+    string                            template_set_name   = 4;
+    repeated template_revision_detail template_revisions  = 5;
+}
+
+// ReleasedAppBoundTmplRevisionGroupBySet is released app bound template revision group by template set
+message ReleasedAppBoundTmplRevisionGroupBySet {
+    message template_revision_detail {
+        uint32 template_id            = 1;
+        string name                   = 2;
+        string path                   = 3;
+        uint32 template_revision_id   = 4;
+        bool   is_latest              = 5;
+        string template_revision_name = 6;
+        string template_revision_memo = 7;
+        string file_type              = 8;
+        string file_mode              = 9;
+        string user                   = 10;
+        string user_group             = 11;
+        string privilege              = 12;
+        string signature              = 13;
+        uint64 byte_size              = 14;
+        string rendered_signature     = 15;
+        uint64 rendered_byte_size     = 16;
+        string creator                = 17;
+        string create_at              = 18;
+    }
+    uint32                            template_space_id   = 1;
+    string                            template_space_name = 2;
+    uint32                            template_set_id     = 3;
+    string                            template_set_name   = 4;
+    repeated template_revision_detail template_revisions  = 5;
+}
+
 // AppBoundTmplRevision is app bound template revision
 message AppBoundTmplRevision {
     uint32 template_space_id      = 1;
