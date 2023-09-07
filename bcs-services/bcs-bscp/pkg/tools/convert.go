@@ -29,6 +29,19 @@ func JoinUint32(list []uint32, sep string) string {
 	return strings.Join(b, sep)
 }
 
+// StringSliceToUint32Slice converts a string slice to a uint32 slice
+func StringSliceToUint32Slice(strSlice []string) ([]uint32, error) {
+	uintSlice := make([]uint32, len(strSlice))
+	for _, str := range strSlice {
+		i, err := strconv.Atoi(str)
+		if err != nil {
+			return nil, err
+		}
+		uintSlice = append(uintSlice, uint32(i))
+	}
+	return uintSlice, nil
+}
+
 // Itoa convert uint32 to string
 func Itoa(v uint32) string {
 	return strconv.FormatUint(uint64(v), 10)

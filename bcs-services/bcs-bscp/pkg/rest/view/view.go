@@ -17,8 +17,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"google.golang.org/grpc/status"
 
 	"bscp.io/pkg/criteria/errf"
+	pbas "bscp.io/pkg/protocol/auth-server"
 	"bscp.io/pkg/rest"
 )
 
@@ -37,9 +39,18 @@ func (h GenericFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		if errors.Is(err, errf.ErrPermissionDenied) {
 			render.Render(w, r, rest.PermissionDenied(err, nil))
-		} else {
-			render.Render(w, r, rest.BadRequest(err))
 		}
+		st, ok := status.FromError(err)
+		if ok {
+			// 获取详细信息
+			for _, detail := range st.Details() {
+				if d, ok := detail.(*pbas.ApplyDetail); ok {
+					// Handle permission denied error with details
+					render.Render(w, r, rest.PermissionDenied(err, d))
+				}
+			}
+		}
+		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 

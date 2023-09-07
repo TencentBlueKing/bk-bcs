@@ -28,8 +28,11 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbcs.UpdateConfigHo
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateConfigHookResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Update}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
 		return nil, err
 	}
 

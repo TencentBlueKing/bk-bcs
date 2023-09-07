@@ -36,7 +36,7 @@ func GenerateResourceCreatorActions() client.ResourceCreatorActions {
 					},
 
 					{
-						ID:         GenerateRelease,
+						ID:         ReleaseGenerate,
 						IsRequired: false,
 					},
 					{

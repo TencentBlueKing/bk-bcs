@@ -13,6 +13,7 @@ limitations under the License.
 package pbas
 
 import (
+	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
 )
 
@@ -117,6 +118,27 @@ func PbBasic(m *meta.Basic) *Basic {
 		Action:     string(m.Action),
 		ResourceId: m.ResourceID,
 	}
+}
+
+// BasicDetails convert pb BasicDetail array to pb BasicDetail array
+func BasicDetails(perm *IamPermission) []meta.BasicDetail {
+	result := make([]meta.BasicDetail, 0)
+
+	for _, action := range perm.Actions {
+		for _, resourceType := range action.RelatedResourceTypes {
+			for _, instance := range resourceType.Instances {
+				for _, i := range instance.Instances {
+					result = append(result, meta.BasicDetail{
+						TypeName:     resourceType.TypeName,
+						ActionName:   action.Name,
+						ResourceName: i.Id,
+					})
+				}
+			}
+		}
+	}
+
+	return result
 }
 
 // Decision convert pb Decision to meta type Decision
@@ -329,4 +351,70 @@ func PbIamResourceAttributeValues(values []*meta.IamResourceAttributeValue) []*I
 	}
 
 	return result
+}
+
+func GrantResourceCreatorAction(req *GrantResourceCreatorActionReq) *client.GrantResourceCreatorActionOption {
+	return &client.GrantResourceCreatorActionOption{
+		System:    req.System,
+		Type:      client.TypeID(req.Type),
+		ID:        req.Id,
+		Name:      req.Name,
+		Creator:   req.Creator,
+		Ancestors: GrantResourceCreatorActionAncetors(req.Ancestors),
+	}
+}
+
+func GrantResourceCreatorActionAncetors(ancetors []*GrantResourceCreatorActionReq_Ancestor) []client.GrantResourceCreatorActionAncestor {
+	result := make([]client.GrantResourceCreatorActionAncestor, len(ancetors))
+
+	if len(ancetors) == 0 {
+		return result
+	}
+
+	for index, ancetor := range ancetors {
+		result[index] = GrantResourceCreatorActionAncetor(ancetor)
+	}
+
+	return result
+}
+
+func GrantResourceCreatorActionAncetor(ancetor *GrantResourceCreatorActionReq_Ancestor) client.GrantResourceCreatorActionAncestor {
+	return client.GrantResourceCreatorActionAncestor{
+		System: ancetor.System,
+		Type:   client.TypeID(ancetor.Type),
+		ID:     ancetor.Id,
+	}
+}
+
+func PbGrantResourceCreatorActionAncestor(ancetor client.GrantResourceCreatorActionAncestor) *GrantResourceCreatorActionReq_Ancestor {
+	return &GrantResourceCreatorActionReq_Ancestor{
+		System: ancetor.System,
+		Type:   string(ancetor.Type),
+		Id:     ancetor.ID,
+	}
+}
+
+func PbGrantResourceCreatorActionAncestors(ancetors []client.GrantResourceCreatorActionAncestor) []*GrantResourceCreatorActionReq_Ancestor {
+	result := make([]*GrantResourceCreatorActionReq_Ancestor, len(ancetors))
+
+	if len(ancetors) == 0 {
+		return result
+	}
+
+	for index, ancetor := range ancetors {
+		result[index] = PbGrantResourceCreatorActionAncestor(ancetor)
+	}
+
+	return result
+}
+
+func PbGrantResourceCreatorActionOption(option *client.GrantResourceCreatorActionOption) *GrantResourceCreatorActionReq {
+	return &GrantResourceCreatorActionReq{
+		System:    option.System,
+		Type:      string(option.Type),
+		Id:        option.ID,
+		Name:      option.Name,
+		Creator:   option.Creator,
+		Ancestors: PbGrantResourceCreatorActionAncestors(option.Ancestors),
+	}
 }

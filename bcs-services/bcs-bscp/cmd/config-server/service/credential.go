@@ -32,8 +32,11 @@ func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredent
 	resp := new(pbcs.CreateCredentialResp)
 
 	bizID := req.BizId
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Credential, Action: meta.Create}, BizID: bizID}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -79,8 +82,11 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentials
 	resp := new(pbcs.ListCredentialsResp)
 
 	bizID := req.BizId
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Credential, Action: meta.Find}, BizID: bizID}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.Credential, Action: meta.View}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +125,11 @@ func (s *Service) DeleteCredential(ctx context.Context, req *pbcs.DeleteCredenti
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteCredentialsResp)
 
-	bizID := req.BizId
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Credential, Action: meta.Delete}, BizID: bizID}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -146,16 +154,18 @@ func (s *Service) UpdateCredential(ctx context.Context, req *pbcs.UpdateCredenti
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateCredentialsResp)
 
-	bizID := req.BizId
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Credential, Action: meta.Update}, BizID: bizID}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
 	if err != nil {
 		return nil, err
 	}
 	r := &pbds.UpdateCredentialReq{
 		Id: req.Id,
 		Attachment: &pbcredential.CredentialAttachment{
-			BizId: bizID,
+			BizId: req.BizId,
 		},
 		Spec: &pbcredential.CredentialSpec{
 			Enable: req.Enable,
