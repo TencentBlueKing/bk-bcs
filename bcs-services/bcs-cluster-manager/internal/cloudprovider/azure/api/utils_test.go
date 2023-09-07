@@ -138,7 +138,7 @@ into:
 			t.Log("stop for.")
 			break into
 		case <-tick:
-			t.Log(time.Now().String())
+			t.Log(time.Now().Format(time.RFC3339))
 		}
 	}
 	t.Log("end")

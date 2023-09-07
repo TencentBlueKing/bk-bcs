@@ -918,7 +918,7 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 		TaskID:       ua.task.TaskID,
 		Message:      fmt.Sprintf("集群%s添加节点", ua.cluster.ClusterID),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 	})

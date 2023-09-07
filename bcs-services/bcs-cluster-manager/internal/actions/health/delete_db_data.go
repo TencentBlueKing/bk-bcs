@@ -59,7 +59,7 @@ func (ha *DeleteDBDataAction) validate() error {
 
 	ha.req.StartTime = st.Format(time.RFC3339)
 
-	et, err := time.ParseInLocation(layout, ha.req.EndTime, time.Local)
+	et, err := time.ParseInLocation(layout+" 15:04:05", ha.req.EndTime+" 23:59:59", time.Local)
 	if err != nil {
 		return fmt.Errorf("end time parse error: %s", err)
 	}

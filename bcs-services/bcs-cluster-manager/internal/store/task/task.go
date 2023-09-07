@@ -33,6 +33,8 @@ const (
 	//! we don't setting bson tag in proto file,
 	//! all struct key in mongo is lowcase in default
 	tableKey              = "taskid"
+	end                   = "end"
+	status                = "status"
 	defaultTaskListLength = 1000
 
 	// TaskStatusInit INIT task status
@@ -199,9 +201,9 @@ func (m *ModelTask) DeleteFinishTaskByDate(ctx context.Context, startTime, endTi
 		return err
 	}
 
-	startCond := operator.NewLeafCondition(operator.Gte, operator.M{"end": startTime})
-	endCond := operator.NewLeafCondition(operator.Lte, operator.M{"end": endTime})
-	statusCond := operator.NewLeafCondition(operator.In, operator.M{"status": []string{
+	startCond := operator.NewLeafCondition(operator.Gte, operator.M{end: startTime})
+	endCond := operator.NewLeafCondition(operator.Lte, operator.M{end: endTime})
+	statusCond := operator.NewLeafCondition(operator.In, operator.M{status: []string{
 		StatusSuccess, StatusFailure, StatusTimeout, StatusForceTerminate,
 	}})
 	cond := operator.NewBranchCondition(operator.And, statusCond, startCond, endCond)

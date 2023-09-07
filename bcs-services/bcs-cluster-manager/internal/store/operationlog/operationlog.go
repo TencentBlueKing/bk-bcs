@@ -36,6 +36,7 @@ const (
 
 	resourceType = "resourcetype"
 	resourceID   = "resourceid"
+	createTime   = "createtime"
 	taskID       = "taskid"
 )
 
@@ -146,13 +147,16 @@ func (m *ModelOperationLog) DeleteOperationLogByDate(ctx context.Context, startT
 		return err
 	}
 
-	startCond := operator.NewLeafCondition(operator.Gte, operator.M{"createtime": startTime})
-	endCond := operator.NewLeafCondition(operator.Lte, operator.M{"createtime": endTime})
+	startCond := operator.NewLeafCondition(operator.Gte, operator.M{createTime: startTime})
+	endCond := operator.NewLeafCondition(operator.Lte, operator.M{createTime: endTime})
 	cond := operator.NewBranchCondition(operator.And, startCond, endCond)
 
-	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	deleteCounter, err := m.db.Table(m.tableName).Delete(ctx, cond)
 	if err != nil {
 		return err
+	}
+	if deleteCounter == 0 {
+		blog.Warnf("no operationLog delete with startTime: %s - endTime: %s", startTime, endTime)
 	}
 
 	return nil
