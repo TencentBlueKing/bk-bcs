@@ -3,9 +3,9 @@
   import { storeToRefs } from 'pinia'
   import { DownShape } from 'bkui-vue/lib/icon'
   import { useConfigStore } from '../../../../../../../store/config'
-  import { IConfigItem, IConfigListQueryParams, IBoundTemplateDetail } from '../../../../../../../../types/config'
+  import { IConfigItem, IConfigListQueryParams, IBoundTemplateGroup, IBoundTemplateDetail } from '../../../../../../../../types/config'
   import { ICommonQuery } from '../../../../../../../../types/index'
-  import { getConfigList, getBoundTemplates } from '../../../../../../../api/config'
+  import { getConfigList, getBoundTemplates, getBoundTemplatesByAppVersion } from '../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../utils/config'
   import SearchInput from '../../../../../../../components/search-input.vue'
   import EditConfig from '../config-table-list/edit-config.vue'
@@ -43,7 +43,7 @@
   const commonConfigListLoading = ref(false)
   const configList = ref<IConfigItem[]>([]) // 非模板配置项
   const boundTemplateListLoading = ref(false)
-  const templateList = ref<IBoundTemplateDetail[]>([]) // 配置项模板
+  const templateGroupList = ref<IBoundTemplateGroup[]>([]) // 配置项模板
   const tableGroupsData = ref<IConfigsGroupData[]>([])
   const searchStr = ref('')
   const editConfigSliderData = ref({
@@ -118,8 +118,14 @@
         params.search_fields = 'revision_name,revision_memo,name,path,creator'
         params.search_value = searchStr.value
       }
-      const res = await getBoundTemplates(props.bkBizId, props.appId, params)
-      templateList.value = res.details
+
+      let res
+      if (isUnNamedVersion.value) {
+        res = await getBoundTemplates(props.bkBizId, props.appId, params)
+      } else {
+        res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id)
+      }
+      templateGroupList.value = res.details
     } catch (e) {
       console.error(e)
     } finally {
@@ -128,7 +134,7 @@
   }
 
   const transListToTableData = () => {
-    const pkgsGroups = groupTplsByPkg(templateList.value)
+    const pkgsGroups = groupTplsByPkg(templateGroupList.value)
     return [
       { id: 0, name: '非模板配置', expand: true, configs: transConfigsToTableItemData(configList.value) },
       ...pkgsGroups
@@ -146,26 +152,23 @@
   }
 
   // 将模板按套餐分组，并将模板数据格式转为表格数据
-  const groupTplsByPkg = (list: IBoundTemplateDetail[]) => {
-    const groups: IConfigsGroupData[] = []
-    list.forEach(tpl => {
-      const {
-        template_space_name, template_set_id, template_set_name,
-        template_id: id, template_revision_id: versionId,
-        template_revision_name: versionName, name, file_type, path, creator
-      } = tpl
-      const config = { id, name, file_type, versionId, versionName, path, creator, reviser: '--', update_at: '--', file_state: '' }
-      const group = groups.find(item => item.id === template_set_id)
-      if (group) {
-        group.configs.push(config)
-      } else {
-        groups.push({
-          id: template_set_id,
-          name: `${template_space_name} - ${template_set_name}`,
-          expand: false,
-          configs: [config]
-        })
+  const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
+    const groups: IConfigsGroupData[] = list.map(groupItem => {
+      const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem
+      const group: IConfigsGroupData = {
+        id: template_set_id,
+        name: `${template_space_name} - ${template_set_name}`,
+        expand: false,
+        configs: []
       }
+      template_revisions.forEach(tpl => {
+        const {
+          template_id: id, name, template_revision_id: versionId,
+          template_revision_name: versionName, path, file_type, creator, file_state
+        } = tpl
+        group.configs.push({ id, name, versionId, versionName, path, file_type, creator, reviser: '--', update_at: '--', file_state })
+      })
+      return group
     })
     return groups
   }

@@ -184,7 +184,7 @@ export const createTemplate = (biz_id: string, template_space_id: number, params
  * @returns
  */
 export const updateTemplateContent = (biz_id: string, templateSpaceId: number, data: string|File, signature: string) => {
-  return http.put(`/bizs/${biz_id}/content/upload`, data, {
+  return http.put(`/biz/${biz_id}/content/upload`, data, {
     headers: {
       'X-Bscp-Template-Space-Id': templateSpaceId,
       'X-Bkapi-File-Content-Id': signature,
@@ -201,7 +201,7 @@ export const updateTemplateContent = (biz_id: string, templateSpaceId: number, d
  * @returns
  */
 export const downloadTemplateContent = (biz_id: string, templateSpaceId: number, signature: string) => {
-  return http.get<string, string>(`/bizs/${biz_id}/content/download`, {
+  return http.get<string, string>(`/biz/${biz_id}/content/download`, {
     headers: {
       'X-Bscp-Template-Space-Id': templateSpaceId,
       'X-Bkapi-File-Content-Id': signature,
