@@ -149,6 +149,7 @@ func (w *Writer) WriteFileInterval() error {
 	}
 }
 
+// Header 文件头部信息
 type Header struct {
 	Version   int    `json:"version"`
 	Width     uint16 `json:"width"`
@@ -158,6 +159,7 @@ type Header struct {
 	Env       Env    `json:"env"`
 }
 
+// Env 文件env信息
 type Env struct {
 	Shell string `json:"SHELL"`
 	Term  string `json:"TERM"`

@@ -27,36 +27,42 @@ type Config struct {
 // Option 可选配置
 type Option func(options *Config)
 
+// WithWidth 配置回放文件头部信息:终端宽度
 func WithWidth(width uint16) Option {
 	return func(options *Config) {
 		options.Width = width
 	}
 }
 
+// WithHeight 配置回放文件头部信息:终端高度
 func WithHeight(height uint16) Option {
 	return func(options *Config) {
 		options.Height = height
 	}
 }
 
+// WithTimestamp 配置回放文件头部信息:时间戳
 func WithTimestamp(timestamp time.Time) Option {
 	return func(options *Config) {
 		options.Timestamp = timestamp
 	}
 }
 
+// WithTitle 配置title信息
 func WithTitle(title string) Option {
 	return func(options *Config) {
 		options.Title = title
 	}
 }
 
+// WithEnvShell shell信息
 func WithEnvShell(shell string) Option {
 	return func(options *Config) {
 		options.EnvShell = shell
 	}
 }
 
+// WithEnvTerm 终端信息
 func WithEnvTerm(term string) Option {
 	return func(options *Config) {
 		options.EnvTerm = term

@@ -87,7 +87,13 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 // ReplayDetailPageHandler 回放终端记录文件
 func (s service) ReplayDetailPageHandler(c *gin.Context) {
 	file := c.Param("fileName")
+	routePrefix := config.G.Web.RoutePrefix
+	if routePrefix == "" {
+		routePrefix = "/webconsole"
+	}
+	u := routePrefix + "/casts/replay/"
 	data := gin.H{
+		"url":             u,
 		"file":            file,
 		"SITE_STATIC_URL": s.opts.RoutePrefix,
 	}

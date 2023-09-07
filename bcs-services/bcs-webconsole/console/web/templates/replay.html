@@ -8,25 +8,9 @@
     <h1>Recorder File</h1>
     {{range $k,$fn:=.file_name}}
     <ul>
-        <li><a href="/replay/fileName={{$fn}}" id="goToReplay" >{{$fn}}</a></li>
+        <li><a href="/replay/{{$fn}}" target="_blank" >{{$fn}}</a></li>
     </ul>
     {{end}}
-
-    <script>
-        const ToLink = document.getElementById('goToReplay');
-        ToLink.addEventListener('click', function(event) {
-            event.preventDefault(); // 阻止默认的链接跳转行为
-
-            // 获取链接的文本内容，作为变量的值
-            const message = ToLink.textContent;
-
-            // 构建带有 URL 参数的链接
-            const url = '/webconsole/replay/' + encodeURIComponent(message);
-
-            // 在新标签页中打开链接
-            window.open(url, '_blank');
-        });
-    </script>
 
 </body>
 </html>

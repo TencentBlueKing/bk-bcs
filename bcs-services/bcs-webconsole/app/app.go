@@ -242,7 +242,7 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 	// 支持路径 prefix 透传和 rewrite 的场景
 	router.Group(routePrefix).StaticFS("/web/static", http.FS(web.WebStatic()))
 	router.Group("").StaticFS("/web/static", http.FS(web.WebStatic()))
-	router.Group(routePrefix).StaticFS("/replay/casts", http.Dir("./data"))
+	router.Group(routePrefix).StaticFS("/casts", http.Dir("./data"))
 
 	handlerOpts := &route.Options{
 		RoutePrefix: routePrefix,

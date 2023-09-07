@@ -24,6 +24,7 @@ var (
 	speed   float64       = 1
 )
 
+// Replay 回放文件
 func Replay(f string) error {
 	file, err := os.Open(f)
 	if err != nil {
