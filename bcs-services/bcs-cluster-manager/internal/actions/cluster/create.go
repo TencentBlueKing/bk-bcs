@@ -457,7 +457,7 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 		TaskID:       ca.task.TaskID,
 		Message:      fmt.Sprintf("创建%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    cls.ClusterID,
 		ProjectID:    req.ProjectID,
 	})

@@ -243,5 +243,6 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetInnerTemplateValues": "",
 	"ClusterManager.DebugBkSopsTask":        "",
 
-	"ClusterManager.Health": "",
+	"ClusterManager.Health":       "",
+	"ClusterManager.DeleteDBData": cluster.CanManageClusterOperation,
 }

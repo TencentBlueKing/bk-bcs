@@ -88,8 +88,8 @@ func TestUpdatePassCCCluster(t *testing.T) {
 		IsExclusive: false,
 		ClusterType: "single",
 		Creator:     "xxxx",
-		CreateTime:  time.Now().String(),
-		UpdateTime:  time.Now().String(),
+		CreateTime:  time.Now().Format(time.RFC3339),
+		UpdateTime:  time.Now().Format(time.RFC3339),
 		Master: map[string]*proto.Node{
 			"xxx": {
 				NodeID:  "",
@@ -128,8 +128,8 @@ func TestCreatePassCCCluster(t *testing.T) {
 		IsExclusive: false,
 		ClusterType: "single",
 		Creator:     "xxx",
-		CreateTime:  time.Now().String(),
-		UpdateTime:  time.Now().String(),
+		CreateTime:  time.Now().Format(time.RFC3339),
+		UpdateTime:  time.Now().Format(time.RFC3339),
 		Master: map[string]*proto.Node{
 			"127.0.0.1": {
 				NodeID:  "",

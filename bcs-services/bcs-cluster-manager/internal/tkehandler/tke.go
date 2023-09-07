@@ -224,7 +224,7 @@ func (h *Handler) ApplyTkeCidr(request *restful.Request, response *restful.Respo
 	updatedTkeCidr := tkeCidr
 	updatedTkeCidr.Status = common.TkeCidrStatusUsed
 	updatedTkeCidr.Cluster = form.Cluster
-	updatedTkeCidr.UpdateTime = time.Now().String()
+	updatedTkeCidr.UpdateTime = time.Now().Format(time.RFC3339)
 	err = h.model.UpdateTkeCidr(request.Request.Context(), updatedTkeCidr)
 	if err != nil {
 		code = httpCodeClientError

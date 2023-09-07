@@ -116,7 +116,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("创建云[%s]模板", req.CloudID),
 		OpUser:       req.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("CreateCloud[%s] CreateOperationLog failed: %v", req.CloudID, err)
