@@ -1299,7 +1299,7 @@ message CreateTemplateRevisionReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    // string revision_name      = 4;
+    string revision_name     = 4;
     string revision_memo     = 5;
     string name              = 6;
     string path              = 7;
