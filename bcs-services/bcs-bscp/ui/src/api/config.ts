@@ -1,5 +1,6 @@
 import http from "../request"
 import { IConfigEditParams, IConfigListQueryParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config'
+import { IVariableEditParams } from '../../types/variable'
 import { ICommonQuery } from "../../types/index"
 
 // 配置项版本下脚本配置接口可能会返回null，做数据兼容处理
@@ -110,12 +111,16 @@ export const getConfigContent = (bizId: string, appId: number, SHA256Str: string
  * 创建配置版本
  * @param bizId 业务ID
  * @param appId 应用ID
- * @param name 版本名称
- * @param memo 版本描述
+ * @param params 请求参数
  * @returns
  */
-export const createVersion = (bizId: string, appId: number, name: string, memo: string) => {
-  return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, { name, memo })
+interface ICreateVersionParams {
+  name: string;
+  memo: string;
+  variables: IVariableEditParams[];
+}
+export const createVersion = (bizId: string, appId: number, params: ICreateVersionParams) => {
+  return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, params)
 }
 
 /**
@@ -204,7 +209,7 @@ export const updateTemplateConfigPkgs = (bizId: string, appId: number, bindingId
 }
 
 /**
- * 获取服务下绑定的模板配置项列表
+ * 获取服务下未命名版本绑定的模板配置项列表
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param params 查询参数
@@ -212,6 +217,17 @@ export const updateTemplateConfigPkgs = (bizId: string, appId: number, bindingId
  */
 export const getBoundTemplates = (bizId: string, appId: number, params: ICommonQuery) => {
   return http.get(`/config/biz/${bizId}/apps/${appId}/template_revisions`, { params }).then(res => res.data)
+}
+
+/**
+ * 获取服务下已命名版本绑定的模板配置项列表
+ * @param bizId
+ * @param appId
+ * @param releaseId
+ * @returns
+ */
+export const getBoundTemplatesByAppVersion = (bizId: string, appId: number, releaseId: number) => {
+  return http.get(`/config/biz/${bizId}/apps/${appId}/released_template_revisions`, { params: { start: 0, all: true, release_id: releaseId } }).then(res =>  res.data)
 }
 
 /**

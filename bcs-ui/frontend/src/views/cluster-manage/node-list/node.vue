@@ -185,7 +185,7 @@
           <template #default="{ row }">
             <bcs-checkbox
               :checked="selections.some(item => item.nodeName === row.nodeName && item.nodeID === row.nodeID)"
-              :disabled="!row.nodeID || ['INITIALIZATION', 'DELETING', 'APPLYING'].includes(row.status)"
+              :disabled="['INITIALIZATION', 'DELETING', 'APPLYING'].includes(row.status)"
               @change="(value) => handleRowCheckChange(value, row)"
             />
           </template>
@@ -242,6 +242,10 @@
         </bcs-table-column>
         <bcs-table-column
           :label="$t('cluster.nodeList.label.nodePool')"
+          :filters="filtersDataSource.nodeGroup"
+          :filtered-value="filteredValue.nodeGroup"
+          column-key="nodeGroupID"
+          prop="nodeGroupID"
           min-width="130"
           show-overflow-tooltip
           v-if="isColumnRender('nodeGroupID')">
@@ -709,12 +713,14 @@ export default defineComponent({
           value: 'nodepool',
         },
       ],
+      nodeGroup: nodeGroupList.value,
       zoneID: zoneList.value,
     }));
     // 表格搜索项选中值
-    const filteredValue = ref<Record<string, string[]>>({
+    const filteredValue = ref({
       status: [],
       nodeSource: [],
+      nodeGroup: [],
       zoneID: [],
     });
     // searchSelect数据源配置
@@ -782,15 +788,7 @@ export default defineComponent({
         name: $i18n.t('cluster.nodeList.label.nodePool'),
         id: 'nodeGroupID',
         multiable: true,
-        children: tableData.value.reduce<any[]>((pre, item) => {
-          if (item.nodeGroupID && pre.every(data => data.id !== item.nodeGroupID)) {
-            pre.push({
-              id: item.nodeGroupID,
-              name: item.nodeGroupName,
-            });
-          }
-          return pre;
-        }, []),
+        children: nodeGroupList.value,
       },
     ]);
     // 表格搜索联动
@@ -976,6 +974,18 @@ export default defineComponent({
     // 全量表格数据
     const tableData = ref<any[]>([]);
 
+    // 节点池
+    const nodeGroupList = computed(() => tableData.value.reduce<any[]>((pre, item) => {
+      if (item.nodeGroupID && pre.every(data => data.id !== item.nodeGroupID)) {
+        pre.push({
+          id: item.nodeGroupID,
+          name: item.nodeGroupName,
+          text: item.nodeGroupName,
+          value: item.nodeGroupID,
+        });
+      }
+      return pre;
+    }, []));
     // 可用区
     const zoneList = computed(() => tableData.value.reduce((pre, row) => {
       if (!row.zoneID) return pre;
@@ -1086,9 +1096,9 @@ export default defineComponent({
 
     // 跨页全选
     const filterFailureTableData = computed(() => filterTableData.value
-      .filter(item => !!item.nodeID && !['INITIALIZATION', 'DELETING', 'APPLYING'].includes(item.status)));
+      .filter(item => !['INITIALIZATION', 'DELETING', 'APPLYING'].includes(item.status)));
     const filterFailureCurTableData = computed(() => curPageData.value
-      .filter(item => !!item.nodeID && !['INITIALIZATION', 'DELETING', 'APPLYING'].includes(item.status)));
+      .filter(item => !['INITIALIZATION', 'DELETING', 'APPLYING'].includes(item.status)));
     const {
       selectType,
       selections,
@@ -1102,11 +1112,15 @@ export default defineComponent({
       curPageData: filterFailureCurTableData,
     });
     // kubeConfig导入、选中节点含有运行中状态、含有非节点池节点不让删除
-    const disableBatchDelete = computed(() => isKubeConfig.value || selections.value.some(item => item.status === 'RUNNING' || !item.nodeGroupID));
+    const disableBatchDelete = computed(() => isKubeConfig.value
+    || selections.value.some(item => item.status === 'RUNNING')
+    || (isImportCluster.value && selections.value.some(item => !item.nodeGroupID)));
+
     const disableBatchDeleteTips = computed(() => {
       if (isKubeConfig.value) {
         return $i18n.t('cluster.nodeList.tips.disableImportClusterAction');
-      } if (selections.value.some(item => !item.nodeGroupID)) {
+      }
+      if ((isImportCluster.value && selections.value.some(item => !item.nodeGroupID))) {
         return $i18n.t('cluster.nodeList.tips.hasNotNodePoolNode');
       }
       return $i18n.t('cluster.ca.nodePool.nodes.action.delete.tips');
@@ -1366,7 +1380,7 @@ export default defineComponent({
     const removeNodeDialogTitle = ref<any>('');
     const user = computed(() => $store.state.user);
     const handleDeleteNode = async (row) => {
-      if (isImportCluster && !row.nodeGroupID) return;
+      if (isImportCluster.value && !row.nodeGroupID) return;
 
       $bkInfo({
         type: 'warning',
@@ -1564,20 +1578,23 @@ export default defineComponent({
       logSideDialogConf.value.loading = false;
     };
     const getTaskTableData = async (row) => {
+      let logStatus = '';
       if (row.taskID) {
-        const data = await taskDetail(row.taskID);
-        logSideDialogConf.value.taskData = [data] as unknown as any;
+        const { stepSequence = [], steps, status } = await taskDetail(row.taskID);
+        logStatus = status;
+        logSideDialogConf.value.taskData = stepSequence.map(key => steps[key]) as unknown as any;
       } else {
         const { taskData, latestTask } = await getTaskData({
           clusterId: row.cluster_id,
           nodeIP: row.inner_ip,
         });
+        logStatus = latestTask?.status;
         logSideDialogConf.value.taskData = taskData || [];
-        if (['RUNNING', 'INITIALZING'].includes(latestTask?.status)) {
-          logIntervalStart();
-        } else {
-          logIntervalStop();
-        }
+      }
+      if (['RUNNING', 'INITIALZING'].includes(logStatus)) {
+        logIntervalStart();
+      } else {
+        logIntervalStop();
       }
     };
     const { stop: logIntervalStop, start: logIntervalStart } = useInterval(async () => {
@@ -1586,14 +1603,7 @@ export default defineComponent({
         logIntervalStop();
         return;
       }
-      const { taskData, latestTask } = await getTaskData({
-        clusterId: row.cluster_id,
-        nodeIP: row.inner_ip,
-      });
-      logSideDialogConf.value.taskData = taskData || [];
-      if (!['RUNNING', 'INITIALZING'].includes(latestTask?.status)) {
-        logIntervalStop();
-      }
+      await getTaskTableData(row);
     }, 5000);
     const closeLog = () => {
       logSideDialogConf.value.row = null;

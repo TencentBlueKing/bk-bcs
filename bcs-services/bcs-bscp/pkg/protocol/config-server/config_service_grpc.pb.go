@@ -75,7 +75,6 @@ const (
 	Config_ListTemplatesOfTemplateSet_FullMethodName                 = "/pbcs.Config/ListTemplatesOfTemplateSet"
 	Config_CreateTemplateRevision_FullMethodName                     = "/pbcs.Config/CreateTemplateRevision"
 	Config_ListTemplateRevisions_FullMethodName                      = "/pbcs.Config/ListTemplateRevisions"
-	Config_DeleteTemplateRevision_FullMethodName                     = "/pbcs.Config/DeleteTemplateRevision"
 	Config_ListTemplateRevisionsByIDs_FullMethodName                 = "/pbcs.Config/ListTemplateRevisionsByIDs"
 	Config_ListTemplateRevisionNamesByTemplateIDs_FullMethodName     = "/pbcs.Config/ListTemplateRevisionNamesByTemplateIDs"
 	Config_CreateTemplateSet_FullMethodName                          = "/pbcs.Config/CreateTemplateSet"
@@ -90,6 +89,7 @@ const (
 	Config_UpdateAppTemplateBinding_FullMethodName                   = "/pbcs.Config/UpdateAppTemplateBinding"
 	Config_ListAppTemplateBindings_FullMethodName                    = "/pbcs.Config/ListAppTemplateBindings"
 	Config_ListAppBoundTemplateRevisions_FullMethodName              = "/pbcs.Config/ListAppBoundTemplateRevisions"
+	Config_ListReleasedAppBoundTemplateRevisions_FullMethodName      = "/pbcs.Config/ListReleasedAppBoundTemplateRevisions"
 	Config_UpdateAppBoundTemplateRevisions_FullMethodName            = "/pbcs.Config/UpdateAppBoundTemplateRevisions"
 	Config_DeleteAppBoundTemplateSets_FullMethodName                 = "/pbcs.Config/DeleteAppBoundTemplateSets"
 	Config_ListTemplateBoundCounts_FullMethodName                    = "/pbcs.Config/ListTemplateBoundCounts"
@@ -113,6 +113,7 @@ const (
 	Config_GetAppTemplateVariableReferences_FullMethodName           = "/pbcs.Config/GetAppTemplateVariableReferences"
 	Config_UpdateAppTemplateVariables_FullMethodName                 = "/pbcs.Config/UpdateAppTemplateVariables"
 	Config_ListAppTemplateVariables_FullMethodName                   = "/pbcs.Config/ListAppTemplateVariables"
+	Config_ListReleasedAppTemplateVariables_FullMethodName           = "/pbcs.Config/ListReleasedAppTemplateVariables"
 	Config_CreateGroup_FullMethodName                                = "/pbcs.Config/CreateGroup"
 	Config_DeleteGroup_FullMethodName                                = "/pbcs.Config/DeleteGroup"
 	Config_UpdateGroup_FullMethodName                                = "/pbcs.Config/UpdateGroup"
@@ -189,7 +190,12 @@ type ConfigClient interface {
 	ListTemplatesOfTemplateSet(ctx context.Context, in *ListTemplatesOfTemplateSetReq, opts ...grpc.CallOption) (*ListTemplatesOfTemplateSetResp, error)
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
-	DeleteTemplateRevision(ctx context.Context, in *DeleteTemplateRevisionReq, opts ...grpc.CallOption) (*DeleteTemplateRevisionResp, error)
+	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTemplateRevisionNamesByTemplateIDs(ctx context.Context, in *ListTemplateRevisionNamesByTemplateIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionNamesByTemplateIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -204,6 +210,7 @@ type ConfigClient interface {
 	UpdateAppTemplateBinding(ctx context.Context, in *UpdateAppTemplateBindingReq, opts ...grpc.CallOption) (*UpdateAppTemplateBindingResp, error)
 	ListAppTemplateBindings(ctx context.Context, in *ListAppTemplateBindingsReq, opts ...grpc.CallOption) (*ListAppTemplateBindingsResp, error)
 	ListAppBoundTemplateRevisions(ctx context.Context, in *ListAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTemplateRevisionsResp, error)
+	ListReleasedAppBoundTemplateRevisions(ctx context.Context, in *ListReleasedAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListReleasedAppBoundTemplateRevisionsResp, error)
 	UpdateAppBoundTemplateRevisions(ctx context.Context, in *UpdateAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*UpdateAppBoundTemplateRevisionsResp, error)
 	DeleteAppBoundTemplateSets(ctx context.Context, in *DeleteAppBoundTemplateSetsReq, opts ...grpc.CallOption) (*DeleteAppBoundTemplateSetsResp, error)
 	ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error)
@@ -227,6 +234,7 @@ type ConfigClient interface {
 	GetAppTemplateVariableReferences(ctx context.Context, in *GetAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetAppTemplateVariableReferencesResp, error)
 	UpdateAppTemplateVariables(ctx context.Context, in *UpdateAppTemplateVariablesReq, opts ...grpc.CallOption) (*UpdateAppTemplateVariablesResp, error)
 	ListAppTemplateVariables(ctx context.Context, in *ListAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListAppTemplateVariablesResp, error)
+	ListReleasedAppTemplateVariables(ctx context.Context, in *ListReleasedAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListReleasedAppTemplateVariablesResp, error)
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
@@ -711,15 +719,6 @@ func (c *configClient) ListTemplateRevisions(ctx context.Context, in *ListTempla
 	return out, nil
 }
 
-func (c *configClient) DeleteTemplateRevision(ctx context.Context, in *DeleteTemplateRevisionReq, opts ...grpc.CallOption) (*DeleteTemplateRevisionResp, error) {
-	out := new(DeleteTemplateRevisionResp)
-	err := c.cc.Invoke(ctx, Config_DeleteTemplateRevision_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *configClient) ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error) {
 	out := new(ListTemplateRevisionsByIDsResp)
 	err := c.cc.Invoke(ctx, Config_ListTemplateRevisionsByIDs_FullMethodName, in, out, opts...)
@@ -840,6 +839,15 @@ func (c *configClient) ListAppTemplateBindings(ctx context.Context, in *ListAppT
 func (c *configClient) ListAppBoundTemplateRevisions(ctx context.Context, in *ListAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTemplateRevisionsResp, error) {
 	out := new(ListAppBoundTemplateRevisionsResp)
 	err := c.cc.Invoke(ctx, Config_ListAppBoundTemplateRevisions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListReleasedAppBoundTemplateRevisions(ctx context.Context, in *ListReleasedAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListReleasedAppBoundTemplateRevisionsResp, error) {
+	out := new(ListReleasedAppBoundTemplateRevisionsResp)
+	err := c.cc.Invoke(ctx, Config_ListReleasedAppBoundTemplateRevisions_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1053,6 +1061,15 @@ func (c *configClient) ListAppTemplateVariables(ctx context.Context, in *ListApp
 	return out, nil
 }
 
+func (c *configClient) ListReleasedAppTemplateVariables(ctx context.Context, in *ListReleasedAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListReleasedAppTemplateVariablesResp, error) {
+	out := new(ListReleasedAppTemplateVariablesResp)
+	err := c.cc.Invoke(ctx, Config_ListReleasedAppTemplateVariables_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error) {
 	out := new(CreateGroupResp)
 	err := c.cc.Invoke(ctx, Config_CreateGroup_FullMethodName, in, out, opts...)
@@ -1247,7 +1264,12 @@ type ConfigServer interface {
 	ListTemplatesOfTemplateSet(context.Context, *ListTemplatesOfTemplateSetReq) (*ListTemplatesOfTemplateSetResp, error)
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
-	DeleteTemplateRevision(context.Context, *DeleteTemplateRevisionReq) (*DeleteTemplateRevisionResp, error)
+	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTemplateRevisionNamesByTemplateIDs(context.Context, *ListTemplateRevisionNamesByTemplateIDsReq) (*ListTemplateRevisionNamesByTemplateIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1262,6 +1284,7 @@ type ConfigServer interface {
 	UpdateAppTemplateBinding(context.Context, *UpdateAppTemplateBindingReq) (*UpdateAppTemplateBindingResp, error)
 	ListAppTemplateBindings(context.Context, *ListAppTemplateBindingsReq) (*ListAppTemplateBindingsResp, error)
 	ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error)
+	ListReleasedAppBoundTemplateRevisions(context.Context, *ListReleasedAppBoundTemplateRevisionsReq) (*ListReleasedAppBoundTemplateRevisionsResp, error)
 	UpdateAppBoundTemplateRevisions(context.Context, *UpdateAppBoundTemplateRevisionsReq) (*UpdateAppBoundTemplateRevisionsResp, error)
 	DeleteAppBoundTemplateSets(context.Context, *DeleteAppBoundTemplateSetsReq) (*DeleteAppBoundTemplateSetsResp, error)
 	ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error)
@@ -1285,6 +1308,7 @@ type ConfigServer interface {
 	GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error)
 	UpdateAppTemplateVariables(context.Context, *UpdateAppTemplateVariablesReq) (*UpdateAppTemplateVariablesResp, error)
 	ListAppTemplateVariables(context.Context, *ListAppTemplateVariablesReq) (*ListAppTemplateVariablesResp, error)
+	ListReleasedAppTemplateVariables(context.Context, *ListReleasedAppTemplateVariablesReq) (*ListReleasedAppTemplateVariablesResp, error)
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
@@ -1459,9 +1483,6 @@ func (UnimplementedConfigServer) CreateTemplateRevision(context.Context, *Create
 func (UnimplementedConfigServer) ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisions not implemented")
 }
-func (UnimplementedConfigServer) DeleteTemplateRevision(context.Context, *DeleteTemplateRevisionReq) (*DeleteTemplateRevisionResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplateRevision not implemented")
-}
 func (UnimplementedConfigServer) ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisionsByIDs not implemented")
 }
@@ -1503,6 +1524,9 @@ func (UnimplementedConfigServer) ListAppTemplateBindings(context.Context, *ListA
 }
 func (UnimplementedConfigServer) ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppBoundTemplateRevisions not implemented")
+}
+func (UnimplementedConfigServer) ListReleasedAppBoundTemplateRevisions(context.Context, *ListReleasedAppBoundTemplateRevisionsReq) (*ListReleasedAppBoundTemplateRevisionsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedAppBoundTemplateRevisions not implemented")
 }
 func (UnimplementedConfigServer) UpdateAppBoundTemplateRevisions(context.Context, *UpdateAppBoundTemplateRevisionsReq) (*UpdateAppBoundTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppBoundTemplateRevisions not implemented")
@@ -1572,6 +1596,9 @@ func (UnimplementedConfigServer) UpdateAppTemplateVariables(context.Context, *Up
 }
 func (UnimplementedConfigServer) ListAppTemplateVariables(context.Context, *ListAppTemplateVariablesReq) (*ListAppTemplateVariablesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppTemplateVariables not implemented")
+}
+func (UnimplementedConfigServer) ListReleasedAppTemplateVariables(context.Context, *ListReleasedAppTemplateVariablesReq) (*ListReleasedAppTemplateVariablesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedAppTemplateVariables not implemented")
 }
 func (UnimplementedConfigServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
@@ -2548,24 +2575,6 @@ func _Config_ListTemplateRevisions_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_DeleteTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTemplateRevisionReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).DeleteTemplateRevision(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_DeleteTemplateRevision_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).DeleteTemplateRevision(ctx, req.(*DeleteTemplateRevisionReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Config_ListTemplateRevisionsByIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateRevisionsByIDsReq)
 	if err := dec(in); err != nil {
@@ -2814,6 +2823,24 @@ func _Config_ListAppBoundTemplateRevisions_Handler(srv interface{}, ctx context.
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListAppBoundTemplateRevisions(ctx, req.(*ListAppBoundTemplateRevisionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListReleasedAppBoundTemplateRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReleasedAppBoundTemplateRevisionsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListReleasedAppBoundTemplateRevisions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListReleasedAppBoundTemplateRevisions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListReleasedAppBoundTemplateRevisions(ctx, req.(*ListReleasedAppBoundTemplateRevisionsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3228,6 +3255,24 @@ func _Config_ListAppTemplateVariables_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListAppTemplateVariables(ctx, req.(*ListAppTemplateVariablesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListReleasedAppTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReleasedAppTemplateVariablesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListReleasedAppTemplateVariables(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListReleasedAppTemplateVariables_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListReleasedAppTemplateVariables(ctx, req.(*ListReleasedAppTemplateVariablesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3714,10 +3759,6 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_ListTemplateRevisions_Handler,
 		},
 		{
-			MethodName: "DeleteTemplateRevision",
-			Handler:    _Config_DeleteTemplateRevision_Handler,
-		},
-		{
 			MethodName: "ListTemplateRevisionsByIDs",
 			Handler:    _Config_ListTemplateRevisionsByIDs_Handler,
 		},
@@ -3772,6 +3813,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAppBoundTemplateRevisions",
 			Handler:    _Config_ListAppBoundTemplateRevisions_Handler,
+		},
+		{
+			MethodName: "ListReleasedAppBoundTemplateRevisions",
+			Handler:    _Config_ListReleasedAppBoundTemplateRevisions_Handler,
 		},
 		{
 			MethodName: "UpdateAppBoundTemplateRevisions",
@@ -3864,6 +3909,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAppTemplateVariables",
 			Handler:    _Config_ListAppTemplateVariables_Handler,
+		},
+		{
+			MethodName: "ListReleasedAppTemplateVariables",
+			Handler:    _Config_ListReleasedAppTemplateVariables_Handler,
 		},
 		{
 			MethodName: "CreateGroup",

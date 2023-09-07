@@ -86,6 +86,7 @@
     .groups-info {
       display: flex;
       align-items: center;
+      margin-left: 24px;
       .group-item {
         padding: 0 8px;
         line-height: 22px;

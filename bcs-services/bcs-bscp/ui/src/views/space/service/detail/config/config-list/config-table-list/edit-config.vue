@@ -28,10 +28,6 @@
   const pending = ref(false)
   const isFormChange = ref(false)
 
-  const editable = computed(() => {
-    return versionData.value.id === 0
-  })
-
   watch(
     () => props.show,
     (val) => {
@@ -118,7 +114,7 @@
 <template>
     <bk-sideslider
       width="640"
-      :title="`${editable ? '编辑' : '查看'}配置项`"
+      title="编辑配置项"
       :is-show="props.show"
       :before-close="handleBeforeClose"
       @closed="close">
@@ -130,7 +126,7 @@
             v-model:fileUploading="fileUploading"
             :config="configForm"
             :content="content"
-            :editable="editable"
+            :editable="true"
             :bk-biz-id="props.bkBizId"
             :app-id="props.appId"
             @change="handleChange" />

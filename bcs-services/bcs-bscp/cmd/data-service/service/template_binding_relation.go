@@ -337,6 +337,9 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 		appIDs[i] = r.AppID
 		releaseIDs[i] = r.ReleaseID
 	}
+	appIDs = tools.RemoveDuplicates(appIDs)
+	releaseIDs = tools.RemoveDuplicates(releaseIDs)
+
 	apps, err := s.dao.App().ListAppsByIDs(kt, appIDs)
 	if err != nil {
 		logs.Errorf("list template bound named app details failed, err: %v, rid: %s", err, kt.Rid)
@@ -359,18 +362,16 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 	// combine resp details
 	details := make([]*pbtbr.TemplateBoundNamedAppDetail, 0)
 	for _, r := range relations {
-		for _, id := range r.TemplateRevisionIDs {
-			// the template revision must belong to the target template
-			if _, ok := tmplRevisionMap[id]; ok {
-				details = append(details, &pbtbr.TemplateBoundNamedAppDetail{
-					TemplateRevisionId:   id,
-					TemplateRevisionName: tmplRevisionMap[id].Spec.RevisionName,
-					AppId:                r.AppID,
-					AppName:              appMap[r.AppID].Spec.Name,
-					ReleaseId:            r.ReleaseID,
-					ReleaseName:          releaseMap[r.ReleaseID].Spec.Name,
-				})
-			}
+		// the template revision must belong to the target template
+		if _, ok := tmplRevisionMap[r.TemplateRevisionID]; ok {
+			details = append(details, &pbtbr.TemplateBoundNamedAppDetail{
+				TemplateRevisionId:   r.TemplateRevisionID,
+				TemplateRevisionName: tmplRevisionMap[r.TemplateRevisionID].Spec.RevisionName,
+				AppId:                r.AppID,
+				AppName:              appMap[r.AppID].Spec.Name,
+				ReleaseId:            r.ReleaseID,
+				ReleaseName:          releaseMap[r.ReleaseID].Spec.Name,
+			})
 		}
 	}
 

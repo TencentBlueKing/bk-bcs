@@ -117,8 +117,8 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 		}
 	}
 
-	if _, err := s.dao.TemplateSet().GetByUniqueKey(
-		kt, req.Attachment.BizId, req.Attachment.TemplateSpaceId, req.Spec.Name); err == nil {
+	if _, err := s.dao.TemplateSet().GetByUniqueKeyForUpdate(
+		kt, req.Attachment.BizId, req.Attachment.TemplateSpaceId, req.Id, req.Spec.Name); err == nil {
 		return nil, fmt.Errorf("template set's same name %s already exists", req.Spec.Name)
 	}
 

@@ -315,11 +315,13 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions"
         };
     }
+    /* 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
     rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
         option (google.api.http) = {
             delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
         };
     }
+    */
     rpc ListTemplateRevisionsByIDs(ListTemplateRevisionsByIDsReq) returns (ListTemplateRevisionsByIDsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_revisions/list_by_ids"
@@ -398,6 +400,12 @@ service Config {
     rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_revisions"
+        };
+    }
+    rpc ListReleasedAppBoundTemplateRevisions(ListReleasedAppBoundTemplateRevisionsReq) returns
+        (ListReleasedAppBoundTemplateRevisionsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/released_template_revisions"
         };
     }
     rpc UpdateAppBoundTemplateRevisions(UpdateAppBoundTemplateRevisionsReq) returns
@@ -535,6 +543,12 @@ service Config {
     rpc ListAppTemplateVariables(ListAppTemplateVariablesReq) returns (ListAppTemplateVariablesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"
+        };
+    }
+    rpc ListReleasedAppTemplateVariables(ListReleasedAppTemplateVariablesReq) returns
+        (ListReleasedAppTemplateVariablesResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/released_template_variables"
         };
     }
 
@@ -866,10 +880,11 @@ message UpdateConfigHookReq {
 message UpdateConfigHookResp {}
 
 message CreateReleaseReq {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
-    string name   = 3;
-    string memo   = 4;
+    uint32                             biz_id    = 1;
+    uint32                             app_id    = 2;
+    string                             name      = 3;
+    string                             memo      = 4;
+    repeated pbtv.TemplateVariableSpec variables = 5;
 }
 
 message CreateReleaseResp {
@@ -1475,6 +1490,24 @@ message ListAppBoundTemplateRevisionsResp {
     repeated pbatb.AppBoundTmplRevision details = 2;
 }
 
+message ListReleasedAppBoundTemplateRevisionsReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    uint32 release_id    = 3;
+    string search_fields = 4;
+    string search_value  = 5;
+    uint32 start         = 6;
+    uint32 limit         = 7;
+    bool   all           = 8;
+}
+
+message ListReleasedAppBoundTemplateRevisionsResp {
+    uint32                                      count   = 1;
+    repeated pbatb.ReleasedAppBoundTmplRevision details = 2;
+}
+
+
+
 message UpdateAppBoundTemplateRevisionsReq {
     uint32                         biz_id     = 1;
     uint32                         app_id     = 2;
@@ -1742,6 +1775,16 @@ message ListAppTemplateVariablesReq {
 }
 
 message ListAppTemplateVariablesResp {
+    repeated pbtv.TemplateVariableSpec details = 1;
+}
+
+message ListReleasedAppTemplateVariablesReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message ListReleasedAppTemplateVariablesResp {
     repeated pbtv.TemplateVariableSpec details = 1;
 }
 

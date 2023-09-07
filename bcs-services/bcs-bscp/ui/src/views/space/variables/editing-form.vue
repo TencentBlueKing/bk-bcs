@@ -70,7 +70,6 @@
       <bk-select v-model="localVal.type" :clearable="false" :disabled="isEditMode" @change="change">
         <bk-option id="string" label="string"></bk-option>
         <bk-option id="number" label="number"></bk-option>
-        <bk-option id="bool" label="bool"></bk-option>
       </bk-select>
     </bk-form-item>
     <bk-form-item label="默认值" property="default_val" required>

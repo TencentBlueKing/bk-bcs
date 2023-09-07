@@ -21,12 +21,13 @@
 </script>
 <template>
   <div class="version-diff-side">
-    <Configs
-      class="config-list-menu"
-      :base-version-id="props.baseVersionId"
-      :current-version-id="props.currentVersionId"
-      :current-config-id="selectedMenu"
-      @selected="handleSelect" />
+    <div class="config-list-apart">
+      <Configs
+        :base-version-id="props.baseVersionId"
+        :current-version-id="props.currentVersionId"
+        :current-config-id="selectedMenu"
+        @selected="handleSelect" />
+    </div>
     <Scripts
       :base-version-id="props.baseVersionId"
       :current-version-id="props.currentVersionId"
@@ -39,13 +40,9 @@
     width: 264px;
     height: 100%;
     background: #fafbfd;
-    border-right: 1px solid #dcded5;
-    .configs-menu {
+    .config-list-apart {
       height: calc(100% - 132px);
-      :deep(.list-wrapper) {
-        height: calc(100% - 50px);
-        overflow: auto;
-      }
+      background: #f0f1f5;
     }
     .scripts-menu {
       border-top: 1px solid #dcded5;

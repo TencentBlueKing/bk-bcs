@@ -10,9 +10,9 @@
   const props = defineProps<{
     show: boolean;
     showPublishBtn?: boolean; // 是否显示发布按钮
-    currentVersion: IConfigVersion; // 当前版本
-    currentConfigId?: number; // 配置项id
+    currentVersion: IConfigVersion; // 当前版本详情
     baseVersionId?: number; // 默认选中的基准版本id
+    currentConfigId?: number; // 默认选中的配置项id
   }>()
 
   const emits = defineEmits(['update:show', 'publish'])
@@ -22,8 +22,8 @@
   const appId = Number(route.params.appId)
   const versionList = ref<IConfigVersion[]>([])
   const versionListLoading = ref(false)
-  const selectedVersion = ref()
-  const selectedDiff = ref<IDiffDetail>({
+  const selectedBaseVersion = ref() // 基准版本ID
+  const diffDetailData = ref<IDiffDetail>({ // 差异详情数据
     contentType: 'text',
     current: {
       language: '',
@@ -46,7 +46,7 @@
   })
 
   watch(() => props.baseVersionId, (val) => {
-    selectedVersion.value = val
+    selectedBaseVersion.value = val
   })
 
   // 获取所有对比基准版本
@@ -64,15 +64,16 @@
 
   // 选择对比基准版本
   const handleSelectVersion = async(val: number) => {
-    selectedVersion.value = val
+    selectedBaseVersion.value = val
   }
 
-  const handleSelect = (data: IDiffDetail) => {
-    selectedDiff.value = data
+  // 选中对比对象，配置或者脚本
+  const handleSelectDiffItem = (data: IDiffDetail) => {
+    diffDetailData.value = data
   }
 
   const handleClose = () => {
-    selectedVersion.value = undefined
+    selectedBaseVersion.value = undefined
     versionList.value = []
     emits('update:show', false)
   }
@@ -87,18 +88,18 @@
     <bk-loading class="loading-wrapper" :loading="loading">
       <div class="version-diff-content">
           <AsideMenu
-            :base-version-id="selectedVersion"
+            :base-version-id="selectedBaseVersion"
             :current-version-id="currentVersion.id"
             :current-config-id="props.currentConfigId"
-            @selected="handleSelect" />
-          <div :class="['diff-content-area', { light: selectedDiff.contentType === 'file' }]">
-            <diff :diff="selectedDiff" :loading="false">
+            @selected="handleSelectDiffItem" />
+          <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
+            <diff :diff="diffDetailData" :loading="false">
               <template #leftHead>
                   <slot name="baseHead">
                     <div class="diff-panel-head">
                       <div class="version-tag base-version">对比版本</div>
                       <bk-select
-                        :model-value="selectedVersion"
+                        :model-value="selectedBaseVersion"
                         style="width: 320px;"
                         :loading="versionListLoading"
                         :clearable="false"
@@ -127,8 +128,10 @@
     </bk-loading>
     <template #footer>
       <div class="actions-btns">
-        <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')">上线版本</bk-button>
-        <bk-button @click="handleClose">关闭</bk-button>
+        <slot name="footerActions">
+          <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')">上线版本</bk-button>
+          <bk-button @click="handleClose">关闭</bk-button>
+        </slot>
       </div>
     </template>
   </bk-sideslider>

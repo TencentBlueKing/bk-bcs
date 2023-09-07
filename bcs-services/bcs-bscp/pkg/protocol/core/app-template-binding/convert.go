@@ -13,6 +13,7 @@ limitations under the License.
 package pbatb
 
 import (
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 )
@@ -181,5 +182,51 @@ func PbAppTemplateBinding(s *table.AppTemplateBinding) *AppTemplateBinding {
 		Spec:       PbAppTemplateBindingSpec(s.Spec),
 		Attachment: PbAppTemplateBindingAttachment(s.Attachment),
 		Revision:   pbbase.PbRevision(s.Revision),
+	}
+}
+
+// PbReleasedAppBoundTmplRevisions convert table ReleasedAppTemplate to pb ReleasedAppBoundTmplRevision
+func PbReleasedAppBoundTmplRevisions(s []*table.ReleasedAppTemplate) []*ReleasedAppBoundTmplRevision {
+	if s == nil {
+		return make([]*ReleasedAppBoundTmplRevision, 0)
+	}
+
+	result := make([]*ReleasedAppBoundTmplRevision, 0)
+	for _, one := range s {
+		result = append(result, PbReleasedAppBoundTmplRevision(one))
+	}
+
+	return result
+}
+
+// PbReleasedAppBoundTmplRevision convert table ReleasedAppTemplate to pb ReleasedAppBoundTmplRevision
+func PbReleasedAppBoundTmplRevision(s *table.ReleasedAppTemplate) *ReleasedAppBoundTmplRevision {
+	if s == nil {
+		return nil
+	}
+
+	return &ReleasedAppBoundTmplRevision{
+		TemplateSpaceId:      s.Spec.TemplateSpaceID,
+		TemplateSpaceName:    s.Spec.TemplateSpaceName,
+		TemplateSetId:        s.Spec.TemplateSetID,
+		TemplateSetName:      s.Spec.TemplateSetName,
+		TemplateId:           s.Spec.TemplateID,
+		Name:                 s.Spec.Name,
+		Path:                 s.Spec.Path,
+		TemplateRevisionId:   s.Spec.TemplateRevisionID,
+		IsLatest:             s.Spec.IsLatest,
+		TemplateRevisionName: s.Spec.TemplateRevisionName,
+		TemplateRevisionMemo: s.Spec.TemplateRevisionMemo,
+		FileType:             s.Spec.FileType,
+		FileMode:             s.Spec.FileMode,
+		User:                 s.Spec.User,
+		UserGroup:            s.Spec.UserGroup,
+		Privilege:            s.Spec.Privilege,
+		Signature:            s.Spec.Signature,
+		ByteSize:             s.Spec.ByteSize,
+		RenderedSignature:    s.Spec.RenderedSignature,
+		RenderedByteSize:     s.Spec.RenderedByteSize,
+		Creator:              s.Revision.Creator,
+		CreateAt:             s.Revision.CreatedAt.Format(constant.TimeStdFormat),
 	}
 }

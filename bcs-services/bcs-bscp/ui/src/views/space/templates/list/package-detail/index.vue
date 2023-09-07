@@ -1,16 +1,15 @@
 <script lang="ts" setup>
   import { ref, computed } from 'vue';
   import { storeToRefs } from 'pinia'
-  import { Search, AngleDoubleRightLine, AngleDoubleLeftLine } from 'bkui-vue/lib/icon'
+  import { AngleDoubleRightLine, AngleDoubleLeftLine } from 'bkui-vue/lib/icon'
   import { useTemplateStore } from '../../../../../store/template'
-  import { getDefaultPackageConfig } from '../../../../../utils/template'
   import { PACKAGE_MENU_OTHER_TYPE_MAP } from '../../../../../constants/template'
   import UsePackageApps from './use-package-apps.vue';
   import ConfigInPackageTable from './tables/config-in-package.vue'
   import ConfigInAllTable from './tables/config-in-all.vue'
   import ConfigWithoutPackageTable from './tables/config-without-package.vue'
 
-  const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
+  const { packageList, currentPkg } = storeToRefs(useTemplateStore())
 
   const isAppsPanelOpen = ref(true)
 
@@ -64,7 +63,7 @@
         <AngleDoubleRightLine v-if="isAppsPanelOpen" class="arrow-icon" />
         <AngleDoubleLeftLine v-else class="arrow-icon" />
       </div>
-      <UsePackageApps />
+      <UsePackageApps @toggle-open="isAppsPanelOpen = $event" />
     </div>
   </div>
 </template>

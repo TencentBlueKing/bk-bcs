@@ -128,12 +128,15 @@ service Data {
     rpc UpdateAppTemplateBinding(UpdateAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
     rpc DeleteAppTemplateBinding(DeleteAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
     rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {}
+    rpc ListReleasedAppBoundTemplateRevisions(ListReleasedAppBoundTemplateRevisionsReq) returns
+        (ListReleasedAppBoundTemplateRevisionsResp) {}
 
     // app template variables related interface.
     rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {}
     rpc GetAppTemplateVariableReferences(GetAppTemplateVariableReferencesReq) returns (GetAppTemplateVariableReferencesResp) {}
     rpc UpdateAppTemplateVariables(UpdateAppTemplateVariablesReq) returns (pbbase.EmptyResp) {}
     rpc ListAppTemplateVariables(ListAppTemplateVariablesReq) returns (ListAppTemplateVariablesResp) {}
+    rpc ListReleasedAppTemplateVariables(ListReleasedAppTemplateVariablesReq) returns (ListReleasedAppTemplateVariablesResp) {}
 
     // template binding relation related interface.
     rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {}
@@ -418,8 +421,9 @@ message GetLatestCommitReq {
 }
 
 message CreateReleaseReq {
-    pbrelease.ReleaseAttachment attachment = 1;
-    pbrelease.ReleaseSpec       spec       = 2;
+    pbrelease.ReleaseAttachment        attachment = 1;
+    pbrelease.ReleaseSpec              spec       = 2;
+    repeated pbtv.TemplateVariableSpec variables  = 3;
 }
 
 message ListReleasesReq {
@@ -509,10 +513,10 @@ message ListHookTagResp {
 }
 
 message ListHookReferencesReq {
-    uint32 biz_id      = 1;
-    uint32 hook_id     = 2;
-    uint32 start       = 3;
-    uint32 limit       = 4;
+    uint32 biz_id  = 1;
+    uint32 hook_id = 2;
+    uint32 start   = 3;
+    uint32 limit   = 4;
 }
 
 message ListHookReferencesResp {
@@ -586,7 +590,7 @@ message GetByPubStateReq {
 }
 
 message UpdateHookRevisionReq {
-    uint32                     id         = 1;
+    uint32                      id         = 1;
     pbhr.HookRevisionAttachment attachment = 2;
     pbhr.HookRevisionSpec       spec       = 3;
 }
@@ -621,13 +625,13 @@ message GetReleaseHookReq {
 
 message GetReleaseHookResp {
     message Hook {
-        uint32 hook_id                 = 1;
-        string hook_name               = 2;
-        uint32 hook_revision_id        = 3;
-        string hook_revision_name      = 4;
-        string type                    = 5;
-        string memo                    = 6;
-        string content                 = 7;
+        uint32 hook_id            = 1;
+        string hook_name          = 2;
+        uint32 hook_revision_id   = 3;
+        string hook_revision_name = 4;
+        string type               = 5;
+        string memo               = 6;
+        string content            = 7;
     }
     Hook pre_hook  = 1;
     Hook post_hook = 2;
@@ -916,6 +920,22 @@ message ListAppBoundTemplateRevisionsResp {
     repeated pbatb.AppBoundTmplRevision details = 2;
 }
 
+message ListReleasedAppBoundTemplateRevisionsReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    uint32 release_id    = 3;
+    string search_fields = 4;
+    string search_value  = 5;
+    uint32 start         = 6;
+    uint32 limit         = 7;
+    bool   all           = 8;
+}
+
+message ListReleasedAppBoundTemplateRevisionsResp {
+    uint32                                      count   = 1;
+    repeated pbatb.ReleasedAppBoundTmplRevision details = 2;
+}
+
 message ExtractAppTemplateVariablesReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
@@ -945,6 +965,16 @@ message ListAppTemplateVariablesReq {
 }
 
 message ListAppTemplateVariablesResp {
+    repeated pbtv.TemplateVariableSpec details = 1;
+}
+
+message ListReleasedAppTemplateVariablesReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message ListReleasedAppTemplateVariablesResp {
     repeated pbtv.TemplateVariableSpec details = 1;
 }
 

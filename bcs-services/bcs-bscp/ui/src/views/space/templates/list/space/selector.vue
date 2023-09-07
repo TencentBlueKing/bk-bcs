@@ -70,8 +70,7 @@
     loading.value = true
     const params: ICommonQuery = {
       start: 0,
-      limit: 1000
-      // all: true
+      all: true
     }
     const res = await getTemplateSpaceList(spaceId.value, params)
     spaceList.value = res.details
@@ -119,6 +118,7 @@
     } else {
       InfoBox({
         title: `确认删除【${space.spec.name}】`,
+        infoType: 'warning',
         extCls: 'delete-space-infobox',
         onConfirm: async () => {
           await deleteTemplateSpace(spaceId.value, space.id)
@@ -178,13 +178,13 @@
       <template #trigger>
         <div class="select-trigger">
           <h5 class="space-name" :title="spaceName">{{ spaceName }}</h5>
-          <div class="space-desc">{{ templateSpaceDetail.memo }}</div>
+          <div class="space-desc">{{ templateSpaceDetail.memo || '--' }}</div>
           <DownShape :class="['triangle-icon', { up: selectorOpen }]" />
         </div>
       </template>
       <bk-option v-for="item in spaceList" :key="item.id" :value="item.id">
         <div class="space-option-item">
-          <div class="name-text">{{ item.spec.name }}</div>
+          <div class="name-text">{{ item.spec.name === 'default_space' ? '默认空间' : item.spec.name }}</div>
           <div class="actions">
             <i class="bk-bscp-icon icon-edit-small" @click.stop="handleEditOpen(item)"></i>
             <Del v-if="templateSpaceDetail.name !== 'default_space'" class="delete-icon" @click.stop="handleDelete(item)" />

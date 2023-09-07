@@ -27,14 +27,14 @@
     { name: 'script', label: '前/后置脚本', routeName: 'init-script' },
   ])
 
-  
+
   const getDefaultTab = () => {
     const tab = tabs.value.find(item => item.routeName === route.name)
     return tab ? tab.name : 'config'
   }
   const activeTab = ref(getDefaultTab())
   const publishVersionRef = ref()
-  
+
   watch(() => route.name, () => {
     activeTab.value = getDefaultTab()
   })
@@ -76,26 +76,28 @@
         }"
         class="version-desc" />
     </section>
-    <div v-if="!props.versionDetailView" class="detail-header-tabs">
-      <BkTab type="unborder-card" v-model:active="activeTab" :label-height="41" @change="handleTabChange">
-        <BkTabPanel v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label"></BkTabPanel>
-      </BkTab>
-    </div>
-    <section class="version-operations">
-      <CreateVersion
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        @confirm="handleVersionCreated" />
-      <PublishVersion
-        ref="publishVersionRef"
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        @confirm="refreshVesionList" />
-      <ModifyGroupPublish
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        @confirm="refreshVesionList" />
-    </section>
+    <template v-if="!props.versionDetailView">
+      <div class="detail-header-tabs">
+        <BkTab type="unborder-card" v-model:active="activeTab" :label-height="41" @change="handleTabChange">
+          <BkTabPanel v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label"></BkTabPanel>
+        </BkTab>
+      </div>
+      <section class="version-operations">
+        <CreateVersion
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          @confirm="handleVersionCreated" />
+        <PublishVersion
+          ref="publishVersionRef"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          @confirm="refreshVesionList" />
+        <ModifyGroupPublish
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          @confirm="refreshVesionList" />
+      </section>
+    </template>
   </div>
 </template>
 <style lang="scss" scoped>

@@ -56,21 +56,34 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
-	// ReleasedAppTemplateBindings : 记录已发布服务版本与模版套餐及模版版本的绑定情况
-	type ReleasedAppTemplateBindings struct {
+	// ReleasedAppTemplates : 记录已发布服务版本的模版情况
+	type ReleasedAppTemplates struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		TemplateSpaceIDs    string `gorm:"type:json not null"`
-		TemplateSetIDs      string `gorm:"type:json not null"`
-		TemplateIDs         string `gorm:"type:json not null"`
-		TemplateRevisionIDs string `gorm:"type:json not null"`
-		Bindings            string `gorm:"type:json not null"`
-		ReleaseID           uint   `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_RelID,priority:3"`
+		ReleaseID            uint   `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:3"`
+		TemplateSpaceID      uint   `gorm:"type:bigint(1) unsigned not null"`
+		TemplateSpaceName    string `gorm:"type:varchar(255) not null"`
+		TemplateSetID        uint   `gorm:"type:bigint(1) unsigned not null"`
+		TemplateSetName      string `gorm:"type:varchar(255) not null"`
+		TemplateID           uint   `gorm:"type:bigint(1) unsigned not null"`
+		Name                 string `gorm:"type:varchar(255) not null"`
+		Path                 string `gorm:"type:varchar(255) not null"`
+		TemplateRevisionID   uint   `gorm:"type:bigint(1) unsigned not null"`
+		IsLatest             bool   `gorm:"boolean default false"`
+		TemplateRevisionName string `gorm:"type:varchar(255) not null"`
+		TemplateRevisionMemo string `gorm:"type:varchar(256) default ''"`
+		FileType             string `gorm:"type:varchar(20) not null"`
+		FileMode             string `gorm:"type:varchar(20) not null"`
+		User                 string `gorm:"type:varchar(64) not null"`
+		UserGroup            string `gorm:"type:varchar(64) not null"`
+		Privilege            string `gorm:"type:varchar(64) not null"`
+		Signature            string `gorm:"type:varchar(64) not null"`
+		ByteSize             uint   `gorm:"type:bigint(1) unsigned not null"`
 
 		// Attachment is attachment info of the resource
-		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_RelID,priority:1"`
-		AppID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_RelID,priority:2"`
+		BizID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:1"`
+		AppID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:2"`
 
 		// Revision is revision info of the resource
 		Creator   string    `gorm:"type:varchar(64) not null"`
@@ -82,7 +95,8 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		Name       string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_name,priority:2"`
+		// Name查询时区分大小写，设置collate为utf8_bin
+		Name       string `gorm:"type:varchar(255) collate utf8_bin not null;uniqueIndex:idx_bizID_name,priority:2"`
 		Type       string `gorm:"type:varchar(20) not null"`
 		DefaultVal string `gorm:"type:mediumtext"`
 		Memo       string `gorm:"type:varchar(256) default ''"`
@@ -120,12 +134,12 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
+		ReleaseID uint   `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_releaseID,priority:1"`
 		Variables string `gorm:"type:json not null"`
-		ReleaseID uint   `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_RelID,priority:3"`
 
 		// Attachment is attachment info of the resource
-		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_RelID,priority:1"`
-		AppID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID_RelID,priority:2"`
+		BizID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID,priority:1"`
+		AppID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID,priority:2"`
 
 		// Revision is revision info of the resource
 		Creator   string    `gorm:"type:varchar(64) not null"`
@@ -142,7 +156,7 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 
 	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").AutoMigrate(
 		&AppTemplateBindings{},
-		&ReleasedAppTemplateBindings{},
+		&ReleasedAppTemplates{},
 		&TemplateVariables{},
 		&AppTemplateVariables{},
 		&ReleasedAppTemplateVariables{},
@@ -152,7 +166,7 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 
 	if result := tx.Create([]IDGenerators{
 		{Resource: "app_template_bindings", MaxID: 0},
-		{Resource: "released_app_template_bindings", MaxID: 0},
+		{Resource: "released_app_templates", MaxID: 0},
 		{Resource: "template_variables", MaxID: 0},
 		{Resource: "app_template_variables", MaxID: 0},
 		{Resource: "released_app_template_variables", MaxID: 0},
@@ -176,7 +190,7 @@ func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
 
 	if err := tx.Migrator().DropTable(
 		"app_template_bindings",
-		"released_app_template_bindings",
+		"released_app_templates",
 		"template_variables",
 		"app_template_variables",
 		"released_app_template_variables",
@@ -186,7 +200,7 @@ func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
 
 	var resources = []string{
 		"app_template_bindings",
-		"released_app_template_bindings",
+		"released_app_templates",
 		"template_variables",
 		"app_template_variables",
 		"released_app_template_variables",

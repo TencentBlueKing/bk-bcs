@@ -9164,6 +9164,8 @@ func (m *InternetAccessible) validate(all bool) error {
 
 	// no validation rules for PublicIPAssigned
 
+	// no validation rules for BandwidthPackageId
+
 	if len(errors) > 0 {
 		return InternetAccessibleMultiError(errors)
 	}
@@ -41473,6 +41475,392 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudAccountTypeValidationError{}
+
+// Validate checks the field values on GetCloudBandwidthPackagesRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetCloudBandwidthPackagesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetCloudBandwidthPackagesRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetCloudBandwidthPackagesRequestMultiError, or nil if none found.
+func (m *GetCloudBandwidthPackagesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetCloudBandwidthPackagesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 1 {
+		err := GetCloudBandwidthPackagesRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetRegion()) < 1 {
+		err := GetCloudBandwidthPackagesRequestValidationError{
+			field:  "Region",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for AccountID
+
+	if len(errors) > 0 {
+		return GetCloudBandwidthPackagesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetCloudBandwidthPackagesRequestMultiError is an error wrapping multiple
+// validation errors returned by
+// GetCloudBandwidthPackagesRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetCloudBandwidthPackagesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetCloudBandwidthPackagesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetCloudBandwidthPackagesRequestMultiError) AllErrors() []error { return m }
+
+// GetCloudBandwidthPackagesRequestValidationError is the validation error
+// returned by GetCloudBandwidthPackagesRequest.Validate if the designated
+// constraints aren't met.
+type GetCloudBandwidthPackagesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCloudBandwidthPackagesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCloudBandwidthPackagesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCloudBandwidthPackagesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCloudBandwidthPackagesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCloudBandwidthPackagesRequestValidationError) ErrorName() string {
+	return "GetCloudBandwidthPackagesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetCloudBandwidthPackagesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCloudBandwidthPackagesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCloudBandwidthPackagesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCloudBandwidthPackagesRequestValidationError{}
+
+// Validate checks the field values on GetCloudBandwidthPackagesResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetCloudBandwidthPackagesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetCloudBandwidthPackagesResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetCloudBandwidthPackagesResponseMultiError, or nil if none found.
+func (m *GetCloudBandwidthPackagesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetCloudBandwidthPackagesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetCloudBandwidthPackagesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetCloudBandwidthPackagesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetCloudBandwidthPackagesResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetCloudBandwidthPackagesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetCloudBandwidthPackagesResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// GetCloudBandwidthPackagesResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetCloudBandwidthPackagesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetCloudBandwidthPackagesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetCloudBandwidthPackagesResponseMultiError) AllErrors() []error { return m }
+
+// GetCloudBandwidthPackagesResponseValidationError is the validation error
+// returned by GetCloudBandwidthPackagesResponse.Validate if the designated
+// constraints aren't met.
+type GetCloudBandwidthPackagesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCloudBandwidthPackagesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCloudBandwidthPackagesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCloudBandwidthPackagesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCloudBandwidthPackagesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCloudBandwidthPackagesResponseValidationError) ErrorName() string {
+	return "GetCloudBandwidthPackagesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetCloudBandwidthPackagesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCloudBandwidthPackagesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCloudBandwidthPackagesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCloudBandwidthPackagesResponseValidationError{}
+
+// Validate checks the field values on BandwidthPackageInfo with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *BandwidthPackageInfo) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on BandwidthPackageInfo with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// BandwidthPackageInfoMultiError, or nil if none found.
+func (m *BandwidthPackageInfo) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *BandwidthPackageInfo) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for Name
+
+	// no validation rules for NetworkType
+
+	// no validation rules for Status
+
+	// no validation rules for Bandwidth
+
+	if len(errors) > 0 {
+		return BandwidthPackageInfoMultiError(errors)
+	}
+
+	return nil
+}
+
+// BandwidthPackageInfoMultiError is an error wrapping multiple validation
+// errors returned by BandwidthPackageInfo.ValidateAll() if the designated
+// constraints aren't met.
+type BandwidthPackageInfoMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BandwidthPackageInfoMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BandwidthPackageInfoMultiError) AllErrors() []error { return m }
+
+// BandwidthPackageInfoValidationError is the validation error returned by
+// BandwidthPackageInfo.Validate if the designated constraints aren't met.
+type BandwidthPackageInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BandwidthPackageInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BandwidthPackageInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BandwidthPackageInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BandwidthPackageInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BandwidthPackageInfoValidationError) ErrorName() string {
+	return "BandwidthPackageInfoValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e BandwidthPackageInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBandwidthPackageInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BandwidthPackageInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BandwidthPackageInfoValidationError{}
 
 // Validate checks the field values on ListCloudOsImageRequest with the rules
 // defined in the proto definition for this message. If any rules are

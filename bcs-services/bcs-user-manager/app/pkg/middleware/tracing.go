@@ -25,6 +25,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/emicklei/go-restful"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
 
@@ -43,12 +44,20 @@ func TracingFilter(request *restful.Request, response *restful.Response, chain *
 	}
 	response.ResponseWriter = writer
 
-	// get http X-Request-Id
-	requestID := request.Request.Header.Get(constant.RequestIDHeaderKey)
 	ctx := request.Request.Context()
-	// 使用requestID当作TraceID
-	ctx = context.WithValue(ctx, constant.RequestIDKey, requestID)
-	ctx = traceUtil.ContextWithRequestID(ctx, requestID)
+	// 上游transparent的打通，判断Header 是否有放置Transparent
+	traceparent := request.Request.Header.Get(constant.Traceparent)
+	if traceparent != "" {
+		// 有则从上游解析Transparent
+		ctx = cfg.Propagators.Extract(ctx, propagation.HeaderCarrier(request.Request.Header))
+	} else {
+		// 没有则从request id截取生成
+		// get http X-Request-Id
+		requestID := request.Request.Header.Get(constant.RequestIDHeaderKey)
+		// 使用requestID当作TraceID
+		ctx = context.WithValue(ctx, constant.RequestIDKey, requestID)
+		ctx = traceUtil.ContextWithRequestID(ctx, requestID)
+	}
 
 	// 记录额外的信息
 	commonAttrs := semconv.NetAttributesFromHTTPRequest("tcp", request.Request)
@@ -91,6 +100,10 @@ func TracingFilter(request *restful.Request, response *restful.Response, chain *
 
 	// pass the span through the request context
 	request.Request = request.Request.WithContext(ctx)
+
+	// 返回Header添加Traceparent
+	cfg.Propagators.Inject(ctx, propagation.HeaderCarrier(response.Header()))
+
 	chain.ProcessFilter(request, response)
 
 	respBody := writer.b.String()

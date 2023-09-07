@@ -70,3 +70,21 @@ func (n NodeGroupSlice) Less(i, j int) bool {
 func (n NodeGroupSlice) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }
+
+// ClusterSlice cluster slice
+type ClusterSlice []*cmproto.Cluster
+
+// Len xxx
+func (n ClusterSlice) Len() int {
+	return len(n)
+}
+
+// Less xxx
+func (n ClusterSlice) Less(i, j int) bool {
+	return n[i].ClusterName < n[j].ClusterName
+}
+
+// Swap xxx
+func (n ClusterSlice) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
+}

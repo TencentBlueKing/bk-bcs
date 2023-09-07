@@ -25,6 +25,20 @@ const (
 	PortPoolBindingLabelKeyFromat = "portpool.%s.%s"
 	// PortPoolBindingAnnotationKeyKeepDuration annotation key for keep duration of port pool binding
 	PortPoolBindingAnnotationKeyKeepDuration = "keepduration.portbinding.bkbcs.tencent.com"
+
+	// PortBindingTypeLabelKey label key for portbinding type
+	PortBindingTypeLabelKey = "type.portbinding.bkbcs.tencent.com"
+	// PortBindingTypeNode mark portbinding is related to node
+	PortBindingTypeNode = "Node"
+	// PortBindingTypePod mark portbinding is related to pod, empty PortBindingType is regarded as pod
+	PortBindingTypePod = "Pod"
+
+	// NodePortBindingConfigMapName name of node portbinding configmap, stores binding ports info of node
+	NodePortBindingConfigMapName = "bcs-ingress-controller-node-port-binding"
+	// NodePortBindingConfigMapNsLabel mark namespace that need injected configmap
+	NodePortBindingConfigMapNsLabel = "bcs-ingress-controller-node-port-binding-configmap-inject"
+	// NodePortBindingConfigMapNsLabelValue mark namespace that need injected configmap
+	NodePortBindingConfigMapNsLabelValue = "true"
 )
 
 // PortBindingItem defines the port binding item
@@ -75,6 +89,7 @@ type PortBindingStatus struct {
 	Status                string                   `json:"status"`
 	UpdateTime            string                   `json:"updateTime"`
 	PortBindingStatusList []*PortBindingStatusItem `json:"portPoolBindStatusList,omitempty"`
+	PortBindingType       string                   `json:"portBindingType,omitempty"`
 }
 
 // +kubebuilder:object:root=true

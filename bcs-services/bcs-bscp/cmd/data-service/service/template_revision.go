@@ -77,7 +77,7 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 			// no need to validate the template revision which just created
 			// the query operation in genFinalATB method are not in the same transaction with the update operation
 			// query it will cause error: `template release id is not exist`
-			if err := s.genFinalATB(kt, atb, false); err != nil {
+			if err := s.genFinalATBWithTx(kt, tx, atb, []uint32{req.Attachment.TemplateId}); err != nil {
 				logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
 				tx.Rollback()
 				return nil, err

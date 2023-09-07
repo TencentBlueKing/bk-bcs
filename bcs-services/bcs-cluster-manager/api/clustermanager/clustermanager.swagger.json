@@ -1118,6 +1118,53 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/bwps": {
+      "get": {
+        "summary": "查询云共享带宽包",
+        "description": "查询云共享带宽包",
+        "operationId": "ClusterManager_GetCloudBandwidthPackages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetCloudBandwidthPackagesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID, 通过指定的云账号信息获取",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/clusters": {
       "get": {
         "summary": "查询cloud地域集群列表",
@@ -5814,6 +5861,27 @@
       "description": "标准运维模板信息记录，用于自动化工作流程记录",
       "title": "BKOpsPlugin"
     },
+    "clustermanagerBandwidthPackageInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "networkType": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "bandwidth": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
     "clustermanagerBatchDeleteClusterNodesResponse": {
       "type": "object",
       "properties": {
@@ -10083,6 +10151,42 @@
         "message"
       ]
     },
+    "clustermanagerGetCloudBandwidthPackagesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerBandwidthPackageInfo"
+          },
+          "description": "获取云共享带宽包列表",
+          "title": "data"
+        }
+      },
+      "description": "查询云共享带宽包",
+      "title": "GetCloudBandwidthPackagesResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerGetCloudRegionZonesResponse": {
       "type": "object",
       "properties": {
@@ -11215,6 +11319,11 @@
           "format": "boolean",
           "description": "是否分配公网IP。默认为false。",
           "title": "publicIPAssigned"
+        },
+        "bandwidthPackageId": {
+          "type": "string",
+          "description": "共享带宽包ID",
+          "title": "bandwidthPackageId"
         }
       },
       "title": "InternetAccessible 公网带宽设置"

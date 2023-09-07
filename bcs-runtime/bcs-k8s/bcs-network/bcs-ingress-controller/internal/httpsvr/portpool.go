@@ -14,6 +14,7 @@ package httpsvr
 
 import (
 	"context"
+	"strings"
 
 	"github.com/emicklei/go-restful"
 
@@ -28,4 +29,23 @@ func (h *HttpServerClient) listPortPool(request *restful.Request, response *rest
 	}
 	data := CreateResponseData(nil, "success", poolList)
 	_, _ = response.Write(data)
+}
+
+func (h *HttpServerClient) getNodePortBindings(request *restful.Request, response *restful.Response) {
+	cache := h.NodePortBindCache.GetCache()
+	nodes := strings.TrimSpace(request.QueryParameter("nodes"))
+	if nodes == "" {
+		_, _ = response.Write(CreateResponseData(nil, "success", cache))
+		return
+	}
+	nodesArr := strings.Split(nodes, ",")
+	newMap := make(map[string]string)
+	for i := range nodesArr {
+		node := nodesArr[i]
+		v, ok := cache[node]
+		if ok {
+			newMap[node] = v
+		}
+	}
+	_, _ = response.Write(CreateResponseData(nil, "success", newMap))
 }

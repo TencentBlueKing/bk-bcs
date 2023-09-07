@@ -6,6 +6,9 @@ import { GET_UNNAMED_VERSION_DATE } from '../constants/config'
 
 export const useConfigStore = defineStore('config', () => {
 
+  // 非套餐配置和模板配置项总数量
+  const allConfigCount = ref(0)
+
   // 当前选中版本, 用id为0表示未命名版本
   const versionData = ref<IConfigVersion>(GET_UNNAMED_VERSION_DATE())
 
@@ -15,5 +18,5 @@ export const useConfigStore = defineStore('config', () => {
   // 是否需要刷新版本列表标识，配置生成版本、发布版本、调整分组上线之后需要更新版本列表
   const refreshVersionListFlag = ref(false)
 
-  return { versionData, versionDetailView, refreshVersionListFlag }
+  return { allConfigCount, versionData, versionDetailView, refreshVersionListFlag }
 })

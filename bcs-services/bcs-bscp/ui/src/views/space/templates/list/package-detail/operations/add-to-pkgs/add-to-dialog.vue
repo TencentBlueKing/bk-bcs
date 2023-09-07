@@ -2,10 +2,11 @@
   import { ref, computed, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue';
-  import { ITemplateConfigItem } from '../../../../../../../../types/template';
+  import { ITemplateConfigItem, IPackagesCitedByApps } from '../../../../../../../../types/template';
   import { useGlobalStore } from '../../../../../../../store/global'
   import { useTemplateStore } from '../../../../../../../store/template'
-  import { addTemplateToPackage } from '../../../../../../../api/template'
+  import { addTemplateToPackage, getUnNamedVersionAppsBoundByPackages } from '../../../../../../../api/template'
+  import LinkToApp from '../../../components/link-to-app.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
@@ -19,6 +20,8 @@
 
   const formRef = ref()
   const selectedPkgs = ref<number[]>([])
+  const loading = ref(false)
+  const citedList = ref<IPackagesCitedByApps[]>([])
   const pending = ref(false)
 
   const allPackages = computed(() => {
@@ -29,11 +32,37 @@
     return props.value.length > 1
   })
 
+  const maxTableHeight = computed(() => {
+    const windowHeight = window.innerHeight
+    return windowHeight * 0.6 - 200
+  })
+
   watch(() => props.show, val => {
     if (val) {
       selectedPkgs.value =[]
+      citedList.value = []
+      pending.value = false
     }
   })
+
+  const getCitedData = async() => {
+    loading.value = true
+    const params = {
+      start: 0,
+      all: true
+    }
+    const res = await getUnNamedVersionAppsBoundByPackages(spaceId.value, currentTemplateSpace.value, selectedPkgs.value, params)
+    citedList.value = res.details
+    loading.value = false
+  }
+
+  const handPkgsChange = () => {
+    if (selectedPkgs.value.length > 0) {
+      getCitedData()
+    } else {
+      citedList.value = []
+    }
+  }
 
   const handleConfirm = async () => {
     const isValid = await formRef.value.validate()
@@ -81,7 +110,7 @@
     <div v-if="isMultiple" class="selected-mark">已选 <span class="num">{{ props.value.length }}</span> 个配置项</div>
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
       <bk-form-item :label="isMultiple ? '添加至模板套餐' : '模板套餐'" property="pkgs" required>
-        <bk-select v-model="selectedPkgs" multiple>
+        <bk-select v-model="selectedPkgs" multiple @change="handPkgsChange">
           <bk-option
             v-for="pkg in allPackages"
             :key="pkg.id"
@@ -92,10 +121,19 @@
       </bk-form-item>
     </bk-form>
     <p class="tips">以下服务配置的未命名版本中将添加已选配置项的 <span class="notice">latest 版本</span></p>
-    <bk-table>
-      <bk-table-column label="模板套餐"></bk-table-column>
-      <bk-table-column label="使用此套餐的服务"></bk-table-column>
-    </bk-table>
+    <bk-loading style="min-height: 100px;" :loading="loading">
+      <bk-table :data="citedList" :max-height="maxTableHeight">
+        <bk-table-column label="目标模板套餐" prop="template_set_name"></bk-table-column>
+        <bk-table-column label="使用此套餐的服务">
+          <template #default="{ row }">
+            <div v-if="row.app_id" class="app-info">
+              <div v-overflow-title class="name-text">{{ row.app_name }}</div>
+              <LinkToApp class="link-icon" :id="row.app_id" />
+            </div>
+          </template>
+        </bk-table-column>
+      </bk-table>
+    </bk-loading>
   </bk-dialog>
 </template>
 <style lang="scss" scoped>
@@ -137,6 +175,20 @@
     color: #63656e;
     .notice {
       color: #ff9c01;
+    }
+  }
+  .app-info {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    .name-text {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .link-icon {
+      flex-shrink: 0;
+      margin-left: 10px;
     }
   }
 </style>

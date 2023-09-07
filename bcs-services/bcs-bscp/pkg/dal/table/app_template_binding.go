@@ -21,7 +21,7 @@ import (
 	"bscp.io/pkg/dal/types"
 )
 
-// AppTemplateBinding 应用模版绑定
+// AppTemplateBinding 未命名版本服务的模版绑定
 type AppTemplateBinding struct {
 	ID         uint32                        `json:"id" gorm:"primaryKey"`
 	Spec       *AppTemplateBindingSpec       `json:"spec" gorm:"embedded"`

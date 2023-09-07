@@ -198,8 +198,7 @@ close_swap() {
 }
 
 stop_firewalld() {
-    firewall_status=$(systemctl is-active firewalld)
-    if [[ $firewall_status == "active" ]]; then
+	if systemctl is-active firewalld; then
         utils::log "INFO" "Stop firewalld"
         systemctl stop firewalld
         systemctl disable firewalld

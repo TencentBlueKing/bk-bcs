@@ -28,6 +28,9 @@ func CustomHeaderMatcher(key string) (string, bool) {
 	switch key {
 	case "X-Request-Id":
 		return "X-Request-Id", true
+	case "Traceparent":
+		// http -> grpc Traceparent
+		return "Traceparent", true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

@@ -78,8 +78,8 @@ init_bap_rule() {
       if ! command -v ctr &>/dev/null; then
         utils::log "ERROR" "containerd client: ctr is not found"
       fi
-      if ctr i pull --hosts-dir "/etc/containerd/certs.d" "${bap_image}"; then
-        if ! ctr run --rm --mount type=bind,src="${PROXY_TOOL_PATH}",dst=/tmp,options=rbind:rw "${bap_image}" \
+      if ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "${bap_image}"; then
+        if ! ctr -n k8s.io run --rm --mount type=bind,src="${PROXY_TOOL_PATH}",dst=/tmp,options=rbind:rw "${bap_image}" \
           bap-copy."$(date +%s)" /bin/cp -f /data/bcs/bcs-apiserver-proxy/apiserver-proxy-tools /tmp/; then
           utils::log "ERROR" "containerd fail to run ${bap_image}"
         fi
@@ -106,7 +106,6 @@ safe_source "${ROOT_DIR}/functions/k8s.sh"
 
 "${ROOT_DIR}"/system/config_envfile.sh -c init
 "${ROOT_DIR}"/system/config_system.sh -c dns sysctl
-"${ROOT_DIR}"/system/config_iptables.sh add
 "${ROOT_DIR}"/k8s/install_cri.sh
 "${ROOT_DIR}"/k8s/install_k8s_tools
 "${ROOT_DIR}"/k8s/render_kubeadm
@@ -122,20 +121,21 @@ case "${K8S_CSI,,}" in
     ;;
 esac
 
-# pull image
-if [[ -n ${BCS_OFFLINE:-} ]]; then
-  # import local image
-  true
-fi
 kubeadm --config="${ROOT_DIR}/kubeadm-config" config images pull \
   || utils::log "FATAL" "fail to pull k8s image"
 
-kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11
+if systemctl is-active kubelet.service -q; then
+  utils::log "WARN" "kubelet service is active now, skip kubeadm join"
+else
+  kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
+    || utils::log "FATAL" "${LAN_IP} failed to join cluster: ${K8S_CTRL_IP}"
+fi
+
 if [[ "${ENABLE_APISERVER_HA}" == "true" ]]; then
   if [[ "${APISERVER_HA_MODE}" == "bcs-apiserver-proxy" ]]; then
     init_bap_rule
   else
     "${ROOT_DIR}"/system/config_bcs_dns -u "${VIP}" k8s-api.bcs.local
-    systemctl restart kubelet.service
+    k8s::restart_kubelet
   fi
 fi

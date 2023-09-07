@@ -16,12 +16,12 @@ message AppTemplateBinding {
 
 // AppTemplateBindingSpec source resource reference: pkg/dal/table/app_template_binding.go
 message AppTemplateBindingSpec {
-    repeated uint32          template_space_ids           = 1;
-    repeated uint32          template_set_ids             = 2;
-    repeated uint32          template_ids                 = 3;
-    repeated uint32          template_revision_ids        = 4;
-    repeated uint32          latest_template_ids = 5;
-    repeated TemplateBinding bindings                     = 6;
+    repeated uint32          template_space_ids    = 1;
+    repeated uint32          template_set_ids      = 2;
+    repeated uint32          template_ids          = 3;
+    repeated uint32          template_revision_ids = 4;
+    repeated uint32          latest_template_ids   = 5;
+    repeated TemplateBinding bindings              = 6;
 }
 
 // TemplateBinding source resource reference: pkg/dal/table/app_template_binding.go
@@ -65,4 +65,30 @@ message AppBoundTmplRevision {
     uint64 byte_size              = 18;
     string creator                = 19;
     string create_at              = 20;
+}
+
+// ReleasedAppBoundTmplRevision is released app bound template revision
+message ReleasedAppBoundTmplRevision {
+    uint32 template_space_id      = 1;
+    string template_space_name    = 2;
+    uint32 template_set_id        = 3;
+    string template_set_name      = 4;
+    uint32 template_id            = 5;
+    string name                   = 6;
+    string path                   = 7;
+    uint32 template_revision_id   = 8;
+    bool   is_latest              = 9;
+    string template_revision_name = 10;
+    string template_revision_memo = 11;
+    string file_type              = 12;
+    string file_mode              = 13;
+    string user                   = 14;
+    string user_group             = 15;
+    string privilege              = 16;
+    string signature              = 17;
+    uint64 byte_size              = 18;
+    string rendered_signature     = 19;
+    uint64 rendered_byte_size     = 20;
+    string creator                = 21;
+    string create_at              = 22;
 }

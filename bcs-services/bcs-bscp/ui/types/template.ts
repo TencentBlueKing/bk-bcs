@@ -75,6 +75,13 @@ export interface ITemplateConfigItem {
     update_at: string;
   }
 }
+// 模板被套餐引用详情
+export interface ITemplateCitedByPkgs {
+  template_id: number;
+  template_name: string;
+  template_set_id: number;
+  template_set_name: string;
+}
 
 // 单个模板套餐被多个服务引用数据
 

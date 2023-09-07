@@ -48,7 +48,8 @@ func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 		return cacheResult.(*Project), nil
 	}
 
-	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", config.GetGlobalConfig().BcsAPI.Host, projectIDOrCode)
+	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", config.GetGlobalConfig().BcsAPI.InnerHost,
+		projectIDOrCode)
 	resp, err := GetClient().R().
 		SetContext(ctx).
 		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
@@ -70,7 +71,7 @@ func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 
 // QueryProjects query projects
 func QueryProjects(ctx context.Context, limit, offset int, params map[string]string) (*ProjectData, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects", config.GetGlobalConfig().BcsAPI.Host)
+	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects", config.GetGlobalConfig().BcsAPI.InnerHost)
 
 	if params == nil {
 		params = make(map[string]string)
@@ -104,7 +105,7 @@ type Namespace struct {
 // GetClusterNamespaces get cluster namespaces
 func GetClusterNamespaces(ctx context.Context, projectID, clusterID string) ([]Namespace, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s/clusters/%s/namespaces",
-		config.GetGlobalConfig().BcsAPI.Host, projectID, clusterID)
+		config.GetGlobalConfig().BcsAPI.InnerHost, projectID, clusterID)
 
 	resp, err := GetClient().R().
 		SetContext(ctx).

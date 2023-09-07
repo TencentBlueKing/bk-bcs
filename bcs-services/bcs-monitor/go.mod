@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
-	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230707021219-f1a826a905d5
+	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230901032130-5c3e207129c5
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20230506100250-1d5620f4abf4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230602131736-2c6f5ea23f31
 	github.com/TencentBlueKing/bkmonitor-kits v0.2.0

@@ -100,7 +100,7 @@
       <template #default="{ row }">
         <div class="actions-wrapper">
           <bk-button text theme="primary" @click="handleOpenDiffSlider(row)">版本对比</bk-button>
-          <bk-button text theme="primary" :disabled="pagination.count === 1" @click="handleDeleteVersion(row)">删除</bk-button>
+          <!-- <bk-button text theme="primary" :disabled="pagination.count === 1" @click="handleDeleteVersion(row)">删除</bk-button> -->
         </div>
       </template>
     </bk-table-column>

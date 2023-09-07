@@ -1,6 +1,6 @@
 import http from "../request"
 import { ICommonQuery } from '../../types/index'
-import { ITemplatePackageEditParams, ITemplateVersionEditingData } from '../../types/template'
+import { ITemplatePackageEditParams, ITemplateVersionEditingData, ITemplateCitedByPkgs } from '../../types/template'
 import { IConfigEditParams } from '../../types/config'
 
 /**
@@ -139,7 +139,7 @@ export const getUnNamedVersionAppsBoundByPackage = (biz_id: string, template_spa
 export const getUnNamedVersionAppsBoundByPackages = (biz_id: string, template_space_id: number, template_sets: number[], params: ICommonQuery) => {
   return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/bound_unnamed_app_details`, {
     params: { template_set_ids: template_sets.join(','), ...params }
-  })
+  }).then(res => res.data);
 }
 
 /**
@@ -254,7 +254,7 @@ export const moveOutTemplateFromPackage = (biz_id: string, template_space_id: nu
 }
 
 /**
- * 查询模板被套餐引用详情
+ * 查询单个模板被套餐引用详情
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
  * @param template_id 模板ID
@@ -274,13 +274,17 @@ export const getPackagesByTemplateId = (biz_id: string, template_space_id: numbe
  * @returns
  */
 export const getPackagesByTemplateIds = (biz_id: string, template_space_id: number, template_ids: number[]) => {
-  // @todo 需要后台提供接口
-  // return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/bound_template_set_details`, { params: { template_ids.join(',') } }).then(res => res.data)
-  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_ids[0]}/bound_template_set_details`, { params: {start: 0, all: true } }).then(res => {
-    const list = []
-    for(let i = 0; i < template_ids.length; i++) {
-      list.push(res.data.details)
-    }
+  const params = {
+    template_ids: template_ids.join(','),
+    start: 0,
+    all: true
+  }
+  return http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/bound_template_set_details`, { params }).then(res => {
+    const list: ITemplateCitedByPkgs[][] = []
+    template_ids.forEach((id, index) => {
+      const data = res.data.details.filter((item: ITemplateCitedByPkgs) => item.template_id === id)
+      list[index] = data
+    })
     return { details: list }
   })
 }
@@ -379,6 +383,19 @@ export const getCountsByTemplateVersionIds = (biz_id: string, template_space_id:
 export const getUnNamedVersionAppsBoundByTemplateVersion = (biz_id: string, template_space_id: number, template_id: number, template_revision_id: number, params: ICommonQuery) => {
   return http
     .get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions/${template_revision_id}/bound_unnamed_app_details`, { params })
+    .then(res => res.data)
+}
+
+/**
+ * 获取模板latest版本被未命名版本服务引用详情
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @returns
+ */
+export const getUnNamedVersionAppsBoundByLatestTemplateVersion = (biz_id: string, template_space_id: number, template_id: number, params: ICommonQuery) => {
+  return http
+    .get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/latest/bound_unnamed_app_details`, { params })
     .then(res => res.data)
 }
 

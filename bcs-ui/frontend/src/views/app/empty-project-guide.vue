@@ -59,7 +59,8 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, computed, toRef, reactive } from 'vue';
+import { computed, defineComponent, reactive, toRef } from 'vue';
+
 import $router from '@/router';
 
 export default defineComponent({

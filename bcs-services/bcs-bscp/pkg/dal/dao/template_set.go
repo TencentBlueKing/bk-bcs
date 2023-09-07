@@ -38,13 +38,17 @@ type TemplateSet interface {
 	// UpdateWithTx update one template set's info with transaction.
 	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, templateSet *table.TemplateSet) error
 	// List template sets with options.
-	List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) ([]*table.TemplateSet, int64, error)
+	List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) (
+		[]*table.TemplateSet, int64, error)
 	// Delete one template set instance.
 	Delete(kit *kit.Kit, templateSet *table.TemplateSet) error
 	// DeleteWithTx delete one template set instance with transaction.
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, templateSet *table.TemplateSet) error
 	// GetByUniqueKey get template set by unique key.
 	GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID uint32, name string) (*table.TemplateSet, error)
+	// GetByUniqueKeyForUpdate get template set by unique key for update which allow to update name.
+	GetByUniqueKeyForUpdate(kit *kit.Kit, bizID, templateSpaceID, selfID uint32, name string) (
+		*table.TemplateSet, error)
 	// ListByIDs list template sets by template set ids.
 	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSet, error)
 	// AddTemplatesToTemplateSets add templates to template sets.
@@ -187,7 +191,8 @@ func (dao *templateSetDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.
 }
 
 // List template sets with options.
-func (dao *templateSetDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) ([]*table.TemplateSet, int64, error) {
+func (dao *templateSetDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) (
+	[]*table.TemplateSet, int64, error) {
 	m := dao.genQ.TemplateSet
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
 
@@ -286,6 +291,21 @@ func (dao *templateSetDao) GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID u
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
 
 	tplSet, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID), m.Name.Eq(name)).Take()
+	if err != nil {
+		return nil, fmt.Errorf("get template space failed, err: %v", err)
+	}
+
+	return tplSet, nil
+}
+
+// GetByUniqueKeyForUpdate get template set by unique key for update which allow to update name.
+func (dao *templateSetDao) GetByUniqueKeyForUpdate(kit *kit.Kit, bizID, templateSpaceID, selfID uint32,
+	name string) (*table.TemplateSet, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	tplSet, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID),
+		m.ID.Neq(selfID), m.Name.Eq(name)).Take()
 	if err != nil {
 		return nil, fmt.Errorf("get template space failed, err: %v", err)
 	}

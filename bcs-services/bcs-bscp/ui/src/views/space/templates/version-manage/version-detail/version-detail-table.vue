@@ -16,7 +16,7 @@
     versionId: number;
   }>()
 
-  const emits = defineEmits(['close', 'refresh', 'select'])
+  const emits = defineEmits(['close', 'select', 'created'])
 
   const versionName = ref('')
   const templateName = ref('')
@@ -54,11 +54,6 @@
     }
   }, { immediate: true })
 
-  const handleCreated = (id: number) => {
-    emits('refresh')
-    emits('select', id)
-  }
-
 </script>
 <template>
   <div class="version-detail-table">
@@ -87,7 +82,7 @@
         :template-name="templateName"
         :data="versionEditingData"
         :type="props.type"
-        @created="handleCreated"
+        @created="emits('created', $event)"
         @close="emits('close')" />
     </div>
   </div>
