@@ -25,6 +25,15 @@ type Logger interface {
 	Info(args ...interface{})
 }
 
+// Log is a logger.
+type Log struct {
+}
+
+// Info log info
+func (l *Log) Info(args ...interface{}) {
+	fmt.Println(args...)
+}
+
 // SplitSlice splits a slice of any type into smaller slices of given length.
 // It returns a 2D slice of the same type as the input slice.
 // If the length of the input slice is not divisible by the given length, the last slice may have fewer elements.

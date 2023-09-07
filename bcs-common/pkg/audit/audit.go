@@ -19,7 +19,6 @@ import (
 
 	"github.com/TencentBlueKing/bk-audit-go-sdk/bkaudit"
 	"github.com/go-playground/validator/v10"
-	"k8s.io/klog"
 )
 
 const (
@@ -39,7 +38,7 @@ type Client struct {
 // NewClient returns a new audit client.
 func NewClient(host, token string, logger Logger) *Client {
 	if logger == nil {
-		logger = klog.V(0)
+		logger = &Log{}
 	}
 	// init formatter
 	var formatter = &bkaudit.EventFormatter{}
@@ -51,6 +50,10 @@ func NewClient(host, token string, logger Logger) *Client {
 		logger.Info("init auditClient client failed, %s", err.Error())
 		return nil
 	}
+
+	// init activity client
+	start()
+
 	return &Client{
 		logger:   logger,
 		bcsHost:  host,
@@ -67,6 +70,11 @@ func (c *Client) R() *Recorder {
 		enableAudit:    true,
 		enableActivity: true,
 	}
+}
+
+// Close closes the client.
+func (c *Client) Close() {
+	stop()
 }
 
 // Recorder is a recorder for audit and activity.
@@ -182,7 +190,7 @@ func (r *Recorder) Do() error {
 			extraData, _ := json.Marshal(r.result.ExtraData)
 			extra = string(extraData)
 		}
-		PushActivity(Activity{
+		pushActivity(Activity{
 			ProjectCode:  r.resource.ProjectCode,
 			ResourceType: r.resource.ResourceType,
 			ResourceName: r.resource.ResourceName,
@@ -223,8 +231,8 @@ type Action struct {
 type ActionResult struct {
 	// 操作结果状态，如: success, failed
 	Status ActivityStatus `validate:"required"`
-	// 操作结果代码，为 http 返回码，如: 200, 400, 500
-	ResultCode int `validate:"required"`
+	// 操作结果代码，为 http 返回码，如: 200, 400, 500，或者 0 表示成功
+	ResultCode int
 	// 操作结果描述，如: 创建了 xxx 应用
 	ResultContent string
 	// 扩展字段，可以自定义一些信息，供操作记录和其他功能联动，如 cluster-manager 任务

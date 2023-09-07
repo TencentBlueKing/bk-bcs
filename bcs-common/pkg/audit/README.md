@@ -24,4 +24,6 @@ err := auditClient.R().SetContext(auditCtx).SetResource(resource).SetAction(acti
 auditClient.R().DisableAudit()
 // 关闭操作记录
 auditClient.R().DisableActivity()
+// 程序停止后，关闭操作记录数据通道
+auditClient.Close()
 ```

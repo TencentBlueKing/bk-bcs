@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"k8s.io/klog"
@@ -65,7 +66,7 @@ const (
 	// ResourceTypeNamespace means the resource type is namespace
 	ResourceTypeNamespace ResourceType = "namespace"
 	// ResourceTypeTemplateSet means the resource type is template set
-	ResourceTypeTemplateSet ResourceType = "template_set"
+	ResourceTypeTemplateSet ResourceType = "templateset"
 	// ResourceTypeVariable means the resource type is variable
 	ResourceTypeVariable ResourceType = "variable"
 	// ResourceTypeK8SResource means the resource type is k8s resource
@@ -113,59 +114,87 @@ type Error struct {
 }
 
 var (
-	activityChan = make(chan Activity, 10000)
-	activityOnce sync.Once
+	activityChan       = make(chan Activity, 10000)
+	activityChanClosed int32
+	activityOnce       sync.Once
 
 	bcsHost string
 	token   string
 )
 
-func init() {
+func start() {
 	activityOnce.Do(func() {
 		go func() {
-			// pushActivity every 10 seconds
+			// consumeActivity every 10 seconds
 			for range time.Tick(10 * time.Second) {
-				activity := make([]Activity, 0)
-				for {
-					select {
-					case a := <-activityChan:
-						activity = append(activity, a)
-					default:
-						batchPushActivity(activity)
-						if len(activity) > 0 {
-							klog.Infof("push activity success, total %d", len(activity))
-							// reset activity
-							activity = activity[:0]
-						}
-						goto END
-					}
-				}
-			END:
+				consumeActivity()
 			}
 		}()
 	})
 }
 
-// PushActivity push activity to queue
-func PushActivity(activity Activity) {
+func stop() {
+	close(activityChan)
+	atomic.AddInt32(&activityChanClosed, int32(1))
+	// consume remaining activity
+	consumeActivity()
+}
+
+func consumeActivity() {
+	activity := make([]Activity, 0)
+
+	// push activity
+	do := func() {
+		batchPushActivity(activity)
+		if len(activity) > 0 {
+			klog.Infof("push activity success, total %d", len(activity))
+			// reset activity
+			activity = activity[:0]
+		}
+	}
+
+	// if activityChan is closed or empty, push activity
+	for {
+		select {
+		case a, ok := <-activityChan:
+			if !ok {
+				do()
+				return
+			}
+			activity = append(activity, a)
+		default:
+			do()
+			return
+		}
+	}
+}
+
+// pushActivity push activity to queue
+func pushActivity(activity Activity) {
+	if a := atomic.LoadInt32(&activityChanClosed); a > 0 {
+		klog.Warningf("activity chan is closed, ignore activity")
+		return
+	}
 	go func() {
 		activityChan <- activity
 	}()
 }
 
+// batchPushActivity splits the input slice of Activity into smaller slices of 100 elements each and creates a new
+// goroutine for each slice to push the activities to the audit log
 func batchPushActivity(activity []Activity) {
 	activities := SplitSlice(activity, 100)
 	for _, v := range activities {
 		go func(data []Activity) {
-			if err := pushActivity(data); err != nil {
+			if err := createActivity(data); err != nil {
 				klog.Errorf("push activity failed, %s", err.Error())
 			}
 		}(v)
 	}
 }
 
-// PushActivity push activity to audit
-func pushActivity(activity []Activity) error {
+// createActivity call bcs-api to create activity
+func createActivity(activity []Activity) error {
 	body := ActivityReq{
 		Activities: activity,
 	}
