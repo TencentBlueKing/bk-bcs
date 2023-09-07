@@ -95,6 +95,8 @@ func (h hook) TableName() string { return h.hookDo.TableName() }
 
 func (h hook) Alias() string { return h.hookDo.Alias() }
 
+func (h hook) Columns(cols ...field.Expr) gen.Columns { return h.hookDo.Columns(cols...) }
+
 func (h *hook) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := h.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -233,10 +235,6 @@ func (h hookDo) Select(conds ...field.Expr) IHookDo {
 
 func (h hookDo) Where(conds ...gen.Condition) IHookDo {
 	return h.withDO(h.DO.Where(conds...))
-}
-
-func (h hookDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IHookDo {
-	return h.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (h hookDo) Order(conds ...field.Expr) IHookDo {

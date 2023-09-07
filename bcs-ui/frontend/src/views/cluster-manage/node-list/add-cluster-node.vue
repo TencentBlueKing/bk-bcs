@@ -10,7 +10,7 @@
               <span
                 v-bk-tooltips="{
                   disabled: !isImportCluster,
-                  content: $t('cluster.nodeList.tips.disableImportClusterAction')
+                  content: $t('cluster.nodeList.tips.disableImportClusterAddNode')
                 }">
                 {{ $t('manualNode.title.source.existingServer') }}
               </span>
@@ -102,12 +102,10 @@
                     </div>
                   </bcs-option>
                 </bcs-option-group>
-                <template #extension>
-                  <span class="cursor-pointer" @click="handleGotoNodePool('')">
-                    <i class="bcs-icon bcs-icon-fenxiang mr5 !text-[12px]"></i>
-                    {{ $t('manualNode.button.gotoNodePool') }}
-                  </span>
-                </template>
+                <span slot="extension" class="cursor-pointer" @click="handleGotoNodePool('')">
+                  <i class="bcs-icon bcs-icon-fenxiang mr5 !text-[12px]"></i>
+                  {{ $t('manualNode.button.gotoNodePool') }}
+                </span>
               </bcs-select>
               <span
                 class="ml10 text-[12px] cursor-pointer"

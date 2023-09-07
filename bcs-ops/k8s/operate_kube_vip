@@ -57,7 +57,7 @@ op_kubevip() {
     kubevip_image="ghcr.io/kube-vip/kube-vip:${KUBE_VIP_VERSION}"
     utils::log "ERROR" "${action} kube-vip failed, empty BK_PUBLIC_REPO or KUBE_VIP_VERSION"
   else
-    kubevip_image="${BK_PUBLIC_REPO}/kube-vip/kube-vip:${KUBE_VIP_VERSION}"
+    kubevip_image="${BK_PUBLIC_REPO}/registry.k8s.io/kube-vip:${KUBE_VIP_VERSION}"
   fi
   utils::log "INFO" "${action}ing kube-vip"
   case $action in

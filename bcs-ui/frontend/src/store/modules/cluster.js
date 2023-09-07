@@ -27,12 +27,12 @@
 import _ from 'lodash';
 
 import http from '@/api';
-import { json2Query, sort } from '@/common/util';
 import {
   fetchNodePodsData,
 } from '@/api/base';
 import { fetchClusterList } from '@/api/modules/cluster-manager';
 import { projectBusiness } from '@/api/modules/project';
+import { json2Query } from '@/common/util';
 
 export default {
   namespaced: true,
@@ -58,8 +58,8 @@ export default {
         project_id: item.projectID,
         ...item,
       }));
-      const sortData = sort(clusterList, 'clusterName');
-      state.clusterList.splice(0, state.clusterList.length, ...sortData);
+      // const sortData = sort(clusterList, 'clusterName');
+      state.clusterList.splice(0, state.clusterList.length, ...clusterList);
       state.isClusterDataReady = true;
     },
     updateClusterWebAnnotations(state, data) {

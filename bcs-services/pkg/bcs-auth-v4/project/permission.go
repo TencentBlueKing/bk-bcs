@@ -17,7 +17,6 @@ import (
 	blog "k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
 )
 
@@ -95,7 +94,6 @@ func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, 
 		Operation: CanEditProjectOperation,
 		User:      user,
 	}, resources, perms)
-	defer audit.AddEvent(ProjectEdit.String(), string(SysProject), projectID, user, allow, nil)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -144,7 +142,6 @@ func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool
 		Operation: CanDeleteProjectOperation,
 		User:      user,
 	}, resources, perms)
-	defer audit.AddEvent(ProjectDelete.String(), string(SysProject), projectID, user, allow, nil)
 
 	if err != nil {
 		return false, "", nil, err
@@ -191,7 +188,6 @@ func (bpp *BCSProjectPerm) CanViewProject(user string, projectID string) (bool, 
 		Operation: CanViewProjectOperation,
 		User:      user,
 	}, resources, perms)
-	defer audit.AddEvent(ProjectView.String(), string(SysProject), projectID, user, allow, nil)
 
 	if err != nil {
 		return false, "", nil, err

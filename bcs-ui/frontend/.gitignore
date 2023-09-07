@@ -89,3 +89,4 @@ build.yml
 .bk.development.env
 .site.env
 .prod.env
+.sg.env

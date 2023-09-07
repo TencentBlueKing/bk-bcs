@@ -1,12 +1,20 @@
 /* eslint-disable camelcase */
-import { computed, ref, watch, Ref, set, reactive, toRef } from 'vue';
-import useInterval from '@/composables/use-interval';
-import { clusterDetail, cloudNodes, sharedclusters, createVCluster, deleteVCluster, cloudAccountType } from '@/api/modules/cluster-manager';
-import $store from '@/store';
-import $router from '@/router';
-import { ICluster } from '@/composables/use-app';
+import { computed, reactive, Ref, ref, set, toRef, watch } from 'vue';
+
+import {
+  cloudAccountType,
+  cloudBwps,
+  cloudNodes,
+  clusterDetail,
+  createVCluster,
+  deleteVCluster,
+  sharedclusters  } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
+import { ICluster } from '@/composables/use-app';
+import useInterval from '@/composables/use-interval';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
 
 /**
  * 获取集群列表
@@ -296,8 +304,18 @@ export function useCloud() {
     return accountType.value;
   };
 
+  const getCloudBwps = async (params: {
+    $cloudId: string
+    accountID: string
+    region: string
+  }) => {
+    const data = await cloudBwps(params).catch(() => []);
+    return data;
+  };
+
   return {
     accountType,
     getCloudAccountType,
+    getCloudBwps,
   };
 }

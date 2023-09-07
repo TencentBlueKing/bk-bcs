@@ -21,8 +21,9 @@ import (
 type Uint32Slice []uint32
 
 // Value implements the driver.Valuer interface
+// See gorm document about customizing data types: https://gorm.io/docs/data_types.html
 func (u Uint32Slice) Value() (driver.Value, error) {
-	// Convert the []uint32 to a JSON-encoded string
+	// Convert the Uint32Slice to a JSON-encoded string
 	data, err := json.Marshal(u)
 	if err != nil {
 		return nil, err
@@ -31,6 +32,7 @@ func (u Uint32Slice) Value() (driver.Value, error) {
 }
 
 // Scan implements the sql.Scanner interface
+// See gorm document about customizing data types: https://gorm.io/docs/data_types.html
 func (u *Uint32Slice) Scan(value interface{}) error {
 	// Check if the value is nil
 	if value == nil {
@@ -38,16 +40,16 @@ func (u *Uint32Slice) Scan(value interface{}) error {
 	}
 
 	switch v := value.(type) {
-	case []uint8:
-		// The value is of type []uint8 (MySQL driver representation for JSON columns)
-		// Unmarshal the JSON-encoded value to []uint32
+	case []byte:
+		// The value is of type []byte (MySQL driver representation for JSON columns)
+		// Unmarshal the JSON-encoded value to Uint32Slice
 		err := json.Unmarshal(v, u)
 		if err != nil {
 			return err
 		}
 	case string:
 		// The value is of type string (fallback for older versions of MySQL driver)
-		// Unmarshal the JSON-encoded value to []uint32
+		// Unmarshal the JSON-encoded value to Uint32Slice
 		err := json.Unmarshal([]byte(v), u)
 		if err != nil {
 			return err

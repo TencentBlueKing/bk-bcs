@@ -16,6 +16,7 @@ import (
 	"context"
 	"net/http"
 
+	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
@@ -80,7 +81,9 @@ func (plugin *ClusterPlugin) listClustersHandler(ctx context.Context, r *http.Re
 // GET /api/v1/clusters/{name}
 func (plugin *ClusterPlugin) clusterViewHandler(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	clusterName := mux.Vars(r)["name"]
-	statusCode, err := plugin.middleware.CheckClusterPermission(ctx, clusterName, iam.ClusterView)
+	statusCode, err := plugin.middleware.CheckClusterPermission(ctx, &clusterclient.ClusterQuery{
+		Name: clusterName,
+	}, iam.ClusterView)
 	if statusCode != http.StatusOK {
 		return mw.ReturnErrorResponse(statusCode,
 			errors.Wrapf(err, "check cluster '%s' view permision failed", clusterName))

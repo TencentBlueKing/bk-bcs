@@ -102,7 +102,7 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (*Proj
 		Get(url)
 
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	project := new(Project)

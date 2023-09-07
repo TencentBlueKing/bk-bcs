@@ -63,6 +63,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/webhookserver"
 	listenerctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/listenercontroller"
+	namespacectrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/namespacecontroller"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/nodecontroller"
 	portbindingctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portbindingcontroller"
 	portpoolctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portpoolcontroller"
@@ -196,10 +197,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	nodeBindCache := portbindingctrl.NewNodePortBindingCache()
 	portBindingReconciler := portbindingctrl.NewPortBindingReconciler(
-		context.Background(), opts.PortBindingCheckInterval, mgr.GetClient(), portPoolCache, mgr.GetEventRecorderFor("bcs-ingress-controller"))
+		context.Background(), opts.PortBindingCheckInterval, mgr.GetClient(), portPoolCache,
+		mgr.GetEventRecorderFor("bcs-ingress-controller"), opts.NodePortBindingNs, nodeBindCache)
 	if err = portBindingReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create port binding reconciler, err %s", err.Error())
+		os.Exit(1)
+	}
+
+	namespaceReconciler := namespacectrl.NewNamespaceReconciler(context.Background(), mgr.GetClient(), nodeBindCache)
+	if err = namespaceReconciler.SetupWithManager(mgr); err != nil {
+		blog.Errorf("unable to create namespace reconciler, err %v", err)
 		os.Exit(1)
 	}
 
@@ -223,7 +232,7 @@ func main() {
 		ServerKeyFile:  opts.ServerKeyFile,
 	}
 	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), lbClient, portPoolCache,
-		eventWatcher, validater, ingressConverter, conflictHandler)
+		eventWatcher, validater, ingressConverter, conflictHandler, opts.NodePortBindingNs)
 	if err != nil {
 		blog.Errorf("create hook server failed, err %s", err.Error())
 		os.Exit(1)
@@ -237,7 +246,7 @@ func main() {
 
 	blog.Infof("starting manager")
 
-	err = initHttpServer(opts, mgr, nodeCache)
+	err = initHttpServer(opts, mgr, nodeCache, nodeBindCache)
 	if err != nil {
 		blog.Errorf("init http server failed: %v", err.Error())
 		os.Exit(1)
@@ -291,7 +300,8 @@ func runPrometheusMetrics(op *option.ControllerOption) {
 // httpServer提供
 // 1. 集群内Ingress/PortPool/PortBinding/Listener等信息的查询
 // 2. 维护节点信息，提供接口给Pod获取所在节点的信息
-func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache *nodecache.NodeCache) error {
+func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache *nodecache.NodeCache,
+	nodeBindCache *portbindingctrl.NodePortBindingCache) error {
 	server := httpserver.NewHttpServer(op.HttpServerPort, op.Address, "")
 	if op.Conf.ServCert.IsSSL {
 		server.SetSsl(op.Conf.ServCert.CAFile, op.Conf.ServCert.CertFile, op.Conf.ServCert.KeyFile,
@@ -302,9 +312,10 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 	server.SetInsecureServer(op.Address, op.HttpServerPort)
 	ws := server.NewWebService("/ingresscontroller", nil)
 	httpServerClient := &httpsvr.HttpServerClient{
-		Mgr:       mgr,
-		NodeCache: nodeCache,
-		Ops:       op,
+		Mgr:               mgr,
+		NodeCache:         nodeCache,
+		Ops:               op,
+		NodePortBindCache: nodeBindCache,
 	}
 	// aga supporter can only be init when use
 	if op.Cloud == constant.CloudAWS {

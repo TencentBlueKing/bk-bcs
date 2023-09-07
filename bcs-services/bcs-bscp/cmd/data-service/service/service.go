@@ -21,10 +21,12 @@ import (
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/dal/dao"
+	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/metrics"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/thirdparty/esb/client"
+	"bscp.io/pkg/tmplprocess"
 )
 
 // Service do all the data service's work
@@ -32,7 +34,9 @@ type Service struct {
 	dao     dao.Set
 	gateway *gateway
 	// esb esb api client.
-	esb client.Client
+	esb      client.Client
+	repo     repository.Provider
+	tmplProc tmplprocess.TmplProcessor
 }
 
 // NewService create a service instance.
@@ -53,10 +57,18 @@ func NewService(sd serviced.Service, daoSet dao.Set) (*Service, error) {
 		return nil, err
 	}
 
+	// initialize repo provider
+	repo, err := repository.NewProvider(cc.DataService().Repo)
+	if err != nil {
+		return nil, err
+	}
+
 	svc := &Service{
-		dao:     daoSet,
-		gateway: gateway,
-		esb:     esbCli,
+		dao:      daoSet,
+		gateway:  gateway,
+		esb:      esbCli,
+		repo:     repo,
+		tmplProc: tmplprocess.NewTmplProcessor(),
 	}
 
 	return svc, nil

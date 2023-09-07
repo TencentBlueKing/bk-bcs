@@ -79,6 +79,8 @@ func (a archivedApp) TableName() string { return a.archivedAppDo.TableName() }
 
 func (a archivedApp) Alias() string { return a.archivedAppDo.Alias() }
 
+func (a archivedApp) Columns(cols ...field.Expr) gen.Columns { return a.archivedAppDo.Columns(cols...) }
+
 func (a *archivedApp) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := a.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -211,10 +213,6 @@ func (a archivedAppDo) Select(conds ...field.Expr) IArchivedAppDo {
 
 func (a archivedAppDo) Where(conds ...gen.Condition) IArchivedAppDo {
 	return a.withDO(a.DO.Where(conds...))
-}
-
-func (a archivedAppDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IArchivedAppDo {
-	return a.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (a archivedAppDo) Order(conds ...field.Expr) IArchivedAppDo {

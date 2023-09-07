@@ -143,8 +143,9 @@ type CmdbConfig struct {
 
 // BcsAPI bcs api config
 type BcsAPI struct {
-	Host  string `json:"host" usage:"enable http host"`
-	Token string `json:"token" usage:"token for calling service"`
+	Host      string `json:"host" usage:"enable http host"`
+	InnerHost string `json:"inner_host" usage:"enable http host"`
+	Token     string `json:"token" usage:"token for calling service"`
 }
 
 // Encrypt define encrypt config

@@ -45,7 +45,8 @@ func (g *GoMicroAuth) EnableSkipHandler(skipHandler func(ctx context.Context, re
 }
 
 // EnableSkipClient enable skip client, if skip client return true, skip authorization
-func (g *GoMicroAuth) EnableSkipClient(exemptClient func(ctx context.Context, req server.Request, client string) bool) *GoMicroAuth {
+func (g *GoMicroAuth) EnableSkipClient(exemptClient func(ctx context.Context, req server.Request,
+	client string) bool) *GoMicroAuth {
 	g.exemptClient = exemptClient
 	return g
 }
@@ -125,15 +126,11 @@ func (g *GoMicroAuth) AuthorizationFunc(fn server.HandlerFunc) server.HandlerFun
 			return fn(ctx, req, rsp)
 		}
 
-		if len(authUser.Username) == 0 {
-			return errors.New("username is empty")
-		}
-
 		if g.checkUserPerm == nil {
 			return errors.New("check user permission function is not set")
 		}
 
-		if allow, err := g.checkUserPerm(ctx, req, authUser.Username); err != nil {
+		if allow, err := g.checkUserPerm(ctx, req, authUser.GetUsername()); err != nil {
 			return err
 		} else if !allow {
 			return errors.New("user not authorized")

@@ -80,6 +80,10 @@ type ControllerOption struct {
 	// ConflictCheckOpen if false, skip all conflict checking about ingress and port pool
 	ConflictCheckOpen bool
 
+	// NodePortBindingNs namespace that node portbinding will be created in,
+	// and if node's annotation have not related portpool namespace, will use NodePortBindingNs as default
+	NodePortBindingNs string
+
 	// HttpServerPort port for http api
 	HttpServerPort uint
 
@@ -89,8 +93,9 @@ type ControllerOption struct {
 	// LBCacheExpiration lb缓存过期时间，单位分钟
 	LBCacheExpiration int
 
+	// Conf HttpServer conf
 	Conf Conf
-
+	// ServCert http server cert
 	ServCert ServCert
 }
 
@@ -192,6 +197,8 @@ func (op *ControllerOption) BindFromCommandLine() {
 		"skip all conflict checking about ingress and port pool")
 	flag.BoolVar(&op.NodeInfoExporterOpen, "node_info_exporter_open", false, "if true, "+
 		"bcs-ingress-controller will record node info in cluster")
+	flag.StringVar(&op.NodePortBindingNs, "node_portbinding_ns", "default",
+		"namespace that node portbinding will be created in ")
 
 	flag.UintVar(&op.HttpServerPort, "http_svr_port", 8088, "port for ingress controller http server")
 	flag.IntVar(&op.LBCacheExpiration, "lb_cache_expiration", 60, "lb cache expiration, unit: minute ")

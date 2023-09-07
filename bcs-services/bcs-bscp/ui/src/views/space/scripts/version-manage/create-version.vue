@@ -29,9 +29,16 @@
     if (val) {
       selectedScript.value = ''
       listLoading.value = true
-      const res = await getScriptVersionList(spaceId.value, props.scriptId, { start: 0, limit: 10 })
-      list.value = res.details
+      const res = await getScriptVersionList(spaceId.value, props.scriptId, { start: 0, all: true })
+      list.value = res.details.map((item: IScriptVersionListItem) => {
+        const { id, spec } = item.hook_revision
+        const name = spec.memo ? `${spec.name}(${spec.memo})` : spec.name
+        return { id, name, content: spec.content }
+      })
       listLoading.value = false
+      if (list.value.length > 0) {
+        selectedScript.value = list.value[0].hook_revision.id
+      }
     }
   }
 
@@ -95,13 +102,14 @@
     footer-align="right"
     width="480"
     :is-show="dialogShow"
+    :is-loading="listLoading"
     @value-change="afterDialogShow"
     @confirm="handleLoadScript"
     @closed="dialogShow = false">
     <bk-form ref="formRef" form-type="vertical" :model="{ selectedScript }">
       <bk-form-item label="选择载入脚本" required property="selectedScript">
-        <bk-select v-model="selectedScript" :loading="listLoading" :clearable="false">
-          <bk-option v-for="option in list" :key="option.hook_revision.id" :value="option.hook_revision.id" :label="option.hook_revision.spec.name"></bk-option>
+        <bk-select v-model="selectedScript" :loading="listLoading" :clearable="false" :filterable="true" :input-search="false">
+          <bk-option v-for="option in list" v-overflow-title :key="option.hook_revision.id" :value="option.hook_revision.id" :label="option.hook_revision.spec.name"></bk-option>
         </bk-select>
       </bk-form-item>
     </bk-form>

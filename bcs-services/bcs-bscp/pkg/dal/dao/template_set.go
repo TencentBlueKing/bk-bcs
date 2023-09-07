@@ -16,11 +16,15 @@ import (
 	"errors"
 	"fmt"
 
+	"gorm.io/datatypes"
+	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
+	dtypes "bscp.io/pkg/dal/types"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
@@ -28,15 +32,41 @@ import (
 // TemplateSet supplies all the template set related operations.
 type TemplateSet interface {
 	// Create one template set instance.
-	Create(kit *kit.Kit, templateSpace *table.TemplateSet) (uint32, error)
+	Create(kit *kit.Kit, templateSet *table.TemplateSet) (uint32, error)
 	// Update one template set's info.
-	Update(kit *kit.Kit, templateSpace *table.TemplateSet) error
+	Update(kit *kit.Kit, templateSet *table.TemplateSet) error
+	// UpdateWithTx update one template set's info with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, templateSet *table.TemplateSet) error
 	// List template sets with options.
-	List(kit *kit.Kit, bizID, templateSpaceID uint32, opt *types.BasePage) ([]*table.TemplateSet, int64, error)
+	List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) (
+		[]*table.TemplateSet, int64, error)
 	// Delete one template set instance.
-	Delete(kit *kit.Kit, templateSpace *table.TemplateSet) error
+	Delete(kit *kit.Kit, templateSet *table.TemplateSet) error
+	// DeleteWithTx delete one template set instance with transaction.
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, templateSet *table.TemplateSet) error
 	// GetByUniqueKey get template set by unique key.
 	GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID uint32, name string) (*table.TemplateSet, error)
+	// GetByUniqueKeyForUpdate get template set by unique key for update which allow to update name.
+	GetByUniqueKeyForUpdate(kit *kit.Kit, bizID, templateSpaceID, selfID uint32, name string) (
+		*table.TemplateSet, error)
+	// ListByIDs list template sets by template set ids.
+	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSet, error)
+	// ListByIDsWithTx list template sets by template set ids with transaction.
+	ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) ([]*table.TemplateSet, error)
+	// AddTemplatesToTemplateSetsWithTx add templates to template sets with transaction.
+	AddTemplatesToTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32, tmplSetIDs []uint32) error
+	// DeleteTemplatesFromTemplateSetsWithTx delete templates from template sets with transaction.
+	DeleteTemplatesFromTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32, tmplSetIDs []uint32) error
+	// AddTemplateToTemplateSetsWithTx add a template to template sets with transaction.
+	AddTemplateToTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplID uint32, tmplSetIDs []uint32) error
+	// DeleteTmplFromAllTmplSetsWithTx delete a template from all template sets with transaction.
+	DeleteTmplFromAllTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error
+	// ListAppTmplSets list all the template sets of the app.
+	ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
+	// ListAllTemplateIDs list all template ids of all template sets in one template space.
+	ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error)
+	// ListAllTemplateSetsOfBiz list all template sets of one biz
+	ListAllTemplateSetsOfBiz(kit *kit.Kit, bizID uint32) ([]*table.TemplateSet, error)
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -113,7 +143,9 @@ func (dao *templateSetDao) Update(kit *kit.Kit, g *table.TemplateSet) error {
 	// 多个使用事务处理
 	updateTx := func(tx *gen.Query) error {
 		q = tx.TemplateSet.WithContext(kit.Ctx)
-		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Select(m.Memo, m.Reviser).Updates(g); err != nil {
+		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+			Select(m.Name, m.Memo, m.Reviser, m.Public, m.BoundApps).
+			Updates(g); err != nil {
 			return err
 		}
 
@@ -129,17 +161,69 @@ func (dao *templateSetDao) Update(kit *kit.Kit, g *table.TemplateSet) error {
 	return nil
 }
 
+// UpdateWithTx update one template set's info with transaction.
+func (dao *templateSetDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.TemplateSet) error {
+	if err := g.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
+		return err
+	}
+
+	// 更新操作, 获取当前记录做审计
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
+	if err := ad.Do(tx.Query); err != nil {
+		return err
+	}
+
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+		Select(m.Name, m.Memo, m.Reviser, m.TemplateIDs, m.Public, m.BoundApps).
+		Updates(g); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // List template sets with options.
-func (dao *templateSetDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, opt *types.BasePage) ([]*table.TemplateSet, int64, error) {
+func (dao *templateSetDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) (
+	[]*table.TemplateSet, int64, error) {
 	m := dao.genQ.TemplateSet
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
 
-	result, count, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).FindByPage(opt.Offset(), opt.LimitInt())
-	if err != nil {
-		return nil, 0, err
+	var conds []rawgen.Condition
+	// add search condition
+	if s != nil {
+		exprs := s.SearchExprs(dao.genQ)
+		if len(exprs) > 0 {
+			var do gen.ITemplateSetDo
+			for i := range exprs {
+				if i == 0 {
+					do = q.Where(exprs[i])
+				}
+				do = do.Or(exprs[i])
+			}
+			conds = append(conds, do)
+		}
 	}
 
-	return result, count, nil
+	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...)
+	if opt.All {
+		result, err := d.Find()
+		if err != nil {
+			return nil, 0, err
+		}
+		return result, int64(len(result)), err
+	}
+
+	return d.FindByPage(opt.Offset(), opt.LimitInt())
 }
 
 // Delete one template set instance.
@@ -177,6 +261,31 @@ func (dao *templateSetDao) Delete(kit *kit.Kit, g *table.TemplateSet) error {
 	return nil
 }
 
+// DeleteWithTx delete one template set instance with transaction.
+func (dao *templateSetDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.TemplateSet) error {
+	if err := g.ValidateDelete(); err != nil {
+		return err
+	}
+
+	// 删除操作, 获取当前记录做审计
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
+	if err := ad.Do(tx.Query); err != nil {
+		return err
+	}
+
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetByUniqueKey get template set by unique key
 func (dao *templateSetDao) GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID uint32, name string) (
 	*table.TemplateSet, error) {
@@ -185,10 +294,156 @@ func (dao *templateSetDao) GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID u
 
 	tplSet, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID), m.Name.Eq(name)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get templateSpace failed, err: %v", err)
+		return nil, fmt.Errorf("get template space failed, err: %v", err)
 	}
 
 	return tplSet, nil
+}
+
+// GetByUniqueKeyForUpdate get template set by unique key for update which allow to update name.
+func (dao *templateSetDao) GetByUniqueKeyForUpdate(kit *kit.Kit, bizID, templateSpaceID, selfID uint32,
+	name string) (*table.TemplateSet, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	tplSet, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID),
+		m.ID.Neq(selfID), m.Name.Eq(name)).Take()
+	if err != nil {
+		return nil, fmt.Errorf("get template space failed, err: %v", err)
+	}
+
+	return tplSet, nil
+}
+
+// ListByIDs list template sets by template set ids.
+func (dao *templateSetDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSet, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+	result, err := q.Where(m.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// ListByIDsWithTx list template sets by template set ids with transaction.
+func (dao *templateSetDao) ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) ([]*table.TemplateSet, error) {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	result, err := q.Where(m.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// AddTemplatesToTemplateSetsWithTx add templates to template sets with transaction.
+func (dao *templateSetDao) AddTemplatesToTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32,
+	tmplSetIDs []uint32) error {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	for _, tmplID := range tmplIDs {
+		if _, err := q.Where(m.ID.In(tmplSetIDs...)).
+			Not(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+			Update(m.TemplateIDs, gorm.Expr("JSON_ARRAY_APPEND(template_ids, '$', ?)", tmplID)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DeleteTemplatesFromTemplateSetsWithTx delete templates from template sets with transaction.
+func (dao *templateSetDao) DeleteTemplatesFromTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs,
+	tmplSetIDs []uint32) error {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	for _, tmplID := range tmplIDs {
+		// subQuery get the array of template ids after delete the target template id, set it to '[]' if no records found
+		subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
+			"JSON_TABLE (template_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
+		if _, err := q.Where(m.ID.In(tmplSetIDs...)).
+			Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+			Update(m.TemplateIDs, gorm.Expr(subQuery, tmplID)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// AddTemplateToTemplateSetsWithTx add a template to template sets with transaction.
+func (dao *templateSetDao) AddTemplateToTemplateSetsWithTx(
+	kit *kit.Kit, tx *gen.QueryTx, tmplID uint32, tmplSetIDs []uint32) error {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	if _, err := q.Where(m.ID.In(tmplSetIDs...)).
+		Not(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+		Update(m.TemplateIDs, gorm.Expr("JSON_ARRAY_APPEND(template_ids, '$', ?)", tmplID)); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteTmplFromAllTmplSetsWithTx delete a template from all template sets with transaction.
+func (dao *templateSetDao) DeleteTmplFromAllTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	// subQuery get the array of template ids after delete the target template id, set it to '[]' if no records found
+	subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
+		"JSON_TABLE (template_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
+	if _, err := q.Where(m.BizID.Eq(bizID)).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+		Update(m.TemplateIDs, gorm.Expr(subQuery, tmplID)); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ListAppTmplSets list all the template sets of the app.
+func (dao *templateSetDao) ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	return q.Where(m.BizID.Eq(bizID)).
+		Where(m.Public.Is(true)).
+		Or(rawgen.Cond(datatypes.JSONArrayQuery("bound_apps").Contains(appID))...).
+		Find()
+}
+
+// ListAllTemplateIDs list all template ids of all template sets in one template space.
+func (dao *templateSetDao) ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	var result []dtypes.Uint32Slice
+	if err := q.Select(m.TemplateIDs).
+		Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).
+		Pluck(m.TemplateIDs, &result); err != nil {
+		return nil, err
+	}
+
+	idMap := make(map[uint32]struct{})
+	for _, ids := range result {
+		for _, id := range ids {
+			idMap[id] = struct{}{}
+		}
+	}
+
+	ids := make([]uint32, 0, len(idMap))
+	for id := range idMap {
+		ids = append(ids, id)
+	}
+
+	return ids, nil
+}
+
+// ListAllTemplateSetsOfBiz list all template sets of one biz
+func (dao *templateSetDao) ListAllTemplateSetsOfBiz(kit *kit.Kit, bizID uint32) ([]*table.TemplateSet, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	return q.Where(m.BizID.Eq(bizID)).Find()
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template
@@ -208,6 +463,11 @@ func (dao *templateSetDao) validateAttachmentExist(kit *kit.Kit, am *table.Templ
 
 // validateTemplatesExist validate if all templates resource exists before operating template set
 func (dao *templateSetDao) validateTemplatesExist(kit *kit.Kit, templateIDs []uint32) error {
+	// allow template ids to be empty
+	if len(templateIDs) == 0 {
+		return nil
+	}
+
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
 	var existIDs []uint32

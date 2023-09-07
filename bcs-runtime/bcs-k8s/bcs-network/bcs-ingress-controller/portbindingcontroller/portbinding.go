@@ -16,7 +16,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -35,11 +34,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type iPortBindingHandler interface {
+	ensurePortBinding(portBinding *networkextensionv1.PortBinding) (bool, error)
+	cleanPortBinding(portBinding *networkextensionv1.PortBinding) (bool, error)
+	recordEvent(portBinding *networkextensionv1.PortBinding, eType, reason, msg string)
+}
+
 type portBindingHandler struct {
 	ctx         context.Context
 	k8sClient   client.Client
 	eventer     record.EventRecorder
 	itemHandler *portBindingItemHandler
+
+	portBindingType       string
+	generateTargetGroup   func(item *networkextensionv1.PortBindingItem) *networkextensionv1.ListenerTargetGroup
+	postPortBindingUpdate func(portBinding *networkextensionv1.PortBinding) error
+	postPortBindingClean  func(portBinding *networkextensionv1.PortBinding) error
 }
 
 func newPortBindingHandler(ctx context.Context, k8sClient client.Client, eventer record.EventRecorder) *portBindingHandler {
@@ -52,12 +62,7 @@ func newPortBindingHandler(ctx context.Context, k8sClient client.Client, eventer
 }
 
 // the returned bool value indicates whether you need to retry
-func (pbh *portBindingHandler) ensurePortBinding(
-	pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) (bool, error) {
-	if portBinding == nil {
-		blog.Warnf("port binding for pod '%s/%s' is empty", pod.GetNamespace(), pod.GetName())
-		return false, nil
-	}
+func (pbh *portBindingHandler) ensurePortBinding(portBinding *networkextensionv1.PortBinding) (bool, error) {
 	var newBindingStatusList []*networkextensionv1.PortBindingStatusItem
 	for _, item := range portBinding.Spec.PortBindingList {
 		var curStatus *networkextensionv1.PortBindingStatusItem
@@ -71,7 +76,8 @@ func (pbh *portBindingHandler) ensurePortBinding(
 				curStatus = tmpStatus
 			}
 		}
-		itemStatus := pbh.itemHandler.ensureItem(pod, item, curStatus)
+		targetGroup := pbh.generateTargetGroup(item)
+		itemStatus := pbh.itemHandler.ensureItem(targetGroup, item, curStatus)
 		newBindingStatusList = append(newBindingStatusList, itemStatus)
 	}
 	portBinding.Status.PortBindingStatusList = newBindingStatusList
@@ -94,6 +100,7 @@ func (pbh *portBindingHandler) ensurePortBinding(
 		pbh.recordEvent(portBinding, k8scorev1.EventTypeNormal, ReasonPortBindingNotReady,
 			fmt.Sprintf(MsgPortBindingNotReady, unreadyNum))
 	}
+	portBinding.Status.PortBindingType = pbh.portBindingType
 	updateStatus := portBinding.Status.Status
 
 	if err := pbh.k8sClient.Status().Update(context.Background(), portBinding, &client.UpdateOptions{}); err != nil {
@@ -101,81 +108,15 @@ func (pbh *portBindingHandler) ensurePortBinding(
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 	}
 
+	if err := pbh.postPortBindingUpdate(portBinding); err != nil {
+		return true, err
+	}
 	// 根据portBinding status更新相关状态
 	if err := pbh.postPortBindingUpdateStatus(rawStatus, updateStatus, portBinding); err != nil {
 		return true, err
 	}
-	if err := pbh.updatePodCondition(pod, portBinding.Status.Status); err != nil {
-		return true, err
-	}
-	if err := pbh.patchPodAnnotation(pod, portBinding.Status.Status); err != nil {
-		return true, err
-	}
-
-	// 当portBinding的部分字段发生变化时，需要同步更新pod上的注解
-	if err := pbh.ensurePod(pod, portBinding); err != nil {
-		return true, errors.Wrapf(err, "ensurePod[%s/%s] failed", pod.GetNamespace(), pod.GetName())
-	}
-	pbh.recordEvent(portBinding, k8scorev1.EventTypeNormal, ReasonPortBindingUpdatePodSuccess,
-		MsgPortBindingUpdatePodSuccess)
 
 	return retry, nil
-}
-
-// updatePodCondition 在pod.condition上记录portBinding的绑定状态
-func (pbh *portBindingHandler) updatePodCondition(pod *k8scorev1.Pod, status string) error {
-	if _, ok := pod.Annotations[constant.AnnotationForPortPoolReadinessGate]; !ok {
-		return nil
-	}
-	found := false
-	for i, condition := range pod.Status.Conditions {
-		if condition.Type == constant.ConditionTypeBcsIngressPortBinding {
-			if condition.Status == k8scorev1.ConditionFalse {
-				if status == constant.PortBindingStatusReady {
-					pod.Status.Conditions[i].Status = k8scorev1.ConditionTrue
-					pod.Status.Conditions[i].Reason = constant.ConditionReasonReadyBcsIngressPortBinding
-					pod.Status.Conditions[i].Message = constant.ConditionMessageReadyBcsIngressPortBinding
-				} else {
-					pod.Status.Conditions[i].Status = k8scorev1.ConditionFalse
-					pod.Status.Conditions[i].Reason = constant.ConditionReasonNotReadyBcsIngressPortBinding
-					pod.Status.Conditions[i].Message = constant.ConditionMessageNotReadyBcsIngressPortBinding
-				}
-			}
-			found = true
-			break
-		}
-	}
-	if !found && status == constant.PortBindingStatusReady {
-		pod.Status.Conditions = append(pod.Status.Conditions, k8scorev1.PodCondition{
-			Type:    constant.ConditionTypeBcsIngressPortBinding,
-			Status:  k8scorev1.ConditionTrue,
-			Reason:  constant.ConditionReasonReadyBcsIngressPortBinding,
-			Message: constant.ConditionMessageReadyBcsIngressPortBinding,
-		})
-	}
-	if err := pbh.k8sClient.Status().Update(context.Background(), pod, &client.UpdateOptions{}); err != nil {
-		blog.Warnf("update pod %s/%s condition failed, err %s", pod.GetName(), pod.GetNamespace(), err.Error())
-		return fmt.Errorf("update pod %s/%s condition failed, err %s", pod.GetName(), pod.GetNamespace(), err.Error())
-	}
-	return nil
-}
-
-func (pbh *portBindingHandler) patchPodAnnotation(pod *k8scorev1.Pod, status string) error {
-	rawPatch := client.RawPatch(k8stypes.MergePatchType, []byte(
-		"{\"metadata\":{\"annotations\":{\""+constant.AnnotationForPortPoolBindingStatus+
-			"\":\""+status+"\"}}}"))
-	updatePod := &k8scorev1.Pod{
-		ObjectMeta: k8smetav1.ObjectMeta{
-			Name:      pod.GetName(),
-			Namespace: pod.GetNamespace(),
-		},
-	}
-	if err := pbh.k8sClient.Patch(context.Background(), updatePod, rawPatch, &client.PatchOptions{}); err != nil {
-		blog.Errorf("patch pod %s/%s annotation status failed, err %s", pod.GetName(), pod.GetNamespace(), err.Error())
-		return fmt.Errorf("patch pod %s/%s annotation status failed, err %s",
-			pod.GetName(), pod.GetNamespace(), err.Error())
-	}
-	return nil
 }
 
 func (pbh *portBindingHandler) patchPodBindingAnnotation(
@@ -219,6 +160,7 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 		blog.Warnf("port binding is empty")
 		return false, nil
 	}
+
 	portBinding.Status.PortBindingStatusList = nil
 	for _, item := range portBinding.Spec.PortBindingList {
 		// 将item对应监听器的targetGroup重新设置为空
@@ -246,57 +188,13 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 	}
 
+	blog.V(3).Infof("do clean annotation from port binding %s/%s related resource", portBinding.GetName(),
+		portBinding.GetNamespace())
+	if err := pbh.postPortBindingClean(portBinding); err != nil {
+		return true, err
+	}
+
 	return notCleanedNum != 0, nil
-}
-
-// ensurePod update pod annotation if portBinding related field changed
-func (pbh *portBindingHandler) ensurePod(pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) error {
-	portBindingItemMap := make(map[string]*networkextensionv1.PortBindingItem)
-	for _, portBindingItem := range portBinding.Spec.PortBindingList {
-		portBindingItemMap[genUniqueIDOfPortBindingItem(portBindingItem)] = portBindingItem
-	}
-
-	podPortBindingList, err := parsePoolBindingsAnnotation(pod)
-	if err != nil {
-		return errors.Wrapf(err, "parse pod annotations for bindingItems failed")
-	}
-
-	// if portBinding.External changed, update pod's annotation
-	changed := false
-	for idx, podPortBindingItem := range podPortBindingList {
-		portBindingItem, ok := portBindingItemMap[genUniqueIDOfPortBindingItem(podPortBindingItem)]
-		if !ok {
-			blog.Warnf("pod's portBindingItem(in annotation) not found in PortBinding, pod: %s/%s, item: %s",
-				pod.GetNamespace(), pod.GetName(), genUniqueIDOfPortBindingItem(podPortBindingItem))
-			continue
-		}
-		if portBindingItem == nil || podPortBindingItem == nil {
-			blog.Warnf("nil portBindingItem, pod:%s/%s", pod.GetNamespace(), pod.GetName())
-			continue
-		}
-
-		if podPortBindingItem.External != portBindingItem.External {
-			podPortBindingList[idx].External = portBindingItem.External
-			changed = true
-		}
-		if !reflect.DeepEqual(podPortBindingItem.LoadBalancerIDs, portBindingItem.LoadBalancerIDs) {
-			podPortBindingList[idx].LoadBalancerIDs = portBindingItem.LoadBalancerIDs
-			changed = true
-		}
-		if !reflect.DeepEqual(podPortBindingItem.PoolItemLoadBalancers, portBindingItem.PoolItemLoadBalancers) {
-			podPortBindingList[idx].PoolItemLoadBalancers = portBindingItem.PoolItemLoadBalancers
-			changed = true
-		}
-	}
-	if changed {
-		blog.Info("pod[%s/%s] PortBindingItem.External changed", pod.GetNamespace(), pod.GetName())
-		if err := pbh.patchPodBindingAnnotation(pod, podPortBindingList); err != nil {
-			return errors.Wrapf(err, "patch pod[%s/%s] for binding annotation failed",
-				pod.GetNamespace(), pod.GetName())
-		}
-	}
-
-	return nil
 }
 
 // patchPortBindingAnnotation patch annotation to portbinding

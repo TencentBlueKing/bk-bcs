@@ -192,6 +192,44 @@ func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Ha
 	}
 }
 
+// ContentVerified 内容操作校验中间件, 需要放到UnifiedAuthentication和BizVerified后面
+// 服务下的配置项内容需要校验服务权限，模版空间下的模版配置项内容需要校验模版空间权限
+func (a authorizer) ContentVerified(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		kt := kit.MustGetKit(r.Context())
+
+		appID, tmplSpaceID, err := repository.GetContentLevelID(r)
+		if err != nil {
+			render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+
+		if appID > 0 {
+			// NOTE: authenticate app on iam
+
+			space, err := a.authClient.QuerySpaceByAppID(r.Context(), &pbas.QuerySpaceByAppIDReq{AppId: appID})
+			if err != nil {
+				s := status.Convert(err)
+				render.Render(w, r, rest.BadRequest(errors.New(s.Message())))
+				return
+			}
+			kt.AppID = appID
+			kt.SpaceID = space.SpaceId
+			kt.SpaceTypeID = space.SpaceTypeId
+		}
+
+		if tmplSpaceID > 0 {
+			// NOTE: authenticate template space on iam
+
+			kt.TmplSpaceID = tmplSpaceID
+		}
+
+		ctx := kit.WithKit(r.Context(), kt)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+	return http.HandlerFunc(fn)
+}
+
 // AppVerified App校验中间件, 需要放到 UnifiedAuthentication 后面, url 需要添加 {app_id} 变量
 func (a authorizer) AppVerified(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {

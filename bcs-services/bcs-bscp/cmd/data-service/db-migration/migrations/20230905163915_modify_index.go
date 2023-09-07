@@ -1,0 +1,68 @@
+/*
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package migrations
+
+import (
+	"gorm.io/gorm"
+
+	"bscp.io/cmd/data-service/db-migration/migrator"
+)
+
+func init() {
+	// add current migration to migrator
+	migrator.GetMigrator().AddMigration(&migrator.Migration{
+		Version: "20230905163915",
+		Name:    "20230905163915_modify_index",
+		Mode:    migrator.GormMode,
+		Up:      mig20230905163915ModifyIndexUp,
+		Down:    mig20230905163915ModifyIndexDown,
+	})
+}
+
+// mig20230905163915ModifyIndexUp for up migration
+func mig20230905163915ModifyIndexUp(tx *gorm.DB) error {
+	// ReleasedConfigItems : 已发布的配置项
+	type ReleasedConfigItems struct {
+		// 这里只是索引操作需要的字段
+		BizID     uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:1"`
+		AppID     uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:2"`
+		ReleaseID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:3"`
+	}
+
+	// delete old index
+	if tx.Migrator().HasIndex(&ReleasedConfigItems{}, "idx_releaseID_commitID") {
+		if err := tx.Migrator().DropIndex(&ReleasedConfigItems{}, "idx_releaseID_commitID"); err != nil {
+			return err
+		}
+	}
+	if tx.Migrator().HasIndex(&ReleasedConfigItems{}, "idx_bizID_appID") {
+		if err := tx.Migrator().DropIndex(&ReleasedConfigItems{}, "idx_bizID_appID"); err != nil {
+			return err
+		}
+	}
+
+	// create new index
+	if !tx.Migrator().HasIndex(&ReleasedConfigItems{}, "idx_bizID_appID_relID") {
+		if err := tx.Migrator().CreateIndex(&ReleasedConfigItems{}, "idx_bizID_appID_relID"); err != nil {
+			return err
+		}
+	}
+
+	return nil
+
+}
+
+// mig20230905163915ModifyIndexDown for down migration
+func mig20230905163915ModifyIndexDown(tx *gorm.DB) error {
+	return nil
+}

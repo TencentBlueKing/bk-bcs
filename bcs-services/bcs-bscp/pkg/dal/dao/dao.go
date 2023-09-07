@@ -46,8 +46,15 @@ type Set interface {
 	ReleasedHook() ReleasedHook
 	TemplateSpace() TemplateSpace
 	Template() Template
-	TemplateRelease() TemplateRelease
+	TemplateRevision() TemplateRevision
 	TemplateSet() TemplateSet
+	AppTemplateBinding() AppTemplateBinding
+	ReleasedAppTemplate() ReleasedAppTemplate
+	AppTemplateVariable() AppTemplateVariable
+	ReleasedAppTemplateVariable() ReleasedAppTemplateVariable
+	TemplateBindingRelation() TemplateBindingRelation
+	TemplateVariable() TemplateVariable
+	Validator() Validator
 	Group() Group
 	GroupAppBind() GroupAppBind
 	ReleasedGroup() ReleasedGroup
@@ -256,9 +263,9 @@ func (s *set) Template() Template {
 	}
 }
 
-// TemplateRelease returns the template release's DAO
-func (s *set) TemplateRelease() TemplateRelease {
-	return &templateReleaseDao{
+// TemplateRevision returns the template release's DAO
+func (s *set) TemplateRevision() TemplateRevision {
+	return &templateRevisionDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
@@ -268,6 +275,69 @@ func (s *set) TemplateRelease() TemplateRelease {
 // TemplateSet returns the template set's DAO
 func (s *set) TemplateSet() TemplateSet {
 	return &templateSetDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// AppTemplateBinding returns the app template binding's DAO
+func (s *set) AppTemplateBinding() AppTemplateBinding {
+	return &appTemplateBindingDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// ReleasedAppTemplate returns the released app template's DAO
+func (s *set) ReleasedAppTemplate() ReleasedAppTemplate {
+	return &releasedAppTemplateDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// AppTemplateVariable returns the app template variable's DAO
+func (s *set) AppTemplateVariable() AppTemplateVariable {
+	return &appTemplateVariableDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// ReleasedAppTemplateVariable returns the released app template variable's DAO
+func (s *set) ReleasedAppTemplateVariable() ReleasedAppTemplateVariable {
+	return &releasedAppTemplateVariableDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// TemplateBindingRelation returns the template binding relation's DAO
+func (s *set) TemplateBindingRelation() TemplateBindingRelation {
+	return &templateBindingRelationDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// TemplateVariable returns the template variable's DAO
+func (s *set) TemplateVariable() TemplateVariable {
+	return &templateVariableDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// Validator returns the template binding relation's DAO
+func (s *set) Validator() Validator {
+	return &validatorDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

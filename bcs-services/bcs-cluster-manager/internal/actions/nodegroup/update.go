@@ -309,11 +309,14 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 		} else {
 			group.NodeTemplate.ScaleInPostScript = ua.req.NodeTemplate.ScaleInPostScript
 		}
+
+		// attention: field will be full update
 		group.NodeTemplate.UnSchedulable = ua.req.NodeTemplate.UnSchedulable
 		group.NodeTemplate.Taints = ua.req.NodeTemplate.Taints
 		group.NodeTemplate.Labels = ua.req.NodeTemplate.Labels
 		group.NodeTemplate.Annotations = ua.req.NodeTemplate.Annotations
-		group.NodeTemplate.SkipSystemInit = ua.req.NodeTemplate.SkipSystemInit
+		// avoid update mixed deployment switch
+		// group.NodeTemplate.SkipSystemInit = ua.req.NodeTemplate.SkipSystemInit
 		group.NodeTemplate.AllowSkipScaleOutWhenFailed = ua.req.NodeTemplate.AllowSkipScaleOutWhenFailed
 		group.NodeTemplate.AllowSkipScaleInWhenFailed = ua.req.NodeTemplate.AllowSkipScaleInWhenFailed
 	}

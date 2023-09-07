@@ -17,9 +17,12 @@ package client
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubectl/pkg/polymorphichelpers"
@@ -212,4 +215,93 @@ func (c *RSClient) RolloutDeployRevision(
 
 	m["status"] = "ok"
 	return m, err
+}
+
+// GetResHistoryRevision 获取某个资源 history revision
+func (c *RSClient) GetResHistoryRevision(
+	ctx context.Context, deployName, namespace, kind, changeCause string) (m map[string]interface{}, err error) {
+
+	// permValidate IAM 权限校验
+	if err := c.permValidate(ctx, action.List, namespace); err != nil {
+		return nil, err
+	}
+
+	// 初始化
+	m = map[string]interface{}{}
+
+	clientSet, err := kubernetes.NewForConfig(c.conf.Rest)
+	if err != nil {
+		return m, err
+	}
+
+	historyViewer, err := polymorphichelpers.HistoryViewerFor(
+		schema.GroupKind{Group: c.res.Group, Kind: kind}, clientSet)
+	if err != nil {
+		return m, err
+	}
+
+	s, err := historyViewer.GetHistory(namespace, deployName)
+	if err != nil {
+		return m, err
+	}
+
+	// 获取版本号和change cause map[int64]runtime.Object -> map[string]interface{}
+	for key, data := range s {
+		if value, ok := data.(metav1.Object); ok {
+			m[strconv.FormatInt(key, 10)] = value.GetAnnotations()[changeCause]
+		}
+	}
+
+	return m, err
+}
+
+// RolloutResRevision 回滚某个资源 history revision
+func (c *RSClient) RolloutResRevision(
+	ctx context.Context, namespace, revision, name, kind string) error {
+
+	// permValidate IAM 权限校验
+	if err := c.permValidate(ctx, action.Update, namespace); err != nil {
+		return err
+	}
+
+	// 转换成int64，和前端的交互统一为string
+	deployRevision, err := stringx.GetInt64(revision)
+	if err != nil {
+		return err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(c.conf.Rest)
+	if err != nil {
+		return err
+	}
+	appV1Cli := clientSet.AppsV1()
+	// 根据kind获取对应资源客户端
+	var deploy interface{}
+	switch strings.ToLower(kind) {
+	case "deployment":
+		deploy, err = appV1Cli.Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+	case "statefulset":
+		deploy, err = appV1Cli.StatefulSets(namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+	case "daemonset":
+		deploy, err = appV1Cli.DaemonSets(namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("%s kind doesn't exist", kind)
+	}
+	rollBacker, err := polymorphichelpers.RollbackerFor(
+		schema.GroupKind{Group: c.res.Group, Kind: kind}, clientSet)
+	object, ok := deploy.(runtime.Object)
+	if !ok {
+		return fmt.Errorf("%s Type assertion failed", kind)
+	}
+	_, err = rollBacker.Rollback(object, nil, deployRevision, 0)
+	return err
 }

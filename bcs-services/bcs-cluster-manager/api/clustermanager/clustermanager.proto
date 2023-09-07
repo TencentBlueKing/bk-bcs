@@ -1037,6 +1037,15 @@ service ClusterManager {
       summary : "查询云账号类型"
     };
   }
+  rpc GetCloudBandwidthPackages(GetCloudBandwidthPackagesRequest) returns (GetCloudBandwidthPackagesResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/bwps"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询云共享带宽包"
+      summary : "查询云共享带宽包"
+    };
+  }
 
   // Operation logs
   rpc ListOperationLogs(ListOperationLogsRequest) returns (ListOperationLogsResponse) {
@@ -3165,6 +3174,10 @@ message InternetAccessible {
   bool publicIPAssigned = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "publicIPAssigned", 
     description: "是否分配公网IP。默认为false。"
+  }];
+  string bandwidthPackageId = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bandwidthPackageId",
+    description: "共享带宽包ID"
   }];
 }
 
@@ -10227,6 +10240,63 @@ message CloudAccountType {
       title : "type",
       description : "云账号类型(用户账号的网络类型，STANDARD为标准用户，LEGACY为传统用户)"
   }];
+}
+
+message GetCloudBandwidthPackagesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetCloudBandwidthPackagesRequest"
+      description : "查询云共享带宽包"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 1}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  },(validate.rules).string = {min_len : 1}];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID, 通过指定的云账号信息获取"
+  }];
+}
+
+message GetCloudBandwidthPackagesResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetCloudBandwidthPackagesResponse"
+      description : "查询云共享带宽包"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated BandwidthPackageInfo data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取云共享带宽包列表"
+  }];
+}
+
+message BandwidthPackageInfo {
+  string id=1;
+  string name=2;
+  string networkType=3;
+  string status=4;
+  int32 bandwidth=5;
 }
 
 message ListCloudOsImageRequest {

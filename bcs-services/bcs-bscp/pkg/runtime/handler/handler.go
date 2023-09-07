@@ -104,13 +104,12 @@ func ReverseProxyHandler(name, remoteURL string) http.Handler {
 	}
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		proxy := httputil.NewSingleHostReverseProxy(remote)
-		proxy.Director = func(req *http.Request) {
-			req.Header = r.Header
-			req.Host = remote.Host
-			req.URL.Scheme = remote.Scheme
-			req.URL.Host = remote.Host
-			klog.InfoS("forward request", "name", name, "url", req.URL)
+		proxy := httputil.ReverseProxy{
+			Rewrite: func(req *httputil.ProxyRequest) {
+				req.SetURL(remote)
+				req.SetXForwarded()
+				klog.InfoS("forward request", "name", name, "url", r.URL)
+			},
 		}
 
 		proxy.ServeHTTP(w, r)
@@ -137,6 +136,8 @@ func CORS(next http.Handler) http.Handler {
 			"X-Requested-With",
 			"X-Bkapi-File-Content-Id",
 			"X-Bkapi-File-Content-Overwrite",
+			"X-Bscp-App-Id",
+			"X-Bscp-Template-Space-Id",
 		}
 		w.Header().Set("Access-Control-Allow-Headers", strings.Join(allowHeaders, ","))
 

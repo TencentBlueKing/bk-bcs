@@ -119,6 +119,37 @@ type Kit struct {
 	BizID       uint32 // 对应的业务ID
 	SpaceID     string // 应用对应的SpaceID
 	SpaceTypeID string // 应用对应的SpaceTypeID
+	TmplSpaceID uint32 // 配置模版对应的TemplateSpaceID
+}
+
+// Clone clones a Kit
+func (c *Kit) Clone() *Kit {
+	return &Kit{
+		Ctx:         c.Ctx,
+		User:        c.User,
+		Rid:         c.Rid,
+		AppCode:     c.AppCode,
+		AppID:       c.AppID,
+		BizID:       c.BizID,
+		SpaceID:     c.SpaceID,
+		SpaceTypeID: c.SpaceTypeID,
+		TmplSpaceID: c.TmplSpaceID,
+	}
+}
+
+// GetKitForRepoTmpl get a kit for repo template operations
+func (c *Kit) GetKitForRepoTmpl(TmplSpaceID uint32) *Kit {
+	c2 := c.Clone()
+	c2.TmplSpaceID = TmplSpaceID
+	c2.AppID = 0
+	return c2
+}
+
+// GetKitForRepoCfg get a kit for repo config item operations
+func (c *Kit) GetKitForRepoCfg() *Kit {
+	c2 := c.Clone()
+	c2.TmplSpaceID = 0
+	return c2
 }
 
 // ContextWithRid NOTES

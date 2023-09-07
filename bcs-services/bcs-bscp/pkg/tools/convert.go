@@ -51,3 +51,20 @@ func Itoa(v uint32) string {
 func SinceMS(start time.Time) float64 {
 	return float64(time.Since(start).Milliseconds())
 }
+
+// IsNumber check if the string is a number
+func IsNumber(s string) bool {
+	// Try to convert to an integer
+	_, err := strconv.Atoi(s)
+	if err == nil {
+		return true
+	}
+
+	// Try to convert to a float64
+	_, err = strconv.ParseFloat(s, 64)
+	if err == nil {
+		return true
+	}
+
+	return false
+}
