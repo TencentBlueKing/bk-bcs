@@ -126,3 +126,35 @@ func RemoveDuplicateStrings(input []string) []string {
 
 	return uniqueSlice
 }
+
+// IsSameSlice judge whether two slices have same elements（including count）, no need care the order of the elements
+func IsSameSlice(s1, s2 []uint32) bool {
+	// Check if the lengths are equal
+	if len(s1) != len(s2) {
+		return false
+	}
+
+	// Create maps to count occurrences of elements in s1 and s2
+	countMap1 := make(map[uint32]int)
+	countMap2 := make(map[uint32]int)
+
+	// Count occurrences in s1
+	for _, num := range s1 {
+		countMap1[num]++
+	}
+
+	// Count occurrences in s2
+	for _, num := range s2 {
+		countMap2[num]++
+	}
+
+	// Compare the occurrence counts
+	for num, count1 := range countMap1 {
+		count2, exists := countMap2[num]
+		if !exists || count1 != count2 {
+			return false
+		}
+	}
+
+	return true
+}

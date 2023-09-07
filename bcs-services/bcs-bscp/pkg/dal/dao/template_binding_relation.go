@@ -20,7 +20,6 @@ import (
 
 	"gorm.io/datatypes"
 	rawgen "gorm.io/gen"
-	"gorm.io/gorm"
 )
 
 // TemplateBindingRelation supplies all the template binding relation query operations.
@@ -55,14 +54,12 @@ type TemplateBindingRelation interface {
 	ListTemplateSetBoundNamedAppDetails(kit *kit.Kit, bizID, templateSetID uint32) ([]*types.TmplSetBoundNamedAppDetail, error)
 	// ListLatestTemplateBoundUnnamedAppDetails list bound unnamed app details of the latest target template.
 	ListLatestTemplateBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateID uint32) ([]*table.AppTemplateBinding, error)
-	// ListTemplateSetInvisibleApps list invisible apps of the target template set when update its app visible scope.
-	ListTemplateSetInvisibleApps(kit *kit.Kit, bizID, templateSetID uint32, boundApps []uint32) ([]uint32, error)
-	// DeleteTmplWithTx delete a template with transaction.
-	DeleteTmplWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error
-	// DeleteTmplSetWithTx delete a template set with transaction.
-	DeleteTmplSetWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32) error
-	// DeleteTmplSetForInvisibleAppsWithTx delete a template set for invisible apps with transaction.
-	DeleteTmplSetForInvisibleAppsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32, appIDs []uint32) error
+	// ListTemplateSetsBoundATBs list bound app template bindings of the target template sets.
+	ListTemplateSetsBoundATBs(kit *kit.Kit, bizID uint32, templateSetIDs []uint32) ([]*table.AppTemplateBinding, error)
+	// ListTemplatesBoundATBs list bound app template bindings of the target templates.
+	ListTemplatesBoundATBs(kit *kit.Kit, bizID uint32, templateIDs []uint32) ([]*table.AppTemplateBinding, error)
+	// ListTemplateSetInvisibleATBs list invisible atbs of the target template set when update its app visible scope.
+	ListTemplateSetInvisibleATBs(kit *kit.Kit, bizID, templateSetID uint32, boundApps []uint32) ([]*table.AppTemplateBinding, error)
 }
 
 var _ TemplateBindingRelation = new(templateBindingRelationDao)
@@ -305,73 +302,79 @@ func (dao *templateBindingRelationDao) ListLatestTemplateBoundUnnamedAppDetails(
 		Find()
 }
 
-// ListTemplateSetInvisibleApps list invisible apps of the target template set when update its app visible scope.
-func (dao *templateBindingRelationDao) ListTemplateSetInvisibleApps(
-	kit *kit.Kit, bizID, templateSetID uint32, boundApps []uint32) ([]uint32, error) {
-	var appIDs []uint32
+// ListTemplateSetsBoundATBs list bound app template bindings of the target template sets.
+func (dao *templateBindingRelationDao) ListTemplateSetsBoundATBs(kit *kit.Kit, bizID uint32, templateSetIDs []uint32) (
+	[]*table.AppTemplateBinding, error) {
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
-	if err := q.Distinct(m.AppID).
-		Where(m.BizID.Eq(bizID)).
+	details := make([]*table.AppTemplateBinding, 0)
+	for _, id := range templateSetIDs {
+		atbs, err := q.Where(m.BizID.Eq(bizID)).
+			Where(rawgen.Cond(datatypes.JSONArrayQuery("template_set_ids").Contains(id))...).
+			Find()
+		if err != nil {
+			return nil, err
+		}
+		details = append(details, atbs...)
+	}
+	if len(details) <= 1 {
+		return details, nil
+	}
+
+	// remove duplicated atb
+	uniqueDetails := make([]*table.AppTemplateBinding, 0)
+	existMap := make(map[uint32]bool)
+	for _, d := range details {
+		if existMap[d.ID] {
+			continue
+		}
+		existMap[d.ID] = true
+		uniqueDetails = append(uniqueDetails, d)
+	}
+
+	return uniqueDetails, nil
+}
+
+// ListTemplatesBoundATBs list bound app template bindings of the target templates.
+func (dao *templateBindingRelationDao) ListTemplatesBoundATBs(kit *kit.Kit, bizID uint32, templateIDs []uint32) (
+	[]*table.AppTemplateBinding, error) {
+	m := dao.genQ.AppTemplateBinding
+	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
+	details := make([]*table.AppTemplateBinding, 0)
+	for _, id := range templateIDs {
+		atbs, err := q.Where(m.BizID.Eq(bizID)).
+			Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(id))...).
+			Find()
+		if err != nil {
+			return nil, err
+		}
+		details = append(details, atbs...)
+	}
+	if len(details) <= 1 {
+		return details, nil
+	}
+
+	// remove duplicated atb
+	uniqueDetails := make([]*table.AppTemplateBinding, 0)
+	existMap := make(map[uint32]bool)
+	for _, d := range details {
+		if existMap[d.ID] {
+			continue
+		}
+		existMap[d.ID] = true
+		uniqueDetails = append(uniqueDetails, d)
+	}
+
+	return uniqueDetails, nil
+}
+
+// ListTemplateSetInvisibleATBs list invisible atbs of the target template set when update its app visible scope.
+func (dao *templateBindingRelationDao) ListTemplateSetInvisibleATBs(
+	kit *kit.Kit, bizID, templateSetID uint32, boundApps []uint32) ([]*table.AppTemplateBinding, error) {
+	m := dao.genQ.AppTemplateBinding
+	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
+	return q.Where(m.BizID.Eq(bizID)).
 		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_set_ids").Contains(templateSetID))...).
 		Where(m.AppID.NotIn(boundApps...)).
-		Pluck(m.AppID, &appIDs); err != nil {
-		return nil, err
-	}
-
-	return appIDs, nil
-}
-
-// DeleteTmplWithTx delete a template with transaction.
-func (dao *templateBindingRelationDao) DeleteTmplWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error {
-	m := tx.AppTemplateBinding
-	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
-	// subQuery get the array of template ids after delete the target template id, set it to '[]' if no records found
-	subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
-		"JSON_TABLE (template_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
-	if _, err := q.Where(m.BizID.Eq(bizID)).
-		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
-		Update(m.TemplateIDs, gorm.Expr(subQuery, tmplID)); err != nil {
-		return err
-	}
-
-	// NOTE: update the template binding whose format is {template set: [template releases]} as well
-	return nil
-}
-
-// DeleteTmplSetWithTx delete a template set with transaction.
-func (dao *templateBindingRelationDao) DeleteTmplSetWithTx(
-	kit *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32) error {
-	m := tx.AppTemplateBinding
-	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
-	// subQuery get the array of template set ids after delete the target template set id, set it to '[]' if no records found
-	subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
-		"JSON_TABLE (template_set_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
-	if _, err := q.Where(m.BizID.Eq(bizID)).
-		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_set_ids").Contains(tmplSetID))...).
-		Update(m.TemplateSetIDs, gorm.Expr(subQuery, tmplSetID)); err != nil {
-		return err
-	}
-
-	// NOTE: update the template binding whose format is {template set: [template releases]} as well
-	return nil
-}
-
-// DeleteTmplSetForInvisibleAppsWithTx delete a template set for invisible apps with transaction.
-func (dao *templateBindingRelationDao) DeleteTmplSetForInvisibleAppsWithTx(
-	kit *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32, appIDs []uint32) error {
-	m := tx.AppTemplateBinding
-	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
-	// subQuery get the array of template set ids after delete the target template set id, set it to '[]' if no records found
-	subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
-		"JSON_TABLE (template_set_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
-	if _, err := q.Where(m.BizID.Eq(bizID)).
-		Where(m.AppID.In(appIDs...)).
-		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_set_ids").Contains(tmplSetID))...).
-		Update(m.TemplateSetIDs, gorm.Expr(subQuery, tmplSetID)); err != nil {
-		return err
-	}
-
-	// NOTE: update the template binding whose format is {template set: [template releases]} as well
-	return nil
+		Find()
 }

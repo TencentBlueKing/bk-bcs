@@ -44,6 +44,8 @@ type TemplateRevision interface {
 	ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) ([]*table.TemplateRevision, error)
 	// ListByTemplateIDs list template revisions by template ids.
 	ListByTemplateIDs(kit *kit.Kit, bizID uint32, templateIDs []uint32) ([]*table.TemplateRevision, error)
+	// ListByTemplateIDsWithTx list template revisions by template ids with transaction.
+	ListByTemplateIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32, templateIDs []uint32) ([]*table.TemplateRevision, error)
 	// DeleteForTmplWithTx delete template revision for one template with transaction.
 	DeleteForTmplWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateID uint32) error
 }
@@ -225,6 +227,14 @@ func (dao *templateRevisionDao) ListByTemplateIDs(kit *kit.Kit, bizID uint32, te
 	error) {
 	m := dao.genQ.TemplateRevision
 	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
+	return q.Where(m.BizID.Eq(bizID), m.TemplateID.In(templateIDs...)).Find()
+}
+
+// ListByTemplateIDsWithTx list template revisions by template ids with transaction.
+func (dao *templateRevisionDao) ListByTemplateIDsWithTx(
+	kit *kit.Kit, tx *gen.QueryTx, bizID uint32, templateIDs []uint32) ([]*table.TemplateRevision, error) {
+	m := tx.TemplateRevision
+	q := tx.TemplateRevision.WithContext(kit.Ctx)
 	return q.Where(m.BizID.Eq(bizID), m.TemplateID.In(templateIDs...)).Find()
 }
 

@@ -18,11 +18,14 @@ import (
 	"fmt"
 	"sort"
 
+	spb "google.golang.org/protobuf/types/known/structpb"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
@@ -36,10 +39,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
-	spb "google.golang.org/protobuf/types/known/structpb"
-	corev1 "k8s.io/api/core/v1"
 )
 
 // ListAction list action for cluster
@@ -736,19 +736,19 @@ func (la *ListNodesInClusterAction) handleNodes() {
 	for i := range nodes {
 		instanceMap[nodes[i].InnerIP] = nodes[i]
 	}
-
+	// 获取语言
+	lang := i18n.LanguageFromCtx(la.ctx)
 	// get node zoneName
 	for i := range la.nodes {
-		if len(la.nodes[i].GetZoneName()) == 0 {
-			node, ok := instanceMap[la.nodes[i].InnerIP]
-			if ok {
-				la.nodes[i].ZoneName = node.ZoneName
-			}
+		if len(la.nodes[i].GetZoneName()) > 0 {
+			continue
 		}
-		if len(la.nodes[i].GetNodeID()) == 0 {
-			node, ok := instanceMap[la.nodes[i].InnerIP]
-			if ok {
-				la.nodes[i].NodeID = node.NodeID
+
+		node, ok := instanceMap[la.nodes[i].InnerIP]
+		if ok {
+			la.nodes[i].ZoneName = node.ZoneName
+			if lang != "zh" {
+				la.nodes[i].ZoneName = node.ZoneID
 			}
 		}
 	}

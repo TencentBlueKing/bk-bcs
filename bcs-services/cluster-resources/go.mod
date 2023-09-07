@@ -24,7 +24,6 @@ require (
 	github.com/golang/glog v1.0.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0
-	github.com/googleapis/gnostic v0.5.5
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
@@ -188,6 +187,7 @@ require (
 )
 
 require (
+	github.com/google/gnostic-models v0.6.8
 	google.golang.org/genproto/googleapis/api v0.0.0-20230525234035-dd9d682886f9
 	k8s.io/kubectl v0.28.0
 )
@@ -202,7 +202,6 @@ require (
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/google/btree v1.0.1 // indirect
-	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

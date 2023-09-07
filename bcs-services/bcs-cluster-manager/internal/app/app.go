@@ -15,6 +15,7 @@ package app
 import (
 	"context"
 	"crypto/tls"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,19 +31,31 @@ import (
 	"syscall"
 	"time"
 
+	restful "github.com/emicklei/go-restful"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
+	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
+	microsvc "github.com/micro/go-micro/v2/service"
+	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc"
+	grpccred "google.golang.org/grpc/credentials"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	i18n2 "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
@@ -75,18 +88,7 @@ import (
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	restful "github.com/emicklei/go-restful"
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
-	microsvc "github.com/micro/go-micro/v2/service"
-	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
-	grpccred "google.golang.org/grpc/credentials"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // ClusterManager cluster manager
@@ -957,6 +959,7 @@ func (cm *ClusterManager) initMicro() error {
 			return nil
 		}),
 		microsvc.WrapHandler(
+			utils.HandleLanguageWrapper,
 			utils.RequestLogWarpper,
 			utils.ResponseWrapper,
 			authWrapper.AuthenticationFunc,
@@ -1098,8 +1101,18 @@ func (cm *ClusterManager) Init() error {
 	cm.initExtraModules()
 	// init system signal handler
 	cm.initSignalHandler()
-
+	// init i18n
+	cm.initI18n()
 	return nil
+}
+
+func (cm *ClusterManager) initI18n() {
+	i18n.Instance()
+	// 加载翻译文件路径
+	i18n.SetPath([]embed.FS{i18n2.Assets})
+	// 设置默认语言
+	// 默认是 zh
+	i18n.SetLanguage("zh")
 }
 
 // Run run cluster manager server

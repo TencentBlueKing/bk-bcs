@@ -185,27 +185,27 @@ func PbAppTemplateBinding(s *table.AppTemplateBinding) *AppTemplateBinding {
 	}
 }
 
-// PbAppBoundTmplRevisions convert table ReleasedAppTemplate to pb AppBoundTmplRevision
-func PbAppBoundTmplRevisions(s []*table.ReleasedAppTemplate) []*AppBoundTmplRevision {
+// PbReleasedAppBoundTmplRevisions convert table ReleasedAppTemplate to pb ReleasedAppBoundTmplRevision
+func PbReleasedAppBoundTmplRevisions(s []*table.ReleasedAppTemplate) []*ReleasedAppBoundTmplRevision {
 	if s == nil {
-		return make([]*AppBoundTmplRevision, 0)
+		return make([]*ReleasedAppBoundTmplRevision, 0)
 	}
 
-	result := make([]*AppBoundTmplRevision, 0)
+	result := make([]*ReleasedAppBoundTmplRevision, 0)
 	for _, one := range s {
-		result = append(result, PbAppBoundTmplRevision(one))
+		result = append(result, PbReleasedAppBoundTmplRevision(one))
 	}
 
 	return result
 }
 
-// PbAppBoundTmplRevision convert table ReleasedAppTemplate to pb AppBoundTmplRevision
-func PbAppBoundTmplRevision(s *table.ReleasedAppTemplate) *AppBoundTmplRevision {
+// PbReleasedAppBoundTmplRevision convert table ReleasedAppTemplate to pb ReleasedAppBoundTmplRevision
+func PbReleasedAppBoundTmplRevision(s *table.ReleasedAppTemplate) *ReleasedAppBoundTmplRevision {
 	if s == nil {
 		return nil
 	}
 
-	return &AppBoundTmplRevision{
+	return &ReleasedAppBoundTmplRevision{
 		TemplateSpaceId:      s.Spec.TemplateSpaceID,
 		TemplateSpaceName:    s.Spec.TemplateSpaceName,
 		TemplateSetId:        s.Spec.TemplateSetID,
@@ -224,6 +224,8 @@ func PbAppBoundTmplRevision(s *table.ReleasedAppTemplate) *AppBoundTmplRevision 
 		Privilege:            s.Spec.Privilege,
 		Signature:            s.Spec.Signature,
 		ByteSize:             s.Spec.ByteSize,
+		RenderedSignature:    s.Spec.RenderedSignature,
+		RenderedByteSize:     s.Spec.RenderedByteSize,
 		Creator:              s.Revision.Creator,
 		CreateAt:             s.Revision.CreatedAt.Format(constant.TimeStdFormat),
 	}
