@@ -15,7 +15,9 @@ package cloudresource
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -181,6 +183,13 @@ func (ga *GetCloudRegionZonesAction) listCloudRegionZones() error {
 	zoneList, err := nodeMgr.GetZoneList(cmOption)
 	if err != nil {
 		return err
+	}
+	// 获取语言
+	lang := i18n.LanguageFromCtx(ga.ctx)
+	if lang != "zh" {
+		for _, item := range zoneList {
+			item.ZoneName = item.Zone
+		}
 	}
 
 	ga.zoneList = zoneList
