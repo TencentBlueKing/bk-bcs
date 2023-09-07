@@ -113,3 +113,23 @@ func (h *Handler) DeleteDeploy(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
+
+// RestartDeploy 重新调度 Deployment
+func (h *Handler) RestartDeploy(
+	ctx context.Context, req *clusterRes.ResRestartReq, resp *clusterRes.CommonResp,
+) (err error) {
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.Deploy).Restart(
+		ctx, req.Namespace, req.Name, metav1.PatchOptions{FieldManager: "kubectl-rollout"},
+	)
+	return err
+}
+
+// PauseOrResumeDeploy 暂停或恢复 Deployment
+func (h *Handler) PauseOrResumeDeploy(
+	ctx context.Context, req *clusterRes.ResPauseOrResumeReq, resp *clusterRes.CommonResp,
+) (err error) {
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.Deploy).PauseOrResume(
+		ctx, req.Namespace, req.Name, req.Value, metav1.PatchOptions{},
+	)
+	return err
+}

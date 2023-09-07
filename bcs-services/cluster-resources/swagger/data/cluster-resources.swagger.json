@@ -3588,6 +3588,114 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/history/{name}": {
+      "get": {
+        "summary": "GetDSHistoryRevision API",
+        "description": "获取 DaemonSet Revision",
+        "operationId": "Workload_GetDSHistoryRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/rollout/{name}": {
+      "put": {
+        "summary": "RolloutDSRevision API",
+        "description": "回滚 DaemonSet Revision",
+        "operationId": "Workload_RolloutDSRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesRolloutDeployRevisionReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}": {
       "get": {
         "summary": "GetDS API",
@@ -3748,6 +3856,64 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterresourcesResUpdateReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/restart": {
+      "put": {
+        "summary": "RestartDeploy API",
+        "description": "重新调度 DaemonSet",
+        "operationId": "Workload_RestartDS",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesResRestartReq"
             }
           }
         ],
@@ -4175,6 +4341,71 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/pause_resume/{value}": {
+      "put": {
+        "summary": "PauseOrResumeDeploy API",
+        "description": "暂停或恢复 Deployment",
+        "operationId": "Workload_PauseOrResumeDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "description": "暂停或者恢复(true暂停，false恢复)",
+            "in": "path",
+            "required": true,
+            "type": "boolean"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesResPauseOrResumeReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/reschedule": {
       "put": {
         "summary": "RescheduleDeployPo API",
@@ -4225,6 +4456,64 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterresourcesResBatchRescheduleReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/restart": {
+      "put": {
+        "summary": "RestartDeploy API",
+        "description": "重新调度 Deployment",
+        "operationId": "Workload_RestartDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesResRestartReq"
             }
           }
         ],
@@ -5383,6 +5672,114 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/history/{name}": {
+      "get": {
+        "summary": "GetSTSHistoryRevision API",
+        "description": "获取 StatefulSet Revision",
+        "operationId": "Workload_GetSTSHistoryRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/rollout/{name}": {
+      "put": {
+        "summary": "RolloutSTSRevision API",
+        "description": "回滚 StatefulSet Revision",
+        "operationId": "Workload_RolloutSTSRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesRolloutDeployRevisionReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}": {
       "get": {
         "summary": "GetSTS API",
@@ -5601,6 +5998,64 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterresourcesResBatchRescheduleReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/restart": {
+      "put": {
+        "summary": "RestartDeploy API",
+        "description": "重新调度 StatefulSet",
+        "operationId": "Workload_RestartSTS",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesResRestartReq"
             }
           }
         ],
@@ -7464,6 +7919,57 @@
       },
       "description": "创建单个 k8s 资源请求体",
       "title": "ResCreateReq"
+    },
+    "clusterresourcesResPauseOrResumeReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "name": {
+          "type": "string",
+          "title": "资源名称"
+        },
+        "value": {
+          "type": "boolean",
+          "description": "暂停或者恢复(true暂停，false恢复)",
+          "title": "value"
+        }
+      },
+      "description": "暂停或恢复单个 k8s 资源请求体",
+      "title": "ResPauseOrResumeReq"
+    },
+    "clusterresourcesResRestartReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "name": {
+          "type": "string",
+          "title": "资源名称"
+        }
+      },
+      "description": "重新部署单个 k8s 资源请求体",
+      "title": "ResRestartReq"
     },
     "clusterresourcesResScaleReq": {
       "type": "object",
