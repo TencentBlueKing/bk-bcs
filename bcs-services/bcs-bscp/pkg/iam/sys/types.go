@@ -36,8 +36,9 @@ var SystemIDNameMap = map[string]string{
 
 // TypeID resource type to register iam.
 const (
-	Business    client.TypeID = "biz"
-	Application client.TypeID = "app"
+	Business      client.TypeID = "biz"
+	Application   client.TypeID = "app"
+	AppCredential client.TypeID = "app_credential"
 )
 
 // ActionID action id to register iam.
@@ -53,8 +54,8 @@ const (
 	AppEdit client.ActionID = "app_edit"
 	// AppDelete app delete.
 	AppDelete client.ActionID = "app_delete"
-	// GenerateRelease generate release.
-	GenerateRelease client.ActionID = "generate_release"
+	// ReleaseGenerate generate release.
+	ReleaseGenerate client.ActionID = "release_generate"
 	// ReleasePublish release publish.
 	ReleasePublish client.ActionID = "release_publish"
 	// ConfigItemFinishPublish config item finish publish.
@@ -89,14 +90,10 @@ const (
 	// Skip is an action that no need to auth
 	Skip client.ActionID = "skip"
 
-	// CredentialCreate 服务密钥创建
-	CredentialCreate client.ActionID = "credential_create"
 	// CredentialView 服务密钥查看
-	CredentialView client.ActionID = "credential_view"
-	// CredentialEdit 服务密钥编辑
-	CredentialEdit client.ActionID = "credential_edit"
-	// CredentialDelete 服务密钥删除
-	CredentialDelete client.ActionID = "credential_delete"
+	CredentialView client.ActionID = "app_credential_view"
+	// CredentialManage 服务密钥管理
+	CredentialManage client.ActionID = "app_credential_manage"
 )
 
 // ActionIDNameMap is action id type map.
@@ -107,7 +104,7 @@ var ActionIDNameMap = map[client.ActionID]string{
 	AppView:                 "服务查看",
 	AppEdit:                 "服务编辑",
 	AppDelete:               "服务删除",
-	GenerateRelease:         "生成版本",
+	ReleaseGenerate:         "生成版本",
 	ReleasePublish:          "上线版本",
 	ConfigItemFinishPublish: "配置项结束发布",
 
@@ -125,10 +122,8 @@ var ActionIDNameMap = map[client.ActionID]string{
 
 	TaskHistoryView: "任务历史",
 
-	CredentialCreate: "服务密钥创建",
-	CredentialView:   "服务密钥查看",
-	CredentialEdit:   "服务密钥编辑",
-	CredentialDelete: "服务密钥删除",
+	CredentialView:   "服务秘钥查看",
+	CredentialManage: "服务秘钥管理",
 }
 
 // InstanceSelectionID selection id to register iam.
@@ -143,6 +138,7 @@ const (
 	Delete client.ActionType = "delete"
 	View   client.ActionType = "view"
 	Edit   client.ActionType = "edit"
+	Manage client.ActionType = "manage"
 	List   client.ActionType = "list"
 )
 
@@ -152,5 +148,6 @@ var ActionTypeIDNameMap = map[client.ActionType]string{
 	Edit:   "编辑",
 	Delete: "删除",
 	View:   "查询",
+	Manage: "管理",
 	List:   "列表查询",
 }

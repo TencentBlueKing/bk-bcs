@@ -83,9 +83,9 @@ func (s *Sys) Register(ctx context.Context, host string) error {
 		return err
 	}
 
-	// if err := s.registerResCreatorAction(ctx, system.ResourceCreatorActions); err != nil {
-	// 	return err
-	// }
+	if err := s.registerResCreatorAction(ctx, system.ResourceCreatorActions); err != nil {
+		return err
+	}
 
 	if err := s.registerCommonAction(ctx, system.CommonActions); err != nil {
 		return err

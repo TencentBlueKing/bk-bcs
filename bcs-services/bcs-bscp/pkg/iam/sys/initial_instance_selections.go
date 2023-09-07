@@ -18,8 +18,19 @@ import "bscp.io/pkg/iam/client"
 func GenerateStaticInstanceSelections() []client.InstanceSelection {
 	return []client.InstanceSelection{
 		{
+			ID:     BusinessSelection,
+			Name:   "业务列表",
+			NameEn: "Business List",
+			ResourceTypeChain: []client.ResourceChain{
+				{
+					SystemID: SystemIDCMDB,
+					ID:       Business,
+				},
+			},
+		},
+		{
 			ID:     ApplicationSelection,
-			Name:   "应用列表",
+			Name:   "服务列表",
 			NameEn: "Application List",
 			ResourceTypeChain: []client.ResourceChain{
 				{

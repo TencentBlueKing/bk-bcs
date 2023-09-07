@@ -209,6 +209,8 @@ type IAM struct {
 	// Endpoints is a seed list of host:port addresses of iam nodes.
 	Endpoints []string `yaml:"endpoints"`
 	APIURL    string   `yaml:"api_url"`
+	// Host is the host of current system, in the other word bk-bscp.
+	Host string `yaml:"host"`
 	// AppCode blueking belong to bscp's appcode.
 	AppCode string `yaml:"appCode"`
 	// AppSecret blueking belong to bscp app's secret.

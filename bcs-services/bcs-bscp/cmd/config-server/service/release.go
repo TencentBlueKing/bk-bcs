@@ -28,9 +28,11 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateReleaseResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Create,
-		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.App, Action: meta.GenerateRelease, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,9 +64,11 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListReleasesResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Find,
-		ResourceID: req.AppId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
 		return nil, err
 	}
 
@@ -95,8 +99,11 @@ func (s *Service) GetReleaseByName(ctx context.Context, req *pbcs.GetReleaseByNa
 	kt := kit.FromGrpcContext(ctx)
 	resp := new(pbrelease.Release)
 
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
 	if err != nil {
 		return nil, err
 	}

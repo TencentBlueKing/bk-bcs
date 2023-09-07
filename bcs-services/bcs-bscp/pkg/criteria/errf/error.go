@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"strings"
 
+	"bscp.io/pkg/iam/meta"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -105,6 +106,20 @@ func Error(err error) *ErrorF {
 	}
 
 	return ef
+}
+
+type PermissionDeniedError struct {
+	Resources []meta.BasicDetail `json:"resources"`
+	ApplyURL  string             `json:"apply_url"`
+}
+
+func (e PermissionDeniedError) Error() string {
+	actions := make([]string, 0, len(e.Resources))
+	for _, resource := range e.Resources {
+		actions = append(actions, resource.ActionName)
+	}
+	return fmt.Sprintf("permission denied, need %s permission, apply url: %s",
+		strings.Join(actions, ", "), e.ApplyURL)
 }
 
 // RPCAborted 通过 msg 构建通用 rpc 退出错误
