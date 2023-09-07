@@ -51,10 +51,12 @@ type TemplateSet interface {
 		*table.TemplateSet, error)
 	// ListByIDs list template sets by template set ids.
 	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSet, error)
-	// AddTemplatesToTemplateSets add templates to template sets.
-	AddTemplatesToTemplateSets(kit *kit.Kit, tmplIDs []uint32, tmplSetIDs []uint32) error
-	// DeleteTemplatesFromTemplateSets delete templates from template sets.
-	DeleteTemplatesFromTemplateSets(kit *kit.Kit, tmplIDs []uint32, tmplSetIDs []uint32) error
+	// ListByIDsWithTx list template sets by template set ids with transaction.
+	ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) ([]*table.TemplateSet, error)
+	// AddTemplatesToTemplateSetsWithTx add templates to template sets with transaction.
+	AddTemplatesToTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32, tmplSetIDs []uint32) error
+	// DeleteTemplatesFromTemplateSetsWithTx delete templates from template sets with transaction.
+	DeleteTemplatesFromTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32, tmplSetIDs []uint32) error
 	// AddTemplateToTemplateSetsWithTx add a template to template sets with transaction.
 	AddTemplateToTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplID uint32, tmplSetIDs []uint32) error
 	// DeleteTmplFromAllTmplSetsWithTx delete a template from all template sets with transaction.
@@ -325,50 +327,48 @@ func (dao *templateSetDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.Templ
 	return result, nil
 }
 
-// AddTemplatesToTemplateSets add templates to template sets.
-func (dao *templateSetDao) AddTemplatesToTemplateSets(kit *kit.Kit, tmplIDs, tmplSetIDs []uint32) error {
-	// use transaction for many operations
-	updateTx := func(tx *gen.Query) error {
-		m := tx.TemplateSet
-		q := tx.TemplateSet.WithContext(kit.Ctx)
-		for _, tmplID := range tmplIDs {
-			if _, err := q.Where(m.ID.In(tmplSetIDs...)).
-				Not(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
-				Update(m.TemplateIDs, gorm.Expr("JSON_ARRAY_APPEND(template_ids, '$', ?)", tmplID)); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-	if err := dao.genQ.Transaction(updateTx); err != nil {
-		return err
+// ListByIDsWithTx list template sets by template set ids with transaction.
+func (dao *templateSetDao) ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) ([]*table.TemplateSet, error) {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	result, err := q.Where(m.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
 	}
 
+	return result, nil
+}
+
+// AddTemplatesToTemplateSetsWithTx add templates to template sets with transaction.
+func (dao *templateSetDao) AddTemplatesToTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32,
+	tmplSetIDs []uint32) error {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	for _, tmplID := range tmplIDs {
+		if _, err := q.Where(m.ID.In(tmplSetIDs...)).
+			Not(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+			Update(m.TemplateIDs, gorm.Expr("JSON_ARRAY_APPEND(template_ids, '$', ?)", tmplID)); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-// DeleteTemplatesFromTemplateSets delete templates from template sets.
-func (dao *templateSetDao) DeleteTemplatesFromTemplateSets(kit *kit.Kit, tmplIDs, tmplSetIDs []uint32) error {
-	// use transaction for many operations
-	updateTx := func(tx *gen.Query) error {
-		m := tx.TemplateSet
-		q := tx.TemplateSet.WithContext(kit.Ctx)
-		for _, tmplID := range tmplIDs {
-			// subQuery get the array of template ids after delete the target template id, set it to '[]' if no records found
-			subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
-				"JSON_TABLE (template_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
-			if _, err := q.Where(m.ID.In(tmplSetIDs...)).
-				Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
-				Update(m.TemplateIDs, gorm.Expr(subQuery, tmplID)); err != nil {
-				return err
-			}
+// DeleteTemplatesFromTemplateSetsWithTx delete templates from template sets with transaction.
+func (dao *templateSetDao) DeleteTemplatesFromTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs,
+	tmplSetIDs []uint32) error {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	for _, tmplID := range tmplIDs {
+		// subQuery get the array of template ids after delete the target template id, set it to '[]' if no records found
+		subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
+			"JSON_TABLE (template_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
+		if _, err := q.Where(m.ID.In(tmplSetIDs...)).
+			Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+			Update(m.TemplateIDs, gorm.Expr(subQuery, tmplID)); err != nil {
+			return err
 		}
-		return nil
 	}
-	if err := dao.genQ.Transaction(updateTx); err != nil {
-		return err
-	}
-
 	return nil
 }
 
