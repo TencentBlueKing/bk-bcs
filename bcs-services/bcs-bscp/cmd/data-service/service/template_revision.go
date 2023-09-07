@@ -64,11 +64,11 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 		return nil, err
 	}
 
-	// 2. update the latest template revision for app template bindings if necessary
+	// 2. update app template bindings if necessary
 	atbs, err := s.dao.TemplateBindingRelation().
 		ListLatestTemplateBoundUnnamedAppDetails(kt, req.Attachment.BizId, req.Attachment.TemplateId)
 	if err != nil {
-		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list latest template bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	if len(atbs) > 0 {
@@ -81,7 +81,10 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 		}
 	}
 
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 
 	resp := &pbds.CreateResp{Id: id}
 	return resp, nil

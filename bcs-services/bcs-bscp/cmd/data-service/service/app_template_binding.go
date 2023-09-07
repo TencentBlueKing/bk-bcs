@@ -379,7 +379,6 @@ func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*tab
 		latestTmplMap[b.TemplateSetID] = make(map[uint32]bool)
 		for _, r := range b.TemplateRevisions {
 			if r.IsLatest {
-				pbs.LatestTemplateIDs = append(pbs.LatestTemplateIDs, r.TemplateID)
 				latestTmplMap[b.TemplateSetID][r.TemplateID] = true
 			} else {
 				// only append non latest template revisions at beginning
@@ -391,7 +390,7 @@ func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*tab
 	}
 
 	// get all the templates of the template set
-	templateSets, err := s.dao.TemplateSet().ListByIDs(kt, pbs.TemplateSetIDs)
+	templateSets, err := s.dao.TemplateSet().ListByIDsWithTx(kt, tx, pbs.TemplateSetIDs)
 	if err != nil {
 		logs.Errorf("list template set by ids failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -414,7 +413,7 @@ func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*tab
 			}
 		}
 	}
-	if err := s.validateTmplForATB(kt, pbs.TemplateIDs); err != nil {
+	if err := s.validateTmplForATBWithTx(kt, tx, pbs.TemplateIDs); err != nil {
 		logs.Errorf("validate template for app template binding failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
@@ -459,6 +458,44 @@ func (s *Service) validateTmplForATB(kt *kit.Kit, tmplIDs []uint32) error {
 	if repeated := tools.SliceRepeatedElements(tmplIDs); len(repeated) > 0 {
 		// get template details
 		tmpls, err := s.dao.Template().ListByIDs(kt, repeated)
+		if err != nil {
+			logs.Errorf("list template by ids failed, err: %v, rid: %s", err, kt.Rid)
+			return err
+		}
+		type tmplT struct {
+			ID   uint32 `json:"id"`
+			Name string `json:"name"`
+			Path string `json:"path"`
+		}
+		details := make([]tmplT, len(tmpls))
+		for idx, t := range tmpls {
+			details[idx] = tmplT{
+				ID:   t.ID,
+				Name: t.Spec.Name,
+				Path: t.Spec.Path,
+			}
+		}
+		detailsJs, err := json.Marshal(details)
+		if err != nil {
+			logs.Errorf("marshal template details failed, err: %v, rid: %s", err, kt.Rid)
+			return err
+		}
+		return fmt.Errorf("same template id in %v can't be bound to the same app, template details: %s",
+			repeated, detailsJs)
+	}
+
+	return nil
+}
+
+// validateTmplForATBWithTx validate template with transaction to avoid same templates are bound to one app
+func (s *Service) validateTmplForATBWithTx(kt *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32) error {
+	if len(tmplIDs) == 0 {
+		return nil
+	}
+
+	if repeated := tools.SliceRepeatedElements(tmplIDs); len(repeated) > 0 {
+		// get template details
+		tmpls, err := s.dao.Template().ListByIDsWithTx(kt, tx, repeated)
 		if err != nil {
 			logs.Errorf("list template by ids failed, err: %v, rid: %s", err, kt.Rid)
 			return err

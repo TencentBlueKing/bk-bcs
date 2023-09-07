@@ -46,6 +46,8 @@ type Template interface {
 	GetByID(kit *kit.Kit, bizID, templateID uint32) (*table.Template, error)
 	// ListByIDs list templates by template ids.
 	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.Template, error)
+	// ListByIDsWithTx list templates by template ids with transaction.
+	ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) ([]*table.Template, error)
 	// ListAllIDs list all template ids.
 	ListAllIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error)
 }
@@ -283,6 +285,18 @@ func (dao *templateDao) GetByID(kit *kit.Kit, bizID, templateID uint32) (*table.
 func (dao *templateDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.Template, error) {
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
+	result, err := q.Where(m.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// ListByIDsWithTx list templates by template ids with transaction.
+func (dao *templateDao) ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) ([]*table.Template, error) {
+	m := tx.Template
+	q := tx.Template.WithContext(kit.Ctx)
 	result, err := q.Where(m.ID.In(ids...)).Find()
 	if err != nil {
 		return nil, err
