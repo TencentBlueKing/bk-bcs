@@ -16,6 +16,8 @@ package constant
 const (
 	// CurrentUserAttr user header
 	CurrentUserAttr = "current-user"
+	// ProjectAttr project header
+	ProjectAttr = "project"
 
 	// DefaultTokenLength user token default length
 	// token is consisted of digital and alphabet(case sensetive)
@@ -30,6 +32,8 @@ const (
 	RequestIDHeaderKey = "X-Request-Id"
 	// RequestIDKey requestID
 	RequestIDKey = "requestID"
+	// Traceparent Traceparent
+	Traceparent = "Traceparent"
 	// TracerName go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
 	TracerName = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )

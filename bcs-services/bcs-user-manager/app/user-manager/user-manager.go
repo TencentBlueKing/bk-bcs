@@ -35,12 +35,12 @@ import (
 	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v3http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/migrations"
@@ -101,8 +101,8 @@ func (u *UserManager) Start() error {
 	}
 
 	// usermanager api
-	ws := u.httpServ.NewWebService("/usermanager", nil)
-	u.initRouters(ws)
+	v1http.InitV1Routers(u.httpServ.NewWebService("/usermanager", nil), u.permService)
+	v3http.InitV3Routers(u.httpServ.NewWebService("/usermanager/v3", nil))
 
 	router := u.httpServ.GetRouter()
 	webContainer := u.httpServ.GetWebContainer()
@@ -132,15 +132,6 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 	}
 
 	chain.ProcessFilter(req, resp)
-}
-
-// initRouters init usermanager http router
-func (u *UserManager) initRouters(ws *restful.WebService) {
-	ws.Filter(middleware.RequestIDFilter)
-	ws.Filter(middleware.TracingFilter)
-	ws.Filter(middleware.LoggingFilter)
-	v1http.InitV1Routers(ws, u.permService)
-	// register pull resource API
 }
 
 func (u *UserManager) initPermService() error {

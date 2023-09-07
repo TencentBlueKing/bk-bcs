@@ -276,7 +276,7 @@ func (ic *iamClient) MultiActionsAllowedWithoutResource(actions []string, reques
 		return nil, ErrServerNotInit
 	}
 
-	req := request.MakeRequestMultiActionsWithoutResources(actions)
+	req := request.MakeReqMultiActionsWithoutRes(actions)
 	return ic.cli.ResourceMultiActionsAllowed(req)
 }
 
@@ -345,7 +345,7 @@ func (ic *iamClient) GetApplyURL(request ApplicationRequest, relatedResources []
 	url, err := ic.cli.GetApplyURL(application, user.BkToken, user.BkUserName)
 	if err != nil {
 		klog.Errorf("iam generate apply url failed: %s", err)
-		return IamAppURL, nil
+		return IamAppURL, err
 	}
 
 	return url, nil

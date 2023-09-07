@@ -79,7 +79,7 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedulerapi.ExtenderFilterResult, error) {
 	// invalid type of custom scheduler, it should be IpSchedulerV3
 	if DefaultIpScheduler == nil {
-		return nil, fmt.Errorf("invalid type of custom scheduler, please check the custome scheduler config")
+		return nil, fmt.Errorf("invalid type of custom scheduler, please check the custom scheduler config")
 	}
 	canSchedule := make([]v1.Node, 0, len(extenderArgs.Nodes.Items))
 	canNotSchedule := make(map[string]string)

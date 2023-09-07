@@ -108,17 +108,17 @@ func (s *Server) cleanAllocatedResource(items [][]portpoolcache.AllocatedPortIte
 }
 
 // check existed port binding
-func (s *Server) checkExistedPortBinding(pod *k8scorev1.Pod, portList []*portEntry) (
+func (s *Server) checkExistedPortBinding(name, namespace string, portList []*portEntry, annotation map[string]string) (
 	*networkextensionv1.PortBinding, error) {
 	portBinding := &networkextensionv1.PortBinding{}
 	if err := s.k8sClient.Get(context.Background(), k8stypes.NamespacedName{
-		Name:      pod.GetName(),
-		Namespace: pod.GetNamespace(),
+		Name:      name,
+		Namespace: namespace,
 	}, portBinding); err != nil {
 		if k8serrors.IsNotFound(err) {
 			return nil, nil
 		}
-		return nil, errors.Wrapf(err, "get portbinding '%s/%s' failed", pod.GetName(), pod.GetNamespace())
+		return nil, errors.Wrapf(err, "get portbinding '%s/%s' failed", namespace, name)
 	}
 	// to prevent pod from reusing the old portbinding without keep duration
 	if !isPortBindingKeepDurationExisted(portBinding) {
@@ -126,9 +126,8 @@ func (s *Server) checkExistedPortBinding(pod *k8scorev1.Pod, portList []*portEnt
 			portBinding.GetName(), portBinding.GetNamespace())
 	}
 	// 用户移除了Pod上的KeepDuration标记
-	if !isPodKeepDurationExisted(pod) {
-		blog.Infof("remove pods' '%s/%s' keep duration annotate, delete portBinding quickly",
-			pod.GetNamespace(), pod.GetName())
+	if !isKeepDurationExisted(annotation) {
+		blog.Infof("remove '%s/%s' keep duration annotate, delete portBinding quickly", namespace, name)
 		// 移除portBinding上的keepDuration注解，尽快删除
 		if err := s.removePortBindingAnnotation(portBinding); err != nil {
 			return nil, errors.Wrapf(err, "remove portbinding '%s/%s' annotations failed, err: %s",
@@ -196,7 +195,7 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 	}
 
 	// check for existed port binding
-	portBinding, err := s.checkExistedPortBinding(pod, portEntryList)
+	portBinding, err := s.checkExistedPortBinding(pod.GetName(), pod.GetNamespace(), portEntryList, pod.GetAnnotations())
 	if err != nil {
 		return nil, errors.Wrapf(err, checkPortBindingExistedFailed)
 	}
@@ -205,51 +204,17 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 		return s.patchPodByBinding(pod, portBinding)
 	}
 
-	portPoolItemStatusList := make([]*networkextensionv1.PortPoolItemStatus, 0, len(portEntryList))
-	portItemListArr := make([][]portpoolcache.AllocatedPortItem, 0, len(portEntryList))
-
 	blog.Infof("pod '%s/%s' do port inject", pod.GetNamespace(), pod.GetName())
-	// allocate port from pool cache
-	s.poolCache.Lock()
-	defer s.poolCache.Unlock()
-	for _, portEntry := range portEntryList {
-		poolKey := getPoolKey(portEntry.poolName, portEntry.poolNamespace)
-		var portPoolItemStatus *networkextensionv1.PortPoolItemStatus
-		var inErr error
-		// deal with TCP_UDP protocol
-		// for TCP_UDP protocol, one container port needs both TCP listener port and UDP listener port
-		if portEntry.protocol == constant.PortPoolPortProtocolTCPUDP {
-			var cachePortItemMap map[string]portpoolcache.AllocatedPortItem
-			portPoolItemStatus, cachePortItemMap, inErr = s.poolCache.AllocateAllProtocolPortBinding(poolKey)
-			if inErr != nil {
-				s.cleanAllocatedResource(portItemListArr)
-				return nil, fmt.Errorf("allocate protocol %s port from pool %s failed, err %s",
-					portEntry.protocol, poolKey, inErr.Error())
-			}
-			var tmpPortItemList []portpoolcache.AllocatedPortItem
-			for _, cachePortItem := range cachePortItemMap {
-				tmpPortItemList = append(tmpPortItemList, cachePortItem)
-			}
-			portItemListArr = append(portItemListArr, tmpPortItemList)
-			portPoolItemStatusList = append(portPoolItemStatusList, portPoolItemStatus)
-		} else {
-			// deal with TCP protocol and UDP protocol
-			var cachePortItem portpoolcache.AllocatedPortItem
-			portPoolItemStatus, cachePortItem, inErr = s.poolCache.AllocatePortBinding(poolKey, portEntry.protocol)
-			if inErr != nil {
-				s.cleanAllocatedResource(portItemListArr)
-				return nil, fmt.Errorf("allocate protocol %s port from pool %s failed, err %s",
-					portEntry.protocol, poolKey, inErr.Error())
-			}
-			portItemListArr = append(portItemListArr, []portpoolcache.AllocatedPortItem{cachePortItem})
-			portPoolItemStatusList = append(portPoolItemStatusList, portPoolItemStatus)
-		}
+
+	portPoolItemStatusList, portItemListArr, err := s.portAllocate(portEntryList)
+	if err != nil {
+		return nil, err
 	}
 
 	// patch annotations
 	var retPatches []PatchOperation
 	annotationPortsPatch, err := s.generatePortsAnnotationPatch(
-		pod, portPoolItemStatusList, portItemListArr, portEntryList)
+		pod.Annotations, portPoolItemStatusList, portItemListArr, portEntryList)
 	if err != nil {
 		s.cleanAllocatedResource(portItemListArr)
 		return nil, fmt.Errorf("generate ports of port pool annotations failed, err %s", err.Error())
@@ -447,7 +412,7 @@ func (s *Server) generateContainerEnvPatchByBinding(
 }
 
 // generate container annotations patch object by port entry list
-func (s *Server) generatePortsAnnotationPatch(pod *k8scorev1.Pod,
+func (s *Server) generatePortsAnnotationPatch(annotations map[string]string,
 	portPoolItemStatusList []*networkextensionv1.PortPoolItemStatus,
 	portItemList [][]portpoolcache.AllocatedPortItem,
 	portEntryList []*portEntry) (PatchOperation, error) {
@@ -479,7 +444,6 @@ func (s *Server) generatePortsAnnotationPatch(pod *k8scorev1.Pod,
 	if err != nil {
 		return PatchOperation{}, err
 	}
-	annotations := pod.Annotations
 	op := constant.PatchOperationReplace
 	if len(annotations) == 0 {
 		op = constant.PatchOperationAdd

@@ -49,22 +49,34 @@ check_dependency() {
 install_nginx_ingress() {
   local ver=$NGINX_INGRESS_VER
   local namespace=$NAMESPACE
+  local chart_path
   if [[ -n ${BCS_OFFLINE:-} ]]; then
-    true
+    chart_path="$(find "${ROOT_DIR}/version-${VERSION}/charts/" -iname "ingress-nginx-*.tgz" -type f | head -1)"
+    if [[ -z $chart_path ]]; then
+      utils::log "FATAL" "can't find ingress-nginx chart in ${ROOT_DIR}/version-${VERSION}/charts/"
+    fi
   else
     [[ -n ${BKREPO_URL:-} ]] || utils::log "FAIL" "missing bkrepo url ${BKREPO_URL}"
     if ! k8s::safe_add_helmrepo blueking "${BKREPO_URL}"; then
       utils::log "WARNING" "something wrong with helm, skip install ingress-nginx"
       return 1
     fi
+    chart_path="blueking/ingress-nginx"
+  fi
+  local registry
+  if [[ -n ${BK_PUBLIC_REPO} ]];then
+	registry="${BK_PUBLIC_REPO}/registry.k8s.io"
+  else
+	registry="registry.k8s.io"
+  fi
 
-    utils::log "INFO" "installing ingress-nginx"
-    cat <<EOF | helm upgrade --install ingress-nginx blueking/ingress-nginx --version "$ver" -n $namespace --debug -f -
+  utils::log "INFO" "installing ingress-nginx"
+  cat <<EOF | helm upgrade --install ingress-nginx "${chart_path}" --version "$ver" -n $namespace --debug -f -
 controller:
   metrics:
     enabled: true
   image:
-    registry: ${BK_PUBLIC_REPO}/registry.k8s.io
+    registry: "${registry}"
     digest: ""
   config:
     # log format is consistent with the filebeat collection configuration
@@ -93,10 +105,9 @@ controller:
   admissionWebhooks:
     patch:
       image:
-        registry: ${BK_PUBLIC_REPO}/registry.k8s.io
+        registry: ${registry}
         digest: ""
 EOF
-  fi
 }
 
 check_k8s_status() {

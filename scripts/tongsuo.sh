@@ -7,7 +7,7 @@ if [ -d $TONGSUO_PATH ]; then
 fi
 
 wget --no-check-certificate https://github.com/Tongsuo-Project/Tongsuo/archive/refs/tags/8.3.2.tar.gz
-tar zxvf 8.3.2.tar.gz
+tar zxvf 8.3.2.tar.gz > /dev/null
 cd Tongsuo-8.3.2/
 
 if [ "$IS_STATIC" == true ]; then
@@ -17,5 +17,6 @@ else
   ./config --prefix=$TONGSUO_PATH -fPIC
 fi
 
-make -j
-make install
+# quiet output
+make -j >/dev/null 2>&1
+make install >/dev/null 2>&1

@@ -16,6 +16,8 @@ import (
 	"errors"
 	"fmt"
 
+	rawgen "gorm.io/gen"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
@@ -141,8 +143,13 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 	m := dao.genQ.Credential
 	q := dao.genQ.Credential.WithContext(kit.Ctx)
 
+	var conds []rawgen.Condition
+	if searchKey != "" {
+		conds = append(conds, q.Where(m.Memo.Regexp("(?i)"+searchKey)).Or(m.Reviser.Regexp("(?i)"+searchKey)))
+	}
+
 	result, count, err := q.Where(m.BizID.Eq(bizID)).
-		Where(q.Where(m.Memo.Regexp("(?i)"+searchKey)).Or(m.Reviser.Regexp("(?i)"+searchKey))).
+		Where(conds...).
 		Order(m.ID.Desc()).
 		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {

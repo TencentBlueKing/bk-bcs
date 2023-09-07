@@ -29,6 +29,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 )
 
+// AgaHostRegion aga api can only be call in us-west-region
+const AgaHostRegion = "us-west-2"
+
 func (h *HttpServerClient) getPodRelatedAgaEntrance(request *restful.Request, response *restful.Response) {
 	startTime := time.Now()
 	mf := func(status string) {
@@ -52,6 +55,11 @@ func (h *HttpServerClient) getPodRelatedAgaEntrance(request *restful.Request, re
 	if region == "" {
 		blog.V(4).Infof("empty region parameter, use default region ")
 		region = h.Ops.Region
+	}
+	agaHostRegion := request.QueryParameter("aga_host_region")
+	if agaHostRegion == "" {
+		blog.V(4).Infof("empty aga host region parameter, use default region, i.e. us-west-2")
+		agaHostRegion = AgaHostRegion
 	}
 
 	blog.V(3).Infof("getPodRelatedAgaEntrance req[pod_name='%s', pod_namespace='%s', region='%s']", podName,
@@ -81,7 +89,8 @@ func (h *HttpServerClient) getPodRelatedAgaEntrance(request *restful.Request, re
 		return
 	}
 
-	resp, err := h.AgaSupporter.ListCustomRoutingByDefinition(region, getNodeInstanceID(node), pod.Status.PodIP)
+	resp, err := h.AgaSupporter.ListCustomRoutingByDefinition(agaHostRegion, region, getNodeInstanceID(node),
+		pod.Status.PodIP)
 	if err != nil {
 		_, _ = response.Write(CreateResponseData(err, "", nil))
 		mf(strconv.Itoa(http.StatusInternalServerError))

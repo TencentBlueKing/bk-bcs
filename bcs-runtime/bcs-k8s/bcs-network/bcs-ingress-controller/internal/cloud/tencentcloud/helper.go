@@ -43,9 +43,10 @@ func (c *Clb) createListner(region string, listener *networkextensionv1.Listener
 
 // do create 4 layer listener
 // (4 layer listener) --------> backend1
-//                         |--> backend2
-//                         |--> backend3
-//                         |--> ...
+//
+//	|--> backend2
+//	|--> backend3
+//	|--> ...
 func (c *Clb) create4LayerListener(region string, listener *networkextensionv1.Listener) (string, error) {
 	// construct request for creating listener
 	req := tclb.NewCreateListenerRequest()
@@ -102,9 +103,10 @@ func (c *Clb) create4LayerListener(region string, listener *networkextensionv1.L
 
 // do create 7 layer listener
 // (7 layer listener) --------> rule1
-//                         |--> rule2
-//                         |--> rule3
-//                         |--> ...
+//
+//	|--> rule2
+//	|--> rule3
+//	|--> ...
 //
 // domain and url is different in different rules
 func (c *Clb) create7LayerListener(region string, listener *networkextensionv1.Listener) (string, error) {

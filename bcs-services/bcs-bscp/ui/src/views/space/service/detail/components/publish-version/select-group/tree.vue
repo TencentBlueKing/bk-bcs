@@ -14,7 +14,7 @@
     indeterminate: boolean;
     children: IGroupNodeData[];
   }
-  
+
   interface IGroupNodeData extends IGroupToPublish {
     node_id: string;
     checked: boolean;

@@ -185,7 +185,7 @@ func (c *client) refreshAppIDCache(kt *kit.Kit, bizID uint32, appName string) (u
 	}
 
 	c.mc.cacheItemByteSize.With(prm.Labels{"rsc": aiRes, "biz": tools.Itoa(bizID)}).Observe(float64(len(b)))
-	
+
 	return app.ID, nil
 }
 

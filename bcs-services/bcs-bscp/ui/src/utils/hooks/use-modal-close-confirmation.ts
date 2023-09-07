@@ -7,10 +7,10 @@ const useModalCloseConfirmation = (title?: string, subTitle?: string) => {
       subTitle: subTitle || '离开会导致未保存信息丢失',
       confirmText: '离开',
       onConfirm: () => {
-        return resolve(true)
+        resolve(true)
       },
       onClosed: () => {
-        return resolve(false)
+        resolve(false)
       }
     })
   } )

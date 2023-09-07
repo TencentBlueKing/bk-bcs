@@ -136,7 +136,7 @@ func (c *client) refreshReleasedHookCache(kt *kit.Kit, bizID uint32, releaseID u
 	}
 
 	c.mc.cacheItemByteSize.With(prm.Labels{"rsc": releasedHookRes, "biz": tools.Itoa(bizID)}).Observe(float64(len(js)))
-	
+
 	// return the array string json.
 	return string(js), nil
 }

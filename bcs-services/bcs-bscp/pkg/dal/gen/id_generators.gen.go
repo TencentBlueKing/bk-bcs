@@ -79,6 +79,8 @@ func (i iDGenerator) TableName() string { return i.iDGeneratorDo.TableName() }
 
 func (i iDGenerator) Alias() string { return i.iDGeneratorDo.Alias() }
 
+func (i iDGenerator) Columns(cols ...field.Expr) gen.Columns { return i.iDGeneratorDo.Columns(cols...) }
+
 func (i *iDGenerator) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := i.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -211,10 +213,6 @@ func (i iDGeneratorDo) Select(conds ...field.Expr) IIDGeneratorDo {
 
 func (i iDGeneratorDo) Where(conds ...gen.Condition) IIDGeneratorDo {
 	return i.withDO(i.DO.Where(conds...))
-}
-
-func (i iDGeneratorDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IIDGeneratorDo {
-	return i.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (i iDGeneratorDo) Order(conds ...field.Expr) IIDGeneratorDo {

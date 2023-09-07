@@ -98,6 +98,8 @@ func (a audit) TableName() string { return a.auditDo.TableName() }
 
 func (a audit) Alias() string { return a.auditDo.Alias() }
 
+func (a audit) Columns(cols ...field.Expr) gen.Columns { return a.auditDo.Columns(cols...) }
+
 func (a *audit) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := a.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -237,10 +239,6 @@ func (a auditDo) Select(conds ...field.Expr) IAuditDo {
 
 func (a auditDo) Where(conds ...gen.Condition) IAuditDo {
 	return a.withDO(a.DO.Where(conds...))
-}
-
-func (a auditDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) IAuditDo {
-	return a.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (a auditDo) Order(conds ...field.Expr) IAuditDo {

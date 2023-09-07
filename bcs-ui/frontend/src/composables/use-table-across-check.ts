@@ -8,7 +8,7 @@ export interface IAcrossCheckConfig {
   rowKey?: string[];
 }
 // 表格跨页全选功能
-export default function useTableAcrossCheck({ tableData, curPageData, rowKey = ['innerIP', 'nodeID'] }: IAcrossCheckConfig) {
+export default function useTableAcrossCheck({ tableData, curPageData, rowKey = ['nodeName', 'nodeID'] }: IAcrossCheckConfig) {
   // 0 未选，1 当前页半选， 2 跨页半选，3 当前页全选，4 跨页全选
   const selectType = ref(CheckType.Uncheck);
   const selections = ref<any[]>([]);

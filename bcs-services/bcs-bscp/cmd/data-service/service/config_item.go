@@ -34,6 +34,19 @@ import (
 func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
+	// validates unique key name+path both in table app_template_bindings and config_items
+	// validate in table app_template_bindings
+	if err := s.ValidateAppTemplateBindingUniqueKey(grpcKit, req.ConfigItemAttachment.BizId,
+		req.ConfigItemAttachment.AppId, req.ConfigItemSpec.Name, req.ConfigItemSpec.Path); err != nil {
+		return nil, err
+	}
+	// validate in table config_items
+	if _, err := s.dao.ConfigItem().GetByUniqueKey(grpcKit, req.ConfigItemAttachment.BizId,
+		req.ConfigItemAttachment.AppId, req.ConfigItemSpec.Name, req.ConfigItemSpec.Path); err == nil {
+		return nil, fmt.Errorf("config item's same name %s and path %s already exists",
+			req.ConfigItemSpec.Name, req.ConfigItemSpec.Path)
+	}
+
 	tx := s.dao.GenQuery().Begin()
 	// 1. create config item.
 	ci := &table.ConfigItem{

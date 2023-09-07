@@ -1185,13 +1185,8 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	vpcCli, err := api.NewVPCClient(info.CmOption)
-	if err != nil {
-		blog.Errorf("getRandomSubnetByVpcID[%s] failed: %v", taskID, err)
-		return "", err
-	}
-
-	subnets, err := vpcCli.ListSubnets(info.Cluster.VpcID, info.CmOption)
+	vpcManager := &api.VPCManager{}
+	subnets, err := vpcManager.ListSubnets(info.Cluster.VpcID, info.CmOption)
 	if err != nil {
 		blog.Errorf("getRandomSubnetByVpcID[%s] failed: %v", taskID, err)
 		return "", err

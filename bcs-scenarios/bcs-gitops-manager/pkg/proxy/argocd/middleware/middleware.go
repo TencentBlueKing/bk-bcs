@@ -118,6 +118,10 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	case returnError:
 		blog.Warnf("RequestID[%s] handler return code '%d': %s", requestID, resp.statusCode, resp.err.Error())
 		http.Error(rw, resp.err.Error(), resp.statusCode)
+	case returnGrpcError:
+		blog.Warnf("RequestID[%s] handler grpc request return code '%d': %s",
+			requestID, resp.statusCode, resp.err.Error())
+		proxy.GRPCErrorResponse(rw, resp.statusCode, resp.err)
 	case grpcResponse:
 		proxy.GRPCResponse(rw, resp.obj)
 	case directResponse:
@@ -136,6 +140,8 @@ const (
 	reverseSecret
 	// returnError 直接返回错误给客户端
 	returnError
+	// returnGrpcError 返回 grpc 的错误给客户端
+	returnGrpcError
 	// grpcResponse 返回特殊的 GRPC 给客户端
 	grpcResponse
 	// directResponse 直接返回给客户端（不做 JSON/GRPC 序列化，用于 metric proxy 代理）
@@ -162,6 +168,15 @@ func ReturnSecretReverse() *HttpResponse {
 func ReturnErrorResponse(statusCode int, err error) *HttpResponse {
 	return &HttpResponse{
 		respType:   returnError,
+		statusCode: statusCode,
+		err:        err,
+	}
+}
+
+// ReturnGRPCErrorResponse 返回 rpc 的错误给客户端
+func ReturnGRPCErrorResponse(statusCode int, err error) *HttpResponse {
+	return &HttpResponse{
+		respType:   returnGrpcError,
 		statusCode: statusCode,
 		err:        err,
 	}

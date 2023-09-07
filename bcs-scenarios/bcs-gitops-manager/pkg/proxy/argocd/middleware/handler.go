@@ -15,10 +15,14 @@ package middleware
 
 import (
 	"context"
+	"fmt"
+	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"net/http"
 	"reflect"
 	"runtime"
+	"strings"
 
+	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -31,7 +35,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
@@ -50,8 +53,9 @@ type MiddlewareInterface interface {
 
 	CheckMultiClustersPermission(ctx context.Context, projectID string, clusterIDs []string,
 		actions []string) (map[string]map[string]bool, error)
-	CheckClusterPermission(ctx context.Context, clusterName string, action iam.ActionID) (int, error)
+	CheckClusterPermission(ctx context.Context, query *clusterclient.ClusterQuery, action iam.ActionID) (int, error)
 
+	CheckCreateApplication(ctx context.Context, app *v1alpha1.Application) (int, error)
 	CheckRepositoryPermission(ctx context.Context, repoName string,
 		action iam.ActionID) (*v1alpha1.Repository, int, error)
 	CheckApplicationPermission(ctx context.Context, appName string,
@@ -61,7 +65,12 @@ type MiddlewareInterface interface {
 	ListClusters(ctx context.Context, projectNames []string) (*v1alpha1.ClusterList, int, error)
 	ListRepositories(ctx context.Context, projectNames []string,
 		needCheckPermission bool) (*v1alpha1.RepositoryList, int, error)
-	ListApplications(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationList, error)
+	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)
+
+	CheckCreateApplicationSet(ctx context.Context, appset *v1alpha1.ApplicationSet) (int, error)
+	CheckDeleteApplicationSet(ctx context.Context, appsetName string) (int, error)
+	CheckGetApplicationSet(ctx context.Context, appsetName string) (int, error)
+	ListApplicationSets(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationSetList, error)
 }
 
 // handler 定义 http 中间件处理对象
@@ -161,6 +170,48 @@ func (h *handler) CheckProjectPermission(ctx context.Context, projectName string
 	return argoProject, statusCode, err
 }
 
+// CheckCreateApplication 检查创建某个应用是否具备权限
+func (h *handler) CheckCreateApplication(ctx context.Context, app *v1alpha1.Application) (int, error) {
+	projectName := app.Spec.Project
+	if projectName == "" || projectName == "default" {
+		return http.StatusBadRequest, errors.Errorf("project information lost")
+	}
+	argoProject, statusCode, err := h.CheckProjectPermission(ctx, projectName, iam.ProjectEdit)
+	if statusCode != http.StatusOK {
+		return statusCode, errors.Wrapf(err, "check application '%s' permission failed", projectName)
+	}
+	repoUrl := app.Spec.Source.RepoURL
+	repo, err := h.option.Storage.GetRepository(ctx, repoUrl)
+	if err != nil {
+		return http.StatusInternalServerError, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
+	}
+	if repo == nil {
+		return http.StatusNotFound, fmt.Errorf("repo '%s' not found", repoUrl)
+	}
+	clusterQuery := clusterclient.ClusterQuery{
+		Server: app.Spec.Destination.Server,
+		Name:   app.Spec.Destination.Name,
+	}
+	argoCluster, err := h.option.Storage.GetCluster(ctx, &clusterQuery)
+	if err != nil {
+		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster '%v' failed", clusterQuery)
+	}
+	if argoCluster == nil {
+		return http.StatusNotFound, fmt.Errorf("cluster '%v' not found", clusterQuery)
+	}
+
+	// setting application name with project prefix
+	if !strings.HasPrefix(app.Name, projectName+"-") {
+		app.Name = projectName + "-" + app.Name
+	}
+	// setting control annotations
+	if app.Annotations == nil {
+		app.Annotations = make(map[string]string)
+	}
+	common.AddCustomAnnotationForApplication(argoProject, app)
+	return 0, nil
+}
+
 // CheckProjectPermissionByID 检查登录态用户对于项目的权限
 func (h *handler) CheckProjectPermissionByID(ctx context.Context, projectID string,
 	action iam.ActionID) (int, error) {
@@ -189,15 +240,15 @@ func (h *handler) CheckProjectPermissionByID(ctx context.Context, projectID stri
 }
 
 // CheckClusterPermission 检查登录态用户对于集群的权限
-func (h *handler) CheckClusterPermission(ctx context.Context, clusterName string,
+func (h *handler) CheckClusterPermission(ctx context.Context, query *clusterclient.ClusterQuery,
 	action iam.ActionID) (statusCode int, err error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
-	argoCluster, err := h.option.Storage.GetCluster(ctx, clusterName)
+	argoCluster, err := h.option.Storage.GetCluster(ctx, query)
 	if err != nil {
 		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster from storage failure")
 	}
 	if argoCluster == nil {
-		return http.StatusNotFound, errors.Errorf("cluster '%s' not found", clusterName)
+		return http.StatusNotFound, errors.Errorf("cluster '%v' not found", *query)
 	}
 	projectID := common.GetBCSProjectID(argoCluster.Annotations)
 	if projectID == "" {
@@ -219,7 +270,7 @@ func (h *handler) CheckClusterPermission(ctx context.Context, clusterName string
 		return http.StatusInternalServerError, errors.Errorf("auth center failed")
 	}
 	if !permit {
-		return http.StatusForbidden, errors.Errorf("cluster '%s' forbidden", clusterName)
+		return http.StatusForbidden, errors.Errorf("cluster '%v' forbidden", *query)
 	}
 	return http.StatusOK, nil
 }
@@ -373,10 +424,11 @@ func (h *handler) ListRepositories(ctx context.Context, projectNames []string,
 }
 
 // ListApplications 根据项目名称获取所有应用
-func (h *handler) ListApplications(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationList, error) {
-	apps, err := h.option.Storage.ListApplications(ctx, &store.ListAppOptions{Projects: projectNames})
+func (h *handler) ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (
+	*v1alpha1.ApplicationList, error) {
+	apps, err := h.option.Storage.ListApplications(ctx, query)
 	if err != nil {
-		return nil, errors.Wrapf(err, "list application swith project '%v' failed", projectNames)
+		return nil, errors.Wrapf(err, "list application swith project '%v' failed", query.Projects)
 	}
 	return apps, nil
 }

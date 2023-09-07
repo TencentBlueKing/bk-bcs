@@ -19,13 +19,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/aws"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/nodecache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portbindingcontroller"
 )
 
 // HttpServerClient http server client
 type HttpServerClient struct {
 	Mgr manager.Manager
 
-	NodeCache *nodecache.NodeCache
+	NodeCache         *nodecache.NodeCache
+	NodePortBindCache *portbindingcontroller.NodePortBindingCache
 
 	AgaSupporter *aws.AgaSupporter
 
@@ -36,6 +38,7 @@ type HttpServerClient struct {
 func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 	ws.Route(ws.GET("/api/v1/ingresss").To(httpServerClient.listIngress))
 	ws.Route(ws.GET("/api/v1/portpools").To(httpServerClient.listPortPool))
+	ws.Route(ws.GET("/api/v1/nodeportbindings").To(httpServerClient.getNodePortBindings))
 	ws.Route(ws.GET("/api/v1/listeners/{condition}/{namespace}/{name}").To(httpServerClient.listListener))
 
 	ws.Route(ws.GET("/api/v1/node").To(httpServerClient.listNode))

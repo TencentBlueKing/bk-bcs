@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"bscp.io/pkg/criteria/constant"
 )
 
 // reservedResNamePrefix internal reserved string prefix, case-insensitive.
@@ -26,6 +28,10 @@ var reservedResNamePrefix = []string{"_bk", "bk_"}
 func validResNamePrefix(name string) error {
 	lowerName := strings.ToLower(name)
 	for _, prefix := range reservedResNamePrefix {
+		// ignore the template variable name which also has prefix `bk_`
+		if strings.HasPrefix(lowerName, constant.TemplateVariablePrefix) {
+			continue
+		}
 		if strings.HasPrefix(lowerName, prefix) {
 			return fmt.Errorf("resource name '%s' is prefixed with '%s' is reserved name, "+
 				"which is not allows to use", lowerName, prefix)

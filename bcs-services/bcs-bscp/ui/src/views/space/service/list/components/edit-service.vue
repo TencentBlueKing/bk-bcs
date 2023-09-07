@@ -91,7 +91,6 @@
       <template #header>
         <div class="service-edit-head">
           <span class="title">{{ t("服务属性") }}</span>
-          <router-link class="credential-btn" :to="{ name: 'credentials-management' }">服务密钥</router-link>
         </div>
       </template>
       <div class="service-edit-wrapper">
@@ -118,7 +117,8 @@
             </div>
           </bk-form-item>
           <bk-form-item :label="t('接入方式')">
-            {{ props.service.spec.config_type }}-{{ props.service.spec.deploy_type }}
+            <!-- {{ props.service.spec.config_type }}-{{ props.service.spec.deploy_type }} -->
+            文件型
           </bk-form-item>
           <bk-form-item :label="t('创建者')">
             {{ props.service.revision.creator}}

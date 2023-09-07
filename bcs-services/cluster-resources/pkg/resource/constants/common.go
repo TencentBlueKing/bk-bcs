@@ -149,4 +149,9 @@ const (
 	Revision = "deployment.kubernetes.io/revision"
 	// ChangeCause deployment更新原因
 	ChangeCause = "deployment.kubernetes.io/change-cause"
+
+	// STSChangeCause StatefulSet 更新原因
+	STSChangeCause = "statefulset.kubernetes.io/change-cause"
+	// DSChangeCause DaemonSet 更新原因
+	DSChangeCause = "daemonset.kubernetes.io/change-cause"
 )

@@ -1,11 +1,11 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
-  import { Search } from 'bkui-vue/lib/icon'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
   import { IScriptCiteQuery, IScriptCitedItem } from '../../../../../types/script'
   import { getScriptCiteList, getScriptVersionCiteList } from '../../../../api/script'
+  import SearchInput from '../../../../components/search-input.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 
@@ -59,14 +59,8 @@
     return href
   }
 
-  const handleNameInputChange = (val: string) => {
-    if (!val) {
-      refreshList()
-    }
-  }
-
-  const refreshList = () => {
-    pagination.value.current = 1
+  const refreshList = (current: number = 1) => {
+    pagination.value.current = current
     getCitedData()
   }
 
@@ -86,21 +80,15 @@
     :is-show="props.show"
     @closed="handleClose">
     <div class="search-area">
-      <bk-input
-        v-model="searchStr"
-        class="search-input"
-        placeholder="服务名称/版本名称/被引用的版本"
-        :clearable="true"
-        @enter="refreshList"
-        @clear="refreshList"
-        @change="handleNameInputChange">
-          <template #suffix>
-            <Search class="search-input-icon" />
-          </template>
-      </bk-input>
+      <SearchInput v-model="searchStr" placeholder="服务名称/版本名称/被引用的版本" @search="refreshList()" />
     </div>
     <div class="cited-data-table">
-      <bk-table :border="['outer']" :data="list">
+      <bk-table
+        :border="['outer']"
+        :data="list"
+        :pagination="pagination"
+        @page-limit-change="handlePageLimitChange"
+        @page-change="refreshList">
         <bk-table-column label="脚本版本">
           <template #default="{ row }">
             <template v-if="row.hook_revision_name || row.revision_name">{{ row.hook_revision_name || row.revision_name }}</template>
@@ -113,15 +101,6 @@
           </template>
         </bk-table-column>
       </bk-table>
-      <bk-pagination
-        class="table-list-pagination"
-        v-model="pagination.current"
-        location="left"
-        :layout="['total', 'limit', 'list']"
-        :count="pagination.count"
-        :limit="pagination.limit"
-        @change="refreshList"
-        @limit-change="handlePageLimitChange"/>
     </div>
     <div class="action-btn">
       <bk-button @click="handleClose">关闭</bk-button>
@@ -148,15 +127,6 @@
   }
   .link-btn {
     font-size: 12px;
-  }
-  .table-list-pagination {
-    padding: 12px;
-    border: 1px solid #dcdee5;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    :deep(.bk-pagination-list.is-last) {
-      margin-left: auto;
-    }
   }
   .action-btn {
     padding: 8px 24px;
