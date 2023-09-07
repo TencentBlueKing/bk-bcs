@@ -279,9 +279,7 @@ func (watch *ExportServiceWatch) createEpServiceInfo(service *commtypes.BcsServi
 
 	// esInfo.exportService.BCSGroup = append(esInfo.exportService.BCSGroup, service.ObjectMeta.Labels["BCSGROUP"])
 	splitGroups := strings.Split(service.ObjectMeta.Labels["BCSGROUP"], ",")
-	for _, oneGroup := range splitGroups {
-		esInfo.exportService.BCSGroup = append(esInfo.exportService.BCSGroup, oneGroup)
-	}
+	esInfo.exportService.BCSGroup = append(esInfo.exportService.BCSGroup, splitGroups...)
 
 	esInfo.exportService.Balance = service.ObjectMeta.Labels["BCSBALANCE"]
 	esInfo.exportService.ServiceWeight = make(map[string]int)
