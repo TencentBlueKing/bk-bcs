@@ -104,6 +104,7 @@ const (
 	Data_ListReleasedAppBoundTemplateRevisions_FullMethodName      = "/pbds.Data/ListReleasedAppBoundTemplateRevisions"
 	Data_ExtractAppTemplateVariables_FullMethodName                = "/pbds.Data/ExtractAppTemplateVariables"
 	Data_GetAppTemplateVariableReferences_FullMethodName           = "/pbds.Data/GetAppTemplateVariableReferences"
+	Data_GetReleasedAppTemplateVariableReferences_FullMethodName   = "/pbds.Data/GetReleasedAppTemplateVariableReferences"
 	Data_UpdateAppTemplateVariables_FullMethodName                 = "/pbds.Data/UpdateAppTemplateVariables"
 	Data_ListAppTemplateVariables_FullMethodName                   = "/pbds.Data/ListAppTemplateVariables"
 	Data_ListReleasedAppTemplateVariables_FullMethodName           = "/pbds.Data/ListReleasedAppTemplateVariables"
@@ -239,6 +240,7 @@ type DataClient interface {
 	// app template variables related interface.
 	ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(ctx context.Context, in *GetAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetAppTemplateVariableReferencesResp, error)
+	GetReleasedAppTemplateVariableReferences(ctx context.Context, in *GetReleasedAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetReleasedAppTemplateVariableReferencesResp, error)
 	UpdateAppTemplateVariables(ctx context.Context, in *UpdateAppTemplateVariablesReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListAppTemplateVariables(ctx context.Context, in *ListAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListAppTemplateVariablesResp, error)
 	ListReleasedAppTemplateVariables(ctx context.Context, in *ListReleasedAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListReleasedAppTemplateVariablesResp, error)
@@ -980,6 +982,15 @@ func (c *dataClient) GetAppTemplateVariableReferences(ctx context.Context, in *G
 	return out, nil
 }
 
+func (c *dataClient) GetReleasedAppTemplateVariableReferences(ctx context.Context, in *GetReleasedAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetReleasedAppTemplateVariableReferencesResp, error) {
+	out := new(GetReleasedAppTemplateVariableReferencesResp)
+	err := c.cc.Invoke(ctx, Data_GetReleasedAppTemplateVariableReferences_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) UpdateAppTemplateVariables(ctx context.Context, in *UpdateAppTemplateVariablesReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_UpdateAppTemplateVariables_FullMethodName, in, out, opts...)
@@ -1417,6 +1428,7 @@ type DataServer interface {
 	// app template variables related interface.
 	ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error)
+	GetReleasedAppTemplateVariableReferences(context.Context, *GetReleasedAppTemplateVariableReferencesReq) (*GetReleasedAppTemplateVariableReferencesResp, error)
 	UpdateAppTemplateVariables(context.Context, *UpdateAppTemplateVariablesReq) (*base.EmptyResp, error)
 	ListAppTemplateVariables(context.Context, *ListAppTemplateVariablesReq) (*ListAppTemplateVariablesResp, error)
 	ListReleasedAppTemplateVariables(context.Context, *ListReleasedAppTemplateVariablesReq) (*ListReleasedAppTemplateVariablesResp, error)
@@ -1697,6 +1709,9 @@ func (UnimplementedDataServer) ExtractAppTemplateVariables(context.Context, *Ext
 }
 func (UnimplementedDataServer) GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAppTemplateVariableReferences not implemented")
+}
+func (UnimplementedDataServer) GetReleasedAppTemplateVariableReferences(context.Context, *GetReleasedAppTemplateVariableReferencesReq) (*GetReleasedAppTemplateVariableReferencesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedAppTemplateVariableReferences not implemented")
 }
 func (UnimplementedDataServer) UpdateAppTemplateVariables(context.Context, *UpdateAppTemplateVariablesReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppTemplateVariables not implemented")
@@ -3192,6 +3207,24 @@ func _Data_GetAppTemplateVariableReferences_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_GetReleasedAppTemplateVariableReferences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasedAppTemplateVariableReferencesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetReleasedAppTemplateVariableReferences(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetReleasedAppTemplateVariableReferences_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetReleasedAppTemplateVariableReferences(ctx, req.(*GetReleasedAppTemplateVariableReferencesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_UpdateAppTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateAppTemplateVariablesReq)
 	if err := dec(in); err != nil {
@@ -4186,6 +4219,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAppTemplateVariableReferences",
 			Handler:    _Data_GetAppTemplateVariableReferences_Handler,
+		},
+		{
+			MethodName: "GetReleasedAppTemplateVariableReferences",
+			Handler:    _Data_GetReleasedAppTemplateVariableReferences_Handler,
 		},
 		{
 			MethodName: "UpdateAppTemplateVariables",

@@ -405,7 +405,7 @@ service Config {
     rpc ListReleasedAppBoundTemplateRevisions(ListReleasedAppBoundTemplateRevisionsReq) returns
         (ListReleasedAppBoundTemplateRevisionsResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/released_template_revisions"
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions"
         };
     }
     rpc UpdateAppBoundTemplateRevisions(UpdateAppBoundTemplateRevisionsReq) returns
@@ -534,6 +534,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"
         };
     }
+    rpc GetReleasedAppTemplateVariableReferences(GetReleasedAppTemplateVariableReferencesReq) returns
+        (GetReleasedAppTemplateVariableReferencesResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables_references"
+        };
+    }
     rpc UpdateAppTemplateVariables(UpdateAppTemplateVariablesReq) returns (UpdateAppTemplateVariablesResp) {
         option (google.api.http) = {
             put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"
@@ -548,7 +554,7 @@ service Config {
     rpc ListReleasedAppTemplateVariables(ListReleasedAppTemplateVariablesReq) returns
         (ListReleasedAppTemplateVariablesResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/released_template_variables"
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables"
         };
     }
 
@@ -1750,6 +1756,16 @@ message GetAppTemplateVariableReferencesReq {
 }
 
 message GetAppTemplateVariableReferencesResp {
+    repeated pbatv.AppTemplateVariableReference details = 1;
+}
+
+message GetReleasedAppTemplateVariableReferencesReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message GetReleasedAppTemplateVariableReferencesResp {
     repeated pbatv.AppTemplateVariableReference details = 1;
 }
 

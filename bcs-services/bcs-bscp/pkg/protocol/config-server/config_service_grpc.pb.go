@@ -111,6 +111,7 @@ const (
 	Config_ListTemplateVariables_FullMethodName                      = "/pbcs.Config/ListTemplateVariables"
 	Config_ExtractAppTemplateVariables_FullMethodName                = "/pbcs.Config/ExtractAppTemplateVariables"
 	Config_GetAppTemplateVariableReferences_FullMethodName           = "/pbcs.Config/GetAppTemplateVariableReferences"
+	Config_GetReleasedAppTemplateVariableReferences_FullMethodName   = "/pbcs.Config/GetReleasedAppTemplateVariableReferences"
 	Config_UpdateAppTemplateVariables_FullMethodName                 = "/pbcs.Config/UpdateAppTemplateVariables"
 	Config_ListAppTemplateVariables_FullMethodName                   = "/pbcs.Config/ListAppTemplateVariables"
 	Config_ListReleasedAppTemplateVariables_FullMethodName           = "/pbcs.Config/ListReleasedAppTemplateVariables"
@@ -232,6 +233,7 @@ type ConfigClient interface {
 	ListTemplateVariables(ctx context.Context, in *ListTemplateVariablesReq, opts ...grpc.CallOption) (*ListTemplateVariablesResp, error)
 	ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(ctx context.Context, in *GetAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetAppTemplateVariableReferencesResp, error)
+	GetReleasedAppTemplateVariableReferences(ctx context.Context, in *GetReleasedAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetReleasedAppTemplateVariableReferencesResp, error)
 	UpdateAppTemplateVariables(ctx context.Context, in *UpdateAppTemplateVariablesReq, opts ...grpc.CallOption) (*UpdateAppTemplateVariablesResp, error)
 	ListAppTemplateVariables(ctx context.Context, in *ListAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListAppTemplateVariablesResp, error)
 	ListReleasedAppTemplateVariables(ctx context.Context, in *ListReleasedAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListReleasedAppTemplateVariablesResp, error)
@@ -1043,6 +1045,15 @@ func (c *configClient) GetAppTemplateVariableReferences(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *configClient) GetReleasedAppTemplateVariableReferences(ctx context.Context, in *GetReleasedAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetReleasedAppTemplateVariableReferencesResp, error) {
+	out := new(GetReleasedAppTemplateVariableReferencesResp)
+	err := c.cc.Invoke(ctx, Config_GetReleasedAppTemplateVariableReferences_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) UpdateAppTemplateVariables(ctx context.Context, in *UpdateAppTemplateVariablesReq, opts ...grpc.CallOption) (*UpdateAppTemplateVariablesResp, error) {
 	out := new(UpdateAppTemplateVariablesResp)
 	err := c.cc.Invoke(ctx, Config_UpdateAppTemplateVariables_FullMethodName, in, out, opts...)
@@ -1306,6 +1317,7 @@ type ConfigServer interface {
 	ListTemplateVariables(context.Context, *ListTemplateVariablesReq) (*ListTemplateVariablesResp, error)
 	ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error)
+	GetReleasedAppTemplateVariableReferences(context.Context, *GetReleasedAppTemplateVariableReferencesReq) (*GetReleasedAppTemplateVariableReferencesResp, error)
 	UpdateAppTemplateVariables(context.Context, *UpdateAppTemplateVariablesReq) (*UpdateAppTemplateVariablesResp, error)
 	ListAppTemplateVariables(context.Context, *ListAppTemplateVariablesReq) (*ListAppTemplateVariablesResp, error)
 	ListReleasedAppTemplateVariables(context.Context, *ListReleasedAppTemplateVariablesReq) (*ListReleasedAppTemplateVariablesResp, error)
@@ -1590,6 +1602,9 @@ func (UnimplementedConfigServer) ExtractAppTemplateVariables(context.Context, *E
 }
 func (UnimplementedConfigServer) GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAppTemplateVariableReferences not implemented")
+}
+func (UnimplementedConfigServer) GetReleasedAppTemplateVariableReferences(context.Context, *GetReleasedAppTemplateVariableReferencesReq) (*GetReleasedAppTemplateVariableReferencesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedAppTemplateVariableReferences not implemented")
 }
 func (UnimplementedConfigServer) UpdateAppTemplateVariables(context.Context, *UpdateAppTemplateVariablesReq) (*UpdateAppTemplateVariablesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppTemplateVariables not implemented")
@@ -3223,6 +3238,24 @@ func _Config_GetAppTemplateVariableReferences_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GetReleasedAppTemplateVariableReferences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasedAppTemplateVariableReferencesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetReleasedAppTemplateVariableReferences(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetReleasedAppTemplateVariableReferences_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetReleasedAppTemplateVariableReferences(ctx, req.(*GetReleasedAppTemplateVariableReferencesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_UpdateAppTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateAppTemplateVariablesReq)
 	if err := dec(in); err != nil {
@@ -3901,6 +3934,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAppTemplateVariableReferences",
 			Handler:    _Config_GetAppTemplateVariableReferences_Handler,
+		},
+		{
+			MethodName: "GetReleasedAppTemplateVariableReferences",
+			Handler:    _Config_GetReleasedAppTemplateVariableReferences_Handler,
 		},
 		{
 			MethodName: "UpdateAppTemplateVariables",

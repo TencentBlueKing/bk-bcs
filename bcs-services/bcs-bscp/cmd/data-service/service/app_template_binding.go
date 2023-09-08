@@ -301,7 +301,7 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 
 	details, count, err := s.dao.ReleasedAppTemplate().List(kt, req.BizId, req.AppId, req.ReleaseId, searcher, opt)
 	if err != nil {
-		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list released app bound templates revisions failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
