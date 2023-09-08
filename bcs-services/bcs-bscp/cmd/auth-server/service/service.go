@@ -165,7 +165,7 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, di
 		}
 	}
 	cfg := &client.Config{
-		Address:   iamSettings.Endpoints,
+		Address:   []string{iamSettings.APIURL},
 		AppCode:   iamSettings.AppCode,
 		AppSecret: iamSettings.AppSecret,
 		SystemID:  sys.SystemIDBSCP,

@@ -71,7 +71,7 @@ func NewIamSys() (*sys.Sys, error) {
 		}
 	}
 	cfg := &client.Config{
-		Address:   iamSettings.Endpoints,
+		Address:   []string{iamSettings.APIURL},
 		AppCode:   iamSettings.AppCode,
 		AppSecret: iamSettings.AppSecret,
 		SystemID:  sys.SystemIDBSCP,

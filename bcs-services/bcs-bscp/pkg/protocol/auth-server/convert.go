@@ -353,6 +353,7 @@ func PbIamResourceAttributeValues(values []*meta.IamResourceAttributeValue) []*I
 	return result
 }
 
+// GrantResourceCreatorAction convert pb GrantResourceCreatorActionReq to client GrantResourceCreatorActionOption
 func GrantResourceCreatorAction(req *GrantResourceCreatorActionReq) *client.GrantResourceCreatorActionOption {
 	return &client.GrantResourceCreatorActionOption{
 		System:    req.System,
@@ -364,6 +365,7 @@ func GrantResourceCreatorAction(req *GrantResourceCreatorActionReq) *client.Gran
 	}
 }
 
+// GrantResourceCreatorActionAncetors convert pb GrantResourceCreatorActionReq_Ancestor array to client GrantResourceCreatorActionAncestor array
 func GrantResourceCreatorActionAncetors(ancetors []*GrantResourceCreatorActionReq_Ancestor) []client.GrantResourceCreatorActionAncestor {
 	result := make([]client.GrantResourceCreatorActionAncestor, len(ancetors))
 
@@ -378,6 +380,7 @@ func GrantResourceCreatorActionAncetors(ancetors []*GrantResourceCreatorActionRe
 	return result
 }
 
+// GrantResourceCreatorActionAncetor convert pb GrantResourceCreatorActionReq_Ancestor to client GrantResourceCreatorActionAncestor
 func GrantResourceCreatorActionAncetor(ancetor *GrantResourceCreatorActionReq_Ancestor) client.GrantResourceCreatorActionAncestor {
 	return client.GrantResourceCreatorActionAncestor{
 		System: ancetor.System,
@@ -386,6 +389,7 @@ func GrantResourceCreatorActionAncetor(ancetor *GrantResourceCreatorActionReq_An
 	}
 }
 
+// PbGrantResourceCreatorActionAncestor convert client GrantResourceCreatorActionAncestor to pb GrantResourceCreatorActionReq_Ancestor
 func PbGrantResourceCreatorActionAncestor(ancetor client.GrantResourceCreatorActionAncestor) *GrantResourceCreatorActionReq_Ancestor {
 	return &GrantResourceCreatorActionReq_Ancestor{
 		System: ancetor.System,
@@ -394,6 +398,7 @@ func PbGrantResourceCreatorActionAncestor(ancetor client.GrantResourceCreatorAct
 	}
 }
 
+// PbGrantResourceCreatorActionAncestors convert client GrantResourceCreatorActionAncestor array to pb GrantResourceCreatorActionReq_Ancestor array
 func PbGrantResourceCreatorActionAncestors(ancetors []client.GrantResourceCreatorActionAncestor) []*GrantResourceCreatorActionReq_Ancestor {
 	result := make([]*GrantResourceCreatorActionReq_Ancestor, len(ancetors))
 
@@ -408,6 +413,7 @@ func PbGrantResourceCreatorActionAncestors(ancetors []client.GrantResourceCreato
 	return result
 }
 
+// PbGrantResourceCreatorActionOption convert client GrantResourceCreatorActionOption to pb GrantResourceCreatorActionReq
 func PbGrantResourceCreatorActionOption(option *client.GrantResourceCreatorActionOption) *GrantResourceCreatorActionReq {
 	return &GrantResourceCreatorActionReq{
 		System:    option.System,

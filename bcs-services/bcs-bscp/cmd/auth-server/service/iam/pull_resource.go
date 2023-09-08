@@ -17,11 +17,12 @@ import (
 	"errors"
 	"fmt"
 
+	pbstruct "github.com/golang/protobuf/ptypes/struct"
+
 	"bscp.io/cmd/auth-server/types"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
-	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
 // PullResource callback function for iam to pull auth resource.
