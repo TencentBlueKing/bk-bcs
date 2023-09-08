@@ -155,6 +155,7 @@ func GetClient() *resty.Client {
 				OnError(restyErrHook).
 				// NOCC:gas/tls(设计如此)
 				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+			globalClient.SetTransport(otelhttp.NewTransport(globalClient.GetClient().Transport))
 		})
 	}
 	return globalClient

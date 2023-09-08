@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_persistent_volume_claim",
-      "alias": "PersistentVolumeClaim Simple Demo",
+      "alias": "PersistentVolumeClaim simple demo",
       "description": "A simple persistentVolumeClaim demo with only basic configuration",
       "manifest": null
     }

@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_pod",
-      "alias": "Pod Simple Demo",
+      "alias": "Pod simple demo",
       "description": "A simple pod demo with only basic configuration",
       "manifest": null
     }

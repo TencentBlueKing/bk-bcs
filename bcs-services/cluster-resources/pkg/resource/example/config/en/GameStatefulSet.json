@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_gamestatefulset",
-      "alias": "GameStatefulSet Simple Demo",
+      "alias": "GameStatefulSet simple demo",
       "description": "A simple GameStatefulSet demo with only basic configuration",
       "manifest": null
     }

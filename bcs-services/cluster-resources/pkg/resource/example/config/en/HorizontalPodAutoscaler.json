@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_hpa",
-      "alias": "HPA Simple Demo",
+      "alias": "HPA simple demo",
       "description": "A simple hpa demo with only basic configuration",
       "manifest": null
     }
