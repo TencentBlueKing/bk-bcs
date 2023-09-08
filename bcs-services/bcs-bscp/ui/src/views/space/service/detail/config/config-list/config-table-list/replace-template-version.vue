@@ -26,13 +26,13 @@ import { Message } from 'bkui-vue';
 
   const loading = ref(false)
   const versionList = ref<ITplVersionItem[]>([])
-  const selected = ref()
+  const selected = ref(props.versionId)
   const formRef = ref()
   const pending = ref(false)
 
   watch(() => props.show, val => {
     if (val) {
-      selected.value = undefined
+      selected.value = props.versionId
       getTemplateVersions()
     }
   })
@@ -53,7 +53,9 @@ import { Message } from 'bkui-vue';
         name: `latest（当前最新为${latestVersion.template_revision_name}）`,
         isLatest: true
       })
-      selected.value = 0
+      if (!props.versionId) {
+        selected.value = 0
+      }
     }
     versionList.value = list
     loading.value = false
@@ -65,7 +67,9 @@ import { Message } from 'bkui-vue';
     let versionId = selected.value
     if (isLatest) {
       const id = versionList.value.find(item => item.isLatest)?.id
-      versionId = id
+      if (id) {
+        versionId = id
+      }
     }
     const params = {
       bindings: [{

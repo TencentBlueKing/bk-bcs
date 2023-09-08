@@ -25,7 +25,6 @@ import (
 	pbatb "bscp.io/pkg/protocol/core/app-template-binding"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/tools"
-	"bscp.io/pkg/types"
 )
 
 // CreateAppTemplateBinding create an app template binding
@@ -170,8 +169,7 @@ func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbcs.ListApp
 	r := &pbds.ListAppTemplateBindingsReq{
 		BizId: req.BizId,
 		AppId: req.AppId,
-		Start: 0,
-		Limit: uint32(types.DefaultMaxPageLimit),
+		All:   true,
 	}
 
 	rp, err := s.client.DS.ListAppTemplateBindings(grpcKit.RpcCtx(), r)
@@ -211,9 +209,8 @@ func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateI
 }
 
 // ListAppBoundTemplateRevisions list app bound template revisions
-func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.ListAppBoundTemplateRevisionsReq) (*pbcs.
-	ListAppBoundTemplateRevisionsResp,
-	error) {
+func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.ListAppBoundTemplateRevisionsReq) (
+	*pbcs.ListAppBoundTemplateRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAppBoundTemplateRevisionsResp)
 
@@ -222,6 +219,31 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
+
+	atbReq := &pbds.ListAppTemplateBindingsReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+		All:   true,
+	}
+
+	atbRsp, err := s.client.DS.ListAppTemplateBindings(grpcKit.RpcCtx(), atbReq)
+	if err != nil {
+		logs.Errorf("list app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	if len(atbRsp.Details) == 0 {
+		return &pbcs.ListAppBoundTemplateRevisionsResp{
+			Details: []*pbatb.AppBoundTmplRevisionGroupBySet{},
+		}, nil
+	}
+	tmplSetIDs := make([]uint32, 0)
+	for _, b := range atbRsp.Details[0].Spec.Bindings {
+		tmplSetIDs = append(tmplSetIDs, b.TemplateSetId)
+	}
+
+	tsbRsp, err := s.client.DS.ListTemplateSetBriefInfoByIDs(grpcKit.RpcCtx(), &pbds.ListTemplateSetBriefInfoByIDsReq{
+		Ids: tmplSetIDs,
+	})
 
 	r := &pbds.ListAppBoundTemplateRevisionsReq{
 		BizId:        req.BizId,
@@ -244,13 +266,15 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 	}
 
 	details := make([]*pbatb.AppBoundTmplRevisionGroupBySet, 0)
-	for id, revisions := range tmplSetMap {
+	for _, tsb := range tsbRsp.Details {
 		group := &pbatb.AppBoundTmplRevisionGroupBySet{
-			TemplateSpaceId:   revisions[0].TemplateSpaceId,
-			TemplateSpaceName: revisions[0].TemplateSpaceName,
-			TemplateSetId:     id,
-			TemplateSetName:   revisions[0].TemplateSetName,
+			TemplateSpaceId:   tsb.TemplateSpaceId,
+			TemplateSpaceName: tsb.TemplateSpaceName,
+			TemplateSetId:     tsb.TemplateSetId,
+			TemplateSetName:   tsb.TemplateSetName,
 		}
+
+		revisions := tmplSetMap[tsb.TemplateSetId]
 		for _, r := range revisions {
 			group.TemplateRevisions = append(group.TemplateRevisions,
 				&pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail{

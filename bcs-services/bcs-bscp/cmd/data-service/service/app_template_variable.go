@@ -75,6 +75,88 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbd
 		}, nil
 	}
 
+	refs, err := s.getVariableReferences(kt, tmplRevisions)
+	if err != nil {
+		logs.Errorf("get variable references failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return &pbds.GetAppTemplateVariableReferencesResp{
+		Details: refs,
+	}, nil
+}
+
+// GetReleasedAppTemplateVariableReferences get released app template variable references.
+func (s *Service) GetReleasedAppTemplateVariableReferences(ctx context.Context,
+	req *pbds.GetReleasedAppTemplateVariableReferencesReq) (
+	*pbds.GetReleasedAppTemplateVariableReferencesResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	releasedTmpls, _, err := s.dao.ReleasedAppTemplate().List(kt, req.BizId, req.AppId, req.ReleaseId, nil,
+		&types.BasePage{All: true})
+	if err != nil {
+		logs.Errorf("list released app templates failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	if len(releasedTmpls) == 0 {
+		return &pbds.GetReleasedAppTemplateVariableReferencesResp{
+			Details: []*pbatv.AppTemplateVariableReference{},
+		}, nil
+	}
+
+	tmplRevisions := getTmplRevisionsFromReleased(releasedTmpls)
+
+	refs, err := s.getVariableReferences(kt, tmplRevisions)
+	if err != nil {
+		logs.Errorf("get variable references failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return &pbds.GetReleasedAppTemplateVariableReferencesResp{
+		Details: refs,
+	}, nil
+}
+
+func getTmplRevisionsFromReleased(releasedTmpls []*table.ReleasedAppTemplate) []*table.TemplateRevision {
+	tmplRevisions := make([]*table.TemplateRevision, len(releasedTmpls))
+	for idx, r := range releasedTmpls {
+		tmplRevisions[idx] = &table.TemplateRevision{
+			ID: r.ID,
+			Spec: &table.TemplateRevisionSpec{
+				RevisionName: r.Spec.TemplateRevisionName,
+				RevisionMemo: r.Spec.TemplateRevisionMemo,
+				Name:         r.Spec.Name,
+				Path:         r.Spec.Path,
+				FileType:     table.FileFormat(r.Spec.FileType),
+				FileMode:     table.FileMode(r.Spec.FileMode),
+				Permission: &table.FilePermission{
+					User:      r.Spec.User,
+					UserGroup: r.Spec.UserGroup,
+					Privilege: r.Spec.Privilege,
+				},
+				ContentSpec: &table.ContentSpec{
+					Signature: r.Spec.Signature,
+					ByteSize:  r.Spec.ByteSize,
+				},
+			},
+			Attachment: &table.TemplateRevisionAttachment{
+				BizID:           r.Attachment.BizID,
+				TemplateSpaceID: r.Spec.TemplateSpaceID,
+				TemplateID:      r.Spec.TemplateID,
+			},
+			Revision: &table.CreatedRevision{
+				Creator:   r.Revision.Creator,
+				CreatedAt: r.Revision.CreatedAt,
+			},
+		}
+	}
+
+	return tmplRevisions
+}
+
+// GetAppTemplateVariableReferences get app template variable references.
+func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.TemplateRevision) (
+	[]*pbatv.AppTemplateVariableReference, error) {
 	contents, err := s.downloadTmplContent(kt, tmplRevisions)
 	if err != nil {
 		logs.Errorf("get app template variable references failed, err: %v, rid: %s", err, kt.Rid)
@@ -114,9 +196,7 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbd
 		refs[idx] = ref
 	}
 
-	return &pbds.GetAppTemplateVariableReferencesResp{
-		Details: refs,
-	}, nil
+	return refs, nil
 }
 
 // ListAppTemplateVariables get app template variable references.
@@ -203,6 +283,10 @@ func (s *Service) ListReleasedAppTemplateVariables(ctx context.Context, req *pbd
 func (s *Service) UpdateAppTemplateVariables(ctx context.Context, req *pbds.UpdateAppTemplateVariablesReq) (
 	*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+	// set for empty slice to ensure the data in db is not `null` but `[]`
+	if len(req.Spec.Variables) == 0 {
+		req.Spec.Variables = []*pbtv.TemplateVariableSpec{}
+	}
 
 	appVar := &table.AppTemplateVariable{
 		Spec:       req.Spec.AppTemplateVariableSpec(),
