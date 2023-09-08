@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"strconv"
 	"sync"
 
 	"bscp.io/pkg/dal/table"
@@ -917,10 +918,17 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 		return nil, err
 	}
 
+	uniqueRelations := make([]*types.TmplSetBoundNamedAppDetail, 0)
+	uniqueRelationMap := make(map[string]bool)
 	// get app and release details
 	appIDs := make([]uint32, len(relations))
 	releaseIDs := make([]uint32, len(relations))
 	for i, r := range relations {
+		key := strconv.FormatUint(uint64(r.AppID), 10) + "_" + strconv.FormatUint(uint64(r.ReleaseID), 10)
+		if !uniqueRelationMap[key] {
+			uniqueRelationMap[key] = true
+			uniqueRelations = append(uniqueRelations, r)
+		}
 		appIDs[i] = r.AppID
 		releaseIDs[i] = r.ReleaseID
 	}
@@ -948,7 +956,7 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 
 	// combine resp details
 	details := make([]*pbtbr.TemplateSetBoundNamedAppDetail, 0)
-	for _, r := range relations {
+	for _, r := range uniqueRelations {
 		details = append(details, &pbtbr.TemplateSetBoundNamedAppDetail{
 			AppId:       r.AppID,
 			AppName:     appMap[r.AppID].Spec.Name,
