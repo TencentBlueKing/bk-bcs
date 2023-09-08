@@ -27,7 +27,32 @@
 
   const emits = defineEmits(['created', 'close'])
 
+  const rules = {
+    revision_name: [
+      {
+        validator: (value: string) => value.length <= 128,
+        message: '最大长度128个字符'
+      },
+      {
+        validator: (value: string) => {
+          if (value.length > 0) {
+            return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value)
+          }
+          return true
+        },
+        message: '仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾'
+      }
+    ],
+    revision_memo: [
+      {
+        validator: (value: string) => value.length <= 256,
+        message: '最大长度256个字符'
+      }
+    ]
+  }
+
   const formData = ref<ITemplateVersionEditingData>({
+    revision_name: '',
     revision_memo: '',
     file_type: '',
     file_mode: '',
@@ -209,8 +234,11 @@
     </div>
     <div :class="['template-config-content-wrapper', { 'view-mode': isViewMode }]">
       <div v-if="!isViewMode" class="config-form">
-        <bk-form ref="formRef" form-type="vertical">
-          <bk-form-item label="版本描述">
+        <bk-form ref="formRef" form-type="vertical" :model="formData" :rules="rules">
+          <bk-form-item label="版本号" property="revision_name">
+            <bk-input v-model="formData.revision_name" />
+          </bk-form-item>
+          <bk-form-item label="版本描述" property="revision_memo">
             <bk-input v-model="formData.revision_memo" type="textarea" :rows="4" :maxlength="200" />
           </bk-form-item>
           <bk-form-item label="文件权限" required>
