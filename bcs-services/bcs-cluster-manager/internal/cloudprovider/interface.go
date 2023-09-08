@@ -240,6 +240,8 @@ type CloudValidateManager interface {
 	AddNodesToClusterValidate(req *proto.AddNodesRequest, opt *CommonOption) error
 	// DeleteNodesFromClusterValidate validate
 	DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest, opt *CommonOption) error
+	// CreateCloudAccountValidate create cloud account validate
+	CreateCloudAccountValidate(account *proto.Account) error
 	// ImportCloudAccountValidate import cloud account validate
 	ImportCloudAccountValidate(account *proto.Account) error
 	// GetCloudRegionZonesValidate get cloud region zones validate
