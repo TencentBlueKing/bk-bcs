@@ -47,6 +47,7 @@ func (h GenericFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				if d, ok := detail.(*pbas.ApplyDetail); ok {
 					// Handle permission denied error with details
 					render.Render(w, r, rest.PermissionDenied(err, d))
+					break
 				}
 			}
 		}
