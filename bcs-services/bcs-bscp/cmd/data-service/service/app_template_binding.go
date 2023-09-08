@@ -591,12 +591,11 @@ func (s *Service) ValidateAppTemplateBindingUniqueKey(kt *kit.Kit, bizID, appID 
 // fillATBModel fill model AppTemplateBinding's template space ids field
 func (s *Service) fillATBTmplSpace(kit *kit.Kit, g *table.AppTemplateBinding,
 	tmplRevisions []*table.TemplateRevision) error {
-	tmplSpaceMap := make(map[uint32]struct{})
+	tmplSpaceIDs := make([]uint32, 0)
 	for _, tr := range tmplRevisions {
-		tmplSpaceMap[tr.Attachment.TemplateSpaceID] = struct{}{}
+		tmplSpaceIDs = append(tmplSpaceIDs, tr.Attachment.TemplateSpaceID)
 	}
-	g.Spec.TemplateSpaceIDs = convertToSlice(tmplSpaceMap)
-
+	g.Spec.TemplateSpaceIDs = tools.RemoveDuplicates(tmplSpaceIDs)
 	return nil
 }
 
@@ -607,6 +606,23 @@ func (s *Service) fillATBModel(kit *kit.Kit, g *table.AppTemplateBinding, pbs *p
 	g.Spec.LatestTemplateIDs = pbs.LatestTemplateIDs
 	g.Spec.TemplateIDs = pbs.TemplateIDs
 	g.Spec.Bindings = pbs.TemplateBindings
+
+	// set for empty slice to ensure the data in db is not `null` but `[]`
+	if len(g.Spec.TemplateSetIDs) == 0 {
+		g.Spec.TemplateSetIDs = []uint32{}
+	}
+	if len(g.Spec.TemplateRevisionIDs) == 0 {
+		g.Spec.TemplateRevisionIDs = []uint32{}
+	}
+	if len(g.Spec.LatestTemplateIDs) == 0 {
+		g.Spec.LatestTemplateIDs = []uint32{}
+	}
+	if len(g.Spec.TemplateIDs) == 0 {
+		g.Spec.TemplateIDs = []uint32{}
+	}
+	if len(g.Spec.Bindings) == 0 {
+		g.Spec.Bindings = []*table.TemplateBinding{}
+	}
 }
 
 // parseBindings parse the input into the target object
@@ -702,14 +718,6 @@ type parsedBindings struct {
 	LatestTemplateIDs         []uint32
 	LatestTemplateRevisionIDs []uint32
 	TemplateBindings          []*table.TemplateBinding
-}
-
-func convertToSlice(m map[uint32]struct{}) []uint32 {
-	var keys []uint32
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
 }
 
 // validateUpsert validate for create or update operation of app template binding

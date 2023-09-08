@@ -203,6 +203,10 @@ func (s *Service) ListReleasedAppTemplateVariables(ctx context.Context, req *pbd
 func (s *Service) UpdateAppTemplateVariables(ctx context.Context, req *pbds.UpdateAppTemplateVariablesReq) (
 	*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+	// set for empty slice to ensure the data in db is not `null` but `[]`
+	if len(req.Spec.Variables) == 0 {
+		req.Spec.Variables = []*pbtv.TemplateVariableSpec{}
+	}
 
 	appVar := &table.AppTemplateVariable{
 		Spec:       req.Spec.AppTemplateVariableSpec(),
