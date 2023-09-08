@@ -1,21 +1,22 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
   import { IDiffDetail } from '../../../../../../../../../types/service';
+  import { IConfigDiffSelected } from '../../../../../../../../../types/config'
   import Configs from './configs.vue'
   import Scripts from './scripts.vue'
 
   const props = defineProps<{
     baseVersionId: number;
     currentVersionId: number;
-    currentConfigId?: number;
+    selectedConfig?: IConfigDiffSelected;
   }>()
 
   const emits = defineEmits(['selected'])
 
-  const selectedMenu = ref<string|number|undefined>(props.currentConfigId)
+  const selectedType = ref('config')
 
-  const handleSelect = (id: string|number, data: IDiffDetail) => {
-    selectedMenu.value = id
+  const handleSelect = (data: IDiffDetail, type: string) => {
+    selectedType.value = type
     emits('selected', data)
   }
 </script>
@@ -25,14 +26,15 @@
       <Configs
         :base-version-id="props.baseVersionId"
         :current-version-id="props.currentVersionId"
-        :current-config-id="selectedMenu"
-        @selected="handleSelect" />
+        :selected-config="props.selectedConfig"
+        :actived="selectedType === 'config'"
+        @selected="handleSelect($event, 'config')" />
     </div>
     <Scripts
       :base-version-id="props.baseVersionId"
       :current-version-id="props.currentVersionId"
-      :value="selectedMenu"
-      @selected="handleSelect" />
+      :actived="selectedType === 'script'"
+      @selected="handleSelect($event, 'script')" />
   </div>
 </template>
 <style lang="scss" scoped>

@@ -14,7 +14,7 @@
   const props = defineProps<{
     currentVersionId: number;
     baseVersionId: number;
-    value: string|number|undefined;
+    actived: boolean;
   }>()
 
   const emits = defineEmits(['selected'])
@@ -56,8 +56,10 @@
     }
   })
 
-  watch(() => props.value, (val) => {
-    selected.value = val
+  watch(() => props.actived, (val) => {
+    if (!val) {
+      selected.value = undefined
+    }
   }, {
     immediate: true
   })
@@ -65,7 +67,7 @@
   onMounted(() => {
     updateDiff(props.currentVersionId, 'current')
   })
-  
+
 
   // 计算前置脚本或后置脚本差异
   const updateDiff = async(id: number, type: 'current'|'base') => {
@@ -91,13 +93,13 @@
     const { base, current } = script
     const diffData = { contentType: 'text', base, current }
     selected.value = id
-    emits('selected', selected.value, diffData)
+    emits('selected', diffData)
   }
 
 </script>
 <template>
   <div class="scripts-menu">
-    <MenuList title="初始化脚本" :value="selected" :list="scriptDetailList" @selected="selectScript" />
+    <MenuList title="前/后置脚本" :value="selected" :list="scriptDetailList" @selected="selectScript" />
   </div>
 </template>
 <style lang="scss" scoped></style>

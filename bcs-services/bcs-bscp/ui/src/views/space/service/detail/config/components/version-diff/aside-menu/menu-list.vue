@@ -1,6 +1,5 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
-  import { PlayShape } from 'bkui-vue/lib/icon'
 
   const props = defineProps<{
     title: string;
@@ -40,7 +39,6 @@
         @click="handleSelect(item.id)">
         <i v-if="item.type" :class="['status-icon', item.type]"></i>
         <div class="name">{{ item.name }}</div>
-        <PlayShape v-if="selected === item.id" class="arrow-icon" />
       </div>
     </div>
   </div>
@@ -74,7 +72,7 @@
       align-items: center;
       justify-content: space-between;
       position: relative;
-      padding: 0 24px;
+      padding: 0 16px 0 32px;
       height: 41px;
       color: #313238;
       background: #ffffff;
@@ -91,7 +89,7 @@
       .status-icon {
         position: absolute;
         top: 18px;
-        left: 10px;
+        left: 16px;
         width: 4px;
         height: 4px;
         border-radius: 50%;
