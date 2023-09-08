@@ -90,6 +90,13 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSe
 // UpdateTemplateSet update template set.
 func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplateSetReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+	// set for empty slice to ensure the data in db is not `null` but `[]`
+	if len(req.Spec.TemplateIds) == 0 {
+		req.Spec.TemplateIds = []uint32{}
+	}
+	if len(req.Spec.BoundApps) == 0 {
+		req.Spec.BoundApps = []uint32{}
+	}
 
 	var (
 		invisibleATBs []*table.AppTemplateBinding
@@ -337,6 +344,7 @@ func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbds.ListTempl
 			&pbtset.TemplateSetOfBizDetail_TemplateSetOfBiz{
 				TemplateSetId:   t.ID,
 				TemplateSetName: t.Spec.Name,
+				TemplateIds:     t.Spec.TemplateIDs,
 			})
 	}
 	tmplSpaceIDs := make([]uint32, 0, len(tmplSetsMap))
