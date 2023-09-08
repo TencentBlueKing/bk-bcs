@@ -344,6 +344,7 @@ func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbds.ListTempl
 			&pbtset.TemplateSetOfBizDetail_TemplateSetOfBiz{
 				TemplateSetId:   t.ID,
 				TemplateSetName: t.Spec.Name,
+				TemplateIds:     t.Spec.TemplateIDs,
 			})
 	}
 	tmplSpaceIDs := make([]uint32, 0, len(tmplSetsMap))
