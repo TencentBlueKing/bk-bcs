@@ -29,9 +29,7 @@ const (
 	NodeGroupStatusUnspecified = "STATUS_UNSPECIFIED"
 	// NodeGroupStatusRunningWithError indicates the node pool has been created and is partially usable
 	NodeGroupStatusRunningWithError = "RUNNING_WITH_ERROR"
-)
 
-const (
 	// InstanceStatusProvisioning indicates the instance is being created
 	InstanceStatusProvisioning = "PROVISIONING"
 	// InstanceStatusStaging indicates the instance is being staged
@@ -48,4 +46,9 @@ const (
 	InstanceStatusRepairing = "REPAIRING"
 	// InstanceStatusTerminated indicates the instance is terminated
 	InstanceStatusTerminated = "TERMINATED"
+
+	// GKEClusterReleaseChannel for GKE cluster release channel
+	GKEClusterReleaseChannel = "releaseChannel"
+	// GKEClusterLocationType for GKE cluster location type
+	GKEClusterLocationType = "locationType"
 )

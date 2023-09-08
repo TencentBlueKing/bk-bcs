@@ -90,6 +90,13 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSe
 // UpdateTemplateSet update template set.
 func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplateSetReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+	// set for empty slice to ensure the data in db is not `null` but `[]`
+	if len(req.Spec.TemplateIds) == 0 {
+		req.Spec.TemplateIds = []uint32{}
+	}
+	if len(req.Spec.BoundApps) == 0 {
+		req.Spec.BoundApps = []uint32{}
+	}
 
 	var (
 		invisibleATBs []*table.AppTemplateBinding
@@ -312,6 +319,56 @@ func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbds.ListTempl
 	return resp, nil
 }
 
+// ListTemplateSetBriefInfoByIDs list template set by ids.
+func (s *Service) ListTemplateSetBriefInfoByIDs(ctx context.Context, req *pbds.ListTemplateSetBriefInfoByIDsReq) (
+	*pbds.ListTemplateSetBriefInfoByIDsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.Ids); err != nil {
+		return nil, err
+	}
+
+	// template set details
+	tmplSets, err := s.dao.TemplateSet().ListByIDs(kt, req.Ids)
+	if err != nil {
+		logs.Errorf("list template sets failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	tmplSetMap := make(map[uint32]*table.TemplateSet)
+	tmplSpaceIDs := make([]uint32, 0)
+	for _, ts := range tmplSets {
+		tmplSetMap[ts.ID] = ts
+		tmplSpaceIDs = append(tmplSpaceIDs, ts.Attachment.TemplateSpaceID)
+	}
+	tmplSpaceIDs = tools.RemoveDuplicates(tmplSpaceIDs)
+
+	// template space details
+	tmplSpaces, err := s.dao.TemplateSpace().ListByIDs(kt, tmplSpaceIDs)
+	if err != nil {
+		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	tmplSpaceMap := make(map[uint32]*table.TemplateSpace)
+	for _, ts := range tmplSpaces {
+		tmplSpaceMap[ts.ID] = ts
+	}
+
+	details := make([]*pbtset.TemplateSetBriefInfo, len(tmplSets))
+	for idx, t := range tmplSets {
+		details[idx] = &pbtset.TemplateSetBriefInfo{
+			TemplateSpaceId:   t.Attachment.TemplateSpaceID,
+			TemplateSpaceName: tmplSpaceMap[t.Attachment.TemplateSpaceID].Spec.Name,
+			TemplateSetId:     t.ID,
+			TemplateSetName:   tmplSetMap[t.ID].Spec.Name,
+		}
+	}
+
+	resp := &pbds.ListTemplateSetBriefInfoByIDsResp{
+		Details: details,
+	}
+	return resp, nil
+}
+
 // ListTemplateSetsOfBiz list template sets of one biz.
 func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbds.ListTemplateSetsOfBizReq) (
 	*pbds.ListTemplateSetsOfBizResp, error) {
@@ -337,6 +394,7 @@ func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbds.ListTempl
 			&pbtset.TemplateSetOfBizDetail_TemplateSetOfBiz{
 				TemplateSetId:   t.ID,
 				TemplateSetName: t.Spec.Name,
+				TemplateIds:     t.Spec.TemplateIDs,
 			})
 	}
 	tmplSpaceIDs := make([]uint32, 0, len(tmplSetsMap))

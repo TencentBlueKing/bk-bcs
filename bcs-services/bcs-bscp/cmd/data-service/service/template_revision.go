@@ -46,7 +46,11 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 
 	// 1. create template revision
 	spec := req.Spec.TemplateRevisionSpec()
-	spec.RevisionName = generateRevisionName()
+	// if no revision name is specified, generate it by system
+	if spec.RevisionName == "" {
+		spec.RevisionName = generateRevisionName()
+	}
+
 	// keep the revision's name and path same with template
 	spec.Name = template.Spec.Name
 	spec.Path = template.Spec.Path
@@ -187,6 +191,7 @@ func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
 			&pbtr.TemplateRevisionNamesDetailRevisionNames{
 				TemplateRevisionId:   t.ID,
 				TemplateRevisionName: t.Spec.RevisionName,
+				TemplateRevisionMemo: t.Spec.RevisionMemo,
 			})
 	}
 

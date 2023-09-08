@@ -40,6 +40,7 @@ message TemplateRevisionNamesDetail {
     message revision_names {
         uint32 template_revision_id   = 1;
         string template_revision_name = 2;
+        string template_revision_memo = 3;
     }
     uint32                  template_id                 = 1;
     string                  template_name               = 2;

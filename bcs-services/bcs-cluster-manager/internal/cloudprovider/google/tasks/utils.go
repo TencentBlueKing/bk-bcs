@@ -33,9 +33,6 @@ func updateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *cmproto.NodeG
 	}
 
 	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
-	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
-		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
-	}
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
 	if err != nil {
 		return err
