@@ -65,7 +65,7 @@ func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbds.ListApp
 	*pbds.ListAppTemplateBindingsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
@@ -301,7 +301,7 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 
 	details, count, err := s.dao.ReleasedAppTemplate().List(kt, req.BizId, req.AppId, req.ReleaseId, searcher, opt)
 	if err != nil {
-		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list released app bound templates revisions failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 

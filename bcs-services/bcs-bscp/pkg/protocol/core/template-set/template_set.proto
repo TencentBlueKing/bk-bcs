@@ -41,3 +41,10 @@ message TemplateSetOfBizDetail {
     repeated TemplateSetOfBiz template_sets       = 3;
 
 }
+
+message TemplateSetBriefInfo {
+    uint32 template_space_id   = 1;
+    string template_space_name = 2;
+    uint32 template_set_id     = 3;
+    string template_set_name   = 4;
+}

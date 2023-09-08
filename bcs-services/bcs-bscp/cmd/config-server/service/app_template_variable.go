@@ -82,6 +82,41 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbc
 	return resp, nil
 }
 
+// GetReleasedAppTemplateVariableReferences get released app template variable references
+func (s *Service) GetReleasedAppTemplateVariableReferences(ctx context.Context,
+	req *pbcs.GetReleasedAppTemplateVariableReferencesReq) (
+	*pbcs.GetReleasedAppTemplateVariableReferencesResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.GetReleasedAppTemplateVariableReferencesResp)
+
+	if req.ReleaseId <= 0 {
+		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find},
+		BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetReleasedAppTemplateVariableReferencesReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+	}
+
+	rp, err := s.client.DS.GetReleasedAppTemplateVariableReferences(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("get app template variable references failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.GetReleasedAppTemplateVariableReferencesResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
 // ListAppTemplateVariables list app template variables
 func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbcs.ListAppTemplateVariablesReq) (
 	*pbcs.ListAppTemplateVariablesResp, error) {
