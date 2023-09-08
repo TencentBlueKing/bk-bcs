@@ -191,6 +191,7 @@ func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
 			&pbtr.TemplateRevisionNamesDetailRevisionNames{
 				TemplateRevisionId:   t.ID,
 				TemplateRevisionName: t.Spec.RevisionName,
+				TemplateRevisionMemo: t.Spec.RevisionMemo,
 			})
 	}
 
