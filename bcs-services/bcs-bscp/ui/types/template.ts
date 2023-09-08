@@ -149,6 +149,7 @@ export interface ITemplateVersionItem {
 
 // 模板版本编辑数据
 export interface ITemplateVersionEditingData {
+  revision_name: string;
   revision_memo: string;
   file_type: string;
   file_mode: string;
@@ -164,6 +165,7 @@ export interface IAllPkgsGroupBySpaceInBiz {
   template_space_id: number;
   template_space_name: string;
   template_sets: {
+    template_ids: number[];
     template_set_id: number;
     template_set_name: string;
     is_latest: boolean;
@@ -188,5 +190,6 @@ export interface ITemplateVersionsName {
   template_revisions: {
     template_revision_id: number;
     template_revision_name: string;
+    template_revision_memo: string;
   }[]
 }
