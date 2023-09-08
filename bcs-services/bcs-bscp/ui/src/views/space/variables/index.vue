@@ -21,7 +21,6 @@
     count: 0,
     limit: 10,
   })
-
   const isCreateSliderShow = ref(false)
   const editSliderData = ref<{ open: boolean; id: number; data: IVariableEditParams; }>({
     open: false,

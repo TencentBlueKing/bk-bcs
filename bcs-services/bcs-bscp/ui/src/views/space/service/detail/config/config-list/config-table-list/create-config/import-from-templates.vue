@@ -26,7 +26,6 @@
   const importedPkgsLoading = ref(false)
   const importedPkgs = ref<ITemplateBoundByAppData[]>([])
   const selectedPkgs = ref<ITemplateBoundByAppData[]>([])
-  const expandedPkg = ref(0)
   const pending = ref(false)
 
   const isImportBtnDisabled = computed(() => {
@@ -36,7 +35,6 @@
   watch(() => props.show, async(val) => {
     if (val) {
       bindingId.value = 0
-      expandedPkg.value = 0
       importedPkgs.value = []
       selectedPkgs.value = []
       getImportedPkgsData()
@@ -89,10 +87,7 @@
     }
   }
 
-  const handleExpandTable = (id: number) => {
-    expandedPkg.value = expandedPkg.value === id ? 0 : id
-  }
-
+  // 更新套餐下某个模板选择的版本
   const handleSelectTplVersion = (pkgId: number, version: { template_id: number; template_revision_id: number; is_latest: boolean; }, type: string) => {
     const pkgs = type === 'imported' ? importedPkgs.value : selectedPkgs.value
     const pkgData = pkgs.find(item => item.template_set_id === pkgId)
@@ -103,6 +98,15 @@
       } else {
         pkgData.template_revisions.push(version)
       }
+    }
+  }
+
+  // 批量更新套餐下所有模板所选择的版本
+  const handleUpdateTplsVersions = (pkgId: number, versionsData: { template_id: number; template_revision_id: number; is_latest: boolean; }[], type: string) => {
+    const pkgs = type === 'imported' ? importedPkgs.value : selectedPkgs.value
+    const pkgData = pkgs.find(item => item.template_set_id === pkgId)
+    if (pkgData) {
+      pkgData.template_revisions = versionsData
     }
   }
 
@@ -161,23 +165,21 @@
               :key="pkg.template_set_id"
               :bk-biz-id="props.bkBizId"
               :pkg-list="pkgList"
-              :expanded="expandedPkg === pkg.template_set_id"
               :pkg-id="pkg.template_set_id"
               :selected-versions="pkg.template_revisions"
               @delete="handleDeletePkg"
-              @expand="handleExpandTable"
-              @select-version="handleSelectTplVersion(pkg.template_set_id, $event, 'new')" />
+              @select-version="handleSelectTplVersion(pkg.template_set_id, $event, 'new')"
+              @update-versions="handleUpdateTplsVersions(pkg.template_set_id, $event, 'new')" />
             <PkgTemplatesTable
               v-for="pkg in importedPkgs"
               :key="pkg.template_set_id"
               :bk-biz-id="props.bkBizId"
               :pkg-list="pkgList"
               :disabled="true"
-              :expanded="expandedPkg === pkg.template_set_id"
               :pkg-id="pkg.template_set_id"
               :selected-versions="pkg.template_revisions"
-              @expand="handleExpandTable"
-              @select-version="handleSelectTplVersion(pkg.template_set_id, $event, 'imported')" />
+              @select-version="handleSelectTplVersion(pkg.template_set_id, $event, 'imported')"
+              @update-versions="handleUpdateTplsVersions(pkg.template_set_id, $event, 'imported')" />
           </template>
           <bk-exception v-else scene="part" type="empty">
             <div class="empty-tips">

@@ -71,7 +71,7 @@ export const updateUnReleasedAppVariables = (biz_id: string, app_id: number, var
  * @returns
  */
 export const getReleasedAppVariables = (biz_id: string, app_id: number, release_id: number) => {
-  return http.get(`/config/biz/${biz_id}/apps/${app_id}/released_template_variable`, { params: { release_id } }).then(res => res.data)
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/template_variables`, { params: {  } }).then(res => res.data)
 }
 
 /**
@@ -92,6 +92,6 @@ export const getUnReleasedAppVariablesCitedDetail = (biz_id: string, app_id: num
  * @returns
  */
 export const getReleasedAppVariablesCitedDetail = (biz_id: string, app_id: number, release_id: number) => {
-  return  http.get(`/config/biz/${biz_id}/apps/${app_id}/template_variables_references`).then(res => res.data)
+  return  http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/template_variables_references`).then(res => res.data)
   // @todo 待接口支持
 }

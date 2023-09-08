@@ -178,6 +178,12 @@
     updateRouter(id)
   }
 
+  const handlePkgCreated = (id: number) => {
+    updateRouter(id)
+    setCurrentPackage(id)
+    getList()
+  }
+
   const handlePkgDeleted = (id: number) => {
     if (id === currentPkg.value) {
       templateStore.$patch((state) => {
@@ -241,7 +247,7 @@
   <PackageCreate
     v-model:show="isCreatePackageDialogShow"
     :template-space-id="currentTemplateSpace"
-    @created="getList" />
+    @created="handlePkgCreated" />
   <PackageEdit
     v-model:show="editingPkgData.open"
     :template-space-id="currentTemplateSpace"

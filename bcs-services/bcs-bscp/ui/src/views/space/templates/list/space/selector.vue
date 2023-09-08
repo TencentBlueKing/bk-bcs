@@ -99,6 +99,11 @@
     selectorRef.value.hidePopover()
   }
 
+  const handleCreated = (id: number) => {
+    const { href } = router.resolve({ name: 'templates-list', params: { templateSpaceId: id } })
+    window.location.href = href
+  }
+
   const handleDelete = async(space: ITemplateSpaceItem) => {
     templatesLoading.value = true
     const params = {
@@ -199,7 +204,7 @@
       </template>
     </bk-select>
   </div>
-  <Create v-model:show="isShowCreateDialog" @created="loadList" />
+  <Create v-model:show="isShowCreateDialog" @created="handleCreated" />
   <Edit v-model:show="editingData.open" :data="editingData.data" @edited="loadList" />
 </template>
 <style lang="scss" scoped>
