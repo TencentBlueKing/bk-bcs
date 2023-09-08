@@ -21,6 +21,7 @@
   const isShow = ref(false)
   const isFormChanged = ref(false)
   const formRef = ref()
+  const prefix = ref()
   const pending = ref(false)
   const variableConfig = ref<IVariableEditParams>({
     name: '',
@@ -33,12 +34,19 @@
     isShow.value = val
     if (val) {
       isFormChanged.value = false
-      variableConfig.value = { ...props.data, name: props.data.name.replace('bk_bscp_', '') }
+      const name = props.data.name.replace(/(^bk_bscp_)|(^BK_BSCP_)/, '')
+      let currentPrefix = 'bk_bscp_'
+      if (/^BK_BSCP_/.test(props.data.name)) {
+        currentPrefix = 'BK_BSCP_'
+      }
+      prefix.value = currentPrefix
+      variableConfig.value = { ...props.data, name }
     }
   })
 
-  const handleFormChange = (val: IVariableEditParams) => {
+  const handleFormChange = (val: IVariableEditParams, localPrefix: string) => {
     isFormChanged.value = true
+    prefix.value = localPrefix
     variableConfig.value = { ...val }
   }
 
@@ -81,10 +89,10 @@
     :before-close="handleBeforeClose"
     @closed="close">
     <div class="variable-form">
-      <EditingForm ref="formRef" type="edit" :value="variableConfig" @change="handleFormChange" />
+      <EditingForm ref="formRef" type="edit" :prefix="prefix" :value="variableConfig" @change="handleFormChange" />
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" :loading="pending" @click="handleEditSubmit">创建</bk-button>
+      <bk-button theme="primary" :loading="pending" @click="handleEditSubmit">编辑</bk-button>
       <bk-button @click="close">取消</bk-button>
     </div>
   </bk-sideslider>
