@@ -381,8 +381,6 @@ func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*tab
 			if r.IsLatest {
 				latestTmplMap[b.TemplateSetID][r.TemplateID] = true
 			} else {
-				// only append non latest template revisions at beginning
-				pbs.TemplateRevisionIDs = append(pbs.TemplateRevisionIDs, r.TemplateRevisionID)
 				nonLatestRevisionMap[b.TemplateSetID][r.TemplateID] = r.TemplateRevisionID
 				allTmplRevisionMap[r.TemplateID] = r.TemplateRevisionID
 			}
@@ -401,13 +399,15 @@ func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*tab
 	for _, ts := range templateSets {
 		allTmplMap[ts.ID] = ts.Spec.TemplateIDs
 		pbs.TemplateIDs = append(pbs.TemplateIDs, ts.Spec.TemplateIDs...)
-		// get all latest template ids
+		// get all latest template ids and all non latest template revision ids
 		for _, id := range ts.Spec.TemplateIDs {
 			if latestTmplMap[ts.ID][id] {
 				pbs.LatestTemplateIDs = append(pbs.LatestTemplateIDs, id)
 				continue
 			}
-			if _, ok := nonLatestRevisionMap[ts.ID][id]; !ok {
+			if _, ok := nonLatestRevisionMap[ts.ID][id]; ok {
+				pbs.TemplateRevisionIDs = append(pbs.TemplateRevisionIDs, nonLatestRevisionMap[ts.ID][id])
+			} else {
 				pbs.LatestTemplateIDs = append(pbs.LatestTemplateIDs, id)
 				latestTmplMap[ts.ID][id] = true
 			}
