@@ -74,7 +74,7 @@ func ensureDirExist(name string) error {
 // NewReplayRecord 初始化Recorder
 // 确认是否开启终端记录 / 创建记录文件 / 初始记录信息
 func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, originTerminalSize *ReplyInfo) *ReplyRecorder {
-	if !config.G.TerminalRecord.Enable {
+	if !config.G.Audit.Enabled {
 		return nil
 	}
 	recorder := &ReplyRecorder{
@@ -83,7 +83,7 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, originTermin
 		Info:      originTerminalSize,
 	}
 	date := time.Now().Format(dateTimeFormat)
-	path := config.G.TerminalRecord.FilePath
+	path := config.G.Audit.DataDir
 	path = filepath.Join(path, date)
 	err := ensureDirExist(path)
 	if err != nil {

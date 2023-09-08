@@ -239,7 +239,7 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 		routePrefix = "/webconsole"
 	}
 	//回放文件
-	replayPath := config.G.TerminalRecord.FilePath
+	replayPath := config.G.Audit.DataDir
 
 	// 支持路径 prefix 透传和 rewrite 的场景
 	router.Group(routePrefix).StaticFS("/web/static", http.FS(web.WebStatic()))

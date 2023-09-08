@@ -68,7 +68,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 // ReplayFilesPageHandler 回放文件
 func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 	folderName := c.Param("folder")
-	baseDir := config.G.TerminalRecord.FilePath
+	baseDir := config.G.Audit.DataDir
 	dir := filepath.Join(baseDir, folderName)
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -91,7 +91,7 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 
 // ReplayFoldersPageHandler 回放文件目录
 func (s *service) ReplayFoldersPageHandler(c *gin.Context) {
-	dirname := config.G.TerminalRecord.FilePath
+	dirname := config.G.Audit.DataDir
 	entries, err := os.ReadDir(dirname)
 	if err != nil {
 		klog.Errorf("read dir err", err)

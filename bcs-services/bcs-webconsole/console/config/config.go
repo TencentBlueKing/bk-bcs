@@ -23,18 +23,18 @@ import (
 
 // Configurations : manage all configurations
 type Configurations struct {
-	mtx            sync.Mutex
-	Base           *BaseConf                `yaml:"base_conf"`
-	Auth           *AuthConf                `yaml:"auth_conf"`
-	Logging        *LogConf                 `yaml:"logging"`
-	BCS            *BCSConf                 `yaml:"bcs_conf"`
-	Credentials    map[string][]*Credential `yaml:"-"`
-	Redis          *RedisConf               `yaml:"redis"`
-	WebConsole     *WebConsoleConf          `yaml:"webconsole"`
-	Web            *WebConf                 `yaml:"web"`
-	Etcd           *EtcdConf                `yaml:"etcd"`
-	Tracing        *TracingConf             `yaml:"tracing"`
-	TerminalRecord *TerminalRecordConf      `yaml:"terminal_record"`
+	mtx         sync.Mutex
+	Base        *BaseConf                `yaml:"base_conf"`
+	Auth        *AuthConf                `yaml:"auth_conf"`
+	Logging     *LogConf                 `yaml:"logging"`
+	BCS         *BCSConf                 `yaml:"bcs_conf"`
+	Credentials map[string][]*Credential `yaml:"-"`
+	Redis       *RedisConf               `yaml:"redis"`
+	WebConsole  *WebConsoleConf          `yaml:"webconsole"`
+	Web         *WebConf                 `yaml:"web"`
+	Etcd        *EtcdConf                `yaml:"etcd"`
+	Tracing     *TracingConf             `yaml:"tracing"`
+	Audit       *AuditConf               `yaml:"audit"`
 }
 
 // newConfigurations 新增配置
@@ -69,7 +69,7 @@ func newConfigurations() (*Configurations, error) {
 	c.Tracing = &TracingConf{}
 	c.Tracing.Init()
 
-	c.TerminalRecord = &TerminalRecordConf{}
+	c.Audit = &AuditConf{}
 
 	c.Credentials = map[string][]*Credential{}
 
@@ -193,8 +193,8 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if err := c.init(); err != nil {
 		return err
 	}
-	if c.TerminalRecord.FilePath == "" {
-		c.TerminalRecord.FilePath = c.TerminalRecord.defaultPath()
+	if c.Audit.DataDir == "" {
+		c.Audit.DataDir = c.Audit.defaultPath()
 	}
 
 	c.Logging.InitBlog()

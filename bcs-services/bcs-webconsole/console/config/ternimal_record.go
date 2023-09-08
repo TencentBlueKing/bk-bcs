@@ -18,12 +18,12 @@ import (
 	"path/filepath"
 )
 
-type TerminalRecordConf struct {
-	Enable   bool   `yaml:"enable"`
-	FilePath string `yaml:"file_path"`
+type AuditConf struct {
+	Enabled bool   `yaml:"enabled"`
+	DataDir string `yaml:"data_dir"`
 }
 
-func (t *TerminalRecordConf) defaultPath() string {
+func (t *AuditConf) defaultPath() string {
 	pwd, _ := os.Getwd()
 	return filepath.Join(pwd, "data")
 }

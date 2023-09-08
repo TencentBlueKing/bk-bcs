@@ -66,6 +66,6 @@ tracing:
     k1: ""
     k2: ""
 
-terminal_record:
-  enable: true
-  file_path: ""
+audit:
+  enabled: true
+  data_dir: ""
