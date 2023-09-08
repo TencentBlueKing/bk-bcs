@@ -236,7 +236,7 @@ func (dao *templateBindingRelationDao) ListTemplateRevisionBoundUnnamedAppDetail
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
 	var appIDs []uint32
-	if err := q.Select(m.AppID).
+	if err := q.Select(m.AppID.Distinct()).
 		Where(m.BizID.Eq(bizID)).
 		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_revision_ids").Contains(templateRevisionID))...).
 		Pluck(m.AppID, &appIDs); err != nil {
@@ -267,7 +267,7 @@ func (dao *templateBindingRelationDao) ListTemplateSetBoundUnnamedAppDetails(kit
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
 	var appIDs []uint32
-	if err := q.Select(m.AppID).
+	if err := q.Select(m.AppID.Distinct()).
 		Where(m.BizID.Eq(bizID)).
 		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_set_ids").Contains(templateSetID))...).
 		Pluck(m.AppID, &appIDs); err != nil {
