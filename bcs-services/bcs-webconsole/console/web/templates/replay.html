@@ -6,11 +6,21 @@
 </head>
 <body>
     <h1>Recorder File</h1>
-    {{range $k,$fn:=.file_name}}
-    <ul>
-        <li><a href="/replay/{{$fn}}" target="_blank" >{{$fn}}</a></li>
-    </ul>
-    {{end}}
+    <div id="folder">
+        {{range $k,$fn:=.folder_names}}
+        <ul>
+            <li><a href="/replay/files/{{$fn}}" >{{$fn}}</a></li>
+        </ul>
+        {{end}}
+    </div>
+
+    <div id="file">
+        {{range $k,$v:=.file_names}}
+        <ul>
+            <li><a href="/replay/{{ $.folder_name }}/{{$v}}" target="_blank" >{{$v}}</a></li>
+        </ul>
+        {{end}}
+    </div>
 
 </body>
 </html>

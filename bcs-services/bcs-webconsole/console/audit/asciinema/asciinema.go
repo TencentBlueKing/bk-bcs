@@ -15,6 +15,7 @@ package asciinema
 import (
 	"encoding/json"
 	"errors"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"io"
 	"time"
 )
@@ -39,12 +40,22 @@ var (
 )
 
 // NewWriter 初始化Writer
-func NewWriter(w io.Writer, opts ...Option) *Writer {
+func NewWriter(w io.Writer, podCtx *types.PodContext, opts ...Option) *Writer {
+	//m := Meta{
+	//	UserName: podCtx.Username,
+	//	ClusterID: podCtx.ClusterId,
+	//	NameSpace: podCtx.Namespace,
+	//	PodName: podCtx.PodName,
+	//	ContainerName: podCtx.ContainerName,
+	//	SessionID: podCtx.SessionId,
+	//}
 	conf := Config{
 		Width:    80,
 		Height:   40,
 		EnvShell: defaultShell,
 		EnvTerm:  defaultTerm,
+		//Meta: m,
+		podCtx: podCtx,
 	}
 	for _, setter := range opts {
 		setter(&conf)
@@ -79,6 +90,14 @@ func (w *Writer) WriteHeader() error {
 		Env: Env{
 			Shell: w.EnvShell,
 			Term:  w.EnvTerm,
+		},
+		Meta: Meta{
+			UserName:      w.podCtx.Username,
+			ClusterID:     w.podCtx.ClusterId,
+			NameSpace:     w.podCtx.Namespace,
+			PodName:       w.podCtx.PodName,
+			ContainerName: w.podCtx.PodName,
+			SessionID:     w.podCtx.SessionId,
 		},
 	}
 	raw, err := json.Marshal(header)
@@ -157,12 +176,22 @@ type Header struct {
 	Timestamp int64  `json:"timestamp"`
 	Title     string `json:"title"`
 	Env       Env    `json:"env"`
+	Meta      Meta   `json:"meta"`
 }
 
 // Env 文件env信息
 type Env struct {
 	Shell string `json:"SHELL"`
 	Term  string `json:"TERM"`
+}
+
+type Meta struct {
+	UserName      string `json:"user_name"`
+	ClusterID     string `json:"cluster_id"`
+	NameSpace     string `json:"name_space"`
+	PodName       string `json:"pod_name"`
+	ContainerName string `json:"container_name"`
+	SessionID     string `json:"session_id"`
 }
 
 // Write 限制文件大小

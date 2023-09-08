@@ -12,7 +12,10 @@
 
 package asciinema
 
-import "time"
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"time"
+)
 
 // Config asciinema文件Header信息
 type Config struct {
@@ -22,6 +25,7 @@ type Config struct {
 	Width     uint16
 	Height    uint16
 	Timestamp time.Time
+	podCtx    *types.PodContext
 }
 
 // Option 可选配置

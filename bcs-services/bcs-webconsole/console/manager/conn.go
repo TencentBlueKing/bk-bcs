@@ -293,8 +293,9 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 			if err := r.wsConn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return errors.Wrap(err, "ping")
 			}
-			//终端记录buff定时写入回放文件
-			if r.ReplayRecord != nil {
+			//未开启或文件初始化失败都不记录
+			if r.ReplayRecord != nil || r.ReplayRecord.Writer != nil {
+				//终端记录buff定时写入回放文件
 				if err := r.ReplayRecord.Writer.WriteFileInterval(); err != nil {
 					r.ReplayRecord.Err = err
 				}

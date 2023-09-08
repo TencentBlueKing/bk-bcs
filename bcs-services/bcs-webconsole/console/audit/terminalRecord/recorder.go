@@ -29,6 +29,7 @@ import (
 
 const (
 	dateTimeFormat = "2006-01-02"
+	dayTimeFormat  = "150405"
 
 	replayFilenameSuffix = ".cast"
 )
@@ -81,16 +82,19 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, originTermin
 		SessionID: podCtx.SessionId,
 		Info:      originTerminalSize,
 	}
+	date := time.Now().Format(dateTimeFormat)
 	path := config.G.TerminalRecord.FilePath
+	path = filepath.Join(path, date)
 	err := ensureDirExist(path)
 	if err != nil {
 		klog.Errorf("Create dir %s error: %s\n", path, err)
 		recorder.Err = err
 		return recorder
 	}
-	date := time.Now().Format(dateTimeFormat)
-	f := fmt.Sprintf("%s_%s_%s_%s_%s_%s_%s", date, podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName,
-		podCtx.ContainerName, podCtx.SessionId[:6])
+	d := time.Now().Format(dayTimeFormat)
+	f := fmt.Sprintf("%s_%s_%s_%s", d, podCtx.ClusterId, podCtx.Username, podCtx.SessionId[:6])
+	//f := fmt.Sprintf("%s_%s_%s_%s_%s_%s_%s", date, podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName,
+	//	podCtx.ContainerName, podCtx.SessionId[:6])
 	filename := f + replayFilenameSuffix
 	absFilePath := filepath.Join(path, filename)
 	recorder.absFilePath = absFilePath
@@ -105,7 +109,7 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, originTermin
 	options = append(options, asciinema.WithHeight(originTerminalSize.Height))
 	options = append(options, asciinema.WithWidth(originTerminalSize.Width))
 	options = append(options, asciinema.WithTimestamp(originTerminalSize.TimeStamp))
-	recorder.Writer = asciinema.NewWriter(recorder.file, options...)
+	recorder.Writer = asciinema.NewWriter(recorder.file, podCtx, options...)
 	return recorder
 }
 

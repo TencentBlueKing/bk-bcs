@@ -16,10 +16,8 @@
   <div id="cast" class="fixed-height-container"></div>
   <script src="{{ .SITE_STATIC_URL }}/web/static/assets/asciinema-player.min.js"></script>
   <script>
-    //本地文件系统路径,避免跨域问题
-    const d = "{{ .url }}" + "{{ .file }}";
     //回放文件
-    AsciinemaPlayer.create(d, document.getElementById('cast'),{
+    AsciinemaPlayer.create("{{ .data }}", document.getElementById('cast'),{
       fit: "both"
     });
   </script>

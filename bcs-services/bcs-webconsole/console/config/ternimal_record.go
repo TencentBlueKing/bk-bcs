@@ -25,5 +25,5 @@ type TerminalRecordConf struct {
 
 func (t *TerminalRecordConf) defaultPath() string {
 	pwd, _ := os.Getwd()
-	return filepath.Join(pwd, "data", "replay")
+	return filepath.Join(pwd, "data")
 }
