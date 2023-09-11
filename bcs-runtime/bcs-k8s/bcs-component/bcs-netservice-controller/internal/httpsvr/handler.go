@@ -97,11 +97,12 @@ func responseData(code uint, m string, result bool, reqID string, data interface
 
 // InitRouters init router
 func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
-	ws.Route(ws.POST("/v1/allocator").To(httpServerClient.allocateIP))
-	ws.Route(ws.DELETE("/v1/allocator").To(httpServerClient.deleteIP))
+	ws.Route(ws.POST("/v1/allocator").To(httpServerClient.AllocateIP))
+	ws.Route(ws.DELETE("/v1/allocator").To(httpServerClient.DeleteIP))
 }
 
-func (c *HttpServerClient) allocateIP(request *restful.Request, response *restful.Response) {
+// AllocateIP do ip allocation
+func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restful.Response) {
 	requestID := request.Request.Header.Get("X-Request-Id")
 	netIPReq := &NetIPAllocateRequest{}
 	if err := request.ReadEntity(netIPReq); err != nil {
@@ -114,31 +115,7 @@ func (c *HttpServerClient) allocateIP(request *restful.Request, response *restfu
 		return
 	}
 
-	// request certain ip
-	if netIPReq.IPAddr != "" {
-		netIP, err := c.getIPFromRequest(netIPReq)
-		if err != nil {
-			response.WriteEntity(responseData(2, err.Error(), false, requestID, nil))
-		}
-		if err := c.K8SClient.Status().Update(context.Background(), netIP); err != nil {
-			message := fmt.Sprintf("update IP [%s] status failed", netIPReq.IPAddr)
-			blog.Errorf(message)
-			response.WriteEntity(responseData(2, message, false, requestID, nil))
-			return
-		}
-		message := fmt.Sprintf("allocate ip [%s] for container %s success", netIPReq.IPAddr, netIPReq.ContainerID)
-		blog.Infof(message)
-		bcspool, err := c.getPoolByIP(netIP)
-		if err != nil {
-			response.WriteEntity(responseData(2, err.Error(), false, requestID, nil))
-			return
-		}
-		data := getAllocateResponseData(netIPReq, netIP, bcspool)
-		response.WriteEntity(responseData(0, message, true, requestID, data))
-		return
-	}
-
-	// ip address not exists in request
+	// get available ips
 	netPoolList := &v1.BCSNetPoolList{}
 	if err := c.K8SClient.List(context.Background(), netPoolList); err != nil {
 		message := fmt.Sprintf("get BCSNetPool list failed, %s", err.Error())
@@ -146,15 +123,14 @@ func (c *HttpServerClient) allocateIP(request *restful.Request, response *restfu
 		response.WriteEntity(responseData(2, message, false, requestID, nil))
 		return
 	}
-
-	availableIP, reservedIP, err := c.getAvailableIPs(netPoolList, netIPReq)
+	availableIP, err := c.getAvailableIPs(netPoolList, netIPReq)
 	if err != nil {
 		response.WriteEntity(responseData(2, err.Error(), false, requestID, nil))
 		return
 	}
 
 	// get claim info from pod annotations
-	claimKey, ExpiredDuration, err := c.getIPClaimAndDuration(netIPReq.PodNamespace, netIPReq.PodName)
+	claimName, _, err := c.getIPClaimAndDuration(netIPReq.PodNamespace, netIPReq.PodName)
 	if err != nil {
 		message := fmt.Sprintf("check BCSNetIP [%s] fixed status failed, %s", netIPReq.IPAddr, err.Error())
 		blog.Errorf(message)
@@ -163,31 +139,64 @@ func (c *HttpServerClient) allocateIP(request *restful.Request, response *restfu
 	}
 
 	// match IP by claim or podName and podNamespace
-	if claimKey != "" {
-		for _, ip := range reservedIP {
-			if ip.Status.IPClaimKey == claimKey {
-				if err := c.updateIPStatus(ip, netIPReq, claimKey, ExpiredDuration, true); err != nil {
-					response.WriteEntity(responseData(2, err.Error(), false, requestID, nil))
-					return
-				}
-				bcspool, err := c.getPoolByIP(ip)
-				if err != nil {
-					response.WriteEntity(responseData(2, err.Error(), false, requestID, nil))
-					return
-				}
-				data := getAllocateResponseData(netIPReq, ip, bcspool)
-				message := fmt.Sprintf("allocate IP [%s] for Host %s success", ip.Name, netIPReq.Host)
-				blog.Infof(message)
-				response.WriteEntity(responseData(0, message, true, requestID, data))
+	if claimName != "" {
+		ipClaim, err := c.getClaim(netIPReq.PodNamespace, claimName)
+		if err != nil {
+			message := fmt.Sprintf("get BCSNetIPClaim %s/%s failed, err %s",
+				netIPReq.PodNamespace, claimName, err.Error())
+			blog.Errorf(message)
+			response.WriteEntity(responseData(2, message, false, requestID, nil))
+			return
+		}
+		if ipClaim.DeletionTimestamp != nil {
+			message := fmt.Sprintf("BCSNetIPClaim %s/%s is deleting", netIPReq.PodNamespace, claimName)
+			blog.Errorf(message)
+			response.WriteEntity(responseData(2, message, false, requestID, nil))
+			return
+		}
+		if ipClaim.Status.Phase == "" {
+			message := fmt.Sprintf("BCSNetIPClaim %s/%s empty phase, wait to pending", netIPReq.PodNamespace, claimName)
+			blog.Errorf(message)
+			response.WriteEntity(responseData(2, message, false, requestID, nil))
+			return
+		}
+		if ipClaim.Status.Phase == constant.BCSNetIPClaimExpiredStatus {
+			message := fmt.Sprintf("BCSNetIPClaim %s/%s is expired", netIPReq.PodNamespace, claimName)
+			blog.Errorf(message)
+			response.WriteEntity(responseData(2, message, false, requestID, nil))
+			return
+		}
+		if ipClaim.Status.Phase == constant.BCSNetIPClaimPendingStatus {
+			// allocate ip for pending ip claim
+			targetIP, bcspool, err := c.allocateNewIPForClaim(netIPReq, availableIP, ipClaim)
+			if err != nil {
+				response.WriteEntity(responseData(2, err.Error(), false, requestID, nil))
 				return
 			}
+			data := getAllocateResponseData(netIPReq, targetIP, bcspool)
+			response.WriteEntity(responseData(0, "success", true, requestID, data))
+			return
+		} else if ipClaim.Status.Phase == constant.BCSNetIPClaimBoundedStatus {
+			// get ip from ip claim
+			bcsNetIP, bcsNetPool, err := c.allocateIPByClaim(netIPReq, ipClaim)
+			if err != nil {
+				response.WriteEntity(responseData(2, err.Error(), false, requestID, nil))
+				return
+			}
+			data := getAllocateResponseData(netIPReq, bcsNetIP, bcsNetPool)
+			message := fmt.Sprintf("allocate IP [%s] from BCSNetIPClaim %s/%s for Host %s success",
+				bcsNetIP.Name, ipClaim.GetNamespace(), ipClaim.GetName(), netIPReq.Host)
+			blog.Infof(message)
+			response.WriteEntity(responseData(0, message, true, requestID, data))
+			return
 		}
-		message := fmt.Sprintf("claim %s is not bounding a valid IP", claimKey)
-		blog.Infof(message)
+		message := fmt.Sprintf("invalid available BCSNetIPClaim %s/%s phase %s",
+			ipClaim.GetNamespace(), ipClaim.GetName(), ipClaim.Status.Phase)
+		blog.Errorf(message)
 		response.WriteEntity(responseData(2, message, false, requestID, nil))
 		return
 	}
-
+	// allocate available unfixed ip
 	if len(availableIP) == 0 {
 		message := fmt.Sprintf("no available IP for pod %s/%s", netIPReq.PodNamespace, netIPReq.PodName)
 		blog.Errorf(message)
@@ -208,6 +217,67 @@ func (c *HttpServerClient) allocateIP(request *restful.Request, response *restfu
 	}
 	data := getAllocateResponseData(netIPReq, targetIP, bcspool)
 	response.WriteEntity(responseData(0, message, true, requestID, data))
+}
+
+func (c *HttpServerClient) allocateNewIPForClaim(
+	netIPReq *NetIPAllocateRequest, availableIP []*v1.BCSNetIP, ipClaim *v1.BCSNetIPClaim) (
+	*v1.BCSNetIP, *v1.BCSNetPool, error) {
+	// do fixed ip bound
+	if len(availableIP) == 0 {
+		message := fmt.Sprintf("no available IP for pod %s/%s", netIPReq.PodNamespace, netIPReq.PodName)
+		blog.Errorf(message)
+		return nil, nil, fmt.Errorf(message)
+	}
+	targetIP := availableIP[0]
+	if err := c.updateIPStatus(targetIP, netIPReq,
+		utils.GetNamespacedNameKey(netIPReq.PodNamespace, ipClaim.GetName()), "", true); err != nil {
+		message := fmt.Sprintf("update IP %s status, failed, err %s", targetIP.GetName(), err.Error())
+		blog.Errorf(message)
+		return nil, nil, fmt.Errorf(message)
+	}
+	if err := c.boundClaimIP(ipClaim, targetIP); err != nil {
+		message := fmt.Sprintf("bound BCSNetIP %s to BCSNetIPClaim %s/%s failed, err %s",
+			targetIP.GetName(), ipClaim.GetNamespace(), ipClaim.GetName(), err.Error())
+		blog.Errorf(message)
+		return nil, nil, fmt.Errorf(message)
+	}
+	message := fmt.Sprintf("allocate fixed IP [%s] for Host %s success", targetIP.Name, netIPReq.Host)
+	blog.Infof(message)
+	bcspool, err := c.getPoolByIP(targetIP)
+	if err != nil {
+		message := fmt.Sprintf("get pool failed, err %s", err.Error())
+		blog.Errorf(message)
+		return nil, nil, fmt.Errorf(message)
+	}
+	return targetIP, bcspool, nil
+}
+
+func (c *HttpServerClient) allocateIPByClaim(
+	netIPReq *NetIPAllocateRequest, ipClaim *v1.BCSNetIPClaim) (*v1.BCSNetIP, *v1.BCSNetPool, error) {
+	ipName := ipClaim.Status.BoundedIP
+	bcsNetIP, bcsNetPool, err := c.getIPAndPool(ipName)
+	if err != nil {
+		message := fmt.Sprintf("get BCSNetIP and BCSNetPool by BCSNetIP name %s failed, err %s",
+			ipName, err.Error())
+		blog.Errorf(message)
+		return nil, nil, fmt.Errorf(message)
+	}
+	if bcsNetIP.Status.Phase != constant.BCSNetIPReservedStatus {
+		message := fmt.Sprintf(
+			"BCSNetIP %s bound with BCSNetIPClaim %s/%s is not in reserved status, BCSNetIP status %v",
+			bcsNetIP.Name, ipClaim.Name, ipClaim.Namespace, bcsNetIP.Status)
+		blog.Errorf(message)
+		return nil, nil, fmt.Errorf(message)
+	}
+	if err := c.updateIPStatus(
+		bcsNetIP, netIPReq, utils.GetNamespacedNameKey(ipClaim.GetNamespace(),
+			ipClaim.GetName()), ipClaim.Spec.ExpiredDuration, true); err != nil {
+		message := fmt.Sprintf("update BCSNetIP %s status failed, err %s",
+			ipName, err.Error())
+		blog.Errorf(message)
+		return nil, nil, fmt.Errorf(message)
+	}
+	return bcsNetIP, bcsNetPool, nil
 }
 
 func (c *HttpServerClient) updateIPStatus(ip *v1.BCSNetIP, netIPReq *NetIPAllocateRequest, claimKey, duration string,
@@ -232,8 +302,8 @@ func (c *HttpServerClient) updateIPStatus(ip *v1.BCSNetIP, netIPReq *NetIPAlloca
 }
 
 func (c *HttpServerClient) getAvailableIPs(netPoolList *v1.BCSNetPoolList, netIPReq *NetIPAllocateRequest) (
-	[]*v1.BCSNetIP, []*v1.BCSNetIP, error) {
-	var availableIP, reservedIP []*v1.BCSNetIP
+	[]*v1.BCSNetIP, error) {
+	var availableIP []*v1.BCSNetIP
 	found := false
 	for _, pool := range netPoolList.Items {
 		if utils.StringInSlice(pool.Spec.Hosts, netIPReq.Host) {
@@ -247,19 +317,16 @@ func (c *HttpServerClient) getAvailableIPs(netPoolList *v1.BCSNetPoolList, netIP
 				if netIP.Status.Phase == constant.BCSNetIPAvailableStatus {
 					availableIP = append(availableIP, netIP)
 				}
-				if netIP.Status.Phase == constant.BCSNetIPReservedStatus {
-					reservedIP = append(reservedIP, netIP)
-				}
 			}
 		}
 	}
 	if !found {
 		message := fmt.Sprintf("host %s does not exist in pools", netIPReq.Host)
 		blog.Errorf(message)
-		return nil, nil, errors.New(message)
+		return nil, errors.New(message)
 	}
 
-	return availableIP, reservedIP, nil
+	return availableIP, nil
 }
 
 func (c *HttpServerClient) getPoolByIP(bcsip *v1.BCSNetIP) (*v1.BCSNetPool, error) {
@@ -278,44 +345,30 @@ func (c *HttpServerClient) getPoolByIP(bcsip *v1.BCSNetIP) (*v1.BCSNetPool, erro
 	return netPool, nil
 }
 
-func (c *HttpServerClient) getIPFromRequest(netIPReq *NetIPAllocateRequest) (*v1.BCSNetIP, error) {
-	netIP := &v1.BCSNetIP{}
-	if err := c.K8SClient.Get(context.Background(), types.NamespacedName{Name: netIPReq.IPAddr}, netIP); err != nil {
-		message := fmt.Sprintf("get BCSNetIP [%s] failed, %s", netIPReq.IPAddr, err.Error())
-		blog.Errorf(message)
-		return nil, errors.New(message)
+func (c *HttpServerClient) getClaim(ns, name string) (*v1.BCSNetIPClaim, error) {
+	retClaim := &v1.BCSNetIPClaim{}
+	if err := c.K8SClient.Get(context.Background(), types.NamespacedName{
+		Namespace: ns,
+		Name:      name,
+	}, retClaim); err != nil {
+		blog.Warnf("get BCSNetIPClaim by ns %s name %s failed, err %s", ns, name, err.Error())
+		return nil, fmt.Errorf("get BCSNetIPClaim by ns %s name %s failed, err %s", ns, name, err.Error())
 	}
-	if netIP.Status.Phase == constant.BCSNetIPActiveStatus {
-		message := fmt.Sprintf("the requested IP [%s] is in use", netIPReq.IPAddr)
-		blog.Errorf(message)
-		return nil, errors.New(message)
-	}
-	claimKey, keepDuration, err := c.getIPClaimAndDuration(netIPReq.PodNamespace, netIPReq.PodName)
-	if err != nil {
-		message := fmt.Sprintf("check BCSNetIP [%s] fixed status failed, %s", netIPReq.IPAddr, err.Error())
-		blog.Errorf(message)
-		return nil, errors.New(message)
-	}
-	netIP.Status = v1.BCSNetIPStatus{
-		Phase:        constant.BCSNetIPActiveStatus,
-		Host:         netIPReq.Host,
-		ContainerID:  netIPReq.ContainerID,
-		IPClaimKey:   claimKey,
-		PodNamespace: netIPReq.PodNamespace,
-		PodName:      netIPReq.PodName,
-		Fixed: func(s string) bool {
-			if s != "" {
-				return true
-			}
-			return false
-		}(claimKey),
-		UpdateTime:   metav1.Now(),
-		KeepDuration: keepDuration,
-	}
-	return netIP, nil
+	return retClaim, nil
 }
 
-func (c *HttpServerClient) deleteIP(request *restful.Request, response *restful.Response) {
+func (c *HttpServerClient) boundClaimIP(claim *v1.BCSNetIPClaim, netIP *v1.BCSNetIP) error {
+	claim.Status.BoundedIP = netIP.Name
+	claim.Status.Phase = constant.BCSNetIPClaimBoundedStatus
+	if err := c.K8SClient.Status().Update(context.Background(), claim); err != nil {
+		blog.Errorf("update BCSNetIPClaim %s/%s status failed, err %v", claim.Namespace, claim.Name, err)
+		return fmt.Errorf("update BCSNetIPClaim %s/%s status failed, err %v", claim.Namespace, claim.Name, err)
+	}
+	return nil
+}
+
+// DeleteIP do ip release
+func (c *HttpServerClient) DeleteIP(request *restful.Request, response *restful.Response) {
 	requestID := request.Request.Header.Get("X-Request-Id")
 	netIPReq := &NetIPDeleteRequest{}
 	if err := request.ReadEntity(netIPReq); err != nil {
@@ -349,33 +402,28 @@ func (c *HttpServerClient) deleteIP(request *restful.Request, response *restful.
 		response.WriteEntity(responseData(0, message, true, requestID, nil))
 		return
 	}
-	if len(netIP.Status.IPClaimKey) != 0 {
+	claimKey := netIP.Status.IPClaimKey
+	if len(claimKey) != 0 {
 		claim := &v1.BCSNetIPClaim{}
-		podNamespace, podName, err := utils.ParseNamespacedNameKey(netIP.Status.IPClaimKey)
+		podNamespace, podName, err := utils.ParseNamespacedNameKey(claimKey)
 		if err != nil {
-			message := fmt.Sprintf("invalid IPClaimKey %s of BCSNetIP %s instance",
-				netIP.Status.IPClaimKey, netIP.GetName())
+			message := fmt.Sprintf("invalid IPClaimKey %s of BCSNetIP %s instance", claimKey, netIP.GetName())
 			blog.Errorf(message)
 			response.WriteEntity(responseData(2, message, false, requestID, nil))
 			return
 		}
 		err = c.K8SClient.Get(context.Background(), types.NamespacedName{Name: podName, Namespace: podNamespace}, claim)
 		if err != nil {
-			message := fmt.Sprintf("get IPClaim by IPClaimKey %s of BCSNetIP %s instance",
-				netIP.Status.IPClaimKey, netIP.GetName())
+			message := fmt.Sprintf("get IPClaim by IPClaimKey %s of BCSNetIP %s instance", claimKey, netIP.GetName())
 			blog.Errorf(message)
 			response.WriteEntity(responseData(2, message, false, requestID, nil))
 			return
 		}
-		netIP.Status.Phase = constant.BCSNetIPReservedStatus
-		netIP.Status.Host = ""
-		netIP.Status.ContainerID = ""
-		netIP.Status.PodName = ""
-		netIP.Status.PodNamespace = ""
-		netIP.Status.UpdateTime = metav1.Now()
-	}
-	if len(netIP.Status.IPClaimKey) != 0 {
-
+		netIP.Status = v1.BCSNetIPStatus{
+			Phase:      constant.BCSNetIPReservedStatus,
+			IPClaimKey: claimKey,
+			UpdateTime: metav1.Now(),
+		}
 	} else {
 		netIP.Status = v1.BCSNetIPStatus{
 			Phase:      constant.BCSNetIPAvailableStatus,
@@ -390,8 +438,20 @@ func (c *HttpServerClient) deleteIP(request *restful.Request, response *restful.
 		return
 	}
 	message := fmt.Sprintf("deactive IP [%s] success, it's available now", netIP.Name)
-	blog.Errorf(message)
+	blog.Infof(message)
 	response.WriteEntity(responseData(0, message, true, requestID, netIPReq))
+}
+
+func (c *HttpServerClient) getIPAndPool(ip string) (*v1.BCSNetIP, *v1.BCSNetPool, error) {
+	bcsNetIP := &v1.BCSNetIP{}
+	if err := c.K8SClient.Get(context.Background(), types.NamespacedName{Name: ip}, bcsNetIP); err != nil {
+		return nil, nil, err
+	}
+	bcsNetPool, err := c.getPoolByIP(bcsNetIP)
+	if err != nil {
+		return nil, nil, err
+	}
+	return bcsNetIP, bcsNetPool, nil
 }
 
 func (c *HttpServerClient) getIPClaimAndDuration(namespace, name string) (string, string, error) {
@@ -405,13 +465,12 @@ func (c *HttpServerClient) getIPClaimAndDuration(namespace, name string) (string
 	if !ok {
 		return "", "", nil
 	}
-	claimKey := fmt.Sprintf("%s/%s", namespace, claimValue)
 	claim := &v1.BCSNetIPClaim{}
 	err = c.K8SClient.Get(context.Background(), types.NamespacedName{Name: claimValue, Namespace: namespace}, claim)
 	if err != nil {
-		return claimKey, "", err
+		return claimValue, "", err
 	}
-	return claimKey, claim.Spec.ExpiredDuration, nil
+	return claimValue, claim.Spec.ExpiredDuration, nil
 }
 
 func validateAllocateNetIPReq(netIPReq *NetIPAllocateRequest) error {
