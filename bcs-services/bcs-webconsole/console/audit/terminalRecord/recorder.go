@@ -48,7 +48,7 @@ type ReplyRecorder struct {
 	absFilePath string
 	//Target      string
 	Writer *asciinema.Writer
-	Err    error
+	err    error
 	ctx    context.Context
 
 	file *os.File
@@ -73,9 +73,9 @@ func ensureDirExist(name string) error {
 
 // NewReplayRecord 初始化Recorder
 // 确认是否开启终端记录 / 创建记录文件 / 初始记录信息
-func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, originTerminalSize *ReplyInfo) *ReplyRecorder {
+func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, originTerminalSize *ReplyInfo) (*ReplyRecorder, error) {
 	if !config.G.Audit.Enabled {
-		return nil
+		return nil, nil
 	}
 	recorder := &ReplyRecorder{
 		ctx:       ctx,
@@ -87,22 +87,16 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, originTermin
 	path = filepath.Join(path, date)
 	err := ensureDirExist(path)
 	if err != nil {
-		klog.Errorf("Create dir %s error: %s\n", path, err)
-		recorder.Err = err
-		return recorder
+		return nil, fmt.Errorf("Create dir %s error: %s\n", path, err)
 	}
 	d := time.Now().Format(dayTimeFormat)
 	f := fmt.Sprintf("%s_%s_%s_%s", d, podCtx.ClusterId, podCtx.Username, podCtx.SessionId[:6])
-	//f := fmt.Sprintf("%s_%s_%s_%s_%s_%s_%s", date, podCtx.Username, podCtx.ClusterId, podCtx.Namespace, podCtx.PodName,
-	//	podCtx.ContainerName, podCtx.SessionId[:6])
 	filename := f + replayFilenameSuffix
 	absFilePath := filepath.Join(path, filename)
 	recorder.absFilePath = absFilePath
 	fd, err := os.Create(recorder.absFilePath)
 	if err != nil {
-		klog.Errorf("Create replay file %s error: %s\n", recorder.absFilePath, err)
-		recorder.Err = err
-		return recorder
+		return nil, fmt.Errorf("Create replay file %s error: %s\n", recorder.absFilePath, err)
 	}
 	recorder.file = fd
 	options := make([]asciinema.Option, 0, 3)
@@ -110,12 +104,17 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, originTermin
 	options = append(options, asciinema.WithWidth(originTerminalSize.Width))
 	options = append(options, asciinema.WithTimestamp(originTerminalSize.TimeStamp))
 	recorder.Writer = asciinema.NewWriter(recorder.file, podCtx, options...)
-	return recorder
+	//初始化时写入Header信息
+	err = recorder.Writer.WriteHeader()
+	if err != nil {
+		return recorder, fmt.Errorf("Session %s write replay header failed: %s\n", recorder.SessionID, err)
+	}
+	return recorder, nil
 }
 
 // isNullError 记录异常
 func (r *ReplyRecorder) isNullError() bool {
-	if r.Err != nil {
+	if r.err != nil {
 		r.once.Do(func() {
 			//异常退出: 直接关闭文件
 			r.file.Close()
@@ -125,8 +124,8 @@ func (r *ReplyRecorder) isNullError() bool {
 	return false
 }
 
-// Record 记录终端输出信息
-func Record(r *ReplyRecorder, p []byte, event asciinema.EventType) {
+// RecordOutputEvent 记录终端输出信息
+func RecordOutputEvent(r *ReplyRecorder, p []byte) {
 	//不开启terminal recorder时, ReplyRecorder返回nil
 	if r == nil {
 		return
@@ -136,14 +135,26 @@ func Record(r *ReplyRecorder, p []byte, event asciinema.EventType) {
 		return
 	}
 	if len(p) > 0 {
-		r.once.Do(func() {
-			if err := r.Writer.WriteHeader(); err != nil {
-				r.Err = err
-				klog.Errorf("Session %s write replay header failed: %s", r.SessionID, err)
-			}
-		})
-		if err := r.Writer.WriteRow(p, event); err != nil {
-			r.Err = err
+		if err := r.Writer.WriteRow(p, asciinema.OutputEvent); err != nil {
+			r.err = err
+			klog.Errorf("Session %s write replay row failed: %s", r.SessionID, err)
+		}
+	}
+}
+
+// RecordResizeEvent 记录终端变化
+func RecordResizeEvent(r *ReplyRecorder, p []byte) {
+	//不开启terminal recorder时, ReplyRecorder返回nil
+	if r == nil {
+		return
+	}
+	//有错误异常就退出本次记录
+	if r.isNullError() {
+		return
+	}
+	if len(p) > 0 {
+		if err := r.Writer.WriteRow(p, asciinema.ResizeEvent); err != nil {
+			r.err = err
 			klog.Errorf("Session %s write replay row failed: %s", r.SessionID, err)
 		}
 	}
@@ -155,7 +166,7 @@ func (r *ReplyRecorder) End() {
 		return
 	} else {
 		//关闭前将剩余缓冲区数据写入
-		r.Writer.Write(r.Writer.WriteBuff)
+		r.Writer.WriteBuff.Flush()
 		r.file.Close()
 		return
 	}
@@ -163,6 +174,6 @@ func (r *ReplyRecorder) End() {
 
 // GracefulShutdownRecorder 关闭文件
 func (r *ReplyRecorder) GracefulShutdownRecorder() {
-	r.Writer.Write(r.Writer.WriteBuff)
+	r.Writer.WriteBuff.Flush()
 	r.file.Close()
 }

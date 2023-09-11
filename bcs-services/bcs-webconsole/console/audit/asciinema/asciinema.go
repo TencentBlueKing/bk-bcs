@@ -13,6 +13,7 @@
 package asciinema
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
@@ -41,31 +42,23 @@ var (
 
 // NewWriter 初始化Writer
 func NewWriter(w io.Writer, podCtx *types.PodContext, opts ...Option) *Writer {
-	//m := Meta{
-	//	UserName: podCtx.Username,
-	//	ClusterID: podCtx.ClusterId,
-	//	NameSpace: podCtx.Namespace,
-	//	PodName: podCtx.PodName,
-	//	ContainerName: podCtx.ContainerName,
-	//	SessionID: podCtx.SessionId,
-	//}
 	conf := Config{
 		Width:    80,
 		Height:   40,
 		EnvShell: defaultShell,
 		EnvTerm:  defaultTerm,
-		//Meta: m,
-		podCtx: podCtx,
+		podCtx:   podCtx,
 	}
 	for _, setter := range opts {
 		setter(&conf)
 	}
+	buf := bufio.NewWriterSize(w, maxBuffSize)
 	return &Writer{
 		Config:        conf,
 		TimestampNano: conf.Timestamp.UnixNano(),
 		writer:        w,
 		limit:         maxFileSize,
-		WriteBuff:     make([]byte, 0, maxBuffSize),
+		WriteBuff:     buf,
 	}
 }
 
@@ -76,7 +69,7 @@ type Writer struct {
 	writer        io.Writer
 	limit         int
 	written       int
-	WriteBuff     []byte
+	WriteBuff     *bufio.Writer
 }
 
 // WriteHeader 写入头信息
@@ -104,11 +97,11 @@ func (w *Writer) WriteHeader() error {
 	if err != nil {
 		return err
 	}
-	_, err = w.Write(raw)
+	_, err = w.writer.Write(raw)
 	if err != nil {
 		return err
 	}
-	_, err = w.Write(newLine)
+	_, err = w.writer.Write(newLine)
 	return err
 }
 
@@ -123,49 +116,23 @@ func (w *Writer) WriteRow(p []byte, event EventType) error {
 func (w *Writer) WriteStdout(ts float64, data []byte, event EventType) error {
 	row := []interface{}{ts, event, string(data)}
 	raw, err := json.Marshal(row)
+	raw = append(raw, newLine...)
 	if err != nil {
 		return err
 	}
 
 	// buff 做批量写入文件
-	if len(raw) > maxBuffSize { //读取的数据大于最大缓存
-		//先缓存写入再将读取的数据写入文件
-		_, err := w.Write(w.WriteBuff)
-		if err != nil {
-			return err
-		}
-		w.WriteBuff = w.WriteBuff[:0]
-		_, err = w.Write(raw)
-		if err != nil {
-			return err
-		}
-		_, err = w.Write(newLine)
-		return err
-	} else if len(raw)+len(w.WriteBuff) > maxBuffSize { //检查是否达到最大容量
-		//buff写入文件,清空buff,raw写入buff
-		_, err := w.Write(w.WriteBuff)
-		if err != nil {
-			return err
-		}
-		w.WriteBuff = w.WriteBuff[:0]
-		raw := append(raw, newLine...)
-		w.WriteBuff = append(w.WriteBuff, raw...)
-	} else {
-		raw := append(raw, newLine...)
-		w.WriteBuff = append(w.WriteBuff, raw...)
+	if w.written >= w.limit {
+		w.WriteBuff.Flush()
+		return errors.New("Exceeds the file size")
 	}
-	return nil
-}
+	n, err := w.WriteBuff.Write(raw)
+	if err != nil {
+		return err
+	}
+	w.written += n
 
-// WriteFileInterval 检查buff是否为空,不为空则写入文件
-func (w *Writer) WriteFileInterval() error {
-	if len(w.WriteBuff) > 0 {
-		_, err := w.writer.Write(w.WriteBuff)
-		w.WriteBuff = w.WriteBuff[:0]
-		return err
-	} else {
-		return nil
-	}
+	return nil
 }
 
 // Header 文件头部信息
@@ -192,20 +159,4 @@ type Meta struct {
 	PodName       string `json:"pod_name"`
 	ContainerName string `json:"container_name"`
 	SessionID     string `json:"session_id"`
-}
-
-// Write 限制文件大小
-func (w *Writer) Write(p []byte) (n int, err error) {
-	remainingSpace := w.limit - w.written
-	if remainingSpace <= 0 {
-		return 0, errors.New("Exceeds the file size")
-	}
-
-	if len(p) > remainingSpace {
-		p = p[:remainingSpace]
-	}
-
-	n, err = w.writer.Write(p)
-	w.written += n
-	return n, err
 }
