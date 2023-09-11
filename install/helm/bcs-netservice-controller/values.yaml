@@ -7,7 +7,7 @@ image:
   repository: blueking/bcs-netservice-controller
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "v1.29.0-alpha.141"
 
 certManagerEnabled: false
 certAutoGenerate: true
