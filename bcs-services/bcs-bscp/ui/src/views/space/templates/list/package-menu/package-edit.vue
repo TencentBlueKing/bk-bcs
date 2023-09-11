@@ -3,8 +3,8 @@
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue/lib'
   import { useGlobalStore } from '../../../../../store/global'
-  import { ITemplatePackageEditParams, ITemplatePackageItem } from '../../../../../../types/template'
-  import { updateTemplatePackage } from '../../../../../api/template'
+  import { ITemplatePackageEditParams, ITemplatePackageItem, IPackageCitedByApps } from '../../../../../../types/template'
+  import { updateTemplatePackage, getUnNamedVersionAppsBoundByPackage } from '../../../../../api/template'
   import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation'
   import PackageForm from './package-form.vue'
 
@@ -27,20 +27,34 @@
     bound_apps: []
   })
   const apps = ref<number[]>([])
+  const appsLoading = ref(false)
   const isFormChange = ref(false)
   const pending = ref(false)
 
   watch(() => props.show, val => {
     isShow.value = val
-    isFormChange.value = false
-    const {
-      name,
-      memo,
-      public: isPublic,
-      bound_apps } = props.pkg.spec
-    data.value = { name, memo, public: isPublic, bound_apps }
-    apps.value = [...bound_apps]
+    if (val) {
+      isFormChange.value = false
+      const {
+        name,
+        memo,
+        public: isPublic,
+        bound_apps } = props.pkg.spec
+      data.value = { name, memo, public: isPublic, bound_apps }
+      getRelatedApps()
+    }
   })
+
+  const getRelatedApps = async () => {
+    appsLoading.value = true
+    const params = {
+      start: 0,
+      all: true
+    }
+    const res = await getUnNamedVersionAppsBoundByPackage(spaceId.value, props.templateSpaceId, props.pkg.id, params)
+    apps.value = res.details.map((item: IPackageCitedByApps) => item.app_id)
+    appsLoading.value = false
+  }
 
   const handleChange = (formData: ITemplatePackageEditParams) => {
     isFormChange.value = true
@@ -51,6 +65,10 @@
     formRef.value.validate().then(async() => {
       try {
         pending.value = true
+        if (data.value.public === true) {
+          data.value.bound_apps = []
+        }
+
         await updateTemplatePackage(spaceId.value, props.templateSpaceId, props.pkg.id, data.value)
         close()
         emits('edited')
@@ -86,7 +104,7 @@
     :is-show="isShow"
     :before-close="handleBeforeClose"
     @closed="close">
-    <div class="package-form">
+    <div v-bkloading="{ loading: appsLoading }" class="package-form">
       <PackageForm ref="formRef" :space-id="spaceId" :data="data" :apps="apps" @change="handleChange" />
     </div>
     <div class="action-btns">
