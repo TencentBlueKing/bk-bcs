@@ -41,7 +41,6 @@ func (p *proxy) routers() http.Handler {
 	// iam 回调接口
 	r.Route("/api/v1/auth/iam/find/resource", func(r chi.Router) {
 		r.Use(handler.RequestBodyLogger())
-		r.Use(view.Generic(p.authorizer))
 		r.Use(auth.IAMVerified)
 		r.Mount("/", p.authSvrMux)
 	})

@@ -34,17 +34,19 @@ func (r *InitAuthCenterReq) Validate() error {
 
 // PullResourceReq convert pb PullResourceReq to types PullResourceReq.
 func (r *PullResourceReq) PullResourceReq() (*types.PullResourceReq, error) {
-	if err := r.Page.Validate(); err != nil {
-		return nil, err
-	}
-
 	req := &types.PullResourceReq{
 		Type:   client.TypeID(r.Type),
 		Method: types.Method(r.Method),
-		Page: types.Page{
+	}
+
+	if r.Page != nil {
+		if err := r.Page.Validate(); err != nil {
+			return nil, err
+		}
+		req.Page = types.Page{
 			Offset: uint(r.Page.Offset),
 			Limit:  uint(r.Page.Limit),
-		},
+		}
 	}
 
 	if r.Filter == nil {
