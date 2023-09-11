@@ -42,8 +42,8 @@ func (s *Service) ListTemplateBoundCounts(ctx context.Context, req *pbcs.ListTem
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -82,8 +82,8 @@ func (s *Service) ListTemplateRevisionBoundCounts(ctx context.Context, req *pbcs
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -123,8 +123,8 @@ func (s *Service) ListTemplateSetBoundCounts(ctx context.Context, req *pbcs.List
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -153,8 +153,8 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateBoundUnnamedAppDetailsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -187,8 +187,8 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateBoundNamedAppDetailsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -221,8 +221,8 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateBoundTemplateSetDetailsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -265,8 +265,8 @@ func (s *Service) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context,
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -299,8 +299,8 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateRevisionBoundUnnamedAppDetailsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -334,8 +334,8 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateRevisionBoundNamedAppDetailsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -369,8 +369,8 @@ func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateSetBoundUnnamedAppDetailsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -413,8 +413,8 @@ func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -447,8 +447,8 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateSetBoundNamedAppDetailsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -481,8 +481,8 @@ func (s *Service) ListLatestTemplateBoundUnnamedAppDetails(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListLatestTemplateBoundUnnamedAppDetailsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 

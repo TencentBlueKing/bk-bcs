@@ -34,9 +34,9 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateTemplateResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Create,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Create,
 		ResourceID: req.TemplateSpaceId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -91,9 +91,9 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateRe
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteTemplateResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Delete,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Delete,
 		ResourceID: req.TemplateId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -129,9 +129,9 @@ func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDelete
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Delete,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Delete,
 		ResourceID: templateIDs[0]}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -156,9 +156,9 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbcs.UpdateTemplateRe
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateTemplateResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Update,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Update,
 		ResourceID: req.TemplateId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -185,8 +185,8 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplatesResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -231,9 +231,9 @@ func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbcs.AddT
 			idsLen2, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Update,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Update,
 		ResourceID: req.TemplateIds[0]}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -270,9 +270,9 @@ func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbcs
 			idsLen2, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Update,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Update,
 		ResourceID: req.TemplateIds[0]}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -309,8 +309,8 @@ func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplate
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -337,8 +337,8 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTempl
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplatesNotBoundResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -372,8 +372,8 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.List
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplatesOfTemplateSetResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 

@@ -44,10 +44,9 @@ import (
 type Authorizer interface {
 	// Authorize if user has permission to the resources, returns auth status per resource and for all.
 	Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error)
-	// AuthorizeWithResp authorize if user has permission to the resources, assign error to response if occurred.
-	// If user is unauthorized, assign error and need applied permissions into response, returns unauthorized error.
-	// Authorize(kt *kit.Kit, resource *meta.ResourceAttribute) error
-	AuthorizeWithResp(kt *kit.Kit, resp interface{}, resources ...*meta.ResourceAttribute) error
+	// AuthorizeWithApplyDetail authorize if user has permission to the resources.
+	// If user is unauthorized, assign apply url and resources into error.
+	AuthorizeWithApplyDetail(kt *kit.Kit, resources ...*meta.ResourceAttribute) error
 	// UnifiedAuthentication API 鉴权中间件
 	UnifiedAuthentication(next http.Handler) http.Handler
 	// GrantResourceCreatorAction grant a user's resource creator action.
@@ -159,59 +158,58 @@ func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute)
 	return pbas.Decisions(resp.Decisions), authorized, nil
 }
 
-// AuthorizeWithResp authorize if user has permission to the resources, assign error to response if occurred.
-// If user is unauthorized, assign error and need applied permissions into response, returns unauthorized error.
-func (a authorizer) AuthorizeWithResp(kt *kit.Kit, resp interface{}, resources ...*meta.ResourceAttribute) error {
-
+// AuthorizeWithApplyDetail authorize if user has permission to the resources.
+// If user is unauthorized, assign apply url and resources into error.
+func (a authorizer) AuthorizeWithApplyDetail(kt *kit.Kit, resources ...*meta.ResourceAttribute) error {
 	_, authorized, err := a.Authorize(kt, resources...)
 	if err != nil {
 		return errf.New(errf.DoAuthorizeFailed, "authorize failed")
 	}
 
-	if !authorized {
-		req := &pbas.GetPermissionToApplyReq{
-			Resources: pbas.PbResourceAttributes(resources),
-		}
+	if authorized {
+		return nil
+	}
 
-		permResp, err := a.authClient.GetPermissionToApply(kt.RpcCtx(), req)
-		if err != nil {
-			logs.Errorf("get permission to apply failed, req: %#v, err: %v, rid: %s", req, err, kt.Rid)
-			return errf.New(errf.DoAuthorizeFailed, "get permission to apply failed")
-		}
+	req := &pbas.GetPermissionToApplyReq{
+		Resources: pbas.PbResourceAttributes(resources),
+	}
 
-		st := status.New(codes.PermissionDenied, "permission denied")
-		details := pbas.ApplyDetail{
-			Resources: []*pbas.BasicDetail{},
-			ApplyUrl:  permResp.ApplyUrl,
-		}
-		for _, action := range permResp.Permission.Actions {
-			for _, resourceType := range action.RelatedResourceTypes {
-				for _, instance := range resourceType.Instances {
-					for _, i := range instance.Instances {
-						if i.Type != resourceType.Type {
-							continue
-						}
-						details.Resources = append(details.Resources, &pbas.BasicDetail{
-							Type:         resourceType.Type,
-							TypeName:     resourceType.TypeName,
-							Action:       action.Id,
-							ActionName:   action.Name,
-							ResourceId:   i.Id,
-							ResourceName: i.Id,
-						})
+	permResp, err := a.authClient.GetPermissionToApply(kt.RpcCtx(), req)
+	if err != nil {
+		logs.Errorf("get permission to apply failed, req: %#v, err: %v, rid: %s", req, err, kt.Rid)
+		return errf.New(errf.DoAuthorizeFailed, "get permission to apply failed")
+	}
+
+	st := status.New(codes.PermissionDenied, "permission denied")
+	details := pbas.ApplyDetail{
+		Resources: []*pbas.BasicDetail{},
+		ApplyUrl:  permResp.ApplyUrl,
+	}
+	for _, action := range permResp.Permission.Actions {
+		for _, resourceType := range action.RelatedResourceTypes {
+			for _, instance := range resourceType.Instances {
+				for _, i := range instance.Instances {
+					if i.Type != resourceType.Type {
+						continue
 					}
+					details.Resources = append(details.Resources, &pbas.BasicDetail{
+						Type:         resourceType.Type,
+						TypeName:     resourceType.TypeName,
+						Action:       action.Id,
+						ActionName:   action.Name,
+						ResourceId:   i.Id,
+						ResourceName: i.Id,
+					})
 				}
 			}
 		}
-		st, err = st.WithDetails(&details)
-		if err != nil {
-			logs.Errorf("with details failed, err: %v", err)
-			return errf.New(errf.PermissionDenied, "grpc status with details failed")
-		}
-		return st.Err()
 	}
-
-	return nil
+	st, err = st.WithDetails(&details)
+	if err != nil {
+		logs.Errorf("with details failed, err: %v", err)
+		return errf.New(errf.PermissionDenied, "grpc status with details failed")
+	}
+	return st.Err()
 }
 
 // GrantResourceCreatorAction grant a user's resource creator action.

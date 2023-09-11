@@ -51,9 +51,9 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 			len(templateIDs))
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Create,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Create,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -84,9 +84,9 @@ func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbcs.Delete
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteAppTemplateBindingResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Delete,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Delete,
 		ResourceID: req.BindingId}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -129,9 +129,9 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 			len(templateIDs))
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
 		ResourceID: req.BindingId}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -160,9 +160,9 @@ func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbcs.ListApp
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAppTemplateBindingsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -214,9 +214,9 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAppBoundTemplateRevisionsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -316,9 +316,9 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -408,9 +408,9 @@ func (s *Service) UpdateAppBoundTemplateRevisions(ctx context.Context, req *pbcs
 			len(templateIDs))
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
 		ResourceID: req.BindingId}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -512,9 +512,9 @@ func (s *Service) DeleteAppBoundTemplateSets(ctx context.Context, req *pbcs.Dele
 	}
 	templateSetIDs = tools.RemoveDuplicates(templateSetIDs)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
+	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
 		ResourceID: req.BindingId}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
 		return nil, err
 	}
 

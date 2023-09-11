@@ -177,7 +177,10 @@ func parseAttributesToBatchOptions(kt *kit.Kit, user *meta.UserInfo, resources .
 	authBatchArr := make([]*client.AuthBatch, 0)
 	decisions := make([]*meta.Decision, len(resources))
 	for index, resource := range resources {
-		decisions[index] = &meta.Decision{Authorized: false}
+		decisions[index] = &meta.Decision{
+			Resource:   resource,
+			Authorized: false,
+		}
 
 		// this resource should be skipped, do not need to verify in auth center.
 		if resource.Basic.Action == meta.SkipAction {
