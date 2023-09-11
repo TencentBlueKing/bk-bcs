@@ -2,13 +2,16 @@
   import { ref } from 'vue';
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon'
+  import { IVariableEditParams } from '../../../../../../../types/variable';
   import ReadFileContent from './read-file-content.vue';
   import CodeEditor from '../../../../../../components/code-editor/index.vue'
 
   const props = withDefaults(defineProps<{
     content: string;
+    variables?: IVariableEditParams[];
     editable: boolean;
   }>(), {
+    variables: () => [],
     editable: true
   })
 
@@ -72,7 +75,7 @@
         </div>
       </div>
       <div class="editor-content">
-        <CodeEditor :model-value="props.content" :editable="editable" @update:model-value="emits('change', $event)" />
+        <CodeEditor :model-value="props.content" :variables="props.variables" :editable="editable" @update:model-value="emits('change', $event)" />
       </div>
     </div>
   </Teleport>

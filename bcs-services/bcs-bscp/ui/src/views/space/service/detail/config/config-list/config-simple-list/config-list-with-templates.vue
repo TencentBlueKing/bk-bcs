@@ -226,7 +226,8 @@
       v-model:show="viewConfigSliderData.open"
       v-bind="viewConfigSliderData.data"
       :bk-biz-id="props.bkBizId"
-      :app-id="props.appId" />
+      :app-id="props.appId"
+      :version-id="versionData.id" />
   </section>
 </template>
 <style lang="scss" scoped>
