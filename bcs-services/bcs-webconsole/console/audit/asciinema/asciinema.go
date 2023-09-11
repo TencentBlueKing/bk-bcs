@@ -16,9 +16,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"io"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 // EventType 事件类型: o:输出 / r:终端变化
@@ -84,7 +85,7 @@ func (w *Writer) WriteHeader() error {
 			Shell: w.EnvShell,
 			Term:  w.EnvTerm,
 		},
-		Meta: Meta{
+		Meta: meta{
 			UserName:      w.podCtx.Username,
 			ClusterID:     w.podCtx.ClusterId,
 			NameSpace:     w.podCtx.Namespace,
@@ -143,7 +144,7 @@ type Header struct {
 	Timestamp int64  `json:"timestamp"`
 	Title     string `json:"title"`
 	Env       Env    `json:"env"`
-	Meta      Meta   `json:"meta"`
+	Meta      meta   `json:"meta"`
 }
 
 // Env 文件env信息
@@ -152,7 +153,8 @@ type Env struct {
 	Term  string `json:"TERM"`
 }
 
-type Meta struct {
+// meta 关于pod的元信息,记录到replay文件头部
+type meta struct {
 	UserName      string `json:"user_name"`
 	ClusterID     string `json:"cluster_id"`
 	NameSpace     string `json:"name_space"`

@@ -47,7 +47,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/ternimalReplay"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/replay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
@@ -386,7 +386,7 @@ func buildCommands() []*cli.Command {
 					logger.Error("replay file not set")
 					return errors.New("replay file not set")
 				}
-				if err := ternimalReplay.Replay(c.Args().First()); err != nil {
+				if err := replay.Replay(c.Args().First()); err != nil {
 					logger.Errorf("replay failure, err: %s, exited", err)
 					return err
 				}

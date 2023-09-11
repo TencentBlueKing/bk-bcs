@@ -35,7 +35,7 @@ import (
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/terminalRecord"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -63,7 +63,7 @@ type RemoteStreamConn struct {
 	outputMsgChan chan []byte
 	hideBanner    bool
 	cmdParser     *audit.CmdParse
-	ReplayRecord  *terminalRecord.ReplyRecorder
+	ReplayRecord  *record.ReplyRecorder
 }
 
 // NewRemoteStreamConn :
@@ -79,7 +79,7 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 		cmdParser:     audit.NewCmdParse(),
 	}
 
-	orgInfo := &terminalRecord.ReplyInfo{TimeStamp: time.Now()}
+	orgInfo := &record.ReplyInfo{TimeStamp: time.Now()}
 	// 初始化命令行宽和高
 	if initTerminalSize != nil {
 		conn.resizeMsgChan <- initTerminalSize
@@ -95,7 +95,7 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 		orgInfo.Height = DefaultRows
 	}
 	//初始化terminal record
-	record, err := terminalRecord.NewReplayRecord(ctx, mgr.PodCtx, orgInfo)
+	record, err := record.NewReplayRecord(ctx, mgr.PodCtx, orgInfo)
 	if err != nil {
 		klog.Errorf("init ReplayRecord failed: %s", err)
 	}
@@ -146,7 +146,7 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 		}
 		newSize := fmt.Sprintf("%vx%v", resizeMsg.Cols, resizeMsg.Rows)
 		//replay 记录终端大小变化
-		terminalRecord.RecordResizeEvent(r.ReplayRecord, []byte(newSize))
+		record.RecordResizeEvent(r.ReplayRecord, []byte(newSize))
 		r.resizeMsgChan <- resizeMsg
 		return nil, nil
 	}
@@ -281,7 +281,7 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 			}
 			// 收到首个字节才发送 hello 信息
 			if notSendMsg && !r.hideBanner {
-				terminalRecord.RecordOutputEvent(r.ReplayRecord, []byte(guideMessages))
+				record.RecordOutputEvent(r.ReplayRecord, []byte(guideMessages))
 				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
 				notSendMsg = false
 			}
@@ -289,7 +289,7 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 			dst := make([]byte, base64.StdEncoding.DecodedLen(len(output)))
 			n, _ := base64.StdEncoding.Decode(dst, output)
 			dst = dst[:n]
-			terminalRecord.RecordOutputEvent(r.ReplayRecord, dst)
+			record.RecordOutputEvent(r.ReplayRecord, dst)
 			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {
 				return err
 			}

@@ -13,8 +13,9 @@
 package asciinema
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 // Config asciinema文件Header信息
