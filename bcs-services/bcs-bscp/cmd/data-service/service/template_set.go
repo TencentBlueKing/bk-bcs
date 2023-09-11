@@ -60,7 +60,8 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbds.CreateTemplat
 }
 
 // ListTemplateSets list template set.
-func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSetsReq) (*pbds.ListTemplateSetsResp, error) {
+func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSetsReq) (*pbds.ListTemplateSetsResp,
+	error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
@@ -374,7 +375,7 @@ func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbds.ListTempl
 	*pbds.ListTemplateSetsOfBizResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	tmplSets, err := s.dao.TemplateSet().ListAllTemplateSetsOfBiz(kt, req.BizId)
+	tmplSets, err := s.dao.TemplateSet().ListAllTemplateSetsOfBiz(kt, req.BizId, req.AppId)
 	if err != nil {
 		logs.Errorf("list template sets of biz failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
