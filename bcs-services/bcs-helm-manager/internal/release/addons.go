@@ -52,6 +52,7 @@ func (a Addons) ToAddonsProto() *helmmanager.Addons {
 		Name:             &a.Name,
 		ChartName:        &a.ChartName,
 		Description:      &a.Description,
+		Logo:             common.GetStringP(""),
 		DocsLink:         &a.DocsLink,
 		Version:          common.GetStringP(""),
 		CurrentVersion:   common.GetStringP(""),

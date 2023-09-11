@@ -24,7 +24,7 @@ func (ah *AddonsHandler) ListAddons(ctx context.Context,
 	req *helmmanager.ListAddonsReq, resp *helmmanager.ListAddonsResp) error {
 
 	defer recorder(ctx, "ListAddons", req, resp)()
-	action := addons.NewListAddonsAction(ah.model, *ah.addons)
+	action := addons.NewListAddonsAction(ah.model, *ah.addons, ah.platform)
 	return action.Handle(ctx, req, resp)
 }
 

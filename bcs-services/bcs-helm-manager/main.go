@@ -83,7 +83,7 @@ func main() {
 	if len(opt.Release.AddonsConfigFile) > 0 {
 		addonsConf, err = makeMicroCredConf(opt.Release.AddonsConfigFile)
 		if err != nil {
-			blog.Fatalf("load credentials from file failed, err %s", err.Error())
+			blog.Fatalf("load addons from file failed, err %s", err.Error())
 		}
 	}
 
