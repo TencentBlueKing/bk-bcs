@@ -32,9 +32,10 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateHookRevisionResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Create,
-		ResourceID: req.BizId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
 		return nil, err
 	}
 
@@ -68,8 +69,10 @@ func (s *Service) ListHookRevisions(ctx context.Context, req *pbcs.ListHookRevis
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListHookRevisionsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
 		return nil, err
 	}
 
@@ -120,9 +123,10 @@ func (s *Service) DeleteHookRevision(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteHookRevisionResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Delete,
-		ResourceID: req.RevisionId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
 		return nil, err
 	}
 
@@ -147,9 +151,10 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbcs.PublishHook
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.PublishHookRevisionResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update},
-		BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
 		return nil, err
 	}
 
@@ -173,9 +178,10 @@ func (s *Service) GetHookRevision(ctx context.Context, req *pbcs.GetHookRevision
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbhr.HookRevision)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update},
-		BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
 		return nil, err
 	}
 
@@ -194,9 +200,10 @@ func (s *Service) UpdateHookRevision(ctx context.Context, req *pbcs.UpdateHookRe
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateHookRevisionResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update,
-		ResourceID: req.RevisionId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
 		return nil, err
 	}
 
@@ -228,8 +235,10 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListHookRevisionReferencesResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
 		return nil, err
 	}
 

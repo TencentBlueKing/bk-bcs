@@ -247,10 +247,11 @@ func (a *Authorize) authElement(ctx context.Context, policy *operator.Policy, rs
 	}
 
 	var authorized bool
+	var err error
 	// check the special resource id at first
 	switch fv.Field.Attribute {
 	case client.IamIDKey:
-		authorized, err := policy.Operator.Operator().Match(authRsc.ID, fv.Value)
+		authorized, err = policy.Operator.Operator().Match(authRsc.ID, fv.Value)
 		if err != nil {
 			return false, false, fmt.Errorf("do %s match calculate failed, err: %v", policy.Operator, err)
 		}

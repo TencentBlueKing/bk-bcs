@@ -27,7 +27,8 @@ import (
 )
 
 // CreateTemplateSet create a template set
-func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplateSetReq) (*pbcs.CreateTemplateSetResp, error) {
+func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplateSetReq) (*pbcs.CreateTemplateSetResp,
+	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateTemplateSetResp)
 
@@ -70,7 +71,8 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplat
 }
 
 // DeleteTemplateSet delete a template set
-func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbcs.DeleteTemplateSetReq) (*pbcs.DeleteTemplateSetResp, error) {
+func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbcs.DeleteTemplateSetReq) (*pbcs.DeleteTemplateSetResp,
+	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteTemplateSetResp)
 
@@ -97,7 +99,8 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbcs.DeleteTemplat
 }
 
 // UpdateTemplateSet update a template set
-func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbcs.UpdateTemplateSetReq) (*pbcs.UpdateTemplateSetResp, error) {
+func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbcs.UpdateTemplateSetReq) (*pbcs.UpdateTemplateSetResp,
+	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateTemplateSetResp)
 
@@ -131,7 +134,8 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbcs.UpdateTemplat
 }
 
 // ListTemplateSets list template sets
-func (s *Service) ListTemplateSets(ctx context.Context, req *pbcs.ListTemplateSetsReq) (*pbcs.ListTemplateSetsResp, error) {
+func (s *Service) ListTemplateSets(ctx context.Context, req *pbcs.ListTemplateSetsReq) (*pbcs.ListTemplateSetsResp,
+	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateSetsResp)
 
@@ -164,9 +168,8 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbcs.ListTemplateSe
 }
 
 // ListAppTemplateSets list app template sets
-func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbcs.ListAppTemplateSetsReq) (*pbcs.
-	ListAppTemplateSetsResp,
-	error) {
+func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbcs.ListAppTemplateSetsReq) (
+	*pbcs.ListAppTemplateSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAppTemplateSetsResp)
 
@@ -193,9 +196,8 @@ func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbcs.ListAppTemp
 }
 
 // ListTemplateSetsByIDs list template sets by ids
-func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbcs.ListTemplateSetsByIDsReq) (*pbcs.
-	ListTemplateSetsByIDsResp,
-	error) {
+func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbcs.ListTemplateSetsByIDsReq) (
+	*pbcs.ListTemplateSetsByIDsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateSetsByIDsResp)
 
@@ -232,9 +234,8 @@ func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbcs.ListTempl
 }
 
 // ListTemplateSetsOfBiz list template sets of one biz
-func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbcs.ListTemplateSetsOfBizReq) (*pbcs.
-	ListTemplateSetsOfBizResp,
-	error) {
+func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbcs.ListTemplateSetsOfBizReq) (
+	*pbcs.ListTemplateSetsOfBizResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateSetsOfBizResp)
 
@@ -245,6 +246,7 @@ func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbcs.ListTempl
 
 	r := &pbds.ListTemplateSetsOfBizReq{
 		BizId: req.BizId,
+		AppId: req.AppId,
 	}
 
 	rp, err := s.client.DS.ListTemplateSetsOfBiz(grpcKit.RpcCtx(), r)

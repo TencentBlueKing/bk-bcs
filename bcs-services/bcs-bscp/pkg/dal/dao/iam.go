@@ -13,12 +13,18 @@ limitations under the License.
 package dao
 
 import (
+	"fmt"
+	"strconv"
+
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/iam/client"
+	"bscp.io/pkg/iam/meta"
+	"bscp.io/pkg/iam/sys"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/runtime/filter"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -26,13 +32,16 @@ import (
 type IAM interface {
 	// ListInstances list instances with options.
 	ListInstances(kt *kit.Kit, opts *types.ListInstancesOption) (*types.ListInstanceDetails, error)
+	// FetchInstanceInfo fetch instance info with options.
+	FetchInstanceInfo(kt *kit.Kit, opts *types.FetchInstanceInfoOption) (*types.FetchInstanceInfoDetails, error)
 }
 
 var _ IAM = new(iamDao)
 
 type iamDao struct {
-	orm orm.Interface
-	sd  *sharding.Sharding
+	orm  orm.Interface
+	genQ *gen.Query
+	sd   *sharding.Sharding
 }
 
 // ListInstances list instances with options.
@@ -49,51 +58,72 @@ func (r *iamDao) ListInstances(kt *kit.Kit, opts *types.ListInstancesOption) (
 		return nil, err
 	}
 
-	sqlOpt := &filter.SQLWhereOption{
-		Priority: filter.Priority{"biz_id", "app_id", "name"},
-		CrownedOption: &filter.CrownedOption{
-			CrownedOp: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "biz_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.BizID,
-				}},
-		},
-	}
-	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
-	if err != nil {
-		return nil, err
-	}
-
-	var sql string
-	var sqlSentence []string
-	if opts.Page.Count {
-		// count instance data by whereExpr
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(opts.TableName), whereExpr)
-		sql = filter.SqlJoint(sqlSentence)
-		var count uint32
-		count, err = r.orm.Do(r.sd.ShardingOne(opts.BizID).DB()).Count(kt.Ctx, sql, args...)
+	var (
+		count   int64
+		details []*types.InstanceResource
+	)
+	switch opts.ResourceType {
+	case meta.App.String():
+		bizID, err := strconv.Atoi(opts.ParentID)
 		if err != nil {
 			return nil, err
 		}
-
-		return &types.ListInstanceDetails{Count: count, Details: make([]*types.InstanceResource, 0)}, nil
+		m := r.genQ.App
+		count, err = m.WithContext(kt.Ctx).
+			Select(m.ID.As("id"), m.Name.As("name")).Where(m.BizID.Eq(uint32(bizID))).
+			ScanByPage(&details, opts.Page.Offset(), opts.Page.LimitInt())
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("invalid resource type %s", opts.ResourceType)
 	}
 
-	// select instance data by whereExpr
-	pageExpr, err := opts.Page.SQLExpr(&types.PageSQLOption{Sort: types.SortOption{Sort: "id", IfNotPresent: true}})
-	if err != nil {
+	return &types.ListInstanceDetails{Count: uint32(count), Details: details}, nil
+}
+
+// FetchInstanceInfo fetch instance info with options.
+func (r *iamDao) FetchInstanceInfo(kt *kit.Kit, opts *types.FetchInstanceInfoOption) (
+	*types.FetchInstanceInfoDetails, error) {
+
+	if opts == nil {
+		return nil, errf.New(errf.InvalidParameter, "fetch instance info options is null")
+	}
+
+	if err := opts.Validate(); err != nil {
 		return nil, err
 	}
 
-	sqlSentence = append(sqlSentence, "SELECT id, name FROM ", string(opts.TableName), whereExpr, pageExpr)
-	sql = filter.SqlJoint(sqlSentence)
-	list := make([]*types.InstanceResource, 0)
-	err = r.orm.Do(r.sd.ShardingOne(opts.BizID).DB()).Select(kt.Ctx, &list, sql, args...)
-	if err != nil {
-		return nil, err
+	var details []*types.InstanceInfo
+	switch opts.ResourceType {
+	case meta.App.String():
+		ids, err := tools.StringSliceToUint32Slice(opts.IDs)
+		if err != nil {
+			return nil, err
+		}
+		m := r.genQ.App
+		apps, err := m.WithContext(kt.Ctx).Where(m.ID.In(ids...)).Find()
+		if err != nil {
+			return nil, err
+		}
+		for _, app := range apps {
+			detail := &types.InstanceInfo{
+				ID:          strconv.Itoa(int(app.ID)),
+				DisplayName: app.Spec.Name,
+				Approver:    []string{},
+				Path:        []string{fmt.Sprintf("/%s,%d/", sys.Business, app.BizID)},
+			}
+			if app.Revision.Creator != "" {
+				detail.Approver = append(detail.Approver, app.Revision.Creator)
+			}
+			if app.Revision.Reviser != "" {
+				detail.Approver = append(detail.Approver, app.Revision.Reviser)
+			}
+			details = append(details, detail)
+		}
+	default:
+		return nil, fmt.Errorf("invalid resource type %s", opts.ResourceType)
 	}
 
-	return &types.ListInstanceDetails{Count: 0, Details: list}, nil
+	return &types.FetchInstanceInfoDetails{Details: details}, nil
 }

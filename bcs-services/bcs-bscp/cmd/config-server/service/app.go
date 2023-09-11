@@ -19,7 +19,9 @@ import (
 
 	"github.com/pkg/errors"
 
+	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
+	"bscp.io/pkg/iam/sys"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
@@ -38,8 +40,11 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 		return nil, err
 	}
 
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Create}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.App, Action: meta.Create}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +70,16 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 		return nil, err
 	}
 
+	if err := s.authorizer.GrantResourceCreatorAction(kt, &client.GrantResourceCreatorActionOption{
+		System:  sys.SystemIDBSCP,
+		Type:    sys.Application,
+		ID:      strconv.Itoa(int(rp.Id)),
+		Name:    req.Name,
+		Creator: kt.User,
+	}); err != nil {
+		logs.Errorf("grant app creator action failed, err: %v, rid: %s", err, kt.Rid)
+	}
+
 	resp = &pbcs.CreateAppResp{Id: rp.Id}
 	return resp, nil
 }
@@ -74,9 +89,11 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateAppResp)
 
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.Id},
-		BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.Id}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,9 +126,11 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbcs.DeleteAppReq) (*pbcs.
 	kt := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteAppResp)
 
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Delete, ResourceID: req.Id},
-		BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.App, Action: meta.Delete, ResourceID: req.Id}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -134,8 +153,11 @@ func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbapp.App, 
 	kt := kit.FromGrpcContext(ctx)
 	resp := new(pbapp.App)
 
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: &meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -156,13 +178,18 @@ func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbapp.App, 
 // GetAppByName get app by app name
 func (s *Service) GetAppByName(ctx context.Context, req *pbcs.GetAppByNameReq) (*pbapp.App, error) {
 	kt := kit.FromGrpcContext(ctx)
-	resp := new(pbapp.App)
 
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
-	if err != nil {
-		return nil, err
-	}
+	// TODO: 暂不鉴权
+	// resp := new(pbapp.App)
+
+	// res := []*meta.ResourceAttribute{
+	// 	{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	// 	{Basic: &meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	// }
+	// err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	r := &pbds.GetAppByNameReq{
 		BizId:   req.BizId,
@@ -180,6 +207,15 @@ func (s *Service) GetAppByName(ctx context.Context, req *pbcs.GetAppByNameReq) (
 // ListAppsRest list apps with rest filter
 func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (*pbcs.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAppsResp)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
+	if err != nil {
+		return nil, err
+	}
 
 	userSpaceResp, err := s.client.AS.ListUserSpace(kt.RpcCtx(), &pbas.ListUserSpaceReq{})
 	if err != nil {
@@ -227,7 +263,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 		}
 	}
 
-	resp := &pbcs.ListAppsResp{
+	resp = &pbcs.ListAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -239,8 +275,10 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsByS
 	kt := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAppsResp)
 
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	res := []*meta.ResourceAttribute{
+		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
 	if err != nil {
 		return nil, err
 	}

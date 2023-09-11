@@ -30,12 +30,18 @@ const (
 	Update Action = "update"
 	// Delete operation's bscp auth action type
 	Delete Action = "delete"
+	// View operation's bscp auth action type
+	View Action = "view"
+	// Manage operation's bscp auth action type
+	Manage Action = "manage"
 	// Find operation's bscp auth action type
 	Find Action = "find"
 	// Publish operation's bscp auth action type
 	Publish Action = "publish"
 	// FinishPublish operation's bscp auth action type
 	FinishPublish Action = "finish_publish"
+	// GenerateRelease operation's bscp auth action type
+	GenerateRelease Action = "generate_release"
 	// Upload operation's bscp auth action type
 	Upload Action = "upload"
 	// Download operation's bscp auth action type

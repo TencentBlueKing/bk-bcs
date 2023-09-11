@@ -143,6 +143,7 @@ const (
 	Data_ListCredentialScopes_FullMethodName                       = "/pbds.Data/ListCredentialScopes"
 	Data_UpdateCredentialScopes_FullMethodName                     = "/pbds.Data/UpdateCredentialScopes"
 	Data_ListInstances_FullMethodName                              = "/pbds.Data/ListInstances"
+	Data_FetchInstanceInfo_FullMethodName                          = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                                       = "/pbds.Data/Ping"
 )
 
@@ -288,6 +289,7 @@ type DataClient interface {
 	UpdateCredentialScopes(ctx context.Context, in *UpdateCredentialScopesReq, opts ...grpc.CallOption) (*UpdateCredentialScopesResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
+	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
 	// Ping verifies if the grpc connection is still alive.
 	Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOption) (*PingMsg, error)
 }
@@ -1335,6 +1337,15 @@ func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, op
 	return out, nil
 }
 
+func (c *dataClient) FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error) {
+	out := new(FetchInstanceInfoResp)
+	err := c.cc.Invoke(ctx, Data_FetchInstanceInfo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOption) (*PingMsg, error) {
 	out := new(PingMsg)
 	err := c.cc.Invoke(ctx, Data_Ping_FullMethodName, in, out, opts...)
@@ -1486,6 +1497,7 @@ type DataServer interface {
 	UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
+	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
 	// Ping verifies if the grpc connection is still alive.
 	Ping(context.Context, *PingMsg) (*PingMsg, error)
 }
@@ -1838,6 +1850,9 @@ func (UnimplementedDataServer) UpdateCredentialScopes(context.Context, *UpdateCr
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
+}
+func (UnimplementedDataServer) FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FetchInstanceInfo not implemented")
 }
 func (UnimplementedDataServer) Ping(context.Context, *PingMsg) (*PingMsg, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
@@ -3924,6 +3939,24 @@ func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_FetchInstanceInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FetchInstanceInfoReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).FetchInstanceInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_FetchInstanceInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).FetchInstanceInfo(ctx, req.(*FetchInstanceInfoReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PingMsg)
 	if err := dec(in); err != nil {
@@ -4408,6 +4441,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListInstances",
 			Handler:    _Data_ListInstances_Handler,
+		},
+		{
+			MethodName: "FetchInstanceInfo",
+			Handler:    _Data_FetchInstanceInfo_Handler,
 		},
 		{
 			MethodName: "Ping",

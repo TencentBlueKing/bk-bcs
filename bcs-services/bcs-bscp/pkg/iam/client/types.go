@@ -24,10 +24,7 @@ import (
 const (
 	// RequestIDHeader iam rid header key.
 	RequestIDHeader = "X-Request-Id"
-	// appCodeHeader iam app code header key.
-	appCodeHeader = "X-Bk-App-Code"
-	// appSecretHeader iam app secret header key.
-	appSecretHeader = "X-Bk-App-Secret" // nolint
+	bkapiAuthHeader = "X-Bkapi-Authorization"
 
 	// BkIAMMaxPageSize blueking iam max page size.
 	BkIAMMaxPageSize = 1000
@@ -546,4 +543,19 @@ type ListWithAttributes struct {
 	IDList       []string           `json:"ids"`
 	AttrPolicies []*operator.Policy `json:"attr_policies"`
 	Type         TypeID             `json:"type"`
+}
+
+type GrantResourceCreatorActionAncestor struct {
+	System string `json:"system"`
+	Type   TypeID `json:"type"`
+	ID     string `json:"id"`
+}
+
+type GrantResourceCreatorActionOption struct {
+	System    string                               `json:"system"`
+	Type      TypeID                               `json:"type"`
+	ID        string                               `json:"id"`
+	Name      string                               `json:"name"`
+	Creator   string                               `json:"creator"`
+	Ancestors []GrantResourceCreatorActionAncestor `json:"ancestors"`
 }
