@@ -9,7 +9,7 @@
     <div id="folder">
         {{range $k,$fn:=.folder_names}}
         <ul>
-            <li><a href="/replay/files/{{$fn}}" >{{$fn}}</a></li>
+            <li><a href="{{ $.SITE_STATIC_URL }}/replay/files/{{$fn}}" >{{$fn}}</a></li>
         </ul>
         {{end}}
     </div>
@@ -17,7 +17,7 @@
     <div id="file">
         {{range $k,$v:=.file_names}}
         <ul>
-            <li><a href="/replay/{{ $.folder_name }}/{{$v}}" target="_blank" >{{$v}}</a></li>
+            <li><a href="{{ $.SITE_STATIC_URL }}/replay/{{ $.folder_name }}/{{$v}}" target="_blank" >{{$v}}</a></li>
         </ul>
         {{end}}
     </div>

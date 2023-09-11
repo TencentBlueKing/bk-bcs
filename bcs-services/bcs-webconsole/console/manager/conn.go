@@ -95,11 +95,11 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 		orgInfo.Height = DefaultRows
 	}
 	//初始化terminal record
-	record, err := record.NewReplayRecord(ctx, mgr.PodCtx, orgInfo)
+	recorder, err := record.NewReplayRecord(ctx, mgr.PodCtx, orgInfo)
 	if err != nil {
 		klog.Errorf("init ReplayRecord failed: %s", err)
 	}
-	conn.ReplayRecord = record
+	conn.ReplayRecord = recorder
 
 	return conn
 }
