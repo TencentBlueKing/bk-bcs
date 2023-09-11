@@ -66,7 +66,7 @@ type TemplateSet interface {
 	// ListAllTemplateIDs list all template ids of all template sets in one template space.
 	ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error)
 	// ListAllTemplateSetsOfBiz list all template sets of one biz
-	ListAllTemplateSetsOfBiz(kit *kit.Kit, bizID uint32) ([]*table.TemplateSet, error)
+	ListAllTemplateSetsOfBiz(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -439,11 +439,16 @@ func (dao *templateSetDao) ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpace
 }
 
 // ListAllTemplateSetsOfBiz list all template sets of one biz
-func (dao *templateSetDao) ListAllTemplateSetsOfBiz(kit *kit.Kit, bizID uint32) ([]*table.TemplateSet, error) {
+func (dao *templateSetDao) ListAllTemplateSetsOfBiz(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error) {
 	m := dao.genQ.TemplateSet
-	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
-
-	return q.Where(m.BizID.Eq(bizID)).Find()
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID))
+	// if appID > 0 , return the app's all visible template sets
+	if appID > 0 {
+		q = q.Where(m.Public.Is(true)).
+			Or(rawgen.Cond(datatypes.JSONArrayQuery("bound_apps").Contains(appID))...)
+		return q.Where(m.BizID.Eq(bizID)).Find()
+	}
+	return q.Find()
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template
