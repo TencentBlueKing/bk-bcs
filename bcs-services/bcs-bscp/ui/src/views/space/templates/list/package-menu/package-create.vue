@@ -43,9 +43,9 @@
     formRef.value.validate().then(async() => {
       try {
         pending.value = true
-        await createTemplatePackage(spaceId.value, props.templateSpaceId, data.value)
+        const res = await createTemplatePackage(spaceId.value, props.templateSpaceId, data.value)
         close()
-        emits('created')
+        emits('created', res.id)
         Message({
           theme: 'success',
           message: '创建成功'

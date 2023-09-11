@@ -6,32 +6,26 @@
 
 
   interface ITemplateConfigWithVersions extends ITemplateConfigItem {
-    versions: { id: number; name: string; isLatest: boolean; }[]
+    versions: { id: number; name: string; memo: string; isLatest: boolean; }[]
   }
 
   const props = defineProps<{
     bkBizId: string;
     pkgList: IAllPkgsGroupBySpaceInBiz[];
     pkgId: number;
-    expanded: boolean;
     selectedVersions: { template_id: number; template_revision_id: number; is_latest: boolean; }[];
     disabled?: boolean;
   }>()
 
-  const emits = defineEmits(['delete', 'expand', 'selectVersion'])
+  const emits = defineEmits(['delete', 'expand', 'selectVersion', 'updateVersions'])
 
   const listLoading = ref(false)
   const configTemplateList = ref<ITemplateConfigWithVersions[]>([])
   const title = ref('')
   const templateSpaceId = ref(0)
+  const expand = ref(true)
 
-  watch(() => props.expanded, val => {
-    if (val) {
-      getTemplateList()
-    }
-  })
-
-  onMounted(() => {
+  onMounted(async() => {
     props.pkgList.some(templateSpace => {
       return templateSpace.template_sets.some(pkg => {
         if (pkg.template_set_id === props.pkgId) {
@@ -40,33 +34,36 @@
         }
       })
     })
-    if (props.expanded) {
-      getTemplateList()
-    }
+    await getTemplateList()
+    setTemplatesDefaultVersion()
   })
 
+  // 获取模板及对应版本列表
   const getTemplateList = async () => {
     listLoading.value = true
+    // 先取套餐下模板列表
     const templateListRes = await getTemplatesByPackageId(props.bkBizId, templateSpaceId.value, props.pkgId, { start: 0, all: true })
     configTemplateList.value = templateListRes.details.map((item: ITemplateConfigItem) => {
       return { ...item, versions: [] }
     })
     const ids = configTemplateList.value.map(item => item.id)
     if (ids.length > 0) {
+      // 再根据模板列表取对应模板的版本列表
       const versionListRes = await getTemplateVersionsNameByIds(props.bkBizId, ids)
       versionListRes.details.forEach((item: ITemplateVersionsName) => {
         const { template_id, latest_template_revision_id, template_revisions } = item
         const configTemplate = configTemplateList.value.find(tpl => tpl.id === template_id)
         if (configTemplate) {
           configTemplate.versions = template_revisions.map(version => {
-            const { template_revision_id, template_revision_name } = version
-            return { id: template_revision_id, name: template_revision_name, isLatest: false }
+            const { template_revision_id, template_revision_name, template_revision_memo } = version
+            return { id: template_revision_id, name: template_revision_name, memo: template_revision_memo, isLatest: false }
           })
           const version = template_revisions.find(version => version.template_revision_id === latest_template_revision_id)
           if (version) {
             configTemplate.versions.unshift({
               id: version.template_revision_id,
               name: `latest（当前最新为${version.template_revision_name}）`,
+              memo: version.template_revision_memo,
               isLatest: true
             })
           }
@@ -76,12 +73,39 @@
     listLoading.value = false
   }
 
+  // 如果有模板没有选择版本则自动选择latest版本
+  const setTemplatesDefaultVersion = () => {
+    const selectedTplVersionsData = props.selectedVersions.slice()
+    configTemplateList.value.forEach(tpl => {
+      if (!props.selectedVersions.find(item => item.template_id === tpl.id)) {
+        const lasteVersion = tpl.versions.find(v => v.isLatest)
+        if (lasteVersion) {
+          selectedTplVersionsData.push({
+            template_id: tpl.id,
+            template_revision_id: lasteVersion.id,
+            is_latest: true
+          })
+        }
+      }
+    })
+    if (selectedTplVersionsData.length !== props.selectedVersions.length) {
+      emits('updateVersions', selectedTplVersionsData)
+    }
+  }
+
   const getVersionSelectVal = (id: number) => {
     const version = props.selectedVersions.find(item => item.template_id === id)
     if (version) {
       return version.is_latest ? 0 : version.template_revision_id
     }
     return ''
+  }
+
+  const handleToggleExpand = () => {
+    expand.value = !expand.value
+    if (expand.value) {
+      getTemplateList()
+    }
   }
 
   const handleSelectVersion = (tplId: number, versions: { id: number; name: string; isLatest: boolean; }[], val: number) => {
@@ -101,13 +125,13 @@
 
 </script>
 <template>
-  <div :class="['package-template-table', { expand: props.expanded }]">
-    <div class="header" @click="emits('expand', props.pkgId)">
+  <div :class="['package-template-table', { expand }]">
+    <div class="header" @click="handleToggleExpand">
       <RightShape class="arrow-icon" />
       <span v-overflow-title class="name">{{ title }}</span>
       <Close v-if="!props.disabled" class="close-icon" @click.stop="handleDeletePkg"/>
     </div>
-    <table v-if="props.expanded" v-bkloading="{ loading: listLoading }" class="template-table">
+    <table v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
       <thead>
         <tr>
           <th>模板名称</th>
@@ -130,6 +154,14 @@
                   :key="version.isLatest ? 0 : version.id"
                   :id="version.isLatest ? 0 : version.id"
                   :label="version.name">
+                  <div
+                    v-bk-tooltips="{
+                      disabled: !version.memo,
+                      content: version.memo
+                    }"
+                    class="version-name">
+                    {{ version.name }}
+                  </div>
                 </bk-option>
               </bk-select>
             </td>

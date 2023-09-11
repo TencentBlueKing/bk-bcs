@@ -20,5 +20,5 @@ import (
 var errorAddonsNotFound = errors.New("addons not found")
 
 const (
-	releaseDefaultTimeout = 10 * time.Minute
+	releaseDefaultTimeout = time.Hour
 )

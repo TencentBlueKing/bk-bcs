@@ -12,7 +12,11 @@
 
 package contextx
 
-import "context"
+import (
+	"context"
+
+	"github.com/micro/go-micro/v2/metadata"
+)
 
 // GetRequestIDFromCtx 通过 ctx 获取 requestID
 func GetRequestIDFromCtx(ctx context.Context) string {
@@ -30,4 +34,24 @@ func GetProjectIDFromCtx(ctx context.Context) string {
 func GetProjectCodeFromCtx(ctx context.Context) string {
 	id, _ := ctx.Value(ProjectCodeContextKey).(string)
 	return id
+}
+
+// GetSourceIPFromCtx 通过 ctx 获取 sourceIP
+func GetSourceIPFromCtx(ctx context.Context) string {
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return ""
+	}
+	forwarded, _ := md.Get(ForwardedForHeaderKey)
+	return forwarded
+}
+
+// GetUserAgentFromCtx 通过 ctx 获取 userAgent
+func GetUserAgentFromCtx(ctx context.Context) string {
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return ""
+	}
+	userAgent, _ := md.Get(UserAgentHeaderKey)
+	return userAgent
 }

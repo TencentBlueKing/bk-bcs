@@ -19,6 +19,7 @@
   const isShow = ref(false)
   const isFormChanged = ref(false)
   const formRef = ref()
+  const prefix = ref('bk_bscp_')
   const pending = ref(false)
   const variableConfig = ref<IVariableEditParams>({
     name: '',
@@ -40,8 +41,9 @@
     }
   })
 
-  const handleFormChange = (val: IVariableEditParams) => {
+  const handleFormChange = (val: IVariableEditParams, localPrefix: string) => {
     isFormChanged.value = true
+    prefix.value = localPrefix
     variableConfig.value = { ...val }
   }
 
@@ -49,7 +51,7 @@
     await formRef.value.validate()
     try {
       pending.value = true
-      const params = { ...variableConfig.value, name: `bk_bscp_${variableConfig.value.name}` }
+      const params = { ...variableConfig.value, name: `${prefix.value}${variableConfig.value.name}` }
       await createVariable(spaceId.value, params)
       close()
       emits('created')
@@ -84,7 +86,7 @@
     :before-close="handleBeforeClose"
     @closed="close">
     <div class="variable-form">
-      <EditingForm ref="formRef" type="create" :value="variableConfig" @change="handleFormChange" />
+      <EditingForm ref="formRef" type="create" :prefix="prefix" :value="variableConfig" @change="handleFormChange" />
     </div>
     <div class="action-btns">
       <bk-button theme="primary" :loading="pending" @click="handleCreateSubmit">创建</bk-button>

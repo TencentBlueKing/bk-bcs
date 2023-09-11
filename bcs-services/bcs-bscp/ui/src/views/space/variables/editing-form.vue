@@ -4,6 +4,7 @@
 
   const props = defineProps<{
     type: string;
+    prefix: string;
     value: IVariableEditParams;
   }>()
 
@@ -15,6 +16,7 @@
     default_val: '',
     memo: ''
   })
+  const localPrefix = ref(props.prefix)
   const formRef = ref()
   const rules = {
     name: [
@@ -48,8 +50,12 @@
     localVal.value = { ...val }
   }, { immediate: true })
 
+  watch(() => props.prefix, val => {
+    localPrefix.value = val
+  })
+
   const change = () => {
-    emits('change', { ...localVal.value })
+    emits('change', { ...localVal.value }, localPrefix.value)
   }
 
   const validate = () => {
@@ -64,7 +70,14 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
     <bk-form-item label="变量名称" property="name" :required="!isEditMode">
-      <bk-input v-model.trim="localVal.name" prefix="bk_bscp_" :disabled="isEditMode" @change="change" />
+      <bk-input v-model.trim="localVal.name" :disabled="isEditMode" @change="change">
+        <template #prefix>
+          <bk-select v-model="localPrefix" class="prefix-selector" :clearable="false" :disabled="isEditMode" @change="change">
+            <bk-option id="bk_bscp_" name="bk_bscp_"></bk-option>
+            <bk-option id="BK_BSCP_" name="BK_BSCP_"></bk-option>
+          </bk-select>
+        </template>
+      </bk-input>
     </bk-form-item>
     <bk-form-item label="类型" property="type" :required="!isEditMode">
       <bk-select v-model="localVal.type" :clearable="false" :disabled="isEditMode" @change="change">
@@ -80,3 +93,16 @@
     </bk-form-item>
   </bk-form>
 </template>
+<style lang="scss" scoped>
+  .prefix-selector {
+    width: 100px;
+    border-right: 1px solid #c4c6cc;
+    :deep(.bk-input) {
+      height: 30px;
+      border: none;
+      .bk-input--text {
+        background: #f5f7fa;
+      }
+    }
+  }
+</style>

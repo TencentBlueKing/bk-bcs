@@ -227,7 +227,7 @@ export const getBoundTemplates = (bizId: string, appId: number, params: ICommonQ
  * @returns
  */
 export const getBoundTemplatesByAppVersion = (bizId: string, appId: number, releaseId: number) => {
-  return http.get(`/config/biz/${bizId}/apps/${appId}/released_template_revisions`, { params: { start: 0, all: true, release_id: releaseId } }).then(res =>  res.data)
+  return http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/template_revisions`, { params: { start: 0, all: true } }).then(res =>  res.data)
 }
 
 /**

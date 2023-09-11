@@ -58,6 +58,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/storage"
@@ -386,6 +387,9 @@ func (hm *HelmManager) initMicro() error {
 			return nil
 		}),
 		microSvc.AfterStop(func() error {
+			// close audit client
+			component.GetAuditClient().Close()
+			// stop all operation
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			hm.httpServer.Shutdown(ctx)
@@ -395,10 +399,10 @@ func (hm *HelmManager) initMicro() error {
 		}),
 		microSvc.WrapHandler(
 			wrapper.RequestLogWarpper,
-			wrapper.ResponseWrapper,
 			authWrapper.AuthenticationFunc,
 			wrapper.ParseProjectIDWrapper,
 			authWrapper.AuthorizationFunc,
+			wrapper.ResponseWrapper,
 		),
 	)
 	svc.Init()
