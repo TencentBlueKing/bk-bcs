@@ -33,6 +33,7 @@ import (
 	"bscp.io/pkg/components"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/kit"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	"bscp.io/pkg/rest"
