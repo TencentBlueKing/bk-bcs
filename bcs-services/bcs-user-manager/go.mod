@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230808080908-7c46cf1bd956
-	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230811095616-815d33d32e2d
+	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230911112816-85f490b1c029
 	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230808080908-7c46cf1bd956
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230808080908-7c46cf1bd956
 	github.com/TencentBlueKing/iam-go-sdk v0.1.4
