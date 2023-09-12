@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { ref, onBeforeUnmount } from 'vue';
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon'
   import { IVariableEditParams } from '../../../../../../../types/variable';
@@ -18,6 +18,11 @@
   const emits = defineEmits(['change'])
 
   const isOpenFullScreen = ref(false)
+  const codeEditorRef = ref()
+
+  onBeforeUnmount(() => {
+    codeEditorRef.value.destroy()
+  })
 
   const handleFileReadComplete = (content: string) => {
     emits('change', content)
@@ -75,7 +80,12 @@
         </div>
       </div>
       <div class="editor-content">
-        <CodeEditor :model-value="props.content" :variables="props.variables" :editable="editable" @update:model-value="emits('change', $event)" />
+        <CodeEditor
+          ref="codeEditorRef"
+          :model-value="props.content"
+          :variables="props.variables"
+          :editable="editable"
+          @update:model-value="emits('change', $event)" />
       </div>
     </div>
   </Teleport>

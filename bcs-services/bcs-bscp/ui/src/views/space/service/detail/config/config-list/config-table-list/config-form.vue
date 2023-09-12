@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import SHA256 from 'crypto-js/sha256'
   import WordArray from 'crypto-js/lib-typedarrays'
   import { TextFill, Done } from 'bkui-vue/lib/icon'
