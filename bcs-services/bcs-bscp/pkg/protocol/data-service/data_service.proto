@@ -131,6 +131,7 @@ service Data {
     rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {}
     rpc ListReleasedAppBoundTemplateRevisions(ListReleasedAppBoundTemplateRevisionsReq) returns
         (ListReleasedAppBoundTemplateRevisionsResp) {}
+    rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {}
 
     // app template variables related interface.
     rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {}
@@ -950,6 +951,15 @@ message ListReleasedAppBoundTemplateRevisionsResp {
     repeated pbatb.ReleasedAppBoundTmplRevision details = 2;
 }
 
+message CheckAppTemplateBindingReq {
+    pbatb.AppTemplateBindingAttachment attachment = 1;
+    pbatb.AppTemplateBindingSpec       spec       = 2;
+}
+
+message CheckAppTemplateBindingResp {
+    repeated pbatb.Conflict details = 1;
+}
+
 message ExtractAppTemplateVariablesReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
@@ -1309,10 +1319,10 @@ message PublishResp {
 }
 
 message ListInstancesReq {
-    string                 resource_type = 1;
-    string                 parent_type   = 2;
-    string                 parent_id     = 3;
-    pbbase.BasePage        page          = 4;
+    string          resource_type = 1;
+    string          parent_type   = 2;
+    string          parent_id     = 3;
+    pbbase.BasePage page          = 4;
 }
 
 message ListInstancesResp {
@@ -1326,8 +1336,8 @@ message InstanceResource {
 }
 
 message FetchInstanceInfoReq {
-    string resource_type = 1;
-    repeated string  ids = 2;
+    string          resource_type = 1;
+    repeated string ids           = 2;
 }
 
 message FetchInstanceInfoResp {
@@ -1335,10 +1345,10 @@ message FetchInstanceInfoResp {
 }
 
 message InstanceInfo {
-    string          id       = 1;
-    string  display_name     = 2;
-    repeated string approver = 3;
-    repeated string path     = 4;
+    string          id           = 1;
+    string          display_name = 2;
+    repeated string approver     = 3;
+    repeated string path         = 4;
 }
 
 message PingMsg {

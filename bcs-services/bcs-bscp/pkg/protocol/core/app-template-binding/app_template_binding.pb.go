@@ -932,6 +932,78 @@ func (x *ReleasedAppBoundTmplRevision) GetCreateAt() string {
 	return ""
 }
 
+// Conflict is the conflict when app binds templates
+type Conflict struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TemplateSetId   uint32 `protobuf:"varint,1,opt,name=template_set_id,json=templateSetId,proto3" json:"template_set_id,omitempty"`
+	TemplateSetName string `protobuf:"bytes,2,opt,name=template_set_name,json=templateSetName,proto3" json:"template_set_name,omitempty"`
+	TemplateId      uint32 `protobuf:"varint,3,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty"`
+	TemplateName    string `protobuf:"bytes,4,opt,name=template_name,json=templateName,proto3" json:"template_name,omitempty"`
+}
+
+func (x *Conflict) Reset() {
+	*x = Conflict{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_app_template_binding_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Conflict) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Conflict) ProtoMessage() {}
+
+func (x *Conflict) ProtoReflect() protoreflect.Message {
+	mi := &file_app_template_binding_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Conflict.ProtoReflect.Descriptor instead.
+func (*Conflict) Descriptor() ([]byte, []int) {
+	return file_app_template_binding_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *Conflict) GetTemplateSetId() uint32 {
+	if x != nil {
+		return x.TemplateSetId
+	}
+	return 0
+}
+
+func (x *Conflict) GetTemplateSetName() string {
+	if x != nil {
+		return x.TemplateSetName
+	}
+	return ""
+}
+
+func (x *Conflict) GetTemplateId() uint32 {
+	if x != nil {
+		return x.TemplateId
+	}
+	return 0
+}
+
+func (x *Conflict) GetTemplateName() string {
+	if x != nil {
+		return x.TemplateName
+	}
+	return ""
+}
+
 type AppBoundTmplRevisionGroupBySetTemplateRevisionDetail struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -958,7 +1030,7 @@ type AppBoundTmplRevisionGroupBySetTemplateRevisionDetail struct {
 func (x *AppBoundTmplRevisionGroupBySetTemplateRevisionDetail) Reset() {
 	*x = AppBoundTmplRevisionGroupBySetTemplateRevisionDetail{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_app_template_binding_proto_msgTypes[9]
+		mi := &file_app_template_binding_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -971,7 +1043,7 @@ func (x *AppBoundTmplRevisionGroupBySetTemplateRevisionDetail) String() string {
 func (*AppBoundTmplRevisionGroupBySetTemplateRevisionDetail) ProtoMessage() {}
 
 func (x *AppBoundTmplRevisionGroupBySetTemplateRevisionDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_app_template_binding_proto_msgTypes[9]
+	mi := &file_app_template_binding_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1127,7 +1199,7 @@ type ReleasedAppBoundTmplRevisionGroupBySetTemplateRevisionDetail struct {
 func (x *ReleasedAppBoundTmplRevisionGroupBySetTemplateRevisionDetail) Reset() {
 	*x = ReleasedAppBoundTmplRevisionGroupBySetTemplateRevisionDetail{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_app_template_binding_proto_msgTypes[10]
+		mi := &file_app_template_binding_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1140,7 +1212,7 @@ func (x *ReleasedAppBoundTmplRevisionGroupBySetTemplateRevisionDetail) String() 
 func (*ReleasedAppBoundTmplRevisionGroupBySetTemplateRevisionDetail) ProtoMessage() {}
 
 func (x *ReleasedAppBoundTmplRevisionGroupBySetTemplateRevisionDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_app_template_binding_proto_msgTypes[10]
+	mi := &file_app_template_binding_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1554,11 +1626,21 @@ var file_app_template_binding_proto_rawDesc = []byte{
 	0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x15, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
 	0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74,
 	0x65, 0x5f, 0x61, 0x74, 0x18, 0x16, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63, 0x72, 0x65, 0x61,
-	0x74, 0x65, 0x41, 0x74, 0x42, 0x36, 0x5a, 0x34, 0x62, 0x73, 0x63, 0x70, 0x2e, 0x69, 0x6f, 0x2f,
-	0x70, 0x6b, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2f, 0x63, 0x6f, 0x72,
-	0x65, 0x2f, 0x61, 0x70, 0x70, 0x2d, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x2d, 0x62,
-	0x69, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x3b, 0x70, 0x62, 0x61, 0x74, 0x62, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x65, 0x41, 0x74, 0x22, 0xa4, 0x01, 0x0a, 0x08, 0x43, 0x6f, 0x6e, 0x66, 0x6c, 0x69, 0x63,
+	0x74, 0x12, 0x26, 0x0a, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65,
+	0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0d, 0x74, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x49, 0x64, 0x12, 0x2a, 0x0a, 0x11, 0x74, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65,
+	0x74, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0a, 0x74, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x49, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x74,
+	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x42, 0x36, 0x5a, 0x34, 0x62,
+	0x73, 0x63, 0x70, 0x2e, 0x69, 0x6f, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x2f, 0x61, 0x70, 0x70, 0x2d, 0x74, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x2d, 0x62, 0x69, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x3b, 0x70, 0x62,
+	0x61, 0x74, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1573,7 +1655,7 @@ func file_app_template_binding_proto_rawDescGZIP() []byte {
 	return file_app_template_binding_proto_rawDescData
 }
 
-var file_app_template_binding_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_app_template_binding_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_app_template_binding_proto_goTypes = []interface{}{
 	(*AppTemplateBinding)(nil),                                           // 0: pbatb.AppTemplateBinding
 	(*AppTemplateBindingSpec)(nil),                                       // 1: pbatb.AppTemplateBindingSpec
@@ -1584,18 +1666,19 @@ var file_app_template_binding_proto_goTypes = []interface{}{
 	(*ReleasedAppBoundTmplRevisionGroupBySet)(nil),                       // 6: pbatb.ReleasedAppBoundTmplRevisionGroupBySet
 	(*AppBoundTmplRevision)(nil),                                         // 7: pbatb.AppBoundTmplRevision
 	(*ReleasedAppBoundTmplRevision)(nil),                                 // 8: pbatb.ReleasedAppBoundTmplRevision
-	(*AppBoundTmplRevisionGroupBySetTemplateRevisionDetail)(nil),         // 9: pbatb.AppBoundTmplRevisionGroupBySet.template_revision_detail
-	(*ReleasedAppBoundTmplRevisionGroupBySetTemplateRevisionDetail)(nil), // 10: pbatb.ReleasedAppBoundTmplRevisionGroupBySet.template_revision_detail
-	(*base.Revision)(nil),                                                // 11: pbbase.Revision
+	(*Conflict)(nil),                                                     // 9: pbatb.Conflict
+	(*AppBoundTmplRevisionGroupBySetTemplateRevisionDetail)(nil),         // 10: pbatb.AppBoundTmplRevisionGroupBySet.template_revision_detail
+	(*ReleasedAppBoundTmplRevisionGroupBySetTemplateRevisionDetail)(nil), // 11: pbatb.ReleasedAppBoundTmplRevisionGroupBySet.template_revision_detail
+	(*base.Revision)(nil),                                                // 12: pbbase.Revision
 }
 var file_app_template_binding_proto_depIdxs = []int32{
 	1,  // 0: pbatb.AppTemplateBinding.spec:type_name -> pbatb.AppTemplateBindingSpec
 	4,  // 1: pbatb.AppTemplateBinding.attachment:type_name -> pbatb.AppTemplateBindingAttachment
-	11, // 2: pbatb.AppTemplateBinding.revision:type_name -> pbbase.Revision
+	12, // 2: pbatb.AppTemplateBinding.revision:type_name -> pbbase.Revision
 	2,  // 3: pbatb.AppTemplateBindingSpec.bindings:type_name -> pbatb.TemplateBinding
 	3,  // 4: pbatb.TemplateBinding.template_revisions:type_name -> pbatb.TemplateRevisionBinding
-	9,  // 5: pbatb.AppBoundTmplRevisionGroupBySet.template_revisions:type_name -> pbatb.AppBoundTmplRevisionGroupBySet.template_revision_detail
-	10, // 6: pbatb.ReleasedAppBoundTmplRevisionGroupBySet.template_revisions:type_name -> pbatb.ReleasedAppBoundTmplRevisionGroupBySet.template_revision_detail
+	10, // 5: pbatb.AppBoundTmplRevisionGroupBySet.template_revisions:type_name -> pbatb.AppBoundTmplRevisionGroupBySet.template_revision_detail
+	11, // 6: pbatb.ReleasedAppBoundTmplRevisionGroupBySet.template_revisions:type_name -> pbatb.ReleasedAppBoundTmplRevisionGroupBySet.template_revision_detail
 	7,  // [7:7] is the sub-list for method output_type
 	7,  // [7:7] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
@@ -1718,7 +1801,7 @@ func file_app_template_binding_proto_init() {
 			}
 		}
 		file_app_template_binding_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AppBoundTmplRevisionGroupBySetTemplateRevisionDetail); i {
+			switch v := v.(*Conflict); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1730,6 +1813,18 @@ func file_app_template_binding_proto_init() {
 			}
 		}
 		file_app_template_binding_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AppBoundTmplRevisionGroupBySetTemplateRevisionDetail); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_app_template_binding_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ReleasedAppBoundTmplRevisionGroupBySetTemplateRevisionDetail); i {
 			case 0:
 				return &v.state
@@ -1748,7 +1843,7 @@ func file_app_template_binding_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_app_template_binding_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -148,3 +148,11 @@ message ReleasedAppBoundTmplRevision {
     string creator                = 21;
     string create_at              = 22;
 }
+
+// Conflict is the conflict when app binds templates
+message Conflict {
+    uint32 template_set_id   = 1;
+    string template_set_name = 2;
+    uint32 template_id       = 3;
+    string template_name     = 4;
+}
