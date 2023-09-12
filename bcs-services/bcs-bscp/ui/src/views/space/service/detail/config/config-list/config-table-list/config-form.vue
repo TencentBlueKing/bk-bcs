@@ -5,6 +5,7 @@
   import { TextFill, Done } from 'bkui-vue/lib/icon'
   import BkMessage from 'bkui-vue/lib/message'
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config'
+  import { IVariableEditParams } from '../../../../../../../../types/variable';
   import { updateConfigContent, getConfigContent } from '../../../../../../../api/config'
   import { stringLengthInBytes } from '../../../../../../../utils/index'
   import { transFileToObject, fileDownload } from '../../../../../../../utils/file'
@@ -27,6 +28,7 @@
     config: IConfigEditParams;
     editable: boolean;
     content: string|IFileConfigContentSummary;
+    variables?: IVariableEditParams[];
     bkBizId: string;
     appId: number;
     fileUploading?: boolean;
@@ -323,6 +325,7 @@
       <ConfigContentEditor
         :content="stringContent"
         :editable="editable"
+        :variables="props.variables"
         @change="handleStringContentChange" />
     </bk-form-item>
   </bk-form>

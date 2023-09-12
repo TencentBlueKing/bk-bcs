@@ -26,6 +26,7 @@
   const formRef = ref()
   const serviceLoading = ref(false)
   const serviceList = ref<IAppItem[]>([])
+  const deletedApps = ref<IAppItem[]>([])
   const rules = {
     public: [
       {
@@ -44,21 +45,6 @@
     localVal.value = cloneDeep(val)
   }, {
     immediate: true
-  })
-
-  const deletedApps = computed(() => {
-    const changed: IAppItem[] = []
-    if (props.apps) {
-      props.apps.forEach(id => {
-        if (!localVal.value.bound_apps.includes(id)) {
-          const app = serviceList.value.find(item => item.id === id)
-          if (app) {
-            changed.push(app)
-          }
-        }
-      })
-    }
-    return changed
   })
 
   onMounted(() => {
@@ -81,6 +67,22 @@
     } finally {
         serviceLoading.value = false;
     }
+  }
+
+  const handleServiceChange = () => {
+    const changed: IAppItem[] = []
+    if (!localVal.value.public && props.apps) {
+      props.apps.forEach(id => {
+        if (!localVal.value.bound_apps.includes(id)) {
+          const app = serviceList.value.find(item => item.id === id)
+          if (app) {
+            changed.push(app)
+          }
+        }
+      })
+    }
+    deletedApps.value = changed
+    change()
   }
 
   const change = () => {
@@ -117,10 +119,10 @@
         filterable
         placeholder="请选择服务"
         :loading="serviceLoading"
-        @change="change">
+        @change="handleServiceChange">
         <bk-option v-for="service in serviceList" :key="service.id" :label="service.spec.name" :value="service.id"></bk-option>
       </bk-select>
-      <p v-if="deletedApps.length > 0" class="tips">
+      <p v-if="localVal.public && deletedApps.length > 0" class="tips">
         提醒：修改可见范围后，服务
         <span v-for="item in deletedApps" :key="item.id">【{{ item.spec.name }}】</span>
         将不再引用此套餐

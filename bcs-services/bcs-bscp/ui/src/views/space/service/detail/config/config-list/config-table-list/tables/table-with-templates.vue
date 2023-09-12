@@ -396,7 +396,8 @@
     v-model:show="viewConfigSliderData.open"
     v-bind="viewConfigSliderData.data"
     :bk-biz-id="props.bkBizId"
-    :app-id="props.appId" />
+    :app-id="props.appId"
+    :version-id="versionData.id" />
   <VersionDiff
     v-model:show="isDiffPanelShow"
     :current-version="versionData"

@@ -6,6 +6,8 @@
   import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
   import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
   import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
+  import { IVariableEditParams } from '../../../types/variable';
+  import useEditorVariableReplace from '../../utils/hooks/use-editor-variable-replace';
 
   self.MonacoEnvironment = {
     getWorker(_, label) {
@@ -28,9 +30,11 @@
   const props = withDefaults(defineProps<{
     modelValue: string;
     lfEol?: boolean;
+    variables?: IVariableEditParams[];
     editable?: boolean;
     language?: string;
   }>(), {
+    variables: () => [],
     editable: true,
     language: ''
   })
@@ -47,12 +51,17 @@
     }
   })
 
-  watch(() => props.language, (val) => {
+  watch(() => props.language, val => {
     monaco.editor.setModelLanguage(<monaco.editor.ITextModel>editor.getModel(), val)
   })
 
   watch(() => props.editable, val => {
     editor.updateOptions({ readOnly: !val })
+  })
+
+  watch(() => props.variables, val => {
+    const model = editor.getModel()
+    console.log(model)
   })
 
   onMounted(() => {
@@ -69,6 +78,9 @@
       const model = <monaco.editor.ITextModel>editor.getModel()
       model.setEOL(monaco.editor.EndOfLineSequence.LF)
     }
+    if (Array.isArray(props.variables) && props.variables.length > 0) {
+      useEditorVariableReplace(editor, props.variables)
+    }
     editor.onDidChangeModelContent((val:any) => {
       localVal.value = editor.getValue();
       emit('update:modelValue', localVal.value)
@@ -77,6 +89,7 @@
   })
 
   onBeforeUnmount(() => {
+    console.log('unmount')
     editor.dispose()
   })
 </script>
@@ -90,4 +103,13 @@
       width: 100%;
     }
   }
+</style>
+<style lang="scss">
+.code-editor-wrapper {
+  .template-variable-item {
+    color: #1768ef;
+    border: 1px solid #1768ef;
+    cursor: pointer;
+  }
+}
 </style>
