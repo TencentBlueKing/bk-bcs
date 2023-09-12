@@ -435,6 +435,69 @@ func TestUnmarshalNotInElement(t *testing.T) {
 
 }
 
+func TestUnmarshalRegexElement(t *testing.T) {
+
+	const reJSON = `
+	{
+		"key": "bscp.modules",
+		"op": "re",
+		"value": "sidecar"
+	}`
+
+	reElement := new(Element)
+	if err := json.Unmarshal([]byte(reJSON), reElement); err != nil {
+		t.Errorf("test re operator, failed, err: %v", err)
+		return
+	}
+
+	if reElement.Key != "bscp.modules" {
+		t.Errorf("test re operator, invalid key: %v", reElement.Key)
+		return
+	}
+
+	if reElement.Op != &RegexOperator {
+		t.Errorf("test re operator, invalid op: %v", reElement.Key)
+		return
+	}
+
+	val := reElement.Value.(string)
+	if val != "sidecar" {
+		t.Errorf("test re operator, invalid value: %v", reElement.Value)
+		return
+	}
+
+	labels := map[string]string{
+		"bscp.modules": "template",
+	}
+
+	matched, err := reElement.Match(labels)
+	if err != nil {
+		t.Errorf("test re operator, match failed, err: %v", err)
+		return
+	}
+
+	if matched {
+		t.Error("test re operator, but matched")
+		return
+	}
+
+	labels = map[string]string{
+		"bscp.modules": "sidecar",
+	}
+
+	matched, err = reElement.Match(labels)
+	if err != nil {
+		t.Errorf("test re operator, match failed, err: %v", err)
+		return
+	}
+
+	if !matched {
+		t.Error("test re operator, but not matched")
+		return
+	}
+
+}
+
 func TestUnmarshalLabelOr(t *testing.T) {
 
 	const labelOrJSON = `
