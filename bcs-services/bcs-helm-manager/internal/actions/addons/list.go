@@ -63,19 +63,6 @@ func (l *ListAddonsAction) Handle(ctx context.Context,
 	for _, value := range l.addons.Addons {
 		addon := value.ToAddonsProto()
 
-		// get latest version
-		version, err := l.getLatestVersion(ctx, value.ChartName)
-		if err != nil {
-			if errors.Is(err, drivers.ErrTableRecordNotFound) {
-				// 没有记录情况下不处理，继续
-			} else {
-				blog.Errorf("get addons latest version failed, %s", err.Error())
-				l.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
-				return nil
-			}
-		}
-		addon.Version = &version
-
 		// get current status
 		rl, err := l.model.GetRelease(ctx, l.req.GetClusterID(), *addon.Namespace, *addon.Name)
 		if err != nil {
@@ -95,38 +82,12 @@ func (l *ListAddonsAction) Handle(ctx context.Context,
 		if len(rl.Values) > 0 {
 			addon.CurrentValues = &rl.Values[len(rl.Values)-1]
 		}
-		if version == "" {
-			addon.Version = &version
-		}
+
 		addons = append(addons, addon)
 	}
 
 	l.setResp(common.ErrHelmManagerSuccess, "ok", addons)
 	return nil
-}
-
-// 获取最新版本
-func (l *ListAddonsAction) getLatestVersion(ctx context.Context, chartName string) (string, error) {
-	repository, err := l.model.GetProjectRepository(ctx, l.req.GetProjectCode(), common.PublicRepoName)
-	if err != nil {
-		return "", err
-	}
-
-	detail, err := l.platform.
-		User(repo.User{
-			Name:     repository.Username,
-			Password: repository.Password,
-		}).
-		Project(repository.GetRepoProjectID()).
-		Repository(
-			repo.GetRepositoryType(repository.Type),
-			repository.GetRepoName(),
-		).
-		GetChartDetail(ctx, chartName)
-	if err != nil {
-		return "", err
-	}
-	return detail.Version, nil
 }
 
 func (l *ListAddonsAction) setResp(err common.HelmManagerError, message string, r []*helmmanager.Addons) {
