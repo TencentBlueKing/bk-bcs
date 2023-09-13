@@ -251,6 +251,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		SearchFields: req.SearchFields,
 		SearchValue:  req.SearchValue,
 		All:          true,
+		WithStatus:   req.WithStatus,
 	}
 
 	rp, err := s.client.DS.ListAppBoundTemplateRevisions(grpcKit.RpcCtx(), r)
@@ -294,7 +295,11 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 					ByteSize:             r.ByteSize,
 					Creator:              r.Creator,
 					CreateAt:             r.CreateAt,
+					FileState:            r.FileState,
 				})
+		}
+		if req.WithStatus {
+			sortFileStateInGroup(group)
 		}
 		details = append(details, group)
 	}
@@ -303,6 +308,37 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		Details: details,
 	}
 	return resp, nil
+}
+
+// sortFileStateInGroup sort as add > revise > unchange > delete
+func sortFileStateInGroup(g *pbatb.AppBoundTmplRevisionGroupBySet) {
+	if len(g.TemplateRevisions) <= 1 {
+		return
+	}
+
+	result := make([]*pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail, 0)
+	add := make([]*pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail, 0)
+	del := make([]*pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail, 0)
+	revise := make([]*pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail, 0)
+	unchange := make([]*pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail, 0)
+	for _, ci := range g.TemplateRevisions {
+		switch ci.FileState {
+		case constant.FileStateAdd:
+			add = append(add, ci)
+		case constant.FileStateDelete:
+			del = append(del, ci)
+		case constant.FileStateRevise:
+			revise = append(revise, ci)
+		case constant.FileStateUnchange:
+			unchange = append(unchange, ci)
+		}
+	}
+	result = append(result, add...)
+	result = append(result, revise...)
+	result = append(result, unchange...)
+	result = append(result, del...)
+
+	g.TemplateRevisions = result
 }
 
 // ListReleasedAppBoundTemplateRevisions list released app bound template revisions

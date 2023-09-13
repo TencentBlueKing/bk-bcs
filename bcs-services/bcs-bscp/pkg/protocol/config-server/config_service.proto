@@ -1493,6 +1493,7 @@ message ListAppBoundTemplateRevisionsReq {
     uint32 app_id        = 2;
     string search_fields = 3;
     string search_value  = 4;
+    bool   with_status   = 5;
 }
 
 message ListAppBoundTemplateRevisionsResp {

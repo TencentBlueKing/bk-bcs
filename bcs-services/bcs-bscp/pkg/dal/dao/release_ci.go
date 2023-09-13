@@ -204,8 +204,7 @@ func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32, s
 	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId), m.ConfigItemID.Neq(0))
 	if searchKey != "" {
 		param := "%" + searchKey + "%"
-		query = q.Where(q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)),
-			q.Where(m.Name.Like(param)).Or(m.Creator.Like(param)).Or(m.Reviser.Like(param)))
+		query = q.Where(query, q.Where(m.Name.Like(param)).Or(m.Creator.Like(param)).Or(m.Reviser.Like(param)))
 	}
 	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).Order(m.ReleaseID.Desc()).Limit(1).Select(m.ReleaseID)
 	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()
