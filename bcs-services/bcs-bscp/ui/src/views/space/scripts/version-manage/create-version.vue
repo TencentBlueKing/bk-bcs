@@ -34,7 +34,7 @@ const formRef = ref()
 const afterDialogShow = async (val: boolean) => {
 	if (val) {
 		selectedScript.value = ''
-		// listLoading.value = true
+		listLoading.value = true
 		const res = await getScriptVersionList(spaceId.value, props.scriptId, {
 			start: 0,
 			all: true,
@@ -45,9 +45,7 @@ const afterDialogShow = async (val: boolean) => {
 			const name = spec.memo ? `${spec.name}(${spec.memo})` : spec.name
 			return { id, name, content: spec.content }
 		})
-		console.log('list', list.value)
-
-		// listLoading.value = false
+		listLoading.value = false
 		if (list.value.length > 0) {
 			selectedScript.value = list.value[0].id
 		}
