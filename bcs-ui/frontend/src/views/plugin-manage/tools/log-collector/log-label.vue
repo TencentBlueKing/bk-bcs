@@ -64,7 +64,8 @@
   </div>
 </template>
 <script setup lang="ts">
-import { PropType, watch, ref, onMounted } from 'vue';
+import { onMounted, PropType, ref, watch } from 'vue';
+
 import Validate from '@/components/validate.vue';
 
 const props = defineProps({

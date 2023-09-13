@@ -83,8 +83,10 @@
 </template>
 <script>
 import { defineComponent } from 'vue';
-import BaseLayout from '@/views/resource-view/common/base-layout';
+
 import ServiceDetail from './service-detail.vue';
+
+import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'NetworkService',

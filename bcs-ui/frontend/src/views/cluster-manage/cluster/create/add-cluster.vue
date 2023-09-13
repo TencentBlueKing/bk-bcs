@@ -360,18 +360,20 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch, getCurrentInstance } from 'vue';
+import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } from 'vue';
+
+import ApplyHost from './apply-host.vue';
+import clusterScaleData from './cluster-scale.json';
+import StepTabLabel from './step-tab-label.vue';
+
+import $bkMessage from '@/common/bkmagic';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
 import BcsContent from '@/components/layout/Content.vue';
-import TemplateSelector from '@/views/cluster-manage/components/template-selector.vue';
-import ApplyHost from './apply-host.vue';
-import StepTabLabel from './step-tab-label.vue';
-import $i18n from '@/i18n/i18n-setup';
-import $store from '@/store';
-import $router from '@/router';
 import { useProject } from '@/composables/use-app';
-import clusterScaleData from './cluster-scale.json';
-import $bkMessage from '@/common/bkmagic';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
+import TemplateSelector from '@/views/cluster-manage/components/template-selector.vue';
 
 interface IScale {
   level: string

@@ -99,8 +99,10 @@
 </template>
 <script>
 import { defineComponent } from 'vue';
-import BaseLayout from '@/views/resource-view/common/base-layout';
+
 import PvcDetail from './pvc-detail.vue';
+
+import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   components: { BaseLayout, PvcDetail },

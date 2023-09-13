@@ -165,14 +165,16 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-require-imports */
-import secretParams from '@/json/k8s-secret.json';
-import ace from '@/components/ace-editor';
-import header from './header.vue';
 import yamljs from 'js-yaml';
 import _ from 'lodash';
+
+import header from './header.vue';
 import tabs from './tabs.vue';
-import mixinBase from '@/mixins/configuration/mixin-base';
+
+import ace from '@/components/ace-editor';
+import secretParams from '@/json/k8s-secret.json';
 import k8sBase from '@/mixins/configuration/k8s-base';
+import mixinBase from '@/mixins/configuration/mixin-base';
 
 export default {
   name: 'K8SSecret',

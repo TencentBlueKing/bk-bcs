@@ -235,18 +235,20 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+
+import ChartDetail from './chart-detail.vue';
+import ChartReleasesTable from './chart-releases-table.vue';
+import useHelm from './use-helm';
+
+import $bkMessage from '@/common/bkmagic';
+import { copyText } from '@/common/util';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
-import ChartReleasesTable from './chart-releases-table.vue';
-import ChartDetail from './chart-detail.vue';
-import useHelm from './use-helm';
-import { IPagination } from '@/composables/use-page';
 import { useProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
-import $router from '@/router';
-import { copyText } from '@/common/util';
+import { IPagination } from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
-import $bkMessage from '@/common/bkmagic';
+import $router from '@/router';
 
 interface ITableConfig {
   name: string;

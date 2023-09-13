@@ -21,16 +21,18 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, toRef, reactive, computed, onMounted, ref, onErrorCaptured } from 'vue';
+import { computed, defineComponent, onErrorCaptured, onMounted, reactive, ref, toRef } from 'vue';
+
+import useProjects from './project-manage/project/use-project';
+
+import $bkMessage from '@/common/bkmagic';
+import ContentHeader from '@/components/layout/Header.vue';
+import { IProject } from '@/composables/use-app';
 import $router from '@/router';
+import $store from '@/store';
+import ProjectGuide from '@/views/app/empty-project-guide.vue';
 import Terminal from '@/views/app/terminal.vue';
 import Unregistry from '@/views/app/unregistry.vue';
-import ContentHeader from '@/components/layout/Header.vue';
-import useProjects from './project-manage/project/use-project';
-import $store from '@/store';
-import $bkMessage from '@/common/bkmagic';
-import { IProject } from '@/composables/use-app';
-import ProjectGuide from '@/views/app/empty-project-guide.vue';
 
 export default defineComponent({
   name: 'AppViews',

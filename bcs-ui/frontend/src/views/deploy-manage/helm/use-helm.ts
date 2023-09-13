@@ -1,27 +1,28 @@
+import Vue, { ref } from 'vue';
+
 import {
-  reposList,
-  createRepo,
-  repoCharts,
-  deleteRepoChart,
-  repoChartVersions,
-  repoChartVersionDetail,
-  deleteRepoChartVersion,
-  releaseDetail,
-  deleteRelease,
-  releaseChart,
-  updateRelease,
-  releaseHistory,
-  previewRelease,
-  rollbackRelease,
-  releaseStatus,
-  releasesList,
-  downloadChartUrl,
   chartDetail,
   chartReleases,
+  createRepo,
+  deleteRelease,
+  deleteRepoChart,
+  deleteRepoChartVersion,
+  downloadChartUrl,
+  previewRelease,
+  releaseChart,
+  releaseDetail,
+  releaseHistory,
+  releasesList,
   releasesManifest,
+  releaseStatus,
+  repoCharts,
+  repoChartVersionDetail,
+  repoChartVersions,
+  reposList,
+  rollbackRelease,
+  updateRelease,
 } from '@/api/modules/helm';
 import { parseUrl } from '@/api/request';
-import Vue, { ref } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
 
 const { $bkMessage } = Vue.prototype;

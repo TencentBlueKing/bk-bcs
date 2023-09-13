@@ -292,26 +292,28 @@
   </div>
 </template>
 <script setup lang="ts">
+import moment from 'moment';
 import { computed, onBeforeMount, ref, watch } from 'vue';
-import Header from '@/components/layout/Header.vue';
-import Row from '@/components/layout/Row.vue';
-import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
-import LoadingIcon from '@/components/loading-icon.vue';
-import StatusIcon from '@/components/status-icon';
-import PopoverSelector from '@/components/popover-selector.vue';
+
 import EditLogCollector from './edit-log-collector.vue';
 import useLog, { IRuleData } from './use-log';
-import { useCluster } from '@/composables/use-app';
+
+import $bkMessage from '@/common/bkmagic';
 import { LOG_COLLECTOR } from '@/common/constant';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
+import Header from '@/components/layout/Header.vue';
+import Row from '@/components/layout/Row.vue';
+import LoadingIcon from '@/components/loading-icon.vue';
+import PopoverSelector from '@/components/popover-selector.vue';
+import StatusIcon from '@/components/status-icon';
+import { useCluster } from '@/composables/use-app';
+import useFormLabel from '@/composables/use-form-label';
 import useInterval from '@/composables/use-interval';
 import usePageConf from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import $bkMessage from '@/common/bkmagic';
 import $router from '@/router';
-import moment from 'moment';
-import useFormLabel from '@/composables/use-form-label';
 
 const { curClusterId, clusterList } = useCluster();
 

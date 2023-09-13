@@ -69,7 +69,9 @@
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue';
+
 import useTableHover from '../../../composables/use-table-hover';
+
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 
 export default defineComponent({

@@ -97,11 +97,12 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, computed, ref } from 'vue';
-import BaseLayout from '@/views/resource-view/common/base-layout';
-import StatusIcon from '@/components/status-icon';
+import { computed, defineComponent, ref } from 'vue';
+
 import BcsLog from '@/components/bcs-log/log-dialog.vue';
+import StatusIcon from '@/components/status-icon';
 import $store from '@/store';
+import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'WorkloadPods',

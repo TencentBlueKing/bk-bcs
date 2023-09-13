@@ -121,13 +121,14 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed } from 'vue';
-import $store from '@/store';
-import $i18n from '@/i18n/i18n-setup';
-import usePage from '@/composables/use-page';
-import useTableSearch from '@/composables/use-search';
+import { computed, defineComponent, onMounted, ref } from 'vue';
+
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import usePage from '@/composables/use-page';
+import useTableSearch from '@/composables/use-search';
+import $i18n from '@/i18n/i18n-setup';
+import $store from '@/store';
 
 export default defineComponent({
   setup() {

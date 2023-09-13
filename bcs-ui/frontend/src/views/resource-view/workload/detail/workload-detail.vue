@@ -312,24 +312,26 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, computed, ref, onMounted, onBeforeUnmount, watch, toRefs } from 'vue';
 import { bkOverflowTips } from 'bk-magic-vue';
-import StatusIcon from '@/components/status-icon';
-import Metric from '@/components/metric.vue';
-import useDetail from './use-detail';
+import { computed, defineComponent, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue';
+
 import detailBasicList from './detail-basic';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import fullScreen from '@/directives/full-screen';
-import useInterval from '@/composables/use-interval';
-import BcsLog from '@/components/bcs-log/log-dialog.vue';
-import usePage from '@/composables/use-page';
-import { timeZoneTransForm } from '@/common/util';
-import useSearch from '@/composables/use-search';
-import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
-import useTableSort from '@/composables/use-table-sort';
-import $store from '@/store';
+import useDetail from './use-detail';
+
 import $bkMessage from '@/common/bkmagic';
+import { timeZoneTransForm } from '@/common/util';
+import BcsLog from '@/components/bcs-log/log-dialog.vue';
+import Metric from '@/components/metric.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import StatusIcon from '@/components/status-icon';
+import useInterval from '@/composables/use-interval';
+import usePage from '@/composables/use-page';
+import useSearch from '@/composables/use-search';
+import useTableSort from '@/composables/use-table-sort';
+import fullScreen from '@/directives/full-screen';
 import $i18n from '@/i18n/i18n-setup';
+import $store from '@/store';
+import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;

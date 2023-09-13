@@ -2,10 +2,11 @@
   <RouterView v-if="clusterID" />
 </template>
 <script lang="ts">
-import { defineComponent, toRef, reactive, computed, onBeforeMount, ref } from 'vue';
+import { computed, defineComponent, onBeforeMount, reactive, ref, toRef } from 'vue';
+
+import { useCluster } from '@/composables/use-app';
 import $router from '@/router';
 import $store from '@/store';
-import { useCluster } from '@/composables/use-app';
 
 export default defineComponent({
   name: 'DashboardIndex',

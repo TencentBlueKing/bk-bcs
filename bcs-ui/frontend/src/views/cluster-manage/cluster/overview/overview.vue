@@ -231,11 +231,13 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, toRefs, computed } from 'vue';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+
 import ClusterOverviewChart from './cluster-overview-chart.vue';
-import $store from '@/store/index';
-import { useCluster, useProject } from '@/composables/use-app';
+
 import { formatBytes } from '@/common/util';
+import { useCluster, useProject } from '@/composables/use-app';
+import $store from '@/store/index';
 
 interface IUsageData {
   request?: string

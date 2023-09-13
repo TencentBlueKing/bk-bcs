@@ -28,8 +28,9 @@
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue';
-import $router from '@/router';
+
 import { useProject } from '@/composables/use-app';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'ClusterGuide',

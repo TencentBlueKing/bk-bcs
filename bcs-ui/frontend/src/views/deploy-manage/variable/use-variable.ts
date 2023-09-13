@@ -1,22 +1,24 @@
 import { ref } from 'vue';
+
+import { usePage } from './use-table';
+
 import {
-  createVariable,
-  variableDefinitions,
-  deleteDefinitions,
-  updateVariable,
-  importVariable,
   clusterVariable,
-  updateClusterVariable,
+  createVariable,
+  deleteDefinitions,
+  importVariable,
   namespaceVariable,
+  updateClusterVariable,
   updateNamespaceVariable,
+  updateVariable,
+  variableDefinitions,
 } from '@/api/base';
 import {
-  getClusterVariables,
-  updateSpecifyClusterVariables,
   getClusterNamespaceVariable,
+  getClusterVariables,
   updateClusterNamespaceVariable,
+  updateSpecifyClusterVariables,
 } from '@/api/modules/project';
-import { usePage } from './use-table';
 
 export interface IParams {
   limit: number

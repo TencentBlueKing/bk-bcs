@@ -32,6 +32,7 @@
 </template>
 <script>
 import { debounce } from 'throttle-debounce';
+
 import { getActualTop } from '@/common/util';
 
 export default {

@@ -57,10 +57,11 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
+
 import { timeDelta, timeFormat } from '@/common/util';
-import StatusIcon from '@/components/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
+import StatusIcon from '@/components/status-icon';
 
 export default defineComponent({
   name: 'TaskList',

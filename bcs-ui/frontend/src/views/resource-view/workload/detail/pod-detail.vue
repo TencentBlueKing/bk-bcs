@@ -318,18 +318,20 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 import { bkOverflowTips } from 'bk-magic-vue';
-import StatusIcon from '@/components/status-icon';
-import Metric from '@/components/metric.vue';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+
 import useDetail from './use-detail';
-import { formatTime, timeZoneTransForm } from '@/common/util';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import fullScreen from '@/directives/full-screen';
-import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
-import $store from '@/store';
-import { useConfig, useProject } from '@/composables/use-app';
+
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
+import { formatTime, timeZoneTransForm } from '@/common/util';
+import Metric from '@/components/metric.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import StatusIcon from '@/components/status-icon';
+import { useConfig, useProject } from '@/composables/use-app';
+import fullScreen from '@/directives/full-screen';
+import $store from '@/store';
+import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;

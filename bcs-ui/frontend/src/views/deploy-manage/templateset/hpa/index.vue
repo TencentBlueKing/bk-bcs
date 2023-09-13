@@ -118,10 +118,11 @@
 </template>
 
 <script>
-import { catchErrorHandler } from '@/common/util';
-import Header from '@/components/layout/Header.vue';
 import ConditionsDialog from './conditions-dialog';
+
+import { catchErrorHandler } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
+import Header from '@/components/layout/Header.vue';
 
 export default {
   components: {

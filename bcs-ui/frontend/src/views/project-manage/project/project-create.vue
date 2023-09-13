@@ -44,11 +44,12 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import { computed, defineComponent, ref, toRefs, watch } from 'vue';
-import useFormLabel from '@/composables/use-form-label';
-import useProjects from '@/views/project-manage/project/use-project';
-import { SPECIAL_REGEXP } from '@/common/constant';
-import $i18n from '@/i18n/i18n-setup';
+
 import $bkMessage from '@/common/bkmagic';
+import { SPECIAL_REGEXP } from '@/common/constant';
+import useFormLabel from '@/composables/use-form-label';
+import $i18n from '@/i18n/i18n-setup';
+import useProjects from '@/views/project-manage/project/use-project';
 
 export default defineComponent({
   name: 'ProjectCreate',

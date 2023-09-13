@@ -118,13 +118,15 @@
   </div>
 </template>
 <script lang='ts' setup>
+import { computed, onMounted, ref, watch } from 'vue';
+
+import useMetric, { IMetricData } from './use-metric';
+
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
-import KeyValue from '@/views/cluster-manage/components/key-value.vue';
-import useMetric, { IMetricData } from './use-metric';
-import { computed, onMounted, ref, watch } from 'vue';
-import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 
 const props = defineProps({
   data: {

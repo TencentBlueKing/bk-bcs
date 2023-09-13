@@ -25,13 +25,15 @@
 */
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import $store from '@/store';
-import http from '@/api';
-import ResourceView from './resource-view';
+
 import ClusterManage from './cluster-manage';
 import DeployManage from './deployment-manage';
-import ProjectManage from './project-manage';
 import PluginManage from './plugin-manage';
+import ProjectManage from './project-manage';
+import ResourceView from './resource-view';
+
+import http from '@/api';
+import $store from '@/store';
 import useMenu from '@/views/app/use-menu';
 
 Vue.use(VueRouter);

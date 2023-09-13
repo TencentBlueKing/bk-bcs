@@ -92,7 +92,9 @@
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue';
+
 import StatusIcon from '../../../components/status-icon';
+
 import { formatTime } from '@/common/util';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 

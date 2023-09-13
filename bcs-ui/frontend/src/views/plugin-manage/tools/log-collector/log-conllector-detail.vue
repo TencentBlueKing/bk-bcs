@@ -180,11 +180,13 @@
   </bcs-form>
 </template>
 <script setup lang="ts">
-import { PropType, computed, ref, watch } from 'vue';
-import { IRuleData } from './use-log';
+import { computed, PropType, ref, watch } from 'vue';
+
 import LogLabel from './log-label.vue';
-import $i18n from '@/i18n/i18n-setup';
+import { IRuleData } from './use-log';
+
 import useFormLabel from '@/composables/use-form-label';
+import $i18n from '@/i18n/i18n-setup';
 
 const props = defineProps({
   data: {

@@ -36,8 +36,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, toRefs, PropType, watch } from 'vue';
+import { defineComponent, onMounted, PropType, ref, toRefs, watch } from 'vue';
+
 import useNode from '../node-list/use-node';
+
 import BcsTaints from './new-taints.vue';
 
 interface IValueItem {

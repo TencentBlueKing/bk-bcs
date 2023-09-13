@@ -17,8 +17,9 @@
   </div>
 </template>
 <script lang="ts">
+import { defineComponent, PropType, ref } from 'vue';
+
 import Header from '@/components/layout/Header.vue';
-import { defineComponent, ref, PropType } from 'vue';
 export default defineComponent({
   name: 'LayoutContent',
   components: {

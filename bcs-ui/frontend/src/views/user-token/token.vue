@@ -224,18 +224,19 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
-import StatusIcon from '@/components/status-icon';
-import { copyText, renderTemplate } from '@/common/util';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import fullScreen from '@/directives/full-screen';
 import clusterDemoConfig from 'text-loader?modules!./cluster-demo.yaml';
 import shareClusterDemoConfig from 'text-loader?modules!./share-cluster-demo.yaml';
-import $store from '@/store';
-import $router from '@/router';
+import { computed, defineComponent, onMounted, ref } from 'vue';
+
 import $bkMessage from '@/common/bkmagic';
-import $i18n from '@/i18n/i18n-setup';
+import { copyText, renderTemplate } from '@/common/util';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import StatusIcon from '@/components/status-icon';
 import { useCluster } from '@/composables/use-app';
+import fullScreen from '@/directives/full-screen';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'UserToken',

@@ -72,13 +72,15 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, onBeforeMount, computed, watch, onMounted } from 'vue';
-import ProjectCreate from '@/views/project-manage/project/project-create.vue';
-import $router from '@/router';
-import $store from '@/store';
+import { computed, defineComponent, onBeforeMount, onMounted, ref, watch } from 'vue';
+
 import useProjects, { IProjectPerm } from '../project-manage/project/use-project';
+
 import { IProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
+import $router from '@/router';
+import $store from '@/store';
+import ProjectCreate from '@/views/project-manage/project/project-create.vue';
 
 export default defineComponent({
   name: 'ProjectSelector',

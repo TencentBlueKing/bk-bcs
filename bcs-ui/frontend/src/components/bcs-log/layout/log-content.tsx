@@ -1,10 +1,12 @@
 /* eslint-disable no-unused-expressions */
-import { defineComponent, ref, computed, PropType, watch, onMounted } from 'vue';
+import { debounce } from 'throttle-debounce';
+import { computed, defineComponent, onMounted, PropType, ref, watch } from 'vue';
+
 import AnsiParser from '../common/ansi-parser';
 import TransformStringPixel from '../common/transform-string-pixel';
-import { debounce } from 'throttle-debounce';
-import { formatTime } from '@/common/util';
+
 import '../style/log.css';
+import { formatTime } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
 
 export interface ILogData {

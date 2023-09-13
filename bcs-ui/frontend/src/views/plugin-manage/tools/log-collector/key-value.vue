@@ -33,8 +33,8 @@
   </div>
 </template>
 <script setup lang="ts">
-import { PropType, watch, ref, onBeforeMount } from 'vue';
 import { cloneDeep } from 'lodash';
+import { onBeforeMount, PropType, ref, watch } from 'vue';
 
 const props = defineProps({
   value: {

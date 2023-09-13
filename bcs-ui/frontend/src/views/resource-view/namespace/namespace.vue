@@ -459,27 +459,30 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, watch, ref, CreateElement, reactive, toRef } from 'vue';
-import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
-import LayoutContent from '@/components/layout/Content.vue';
-import LayoutRow from '@/components/layout/Row.vue';
-import Detail from './detail.vue';
+import { computed, CreateElement, defineComponent, reactive, ref, toRef, watch } from 'vue';
+
+import StatusIcon from '../../../components/status-icon';
 import usePage from '../../../composables/use-page';
 import useSearch from '../../../composables/use-search';
-import { useCluster, useProject } from '@/composables/use-app';
+
+import Detail from './detail.vue';
 import { useNamespace } from './use-namespace';
+
+import $bkMessage from '@/common/bkmagic';
+import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
 import { timeZoneTransForm } from '@/common/util';
-import { VALUE_REGEXP, KEY_REGEXP } from '@/common/constant';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import KeyValue from '@/components/key-value.vue';
+import LayoutContent from '@/components/layout/Content.vue';
+import LayoutRow from '@/components/layout/Row.vue';
+import { useCluster, useProject } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
-import StatusIcon from '../../../components/status-icon';
-import AppFooter from '@/views/app/app-footer.vue';
 import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
-import $bkMessage from '@/common/bkmagic';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import $router from '@/router';
 import $store from '@/store';
+import AppFooter from '@/views/app/app-footer.vue';
 
 export default defineComponent({
   name: 'NamespaceList',

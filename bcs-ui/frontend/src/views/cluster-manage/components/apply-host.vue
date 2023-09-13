@@ -343,6 +343,9 @@ export default {
         id: 32,
         name: 32 + this.$t('units.suffix.cores'),
       }, {
+        id: 48,
+        name: 48 + this.$t('units.suffix.cores'),
+      }, {
         id: 84,
         name: 84 + this.$t('units.suffix.cores'),
       }],

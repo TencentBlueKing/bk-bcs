@@ -138,14 +138,16 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, computed, ref, toRef, reactive } from 'vue';
-import LayoutContent from '@/components/layout/Content.vue';
+import { computed, defineComponent, reactive, ref, toRef } from 'vue';
+
 import { useNamespace } from './use-namespace';
-import { useCluster } from '@/composables/use-app';
-import { KEY_REGEXP } from '@/common/constant';
-import $i18n from '@/i18n/i18n-setup';
+
 import $bkMessage from '@/common/bkmagic';
+import { KEY_REGEXP } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import LayoutContent from '@/components/layout/Content.vue';
+import { useCluster } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 
 export default defineComponent({

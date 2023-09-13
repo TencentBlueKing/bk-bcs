@@ -277,13 +277,14 @@
   </div>
 </template>
 <script lang="ts">
-import { useProject } from '@/composables/use-app';
 import { defineComponent, PropType, toRefs } from 'vue';
+
 import Row from '@/components/layout/Row.vue';
-import LoadingCell from '@/views/cluster-manage/components/loading-cell.vue';
-import $i18n from '@/i18n/i18n-setup';
 import PopoverSelector from '@/components/popover-selector.vue';
+import { useProject } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
 import maintain from '@/images/500.svg';
+import LoadingCell from '@/views/cluster-manage/components/loading-cell.vue';
 
 export default defineComponent({
   name: 'ClusterCard',

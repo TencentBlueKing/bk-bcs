@@ -23,13 +23,13 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
-import Vue from 'vue';
-import VueI18n from 'vue-i18n';
-import { locale, lang } from 'bk-magic-vue';
+import { lang, locale } from 'bk-magic-vue';
 import cookie from 'cookie';
 import yamljs from 'js-yaml';
 import enUS from 'text-loader?modules!./en-US.yaml';
 import zhCN from 'text-loader?modules!./zh-CN.yaml';
+import Vue from 'vue';
+import VueI18n from 'vue-i18n';
 
 Vue.use(VueI18n);
 

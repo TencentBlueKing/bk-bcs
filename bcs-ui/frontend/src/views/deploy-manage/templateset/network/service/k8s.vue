@@ -608,10 +608,11 @@
 
 <script>
 import mixin from './mixin';
+
 import { catchErrorHandler, formatDate } from '@/common/util';
-import useFormLabel from '@/composables/use-form-label';
-import Header from '@/components/layout/Header.vue';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
+import Header from '@/components/layout/Header.vue';
+import useFormLabel from '@/composables/use-form-label';
 
 export default {
   components: { Header, ClusterSelectComb },

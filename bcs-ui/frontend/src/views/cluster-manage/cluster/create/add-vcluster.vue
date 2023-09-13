@@ -131,17 +131,19 @@
   </BcsContent>
 </template>
 <script lang="ts" setup>
-import { ref, onBeforeMount, getCurrentInstance, computed } from 'vue';
-import BcsContent from '@/components/layout/Content.vue';
-import StepTabLabel from './step-tab-label.vue';
-import ClusterQuota from './cluster-quota.vue';
-import $store from '@/store';
-import $router from '@/router';
-import { useVCluster } from '@/views/cluster-manage/cluster/use-cluster';
-import $i18n from '@/i18n/i18n-setup';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import { useProject } from '@/composables/use-app';
 import { uniq } from 'lodash';
+import { computed, getCurrentInstance, onBeforeMount, ref } from 'vue';
+
+import ClusterQuota from './cluster-quota.vue';
+import StepTabLabel from './step-tab-label.vue';
+
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import BcsContent from '@/components/layout/Content.vue';
+import { useProject } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
+import { useVCluster } from '@/views/cluster-manage/cluster/use-cluster';
 
 const steps = ref([
   { name: 'basicInfo', formRef: 'basicInfoRef', disabled: false },

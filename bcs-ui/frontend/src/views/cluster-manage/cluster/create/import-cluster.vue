@@ -179,15 +179,16 @@
   </section>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch } from 'vue';
-import useFormLabel from '@/composables/use-form-label';
 import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+
+import $bkMessage from '@/common/bkmagic';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import useFormLabel from '@/composables/use-form-label';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import $i18n from '@/i18n/i18n-setup';
-import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'ImportCluster',

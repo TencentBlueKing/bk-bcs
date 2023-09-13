@@ -12,7 +12,7 @@
 </template>
 <script lang="ts">
 import { Property } from 'csstype';
-import { PropType, defineComponent, onMounted, ref } from 'vue';
+import { defineComponent, onMounted, PropType, ref } from 'vue';
 
 export default defineComponent({
   name: 'FixedButton',

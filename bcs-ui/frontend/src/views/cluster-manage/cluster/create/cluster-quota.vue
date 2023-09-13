@@ -71,7 +71,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, PropType, watch, onBeforeMount } from 'vue';
+import { computed, onBeforeMount, PropType, ref, watch } from 'vue';
 
 defineProps({
   value: {

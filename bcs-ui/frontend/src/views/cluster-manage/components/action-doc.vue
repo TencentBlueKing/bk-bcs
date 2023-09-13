@@ -33,15 +33,17 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from 'vue';
-import postActionDescMd from '../node-template/postaction-desc.md';
-import postActionDescMdEn from '../node-template/postaction-desc-en.md';
+
 import autoscalerScriptsMd from '../cluster/autoscaler/autoscaler-scripts.md';
 import autoscalerScriptsMdEn from '../cluster/autoscaler/autoscaler-scripts-en.md';
+import postActionDescMd from '../node-template/postaction-desc.md';
+import postActionDescMdEn from '../node-template/postaction-desc-en.md';
+
+import $bkMessage from '@/common/bkmagic';
 import { copyText } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
-import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'ActionDoc',

@@ -172,16 +172,18 @@
   </div>
 </template>
 <script setup lang="ts">
-import { PropType, computed, onBeforeMount, ref, watch } from 'vue';
+import moment from 'moment';
+import { computed, onBeforeMount, PropType, ref, watch } from 'vue';
+
+import LogConllectorDetail from './log-conllector-detail.vue';
+import LogForm from './log-form.vue';
+import useLog, { IRuleData } from './use-log';
+
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
 import StatusIcon from '@/components/status-icon';
-import LogForm from './log-form.vue';
-import LogConllectorDetail from './log-conllector-detail.vue';
-import useLog, { IRuleData } from './use-log';
-import $bkMessage from '@/common/bkmagic';
 import $i18n from '@/i18n/i18n-setup';
-import moment from 'moment';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 // import $router from '@/router';
 
 const props = defineProps({
