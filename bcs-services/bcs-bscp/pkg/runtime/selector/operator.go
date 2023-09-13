@@ -53,6 +53,7 @@ const (
 	In               OperatorType = "in"
 	NotIn            OperatorType = "nin"
 	Regex            OperatorType = "re"
+	NotRegex         OperatorType = "nre"
 )
 
 // supported default operators
@@ -66,6 +67,7 @@ var (
 	InOperator               = InType(In)
 	NotInOperator            = NotInType(NotIn)
 	RegexOperator            = RegexType(Regex)
+	NotRegexOperator         = NotRegexType(NotRegex)
 )
 
 // OperatorEnums enum all the supported operators.
@@ -79,6 +81,7 @@ var OperatorEnums = map[OperatorType]Operator{
 	In:               &InOperator,
 	NotIn:            &NotInOperator,
 	Regex:            &RegexOperator,
+	NotRegex:         &NotRegexOperator,
 }
 
 var _ Operator = new(EqualType)
@@ -468,7 +471,50 @@ func (re *RegexType) Match(match *Element, labels map[string]string) (bool, erro
 		return false, nil
 	}
 
-	return regexp.MustCompile(val).MatchString(to), nil
+	return regexp.MatchString(val, to)
+}
+
+var _ Operator = new(NotRegexType)
+
+// NotRegexType is a not regex operator
+type NotRegexType OperatorType
+
+// Name is the name of not regex operator
+func (nre *NotRegexType) Name() OperatorType {
+	return NotRegex
+}
+
+// Validate valid the match element is valid to match not regex operator or not
+func (nre *NotRegexType) Validate(match *Element) error {
+	v, ok := match.Value.(string)
+	if !ok {
+		return fmt.Errorf("invalid nre oper with value: %v, should be string", match.Value)
+	}
+
+	if err := validator.ValidateLabelValue(v); err != nil {
+		return fmt.Errorf("invalid label key's value, key: %s value: %s, %v", match.Key, v, err)
+	}
+
+	return nil
+}
+
+// Match matched only when the match key is exist and test value is not matched with regular expression.
+func (nre *NotRegexType) Match(match *Element, labels map[string]string) (bool, error) {
+	val, ok := match.Value.(string)
+	if !ok {
+		return false, fmt.Errorf("invalid nre oper with value: %v, should be string", match.Value)
+	}
+
+	to, exists := labels[match.Key]
+	if !exists {
+		return false, nil
+	}
+
+	matched, err := regexp.MatchString(val, to)
+	if err != nil {
+		return false, err
+	}
+	return !matched, nil
 }
 
 func isNumeric(val interface{}) bool {
