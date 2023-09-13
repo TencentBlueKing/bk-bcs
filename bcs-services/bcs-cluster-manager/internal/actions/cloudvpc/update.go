@@ -117,6 +117,7 @@ func (ua *UpdateAction) Handle(
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.CloudVPC.String(),
 		ResourceID:   req.VpcID,
+		ResourceName: destCloudVPC.VpcName,
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新云[%s]vpc网络[%s]信息", req.CloudID, req.VpcID),
 		OpUser:       req.Updater,

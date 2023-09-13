@@ -190,6 +190,7 @@ func (da *DeleteVirtualAction) Handle(ctx context.Context,
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
 		ResourceType: common.Cluster.String(),
 		ResourceID:   da.cluster.ClusterID,
+		ResourceName: da.cluster.ClusterName,
 		TaskID:       da.task.TaskID,
 		Message:      fmt.Sprintf("删除%s虚拟集群%s", da.cluster.Provider, da.cluster.ClusterID),
 		OpUser:       da.req.Operator,

@@ -450,6 +450,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
 		ResourceType: common.Cluster.String(),
 		ResourceID:   da.cluster.ClusterID,
+		ResourceName: da.cluster.ClusterName,
 		TaskID:       da.tasks.TaskID,
 		Message:      fmt.Sprintf("删除%s集群%s", da.cluster.Provider, da.cluster.ClusterID),
 		OpUser:       da.req.Operator,
@@ -838,6 +839,7 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
 		ResourceType: common.Cluster.String(),
 		ResourceID:   da.cluster.ClusterID,
+		ResourceName: da.cluster.ClusterName,
 		TaskID:       da.task.TaskID,
 		Message:      fmt.Sprintf("集群%s下架节点", da.cluster.ClusterID),
 		OpUser:       da.req.Operator,

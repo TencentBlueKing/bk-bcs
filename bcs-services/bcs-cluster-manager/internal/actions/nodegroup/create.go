@@ -290,6 +290,7 @@ func (ca *CreateAction) createNodeGroup() error {
 	err = ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ca.group.NodeGroupID,
+		ResourceName: ca.group.Name,
 		TaskID:       taskID,
 		Message:      fmt.Sprintf("集群%s创建节点规格%s", ca.cluster.ClusterID, ca.group.NodeGroupID),
 		OpUser:       ca.req.Creator,

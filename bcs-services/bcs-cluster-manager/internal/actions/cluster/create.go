@@ -454,6 +454,7 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 	err = ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
 		ResourceType: common.Cluster.String(),
 		ResourceID:   cls.ClusterID,
+		ResourceName: cls.ClusterName,
 		TaskID:       ca.task.TaskID,
 		Message:      fmt.Sprintf("创建%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,

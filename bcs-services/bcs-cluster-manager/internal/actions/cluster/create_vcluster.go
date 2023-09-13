@@ -18,8 +18,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -297,6 +298,7 @@ func (ca *CreateVirtualClusterAction) Handle(ctx context.Context, req *cmproto.C
 	err = ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
 		ResourceType: common.Cluster.String(),
 		ResourceID:   cls.ClusterID,
+		ResourceName: cls.ClusterName,
 		TaskID:       ca.task.TaskID,
 		Message:      fmt.Sprintf("创建%s虚拟集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,

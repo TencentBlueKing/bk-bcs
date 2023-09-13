@@ -483,6 +483,7 @@ func (ua *UpdateAction) Handle(
 	if err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.req.NodeGroupID,
+		ResourceName: ua.group.Name,
 		TaskID: func() string {
 			if ua.task == nil {
 				return ""
@@ -632,6 +633,7 @@ func (ua *MoveNodeAction) Handle(
 	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   req.NodeGroupID,
+		ResourceName: ua.group.Name,
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s移入节点至节点规格%s", ua.cluster.ClusterID, req.NodeGroupID),
 		OpUser:       ua.group.Updater,
@@ -1011,6 +1013,7 @@ func (ua *UpdateDesiredNodeAction) Handle(
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   req.NodeGroupID,
+		ResourceName: ua.group.Name,
 		TaskID:       ua.task.TaskID,
 		Message:      fmt.Sprintf("集群%s扩容节点规格%s节点数至%v", ua.cluster.ClusterID, req.NodeGroupID, req.DesiredNode),
 		OpUser:       ua.group.Updater,
@@ -1105,6 +1108,7 @@ func (ua *UpdateDesiredSizeAction) Handle(
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   req.NodeGroupID,
+		ResourceName: destGroup.Name,
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新集群%s节点规格%s期望扩容节点数至%d", destGroup.ClusterID, req.NodeGroupID, req.DesiredSize),
 		OpUser:       req.Operator,

@@ -215,6 +215,7 @@ func (da *DeleteAction) Handle(
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   da.group.NodeGroupID,
+		ResourceName: da.group.Name,
 		TaskID: func() string {
 			if task == nil {
 				return ""
@@ -405,6 +406,7 @@ func (da *RemoveNodeAction) Handle(
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   da.group.NodeGroupID,
+		ResourceName: da.group.Name,
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s节点规格%s移除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       da.group.Creator,
@@ -675,6 +677,7 @@ func (da *CleanNodesAction) Handle(
 	err := da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   da.group.NodeGroupID,
+		ResourceName: da.group.Name,
 		TaskID:       da.task.TaskID,
 		Message:      fmt.Sprintf("集群%s节点规格%s删除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       req.Operator,

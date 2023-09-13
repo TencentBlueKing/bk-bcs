@@ -236,6 +236,7 @@ func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, condSrc, 
 			"$limit": opt.Limit,
 		})
 	}
+
 	if err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &retTaskOpLogs); err != nil {
 		return nil, err
 	}

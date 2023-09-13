@@ -143,6 +143,7 @@ func (ua *UpdateAction) Handle(
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.Cloud.String(),
 		ResourceID:   req.CloudID,
+		ResourceName: destCloud.Name,
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新云[%s]模板信息", req.CloudID),
 		OpUser:       req.Updater,

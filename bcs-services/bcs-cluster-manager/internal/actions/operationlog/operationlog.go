@@ -134,6 +134,7 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
 		ua.resp.Data.Results = append(ua.resp.Data.Results, &cmproto.OperationLogDetail{
 			ResourceType: v.ResourceType,
 			ResourceID:   v.ResourceID,
+			ResourceName: v.ResourceName,
 			TaskID:       v.TaskID,
 			Message:      v.Message,
 			OpUser:       v.OpUser,
@@ -206,6 +207,7 @@ func (ua *ListOperationLogsAction) fetchV1OperationLogs() error {
 		ua.resp.Data.Results = append(ua.resp.Data.Results, &cmproto.OperationLogDetail{
 			ResourceType: v.ResourceType,
 			ResourceID:   v.ResourceID,
+			ResourceName: v.ResourceName,
 			TaskID:       v.TaskID,
 			Message:      v.Message,
 			OpUser:       v.OpUser,

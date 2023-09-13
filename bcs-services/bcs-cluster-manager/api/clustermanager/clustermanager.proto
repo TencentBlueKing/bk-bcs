@@ -9884,31 +9884,35 @@ message OperationLog {
     title : "resourceType",
     description : "资源类型"
   }];
-  string resourceID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string resourceID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "resourceID",
     description : "资源ID"
   }];
-  string taskID = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string resourceName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceName",
+    description : "资源名称"
+  }];
+  string taskID = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "taskID",
     description : "任务ID记录"
   }];
-  string message = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string message = 5 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "message",
     description : "审计日志信息"
   }];
-  string opUser = 5 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string opUser = 6 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "opUser",
     description : "操作人"
   }];
-  string createTime = 6 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string createTime = 7 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "createTime",
     description : "创建时间"
   }];
-  string clusterID = 7 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string clusterID = 8 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "clusterID",
     description : "操作关联的集群ID"
   }];
-  string projectID = 8 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string projectID = 9 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "projectID",
     description : "操作关联的项目ID"
   }];
@@ -9917,14 +9921,15 @@ message OperationLog {
 message TaskOperationLog {
   string resourceType = 1;
   string resourceID = 2;
-  string taskID = 3;
-  string message = 4;
-  string opUser = 5;
-  string createTime = 6;
-  string clusterID = 7;
-  string projectID = 8;
-  string status = 9;
-  string taskType = 10;
+  string resourceName = 3;
+  string taskID = 4;
+  string message = 5;
+  string opUser = 6;
+  string createTime = 7;
+  string clusterID = 8;
+  string projectID = 9;
+  string status = 10;
+  string taskType = 11;
 }
 
 message ListCloudInstanceTypeRequest {
@@ -10722,31 +10727,35 @@ message OperationLogDetail {
     title : "resourceID",
     description : "资源 ID"
   }];
-  string taskID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string resourceName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceName",
+    description : "资源名称"
+  }];
+  string taskID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "taskID",
     description : "任务 ID，可能为空"
   }];
-  string message = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string message = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "message",
     description : "日志信息"
   }];
-  string opUser = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string opUser = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "opUser",
     description : "操作者"
   }];
-  string createTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string createTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "createTime",
     description : "发生时间"
   }];
-  Task task = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  Task task = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "task",
     description : "任务详细信息，可能为空"
   }];
-  string taskType = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string taskType = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "taskType",
     description : "任务类型"
   }];
-  string status = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string status = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "status",
     description : "任务状态"
   }];

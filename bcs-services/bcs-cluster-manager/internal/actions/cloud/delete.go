@@ -76,6 +76,7 @@ func (da *DeleteAction) Handle(
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
 		ResourceType: common.Cloud.String(),
 		ResourceID:   req.CloudID,
+		ResourceName: deletedCloud.Name,
 		TaskID:       "",
 		Message:      fmt.Sprintf("删除云[%s]模板", req.CloudID),
 		OpUser:       deletedCloud.Creator,

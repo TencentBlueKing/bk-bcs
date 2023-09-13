@@ -95,6 +95,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	err := ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
 		ResourceType: common.CloudVPC.String(),
 		ResourceID:   req.VpcID,
+		ResourceName: req.VpcName,
 		TaskID:       "",
 		Message:      fmt.Sprintf("创建云[%s]vpc网络[%s]", req.CloudID, req.VpcID),
 		OpUser:       req.Creator,

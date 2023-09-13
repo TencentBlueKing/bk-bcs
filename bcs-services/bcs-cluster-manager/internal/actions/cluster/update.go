@@ -915,6 +915,7 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.Cluster.String(),
 		ResourceID:   ua.cluster.ClusterID,
+		ResourceName: ua.cluster.ClusterName,
 		TaskID:       ua.task.TaskID,
 		Message:      fmt.Sprintf("集群%s添加节点", ua.cluster.ClusterID),
 		OpUser:       req.Operator,
