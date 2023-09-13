@@ -594,3 +594,46 @@ func getBindingsAfterDelete(origin []*pbatb.TemplateBinding, deletedTmplSetIDs [
 
 	return final, nil
 }
+
+// CheckAppTemplateBinding check conflicts of app template binding.
+func (s *Service) CheckAppTemplateBinding(ctx context.Context, req *pbcs.CheckAppTemplateBindingReq) (*pbcs.
+	CheckAppTemplateBindingResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.CheckAppTemplateBindingResp)
+
+	_, templateIDs, err := parseBindings(req.Bindings)
+	if err != nil {
+		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	if len(templateIDs) > 500 {
+		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
+			len(templateIDs))
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Create,
+		ResourceID: req.AppId}, BizID: req.BizId}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.CheckAppTemplateBindingReq{
+		Attachment: &pbatb.AppTemplateBindingAttachment{
+			BizId: req.BizId,
+			AppId: req.AppId,
+		},
+		Spec: &pbatb.AppTemplateBindingSpec{
+			Bindings: req.Bindings,
+		},
+	}
+	rp, err := s.client.DS.CheckAppTemplateBinding(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("create app template binding failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.CheckAppTemplateBindingResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}
