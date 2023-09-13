@@ -321,6 +321,9 @@ type packExtension struct {
 
 // convert2Chart 将bk-repo HELM仓库中的package信息, 转换为chart信息
 func (p *pack) convert2Chart() *repo.Chart {
+	if p == nil {
+		return &repo.Chart{}
+	}
 	chart := &repo.Chart{
 		Key:         p.Key,
 		Name:        p.Name,
