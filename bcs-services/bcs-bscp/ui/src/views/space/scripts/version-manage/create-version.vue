@@ -3,7 +3,7 @@
   import { Plus } from 'bkui-vue/lib/icon'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
-  import { IScriptVersionListItem,IScriptMapItem } from '../../../../../types/script'
+  import { IScriptVersionListItem, IScriptMapItem } from '../../../../../types/script'
   import { getScriptVersionList } from '../../../../api/script'
 
   const { spaceId } = storeToRefs(useGlobalStore())
