@@ -31,6 +31,7 @@ type cosStorage struct {
 	client *cos.Client
 }
 
+// UploadFile upload file to cos
 func (c *cosStorage) UploadFile(ctx context.Context, localFile, filePath string) error {
 	f, err := os.Open(localFile)
 	if err != nil {
@@ -44,6 +45,7 @@ func (c *cosStorage) UploadFile(ctx context.Context, localFile, filePath string)
 	return nil
 }
 
+// ListFile list of files under a cos folder
 func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]string, error) {
 	var marker string
 	folderName = strings.Trim(folderName, "/")
@@ -75,6 +77,7 @@ func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]string,
 	return files, nil
 }
 
+// DownloadFile download file from cos
 func (c *cosStorage) DownloadFile(ctx context.Context, filePath string) (io.ReadCloser, error) {
 	resp, err := c.client.Object.Get(ctx, filePath, nil)
 	if err != nil {
