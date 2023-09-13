@@ -74,4 +74,6 @@ mgrGuideMessage: "Support common Bash shortcuts; Ctrl-W in Windows is to close t
 
 session不合法: "Invalid session"
 
+初始化session失败: "Init session failed"
+
 BCS Console 服务端连接断开，请重新登录: "The BCS Console server is disconnected, please login again"

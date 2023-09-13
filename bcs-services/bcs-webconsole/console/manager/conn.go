@@ -16,10 +16,7 @@ package manager
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
-	"k8s.io/klog/v2"
-	"regexp"
-	"runtime/debug"
+	"encoding/json"
 	"strings"
 	"sync"
 	"time"
@@ -27,15 +24,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/pborman/ansi"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -58,48 +52,26 @@ type RemoteStreamConn struct {
 	once          sync.Once
 	wsConn        *websocket.Conn
 	bindMgr       *ConsoleManager
-	resizeMsgChan chan *TerminalSize
+	resizeMsgChan chan *types.TerminalSize
 	inputMsgChan  <-chan wsMessage
 	outputMsgChan chan []byte
 	hideBanner    bool
-	cmdParser     *audit.CmdParse
-	ReplayRecord  *record.ReplyRecorder
 }
 
 // NewRemoteStreamConn :
 func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager,
-	initTerminalSize *TerminalSize, hideBanner bool) *RemoteStreamConn {
+	initTerminalSize *types.TerminalSize, hideBanner bool) *RemoteStreamConn {
 	conn := &RemoteStreamConn{
 		ctx:           ctx,
 		wsConn:        wsConn,
 		bindMgr:       mgr,
-		resizeMsgChan: make(chan *TerminalSize, 1), // 放入初始宽高
+		resizeMsgChan: make(chan *types.TerminalSize, 1), // 放入初始宽高
 		outputMsgChan: make(chan []byte),
 		hideBanner:    hideBanner,
-		cmdParser:     audit.NewCmdParse(),
 	}
 
-	orgInfo := &record.ReplyInfo{TimeStamp: time.Now()}
 	// 初始化命令行宽和高
-	if initTerminalSize != nil {
-		conn.resizeMsgChan <- initTerminalSize
-		orgInfo.Width = initTerminalSize.Cols
-		orgInfo.Height = initTerminalSize.Rows
-	} else {
-		// 前端没有指定长宽高, 使用默认值
-		conn.resizeMsgChan <- &TerminalSize{
-			Rows: DefaultRows,
-			Cols: DefaultCols,
-		}
-		orgInfo.Width = DefaultCols
-		orgInfo.Height = DefaultRows
-	}
-	//初始化terminal record
-	recorder, err := record.NewReplayRecord(ctx, mgr.PodCtx, orgInfo)
-	if err != nil {
-		klog.Errorf("init ReplayRecord failed: %s", err)
-	}
-	conn.ReplayRecord = recorder
+	conn.resizeMsgChan <- initTerminalSize
 
 	return conn
 }
@@ -124,6 +96,19 @@ func (r *RemoteStreamConn) readInputMsg() <-chan wsMessage {
 	return inputMsgChan
 }
 
+// handleResizeMsg : 处理 Resize 数据流
+func (c *RemoteStreamConn) handleResizeMsg(msg []byte) (*types.TerminalSize, error) {
+	resizeMsg := types.TerminalSize{}
+
+	// 解析Json数据
+	err := json.Unmarshal(msg, &resizeMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resizeMsg, nil
+}
+
 // HandleMsg Msg 处理
 func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	// 只处理文本数据
@@ -140,13 +125,13 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	// 第一个字符串为 channel
 	channel := string(msg[0])
 	if channel == ResizeChannel {
-		resizeMsg, resizeErr := r.bindMgr.HandleResizeMsg(decodeMsg)
+		resizeMsg, resizeErr := r.handleResizeMsg(decodeMsg)
 		if resizeErr != nil {
 			return nil, nil
 		}
-		newSize := fmt.Sprintf("%vx%v", resizeMsg.Cols, resizeMsg.Rows)
-		//replay 记录终端大小变化
-		record.RecordResizeEvent(r.ReplayRecord, []byte(newSize))
+
+		r.bindMgr.HandleResizeMsg(resizeMsg)
+
 		r.resizeMsgChan <- resizeMsg
 		return nil, nil
 	}
@@ -155,14 +140,6 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, nil
 	}
-
-	_, ss, err := ansi.Decode(inputMsg)
-	if err != nil {
-		return inputMsg, nil
-	}
-
-	r.cmdParser.Cmd = ss
-	r.cmdParser.InputSlice = append(r.cmdParser.InputSlice, ss)
 
 	return inputMsg, nil
 }
@@ -186,39 +163,6 @@ func (r *RemoteStreamConn) Read(p []byte) (int, error) {
 	}
 }
 
-// auditCmd 命令行审计, 不能影响主流程
-func (r *RemoteStreamConn) auditCmd(outputMsg []byte) {
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Error("[audit cmd panic], err: %v, debug strace: %s", r, debug.Stack())
-		}
-	}()
-
-	//输入输出映射,用于查找历史命令
-	out, ss, err := ansi.Decode(outputMsg)
-	if err != nil {
-		logger.Error("decode output error: %s", err)
-		return
-	}
-
-	//TODO:历史命令问题,可能解析问题导致
-	if strings.ReplaceAll(string(ss.Code), "\b", "") == "" {
-		rex := regexp.MustCompile("\\x1b\\[\\d+P")
-		l := rex.Split(string(out), -1)
-		ss.Code = ansi.Name(l[len(l)-1])
-	}
-	//时序性问题不可避免
-	r.cmdParser.CmdResult[r.cmdParser.Cmd] = ss
-
-	if r.cmdParser.Cmd != nil && r.cmdParser.Cmd.Code == "\r" {
-		cmd := audit.ResolveInOut(r.cmdParser)
-		if cmd != "" {
-			logger.Infof("UserName=%s  SessionID=%s  Command=%s",
-				r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, cmd)
-		}
-	}
-}
-
 // Write : executor 回调向 web 端输出
 func (r *RemoteStreamConn) Write(p []byte) (int, error) {
 	msg := make([]byte, len(p))
@@ -228,9 +172,6 @@ func (r *RemoteStreamConn) Write(p []byte) (int, error) {
 	if err != nil {
 		return 0, nil
 	}
-
-	// 命令行解析与审计
-	r.auditCmd(outputMsg)
 
 	output := []byte(base64.StdEncoding.EncodeToString(outputMsg))
 	r.outputMsgChan <- output
@@ -263,43 +204,32 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 	pingInterval := time.NewTicker(10 * time.Second)
 	defer pingInterval.Stop()
 
-	guideMessages := helloMessage(c, r.bindMgr.PodCtx.Source)
+	guideMessages := helloMessage(c, r.bindMgr.podCtx.Source)
 	notSendMsg := true
-	//结束会话时,处理缓存/关闭文件
-	defer r.ReplayRecord.End()
 
 	for {
 		select {
 		case <-r.ctx.Done():
-			r.ReplayRecord.GracefulShutdownRecorder()
-			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.PodCtx.PodName)
+			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.podCtx.PodName)
 			return nil
 		case output, ok := <-r.outputMsgChan:
 			if !ok {
-				logger.Infof("close %s RemoteStreamConn done by chan", r.bindMgr.PodCtx.PodName)
+				logger.Infof("close %s RemoteStreamConn done by chan", r.bindMgr.podCtx.PodName)
 				return nil
 			}
 			// 收到首个字节才发送 hello 信息
 			if notSendMsg && !r.hideBanner {
-				record.RecordOutputEvent(r.ReplayRecord, []byte(guideMessages))
+				r.bindMgr.HandleBannerMsg([]byte(guideMessages))
 				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
 				notSendMsg = false
 			}
 
-			dst := make([]byte, base64.StdEncoding.DecodedLen(len(output)))
-			n, _ := base64.StdEncoding.Decode(dst, output)
-			dst = dst[:n]
-			record.RecordOutputEvent(r.ReplayRecord, dst)
 			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {
 				return err
 			}
 		case <-pingInterval.C: // 定时主动发送 ping
 			if err := r.wsConn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return errors.Wrap(err, "ping")
-			}
-			//未开启或文件初始化失败都不记录
-			if r.ReplayRecord != nil && r.ReplayRecord.Writer != nil {
-				r.ReplayRecord.Writer.WriteBuff.Flush()
 			}
 		}
 	}
@@ -393,7 +323,6 @@ func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected b
 }
 
 func helloMessage(c *gin.Context, source string) string {
-
 	var guideMsg []string
 	var messages []string
 
@@ -431,7 +360,6 @@ func helloMessage(c *gin.Context, source string) string {
 
 // ZhLength 计算中文字符串长度, 中文为2个长度
 func ZhLength(str string) int {
-
 	var length int
 
 	for _, i := range str {
