@@ -30,6 +30,7 @@ type bkrepoStorage struct {
 	client *http.Client
 }
 
+// UploadFile upload file to bkRepo
 func (b *bkrepoStorage) UploadFile(ctx context.Context, localFile, filePath string) error {
 	//上传文件API PUT /generic/{project}/{repoName}/{fullPath}
 	rawURL := fmt.Sprintf("%s/generic/%s/%s/%s", config.G.Repository.Bkrepo.Endpoint,
@@ -58,6 +59,7 @@ func (b *bkrepoStorage) UploadFile(ctx context.Context, localFile, filePath stri
 	return nil
 }
 
+// ListFile list of files under a bkRepo folder
 func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]string, error) {
 	//节点详情 https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/node/node.md
 	//GET /repository/api/node/page/{projectId}/{repoName}/{fullPath}
@@ -93,6 +95,7 @@ func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]stri
 	return files, nil
 }
 
+// DownloadFile download file from bkRepo
 func (b *bkrepoStorage) DownloadFile(ctx context.Context, filePath string) (io.ReadCloser, error) {
 	//下载文件API PUT /generic/{project}/{repoName}/{fullPath}
 	rawURL := fmt.Sprintf("%s/generic/%s/%s/%s?download=true", config.G.Repository.Bkrepo.Endpoint,
