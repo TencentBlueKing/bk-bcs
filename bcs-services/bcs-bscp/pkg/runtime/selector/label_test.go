@@ -432,70 +432,6 @@ func TestUnmarshalNotInElement(t *testing.T) {
 		t.Error("test nin operator, but matched")
 		return
 	}
-
-}
-
-func TestUnmarshalNotRegexElement(t *testing.T) {
-
-	const nreJSON = `
-	{
-		"key": "bscp.modules",
-		"op": "nre",
-		"value": "sidecar"
-	}`
-
-	nreElement := new(Element)
-	if err := json.Unmarshal([]byte(nreJSON), nreElement); err != nil {
-		t.Errorf("test nre operator, failed, err: %v", err)
-		return
-	}
-
-	if nreElement.Key != "bscp.modules" {
-		t.Errorf("test nre operator, invalid key: %v", nreElement.Key)
-		return
-	}
-
-	if nreElement.Op != &NotRegexOperator {
-		t.Errorf("test nre operator, invalid op: %v", nreElement.Op)
-		return
-	}
-
-	val := nreElement.Value.(string)
-	if val != "sidecar" {
-		t.Errorf("test nre operator, invalid value: %v", nreElement.Value)
-		return
-	}
-
-	labels := map[string]string{
-		"bscp.modules": "template",
-	}
-
-	matched, err := nreElement.Match(labels)
-	if err != nil {
-		t.Errorf("test nre operator, match failed, err: %v", err)
-		return
-	}
-
-	if !matched {
-		t.Error("test nre operator, but not matched")
-		return
-	}
-
-	labels = map[string]string{
-		"bscp.modules": "sidecar",
-	}
-
-	matched, err = nreElement.Match(labels)
-	if err != nil {
-		t.Errorf("test nre operator, match failed, err: %v", err)
-		return
-	}
-
-	if matched {
-		t.Error("test nre operator, but matched")
-		return
-	}
-
 }
 
 func TestUnmarshalRegexElement(t *testing.T) {
@@ -556,6 +492,68 @@ func TestUnmarshalRegexElement(t *testing.T) {
 
 	if !matched {
 		t.Error("test re operator, but not matched")
+		return
+	}
+}
+
+func TestUnmarshalNotRegexElement(t *testing.T) {
+
+	const nreJSON = `
+	{
+		"key": "bscp.modules",
+		"op": "nre",
+		"value": "sidecar"
+	}`
+
+	nreElement := new(Element)
+	if err := json.Unmarshal([]byte(nreJSON), nreElement); err != nil {
+		t.Errorf("test nre operator, failed, err: %v", err)
+		return
+	}
+
+	if nreElement.Key != "bscp.modules" {
+		t.Errorf("test nre operator, invalid key: %v", nreElement.Key)
+		return
+	}
+
+	if nreElement.Op != &NotRegexOperator {
+		t.Errorf("test nre operator, invalid op: %v", nreElement.Op)
+		return
+	}
+
+	val := nreElement.Value.(string)
+	if val != "sidecar" {
+		t.Errorf("test nre operator, invalid value: %v", nreElement.Value)
+		return
+	}
+
+	labels := map[string]string{
+		"bscp.modules": "template",
+	}
+
+	matched, err := nreElement.Match(labels)
+	if err != nil {
+		t.Errorf("test nre operator, match failed, err: %v", err)
+		return
+	}
+
+	if !matched {
+		t.Error("test nre operator, but not matched")
+		return
+	}
+
+	labels = map[string]string{
+		"bscp.modules": "sidecar",
+	}
+
+	matched, err = nreElement.Match(labels)
+	if err != nil {
+		t.Errorf("test nre operator, match failed, err: %v", err)
+		return
+	}
+
+	if matched {
+		t.Error("test nre operator, but matched")
 		return
 	}
 
