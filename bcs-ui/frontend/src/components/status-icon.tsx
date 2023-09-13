@@ -1,6 +1,7 @@
-import { defineComponent, computed, toRefs } from 'vue';
-import LoadingIcon from '@/components/loading-icon.vue';
+import { computed, defineComponent, toRefs } from 'vue';
+
 import './status-icon.css';
+import LoadingIcon from '@/components/loading-icon.vue';
 import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({

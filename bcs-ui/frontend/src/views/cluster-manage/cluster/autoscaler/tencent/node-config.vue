@@ -323,9 +323,9 @@
                     <span :class="['company', { disabled: isEdit }]">Mbps</span>
                   </div>
                 </bk-radio>
-                <bk-radio 
-                  :disabled="isEdit" 
-                  value="un-limit" 
+                <bk-radio
+                  :disabled="isEdit"
+                  value="un-limit"
                   v-if="nodePoolConfig.launchTemplate.internetAccess.internetChargeType === 'BANDWIDTH_PACKAGE'">
                   <span>{{ $t('ca.internetAccess.label.unLimit') }}</span>
                 </bk-radio>
@@ -886,7 +886,7 @@ export default defineComponent({
         nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = '100';
       }
       if (value !== 'BANDWIDTH_PACKAGE' && maxBandwidthType.value === 'un-limit') {
-        maxBandwidthType.value = 'limit'
+        maxBandwidthType.value = 'limit';
       }
     };
     const createBandWidth = () => {

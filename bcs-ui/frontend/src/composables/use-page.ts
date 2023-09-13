@@ -1,4 +1,4 @@
-import { reactive, computed, Ref, ComputedRef } from 'vue';
+import { computed, ComputedRef, reactive, Ref } from 'vue';
 
 export interface IPageConf {
   current: number;

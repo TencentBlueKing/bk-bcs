@@ -105,6 +105,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 import header from './header.vue';
 import tabs from './tabs.vue';
+
 import ingressParams from '@/json/k8s-ingress.json';
 
 export default {

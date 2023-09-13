@@ -53,6 +53,7 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, ref, toRefs, watch } from 'vue';
+
 import $i18n from '@/i18n/i18n-setup';
 export enum CheckType {
   Uncheck, // 0 未选

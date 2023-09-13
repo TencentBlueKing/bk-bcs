@@ -303,15 +303,17 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-require-imports */
-import serviceParams from '@/json/k8s-service.json';
-import bkKeyer from '@/components/keyer';
-import header from './header.vue';
-import tabs from './tabs.vue';
-import mixinBase from '@/mixins/configuration/mixin-base';
-import k8sBase from '@/mixins/configuration/k8s-base';
-import ace from '@/components/ace-editor';
 import yamljs from 'js-yaml';
 import _ from 'lodash';
+
+import header from './header.vue';
+import tabs from './tabs.vue';
+
+import ace from '@/components/ace-editor';
+import bkKeyer from '@/components/keyer';
+import serviceParams from '@/json/k8s-service.json';
+import k8sBase from '@/mixins/configuration/k8s-base';
+import mixinBase from '@/mixins/configuration/mixin-base';
 
 export default {
   name: 'K8SService',

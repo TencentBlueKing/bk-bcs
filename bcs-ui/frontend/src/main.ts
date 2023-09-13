@@ -23,26 +23,27 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
-import Vue from 'vue';
 import VeeValidate from 'vee-validate';
-import i18n from '@/i18n/i18n-setup';
+import Vue from 'vue';
+
 import '@/common/bkmagic';
-import bkmagic2 from '@/components/bk-magic-2.0';
-import { bus } from '@/common/bus';
-import focus from '@/directives/focus/index';
+import '@/fonts/svg-icon/iconcool';
 import App from '@/App.vue';
+import { bus } from '@/common/bus';
+import { chainable } from '@/common/util';
+import bkCombox from '@/components/bk-input/combox.vue';
+import bkbcsInput from '@/components/bk-input/index.vue';
+import bkmagic2 from '@/components/bk-magic-2.0';
+import BcsEmptyTableStatus from '@/components/empty-table-status.vue';
+import bkSelector from '@/components/selector/index.vue';
+import Authority from '@/directives/authority';
+import focus from '@/directives/focus/index';
+import i18n from '@/i18n/i18n-setup';
+import config from '@/mixins/config';
 import router from '@/router';
 import store from '@/store';
-import Authority from '@/directives/authority';
-import config from '@/mixins/config';
-import bkSelector from '@/components/selector/index.vue';
-import bkbcsInput from '@/components/bk-input/index.vue';
-import bkCombox from '@/components/bk-input/combox.vue';
-import k8sIngress from '@/views/deploy-manage/templateset/ingress/k8s-ingress.vue';
-import BcsEmptyTableStatus from '@/components/empty-table-status.vue';
-import { chainable } from '@/common/util';
 import BcsErrorPlugin from '@/views/app/bcs-error';
-import '@/fonts/svg-icon/iconcool';
+import k8sIngress from '@/views/deploy-manage/templateset/ingress/k8s-ingress.vue';
 
 Vue.config.devtools = process.env.NODE_ENV === 'development';
 Vue.prototype.$chainable = chainable;

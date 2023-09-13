@@ -281,8 +281,8 @@
 
 <script>
 import { catchErrorHandler, formatDate } from '@/common/util';
-import Header from '@/components/layout/Header.vue';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
+import Header from '@/components/layout/Header.vue';
 
 export default {
   components: { Header, ClusterSelectComb },

@@ -59,9 +59,10 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import { computed, defineComponent, ref, toRefs, watch } from 'vue';
-import useProject from '@/views/project-manage/project/use-project';
-import $store from '@/store';
+
 import $i18n from '@/i18n/i18n-setup';
+import $store from '@/store';
+import useProject from '@/views/project-manage/project/use-project';
 
 export default defineComponent({
   name: 'ProjectConfig',

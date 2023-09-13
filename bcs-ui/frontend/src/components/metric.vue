@@ -25,16 +25,18 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, reactive, toRefs, onMounted, ref, watch, computed, PropType, toRef } from 'vue';
 import moment from 'moment';
-import defaultChartOption from '../views/resource-view/common/default-echarts-option';
+import { computed, defineComponent, onMounted, PropType, reactive, ref, toRef, toRefs, watch } from 'vue';
 import ECharts from 'vue-echarts/components/ECharts.vue';
+
+import defaultChartOption from '../views/resource-view/common/default-echarts-option';
+
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
 import $i18n from '@/i18n/i18n-setup';
-import $store from '@/store';
 import $router from '@/router';
+import $store from '@/store';
 
 interface ITimeRange {
   name: string

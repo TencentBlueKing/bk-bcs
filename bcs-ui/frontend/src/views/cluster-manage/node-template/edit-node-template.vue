@@ -330,19 +330,21 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch, getCurrentInstance } from 'vue';
-import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
-import KeyValue from '@/views/cluster-manage/components/key-value.vue';
-import Taints from '@/views/cluster-manage/components/new-taints.vue';
-import $store from '@/store/index';
+import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } from 'vue';
+
+import ActionDoc from '../components/action-doc.vue';
+
+import $bkMessage from '@/common/bkmagic';
+import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
-import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
-import useInterval from '@/composables/use-interval';
+import $router from '@/router';
+import $store from '@/store/index';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 import InputType from '@/views/cluster-manage/components/input-type.vue';
-import ActionDoc from '../components/action-doc.vue';
-import $bkMessage from '@/common/bkmagic';
+import KeyValue from '@/views/cluster-manage/components/key-value.vue';
+import Taints from '@/views/cluster-manage/components/new-taints.vue';
 
 export default defineComponent({
   components: { FormGroup, KeyValue, Taints, InputType, ActionDoc },

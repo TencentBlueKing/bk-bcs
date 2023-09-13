@@ -47,7 +47,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, getCurrentInstance } from 'vue';
+import { defineComponent, getCurrentInstance, onMounted, ref } from 'vue';
 
 export default defineComponent({
   model: {

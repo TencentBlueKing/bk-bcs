@@ -25,11 +25,13 @@
   </bk-exception>
 </template>
 <script lang="ts">
-import { PropType, defineComponent, onBeforeMount, ref } from 'vue';
-import actionsMap from '@/views/app/actions-map';
-import $router from '@/router';
+import { defineComponent, onBeforeMount, PropType, ref } from 'vue';
+
 import useProjects from '../project-manage/project/use-project';
+
 import $bkMessage from '@/common/bkmagic';
+import $router from '@/router';
+import actionsMap from '@/views/app/actions-map';
 
 interface IPerms {
   action_list: Array<{

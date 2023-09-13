@@ -159,8 +159,8 @@
 
 <script>
 import { catchErrorHandler } from '@/common/util';
-import MonacoEditor from '@/components/monaco-editor/editor.vue';
 import Header from '@/components/layout/Header.vue';
+import MonacoEditor from '@/components/monaco-editor/editor.vue';
 import useHelm from '@/views/deploy-manage/helm/use-helm';
 
 export default {

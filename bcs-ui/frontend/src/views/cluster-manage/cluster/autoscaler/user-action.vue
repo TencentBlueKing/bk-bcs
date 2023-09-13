@@ -23,7 +23,8 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, toRefs, watch } from 'vue';
+import { computed, defineComponent, ref, toRefs, watch } from 'vue';
+
 import $store from '@/store/index';
 
 export default defineComponent({

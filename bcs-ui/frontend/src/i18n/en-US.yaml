@@ -1409,6 +1409,7 @@ cluster:
     tips:
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
       hasNotNodePoolNode: ''
+      disableImportClusterAddNode: ''
     placeholder:
       searchNode: 'Search for IP, label, taints, annotations, status, node source, nodePool'
     title:

@@ -1,5 +1,5 @@
-import { Store, MutationPayload } from 'vuex';
-import { merge, get, set } from 'lodash';
+import { get, merge, set } from 'lodash';
+import { MutationPayload, Store } from 'vuex';
 
 interface Storage {
   getItem: (key: string) => any;

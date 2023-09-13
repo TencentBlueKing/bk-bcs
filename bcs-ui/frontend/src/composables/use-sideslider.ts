@@ -1,6 +1,7 @@
-import { Ref, watch, ref } from 'vue';
-import $i18n from '@/i18n/i18n-setup';
+import { Ref, ref, watch } from 'vue';
+
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import $i18n from '@/i18n/i18n-setup';
 
 export interface IConfig {
   watchOnce?: boolean

@@ -83,12 +83,13 @@
 
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
-import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
-import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
+
 import { storageEvents } from '@/api/modules/storage';
 import { formatDate } from '@/common/util';
-import $i18n from '@/i18n/i18n-setup';
+import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
+import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import { useCluster } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
 import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 export default defineComponent({

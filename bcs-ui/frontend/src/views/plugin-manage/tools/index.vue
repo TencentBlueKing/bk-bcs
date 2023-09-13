@@ -378,9 +378,9 @@
 
 <script>
 import { catchErrorHandler } from '@/common/util';
-import MonacoEditor from '@/components/monaco-editor/editor.vue';
-import Header from '@/components/layout/Header.vue';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
+import Header from '@/components/layout/Header.vue';
+import MonacoEditor from '@/components/monaco-editor/editor.vue';
 
 export default {
   components: {

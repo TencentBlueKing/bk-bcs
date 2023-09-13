@@ -87,7 +87,8 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, PropType } from 'vue';
+import { defineComponent, PropType, ref } from 'vue';
+
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 
 export default defineComponent({

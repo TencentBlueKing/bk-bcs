@@ -122,9 +122,11 @@
 </template>
 <script>
 import { defineComponent } from 'vue';
-import BaseLayout from '@/views/resource-view/common/base-layout';
+
 import StatusIcon from '../../../components/status-icon';
+
 import LoadingIcon from '@/components/loading-icon.vue';
+import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'DashboardDeploy',

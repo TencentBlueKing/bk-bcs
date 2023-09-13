@@ -29,8 +29,9 @@
   </TopoSelect>
 </template>
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
 import TopoSelect from 'bk-magic-vue/lib/select';
+import { defineComponent, onMounted, ref } from 'vue';
+
 import { ccTopology } from '@/api/base';
 
 export default defineComponent({

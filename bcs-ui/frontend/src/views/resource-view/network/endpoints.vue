@@ -67,8 +67,10 @@
 </template>
 <script>
 import { defineComponent } from 'vue';
-import BaseLayout from '@/views/resource-view/common/base-layout';
+
 import EndpointsDetail from './endpoints-detail.vue';
+
+import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'NetworkEndpoints',

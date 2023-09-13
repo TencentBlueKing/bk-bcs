@@ -115,8 +115,10 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, toRefs, watch, ref, computed, PropType, onMounted } from 'vue';
+import { computed, defineComponent, onMounted, PropType, ref, toRefs, watch } from 'vue';
+
 import Validate from './validate.vue';
+
 import $i18n from '@/i18n/i18n-setup';
 
 export interface IData {

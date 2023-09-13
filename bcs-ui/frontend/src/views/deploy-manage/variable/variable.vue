@@ -220,19 +220,21 @@
   </LayoutContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, watch } from 'vue';
-import LayoutContent from '@/components/layout/Content.vue';
-import LayoutRow from '@/components/layout/Row.vue';
-import useVariable, { IParams, Pick } from './use-variable';
-import $i18n from '@/i18n/i18n-setup';
-import BkFormItem from 'bk-magic-vue/lib/form-item';
 import BkForm from 'bk-magic-vue/lib/form';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import BkFormItem from 'bk-magic-vue/lib/form-item';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+
+import useVariable, { IParams, Pick } from './use-variable';
 import exampleData from './variable.json';
-import useDebouncedRef from '@/composables/use-debounce';
-import useSideslider from '@/composables/use-sideslider';
+
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import LayoutContent from '@/components/layout/Content.vue';
+import LayoutRow from '@/components/layout/Row.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import useDebouncedRef from '@/composables/use-debounce';
+import useSideslider from '@/composables/use-sideslider';
+import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({
   name: 'VariableManager',

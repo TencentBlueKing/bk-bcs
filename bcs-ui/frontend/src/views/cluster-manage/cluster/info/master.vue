@@ -59,12 +59,14 @@
   </bk-form>
 </template>
 <script lang="ts">
-import { useCluster } from '@/composables/use-app';
-import { defineComponent, ref, computed, onBeforeMount } from 'vue';
-import { masterList } from '@/api/modules/cluster-manager';
+import { computed, defineComponent, onBeforeMount, ref } from 'vue';
+
 import clusterScaleData from '../create/cluster-scale.json';
-import { copyText } from '@/common/util';
+
+import { masterList } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
+import { copyText } from '@/common/util';
+import { useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({

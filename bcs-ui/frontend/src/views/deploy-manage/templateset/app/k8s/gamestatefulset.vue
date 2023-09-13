@@ -149,12 +149,13 @@
 </template>
 
 <script>
-import { catchErrorHandler } from '@/common/util';
-import Header from '@/components/layout/Header.vue';
-import GamestatefulsetUpdate from './gamestatefulset-update';
 import GamestatefulsetScale from './gamestatefulset-scale';
-import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
+import GamestatefulsetUpdate from './gamestatefulset-update';
+
+import { catchErrorHandler } from '@/common/util';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
+import Header from '@/components/layout/Header.vue';
+import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 export default {
   name: 'GamestatefulSet',

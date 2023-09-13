@@ -147,10 +147,12 @@
 }
 
 .bk-message-content {
-    max-width: 580px;
-    line-height: 20px;
-    float: none;
-    word-break: break-word;
+    .tools .tool.fixed {
+        position: relative !important;
+    }
+    .message-row {
+        width: 100%;
+    }
 }
 
 .bk-table>thead>tr>th {
@@ -1265,10 +1267,6 @@
 
 .bk-button.bk-primary.hover, .bk-button.bk-primary:hover {
     color: #FFF;
-}
-
-.bk-message-content {
-    min-width: 100px;
 }
 
 .bk-button {

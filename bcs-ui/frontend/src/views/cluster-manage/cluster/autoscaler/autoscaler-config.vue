@@ -236,17 +236,19 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from 'vue';
-import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
-import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
-import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
-import $i18n from '@/i18n/i18n-setup';
-import $router from '@/router';
-import $store from '@/store/index';
-import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
+
 import TopoSelectTree from './topo-select-tree.vue';
+
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import { useConfig } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store/index';
+import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
+import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
+import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
+import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
 
 export default defineComponent({
   components: {

@@ -39,7 +39,8 @@
   </bcs-select>
 </template>
 <script lang="ts">
-import {  defineComponent, watch, toRefs, PropType } from 'vue';
+import {  defineComponent, PropType, toRefs, watch } from 'vue';
+
 import CollapseTitle from './collapse-title.vue';
 import useClusterSelector, { ClusterType } from './use-cluster-selector';
 

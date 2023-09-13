@@ -1,6 +1,7 @@
-import { defineComponent, computed, toRef, reactive } from 'vue';
-import $router from '@/router';
+import { computed, defineComponent, reactive, toRef } from 'vue';
+
 import './dashboard-top-actions.css';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'DashboardTopActions',
