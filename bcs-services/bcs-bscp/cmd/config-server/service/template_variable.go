@@ -33,9 +33,10 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbcs.CreateTe
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateTemplateVariableResp)
 
-	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.TemplateVariable, Action: meta.Create,
-		ResourceID: req.BizId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -73,9 +74,10 @@ func (s *Service) DeleteTemplateVariable(ctx context.Context, req *pbcs.DeleteTe
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteTemplateVariableResp)
 
-	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.TemplateVariable, Action: meta.Delete,
-		ResourceID: req.TemplateVariableId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -100,9 +102,10 @@ func (s *Service) UpdateTemplateVariable(ctx context.Context, req *pbcs.UpdateTe
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateTemplateVariableResp)
 
-	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.TemplateVariable, Action: meta.Update,
-		ResourceID: req.TemplateVariableId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -131,9 +134,10 @@ func (s *Service) ListTemplateVariables(ctx context.Context, req *pbcs.ListTempl
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateVariablesResp)
 
-	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.TemplateVariable, Action: meta.Find},
-		BizID: grpcKit.BizID}
-	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
