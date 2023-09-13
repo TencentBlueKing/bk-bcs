@@ -95,12 +95,8 @@ func PbResourceAttributes(resourceAttributes []*meta.ResourceAttribute) []*Resou
 }
 
 // Basic convert pb Basic to meta type Basic
-func (m *Basic) Basic() *meta.Basic {
-	if m == nil {
-		return nil
-	}
-
-	return &meta.Basic{
+func (m *Basic) Basic() meta.Basic {
+	return meta.Basic{
 		Type:       meta.ResourceType(m.Type),
 		Action:     meta.Action(m.Action),
 		ResourceID: m.ResourceId,
@@ -108,11 +104,7 @@ func (m *Basic) Basic() *meta.Basic {
 }
 
 // PbBasic convert meta Basic to pb Basic
-func PbBasic(m *meta.Basic) *Basic {
-	if m == nil {
-		return nil
-	}
-
+func PbBasic(m meta.Basic) *Basic {
 	return &Basic{
 		Type:       string(m.Type),
 		Action:     string(m.Action),
@@ -148,6 +140,7 @@ func (m *Decision) Decision() *meta.Decision {
 	}
 
 	return &meta.Decision{
+		Resource:   m.Resource.ResourceAttribute(),
 		Authorized: m.Authorized,
 	}
 }
@@ -174,6 +167,7 @@ func PbDecision(m *meta.Decision) *Decision {
 	}
 
 	return &Decision{
+		Resource:   PbResourceAttribute(m.Resource),
 		Authorized: m.Authorized,
 	}
 }
