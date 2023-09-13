@@ -37,6 +37,11 @@ const (
 	MaxConnIdleTimeout     = 24 * 60
 )
 
+const (
+	defaultTerminalCols = 211 // defaultTerminalCols DefaultRows 1080p页面测试得来
+	defaultTerminalRows = 25  // defaultTerminalRows xxx
+)
+
 // APIResponse xxx
 type APIResponse struct {
 	Data      interface{} `json:"data,omitempty"`
@@ -123,4 +128,18 @@ type TimestampPodContext struct {
 func (c *TimestampPodContext) IsExpired() bool {
 	expireTimestamp := time.Now().Add(-c.GetSessionTimeout()).Unix()
 	return c.Timestamp <= expireTimestamp
+}
+
+// TerminalSize web终端发来的 resize 包
+type TerminalSize struct {
+	Rows uint16 `json:"rows"`
+	Cols uint16 `json:"cols"`
+}
+
+// DefaultTerminalSize Terminal 终端默认大小配置
+func DefaultTerminalSize() *TerminalSize {
+	return &TerminalSize{
+		Rows: defaultTerminalRows,
+		Cols: defaultTerminalCols,
+	}
 }
