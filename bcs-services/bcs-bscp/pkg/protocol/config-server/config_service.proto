@@ -405,7 +405,7 @@ service Config {
     rpc ListReleasedAppBoundTemplateRevisions(ListReleasedAppBoundTemplateRevisionsReq) returns
         (ListReleasedAppBoundTemplateRevisionsResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/released_template_revisions"
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions"
         };
     }
     rpc UpdateAppBoundTemplateRevisions(UpdateAppBoundTemplateRevisionsReq) returns
@@ -418,6 +418,12 @@ service Config {
     rpc DeleteAppBoundTemplateSets(DeleteAppBoundTemplateSetsReq) returns (DeleteAppBoundTemplateSetsResp) {
         option (google.api.http) = {
             delete : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_sets"
+        };
+    }
+    rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/conflict_check"
+            body : "*"
         };
     }
 
@@ -534,6 +540,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"
         };
     }
+    rpc GetReleasedAppTemplateVariableReferences(GetReleasedAppTemplateVariableReferencesReq) returns
+        (GetReleasedAppTemplateVariableReferencesResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables_references"
+        };
+    }
     rpc UpdateAppTemplateVariables(UpdateAppTemplateVariablesReq) returns (UpdateAppTemplateVariablesResp) {
         option (google.api.http) = {
             put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"
@@ -548,7 +560,7 @@ service Config {
     rpc ListReleasedAppTemplateVariables(ListReleasedAppTemplateVariablesReq) returns
         (ListReleasedAppTemplateVariablesResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/released_template_variables"
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables"
         };
     }
 
@@ -1299,7 +1311,7 @@ message CreateTemplateRevisionReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    // string revision_name      = 4;
+    string revision_name     = 4;
     string revision_memo     = 5;
     string name              = 6;
     string path              = 7;
@@ -1432,6 +1444,7 @@ message ListTemplateSetsByIDsResp {
 
 message ListTemplateSetsOfBizReq {
     uint32 biz_id = 1;
+    uint32 app_id = 2;
 }
 
 message ListTemplateSetsOfBizResp {
@@ -1498,8 +1511,6 @@ message ListReleasedAppBoundTemplateRevisionsResp {
     repeated pbatb.ReleasedAppBoundTmplRevisionGroupBySet details = 1;
 }
 
-
-
 message UpdateAppBoundTemplateRevisionsReq {
     uint32                         biz_id     = 1;
     uint32                         app_id     = 2;
@@ -1518,6 +1529,16 @@ message DeleteAppBoundTemplateSetsReq {
 }
 
 message DeleteAppBoundTemplateSetsResp {}
+
+message CheckAppTemplateBindingReq {
+    uint32                         biz_id   = 1;
+    uint32                         app_id   = 2;
+    repeated pbatb.TemplateBinding bindings = 3;
+}
+
+message CheckAppTemplateBindingResp {
+    repeated pbatb.Conflict details = 1;
+}
 
 message ListTemplateBoundCountsReq {
     uint32          biz_id            = 1;
@@ -1750,6 +1771,16 @@ message GetAppTemplateVariableReferencesReq {
 }
 
 message GetAppTemplateVariableReferencesResp {
+    repeated pbatv.AppTemplateVariableReference details = 1;
+}
+
+message GetReleasedAppTemplateVariableReferencesReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message GetReleasedAppTemplateVariableReferencesResp {
     repeated pbatv.AppTemplateVariableReference details = 1;
 }
 

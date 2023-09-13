@@ -24,12 +24,7 @@ LGFLAGS4TEST="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/co
 LGFLAGS4DEV="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime.RunMode=Dev"
 
 proto:
-	# --micro_out => pb.micro.go，--go_out => pb.go，--grpc-gateway_out => pb.gw.go --validate_out => pb.validate.go，--swagger_out => swagger.json
-	protoc -I ./third_party/ --proto_path=. --micro_out=. --go_out=plugins=grpc:. \
-		--grpc-gateway_out=allow_delete_body=true,logtostderr=true,register_func_suffix=Gw:. \
-		--validate_out=lang=go:. --swagger_out=logtostderr=true:. proto/cluster-resources/cluster-resources.proto
-	# move swagger.json to ./swagger/data for file server
-	mv ./proto/cluster-resources/cluster-resources.swagger.json ./swagger/data/
+	$(MAKE) -C proto/cluster-resources
 
 tidy:
 	go mod tidy -compat=1.17

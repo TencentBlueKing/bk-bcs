@@ -247,13 +247,13 @@ func getApplications(projectID, clusterID string, namespaceCreated, clusterScope
 		},
 	}))
 	if clusterScope {
-		apps = append(apps, cluster.BuildClusterScopedApplicationInstance(cluster.ClusterScopedApplicationAction{
+		apps = append(apps, cluster.BuildClusterScopedAppInstance(cluster.ClusterScopedApplicationAction{
 			ActionID: cluster.ClusterScopedCreate.String(),
 			Data: []cluster.ProjectClusterData{
 				{Project: projectID, Cluster: clusterID},
 			},
 		}))
-		apps = append(apps, cluster.BuildClusterScopedApplicationInstance(cluster.ClusterScopedApplicationAction{
+		apps = append(apps, cluster.BuildClusterScopedAppInstance(cluster.ClusterScopedApplicationAction{
 			ActionID: cluster.ClusterScopedUpdate.String(),
 			Data: []cluster.ProjectClusterData{
 				{Project: projectID, Cluster: clusterID},
@@ -277,14 +277,14 @@ func getApplications(projectID, clusterID string, namespaceCreated, clusterScope
 				{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
 			},
 		}))
-		apps = append(apps, namespace.BuildNamespaceScopedApplicationInstance(
+		apps = append(apps, namespace.BuildNSScopedAppInstance(
 			namespace.NamespaceScopedApplicationAction{
 				ActionID: namespace.NameSpaceScopedCreate.String(),
 				Data: []namespace.ProjectNamespaceData{
 					{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
 				},
 			}))
-		apps = append(apps, namespace.BuildNamespaceScopedApplicationInstance(
+		apps = append(apps, namespace.BuildNSScopedAppInstance(
 			namespace.NamespaceScopedApplicationAction{
 				ActionID: namespace.NameSpaceScopedUpdate.String(),
 				Data: []namespace.ProjectNamespaceData{

@@ -60,7 +60,7 @@
           nodeId: `pkg_${pkg.template_set_id}`,
           name: pkg.template_set_name,
           checked: isPkgNodeChecked(pkg.template_set_id),
-          disabled: isPkgImported(pkg.template_set_id),
+          disabled: isPkgImported(pkg.template_set_id) || pkg.template_ids.length === 0,
           indeterminate: false
         })
       })
@@ -76,7 +76,7 @@
       const pkgNodes = node.children
       if (val) {
         pkgNodes.forEach(pkg => {
-          if (!isPkgNodeChecked(pkg.id)) {
+          if (!pkg.disabled && !isPkgNodeChecked(pkg.id)) {
             list.push({
               template_set_id: pkg.id,
               template_revisions: []

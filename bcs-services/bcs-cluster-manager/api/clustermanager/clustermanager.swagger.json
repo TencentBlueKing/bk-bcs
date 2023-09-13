@@ -985,6 +985,47 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/accounts/available": {
+      "post": {
+        "summary": "检查云账号可用性",
+        "description": "检查云账号可用性",
+        "operationId": "ClusterManager_VerifyCloudAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerVerifyCloudAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "cloud云类型",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerVerifyCloudAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}": {
       "delete": {
         "summary": "删除Cloud 账号信息",
@@ -16633,6 +16674,54 @@
         },
         "status": {
           "type": "string"
+        }
+      }
+    },
+    "clustermanagerVerifyCloudAccountRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "cloud云类型",
+          "title": "cloudID"
+        },
+        "desc": {
+          "type": "string",
+          "description": "cloud账号描述信息",
+          "title": "desc"
+        },
+        "account": {
+          "$ref": "#/definitions/clustermanagerAccount",
+          "description": "cloud云账号信息,不同cloud进行有效性及兼容处理",
+          "title": "account"
+        }
+      },
+      "description": "检查cloud account可用性",
+      "title": "VerifyCloudAccountRequest",
+      "required": [
+        "cloudID",
+        "account"
+      ]
+    },
+    "clustermanagerVerifyCloudAccountResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       }
     },

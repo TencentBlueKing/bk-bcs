@@ -95,6 +95,7 @@ const (
 	Data_DeleteTemplateSet_FullMethodName                          = "/pbds.Data/DeleteTemplateSet"
 	Data_ListAppTemplateSets_FullMethodName                        = "/pbds.Data/ListAppTemplateSets"
 	Data_ListTemplateSetsByIDs_FullMethodName                      = "/pbds.Data/ListTemplateSetsByIDs"
+	Data_ListTemplateSetBriefInfoByIDs_FullMethodName              = "/pbds.Data/ListTemplateSetBriefInfoByIDs"
 	Data_ListTemplateSetsOfBiz_FullMethodName                      = "/pbds.Data/ListTemplateSetsOfBiz"
 	Data_CreateAppTemplateBinding_FullMethodName                   = "/pbds.Data/CreateAppTemplateBinding"
 	Data_ListAppTemplateBindings_FullMethodName                    = "/pbds.Data/ListAppTemplateBindings"
@@ -102,8 +103,10 @@ const (
 	Data_DeleteAppTemplateBinding_FullMethodName                   = "/pbds.Data/DeleteAppTemplateBinding"
 	Data_ListAppBoundTemplateRevisions_FullMethodName              = "/pbds.Data/ListAppBoundTemplateRevisions"
 	Data_ListReleasedAppBoundTemplateRevisions_FullMethodName      = "/pbds.Data/ListReleasedAppBoundTemplateRevisions"
+	Data_CheckAppTemplateBinding_FullMethodName                    = "/pbds.Data/CheckAppTemplateBinding"
 	Data_ExtractAppTemplateVariables_FullMethodName                = "/pbds.Data/ExtractAppTemplateVariables"
 	Data_GetAppTemplateVariableReferences_FullMethodName           = "/pbds.Data/GetAppTemplateVariableReferences"
+	Data_GetReleasedAppTemplateVariableReferences_FullMethodName   = "/pbds.Data/GetReleasedAppTemplateVariableReferences"
 	Data_UpdateAppTemplateVariables_FullMethodName                 = "/pbds.Data/UpdateAppTemplateVariables"
 	Data_ListAppTemplateVariables_FullMethodName                   = "/pbds.Data/ListAppTemplateVariables"
 	Data_ListReleasedAppTemplateVariables_FullMethodName           = "/pbds.Data/ListReleasedAppTemplateVariables"
@@ -141,6 +144,7 @@ const (
 	Data_ListCredentialScopes_FullMethodName                       = "/pbds.Data/ListCredentialScopes"
 	Data_UpdateCredentialScopes_FullMethodName                     = "/pbds.Data/UpdateCredentialScopes"
 	Data_ListInstances_FullMethodName                              = "/pbds.Data/ListInstances"
+	Data_FetchInstanceInfo_FullMethodName                          = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                                       = "/pbds.Data/Ping"
 )
 
@@ -228,6 +232,7 @@ type DataClient interface {
 	DeleteTemplateSet(ctx context.Context, in *DeleteTemplateSetReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListAppTemplateSets(ctx context.Context, in *ListAppTemplateSetsReq, opts ...grpc.CallOption) (*ListAppTemplateSetsResp, error)
 	ListTemplateSetsByIDs(ctx context.Context, in *ListTemplateSetsByIDsReq, opts ...grpc.CallOption) (*ListTemplateSetsByIDsResp, error)
+	ListTemplateSetBriefInfoByIDs(ctx context.Context, in *ListTemplateSetBriefInfoByIDsReq, opts ...grpc.CallOption) (*ListTemplateSetBriefInfoByIDsResp, error)
 	ListTemplateSetsOfBiz(ctx context.Context, in *ListTemplateSetsOfBizReq, opts ...grpc.CallOption) (*ListTemplateSetsOfBizResp, error)
 	// app template binding related interface.
 	CreateAppTemplateBinding(ctx context.Context, in *CreateAppTemplateBindingReq, opts ...grpc.CallOption) (*CreateResp, error)
@@ -236,9 +241,11 @@ type DataClient interface {
 	DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListAppBoundTemplateRevisions(ctx context.Context, in *ListAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTemplateRevisionsResp, error)
 	ListReleasedAppBoundTemplateRevisions(ctx context.Context, in *ListReleasedAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListReleasedAppBoundTemplateRevisionsResp, error)
+	CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error)
 	// app template variables related interface.
 	ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(ctx context.Context, in *GetAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetAppTemplateVariableReferencesResp, error)
+	GetReleasedAppTemplateVariableReferences(ctx context.Context, in *GetReleasedAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetReleasedAppTemplateVariableReferencesResp, error)
 	UpdateAppTemplateVariables(ctx context.Context, in *UpdateAppTemplateVariablesReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListAppTemplateVariables(ctx context.Context, in *ListAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListAppTemplateVariablesResp, error)
 	ListReleasedAppTemplateVariables(ctx context.Context, in *ListReleasedAppTemplateVariablesReq, opts ...grpc.CallOption) (*ListReleasedAppTemplateVariablesResp, error)
@@ -284,6 +291,7 @@ type DataClient interface {
 	UpdateCredentialScopes(ctx context.Context, in *UpdateCredentialScopesReq, opts ...grpc.CallOption) (*UpdateCredentialScopesResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
+	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
 	// Ping verifies if the grpc connection is still alive.
 	Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOption) (*PingMsg, error)
 }
@@ -899,6 +907,15 @@ func (c *dataClient) ListTemplateSetsByIDs(ctx context.Context, in *ListTemplate
 	return out, nil
 }
 
+func (c *dataClient) ListTemplateSetBriefInfoByIDs(ctx context.Context, in *ListTemplateSetBriefInfoByIDsReq, opts ...grpc.CallOption) (*ListTemplateSetBriefInfoByIDsResp, error) {
+	out := new(ListTemplateSetBriefInfoByIDsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateSetBriefInfoByIDs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListTemplateSetsOfBiz(ctx context.Context, in *ListTemplateSetsOfBizReq, opts ...grpc.CallOption) (*ListTemplateSetsOfBizResp, error) {
 	out := new(ListTemplateSetsOfBizResp)
 	err := c.cc.Invoke(ctx, Data_ListTemplateSetsOfBiz_FullMethodName, in, out, opts...)
@@ -962,6 +979,15 @@ func (c *dataClient) ListReleasedAppBoundTemplateRevisions(ctx context.Context, 
 	return out, nil
 }
 
+func (c *dataClient) CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error) {
+	out := new(CheckAppTemplateBindingResp)
+	err := c.cc.Invoke(ctx, Data_CheckAppTemplateBinding_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error) {
 	out := new(ExtractAppTemplateVariablesResp)
 	err := c.cc.Invoke(ctx, Data_ExtractAppTemplateVariables_FullMethodName, in, out, opts...)
@@ -974,6 +1000,15 @@ func (c *dataClient) ExtractAppTemplateVariables(ctx context.Context, in *Extrac
 func (c *dataClient) GetAppTemplateVariableReferences(ctx context.Context, in *GetAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetAppTemplateVariableReferencesResp, error) {
 	out := new(GetAppTemplateVariableReferencesResp)
 	err := c.cc.Invoke(ctx, Data_GetAppTemplateVariableReferences_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetReleasedAppTemplateVariableReferences(ctx context.Context, in *GetReleasedAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetReleasedAppTemplateVariableReferencesResp, error) {
+	out := new(GetReleasedAppTemplateVariableReferencesResp)
+	err := c.cc.Invoke(ctx, Data_GetReleasedAppTemplateVariableReferences_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1313,6 +1348,15 @@ func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, op
 	return out, nil
 }
 
+func (c *dataClient) FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error) {
+	out := new(FetchInstanceInfoResp)
+	err := c.cc.Invoke(ctx, Data_FetchInstanceInfo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) Ping(ctx context.Context, in *PingMsg, opts ...grpc.CallOption) (*PingMsg, error) {
 	out := new(PingMsg)
 	err := c.cc.Invoke(ctx, Data_Ping_FullMethodName, in, out, opts...)
@@ -1406,6 +1450,7 @@ type DataServer interface {
 	DeleteTemplateSet(context.Context, *DeleteTemplateSetReq) (*base.EmptyResp, error)
 	ListAppTemplateSets(context.Context, *ListAppTemplateSetsReq) (*ListAppTemplateSetsResp, error)
 	ListTemplateSetsByIDs(context.Context, *ListTemplateSetsByIDsReq) (*ListTemplateSetsByIDsResp, error)
+	ListTemplateSetBriefInfoByIDs(context.Context, *ListTemplateSetBriefInfoByIDsReq) (*ListTemplateSetBriefInfoByIDsResp, error)
 	ListTemplateSetsOfBiz(context.Context, *ListTemplateSetsOfBizReq) (*ListTemplateSetsOfBizResp, error)
 	// app template binding related interface.
 	CreateAppTemplateBinding(context.Context, *CreateAppTemplateBindingReq) (*CreateResp, error)
@@ -1414,9 +1459,11 @@ type DataServer interface {
 	DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*base.EmptyResp, error)
 	ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error)
 	ListReleasedAppBoundTemplateRevisions(context.Context, *ListReleasedAppBoundTemplateRevisionsReq) (*ListReleasedAppBoundTemplateRevisionsResp, error)
+	CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error)
 	// app template variables related interface.
 	ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error)
+	GetReleasedAppTemplateVariableReferences(context.Context, *GetReleasedAppTemplateVariableReferencesReq) (*GetReleasedAppTemplateVariableReferencesResp, error)
 	UpdateAppTemplateVariables(context.Context, *UpdateAppTemplateVariablesReq) (*base.EmptyResp, error)
 	ListAppTemplateVariables(context.Context, *ListAppTemplateVariablesReq) (*ListAppTemplateVariablesResp, error)
 	ListReleasedAppTemplateVariables(context.Context, *ListReleasedAppTemplateVariablesReq) (*ListReleasedAppTemplateVariablesResp, error)
@@ -1462,6 +1509,7 @@ type DataServer interface {
 	UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
+	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
 	// Ping verifies if the grpc connection is still alive.
 	Ping(context.Context, *PingMsg) (*PingMsg, error)
 }
@@ -1671,6 +1719,9 @@ func (UnimplementedDataServer) ListAppTemplateSets(context.Context, *ListAppTemp
 func (UnimplementedDataServer) ListTemplateSetsByIDs(context.Context, *ListTemplateSetsByIDsReq) (*ListTemplateSetsByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetsByIDs not implemented")
 }
+func (UnimplementedDataServer) ListTemplateSetBriefInfoByIDs(context.Context, *ListTemplateSetBriefInfoByIDsReq) (*ListTemplateSetBriefInfoByIDsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetBriefInfoByIDs not implemented")
+}
 func (UnimplementedDataServer) ListTemplateSetsOfBiz(context.Context, *ListTemplateSetsOfBizReq) (*ListTemplateSetsOfBizResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetsOfBiz not implemented")
 }
@@ -1692,11 +1743,17 @@ func (UnimplementedDataServer) ListAppBoundTemplateRevisions(context.Context, *L
 func (UnimplementedDataServer) ListReleasedAppBoundTemplateRevisions(context.Context, *ListReleasedAppBoundTemplateRevisionsReq) (*ListReleasedAppBoundTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedAppBoundTemplateRevisions not implemented")
 }
+func (UnimplementedDataServer) CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckAppTemplateBinding not implemented")
+}
 func (UnimplementedDataServer) ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExtractAppTemplateVariables not implemented")
 }
 func (UnimplementedDataServer) GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAppTemplateVariableReferences not implemented")
+}
+func (UnimplementedDataServer) GetReleasedAppTemplateVariableReferences(context.Context, *GetReleasedAppTemplateVariableReferencesReq) (*GetReleasedAppTemplateVariableReferencesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedAppTemplateVariableReferences not implemented")
 }
 func (UnimplementedDataServer) UpdateAppTemplateVariables(context.Context, *UpdateAppTemplateVariablesReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppTemplateVariables not implemented")
@@ -1808,6 +1865,9 @@ func (UnimplementedDataServer) UpdateCredentialScopes(context.Context, *UpdateCr
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
+}
+func (UnimplementedDataServer) FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FetchInstanceInfo not implemented")
 }
 func (UnimplementedDataServer) Ping(context.Context, *PingMsg) (*PingMsg, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
@@ -3030,6 +3090,24 @@ func _Data_ListTemplateSetsByIDs_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListTemplateSetBriefInfoByIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateSetBriefInfoByIDsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateSetBriefInfoByIDs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateSetBriefInfoByIDs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateSetBriefInfoByIDs(ctx, req.(*ListTemplateSetBriefInfoByIDsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListTemplateSetsOfBiz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateSetsOfBizReq)
 	if err := dec(in); err != nil {
@@ -3156,6 +3234,24 @@ func _Data_ListReleasedAppBoundTemplateRevisions_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CheckAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckAppTemplateBindingReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CheckAppTemplateBinding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CheckAppTemplateBinding_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CheckAppTemplateBinding(ctx, req.(*CheckAppTemplateBindingReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ExtractAppTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ExtractAppTemplateVariablesReq)
 	if err := dec(in); err != nil {
@@ -3188,6 +3284,24 @@ func _Data_GetAppTemplateVariableReferences_Handler(srv interface{}, ctx context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).GetAppTemplateVariableReferences(ctx, req.(*GetAppTemplateVariableReferencesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetReleasedAppTemplateVariableReferences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasedAppTemplateVariableReferencesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetReleasedAppTemplateVariableReferences(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetReleasedAppTemplateVariableReferences_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetReleasedAppTemplateVariableReferences(ctx, req.(*GetReleasedAppTemplateVariableReferencesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3858,6 +3972,24 @@ func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_FetchInstanceInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FetchInstanceInfoReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).FetchInstanceInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_FetchInstanceInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).FetchInstanceInfo(ctx, req.(*FetchInstanceInfoReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PingMsg)
 	if err := dec(in); err != nil {
@@ -4152,6 +4284,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListTemplateSetsByIDs_Handler,
 		},
 		{
+			MethodName: "ListTemplateSetBriefInfoByIDs",
+			Handler:    _Data_ListTemplateSetBriefInfoByIDs_Handler,
+		},
+		{
 			MethodName: "ListTemplateSetsOfBiz",
 			Handler:    _Data_ListTemplateSetsOfBiz_Handler,
 		},
@@ -4180,12 +4316,20 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListReleasedAppBoundTemplateRevisions_Handler,
 		},
 		{
+			MethodName: "CheckAppTemplateBinding",
+			Handler:    _Data_CheckAppTemplateBinding_Handler,
+		},
+		{
 			MethodName: "ExtractAppTemplateVariables",
 			Handler:    _Data_ExtractAppTemplateVariables_Handler,
 		},
 		{
 			MethodName: "GetAppTemplateVariableReferences",
 			Handler:    _Data_GetAppTemplateVariableReferences_Handler,
+		},
+		{
+			MethodName: "GetReleasedAppTemplateVariableReferences",
+			Handler:    _Data_GetReleasedAppTemplateVariableReferences_Handler,
 		},
 		{
 			MethodName: "UpdateAppTemplateVariables",
@@ -4334,6 +4478,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListInstances",
 			Handler:    _Data_ListInstances_Handler,
+		},
+		{
+			MethodName: "FetchInstanceInfo",
+			Handler:    _Data_FetchInstanceInfo_Handler,
 		},
 		{
 			MethodName: "Ping",

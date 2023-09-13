@@ -63,19 +63,19 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	}
 	cls.SystemID = cluster.Name
 
-	cls.VpcID = cluster.NetworkConfig.Network
+	cls.VpcID = cluster.Subnetwork
 	// 记录gke集群发布类型
 	if cluster.ReleaseChannel != nil {
 		if cls.ExtraInfo == nil {
 			cls.ExtraInfo = make(map[string]string, 0)
 		}
-		cls.ExtraInfo["releaseChannel"] = cluster.ReleaseChannel.Channel
+		cls.ExtraInfo[api.GKEClusterReleaseChannel] = cluster.ReleaseChannel.Channel
 	}
 	// 区分gke集群是zone级别还是region级别
 	if len(strings.Split(cluster.Location, "-")) == 2 {
-		cls.ExtraInfo["locationType"] = "regions"
+		cls.ExtraInfo[api.GKEClusterLocationType] = "regions"
 	} else if len(strings.Split(cluster.Location, "-")) == 3 {
-		cls.ExtraInfo["locationType"] = "zones"
+		cls.ExtraInfo[api.GKEClusterLocationType] = "zones"
 	}
 
 	kubeConfig, err := api.GetClusterKubeConfig(context.Background(), opt.Common.Account.ServiceAccountSecret,

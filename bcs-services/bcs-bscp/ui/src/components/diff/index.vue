@@ -1,14 +1,14 @@
 <script setup lang="ts">
-    import { IDiffDetail } from '../../../types/service';
-    import { IFileConfigContentSummary } from '../../../types/config';
-    import File from './file.vue'
-    import Text from './text.vue'
+  import { IDiffDetail } from '../../../types/service';
+  import { IFileConfigContentSummary } from '../../../types/config';
+  import File from './file.vue'
+  import Text from './text.vue'
 
-    const props = defineProps<{
-        panelName?: String;
-        diff: IDiffDetail;
-        loading: boolean
-    }>()
+  const props = defineProps<{
+    panelName?: String;
+    diff: IDiffDetail;
+    loading: boolean
+  }>()
 </script>
 <template>
     <section class="diff-comp-panel">
@@ -30,10 +30,12 @@
                     :current="(props.diff.current.content as IFileConfigContentSummary)"
                     :base="(props.diff.base.content as IFileConfigContentSummary)" />
                 <Text
-                    v-else
+                    v-else-if="props.diff.contentType === 'text'"
                     :language="props.diff.current.language"
                     :current="(props.diff.current.content as string)"
-                    :base="(props.diff.base.content as string)" />
+                    :current-variables="props.diff.current.variables"
+                    :base="(props.diff.base.content as string)"
+                    :base-variables="props.diff.base.variables" />
             </div>
         </bk-loading>
     </section>

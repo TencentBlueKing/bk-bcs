@@ -16,12 +16,12 @@ package wrapper
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
 	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	jwtGo "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	goAttr "github.com/ssrathi/go-attr"
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
 
@@ -173,25 +173,52 @@ func needInjectProjCluster(req server.Request) bool {
 
 // fetchProjCluster 获取项目，集群信息
 func fetchProjCluster(ctx context.Context, req server.Request) (*project.Project, *cluster.Cluster, error) {
-	projectID, err := goAttr.GetValue(req.Body(), "ProjectID")
+	resourceID, err := getResourceID(req)
 	if err != nil {
-		return nil, nil, errorx.New(errcode.General, "Get ProjectID from Request Failed: %v", err)
+		return nil, nil, errorx.New(errcode.General, "Parse params failed: %v", err)
 	}
-	projInfo, err := project.GetProjectInfo(ctx, projectID.(string))
+	projInfo, err := project.GetProjectInfo(ctx, resourceID.ProjectID)
 	if err != nil {
-		return nil, nil, errorx.New(errcode.General, i18n.GetMsg(ctx, "获取项目 %s 信息失败：%v"), projectID, err)
+		return nil, nil, errorx.New(errcode.General, i18n.GetMsg(ctx, "获取项目 %s 信息失败：%v"),
+			resourceID.ProjectID, err)
 	}
-	clusterID, err := goAttr.GetValue(req.Body(), "ClusterID")
-	if err != nil {
-		return nil, nil, errorx.New(errcode.General, "Get ClusterID from Request Failed: %v", err)
+	// 有些接口没有集群 ID 参数
+	if resourceID.ClusterID == "" {
+		return projInfo, nil, nil
 	}
-	clusterInfo, err := cluster.GetClusterInfo(ctx, clusterID.(string))
+	clusterInfo, err := cluster.GetClusterInfo(ctx, resourceID.ClusterID)
 	if err != nil {
-		return nil, nil, errorx.New(errcode.General, i18n.GetMsg(ctx, "获取集群 %s 信息失败：%v"), clusterID, err)
+		return nil, nil, errorx.New(errcode.General, i18n.GetMsg(ctx, "获取集群 %s 信息失败：%v"),
+			resourceID.ClusterID, err)
 	}
 	// 若集群类型非共享集群，则需确认集群的项目 ID 与请求参数中的一致
 	if !slice.StringInSlice(clusterInfo.Type, cluster.SharedClusterTypes) && clusterInfo.ProjID != projInfo.ID {
-		return nil, nil, errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "集群 %s 不属于指定项目!"), clusterID)
+		return nil, nil, errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "集群 %s 不属于指定项目!"),
+			resourceID.ClusterID)
 	}
 	return projInfo, clusterInfo, nil
+}
+
+type resource struct {
+	ProjectCode string `json:"projectCode" yaml:"projectCode"`
+	ClusterID   string `json:"clusterID" yaml:"clusterID"`
+	ProjectID   string `json:"projectID" yaml:"projectID"`
+}
+
+func getResourceID(req server.Request) (*resource, error) {
+	body := req.Body()
+	b, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID := &resource{}
+	err = json.Unmarshal(b, resourceID)
+	if err != nil {
+		return nil, err
+	}
+	if resourceID.ProjectID == "" {
+		resourceID.ProjectID = resourceID.ProjectCode
+	}
+	return resourceID, nil
 }

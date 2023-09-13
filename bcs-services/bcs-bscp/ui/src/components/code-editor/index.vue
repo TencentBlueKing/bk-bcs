@@ -1,11 +1,13 @@
 <script setup lang="ts">
-  import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import * as monaco from 'monaco-editor'
   import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
   import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
   import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
   import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
   import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
+  import { IVariableEditParams } from '../../../types/variable';
+  import useEditorVariableReplace from '../../utils/hooks/use-editor-variable-replace';
 
   self.MonacoEnvironment = {
     getWorker(_, label) {
@@ -28,9 +30,11 @@
   const props = withDefaults(defineProps<{
     modelValue: string;
     lfEol?: boolean;
+    variables?: IVariableEditParams[];
     editable?: boolean;
     language?: string;
   }>(), {
+    variables: () => [],
     editable: true,
     language: ''
   })
@@ -39,6 +43,7 @@
 
   const codeEditorRef = ref()
   let editor: monaco.editor.IStandaloneCodeEditor
+  let editorHoverProvider:  monaco.IDisposable
   const localVal = ref(props.modelValue)
 
   watch(() => props.modelValue, (val) => {
@@ -47,12 +52,16 @@
     }
   })
 
-  watch(() => props.language, (val) => {
+  watch(() => props.language, val => {
     monaco.editor.setModelLanguage(<monaco.editor.ITextModel>editor.getModel(), val)
   })
 
   watch(() => props.editable, val => {
     editor.updateOptions({ readOnly: !val })
+  })
+
+  watch(() => props.variables, val => {
+    const model = editor.getModel()
   })
 
   onMounted(() => {
@@ -69,6 +78,9 @@
       const model = <monaco.editor.ITextModel>editor.getModel()
       model.setEOL(monaco.editor.EndOfLineSequence.LF)
     }
+    if (Array.isArray(props.variables) && props.variables.length > 0) {
+      editorHoverProvider = useEditorVariableReplace(editor, props.variables)
+    }
     editor.onDidChangeModelContent((val:any) => {
       localVal.value = editor.getValue();
       emit('update:modelValue', localVal.value)
@@ -76,8 +88,26 @@
     })
   })
 
-  onBeforeUnmount(() => {
-    editor.dispose()
+  // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
+  // onBeforeUnmount(() => {
+  //   if (editor) {
+  //     editor.dispose()
+  //   }
+  //   if (editorHoverProvider) {
+  //     editorHoverProvider.dispose()
+  //   }
+  // })
+  const destroy = () => {
+    if (editor) {
+      editor.dispose()
+    }
+    if (editorHoverProvider) {
+      editorHoverProvider.dispose()
+    }
+  }
+
+  defineExpose({
+    destroy
   })
 </script>
 <template>
@@ -86,8 +116,13 @@
 <style lang="scss" scoped>
   .code-editor-wrapper {
     height: 100%;
-    .monaco-editor {
+    :deep(.monaco-editor) {
       width: 100%;
+      .template-variable-item {
+        color: #1768ef;
+        border: 1px solid #1768ef;
+        cursor: pointer;
+      }
     }
   }
 </style>

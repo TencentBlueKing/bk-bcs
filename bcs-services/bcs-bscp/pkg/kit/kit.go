@@ -44,6 +44,7 @@ var (
 	lowSpaceIDKey     = strings.ToLower(constant.SpaceIDKey)
 	lowSpaceTypeIDKey = strings.ToLower(constant.SpaceTypeIDKey)
 	lowBizIDKey       = strings.ToLower(constant.BizIDKey)
+	lowAppIDKey       = strings.ToLower(constant.AppIDKey)
 )
 
 // FromGrpcContext used only to obtain Kit through grpc context.
@@ -87,6 +88,16 @@ func FromGrpcContext(ctx context.Context) *Kit {
 			klog.ErrorS(err, "parse lowBizID %s", bizIDs[0])
 		} else {
 			kit.BizID = uint32(bizID)
+		}
+	}
+
+	appIDs := md[lowAppIDKey]
+	if len(appIDs) != 0 {
+		appID, err := strconv.ParseUint(appIDs[0], 10, 64)
+		if err != nil {
+			klog.ErrorS(err, "parse lowBizID %s", appIDs[0])
+		} else {
+			kit.AppID = uint32(appID)
 		}
 	}
 
@@ -166,6 +177,7 @@ func (c *Kit) RPCMetaData() metadata.MD {
 		constant.SpaceIDKey:     c.SpaceID,
 		constant.SpaceTypeIDKey: c.SpaceTypeID,
 		constant.BizIDKey:       strconv.FormatUint(uint64(c.BizID), 10),
+		constant.AppIDKey:       strconv.FormatUint(uint64(c.AppID), 10),
 	}
 
 	md := metadata.New(m)

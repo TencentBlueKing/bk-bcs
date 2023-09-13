@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" href="{{ .SITE_STATIC_URL }}/web/static/images/favicon.ico" />
+    <title>BCS Console Replayer</title>
+</head>
+<body>
+    <h1>Recorder File</h1>
+    <div id="folder">
+        {{range $k,$fn:=.folder_names}}
+        <ul>
+            <li><a href="{{ $.SITE_STATIC_URL }}/replay/files/{{$fn}}" >{{$fn}}</a></li>
+        </ul>
+        {{end}}
+    </div>
+
+    <div id="file">
+        {{range $k,$v:=.file_names}}
+        <ul>
+            <li><a href="{{ $.SITE_STATIC_URL }}/replay/{{ $.folder_name }}/{{$v}}" target="_blank" >{{$v}}</a></li>
+        </ul>
+        {{end}}
+    </div>
+
+</body>
+</html>

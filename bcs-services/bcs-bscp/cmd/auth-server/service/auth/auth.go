@@ -49,10 +49,12 @@ type Auth struct {
 	disableAuth bool
 	// disableWriteOpt defines which biz's write operation needs to be disabled
 	disableWriteOpt *options.DisableWriteOption
+	// iamSettings defines iam settings
+	iamClient *bkiam.IAM
 }
 
 // NewAuth new auth.
-func NewAuth(auth auth.Authorizer, ds pbds.DataClient, disableAuth bool, disableWriteOpt *options.DisableWriteOption) (
+func NewAuth(auth auth.Authorizer, ds pbds.DataClient, disableAuth bool, iamClient *bkiam.IAM, disableWriteOpt *options.DisableWriteOption) (
 	*Auth, error) {
 
 	if auth == nil {
@@ -71,6 +73,7 @@ func NewAuth(auth auth.Authorizer, ds pbds.DataClient, disableAuth bool, disable
 		auth:            auth,
 		ds:              ds,
 		disableAuth:     disableAuth,
+		iamClient:       iamClient,
 		disableWriteOpt: disableWriteOpt,
 	}
 
@@ -174,7 +177,10 @@ func parseAttributesToBatchOptions(kt *kit.Kit, user *meta.UserInfo, resources .
 	authBatchArr := make([]*client.AuthBatch, 0)
 	decisions := make([]*meta.Decision, len(resources))
 	for index, resource := range resources {
-		decisions[index] = &meta.Decision{Authorized: false}
+		decisions[index] = &meta.Decision{
+			Resource:   resource,
+			Authorized: false,
+		}
 
 		// this resource should be skipped, do not need to verify in auth center.
 		if resource.Basic.Action == meta.SkipAction {
@@ -230,6 +236,17 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 		return resp, nil
 	}
 
+	resourceAttributes := pbas.ResourceAttributes(req.Resources)
+	application, err := AdaptIAMApplicationOptions(resourceAttributes)
+	if err != nil {
+		return nil, err
+	}
+	url, err := a.iamClient.GetApplyURL(*application, "", kt.User)
+	if err != nil {
+		return nil, errors.Wrap(err, "gen apply url")
+	}
+	resp.ApplyUrl = url
+
 	resp.Permission = pbas.PbIamPermission(permission)
 	return resp, nil
 }
@@ -255,9 +272,7 @@ func (a *Auth) CheckPermission(ctx context.Context, biz *cmdb.Biz, iamSettings c
 	}
 
 	actionRequest.Subject = bkiam.NewSubject("user", kt.User)
-	// i := bkiam.NewIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.Endpoints[0], "")
-	i := bkiam.NewAPIGatewayIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.APIURL)
-	allowed, err := i.IsAllowed(*actionRequest)
+	allowed, err := a.iamClient.IsAllowed(*actionRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -283,11 +298,11 @@ func (a *Auth) CheckPermission(ctx context.Context, biz *cmdb.Biz, iamSettings c
 			ResourceName: biz.BizName,
 		})
 
-		application, err := AdaptIAMApplicationOptions(req)
+		application, err := AdaptIAMApplicationOptions([]*meta.ResourceAttribute{req})
 		if err != nil {
 			return nil, err
 		}
-		url, err := i.GetApplyURL(*application, "", kt.User)
+		url, err := a.iamClient.GetApplyURL(*application, "", kt.User)
 		if err != nil {
 			return nil, errors.Wrap(err, "gen apply url")
 		}
@@ -436,14 +451,15 @@ func (a *Auth) parseIamPathToAncestors(iamPath []string) ([]*meta.IamResourceIns
 	return resources, nil
 }
 
-// getInstIDNameMap NOTES
-// Note how to get ancestor names? right now it means cc biz name,  which is not in bscp
-// note that app id is generated in the form of {biz_id}-{app_id}
-// and right now pbds.ListInstancesReq requires biz id to be set, how to confirm this?
-// and return should be grouped by type to avoid duplicates
+// Note how to get ancestor names? right now it means cc biz name, which is not in bscp
 // getInstIDNameMap get resource id to name map by resource ids, groups by resource type
 func (a *Auth) getInstIDNameMap(kt *kit.Kit, resTypeIDsMap map[client.TypeID][]string) (map[string]string, error) {
 
 	// Note implement this
 	return make(map[string]string), nil
+}
+
+// GrantResourceCreatorAction grant resource creator action.
+func (a *Auth) GrantResourceCreatorAction(ctx context.Context, opts *client.GrantResourceCreatorActionOption) error {
+	return a.auth.GrantResourceCreatorAction(ctx, opts)
 }

@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_ingress",
-      "alias": "Ingress Simple Demo",
+      "alias": "Ingress simple demo",
       "description": "A simple ingress demo with only basic configuration",
       "manifest": null
     }

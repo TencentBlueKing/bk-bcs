@@ -15,8 +15,16 @@ package google
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+
 	"sync"
+	"time"
+
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -147,5 +155,47 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 // CheckClusterEndpointStatus check cluster endpoint status
 func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
-	return false, cloudprovider.ErrCloudNotImplemented
+
+	gkeCli, err := api.NewContainerServiceClient(&opt.CommonOption)
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus get gke client failed, %v", err)
+	}
+
+	gkeCluster, err := gkeCli.GetCluster(context.Background(), clusterID)
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus get cluster failed, %v", err)
+	}
+
+	cert, err := base64.StdEncoding.DecodeString(gkeCluster.MasterAuth.ClusterCaCertificate)
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus get cluster certificate failed, %v", err)
+	}
+
+	restConfig := &rest.Config{
+		TLSClientConfig: rest.TLSClientConfig{
+			CAData: cert,
+		},
+		Host: "https://" + gkeCluster.Endpoint,
+		AuthProvider: &clientcmdapi.AuthProviderConfig{
+			Name: api.GoogleAuthPlugin,
+			Config: map[string]string{
+				"scopes":      "https://www.googleapis.com/auth/cloud-platform",
+				"credentials": opt.CommonOption.Account.ServiceAccountSecret,
+			},
+		},
+	}
+	cs, err := clientset.NewForConfig(restConfig)
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus create clientset failed: %v", err)
+	}
+
+	// 获取 CRD
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	defer cancel()
+	_, err = cs.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return false, fmt.Errorf("CheckClusterEndpointStatus failed: %v", err)
+	}
+
+	return true, nil
 }

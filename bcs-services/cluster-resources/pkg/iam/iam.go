@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
 	nsAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/namespace"
+	projectAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/project"
 )
 
 // NewNSPerm xxx
@@ -37,6 +38,14 @@ func NewNSScopedPerm(projectID, clusterID string) perm.Perm {
 		return &MockPerm{}
 	}
 	return nsAuth.NewScopedPerm(projectID, clusterID)
+}
+
+// NewProjectPerm xxx
+func NewProjectPerm() perm.Perm {
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
+		return &MockPerm{}
+	}
+	return projectAuth.NewPerm()
 }
 
 // NewClusterPerm xxx

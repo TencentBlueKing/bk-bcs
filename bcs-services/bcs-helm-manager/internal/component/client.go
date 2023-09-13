@@ -15,9 +15,11 @@ package component
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	goReq "github.com/parnurzeal/gorequest"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -67,4 +69,20 @@ func GetK8SClientByClusterID(clusterID string) (*kubernetes.Clientset, error) {
 		return nil, err
 	}
 	return k8sClient, nil
+}
+
+var (
+	auditClient *audit.Client
+	auditOnce   sync.Once
+)
+
+// GetAuditClient 获取审计客户端
+func GetAuditClient() *audit.Client {
+	if auditClient == nil {
+		auditOnce.Do(func() {
+			auditClient =
+				audit.NewClient(options.GlobalOptions.Release.APIServer, options.GlobalOptions.Release.Token, nil)
+		})
+	}
+	return auditClient
 }

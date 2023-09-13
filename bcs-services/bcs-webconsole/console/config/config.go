@@ -34,6 +34,7 @@ type Configurations struct {
 	Web         *WebConf                 `yaml:"web"`
 	Etcd        *EtcdConf                `yaml:"etcd"`
 	Tracing     *TracingConf             `yaml:"tracing"`
+	Audit       *AuditConf               `yaml:"audit"`
 }
 
 // newConfigurations 新增配置
@@ -67,6 +68,8 @@ func newConfigurations() (*Configurations, error) {
 	// Tracing Config
 	c.Tracing = &TracingConf{}
 	c.Tracing.Init()
+
+	c.Audit = &AuditConf{}
 
 	c.Credentials = map[string][]*Credential{}
 
@@ -189,6 +192,9 @@ func (c *Configurations) ReadFrom(content []byte) error {
 
 	if err := c.init(); err != nil {
 		return err
+	}
+	if c.Audit.DataDir == "" {
+		c.Audit.DataDir = c.Audit.defaultPath()
 	}
 
 	c.Logging.InitBlog()

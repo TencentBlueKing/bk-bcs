@@ -20,9 +20,23 @@ func PbInstanceResources(instances []*types.InstanceResource) []*InstanceResourc
 	for _, instance := range instances {
 		resources = append(resources, &InstanceResource{
 			Id:   instance.ID,
-			Name: instance.DisplayName,
+			Name: instance.Name,
 		})
 	}
 
 	return resources
+}
+
+// PbInstanceInfo convert types InstanceInfo to pb PbInstanceInfo
+func PbInstanceInfo(instances []*types.InstanceInfo) []*InstanceInfo {
+	infos := make([]*InstanceInfo, 0)
+	for _, instance := range instances {
+		infos = append(infos, &InstanceInfo{
+			Id:          instance.ID,
+			DisplayName: instance.DisplayName,
+			Approver:    instance.Approver,
+			Path:        instance.Path,
+		})
+	}
+	return infos
 }

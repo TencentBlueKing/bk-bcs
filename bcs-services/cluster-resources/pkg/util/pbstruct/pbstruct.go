@@ -79,6 +79,20 @@ func Map2pbStruct(m map[string]interface{}) (*spb.Struct, error) {
 	return x, nil
 }
 
+func mapString2pbStruct(m map[string]string) (*spb.Struct, error) {
+	x := &spb.Struct{Fields: make(map[string]*spb.Value, len(m))}
+	for k, v := range m {
+		if !utf8.ValidString(k) {
+			return nil, protoimpl.X.NewError("invalid UTF-8 in string: %q", k)
+		}
+		if !utf8.ValidString(v) {
+			return nil, protoimpl.X.NewError("invalid UTF-8 in string: %q", v)
+		}
+		x.Fields[k] = spb.NewStringValue(v)
+	}
+	return x, nil
+}
+
 // interface2pbValue interface -> structpb.Value
 // 参考 structpb.NewValue 实现，添加对 []string 类型的支持，若需要支持更多类型可按需添加
 // NOCC:CCN_threshold(设计如此)
@@ -114,6 +128,12 @@ func interface2pbValue(v interface{}) (*spb.Value, error) {
 		return spb.NewStringValue(s), nil
 	case map[string]interface{}:
 		v2, err := Map2pbStruct(v)
+		if err != nil {
+			return nil, err
+		}
+		return spb.NewStructValue(v2), nil
+	case map[string]string:
+		v2, err := mapString2pbStruct(v)
 		if err != nil {
 			return nil, err
 		}

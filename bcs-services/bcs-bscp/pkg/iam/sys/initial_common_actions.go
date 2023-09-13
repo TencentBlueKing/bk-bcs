@@ -35,7 +35,6 @@ func genBizCommonActions() []client.CommonAction {
 					BusinessViewResource,
 				},
 				{
-
 					AppView,
 				},
 				{
@@ -63,22 +62,16 @@ func genBizCommonActions() []client.CommonAction {
 					AppDelete,
 				},
 				{
-					GenerateRelease,
+					ReleaseGenerate,
 				},
 				{
 					ReleasePublish,
 				},
 				{
-					CredentialCreate,
-				},
-				{
 					CredentialView,
 				},
 				{
-					CredentialEdit,
-				},
-				{
-					CredentialDelete,
+					CredentialManage,
 				},
 			},
 		},

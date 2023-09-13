@@ -16,6 +16,8 @@ package manager
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
+	"k8s.io/klog/v2"
 	"regexp"
 	"runtime/debug"
 	"strings"
@@ -33,6 +35,7 @@ import (
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -60,6 +63,7 @@ type RemoteStreamConn struct {
 	outputMsgChan chan []byte
 	hideBanner    bool
 	cmdParser     *audit.CmdParse
+	ReplayRecord  *record.ReplyRecorder
 }
 
 // NewRemoteStreamConn :
@@ -75,16 +79,27 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 		cmdParser:     audit.NewCmdParse(),
 	}
 
+	orgInfo := &record.ReplyInfo{TimeStamp: time.Now()}
 	// 初始化命令行宽和高
 	if initTerminalSize != nil {
 		conn.resizeMsgChan <- initTerminalSize
+		orgInfo.Width = initTerminalSize.Cols
+		orgInfo.Height = initTerminalSize.Rows
 	} else {
 		// 前端没有指定长宽高, 使用默认值
 		conn.resizeMsgChan <- &TerminalSize{
 			Rows: DefaultRows,
 			Cols: DefaultCols,
 		}
+		orgInfo.Width = DefaultCols
+		orgInfo.Height = DefaultRows
 	}
+	//初始化terminal record
+	recorder, err := record.NewReplayRecord(ctx, mgr.PodCtx, orgInfo)
+	if err != nil {
+		klog.Errorf("init ReplayRecord failed: %s", err)
+	}
+	conn.ReplayRecord = recorder
 
 	return conn
 }
@@ -129,7 +144,9 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 		if resizeErr != nil {
 			return nil, nil
 		}
-
+		newSize := fmt.Sprintf("%vx%v", resizeMsg.Cols, resizeMsg.Rows)
+		//replay 记录终端大小变化
+		record.RecordResizeEvent(r.ReplayRecord, []byte(newSize))
 		r.resizeMsgChan <- resizeMsg
 		return nil, nil
 	}
@@ -248,10 +265,13 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 
 	guideMessages := helloMessage(c, r.bindMgr.PodCtx.Source)
 	notSendMsg := true
+	//结束会话时,处理缓存/关闭文件
+	defer r.ReplayRecord.End()
 
 	for {
 		select {
 		case <-r.ctx.Done():
+			r.ReplayRecord.GracefulShutdownRecorder()
 			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.PodCtx.PodName)
 			return nil
 		case output, ok := <-r.outputMsgChan:
@@ -261,16 +281,25 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 			}
 			// 收到首个字节才发送 hello 信息
 			if notSendMsg && !r.hideBanner {
+				record.RecordOutputEvent(r.ReplayRecord, []byte(guideMessages))
 				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
 				notSendMsg = false
 			}
 
+			dst := make([]byte, base64.StdEncoding.DecodedLen(len(output)))
+			n, _ := base64.StdEncoding.Decode(dst, output)
+			dst = dst[:n]
+			record.RecordOutputEvent(r.ReplayRecord, dst)
 			if err := r.wsConn.WriteMessage(websocket.TextMessage, output); err != nil {
 				return err
 			}
 		case <-pingInterval.C: // 定时主动发送 ping
 			if err := r.wsConn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return errors.Wrap(err, "ping")
+			}
+			//未开启或文件初始化失败都不记录
+			if r.ReplayRecord != nil && r.ReplayRecord.Writer != nil {
+				r.ReplayRecord.Writer.WriteBuff.Flush()
 			}
 		}
 	}

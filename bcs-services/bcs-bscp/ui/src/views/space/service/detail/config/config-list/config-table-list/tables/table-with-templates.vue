@@ -187,7 +187,7 @@
       const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem
       const group: IConfigsGroupData = {
         id: template_set_id,
-        name: `${template_space_name} - ${template_set_name}`,
+        name: `${template_space_name === 'default_space' ? '默认空间' : template_space_name} - ${template_set_name}`,
         expand: false,
         configs: []
       }
@@ -303,7 +303,7 @@
                   <DownShape :class="['fold-icon', { fold: !group.expand }]" />
                   {{ group.name }}
                 </div>
-                <div v-if="group.id !== 0" class="delete-btn" @click="handleDeletePkg(group.id, group.name)">
+                <div v-if="isUnNamedVersion && group.id !== 0" class="delete-btn" @click="handleDeletePkg(group.id, group.name)">
                   <Close class="close-icon" />
                   删除套餐
                 </div>
@@ -396,7 +396,8 @@
     v-model:show="viewConfigSliderData.open"
     v-bind="viewConfigSliderData.data"
     :bk-biz-id="props.bkBizId"
-    :app-id="props.appId" />
+    :app-id="props.appId"
+    :version-id="versionData.id" />
   <VersionDiff
     v-model:show="isDiffPanelShow"
     :current-version="versionData"

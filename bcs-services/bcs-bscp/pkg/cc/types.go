@@ -206,9 +206,10 @@ func (rs RedisCluster) validate() error {
 
 // IAM defines all the iam related runtime.
 type IAM struct {
-	// Endpoints is a seed list of host:port addresses of iam nodes.
-	Endpoints []string `yaml:"endpoints"`
+	// IAM api url.
 	APIURL    string   `yaml:"api_url"`
+	// Host is the host of current system, in the other word bk-bscp.
+	Host string `yaml:"host"`
 	// AppCode blueking belong to bscp's appcode.
 	AppCode string `yaml:"appCode"`
 	// AppSecret blueking belong to bscp app's secret.
@@ -218,8 +219,12 @@ type IAM struct {
 
 // validate iam runtime.
 func (s IAM) validate() error {
-	if len(s.Endpoints) == 0 {
-		return errors.New("iam endpoints is not set")
+	if len(s.APIURL) == 0 {
+		return errors.New("iam api url is not set")
+	}
+
+	if len(s.Host) == 0 {
+		return errors.New("iam host is not set")
 	}
 
 	if len(s.AppCode) == 0 {

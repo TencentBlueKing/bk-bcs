@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_statefulset",
-      "alias": "StatefulSet Simple Demo",
+      "alias": "StatefulSet simple demo",
       "description": "A simple statefulset demo with only basic configuration",
       "manifest": null
     }

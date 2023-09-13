@@ -3055,128 +3055,6 @@ var _ interface {
 	ErrorName() string
 } = AccountValidationError{}
 
-// Validate checks the field values on GkeServiceAccount with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *GkeServiceAccount) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on GkeServiceAccount with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// GkeServiceAccountMultiError, or nil if none found.
-func (m *GkeServiceAccount) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *GkeServiceAccount) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Type
-
-	// no validation rules for ProjectID
-
-	// no validation rules for PrivateKeyID
-
-	// no validation rules for PrivateKey
-
-	// no validation rules for ClientEmail
-
-	// no validation rules for ClientID
-
-	// no validation rules for AuthURI
-
-	// no validation rules for TokenURI
-
-	// no validation rules for AuthProviderCertURL
-
-	// no validation rules for ClientCertURL
-
-	if len(errors) > 0 {
-		return GkeServiceAccountMultiError(errors)
-	}
-
-	return nil
-}
-
-// GkeServiceAccountMultiError is an error wrapping multiple validation errors
-// returned by GkeServiceAccount.ValidateAll() if the designated constraints
-// aren't met.
-type GkeServiceAccountMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m GkeServiceAccountMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m GkeServiceAccountMultiError) AllErrors() []error { return m }
-
-// GkeServiceAccountValidationError is the validation error returned by
-// GkeServiceAccount.Validate if the designated constraints aren't met.
-type GkeServiceAccountValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GkeServiceAccountValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GkeServiceAccountValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GkeServiceAccountValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GkeServiceAccountValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GkeServiceAccountValidationError) ErrorName() string {
-	return "GkeServiceAccountValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e GkeServiceAccountValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGkeServiceAccount.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GkeServiceAccountValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GkeServiceAccountValidationError{}
-
 // Validate checks the field values on CloudAccount with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -5011,6 +4889,271 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListCloudAccountRequestValidationError{}
+
+// Validate checks the field values on VerifyCloudAccountRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *VerifyCloudAccountRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on VerifyCloudAccountRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// VerifyCloudAccountRequestMultiError, or nil if none found.
+func (m *VerifyCloudAccountRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *VerifyCloudAccountRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetCloudID()); l < 2 || l > 1024 {
+		err := VerifyCloudAccountRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be between 2 and 1024 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_VerifyCloudAccountRequest_CloudID_Pattern.MatchString(m.GetCloudID()) {
+		err := VerifyCloudAccountRequestValidationError{
+			field:  "CloudID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Desc
+
+	if all {
+		switch v := interface{}(m.GetAccount()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, VerifyCloudAccountRequestValidationError{
+					field:  "Account",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, VerifyCloudAccountRequestValidationError{
+					field:  "Account",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAccount()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return VerifyCloudAccountRequestValidationError{
+				field:  "Account",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return VerifyCloudAccountRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// VerifyCloudAccountRequestMultiError is an error wrapping multiple validation
+// errors returned by VerifyCloudAccountRequest.ValidateAll() if the
+// designated constraints aren't met.
+type VerifyCloudAccountRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m VerifyCloudAccountRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m VerifyCloudAccountRequestMultiError) AllErrors() []error { return m }
+
+// VerifyCloudAccountRequestValidationError is the validation error returned by
+// VerifyCloudAccountRequest.Validate if the designated constraints aren't met.
+type VerifyCloudAccountRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e VerifyCloudAccountRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e VerifyCloudAccountRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e VerifyCloudAccountRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e VerifyCloudAccountRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e VerifyCloudAccountRequestValidationError) ErrorName() string {
+	return "VerifyCloudAccountRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e VerifyCloudAccountRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sVerifyCloudAccountRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = VerifyCloudAccountRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = VerifyCloudAccountRequestValidationError{}
+
+var _VerifyCloudAccountRequest_CloudID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on VerifyCloudAccountResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *VerifyCloudAccountResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on VerifyCloudAccountResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// VerifyCloudAccountResponseMultiError, or nil if none found.
+func (m *VerifyCloudAccountResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *VerifyCloudAccountResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if len(errors) > 0 {
+		return VerifyCloudAccountResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// VerifyCloudAccountResponseMultiError is an error wrapping multiple
+// validation errors returned by VerifyCloudAccountResponse.ValidateAll() if
+// the designated constraints aren't met.
+type VerifyCloudAccountResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m VerifyCloudAccountResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m VerifyCloudAccountResponseMultiError) AllErrors() []error { return m }
+
+// VerifyCloudAccountResponseValidationError is the validation error returned
+// by VerifyCloudAccountResponse.Validate if the designated constraints aren't met.
+type VerifyCloudAccountResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e VerifyCloudAccountResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e VerifyCloudAccountResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e VerifyCloudAccountResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e VerifyCloudAccountResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e VerifyCloudAccountResponseValidationError) ErrorName() string {
+	return "VerifyCloudAccountResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e VerifyCloudAccountResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sVerifyCloudAccountResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = VerifyCloudAccountResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = VerifyCloudAccountResponseValidationError{}
 
 // Validate checks the field values on CloudAccountInfo with the rules defined
 // in the proto definition for this message. If any rules are violated, the

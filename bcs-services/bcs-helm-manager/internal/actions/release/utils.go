@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	releaseDefaultTimeout = 10 * time.Minute
+	releaseDefaultTimeout = time.Hour
 )
 
 func getChartContent(model store.HelmManagerModel, platform repo.Platform,

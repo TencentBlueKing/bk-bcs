@@ -8,6 +8,7 @@ import { Message } from 'bkui-vue';
   interface ITplVersionItem {
     id: number;
     name: string;
+    memo: string;
     isLatest: boolean;
   }
 
@@ -43,14 +44,15 @@ import { Message } from 'bkui-vue';
     const templateVersion: ITemplateVersionsName = res.details[0]
     const list: ITplVersionItem[] = []
     templateVersion.template_revisions.forEach(item => {
-      const { template_revision_id, template_revision_name } = item
-      list.push({ id: template_revision_id, name: template_revision_name, isLatest: false })
+      const { template_revision_id, template_revision_name, template_revision_memo } = item
+      list.push({ id: template_revision_id, name: template_revision_name, memo: template_revision_memo, isLatest: false })
     })
     const latestVersion = templateVersion.template_revisions.find(version => version.template_revision_id === templateVersion.latest_template_revision_id)
     if (latestVersion) {
       list.unshift({
         id: latestVersion.template_revision_id,
         name: `latest（当前最新为${latestVersion.template_revision_name}）`,
+        memo: latestVersion.template_revision_memo,
         isLatest: true
       })
       if (!props.versionId) {
@@ -117,6 +119,14 @@ import { Message } from 'bkui-vue';
             :key="option.isLatest ? 0 : option.id"
             :value="option.isLatest ? 0 : option.id"
             :label="option.name">
+            <div
+              v-bk-tooltips="{
+                disabled: !option.memo,
+                content: option.memo
+              }"
+              class="version-name">
+              {{ option.name }}
+            </div>
           </bk-option>
         </bk-select>
       </bk-form-item>

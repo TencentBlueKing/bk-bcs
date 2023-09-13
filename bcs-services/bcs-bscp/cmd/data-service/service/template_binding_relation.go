@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"strconv"
 	"sync"
 
 	"bscp.io/pkg/dal/table"
@@ -337,9 +338,6 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 		appIDs[i] = r.AppID
 		releaseIDs[i] = r.ReleaseID
 	}
-	appIDs = tools.RemoveDuplicates(appIDs)
-	releaseIDs = tools.RemoveDuplicates(releaseIDs)
-
 	apps, err := s.dao.App().ListAppsByIDs(kt, appIDs)
 	if err != nil {
 		logs.Errorf("list template bound named app details failed, err: %v, rid: %s", err, kt.Rid)
@@ -349,7 +347,10 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 	for _, a := range apps {
 		appMap[a.ID] = a
 	}
-	releases, err := s.dao.Release().ListAllByIDs(kt, appIDs, req.BizId)
+	appIDs = tools.RemoveDuplicates(appIDs)
+	releaseIDs = tools.RemoveDuplicates(releaseIDs)
+
+	releases, err := s.dao.Release().ListAllByIDs(kt, releaseIDs, req.BizId)
 	if err != nil {
 		logs.Errorf("list template bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -588,7 +589,7 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 	}
 
 	appIDs, err := s.dao.TemplateBindingRelation().
-		ListTemplateRevisionBoundUnnamedAppDetails(kt, req.BizId, req.TemplateId)
+		ListTemplateRevisionBoundUnnamedAppDetails(kt, req.BizId, req.TemplateRevisionId)
 	if err != nil {
 		logs.Errorf("list template revision bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -652,7 +653,7 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 	}
 
 	relations, err := s.dao.TemplateBindingRelation().
-		ListTemplateRevisionBoundNamedAppDetails(kt, req.BizId, req.TemplateId)
+		ListTemplateRevisionBoundNamedAppDetails(kt, req.BizId, req.TemplateRevisionId)
 	if err != nil {
 		logs.Errorf("list template revision bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -665,6 +666,9 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 		appIDs[i] = r.AppID
 		releaseIDs[i] = r.ReleaseID
 	}
+	appIDs = tools.RemoveDuplicates(appIDs)
+	releaseIDs = tools.RemoveDuplicates(releaseIDs)
+
 	apps, err := s.dao.App().ListAppsByIDs(kt, appIDs)
 	if err != nil {
 		logs.Errorf("list template revision bound named app details failed, err: %v, rid: %s", err, kt.Rid)
@@ -674,7 +678,7 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 	for _, a := range apps {
 		appMap[a.ID] = a
 	}
-	releases, err := s.dao.Release().ListAllByIDs(kt, appIDs, req.BizId)
+	releases, err := s.dao.Release().ListAllByIDs(kt, releaseIDs, req.BizId)
 	if err != nil {
 		logs.Errorf("list template revision bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -914,13 +918,23 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 		return nil, err
 	}
 
+	uniqueRelations := make([]*types.TmplSetBoundNamedAppDetail, 0)
+	uniqueRelationMap := make(map[string]bool)
 	// get app and release details
 	appIDs := make([]uint32, len(relations))
 	releaseIDs := make([]uint32, len(relations))
 	for i, r := range relations {
+		key := strconv.FormatUint(uint64(r.AppID), 10) + "_" + strconv.FormatUint(uint64(r.ReleaseID), 10)
+		if !uniqueRelationMap[key] {
+			uniqueRelationMap[key] = true
+			uniqueRelations = append(uniqueRelations, r)
+		}
 		appIDs[i] = r.AppID
 		releaseIDs[i] = r.ReleaseID
 	}
+	appIDs = tools.RemoveDuplicates(appIDs)
+	releaseIDs = tools.RemoveDuplicates(releaseIDs)
+
 	apps, err := s.dao.App().ListAppsByIDs(kt, appIDs)
 	if err != nil {
 		logs.Errorf("list template set bound named app details failed, err: %v, rid: %s", err, kt.Rid)
@@ -930,7 +944,7 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 	for _, a := range apps {
 		appMap[a.ID] = a
 	}
-	releases, err := s.dao.Release().ListAllByIDs(kt, appIDs, req.BizId)
+	releases, err := s.dao.Release().ListAllByIDs(kt, releaseIDs, req.BizId)
 	if err != nil {
 		logs.Errorf("list template set bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -942,7 +956,7 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 
 	// combine resp details
 	details := make([]*pbtbr.TemplateSetBoundNamedAppDetail, 0)
-	for _, r := range relations {
+	for _, r := range uniqueRelations {
 		details = append(details, &pbtbr.TemplateSetBoundNamedAppDetail{
 			AppId:       r.AppID,
 			AppName:     appMap[r.AppID].Spec.Name,

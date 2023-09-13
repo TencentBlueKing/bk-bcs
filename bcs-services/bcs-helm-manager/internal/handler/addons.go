@@ -24,7 +24,7 @@ func (ah *AddonsHandler) ListAddons(ctx context.Context,
 	req *helmmanager.ListAddonsReq, resp *helmmanager.ListAddonsResp) error {
 
 	defer recorder(ctx, "ListAddons", req, resp)()
-	action := addons.NewListAddonsAction(ah.model, ah.addons)
+	action := addons.NewListAddonsAction(ah.model, *ah.addons, ah.platform)
 	return action.Handle(ctx, req, resp)
 }
 
@@ -33,7 +33,7 @@ func (ah *AddonsHandler) GetAddonsDetail(ctx context.Context,
 	req *helmmanager.GetAddonsDetailReq, resp *helmmanager.GetAddonsDetailResp) error {
 
 	defer recorder(ctx, "GetAddonsDetail", req, resp)()
-	action := addons.NewGetAddonsDetailAction(ah.model, ah.addons, ah.platform)
+	action := addons.NewGetAddonsDetailAction(ah.model, *ah.addons, ah.platform)
 	return action.Handle(ctx, req, resp)
 }
 
@@ -42,7 +42,7 @@ func (ah *AddonsHandler) InstallAddons(ctx context.Context,
 	req *helmmanager.InstallAddonsReq, resp *helmmanager.InstallAddonsResp) error {
 
 	defer recorder(ctx, "InstallAddons", req, resp)()
-	action := addons.NewInstallAddonsAction(ah.model, ah.addons, ah.platform, ah.releaseHandler)
+	action := addons.NewInstallAddonsAction(ah.model, *ah.addons, ah.platform, ah.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }
 
@@ -51,7 +51,7 @@ func (ah *AddonsHandler) UpgradeAddons(ctx context.Context,
 	req *helmmanager.UpgradeAddonsReq, resp *helmmanager.UpgradeAddonsResp) error {
 
 	defer recorder(ctx, "UpgradeAddons", req, resp)()
-	action := addons.NewUpgradeAddonsAction(ah.model, ah.addons, ah.platform, ah.releaseHandler)
+	action := addons.NewUpgradeAddonsAction(ah.model, *ah.addons, ah.platform, ah.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }
 
@@ -60,7 +60,7 @@ func (ah *AddonsHandler) StopAddons(ctx context.Context,
 	req *helmmanager.StopAddonsReq, resp *helmmanager.StopAddonsResp) error {
 
 	defer recorder(ctx, "StopAddons", req, resp)()
-	action := addons.NewStopAddonsAction(ah.model, ah.addons, ah.platform, ah.releaseHandler)
+	action := addons.NewStopAddonsAction(ah.model, *ah.addons, ah.platform, ah.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }
 
@@ -69,6 +69,6 @@ func (ah *AddonsHandler) UninstallAddons(ctx context.Context,
 	req *helmmanager.UninstallAddonsReq, resp *helmmanager.UninstallAddonsResp) error {
 
 	defer recorder(ctx, "UninstallAddons", req, resp)()
-	action := addons.NewUninstallAddonsAction(ah.model, ah.addons, ah.platform, ah.releaseHandler)
+	action := addons.NewUninstallAddonsAction(ah.model, *ah.addons, ah.platform, ah.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }

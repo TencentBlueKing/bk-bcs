@@ -53,6 +53,9 @@ var (
 	BKIAMGatewayHost = envx.Get("BK_IAM_GATEWAY_HOST", "")
 	BKIAMSystemID    = envx.Get("BK_IAM_SYSTEM_ID", "")
 	RedisPassword    = envx.Get("REDIS_PASSWORD", "")
+	MongoAddress     = envx.Get("MONGO_ADDRESS", "")
+	MongoUsername    = envx.Get("MONGO_USERNAME", "")
+	MongoPassword    = envx.Get("MONGO_PASSWORD", "")
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）

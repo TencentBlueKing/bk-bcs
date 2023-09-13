@@ -1,6 +1,7 @@
 <script lang="ts" setup>
   import { ref, computed, watch } from 'vue'
   import { AngleDoubleRightLine } from 'bkui-vue/lib/icon'
+  import dayjs from 'dayjs';
   import { IPagination } from '../../../../../../types/index';
   import { ITemplateVersionItem } from '../../../../../../types/template'
   import List from './list.vue'
@@ -23,6 +24,7 @@
 
   const versionEditingData = computed(() => {
     let data = {
+      revision_name: '',
       revision_memo: '',
       file_type: '',
       file_mode: "unix",
@@ -38,7 +40,7 @@
         const { revision_memo, file_type, file_mode, content_spec, permission } = version.spec
         const { signature: sign, byte_size } = content_spec
         const { user, user_group, privilege } = permission
-        data = { revision_memo, file_type, file_mode, user, user_group, privilege, sign, byte_size }
+        data = { revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`, revision_memo, file_type, file_mode, user, user_group, privilege, sign, byte_size }
       }
     }
     return data

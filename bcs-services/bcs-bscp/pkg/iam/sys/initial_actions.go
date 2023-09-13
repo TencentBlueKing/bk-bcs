@@ -233,8 +233,8 @@ func genApplicationActions() []client.ResourceAction {
 	})
 
 	actions = append(actions, client.ResourceAction{
-		ID:                   GenerateRelease,
-		Name:                 ActionIDNameMap[GenerateRelease],
+		ID:                   ReleaseGenerate,
+		Name:                 ActionIDNameMap[ReleaseGenerate],
 		NameEn:               "Generate Release",
 		Type:                 Edit,
 		RelatedResourceTypes: relatedResource,
@@ -259,54 +259,74 @@ func genApplicationActions() []client.ResourceAction {
 func genCredentialActions() []client.ResourceAction {
 	actions := make([]client.ResourceAction, 0)
 
+	// actions = append(actions, client.ResourceAction{
+	// 	ID:                   CredentialCreate,
+	// 	Name:                 ActionIDNameMap[CredentialCreate],
+	// 	NameEn:               "Create App Credential",
+	// 	Type:                 Create,
+	// 	RelatedResourceTypes: businessResource,
+	// 	RelatedActions:       []client.ActionID{BusinessViewResource},
+	// 	Version:              1,
+	// })
+
+	// relatedResource := []client.RelateResourceType{{
+	// 	SystemID:    SystemIDBSCP,
+	// 	ID:          Application,
+	// 	NameAlias:   "",
+	// 	NameAliasEn: "",
+	// 	Scope:       nil,
+	// 	InstanceSelections: []client.RelatedInstanceSelection{{
+	// 		SystemID: SystemIDCMDB,
+	// 		ID:       BusinessSelection,
+	// 	}},
+	// }}
+
+	// actions = append(actions, client.ResourceAction{
+	// 	ID:                   CredentialView,
+	// 	Name:                 ActionIDNameMap[CredentialView],
+	// 	NameEn:               "View App Credential",
+	// 	Type:                 View,
+	// 	RelatedResourceTypes: relatedResource,
+	// 	RelatedActions:       []client.ActionID{BusinessViewResource},
+	// 	Version:              1,
+	// })
+
+	// actions = append(actions, client.ResourceAction{
+	// 	ID:                   CredentialEdit,
+	// 	Name:                 ActionIDNameMap[CredentialEdit],
+	// 	NameEn:               "Edit APP Credential",
+	// 	Type:                 Edit,
+	// 	RelatedResourceTypes: relatedResource,
+	// 	RelatedActions:       []client.ActionID{BusinessViewResource, CredentialView},
+	// 	Version:              1,
+	// })
+
+	// actions = append(actions, client.ResourceAction{
+	// 	ID:                   CredentialDelete,
+	// 	Name:                 ActionIDNameMap[CredentialDelete],
+	// 	NameEn:               "Delete App Credential",
+	// 	Type:                 Delete,
+	// 	RelatedResourceTypes: relatedResource,
+	// 	RelatedActions:       []client.ActionID{BusinessViewResource, CredentialView},
+	// 	Version:              1,
+	// })
+
 	actions = append(actions, client.ResourceAction{
-		ID:                   CredentialCreate,
-		Name:                 ActionIDNameMap[CredentialCreate],
-		NameEn:               "Create Credential",
-		Type:                 Create,
+		ID:                   CredentialView,
+		Name:                 ActionIDNameMap[CredentialView],
+		NameEn:               "View App Credential",
+		Type:                 View,
 		RelatedResourceTypes: businessResource,
 		RelatedActions:       []client.ActionID{BusinessViewResource},
 		Version:              1,
 	})
 
-	relatedResource := []client.RelateResourceType{{
-		SystemID:    SystemIDBSCP,
-		ID:          Application,
-		NameAlias:   "",
-		NameAliasEn: "",
-		Scope:       nil,
-		InstanceSelections: []client.RelatedInstanceSelection{{
-			SystemID: SystemIDBSCP,
-			ID:       ApplicationSelection,
-		}},
-	}}
-
 	actions = append(actions, client.ResourceAction{
-		ID:                   CredentialView,
-		Name:                 ActionIDNameMap[CredentialView],
-		NameEn:               "View Credential",
-		Type:                 View,
-		RelatedResourceTypes: relatedResource,
-		RelatedActions:       []client.ActionID{BusinessViewResource},
-		Version:              1,
-	})
-
-	actions = append(actions, client.ResourceAction{
-		ID:                   CredentialEdit,
-		Name:                 ActionIDNameMap[CredentialEdit],
-		NameEn:               "Edit Credential",
-		Type:                 Edit,
-		RelatedResourceTypes: relatedResource,
-		RelatedActions:       []client.ActionID{BusinessViewResource, CredentialView},
-		Version:              1,
-	})
-
-	actions = append(actions, client.ResourceAction{
-		ID:                   CredentialDelete,
-		Name:                 ActionIDNameMap[CredentialDelete],
-		NameEn:               "Delete Credential",
-		Type:                 Delete,
-		RelatedResourceTypes: relatedResource,
+		ID:                   CredentialManage,
+		Name:                 ActionIDNameMap[CredentialManage],
+		NameEn:               "Manage App Credential",
+		Type:                 Manage,
+		RelatedResourceTypes: businessResource,
 		RelatedActions:       []client.ActionID{BusinessViewResource, CredentialView},
 		Version:              1,
 	})
