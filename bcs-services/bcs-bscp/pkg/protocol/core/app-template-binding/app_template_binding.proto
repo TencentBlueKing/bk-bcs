@@ -62,6 +62,7 @@ message AppBoundTmplRevisionGroupBySet {
         uint64 byte_size              = 14;
         string creator                = 15;
         string create_at              = 16;
+        string file_state             = 17;
     }
     uint32                            template_space_id   = 1;
     string                            template_space_name = 2;
@@ -121,6 +122,7 @@ message AppBoundTmplRevision {
     uint64 byte_size              = 18;
     string creator                = 19;
     string create_at              = 20;
+    string file_state             = 21;
 }
 
 // ReleasedAppBoundTmplRevision is released app bound template revision

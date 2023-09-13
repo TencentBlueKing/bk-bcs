@@ -228,7 +228,13 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.L
 				CreateAt:             d.Revision.CreatedAt.Format(constant.TimeStdFormat),
 			})
 		}
+	}
 
+	if req.WithStatus {
+		if details, err = s.setFileState(kt, details); err != nil {
+			logs.Errorf("set file state for app bound template config items failed err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
 	}
 
 	// search by logic
@@ -280,6 +286,60 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.L
 		Details: details,
 	}
 	return resp, nil
+}
+
+// setFileState set file state for template config items.
+func (s *Service) setFileState(kt *kit.Kit, unreleased []*pbatb.AppBoundTmplRevision) ([]*pbatb.AppBoundTmplRevision,
+	error) {
+	if len(unreleased) == 0 {
+		return []*pbatb.AppBoundTmplRevision{}, nil
+	}
+
+	released, err := s.dao.ReleasedAppTemplate().GetReleasedLately(kt, kt.BizID, kt.AppID)
+	if err != nil {
+		logs.Errorf("get released app templates lately failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	releasedMap := make(map[uint32]*table.ReleasedAppTemplate, len(released))
+	for _, r := range released {
+		releasedMap[r.Spec.TemplateID] = r
+	}
+
+	for _, ci := range unreleased {
+		if len(releasedMap) == 0 {
+			ci.FileState = constant.FileStateAdd
+			continue
+		}
+
+		if _, ok := releasedMap[ci.TemplateId]; ok {
+			if ci.TemplateRevisionId == releasedMap[ci.TemplateId].Spec.TemplateRevisionID {
+				ci.FileState = constant.FileStateUnchange
+			} else {
+				ci.FileState = constant.FileStateRevise
+			}
+			delete(releasedMap, ci.TemplateId)
+			continue
+		}
+
+		ci.FileState = constant.FileStateAdd
+	}
+
+	result := unreleased
+	if len(releasedMap) > 0 {
+		releasedTmpls := make([]*table.ReleasedAppTemplate, 0)
+		for _, r := range releasedMap {
+			releasedTmpls = append(releasedTmpls, r)
+		}
+		deleted := pbatb.PbAppBoundTmplRevisionsFromReleased(releasedTmpls)
+		for _, d := range deleted {
+			d.FileState = constant.FileStateDelete
+		}
+		result = append(unreleased, deleted...)
+
+	}
+
+	return result, nil
 }
 
 // ListReleasedAppBoundTemplateRevisions list app bound template revisions.

@@ -13,6 +13,7 @@ limitations under the License.
 package pbrci
 
 import (
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbcommit "bscp.io/pkg/protocol/core/commit"
@@ -131,62 +132,50 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 	for _, ci := range cis {
 		var fileState string
 		if len(fileRelease) == 0 {
-			fileState = ADD
+			fileState = constant.FileStateAdd
 		} else {
 			if _, ok := releaseMap[ci.ID]; ok {
 				if ci.Revision.UpdatedAt == releaseMap[ci.ID].Revision.UpdatedAt {
-					fileState = UNCHANGE
+					fileState = constant.FileStateUnchange
 				} else {
-					fileState = REVISE
+					fileState = constant.FileStateRevise
 				}
 				delete(releaseMap, ci.ID)
 			}
 		}
 		if len(fileState) == 0 {
-			fileState = ADD
+			fileState = constant.FileStateAdd
 		}
 		result = append(result, pbci.PbConfigItem(ci, fileState))
 	}
 	for _, file := range releaseMap {
-		result = append(result, PbConfigItem(file, DELETE))
+		result = append(result, PbConfigItem(file, constant.FileStateDelete))
 	}
 	return sortConfigItemsByState(result)
 }
 
+// sortConfigItemsByState sort as add > revise > unchange > delete
 func sortConfigItemsByState(cis []*pbci.ConfigItem) []*pbci.ConfigItem {
 	result := make([]*pbci.ConfigItem, 0)
 	add := make([]*pbci.ConfigItem, 0)
-	delete := make([]*pbci.ConfigItem, 0)
+	del := make([]*pbci.ConfigItem, 0)
 	revise := make([]*pbci.ConfigItem, 0)
 	unchange := make([]*pbci.ConfigItem, 0)
 	for _, ci := range cis {
 		switch ci.FileState {
-		case ADD:
+		case constant.FileStateAdd:
 			add = append(add, ci)
-		case DELETE:
-			delete = append(delete, ci)
-		case REVISE:
+		case constant.FileStateDelete:
+			del = append(del, ci)
+		case constant.FileStateRevise:
 			revise = append(revise, ci)
-		case UNCHANGE:
+		case constant.FileStateUnchange:
 			unchange = append(unchange, ci)
 		}
 	}
 	result = append(result, add...)
 	result = append(result, revise...)
-	result = append(result, delete...)
 	result = append(result, unchange...)
+	result = append(result, del...)
 	return result
-
 }
-
-// 文件状态
-const (
-	// 增加
-	ADD = "ADD"
-	//删除
-	DELETE = "DELETE"
-	//修改
-	REVISE = "REVISE"
-	//不变
-	UNCHANGE = "UNCHANGE"
-)

@@ -103,3 +103,15 @@ var (
 		RidKeyGeneric,
 	}
 )
+
+// 文件状态，未命名版本服务配置项相比上一个版本的变化
+const (
+	// FileStateAdd 增加
+	FileStateAdd = "ADD"
+	// FileStateDelete 删除
+	FileStateDelete = "DELETE"
+	// FileStateRevise 修改
+	FileStateRevise = "REVISE"
+	// FileStateUnchange 不变
+	FileStateUnchange = "UNCHANGE"
+)
