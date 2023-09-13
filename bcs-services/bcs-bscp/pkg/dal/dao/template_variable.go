@@ -136,7 +136,7 @@ func (dao *templateVariableDao) List(
 		}
 	}
 
-	d := q.Where(m.BizID.Eq(bizID)).Where(conds...)
+	d := q.Where(m.BizID.Eq(bizID)).Where(conds...).Order(m.Name)
 	if opt.All {
 		result, err := d.Find()
 		if err != nil {
