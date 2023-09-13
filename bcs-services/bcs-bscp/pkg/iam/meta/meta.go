@@ -21,7 +21,7 @@ type UserInfo struct {
 
 // ResourceAttribute represent one iam resource
 type ResourceAttribute struct {
-	*Basic
+	Basic `json:",inline"`
 	// BizID biz id of the iam resource.
 	BizID uint32 `json:"biz_id,omitempty"`
 	// GenApplyURL 是否生成申请链接
@@ -50,6 +50,7 @@ type BasicDetail struct {
 
 // Decision defines the authorization decision of a resource.
 type Decision struct {
+	Resource *ResourceAttribute
 	// Authorized the authorization decision, whether a user has permission to the resource or not.
 	Authorized bool
 }
@@ -95,4 +96,13 @@ type IamResourceAttribute struct {
 // IamResourceAttributeValue defines the iam resource attribute value info.
 type IamResourceAttributeValue struct {
 	ID string `json:"id"`
+}
+
+// Decision defines the authorization decision of a resource.
+func DecisionsMap(ds []*Decision) map[ResourceAttribute]bool {
+	result := make(map[ResourceAttribute]bool, len(ds))
+	for _, d := range ds {
+		result[*d.Resource] = d.Authorized
+	}
+	return result
 }

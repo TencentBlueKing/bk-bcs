@@ -33,9 +33,9 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 	resp := new(pbcs.CreateHookRevisionResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -70,9 +70,9 @@ func (s *Service) ListHookRevisions(ctx context.Context, req *pbcs.ListHookRevis
 	resp := new(pbcs.ListHookRevisionsResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -124,9 +124,9 @@ func (s *Service) DeleteHookRevision(ctx context.Context,
 	resp := new(pbcs.DeleteHookRevisionResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -152,9 +152,9 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbcs.PublishHook
 	resp := new(pbcs.PublishHookRevisionResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -176,12 +176,11 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbcs.PublishHook
 func (s *Service) GetHookRevision(ctx context.Context, req *pbcs.GetHookRevisionReq) (*pbhr.HookRevision, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbhr.HookRevision)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -201,9 +200,9 @@ func (s *Service) UpdateHookRevision(ctx context.Context, req *pbcs.UpdateHookRe
 	resp := new(pbcs.UpdateHookRevisionResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -236,9 +235,9 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 	resp := new(pbcs.ListHookRevisionReferencesResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 

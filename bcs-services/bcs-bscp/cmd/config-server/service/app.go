@@ -18,7 +18,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 
+	iamauth "bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/iam/sys"
@@ -28,6 +30,7 @@ import (
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbapp "bscp.io/pkg/protocol/core/app"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/rest/view/webannotation"
 	"bscp.io/pkg/space"
 )
 
@@ -41,10 +44,10 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 	}
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.App, Action: meta.Create}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Create}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -90,10 +93,10 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 	resp := new(pbcs.UpdateAppResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.Id}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.Id}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -127,10 +130,10 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbcs.DeleteAppReq) (*pbcs.
 	resp := new(pbcs.DeleteAppResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.App, Action: meta.Delete, ResourceID: req.Id}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Delete, ResourceID: req.Id}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -151,13 +154,11 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbcs.DeleteAppReq) (*pbcs.
 // GetApp get app with app id
 func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbapp.App, error) {
 	kt := kit.FromGrpcContext(ctx)
-	resp := new(pbapp.App)
-
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -183,10 +184,10 @@ func (s *Service) GetAppByName(ctx context.Context, req *pbcs.GetAppByNameReq) (
 	// resp := new(pbapp.App)
 
 	// res := []*meta.ResourceAttribute{
-	// 	{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-	// 	{Basic: &meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	// 	{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	// 	{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	// }
-	// err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
+	// err := s.authorizer.AuthorizeWithApplyDetail(kt, res...)
 	// if err != nil {
 	// 	return nil, err
 	// }
@@ -210,9 +211,9 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 	resp := new(pbcs.ListAppsResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -276,9 +277,9 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsByS
 	resp := new(pbcs.ListAppsResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -339,4 +340,51 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsByS
 		Details: rp.Details,
 	}
 	return resp, nil
+}
+
+// ListAppsAnnotation list apps permission annotations
+func ListAppsAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamauth.Authorizer, msg proto.Message) (*webannotation.Annotation, error) {
+	resp, ok := msg.(*pbcs.ListAppsResp)
+	if !ok {
+		return nil, nil
+	}
+
+	perms := map[string]webannotation.Perm{}
+	authRes := make([]*meta.ResourceAttribute, 0, len(resp.Details))
+	for _, v := range resp.Details {
+		bID, _ := strconv.ParseInt(v.SpaceId, 10, 64)
+		authRes = append(authRes, &meta.ResourceAttribute{Basic: meta.Basic{
+			Type: meta.App, Action: meta.View, ResourceID: v.Id}, BizID: uint32(bID)},
+		)
+		authRes = append(authRes, &meta.ResourceAttribute{Basic: meta.Basic{
+			Type: meta.App, Action: meta.Update, ResourceID: v.Id}, BizID: uint32(bID)},
+		)
+		authRes = append(authRes, &meta.ResourceAttribute{Basic: meta.Basic{
+			Type: meta.App, Action: meta.Delete, ResourceID: v.Id}, BizID: uint32(bID)},
+		)
+		authRes = append(authRes, &meta.ResourceAttribute{Basic: meta.Basic{
+			Type: meta.App, Action: meta.Publish, ResourceID: v.Id}, BizID: uint32(bID)},
+		)
+		authRes = append(authRes, &meta.ResourceAttribute{Basic: meta.Basic{
+			Type: meta.App, Action: meta.GenerateRelease, ResourceID: v.Id}, BizID: uint32(bID)},
+		)
+	}
+
+	decisions, _, err := authorizer.AuthorizeDecision(kt, authRes...)
+	if err != nil {
+		return nil, err
+	}
+
+	dMap := meta.DecisionsMap(decisions)
+
+	for _, res := range authRes {
+		if _, ok := perms[strconv.Itoa(int(res.ResourceID))]; !ok {
+			perms[strconv.Itoa(int(res.ResourceID))] = webannotation.Perm{
+				string(res.Action): dMap[*res],
+			}
+		} else {
+			perms[strconv.Itoa(int(res.ResourceID))][string(res.Action)] = dMap[*res]
+		}
+	}
+	return &webannotation.Annotation{Perms: perms}, nil
 }
