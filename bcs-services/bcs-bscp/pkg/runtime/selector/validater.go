@@ -58,7 +58,7 @@ func validatEelement(e *element) error {
 		return nil
 	}
 
-	if operator == &EqualOperator || operator == &NotEqualOperator {
+	if operator == &EqualOperator || operator == &NotEqualOperator || operator == &RegexOperator {
 		value, ok := e.Value.(string)
 		if !ok {
 			return fmt.Errorf("selector label value %s must be string", e.Value)
