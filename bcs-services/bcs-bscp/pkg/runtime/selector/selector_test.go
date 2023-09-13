@@ -41,8 +41,6 @@ func TestMarshal(t *testing.T) {
 
 	result := `{"labels_or":[{"key":"biz","op":"eq","value":"2001"},{"key":"set","op":"in","value":` +
 		`["1","2","3"]},{"key":"module","op":"gt","value":1},{"key":"game","op":"ne","value":"stress"}]}`
-	t.Log(string(json))
-	t.Log(result)
 	if string(json) != result {
 		t.Errorf("selector marshal json not right")
 		return
