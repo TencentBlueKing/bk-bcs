@@ -145,7 +145,7 @@ func (dao *templateRevisionDao) List(kit *kit.Kit, bizID, templateID uint32, s s
 		}
 	}
 
-	d := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID)).Where(conds...)
+	d := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID)).Where(conds...).Order(m.ID.Desc())
 	if opt.All {
 		result, err := d.Find()
 		if err != nil {
