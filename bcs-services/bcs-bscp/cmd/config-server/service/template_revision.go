@@ -35,7 +35,7 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbcs.CreateTe
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.TemplateRevision, Action: meta.Create,
 		ResourceID: req.TemplateId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -82,7 +82,7 @@ func (s *Service) DeleteTemplateRevision(ctx context.Context, req *pbcs.DeleteTe
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.TemplateRevision, Action: meta.Delete,
 		ResourceID: req.TemplateRevisionId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -108,7 +108,7 @@ func (s *Service) ListTemplateRevisions(ctx context.Context, req *pbcs.ListTempl
 	resp := new(pbcs.ListTemplateRevisionsResp)
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.TemplateRevision, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -154,7 +154,7 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbcs.List
 	}
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.TemplateRevision, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -194,7 +194,7 @@ func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
 	}
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.TemplateRevision, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 

@@ -53,7 +53,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Create,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -86,7 +86,7 @@ func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbcs.Delete
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Delete,
 		ResourceID: req.BindingId}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -131,7 +131,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
 		ResourceID: req.BindingId}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -162,7 +162,7 @@ func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbcs.ListApp
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -216,7 +216,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -318,7 +318,7 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -410,7 +410,7 @@ func (s *Service) UpdateAppBoundTemplateRevisions(ctx context.Context, req *pbcs
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
 		ResourceID: req.BindingId}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -514,7 +514,7 @@ func (s *Service) DeleteAppBoundTemplateSets(ctx context.Context, req *pbcs.Dele
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
 		ResourceID: req.BindingId}, BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 

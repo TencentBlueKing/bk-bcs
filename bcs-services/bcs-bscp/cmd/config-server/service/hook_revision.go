@@ -35,7 +35,7 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -72,7 +72,7 @@ func (s *Service) ListHookRevisions(ctx context.Context, req *pbcs.ListHookRevis
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -126,7 +126,7 @@ func (s *Service) DeleteHookRevision(ctx context.Context,
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -154,7 +154,7 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbcs.PublishHook
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -180,7 +180,7 @@ func (s *Service) GetHookRevision(ctx context.Context, req *pbcs.GetHookRevision
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -202,7 +202,7 @@ func (s *Service) UpdateHookRevision(ctx context.Context, req *pbcs.UpdateHookRe
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -237,7 +237,7 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 

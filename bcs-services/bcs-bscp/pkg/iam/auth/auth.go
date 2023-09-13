@@ -42,11 +42,11 @@ import (
 
 // Authorizer defines all the supported functionalities to do auth operation.
 type Authorizer interface {
-	// Authorize if user has permission to the resources, returns auth status per resource and for all.
-	Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error)
-	// AuthorizeWithApplyDetail authorize if user has permission to the resources.
+	// AuthorizeDecision if user has permission to the resources, returns auth status per resource and for all.
+	AuthorizeDecision(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error)
+	// Authorize authorize if user has permission to the resources.
 	// If user is unauthorized, assign apply url and resources into error.
-	AuthorizeWithApplyDetail(kt *kit.Kit, resources ...*meta.ResourceAttribute) error
+	Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) error
 	// UnifiedAuthentication API 鉴权中间件
 	UnifiedAuthentication(next http.Handler) http.Handler
 	// GrantResourceCreatorAction grant a user's resource creator action.
@@ -132,8 +132,8 @@ type authorizer struct {
 	gwParser        gwparser.Parser
 }
 
-// Authorize if user has permission to the resources, returns auth status per resource and for all.
-func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error) {
+// AuthorizeDecision if user has permission to the resources, returns auth status per resource and for all.
+func (a authorizer) AuthorizeDecision(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error) {
 	userInfo := &meta.UserInfo{UserName: kt.User}
 
 	req := &pbas.AuthorizeBatchReq{
@@ -158,10 +158,10 @@ func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute)
 	return pbas.Decisions(resp.Decisions), authorized, nil
 }
 
-// AuthorizeWithApplyDetail authorize if user has permission to the resources.
+// Authorize authorize if user has permission to the resources.
 // If user is unauthorized, assign apply url and resources into error.
-func (a authorizer) AuthorizeWithApplyDetail(kt *kit.Kit, resources ...*meta.ResourceAttribute) error {
-	_, authorized, err := a.Authorize(kt, resources...)
+func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) error {
+	_, authorized, err := a.AuthorizeDecision(kt, resources...)
 	if err != nil {
 		return errf.New(errf.DoAuthorizeFailed, "authorize failed")
 	}

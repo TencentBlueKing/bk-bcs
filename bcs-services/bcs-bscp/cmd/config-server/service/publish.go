@@ -33,7 +33,7 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Publish, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbcs.Gener
 		{Basic: meta.Basic{Type: meta.App, Action: meta.GenerateRelease, ResourceID: req.AppId}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Publish, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}

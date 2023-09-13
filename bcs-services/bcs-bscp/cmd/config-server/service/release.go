@@ -32,7 +32,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.GenerateRelease, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -103,7 +103,7 @@ func (s *Service) GetReleaseByName(ctx context.Context, req *pbcs.GetReleaseByNa
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(kt, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}

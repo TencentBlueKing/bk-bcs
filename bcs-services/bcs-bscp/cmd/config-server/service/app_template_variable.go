@@ -32,7 +32,7 @@ func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbcs.Ext
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.App, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -61,7 +61,7 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbc
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.App, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -95,7 +95,7 @@ func (s *Service) GetReleasedAppTemplateVariableReferences(ctx context.Context,
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.App, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -125,7 +125,7 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbcs.ListAp
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.App, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -158,7 +158,7 @@ func (s *Service) ListReleasedAppTemplateVariables(ctx context.Context, req *pbc
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.App, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -188,7 +188,7 @@ func (s *Service) UpdateAppTemplateVariables(ctx context.Context, req *pbcs.Upda
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.App, Action: meta.Find},
 		BizID: req.BizId}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 

@@ -32,7 +32,7 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbcs.UpdateConfigHo
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 

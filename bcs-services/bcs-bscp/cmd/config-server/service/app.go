@@ -47,7 +47,7 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Create}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(kt, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.Id}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbcs.DeleteAppReq) (*pbcs.
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Delete, ResourceID: req.Id}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(kt, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbapp.App, 
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(kt, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(kt, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +279,7 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsByS
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(kt, res...)
+	err := s.authorizer.Authorize(kt, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +370,7 @@ func ListAppsAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamauth.Aut
 		)
 	}
 
-	decisions, _, err := authorizer.Authorize(kt, authRes...)
+	decisions, _, err := authorizer.AuthorizeDecision(kt, authRes...)
 	if err != nil {
 		return nil, err
 	}

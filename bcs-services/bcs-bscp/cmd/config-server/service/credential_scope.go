@@ -31,7 +31,7 @@ func (s *Service) ListCredentialScopes(ctx context.Context, req *pbcs.ListCreden
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.Credential, Action: meta.View}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (s *Service) UpdateCredentialScope(ctx context.Context, req *pbcs.UpdateCre
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}

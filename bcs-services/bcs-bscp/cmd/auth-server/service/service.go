@@ -33,6 +33,7 @@ import (
 	"bscp.io/cmd/auth-server/service/auth"
 	"bscp.io/cmd/auth-server/service/iam"
 	"bscp.io/cmd/auth-server/service/initial"
+	confsvc "bscp.io/cmd/config-server/service"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/criteria/errf"
@@ -49,7 +50,6 @@ import (
 	base "bscp.io/pkg/protocol/core/base"
 	basepb "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
-	confsvc "bscp.io/cmd/config-server/service"
 	"bscp.io/pkg/rest/view/webannotation"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/space"
@@ -356,7 +356,7 @@ func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamaut
 
 	}
 
-	authResp, _, err := authorizer.Authorize(kt, authRes...)
+	authResp, _, err := authorizer.AuthorizeDecision(kt, authRes...)
 	if err != nil {
 		return nil, err
 	}

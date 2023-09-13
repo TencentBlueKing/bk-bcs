@@ -39,7 +39,7 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +273,7 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbcs.DeleteConfigIt
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +304,7 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -400,7 +400,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -434,7 +434,7 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigI
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}

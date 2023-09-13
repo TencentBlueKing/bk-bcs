@@ -36,7 +36,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Create,
 		ResourceID: req.TemplateSpaceId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -93,7 +93,7 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateRe
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Delete,
 		ResourceID: req.TemplateId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -131,7 +131,7 @@ func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDelete
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Delete,
 		ResourceID: templateIDs[0]}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -158,7 +158,7 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbcs.UpdateTemplateRe
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Update,
 		ResourceID: req.TemplateId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -186,7 +186,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 	resp := new(pbcs.ListTemplatesResp)
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -233,7 +233,7 @@ func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbcs.AddT
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Update,
 		ResourceID: req.TemplateIds[0]}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -272,7 +272,7 @@ func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbcs
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Update,
 		ResourceID: req.TemplateIds[0]}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -310,7 +310,7 @@ func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplate
 	}
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -338,7 +338,7 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTempl
 	resp := new(pbcs.ListTemplatesNotBoundResp)
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
@@ -373,7 +373,7 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.List
 	resp := new(pbcs.ListTemplatesOfTemplateSetResp)
 
 	res := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithApplyDetail(grpcKit, res); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res); err != nil {
 		return nil, err
 	}
 
