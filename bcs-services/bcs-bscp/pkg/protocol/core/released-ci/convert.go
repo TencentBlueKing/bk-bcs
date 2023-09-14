@@ -59,9 +59,9 @@ func PbReleasedCIFromCache(rs []*types.ReleaseCICache) []*ReleasedConfigItem {
 			Id:        one.ID,
 			ReleaseId: one.ReleaseID,
 			CommitId:  one.CommitID,
-			CommitSpec: &pbcommit.CommitSpec{
+			CommitSpec: &pbcommit.ReleasedCommitSpec{
 				ContentId: one.CommitSpec.ContentID,
-				Content: &pbcontent.ContentSpec{
+				Content: &pbcontent.ReleasedContentSpec{
 					Signature: one.CommitSpec.Signature,
 					ByteSize:  one.CommitSpec.ByteSize,
 				},
@@ -98,7 +98,7 @@ func PbReleasedConfigItem(rci *table.ReleasedConfigItem) *ReleasedConfigItem {
 		Id:             rci.ID,
 		ReleaseId:      rci.ReleaseID,
 		CommitId:       rci.CommitID,
-		CommitSpec:     pbcommit.PbCommitSpec(rci.CommitSpec),
+		CommitSpec:     pbcommit.PbReleasedCommitSpec(rci.CommitSpec),
 		ConfigItemId:   rci.ConfigItemID,
 		ConfigItemSpec: pbci.PbConfigItemSpec(rci.ConfigItemSpec),
 		Attachment:     pbci.PbConfigItemAttachment(rci.Attachment),

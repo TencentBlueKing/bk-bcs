@@ -88,8 +88,8 @@ message ReleasedAppBoundTmplRevisionGroupBySet {
         string privilege              = 12;
         string signature              = 13;
         uint64 byte_size              = 14;
-        string rendered_signature     = 15;
-        uint64 rendered_byte_size     = 16;
+        string origin_signature       = 15;
+        uint64 origin_byte_size       = 16;
         string creator                = 17;
         string create_at              = 18;
     }
@@ -145,8 +145,8 @@ message ReleasedAppBoundTmplRevision {
     string privilege              = 16;
     string signature              = 17;
     uint64 byte_size              = 18;
-    string rendered_signature     = 19;
-    uint64 rendered_byte_size     = 20;
+    string origin_signature       = 19;
+    uint64 origin_byte_size       = 20;
     string creator                = 21;
     string create_at              = 22;
 }

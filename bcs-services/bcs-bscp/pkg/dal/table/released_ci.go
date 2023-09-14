@@ -53,7 +53,7 @@ type ReleasedConfigItem struct {
 	// CommitSpec is this config item's commit spec when it is released.
 	// which is same with the commits' spec information with the upper
 	// CommitID
-	CommitSpec *CommitSpec `db:"commit_spec" json:"commit_spec" gorm:"embedded"`
+	CommitSpec *ReleasedCommitSpec `db:"commit_spec" json:"commit_spec" gorm:"embedded"`
 
 	// ConfigItemSpec is this config item's spec when it is released, which
 	// means it is same with the config item's spec information when it is

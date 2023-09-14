@@ -384,7 +384,10 @@ func (s *Service) getReleasedConfigItem(grpcKit *kit.Kit, configItemID, bizID, a
 			Spec:       releasedCI.ConfigItemSpec,
 			Attachment: releasedCI.Attachment,
 		},
-		Content: releasedCI.CommitSpec.Content,
+		Content: &pbcontent.ContentSpec{
+			Signature: releasedCI.CommitSpec.Content.Signature,
+			ByteSize:  releasedCI.CommitSpec.Content.ByteSize,
+		},
 	}
 	return resp, nil
 }
