@@ -101,8 +101,18 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		}
 
 		releasedCIs = append(releasedCIs, &table.ReleasedConfigItem{
-			CommitID:       commit.ID,
-			CommitSpec:     commit.Spec,
+			CommitID: commit.ID,
+			CommitSpec: &table.ReleasedCommitSpec{
+				ContentID: commit.Spec.ContentID,
+				Content: &table.ReleasedContentSpec{
+					// Note: use the rendered data when rendering config
+					Signature:       commit.Spec.Content.Signature,
+					ByteSize:        commit.Spec.Content.ByteSize,
+					OriginSignature: commit.Spec.Content.Signature,
+					OriginByteSize:  commit.Spec.Content.ByteSize,
+				},
+				Memo: commit.Spec.Memo,
+			},
 			ConfigItemID:   item.ID,
 			ConfigItemSpec: item.Spec,
 			Attachment:     item.Attachment,

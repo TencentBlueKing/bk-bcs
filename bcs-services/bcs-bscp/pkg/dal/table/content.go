@@ -111,6 +111,23 @@ type ContentSpec struct {
 	ByteSize uint64 `db:"byte_size" json:"byte_size" gorm:"column:byte_size"`
 }
 
+// ReleasedContentSpec is a collection of a released content specifics.
+// all the fields under the content spec can not be updated.
+type ReleasedContentSpec struct {
+	// Signature is the sha256 value of a configuration file's
+	// content after render, it can not be updated.
+	Signature string `db:"signature" json:"signature" gorm:"column:signature"`
+	// ByteSize is the size of this content in byte after render.
+	// can not be updated
+	ByteSize uint64 `db:"byte_size" json:"byte_size" gorm:"column:byte_size"`
+	// OriginSignature is the sha256 value of a configuration file's
+	// content before render, it can not be updated.
+	OriginSignature string `db:"origin_signature" json:"origin_signature" gorm:"column:origin_signature"`
+	// OriginByteSize is the size of this content in byte before render.
+	// can not be updated
+	OriginByteSize uint64 `db:"origin_byte_size" json:"origin_byte_size" gorm:"column:origin_byte_size"`
+}
+
 // Validate content's spec
 func (cs ContentSpec) Validate() error {
 	// a file's sha256 signature value's length is 64.
@@ -120,6 +137,25 @@ func (cs ContentSpec) Validate() error {
 
 	if cs.Signature != strings.ToLower(cs.Signature) {
 		return errors.New("content signature should be lowercase")
+	}
+	return nil
+}
+
+// Validate released content's spec
+func (cs ReleasedContentSpec) Validate() error {
+	// a file's sha256 signature value's length is 64.
+	if len(cs.Signature) != 64 {
+		return errors.New("invalid content signature, should be config's sha256 value")
+	}
+	if len(cs.OriginSignature) != 64 {
+		return errors.New("invalid origin content signature, should be config's sha256 value")
+	}
+
+	if cs.Signature != strings.ToLower(cs.Signature) {
+		return errors.New("content signature should be lowercase")
+	}
+	if cs.OriginSignature != strings.ToLower(cs.OriginSignature) {
+		return errors.New("origin content signature should be lowercase")
 	}
 	return nil
 }

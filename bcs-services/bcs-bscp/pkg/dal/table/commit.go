@@ -110,8 +110,33 @@ type CommitSpec struct {
 	Memo      string       `db:"memo" json:"memo" gorm:"column:memo"`
 }
 
+// ReleasedCommitSpec is the specifics of this released committed configuration file.
+type ReleasedCommitSpec struct {
+	// ContentID is the identity id of a content.
+	ContentID uint32               `db:"content_id" json:"content_id" gorm:"column:content_id"`
+	Content   *ReleasedContentSpec `db:"content" json:"content" gorm:"embedded"`
+	Memo      string               `db:"memo" json:"memo" gorm:"column:memo"`
+}
+
 // Validate commit specifics.
 func (c CommitSpec) Validate() error {
+	if c.ContentID <= 0 {
+		return errors.New("invalid commit spec's content id")
+	}
+
+	if c.Content == nil {
+		return errors.New("commit spec's content is empty")
+	}
+
+	if err := validator.ValidateMemo(c.Memo, false); err != nil {
+		return err
+	}
+
+	return c.Content.Validate()
+}
+
+// Validate released commit specifics.
+func (c ReleasedCommitSpec) Validate() error {
 	if c.ContentID <= 0 {
 		return errors.New("invalid commit spec's content id")
 	}
