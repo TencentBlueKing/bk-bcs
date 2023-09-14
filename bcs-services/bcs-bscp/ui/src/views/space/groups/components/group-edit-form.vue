@@ -184,7 +184,7 @@
     <bk-form-item class="radio-group-form" label="分组规则" required property="rules">
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
         <bk-input v-model="rule.key" style="width: 176px;" placeholder="" @change="ruleChange"></bk-input>
-        <bk-select :model-value="rule.op" style="width: 100px;" :clearable="false" @change="handleLogicChange(index, $event)">
+        <bk-select :model-value="rule.op" style="width: 120px;" :clearable="false" @change="handleLogicChange(index, $event)">
           <bk-option v-for="op in GROUP_RULE_OPS" :key="op.id" :value="op.id" :label="op.name"></bk-option>
         </bk-select>
         <div class="value-input">
@@ -253,7 +253,7 @@
       cursor: pointer;
     }
     .value-input {
-      width: 270px;
+      width: 250px;
     }
   }
   .action-btns {
