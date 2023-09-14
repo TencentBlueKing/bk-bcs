@@ -216,6 +216,9 @@ func (g GroupSpec) ValidateCreate() error {
 		if g.Selector == nil || g.Selector.IsEmpty() {
 			return errors.New("group works in custom mode, selector should be set")
 		}
+		if err := g.Selector.Validate(); err != nil {
+			return fmt.Errorf("group works in custom mode, selector is invalid, err: %v", err)
+		}
 	case Debug:
 		if g.UID == "" {
 			return errors.New("group works in debug mode, uid should be set")
@@ -234,6 +237,16 @@ func (g GroupSpec) ValidateUpdate() error {
 
 	if g.Mode != "" {
 		return errors.New("group's mode can not be updated")
+	}
+
+	if g.Selector == nil {
+		return errors.New("group's selector should be set")
+	}
+
+	// Note: at present, noly custom group's selector can be updated,
+	// so we don't need to check other mode's selector.
+	if err := g.Selector.Validate(); err != nil {
+		return fmt.Errorf("group's selector is invalid, err: %v", err)
 	}
 
 	return nil
