@@ -455,7 +455,9 @@ func (re *RegexType) Validate(match *Element) error {
 	if err := validator.ValidateLabelValue(v); err != nil {
 		return fmt.Errorf("invalid label key's value, key: %s value: %s, %v", match.Key, v, err)
 	}
-
+	if err := validator.ValidateLabelValueRegex(v); err != nil {
+		return fmt.Errorf("invalid label key's value, key: %s value: %s, %v", match.Key, v, err)
+	}
 	return nil
 }
 
@@ -492,6 +494,9 @@ func (nre *NotRegexType) Validate(match *Element) error {
 	}
 
 	if err := validator.ValidateLabelValue(v); err != nil {
+		return fmt.Errorf("invalid label key's value, key: %s value: %s, %v", match.Key, v, err)
+	}
+	if err := validator.ValidateLabelValueRegex(v); err != nil {
 		return fmt.Errorf("invalid label key's value, key: %s value: %s, %v", match.Key, v, err)
 	}
 

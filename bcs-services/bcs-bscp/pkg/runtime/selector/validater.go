@@ -15,6 +15,7 @@ package selector
 import (
 	"errors"
 	"fmt"
+	"regexp"
 
 	"bscp.io/pkg/runtime/jsoni"
 )
@@ -58,14 +59,27 @@ func validatEelement(e *element) error {
 		return nil
 	}
 
-	if operator == &EqualOperator || operator == &NotEqualOperator ||
-		operator == &RegexOperator || operator == &NotRegexOperator {
+	if operator == &EqualOperator || operator == &NotEqualOperator {
 		value, ok := e.Value.(string)
 		if !ok {
 			return fmt.Errorf("selector label value %s must be string", e.Value)
 		}
 		if len(value) == 0 {
 			return fmt.Errorf("selector label value %v is empty", e.Value)
+		}
+		return nil
+	}
+
+	if operator == &RegexOperator || operator == &NotRegexOperator {
+		value, ok := e.Value.(string)
+		if !ok {
+			return fmt.Errorf("selector label value %s must be string", e.Value)
+		}
+		if len(value) == 0 {
+			return fmt.Errorf("selector label value %v is empty", e.Value)
+		}
+		if _, err := regexp.Compile(value); err != nil {
+			return fmt.Errorf("selector label value %v is invalid regex: %v", value, err)
 		}
 		return nil
 	}
