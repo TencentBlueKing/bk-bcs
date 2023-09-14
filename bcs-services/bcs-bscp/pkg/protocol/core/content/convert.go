@@ -44,6 +44,34 @@ func PbContentSpec(spec *table.ContentSpec) *ContentSpec {
 	}
 }
 
+// ReleasedContentSpec convert pb ReleasedContentSpec to table ReleasedContentSpec
+func (m *ReleasedContentSpec) ReleasedContentSpec() *table.ReleasedContentSpec {
+	if m == nil {
+		return nil
+	}
+
+	return &table.ReleasedContentSpec{
+		Signature:       m.Signature,
+		ByteSize:        m.ByteSize,
+		OriginSignature: m.OriginSignature,
+		OriginByteSize:  m.OriginByteSize,
+	}
+}
+
+// PbReleasedContentSpec convert table ReleasedContentSpec to pb ReleasedContentSpec
+func PbReleasedContentSpec(spec *table.ReleasedContentSpec) *ReleasedContentSpec {
+	if spec == nil {
+		return nil
+	}
+
+	return &ReleasedContentSpec{
+		Signature:       spec.Signature,
+		ByteSize:        spec.ByteSize,
+		OriginSignature: spec.OriginSignature,
+		OriginByteSize:  spec.OriginByteSize,
+	}
+}
+
 // ContentAttachment convert pb ContentAttachment to table ContentAttachment
 func (m *ContentAttachment) ContentAttachment() *table.ContentAttachment {
 	if m == nil {
