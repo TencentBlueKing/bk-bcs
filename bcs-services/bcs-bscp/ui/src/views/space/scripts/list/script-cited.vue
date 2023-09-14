@@ -59,7 +59,7 @@
     return href
   }
 
-  const refreshList = (current: number = 1) => {
+const refreshList = (current: number = 1) => {
     pagination.value.current = current
     getCitedData()
   }
