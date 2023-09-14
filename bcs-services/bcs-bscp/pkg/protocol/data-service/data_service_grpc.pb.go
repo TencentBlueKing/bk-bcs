@@ -42,6 +42,7 @@ const (
 	Data_DeleteConfigItem_FullMethodName                           = "/pbds.Data/DeleteConfigItem"
 	Data_GetConfigItem_FullMethodName                              = "/pbds.Data/GetConfigItem"
 	Data_ListConfigItems_FullMethodName                            = "/pbds.Data/ListConfigItems"
+	Data_ListReleasedConfigItems_FullMethodName                    = "/pbds.Data/ListReleasedConfigItems"
 	Data_ListConfigItemCount_FullMethodName                        = "/pbds.Data/ListConfigItemCount"
 	Data_UpdateConfigHook_FullMethodName                           = "/pbds.Data/UpdateConfigHook"
 	Data_CreateContent_FullMethodName                              = "/pbds.Data/CreateContent"
@@ -168,6 +169,7 @@ type DataClient interface {
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*config_item.ConfigItem, error)
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
+	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
 	// config hook related interface.
 	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
@@ -424,6 +426,15 @@ func (c *dataClient) GetConfigItem(ctx context.Context, in *GetConfigItemReq, op
 func (c *dataClient) ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error) {
 	out := new(ListConfigItemsResp)
 	err := c.cc.Invoke(ctx, Data_ListConfigItems_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error) {
+	out := new(ListReleasedConfigItemsResp)
+	err := c.cc.Invoke(ctx, Data_ListReleasedConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1386,6 +1397,7 @@ type DataServer interface {
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*base.EmptyResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*config_item.ConfigItem, error)
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
+	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
 	// config hook related interface.
 	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*base.EmptyResp, error)
@@ -1559,6 +1571,9 @@ func (UnimplementedDataServer) GetConfigItem(context.Context, *GetConfigItemReq)
 }
 func (UnimplementedDataServer) ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItems not implemented")
+}
+func (UnimplementedDataServer) ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedConfigItems not implemented")
 }
 func (UnimplementedDataServer) ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemCount not implemented")
@@ -2132,6 +2147,24 @@ func _Data_ListConfigItems_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListConfigItems(ctx, req.(*ListConfigItemsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListReleasedConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReleasedConfigItemsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListReleasedConfigItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListReleasedConfigItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListReleasedConfigItems(ctx, req.(*ListReleasedConfigItemsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4070,6 +4103,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListConfigItems",
 			Handler:    _Data_ListConfigItems_Handler,
+		},
+		{
+			MethodName: "ListReleasedConfigItems",
+			Handler:    _Data_ListReleasedConfigItems_Handler,
 		},
 		{
 			MethodName: "ListConfigItemCount",
