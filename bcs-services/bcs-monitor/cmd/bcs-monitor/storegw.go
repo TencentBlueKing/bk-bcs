@@ -114,7 +114,7 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 		if err != nil {
 			return errors.Wrap(err, "building gRPC client")
 		}
-		endpoints = query.NewEndpointSet(kitLogger, opt.reg,
+		endpoints = query.NewEndpointSet(time.Now, kitLogger, opt.reg,
 			func() (specs []*query.GRPCEndpointSpec) {
 				for _, addr := range gw.GetStoreAddrs() {
 					specs = append(specs, query.NewGRPCEndpointSpec(addr, true))
@@ -122,6 +122,7 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 				return specs
 			},
 			dialOpts,
+			time.Second*30,
 			time.Second*30,
 		)
 
@@ -159,10 +160,10 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 func registryProxyStore(g *run.Group, kitLogger gokit.Logger, opt *option, endpoints *query.EndpointSet) {
 
 	proxyStore := store.NewProxyStore(kitLogger, opt.reg, endpoints.GetStoreClients, component.Query, nil,
-		time.Minute*2)
+		time.Minute*2, store.LazyRetrieval)
 	grpcProbe := prober.NewGRPC()
 	grpcSrv := grpcserver.New(kitLogger, opt.reg, nil, nil, nil, component.Store, grpcProbe,
-		grpcserver.WithServer(store.RegisterStoreServer(proxyStore)),
+		grpcserver.WithServer(store.RegisterStoreServer(proxyStore, kitLogger)),
 		grpcserver.WithListen(utils.GetListenAddr(bindAddress, grpcPort)),
 		grpcserver.WithGracePeriod(time.Duration(0)),
 		grpcserver.WithMaxConnAge(time.Minute*5), // 5分钟主动重连, pod 扩容等需要

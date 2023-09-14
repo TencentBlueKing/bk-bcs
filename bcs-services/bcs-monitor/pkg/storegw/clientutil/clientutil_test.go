@@ -16,10 +16,10 @@ package clientutil
 import (
 	"testing"
 
+	"github.com/efficientgo/core/testutil"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
-	"github.com/thanos-io/thanos/pkg/testutil"
 )
 
 func TestGetCluterID(t *testing.T) {

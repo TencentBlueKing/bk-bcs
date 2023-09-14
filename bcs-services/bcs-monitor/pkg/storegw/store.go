@@ -96,7 +96,7 @@ func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, 
 	nilLogger := &NilLogger{}
 
 	g := grpcserver.New(nilLogger, _reg, nil, nil, nil, component.Store, grpcProbe,
-		grpcserver.WithServer(store.RegisterStoreServer(storeSvr)),
+		grpcserver.WithServer(store.RegisterStoreServer(storeSvr, logger)),
 		grpcserver.WithListen(address),
 		grpcserver.WithGracePeriod(time.Duration(0)),
 	)

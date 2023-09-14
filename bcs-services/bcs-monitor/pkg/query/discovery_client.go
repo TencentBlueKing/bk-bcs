@@ -161,6 +161,7 @@ func resolveStoreProvider(ctxm context.Context, g *run.Group, dnsStoreProvider *
 func getEndpoints(kitLogger gokit.Logger, reg *prometheus.Registry, strictStoreList []string,
 	dnsStoreProvider *dns.Provider, dialOpts []grpc.DialOption) *query.EndpointSet {
 	return query.NewEndpointSet(
+		time.Now,
 		kitLogger,
 		reg,
 		func() (specs []*query.GRPCEndpointSpec) {
@@ -177,6 +178,8 @@ func getEndpoints(kitLogger gokit.Logger, reg *prometheus.Registry, strictStoreL
 		},
 		dialOpts,
 		unhealthyStoreTimeout,
+		endpointInfoTimeout, // thanos端点超时时间
+
 	)
 }
 
@@ -373,7 +376,7 @@ func NewHTTPSDClient(ctx context.Context, kitLogger gokit.Logger, conf httpdisco
 	// Run File Service Discovery and update the store set when the files are modified.
 	u.Host = addr
 	conf.URL = u.String()
-	sdClient, err := httpdiscovery.NewDiscovery(&conf, kitLogger)
+	sdClient, err := httpdiscovery.NewDiscovery(&conf, kitLogger, nil)
 	if err != nil {
 		return nil, err
 	}
