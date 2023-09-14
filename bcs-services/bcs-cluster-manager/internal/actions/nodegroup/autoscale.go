@@ -207,6 +207,7 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.group.NodeGroupID,
+		ResourceName: ua.group.Name,
 		TaskID:       taskID,
 		Message:      fmt.Sprintf("%s 开启节点规格 ", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
@@ -383,6 +384,7 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.group.NodeGroupID,
+		ResourceName: ua.group.Name,
 		TaskID:       taskID,
 		Message:      fmt.Sprintf("%s 关闭节点规格", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,

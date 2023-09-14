@@ -151,6 +151,7 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 	err = ra.model.CreateOperationLog(ra.ctx, &cmproto.OperationLog{
 		ResourceType: common.Cluster.String(),
 		ResourceID:   cls.ClusterID,
+		ResourceName: cls.ClusterName,
 		TaskID:       task.TaskID,
 		Message:      fmt.Sprintf("重试创建%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       req.Operator,

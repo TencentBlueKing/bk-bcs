@@ -40181,6 +40181,8 @@ func (m *OperationLog) validate(all bool) error {
 
 	// no validation rules for ResourceID
 
+	// no validation rules for ResourceName
+
 	// no validation rules for TaskID
 
 	// no validation rules for Message
@@ -40295,6 +40297,8 @@ func (m *TaskOperationLog) validate(all bool) error {
 	// no validation rules for ResourceType
 
 	// no validation rules for ResourceID
+
+	// no validation rules for ResourceName
 
 	// no validation rules for TaskID
 
@@ -43877,6 +43881,8 @@ func (m *OperationLogDetail) validate(all bool) error {
 	// no validation rules for ResourceType
 
 	// no validation rules for ResourceID
+
+	// no validation rules for ResourceName
 
 	// no validation rules for TaskID
 

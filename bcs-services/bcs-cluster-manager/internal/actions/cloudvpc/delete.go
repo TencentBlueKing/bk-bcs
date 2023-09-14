@@ -77,6 +77,7 @@ func (da *DeleteAction) Handle(
 	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
 		ResourceType: common.CloudVPC.String(),
 		ResourceID:   req.VpcID,
+		ResourceName: deletedCloudVPC.VpcName,
 		TaskID:       "",
 		Message:      fmt.Sprintf("删除云[%s]vpc网络[%s]", req.CloudID, req.VpcID),
 		OpUser:       deletedCloudVPC.Creator,

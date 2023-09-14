@@ -14,6 +14,7 @@ package util
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 
@@ -214,6 +215,7 @@ func BuildTaskOperationLogProject() map[string]interface{} {
 	return map[string]interface{}{
 		"resourcetype": "$resourcetype",
 		"resourceid":   "$resourceid",
+		"resourcename": "$resourcename",
 		"taskid":       "$taskid",
 		"message":      "$message",
 		"opuser":       "$opuser",

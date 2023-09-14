@@ -138,6 +138,7 @@ func (ua *UpdateAction) updateAutoScaling() error {
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.AutoScalingOption.String(),
 		ResourceID:   ua.req.ClusterID,
+		ResourceName: ua.cluster.ClusterName,
 		TaskID:       taskID,
 		Message:      fmt.Sprintf("编辑集群[%s]扩缩容配置", ua.req.ClusterID),
 		OpUser:       ua.req.Updater,

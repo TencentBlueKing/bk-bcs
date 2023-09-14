@@ -113,6 +113,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	err := ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
 		ResourceType: common.Cloud.String(),
 		ResourceID:   req.CloudID,
+		ResourceName: req.Name,
 		TaskID:       "",
 		Message:      fmt.Sprintf("创建云[%s]模板", req.CloudID),
 		OpUser:       req.Creator,

@@ -18,9 +18,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -250,6 +251,7 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 	err = ia.model.CreateOperationLog(ctx, &cmproto.OperationLog{
 		ResourceType: common.Cluster.String(),
 		ResourceID:   cls.ClusterID,
+		ResourceName: cls.ClusterName,
 		TaskID:       ia.task.TaskID,
 		Message:      fmt.Sprintf("导入%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
