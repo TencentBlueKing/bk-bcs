@@ -13,9 +13,9 @@
   integrity sha512-lNbdGsQb9ekfsnjFGhEiF4hfFqGgfOP3H3d27re3n+CGhNuTSUEQdfWk556sTLNTloczcdM5TYF2LhzmDQKyvQ==
 
 "@babel/runtime@^7.21.0":
-  version "7.22.10"
-  resolved "https://mirrors.tencent.com/npm/@babel/runtime/-/runtime-7.22.10.tgz#ae3e9631fd947cb7e3610d3e9d8fef5f76696682"
-  integrity sha512-21t/fkKLMZI4pqP2wlmsQAWnYW1PDyKyyUV4vCi+B25ydmdaYTKXPwCj0BzSUnZf4seIiYvSA3jcZ3gdsMFkLQ==
+  version "7.22.15"
+  resolved "https://mirrors.tencent.com/npm/@babel/runtime/-/runtime-7.22.15.tgz#38f46494ccf6cf020bd4eed7124b425e83e523b8"
+  integrity sha512-T0O+aa+4w0u06iNmapipJXMV4HoUir03hpx3/YqXXhu9xim3w+dVphjFWl1OH8NbZHw5Lbm9k45drDkgq2VNNA==
   dependencies:
     regenerator-runtime "^0.14.0"
 
@@ -490,10 +490,10 @@ binary-extensions@^2.0.0:
   resolved "https://mirrors.tencent.com/npm/binary-extensions/-/binary-extensions-2.2.0.tgz#75f502eeaf9ffde42fc98829645be4ea76bd9e2d"
   integrity sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==
 
-bkui-vue@0.0.2-beta.10:
-  version "0.0.2-beta.10"
-  resolved "https://mirrors.tencent.com/npm/bkui-vue/-/bkui-vue-0.0.2-beta.10.tgz#3a10fe08045317a977868e7d07aab5ea91d87230"
-  integrity sha512-rh1vHCt3T4PYmujPs4/KLyolecUnfLKRLpG2ZKk/82wM12wlsYAOpORHl45JKFGF27KPjITsKFrUuo7pZKZYUw==
+bkui-vue@0.0.2-beta.28:
+  version "0.0.2-beta.28"
+  resolved "https://mirrors.tencent.com/npm/bkui-vue/-/bkui-vue-0.0.2-beta.28.tgz#bfd1960c214642791ae649e5c8db7770089567db"
+  integrity sha512-EWAl+3giEw9TsFRWBV4a8rMj7qIYiSO3zJEVYefdVAwZdGVgVtPXTvklnFSL0ITybSb7ie3/hkpCe5S4Tn5Epg==
   dependencies:
     "@floating-ui/dom" "~1.5.0"
     "@popperjs/core" "~2.11.8"
@@ -606,6 +606,11 @@ date-fns@~2.30.0:
   integrity sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==
   dependencies:
     "@babel/runtime" "^7.21.0"
+
+dayjs@^1.11.9:
+  version "1.11.9"
+  resolved "https://mirrors.tencent.com/npm/dayjs/-/dayjs-1.11.9.tgz#9ca491933fadd0a60a2c19f6c237c03517d71d1a"
+  integrity sha512-QvzAURSbQ0pKdIye2txOzNaHmxtUBXerpY0FJsFXUMKbIZeFm5ht1LS/jFsrncjnmtv8HsG0W2g6c0zUjZWmpA==
 
 debug@^4.1.1, debug@^4.3.2, debug@^4.3.3, debug@^4.3.4:
   version "4.3.4"
