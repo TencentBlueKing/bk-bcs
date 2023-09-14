@@ -14,13 +14,19 @@
 package rest
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"net/http"
+	"time"
 
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
 
@@ -110,17 +116,24 @@ func GetRestContext(c *gin.Context) (*Context, error) {
 // RestHandlerFunc rest handler
 func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		startTime := time.Now()
+		// 需要在审计操作记录中对body进行解析
+		reqBody := getRequestBody(c.Request)
 		restContext, err := GetRestContext(c)
 		if err != nil {
 			AbortWithUnauthorizedError(InitRestContext(c), err)
 			return
 		}
 		result, err := handler(restContext)
+		endTime := time.Now()
 		if err != nil {
+			// 添加审计中心操作记录
+			go addAudit(restContext, reqBody, startTime, endTime, 1400, err.Error())
 			AbortWithJSONError(restContext, err)
 			return
 		}
-
+		// 添加审计中心操作记录
+		go addAudit(restContext, reqBody, startTime, endTime, 0, "OK")
 		APIResponse(restContext, result)
 	}
 }
@@ -153,4 +166,146 @@ func StreamHandler(handler StreamHandlerFunc) gin.HandlerFunc {
 		}
 		handler(restContext)
 	}
+}
+
+type resource struct {
+	ClusterID string `json:"cluster_id" yaml:"cluster_id"`
+	ProjectID string `json:"project_id" yaml:"project_id"`
+	Name      string `json:"name" yaml:"name"`
+	FromRule  string `json:"from_rule" yaml:"from_rule"`
+}
+
+// resource to map
+func (r resource) toMap() map[string]any {
+	result := make(map[string]any, 0)
+
+	if r.ClusterID != "" {
+		result["ClusterID"] = r.ClusterID
+	}
+
+	if r.ProjectID != "" {
+		result["ProjectID"] = r.ProjectID
+	}
+
+	if r.Name != "" {
+		result["Name"] = r.Name
+	}
+
+	if r.FromRule != "" {
+		result["FromRule"] = r.FromRule
+	}
+
+	return result
+}
+
+// 获取resourceData 的资源
+func getResourceID(b []byte, ctx *Context) resource {
+	resourceID := resource{}
+	_ = json.Unmarshal(b, &resourceID)
+	resourceID.ClusterID = ctx.ClusterId
+	resourceID.ProjectID = ctx.ProjectId
+	return resourceID
+}
+
+var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audit.Action){
+	"POST./projects/:projectId/clusters/:clusterId/log_collector/rules": func(
+		b []byte, ctx *Context) (audit.Resource, audit.Action) {
+		// resourceData解析
+		res := getResourceID(b, ctx)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "create_log_rule", ActivityType: audit.ActivityTypeCreate}
+	},
+	"PUT./projects/:projectId/clusters/:clusterId/log_collector/rules/:id": func(
+		b []byte, ctx *Context) (audit.Resource, audit.Action) {
+		res := getResourceID(b, ctx)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "update_log_rule", ActivityType: audit.ActivityTypeUpdate}
+	},
+	"DELETE./projects/:projectId/clusters/:clusterId/log_collector/rules/:id": func(
+		b []byte, ctx *Context) (audit.Resource, audit.Action) {
+		res := getResourceID(b, ctx)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "delete_log_rule", ActivityType: audit.ActivityTypeDelete}
+	},
+	"POST./projects/:projectId/clusters/:clusterId/log_collector/rules/:id/retry": func(
+		b []byte, ctx *Context) (audit.Resource, audit.Action) {
+		res := getResourceID(b, ctx)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "retry_log_rule", ActivityType: audit.ActivityTypeUpdate}
+	},
+	"POST./projects/:projectId/clusters/:clusterId/log_collector/rules/:id/enable": func(
+		b []byte, ctx *Context) (audit.Resource, audit.Action) {
+		res := getResourceID(b, ctx)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "enable_log_rule", ActivityType: audit.ActivityTypeUpdate}
+	},
+	"POST./projects/:projectId/clusters/:clusterId/log_collector/rules/:id/disable": func(
+		b []byte, ctx *Context) (audit.Resource, audit.Action) {
+		res := getResourceID(b, ctx)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "disable_log_rule", ActivityType: audit.ActivityTypeUpdate}
+	},
+}
+
+// 审计中心新增操作记录
+func addAudit(ctx *Context, b []byte, startTime, endTime time.Time, code int, message string) {
+	// get method audit func
+	fn, ok := auditFuncMap[ctx.Request.Method+"."+ctx.FullPath()]
+	if !ok {
+		return
+	}
+
+	res, act := fn(b, ctx)
+
+	auditCtx := audit.RecorderContext{
+		Username:  ctx.Username,
+		RequestID: ctx.RequestId,
+		StartTime: startTime,
+		EndTime:   endTime,
+	}
+	resource := audit.Resource{
+		ProjectCode:  ctx.ProjectId,
+		ResourceType: res.ResourceType,
+		ResourceID:   ctx.RequestId,
+		ResourceName: res.ResourceName,
+		ResourceData: res.ResourceData,
+	}
+	action := audit.Action{
+		ActionID:     act.ActionID,
+		ActivityType: act.ActivityType,
+	}
+
+	result := audit.ActionResult{
+		Status:        audit.ActivityStatusSuccess,
+		ResultCode:    code,
+		ResultContent: message,
+	}
+
+	// code不为0的情况则为失败
+	if code != 0 {
+		result.Status = audit.ActivityStatusFailed
+	}
+	component.GetAuditClient().R().
+		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+}
+
+// 获取请求体
+func getRequestBody(r *http.Request) []byte {
+	// 读取请求体
+	body, _ := io.ReadAll(r.Body)
+	// 恢复请求体
+	r.Body = io.NopCloser(bytes.NewBuffer(body))
+	return body
 }
