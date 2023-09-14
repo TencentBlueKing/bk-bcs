@@ -219,7 +219,7 @@ resource:
               name: bfInput
               props:
                 max: 256000
-                unit: Mi
+                unit: MiB
             ui:rules:
               - validator: "{{`{{`}} $widgetNode?.getSibling('type')?.instance?.value !== 'AverageValue' || $widgetNode?.getSibling('name')?.instance?.value !== 'memory' || $self.value {{`}}`}}"
                 message: {{ i18n "值不能为零或空" .lang }}

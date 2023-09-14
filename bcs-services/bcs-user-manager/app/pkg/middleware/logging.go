@@ -16,7 +16,7 @@ package middleware
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/dustin/go-humanize"
@@ -27,14 +27,14 @@ import (
 
 // LoggingFilter log request
 func LoggingFilter(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
-	inBody, err := ioutil.ReadAll(request.Request.Body)
+	inBody, err := io.ReadAll(request.Request.Body)
 	if err != nil {
 		response.WriteError(400, err)
 		return
 	}
 	blog.Log(request.Request.Context()).Infof("url: %s, method: %s, request: %s", request.Request.URL,
 		request.Request.Method, string(inBody))
-	request.Request.Body = ioutil.NopCloser(bytes.NewReader(inBody))
+	request.Request.Body = io.NopCloser(bytes.NewReader(inBody))
 
 	c := NewResponseCapture(response.ResponseWriter)
 	response.ResponseWriter = c

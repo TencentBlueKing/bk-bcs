@@ -14,10 +14,11 @@ syntax = "proto3";
 
 package clusterresources;
 
-option go_package = "proto/cluster-resources";
+option go_package = "./;clusterresources";
 
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
+import "google/protobuf/any.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 
@@ -147,6 +148,28 @@ service Workload {
 		};
 	}
 
+	rpc RestartDeploy(ResRestartReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/restart"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "重新调度 Deployment"
+			summary: "RestartDeploy API"
+		};
+	}
+
+	rpc PauseOrResumeDeploy(ResPauseOrResumeReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/pause_resume/{value}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "暂停或恢复 Deployment"
+			summary: "PauseOrResumeDeploy API"
+		};
+	}
+
 	rpc ScaleDeploy(ResScaleReq) returns (CommonResp) {
 		option (google.api.http) = {
 			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/scale"
@@ -262,6 +285,38 @@ service Workload {
 		};
 	}
 
+	rpc RestartDS(ResRestartReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/restart"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "重新调度 DaemonSet"
+			summary: "RestartDeploy API"
+		};
+	}
+
+	rpc GetDSHistoryRevision(GetDeployHistoryRevisionReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/history/{name}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 DaemonSet Revision"
+			summary: "GetDSHistoryRevision API"
+		};
+	}
+
+	rpc RolloutDSRevision(RolloutDeployRevisionReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/rollout/{name}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "回滚 DaemonSet Revision"
+			summary: "RolloutDSRevision API"
+		};
+	}
+
 	rpc DeleteDS(ResDeleteReq) returns (CommonResp) {
 		option (google.api.http) = {
 			delete: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"
@@ -311,6 +366,38 @@ service Workload {
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "更新 StatefulSet"
 			summary: "UpdateSTS API"
+		};
+	}
+
+	rpc RestartSTS(ResRestartReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/restart"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "重新调度 StatefulSet"
+			summary: "RestartDeploy API"
+		};
+	}
+
+	rpc GetSTSHistoryRevision(GetDeployHistoryRevisionReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/history/{name}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 StatefulSet Revision"
+			summary: "GetSTSHistoryRevision API"
+		};
+	}
+
+	rpc RolloutSTSRevision(RolloutDeployRevisionReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/rollout/{name}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "回滚 StatefulSet Revision"
+			summary: "RolloutSTSRevision API"
 		};
 	}
 
@@ -1317,6 +1404,77 @@ service Resource {
 	}
 }
 
+service ViewConfig {
+	// 获取视图配置列表
+	rpc ListViewConfigs(ListViewConfigsReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/view_configs"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取视图配置列表"
+			summary: "Get view configs"
+		};
+	}
+
+	// 获取视图配置详情
+	rpc GetViewConfig(GetViewConfigReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/view_configs/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取视图配置详情"
+			summary: "Get view config detail"
+		};
+	}
+
+	// 创建视图配置
+	rpc CreateViewConfig(CreateViewConfigReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/view_configs"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建视图配置1"
+			summary: "Create view config"
+		};
+	}
+
+	// 更新视图配置
+	rpc UpdateViewConfig(UpdateViewConfigReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectCode}/view_configs/{id}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "更新视图配置"
+			summary: "Update view config"
+		};
+	}
+
+	// 视图重命名
+	rpc RenameViewConfig(RenameViewConfigReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectCode}/view_configs/{id}/rename"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "视图重命名"
+			summary: "Update view config name"
+		};
+	}
+
+	// 删除视图配置
+	rpc DeleteViewConfig(DeleteViewConfigReq) returns (CommonResp) {
+		option (google.api.http) = {
+			delete: "/clusterresources/v1/projects/{projectCode}/view_configs/{id}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除单个视图配置"
+			summary: "Delete view config"
+		};
+	}
+}
+
 // 基础类请求/响应体
 message EchoReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
@@ -1502,6 +1660,46 @@ message ResUpdateReq {
 	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
 	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
+}
+
+message ResRestartReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ResRestartReq", description: "重新部署单个 k8s 资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源名称"
+	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+}
+
+message ResPauseOrResumeReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ResPauseOrResumeReq", description: "暂停或恢复单个 k8s 资源请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源名称"
+	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
+	bool value = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "value",
+		description: "暂停或者恢复(true暂停，false恢复)"
+	}];
 }
 
 message ResScaleReq {
@@ -2059,4 +2257,106 @@ message GetResSelectItemsReq {
 	string scene = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "使用场景"
 	}, (validate.rules).string = {max_len: 32}];
+}
+
+message ListViewConfigsReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ListViewConfigsReq", description: "获取视图配置列表"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message GetViewConfigReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetViewConfigReq", description: "获取视图配置详情"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "视图 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message ViewFilter {
+	string name = 1;
+	repeated string creator = 2;
+	map<string, string> labelSelector = 3;
+}
+
+message CreateViewConfigReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CreateViewConfigReq", description: "创建视图配置"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {pattern: "^BCS-K8S-\\d{5}$"}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "视图名称"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+	ViewFilter filter = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "筛选条件"
+	}];
+	bool saveAs = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "另存为"
+	}];
+}
+
+message UpdateViewConfigReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "UpdateViewConfigReq", description: "更新视图配置"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "视图 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+	string clusterID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {pattern: "^BCS-K8S-\\d{5}$"}];
+	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+	string name = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "视图名称"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+	ViewFilter filter = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "筛选条件"
+	}];
+}
+
+message RenameViewConfigReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "UpdateViewConfigReq", description: "更新视图配置"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "视图 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "视图名称"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
+}
+
+message DeleteViewConfigReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "DeleteViewConfigsReq", description: "删除单个视图配置"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "视图 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1 , max_len : 64}];
 }

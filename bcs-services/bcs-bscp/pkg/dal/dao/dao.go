@@ -400,8 +400,9 @@ func (s *set) BeginTx(kit *kit.Kit, bizID uint32) (*sharding.Tx, error) {
 // IAM returns the iam operation related DAO
 func (s *set) IAM() IAM {
 	return &iamDao{
-		orm: s.orm,
-		sd:  s.sd,
+		orm:  s.orm,
+		sd:   s.sd,
+		genQ: s.genQ,
 	}
 }
 

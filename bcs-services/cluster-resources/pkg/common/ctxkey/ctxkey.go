@@ -15,7 +15,11 @@
 // Package ctxkey xxx
 package ctxkey
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
+import (
+	"context"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
+)
 
 const (
 	// RequestIDKey xxx
@@ -29,3 +33,9 @@ const (
 	// LangKey 语言版本
 	LangKey = types.ContextKey("lang")
 )
+
+// GetUsernameFromCtx 通过 ctx 获取 username
+func GetUsernameFromCtx(ctx context.Context) string {
+	id, _ := ctx.Value(UsernameKey).(string)
+	return id
+}

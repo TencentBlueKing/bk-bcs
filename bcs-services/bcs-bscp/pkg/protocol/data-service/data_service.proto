@@ -120,6 +120,7 @@ service Data {
     rpc DeleteTemplateSet(DeleteTemplateSetReq) returns (pbbase.EmptyResp) {}
     rpc ListAppTemplateSets(ListAppTemplateSetsReq) returns (ListAppTemplateSetsResp) {}
     rpc ListTemplateSetsByIDs(ListTemplateSetsByIDsReq) returns (ListTemplateSetsByIDsResp) {}
+    rpc ListTemplateSetBriefInfoByIDs(ListTemplateSetBriefInfoByIDsReq) returns (ListTemplateSetBriefInfoByIDsResp) {}
     rpc ListTemplateSetsOfBiz(ListTemplateSetsOfBizReq) returns (ListTemplateSetsOfBizResp) {}
 
     // app template binding related interface.
@@ -130,10 +131,13 @@ service Data {
     rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {}
     rpc ListReleasedAppBoundTemplateRevisions(ListReleasedAppBoundTemplateRevisionsReq) returns
         (ListReleasedAppBoundTemplateRevisionsResp) {}
+    rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {}
 
     // app template variables related interface.
     rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {}
     rpc GetAppTemplateVariableReferences(GetAppTemplateVariableReferencesReq) returns (GetAppTemplateVariableReferencesResp) {}
+    rpc GetReleasedAppTemplateVariableReferences(GetReleasedAppTemplateVariableReferencesReq) returns
+        (GetReleasedAppTemplateVariableReferencesResp) {}
     rpc UpdateAppTemplateVariables(UpdateAppTemplateVariablesReq) returns (pbbase.EmptyResp) {}
     rpc ListAppTemplateVariables(ListAppTemplateVariablesReq) returns (ListAppTemplateVariablesResp) {}
     rpc ListReleasedAppTemplateVariables(ListReleasedAppTemplateVariablesReq) returns (ListReleasedAppTemplateVariablesResp) {}
@@ -197,6 +201,7 @@ service Data {
 
     // used iam pull resource callback.
     rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {}
+    rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {}
 
     // Ping verifies if the grpc connection is still alive.
     rpc Ping(PingMsg) returns (PingMsg) {
@@ -869,8 +874,17 @@ message  ListTemplateSetsByIDsResp {
     repeated pbtset.TemplateSet details = 1;
 }
 
+message  ListTemplateSetBriefInfoByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message  ListTemplateSetBriefInfoByIDsResp {
+    repeated pbtset.TemplateSetBriefInfo details = 1;
+}
+
 message  ListTemplateSetsOfBizReq {
     uint32 biz_id = 1;
+    uint32 app_id = 2;
 }
 
 message  ListTemplateSetsOfBizResp {
@@ -887,6 +901,7 @@ message ListAppTemplateBindingsReq {
     uint32 app_id = 2;
     uint32 start  = 3;
     uint32 limit  = 4;
+    bool   all    = 5;
 }
 
 message ListAppTemplateBindingsResp {
@@ -913,6 +928,7 @@ message ListAppBoundTemplateRevisionsReq {
     uint32 start         = 5;
     uint32 limit         = 6;
     bool   all           = 7;
+    bool   with_status   = 8;
 }
 
 message ListAppBoundTemplateRevisionsResp {
@@ -932,8 +948,17 @@ message ListReleasedAppBoundTemplateRevisionsReq {
 }
 
 message ListReleasedAppBoundTemplateRevisionsResp {
-    uint32                              count   = 1;
-    repeated pbatb.AppBoundTmplRevision details = 2;
+    uint32                                      count   = 1;
+    repeated pbatb.ReleasedAppBoundTmplRevision details = 2;
+}
+
+message CheckAppTemplateBindingReq {
+    pbatb.AppTemplateBindingAttachment attachment = 1;
+    pbatb.AppTemplateBindingSpec       spec       = 2;
+}
+
+message CheckAppTemplateBindingResp {
+    repeated pbatb.Conflict details = 1;
 }
 
 message ExtractAppTemplateVariablesReq {
@@ -951,6 +976,16 @@ message GetAppTemplateVariableReferencesReq {
 }
 
 message GetAppTemplateVariableReferencesResp {
+    repeated pbatv.AppTemplateVariableReference details = 1;
+}
+
+message GetReleasedAppTemplateVariableReferencesReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message GetReleasedAppTemplateVariableReferencesResp {
     repeated pbatv.AppTemplateVariableReference details = 1;
 }
 
@@ -1285,10 +1320,10 @@ message PublishResp {
 }
 
 message ListInstancesReq {
-    string                 resource_type = 1;
-    uint32                 biz_id        = 2;
-    google.protobuf.Struct filter        = 3;
-    pbbase.BasePage        page          = 4;
+    string          resource_type = 1;
+    string          parent_type   = 2;
+    string          parent_id     = 3;
+    pbbase.BasePage page          = 4;
 }
 
 message ListInstancesResp {
@@ -1297,8 +1332,24 @@ message ListInstancesResp {
 }
 
 message InstanceResource {
-    uint32 id   = 1;
+    string id   = 1;
     string name = 2;
+}
+
+message FetchInstanceInfoReq {
+    string          resource_type = 1;
+    repeated string ids           = 2;
+}
+
+message FetchInstanceInfoResp {
+    repeated InstanceInfo details = 1;
+}
+
+message InstanceInfo {
+    string          id           = 1;
+    string          display_name = 2;
+    repeated string approver     = 3;
+    repeated string path         = 4;
 }
 
 message PingMsg {

@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_configmap",
-      "alias": "ConfigMap Simple Demo",
+      "alias": "ConfigMap simple demo",
       "description": "A simple configmap demo with only basic configuration",
       "manifest": null
     },
@@ -17,7 +17,7 @@
     },
     {
       "name": "binary_data_configmap",
-      "alias": "ConfigMap Use BinaryData Example",
+      "alias": "ConfigMap use binary data example",
       "description": "BinaryData can contain byte sequences that are not in the UTF-8 range. The keys stored in BinaryData must not overlap with the ones in the Data field, this is enforced during validation process.",
       "manifest": null
     }

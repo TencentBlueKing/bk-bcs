@@ -41,7 +41,6 @@ func (p *proxy) routers() http.Handler {
 	// iam 回调接口
 	r.Route("/api/v1/auth/iam/find/resource", func(r chi.Router) {
 		r.Use(handler.RequestBodyLogger())
-		r.Use(view.Generic(p.authorizer))
 		r.Use(auth.IAMVerified)
 		r.Mount("/", p.authSvrMux)
 	})
@@ -109,7 +108,7 @@ func (p *proxy) routers() http.Handler {
 	// 新的内容上传、下载相关接口，后续统一使用这组新接口
 	// 服务下的配置项内容需要进行服务鉴权，模版空间下的模版配置项内容需要进行模版空间鉴权
 	// app_id和template_space_id信息放在header中，用于鉴权，和sign保持一致
-	r.Route("/api/v1/bizs/{biz_id}/content", func(r chi.Router) {
+	r.Route("/api/v1/biz/{biz_id}/content", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.authorizer.BizVerified)
 		r.Use(p.authorizer.ContentVerified)

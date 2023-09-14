@@ -21,6 +21,7 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
+	"bscp.io/pkg/iam/sys"
 )
 
 // AdaptAuthOptions convert bscp auth resource to iam action id and resources
@@ -37,10 +38,12 @@ func AdaptAuthOptions(a *meta.ResourceAttribute) (client.ActionID, []client.Reso
 	switch a.Basic.Type {
 	case meta.Biz:
 		return genBizResource(a)
-	case meta.App, meta.Commit, meta.ConfigItem, meta.Content, meta.CRInstance, meta.Release, meta.ReleasedCI, meta.Strategy, meta.StrategySet, meta.PSH, meta.Repo, meta.Sidecar, meta.Credential:
+	case meta.App:
+		return genAppResource(a)
+	case meta.Credential:
+		return genCredResource(a)
+	case meta.Commit, meta.ConfigItem, meta.Content, meta.CRInstance, meta.Release, meta.ReleasedCI, meta.Strategy, meta.StrategySet, meta.PSH, meta.Repo, meta.Sidecar:
 		return genSkipResource(a)
-	//case meta.App:
-	//	return genAppResource(a)
 	//case meta.Commit:
 	//	return genCommitResource(a)
 	//case meta.ConfigItem:
@@ -80,20 +83,45 @@ func AdaptIAMResourceOptions(a *meta.ResourceAttribute) (*bkiam.Request, error) 
 	switch a.Basic.Type {
 	case meta.Biz:
 		return genBizIAMResource(a)
+	case meta.App:
+		return genAppIAMResource(a)
+	case meta.Credential:
+		return genCredIAMResource(a)
 	default:
 		return nil, fmt.Errorf("unsupported bscp auth type: %s", a.Basic.Type)
 	}
 }
 
 // AdaptIAMApplicationOptions 申请链接, applyURL 接口使用
-func AdaptIAMApplicationOptions(a *meta.ResourceAttribute) (*bkiam.Application, error) {
-	if a == nil {
+func AdaptIAMApplicationOptions(as []*meta.ResourceAttribute) (*bkiam.Application, error) {
+	if len(as) == 0 {
 		return nil, errors.New("resource attribute is not set")
 	}
-	switch a.Basic.Type {
-	case meta.Biz:
-		return genBizIAMApplication(a)
-	default:
-		return nil, fmt.Errorf("unsupported bscp auth type: %s", a.Basic.Type)
+	actions := make([]bkiam.ApplicationAction, 0)
+	for _, a := range as {
+		switch a.Basic.Type {
+		case meta.Biz:
+			action, err := genBizIAMApplication(a)
+			if err != nil {
+				return nil, err
+			}
+			actions = append(actions, action)
+		case meta.App:
+			action, err := genAppIAMApplication(a)
+			if err != nil {
+				return nil, err
+			}
+			actions = append(actions, action)
+		case meta.Credential:
+			action, err := genCredIAMApplication(a)
+			if err != nil {
+				return nil, err
+			}
+			actions = append(actions, action)
+		default:
+			return nil, fmt.Errorf("unsupported bscp auth type: %s", a.Basic.Type)
+		}
 	}
+	application := bkiam.NewApplication(sys.SystemIDBSCP, actions)
+	return &application, nil
 }

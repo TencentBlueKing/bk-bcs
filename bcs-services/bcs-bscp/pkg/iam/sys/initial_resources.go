@@ -17,7 +17,7 @@ import "bscp.io/pkg/iam/client"
 // ResourceTypeIDMap resource type map.
 var ResourceTypeIDMap = map[client.TypeID]string{
 	Business:    "业务",
-	Application: "应用",
+	Application: "服务",
 }
 
 // GenerateStaticResourceTypes generate all the resource types registered to IAM.
@@ -35,7 +35,7 @@ func genBusinessResources() []client.ResourceType {
 			ID:            Application,
 			Name:          ResourceTypeIDMap[Application],
 			NameEn:        "Application",
-			Description:   "应用",
+			Description:   "服务",
 			DescriptionEn: "application under a business",
 			Parents: []client.Parent{{
 				SystemID:   SystemIDCMDB,

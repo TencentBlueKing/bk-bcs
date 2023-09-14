@@ -21,8 +21,14 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
 	microGrpc "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
@@ -36,9 +42,6 @@ import (
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -53,9 +56,11 @@ import (
 	rbacHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/rbac"
 	resHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/resource"
 	storageHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/storage"
+	viewHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/view"
 	workloadHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/workload"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -80,6 +85,8 @@ type clusterResourcesService struct {
 	tlsConfig       *tls.Config
 	clientTLSConfig *tls.Config
 
+	model store.ClusterResourcesModel
+
 	stopCh chan struct{}
 }
 
@@ -93,6 +100,7 @@ func (crSvc *clusterResourcesService) Init() error {
 	// 各个初始化方法依次执行
 	for _, f := range []func() error{
 		crSvc.initTLSConfig,
+		crSvc.initModel,
 		crSvc.initRegistry,
 		crSvc.initMicro,
 		crSvc.initHandler,
@@ -213,6 +221,9 @@ func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
 	if err := clusterRes.RegisterResourceHandler(crSvc.microSvc.Server(), resHdlr.New()); err != nil {
 		return err
 	}
+	if err := clusterRes.RegisterViewConfigHandler(crSvc.microSvc.Server(), viewHdlr.New(crSvc.model)); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -302,6 +313,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		clusterRes.RegisterConfigGwFromEndpoint, clusterRes.RegisterStorageGwFromEndpoint,
 		clusterRes.RegisterRBACGwFromEndpoint, clusterRes.RegisterHPAGwFromEndpoint,
 		clusterRes.RegisterCustomResGwFromEndpoint, clusterRes.RegisterResourceGwFromEndpoint,
+		clusterRes.RegisterViewConfigGwFromEndpoint,
 	} {
 		err := epRegister(crSvc.ctx, rmMux, endpoint, grpcDialOpts)
 		if err != nil {
@@ -425,5 +437,51 @@ func (crSvc *clusterResourcesService) initComponentClient() (err error) {
 	cluster.InitCMClient()
 	// ProjectManager
 	project.InitProjClient()
+	return nil
+}
+
+// initModel decode the connection info from the config and init a new store.HelmManagerModel
+func (crSvc *clusterResourcesService) initModel() error {
+	if len(crSvc.conf.Mongo.Address) == 0 {
+		log.Error(crSvc.ctx, "mongo address is empty")
+		return nil
+	}
+	if len(crSvc.conf.Mongo.Database) == 0 {
+		log.Error(crSvc.ctx, "mongo database is empty")
+		return nil
+	}
+	password := crSvc.conf.Mongo.Password
+	if password != "" && crSvc.conf.Mongo.Encrypted {
+		realPwd, err := encrypt.DesDecryptFromBase([]byte(password))
+		if err != nil {
+			log.Error(crSvc.ctx, "decrypt password failed, err %s", err.Error())
+			return nil
+		}
+
+		password = string(realPwd)
+	}
+	mongoOptions := &mongo.Options{
+		Hosts:                 strings.Split(crSvc.conf.Mongo.Address, ","),
+		ConnectTimeoutSeconds: int(crSvc.conf.Mongo.ConnectTimeout),
+		AuthDatabase:          crSvc.conf.Mongo.AuthDatabase,
+		Database:              crSvc.conf.Mongo.Database,
+		Username:              crSvc.conf.Mongo.Username,
+		Password:              password,
+		MaxPoolSize:           uint64(crSvc.conf.Mongo.MaxPoolSize),
+		MinPoolSize:           uint64(crSvc.conf.Mongo.MinPoolSize),
+	}
+
+	mongoDB, err := mongo.NewDB(mongoOptions)
+	if err != nil {
+		log.Error(crSvc.ctx, "init mongo db failed, err %s", err.Error())
+		return nil
+	}
+	if err = mongoDB.Ping(); err != nil {
+		log.Error(crSvc.ctx, "ping mongo db failed, err %s", err.Error())
+		return nil
+	}
+	log.Info(crSvc.ctx, "init mongo db successfully")
+	crSvc.model = store.New(mongoDB)
+	log.Info(crSvc.ctx, "init store successfully")
 	return nil
 }

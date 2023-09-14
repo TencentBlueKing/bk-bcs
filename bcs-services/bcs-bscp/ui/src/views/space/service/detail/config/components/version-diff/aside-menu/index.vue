@@ -1,37 +1,40 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
   import { IDiffDetail } from '../../../../../../../../../types/service';
+  import { IConfigDiffSelected } from '../../../../../../../../../types/config'
   import Configs from './configs.vue'
   import Scripts from './scripts.vue'
 
   const props = defineProps<{
     baseVersionId: number;
     currentVersionId: number;
-    currentConfigId?: number;
+    selectedConfig?: IConfigDiffSelected;
   }>()
 
   const emits = defineEmits(['selected'])
 
-  const selectedMenu = ref<string|number|undefined>(props.currentConfigId)
+  const selectedType = ref('config')
 
-  const handleSelect = (id: string|number, data: IDiffDetail) => {
-    selectedMenu.value = id
+  const handleSelect = (data: IDiffDetail, type: string) => {
+    selectedType.value = type
     emits('selected', data)
   }
 </script>
 <template>
   <div class="version-diff-side">
-    <Configs
-      class="config-list-menu"
-      :base-version-id="props.baseVersionId"
-      :current-version-id="props.currentVersionId"
-      :current-config-id="selectedMenu"
-      @selected="handleSelect" />
+    <div class="config-list-apart">
+      <Configs
+        :base-version-id="props.baseVersionId"
+        :current-version-id="props.currentVersionId"
+        :selected-config="props.selectedConfig"
+        :actived="selectedType === 'config'"
+        @selected="handleSelect($event, 'config')" />
+    </div>
     <Scripts
       :base-version-id="props.baseVersionId"
       :current-version-id="props.currentVersionId"
-      :value="selectedMenu"
-      @selected="handleSelect" />
+      :actived="selectedType === 'script'"
+      @selected="handleSelect($event, 'script')" />
   </div>
 </template>
 <style lang="scss" scoped>
@@ -39,12 +42,9 @@
     width: 264px;
     height: 100%;
     background: #fafbfd;
-    .configs-menu {
+    .config-list-apart {
       height: calc(100% - 132px);
-      :deep(.list-wrapper) {
-        height: calc(100% - 50px);
-        overflow: auto;
-      }
+      background: #f0f1f5;
     }
     .scripts-menu {
       border-top: 1px solid #dcded5;

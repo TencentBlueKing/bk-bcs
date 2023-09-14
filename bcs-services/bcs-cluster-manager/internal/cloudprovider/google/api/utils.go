@@ -96,7 +96,7 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, c
 
 	cert, err := base64.StdEncoding.DecodeString(gkeCluster.MasterAuth.ClusterCaCertificate)
 	if err != nil {
-		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %v", name, err)
+		return "", fmt.Errorf("GetClusterKubeConfig certificate failed, cluster=%s: %v", name, err)
 	}
 
 	restConfig := &rest.Config{

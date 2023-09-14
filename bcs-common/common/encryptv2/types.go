@@ -15,6 +15,7 @@ package encryptv2
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 )
 
 // Config defines cmdb crypto configuration
@@ -48,6 +49,22 @@ func (conf Config) Validate() error {
 	}
 
 	return nil
+}
+
+var algorithmRandLen = map[Algorithm]int{
+	Sm4:    16,
+	AesGcm: 12,
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+// RandomId xxx
+func RandomId(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
 
 // Algorithm defines cryptography algorithm types

@@ -65,7 +65,7 @@ func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbds.ListApp
 	*pbds.ListAppTemplateBindingsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
@@ -228,7 +228,13 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.L
 				CreateAt:             d.Revision.CreatedAt.Format(constant.TimeStdFormat),
 			})
 		}
+	}
 
+	if req.WithStatus {
+		if details, err = s.setFileState(kt, details); err != nil {
+			logs.Errorf("set file state for app bound template config items failed err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
 	}
 
 	// search by logic
@@ -282,6 +288,60 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.L
 	return resp, nil
 }
 
+// setFileState set file state for template config items.
+func (s *Service) setFileState(kt *kit.Kit, unreleased []*pbatb.AppBoundTmplRevision) ([]*pbatb.AppBoundTmplRevision,
+	error) {
+	if len(unreleased) == 0 {
+		return []*pbatb.AppBoundTmplRevision{}, nil
+	}
+
+	released, err := s.dao.ReleasedAppTemplate().GetReleasedLately(kt, kt.BizID, kt.AppID)
+	if err != nil {
+		logs.Errorf("get released app templates lately failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	releasedMap := make(map[uint32]*table.ReleasedAppTemplate, len(released))
+	for _, r := range released {
+		releasedMap[r.Spec.TemplateID] = r
+	}
+
+	for _, ci := range unreleased {
+		if len(releasedMap) == 0 {
+			ci.FileState = constant.FileStateAdd
+			continue
+		}
+
+		if _, ok := releasedMap[ci.TemplateId]; ok {
+			if ci.TemplateRevisionId == releasedMap[ci.TemplateId].Spec.TemplateRevisionID {
+				ci.FileState = constant.FileStateUnchange
+			} else {
+				ci.FileState = constant.FileStateRevise
+			}
+			delete(releasedMap, ci.TemplateId)
+			continue
+		}
+
+		ci.FileState = constant.FileStateAdd
+	}
+
+	result := unreleased
+	if len(releasedMap) > 0 {
+		releasedTmpls := make([]*table.ReleasedAppTemplate, 0)
+		for _, r := range releasedMap {
+			releasedTmpls = append(releasedTmpls, r)
+		}
+		deleted := pbatb.PbAppBoundTmplRevisionsFromReleased(releasedTmpls)
+		for _, d := range deleted {
+			d.FileState = constant.FileStateDelete
+		}
+		result = append(unreleased, deleted...)
+
+	}
+
+	return result, nil
+}
+
 // ListReleasedAppBoundTemplateRevisions list app bound template revisions.
 func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 	req *pbds.ListReleasedAppBoundTemplateRevisionsReq) (
@@ -301,26 +361,340 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 
 	details, count, err := s.dao.ReleasedAppTemplate().List(kt, req.BizId, req.AppId, req.ReleaseId, searcher, opt)
 	if err != nil {
-		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list released app bound templates revisions failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
 	resp := &pbds.ListReleasedAppBoundTemplateRevisionsResp{
 		Count:   uint32(count),
-		Details: pbatb.PbAppBoundTmplRevisions(details),
+		Details: pbatb.PbReleasedAppBoundTmplRevisions(details),
 	}
 	return resp, nil
+}
+
+// CheckAppTemplateBinding check conflicts of app template binding.
+func (s *Service) CheckAppTemplateBinding(ctx context.Context, req *pbds.CheckAppTemplateBindingReq) (
+	*pbds.CheckAppTemplateBindingResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	atb := &table.AppTemplateBinding{
+		Spec:       req.Spec.AppTemplateBindingSpec(),
+		Attachment: req.Attachment.AppTemplateBindingAttachment(),
+		Revision: &table.Revision{
+			Creator: kt.User,
+			Reviser: kt.User,
+		},
+	}
+
+	conflicts, err := s.getConflictsOfATB(kt, atb)
+	if err != nil {
+		logs.Errorf("check app template binding failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return &pbds.CheckAppTemplateBindingResp{
+		Details: conflicts,
+	}, nil
+}
+
+// getConflictsOfATB get conflicts of app template binding.
+func (s *Service) getConflictsOfATB(kt *kit.Kit, atb *table.AppTemplateBinding) ([]*pbatb.Conflict, error) {
+	pbs := parseBindings(atb.Spec.Bindings)
+
+	if err := s.fillUnspecifiedTemplates(kt, pbs); err != nil {
+		return nil, err
+	}
+
+	if repeated := tools.SliceRepeatedElements(pbs.TemplateIDs); len(repeated) > 0 {
+		return s.getConflictDetailsOfATB(kt, pbs, repeated)
+	}
+
+	tmplRevisions, err := s.dao.TemplateRevision().ListByIDs(kt, pbs.TemplateRevisionIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	duplicated, _, err := s.getDuplicatedCIs(kt, tmplRevisions)
+	if err != nil {
+		logs.Errorf("get duplicated config items failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return s.getConflictDetailsOfATB(kt, pbs, duplicated)
+}
+
+func (s *Service) getConflictDetailsOfATB(kt *kit.Kit, pbs *parsedBindings, tmplIDs []uint32) ([]*pbatb.Conflict,
+	error) {
+	if len(tmplIDs) == 0 {
+		return []*pbatb.Conflict{}, nil
+	}
+
+	// get template set details
+	tmplSets, err := s.dao.TemplateSet().ListByIDs(kt, pbs.TemplateSetIDs)
+	if err != nil {
+		logs.Errorf("list template set details by ids failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	tmplSetMap := make(map[uint32]*table.TemplateSet, len(tmplSets))
+	for _, t := range tmplSets {
+		tmplSetMap[t.ID] = t
+	}
+
+	// get template details
+	tmpls, err := s.dao.Template().ListByIDs(kt, tmplIDs)
+	if err != nil {
+		logs.Errorf("list template details by ids failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	tmplMap := make(map[uint32]*table.Template, len(tmpls))
+	for _, t := range tmpls {
+		tmplMap[t.ID] = t
+	}
+
+	conflicts := make([]*pbatb.Conflict, 0)
+	for _, b := range pbs.TemplateBindings {
+		for _, r := range b.TemplateRevisions {
+			if _, ok := tmplMap[r.TemplateID]; ok {
+				conflicts = append(conflicts, &pbatb.Conflict{
+					TemplateSetId:   b.TemplateSetID,
+					TemplateSetName: tmplSetMap[b.TemplateSetID].Spec.Name,
+					TemplateId:      r.TemplateID,
+					TemplateName:    tmplMap[r.TemplateID].Spec.Name,
+				})
+			}
+		}
+	}
+
+	return conflicts, nil
+}
+
+// CascadeUpdateATB update app template binding in cascaded way.
+// Only called by bscp system itself, no need to validate the input, but need the uniqueness verification.
+/*
+在模版/套餐有被服务引用的情况下，如下场景需要级联更新应用模版绑定数据：
+1.对套餐添加/移出模板 （更新套餐接口、添加模版到套餐接口、从套餐移出模版接口）
+2.删除套餐（删除套餐接口）
+3.创建模版时指定了套餐（创建模版接口）
+4.删除模版（删除模版接口、批量删除模版接口）
+5.创建模版版本（创建模版版本接口）
+6.删除模版版本（删除模版版本接口，暂不开放该接口）
+*/
+func (s *Service) CascadeUpdateATB(kt *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding) error {
+	if err := s.genFinalATBForCascade(kt, tx, atb); err != nil {
+		logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	if err := s.dao.AppTemplateBinding().UpdateWithTx(kt, tx, atb); err != nil {
+		logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	return nil
+}
+
+// genFinalATBForCascade generate the final app template binding for cascade update operation.
+// 因为服务是引用套餐下的所有模版，主要关注套餐变化，对于模版和模版版本相关操作，基于原有atb重新生成即可（包括更新latest版本）
+func (s *Service) genFinalATBForCascade(kt *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding) error {
+	pbs, err := s.getPBSForCascade(kt, tx, atb.Spec.Bindings)
+	if err != nil {
+		return err
+	}
+
+	tmplRevisions, err := s.dao.TemplateRevision().ListByIDsWithTx(kt, tx, pbs.TemplateRevisionIDs)
+	if err != nil {
+		return err
+	}
+
+	if err := s.validateATBUniqueKey(kt, tmplRevisions); err != nil {
+		return err
+	}
+
+	s.fillATBTmplSpace(kt, atb, tmplRevisions)
+	s.fillATBModel(kt, atb, pbs)
+
+	return nil
+}
+
+// getPBSForCascade get parsed bindings for cascade update operation.
+func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*table.TemplateBinding) (*parsedBindings,
+	error) {
+	pbs := new(parsedBindings)
+	if len(bindings) == 0 {
+		return pbs, nil
+	}
+
+	// tmplSetID => [tmplID => tmplRevisionID]
+	nonLatestRevisionMap := make(map[uint32]map[uint32]uint32)
+	// tmplSetID => [tmplID => isLatest]
+	latestTmplMap := make(map[uint32]map[uint32]bool)
+	// tmplID => tmplRevisionID
+	allTmplRevisionMap := make(map[uint32]uint32)
+	for _, b := range bindings {
+		pbs.TemplateSetIDs = append(pbs.TemplateSetIDs, b.TemplateSetID)
+		nonLatestRevisionMap[b.TemplateSetID] = make(map[uint32]uint32)
+		latestTmplMap[b.TemplateSetID] = make(map[uint32]bool)
+		for _, r := range b.TemplateRevisions {
+			if r.IsLatest {
+				latestTmplMap[b.TemplateSetID][r.TemplateID] = true
+			} else {
+				nonLatestRevisionMap[b.TemplateSetID][r.TemplateID] = r.TemplateRevisionID
+				allTmplRevisionMap[r.TemplateID] = r.TemplateRevisionID
+			}
+		}
+	}
+
+	// get all the templates of the template set
+	templateSets, err := s.dao.TemplateSet().ListByIDsWithTx(kt, tx, pbs.TemplateSetIDs)
+	if err != nil {
+		logs.Errorf("list template set by ids failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	// tmplSetID => [tmplID...]
+	allTmplMap := make(map[uint32][]uint32)
+	for _, ts := range templateSets {
+		allTmplMap[ts.ID] = ts.Spec.TemplateIDs
+		pbs.TemplateIDs = append(pbs.TemplateIDs, ts.Spec.TemplateIDs...)
+		// get all latest template ids and all non latest template revision ids
+		for _, id := range ts.Spec.TemplateIDs {
+			if latestTmplMap[ts.ID][id] {
+				pbs.LatestTemplateIDs = append(pbs.LatestTemplateIDs, id)
+				continue
+			}
+			if _, ok := nonLatestRevisionMap[ts.ID][id]; ok {
+				pbs.TemplateRevisionIDs = append(pbs.TemplateRevisionIDs, nonLatestRevisionMap[ts.ID][id])
+			} else {
+				pbs.LatestTemplateIDs = append(pbs.LatestTemplateIDs, id)
+				latestTmplMap[ts.ID][id] = true
+			}
+		}
+	}
+	if err := s.validateTmplForATBWithTx(kt, tx, pbs.TemplateIDs); err != nil {
+		logs.Errorf("validate template for app template binding failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	// get all latest revisions of latest templates
+	latestTmplRevisions, err := s.dao.TemplateRevision().ListByTemplateIDsWithTx(kt, tx, kt.BizID,
+		pbs.LatestTemplateIDs)
+	if err != nil {
+		logs.Errorf("list template revision names by template ids failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	// template id => the latest template revision id
+	latestRevisionMap := getLatestTmplRevisions(latestTmplRevisions)
+
+	for tID, rID := range latestRevisionMap {
+		pbs.TemplateRevisionIDs = append(pbs.TemplateRevisionIDs, rID)
+		allTmplRevisionMap[tID] = rID
+	}
+
+	for tsID, tmpls := range allTmplMap {
+		b := new(table.TemplateBinding)
+		b.TemplateSetID = tsID
+		for _, tID := range tmpls {
+			b.TemplateRevisions = append(b.TemplateRevisions, &table.TemplateRevisionBinding{
+				TemplateID:         tID,
+				TemplateRevisionID: allTmplRevisionMap[tID],
+				IsLatest:           latestTmplMap[tsID][tID],
+			})
+		}
+		pbs.TemplateBindings = append(pbs.TemplateBindings, b)
+	}
+
+	return pbs, nil
+}
+
+// validateTmplForATB validate template to avoid same templates are bound to one app
+func (s *Service) validateTmplForATB(kt *kit.Kit, tmplIDs []uint32) error {
+	if len(tmplIDs) == 0 {
+		return nil
+	}
+
+	if repeated := tools.SliceRepeatedElements(tmplIDs); len(repeated) > 0 {
+		// get template details
+		tmpls, err := s.dao.Template().ListByIDs(kt, repeated)
+		if err != nil {
+			logs.Errorf("list template by ids failed, err: %v, rid: %s", err, kt.Rid)
+			return err
+		}
+		type tmplT struct {
+			ID   uint32 `json:"id"`
+			Name string `json:"name"`
+			Path string `json:"path"`
+		}
+		details := make([]tmplT, len(tmpls))
+		for idx, t := range tmpls {
+			details[idx] = tmplT{
+				ID:   t.ID,
+				Name: t.Spec.Name,
+				Path: t.Spec.Path,
+			}
+		}
+		detailsJs, err := json.Marshal(details)
+		if err != nil {
+			logs.Errorf("marshal template details failed, err: %v, rid: %s", err, kt.Rid)
+			return err
+		}
+		return fmt.Errorf("same template id in %v can't be bound to the same app, template details: %s",
+			repeated, detailsJs)
+	}
+
+	return nil
+}
+
+// validateTmplForATBWithTx validate template with transaction to avoid same templates are bound to one app
+func (s *Service) validateTmplForATBWithTx(kt *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32) error {
+	if len(tmplIDs) == 0 {
+		return nil
+	}
+
+	if repeated := tools.SliceRepeatedElements(tmplIDs); len(repeated) > 0 {
+		// get template details
+		tmpls, err := s.dao.Template().ListByIDsWithTx(kt, tx, repeated)
+		if err != nil {
+			logs.Errorf("list template by ids failed, err: %v, rid: %s", err, kt.Rid)
+			return err
+		}
+		type tmplT struct {
+			ID   uint32 `json:"id"`
+			Name string `json:"name"`
+			Path string `json:"path"`
+		}
+		details := make([]tmplT, len(tmpls))
+		for idx, t := range tmpls {
+			details[idx] = tmplT{
+				ID:   t.ID,
+				Name: t.Spec.Name,
+				Path: t.Spec.Path,
+			}
+		}
+		detailsJs, err := json.Marshal(details)
+		if err != nil {
+			logs.Errorf("marshal template details failed, err: %v, rid: %s", err, kt.Rid)
+			return err
+		}
+		return fmt.Errorf("same template id in %v can't be bound to the same app, template details: %s",
+			repeated, detailsJs)
+	}
+
+	return nil
 }
 
 // genFinalATB generate the final app template binding.
 func (s *Service) genFinalATB(kt *kit.Kit, atb *table.AppTemplateBinding) error {
 	pbs := parseBindings(atb.Spec.Bindings)
 
-	if err := s.validateATBUpsert(kt, pbs, []uint32{}); err != nil {
+	if err := s.validateATBUpsert(kt, pbs); err != nil {
 		return err
 	}
 
 	if err := s.fillUnspecifiedTemplates(kt, pbs); err != nil {
+		return err
+	}
+
+	if err := s.validateTmplForATB(kt, pbs.TemplateIDs); err != nil {
 		return err
 	}
 
@@ -332,54 +706,12 @@ func (s *Service) genFinalATB(kt *kit.Kit, atb *table.AppTemplateBinding) error 
 		return err
 	}
 
-	if err := s.validateATBUniqueKey(kt, tmplRevisions, atb.Attachment.BizID, atb.Attachment.AppID); err != nil {
+	if err := s.validateATBUniqueKey(kt, tmplRevisions); err != nil {
 		return err
 	}
 
 	s.fillATBTmplSpace(kt, atb, tmplRevisions)
-
-	if err := s.fillATBModel(kt, atb, pbs); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// genFinalATB generate the final app template binding with transaction.
-// tx is transaction to find the data in the same transaction
-// ignoredTmplID is the template id which is ignored for validation to avoid querying db not in the same transaction
-// it is for the following scenarios
-// 1.add templates for template sets which are already bound by app
-// 2.create new template revision for one template which is already bound by app
-func (s *Service) genFinalATBWithTx(kt *kit.Kit, tx *gen.QueryTx, atb *table.AppTemplateBinding,
-	ignoredTmplIDs []uint32) error {
-	pbs := parseBindings(atb.Spec.Bindings)
-
-	if err := s.validateATBUpsert(kt, pbs, ignoredTmplIDs); err != nil {
-		return err
-	}
-
-	if err := s.fillUnspecifiedTemplates(kt, pbs); err != nil {
-		return err
-	}
-
-	if err := s.dao.Validator().ValidateTemplateRevisionsExistWithTx(kt, tx, pbs.TemplateRevisionIDs); err != nil {
-		return err
-	}
-	tmplRevisions, err := s.dao.TemplateRevision().ListByIDsWithTx(kt, tx, pbs.TemplateRevisionIDs)
-	if err != nil {
-		return err
-	}
-
-	if err := s.validateATBUniqueKey(kt, tmplRevisions, atb.Attachment.BizID, atb.Attachment.AppID); err != nil {
-		return err
-	}
-
-	s.fillATBTmplSpace(kt, atb, tmplRevisions)
-
-	if err := s.fillATBModel(kt, atb, pbs); err != nil {
-		return err
-	}
+	s.fillATBModel(kt, atb, pbs)
 
 	return nil
 }
@@ -416,24 +748,38 @@ func (s *Service) ValidateAppTemplateBindingUniqueKey(kt *kit.Kit, bizID, appID 
 // fillATBModel fill model AppTemplateBinding's template space ids field
 func (s *Service) fillATBTmplSpace(kit *kit.Kit, g *table.AppTemplateBinding,
 	tmplRevisions []*table.TemplateRevision) error {
-	tmplSpaceMap := make(map[uint32]struct{})
+	tmplSpaceIDs := make([]uint32, 0)
 	for _, tr := range tmplRevisions {
-		tmplSpaceMap[tr.Attachment.TemplateSpaceID] = struct{}{}
+		tmplSpaceIDs = append(tmplSpaceIDs, tr.Attachment.TemplateSpaceID)
 	}
-	g.Spec.TemplateSpaceIDs = convertToSlice(tmplSpaceMap)
-
+	g.Spec.TemplateSpaceIDs = tools.RemoveDuplicates(tmplSpaceIDs)
 	return nil
 }
 
 // fillATBModel fill model AppTemplateBinding's fields
-func (s *Service) fillATBModel(kit *kit.Kit, g *table.AppTemplateBinding, pbs *parsedBindings) error {
+func (s *Service) fillATBModel(kit *kit.Kit, g *table.AppTemplateBinding, pbs *parsedBindings) {
 	g.Spec.TemplateSetIDs = pbs.TemplateSetIDs
 	g.Spec.TemplateRevisionIDs = pbs.TemplateRevisionIDs
 	g.Spec.LatestTemplateIDs = pbs.LatestTemplateIDs
 	g.Spec.TemplateIDs = pbs.TemplateIDs
 	g.Spec.Bindings = pbs.TemplateBindings
 
-	return nil
+	// set for empty slice to ensure the data in db is not `null` but `[]`
+	if len(g.Spec.TemplateSetIDs) == 0 {
+		g.Spec.TemplateSetIDs = []uint32{}
+	}
+	if len(g.Spec.TemplateRevisionIDs) == 0 {
+		g.Spec.TemplateRevisionIDs = []uint32{}
+	}
+	if len(g.Spec.LatestTemplateIDs) == 0 {
+		g.Spec.LatestTemplateIDs = []uint32{}
+	}
+	if len(g.Spec.TemplateIDs) == 0 {
+		g.Spec.TemplateIDs = []uint32{}
+	}
+	if len(g.Spec.Bindings) == 0 {
+		g.Spec.Bindings = []*table.TemplateBinding{}
+	}
 }
 
 // parseBindings parse the input into the target object
@@ -452,6 +798,7 @@ func parseBindings(bindings []*table.TemplateBinding) *parsedBindings {
 			pbs.TemplateIDs = append(pbs.TemplateIDs, r.TemplateID)
 			if r.IsLatest {
 				pbs.LatestTemplateIDs = append(pbs.LatestTemplateIDs, r.TemplateID)
+				pbs.LatestTemplateRevisionIDs = append(pbs.LatestTemplateRevisionIDs, r.TemplateRevisionID)
 			}
 
 			b2.TemplateRevisions = append(b2.TemplateRevisions, &table.TemplateRevisionBinding{
@@ -468,7 +815,7 @@ func parseBindings(bindings []*table.TemplateBinding) *parsedBindings {
 }
 
 // fillUnspecifiedTemplates update the pbs's unspecified templates and revisions
-func (s *Service) fillUnspecifiedTemplates(kit *kit.Kit, pbs *parsedBindings) error {
+func (s *Service) fillUnspecifiedTemplates(kt *kit.Kit, pbs *parsedBindings) error {
 	for i := range pbs.TemplateBindings {
 		b := pbs.TemplateBindings[i]
 		var templateIDs []uint32
@@ -476,14 +823,14 @@ func (s *Service) fillUnspecifiedTemplates(kit *kit.Kit, pbs *parsedBindings) er
 			templateIDs = append(templateIDs, r.TemplateID)
 		}
 
-		if err := s.dao.Validator().ValidateTemplatesBelongToTemplateSet(kit, templateIDs, b.TemplateSetID); err != nil {
+		if err := s.dao.Validator().ValidateTemplatesBelongToTemplateSet(kt, templateIDs, b.TemplateSetID); err != nil {
 			return err
 		}
 
 		// get all the templates belong to the template set, then get the unspecified templates
-		templateSets, err := s.dao.TemplateSet().ListByIDs(kit, []uint32{b.TemplateSetID})
+		templateSets, err := s.dao.TemplateSet().ListByIDs(kt, []uint32{b.TemplateSetID})
 		if err != nil {
-			logs.Errorf("fill unspecified templates failed, err: %v, rid: %s", err, kit.Rid)
+			logs.Errorf("fill unspecified templates failed, err: %v, rid: %s", err, kt.Rid)
 			return err
 		}
 		unspecified := tools.SliceDiff(templateSets[0].Spec.TemplateIDs, templateIDs)
@@ -493,13 +840,13 @@ func (s *Service) fillUnspecifiedTemplates(kit *kit.Kit, pbs *parsedBindings) er
 			pbs.TemplateIDs = append(pbs.TemplateIDs, unspecified...)
 
 			templateRevisions, err := s.ListTemplateRevisionNamesByTemplateIDs(
-				kit.Ctx,
+				kt.Ctx,
 				&pbds.ListTemplateRevisionNamesByTemplateIDsReq{
-					BizId:       kit.BizID,
+					BizId:       kt.BizID,
 					TemplateIds: unspecified,
 				})
 			if err != nil {
-				logs.Errorf("fill unspecified templates failed, err: %v, rid: %s", err, kit.Rid)
+				logs.Errorf("fill unspecified templates failed, err: %v, rid: %s", err, kt.Rid)
 				return err
 			}
 
@@ -522,35 +869,21 @@ func (s *Service) fillUnspecifiedTemplates(kit *kit.Kit, pbs *parsedBindings) er
 
 // parsedBindings is parsed bindings which suits to save in db
 type parsedBindings struct {
-	TemplateIDs         []uint32
-	TemplateSetIDs      []uint32
-	TemplateRevisionIDs []uint32
-	LatestTemplateIDs   []uint32
-	TemplateBindings    []*table.TemplateBinding
-}
-
-func convertToSlice(m map[uint32]struct{}) []uint32 {
-	var keys []uint32
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
+	TemplateIDs               []uint32
+	TemplateSetIDs            []uint32
+	TemplateRevisionIDs       []uint32
+	LatestTemplateIDs         []uint32
+	LatestTemplateRevisionIDs []uint32
+	TemplateBindings          []*table.TemplateBinding
 }
 
 // validateUpsert validate for create or update operation of app template binding
-func (s *Service) validateATBUpsert(kit *kit.Kit, b *parsedBindings, ignoredTmplIDs []uint32) error {
-	if err := s.dao.Validator().ValidateTemplateSetsExist(kit, b.TemplateSetIDs); err != nil {
+func (s *Service) validateATBUpsert(kt *kit.Kit, b *parsedBindings) error {
+	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, b.TemplateSetIDs); err != nil {
 		return err
 	}
 
-	tmplIDs := tools.SliceDiff(b.TemplateIDs, ignoredTmplIDs)
-	if len(tmplIDs) > 0 {
-		if err := s.dao.Validator().ValidateTemplatesExist(kit, tmplIDs); err != nil {
-			return err
-		}
-	}
-
-	if err := s.validateATBLatestRevisions(kit, b, ignoredTmplIDs); err != nil {
+	if err := s.validateATBLatestRevisions(kt, b); err != nil {
 		return err
 	}
 
@@ -558,20 +891,20 @@ func (s *Service) validateATBUpsert(kit *kit.Kit, b *parsedBindings, ignoredTmpl
 }
 
 // validateATBLatestRevisions validate whether the latest revisions specified by user is latest
-func (s *Service) validateATBLatestRevisions(kit *kit.Kit, b *parsedBindings, ignoredTmplIDs []uint32) error {
-	tmplIDs := tools.SliceDiff(b.TemplateIDs, ignoredTmplIDs)
-	if len(tmplIDs) == 0 {
+func (s *Service) validateATBLatestRevisions(kt *kit.Kit, b *parsedBindings) error {
+	if len(b.TemplateIDs) == 0 {
 		return nil
 	}
 
+	// the method will validate whether template ids exist as well
 	templateRevisions, err := s.ListTemplateRevisionNamesByTemplateIDs(
-		kit.Ctx,
+		kt.Ctx,
 		&pbds.ListTemplateRevisionNamesByTemplateIDsReq{
-			BizId:       kit.BizID,
-			TemplateIds: tmplIDs,
+			BizId:       kt.BizID,
+			TemplateIds: b.TemplateIDs,
 		})
 	if err != nil {
-		logs.Errorf("validate the latest template revision failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("validate the latest template revision failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
 
@@ -582,7 +915,7 @@ func (s *Service) validateATBLatestRevisions(kit *kit.Kit, b *parsedBindings, ig
 
 	// validate whether the latest revision specified by user is latest
 	nonLatest := make([]uint32, 0)
-	for _, id := range b.LatestTemplateIDs {
+	for _, id := range b.LatestTemplateRevisionIDs {
 		if !latestMap[id] {
 			nonLatest = append(nonLatest, id)
 
@@ -590,68 +923,62 @@ func (s *Service) validateATBLatestRevisions(kit *kit.Kit, b *parsedBindings, ig
 	}
 
 	if len(nonLatest) > 0 {
-		return fmt.Errorf("template revision id in %v is not the latest revision, please confirm it carefully",
-			nonLatest)
+		return fmt.Errorf("template revision id in %v is not the latest revision, please confirm it carefully, "+
+			"refresh the page to get the latest revision if you are using with browser", nonLatest)
 	}
 
 	return nil
 }
 
 // validateATBUniqueKey validate unique key for app template binding
-func (s *Service) validateATBUniqueKey(
-	kit *kit.Kit, tmplRevisions []*table.TemplateRevision, bizID, appID uint32) error {
-	// validates unique key name+path both in table app_template_bindings and config_items
-	// validate the input is equivalent to validate in table app_template_bindings
-	if err := validateUniqueKeyOfInput(tmplRevisions); err != nil {
+func (s *Service) validateATBUniqueKey(kt *kit.Kit, tmplRevisions []*table.TemplateRevision) error {
+	_, uKeys, err := s.getDuplicatedCIs(kt, tmplRevisions)
+	if err != nil {
+		logs.Errorf("get duplicated config items failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
-	// validate in table config_items
-	for _, tr := range tmplRevisions {
-		if _, err := s.dao.ConfigItem().GetByUniqueKey(kit, bizID, appID, tr.Spec.Name, tr.Spec.Path); err == nil {
-			return fmt.Errorf("config item's same name %s and path %s already exists", tr.Spec.Name, tr.Spec.Path)
-		}
+
+	if len(uKeys) == 0 {
+		return nil
 	}
 
-	return nil
+	js, _ := json.Marshal(uKeys)
+	return fmt.Errorf("config item's name and path must be unique, these are repeated: %s", js)
 }
 
-// validateUniqueKeyOfInput validates unique key which is name+path of input only
-func validateUniqueKeyOfInput(tmplRevisions []*table.TemplateRevision) error {
-	var uids []uid
+// getDuplicatedCIs get duplicated config items whose unique keys `name+path` are same
+func (s *Service) getDuplicatedCIs(kt *kit.Kit, tmplRevisions []*table.TemplateRevision) (tmplIDs []uint32,
+	uKeys []types.CIUniqueKey, err error) {
+	var addKeys []types.CIUniqueKey
+	tmplMap := make(map[types.CIUniqueKey][]uint32)
 	for _, tr := range tmplRevisions {
-		uids = append(uids, uid{
+		k := types.CIUniqueKey{
 			Name: tr.Spec.Name,
 			Path: tr.Spec.Path,
-		})
-	}
-	repeated := findRepeatedElements(uids)
-	if len(repeated) > 0 {
-		js, _ := json.Marshal(repeated)
-		return fmt.Errorf("config item's name and path must be unique, these are repeated: %s", js)
-	}
-
-	return nil
-}
-
-// validateUniqueKeyForApp validates unique key which is name+path for an app
-func validateUniqueKeyForApp(tmplRevisions []*table.TemplateRevision, name, path string) error {
-	for _, tr := range tmplRevisions {
-		if name == tr.Spec.Name && path == tr.Spec.Path {
-			return fmt.Errorf("config item's same name %s and path %s already exists", name, path)
 		}
+		addKeys = append(addKeys, k)
+		tmplMap[k] = append(tmplMap[k], tr.Attachment.TemplateID)
 	}
 
-	return nil
+	existKeys, err := s.dao.ConfigItem().GetUniqueKeys(kt, kt.BizID, kt.AppID)
+	if err != nil {
+		logs.Errorf("get config items unique keys failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, nil, err
+	}
+
+	allKeys := append(existKeys, addKeys...)
+	uKeys = findRepeatedElements(allKeys)
+	for _, k := range uKeys {
+		tmplIDs = append(tmplIDs, tmplMap[k]...)
+	}
+	tmplIDs = tools.RemoveDuplicates(tmplIDs)
+
+	return tmplIDs, uKeys, nil
 }
 
-type uid struct {
-	Name string
-	Path string
-}
-
-func findRepeatedElements(slice []uid) []uid {
-	frequencyMap := make(map[uid]int)
-	var repeatedElements []uid
+func findRepeatedElements(slice []types.CIUniqueKey) []types.CIUniqueKey {
+	frequencyMap := make(map[types.CIUniqueKey]int)
+	var repeatedElements []types.CIUniqueKey
 
 	// Count the frequency of each uID in the slice
 	for _, key := range slice {

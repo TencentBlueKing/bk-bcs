@@ -5,7 +5,9 @@
   import { getConfigItemDetail, getConfigContent } from '../../../../../../../api/config'
   import { getTemplateVersionsDetailByIds, downloadTemplateContent } from '../../../../../../../api/template'
   import { getConfigEditParams } from '../../../../../../../utils/config'
+  import { IVariableEditParams } from '../../../../../../../../types/variable';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config'
+  import { getReleasedAppVariables } from '../../../../../../../api/variable'
   import { useConfigStore } from '../../../../../../../store/config'
 
   const { versionData } = storeToRefs(useConfigStore())
@@ -14,6 +16,7 @@
     bkBizId: string;
     appId: number;
     id: number;
+    versionId: number;
     type: string; // 取值为config/template，分别表示非模板套餐下配置项和模板套餐下配置项
     show: Boolean;
   }>()
@@ -23,6 +26,8 @@
   const detailLoading = ref(true)
   const configForm = ref<IConfigEditParams>(getConfigEditParams())
   const content = ref<string|IFileConfigContentSummary>('')
+  const variables = ref<IVariableEditParams[]>([])
+  const variablesLoading = ref(false)
 
   watch(
     () => props.show,
@@ -39,6 +44,10 @@
       getConfigDetail()
     } else if (props.type === 'template') {
       getTemplateDetail()
+      // 未命名版本id为0，不需要展示变量替换
+      if (props.versionId) {
+        getVariableList()
+      }
     }
   }
 
@@ -90,6 +99,13 @@
     }
   }
 
+  const getVariableList = async () => {
+    variablesLoading.value = true
+    const res = await getReleasedAppVariables(props.bkBizId, props.appId, props.versionId)
+    variables.value = res.details
+    variablesLoading.value = false
+  }
+
   const close = () => {
     emits('update:show', false)
   }
@@ -102,11 +118,12 @@
       @closed="close">
         <bk-loading :loading="detailLoading" class="config-loading-container">
           <ConfigForm
-            v-if="!detailLoading"
+            v-if="props.show && !detailLoading"
             class="config-form-wrapper"
             :editable="false"
             :config="configForm"
             :content="content"
+            :variables="variables"
             :bk-biz-id="props.bkBizId"
             :app-id="props.appId"/>
         </bk-loading>

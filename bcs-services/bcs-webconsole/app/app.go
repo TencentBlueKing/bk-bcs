@@ -15,6 +15,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -46,6 +47,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/replay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
@@ -169,6 +171,7 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 	}
 	microCmd := cmd.NewCmd(cmdOptions...)
 	microCmd.App().Flags = buildFlags()
+	microCmd.App().Commands = buildCommands()
 	microCmd.App().Action = func(c *cli.Context) error {
 		if c.Bool("confinfo") {
 			encoder := yaml2.NewEncoder(os.Stdout)
@@ -235,10 +238,14 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 	if routePrefix == "" {
 		routePrefix = "/webconsole"
 	}
+	//回放文件
+	replayPath := config.G.Audit.DataDir
 
 	// 支持路径 prefix 透传和 rewrite 的场景
 	router.Group(routePrefix).StaticFS("/web/static", http.FS(web.WebStatic()))
 	router.Group("").StaticFS("/web/static", http.FS(web.WebStatic()))
+	router.Group(routePrefix).StaticFS("/casts", http.Dir(replayPath))
+	router.Group("").StaticFS("/casts", http.Dir(replayPath))
 
 	handlerOpts := &route.Options{
 		RoutePrefix: routePrefix,
@@ -363,6 +370,29 @@ func buildFlags() []cli.Flag {
 			Name:    "confinfo",
 			Usage:   "print init confinfo to stdout",
 			Aliases: []string{"o"},
+		},
+	}
+}
+
+// 命令行子命令
+func buildCommands() []*cli.Command {
+	return cli.Commands{
+		&cli.Command{
+			Name:    "replay",
+			Usage:   "replay terminal session record",
+			Aliases: []string{"r"},
+			Action: func(c *cli.Context) error {
+				if c.NArg() == 0 {
+					logger.Error("replay file not set")
+					return errors.New("replay file not set")
+				}
+				if err := replay.Replay(c.Args().First()); err != nil {
+					logger.Errorf("replay failure, err: %s, exited", err)
+					return err
+				}
+				os.Exit(0)
+				return nil
+			},
 		},
 	}
 }

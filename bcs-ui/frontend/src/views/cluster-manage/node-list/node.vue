@@ -1112,11 +1112,15 @@ export default defineComponent({
       curPageData: filterFailureCurTableData,
     });
     // kubeConfig导入、选中节点含有运行中状态、含有非节点池节点不让删除
-    const disableBatchDelete = computed(() => isKubeConfig.value || selections.value.some(item => item.status === 'RUNNING' || !item.nodeGroupID));
+    const disableBatchDelete = computed(() => isKubeConfig.value
+    || selections.value.some(item => item.status === 'RUNNING')
+    || (isImportCluster.value && selections.value.some(item => !item.nodeGroupID)));
+
     const disableBatchDeleteTips = computed(() => {
       if (isKubeConfig.value) {
         return $i18n.t('cluster.nodeList.tips.disableImportClusterAction');
-      } if (selections.value.some(item => !item.nodeGroupID)) {
+      }
+      if ((isImportCluster.value && selections.value.some(item => !item.nodeGroupID))) {
         return $i18n.t('cluster.nodeList.tips.hasNotNodePoolNode');
       }
       return $i18n.t('cluster.ca.nodePool.nodes.action.delete.tips');
@@ -1376,7 +1380,7 @@ export default defineComponent({
     const removeNodeDialogTitle = ref<any>('');
     const user = computed(() => $store.state.user);
     const handleDeleteNode = async (row) => {
-      if (isImportCluster && !row.nodeGroupID) return;
+      if (isImportCluster.value && !row.nodeGroupID) return;
 
       $bkInfo({
         type: 'warning',

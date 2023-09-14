@@ -37,6 +37,9 @@ type Authorizer interface {
 	// the returned list may be huge, we do not do result paging
 	ListAuthorizedInstances(ctx context.Context, opts *client.AuthOptions, resourceType client.TypeID) (
 		*client.AuthorizeList, error)
+
+	// GrantResourceCreatorAction grant a user's resource creator action.
+	GrantResourceCreatorAction(ctx context.Context, opts *client.GrantResourceCreatorActionOption) error
 }
 
 // ResourceFetcher defines all the supported operations for iam to fetch resources from bscp

@@ -17,17 +17,20 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"reflect"
 
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -39,14 +42,15 @@ import (
 
 // Authorizer defines all the supported functionalities to do auth operation.
 type Authorizer interface {
-	// Authorize if user has permission to the resources, returns auth status per resource and for all.
-	Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error)
-	// AuthorizeWithResp authorize if user has permission to the resources, assign error to response if occurred.
-	// If user is unauthorized, assign error and need applied permissions into response, returns unauthorized error.
-	// Authorize(kt *kit.Kit, resource *meta.ResourceAttribute) error
-	AuthorizeWithResp(kt *kit.Kit, resp interface{}, resources ...*meta.ResourceAttribute) error
+	// AuthorizeDecision if user has permission to the resources, returns auth status per resource and for all.
+	AuthorizeDecision(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error)
+	// Authorize authorize if user has permission to the resources.
+	// If user is unauthorized, assign apply url and resources into error.
+	Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) error
 	// UnifiedAuthentication API 鉴权中间件
 	UnifiedAuthentication(next http.Handler) http.Handler
+	// GrantResourceCreatorAction grant a user's resource creator action.
+	GrantResourceCreatorAction(kt *kit.Kit, opts *client.GrantResourceCreatorActionOption) error
 	// WebAuthentication 网页鉴权中间件
 	WebAuthentication(webHost string) func(http.Handler) http.Handler
 	// AppVerified App校验中间件, 需要放到 UnifiedAuthentication 后面, url 需要添加 {app_id} 变量
@@ -121,14 +125,15 @@ func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig) (Authorizer, error) {
 }
 
 type authorizer struct {
+	iamClient *bkiam.IAM
 	// authClient auth server's client api
 	authClient      pbas.AuthClient
 	authLoginClient bkpaas.AuthLoginClient
 	gwParser        gwparser.Parser
 }
 
-// Authorize if user has permission to the resources, returns auth status per resource and for all.
-func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error) {
+// AuthorizeDecision if user has permission to the resources, returns auth status per resource and for all.
+func (a authorizer) AuthorizeDecision(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error) {
 	userInfo := &meta.UserInfo{UserName: kt.User}
 
 	req := &pbas.AuthorizeBatchReq{
@@ -153,68 +158,63 @@ func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute)
 	return pbas.Decisions(resp.Decisions), authorized, nil
 }
 
-// AuthorizeWithResp authorize if user has permission to the resources, assign error to response if occurred.
-// If user is unauthorized, assign error and need applied permissions into response, returns unauthorized error.
-func (a authorizer) AuthorizeWithResp(kt *kit.Kit, resp interface{}, resources ...*meta.ResourceAttribute) error {
-
-	_, authorized, err := a.Authorize(kt, resources...)
+// Authorize authorize if user has permission to the resources.
+// If user is unauthorized, assign apply url and resources into error.
+func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) error {
+	_, authorized, err := a.AuthorizeDecision(kt, resources...)
 	if err != nil {
-		a.assignAuthorizeResp(kt, resp, errf.DoAuthorizeFailed, "authorize failed", nil)
 		return errf.New(errf.DoAuthorizeFailed, "authorize failed")
 	}
 
-	if !authorized {
-		req := &pbas.GetPermissionToApplyReq{
-			Resources: pbas.PbResourceAttributes(resources),
-		}
-
-		permResp, err := a.authClient.GetPermissionToApply(kt.RpcCtx(), req)
-		if err != nil {
-			logs.Errorf("get permission to apply failed, req: %#v, err: %v, rid: %s", req, err, kt.Rid)
-			a.assignAuthorizeResp(kt, resp, errf.DoAuthorizeFailed, "authorize failed", nil)
-			return errf.New(errf.DoAuthorizeFailed, "get permission to apply failed")
-		}
-
-		a.assignAuthorizeResp(kt, resp, errf.PermissionDenied, "no permission", permResp.Permission)
-		return errf.New(errf.PermissionDenied, "no permission")
+	if authorized {
+		return nil
 	}
 
-	return nil
+	req := &pbas.GetPermissionToApplyReq{
+		Resources: pbas.PbResourceAttributes(resources),
+	}
+
+	permResp, err := a.authClient.GetPermissionToApply(kt.RpcCtx(), req)
+	if err != nil {
+		logs.Errorf("get permission to apply failed, req: %#v, err: %v, rid: %s", req, err, kt.Rid)
+		return errf.New(errf.DoAuthorizeFailed, "get permission to apply failed")
+	}
+
+	st := status.New(codes.PermissionDenied, "permission denied")
+	details := pbas.ApplyDetail{
+		Resources: []*pbas.BasicDetail{},
+		ApplyUrl:  permResp.ApplyUrl,
+	}
+	for _, action := range permResp.Permission.Actions {
+		for _, resourceType := range action.RelatedResourceTypes {
+			for _, instance := range resourceType.Instances {
+				for _, i := range instance.Instances {
+					if i.Type != resourceType.Type {
+						continue
+					}
+					details.Resources = append(details.Resources, &pbas.BasicDetail{
+						Type:         resourceType.Type,
+						TypeName:     resourceType.TypeName,
+						Action:       action.Id,
+						ActionName:   action.Name,
+						ResourceId:   i.Id,
+						ResourceName: i.Id,
+					})
+				}
+			}
+		}
+	}
+	st, err = st.WithDetails(&details)
+	if err != nil {
+		logs.Errorf("with details failed, err: %v", err)
+		return errf.New(errf.PermissionDenied, "grpc status with details failed")
+	}
+	return st.Err()
 }
 
-// assignAuthorizeResp used to assign the values of error code and message and need applied permissions to response
-// Node: resp must be a *struct.
-func (a authorizer) assignAuthorizeResp(kt *kit.Kit, resp interface{}, errCode int32, errMsg string,
-	permission *pbas.IamPermission) {
-
-	if reflect.ValueOf(resp).Type().Kind() != reflect.Ptr {
-		logs.ErrorDepthf(2, "response is not pointer, rid: %s", kt.Rid)
-		return
-	}
-
-	if _, ok := reflect.TypeOf(resp).Elem().FieldByName("Code"); !ok {
-		logs.ErrorDepthf(2, "response have no 'Code' field, rid: %s", kt.Rid)
-		return
-	}
-
-	if _, ok := reflect.TypeOf(resp).Elem().FieldByName("Message"); !ok {
-		logs.ErrorDepthf(2, "response have no 'Message' field, rid: %s", kt.Rid)
-		return
-	}
-
-	if _, ok := reflect.TypeOf(resp).Elem().FieldByName("Permission"); !ok {
-		logs.ErrorDepthf(2, "response have no 'Permission' field, rid: %s", kt.Rid)
-		return
-	}
-
-	valueOf := reflect.ValueOf(resp).Elem()
-
-	code := valueOf.FieldByName("Code")
-	code.SetInt(int64(errCode))
-
-	msg := valueOf.FieldByName("Message")
-	msg.SetString(errMsg)
-
-	perm := valueOf.FieldByName("Permission")
-	perm.Set(reflect.ValueOf(permission))
+// GrantResourceCreatorAction grant a user's resource creator action.
+func (a authorizer) GrantResourceCreatorAction(kt *kit.Kit, opts *client.GrantResourceCreatorActionOption) error {
+	req := pbas.PbGrantResourceCreatorActionOption(opts)
+	_, err := a.authClient.GrantResourceCreatorAction(kt.RpcCtx(), req)
+	return err
 }

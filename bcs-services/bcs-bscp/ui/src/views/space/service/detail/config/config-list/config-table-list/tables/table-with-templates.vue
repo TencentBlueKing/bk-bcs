@@ -5,7 +5,7 @@
   import { DownShape, Close } from 'bkui-vue/lib/icon';
   import { useConfigStore } from '../../../../../../../../store/config'
   import { ICommonQuery } from '../../../../../../../../../types/index';
-  import { IConfigItem, IConfigListQueryParams, IBoundTemplateDetail } from '../../../../../../../../../types/config'
+  import { IConfigItem, IConfigListQueryParams, IBoundTemplateGroup, IBoundTemplateDetail, IConfigDiffSelected } from '../../../../../../../../../types/config'
   import { getConfigList, getBoundTemplates, getBoundTemplatesByAppVersion, deleteServiceConfigItem, deleteBoundPkg } from '../../../../../../../../api/config'
   import { getAppPkgBindingRelations } from '../../../../../../../../api/template'
   import StatusTag from './status-tag'
@@ -48,7 +48,7 @@
   const configList = ref<IConfigItem[]>([]) // 非模板配置项
   const configsCount = ref(0)
   const boundTemplateListLoading = ref(false)
-  const templateList = ref<IBoundTemplateDetail[]>([]) // 配置项模板
+  const templateGroupList = ref<IBoundTemplateGroup[]>([]) // 配置项模板（按套餐分组）
   const templatesCount = ref(0)
   const tableGroupsData = ref<IConfigsGroupData[]>([])
   const editPanelShow = ref(false)
@@ -67,7 +67,11 @@
       versionName: ''
     }
   })
-  const diffConfig = ref(0)
+  const diffConfig = ref<IConfigDiffSelected>({
+    pkgId: 0,
+    id: 0,
+    version: 0
+  })
 
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => {
@@ -150,7 +154,7 @@
       } else {
         res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id)
       }
-      templateList.value = res.details
+      templateGroupList.value = res.details
       templatesCount.value = res.count
     } catch (e) {
       console.error(e)
@@ -160,7 +164,7 @@
   }
 
   const transListToTableData = () => {
-    const pkgsGroups = groupTplsByPkg(templateList.value)
+    const pkgsGroups = groupTplsByPkg(templateGroupList.value)
     return [
       { id: 0, name: '非模板配置', expand: true, configs: transConfigsToTableItemData(configList.value) },
       ...pkgsGroups
@@ -178,26 +182,23 @@
   }
 
   // 将模板按套餐分组，并将模板数据格式转为表格数据
-  const groupTplsByPkg = (list: IBoundTemplateDetail[]) => {
-    const groups: IConfigsGroupData[] = []
-    list.forEach(tpl => {
-      const {
-        template_space_name, template_set_id, template_set_name,
-        template_id: id, name, template_revision_id: versionId,
-        template_revision_name: versionName, path, creator
-      } = tpl
-      const config = { id, name, versionId, versionName, path, creator, reviser: '--', update_at: '--', file_state: '' }
-      const group = groups.find(item => item.id === template_set_id)
-      if (group) {
-        group.configs.push(config)
-      } else {
-        groups.push({
-          id: template_set_id,
-          name: `${template_space_name} - ${template_set_name}`,
-          expand: false,
-          configs: [config]
-        })
+  const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
+    const groups: IConfigsGroupData[] = list.map(groupItem => {
+      const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem
+      const group: IConfigsGroupData = {
+        id: template_set_id,
+        name: `${template_space_name === 'default_space' ? '默认空间' : template_space_name} - ${template_set_name}`,
+        expand: false,
+        configs: []
       }
+      template_revisions.forEach(tpl => {
+        const {
+          template_id: id, name, template_revision_id: versionId,
+          template_revision_name: versionName, path, creator, file_state
+        } = tpl
+        group.configs.push({ id, name, versionId, versionName, path, creator, reviser: '--', update_at: '--', file_state })
+      })
+      return group
     })
     return groups
   }
@@ -221,9 +222,8 @@
     }
   }
 
-  const handleOpenReplaceVersionDialog = (config: IConfigTableItem) => {
+  const handleOpenReplaceVersionDialog = (pkgId: number, config: IConfigTableItem) => {
     const { id: templateId, versionId, versionName } = config
-    const pkgId = templateList.value.find(item => item.template_id === templateId)?.template_set_id || 0
     replaceDialogData.value = {
       open: true,
       data: { pkgId, templateId, versionId, versionName }
@@ -231,36 +231,32 @@
   }
 
   // 删除模板套餐
-  const handleDeletePkg = async(id: number) => {
-    const tpl = templateList.value.find(item => item.template_set_id === id)
-    if (tpl) {
-      InfoBox({
-        title: `确认是否删除模板套餐【${tpl.template_space_name} - ${tpl.template_set_name}】?`,
-        infoType: "danger",
-        headerAlign: "center" as const,
-        footerAlign: "center" as const,
-        onConfirm: async () => {
-          await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [tpl.template_set_id])
-          await getBoundTemplateList()
-          tableGroupsData.value = transListToTableData()
-          Message({
-            theme: 'success',
-            message: '删除模板套餐成功'
-          })
-        },
-      } as any);
-    }
+  const handleDeletePkg = async(pkgId: number, name: string) => {
+    InfoBox({
+      title: `确认是否删除模板套餐【${name}】?`,
+      infoType: "danger",
+      headerAlign: "center" as const,
+      footerAlign: "center" as const,
+      onConfirm: async () => {
+        await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [pkgId])
+        await getBoundTemplateList()
+        tableGroupsData.value = transListToTableData()
+        Message({
+          theme: 'success',
+          message: '删除模板套餐成功'
+        })
+      },
+    } as any);
   }
 
   // 非模板配置项diff
-  const handleConfigDiff = (config: IConfigTableItem) => {
-    diffConfig.value = config.id
+  const handleConfigDiff = (groupId: number, config: IConfigTableItem) => {
+    diffConfig.value = {
+      pkgId: groupId,
+      id: config.id,
+      version: config.versionId
+    }
     isDiffPanelShow.value = true
-  }
-
-  // 模板配置项diff
-  const handleTplDiff = (config: IConfigTableItem) => {
-
   }
 
   // 删除配置项
@@ -307,7 +303,7 @@
                   <DownShape :class="['fold-icon', { fold: !group.expand }]" />
                   {{ group.name }}
                 </div>
-                <div v-if="group.id !== 0" class="delete-btn" @click="handleDeletePkg(group.id)">
+                <div v-if="isUnNamedVersion && group.id !== 0" class="delete-btn" @click="handleDeletePkg(group.id, group.name)">
                   <Close class="close-icon" />
                   删除套餐
                 </div>
@@ -365,15 +361,15 @@
                               </template>
                               <template v-else>
                                 <bk-button text theme="primary" @click="handleViewConfig(config.id, 'config')">查看</bk-button>
-                                <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleConfigDiff(config)">对比</bk-button>
+                                <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleConfigDiff(group.id, config)">对比</bk-button>
                               </template>
                             </template>
                             <!-- 套餐模板 -->
                             <template v-else>
-                              <bk-button v-if="isUnNamedVersion" text theme="primary" @click="handleOpenReplaceVersionDialog(config)">替换版本</bk-button>
+                              <bk-button v-if="isUnNamedVersion" text theme="primary" @click="handleOpenReplaceVersionDialog(group.id, config)">替换版本</bk-button>
                               <template v-else>
                                 <bk-button text theme="primary" @click="handleViewConfig(config.versionId, 'template')">查看</bk-button>
-                                <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleTplDiff(config)">对比</bk-button>
+                                <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleConfigDiff(group.id, config)">对比</bk-button>
                               </template>
                             </template>
                           </div>
@@ -400,11 +396,12 @@
     v-model:show="viewConfigSliderData.open"
     v-bind="viewConfigSliderData.data"
     :bk-biz-id="props.bkBizId"
-    :app-id="props.appId" />
+    :app-id="props.appId"
+    :version-id="versionData.id" />
   <VersionDiff
     v-model:show="isDiffPanelShow"
     :current-version="versionData"
-    :current-config="diffConfig" />
+    :selected-config="diffConfig" />
   <ReplaceTemplateVersion
     v-model:show="replaceDialogData.open"
     v-bind="replaceDialogData.data"

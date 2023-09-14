@@ -27,15 +27,17 @@ func (s *Service) ListCredentialScopes(ctx context.Context, req *pbcs.ListCreden
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListCredentialScopesResp)
 
-	bizID := req.BizId
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.CredentialScope, Action: meta.Find}, BizID: bizID}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Credential, Action: meta.View}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
 
 	r := &pbds.ListCredentialScopesReq{
-		BizId:        bizID,
+		BizId:        req.BizId,
 		CredentialId: req.CredentialId,
 	}
 	rp, err := s.client.DS.ListCredentialScopes(grpcKit.RpcCtx(), r)
@@ -57,9 +59,11 @@ func (s *Service) UpdateCredentialScope(ctx context.Context, req *pbcs.UpdateCre
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateCredentialScopeResp)
 
-	bizID := req.BizId
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.CredentialScope, Action: meta.Update}, BizID: bizID}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}

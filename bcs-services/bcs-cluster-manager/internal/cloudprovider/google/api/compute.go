@@ -439,6 +439,23 @@ func (c *ComputeServiceClient) ListZoneInstances(ctx context.Context) (
 	return instanceList, nil
 }
 
+// GetInstance get the instance
+func (c *ComputeServiceClient) GetInstance(ctx context.Context, name string) (*compute.Instance, error) {
+	if c.gkeProjectID == "" {
+		return nil, fmt.Errorf("gce client GetInstance failed: gkeProjectId is required")
+	}
+	if c.location == "" {
+		return nil, fmt.Errorf("gce client GetInstance failed: location is required")
+	}
+	instance, err := c.computeServiceClient.Instances.Get(c.gkeProjectID, c.location, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gce client GetInstance failed: %v", err)
+	}
+	blog.Infof("gce client GetInstance successful")
+
+	return instance, nil
+}
+
 // RemoveNodeFromMIG remove nodes from MIG, but the nodes still in cluster
 func (c *ComputeServiceClient) RemoveNodeFromMIG(ctx context.Context, location, name string, nodes []string) error {
 	if c.gkeProjectID == "" {

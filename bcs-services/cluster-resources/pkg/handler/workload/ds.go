@@ -23,7 +23,9 @@ import (
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
+	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -86,4 +88,34 @@ func (h *Handler) DeleteDS(
 	return resAction.NewResMgr(req.ClusterID, "", resCsts.DS).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
+}
+
+// RestartDS 重新调度 DaemonSet
+func (h *Handler) RestartDS(
+	ctx context.Context, req *clusterRes.ResRestartReq, resp *clusterRes.CommonResp,
+) (err error) {
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.DS).Restart(
+		ctx, req.Namespace, req.Name, metav1.PatchOptions{FieldManager: "kubectl-rollout"},
+	)
+	return err
+}
+
+// GetDSHistoryRevision 获取DaemonSet history revision
+func (h *Handler) GetDSHistoryRevision(ctx context.Context, req *clusterRes.GetDeployHistoryRevisionReq, resp *clusterRes.CommonResp) error {
+	// 根据deployment name namespace筛选
+	ret, err := cli.NewRSCliByClusterID(ctx, req.ClusterID).GetResHistoryRevision(
+		ctx, req.Name, req.Namespace, resCsts.DS, resCsts.DSChangeCause)
+
+	if err != nil {
+		return err
+	}
+	resp.Data, err = pbstruct.Map2pbStruct(ret)
+	return err
+}
+
+// RolloutDSRevision 回滚DaemonSet history revision
+func (h *Handler) RolloutDSRevision(ctx context.Context, req *clusterRes.RolloutDeployRevisionReq,
+	_ *clusterRes.CommonResp) error {
+	return cli.NewRSCliByClusterID(ctx, req.ClusterID).RolloutResRevision(
+		ctx, req.Namespace, req.Revision, req.Name, resCsts.DS)
 }

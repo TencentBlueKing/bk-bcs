@@ -84,7 +84,7 @@ downstream:
   # this parameter to sidecar. if the connection between sidecar and feed server reaches this interval,
   # sidecar will re-select the feed server instance to establish the connection. unit is hour, the
   # minimum bounceIntervalHour is 1, the maximum bounceIntervalHour is 48, and the default bounceIntervalHour is 1.
-  bounceIntervalHour: 60
+  bounceIntervalHour: 48
   # notifyMaxLimit is the concurrent number of goroutines which are used to broadcast app release messages to
   #	sidecars, which are connnected to one feed server, when new app releases are published. The larger of it,
   #	the more CPU and Mem will be costed.the minimum notifyMaxLimit is 10, the default notifyMaxLimit is 50.

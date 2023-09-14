@@ -22,12 +22,14 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/emicklei/go-restful"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/errors"
 	jwt2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
+	blog "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/log"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
@@ -115,7 +117,7 @@ func (ta *TokenAuthenticater) GetJWTUser() *models.BcsUser {
 
 	jwtUser, err := jwt2.JWTClient.JWTDecode(tokenString)
 	if err != nil {
-		blog.Errorf("decode jwt user failed: %s", err.Error())
+		blog.Log(ta.req.Context()).Errorf("decode jwt user failed: %s", err.Error())
 		return nil
 	}
 
@@ -129,18 +131,18 @@ func (ta *TokenAuthenticater) GetJWTUser() *models.BcsUser {
 	switch jwtUser.SubType {
 	case jwt.User.String():
 		if jwtUser.UserName == "" {
-			blog.Errorf("invalid jwt user: %v", jwtUser)
+			blog.Log(ta.req.Context()).Errorf("invalid jwt user: %v", jwtUser)
 			return nil
 		}
 		username = jwtUser.UserName
 	case jwt.Client.String():
 		if jwtUser.ClientID == "" {
-			blog.Errorf("invalid jwt user: %v", jwtUser)
+			blog.Log(ta.req.Context()).Errorf("invalid jwt user: %v", jwtUser)
 			return nil
 		}
 		username = jwtUser.ClientID
 	default:
-		blog.Errorf("invalid jwt user: %v", jwtUser)
+		blog.Log(ta.req.Context()).Errorf("invalid jwt user: %v", jwtUser)
 		return nil
 	}
 
@@ -177,6 +179,110 @@ func AuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
 func TokenAuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	rb.Filter(TokenAuthAuthenticate)
 	return rb
+}
+
+// ProjectViewFunc project view filter
+func ProjectViewFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	rb.Filter(ProjectViewAuthorization)
+	return rb
+}
+
+// TokenAuthenticateV2Func token filter
+func TokenAuthenticateV2Func(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	rb.Filter(TokenAuthenticateV2)
+	return rb
+}
+
+// ManagerAuthFunc token filter
+func ManagerAuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	rb.Filter(ManagerAuth)
+	return rb
+}
+
+// TokenAuthenticateV2 uesr token verification
+func TokenAuthenticateV2(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
+	authenticater := newTokenAuthenticater(request.Request, &TokenAuthConfig{
+		SourceBearerEnabled: true,
+	})
+	user := authenticater.GetUser()
+	if user == nil || user.HasExpired() {
+		utils.ResponseAuthError(response)
+		return
+	}
+
+	request.SetAttribute(constant.CurrentUserAttr, user)
+	chain.ProcessFilter(request, response)
+}
+
+// PermsAuthFunc perms auth filter
+func PermsAuthFunc(actionID string, permCtx *PermCtx) func(request *restful.Request, response *restful.Response,
+	chain *restful.FilterChain) {
+	return func(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
+		user := utils.GetUserFromAttribute(request)
+		if user == nil {
+			utils.ResponseAuthError(response)
+			return
+		}
+		blog.Log(request.Request.Context()).Infof("check user %s permission", user.Name)
+
+		// get perm
+		permReq := iam.PermissionRequest{
+			SystemID: config.GetGlobalConfig().IAMConfig.SystemID,
+			UserName: user.Name,
+		}
+		var allow bool
+		var applyURL string
+		node := GetResourceNodeFromPermCtx(permCtx)
+		allow, err := config.GloablIAMClient.IsAllowedWithResource(actionID, permReq, []iam.ResourceNode{node}, true)
+		if err != nil {
+			utils.ResponseSystemError(response, fmt.Errorf("get perm failed, err %s", err.Error()))
+			return
+		}
+
+		if !allow {
+			applyURL, err = GetApplyURL(GetApplicationsFromPermCtx(permCtx, actionID))
+			if err != nil {
+				utils.ResponseSystemError(response, fmt.Errorf("get apply url failed, err %s", err.Error()))
+				return
+			}
+			utils.ResponsePermissionError(response, &utils.PermDeniedError{Perms: utils.PermData{
+				ApplyURL:   applyURL,
+				ActionList: []utils.ResourceAction{{Type: permCtx.ResourceType, Action: actionID}},
+			}})
+			return
+		}
+		chain.ProcessFilter(request, response)
+	}
+}
+
+// ProjectViewAuthorization project view authorization
+func ProjectViewAuthorization(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
+	project := utils.GetProjectFromAttribute(request)
+	if project == nil {
+		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
+		return
+	}
+	permCtx := &PermCtx{ResourceType: "project", ProjectID: project.ProjectID}
+	PermsAuthFunc("project_view", permCtx)(request, response, chain)
+}
+
+// ManagerAuth manager token verification
+func ManagerAuth(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
+	authenticater := newTokenAuthenticater(request.Request, &TokenAuthConfig{
+		SourceBearerEnabled: true,
+	})
+	user := authenticater.GetUser()
+	if user == nil || user.HasExpired() {
+		utils.ResponseAuthError(response)
+		return
+	}
+	if user.UserType != models.AdminUser && user.UserType != models.SaasUser {
+		utils.ResponsePermissionError(response, fmt.Errorf("access denied"))
+		return
+	}
+	request.SetAttribute(constant.CurrentUserAttr, user)
+	chain.ProcessFilter(request, response)
+	return
 }
 
 // AdminTokenAuthenticate admin token verification

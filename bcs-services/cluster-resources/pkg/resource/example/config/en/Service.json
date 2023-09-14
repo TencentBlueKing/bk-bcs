@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_service",
-      "alias": "Service Simple Demo",
+      "alias": "Service simple demo",
       "description": "A simple service demo with only basic configuration",
       "manifest": null
     }

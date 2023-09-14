@@ -21,17 +21,17 @@ import (
 	"net"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+	"github.com/TencentBlueKing/iam-go-sdk/logger"
+	"github.com/TencentBlueKing/iam-go-sdk/metric"
 	jwtGo "github.com/golang-jwt/jwt/v4"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
-	bkiam "github.com/TencentBlueKing/iam-go-sdk"
-	"github.com/TencentBlueKing/iam-go-sdk/logger"
-	"github.com/TencentBlueKing/iam-go-sdk/metric"
 )
 
 // G 全局配置，可在业务逻辑中使用
@@ -71,6 +71,17 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 
 	if conf.Redis.Password == "" {
 		conf.Redis.Password = envs.RedisPassword
+	}
+
+	// mongo env
+	if conf.Mongo.Address == "" {
+		conf.Mongo.Address = envs.MongoAddress
+	}
+	if conf.Mongo.Username == "" {
+		conf.Mongo.Username = envs.MongoUsername
+	}
+	if conf.Mongo.Password == "" {
+		conf.Mongo.Password = envs.MongoPassword
 	}
 
 	for _, f := range []func() error{
@@ -121,6 +132,7 @@ type ClusterResourcesConf struct {
 	Swagger SwaggerConf `yaml:"swagger"`
 	Log     LogConf     `yaml:"log"`
 	Redis   RedisConf   `yaml:"redis"`
+	Mongo   MongoConfig `yaml:"mongo"`
 	Global  GlobalConf  `yaml:"crGlobal"`
 	Tracing TracingConf `yaml:"tracing"`
 }
@@ -268,6 +280,19 @@ type RedisConf struct {
 	PoolSize     int    `yaml:"poolSize" usage:"Redis Pool Size"`
 	MinIdleConns int    `yaml:"minIdleConns" usage:"Redis Min Idle Conns"`
 	IdleTimeout  int    `yaml:"idleTimeout" usage:"Redis Idle Timeout(min)"`
+}
+
+// MongoConfig option for mongo
+type MongoConfig struct {
+	Address        string `json:"address" yaml:"address"`
+	ConnectTimeout uint   `json:"connectTimeout" yaml:"connectTimeout"`
+	AuthDatabase   string `json:"authDatabase" yaml:"authDatabase"`
+	Database       string `json:"database" yaml:"database"`
+	Username       string `json:"username" yaml:"username"`
+	Password       string `json:"password" yaml:"password"`
+	MaxPoolSize    uint   `json:"maxPoolSize" yaml:"maxPoolSize"`
+	MinPoolSize    uint   `json:"minPoolSize" yaml:"minPoolSize"`
+	Encrypted      bool   `json:"encrypted" yaml:"encrypted"`
 }
 
 // GlobalConf 全局配置，可在业务逻辑中使用

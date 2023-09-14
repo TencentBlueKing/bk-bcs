@@ -246,7 +246,7 @@ func main() {
 
 	blog.Infof("starting manager")
 
-	err = initHttpServer(opts, mgr, nodeCache)
+	err = initHttpServer(opts, mgr, nodeCache, nodeBindCache)
 	if err != nil {
 		blog.Errorf("init http server failed: %v", err.Error())
 		os.Exit(1)
@@ -300,7 +300,8 @@ func runPrometheusMetrics(op *option.ControllerOption) {
 // httpServer提供
 // 1. 集群内Ingress/PortPool/PortBinding/Listener等信息的查询
 // 2. 维护节点信息，提供接口给Pod获取所在节点的信息
-func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache *nodecache.NodeCache) error {
+func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache *nodecache.NodeCache,
+	nodeBindCache *portbindingctrl.NodePortBindingCache) error {
 	server := httpserver.NewHttpServer(op.HttpServerPort, op.Address, "")
 	if op.Conf.ServCert.IsSSL {
 		server.SetSsl(op.Conf.ServCert.CAFile, op.Conf.ServCert.CertFile, op.Conf.ServCert.KeyFile,
@@ -311,9 +312,10 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 	server.SetInsecureServer(op.Address, op.HttpServerPort)
 	ws := server.NewWebService("/ingresscontroller", nil)
 	httpServerClient := &httpsvr.HttpServerClient{
-		Mgr:       mgr,
-		NodeCache: nodeCache,
-		Ops:       op,
+		Mgr:               mgr,
+		NodeCache:         nodeCache,
+		Ops:               op,
+		NodePortBindCache: nodeBindCache,
 	}
 	// aga supporter can only be init when use
 	if op.Cloud == constant.CloudAWS {

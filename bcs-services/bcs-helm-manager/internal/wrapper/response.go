@@ -16,13 +16,18 @@ package wrapper
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
+	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -32,8 +37,13 @@ import (
 func ResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 		requestID := getRequestID(ctx)
+		startTime := time.Now()
 		ctx = context.WithValue(ctx, contextx.RequestIDContextKey, requestID)
 		err = fn(ctx, req, rsp)
+		endTime := time.Now()
+
+		// 添加审计
+		go addAudit(ctx, req, rsp, startTime, endTime)
 		return renderResponse(rsp, requestID, err)
 	}
 }
@@ -91,4 +101,176 @@ func getRequestID(ctx context.Context) string {
 	}
 
 	return requestID
+}
+
+// actionDesc 操作描述
+type actionDesc string
+
+// String string
+func (a actionDesc) String() string {
+	return string(a)
+}
+
+type resource struct {
+	RepoName  string `json:"repoName" yaml:"repoName"`
+	ClusterID string `json:"clusterID" yaml:"clusterID"`
+	Namespace string `json:"namespace" yaml:"namespace"`
+	Name      string `json:"name" yaml:"name"`
+	Version   string `json:"version" yaml:"version"`
+	Chart     string `json:"chart" yaml:"chart"`
+	Revision  uint32 `json:"revision" yaml:"revision"`
+}
+
+// resource to map
+func (r resource) toMap() map[string]any {
+	result := make(map[string]any, 0)
+	if r.RepoName != "" {
+		result["RepoName"] = r.RepoName
+	}
+	if r.ClusterID != "" {
+		result["ClusterID"] = r.ClusterID
+	}
+	if r.Namespace != "" {
+		result["Namespace"] = r.Namespace
+	}
+	if r.Name != "" {
+		result["Name"] = r.Name
+	}
+	if r.Version != "" {
+		result["Version"] = r.Version
+	}
+	if r.Chart != "" {
+		result["Chart"] = r.Chart
+	}
+	if r.Revision != 0 {
+		result["Revision"] = r.Revision
+	}
+	return result
+}
+
+func getResourceID(req server.Request) resource {
+	body := req.Body()
+	b, _ := json.Marshal(body)
+
+	resourceID := resource{}
+	_ = json.Unmarshal(b, &resourceID)
+	return resourceID
+}
+
+var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.Resource, audit.Action){
+	"HelmManager.DeleteChart": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeChart, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "delete_chart", ActivityType: audit.ActivityTypeDelete}
+	},
+	"HelmManager.DeleteChartVersion": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeChart, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "delete_chart_version", ActivityType: audit.ActivityTypeDelete}
+	},
+	"HelmManager.InstallReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "install_release", ActivityType: audit.ActivityTypeCreate}
+	},
+	"HelmManager.UninstallReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "uninstall_release", ActivityType: audit.ActivityTypeDelete}
+	},
+	"HelmManager.UpgradeReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "upgrade_release", ActivityType: audit.ActivityTypeUpdate}
+	},
+	"HelmManager.RollbackReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "rollback_release", ActivityType: audit.ActivityTypeUpdate}
+	},
+	"HelmManager.InstallAddons": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeAddons, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "install_addons", ActivityType: audit.ActivityTypeCreate}
+	},
+	"HelmManager.UpgradeAddons": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeAddons, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "upgrade_addons", ActivityType: audit.ActivityTypeUpdate}
+	},
+	"HelmManager.UninstallAddons": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeAddons, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "uninstall_addons", ActivityType: audit.ActivityTypeDelete}
+	},
+}
+
+func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTime, endTime time.Time) {
+	// get method audit func
+	fn, ok := auditFuncMap[req.Method()]
+	if !ok {
+		return
+	}
+
+	res, act := fn(req, rsp)
+
+	auditCtx := audit.RecorderContext{
+		Username:  auth.GetUserFromCtx(ctx),
+		SourceIP:  contextx.GetSourceIPFromCtx(ctx),
+		UserAgent: contextx.GetUserAgentFromCtx(ctx),
+		RequestID: contextx.GetRequestIDFromCtx(ctx),
+		StartTime: startTime,
+		EndTime:   endTime,
+	}
+	resource := audit.Resource{
+		ProjectCode:  contextx.GetProjectCodeFromCtx(ctx),
+		ResourceType: res.ResourceType,
+		ResourceID:   res.ResourceID,
+		ResourceName: res.ResourceName,
+		ResourceData: res.ResourceData,
+	}
+	action := audit.Action{
+		ActionID:     act.ActionID,
+		ActivityType: act.ActivityType,
+	}
+
+	result := audit.ActionResult{
+		Status: audit.ActivityStatusSuccess,
+	}
+
+	// get handle result
+	v := reflect.ValueOf(rsp)
+	codeField := v.Elem().FieldByName("Code")
+	messageField := v.Elem().FieldByName("Message")
+	if codeField.CanInterface() {
+		code := int(*codeField.Interface().(*uint32))
+		result.ResultCode = code
+	}
+	if messageField.CanInterface() {
+		message := *messageField.Interface().(*string)
+		result.ResultContent = message
+	}
+	if result.ResultCode != int(common.ErrHelmManagerSuccess) {
+		result.Status = audit.ActivityStatusFailed
+	}
+	component.GetAuditClient().R().
+		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 }

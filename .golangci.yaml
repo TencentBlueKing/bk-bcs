@@ -14,13 +14,11 @@ linters:
   disable-all: true
   enable:
     # enable by default
-    - deadcode
     - errcheck
     - gosimple
     - govet
     - ineffassign
     - staticcheck
-    - structcheck
     - typecheck
     - unused
     # custom

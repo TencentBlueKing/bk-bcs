@@ -49,7 +49,7 @@ var migrateInitCmd = &cobra.Command{
 			fmt.Printf("new iam sys failed, err: %v\n", err)
 		}
 
-		if err := iamSys.Register(context.Background(), cc.AuthServer().IAM.APIURL); err != nil {
+		if err := iamSys.Register(context.Background(), cc.AuthServer().IAM.Host); err != nil {
 			fmt.Printf("initialize service failed, err: %v\n", err)
 			return
 		}
@@ -71,7 +71,7 @@ func NewIamSys() (*sys.Sys, error) {
 		}
 	}
 	cfg := &client.Config{
-		Address:   iamSettings.Endpoints,
+		Address:   []string{iamSettings.APIURL},
 		AppCode:   iamSettings.AppCode,
 		AppSecret: iamSettings.AppSecret,
 		SystemID:  sys.SystemIDBSCP,

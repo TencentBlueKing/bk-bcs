@@ -32,7 +32,7 @@ wget https://github.com/protocolbuffers/protobuf/releases/download/v3.20.3/proto
 export GO111MODULE=on
 # go-micro new service 等依赖
 go install github.com/go-micro/cli/cmd/go-micro@v1.1.4
-# proto 依赖
+# proto 依赖(已使用 docker 生成 proto，无需下载依赖)
 go install github.com/go-micro/generator/cmd/protoc-gen-micro@v1.0.0
 go install github.com/golang/protobuf/protoc-gen-go@1.5.2
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0

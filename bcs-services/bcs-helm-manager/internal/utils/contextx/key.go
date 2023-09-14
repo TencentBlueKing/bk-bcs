@@ -26,7 +26,7 @@ const (
 	ProjectIDContextKey ContextKey = "projectID"
 	// ProjectCodeContextKey projectCode context key
 	ProjectCodeContextKey ContextKey = "projectCode"
-	// LangContectKey
+	// LangContectKey lang context key
 	LangContectKey ContextKey = "lang"
 )
 
@@ -34,6 +34,10 @@ const (
 const (
 	// RequestIDKey ...
 	RequestIDHeaderKey = "X-Request-Id"
+	// ForwardedForHeader is the header name of X-Forwarded-For.
+	ForwardedForHeaderKey = "X-Forwarded-For"
+	// UserAgentHeader is the header name of User-Agent.
+	UserAgentHeaderKey = "Grpcgateway-User-Agent"
 	// ContentDispositionKey content disposition key
 	ContentDispositionKey = "content-disposition"
 	// ContentDispositionKey content disposition key

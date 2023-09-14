@@ -24,6 +24,7 @@ import (
 	pbtset "bscp.io/pkg/protocol/core/template-set"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/search"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -59,7 +60,8 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbds.CreateTemplat
 }
 
 // ListTemplateSets list template set.
-func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSetsReq) (*pbds.ListTemplateSetsResp, error) {
+func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSetsReq) (*pbds.ListTemplateSetsResp,
+	error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
@@ -89,22 +91,27 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSe
 // UpdateTemplateSet update template set.
 func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplateSetReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+	// set for empty slice to ensure the data in db is not `null` but `[]`
+	if len(req.Spec.TemplateIds) == 0 {
+		req.Spec.TemplateIds = []uint32{}
+	}
+	if len(req.Spec.BoundApps) == 0 {
+		req.Spec.BoundApps = []uint32{}
+	}
 
 	var (
-		hasInvisibleApp bool
-		invisibleApps   []uint32
-		err             error
+		invisibleATBs []*table.AppTemplateBinding
+		err           error
 	)
 
 	if req.Spec.Public == false {
-		invisibleApps, err = s.dao.TemplateBindingRelation().ListTemplateSetInvisibleApps(kt, req.Attachment.BizId,
+		invisibleATBs, err = s.dao.TemplateBindingRelation().ListTemplateSetInvisibleATBs(kt, req.Attachment.BizId,
 			req.Id, req.Spec.BoundApps)
 		if err != nil {
 			logs.Errorf("update template set failed, err: %v, rid: %s", err, kt.Rid)
 			return nil, err
 		}
-		if len(invisibleApps) > 0 {
-			hasInvisibleApp = true
+		if len(invisibleATBs) > 0 {
 			if !req.Force {
 				return nil, errors.New("template set is bound to unnamed app, please unbind first")
 			}
@@ -143,17 +150,58 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 		return nil, err
 	}
 
-	// 2. delete template set for invisible apps if exists
-	if hasInvisibleApp {
-		if err = s.dao.TemplateBindingRelation().DeleteTmplSetForInvisibleAppsWithTx(kt, tx, req.Attachment.BizId,
-			req.Id, invisibleApps); err != nil {
-			logs.Errorf("delete template set for invisible apps failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
-			return nil, err
+	// 2. update app template bindings if necessary
+	// delete invisible template set from correspond app template bindings
+	if len(invisibleATBs) > 0 {
+		for _, atb := range invisibleATBs {
+			// delete the specific set in the atb
+			delIndex := -1
+			for idx, b := range atb.Spec.Bindings {
+				if b.TemplateSetID == req.Id {
+					delIndex = idx
+					break
+				}
+			}
+			if delIndex >= 0 {
+				atb.Spec.Bindings = append(atb.Spec.Bindings[:delIndex], atb.Spec.Bindings[delIndex+1:]...)
+			}
+			if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
+				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
+				tx.Rollback()
+				return nil, err
+			}
 		}
 	}
 
-	tx.Commit()
+	// 3. update app template bindings if necessary
+	// get old template set detail before the update operation, not use transaction so that it is the old one
+	oldTmplSets, err := s.dao.TemplateSet().ListByIDs(kt, []uint32{req.Id})
+	if err != nil {
+		logs.Errorf("list template sets by ids failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	if !tools.IsSameSlice(oldTmplSets[0].Spec.TemplateIDs, templateSet.Spec.TemplateIDs) {
+		atbs, err := s.dao.TemplateBindingRelation().
+			ListTemplateSetsBoundATBs(kt, req.Attachment.BizId, []uint32{req.Id})
+		if err != nil {
+			logs.Errorf("list template set bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+		if len(atbs) > 0 {
+			for _, atb := range atbs {
+				if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
+					logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
+					tx.Rollback()
+					return nil, err
+				}
+			}
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 
 	return new(pbbase.EmptyResp), nil
 }
@@ -196,16 +244,40 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplat
 		return nil, err
 	}
 
-	// 2. delete bound unnamed app if exists
+	// 2. update app template bindings if necessary
 	if hasUnnamedApp {
-		if err = s.dao.TemplateBindingRelation().DeleteTmplSetWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
-			logs.Errorf("delete template set failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+		atbs, err := s.dao.TemplateBindingRelation().
+			ListTemplateSetsBoundATBs(kt, req.Attachment.BizId, []uint32{req.Id})
+		if err != nil {
+			logs.Errorf("list template set bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
 			return nil, err
+		}
+		if len(atbs) > 0 {
+			for _, atb := range atbs {
+				// delete the specific set in the atb
+				delIndex := -1
+				for idx, b := range atb.Spec.Bindings {
+					if b.TemplateSetID == req.Id {
+						delIndex = idx
+						break
+					}
+				}
+				if delIndex >= 0 {
+					atb.Spec.Bindings = append(atb.Spec.Bindings[:delIndex], atb.Spec.Bindings[delIndex+1:]...)
+				}
+				if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
+					logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
+					tx.Rollback()
+					return nil, err
+				}
+			}
 		}
 	}
 
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 
 	return new(pbbase.EmptyResp), nil
 }
@@ -248,12 +320,62 @@ func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbds.ListTempl
 	return resp, nil
 }
 
+// ListTemplateSetBriefInfoByIDs list template set by ids.
+func (s *Service) ListTemplateSetBriefInfoByIDs(ctx context.Context, req *pbds.ListTemplateSetBriefInfoByIDsReq) (
+	*pbds.ListTemplateSetBriefInfoByIDsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.Ids); err != nil {
+		return nil, err
+	}
+
+	// template set details
+	tmplSets, err := s.dao.TemplateSet().ListByIDs(kt, req.Ids)
+	if err != nil {
+		logs.Errorf("list template sets failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	tmplSetMap := make(map[uint32]*table.TemplateSet)
+	tmplSpaceIDs := make([]uint32, 0)
+	for _, ts := range tmplSets {
+		tmplSetMap[ts.ID] = ts
+		tmplSpaceIDs = append(tmplSpaceIDs, ts.Attachment.TemplateSpaceID)
+	}
+	tmplSpaceIDs = tools.RemoveDuplicates(tmplSpaceIDs)
+
+	// template space details
+	tmplSpaces, err := s.dao.TemplateSpace().ListByIDs(kt, tmplSpaceIDs)
+	if err != nil {
+		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	tmplSpaceMap := make(map[uint32]*table.TemplateSpace)
+	for _, ts := range tmplSpaces {
+		tmplSpaceMap[ts.ID] = ts
+	}
+
+	details := make([]*pbtset.TemplateSetBriefInfo, len(tmplSets))
+	for idx, t := range tmplSets {
+		details[idx] = &pbtset.TemplateSetBriefInfo{
+			TemplateSpaceId:   t.Attachment.TemplateSpaceID,
+			TemplateSpaceName: tmplSpaceMap[t.Attachment.TemplateSpaceID].Spec.Name,
+			TemplateSetId:     t.ID,
+			TemplateSetName:   tmplSetMap[t.ID].Spec.Name,
+		}
+	}
+
+	resp := &pbds.ListTemplateSetBriefInfoByIDsResp{
+		Details: details,
+	}
+	return resp, nil
+}
+
 // ListTemplateSetsOfBiz list template sets of one biz.
 func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbds.ListTemplateSetsOfBizReq) (
 	*pbds.ListTemplateSetsOfBizResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	tmplSets, err := s.dao.TemplateSet().ListAllTemplateSetsOfBiz(kt, req.BizId)
+	tmplSets, err := s.dao.TemplateSet().ListAllTemplateSetsOfBiz(kt, req.BizId, req.AppId)
 	if err != nil {
 		logs.Errorf("list template sets of biz failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -273,6 +395,7 @@ func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbds.ListTempl
 			&pbtset.TemplateSetOfBizDetail_TemplateSetOfBiz{
 				TemplateSetId:   t.ID,
 				TemplateSetName: t.Spec.Name,
+				TemplateIds:     t.Spec.TemplateIDs,
 			})
 	}
 	tmplSpaceIDs := make([]uint32, 0, len(tmplSetsMap))

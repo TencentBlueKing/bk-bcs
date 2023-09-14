@@ -61,7 +61,7 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		ReleaseID            uint   `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_releaseID,priority:1"`
+		ReleaseID            uint   `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:3"`
 		TemplateSpaceID      uint   `gorm:"type:bigint(1) unsigned not null"`
 		TemplateSpaceName    string `gorm:"type:varchar(255) not null"`
 		TemplateSetID        uint   `gorm:"type:bigint(1) unsigned not null"`
@@ -82,8 +82,8 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		ByteSize             uint   `gorm:"type:bigint(1) unsigned not null"`
 
 		// Attachment is attachment info of the resource
-		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID,priority:1"`
-		AppID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_appID,priority:2"`
+		BizID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:1"`
+		AppID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:2"`
 
 		// Revision is revision info of the resource
 		Creator   string    `gorm:"type:varchar(64) not null"`

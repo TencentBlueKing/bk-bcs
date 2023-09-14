@@ -237,3 +237,9 @@ func (a *Authorize) ListAuthorizedInstances(ctx context.Context, opts *client.Au
 	}
 	return a.countPolicy(ctx, policy, resourceType)
 }
+
+func (a *Authorize) GrantResourceCreatorAction(ctx context.Context,
+	opts *client.GrantResourceCreatorActionOption) error {
+
+	return a.client.GrantResourceCreatorAction(ctx, *opts)
+}

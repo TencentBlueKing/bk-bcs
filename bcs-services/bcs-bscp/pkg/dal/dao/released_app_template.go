@@ -32,6 +32,8 @@ type ReleasedAppTemplate interface {
 	// List released app templates with options.
 	List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher, opt *types.BasePage) (
 		[]*table.ReleasedAppTemplate, int64, error)
+	// GetReleasedLately get released templates lately
+	GetReleasedLately(kit *kit.Kit, bizID, appID uint32) ([]*table.ReleasedAppTemplate, error)
 }
 
 var _ ReleasedAppTemplate = new(releasedAppTemplateDao)
@@ -71,7 +73,7 @@ func (dao *releasedAppTemplateDao) BulkCreateWithTx(
 
 	q := tx.ReleasedAppTemplate.WithContext(kit.Ctx)
 	if err := q.CreateInBatches(items, batchSize); err != nil {
-		return fmt.Errorf("insert events failed, err: %v", err)
+		return fmt.Errorf("create released template config items in batch failed, err: %v", err)
 	}
 
 	ad := dao.auditDao.DecoratorV2(kit, items[0].Attachment.BizID).PrepareCreate(table.RatiList(items))
@@ -116,4 +118,15 @@ func (dao *releasedAppTemplateDao) List(kit *kit.Kit, bizID, appID, releaseID ui
 	}
 
 	return d.FindByPage(opt.Offset(), opt.LimitInt())
+}
+
+// GetReleasedLately get released templates lately
+func (dao *releasedAppTemplateDao) GetReleasedLately(kit *kit.Kit, bizID, appId uint32) (
+	[]*table.ReleasedAppTemplate, error) {
+	m := dao.genQ.ReleasedAppTemplate
+	q := dao.genQ.ReleasedAppTemplate.WithContext(kit.Ctx)
+
+	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId))
+	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).Order(m.ReleaseID.Desc()).Limit(1).Select(m.ReleaseID)
+	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()
 }

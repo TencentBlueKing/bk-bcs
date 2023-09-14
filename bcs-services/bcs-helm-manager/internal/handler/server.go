@@ -42,14 +42,14 @@ func NewHelmManager(model store.HelmManagerModel, platform repo.Platform, opt *o
 type AddonsHandler struct {
 	opt            *options.HelmManagerOptions
 	model          store.HelmManagerModel
-	addons         release.AddonsSlice
+	addons         *release.AddonsSlice
 	platform       repo.Platform
 	releaseHandler release.Handler
 }
 
 // NewAddonsHandler return a new AddonsHandler instance
 func NewAddonsHandler(model store.HelmManagerModel, opt *options.HelmManagerOptions, platform repo.Platform,
-	addons release.AddonsSlice, releaseHandler release.Handler) *AddonsHandler {
+	addons *release.AddonsSlice, releaseHandler release.Handler) *AddonsHandler {
 	return &AddonsHandler{
 		opt:            opt,
 		model:          model,

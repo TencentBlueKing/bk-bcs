@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"io"
 	"net/http"
 	"strconv"
@@ -28,7 +29,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils/jsonq"
@@ -112,36 +112,19 @@ func (plugin *AppPlugin) createApplicationHandler(ctx context.Context, r *http.R
 	if err = json.Unmarshal(body, app); err != nil {
 		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "unmarshal body failed"))
 	}
-	if app.Spec.Project == "" || app.Spec.Project == "default" {
-		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("project information lost"))
+	statusCode, err := plugin.middleware.CheckCreateApplication(ctx, app)
+	if err != nil {
+		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check create application failed"))
 	}
-	argoProject, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, app.Spec.Project, iam.ProjectEdit)
-	if statusCode != http.StatusOK {
-		return mw.ReturnErrorResponse(statusCode,
-			errors.Wrapf(err, "check project '%s' edit permission failed", app.Spec.Project))
-	}
-
-	// setting application name with project prefix
-	if !strings.HasPrefix(app.Name, app.Spec.Project+"-") {
-		app.Name = app.Spec.Project + "-" + app.Name
-	}
-	// setting control annotations
-	if app.Annotations == nil {
-		app.Annotations = make(map[string]string)
-	}
-	app.Annotations[common.ProjectIDKey] = common.GetBCSProjectID(argoProject.Annotations)
-	app.Annotations[common.ProjectBusinessIDKey] = argoProject.Annotations[common.ProjectBusinessIDKey]
-
 	updatedBody, err := json.Marshal(app)
 	if err != nil {
 		return mw.ReturnErrorResponse(http.StatusBadRequest,
-			errors.Wrapf(err, "json marshal application failed: %v", app))
+			errors.Wrapf(err, "json marshal application failed"))
 	}
 	r.Body = io.NopCloser(bytes.NewBuffer(updatedBody))
 	length := len(updatedBody)
 	r.Header.Set("Content-Length", strconv.Itoa(length))
 	r.ContentLength = int64(length)
-
 	return mw.ReturnArgoReverse()
 }
 
@@ -159,7 +142,7 @@ func (plugin *AppPlugin) listApplicationsHandler(ctx context.Context, r *http.Re
 				errors.Wrapf(err, "check project '%s' permission failed", projectName))
 		}
 	}
-	appList, err := plugin.middleware.ListApplications(ctx, projects)
+	appList, err := plugin.middleware.ListApplications(ctx, &appclient.ApplicationQuery{Projects: projects})
 	if err != nil {
 		return mw.ReturnErrorResponse(http.StatusInternalServerError,
 			errors.Wrapf(err, "list applications by project '%v' from storage failed", projects))

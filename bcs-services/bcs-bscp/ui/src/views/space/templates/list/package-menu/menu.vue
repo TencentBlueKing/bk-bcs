@@ -121,8 +121,7 @@
     loading.value = true
     const params = {
       start: 0,
-      limit: 1000,
-      // all: true
+      all: true
     }
     const res = await getTemplatePackageList(spaceId.value, currentTemplateSpace.value, params)
     packages.value = res.details
@@ -176,6 +175,12 @@
   const handleSelect = (id: number|string) => {
     setCurrentPackage(id)
     updateRouter(id)
+  }
+
+  const handlePkgCreated = (id: number) => {
+    updateRouter(id)
+    setCurrentPackage(id)
+    getList()
   }
 
   const handlePkgDeleted = (id: number) => {
@@ -241,7 +246,7 @@
   <PackageCreate
     v-model:show="isCreatePackageDialogShow"
     :template-space-id="currentTemplateSpace"
-    @created="getList" />
+    @created="handlePkgCreated" />
   <PackageEdit
     v-model:show="editingPkgData.open"
     :template-space-id="currentTemplateSpace"

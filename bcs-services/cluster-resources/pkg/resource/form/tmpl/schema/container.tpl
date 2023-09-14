@@ -139,7 +139,6 @@ command:
       type: boolean
     stdinOnce:
       title: {{ i18n "仅一次" .lang }}
-      description: stdinOnce
       type: boolean
     tty:
       title: tty
@@ -531,7 +530,7 @@ resource:
             name: bfInput
             props:
               max: 256000
-              unit: Mi
+              unit: MiB
         extra:
           title: {{ i18n "自定义资源预留" .lang }}
           type: array
@@ -586,7 +585,7 @@ resource:
             name: bfInput
             props:
               max: 256000
-              unit: Mi
+              unit: MiB
         extra:
           title: {{ i18n "自定义资源限制" .lang }}
           type: array

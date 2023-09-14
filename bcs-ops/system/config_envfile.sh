@@ -120,7 +120,7 @@ init_env() {
   APISERVER_HA_MODE=${APISERVER_HA_MODE:-"bcs-apiserver-proxy"}
   VIP=${VIP:-}
   ## bcs apiserver proxy
-  APISERVER_PROXY_VERSION=${APISERVER_PROXY_VERSION:-"v1.28.0"}
+  APISERVER_PROXY_VERSION=${APISERVER_PROXY_VERSION:-"v1.29.0-alpha.130-tencent"}
   PROXY_TOOL_PATH=${PROXY_TOOL_PATH:-"/usr/bin"}
   VS_PORT=${VS_PORT:-"6443"}
   LVS_SCHEDULER=${LVS_SCHEDULER:-"rr"}
@@ -263,6 +263,17 @@ BCS_CP_WORKER="${BCS_CP_WORKER}"
 
 # csi
 K8S_CSI="${K8S_CSI}"
+$(
+    case "${K8S_CSI,,}" in
+      "localpv")
+        cat <<CSI_EOF
+LOCALPV_DIR="${LOCALPV_DIR}"
+LOCALPV_COUNT="${LOCALPV_COUNT}"
+LOCALPV_reclaimPolicy="${LOCALPV_reclaimPolicy}"
+CSI_EOF
+        ;;
+    esac
+  )
 
 ## yum_mirror
 MIRROR_URL="${MIRROR_URL}"

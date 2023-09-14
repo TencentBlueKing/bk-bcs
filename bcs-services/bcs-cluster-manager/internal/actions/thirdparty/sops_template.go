@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
@@ -285,7 +286,7 @@ func (la *GetTemplateValuesAction) getInnerTemplateValues() error {
 	for i := range template.InnerTemplateVarsList {
 		la.templateValues = append(la.templateValues, &cmproto.TemplateValue{
 			Name:  template.InnerTemplateVarsList[i].VarName,
-			Desc:  template.InnerTemplateVarsList[i].Desc,
+			Desc:  i18n.T(la.ctx, strings.Replace(template.InnerTemplateVarsList[i].ReferMethod, " ", "", -1)),
 			Refer: template.InnerTemplateVarsList[i].ReferMethod,
 			Trans: template.InnerTemplateVarsList[i].TransMethod,
 			Value: func() string {

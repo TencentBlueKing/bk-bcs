@@ -31,7 +31,7 @@ type ReleasedCI interface {
 	Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error)
 	// GetReleasedLately released config item by app id and biz id
 	GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) ([]*table.ReleasedConfigItem, error)
-	// List released config items with options.
+	// List released config items with options, only return non template config items.
 	List(kit *kit.Kit, opts *types.ListReleasedCIsOption) (*types.ListReleasedCIsDetails, error)
 	// ListAll list all released config items in biz.
 	ListAll(kit *kit.Kit, bizID uint32) ([]*table.ReleasedConfigItem, error)
@@ -79,7 +79,7 @@ func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items 
 
 	q := tx.ReleasedConfigItem.WithContext(kit.Ctx)
 	if err := q.CreateInBatches(items, batchSize); err != nil {
-		return fmt.Errorf("insert events failed, err: %v", err)
+		return fmt.Errorf("create released config items in batch failed, err: %v", err)
 	}
 
 	ad := dao.auditDao.DecoratorV2(kit, items[0].Attachment.BizID).PrepareCreate(table.RciList(items))
@@ -106,7 +106,7 @@ func (dao *releasedCIDao) Get(kit *kit.Kit, configItemID, bizID, releaseID uint3
 		m.ConfigItemID.Eq(configItemID), m.ReleaseID.Eq(releaseID), m.BizID.Eq(bizID)).Take()
 }
 
-// List released config items with options.
+// List released config items with options, only return non template config items.
 func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) (
 	*types.ListReleasedCIsDetails, error) {
 
@@ -124,8 +124,8 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 	}
 
 	m := dao.genQ.ReleasedConfigItem
-
-	query := m.WithContext(kit.Ctx).Where(m.ReleaseID.Eq(opts.ReleaseID), m.BizID.Eq(opts.BizID))
+	// m.ConfigItemID.Neq(0) means not to match template config items
+	query := m.WithContext(kit.Ctx).Where(m.ReleaseID.Eq(opts.ReleaseID), m.BizID.Eq(opts.BizID), m.ConfigItemID.Neq(0))
 	if opts.SearchKey != "" {
 		searchKey := "%" + opts.SearchKey + "%"
 		query = query.Where(m.Name.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))
@@ -200,11 +200,11 @@ func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32, s
 
 	m := dao.genQ.ReleasedConfigItem
 	q := dao.genQ.ReleasedConfigItem.WithContext(kit.Ctx)
-	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId))
+	// m.ConfigItemID.Neq(0) means not to match template config items
+	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId), m.ConfigItemID.Neq(0))
 	if searchKey != "" {
 		param := "%" + searchKey + "%"
-		query = q.Where(q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)),
-			q.Where(m.Name.Like(param)).Or(m.Creator.Like(param)).Or(m.Reviser.Like(param)))
+		query = q.Where(query, q.Where(m.Name.Like(param)).Or(m.Creator.Like(param)).Or(m.Reviser.Like(param)))
 	}
 	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).Order(m.ReleaseID.Desc()).Limit(1).Select(m.ReleaseID)
 	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()

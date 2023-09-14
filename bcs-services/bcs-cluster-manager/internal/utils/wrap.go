@@ -17,18 +17,34 @@ import (
 	"context"
 	"reflect"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
+	"github.com/micro/go-micro/v2/server/grpc"
+	microSvc "github.com/micro/go-micro/v2/service"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 const (
 	// NoPermissionErr auth failed
 	NoPermissionErr = 40403
 )
+
+var (
+	// MaxBodySize define maximum message size that grpc server can send or receive. Default value is 50MB.
+	MaxBodySize = 1024 * 1024 * 50
+)
+
+// MaxMsgSize of the max msg size
+func MaxMsgSize(s int) microSvc.Option {
+	return func(o *microSvc.Options) {
+		o.Server.Init(grpc.MaxMsgSize(s))
+	}
+}
 
 // RequestLogWarpper log request
 func RequestLogWarpper(fn server.HandlerFunc) server.HandlerFunc {
@@ -105,4 +121,30 @@ func getRequestID(ctx context.Context) string {
 	}
 
 	return requestID
+}
+
+// HandleLanguageWrapper 从上下文获取语言
+func HandleLanguageWrapper(fn server.HandlerFunc) server.HandlerFunc {
+	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
+		md, _ := metadata.FromContext(ctx)
+		ctx = i18n.WithLanguage(ctx, getLangFromCookies(md))
+		return fn(ctx, req, rsp)
+	}
+}
+
+// getLangFromCookies 从 Cookies 中获取语言版本
+func getLangFromCookies(md metadata.Metadata) string {
+	cookies, ok := md.Get(common.MetadataCookiesKey)
+
+	if !ok {
+		return i18n.DefaultLanguage
+	}
+	for _, c := range Split(cookies) {
+		k, v := Partition(c, "=")
+		if k != common.LangCookieName {
+			continue
+		}
+		return v
+	}
+	return i18n.DefaultLanguage
 }

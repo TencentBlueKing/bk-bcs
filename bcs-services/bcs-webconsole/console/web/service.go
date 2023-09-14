@@ -17,16 +17,22 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
+	"path/filepath"
+
+	"github.com/gin-gonic/gin"
+	"k8s.io/klog/v2"
 
 	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
+	"github.com/gin-gonic/gin"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-	"github.com/gin-gonic/gin"
 )
 
 type service struct {
@@ -51,11 +57,72 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web.GET("/projects/:projectId/mgr/", metrics.RequestCollect("MgrPage"), s.MgrPageHandler)
 	web.GET("/portal/container/", metrics.RequestCollect("ContainerGatePage"), s.ContainerGatePageHandler)
 	web.GET("/portal/cluster/", metrics.RequestCollect("ClusterGatePage"), s.ClusterGatePageHandler)
+	web.GET("/replay/files", metrics.RequestCollect("ReplayFilesPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFoldersPageHandler)
+	web.GET("/replay/files/:folder", metrics.RequestCollect("ReplayFilesPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFilesPageHandler)
+	web.GET("/replay/:folderName/:fileName", metrics.RequestCollect("ReplayDetailPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayDetailPageHandler)
 
 	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
 	web.GET("/-/ready", s.ReadyHandler)
 	web.GET("/metrics", metrics.PromMetricHandler())
+}
+
+// ReplayFilesPageHandler 回放文件
+func (s *service) ReplayFilesPageHandler(c *gin.Context) {
+	folderName := c.Param("folder")
+	baseDir := config.G.Audit.DataDir
+	dir := filepath.Join(baseDir, folderName)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		klog.Errorf("read dir err", err)
+		return
+	}
+	fileNames := make([]string, 0)
+	for _, entry := range entries {
+		if entry.Type().IsRegular() {
+			fileNames = append(fileNames, entry.Name())
+		}
+	}
+	data := gin.H{
+		"folder_name":     folderName,
+		"file_names":      fileNames,
+		"SITE_STATIC_URL": s.opts.RoutePrefix,
+	}
+	c.HTML(http.StatusOK, "replay.html", data)
+}
+
+// ReplayFoldersPageHandler 回放文件目录
+func (s *service) ReplayFoldersPageHandler(c *gin.Context) {
+	dirname := config.G.Audit.DataDir
+	entries, err := os.ReadDir(dirname)
+	if err != nil {
+		klog.Errorf("read dir err", err)
+		return
+	}
+	folderNames := make([]string, 0)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			folderNames = append(folderNames, entry.Name())
+		}
+	}
+	data := gin.H{
+		"folder_names":    folderNames,
+		"SITE_STATIC_URL": s.opts.RoutePrefix,
+	}
+	c.HTML(http.StatusOK, "replay.html", data)
+}
+
+// ReplayDetailPageHandler 回放终端记录文件
+func (s service) ReplayDetailPageHandler(c *gin.Context) {
+	folder := c.Param("folderName")
+	file := c.Param("fileName")
+	routePrefix := config.G.Web.RoutePrefix
+	data := fmt.Sprintf("%s/casts/%s/%s", routePrefix, folder, file)
+	res := gin.H{
+		"data":            data,
+		"SITE_STATIC_URL": s.opts.RoutePrefix,
+	}
+	c.HTML(http.StatusOK, "asciinema.html", res)
 }
 
 // IndexPageHandler index 页面

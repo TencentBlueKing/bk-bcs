@@ -406,3 +406,19 @@ func GenerateNamespaceName(prefix, projectCode string, clusterID string) string 
 
 	return fmt.Sprintf("%s-%s-%s", prefix, projectCode, strings.ToLower(clusterID))
 }
+
+// Split 分割字符串，支持 " ", ";", "," 分隔符
+func Split(originStr string) []string {
+	originStr = strings.ReplaceAll(originStr, ";", ",")
+	originStr = strings.ReplaceAll(originStr, " ", ",")
+	return strings.FieldsFunc(originStr, func(c rune) bool { return c == ',' })
+}
+
+// Partition 从指定分隔符的第一个位置，将字符串分为两段
+func Partition(s string, sep string) (string, string) {
+	parts := strings.SplitN(s, sep, 2)
+	if len(parts) == 1 {
+		return parts[0], ""
+	}
+	return parts[0], parts[1]
+}

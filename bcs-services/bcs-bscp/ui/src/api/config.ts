@@ -1,5 +1,6 @@
 import http from "../request"
 import { IConfigEditParams, IConfigListQueryParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config'
+import { IVariableEditParams } from '../../types/variable'
 import { ICommonQuery } from "../../types/index"
 
 // 配置项版本下脚本配置接口可能会返回null，做数据兼容处理
@@ -116,7 +117,7 @@ export const getConfigContent = (bizId: string, appId: number, SHA256Str: string
 interface ICreateVersionParams {
   name: string;
   memo: string;
-  variables: { [key: string]: string }
+  variables: IVariableEditParams[];
 }
 export const createVersion = (bizId: string, appId: number, params: ICreateVersionParams) => {
   return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, params)
@@ -226,7 +227,7 @@ export const getBoundTemplates = (bizId: string, appId: number, params: ICommonQ
  * @returns
  */
 export const getBoundTemplatesByAppVersion = (bizId: string, appId: number, releaseId: number) => {
-  return http.get(`/config/biz/${bizId}/apps/${appId}/released_template_revisions`, { params: { start: 0, all: true, release_id: releaseId } })
+  return http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/template_revisions`, { params: { start: 0, all: true } }).then(res =>  res.data)
 }
 
 /**
