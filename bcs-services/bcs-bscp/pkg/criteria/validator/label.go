@@ -15,6 +15,7 @@ package validator
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -88,5 +89,13 @@ func ValidateLabelValue(value string) error {
 		return fmt.Errorf("label's value length should <= %d", MaxLabelValueLength)
 	}
 
+	return nil
+}
+
+// ValidateLabelValue validate if a label's value is valid or not when the value is an regular expression.
+func ValidateLabelValueRegex(value string) error {
+	if _, err := regexp.Compile(value); err != nil {
+		return fmt.Errorf("label's value %v is invalid regex: %v", value, err)
+	}
 	return nil
 }
