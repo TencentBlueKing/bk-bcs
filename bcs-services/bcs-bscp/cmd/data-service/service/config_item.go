@@ -24,6 +24,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
+	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbrci "bscp.io/pkg/protocol/core/released-ci"
 	pbds "bscp.io/pkg/protocol/data-service"
@@ -518,6 +519,11 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 		return nil, err
 	}
 	configItems := pbrci.PbConfigItemState(details, fileReleased)
+	if err := s.setCommitSpecForCIs(grpcKit, configItems); err != nil {
+		logs.Errorf("set commit spec for config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
 	var start, end uint32 = 0, uint32(len(configItems))
 	if !req.All {
 		if req.Start < uint32(len(configItems)) {
@@ -534,6 +540,29 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 		Details: configItems[start:end],
 	}
 	return resp, nil
+}
+
+func (s *Service) setCommitSpecForCIs(kt *kit.Kit, cis []*pbci.ConfigItem) error {
+	ids := make([]uint32, len(cis))
+	for i, ci := range cis {
+		ids[i] = ci.Id
+	}
+
+	commits, err := s.dao.Commit().BatchListLatestCommits(kt, kt.BizID, kt.AppID, ids)
+	if err != nil {
+		logs.Errorf("batch list latest commits failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+	commitMap := make(map[uint32]*table.CommitSpec, len(commits))
+	for _, c := range commits {
+		commitMap[c.Attachment.ConfigItemID] = c.Spec
+	}
+
+	for _, ci := range cis {
+		ci.CommitSpec = pbcommit.PbCommitSpec(commitMap[ci.Id])
+	}
+
+	return nil
 }
 
 // ListConfigItemCount list config items count.
