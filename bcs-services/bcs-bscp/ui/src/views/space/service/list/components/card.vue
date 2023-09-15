@@ -1,33 +1,72 @@
 <script setup lang="ts">
   import { useI18n } from "vue-i18n"
   import { useRoute, useRouter } from 'vue-router'
+  import { storeToRefs } from 'pinia'
   import { Del } from 'bkui-vue/lib/icon'
   import { InfoBox } from 'bkui-vue/lib'
+  import { useGlobalStore } from '../../../../../store/global'
   import { IAppItem } from '../../../../../../types/app'
   import { deleteApp } from "../../../../../api";
 
+  const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore())
 
   const { t } = useI18n()
   const route = useRoute()
   const router = useRouter()
 
   const props = defineProps<{
-    service: IAppItem
+    service: IAppItem;
   }>()
 
   const emits = defineEmits(['edit', 'update'])
 
   const handleDeleteItem = () => {
-    InfoBox({
-      title: `确认是否删除服务 ${props.service.spec.name}?`,
-      infoType: "danger",
-      headerAlign: "center" as const,
-      footerAlign: "center" as const,
-      onConfirm: async () => {
-        await deleteApp(<number>props.service.id, props.service.biz_id);
-        emits('update')
-      },
-    } as any);
+    if (props.service.permissions.delete) {
+      InfoBox({
+        title: `确认是否删除服务 ${props.service.spec.name}?`,
+        infoType: "danger",
+        headerAlign: "center" as const,
+        footerAlign: "center" as const,
+        onConfirm: async () => {
+          await deleteApp(<number>props.service.id, props.service.biz_id);
+          emits('update')
+        },
+      } as any);
+    } else {
+      const query = {
+        resources: [{
+          biz_id: props.service.biz_id,
+          basic: {
+            type: 'app',
+            action: 'delete',
+            resource_id: props.service.id
+          }
+        }]
+      }
+      openPermApplyDialog(query)
+    }
+  }
+
+  const handleCardClick = () => {
+    if (props.service.permissions.view) {
+      return
+    }
+    const query = {
+      resources: [{
+        biz_id: props.service.biz_id,
+        basic: {
+          type: 'app',
+          action: 'view',
+          resource_id: props.service.id
+        }
+      }]
+    }
+    openPermApplyDialog(query)
+  }
+
+  const openPermApplyDialog = (query) => {
+    permissionQuery.value = query
+    showApplyPermDialog.value = true
   }
 
   const goToDetail = () => {
@@ -35,7 +74,7 @@
   }
 </script>
 <template>
-  <section class="service-card">
+  <section :class="['service-card', { 'no-view-perm': !props.service.permissions.view }]" @click="handleCardClick">
     <div class="card-content-wrapper">
       <div class="card-head">{{ props.service.spec?.name }}</div>
       <span class="del-btn"><Del @click="handleDeleteItem" /></span>
@@ -50,16 +89,19 @@
         </div>
       </div>
       <div class="card-footer">
-        <bk-button
-          size="small"
-          text
-          @click="emits('edit', props.service)">
-          {{ t("服务属性") }}
-        </bk-button>
-        <span class="divider-middle"></span>
-        <bk-button size="small" text @click="goToDetail">
-          {{t("配置管理")}}
-        </bk-button>
+        <template v-if="props.service.permissions.view">
+          <bk-button
+            size="small"
+            text
+            @click="emits('edit', props.service)">
+            {{ t("服务属性") }}
+          </bk-button>
+          <span class="divider-middle"></span>
+          <bk-button size="small" text @click="goToDetail">
+            {{t("配置管理")}}
+          </bk-button>
+        </template>
+        <div v-else class="apply-btn">申请服务权限</div>
       </div>
     </div>
   </section>
@@ -70,6 +112,29 @@
     width: 304px;
     height: 165px;
     padding: 0px 8px 16px 8px;
+    &.no-view-perm {
+      cursor: pointer;
+      .card-content-wrapper {
+        background: #fafbfd;
+        .del-btn {
+          display: none !important;
+        }
+      }
+      .card-head {
+        color: #c4c6cc;
+        &::before {
+          background: #dcdee5;
+        }
+      }
+      .service-config {
+        color: #c4c6cc;
+      }
+      &:hover {
+        .apply-btn {
+          color: #3a84ff;
+        }
+      }
+    }
     .card-content-wrapper {
       height: 100%;
       background: #ffffff;
@@ -156,6 +221,14 @@
         height: 100%;
         background: #f0f1f5;
         margin: 0 16px;
+      }
+      .apply-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: #979ba5;
       }
     }
   }

@@ -7,7 +7,7 @@
   import { datetimeFormat } from '../../../../../utils/index';
   import { IAppItem } from '../../../../../../types/app'
 
-  const { spaceList } = storeToRefs(useGlobalStore())
+  const { spaceList, showApplyPermDialog, permissionQuery  } = storeToRefs(useGlobalStore())
 
   const { t } = useI18n()
 
@@ -51,10 +51,28 @@
   })
 
   const handleEditMemo = () => {
-    isMemoEdit.value = true
-    nextTick(() => {
-      memoRef.value.focus()
-    })
+    if (props.service.permissions.update) {
+      isMemoEdit.value = true
+      nextTick(() => {
+        memoRef.value.focus()
+      })
+    } else {
+      openPermApplyDialog()
+    }
+  }
+
+  const openPermApplyDialog = () => {
+    permissionQuery.value = {
+      resources: [{
+        biz_id: props.service.biz_id,
+        basic: {
+          type: 'app',
+          action: 'update',
+          resource_id: props.service.id
+        }
+      }]
+    }
+    showApplyPermDialog.value = true
   }
 
   const handleUpdateMemo = async() => {
@@ -112,7 +130,7 @@
               </template>
               <template v-else>
                 {{ formData.memo || '--' }}
-                <i class="bk-bscp-icon icon-edit-small edit-icon" @click="handleEditMemo"></i>
+                <i :class="['bk-bscp-icon icon-edit-small edit-icon', { 'no-edit-perm': props.service.permissions.update }]" @click="handleEditMemo" />
               </template>
             </div>
           </bk-form-item>
@@ -170,6 +188,9 @@
         cursor: pointer;
         &:hover {
           color: #3a84ff;
+        }
+        &.no-edit-perm {
+          color: #c4c6cc;
         }
       }
 
