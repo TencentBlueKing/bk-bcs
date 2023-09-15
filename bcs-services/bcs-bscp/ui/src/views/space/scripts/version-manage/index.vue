@@ -75,7 +75,7 @@
   }
 
   // 获取版本列表
-  const getVersionList = async () => {
+  const getVersionList = async() => {
     versionLoading.value = true
     const params: { start: number; limit: number; searchKey?: string } = {
       start: (pagination.value.current - 1) * pagination.value.limit,
@@ -193,16 +193,11 @@
     if (type === 'create') {
       createBtnDisabled.value = true
       scriptDetail.value.not_release_id = data.id
-      unPublishVersion.value = await getScriptVersionDetail(spaceId.value, scriptId.value, scriptDetail.value.not_release_id)
       createBtnDisabled.value = false
     }
-  }
-
-  // 关闭编辑脚本回调
-  const handleCloseEditScript = async() => {
-    versionEditData.value.panelOpen = false
     unPublishVersion.value = await getScriptVersionDetail(spaceId.value, scriptId.value, scriptDetail.value.not_release_id)
   }
+
   // 版本对比
   const handleVersionDiff = (version: IScriptVersion) => {
     crtVersion.value = version
@@ -308,7 +303,7 @@
               :script-id="scriptId"
               :editable="versionEditData.editable"
               @submitted="handleVersionEditSubmitted"
-              @close="handleCloseEditScript" />
+              @close="versionEditData.panelOpen = false" />
           </div>
         </div>
       </bk-loading>

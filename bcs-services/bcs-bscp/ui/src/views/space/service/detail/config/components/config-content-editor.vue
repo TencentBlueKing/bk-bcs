@@ -55,7 +55,13 @@
           仅支持大小不超过 50M
         </div>
         <div v-if="editable" class="btns">
-            <ReadFileContent @completed="handleFileReadComplete" />
+            <ReadFileContent
+              v-bk-tooltips="{
+                content: '上传',
+                placement: 'top',
+                distance: 20
+              }"
+            @completed="handleFileReadComplete" />
             <FilliscreenLine
               v-if="!isOpenFullScreen"
               v-bk-tooltips="{

@@ -37,8 +37,7 @@
   })
 
   // 加载密钥列表
-const loadCredentialList = async () => {
-
+  const loadCredentialList = async () => {
     const query: { limit: number, start: number, searchKey?: string } = {
       start: pagination.value.limit * (pagination.value.current - 1),
       limit: pagination.value.limit
@@ -53,7 +52,7 @@ const loadCredentialList = async () => {
   }
 
   // 更新列表数据，带loading效果
-const refreshListWithLoading = async (current: number = 1) => {
+  const refreshListWithLoading = async (current: number = 1) => {
     // 创建新密钥时，页码会切换会首页，此时不另外发请求
     if (createPending.value) {
       return
