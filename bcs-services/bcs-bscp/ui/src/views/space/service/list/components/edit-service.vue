@@ -16,7 +16,7 @@
     service: IAppItem
   }>()
 
-  const emits = defineEmits(['update:show'])
+  const emits = defineEmits(['update:show','editMemo'])
 
   const isMemoEdit = ref(false)
   const formData = ref({
@@ -73,6 +73,7 @@
       memo: formData.value.memo
     }
     await updateApp({ id, biz_id, data })
+    emits('editMemo', formData.value.memo)
     isMemoEdit.value = false
   }
 

@@ -200,7 +200,7 @@
           </bk-loading>
       </div>
       <CreateService v-model:show="isCreateServiceOpen" @reload="loadAppList" />
-      <EditService v-model:show="isEditServiceOpen" :service="editingService" />
+      <EditService v-model:show="isEditServiceOpen" :service="editingService" @editMemo="editingService.spec.memo = $event"/>
     </div>
 </template>
 <style lang="scss" scoped>
