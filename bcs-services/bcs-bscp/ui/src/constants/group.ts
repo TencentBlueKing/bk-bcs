@@ -7,6 +7,6 @@ export const GROUP_RULE_OPS = [
   { id: 'le', name: '<=' },
   { id: 'in', name: 'IN' },
   { id: 'nin', name: 'NOT IN' },
-  { id: 're', name: 'REGEX' },
-  { id: 'nre', name: 'NOT REGEX' }
+  { id: 're', name: 'RE' },
+  { id: 'nre', name: 'NOT RE' }
 ]
