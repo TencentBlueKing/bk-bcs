@@ -60,6 +60,9 @@ const (
 
 	// TemplateVariablePrefix is the prefix for template variable name
 	TemplateVariablePrefix = "bk_bscp_"
+
+	// MaxRenderBytes is the max bytes to render for template config which is 2MB
+	MaxRenderBytes = 2 * 1024 * 1024
 )
 
 // default resource

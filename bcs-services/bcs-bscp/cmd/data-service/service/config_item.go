@@ -513,12 +513,21 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 		return nil, err
 	}
 
-	fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.AppId, req.BizId, req.SearchKey)
-	if err != nil {
-		logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
+	configItems := make([]*pbci.ConfigItem, 0)
+	// if WithStatus is true, the config items includes the deleted ones and file state, else  without these data
+	if req.WithStatus {
+		fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.AppId, req.BizId, req.SearchKey)
+		if err != nil {
+			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+		configItems = pbrci.PbConfigItemState(details, fileReleased)
+	} else {
+		for _, ci := range details {
+			configItems = append(configItems, pbci.PbConfigItem(ci, ""))
+		}
 	}
-	configItems := pbrci.PbConfigItemState(details, fileReleased)
+
 	if err := s.setCommitSpecForCIs(grpcKit, configItems); err != nil {
 		logs.Errorf("set commit spec for config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err

@@ -865,12 +865,13 @@ message GetConfigItemResp {
 }
 
 message ListConfigItemsReq {
-    uint32 biz_id     = 1;
-    uint32 app_id     = 2;
-    uint32 start      = 3;
-    uint32 limit      = 4;
-    bool   all        = 5;
-    string searchKey  = 6;
+    uint32 biz_id      = 1;
+    uint32 app_id      = 2;
+    uint32 start       = 3;
+    uint32 limit       = 4;
+    bool   all         = 5;
+    string searchKey   = 6;
+    bool   with_status = 7;
 }
 
 message ListConfigItemsResp {
