@@ -234,7 +234,6 @@
   const handleDeletePkg = async(pkgId: number, name: string) => {
     InfoBox({
       title: `确认是否删除模板套餐【${name}】?`,
-      infoType: "danger",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
@@ -263,7 +262,6 @@
   const handleDel = (config: IConfigTableItem) => {
     InfoBox({
       title: `确认是否删除配置项【${config.name}】?`,
-      infoType: "danger",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
