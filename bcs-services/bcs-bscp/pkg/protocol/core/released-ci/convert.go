@@ -102,7 +102,7 @@ func PbReleasedConfigItem(rci *table.ReleasedConfigItem) *ReleasedConfigItem {
 		ConfigItemId:   rci.ConfigItemID,
 		ConfigItemSpec: pbci.PbConfigItemSpec(rci.ConfigItemSpec),
 		Attachment:     pbci.PbConfigItemAttachment(rci.Attachment),
-		Revision:       pbbase.PbRevision(rci.Revision),
+		Revision:       pbbase.PbCreatedRevision(rci.Revision),
 	}
 }
 
@@ -117,7 +117,12 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 		FileState:  fileState,
 		Spec:       pbci.PbConfigItemSpec(rci.ConfigItemSpec),
 		Attachment: pbci.PbConfigItemAttachment(rci.Attachment),
-		Revision:   pbbase.PbRevision(rci.Revision),
+		Revision: &pbbase.Revision{
+			Creator:  rci.Revision.Creator,
+			Reviser:  rci.Revision.Creator,
+			CreateAt: rci.Revision.CreatedAt.Format(constant.TimeStdFormat),
+			UpdateAt: rci.Revision.CreatedAt.Format(constant.TimeStdFormat),
+		},
 	}
 }
 
@@ -135,10 +140,10 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 			fileState = constant.FileStateAdd
 		} else {
 			if _, ok := releaseMap[ci.ID]; ok {
-				if ci.Revision.UpdatedAt == releaseMap[ci.ID].Revision.UpdatedAt {
-					fileState = constant.FileStateUnchange
-				} else {
+				if ci.Revision.UpdatedAt.After(releaseMap[ci.ID].Revision.CreatedAt) {
 					fileState = constant.FileStateRevise
+				} else {
+					fileState = constant.FileStateUnchange
 				}
 				delete(releaseMap, ci.ID)
 			}

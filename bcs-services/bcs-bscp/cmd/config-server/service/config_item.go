@@ -411,7 +411,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	r := &pbds.ListConfigItemsReq{
 		BizId:     grpcKit.BizID,
 		AppId:     req.AppId,
-		ReleaseId: req.ReleaseId,
 		Start:     req.Start,
 		Limit:     req.Limit,
 		All:       req.All,
@@ -424,6 +423,49 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	}
 
 	resp = &pbcs.ListConfigItemsResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListReleasedConfigItems list released config items
+func (s *Service) ListReleasedConfigItems(ctx context.Context,
+	req *pbcs.ListReleasedConfigItemsReq) (
+	*pbcs.ListReleasedConfigItemsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListReleasedConfigItemsResp)
+
+	if req.ReleaseId <= 0 {
+		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
+	}
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListReleasedConfigItemsReq{
+		BizId:        req.BizId,
+		AppId:        req.AppId,
+		ReleaseId:    req.ReleaseId,
+		SearchFields: req.SearchFields,
+		SearchValue:  req.SearchValue,
+		Start:        req.Start,
+		Limit:        req.Limit,
+		All:          true,
+	}
+
+	rp, err := s.client.DS.ListReleasedConfigItems(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListReleasedConfigItemsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
