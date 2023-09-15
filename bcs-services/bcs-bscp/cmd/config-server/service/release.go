@@ -26,6 +26,8 @@ import (
 // CreateRelease create a release
 func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq) (*pbcs.CreateReleaseResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
+	// the url path doesn't include appID, set the appID to use later
+	grpcKit.AppID = req.AppId
 	resp := new(pbcs.CreateReleaseResp)
 
 	res := []*meta.ResourceAttribute{

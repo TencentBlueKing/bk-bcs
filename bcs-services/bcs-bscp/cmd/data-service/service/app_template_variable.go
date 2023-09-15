@@ -32,33 +32,25 @@ import (
 )
 
 // ExtractAppTemplateVariables extract app template variables.
-// the variables come from template and non template config items
+// the variables come from template and non-template config items
 func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbds.ExtractAppTemplateVariablesReq) (
 	*pbds.ExtractAppTemplateVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	tmplRevisions, err := s.getAppTmplRevisions(kt)
+	tmplRevisions, cis, err := s.getAllAppCIs(kt)
 	if err != nil {
-		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get all app config items failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	tmplRevisions = filterSizeForTmplRevisions(tmplRevisions)
-
-	cis, err := s.getAppConfigItems(kt)
-	if err != nil {
-		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	cis = filterSizeForConfigItems(cis)
 
 	contents, err := s.downloadTmplContent(kt, tmplRevisions)
 	if err != nil {
-		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("download template content failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	ciContents, err := s.downloadConfigItemContent(kt, cis)
+	ciContents, err := s.downloadCIContent(kt, cis)
 	if err != nil {
-		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("download config item content failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	contents = append(contents, ciContents...)
@@ -73,45 +65,17 @@ func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbds.Ext
 	}, nil
 }
 
-func filterSizeForTmplRevisions(tmplRevisions []*table.TemplateRevision) []*table.TemplateRevision {
-	rs := make([]*table.TemplateRevision, 0)
-	for _, r := range tmplRevisions {
-		if r.Spec.ContentSpec.ByteSize <= constant.MaxRenderBytes {
-			rs = append(rs, r)
-		}
-	}
-	return rs
-}
-
-func filterSizeForConfigItems(cis []*pbci.ConfigItem) []*pbci.ConfigItem {
-	rs := make([]*pbci.ConfigItem, 0)
-	for _, ci := range cis {
-		if ci.CommitSpec.Content.ByteSize <= constant.MaxRenderBytes {
-			rs = append(rs, ci)
-		}
-	}
-	return rs
-}
-
 // GetAppTemplateVariableReferences get app template variable references.
-// the variables come from template and non template config items
+// the variables come from template and non-template config items
 func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbds.GetAppTemplateVariableReferencesReq) (
 	*pbds.GetAppTemplateVariableReferencesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	tmplRevisions, err := s.getAppTmplRevisions(kt)
+	tmplRevisions, cis, err := s.getAllAppCIs(kt)
 	if err != nil {
-		logs.Errorf("get app template variable references failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get all app config items failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	tmplRevisions = filterSizeForTmplRevisions(tmplRevisions)
-
-	cis, err := s.getAppConfigItems(kt)
-	if err != nil {
-		logs.Errorf("get config items failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	cis = filterSizeForConfigItems(cis)
 
 	refs, err := s.getVariableReferences(kt, tmplRevisions, cis)
 	if err != nil {
@@ -125,7 +89,7 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbd
 }
 
 // GetReleasedAppTemplateVariableReferences get released app template variable references.
-// the variables come from template and non template config items
+// the variables come from template and non-template config items
 func (s *Service) GetReleasedAppTemplateVariableReferences(ctx context.Context,
 	req *pbds.GetReleasedAppTemplateVariableReferencesReq) (
 	*pbds.GetReleasedAppTemplateVariableReferencesResp, error) {
@@ -242,12 +206,12 @@ func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.Temp
 	[]*pbatv.AppTemplateVariableReference, error) {
 	contents, err := s.downloadTmplContent(kt, tmplRevisions)
 	if err != nil {
-		logs.Errorf("get app template variable references failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("download template content failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	ciContents, err := s.downloadConfigItemContent(kt, cis)
+	ciContents, err := s.downloadCIContent(kt, cis)
 	if err != nil {
-		logs.Errorf("get app template variable references failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("download config item content failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -323,7 +287,7 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAp
 		AppId: req.AppId,
 	})
 	if err != nil {
-		logs.Errorf("list app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	allVariables := extractRep.Details
@@ -347,7 +311,7 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAp
 	// get biz template variables
 	bizVars, _, err := s.dao.TemplateVariable().List(kt, req.BizId, nil, &types.BasePage{All: true})
 	if err != nil {
-		logs.Errorf("list app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list template variables failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	bizVarMap := make(map[string]*table.TemplateVariableSpec, len(bizVars))
