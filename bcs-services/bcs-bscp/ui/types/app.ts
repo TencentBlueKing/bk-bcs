@@ -32,5 +32,8 @@ export interface IAppItem {
   config?: {
     count: number;
     update_at: string;
+  },
+  permissions: {
+    [key: string]: string;
   }
 }

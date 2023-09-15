@@ -25,15 +25,14 @@ export interface ICommonQuery {
   search_value?: string;
 }
 
-// 权限查询参数
-export interface IPermissionQuery {
+// 权限查询参数单个资源条目
+export interface IPermissionQueryResourceItem {
   biz_id: number|string;
   basic: {
     type: string;
     action: string;
-    resource_id: number|string;
+    resource_id?: number|string;
   };
-  gen_apply_url: boolean;
 }
 
 // 权限申请资源信息
