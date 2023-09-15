@@ -36,6 +36,10 @@ func NewTmplProcessor() TmplProcessor {
 
 // ExtractVariables extracts variables from template
 func (p *processor) ExtractVariables(template []byte) []string {
+	if len(template) == 0 {
+		return []string{}
+	}
+
 	matches := re.FindAllStringSubmatch(string(template), -1)
 
 	nameMap := make(map[string]struct{})

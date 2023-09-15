@@ -45,7 +45,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 	}
 
 	// get app template revisions which are template config items
-	tmplRevisions, err := s.getAppTmplRevisions(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
+	tmplRevisions, err := s.getAppTmplRevisions(grpcKit)
 	if err != nil {
 		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err

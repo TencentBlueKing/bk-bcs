@@ -15,26 +15,28 @@ package service
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"sync"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	pbci "bscp.io/pkg/protocol/core/config-item"
+	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/types"
 )
 
 // getAppTmplRevisions get app template revision details
-func (s *Service) getAppTmplRevisions(kt *kit.Kit, bizID, appID uint32) ([]*table.TemplateRevision, error) {
+func (s *Service) getAppTmplRevisions(kt *kit.Kit) ([]*table.TemplateRevision, error) {
 	opt := &types.BasePage{All: true}
-	details, _, err := s.dao.AppTemplateBinding().List(kt, bizID, appID, opt)
+	details, _, err := s.dao.AppTemplateBinding().List(kt, kt.BizID, kt.AppID, opt)
 	if err != nil {
 		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	// so far, no any template config item exists for the app
 	if len(details) == 0 {
-		return nil, nil
+		return []*table.TemplateRevision{}, nil
 	}
 
 	// get template revision details
@@ -48,9 +50,33 @@ func (s *Service) getAppTmplRevisions(kt *kit.Kit, bizID, appID uint32) ([]*tabl
 	return tmplRevisions, nil
 }
 
+// getAppConfigItems get app config item details
+func (s *Service) getAppConfigItems(kt *kit.Kit) ([]*pbci.ConfigItem, error) {
+	req := &pbds.ListConfigItemsReq{
+		BizId: kt.BizID,
+		AppId: kt.AppID,
+		All:   true,
+	}
+	resp, err := s.ListConfigItems(kt.Ctx, req)
+	if err != nil {
+		logs.Errorf("list all config items failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	// so far, no any config item exists for the app
+	if len(resp.Details) == 0 {
+		return []*pbci.ConfigItem{}, nil
+	}
+
+	return resp.Details, nil
+}
+
 // downloadTmplContent download template config item content from repo.
 // the order of elements in slice contents and slice tmplRevisions is consistent
 func (s *Service) downloadTmplContent(kt *kit.Kit, tmplRevisions []*table.TemplateRevision) ([][]byte, error) {
+	if len(tmplRevisions) == 0 {
+		return [][]byte{}, nil
+	}
+
 	contents := make([][]byte, len(tmplRevisions))
 	var hitError error
 	pipe := make(chan struct{}, 10)
@@ -74,7 +100,7 @@ func (s *Service) downloadTmplContent(kt *kit.Kit, tmplRevisions []*table.Templa
 					r.Attachment.TemplateID, r.Spec.Name, r.Spec.Path, err)
 				return
 			}
-			content, err := ioutil.ReadAll(body)
+			content, err := io.ReadAll(body)
 			if err != nil {
 				hitError = fmt.Errorf("read template config content from body failed, "+
 					"template id: %d, name: %s, path: %s, error: %v",
@@ -89,6 +115,57 @@ func (s *Service) downloadTmplContent(kt *kit.Kit, tmplRevisions []*table.Templa
 
 	if hitError != nil {
 		logs.Errorf("download template config content failed, err: %v, rid: %s", hitError, kt.Rid)
+		return nil, hitError
+	}
+
+	return contents, nil
+}
+
+// downloadConfigItemContent download normal config item content from repo.
+// the order of elements in slice contents and slice tmplRevisions is consistent
+func (s *Service) downloadConfigItemContent(kt *kit.Kit, cis []*pbci.ConfigItem) ([][]byte, error) {
+	if len(cis) == 0 {
+		return [][]byte{}, nil
+	}
+
+	contents := make([][]byte, len(cis))
+	var hitError error
+	pipe := make(chan struct{}, 10)
+	wg := sync.WaitGroup{}
+
+	for idx, c := range cis {
+		wg.Add(1)
+
+		pipe <- struct{}{}
+		go func(idx int, c *pbci.ConfigItem) {
+			defer func() {
+				wg.Done()
+				<-pipe
+			}()
+
+			k := kt.GetKitForRepoCfg()
+			body, _, err := s.repo.Download(k, c.CommitSpec.Content.Signature)
+			if err != nil {
+				hitError = fmt.Errorf("download config item content from repo failed, "+
+					"config item id: %d, name: %s, path: %s, error: %v",
+					c.Id, c.Spec.Name, c.Spec.Path, err)
+				return
+			}
+			content, err := io.ReadAll(body)
+			if err != nil {
+				hitError = fmt.Errorf("read config item content from body failed, "+
+					"config item id: %d, name: %s, path: %s, error: %v",
+					c.Id, c.Spec.Name, c.Spec.Path, err)
+				return
+			}
+
+			contents[idx] = content
+		}(idx, c)
+	}
+	wg.Wait()
+
+	if hitError != nil {
+		logs.Errorf("download config item content failed, err: %v, rid: %s", hitError, kt.Rid)
 		return nil, hitError
 	}
 
