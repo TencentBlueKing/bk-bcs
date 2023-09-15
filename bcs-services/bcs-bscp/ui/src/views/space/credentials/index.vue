@@ -231,7 +231,7 @@
             class="search-group-input"
             placeholder="状态/说明/更新人/更新时间"
             :clearable="true"
-            @enter="refreshListWithLoading"
+            @enter="refreshListWithLoading()"
             @clear="refreshListWithLoading"
             @change="handleSearchInputChange">
             <template #suffix>
