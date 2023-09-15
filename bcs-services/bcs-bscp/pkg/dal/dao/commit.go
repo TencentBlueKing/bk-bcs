@@ -141,7 +141,7 @@ func (dao *commitDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, commits [
 	return tx.Query.Commit.WithContext(kit.Ctx).Save(commits...)
 }
 
-// BatchListLatestCommits batch list config itmes' latest commit.
+// BatchListLatestCommits batch list config items' latest commit.
 func (dao *commitDao) BatchListLatestCommits(kit *kit.Kit, bizID, appID uint32, ids []uint32) ([]*table.Commit, error) {
 	if len(ids) == 0 {
 		return nil, nil

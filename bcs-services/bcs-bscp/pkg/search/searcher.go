@@ -37,6 +37,8 @@ const (
 	TemplateVariable TableName = "template_variables"
 	// ReleasedAppTemplate is released app template table
 	ReleasedAppTemplate TableName = "released_app_templates"
+	// ReleasedConfigItem is released config item table
+	ReleasedConfigItem TableName = "released_config_items"
 )
 
 // supportedFields is supported search fields of tables
@@ -47,6 +49,7 @@ var supportedFields = map[TableName][]string{
 	TemplateSet:         {"name", "memo", "creator", "reviser"},
 	TemplateVariable:    {"name", "memo", "creator", "reviser"},
 	ReleasedAppTemplate: {"revision_name", "revision_memo", "name", "path", "creator"},
+	ReleasedConfigItem:  {"name", "path", "memo", "creator"},
 }
 
 // supportedFieldsMap is supported search fields map of tables
@@ -57,6 +60,7 @@ var supportedFieldsMap = map[TableName]map[string]struct{}{
 	TemplateSet:         {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 	TemplateVariable:    {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 	ReleasedAppTemplate: {"revision_name": {}, "revision_memo": {}, "name": {}, "path": {}, "creator": {}},
+	ReleasedConfigItem:  {"name": {}, "path": {}, "memo": {}, "creator": {}},
 }
 
 // defaultFields is default search fields when field is not specified
@@ -67,6 +71,7 @@ var defaultFields = map[TableName][]string{
 	TemplateSet:         {"name"},
 	TemplateVariable:    {"name"},
 	ReleasedAppTemplate: {"revision_name"},
+	ReleasedConfigItem:  {"name"},
 }
 
 // getGenFieldsMap get the map for `table column name` => `gorm/gen field object`
@@ -110,6 +115,12 @@ func getGenFieldsMap(q *gen.Query) map[TableName]map[string]field.String {
 			"name":          q.ReleasedAppTemplate.Name,
 			"path":          q.ReleasedAppTemplate.Path,
 			"creator":       q.ReleasedAppTemplate.Creator,
+		},
+		ReleasedConfigItem: {
+			"name":    q.ReleasedConfigItem.Name,
+			"path":    q.ReleasedConfigItem.Path,
+			"memo":    q.ReleasedConfigItem.Memo,
+			"creator": q.ReleasedConfigItem.Creator,
 		},
 	}
 }

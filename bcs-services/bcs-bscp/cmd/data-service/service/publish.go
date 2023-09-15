@@ -116,7 +116,10 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 			ConfigItemID:   item.ID,
 			ConfigItemSpec: item.Spec,
 			Attachment:     item.Attachment,
-			Revision:       item.Revision,
+			Revision: &table.CreatedRevision{
+				Creator:   item.Revision.Creator,
+				CreatedAt: item.Revision.CreatedAt,
+			},
 		})
 	}
 

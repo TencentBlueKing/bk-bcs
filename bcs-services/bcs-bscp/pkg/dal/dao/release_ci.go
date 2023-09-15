@@ -20,7 +20,9 @@ import (
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
+	rawgen "gorm.io/gen"
 )
 
 // ReleasedCI supplies all the released config item related operations.
@@ -31,8 +33,9 @@ type ReleasedCI interface {
 	Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error)
 	// GetReleasedLately released config item by app id and biz id
 	GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) ([]*table.ReleasedConfigItem, error)
-	// List released config items with options, only return non template config items.
-	List(kit *kit.Kit, opts *types.ListReleasedCIsOption) (*types.ListReleasedCIsDetails, error)
+	// List released config items with options.
+	List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher, opt *types.BasePage) (
+		[]*table.ReleasedConfigItem, int64, error)
 	// ListAll list all released config items in biz.
 	ListAll(kit *kit.Kit, bizID uint32) ([]*table.ReleasedConfigItem, error)
 	// ListAllByAppID list all released config items by appID.
@@ -106,47 +109,39 @@ func (dao *releasedCIDao) Get(kit *kit.Kit, configItemID, bizID, releaseID uint3
 		m.ConfigItemID.Eq(configItemID), m.ReleaseID.Eq(releaseID), m.BizID.Eq(bizID)).Take()
 }
 
-// List released config items with options, only return non template config items.
-func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) (
-	*types.ListReleasedCIsDetails, error) {
-
-	if opts == nil {
-		return nil, errf.New(errf.InvalidParameter, "list released config items options null")
-	}
-
-	po := &types.PageOption{
-		// allows list released ci without page
-		EnableUnlimitedLimit: true,
-		DisabledSort:         false,
-	}
-	if err := opts.Validate(po); err != nil {
-		return nil, err
-	}
-
+// List released config items with options.
+func (dao *releasedCIDao) List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher, opt *types.BasePage) (
+	[]*table.ReleasedConfigItem, int64, error) {
 	m := dao.genQ.ReleasedConfigItem
-	// m.ConfigItemID.Neq(0) means not to match template config items
-	query := m.WithContext(kit.Ctx).Where(m.ReleaseID.Eq(opts.ReleaseID), m.BizID.Eq(opts.BizID), m.ConfigItemID.Neq(0))
-	if opts.SearchKey != "" {
-		searchKey := "%" + opts.SearchKey + "%"
-		query = query.Where(m.Name.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))
+	q := dao.genQ.ReleasedConfigItem.WithContext(kit.Ctx)
+
+	var conds []rawgen.Condition
+	// add search condition
+	if s != nil {
+		exprs := s.SearchExprs(dao.genQ)
+		if len(exprs) > 0 {
+			var do gen.IReleasedConfigItemDo
+			for i := range exprs {
+				if i == 0 {
+					do = q.Where(exprs[i])
+				}
+				do = do.Or(exprs[i])
+			}
+			conds = append(conds, do)
+		}
 	}
 
-	var list []*table.ReleasedConfigItem
-	var count int64
-	var err error
-	if opts.Page.Start == 0 && opts.Page.Limit == 0 {
-		list, err = query.Find()
+	d := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID), m.ConfigItemID.Neq(0)).
+		Where(conds...)
+	if opt.All {
+		result, err := d.Find()
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
-		count = int64(len(list))
-	} else {
-		list, count, err = query.FindByPage(opts.Page.Offset(), opts.Page.LimitInt())
-		if err != nil {
-			return nil, err
-		}
+		return result, int64(len(result)), err
 	}
-	return &types.ListReleasedCIsDetails{Count: uint32(count), Details: list}, nil
+
+	return d.FindByPage(opt.Offset(), opt.LimitInt())
 }
 
 // ListAll list all released config items in biz.

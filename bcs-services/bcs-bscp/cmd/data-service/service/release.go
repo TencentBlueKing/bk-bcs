@@ -159,7 +159,9 @@ func (s *Service) doConfigItemActionForCreateRelease(kt *kit.Kit, req *pbds.Crea
 			ConfigItemID:   item.ID,
 			ConfigItemSpec: item.Spec,
 			Attachment:     item.Attachment,
-			Revision:       item.Revision,
+			Revision: &table.CreatedRevision{
+				Creator: kt.User,
+			},
 		})
 	}
 
@@ -314,9 +316,8 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 				BizID: kt.BizID,
 				AppID: kt.AppID,
 			},
-			Revision: &table.Revision{
+			Revision: &table.CreatedRevision{
 				Creator: kt.User,
-				Reviser: kt.User,
 			},
 		}
 	}

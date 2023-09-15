@@ -60,7 +60,7 @@ type ReleasedConfigItem struct {
 	// released.
 	ConfigItemSpec *ConfigItemSpec       `db:"config_item_spec" json:"config_item_spec" gorm:"embedded"`
 	Attachment     *ConfigItemAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
-	Revision       *Revision             `db:"revision" json:"revision" gorm:"embedded"`
+	Revision       *CreatedRevision      `db:"revision" json:"revision" gorm:"embedded"`
 }
 
 // TableName is the released app config's database table name.
@@ -155,7 +155,7 @@ func (r *ReleasedConfigItem) Validate() error {
 		return errors.New("revision is empty")
 	}
 
-	if err := r.Revision.ValidateCreate(); err != nil {
+	if err := r.Revision.Validate(); err != nil {
 		return err
 	}
 
