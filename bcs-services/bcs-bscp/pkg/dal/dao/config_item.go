@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 
+	"bscp.io/pkg/types"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/criteria/errf"
@@ -41,6 +42,8 @@ type ConfigItem interface {
 	Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem, error)
 	// GetByUniqueKey get config item by unique key
 	GetByUniqueKey(kit *kit.Kit, bizID, appID uint32, name, path string) (*table.ConfigItem, error)
+	// GetUniqueKeys get unique keys of all config items in one app
+	GetUniqueKeys(kit *kit.Kit, bizID, appID uint32) ([]types.CIUniqueKey, error)
 	// SearchAll search all configItem with searchKey.
 	SearchAll(kit *kit.Kit, searchKey string, appID, bizID uint32) ([]*table.ConfigItem, error)
 	// ListAllByAppID list all configItem by appID
@@ -218,6 +221,18 @@ func (dao *configItemDao) GetByUniqueKey(kit *kit.Kit, bizID, appID uint32, name
 	}
 
 	return configItem, nil
+}
+
+// GetUniqueKeys get unique keys of all config items in one app
+func (dao *configItemDao) GetUniqueKeys(kit *kit.Kit, bizID, appID uint32) ([]types.CIUniqueKey, error) {
+	m := dao.genQ.ConfigItem
+	q := dao.genQ.ConfigItem.WithContext(kit.Ctx)
+
+	var rs []types.CIUniqueKey
+	if err := q.Select(m.Name, m.Path).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Scan(&rs); err != nil {
+		return nil, err
+	}
+	return rs, nil
 }
 
 // SearchAll search all configItem by searchKey

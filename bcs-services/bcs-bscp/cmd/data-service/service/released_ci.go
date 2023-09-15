@@ -19,6 +19,8 @@ import (
 	"bscp.io/pkg/logs"
 	pbrci "bscp.io/pkg/protocol/core/released-ci"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/search"
+	"bscp.io/pkg/types"
 )
 
 // GetReleasedConfigItem get released config item
@@ -34,4 +36,34 @@ func (s *Service) GetReleasedConfigItem(ctx context.Context, req *pbds.GetReleas
 	}
 
 	return pbrci.PbReleasedConfigItem(releasedCI), nil
+}
+
+// ListReleasedConfigItems list app bound template revisions.
+func (s *Service) ListReleasedConfigItems(ctx context.Context,
+	req *pbds.ListReleasedConfigItemsReq) (
+	*pbds.ListReleasedConfigItemsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	// validate the page params
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
+
+	searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.ReleasedConfigItem)
+	if err != nil {
+		return nil, err
+	}
+
+	details, count, err := s.dao.ReleasedCI().List(kt, req.BizId, req.AppId, req.ReleaseId, searcher, opt)
+	if err != nil {
+		logs.Errorf("list released app bound templates revisions failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListReleasedConfigItemsResp{
+		Count:   uint32(count),
+		Details: pbrci.PbReleasedConfigItems(details),
+	}
+	return resp, nil
 }

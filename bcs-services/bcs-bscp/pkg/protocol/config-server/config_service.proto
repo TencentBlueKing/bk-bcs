@@ -11,6 +11,7 @@ import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
 import "bscp.io/pkg/protocol/core/hook-revision/hook_revision.proto";
 import "bscp.io/pkg/protocol/core/release/release.proto";
+import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
 import "bscp.io/pkg/protocol/core/template-binding-relation/template_binding_relation.proto";
 import "bscp.io/pkg/protocol/core/template-revision/template_revision.proto";
@@ -98,6 +99,11 @@ service Config {
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items"
+        };
+    }
+    rpc ListReleasedConfigItems(ListReleasedConfigItemsReq) returns (ListReleasedConfigItemsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/config_items"
         };
     }
     rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {
@@ -418,6 +424,12 @@ service Config {
     rpc DeleteAppBoundTemplateSets(DeleteAppBoundTemplateSetsReq) returns (DeleteAppBoundTemplateSetsResp) {
         option (google.api.http) = {
             delete : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_sets"
+        };
+    }
+    rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/conflict_check"
+            body : "*"
         };
     }
 
@@ -855,16 +867,31 @@ message GetConfigItemResp {
 message ListConfigItemsReq {
     uint32 biz_id     = 1;
     uint32 app_id     = 2;
-    uint32 release_id = 3;
-    uint32 start      = 4;
-    uint32 limit      = 5;
-    bool   all        = 6;
-    string searchKey  = 7;
+    uint32 start      = 3;
+    uint32 limit      = 4;
+    bool   all        = 5;
+    string searchKey  = 6;
 }
 
 message ListConfigItemsResp {
     uint32                   count   = 1;
     repeated pbci.ConfigItem details = 2;
+}
+
+message ListReleasedConfigItemsReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    uint32 release_id    = 3;
+    string search_fields = 4;
+    string search_value  = 5;
+    uint32 start         = 6;
+    uint32 limit         = 7;
+    bool   all           = 8;
+}
+
+message ListReleasedConfigItemsResp {
+    uint32                            count   = 1;
+    repeated pbrci.ReleasedConfigItem details = 2;
 }
 
 message ListConfigItemCountReq {
@@ -1487,6 +1514,7 @@ message ListAppBoundTemplateRevisionsReq {
     uint32 app_id        = 2;
     string search_fields = 3;
     string search_value  = 4;
+    bool   with_status   = 5;
 }
 
 message ListAppBoundTemplateRevisionsResp {
@@ -1504,8 +1532,6 @@ message ListReleasedAppBoundTemplateRevisionsReq {
 message ListReleasedAppBoundTemplateRevisionsResp {
     repeated pbatb.ReleasedAppBoundTmplRevisionGroupBySet details = 1;
 }
-
-
 
 message UpdateAppBoundTemplateRevisionsReq {
     uint32                         biz_id     = 1;
@@ -1525,6 +1551,16 @@ message DeleteAppBoundTemplateSetsReq {
 }
 
 message DeleteAppBoundTemplateSetsResp {}
+
+message CheckAppTemplateBindingReq {
+    uint32                         biz_id   = 1;
+    uint32                         app_id   = 2;
+    repeated pbatb.TemplateBinding bindings = 3;
+}
+
+message CheckAppTemplateBindingResp {
+    repeated pbatb.Conflict details = 1;
+}
 
 message ListTemplateBoundCountsReq {
     uint32          biz_id            = 1;

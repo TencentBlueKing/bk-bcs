@@ -45,6 +45,7 @@ service Data {
     rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
+    rpc ListReleasedConfigItems(ListReleasedConfigItemsReq) returns (ListReleasedConfigItemsResp) {}
     rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {}
 
     // config hook related interface.
@@ -131,6 +132,7 @@ service Data {
     rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {}
     rpc ListReleasedAppBoundTemplateRevisions(ListReleasedAppBoundTemplateRevisionsReq) returns
         (ListReleasedAppBoundTemplateRevisionsResp) {}
+    rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {}
 
     // app template variables related interface.
     rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {}
@@ -380,16 +382,31 @@ message GetConfigItemReq {
 message ListConfigItemsReq {
     uint32 biz_id     = 1;
     uint32 app_id     = 2;
-    uint32 release_id = 3;
-    uint32 start      = 4;
-    uint32 limit      = 5;
-    bool   all        = 6;
-    string searchKey  = 7;
+    uint32 start      = 3;
+    uint32 limit      = 4;
+    bool   all        = 5;
+    string searchKey  = 6;
 }
 
 message ListConfigItemsResp {
     uint32                   count   = 1;
     repeated pbci.ConfigItem details = 2;
+}
+
+message ListReleasedConfigItemsReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    uint32 release_id    = 3;
+    string search_fields = 4;
+    string search_value  = 5;
+    uint32 start         = 6;
+    uint32 limit         = 7;
+    bool   all           = 8;
+}
+
+message ListReleasedConfigItemsResp {
+    uint32                            count   = 1;
+    repeated pbrci.ReleasedConfigItem details = 2;
 }
 
 message ListConfigItemCountReq {
@@ -927,6 +944,7 @@ message ListAppBoundTemplateRevisionsReq {
     uint32 start         = 5;
     uint32 limit         = 6;
     bool   all           = 7;
+    bool   with_status   = 8;
 }
 
 message ListAppBoundTemplateRevisionsResp {
@@ -948,6 +966,15 @@ message ListReleasedAppBoundTemplateRevisionsReq {
 message ListReleasedAppBoundTemplateRevisionsResp {
     uint32                                      count   = 1;
     repeated pbatb.ReleasedAppBoundTmplRevision details = 2;
+}
+
+message CheckAppTemplateBindingReq {
+    pbatb.AppTemplateBindingAttachment attachment = 1;
+    pbatb.AppTemplateBindingSpec       spec       = 2;
+}
+
+message CheckAppTemplateBindingResp {
+    repeated pbatb.Conflict details = 1;
 }
 
 message ExtractAppTemplateVariablesReq {
@@ -1309,10 +1336,10 @@ message PublishResp {
 }
 
 message ListInstancesReq {
-    string                 resource_type = 1;
-    string                 parent_type   = 2;
-    string                 parent_id     = 3;
-    pbbase.BasePage        page          = 4;
+    string          resource_type = 1;
+    string          parent_type   = 2;
+    string          parent_id     = 3;
+    pbbase.BasePage page          = 4;
 }
 
 message ListInstancesResp {
@@ -1326,8 +1353,8 @@ message InstanceResource {
 }
 
 message FetchInstanceInfoReq {
-    string resource_type = 1;
-    repeated string  ids = 2;
+    string          resource_type = 1;
+    repeated string ids           = 2;
 }
 
 message FetchInstanceInfoResp {
@@ -1335,10 +1362,10 @@ message FetchInstanceInfoResp {
 }
 
 message InstanceInfo {
-    string          id       = 1;
-    string  display_name     = 2;
-    repeated string approver = 3;
-    repeated string path     = 4;
+    string          id           = 1;
+    string          display_name = 2;
+    repeated string approver     = 3;
+    repeated string path         = 4;
 }
 
 message PingMsg {

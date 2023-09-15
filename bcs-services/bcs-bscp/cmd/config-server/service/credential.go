@@ -33,10 +33,10 @@ func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredent
 
 	bizID := req.BizId
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,10 +83,10 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentials
 
 	bizID := req.BizId
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.Credential, Action: meta.View}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Credential, Action: meta.View}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,10 +126,10 @@ func (s *Service) DeleteCredential(ctx context.Context, req *pbcs.DeleteCredenti
 	resp := new(pbcs.DeleteCredentialsResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -155,10 +155,10 @@ func (s *Service) UpdateCredential(ctx context.Context, req *pbcs.UpdateCredenti
 	resp := new(pbcs.UpdateCredentialsResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Credential, Action: meta.Manage}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}

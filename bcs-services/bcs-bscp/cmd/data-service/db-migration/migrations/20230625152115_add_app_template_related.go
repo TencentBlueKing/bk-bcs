@@ -80,6 +80,8 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		Privilege            string `gorm:"type:varchar(64) not null"`
 		Signature            string `gorm:"type:varchar(64) not null"`
 		ByteSize             uint   `gorm:"type:bigint(1) unsigned not null"`
+		OriginSignature      string `gorm:"type:varchar(64) not null"`
+		OriginByteSize       uint   `gorm:"type:bigint(1) unsigned not null"`
 
 		// Attachment is attachment info of the resource
 		BizID uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:1"`

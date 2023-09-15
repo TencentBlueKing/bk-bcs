@@ -32,9 +32,10 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbcs.CreateTempl
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateTemplateSpaceResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Create,
-		ResourceID: req.BizId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -68,9 +69,10 @@ func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbcs.DeleteTempl
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteTemplateSpaceResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Delete,
-		ResourceID: req.TemplateSpaceId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -93,9 +95,10 @@ func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbcs.UpdateTempl
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateTemplateSpaceResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update,
-		ResourceID: req.TemplateSpaceId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -121,8 +124,10 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbcs.ListTemplate
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateSpacesResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -203,8 +208,10 @@ func (s *Service) ListTemplateSpacesByIDs(ctx context.Context, req *pbcs.ListTem
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 

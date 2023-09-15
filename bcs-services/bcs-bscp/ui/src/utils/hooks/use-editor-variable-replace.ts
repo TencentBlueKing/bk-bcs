@@ -1,9 +1,10 @@
 import * as monaco from 'monaco-editor'
 import { IVariableEditParams } from '../../../types/variable';
 
-const useEditorVariableReplace = (model: monaco.editor.IStandaloneCodeEditor, variables: IVariableEditParams[]) => {
+const useEditorVariableReplace = (model: monaco.editor.IStandaloneCodeEditor, variables: IVariableEditParams[]): monaco.IDisposable => {
   const ins = new VariableReplace(model, variables);
   ins.replace()
+  return VariableReplace.hoverProvider
 }
 
 class VariableReplace {
@@ -12,7 +13,7 @@ class VariableReplace {
   variables: IVariableEditParams[];
   replacedList: { range: monaco.IRange, key: string }[] = []
 
-  static hoverProvider: monaco.IDisposable | null = null
+  static hoverProvider: monaco.IDisposable
 
   constructor(editor: monaco.editor.IStandaloneCodeEditor, variables: IVariableEditParams[]) {
     this.editor = editor
@@ -28,11 +29,16 @@ class VariableReplace {
   replace() {
     const textList = this.model.getValue().split('\n')
     textList.forEach((text, index) => {
+      const lineNumber = index + 1
       this.variables.forEach(variable => {
         const { replacedText, variablePos } = this.getReplacedData(text, variable)
         if (variablePos.length > 0) {
           variablePos.forEach(pos => {
-            this.replacedList.push({ range: { startLineNumber: index + 1, startColumn: pos.start, endLineNumber: index + 1, endColumn: pos.end }, key: variable.name })
+            const { start, end } = pos
+            this.replacedList.push({
+              range: { startLineNumber: lineNumber, startColumn: start, endLineNumber: lineNumber, endColumn: end },
+              key: variable.name
+            })
           })
           textList[index] = replacedText
         }
@@ -83,7 +89,7 @@ class VariableReplace {
           return {
             range: variable.range,
             contents: [
-              {value: ''},
+              {value: ''}, // 去掉标题
               {
                 value: variable.key,
               }

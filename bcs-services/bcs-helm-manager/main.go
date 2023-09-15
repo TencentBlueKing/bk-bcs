@@ -77,6 +77,16 @@ func main() {
 	if err = config.Scan(opt); err != nil {
 		blog.Fatalf("scan config failed, %s", err.Error())
 	}
+
+	// addons 动态配置
+	addonsConf, _ := microCfg.NewConfig()
+	if len(opt.Release.AddonsConfigFile) > 0 {
+		addonsConf, err = makeMicroCredConf(opt.Release.AddonsConfigFile)
+		if err != nil {
+			blog.Fatalf("load addons from file failed, err %s", err.Error())
+		}
+	}
+
 	// 初始化 I18N 相关配置
 	if err = i18n.InitMsgMap(); err != nil {
 		blog.Fatalf("init i18n message map failed %s", err.Error())
@@ -96,7 +106,7 @@ func main() {
 
 	blog.Info(string(config.Bytes()))
 	options.GlobalOptions = opt
-	helmManager := app.NewHelmManager(opt, credConf)
+	helmManager := app.NewHelmManager(opt, credConf, addonsConf)
 	if err := helmManager.Init(); err != nil {
 		blog.Fatalf("init helm manager failed, %s", err.Error())
 	}

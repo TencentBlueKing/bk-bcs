@@ -106,7 +106,6 @@
     variablesLoading.value = false
   }
 
-
   const close = () => {
     emits('update:show', false)
   }
@@ -119,7 +118,7 @@
       @closed="close">
         <bk-loading :loading="detailLoading" class="config-loading-container">
           <ConfigForm
-            v-if="!detailLoading"
+            v-if="props.show && !detailLoading"
             class="config-form-wrapper"
             :editable="false"
             :config="configForm"

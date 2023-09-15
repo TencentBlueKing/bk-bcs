@@ -144,12 +144,24 @@ func (s *Service) doConfigItemActionForCreateRelease(kt *kit.Kit, req *pbds.Crea
 			return e
 		}
 		releasedCIs = append(releasedCIs, &table.ReleasedConfigItem{
-			CommitID:       commit.ID,
-			CommitSpec:     commit.Spec,
+			CommitID: commit.ID,
+			CommitSpec: &table.ReleasedCommitSpec{
+				ContentID: commit.Spec.ContentID,
+				Content: &table.ReleasedContentSpec{
+					// Note: use the rendered data when rendering config
+					Signature:       commit.Spec.Content.Signature,
+					ByteSize:        commit.Spec.Content.ByteSize,
+					OriginSignature: commit.Spec.Content.Signature,
+					OriginByteSize:  commit.Spec.Content.ByteSize,
+				},
+				Memo: commit.Spec.Memo,
+			},
 			ConfigItemID:   item.ID,
 			ConfigItemSpec: item.Spec,
 			Attachment:     item.Attachment,
-			Revision:       item.Revision,
+			Revision: &table.CreatedRevision{
+				Creator: kt.User,
+			},
 		})
 	}
 
@@ -282,11 +294,13 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 	for idx, r := range tmplRevisions {
 		releasedCIs[idx] = &table.ReleasedConfigItem{
 			ReleaseID: releaseID,
-			CommitSpec: &table.CommitSpec{
+			CommitSpec: &table.ReleasedCommitSpec{
 				ContentID: 0,
-				Content: &table.ContentSpec{
-					Signature: signatureMap[r.ID],
-					ByteSize:  uint64(len(renderedContentMap[r.ID])),
+				Content: &table.ReleasedContentSpec{
+					Signature:       signatureMap[r.ID],
+					ByteSize:        uint64(len(renderedContentMap[r.ID])),
+					OriginSignature: r.Spec.ContentSpec.Signature,
+					OriginByteSize:  r.Spec.ContentSpec.ByteSize,
 				},
 				Memo: "",
 			},
@@ -302,9 +316,8 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 				BizID: kt.BizID,
 				AppID: kt.AppID,
 			},
-			Revision: &table.Revision{
+			Revision: &table.CreatedRevision{
 				Creator: kt.User,
-				Reviser: kt.User,
 			},
 		}
 	}
@@ -351,10 +364,10 @@ func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, relea
 				User:                 r.User,
 				UserGroup:            r.UserGroup,
 				Privilege:            r.Privilege,
-				Signature:            r.Signature,
-				ByteSize:             r.ByteSize,
-				RenderedSignature:    signatureMap[r.TemplateRevisionId],
-				RenderedByteSize:     uint64(len(renderedContentMap[r.TemplateRevisionId])),
+				Signature:            signatureMap[r.TemplateRevisionId],
+				ByteSize:             uint64(len(renderedContentMap[r.TemplateRevisionId])),
+				OriginSignature:      r.Signature,
+				OriginByteSize:       r.ByteSize,
 			},
 			Attachment: &table.ReleasedAppTemplateAttachment{
 				BizID: kt.BizID,
