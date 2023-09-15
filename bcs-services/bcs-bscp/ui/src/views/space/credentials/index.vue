@@ -192,7 +192,6 @@
       title: '确定删除此密钥',
       subTitle: '删除密钥后，使用此密钥的应用将无法正常使用 SDK/API 拉取配置，且密钥无法恢复',
       confirmText: '删除',
-      infoType: 'warning',
       onConfirm: async () => {
         await deleteCredential(spaceId.value, credential.id)
         if (credentialList.value.length === 1 && pagination.value.current > 1) {
@@ -201,6 +200,18 @@
         loadCredentialList()
       },
     } as any)
+  }
+  // 删除配置项提示文字
+  const deleteTooltip = (isShowTooltip: boolean) => {
+    if (isShowTooltip) {
+      return {
+        content: '已启用，不能删除',
+        placement: 'top'
+      }
+    }
+    return {
+      disabled:true
+    }
   }
 
   // 更改每页条数
@@ -297,6 +308,7 @@
                   text
                   theme="primary"
                   :disabled="row.spec.enable"
+                  v-bk-tooltips="deleteTooltip(row.spec.enable)"
                   @click="handleDelete(row)">
                   删除
                 </bk-button>
