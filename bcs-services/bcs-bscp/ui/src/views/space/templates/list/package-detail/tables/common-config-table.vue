@@ -8,6 +8,7 @@
   import { ICommonQuery } from '../../../../../../../types/index';
   import { ITemplateConfigItem, ITemplateCitedCountDetailItem, ITemplateCitedByPkgs } from '../../../../../../../types/template';
   import { getPackagesByTemplateIds, getCountsByTemplateIds } from '../../../../../../api/template'
+  import { datetimeFormat } from '../../../../../../utils/index'
   import AddToDialog from '../operations/add-to-pkgs/add-to-dialog.vue'
   import MoveOutFromPkgsDialog from '../operations/move-out-from-pkg/move-out-from-pkgs-dialog.vue'
   import PkgsTag from '../../components/packages-tag.vue'
@@ -236,7 +237,7 @@
           </template>
         </bk-table-column>
         <template v-if="showCitedByPkgsCol">
-          <bk-table-column label="所在套餐">
+          <bk-table-column label="所在套餐" :width="200">
             <template #default="{ index }">
               <template v-if="citedByPkgsLoading"><Spinner /></template>
               <template v-else-if="citeByPkgsList[index]">
@@ -265,7 +266,13 @@
         </template>
         <bk-table-column label="创建人" prop="revision.creator" :width="100"></bk-table-column>
         <bk-table-column label="更新人" prop="revision.reviser" :width="100"></bk-table-column>
-        <bk-table-column label="更新时间" prop="revision.update_at" :width="180"></bk-table-column>
+        <bk-table-column label="更新时间" prop="" :width="180">
+          <template #default="{ row }">
+            <template v-if="row.revision">
+              {{ datetimeFormat(row.revision.update_at) }}
+            </template>
+          </template>
+        </bk-table-column>
         <bk-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }">
             <div class="actions-wrapper">
