@@ -166,12 +166,15 @@
     crtConfig.value = [config]
   }
 
+  const handleAdded = () => {
+    refreshList()
+    updateRefreshFlag()
+  }
+
   const handleMovedOut = () => {
     refreshListAfterDeleted(1)
     crtConfig.value = []
-    templateStore.$patch(state => {
-      state.needRefreshMenuFlag = true
-    })
+    updateRefreshFlag()
   }
 
   const handleOpenAppBoundByTemplateSlider = (config: ITemplateConfigItem) => {
@@ -184,8 +187,10 @@
     }
   }
 
-  const refreshConfigList = () => {
-    refreshList()
+  const updateRefreshFlag = () => {
+    templateStore.$patch(state => {
+      state.needRefreshMenuFlag = true
+    })
   }
 
   const goToVersionManage = (id: number) => {
@@ -298,7 +303,7 @@
         </bk-table-column>
       </bk-table>
     </bk-loading>
-    <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" @added="refreshConfigList" />
+    <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" @added="handleAdded" />
     <MoveOutFromPkgsDialog
       v-model:show="isMoveOutFromPkgsDialogShow"
       :id="crtConfig.length > 0 ? crtConfig[0].id : 0"
