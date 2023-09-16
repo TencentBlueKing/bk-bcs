@@ -1,7 +1,11 @@
 <script lang="ts" setup>
-  import { ref, computed, watch } from 'vue'
+  import { ref, reactive, computed, watch } from 'vue'
   import cloneDeep from 'lodash';
   import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
+
+  interface IErrorDetail {
+    [key: string]: string[]
+  }
 
   const props = withDefaults(defineProps<{
     list: IVariableEditParams[];
@@ -17,7 +21,8 @@
 
   const emits = defineEmits(['change'])
 
-  const variables = ref<IVariableEditParams[]>([])
+  let variables = reactive<IVariableEditParams[]>([])
+  const errorDetails = ref<IErrorDetail>({})
 
   const cols = computed(() => {
     const tableCols = [
@@ -33,7 +38,7 @@
   })
 
   watch(() => props.list, val => {
-    variables.value = cloneDeep(val).value()
+    variables = cloneDeep(val).value()
   }, { immediate: true })
 
   const isCellEditable = (prop: string) => {
@@ -56,10 +61,35 @@
     return detail?.references.map(item => item.name).join(',')
   }
 
-  const validate = () => {}
+  const deleteCellError = (name: string, key: string) => {
+    if (errorDetails.value[name]?.includes(key)) {
+      if (errorDetails.value[name].length === 0) {
+        delete errorDetails.value[name]
+      } else {
+        errorDetails.value[name] = errorDetails.value[name].filter(item => item !== key)
+      }
+    }
+  }
+
+  const validate = () => {
+    const errors: IErrorDetail = {}
+    variables.forEach(variable => {
+      ['type', 'default_val'].forEach(key => {
+        if (variable[key as keyof typeof variable] === '') {
+          if (errors[variable.name]) {
+            errors[variable.name].push(key)
+          } else {
+            errors[variable.name] = [key]
+          }
+        }
+      })
+    })
+    errorDetails.value = errors
+    return Object.keys(errorDetails.value).length === 0
+  }
 
   const change = () => {
-    emits('change', variables.value)
+    emits('change', variables)
   }
 
   defineExpose({
@@ -80,13 +110,23 @@
       </thead>
       <tbody>
         <tr v-for="(variable, index) in variables" :key="index">
-          <td v-for="col in cols" :key="col.prop" :class="['td-cell', col.cls, { 'td-cell-edit': isCellEditable(col.prop) }]">
+          <td
+            v-for="col in cols"
+            :key="col.prop"
+            :class="[
+              'td-cell',
+              col.cls,
+              {
+                'td-cell-edit': isCellEditable(col.prop),
+                'has-error': errorDetails[variable.name]?.includes(col.prop)
+              }
+            ]">
             <template v-if="props.editable">
-                <bk-select v-if="col.prop === 'type'" v-model="variable.type" :clearable="false" @change="change">
+                <bk-select v-if="col.prop === 'type'" v-model="variable.type" :clearable="false" @change="deleteCellError(variable.name, col.prop)">
                   <bk-option id="string" label="string"></bk-option>
                   <bk-option id="number" label="number"></bk-option>
                 </bk-select>
-                <bk-input v-else-if="col.prop === 'default_val'" v-model="variable.default_val" @change="change" />
+                <bk-input v-else-if="col.prop === 'default_val'" v-model="variable.default_val" @change="deleteCellError(variable.name, col.prop)" />
                 <bk-input v-else-if="col.prop === 'memo'" v-model="variable.memo" @change="change" />
                 <div v-else v-overflow-title class="cell">{{ getCellVal(variable, col.prop) }}</div>
             </template>
@@ -111,6 +151,9 @@
     &.edit-mode {
       .td-cell {
         background: #f5f7fa;
+        &.has-error {
+          border: 1px double #ea3636;
+        }
       }
       .td-cell-edit {
         padding: 0;
