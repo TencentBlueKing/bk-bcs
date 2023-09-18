@@ -18,8 +18,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 	"github.com/prometheus/prometheus/prompb"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 )
 
 // metricsParams

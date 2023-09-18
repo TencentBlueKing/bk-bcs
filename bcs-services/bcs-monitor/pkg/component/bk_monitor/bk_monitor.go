@@ -24,11 +24,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/prompb"
+	"github.com/thanos-io/thanos/pkg/store/storepb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
-	"github.com/thanos-io/thanos/pkg/store/storepb"
 )
 
 const (

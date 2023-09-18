@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
-
 	redis "github.com/go-redis/redis/v8"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
 // RedisSession :
