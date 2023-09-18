@@ -25,11 +25,11 @@ import (
 	"strings"
 	"time"
 
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"

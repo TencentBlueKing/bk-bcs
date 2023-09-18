@@ -21,13 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/gosimple/slug"
-
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/gosimple/slug"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	k8sErr "k8s.io/apimachinery/pkg/api/errors"
@@ -35,6 +30,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 	clientcmdv1 "k8s.io/client-go/tools/clientcmd/api/v1"
 	"sigs.k8s.io/yaml"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 // StartupManager xxx

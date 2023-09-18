@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/audit"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
@@ -27,7 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/audit"
 )
 
 // AuthenticationRequired API类型, 兼容多种认证模式

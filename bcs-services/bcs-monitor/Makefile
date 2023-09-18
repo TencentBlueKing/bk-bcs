@@ -45,6 +45,10 @@ promu:
 build:
 	${GOBUILD} ${LDFLAG} -o bin/bcs-monitor ./cmd/bcs-monitor
 
+.PHONY: lint
+lint:
+	@golangci-lint run --issues-exit-code=0 --fix
+
 .PHONY: test
 test:
 	@echo ">> test not support"
