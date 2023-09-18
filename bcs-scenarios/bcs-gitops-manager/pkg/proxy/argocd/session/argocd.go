@@ -23,7 +23,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // ArgoSession purpose: simple revese proxy for argocd according kubernetes service.
@@ -62,7 +64,10 @@ func (s *ArgoSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			request.Header.Set("Token", token)
 		},
 		ErrorHandler: func(res http.ResponseWriter, request *http.Request, e error) {
-			blog.Errorf("GitOps proxy %s failure, %s. header: %+v", fullPath, e.Error(), request.Header)
+			if !utils.IsContextCanceled(e) {
+				metric.ManagerArgoProxyFailed.WithLabelValues().Inc()
+				blog.Errorf("GitOps proxy %s failure, %s. header: %+v", fullPath, e.Error(), request.Header)
+			}
 			res.WriteHeader(http.StatusInternalServerError)
 			res.Write([]byte("GitOps Proxy session failure")) // nolint
 		},

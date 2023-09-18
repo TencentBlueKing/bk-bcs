@@ -27,7 +27,8 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/options"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/common"
 )
 
 const (
@@ -42,7 +43,7 @@ func incrementalBackoff(n uint, err error, config *retry.Config) time.Duration {
 
 // VaultSecretManager vault client
 type VaultSecretManager struct {
-	option  *Options
+	option  *options.Options
 	client  *vault.Client
 	kclient *kubernetes.Clientset
 }
@@ -51,28 +52,29 @@ type VaultSecretManager struct {
 func (m *VaultSecretManager) Init() error {
 	// init vault client
 	config := vault.DefaultConfig()
-	config.Address = m.option.Endpoints
-	config.ConfigureTLS(&vault.TLSConfig{
-		CAPath: common.GetVaultCa(),
-	})
+	config.Address = m.option.Secret.Endpoints
+	if err := config.ConfigureTLS(&vault.TLSConfig{
+		CAPath: m.option.Secret.CA,
+	}); err != nil {
+		return errors.Wrapf(err, "init vault config tls failed")
+	}
+
 	client, err := vault.NewClient(config)
 	if err != nil {
 		return errors.Wrapf(err, "unable to initialize Vault client")
 	}
-	client.SetToken(m.option.Token)
+	client.SetToken(m.option.Secret.Token)
 	m.client = client
 
-	// init k8s clientset
-	kubernetesConfig, err := rest.InClusterConfig()
+	k8sCfg, err := rest.InClusterConfig()
 	if err != nil {
 		return errors.Wrapf(err, "unable to get kubernetes config in cluster")
 	}
-	clientset, err := kubernetes.NewForConfig(kubernetesConfig)
+	clientSet, err := kubernetes.NewForConfig(k8sCfg)
 	if err != nil {
 		return errors.Wrapf(err, "unable to initialize kubernetes client")
 	}
-	m.kclient = clientset
-
+	m.kclient = clientSet
 	return nil
 }
 
@@ -95,30 +97,29 @@ func (m *VaultSecretManager) hasInitProject(project string) bool {
 	return false
 }
 
-func (m *VaultSecretManager) deferInit(project string) {
-	// check mount
+func (m *VaultSecretManager) reverseInitProject(project string) []error {
+	var errs []error
 	ml, err := m.client.Sys().ListMounts()
 	if err != nil {
-		blog.Infof("listMount failed when check initSecret, err: %s", err)
-	}
-	for mount := range ml {
-		if mount == fmt.Sprintf("%s/", project) {
-			err = m.client.Sys().Unmount(project)
-			if err != nil {
-				blog.Warnf("umount failed when deferInit, err: %s", err)
+		errs = append(errs, errors.Wrapf(err, "list mounts for project '%s' failed", project))
+	} else {
+		for mount := range ml {
+			if mount != fmt.Sprintf("%s/", project) {
+				continue
+			}
+			if err = m.client.Sys().Unmount(mount); err != nil {
+				errs = append(errs, errors.Wrapf(err, "unmount '%s' for project '%s' failed", mount, project))
 			}
 		}
 	}
-
-	// check policy
-	_, err = m.client.Sys().GetPolicy(project)
-	if err != nil {
-		blog.Infof("getPolicy failed when deferInit, if err is not found, skip... err: %s", err)
+	if _, err = m.client.Sys().GetPolicy(project); err != nil {
+		errs = append(errs, errors.Wrapf(err, "get policy failed for project '%s'", project))
 	}
 	err = m.client.Sys().DeletePolicy(project)
 	if err != nil {
-		blog.Warnf("delPolicy failed when deferInit, err: %s", err)
+		errs = append(errs, errors.Wrapf(err, "delete policy failed for project '%s'", project))
 	}
+	return errs
 }
 
 // InitProject mount, policy, token, secret
@@ -128,6 +129,17 @@ func (m *VaultSecretManager) InitProject(project string) error {
 		return nil
 	}
 
+	blog.Infof("Project '%s' init starting", project)
+	defer func() {
+		if errs := m.reverseInitProject(project); len(errs) != 0 {
+			for i := range errs {
+				blog.Errorf("Project '%s' reserve init failed: %s", project, errs[i].Error())
+			}
+		} else {
+			blog.Warnf("Project '%s' reverse init complete", project)
+		}
+	}()
+
 	// create kv, secrets volume for project root path
 	kvMount := &vault.MountInput{
 		Type:        "kv",
@@ -136,58 +148,44 @@ func (m *VaultSecretManager) InitProject(project string) error {
 			"version": common.VaultVersion,
 		},
 	}
-	err := m.client.Sys().Mount(project, kvMount)
-	if err != nil {
-		m.deferInit(project)
-		return errors.Wrapf(err, "create mount --path=%s err", project)
+	if err := m.client.Sys().Mount(project, kvMount); err != nil {
+		return errors.Wrapf(err, "init project '%s' mount failed", project)
 	}
-
-	err = m.client.Sys().PutPolicy(project, common.GetVaultProjectRule(project))
-	if err != nil {
-		// Atomic operations, rollback.
-		blog.Infof("project[%s] initSecret failed, err: %s.", project, err)
-		m.deferInit(project)
-		return errors.Wrapf(err, "create policy %s err", project)
+	if err := m.client.Sys().PutPolicy(project, common.GetVaultProjectRule(project)); err != nil {
+		return errors.Wrapf(err, "init project '%s' policy failed", project)
 	}
-
-	// create token
-	ops := &vault.TokenCreateRequest{
+	token, err := m.client.Auth().Token().Create(&vault.TokenCreateRequest{
 		Policies: []string{project},
-	}
-	token, err := m.client.Auth().Token().Create(ops)
+	})
 	if err != nil {
-		blog.Infof("project[%s] initSecret failed, err: %s.", project, err)
-		m.deferInit(project)
-		return errors.Wrapf(err, "create token %s err", project)
+		return errors.Wrapf(err, "init project '%s' create token failed", project)
 	}
 
 	// create secret
-	ksecret := &corev1.Secret{
+	k8sSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      common.GetVaultSecretName(project),
-			Namespace: common.GetVaultSecretNamespace(),
+			Namespace: m.option.Secret.Namespace,
 		},
 		StringData: map[string]string{
-			"VAULT_ADDR":    common.GetVaultAddr(),
+			"VAULT_ADDR":    m.option.Secret.Endpoints,
 			"VAULT_TOKEN":   token.Auth.ClientToken,
-			"AVP_TYPE":      common.GetSecretType(),
+			"AVP_TYPE":      m.option.Secret.Type,
 			"AVP_AUTH_TYPE": "token",
-			"VAULT_CACERT":  common.GetVaultCa(),
+			"VAULT_CACERT":  m.option.Secret.CA,
 		},
 	}
-	_, err = m.kclient.CoreV1().Secrets(common.GetVaultSecretNamespace()).Create(context.Background(), ksecret, metav1.CreateOptions{})
+	_, err = m.kclient.CoreV1().Secrets(m.option.Secret.Namespace).
+		Create(context.Background(), k8sSecret, metav1.CreateOptions{})
 	if err != nil {
-		m.deferInit(project)
-		blog.Errorf("project[%s] initSecret failed, err: %s.", project, err)
-		return errors.Wrapf(err, "create Secret %s err", ksecret.Name)
+		return errors.Wrapf(err, "init project '%s' create k8s secret failed", project)
 	}
-
 	return nil
 }
 
 // GetSecretAnnotation get init secret info for gitops-manager
 func (m *VaultSecretManager) GetSecretAnnotation(project string) string {
-	return common.GetVaultSecForProAnno(project)
+	return common.GetVaultSecForProAnno(m.option.Secret.Namespace, project)
 }
 
 // GetSecret interface for get secret
@@ -225,7 +223,7 @@ func (m *VaultSecretManager) GetMetadata(ctx context.Context, req *SecretRequest
 	}
 	data := &SecretMetadata{}
 	if err := json.Unmarshal(s, data); err != nil {
-		blog.Infof("GetMetadata meta []byte is: %s", s)
+		blog.Errorf("GetMetadata meta []byte is: %s", s)
 		return nil, err
 	}
 

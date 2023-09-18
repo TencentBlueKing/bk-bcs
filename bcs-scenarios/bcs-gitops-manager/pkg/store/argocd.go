@@ -21,7 +21,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -47,7 +46,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/argoconn"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 type argo struct {
@@ -96,6 +97,9 @@ func (cd *argo) GetOptions() *Options {
 func (cd *argo) CreateProject(ctx context.Context, pro *v1alpha1.AppProject) error {
 	_, err := cd.projectClient.Create(ctx, &project.ProjectCreateRequest{Project: pro})
 	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("CreateProject").Inc()
+		}
 		return errors.Wrapf(err, "argocd create project '%s' failed", pro.GetName())
 	}
 	return nil
@@ -105,6 +109,9 @@ func (cd *argo) CreateProject(ctx context.Context, pro *v1alpha1.AppProject) err
 func (cd *argo) UpdateProject(ctx context.Context, pro *v1alpha1.AppProject) error {
 	_, err := cd.projectClient.Update(ctx, &project.ProjectUpdateRequest{Project: pro})
 	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("UpdateProject").Inc()
+		}
 		return errors.Wrapf(err, "argocd update project '%s' failed", pro.GetName())
 	}
 	return nil
@@ -114,9 +121,11 @@ func (cd *argo) UpdateProject(ctx context.Context, pro *v1alpha1.AppProject) err
 func (cd *argo) GetProject(ctx context.Context, name string) (*v1alpha1.AppProject, error) {
 	pro, err := cd.projectClient.Get(ctx, &project.ProjectQuery{Name: name})
 	if err != nil {
-		// filter error that NotFound
-		if strings.Contains(err.Error(), "code = NotFound") {
+		if utils.IsArgoResourceNotFound(err) {
 			return nil, nil
+		}
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("GetProject").Inc()
 		}
 		return nil, errors.Wrapf(err, "argocd get project '%s' failed", name)
 	}
@@ -127,6 +136,9 @@ func (cd *argo) GetProject(ctx context.Context, name string) (*v1alpha1.AppProje
 func (cd *argo) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, error) {
 	pro, err := cd.projectClient.List(ctx, &project.ProjectQuery{})
 	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListProjects").Inc()
+		}
 		return nil, errors.Wrapf(err, "argocd list alll projects failed")
 	}
 	return pro, nil
@@ -136,6 +148,9 @@ func (cd *argo) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, err
 func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error {
 	_, err := cd.clusterClient.Create(ctx, &cluster.ClusterCreateRequest{Cluster: cls})
 	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("CreateCluster").Inc()
+		}
 		return errors.Wrapf(err, "argocd create cluster '%s' failed", cls.Name)
 	}
 	return nil
@@ -150,7 +165,10 @@ func (cd *argo) DeleteCluster(ctx context.Context, name string) error {
 			blog.Warnf("argocd delete cluster %s warning: %s", name, err.Error())
 			return nil
 		}
-		return errors.Wrapf(err, "delete cluster failed")
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("DeleteCluster").Inc()
+		}
+		return errors.Wrapf(err, "argocd delete cluster failed")
 	}
 	return nil
 }
@@ -166,6 +184,12 @@ func (cd *argo) GetCluster(ctx context.Context, query *cluster.ClusterQuery) (*v
 				*query, err.Error())
 			return nil, nil
 		}
+		if utils.IsArgoResourceNotFound(err) {
+			return nil, nil
+		}
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("GetCluster").Inc()
+		}
 		return nil, errors.Wrapf(err, "argocd get cluster '%v' failed", *query)
 	}
 	return cls, nil
@@ -177,7 +201,10 @@ func (cd *argo) UpdateCluster(ctx context.Context, argoCluster *v1alpha1.Cluster
 		Cluster:       argoCluster,
 		UpdatedFields: []string{"annotations"},
 	}); err != nil {
-		return errors.Wrapf(err, "update cluster '%s' failed", argoCluster.Name)
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("UpdateCluster").Inc()
+		}
+		return errors.Wrapf(err, "argocd update cluster '%s' failed", argoCluster.Name)
 	}
 	return nil
 }
@@ -186,6 +213,9 @@ func (cd *argo) UpdateCluster(ctx context.Context, argoCluster *v1alpha1.Cluster
 func (cd *argo) ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error) {
 	cls, err := cd.clusterClient.List(ctx, &cluster.ClusterQuery{})
 	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListCluster").Inc()
+		}
 		return nil, errors.Wrapf(err, "argocd list all clusters failed")
 	}
 	return cls, nil
@@ -195,13 +225,16 @@ func (cd *argo) ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error) 
 func (cd *argo) ListClustersByProject(ctx context.Context, project string) (*v1alpha1.ClusterList, error) {
 	cls, err := cd.clusterClient.List(ctx, &cluster.ClusterQuery{})
 	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListClustersByProject").Inc()
+		}
 		return nil, errors.Wrapf(err, "argocd list all clusters failed")
 	}
 
 	clusters := make([]v1alpha1.Cluster, 0, len(cls.Items))
 	for _, item := range cls.Items {
 		projectID, ok := item.Annotations[common.ProjectIDKey]
-		if !ok || (projectID == "" && item.Name != common.InClusterName) {
+		if item.Name != common.InClusterName && (!ok || projectID == "") {
 			blog.Errorf("cluster '%s' not have project id annotation", item.Name)
 			continue
 		}
@@ -236,9 +269,12 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 	}
 	repos, err := cd.repoClient.Get(ctx, &repository.RepoQuery{Repo: repo})
 	if err != nil {
-		if strings.Contains(err.Error(), "code = NotFound") {
+		if utils.IsArgoResourceNotFound(err) {
 			blog.Warnf("argocd get Repository %s warning, %s", repo, err.Error())
 			return nil, nil
+		}
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("GetRepository").Inc()
 		}
 		return nil, errors.Wrapf(err, "argocd get repo '%s' failed", repo)
 	}
@@ -249,6 +285,9 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 func (cd *argo) ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, error) {
 	repos, err := cd.repoClient.List(ctx, &repository.RepoQuery{})
 	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListRepository").Inc()
+		}
 		return nil, errors.Wrapf(err, "argocd list repos failed")
 	}
 	return repos, nil
@@ -258,9 +297,12 @@ func (cd *argo) ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, e
 func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error) {
 	app, err := cd.appClient.Get(ctx, &appclient.ApplicationQuery{Name: &name})
 	if err != nil {
-		if strings.Contains(err.Error(), "code = NotFound") {
-			blog.Warnf("argocd get application %s warning, %s", name, err.Error())
+		if utils.IsArgoResourceNotFound(err) {
+			blog.Warnf("argocd get application %s not found: %s", name, err.Error())
 			return nil, nil
+		}
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("GetApplication").Inc()
 		}
 		return nil, errors.Wrapf(err, "argocd get application '%s' failed", name)
 	}
@@ -273,6 +315,9 @@ func (cd *argo) ListApplications(ctx context.Context, query *appclient.Applicati
 	if !cd.cacheSynced.Load() {
 		apps, err := cd.appClient.List(ctx, query)
 		if err != nil {
+			if !utils.IsContextCanceled(err) {
+				metric.ManagerArgoOperateFailed.WithLabelValues("ListApplications").Inc()
+			}
 			return nil, errors.Wrapf(err, "argocd list application for project '%v' failed", query.Projects)
 		}
 		return apps, nil
@@ -335,11 +380,21 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 			ResourceName: &resource.Name,
 		})
 		if err != nil {
-			errs = append(errs, fmt.Sprintf("delete resource '%s/%s/%s' failed for cluster '%s': %s",
-				resource.Group, resource.Kind, resource.Name, server, err.Error()))
+			if utils.IsArgoResourceNotFound(err) {
+				blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
+					"got 'Not Found': %s",
+					utils.RequestID(ctx), resource.Group, resource.Kind, resource.Name,
+					server, application.Name, err.Error())
+			} else {
+				if !utils.IsContextCanceled(err) {
+					metric.ManagerArgoOperateFailed.WithLabelValues("DeleteApplicationResource").Inc()
+				}
+				errs = append(errs, fmt.Sprintf("argocd delete resource '%s/%s/%s' failed for cluster '%s': %s",
+					resource.Group, resource.Kind, resource.Name, server, err.Error()))
+			}
 		} else {
-			blog.Infof("delete resource '%s/%s/%s' for cluster '%s' with application '%s' success",
-				resource.Group, resource.Kind, resource.Name, server, application.Name)
+			blog.Infof("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' success",
+				utils.RequestID(ctx), resource.Group, resource.Kind, resource.Name, server, application.Name)
 		}
 	}
 	if len(errs) != 0 {
@@ -355,22 +410,26 @@ func (cd *argo) GetApplicationSet(ctx context.Context, name string) (*v1alpha1.A
 		Name: name,
 	})
 	if err != nil {
-		os.IsExist(err)
-		if strings.Contains(err.Error(), "code = NotFound") {
+		if utils.IsArgoResourceNotFound(err) {
 			return nil, nil
 		}
-		return nil, errors.Wrapf(err, "get applicationset '%s' failed", name)
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("GetApplicationSet").Inc()
+		}
+		return nil, errors.Wrapf(err, "argocd get applicationset '%s' failed", name)
 	}
 	return appset, nil
 }
 
 // ListApplicationSets list applicationsets by projects
-func (cd *argo) ListApplicationSets(ctx context.Context, projects []string) (*v1alpha1.ApplicationSetList, error) {
-	appsets, err := cd.appsetClient.List(ctx, &appsetpkg.ApplicationSetListQuery{
-		Projects: projects,
-	})
+func (cd *argo) ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
+	*v1alpha1.ApplicationSetList, error) {
+	appsets, err := cd.appsetClient.List(ctx, query)
 	if err != nil {
-		return nil, errors.Wrapf(err, "list applicationsets by project '%v' failed", projects)
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListApplicationSets").Inc()
+		}
+		return nil, errors.Wrapf(err, "argocd list applicationsets by project '%v' failed", *query)
 	}
 	return appsets, nil
 }
@@ -432,6 +491,7 @@ func (cd *argo) initBasicClient() error {
 		for {
 			// 当链接发生故障，则进行重连; 重连成功，则持续检查状态; 重连失败则间隔重连
 			if cd.conn == nil {
+				metric.ManagerArgoConnectionNum.WithLabelValues().Inc()
 				if err = cd.connect(); err != nil {
 					blog.Errorf("[store] argocd grpc connection connect failed: %s", err.Error())
 					time.Sleep(5 * time.Second)
@@ -444,8 +504,10 @@ func (cd *argo) initBasicClient() error {
 				// 检测 GRPC 连接状态是否断开
 				state := cd.conn.GetState()
 				if state != connectivity.TransientFailure && state != connectivity.Shutdown {
+					metric.ManagerArgoConnectionStatus.WithLabelValues().Set(0)
 					continue
 				}
+				metric.ManagerArgoConnectionStatus.WithLabelValues().Set(1)
 				blog.Errorf("[store] argocd grpc connection disconnect: %s", state.String())
 				// 发生链接断开问题，则重置链接
 				if cd.connCloser != nil {
@@ -507,27 +569,32 @@ func (cd *argo) handleApplicationWatch() error {
 	go func() {
 		blog.Infof("[store] application watch started")
 		for {
-			var event *v1alpha1.ApplicationWatchEvent
-			if event, err = watchClient.Recv(); err != nil {
-				blog.Errorf("[store] application watch received error: %s", err.Error())
+			// 如果 watchClient 是空的，我们需要去重连
+			if watchClient == nil {
 				cd.cacheSynced.Store(false)
-
-				// watch client will be re-created after 10 seconds
-				time.Sleep(10 * time.Second)
 				watchClient, err = cd.appClient.Watch(context.Background(), &applicationpkg.ApplicationQuery{})
 				if err != nil {
 					blog.Error("[store] application watch client recreated failed")
-				} else {
-					blog.Infof("[store] application watch client re-created")
-					// 当重连成功之后，刷新所有缓存，并重新开始监听事件
-					if err = cd.initCache(); err != nil {
-						blog.Errorf("[store] cache synced failed: %s", err.Error())
-					} else {
-						blog.Infof("[store] cache synced success")
-					}
+					// 重连如果失败，在 10s 后继续重连
+					time.Sleep(10 * time.Second)
+					continue
 				}
+				blog.Infof("[store] application watch client re-created")
+				// 当重连成功之后，刷新所有缓存，并重新开始监听事件
+				if err = cd.initCache(); err != nil {
+					blog.Errorf("[store] cache synced failed: %s", err.Error())
+				} else {
+					blog.Infof("[store] cache synced success")
+				}
+			}
+			var event *v1alpha1.ApplicationWatchEvent
+			if event, err = watchClient.Recv(); err != nil {
+				blog.Errorf("[store] application watch received error: %s", err.Error())
+				// 如果 watchClient 接收到错误，直接设置为空进行重连逻辑
+				watchClient = nil
 				continue
 			}
+
 			if event.Type != watch.Modified {
 				blog.Infof("[store] application watch received: %s/%s", string(event.Type), event.Application.Name)
 			}

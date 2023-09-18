@@ -25,7 +25,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // SecretSession defines the instance that to proxy to secret server
@@ -59,6 +61,9 @@ func (s *SecretSession) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			request.URL = newURL
 		},
 		ErrorHandler: func(res http.ResponseWriter, request *http.Request, e error) {
+			if !utils.IsContextCanceled(e) {
+				metric.ManagerSecretProxyFailed.WithLabelValues().Inc()
+			}
 			blog.Errorf("secret session proxy '%s' with header '%s' failure: %s",
 				fullPath, request.Header, e.Error())
 			res.WriteHeader(http.StatusInternalServerError)
