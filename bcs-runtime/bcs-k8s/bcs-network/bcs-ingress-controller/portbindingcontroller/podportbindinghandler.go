@@ -31,6 +31,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
+// PodPortBindingHandler handle portbinding related to pods
 type PodPortBindingHandler struct {
 	pod *k8scorev1.Pod
 

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package constant variables
 package constant
 
 const (

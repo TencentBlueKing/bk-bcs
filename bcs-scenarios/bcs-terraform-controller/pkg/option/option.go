@@ -11,6 +11,7 @@
  *
  */
 
+// Package option include controller options from command line and env
 package option
 
 import (

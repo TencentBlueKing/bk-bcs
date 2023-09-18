@@ -11,6 +11,7 @@
  *
  */
 
+// Package utils implement simple utils
 package utils
 
 import (
