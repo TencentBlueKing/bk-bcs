@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	redisotel2 "github.com/go-redis/redis/extra/redisotel/v8"
 	"github.com/go-redis/redis/v8"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
@@ -94,6 +95,7 @@ func InitRedisClient(conf *config.RedisConf) {
 	}
 	initOnce.Do(func() {
 		rds = NewStandaloneClient(conf)
+		rds.AddHook(redisotel2.NewTracingHook())
 		// 若 Redis 服务异常，应重置 rds 并 panic
 		if _, err := rds.Ping(context.TODO()).Result(); err != nil {
 			rds = nil
@@ -108,6 +110,7 @@ func GetDefaultClient() *redis.Client {
 		// 单元测试模式下，自动启用测试用 Redis，否则需要提前初始化
 		if crRuntime.RunMode == runmode.UnitTest {
 			rds = NewTestRedisClient()
+			rds.AddHook(redisotel2.NewTracingHook())
 			return rds
 		}
 		panic("prod and stag run mode need init redis!")
