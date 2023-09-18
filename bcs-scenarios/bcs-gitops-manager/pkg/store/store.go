@@ -14,7 +14,10 @@ package store
 
 import (
 	"context"
+
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
+
 	"sync"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
@@ -59,7 +62,8 @@ type Store interface {
 	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application) error
 
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
-	ListApplicationSets(ctx context.Context, projects []string) (*v1alpha1.ApplicationSetList, error)
+	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
+		*v1alpha1.ApplicationSetList, error)
 
 	// authentication token
 	GetToken(ctx context.Context) string

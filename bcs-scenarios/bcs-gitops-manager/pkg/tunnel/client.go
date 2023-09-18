@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 )
 
 // ClientOptions for websocket client
@@ -110,6 +111,7 @@ func (c *Client) connect2Proxy() {
 		default:
 			c.lastConnected = time.Now()
 			blog.Infof("try connect to tunnel proxy address %s in loop", proxyWS)
+			metric.ManagerTunnelConnectStatus.WithLabelValues().Set(0)
 			if err := websocketDialer.ClientConnect(
 				c.option.Context,
 				proxyWS,
@@ -121,6 +123,8 @@ func (c *Client) connect2Proxy() {
 				}); err != nil {
 				blog.Errorf("client websocket connect %s failed, %s", proxyWS, err.Error())
 			}
+			metric.ManagerTunnelConnectStatus.WithLabelValues().Set(1)
+			metric.ManagerTunnelConnectNum.WithLabelValues().Inc()
 			time.Sleep(c.backoff())
 		}
 	}

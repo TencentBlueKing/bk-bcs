@@ -495,7 +495,7 @@ gitops-webhook:
 
 gitops-vaultplugin-server:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-vaultplugin-server
-	cd bcs-scenarios/bcs-gitops-manager && make vaultplugin && cd -
+	cd bcs-scenarios/bcs-gitops-vaultplugin-server && make vaultplugin && cd -
 
 test: test-bcs-runtime
 

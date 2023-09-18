@@ -21,6 +21,7 @@ import (
 
 	"github.com/argoproj/argo-cd/v2/applicationset/generators"
 	"github.com/argoproj/argo-cd/v2/applicationset/utils"
+	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
@@ -173,10 +174,11 @@ func (h *handler) CheckGetApplicationSet(ctx context.Context, appsetName string)
 }
 
 // ListApplicationSets list applicationsets
-func (h *handler) ListApplicationSets(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationSetList, error) {
-	appsets, err := h.option.Storage.ListApplicationSets(ctx, projectNames)
+func (h *handler) ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
+	*v1alpha1.ApplicationSetList, error) {
+	appsets, err := h.option.Storage.ListApplicationSets(ctx, query)
 	if err != nil {
-		return nil, errors.Wrapf(err, "list application swith project '%v' failed", projectNames)
+		return nil, errors.Wrapf(err, "list application swith project '%v' failed", *query)
 	}
 	return appsets, nil
 }

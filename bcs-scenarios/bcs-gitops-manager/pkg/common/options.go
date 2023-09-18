@@ -24,6 +24,7 @@ import (
 
 // ServerConfig option for server side
 type ServerConfig struct {
+	Debug       bool        `json:"debug"`
 	Address     string      `json:"address,omitempty"`
 	IPv6Address string      `json:"ipv6address,omitempty"`
 	Port        uint        `json:"port,omitempty"`

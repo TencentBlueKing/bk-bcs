@@ -11,6 +11,7 @@
  *
  */
 
+// Package secretstore defines the function for vaultplugin
 package secretstore
 
 import (
@@ -23,9 +24,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/handler"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
+// SecretInterface defines the interface of secret
 type SecretInterface interface {
 	InitProjectSecret(ctx context.Context, project string) error
 	GetProjectSecret(ctx context.Context, project string) (string, error)
@@ -35,11 +38,13 @@ type secretStore struct {
 	op *SecretStoreOptions
 }
 
+// SecretStoreOptions defines the options of secret store
 type SecretStoreOptions struct {
 	Address string `json:"address"`
 	Port    string `json:"port"`
 }
 
+// NewSecretStore will create the instance of SecretStore
 func NewSecretStore(op *SecretStoreOptions) SecretInterface {
 	return &secretStore{
 		op: op,
@@ -49,6 +54,12 @@ func NewSecretStore(op *SecretStoreOptions) SecretInterface {
 const (
 	initPath = "/api/v1/secrets/init"
 )
+
+type secretResponse struct {
+	Code    int32       `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
 
 // InitProjectSecret init the secret when project is open
 func (s *secretStore) InitProjectSecret(ctx context.Context, project string) error {
@@ -60,10 +71,10 @@ func (s *secretStore) InitProjectSecret(ctx context.Context, project string) err
 		},
 	}
 	bs, err := s.send(ctx, hr)
-	if err != nil {
+	if err != nil && !utils.IsSecretAlreadyExist(err) {
 		return errors.Wrapf(err, "init secret for project '%s' failed", project)
 	}
-	response := new(handler.SecretResponse)
+	response := new(secretResponse)
 	if err = json.Unmarshal(bs, response); err != nil {
 		return errors.Wrapf(err, "init secret for project '%s' unmarshal '%s' failed",
 			project, string(bs))
@@ -76,13 +87,13 @@ func (s *secretStore) InitProjectSecret(ctx context.Context, project string) err
 }
 
 const (
-	getSecretPath = "/api/v1/secrets/annotation"
+	getSecretPath = "/api/v1/secrets/annotation" // nolint
 )
 
 // GetProjectSecret get the secret by project name
 func (s *secretStore) GetProjectSecret(ctx context.Context, project string) (string, error) {
 	hr := &httpRequest{
-		path:   getSecretPath,
+		path:   getSecretPath, // nolint
 		method: http.MethodGet,
 		queryParams: map[string]string{
 			"project": project,
@@ -93,11 +104,11 @@ func (s *secretStore) GetProjectSecret(ctx context.Context, project string) (str
 	if err != nil {
 		return secretName, errors.Wrapf(err, "get project '%s' secret failed", project)
 	}
-	response := new(handler.SecretResponse)
+	response := new(secretResponse)
 	if err = json.Unmarshal(bs, response); err != nil {
 		return secretName, errors.Wrapf(err, "get project '%s' secret unmarshal '%s' failed", project, string(bs))
 	}
-	if response.Code != handler.SuccessHttpCode {
+	if response.Code != 0 {
 		return secretName, errors.Errorf("get project '%s' secret resp code not 0 but %d: %s",
 			project, response.Code, response.Message)
 	}
@@ -122,7 +133,8 @@ func (s *secretStore) send(ctx context.Context, hr *httpRequest) ([]byte, error)
 
 	urlStr := fmt.Sprintf("http://%s:%s%s", s.op.Address, s.op.Port, hr.path) // nolint
 	if hr.body != nil {
-		body, err := json.Marshal(hr.body)
+		var body []byte
+		body, err = json.Marshal(hr.body)
 		if err != nil {
 			return nil, errors.Wrapf(err, "marshal body failed")
 		}
@@ -148,6 +160,9 @@ func (s *secretStore) send(ctx context.Context, hr *httpRequest) ([]byte, error)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerSecretOperateFailed.WithLabelValues().Inc()
+		}
 		return nil, errors.Wrap(err, "http request failed when proxy send")
 	}
 	defer resp.Body.Close()

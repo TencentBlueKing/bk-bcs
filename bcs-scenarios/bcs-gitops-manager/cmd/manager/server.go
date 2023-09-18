@@ -15,10 +15,13 @@ package manager
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
+	"net/http/pprof"
 	"path"
 	"reflect"
 	osruntime "runtime"
+	"strconv"
 	"strings"
 	ossync "sync"
 	"time"
@@ -30,6 +33,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/sync"
@@ -76,6 +80,7 @@ type Server struct {
 	waitLeaderResign chan struct{}
 	microService     micro.Service
 	httpService      *http.Server
+	metricServer     *http.Server
 	// controller for data sync
 	clusterCtl controller.ClusterControl
 	projectCtl controller.ProjectControl
@@ -91,7 +96,7 @@ type Server struct {
 
 // Init all subsystems
 func (s *Server) Init() error {
-	// 初始化所有进程
+	s.initMetricService()
 	initializer := []func() error{
 		s.initSecret, s.initIamJWTClient, s.initStorage, s.initController,
 		s.initMicroService, s.initHTTPService, s.initLeaderElection,
@@ -263,6 +268,42 @@ func (s *Server) initHTTPService() error {
 	}
 	blog.Infof("manager init http service successfully")
 	return nil
+}
+
+func (s *Server) initMetricService() {
+	metricMux := http.NewServeMux()
+	s.initPProf(metricMux)
+	s.initMetric(metricMux)
+	extraServerEndpoint := net.JoinHostPort(s.option.Address, strconv.Itoa(int(s.option.MetricPort)))
+
+	s.metricServer = &http.Server{
+		Addr:    extraServerEndpoint,
+		Handler: metricMux,
+	}
+	go func() {
+		blog.Infof("start extra modules [pprof, metric] server %s", extraServerEndpoint)
+		if err := s.metricServer.ListenAndServe(); err != nil {
+			blog.Errorf("metric server listen failed, err %s", err.Error())
+		}
+	}()
+}
+
+func (s *Server) initPProf(mux *http.ServeMux) {
+	if !s.option.Debug {
+		blog.Infof("pprof is disabled")
+		return
+	}
+	blog.Infof("pprof is enabled")
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+}
+
+func (s *Server) initMetric(mux *http.ServeMux) {
+	blog.Infof("init metric handler")
+	mux.Handle("/metrics", promhttp.Handler())
 }
 
 func (s *Server) startHTTPService() {
