@@ -44,7 +44,7 @@
     refreshVesionList()
     if (isPublish && publishVersionRef.value) {
         versionData.value = version
-        publishVersionRef.value.handleOpenSelectGroupPanel()
+        publishVersionRef.value.openSelectGroupPanel()
       }
   }
 

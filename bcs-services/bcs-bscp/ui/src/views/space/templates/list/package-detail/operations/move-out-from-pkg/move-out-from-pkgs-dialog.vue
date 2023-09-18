@@ -152,7 +152,7 @@
             </div>
           </template>
         </bk-table-column>
-        <bk-table-column v-show-overflow-tooltip label="使用此套餐的服务" prop="appNames"></bk-table-column>
+        <bk-table-column show-overflow-tooltip label="使用此套餐的服务" prop="appNames"></bk-table-column>
       </bk-table>
     </bk-loading>
     <p v-if="citedList.length === 1" class="tips">

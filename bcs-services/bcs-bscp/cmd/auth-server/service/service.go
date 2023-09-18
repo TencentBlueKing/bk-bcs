@@ -33,6 +33,7 @@ import (
 	"bscp.io/cmd/auth-server/service/auth"
 	"bscp.io/cmd/auth-server/service/iam"
 	"bscp.io/cmd/auth-server/service/initial"
+	confsvc "bscp.io/cmd/config-server/service"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/criteria/errf"
@@ -45,6 +46,7 @@ import (
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	pbas "bscp.io/pkg/protocol/auth-server"
+	pbcs "bscp.io/pkg/protocol/config-server"
 	base "bscp.io/pkg/protocol/core/base"
 	basepb "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
@@ -349,12 +351,12 @@ func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamaut
 	for _, v := range resp.GetItems() {
 		bID, _ := strconv.ParseInt(v.SpaceId, 10, 64)
 		authRes = append(authRes, &meta.ResourceAttribute{
-			Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource, ResourceID: uint32(bID)}, BizID: uint32(bID)},
+			Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource, ResourceID: uint32(bID)}, BizID: uint32(bID)},
 		)
 
 	}
 
-	authResp, _, err := authorizer.Authorize(kt, authRes...)
+	authResp, _, err := authorizer.AuthorizeDecision(kt, authRes...)
 	if err != nil {
 		return nil, err
 	}
@@ -368,6 +370,7 @@ func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamaut
 
 func init() {
 	webannotation.Register(&pbas.ListUserSpaceResp{}, ListUserSpaceAnnotation)
+	webannotation.Register(&pbcs.ListAppsResp{}, confsvc.ListAppsAnnotation)
 }
 
 // ListUserSpace 获取用户信息

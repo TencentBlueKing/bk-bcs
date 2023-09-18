@@ -303,15 +303,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, toRefs, computed, onMounted, watch, toRef, h } from 'vue';
-import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
-import Header from '@/components/layout/Header.vue';
-import useSideslider from '@/composables/use-sideslider';
-import $store from '@/store';
-import $router from '@/router';
-import $i18n from '@/i18n/i18n-setup';
+import { computed, defineComponent, h, onMounted, reactive, toRef, toRefs, watch } from 'vue';
+
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import Header from '@/components/layout/Header.vue';
+import useSideslider from '@/composables/use-sideslider';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
+import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 export default defineComponent({
   name: 'CrdcontrollerPolarisInstances',

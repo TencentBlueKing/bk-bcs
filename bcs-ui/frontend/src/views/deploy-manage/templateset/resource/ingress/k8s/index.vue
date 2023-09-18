@@ -431,11 +431,11 @@
 
 <script>
 import { catchErrorHandler, formatDate } from '@/common/util';
-import ingressParams from '@/json/k8s-ingress.json';
-import ruleParams from '@/json/k8s-ingress-rule.json';
+import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import bkKeyer from '@/components/keyer';
 import Header from '@/components/layout/Header.vue';
-import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
+import ingressParams from '@/json/k8s-ingress.json';
+import ruleParams from '@/json/k8s-ingress-rule.json';
 
 export default {
   components: {

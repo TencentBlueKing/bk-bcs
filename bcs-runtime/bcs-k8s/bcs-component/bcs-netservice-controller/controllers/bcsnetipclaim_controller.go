@@ -14,7 +14,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -49,7 +48,7 @@ type BCSNetIPClaimReconciler struct {
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 func (r *BCSNetIPClaimReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	blog.V(5).Infof("BCSNetIPClaim %+v triggered", req.Name)
+	blog.Infof("BCSNetIPClaim %+v triggered", req.Name)
 	claim := &netservicev1.BCSNetIPClaim{}
 	if err := r.Get(ctx, req.NamespacedName, claim); err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -74,11 +73,6 @@ func (r *BCSNetIPClaimReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 					RequeueAfter: 5 * time.Second,
 				}, err
 			}
-			blog.Errorf("can not delete claim %s in %s status", claim.Name, constant.BCSNetIPClaimBoundedStatus)
-			return ctrl.Result{
-				Requeue:      true,
-				RequeueAfter: 5 * time.Second,
-			}, fmt.Errorf("can not delete claim %s in %s status", claim.Name, constant.BCSNetIPClaimBoundedStatus)
 		}
 
 		if err := r.removeFinalizerForPool(claim); err != nil {
@@ -116,14 +110,6 @@ func (r *BCSNetIPClaimReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 		return ctrl.Result{}, nil
 	}
-	if err := r.boundBCSNetIP(ctx, claim); err != nil {
-		r.Recorder.Eventf(claim, v1.EventTypeWarning, "Unbound",
-			"Bound BCSNetIP failed, %s", err.Error())
-		return ctrl.Result{
-			Requeue:      true,
-			RequeueAfter: 5 * time.Second,
-		}, err
-	}
 
 	return ctrl.Result{}, nil
 }
@@ -134,14 +120,28 @@ func (r *BCSNetIPClaimReconciler) unboundIP(ctx context.Context, claim *netservi
 		return err
 	}
 	if netIP.Status.Phase == constant.BCSNetIPActiveStatus {
-		return fmt.Errorf("delete claim %s failed, bounded IP %s in Active status",
+		return fmt.Errorf("delete claim %s failed, bounded BCSNetIP %s in Active status",
 			fmt.Sprintf("%s/%s", claim.Namespace, claim.Name), claim.Status.BoundedIP)
+	}
+	claimKey := utils.GetNamespacedNameKey(claim.GetNamespace(), claim.GetName())
+	if netIP.Status.IPClaimKey == "" {
+		blog.Infof("ip %s is already unbounded from claim %s", netIP.GetName(), claimKey)
+		return nil
+	}
+	if netIP.Status.IPClaimKey != claimKey {
+		return fmt.Errorf("ip %s is not handled by claim %s", netIP.GetName(), claimKey)
+	}
+	netIP.Labels[constant.FixIPLabel] = "false"
+	if err := r.Update(context.Background(), netIP); err != nil {
+		blog.Errorf("set BCSNetIP [%s] label failed", netIP.Name)
+		return fmt.Errorf("set IP [%s] label failed", netIP.Name)
 	}
 	netIP.Status = netservicev1.BCSNetIPStatus{
 		Phase:      constant.BCSNetIPAvailableStatus,
 		UpdateTime: metav1.Now(),
 	}
 	if err := r.Status().Update(ctx, netIP); err != nil {
+		blog.Errorf("update BCSNetIP status failed, err %s", err.Error())
 		return err
 	}
 
@@ -164,44 +164,6 @@ func (r *BCSNetIPClaimReconciler) removeFinalizerForPool(claim *netservicev1.BCS
 		return fmt.Errorf("remove finalizer for claim %s failed, err %s", claim.Name, err.Error())
 	}
 	blog.V(3).Infof("remove finalizer for claim %s success", claim.Name)
-	return nil
-}
-
-func (r *BCSNetIPClaimReconciler) boundBCSNetIP(ctx context.Context, claim *netservicev1.BCSNetIPClaim) error {
-	if claim.Spec.BCSNetIPName != "" {
-		netIP := &netservicev1.BCSNetIP{}
-		if err := r.Get(ctx, types.NamespacedName{Name: claim.Spec.BCSNetIPName}, netIP); err != nil {
-			return err
-		}
-		if netIP.Status.Phase != constant.BCSNetIPAvailableStatus {
-			return fmt.Errorf("claimed IP [%s] is not available", claim.Spec.BCSNetIPName)
-		}
-		if err := r.boundIP(ctx, claim, *netIP); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	netIPList := &netservicev1.BCSNetIPList{}
-	if err := r.List(context.Background(), netIPList); err != nil {
-		message := fmt.Sprintf("get BCSNetPool list failed, %s", err.Error())
-		blog.Errorf(message)
-		return err
-	}
-	found := false
-	for _, ip := range netIPList.Items {
-		if ip.Status.Phase == constant.BCSNetIPAvailableStatus {
-			found = true
-			if err := r.boundIP(ctx, claim, ip); err != nil {
-				return err
-			}
-			break
-		}
-	}
-	if !found {
-		return errors.New("no available IP to bound")
-	}
-
 	return nil
 }
 

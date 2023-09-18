@@ -111,6 +111,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref, toRefs, watch } from 'vue';
+
 import StatusIcon from '@/components/status-icon';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 

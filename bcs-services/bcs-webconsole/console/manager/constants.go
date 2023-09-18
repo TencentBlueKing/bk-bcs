@@ -13,29 +13,11 @@
  */
 package manager
 
-var (
-	// ShCommand sh 命令
-	ShCommand = []string{
-		"/bin/sh",
-		"-c",
-		"export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/sh",
-	}
-	// BashCommand bash 命令
-	BashCommand = []string{
-		"/bin/bash",
-		"-c",
-		"export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/bash",
-	}
-)
+import "os"
 
 const (
 	// LongDateTimeLayout xxx
 	LongDateTimeLayout = "20060102150405"
-
-	// DefaultCols DefaultRows 1080p页面测试得来
-	DefaultCols = 211
-	// DefaultRows xxx
-	DefaultRows = 25
 
 	// WebsocketPingInterval ping/pong时间间隔
 	WebsocketPingInterval = 10
@@ -54,6 +36,7 @@ const (
 	AnsiEscape = "r\"\\x1B\\[[0-?]*[ -/]*[@-~]\""
 
 	// StdinChannel xxx
+	// same as kubernete client https://github.com/kubernetes-client/python/blob/master/kubernetes/base/stream/ws_client.py#L3
 	StdinChannel = "0"
 	// StdoutChannel xxx
 	StdoutChannel = "1"
@@ -64,10 +47,26 @@ const (
 	// ResizeChannel xxx
 	ResizeChannel = "4"
 
-	LogChannel = "5"
-
 	helloBcsMessage = "Welcome to the BCS Console"
 
 	ShellSH   = "sh"
 	ShellBash = "bash"
+)
+
+var (
+	// ShCommand sh 命令
+	ShCommand = []string{
+		"/bin/sh",
+		"-c",
+		"export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/sh",
+	}
+	// BashCommand bash 命令
+	BashCommand = []string{
+		"/bin/bash",
+		"-c",
+		"export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/bash",
+	}
+
+	// key 记录 webconsole key 响应时间
+	key = os.Getenv("WEBCONSOLE_KEY")
 )

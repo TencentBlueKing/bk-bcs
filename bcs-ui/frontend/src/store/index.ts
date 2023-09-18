@@ -24,33 +24,34 @@
 * IN THE SOFTWARE.
 */
 
+import cookie from 'cookie';
 import Vue from 'vue';
 import Vuex from 'vuex';
-import cookie from 'cookie';
+
 import http from '@/api';
-import { json2Query } from '@/common/util';
-import depot from '@/store/modules/depot';
-import metric from '@/store/modules/metric';
-import mc from '@/store/modules/mc';
-import cluster from '@/store/modules/cluster';
-import resource from '@/store/modules/resource';
-import app from '@/store/modules/app';
-import variable from '@/store/modules/variable';
-import configuration from '@/store/modules/configuration';
-import templateset from '@/store/modules/templateset';
-import network from '@/store/modules/network';
-import k8sTemplate from '@/store/modules/k8s-template';
-import helm from '@/store/modules/helm';
-import crdcontroller from '@/store/modules/crdcontroller';
-import log from '@/store/modules/log';
-import hpa from '@/store/modules/hpa';
-import storage from '@/store/modules/storage';
-import dashboard from '@/store/modules/dashboard';
-import clustermanager from '@/store/modules/clustermanager';
-import token from '@/store/modules/token';
 import { getProject } from '@/api/modules/project';
+import { json2Query } from '@/common/util';
 import VuexStorage from '@/common/vuex-storage';
 import { IProject } from '@/composables/use-app';
+import app from '@/store/modules/app';
+import cluster from '@/store/modules/cluster';
+import clustermanager from '@/store/modules/clustermanager';
+import configuration from '@/store/modules/configuration';
+import crdcontroller from '@/store/modules/crdcontroller';
+import dashboard from '@/store/modules/dashboard';
+import depot from '@/store/modules/depot';
+import helm from '@/store/modules/helm';
+import hpa from '@/store/modules/hpa';
+import k8sTemplate from '@/store/modules/k8s-template';
+import log from '@/store/modules/log';
+import mc from '@/store/modules/mc';
+import metric from '@/store/modules/metric';
+import network from '@/store/modules/network';
+import resource from '@/store/modules/resource';
+import storage from '@/store/modules/storage';
+import templateset from '@/store/modules/templateset';
+import token from '@/store/modules/token';
+import variable from '@/store/modules/variable';
 import { IMenu } from '@/views/app/menus';
 
 Vue.use(Vuex);

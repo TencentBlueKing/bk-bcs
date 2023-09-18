@@ -25,10 +25,10 @@
 */
 
 import {
-  getTokens,
   createToken,
-  updateToken,
   deleteToken,
+  getTokens,
+  updateToken,
 } from '@/api/base';
 
 export default {

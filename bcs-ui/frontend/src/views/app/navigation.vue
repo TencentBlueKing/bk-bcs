@@ -119,17 +119,20 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, toRef, reactive, onMounted, onBeforeUnmount } from 'vue';
-import SystemLog from '@/views/app/log.vue';
-import BcsMd from '@/components/bcs-md/index.vue';
-import ProjectSelector from '@/views/app/project-selector.vue';
+import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef } from 'vue';
+
 import PopoverSelector from '../../components/popover-selector.vue';
-import $store from '@/store';
-import $i18n from '@/i18n/i18n-setup';
-import $router from '@/router';
+
 import menusData, { IMenu } from './menus';
+
 import { releaseNote, switchLanguage } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
+import BcsMd from '@/components/bcs-md/index.vue';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
+import SystemLog from '@/views/app/log.vue';
+import ProjectSelector from '@/views/app/project-selector.vue';
 
 export default defineComponent({
   name: 'NewNavigation',

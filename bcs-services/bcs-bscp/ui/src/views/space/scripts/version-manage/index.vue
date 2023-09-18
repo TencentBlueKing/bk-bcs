@@ -195,6 +195,11 @@
       scriptDetail.value.not_release_id = data.id
       unPublishVersion.value = await getScriptVersionDetail(spaceId.value, scriptId.value, scriptDetail.value.not_release_id)
       createBtnDisabled.value = false
+    } else {
+      // 如果是编辑旧版本，则直接修改版本数据
+      const {memo,content} = data
+      unPublishVersion.value!.spec.memo = memo
+      unPublishVersion.value!.spec.content = content
     }
   }
 

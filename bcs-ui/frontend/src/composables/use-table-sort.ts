@@ -1,4 +1,5 @@
-import { Ref, ref, computed } from 'vue';
+import { computed, Ref, ref } from 'vue';
+
 import { sort } from '@/common/util';
 
 export default function useTableSort(data: Ref<any[]>, extraDataFn?) {

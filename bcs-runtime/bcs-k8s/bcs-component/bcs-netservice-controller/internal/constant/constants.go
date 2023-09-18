@@ -43,4 +43,7 @@ const (
 
 	// FinalizerNameBcsNetserviceController finalizer name of bcs netservice controller
 	FinalizerNameBcsNetserviceController = "netservicecontroller.bkbcs.tencent.com"
+
+	// ResourceNameForBCSNetIP is resource name for bcsnetip
+	ResourceNameForBCSNetIP = "netservice.bkbcs.tencent.com/bcsnetip"
 )

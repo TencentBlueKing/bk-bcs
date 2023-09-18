@@ -83,11 +83,12 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from 'vue';
-import $store from '@/store/index';
-import $router from '@/router';
-import $i18n from '@/i18n/i18n-setup';
+
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store/index';
 
 export default defineComponent({
   props: {

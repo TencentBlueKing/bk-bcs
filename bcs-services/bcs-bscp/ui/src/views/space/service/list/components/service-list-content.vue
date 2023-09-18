@@ -11,13 +11,15 @@
   import CreateService from './create-service.vue'
   import EditService from './edit-service.vue'
 
-  const { spaceId } = storeToRefs(useGlobalStore())
+  const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore())
   const { userInfo } = storeToRefs(useUserStore())
   const { t } = useI18n();
 
   const props = defineProps<{
     type: string;
     spaceId: string;
+    permCheckLoading: boolean;
+    hasCreateServicePerm: boolean;
   }>()
 
   const serviceList= ref<IAppItem[]>([])
@@ -47,7 +49,8 @@
       reviser: "",
       create_at: "",
       update_at: "",
-    }
+    },
+    permissions: {}
   })
   const pagination = ref({
     current: 1,
@@ -116,6 +119,26 @@
     }
   }
 
+  const handleCreateServiceClick = () => {
+    if (props.hasCreateServicePerm) {
+      isCreateServiceOpen.value = true
+    } else {
+      permissionQuery.value = {
+        resources: [
+          {
+            biz_id: props.spaceId,
+            basic: {
+              type: "app",
+              action: "create",
+            }
+          }
+        ]
+      }
+
+      showApplyPermDialog.value = true
+    }
+  }
+
   // 编辑服务
   const handleEditService = (service: IAppItem) => {
     editingService.value = service
@@ -144,7 +167,12 @@
 <template>
     <div class="service-list-content">
       <div class="head-section">
-        <bk-button theme="primary" @click="isCreateServiceOpen = true">
+        <bk-button
+          v-cursor="{ active: !props.permCheckLoading && props.hasCreateServicePerm }"
+          theme="primary"
+          :class="{ 'bk-button-with-no-perm': !props.permCheckLoading && props.hasCreateServicePerm }"
+          :disabled="props.permCheckLoading"
+          @click="handleCreateServiceClick">
           <Plus class="create-icon" />
           {{ t("新建服务") }}
         </bk-button>

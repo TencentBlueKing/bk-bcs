@@ -245,21 +245,23 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted } from 'vue';
-import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
-import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
-import { useClusterList, useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
-import $i18n from '@/i18n/i18n-setup';
-import $store from '@/store/index';
-import $router from '@/router';
-import StatusIcon from '@/components/status-icon';
-import LoadingIcon from '@/components/loading-icon.vue';
-import useInterval from '@/composables/use-interval';
+import { computed, defineComponent, onMounted, ref } from 'vue';
+
 import kubeletParams from '../kubelet-params.vue';
 import UserAction from '../user-action.vue';
-import useChainingRef from '@/composables/use-chaining';
-import { cloudsZones } from '@/api/modules/cluster-manager';
+
 import { nodemanCloudList } from '@/api/base';
+import { cloudsZones } from '@/api/modules/cluster-manager';
+import LoadingIcon from '@/components/loading-icon.vue';
+import StatusIcon from '@/components/status-icon';
+import useChainingRef from '@/composables/use-chaining';
+import useInterval from '@/composables/use-interval';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store/index';
+import { useClusterInfo, useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
+import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
+import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 
 export default defineComponent({
   components: {

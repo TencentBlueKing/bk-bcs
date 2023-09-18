@@ -24,8 +24,10 @@
   </bcs-dialog>
 </template>
 <script lang="ts">
-import { defineComponent, ref, toRefs, watch, onMounted, PropType } from 'vue';
+import { defineComponent, onMounted, PropType, ref, toRefs, watch } from 'vue';
+
 import Selector from './ip-selector-bcs.vue';
+
 import $bkMessage from '@/common/bkmagic';
 import $i18n from '@/i18n/i18n-setup';
 

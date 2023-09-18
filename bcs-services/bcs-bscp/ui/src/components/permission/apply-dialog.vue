@@ -22,7 +22,7 @@
       getPermUrl()
     }
   })
-  
+
   const getPermUrl = async () => {
     loading.value = true
     const res = await permissionCheck(permissionQuery.value)
@@ -35,16 +35,18 @@
     clicked.value = true
   }
 
+  const handleSubmitClick = () => {
+    if (clicked.value) {
+      window.location.reload()
+    } else {
+      goToIAM()
+    }
+  }
+
   const handleClose = () => {
     showApplyPermDialog.value = false
     permissionQuery.value = {
-      biz_id: '',
-      basic: {
-        type: '',
-        action: '',
-        resource_id: '',
-      },
-      gen_apply_url: true,
+      resources: []
     }
   }
 
@@ -98,7 +100,7 @@
         <bk-button
           theme="primary"
           :disabled="loading"
-          @click="goToIAM">
+          @click="handleSubmitClick">
           {{ clicked ? '已申请' : '去申请' }}
         </bk-button>
         <bk-button @click="handleClose">取消</bk-button>

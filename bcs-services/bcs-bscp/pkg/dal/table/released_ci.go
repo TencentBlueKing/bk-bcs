@@ -53,14 +53,14 @@ type ReleasedConfigItem struct {
 	// CommitSpec is this config item's commit spec when it is released.
 	// which is same with the commits' spec information with the upper
 	// CommitID
-	CommitSpec *CommitSpec `db:"commit_spec" json:"commit_spec" gorm:"embedded"`
+	CommitSpec *ReleasedCommitSpec `db:"commit_spec" json:"commit_spec" gorm:"embedded"`
 
 	// ConfigItemSpec is this config item's spec when it is released, which
 	// means it is same with the config item's spec information when it is
 	// released.
 	ConfigItemSpec *ConfigItemSpec       `db:"config_item_spec" json:"config_item_spec" gorm:"embedded"`
 	Attachment     *ConfigItemAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
-	Revision       *Revision             `db:"revision" json:"revision" gorm:"embedded"`
+	Revision       *CreatedRevision      `db:"revision" json:"revision" gorm:"embedded"`
 }
 
 // TableName is the released app config's database table name.
@@ -155,7 +155,7 @@ func (r *ReleasedConfigItem) Validate() error {
 		return errors.New("revision is empty")
 	}
 
-	if err := r.Revision.ValidateCreate(); err != nil {
+	if err := r.Revision.Validate(); err != nil {
 		return err
 	}
 

@@ -1,16 +1,17 @@
 import { ref, watch } from 'vue';
-import $store from '@/store';
+
 import {
-  getNamespaceList,
-  deleteNamespace,
-  updateNamespace,
-  getClusterNamespaceVariable,
-  updateClusterNamespaceVariable,
   createdNamespace,
+  deleteNamespace,
   fetchNamespaceInfo,
+  getClusterNamespaceVariable,
+  getNamespaceList,
   syncNamespaceList,
+  updateClusterNamespaceVariable,
+  updateNamespace,
   withdrawNamespace,
 } from '@/api/modules/project';
+import $store from '@/store';
 
 export function useNamespace() {
   const namespaceData = ref<any[]>([]);

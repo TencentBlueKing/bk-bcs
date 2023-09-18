@@ -30,10 +30,10 @@
 import moment from 'moment';
 
 import { catchErrorHandler } from '@/common/util';
-import bkSearcher from '@/views/deploy-manage/templateset/components/bk-searcher';
 import ace from '@/components/ace-editor';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
+import bkSearcher from '@/views/deploy-manage/templateset/components/bk-searcher';
 
 export default {
   components: {

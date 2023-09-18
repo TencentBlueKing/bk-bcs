@@ -24,10 +24,10 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
+	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbrci "bscp.io/pkg/protocol/core/released-ci"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/types"
 )
 
 // CreateConfigItem create config item.
@@ -506,63 +506,72 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
+	// search all editing config items
+	details, err := s.dao.ConfigItem().SearchAll(grpcKit, req.SearchKey, req.AppId, req.BizId)
+	if err != nil {
+		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
 
-	if req.ReleaseId == 0 {
-		// search all editing config items
-		details, err := s.dao.ConfigItem().SearchAll(grpcKit, req.SearchKey, req.AppId, req.BizId)
-		if err != nil {
-			logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-
+	configItems := make([]*pbci.ConfigItem, 0)
+	// if WithStatus is true, the config items includes the deleted ones and file state, else  without these data
+	if req.WithStatus {
 		fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.AppId, req.BizId, req.SearchKey)
 		if err != nil {
 			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
-		configItems := pbrci.PbConfigItemState(details, fileReleased)
-		var start, end uint32 = 0, uint32(len(configItems))
-		if !req.All {
-			if req.Start < uint32(len(configItems)) {
-				start = req.Start
-			}
-			if req.Start+req.Limit < uint32(len(configItems)) {
-				end = req.Start + req.Limit
-			} else {
-				end = uint32(len(configItems))
-			}
+		configItems = pbrci.PbConfigItemState(details, fileReleased)
+	} else {
+		for _, ci := range details {
+			configItems = append(configItems, pbci.PbConfigItem(ci, ""))
 		}
-		resp := &pbds.ListConfigItemsResp{
-			Count:   uint32(len(configItems)),
-			Details: configItems[start:end],
-		}
-		return resp, nil
 	}
-	// list released config items
-	query := &types.ListReleasedCIsOption{
-		BizID:     req.BizId,
-		ReleaseID: req.ReleaseId,
-		SearchKey: req.SearchKey,
-		Page: &types.BasePage{
-			Start: req.Start,
-			Limit: uint(req.Limit),
-		},
-	}
-	if req.All {
-		query.Page.Start = 0
-		query.Page.Limit = 0
-	}
-	details, err := s.dao.ReleasedCI().List(grpcKit, query)
-	if err != nil {
-		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+
+	if err := s.setCommitSpecForCIs(grpcKit, configItems); err != nil {
+		logs.Errorf("set commit spec for config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
+
+	var start, end uint32 = 0, uint32(len(configItems))
+	if !req.All {
+		if req.Start < uint32(len(configItems)) {
+			start = req.Start
+		}
+		if req.Start+req.Limit < uint32(len(configItems)) {
+			end = req.Start + req.Limit
+		} else {
+			end = uint32(len(configItems))
+		}
+	}
 	resp := &pbds.ListConfigItemsResp{
-		Count:   details.Count,
-		Details: pbrci.PbConfigItems(details.Details),
+		Count:   uint32(len(configItems)),
+		Details: configItems[start:end],
 	}
 	return resp, nil
+}
 
+func (s *Service) setCommitSpecForCIs(kt *kit.Kit, cis []*pbci.ConfigItem) error {
+	ids := make([]uint32, len(cis))
+	for i, ci := range cis {
+		ids[i] = ci.Id
+	}
+
+	commits, err := s.dao.Commit().BatchListLatestCommits(kt, kt.BizID, kt.AppID, ids)
+	if err != nil {
+		logs.Errorf("batch list latest commits failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+	commitMap := make(map[uint32]*table.CommitSpec, len(commits))
+	for _, c := range commits {
+		commitMap[c.Attachment.ConfigItemID] = c.Spec
+	}
+
+	for _, ci := range cis {
+		ci.CommitSpec = pbcommit.PbCommitSpec(commitMap[ci.Id])
+	}
+
+	return nil
 }
 
 // ListConfigItemCount list config items count.

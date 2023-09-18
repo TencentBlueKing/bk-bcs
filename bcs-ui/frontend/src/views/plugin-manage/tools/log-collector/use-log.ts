@@ -1,19 +1,20 @@
+import { ref } from 'vue';
+
+import { dashbordList } from '@/api/modules/cluster-resource';
 import {
   addonsDetail,
   updateOns as aliasUpdateOns,
 } from '@/api/modules/helm';
 import {
-  logCollectorRules as aliasLogCollectorRules,
-  retryLogCollectorRule as aliasRetryLogCollectorRule,
-  enableLogCollector as aliasEnableLogCollector,
-  disableLogCollector as aliasDisableLogCollector,
-  deleteLogCollectorRule as aliasDeleteLogCollectorRule,
-  logCollectorDetail as aliasLogCollectorDetail,
   createLogCollectorRule as aliasCreateLogCollectorRule,
+  deleteLogCollectorRule as aliasDeleteLogCollectorRule,
+  disableLogCollector as aliasDisableLogCollector,
+  enableLogCollector as aliasEnableLogCollector,
+  logCollectorDetail as aliasLogCollectorDetail,
+  logCollectorRules as aliasLogCollectorRules,
   modifyLogCollectorRule as aliasModifyLogCollectorRule,
+  retryLogCollectorRule as aliasRetryLogCollectorRule,
 } from '@/api/modules/monitor';
-import { dashbordList } from '@/api/modules/cluster-resource';
-import { ref } from 'vue';
 
 interface IAddOnsParams {
   $clusterId: string

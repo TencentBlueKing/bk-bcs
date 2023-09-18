@@ -126,20 +126,22 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, toRefs, ref } from 'vue';
-import StatusIcon from '@/components/status-icon';
-import useVariable from '@/views/deploy-manage/variable/use-variable';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+
 import EditFormItem from '../../components/edit-form-item.vue';
-import LoadingIcon from '@/components/loading-icon.vue';
-import KeyValue from '@/components/key-value.vue';
-import $store from '@/store';
-import $i18n from '@/i18n/i18n-setup';
-import $router from '@/router';
 import { useClusterInfo, useClusterList } from '../use-cluster';
-import useSideslider from '@/composables/use-sideslider';
+
 import $bkMessage from '@/common/bkmagic';
 import { CLUSTER_ENV } from '@/common/constant';
 import DescList from '@/components/desc-list.vue';
+import KeyValue from '@/components/key-value.vue';
+import LoadingIcon from '@/components/loading-icon.vue';
+import StatusIcon from '@/components/status-icon';
+import useSideslider from '@/composables/use-sideslider';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
+import useVariable from '@/views/deploy-manage/variable/use-variable';
 
 export default defineComponent({
   name: 'ClusterInfo',

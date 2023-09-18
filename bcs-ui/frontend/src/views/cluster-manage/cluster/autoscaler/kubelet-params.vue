@@ -95,10 +95,11 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, toRefs, watch, getCurrentInstance } from 'vue';
-import $store from '@/store/index';
+import { computed, defineComponent, getCurrentInstance, onMounted, ref, toRefs, watch } from 'vue';
+
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
+import $store from '@/store/index';
 import InputType from '@/views/cluster-manage/components/input-type.vue';
 
 export default defineComponent({

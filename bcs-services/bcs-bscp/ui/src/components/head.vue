@@ -54,19 +54,21 @@
     if (space) {
       if (!space.permission) {
         permissionQuery.value = {
-          biz_id: id,
-          basic: {
-            type: "biz",
-            action: "find_business_resource",
-            resource_id: id
-          },
-          gen_apply_url: true
+          resources: [
+            {
+              biz_id: id,
+              basic: {
+                type: "biz",
+                action: "find_business_resource",
+                resource_id: id
+              }
+            }
+          ]
         }
 
         showApplyPermDialog.value = true
         return
       }
-      console.log(route)
       templateStore.$patch((state) => {
         state.templateSpaceList = []
         state.currentTemplateSpace = 0
@@ -217,6 +219,7 @@
 .biz-option-item {
   position: relative;
   padding: 0 12px;
+  width: 100%;
   &.no-perm {
     background-color: #fafafa !important;
     color: #cccccc !important;

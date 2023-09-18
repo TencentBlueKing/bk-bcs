@@ -287,9 +287,9 @@
 
 <script>
 import { catchErrorHandler } from '@/common/util';
+import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import bkKeyer from '@/components/keyer';
 import Header from '@/components/layout/Header.vue';
-import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 
 export default {
   components: {

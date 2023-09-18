@@ -123,7 +123,8 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+import { defineComponent, onMounted, ref } from 'vue';
+
 import $store from '@/store';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 

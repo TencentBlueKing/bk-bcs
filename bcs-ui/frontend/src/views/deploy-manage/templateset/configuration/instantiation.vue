@@ -379,10 +379,11 @@
 <script>
 /* eslint-disable @typescript-eslint/prefer-optional-chain  */
 import yamljs from 'js-yaml';
-import ace from '@/components/ace-editor';
+
 import { catchErrorHandler } from '@/common/util';
-import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
+import ace from '@/components/ace-editor';
 import Header from '@/components/layout/Header.vue';
+import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 const ARR = [
   'Application',

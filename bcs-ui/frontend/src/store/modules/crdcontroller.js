@@ -25,19 +25,19 @@
 */
 
 import http from '@/api';
-import { json2Query } from '@/common/util';
 import {
   clusterTools,
-  clusterToolsInstalledDetail,
   clusterToolsInstall,
-  clusterToolsUpgrade,
+  clusterToolsInstalledDetail,
   clusterToolsUninstall,
+  clusterToolsUpgrade,
   createLogCollect,
-  logCollectList,
-  updateLogCollect,
   deleteLogCollect,
+  logCollectList,
   retrieveLogCollect,
+  updateLogCollect,
 } from '@/api/base';
+import { json2Query } from '@/common/util';
 
 export default {
   namespaced: true,

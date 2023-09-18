@@ -20,6 +20,14 @@ message ContentSpec {
     uint64 byte_size = 2;
 }
 
+// ReleasedContentSpec source resource reference: pkg/dal/table/content.go
+message ReleasedContentSpec {
+    string signature = 1;
+    uint64 byte_size = 2;
+    string origin_signature = 3;
+    uint64 origin_byte_size = 4;
+}
+
 // ContentAttachment source resource reference: pkg/dal/table/content.go
 message ContentAttachment {
     uint32 biz_id         = 1;

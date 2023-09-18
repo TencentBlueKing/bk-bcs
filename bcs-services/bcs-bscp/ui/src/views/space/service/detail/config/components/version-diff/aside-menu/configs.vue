@@ -7,7 +7,9 @@
   import { ICommonQuery } from '../../../../../../../../../types/index'
   import { IConfigItem, IConfigListQueryParams, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config'
   import { IFileConfigContentSummary } from '../../../../../../../../../types/config';
+  import { IVariableEditParams } from '../../../../../../../../../types/variable'
   import { getConfigList, getConfigItemDetail, getConfigContent, getBoundTemplates, getBoundTemplatesByAppVersion } from '../../../../../../../../api/config'
+  import { getReleasedAppVariables } from '../../../../../../../../api/variable'
   import { byteUnitConverse } from '../../../../../../../../utils'
   import SearchInput from '../../../../../../../../components/search-input.vue'
 
@@ -59,7 +61,9 @@
   const diffCount = ref(0)
   const selected = ref<IConfigDiffSelected>({ pkgId: 0, id: 0, version: 0 })
   const currentGroupList = ref<IConfigsGroupData[]>([])
+  const currentVariables = ref<IVariableEditParams[]>([])
   const baseGroupList = ref<IConfigsGroupData[]>([])
+  const baseVariables = ref<IVariableEditParams[]>([])
   // 汇总的配置项列表，包含未修改、增加、删除、修改的所有配置项
   const aggregatedList = ref<IDiffGroupData[]>([])
   const groupedConfigListOnShow = ref<IDiffGroupData[]>([])
@@ -75,6 +79,7 @@
   // 基准版本变化，更新选中对比项
   watch(() => props.baseVersionId, async() => {
     baseGroupList.value = await getConfigsOfVersion(props.baseVersionId)
+    baseVariables.value = await getVariableList(props.baseVersionId)
     aggregatedList.value = calcDiff()
     groupedConfigListOnShow.value = aggregatedList.value.slice()
     setDefaultSelected()
@@ -91,6 +96,8 @@
 
   onMounted(async() => {
     await getAllConfigList()
+    currentVariables.value = await getVariableList(props.currentVersionId)
+    baseVariables.value = await getVariableList(props.baseVersionId)
     aggregatedList.value = calcDiff()
     groupedConfigListOnShow.value = aggregatedList.value.slice()
     setDefaultSelected()
@@ -99,6 +106,12 @@
   // 判断版本是否为未命名版本
   const isUnNamedVersion = (id: number) => {
     return id === 0
+  }
+
+  // 获取当前版本和基准版本的所有配置项列表(非模板配置和套餐下模板)
+  const getAllConfigList = async () => {
+    currentGroupList.value = await getConfigsOfVersion(props.currentVersionId)
+    baseGroupList.value = await getConfigsOfVersion(props.baseVersionId)
   }
 
   // 获取某一版本下配置项和模板列表
@@ -190,10 +203,13 @@
       })
   }
 
-  // 获取当前版本和基准版本的所有配置项列表
-  const getAllConfigList = async () => {
-    currentGroupList.value = await getConfigsOfVersion(props.currentVersionId)
-    baseGroupList.value = await getConfigsOfVersion(props.baseVersionId)
+  // 获取版本下变量列表
+  const getVariableList = async (id: number|undefined) => {
+    if (id === undefined || isUnNamedVersion(id)) {
+      return []
+    }
+    const res = await getReleasedAppVariables(bkBizId.value, <number>appData.value.id, id)
+    return res.details
   }
 
   // 计算配置被修改、被删除、新增的差异
@@ -208,7 +224,7 @@
         baseGroupList.value.some(baseGroupItem => {
           if(baseGroupItem.template_space_id === currentGroupItem.template_space_id) {
             return baseGroupItem.configs.some((config) => {
-              if (config.id === crtItem.id && config.template_revision_id === crtItem.template_revision_id) {
+              if (config.id === crtItem.id) {
                 baseItem = config
                 return true
               }
@@ -253,7 +269,7 @@
         currentGroupList.value.some(baseGroupItem => {
           if( baseGroupItem.template_space_id === baseGroupItem.template_space_id) {
             return baseGroupItem.configs.some((config) => {
-              if (config.id === baseItem.id && config.template_revision_id === baseItem.template_revision_id) {
+              if (config.id === baseItem.id) {
                 currentItem = config
                 return true
               }
@@ -356,10 +372,12 @@
     return {
       contentType: config.file_type === 'binary' ? 'file' : 'text',
       base: {
-        content: baseConfigContent
+        content: baseConfigContent,
+        variables: baseVariables.value
       },
       current: {
-        content: currentConfigContent
+        content: currentConfigContent,
+        variables: currentVariables.value
       }
     }
   }

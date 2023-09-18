@@ -99,11 +99,12 @@
 </template>
 
 <script>
-import { catchErrorHandler } from '@/common/util';
-import Header from '@/components/layout/Header.vue';
 import GamestatefulsetSideslider from './gamestatefulset-sideslider';
-import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
+
+import { catchErrorHandler } from '@/common/util';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
+import Header from '@/components/layout/Header.vue';
+import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 export default {
   name: 'CustomObjects',

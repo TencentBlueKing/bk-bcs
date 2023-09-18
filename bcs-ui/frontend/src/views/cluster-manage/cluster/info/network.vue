@@ -18,6 +18,7 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted } from 'vue';
+
 import { useClusterInfo } from '../use-cluster';
 
 export default defineComponent({

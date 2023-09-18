@@ -40,6 +40,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, PropType, ref } from 'vue';
+
 import PopoverSelector from './popover-selector.vue';
 
 export interface IData {

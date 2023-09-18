@@ -15,6 +15,25 @@ package v3
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+const (
+	// BCSNetIPClaimBoundedStatus for BCSNetIPClaim Bound status
+	BCSNetIPClaimBoundedStatus = "Bound"
+	// BCSNetIPClaimPendingStatus for BCSNetIPClaim Pending status
+	BCSNetIPClaimPendingStatus = "Pending"
+	// BCSNetIPClaimExpiredStatus for BCSNetIPClaim Expired status
+	BCSNetIPClaimExpiredStatus = "Expired"
+
+	// BCSNetIPActiveStatus for BCSNetIP Active status
+	BCSNetIPActiveStatus = "Active"
+	// BCSNetIPAvailableStatus for BCSNetIP Available status
+	BCSNetIPAvailableStatus = "Available"
+	// BCSNetIPReservedStatus for BCSNetIP Reserved status
+	BCSNetIPReservedStatus = "Reserved"
+
+	// PodLabelKeyForPool pod label key for pool
+	PodLabelKeyForPool = "pool"
+)
+
 // BCSNetIPClaimSpec defines the desired state of BCSNetIPClaim
 type BCSNetIPClaimSpec struct {
 	// BCSNetIPName sets the name for BCSNetIP will be bounded with this claim

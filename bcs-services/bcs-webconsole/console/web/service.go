@@ -21,11 +21,9 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/gin-gonic/gin"
-	"k8s.io/klog/v2"
-
 	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/gin-gonic/gin"
+	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"

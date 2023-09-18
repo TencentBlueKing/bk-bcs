@@ -88,6 +88,24 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			tx.Rollback()
 			return nil, err
 		}
+
+		// 3-1. update app template bindings if necessary
+		atbs, err := s.dao.TemplateBindingRelation().
+			ListTemplateSetsBoundATBs(kt, template.Attachment.BizID, req.TemplateSetIds)
+		if err != nil {
+			logs.Errorf("list template sets bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
+		if len(atbs) > 0 {
+			for _, atb := range atbs {
+				if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
+					logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
+					tx.Rollback()
+					return nil, err
+				}
+			}
+		}
 	}
 
 	if err := tx.Commit(); err != nil {

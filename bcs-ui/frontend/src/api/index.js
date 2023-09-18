@@ -225,7 +225,18 @@ function handleReject(error, config) {
     }
 
     if (config.globalError && !CUSTOM_HANDLE_CODE.includes(data?.code)) {
-      messageError(message);
+      const traceID = String(error.response?.config?.headers?.Traceparent || '').split('-')?.[1];
+      messageError({
+        code: data?.code,
+        overview: message,
+        suggestion: '',
+        assistant: window.BCS_CONFIG?.contact,
+        type: 'key-value',
+        details: {
+          Traceparent: traceID,
+          message: data.message,
+        },
+      });
     }
   } else if (error.message === 'Network Error') {
     messageError(window.i18n.t('generic.msg.error.network'));

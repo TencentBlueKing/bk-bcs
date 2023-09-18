@@ -23,9 +23,9 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
+import { catchErrorHandler } from '@/common/util';
 import bkKeyer from '@/components/keyer';
 import mixinBase from '@/mixins/network/mixin-base';
-import { catchErrorHandler } from '@/common/util';
 
 export default {
   components: {

@@ -86,14 +86,15 @@
   </section>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed, watch } from 'vue';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+
+import $bkMessage from '@/common/bkmagic';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import KeyValue from '@/components/key-value.vue';
 import useFormLabel from '@/composables/use-form-label';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import $i18n from '@/i18n/i18n-setup';
-import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'CreateCluster',

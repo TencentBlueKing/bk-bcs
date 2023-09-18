@@ -88,6 +88,9 @@
       .name {
         font-size: 12px;
         color: #63656e;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .num {
         padding: 0 8px;

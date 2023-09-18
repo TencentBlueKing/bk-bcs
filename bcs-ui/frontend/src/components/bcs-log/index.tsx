@@ -1,7 +1,9 @@
 /* eslint-disable no-unused-expressions */
-import { defineComponent, reactive, toRefs, ref, watch, onBeforeUnmount } from 'vue';
-import LogHeader from './layout/log-header';
+import { defineComponent, onBeforeUnmount, reactive, ref, toRefs, watch } from 'vue';
+
 import LogContent, { ILogData } from './layout/log-content';
+import LogHeader from './layout/log-header';
+
 import './style/log.css';
 import $store from '@/store';
 
@@ -125,7 +127,7 @@ export default defineComponent({
         $namespaceId,
         $podId,
         $containerName: container_name,
-        $previous: state.showLastContainer
+        $previous: state.showLastContainer,
       });
     };
 

@@ -1,5 +1,6 @@
-import { defineComponent, PropType, ref, toRefs, watch, computed } from 'vue';
+import { computed, defineComponent, PropType, ref, toRefs, watch } from 'vue';
 import { TranslateResult } from 'vue-i18n';
+
 import $i18n from '@/i18n/i18n-setup';
 
 interface IOption {

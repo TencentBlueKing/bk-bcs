@@ -52,7 +52,7 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 		return nil, status.Error(codes.InvalidArgument, "sdk's version is too low, should be upgraded")
 	}
 
-	ra := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: hm.Spec.BizId}
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: hm.Spec.BizId}
 	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, err.Error())
@@ -122,7 +122,7 @@ func (s *Service) Watch(swm *pbfs.SideWatchMeta, fws pbfs.Upstream_WatchServer) 
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	ra := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
 	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
 	if err != nil {
 		return status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())
@@ -179,7 +179,7 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	ra := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
 	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, err.Error())
@@ -208,7 +208,7 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	ra := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
 	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())

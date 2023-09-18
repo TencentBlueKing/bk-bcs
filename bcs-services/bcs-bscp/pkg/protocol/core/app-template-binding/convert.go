@@ -224,9 +224,39 @@ func PbReleasedAppBoundTmplRevision(s *table.ReleasedAppTemplate) *ReleasedAppBo
 		Privilege:            s.Spec.Privilege,
 		Signature:            s.Spec.Signature,
 		ByteSize:             s.Spec.ByteSize,
-		RenderedSignature:    s.Spec.RenderedSignature,
-		RenderedByteSize:     s.Spec.RenderedByteSize,
+		OriginSignature:      s.Spec.OriginSignature,
+		OriginByteSize:       s.Spec.OriginByteSize,
 		Creator:              s.Revision.Creator,
 		CreateAt:             s.Revision.CreatedAt.Format(constant.TimeStdFormat),
 	}
+}
+
+// PbAppBoundTmplRevisionsFromReleased convert table ReleasedAppTemplate to pb AppBoundTmplRevision
+func PbAppBoundTmplRevisionsFromReleased(releasedTmpls []*table.ReleasedAppTemplate) []*AppBoundTmplRevision {
+	tmplRevisions := make([]*AppBoundTmplRevision, len(releasedTmpls))
+	for idx, r := range releasedTmpls {
+		tmplRevisions[idx] = &AppBoundTmplRevision{
+			TemplateSpaceId:      r.Spec.TemplateSpaceID,
+			TemplateSpaceName:    r.Spec.TemplateSpaceName,
+			TemplateSetId:        r.Spec.TemplateSetID,
+			TemplateSetName:      r.Spec.TemplateSetName,
+			TemplateId:           r.Spec.TemplateID,
+			Name:                 r.Spec.Name,
+			Path:                 r.Spec.Path,
+			TemplateRevisionId:   r.Spec.TemplateRevisionID,
+			IsLatest:             r.Spec.IsLatest,
+			TemplateRevisionName: r.Spec.TemplateRevisionName,
+			TemplateRevisionMemo: r.Spec.TemplateRevisionMemo,
+			FileType:             r.Spec.FileType,
+			FileMode:             r.Spec.FileMode,
+			User:                 r.Spec.User,
+			UserGroup:            r.Spec.UserGroup,
+			Privilege:            r.Spec.Privilege,
+			Signature:            r.Spec.Signature,
+			ByteSize:             r.Spec.ByteSize,
+			Creator:              r.Revision.Creator,
+			CreateAt:             r.Revision.CreatedAt.Format(constant.TimeStdFormat),
+		}
+	}
+	return tmplRevisions
 }

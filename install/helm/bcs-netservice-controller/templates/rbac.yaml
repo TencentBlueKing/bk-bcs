@@ -7,6 +7,17 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - pods
+  - nodes
+  - nodes/status
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+- apiGroups:
+  - ""
+  resources:
   - configmaps
   verbs:
   - get
