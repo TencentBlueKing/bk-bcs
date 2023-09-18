@@ -27,6 +27,10 @@ init:
 	@go install github.com/golang/protobuf/protoc-gen-go@latest
 	@go install github.com/asim/go-micro/cmd/protoc-gen-micro/v4@latest
 
+.PHONY: lint
+lint:
+	@golangci-lint run --issues-exit-code=0 --fix
+
 .PHONY: proto
 proto:
 	@protoc --proto_path=. --micro_out=. --go_out=:. proto/bcs-webconsole.proto
