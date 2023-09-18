@@ -16,9 +16,9 @@ package tracing
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	"go.opentelemetry.io/otel/attribute"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 

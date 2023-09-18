@@ -19,10 +19,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
-	"github.com/pkg/errors"
 )
 
 const cacheExpireDuration = time.Hour * 24 // 缓存过期时间, 现在的场景主要是获取不可变的 lowerPodID
