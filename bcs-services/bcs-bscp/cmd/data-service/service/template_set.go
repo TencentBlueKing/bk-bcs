@@ -99,11 +99,8 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 		req.Spec.BoundApps = []uint32{}
 	}
 
-	var (
-		invisibleATBs []*table.AppTemplateBinding
-		err           error
-	)
-
+	var invisibleATBs []*table.AppTemplateBinding
+	var err error
 	if req.Spec.Public == false {
 		invisibleATBs, err = s.dao.TemplateBindingRelation().ListTemplateSetInvisibleATBs(kt, req.Attachment.BizId,
 			req.Id, req.Spec.BoundApps)
@@ -165,7 +162,7 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 			if delIndex >= 0 {
 				atb.Spec.Bindings = append(atb.Spec.Bindings[:delIndex], atb.Spec.Bindings[delIndex+1:]...)
 			}
-			if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
+			if err = s.CascadeUpdateATB(kt, tx, atb); err != nil {
 				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
 				tx.Rollback()
 				return nil, err
@@ -175,13 +172,15 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 
 	// 3. update app template bindings if necessary
 	// get old template set detail before the update operation, not use transaction so that it is the old one
-	oldTmplSets, err := s.dao.TemplateSet().ListByIDs(kt, []uint32{req.Id})
+	var oldTmplSets []*table.TemplateSet
+	oldTmplSets, err = s.dao.TemplateSet().ListByIDs(kt, []uint32{req.Id})
 	if err != nil {
 		logs.Errorf("list template sets by ids failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	if !tools.IsSameSlice(oldTmplSets[0].Spec.TemplateIDs, templateSet.Spec.TemplateIDs) {
-		atbs, err := s.dao.TemplateBindingRelation().
+		var atbs []*table.AppTemplateBinding
+		atbs, err = s.dao.TemplateBindingRelation().
 			ListTemplateSetsBoundATBs(kt, req.Attachment.BizId, []uint32{req.Id})
 		if err != nil {
 			logs.Errorf("list template set bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
@@ -189,7 +188,7 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 		}
 		if len(atbs) > 0 {
 			for _, atb := range atbs {
-				if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
+				if err = s.CascadeUpdateATB(kt, tx, atb); err != nil {
 					logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
 					tx.Rollback()
 					return nil, err
@@ -198,7 +197,7 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err = tx.Commit(); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
@@ -215,7 +214,10 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplat
 		TemplateSpaceId: req.Attachment.TemplateSpaceId,
 		TemplateSetIds:  []uint32{req.Id},
 	}
-	boundCnt, err := s.ListTemplateSetBoundCounts(ctx, r)
+
+	var boundCnt *pbds.ListTemplateSetBoundCountsResp
+	var err error
+	boundCnt, err = s.ListTemplateSetBoundCounts(ctx, r)
 	if err != nil {
 		logs.Errorf("delete template set failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -246,7 +248,8 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplat
 
 	// 2. update app template bindings if necessary
 	if hasUnnamedApp {
-		atbs, err := s.dao.TemplateBindingRelation().
+		var atbs []*table.AppTemplateBinding
+		atbs, err = s.dao.TemplateBindingRelation().
 			ListTemplateSetsBoundATBs(kt, req.Attachment.BizId, []uint32{req.Id})
 		if err != nil {
 			logs.Errorf("list template set bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)

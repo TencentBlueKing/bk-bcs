@@ -267,6 +267,7 @@ func (s *Service) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListMultiTemplateBoundTemplateSetDetailsResp)
 
+	// validate input param
 	templateIDs, err := tools.GetUint32List(req.TemplateIds)
 	if err != nil {
 		return nil, fmt.Errorf("invalid template ids, %s", err)
@@ -345,8 +346,7 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 
 // ListTemplateRevisionBoundNamedAppDetails list template revision bound named app details
 func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
-	req *pbcs.ListTemplateRevisionBoundNamedAppDetailsReq) (
-	*pbcs.ListTemplateRevisionBoundNamedAppDetailsResp, error) {
+	req *pbcs.ListTemplateRevisionBoundNamedAppDetailsReq) (*pbcs.ListTemplateRevisionBoundNamedAppDetailsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateRevisionBoundNamedAppDetailsResp)
 
@@ -423,6 +423,7 @@ func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListMultiTemplateSetBoundUnnamedAppDetailsResp)
 
+	// validate input param
 	templateSetIDs, err := tools.GetUint32List(req.TemplateSetIds)
 	if err != nil {
 		return nil, fmt.Errorf("invalid template set ids, %s", err)

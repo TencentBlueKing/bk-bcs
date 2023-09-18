@@ -41,6 +41,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 		return nil, err
 	}
 
+	// validate input param
 	idsLen := len(req.TemplateSetIds)
 	if idsLen > constant.ArrayInputLenLimit {
 		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [0,%d]",
@@ -121,6 +122,7 @@ func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDelete
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.BatchDeleteTemplateResp)
 
+	// validate input param
 	templateIDs, err := tools.GetUint32List(req.TemplateIds)
 	if err != nil {
 		return nil, fmt.Errorf("invalid template ids, %s", err)
@@ -225,6 +227,7 @@ func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbcs.AddT
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.AddTemplatesToTemplateSetsResp)
 
+	// validate input param
 	idsLen := len(req.TemplateIds)
 	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
 		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
@@ -265,6 +268,7 @@ func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbcs
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteTemplatesFromTemplateSetsResp)
 
+	// validate input param
 	idsLen := len(req.TemplateIds)
 	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
 		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
@@ -300,9 +304,8 @@ func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbcs
 }
 
 // ListTemplatesByIDs list templates by ids
-func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplatesByIDsReq) (*pbcs.
-	ListTemplatesByIDsResp,
-	error) {
+func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplatesByIDsReq) (
+	*pbcs.ListTemplatesByIDsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplatesByIDsResp)
 
@@ -341,9 +344,8 @@ func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplate
 }
 
 // ListTemplatesNotBound list templates not bound
-func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTemplatesNotBoundReq) (*pbcs.
-	ListTemplatesNotBoundResp,
-	error) {
+func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTemplatesNotBoundReq) (
+	*pbcs.ListTemplatesNotBoundResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplatesNotBoundResp)
 
@@ -378,9 +380,8 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTempl
 }
 
 // ListTemplatesOfTemplateSet list templates of template set
-func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.ListTemplatesOfTemplateSetReq) (*pbcs.
-	ListTemplatesOfTemplateSetResp,
-	error) {
+func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.ListTemplatesOfTemplateSetReq) (
+	*pbcs.ListTemplatesOfTemplateSetResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplatesOfTemplateSetResp)
 

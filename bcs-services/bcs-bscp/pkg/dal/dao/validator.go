@@ -231,9 +231,9 @@ func (dao *validatorDao) ValidateTemplatesBelongToTemplateSet(
 		return fmt.Errorf("validate templates in a template set failed, err: %v", err)
 	}
 
-	diffIDs := tools.SliceDiff(templateIDs, []uint32(existIDs.TemplateIDs))
+	diffIDs := tools.SliceDiff(templateIDs, existIDs.TemplateIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("template id in %v is not belong to tempalte set id %d", diffIDs, templateSetID)
+		return fmt.Errorf("template id in %v is not belong to template set id %d", diffIDs, templateSetID)
 	}
 
 	return nil

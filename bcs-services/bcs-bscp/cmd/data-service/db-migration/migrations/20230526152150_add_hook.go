@@ -26,13 +26,13 @@ func init() {
 		Version: "20230526152150",
 		Name:    "20230526152150_add_hook",
 		Mode:    migrator.GormMode,
-		Up:      mig20230526152150GormUp,
-		Down:    mig20230526152150GormDown,
+		Up:      mig20230526152150Up,
+		Down:    mig20230526152150Down,
 	})
 }
 
-// mig20230526152150GormUp for up migration
-func mig20230526152150GormUp(tx *gorm.DB) error {
+// mig20230526152150Up for up migration
+func mig20230526152150Up(tx *gorm.DB) error {
 
 	// Hook 脚本
 	type Hook struct {
@@ -117,8 +117,8 @@ func mig20230526152150GormUp(tx *gorm.DB) error {
 	return nil
 }
 
-// mig20230526152150GormDown for down migration
-func mig20230526152150GormDown(tx *gorm.DB) error {
+// mig20230526152150Down for down migration
+func mig20230526152150Down(tx *gorm.DB) error {
 
 	// IDGenerators : ID生成器
 	type IDGenerators struct {
