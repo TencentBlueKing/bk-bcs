@@ -16,10 +16,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/prometheus/prometheus/prompb"
+
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
-	"github.com/prometheus/prometheus/prompb"
 )
 
 const (
