@@ -22,8 +22,9 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
 
 func initConf() {

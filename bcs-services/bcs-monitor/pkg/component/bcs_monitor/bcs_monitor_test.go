@@ -19,8 +19,9 @@ import (
 	"testing"
 	"time"
 
-	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
 	"github.com/stretchr/testify/assert"
+
+	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
 )
 
 func TestQueryInstant(t *testing.T) {
