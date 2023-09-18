@@ -16,11 +16,15 @@ import (
 	"bytes"
 	"context"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbatv "bscp.io/pkg/protocol/core/app-template-variable"
 	pbbase "bscp.io/pkg/protocol/core/base"
+	pbcommit "bscp.io/pkg/protocol/core/commit"
+	pbci "bscp.io/pkg/protocol/core/config-item"
+	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbtv "bscp.io/pkg/protocol/core/template-variable"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/tools"
@@ -28,26 +32,28 @@ import (
 )
 
 // ExtractAppTemplateVariables extract app template variables.
+// the variables come from template and non-template config items
 func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbds.ExtractAppTemplateVariablesReq) (
 	*pbds.ExtractAppTemplateVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	tmplRevisions, err := s.getAppTmplRevisions(kt, req.BizId, req.AppId)
+	tmplRevisions, cis, err := s.getAllAppCIs(kt)
 	if err != nil {
-		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get all app config items failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
-	}
-	if len(tmplRevisions) == 0 {
-		return &pbds.ExtractAppTemplateVariablesResp{
-			Details: []string{},
-		}, nil
 	}
 
 	contents, err := s.downloadTmplContent(kt, tmplRevisions)
 	if err != nil {
-		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("download template content failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
+	ciContents, err := s.downloadCIContent(kt, cis)
+	if err != nil {
+		logs.Errorf("download config item content failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	contents = append(contents, ciContents...)
 
 	// merge all template content
 	allContent := bytes.Join(contents, []byte(" "))
@@ -60,22 +66,18 @@ func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbds.Ext
 }
 
 // GetAppTemplateVariableReferences get app template variable references.
+// the variables come from template and non-template config items
 func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbds.GetAppTemplateVariableReferencesReq) (
 	*pbds.GetAppTemplateVariableReferencesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	tmplRevisions, err := s.getAppTmplRevisions(kt, req.BizId, req.AppId)
+	tmplRevisions, cis, err := s.getAllAppCIs(kt)
 	if err != nil {
-		logs.Errorf("get app template variable references failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get all app config items failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	if len(tmplRevisions) == 0 {
-		return &pbds.GetAppTemplateVariableReferencesResp{
-			Details: []*pbatv.AppTemplateVariableReference{},
-		}, nil
-	}
 
-	refs, err := s.getVariableReferences(kt, tmplRevisions)
+	refs, err := s.getVariableReferences(kt, tmplRevisions, cis)
 	if err != nil {
 		logs.Errorf("get variable references failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -87,6 +89,7 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbd
 }
 
 // GetReleasedAppTemplateVariableReferences get released app template variable references.
+// the variables come from template and non-template config items
 func (s *Service) GetReleasedAppTemplateVariableReferences(ctx context.Context,
 	req *pbds.GetReleasedAppTemplateVariableReferencesReq) (
 	*pbds.GetReleasedAppTemplateVariableReferencesResp, error) {
@@ -98,15 +101,19 @@ func (s *Service) GetReleasedAppTemplateVariableReferences(ctx context.Context,
 		logs.Errorf("list released app templates failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	if len(releasedTmpls) == 0 {
-		return &pbds.GetReleasedAppTemplateVariableReferencesResp{
-			Details: []*pbatv.AppTemplateVariableReference{},
-		}, nil
-	}
-
 	tmplRevisions := getTmplRevisionsFromReleased(releasedTmpls)
+	tmplRevisions = filterSizeForTmplRevisions(tmplRevisions)
 
-	refs, err := s.getVariableReferences(kt, tmplRevisions)
+	releasedCIs, _, err := s.dao.ReleasedCI().List(kt, req.BizId, req.AppId, req.ReleaseId, nil,
+		&types.BasePage{All: true})
+	if err != nil {
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	cis := getPbConfigItemsFromReleased(releasedCIs)
+	cis = filterSizeForConfigItems(cis)
+
+	refs, err := s.getVariableReferences(kt, tmplRevisions, cis)
 	if err != nil {
 		logs.Errorf("get variable references failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -135,8 +142,8 @@ func getTmplRevisionsFromReleased(releasedTmpls []*table.ReleasedAppTemplate) []
 					Privilege: r.Spec.Privilege,
 				},
 				ContentSpec: &table.ContentSpec{
-					Signature: r.Spec.Signature,
-					ByteSize:  r.Spec.ByteSize,
+					Signature: r.Spec.OriginSignature,
+					ByteSize:  r.Spec.OriginByteSize,
 				},
 			},
 			Attachment: &table.TemplateRevisionAttachment{
@@ -154,12 +161,57 @@ func getTmplRevisionsFromReleased(releasedTmpls []*table.ReleasedAppTemplate) []
 	return tmplRevisions
 }
 
+func getPbConfigItemsFromReleased(releasedCIs []*table.ReleasedConfigItem) []*pbci.ConfigItem {
+	cis := make([]*pbci.ConfigItem, len(releasedCIs))
+	for idx, r := range releasedCIs {
+		cis[idx] = &pbci.ConfigItem{
+			Id: r.ID,
+			Spec: &pbci.ConfigItemSpec{
+				Name:     r.ConfigItemSpec.Name,
+				Path:     r.ConfigItemSpec.Path,
+				FileType: string(r.ConfigItemSpec.FileType),
+				FileMode: string(r.ConfigItemSpec.FileMode),
+				Permission: &pbci.FilePermission{
+					User:      r.ConfigItemSpec.Permission.User,
+					UserGroup: r.ConfigItemSpec.Permission.UserGroup,
+					Privilege: r.ConfigItemSpec.Permission.Privilege,
+				},
+			},
+			CommitSpec: &pbcommit.CommitSpec{
+				ContentId: r.CommitSpec.ContentID,
+				Content: &pbcontent.ContentSpec{
+					Signature: r.CommitSpec.Content.OriginSignature,
+					ByteSize:  r.CommitSpec.Content.OriginByteSize,
+				},
+				Memo: r.CommitSpec.Memo,
+			},
+			Attachment: &pbci.ConfigItemAttachment{
+				BizId: r.Attachment.BizID,
+				AppId: r.Attachment.AppID,
+			},
+			Revision: &pbbase.Revision{
+				Creator:  r.Revision.Creator,
+				Reviser:  r.Revision.Creator,
+				CreateAt: r.Revision.CreatedAt.Format(constant.TimeStdFormat),
+				UpdateAt: r.Revision.CreatedAt.Format(constant.TimeStdFormat),
+			},
+		}
+	}
+
+	return cis
+}
+
 // GetAppTemplateVariableReferences get app template variable references.
-func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.TemplateRevision) (
+func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.TemplateRevision, cis []*pbci.ConfigItem) (
 	[]*pbatv.AppTemplateVariableReference, error) {
 	contents, err := s.downloadTmplContent(kt, tmplRevisions)
 	if err != nil {
-		logs.Errorf("get app template variable references failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("download template content failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	ciContents, err := s.downloadCIContent(kt, cis)
+	if err != nil {
+		logs.Errorf("download config item content failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -177,8 +229,22 @@ func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.Temp
 			revisionVariableMap[r.ID][v] = struct{}{}
 		}
 	}
-	allVariables = tools.RemoveDuplicateStrings(allVariables)
 
+	ciVariableMap := make(map[uint32]map[string]struct{}, len(cis))
+	ciMap := make(map[uint32]*pbci.ConfigItem, len(cis))
+	for idx, ci := range cis {
+		// extract config item variables for one config item
+		variables := s.tmplProc.ExtractVariables(ciContents[idx])
+		allVariables = append(allVariables, variables...)
+		ciMap[ci.Id] = ci
+
+		ciVariableMap[ci.Id] = map[string]struct{}{}
+		for _, v := range variables {
+			ciVariableMap[ci.Id][v] = struct{}{}
+		}
+	}
+
+	allVariables = tools.RemoveDuplicateStrings(allVariables)
 	refs := make([]*pbatv.AppTemplateVariableReference, len(allVariables))
 	for idx, v := range allVariables {
 		ref := &pbatv.AppTemplateVariableReference{
@@ -187,9 +253,20 @@ func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.Temp
 		for rID, variables := range revisionVariableMap {
 			if _, ok := variables[v]; ok {
 				ref.References = append(ref.References, &pbatv.AppTemplateVariableReferenceReference{
-					TemplateId:         revisionMap[rID].Attachment.TemplateID,
+					Id:                 revisionMap[rID].Attachment.TemplateID,
 					TemplateRevisionId: rID,
 					Name:               revisionMap[rID].Spec.Name,
+					Path:               revisionMap[rID].Spec.Path,
+				})
+			}
+		}
+		for cID, variables := range ciVariableMap {
+			if _, ok := variables[v]; ok {
+				ref.References = append(ref.References, &pbatv.AppTemplateVariableReferenceReference{
+					Id:                 ciMap[cID].Id,
+					TemplateRevisionId: 0,
+					Name:               ciMap[cID].Spec.Name,
+					Path:               ciMap[cID].Spec.Path,
 				})
 			}
 		}
@@ -199,7 +276,7 @@ func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.Temp
 	return refs, nil
 }
 
-// ListAppTemplateVariables get app template variable references.
+// ListAppTemplateVariables list app template variables.
 func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAppTemplateVariablesReq) (
 	*pbds.ListAppTemplateVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
@@ -210,7 +287,7 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAp
 		AppId: req.AppId,
 	})
 	if err != nil {
-		logs.Errorf("list app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("extract app template variables failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	allVariables := extractRep.Details
@@ -234,7 +311,7 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAp
 	// get biz template variables
 	bizVars, _, err := s.dao.TemplateVariable().List(kt, req.BizId, nil, &types.BasePage{All: true})
 	if err != nil {
-		logs.Errorf("list app template variables failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list template variables failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	bizVarMap := make(map[string]*table.TemplateVariableSpec, len(bizVars))

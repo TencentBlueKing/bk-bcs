@@ -86,7 +86,6 @@
   }
 
   const handleEditOpen = (space: ITemplateSpaceItem) => {
-    console.log('edit open: ', space)
     const { id, spec } = space
     editingData.value = {
       open: true,
@@ -116,14 +115,12 @@
       InfoBox({
         title: `未能删除【${space.spec.name}】`,
         subTitle: '请先确认删除此空间下所有配置项',
-        infoType: 'warning',
         dialogType: 'confirm',
         confirmText: '我知道了',
       } as any)
     } else {
       InfoBox({
         title: `确认删除【${space.spec.name}】`,
-        infoType: 'warning',
         extCls: 'delete-space-infobox',
         onConfirm: async () => {
           await deleteTemplateSpace(spaceId.value, space.id)
@@ -187,7 +184,7 @@
           <DownShape :class="['triangle-icon', { up: selectorOpen }]" />
         </div>
       </template>
-      <bk-option v-for="item in spaceList" :key="item.id" :value="item.id">
+      <bk-option v-for="item in spaceList" :key="item.id" :value="item.id" :label="item.spec.name">
         <div class="space-option-item">
           <div class="name-text">{{ item.spec.name === 'default_space' ? '默认空间' : item.spec.name }}</div>
           <div class="actions">

@@ -12,7 +12,7 @@
     showAddExistingConfigOption?: boolean;
   }>()
 
-  const emits = defineEmits(['added'])
+  const emits = defineEmits(['refresh'])
 
   const buttonRef = ref()
   const silders = ref<Record<string, boolean>>({
@@ -24,14 +24,6 @@
   const handleOpenSlider = (slider: string) => {
     silders.value[slider] = true
     buttonRef.value.hide()
-  }
-
-  const handleAdded = () => {
-    // 更新左侧套餐菜单栏及套餐下配置项数量
-    templateStore.$patch(state => {
-      state.needRefreshMenuFlag = true
-    })
-    emits('added')
   }
 
 </script>
@@ -52,12 +44,13 @@
       <div class="add-config-operations">
         <div v-if="props.showAddExistingConfigOption" class="operation-item" @click="handleOpenSlider('isAddOpen')">添加已有配置项</div>
         <div class="operation-item" @click="handleOpenSlider('isCreateOpen')">新建配置项</div>
-        <div class="operation-item" @click="handleOpenSlider('isImportOpen')">导入配置项</div>
+        <!-- 接口未提供，暂时隐藏 -->
+        <!-- <div class="operation-item" @click="handleOpenSlider('isImportOpen')">导入配置项</div> -->
       </div>
     </template>
   </bk-popover>
-  <AddFromExistingConfigs v-model:show="silders.isAddOpen" @added="handleAdded" />
-  <CreateNewConfig v-model:show="silders.isCreateOpen" @added="handleAdded" />
+  <AddFromExistingConfigs v-model:show="silders.isAddOpen" @added="emits('refresh')" />
+  <CreateNewConfig v-model:show="silders.isCreateOpen" @added="emits('refresh')" />
   <ImportConfigs v-model:show="silders.isImportOpen" />
 </template>
 <style lang="scss" scoped>

@@ -5,7 +5,8 @@
   import { DownShape, Close } from 'bkui-vue/lib/icon';
   import { useConfigStore } from '../../../../../../../../store/config'
   import { ICommonQuery } from '../../../../../../../../../types/index';
-  import { IConfigItem, IConfigListQueryParams, IBoundTemplateGroup, IBoundTemplateDetail, IConfigDiffSelected } from '../../../../../../../../../types/config'
+  import { datetimeFormat } from '../../../../../../../../utils/index'
+  import { IConfigItem, IConfigListQueryParams, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config'
   import { getConfigList, getBoundTemplates, getBoundTemplatesByAppVersion, deleteServiceConfigItem, deleteBoundPkg } from '../../../../../../../../api/config'
   import { getAppPkgBindingRelations } from '../../../../../../../../api/template'
   import StatusTag from './status-tag'
@@ -177,7 +178,7 @@
         const { id, spec, revision, file_state } = item
         const { name, path } = spec
         const { creator, reviser, update_at } = revision
-        return { id, name, versionId: 0, versionName: '--', path, creator, reviser, update_at, file_state }
+        return { id, name, versionId: 0, versionName: '--', path, creator, reviser, update_at: datetimeFormat(update_at), file_state }
       })
   }
 
@@ -194,9 +195,9 @@
       template_revisions.forEach(tpl => {
         const {
           template_id: id, name, template_revision_id: versionId,
-          template_revision_name: versionName, path, creator, file_state
+          template_revision_name: versionName, path, creator, create_at, file_state
         } = tpl
-        group.configs.push({ id, name, versionId, versionName, path, creator, reviser: '--', update_at: '--', file_state })
+        group.configs.push({ id, name, versionId, versionName, path, creator, reviser: creator, update_at: datetimeFormat(create_at), file_state })
       })
       return group
     })
@@ -234,7 +235,6 @@
   const handleDeletePkg = async(pkgId: number, name: string) => {
     InfoBox({
       title: `确认是否删除模板套餐【${name}】?`,
-      infoType: "danger",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
@@ -263,7 +263,6 @@
   const handleDel = (config: IConfigTableItem) => {
     InfoBox({
       title: `确认是否删除配置项【${config.name}】?`,
-      infoType: "danger",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {

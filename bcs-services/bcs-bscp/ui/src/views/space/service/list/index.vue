@@ -1,19 +1,21 @@
 <script setup lang="ts">
-  import { ref, watch } from "vue";
+  import { ref, watch, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRouter, useRoute } from "vue-router";
   import { storeToRefs } from 'pinia';
   import { useGlobalStore } from '../../../../store/global';
-
+  import { permissionCheck } from '../../../../api/index'
   import LayoutTopBar from "../../../../components/layout-top-bar.vue";
   import ServiceListContent from "./components/service-list-content.vue";
-  
+
   const { t } = useI18n();
   const router = useRouter();
   const route = useRoute();
   const { spaceId } = storeToRefs(useGlobalStore())
 
   const activeTabName = ref<string>(route.name as string);
+  const hasCreateServicePerm = ref(false)
+  const permCheckLoading = ref(false)
   const panels = [
     { name: "service-mine", label: t("我的服务") },
     { name: "service-all", label: t("全部服务") },
@@ -22,6 +24,25 @@
   watch(() => route.name, (val) => {
     activeTabName.value = <string>val
   })
+
+  onMounted(() => {
+    checkCreateServicePerm()
+  })
+
+  const checkCreateServicePerm = async () => {
+    permCheckLoading.value = true
+    const res = await permissionCheck({
+      resources: [{
+        biz_id: spaceId.value,
+        basic: {
+          type: 'app',
+          action: 'create'
+        }
+      }]
+    })
+    hasCreateServicePerm.value = res.is_allowed
+    permCheckLoading.value = false
+  }
 
   const handleTabChange = (name: string) => {
     activeTabName.value = name
@@ -47,7 +68,11 @@
         </bk-tab>
       </div>
     </template>
-    <ServiceListContent :type="activeTabName" :space-id="spaceId" />
+    <ServiceListContent
+      :type="activeTabName"
+      :space-id="spaceId"
+      :perm-check-loading="permCheckLoading"
+      :has-create-service-perm="hasCreateServicePerm" />
   </LayoutTopBar>
 </template>
 

@@ -16,17 +16,12 @@ package auth
 import (
 	"context"
 	"fmt"
-	"os"
-	"strconv"
 	"strings"
 
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
-	bkiamlogger "github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
 	"bscp.io/cmd/auth-server/options"
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
@@ -36,7 +31,6 @@ import (
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/thirdparty/esb/cmdb"
 )
 
 // Auth related operate.
@@ -248,67 +242,6 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 	resp.ApplyUrl = url
 
 	resp.Permission = pbas.PbIamPermission(permission)
-	return resp, nil
-}
-
-// CheckPermission check permission by attr
-func (a *Auth) CheckPermission(ctx context.Context, biz *cmdb.Biz, iamSettings cc.IAM, req *meta.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	log := &logrus.Logger{
-		Out:          os.Stderr,
-		Formatter:    new(logrus.TextFormatter),
-		Hooks:        make(logrus.LevelHooks),
-		Level:        logrus.DebugLevel,
-		ExitFunc:     os.Exit,
-		ReportCaller: false,
-	}
-
-	bkiamlogger.SetLogger(log)
-
-	actionRequest, err := AdaptIAMResourceOptions(req)
-	if err != nil {
-		return nil, err
-	}
-
-	actionRequest.Subject = bkiam.NewSubject("user", kt.User)
-	allowed, err := a.iamClient.IsAllowed(*actionRequest)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := &pbas.CheckPermissionResp{
-		IsAllowed: false,
-		ApplyUrl:  "",
-		Resources: []*pbas.BasicDetail{},
-	}
-
-	if allowed {
-		resp.IsAllowed = true
-		return resp, nil
-	}
-
-	if req.GenApplyURL {
-		resp.Resources = append(resp.Resources, &pbas.BasicDetail{
-			Type:         string(req.Type),
-			Action:       req.Action.String(),
-			ResourceId:   strconv.FormatInt(int64(req.ResourceID), 10),
-			TypeName:     "业务",
-			ActionName:   "业务访问",
-			ResourceName: biz.BizName,
-		})
-
-		application, err := AdaptIAMApplicationOptions([]*meta.ResourceAttribute{req})
-		if err != nil {
-			return nil, err
-		}
-		url, err := a.iamClient.GetApplyURL(*application, "", kt.User)
-		if err != nil {
-			return nil, errors.Wrap(err, "gen apply url")
-		}
-		resp.ApplyUrl = url
-	}
-
 	return resp, nil
 }
 

@@ -38,9 +38,11 @@ http.interceptors.response.use(
               })
               return
           } else if (response.status === 403) {
+
             globalStore.$patch((state) => {
-              state.showSpacePermApply = true
+              state.showPermApplyPage = true
               state.applyPermUrl = response.data.error.data.apply_url
+              state.applyPermResource = response.data.error.data.resources
             })
             return response.data.error
           }
