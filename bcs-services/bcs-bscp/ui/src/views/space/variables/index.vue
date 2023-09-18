@@ -70,7 +70,6 @@
     InfoBox({
       title: `确定删除变量[${variable.spec.name}]?`,
       confirmText: '删除',
-      infoType: 'warning',
       onConfirm: async () => {
         await deleteVariable(spaceId.value, variable.id)
         if (list.value.length === 1 && pagination.value.current > 1) {

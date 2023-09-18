@@ -25,7 +25,6 @@
     if (props.service.permissions.delete) {
       InfoBox({
         title: `确认是否删除服务 ${props.service.spec.name}?`,
-        infoType: "danger",
         headerAlign: "center" as const,
         footerAlign: "center" as const,
         onConfirm: async () => {
