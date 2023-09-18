@@ -48,7 +48,7 @@ func (b *BizsOfTmplSpace) Has(key uint32) bool {
 func (p *proxy) initBizsOfTmplSpaces() {
 	bizsOfTS.Bizs = make(map[uint32]struct{})
 
-	resp, err := p.cfgClient.GetAllBizsOfTemplateSpaces(context.Background(), &pbbase.EmptyReq{})
+	resp, err := p.cfgClient.GetAllBizsOfTmplSpaces(context.Background(), &pbbase.EmptyReq{})
 	if err != nil {
 		logs.Warnf("init bizs of template spaces from db failed, err: %v", err)
 		return

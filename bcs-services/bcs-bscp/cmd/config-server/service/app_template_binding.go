@@ -218,11 +218,11 @@ func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateI
 	return templateSetIDs, templateIDs, nil
 }
 
-// ListAppBoundTemplateRevisions list app bound template revisions
-func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.ListAppBoundTemplateRevisionsReq) (
-	*pbcs.ListAppBoundTemplateRevisionsResp, error) {
+// ListAppBoundTmplRevisions list app bound template revisions
+func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListAppBoundTmplRevisionsReq) (
+	*pbcs.ListAppBoundTmplRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListAppBoundTemplateRevisionsResp)
+	resp := new(pbcs.ListAppBoundTmplRevisionsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -246,7 +246,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		return nil, err
 	}
 	if len(atbRsp.Details) == 0 {
-		return &pbcs.ListAppBoundTemplateRevisionsResp{
+		return &pbcs.ListAppBoundTmplRevisionsResp{
 			Details: []*pbatb.AppBoundTmplRevisionGroupBySet{},
 		}, nil
 	}
@@ -259,7 +259,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		Ids: tmplSetIDs,
 	})
 
-	r := &pbds.ListAppBoundTemplateRevisionsReq{
+	r := &pbds.ListAppBoundTmplRevisionsReq{
 		BizId:        req.BizId,
 		AppId:        req.AppId,
 		SearchFields: req.SearchFields,
@@ -268,7 +268,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		WithStatus:   req.WithStatus,
 	}
 
-	rp, err := s.client.DS.ListAppBoundTemplateRevisions(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListAppBoundTmplRevisions(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("list app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -318,7 +318,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		details = append(details, group)
 	}
 
-	resp = &pbcs.ListAppBoundTemplateRevisionsResp{
+	resp = &pbcs.ListAppBoundTmplRevisionsResp{
 		Details: details,
 	}
 	return resp, nil
@@ -355,12 +355,12 @@ func sortFileStateInGroup(g *pbatb.AppBoundTmplRevisionGroupBySet) {
 	g.TemplateRevisions = result
 }
 
-// ListReleasedAppBoundTemplateRevisions list released app bound template revisions
-func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
-	req *pbcs.ListReleasedAppBoundTemplateRevisionsReq) (
-	*pbcs.ListReleasedAppBoundTemplateRevisionsResp, error) {
+// ListReleasedAppBoundTmplRevisions list released app bound template revisions
+func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
+	req *pbcs.ListReleasedAppBoundTmplRevisionsReq) (
+	*pbcs.ListReleasedAppBoundTmplRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListReleasedAppBoundTemplateRevisionsResp)
+	resp := new(pbcs.ListReleasedAppBoundTmplRevisionsResp)
 
 	if req.ReleaseId <= 0 {
 		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
@@ -374,7 +374,7 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 		return nil, err
 	}
 
-	r := &pbds.ListReleasedAppBoundTemplateRevisionsReq{
+	r := &pbds.ListReleasedAppBoundTmplRevisionsReq{
 		BizId:        req.BizId,
 		AppId:        req.AppId,
 		ReleaseId:    req.ReleaseId,
@@ -383,7 +383,7 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 		All:          true,
 	}
 
-	rp, err := s.client.DS.ListReleasedAppBoundTemplateRevisions(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListReleasedAppBoundTmplRevisions(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("list released app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -429,18 +429,18 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 		details = append(details, group)
 	}
 
-	resp = &pbcs.ListReleasedAppBoundTemplateRevisionsResp{
+	resp = &pbcs.ListReleasedAppBoundTmplRevisionsResp{
 		Details: details,
 	}
 	return resp, nil
 }
 
-// UpdateAppBoundTemplateRevisions update app bound template revisions
-func (s *Service) UpdateAppBoundTemplateRevisions(ctx context.Context, req *pbcs.UpdateAppBoundTemplateRevisionsReq) (
+// UpdateAppBoundTmplRevisions update app bound template revisions
+func (s *Service) UpdateAppBoundTmplRevisions(ctx context.Context, req *pbcs.UpdateAppBoundTmplRevisionsReq) (
 	*pbcs.
-		UpdateAppBoundTemplateRevisionsResp, error) {
+		UpdateAppBoundTmplRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateAppBoundTemplateRevisionsResp)
+	resp := new(pbcs.UpdateAppBoundTmplRevisionsResp)
 
 	// validate input param
 	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
@@ -550,11 +550,11 @@ func getBindingsAfterUpdate(origin, update []*pbatb.TemplateBinding) ([]*pbatb.T
 	return final, nil
 }
 
-// DeleteAppBoundTemplateSets delete app bound template sets
-func (s *Service) DeleteAppBoundTemplateSets(ctx context.Context, req *pbcs.DeleteAppBoundTemplateSetsReq) (
-	*pbcs.DeleteAppBoundTemplateSetsResp, error) {
+// DeleteAppBoundTmplSets delete app bound template sets
+func (s *Service) DeleteAppBoundTmplSets(ctx context.Context, req *pbcs.DeleteAppBoundTmplSetsReq) (
+	*pbcs.DeleteAppBoundTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteAppBoundTemplateSetsResp)
+	resp := new(pbcs.DeleteAppBoundTmplSetsResp)
 
 	// validate input param
 	templateSetIDs, err := tools.GetUint32List(req.TemplateSetIds)

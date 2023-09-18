@@ -91,9 +91,9 @@ service Data {
     rpc ListTemplateSpaces(ListTemplateSpacesReq) returns (ListTemplateSpacesResp) {}
     rpc UpdateTemplateSpace(UpdateTemplateSpaceReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplateSpace(DeleteTemplateSpaceReq) returns (pbbase.EmptyResp) {}
-    rpc GetAllBizsOfTemplateSpaces(pbbase.EmptyReq) returns (GetAllBizsOfTemplateSpacesResp) {}
-    rpc CreateDefaultTemplateSpace(CreateDefaultTemplateSpaceReq) returns (CreateResp) {}
-    rpc ListTemplateSpacesByIDs(ListTemplateSpacesByIDsReq) returns (ListTemplateSpacesByIDsResp) {}
+    rpc GetAllBizsOfTmplSpaces(pbbase.EmptyReq) returns (GetAllBizsOfTmplSpacesResp) {}
+    rpc CreateDefaultTmplSpace(CreateDefaultTmplSpaceReq) returns (CreateResp) {}
+    rpc ListTmplSpacesByIDs(ListTmplSpacesByIDsReq) returns (ListTmplSpacesByIDsResp) {}
 
     // template related interface.
     rpc CreateTemplate(CreateTemplateReq) returns (CreateResp) {}
@@ -101,18 +101,18 @@ service Data {
     rpc UpdateTemplate(UpdateTemplateReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplate(DeleteTemplateReq) returns (pbbase.EmptyResp) {}
     rpc BatchDeleteTemplate(BatchDeleteTemplateReq) returns (pbbase.EmptyResp) {}
-    rpc AddTemplatesToTemplateSets(AddTemplatesToTemplateSetsReq) returns (pbbase.EmptyResp) {}
-    rpc DeleteTemplatesFromTemplateSets(DeleteTemplatesFromTemplateSetsReq) returns (pbbase.EmptyResp) {}
+    rpc AddTmplsToTmplSets(AddTmplsToTmplSetsReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteTmplsFromTmplSets(DeleteTmplsFromTmplSetsReq) returns (pbbase.EmptyResp) {}
     rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {}
     rpc ListTemplatesNotBound(ListTemplatesNotBoundReq) returns (ListTemplatesNotBoundResp) {}
-    rpc ListTemplatesOfTemplateSet(ListTemplatesOfTemplateSetReq) returns (ListTemplatesOfTemplateSetResp) {}
+    rpc ListTmplsOfTmplSet(ListTmplsOfTmplSetReq) returns (ListTmplsOfTmplSetResp) {}
 
     // template release related interface.
     rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateResp) {}
     rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {}
     rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (pbbase.EmptyResp) {}
     rpc ListTemplateRevisionsByIDs(ListTemplateRevisionsByIDsReq) returns (ListTemplateRevisionsByIDsResp) {}
-    rpc ListTemplateRevisionNamesByTemplateIDs(ListTemplateRevisionNamesByTemplateIDsReq) returns (ListTemplateRevisionNamesByTemplateIDsResp) {}
+    rpc ListTmplRevisionNamesByTmplIDs(ListTmplRevisionNamesByTmplIDsReq) returns (ListTmplRevisionNamesByTmplIDsResp) {}
 
     // template set related interface.
     rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateResp) {}
@@ -122,51 +122,51 @@ service Data {
     rpc ListAppTemplateSets(ListAppTemplateSetsReq) returns (ListAppTemplateSetsResp) {}
     rpc ListTemplateSetsByIDs(ListTemplateSetsByIDsReq) returns (ListTemplateSetsByIDsResp) {}
     rpc ListTemplateSetBriefInfoByIDs(ListTemplateSetBriefInfoByIDsReq) returns (ListTemplateSetBriefInfoByIDsResp) {}
-    rpc ListTemplateSetsOfBiz(ListTemplateSetsOfBizReq) returns (ListTemplateSetsOfBizResp) {}
+    rpc ListTmplSetsOfBiz(ListTmplSetsOfBizReq) returns (ListTmplSetsOfBizResp) {}
 
     // app template binding related interface.
     rpc CreateAppTemplateBinding(CreateAppTemplateBindingReq) returns (CreateResp) {}
     rpc ListAppTemplateBindings(ListAppTemplateBindingsReq) returns (ListAppTemplateBindingsResp) {}
     rpc UpdateAppTemplateBinding(UpdateAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
     rpc DeleteAppTemplateBinding(DeleteAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
-    rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {}
-    rpc ListReleasedAppBoundTemplateRevisions(ListReleasedAppBoundTemplateRevisionsReq) returns
-        (ListReleasedAppBoundTemplateRevisionsResp) {}
+    rpc ListAppBoundTmplRevisions(ListAppBoundTmplRevisionsReq) returns (ListAppBoundTmplRevisionsResp) {}
+    rpc ListReleasedAppBoundTmplRevisions(ListReleasedAppBoundTmplRevisionsReq) returns
+        (ListReleasedAppBoundTmplRevisionsResp) {}
     rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {}
 
     // app template variables related interface.
-    rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {}
-    rpc GetAppTemplateVariableReferences(GetAppTemplateVariableReferencesReq) returns (GetAppTemplateVariableReferencesResp) {}
-    rpc GetReleasedAppTemplateVariableReferences(GetReleasedAppTemplateVariableReferencesReq) returns
-        (GetReleasedAppTemplateVariableReferencesResp) {}
-    rpc UpdateAppTemplateVariables(UpdateAppTemplateVariablesReq) returns (pbbase.EmptyResp) {}
-    rpc ListAppTemplateVariables(ListAppTemplateVariablesReq) returns (ListAppTemplateVariablesResp) {}
-    rpc ListReleasedAppTemplateVariables(ListReleasedAppTemplateVariablesReq) returns (ListReleasedAppTemplateVariablesResp) {}
+    rpc ExtractAppTmplVariables(ExtractAppTmplVariablesReq) returns (ExtractAppTmplVariablesResp) {}
+    rpc GetAppTmplVariableRefs(GetAppTmplVariableRefsReq) returns (GetAppTmplVariableRefsResp) {}
+    rpc GetReleasedAppTmplVariableRefs(GetReleasedAppTmplVariableRefsReq) returns
+        (GetReleasedAppTmplVariableRefsResp) {}
+    rpc UpdateAppTmplVariables(UpdateAppTmplVariablesReq) returns (pbbase.EmptyResp) {}
+    rpc ListAppTmplVariables(ListAppTmplVariablesReq) returns (ListAppTmplVariablesResp) {}
+    rpc ListReleasedAppTmplVariables(ListReleasedAppTmplVariablesReq) returns (ListReleasedAppTmplVariablesResp) {}
 
     // template binding relation related interface.
-    rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {}
-    rpc ListTemplateRevisionBoundCounts(ListTemplateRevisionBoundCountsReq) returns (ListTemplateRevisionBoundCountsResp){}
-    rpc ListTemplateSetBoundCounts(ListTemplateSetBoundCountsReq) returns (ListTemplateSetBoundCountsResp){}
-    rpc ListTemplateBoundUnnamedAppDetails(ListTemplateBoundUnnamedAppDetailsReq) returns
-        (ListTemplateBoundUnnamedAppDetailsResp){}
-    rpc ListTemplateBoundNamedAppDetails(ListTemplateBoundNamedAppDetailsReq) returns
-        (ListTemplateBoundNamedAppDetailsResp) {}
-    rpc ListTemplateBoundTemplateSetDetails(ListTemplateBoundTemplateSetDetailsReq) returns
-        (ListTemplateBoundTemplateSetDetailsResp) {}
-    rpc ListMultiTemplateBoundTemplateSetDetails(ListMultiTemplateBoundTemplateSetDetailsReq) returns
-        (ListMultiTemplateBoundTemplateSetDetailsResp) {}
-    rpc ListTemplateRevisionBoundUnnamedAppDetails(ListTemplateRevisionBoundUnnamedAppDetailsReq) returns
-        (ListTemplateRevisionBoundUnnamedAppDetailsResp){}
-    rpc ListTemplateRevisionBoundNamedAppDetails(ListTemplateRevisionBoundNamedAppDetailsReq) returns
-        (ListTemplateRevisionBoundNamedAppDetailsResp) {}
-    rpc ListTemplateSetBoundUnnamedAppDetails(ListTemplateSetBoundUnnamedAppDetailsReq) returns
-        (ListTemplateSetBoundUnnamedAppDetailsResp){}
-    rpc ListMultiTemplateSetBoundUnnamedAppDetails(ListMultiTemplateSetBoundUnnamedAppDetailsReq) returns
-        (ListMultiTemplateSetBoundUnnamedAppDetailsResp){}
-    rpc ListTemplateSetBoundNamedAppDetails(ListTemplateSetBoundNamedAppDetailsReq) returns
-        (ListTemplateSetBoundNamedAppDetailsResp){}
-    rpc ListLatestTemplateBoundUnnamedAppDetails(ListLatestTemplateBoundUnnamedAppDetailsReq) returns
-        (ListLatestTemplateBoundUnnamedAppDetailsResp){}
+    rpc ListTmplBoundCounts(ListTmplBoundCountsReq) returns (ListTmplBoundCountsResp) {}
+    rpc ListTmplRevisionBoundCounts(ListTmplRevisionBoundCountsReq) returns (ListTmplRevisionBoundCountsResp){}
+    rpc ListTmplSetBoundCounts(ListTmplSetBoundCountsReq) returns (ListTmplSetBoundCountsResp){}
+    rpc ListTmplBoundUnnamedApps(ListTmplBoundUnnamedAppsReq) returns
+        (ListTmplBoundUnnamedAppsResp){}
+    rpc ListTmplBoundNamedApps(ListTmplBoundNamedAppsReq) returns
+        (ListTmplBoundNamedAppsResp) {}
+    rpc ListTmplBoundTmplSets(ListTmplBoundTmplSetsReq) returns
+        (ListTmplBoundTmplSetsResp) {}
+    rpc ListMultiTmplBoundTmplSets(ListMultiTmplBoundTmplSetsReq) returns
+        (ListMultiTmplBoundTmplSetsResp) {}
+    rpc ListTmplRevisionBoundUnnamedApps(ListTmplRevisionBoundUnnamedAppsReq) returns
+        (ListTmplRevisionBoundUnnamedAppsResp){}
+    rpc ListTmplRevisionBoundNamedApps(ListTmplRevisionBoundNamedAppsReq) returns
+        (ListTmplRevisionBoundNamedAppsResp) {}
+    rpc ListTmplSetBoundUnnamedApps(ListTmplSetBoundUnnamedAppsReq) returns
+        (ListTmplSetBoundUnnamedAppsResp){}
+    rpc ListMultiTmplSetBoundUnnamedApps(ListMultiTmplSetBoundUnnamedAppsReq) returns
+        (ListMultiTmplSetBoundUnnamedAppsResp){}
+    rpc ListTmplSetBoundNamedApps(ListTmplSetBoundNamedAppsReq) returns
+        (ListTmplSetBoundNamedAppsResp){}
+    rpc ListLatestTmplBoundUnnamedApps(ListLatestTmplBoundUnnamedAppsReq) returns
+        (ListLatestTmplBoundUnnamedAppsResp){}
 
     // template variable related interface.
     rpc CreateTemplateVariable(CreateTemplateVariableReq) returns (CreateResp) {}
@@ -689,19 +689,19 @@ message DeleteTemplateSpaceReq {
     pbts.TemplateSpaceAttachment attachment = 2;
 }
 
-message GetAllBizsOfTemplateSpacesResp{
+message GetAllBizsOfTmplSpacesResp{
     repeated uint32 biz_ids = 1;
 }
 
-message CreateDefaultTemplateSpaceReq{
+message CreateDefaultTmplSpaceReq{
     uint32 biz_id = 1;
 }
 
-message  ListTemplateSpacesByIDsReq {
+message  ListTmplSpacesByIDsReq {
     repeated uint32 ids = 1;
 }
 
-message  ListTemplateSpacesByIDsResp {
+message  ListTmplSpacesByIDsResp {
     repeated pbts.TemplateSpace details = 1;
 }
 
@@ -745,14 +745,14 @@ message BatchDeleteTemplateReq {
     bool                          force      = 3;
 }
 
-message AddTemplatesToTemplateSetsReq {
+message AddTmplsToTmplSetsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     repeated uint32 template_ids      = 3;
     repeated uint32 template_set_ids  = 4;
 }
 
-message DeleteTemplatesFromTemplateSetsReq {
+message DeleteTmplsFromTmplSetsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     repeated uint32 template_ids      = 3;
@@ -782,7 +782,7 @@ message ListTemplatesNotBoundResp {
     repeated pbtemplate.Template details = 2;
 }
 
-message ListTemplatesOfTemplateSetReq {
+message ListTmplsOfTmplSetReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_set_id   = 3;
@@ -793,7 +793,7 @@ message ListTemplatesOfTemplateSetReq {
     bool   all               = 8;
 }
 
-message ListTemplatesOfTemplateSetResp {
+message ListTmplsOfTmplSetResp {
     uint32                       count   = 1;
     repeated pbtemplate.Template details = 2;
 }
@@ -832,12 +832,12 @@ message  ListTemplateRevisionsByIDsResp {
     repeated pbtr.TemplateRevision details = 1;
 }
 
-message ListTemplateRevisionNamesByTemplateIDsReq {
+message ListTmplRevisionNamesByTmplIDsReq {
     uint32          biz_id       = 1;
     repeated uint32 template_ids = 2;
 }
 
-message ListTemplateRevisionNamesByTemplateIDsResp {
+message ListTmplRevisionNamesByTmplIDsResp {
     repeated pbtr.TemplateRevisionNamesDetail details = 1;
 }
 
@@ -899,12 +899,12 @@ message  ListTemplateSetBriefInfoByIDsResp {
     repeated pbtset.TemplateSetBriefInfo details = 1;
 }
 
-message  ListTemplateSetsOfBizReq {
+message  ListTmplSetsOfBizReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
 }
 
-message  ListTemplateSetsOfBizResp {
+message  ListTmplSetsOfBizResp {
     repeated pbtset.TemplateSetOfBizDetail details = 1;
 }
 
@@ -937,7 +937,7 @@ message DeleteAppTemplateBindingReq {
     pbatb.AppTemplateBindingAttachment attachment = 2;
 }
 
-message ListAppBoundTemplateRevisionsReq {
+message ListAppBoundTmplRevisionsReq {
     uint32 biz_id        = 1;
     uint32 app_id        = 2;
     string search_fields = 3;
@@ -948,12 +948,12 @@ message ListAppBoundTemplateRevisionsReq {
     bool   with_status   = 8;
 }
 
-message ListAppBoundTemplateRevisionsResp {
+message ListAppBoundTmplRevisionsResp {
     uint32                              count   = 1;
     repeated pbatb.AppBoundTmplRevision details = 2;
 }
 
-message ListReleasedAppBoundTemplateRevisionsReq {
+message ListReleasedAppBoundTmplRevisionsReq {
     uint32 biz_id        = 1;
     uint32 app_id        = 2;
     uint32 release_id    = 3;
@@ -964,7 +964,7 @@ message ListReleasedAppBoundTemplateRevisionsReq {
     bool   all           = 8;
 }
 
-message ListReleasedAppBoundTemplateRevisionsResp {
+message ListReleasedAppBoundTmplRevisionsResp {
     uint32                                      count   = 1;
     repeated pbatb.ReleasedAppBoundTmplRevision details = 2;
 }
@@ -978,90 +978,90 @@ message CheckAppTemplateBindingResp {
     repeated pbatb.Conflict details = 1;
 }
 
-message ExtractAppTemplateVariablesReq {
+message ExtractAppTmplVariablesReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
 }
 
-message ExtractAppTemplateVariablesResp {
+message ExtractAppTmplVariablesResp {
     repeated string details = 1;
 }
 
-message GetAppTemplateVariableReferencesReq {
+message GetAppTmplVariableRefsReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
 }
 
-message GetAppTemplateVariableReferencesResp {
+message GetAppTmplVariableRefsResp {
     repeated pbatv.AppTemplateVariableReference details = 1;
 }
 
-message GetReleasedAppTemplateVariableReferencesReq {
+message GetReleasedAppTmplVariableRefsReq {
     uint32 biz_id     = 1;
     uint32 app_id     = 2;
     uint32 release_id = 3;
 }
 
-message GetReleasedAppTemplateVariableReferencesResp {
+message GetReleasedAppTmplVariableRefsResp {
     repeated pbatv.AppTemplateVariableReference details = 1;
 }
 
-message UpdateAppTemplateVariablesReq {
+message UpdateAppTmplVariablesReq {
     pbatv.AppTemplateVariableAttachment attachment = 1;
     pbatv.AppTemplateVariableSpec       spec       = 2;
 }
 
-message ListAppTemplateVariablesReq {
+message ListAppTmplVariablesReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
 }
 
-message ListAppTemplateVariablesResp {
+message ListAppTmplVariablesResp {
     repeated pbtv.TemplateVariableSpec details = 1;
 }
 
-message ListReleasedAppTemplateVariablesReq {
+message ListReleasedAppTmplVariablesReq {
     uint32 biz_id     = 1;
     uint32 app_id     = 2;
     uint32 release_id = 3;
 }
 
-message ListReleasedAppTemplateVariablesResp {
+message ListReleasedAppTmplVariablesResp {
     repeated pbtv.TemplateVariableSpec details = 1;
 }
 
-message ListTemplateBoundCountsReq {
+message ListTmplBoundCountsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     repeated uint32 template_ids      = 3;
 }
 
-message ListTemplateBoundCountsResp {
+message ListTmplBoundCountsResp {
     repeated pbtbr.TemplateBoundCounts details = 1;
 }
 
-message ListTemplateRevisionBoundCountsReq {
+message ListTmplRevisionBoundCountsReq {
     uint32          biz_id                = 1;
     uint32          template_space_id     = 2;
     uint32          template_id           = 3;
     repeated uint32 template_revision_ids = 4;
 }
 
-message ListTemplateRevisionBoundCountsResp {
+message ListTmplRevisionBoundCountsResp {
     repeated pbtbr.TemplateRevisionBoundCounts details = 1;
 }
 
-message ListTemplateSetBoundCountsReq {
+message ListTmplSetBoundCountsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     repeated uint32 template_set_ids  = 3;
 }
 
-message ListTemplateSetBoundCountsResp {
+message ListTmplSetBoundCountsResp {
     repeated pbtbr.TemplateSetBoundCounts details = 1;
 }
 
-message ListTemplateBoundUnnamedAppDetailsReq {
+message ListTmplBoundUnnamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
@@ -1070,12 +1070,12 @@ message ListTemplateBoundUnnamedAppDetailsReq {
     bool   all               = 6;
 }
 
-message ListTemplateBoundUnnamedAppDetailsResp {
+message ListTmplBoundUnnamedAppsResp {
     uint32                                       count   = 1;
     repeated pbtbr.TemplateBoundUnnamedAppDetail details = 2;
 }
 
-message ListTemplateBoundNamedAppDetailsReq {
+message ListTmplBoundNamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
@@ -1084,12 +1084,12 @@ message ListTemplateBoundNamedAppDetailsReq {
     bool   all               = 6;
 }
 
-message ListTemplateBoundNamedAppDetailsResp {
+message ListTmplBoundNamedAppsResp {
     uint32                                     count   = 1;
     repeated pbtbr.TemplateBoundNamedAppDetail details = 2;
 }
 
-message ListTemplateBoundTemplateSetDetailsReq {
+message ListTmplBoundTmplSetsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
@@ -1098,12 +1098,12 @@ message ListTemplateBoundTemplateSetDetailsReq {
     bool   all               = 6;
 }
 
-message ListTemplateBoundTemplateSetDetailsResp {
+message ListTmplBoundTmplSetsResp {
     uint32                                        count   = 1;
     repeated pbtbr.TemplateBoundTemplateSetDetail details = 2;
 }
 
-message ListMultiTemplateBoundTemplateSetDetailsReq {
+message ListMultiTmplBoundTmplSetsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     repeated uint32 template_ids      = 3;
@@ -1112,12 +1112,12 @@ message ListMultiTemplateBoundTemplateSetDetailsReq {
     bool            all               = 6;
 }
 
-message ListMultiTemplateBoundTemplateSetDetailsResp {
+message ListMultiTmplBoundTmplSetsResp {
     uint32                                             count   = 1;
     repeated pbtbr.MultiTemplateBoundTemplateSetDetail details = 2;
 }
 
-message ListTemplateRevisionBoundUnnamedAppDetailsReq {
+message ListTmplRevisionBoundUnnamedAppsReq {
     uint32 biz_id               = 1;
     uint32 template_space_id    = 2;
     uint32 template_id          = 3;
@@ -1127,12 +1127,12 @@ message ListTemplateRevisionBoundUnnamedAppDetailsReq {
     bool   all                  = 7;
 }
 
-message ListTemplateRevisionBoundUnnamedAppDetailsResp {
+message ListTmplRevisionBoundUnnamedAppsResp {
     uint32                                               count   = 1;
     repeated pbtbr.TemplateRevisionBoundUnnamedAppDetail details = 2;
 }
 
-message ListTemplateRevisionBoundNamedAppDetailsReq {
+message ListTmplRevisionBoundNamedAppsReq {
     uint32 biz_id               = 1;
     uint32 template_space_id    = 2;
     uint32 template_id          = 3;
@@ -1142,12 +1142,12 @@ message ListTemplateRevisionBoundNamedAppDetailsReq {
     bool   all                  = 7;
 }
 
-message ListTemplateRevisionBoundNamedAppDetailsResp {
+message ListTmplRevisionBoundNamedAppsResp {
     uint32                                             count   = 1;
     repeated pbtbr.TemplateRevisionBoundNamedAppDetail details = 2;
 }
 
-message ListTemplateSetBoundUnnamedAppDetailsReq {
+message ListTmplSetBoundUnnamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_set_id   = 3;
@@ -1156,12 +1156,12 @@ message ListTemplateSetBoundUnnamedAppDetailsReq {
     bool   all               = 6;
 }
 
-message ListTemplateSetBoundUnnamedAppDetailsResp {
+message ListTmplSetBoundUnnamedAppsResp {
     uint32                                          count   = 1;
     repeated pbtbr.TemplateSetBoundUnnamedAppDetail details = 2;
 }
 
-message ListMultiTemplateSetBoundUnnamedAppDetailsReq {
+message ListMultiTmplSetBoundUnnamedAppsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     repeated uint32 template_set_ids  = 3;
@@ -1170,12 +1170,12 @@ message ListMultiTemplateSetBoundUnnamedAppDetailsReq {
     bool            all               = 6;
 }
 
-message ListMultiTemplateSetBoundUnnamedAppDetailsResp {
+message ListMultiTmplSetBoundUnnamedAppsResp {
     uint32                                               count   = 1;
     repeated pbtbr.MultiTemplateSetBoundUnnamedAppDetail details = 2;
 }
 
-message ListTemplateSetBoundNamedAppDetailsReq {
+message ListTmplSetBoundNamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_set_id   = 3;
@@ -1184,12 +1184,12 @@ message ListTemplateSetBoundNamedAppDetailsReq {
     bool   all               = 6;
 }
 
-message ListTemplateSetBoundNamedAppDetailsResp {
+message ListTmplSetBoundNamedAppsResp {
     uint32                                        count   = 1;
     repeated pbtbr.TemplateSetBoundNamedAppDetail details = 2;
 }
 
-message ListLatestTemplateBoundUnnamedAppDetailsReq {
+message ListLatestTmplBoundUnnamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
@@ -1198,7 +1198,7 @@ message ListLatestTemplateBoundUnnamedAppDetailsReq {
     bool   all               = 6;
 }
 
-message ListLatestTemplateBoundUnnamedAppDetailsResp {
+message ListLatestTmplBoundUnnamedAppsResp {
     uint32                                             count   = 1;
     repeated pbtbr.LatestTemplateBoundUnnamedAppDetail details = 2;
 }

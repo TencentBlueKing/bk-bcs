@@ -243,11 +243,11 @@ func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbcs.ListTempl
 	return resp, nil
 }
 
-// ListTemplateSetsOfBiz list template sets of one biz
-func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbcs.ListTemplateSetsOfBizReq) (
-	*pbcs.ListTemplateSetsOfBizResp, error) {
+// ListTmplSetsOfBiz list template sets of one biz
+func (s *Service) ListTmplSetsOfBiz(ctx context.Context, req *pbcs.ListTmplSetsOfBizReq) (
+	*pbcs.ListTmplSetsOfBizResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateSetsOfBizResp)
+	resp := new(pbcs.ListTmplSetsOfBizResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -256,18 +256,18 @@ func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbcs.ListTempl
 		return nil, err
 	}
 
-	r := &pbds.ListTemplateSetsOfBizReq{
+	r := &pbds.ListTmplSetsOfBizReq{
 		BizId: req.BizId,
 		AppId: req.AppId,
 	}
 
-	rp, err := s.client.DS.ListTemplateSetsOfBiz(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListTmplSetsOfBiz(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("list template sets of biz failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateSetsOfBizResp{
+	resp = &pbcs.ListTmplSetsOfBizResp{
 		Details: rp.Details,
 	}
 	return resp, nil

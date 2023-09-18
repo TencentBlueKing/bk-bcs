@@ -180,13 +180,13 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbcs.List
 	return resp, nil
 }
 
-// ListTemplateRevisionNamesByTemplateIDs list template Revisions by ids
-func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
-	req *pbcs.ListTemplateRevisionNamesByTemplateIDsReq) (
+// ListTmplRevisionNamesByTmplIDs list template Revisions by ids
+func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context,
+	req *pbcs.ListTmplRevisionNamesByTmplIDsReq) (
 	*pbcs.
-		ListTemplateRevisionNamesByTemplateIDsResp, error) {
+		ListTmplRevisionNamesByTmplIDsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateRevisionNamesByTemplateIDsResp)
+	resp := new(pbcs.ListTmplRevisionNamesByTmplIDsResp)
 
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.TemplateIds)
@@ -206,18 +206,18 @@ func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
 		return nil, err
 	}
 
-	r := &pbds.ListTemplateRevisionNamesByTemplateIDsReq{
+	r := &pbds.ListTmplRevisionNamesByTmplIDsReq{
 		BizId:       req.BizId,
 		TemplateIds: req.TemplateIds,
 	}
 
-	rp, err := s.client.DS.ListTemplateRevisionNamesByTemplateIDs(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListTmplRevisionNamesByTmplIDs(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("list template Revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateRevisionNamesByTemplateIDsResp{
+	resp = &pbcs.ListTmplRevisionNamesByTmplIDsResp{
 		Details: rp.Details,
 	}
 	return resp, nil

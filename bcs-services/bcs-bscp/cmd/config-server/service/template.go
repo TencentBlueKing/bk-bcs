@@ -221,11 +221,11 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 	return resp, nil
 }
 
-// AddTemplatesToTemplateSets add templates to template sets
-func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbcs.AddTemplatesToTemplateSetsReq) (
-	*pbcs.AddTemplatesToTemplateSetsResp, error) {
+// AddTmplsToTmplSets add templates to template sets
+func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbcs.AddTmplsToTmplSetsReq) (
+	*pbcs.AddTmplsToTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.AddTemplatesToTemplateSetsResp)
+	resp := new(pbcs.AddTmplsToTmplSetsResp)
 
 	// validate input param
 	idsLen := len(req.TemplateIds)
@@ -247,14 +247,14 @@ func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbcs.AddT
 		return nil, err
 	}
 
-	r := &pbds.AddTemplatesToTemplateSetsReq{
+	r := &pbds.AddTmplsToTmplSetsReq{
 		BizId:           req.BizId,
 		TemplateSpaceId: req.TemplateSpaceId,
 		TemplateIds:     req.TemplateIds,
 		TemplateSetIds:  req.TemplateSetIds,
 	}
 
-	if _, err := s.client.DS.AddTemplatesToTemplateSets(grpcKit.RpcCtx(), r); err != nil {
+	if _, err := s.client.DS.AddTmplsToTmplSets(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("update template failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
@@ -262,11 +262,11 @@ func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbcs.AddT
 	return resp, nil
 }
 
-// DeleteTemplatesFromTemplateSets delete templates from template sets
-func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbcs.DeleteTemplatesFromTemplateSetsReq) (
-	*pbcs.DeleteTemplatesFromTemplateSetsResp, error) {
+// DeleteTmplsFromTmplSets delete templates from template sets
+func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbcs.DeleteTmplsFromTmplSetsReq) (
+	*pbcs.DeleteTmplsFromTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteTemplatesFromTemplateSetsResp)
+	resp := new(pbcs.DeleteTmplsFromTmplSetsResp)
 
 	// validate input param
 	idsLen := len(req.TemplateIds)
@@ -288,14 +288,14 @@ func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbcs
 		return nil, err
 	}
 
-	r := &pbds.DeleteTemplatesFromTemplateSetsReq{
+	r := &pbds.DeleteTmplsFromTmplSetsReq{
 		BizId:           req.BizId,
 		TemplateSpaceId: req.TemplateSpaceId,
 		TemplateIds:     req.TemplateIds,
 		TemplateSetIds:  req.TemplateSetIds,
 	}
 
-	if _, err := s.client.DS.DeleteTemplatesFromTemplateSets(grpcKit.RpcCtx(), r); err != nil {
+	if _, err := s.client.DS.DeleteTmplsFromTmplSets(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("update template failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
@@ -379,11 +379,11 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTempl
 	return resp, nil
 }
 
-// ListTemplatesOfTemplateSet list templates of template set
-func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.ListTemplatesOfTemplateSetReq) (
-	*pbcs.ListTemplatesOfTemplateSetResp, error) {
+// ListTmplsOfTmplSet list templates of template set
+func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbcs.ListTmplsOfTmplSetReq) (
+	*pbcs.ListTmplsOfTmplSetResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplatesOfTemplateSetResp)
+	resp := new(pbcs.ListTmplsOfTmplSetResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -392,7 +392,7 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.List
 		return nil, err
 	}
 
-	r := &pbds.ListTemplatesOfTemplateSetReq{
+	r := &pbds.ListTmplsOfTmplSetReq{
 		BizId:           grpcKit.BizID,
 		TemplateSpaceId: req.TemplateSpaceId,
 		TemplateSetId:   req.TemplateSetId,
@@ -403,13 +403,13 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.List
 		All:             req.All,
 	}
 
-	rp, err := s.client.DS.ListTemplatesOfTemplateSet(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListTmplsOfTmplSet(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("list templates of template set failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplatesOfTemplateSetResp{
+	resp = &pbcs.ListTmplsOfTmplSetResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

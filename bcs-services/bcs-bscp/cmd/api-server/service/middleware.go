@@ -45,8 +45,8 @@ func (p *proxy) CheckDefaultTmplSpace(next http.Handler) http.Handler {
 		kt.User = constant.BKSystemUser
 
 		// create default template space when not existent
-		in := &pbcs.CreateDefaultTemplateSpaceReq{BizId: bizID}
-		if _, err := p.cfgClient.CreateDefaultTemplateSpace(kt.RpcCtx(), in); err != nil {
+		in := &pbcs.CreateDefaultTmplSpaceReq{BizId: bizID}
+		if _, err := p.cfgClient.CreateDefaultTmplSpace(kt.RpcCtx(), in); err != nil {
 			render.Render(w, r, rest.BadRequest(err))
 			return
 		}

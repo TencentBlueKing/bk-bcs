@@ -209,15 +209,15 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplateSetReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	r := &pbds.ListTemplateSetBoundCountsReq{
+	r := &pbds.ListTmplSetBoundCountsReq{
 		BizId:           req.Attachment.BizId,
 		TemplateSpaceId: req.Attachment.TemplateSpaceId,
 		TemplateSetIds:  []uint32{req.Id},
 	}
 
-	var boundCnt *pbds.ListTemplateSetBoundCountsResp
+	var boundCnt *pbds.ListTmplSetBoundCountsResp
 	var err error
-	boundCnt, err = s.ListTemplateSetBoundCounts(ctx, r)
+	boundCnt, err = s.ListTmplSetBoundCounts(ctx, r)
 	if err != nil {
 		logs.Errorf("delete template set failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -307,7 +307,7 @@ func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbds.ListTempl
 	*pbds.ListTemplateSetsByIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.Ids); err != nil {
+	if err := s.dao.Validator().ValidateTmplSetsExist(kt, req.Ids); err != nil {
 		return nil, err
 	}
 
@@ -328,7 +328,7 @@ func (s *Service) ListTemplateSetBriefInfoByIDs(ctx context.Context, req *pbds.L
 	*pbds.ListTemplateSetBriefInfoByIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.Ids); err != nil {
+	if err := s.dao.Validator().ValidateTmplSetsExist(kt, req.Ids); err != nil {
 		return nil, err
 	}
 
@@ -373,18 +373,18 @@ func (s *Service) ListTemplateSetBriefInfoByIDs(ctx context.Context, req *pbds.L
 	return resp, nil
 }
 
-// ListTemplateSetsOfBiz list template sets of one biz.
-func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbds.ListTemplateSetsOfBizReq) (
-	*pbds.ListTemplateSetsOfBizResp, error) {
+// ListTmplSetsOfBiz list template sets of one biz.
+func (s *Service) ListTmplSetsOfBiz(ctx context.Context, req *pbds.ListTmplSetsOfBizReq) (
+	*pbds.ListTmplSetsOfBizResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	tmplSets, err := s.dao.TemplateSet().ListAllTemplateSetsOfBiz(kt, req.BizId, req.AppId)
+	tmplSets, err := s.dao.TemplateSet().ListAllTmplSetsOfBiz(kt, req.BizId, req.AppId)
 	if err != nil {
 		logs.Errorf("list template sets of biz failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	if len(tmplSets) == 0 {
-		return &pbds.ListTemplateSetsOfBizResp{}, nil
+		return &pbds.ListTmplSetsOfBizResp{}, nil
 	}
 
 	// get the map of template space id => template set detail
@@ -421,7 +421,7 @@ func (s *Service) ListTemplateSetsOfBiz(ctx context.Context, req *pbds.ListTempl
 		})
 	}
 
-	resp := &pbds.ListTemplateSetsOfBizResp{
+	resp := &pbds.ListTmplSetsOfBizResp{
 		Details: details,
 	}
 	return resp, nil

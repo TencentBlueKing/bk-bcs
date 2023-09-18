@@ -400,7 +400,7 @@ func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releas
 // createReleasedAppTemplates create released app templates.
 func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
 	byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
-	revisionsResp, err := s.ListAppBoundTemplateRevisions(kt.Ctx, &pbds.ListAppBoundTemplateRevisionsReq{
+	revisionsResp, err := s.ListAppBoundTmplRevisions(kt.Ctx, &pbds.ListAppBoundTmplRevisionsReq{
 		BizId: kt.BizID,
 		AppId: kt.AppID,
 		All:   true,
