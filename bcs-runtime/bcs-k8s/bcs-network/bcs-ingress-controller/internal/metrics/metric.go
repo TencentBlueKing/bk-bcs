@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package metrics include sdk and crd metrics
 package metrics
 
 import (

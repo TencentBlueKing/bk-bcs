@@ -11,6 +11,7 @@
  *
  */
 
+// Package azure load balancer related api wrapper
 package azure
 
 import (

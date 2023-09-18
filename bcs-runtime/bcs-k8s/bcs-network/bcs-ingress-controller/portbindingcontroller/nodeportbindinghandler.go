@@ -33,6 +33,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
+// NodePortBindingCache cache node portbinding info
 type NodePortBindingCache struct {
 	Cache map[string]string
 	sync.Mutex
@@ -93,6 +94,7 @@ func newNodePortBindingHandler(ctx context.Context, k8sClient client.Client, eve
 	return npbh
 }
 
+// generateTargetGroup use node internal ip as target group
 func (n *nodePortBindingHandler) generateTargetGroup(item *networkextensionv1.PortBindingItem) *networkextensionv1.
 	ListenerTargetGroup {
 	if n.node == nil {
@@ -117,6 +119,7 @@ func (n *nodePortBindingHandler) generateTargetGroup(item *networkextensionv1.Po
 	}
 }
 
+// postPortBindingUpdate do after portbinding update
 func (n *nodePortBindingHandler) postPortBindingUpdate(portBinding *networkextensionv1.PortBinding) error {
 	if n.node == nil {
 		err := errors.New("update portbinding for empty node")
@@ -136,6 +139,7 @@ func (n *nodePortBindingHandler) postPortBindingUpdate(portBinding *networkexten
 	return nil
 }
 
+// postPortBindingClean do after portbinding need clean
 func (n *nodePortBindingHandler) postPortBindingClean(portBinding *networkextensionv1.PortBinding) error {
 	node := &k8scorev1.Node{}
 	if err := n.k8sClient.Get(n.ctx, k8stypes.NamespacedName{Name: portBinding.GetName()}, node); err != nil {
