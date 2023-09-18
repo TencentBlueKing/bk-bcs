@@ -155,7 +155,6 @@
   const handleDeleteGroup = (group: IGroupItem) => {
     InfoBox({
       title: `确认是否删除分组【${group.name}?】`,
-      infoType: "danger",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
