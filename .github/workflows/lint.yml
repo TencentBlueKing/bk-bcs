@@ -11,14 +11,17 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: bcs-services/bcs-webconsole/go.mod
+      - name: go mod tidy check
+        uses: katexochen/go-tidy-check@v2
+        with:
+          modules: bcs-services/bcs-webconsole
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
           args: --timeout=30m --issues-exit-code=0
           working-directory: bcs-services/bcs-webconsole
-      - name: go mod tidy check
-        uses: katexochen/go-tidy-check@v2
+
   bcs-monitor:
     name: bcs-monitor
     runs-on: ubuntu-latest
@@ -29,11 +32,13 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: bcs-services/bcs-monitor/go.mod
+      - name: go mod tidy check
+        uses: katexochen/go-tidy-check@v2
+        with:
+          modules: bcs-services/bcs-monitor
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
           args: --timeout=30m --issues-exit-code=0
           working-directory: bcs-services/bcs-monitor
-      - name: go mod tidy check
-        uses: katexochen/go-tidy-check@v2
