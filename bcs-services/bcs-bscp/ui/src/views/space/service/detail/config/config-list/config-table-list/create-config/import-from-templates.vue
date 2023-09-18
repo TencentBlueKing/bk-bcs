@@ -4,7 +4,7 @@
   import { Message } from 'bkui-vue';
   import { ITemplateBoundByAppData } from '../../../../../../../../../types/config'
   import { IAllPkgsGroupBySpaceInBiz } from '../../../../../../../../../types/template'
-  import { importTemplateConfigPkgs, updateTemplateConfigPkgs } from '../../../../../../../../api/config';
+  import { checkAppTemplateBinding, importTemplateConfigPkgs, updateTemplateConfigPkgs } from '../../../../../../../../api/config';
   import { getAllPackagesGroupBySpace, getAppPkgBindingRelations } from '../../../../../../../../api/template';
   import PkgTree from './pkg-tree.vue';
   import PkgTemplatesTable from './pkg-templates-table.vue';
@@ -27,14 +27,20 @@
   const importedPkgs = ref<ITemplateBoundByAppData[]>([])
   const selectedPkgs = ref<ITemplateBoundByAppData[]>([])
   const pending = ref(false)
+  const conflictDetail = ref<{[key: number]: number[]}>([])
+
+  const hasConflict = computed(() =>{
+    return selectedPkgs.value.some(pkg => conflictDetail.value[pkg.template_set_id])
+  })
 
   const isImportBtnDisabled = computed(() => {
-    return pkgListLoading.value || (importedPkgs.value.length + selectedPkgs.value.length) === 0
+    return hasConflict.value || pkgListLoading.value || (importedPkgs.value.length + selectedPkgs.value.length) === 0
   })
 
   watch(() => props.show, async(val) => {
     if (val) {
       bindingId.value = 0
+      conflictDetail.value = []
       importedPkgs.value = []
       selectedPkgs.value = []
       getImportedPkgsData()
@@ -58,7 +64,7 @@
 
   const getPkgList = async () => {
     pkgListLoading.value = true
-    const res = await getAllPackagesGroupBySpace(props.bkBizId)
+    const res = await getAllPackagesGroupBySpace(props.bkBizId, { app_id: props.appId })
     pkgList.value = res.details
     pkgListLoading.value = false
   }
@@ -113,6 +119,11 @@
   const handleImportConfirm = async () => {
     try {
       pending.value = true
+      conflictDetail.value = await checkAppTemplateBinding(props.bkBizId, props.appId, { bindings: selectedPkgs.value.concat(importedPkgs.value) })
+      if (hasConflict.value) {
+        pending.value = false
+        return
+      }
       if (bindingId.value) {
         await updateTemplateConfigPkgs(props.bkBizId, props.appId, bindingId.value, { bindings: selectedPkgs.value.concat(importedPkgs.value) })
       } else {
@@ -167,6 +178,7 @@
               :pkg-list="pkgList"
               :pkg-id="pkg.template_set_id"
               :selected-versions="pkg.template_revisions"
+              :conflict-tpls="conflictDetail[pkg.template_set_id] || []"
               @delete="handleDeletePkg"
               @select-version="handleSelectTplVersion(pkg.template_set_id, $event, 'new')"
               @update-versions="handleUpdateTplsVersions(pkg.template_set_id, $event, 'new')" />
@@ -191,9 +203,12 @@
       </div>
     </div>
     <template #footer>
-      <div class="action-btns">
-        <bk-button theme="primary" :disabled="isImportBtnDisabled" :loading="pending" @click="handleImportConfirm">导入</bk-button>
-        <bk-button @click="close">取消</bk-button>
+      <div class="footer-wrapper">
+        <p v-if="hasConflict" class="conflict-tip">检测到模板冲突，无法导入</p>
+        <div class="action-btns">
+          <bk-button theme="primary" :disabled="isImportBtnDisabled" :loading="pending" @click="handleImportConfirm">导入</bk-button>
+          <bk-button @click="close">取消</bk-button>
+        </div>
       </div>
     </template>
   </bk-dialog>
@@ -255,6 +270,21 @@
       }
     }
   }
+  .footer-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    .conflict-tip {
+      margin: 0 12px 0 0;
+      font-size: 12px;
+      color: #ff9c01;
+    }
+    .action-btns {
+      .bk-button:not(:last-child) {
+        margin-right: 8px;
+      }
+    }
+  }
 </style>
 <style lang="scss">
   .import-template-config-dialog.bk-dialog-wrapper {
@@ -264,11 +294,6 @@
     }
     .bk-modal-content {
       padding: 0;
-    }
-    .action-btns {
-      .bk-button:not(:last-child) {
-        margin-right: 8px;
-      }
     }
   }
 </style>

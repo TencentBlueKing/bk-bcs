@@ -4,6 +4,7 @@
   import InfoBox from 'bkui-vue/lib/info-box';
   import BkMessage from 'bkui-vue/lib/message';
   import { storeToRefs } from 'pinia'
+  import { useGlobalStore } from '../../../../../../store/global'
   import { IGroupToPublish } from '../../../../../../../types/group';
   import { useServiceStore } from '../../../../../../store/service'
   import { useConfigStore } from '../../../../../../store/config'
@@ -13,6 +14,7 @@
   import SelectGroup from './select-group/index.vue'
   import VersionDiff from '../../config/components/version-diff/index.vue';
 
+  const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore())
   const serviceStore = useServiceStore()
   const versionStore = useConfigStore()
   const { appData } = storeToRefs(serviceStore)
@@ -68,7 +70,7 @@
     if (hasPublishVersionPerm.value) {
       isSelectGroupPanelOpen.value = true
     } else {
-      permissionQuery.value = permissionQueryResource.value
+      permissionQuery.value = { resources: permissionQueryResource.value }
       showApplyPermDialog.value = true
     }
   }

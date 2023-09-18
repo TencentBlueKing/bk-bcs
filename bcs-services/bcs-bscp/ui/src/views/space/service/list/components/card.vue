@@ -6,6 +6,7 @@
   import { InfoBox } from 'bkui-vue/lib'
   import { useGlobalStore } from '../../../../../store/global'
   import { IAppItem } from '../../../../../../types/app'
+  import { IPermissionQueryResourceItem } from '../../../../../../types/index'
   import { deleteApp } from "../../../../../api";
 
   const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore())
@@ -64,7 +65,7 @@
     openPermApplyDialog(query)
   }
 
-  const openPermApplyDialog = (query) => {
+  const openPermApplyDialog = (query: { resources: IPermissionQueryResourceItem[] }) => {
     permissionQuery.value = query
     showApplyPermDialog.value = true
   }

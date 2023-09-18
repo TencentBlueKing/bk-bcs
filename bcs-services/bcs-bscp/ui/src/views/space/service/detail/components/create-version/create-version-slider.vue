@@ -76,7 +76,9 @@
 
   const handleOpenDiff = async() => {
     await formRef.value.validate()
-    await tableRef.value.validate()
+    if (!tableRef.value.validate()) {
+      return
+    }
     emits('open-diff', variableList.value)
   }
 

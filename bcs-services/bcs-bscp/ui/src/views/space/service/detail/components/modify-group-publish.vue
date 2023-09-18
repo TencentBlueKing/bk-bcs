@@ -4,6 +4,7 @@
   import InfoBox from 'bkui-vue/lib/info-box';
   import BkMessage from 'bkui-vue/lib/message';
   import { storeToRefs } from 'pinia'
+  import { useGlobalStore } from '../../../../../store/global'
   import { useServiceStore } from '../../../../../store/service'
   import { useConfigStore } from '../../../../../store/config'
   import { IGroupToPublish } from '../../../../../../types/group';
@@ -13,6 +14,7 @@
   import SelectGroup from './publish-version/select-group/index.vue'
   import VersionDiff from '../config/components/version-diff/index.vue';
 
+  const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore())
   const serviceStore = useServiceStore()
   const versionStore = useConfigStore()
   const { appData } = storeToRefs(serviceStore)
@@ -72,7 +74,7 @@
     if (hasPublishVersionPerm.value) {
       openSelectGroupPanel()
     } else {
-      permissionQuery.value = permissionQueryResource.value
+      permissionQuery.value = { resources: permissionQueryResource.value }
       showApplyPermDialog.value = true
     }
   }
@@ -139,7 +141,7 @@
           theme="primary"
           :class="['trigger-button', { 'bk-button-with-no-perm': !permCheckLoading && hasPublishVersionPerm }]"
           :disabled="permCheckLoading"
-          @click="handleOpenSelectGroupPanel">
+          @click="handleBtnClick">
           调整分组上线
         </bk-button>
         <Teleport to="body">
