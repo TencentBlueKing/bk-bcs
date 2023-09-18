@@ -7,9 +7,10 @@
   </div>
 </template>
 <script>
-import assign from 'nano-assign';
-import monokaiTheme from './theme.json';
 import * as monaco from 'monaco-editor';
+import assign from 'nano-assign';
+
+import monokaiTheme from './theme.json';
 
 export default {
   name: 'MonacoEditor',

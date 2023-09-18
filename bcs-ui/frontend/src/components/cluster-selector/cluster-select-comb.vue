@@ -25,7 +25,8 @@
   </div>
 </template>
 <script lang="ts">
-import { PropType, defineComponent } from 'vue';
+import { defineComponent, PropType } from 'vue';
+
 import ClusterSelect from './cluster-select.vue';
 import { ClusterType } from './use-cluster-selector';
 

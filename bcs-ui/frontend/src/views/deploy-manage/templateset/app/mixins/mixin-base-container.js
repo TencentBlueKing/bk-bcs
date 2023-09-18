@@ -25,17 +25,17 @@
 */
 /* eslint-disable @typescript-eslint/prefer-optional-chain */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { Decimal } from 'decimal.js';
+import moment from 'moment';
 import ECharts from 'vue-echarts/components/ECharts.vue';
+
+import { createChartOption } from '../container-chart-opts';
+
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
-import moment from 'moment';
-import { Decimal } from 'decimal.js';
-
 import { containerDetailChart } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
-
-import { createChartOption } from '../container-chart-opts';
 
 export default {
   props: {

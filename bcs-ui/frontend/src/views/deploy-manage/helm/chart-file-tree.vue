@@ -42,9 +42,10 @@
   </bcs-resize-layout>
 </template>
 <script lang="ts">
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import { defineComponent, ref, computed, toRefs, watch } from 'vue';
+import { computed, defineComponent, ref, toRefs, watch } from 'vue';
+
 import { path2Tree } from '@/common/util';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 
 export default defineComponent({
   name: 'ChartFileTree',

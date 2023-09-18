@@ -25,10 +25,12 @@
 </template>
 <script lang="ts">
 import {  computed, defineComponent, ref, toRefs, watch } from 'vue';
-import DetailItem from '@/components/layout/DetailItem.vue';
+
 import ChartFileTree from './chart-file-tree.vue';
-import BcsMd from '@/components/bcs-md/index.vue';
 import useHelm from './use-helm';
+
+import BcsMd from '@/components/bcs-md/index.vue';
+import DetailItem from '@/components/layout/DetailItem.vue';
 
 export default defineComponent({
   name: 'ChartDetail',

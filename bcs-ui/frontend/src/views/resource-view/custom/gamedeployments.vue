@@ -102,6 +102,7 @@
 </template>
 <script>
 import { defineComponent } from 'vue';
+
 import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({

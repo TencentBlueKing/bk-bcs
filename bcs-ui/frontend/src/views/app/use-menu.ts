@@ -1,8 +1,10 @@
-import menusData, { IMenu } from './menus';
-import { useCluster, useConfig, useAppData } from '@/composables/use-app';
-import { computed } from 'vue';
 import { has } from 'lodash';
+import { computed } from 'vue';
 import { Route } from 'vue-router';
+
+import menusData, { IMenu } from './menus';
+
+import { useAppData, useCluster, useConfig } from '@/composables/use-app';
 
 export default function useMenu() {
   const parseTreeMenuToMap = (menus: IMenu[], initialValue = {}, parent?: IMenu) => (

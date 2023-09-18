@@ -48,9 +48,10 @@
 </template>
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import $i18n from '@/i18n/i18n-setup';
-import StatusIcon from '@/components/status-icon';
+
 import LoadingIcon from '@/components/loading-icon.vue';
+import StatusIcon from '@/components/status-icon';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 
 export default defineComponent({

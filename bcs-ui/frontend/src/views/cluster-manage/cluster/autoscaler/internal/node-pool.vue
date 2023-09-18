@@ -23,17 +23,19 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, toRefs } from 'vue';
-import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
-import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
-import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
-import $i18n from '@/i18n/i18n-setup';
-import NodePoolInfo from './node-pool-info.vue';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+
 import NodeConfig from './node-config.vue';
+import NodePoolInfo from './node-pool-info.vue';
+
+import { mergeDeep } from '@/common/util';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 import $store from '@/store/index';
 import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
-import { mergeDeep } from '@/common/util';
-import $router from '@/router';
+import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
+import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
+import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 
 export default defineComponent({
   components: {

@@ -1,15 +1,16 @@
+import { ref } from 'vue';
+
+import { dashbordList } from '@/api/modules/cluster-resource';
 import {
+  batchDeleteServiceMonitor,
+  createServiceMonitor,
+  deleteServiceMonitor,
   getServiceMonitor,
   getServiceMonitorDetail,
-  createServiceMonitor,
   updateServiceMonitor,
-  deleteServiceMonitor,
-  batchDeleteServiceMonitor,
 } from '@/api/modules/monitor';
-import { dashbordList } from '@/api/modules/cluster-resource';
 import $bkMessage from '@/common/bkmagic';
 import $i18n from '@/i18n/i18n-setup';
-import { ref } from 'vue';
 
 export interface IMetricData {
   'service_name': string

@@ -166,7 +166,8 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch, computed, toRefs, onMounted, set } from 'vue';
+import { computed, defineComponent, onMounted, ref, set, toRefs, watch } from 'vue';
+
 import useInterval from '@/composables/use-interval';
 import $store from '@/store/index';
 

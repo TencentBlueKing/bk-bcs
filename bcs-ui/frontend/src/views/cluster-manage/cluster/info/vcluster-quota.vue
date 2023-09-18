@@ -16,6 +16,7 @@
 </template>
 <script lang="ts" setup>
 import { computed } from 'vue';
+
 import { useClusterList } from '../use-cluster';
 
 const props = defineProps({

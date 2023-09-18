@@ -785,11 +785,12 @@
 /* eslint-disable no-prototype-builtins */
 /* eslint-disable @typescript-eslint/prefer-optional-chain */
 /* eslint-disable @typescript-eslint/no-this-alias */
+import bkExpression from './expression';
+
 import { catchErrorHandler } from '@/common/util';
 import bkKeyer from '@/components/keyer';
-import bkExpression from './expression';
-import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
 import Header from '@/components/layout/Header.vue';
+import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 export default {
   components: {

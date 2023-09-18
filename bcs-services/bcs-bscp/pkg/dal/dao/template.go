@@ -182,7 +182,7 @@ func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s sear
 		}
 	}
 
-	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...)
+	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...).Order(m.Name)
 	if opt.All {
 		result, err := d.Find()
 		if err != nil {

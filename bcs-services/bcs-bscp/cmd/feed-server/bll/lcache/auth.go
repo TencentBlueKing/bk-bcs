@@ -78,7 +78,7 @@ func (au *Auth) Authorize(kt *kit.Kit, res *meta.ResourceAttribute) (bool, error
 
 	start := time.Now()
 
-	_, authorized, err := au.authorizer.Authorize(kt, res)
+	_, authorized, err := au.authorizer.AuthorizeDecision(kt, res)
 	if err != nil {
 		au.mc.errCounter.With(prometheus.Labels{"resource": "auth", "biz": tools.Itoa(res.BizID)}).Inc()
 		return false, err

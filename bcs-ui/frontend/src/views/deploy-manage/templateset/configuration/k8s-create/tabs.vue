@@ -99,8 +99,9 @@
 </template>
 <script>
 import Clipboard from 'clipboard';
-import clickoutside from '@/directives/clickoutside';
+
 import { catchErrorHandler } from '@/common/util';
+import clickoutside from '@/directives/clickoutside';
 
 export default {
   name: 'K8STabs',

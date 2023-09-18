@@ -56,9 +56,8 @@
 </template>
 
 <script>
-import MonacoEditor from '@/components/monaco-editor/editor.vue';
-
 import { catchErrorHandler } from '@/common/util';
+import MonacoEditor from '@/components/monaco-editor/editor.vue';
 
 export default {
   components: {

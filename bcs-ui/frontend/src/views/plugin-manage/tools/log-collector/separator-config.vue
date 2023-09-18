@@ -57,6 +57,7 @@
 </template>
 <script setup lang="ts">
 import { PropType, ref, watch } from 'vue';
+
 import { ISeparatorFilter } from './use-log';
 
 const props = defineProps({

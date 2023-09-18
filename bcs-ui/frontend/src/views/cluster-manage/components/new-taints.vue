@@ -60,8 +60,9 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, ref, watch } from 'vue';
-import Validate from '@/components/validate.vue';
+
 import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
+import Validate from '@/components/validate.vue';
 
 interface ITaint {
   key: string;

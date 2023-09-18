@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import VueI18n from 'vue-i18n';
+
 import { CLUSTER_NODE_TABLE_COL } from '@/common/constant';
 
 export interface IField {

@@ -1,23 +1,26 @@
 /* eslint-disable camelcase */
-import { defineComponent, computed, ref, watch, onMounted, toRefs } from 'vue';
-import { useSelectItemsNamespace } from '../namespace/use-namespace';
+import yamljs from 'js-yaml';
+import jp from 'jsonpath';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
+
 import usePage from '../../../composables/use-page';
+import { useSelectItemsNamespace } from '../namespace/use-namespace';
+
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
 import useTableData from './use-table-data';
-import { padIPv6 } from '@/common/util';
-import yamljs from 'js-yaml';
+
 import './base-layout.css';
-import fullScreen from '@/directives/full-screen';
-import { CUR_SELECT_CRD } from '@/common/constant';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import Header from '@/components/layout/Header.vue';
-import jp from 'jsonpath';
-import useTableSort from '@/composables/use-table-sort';
-import $store from '@/store';
-import $i18n from '@/i18n/i18n-setup';
 import $bkMessage from '@/common/bkmagic';
+import { CUR_SELECT_CRD } from '@/common/constant';
+import { padIPv6 } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import Header from '@/components/layout/Header.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import useTableSort from '@/composables/use-table-sort';
+import fullScreen from '@/directives/full-screen';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'BaseLayout',

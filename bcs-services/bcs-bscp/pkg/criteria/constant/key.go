@@ -34,6 +34,7 @@ const (
 	SpaceIDKey     = "X-Bkapi-Space-Id"
 	SpaceTypeIDKey = "X-Bkapi-Space-Type-Id"
 	BizIDKey       = "X-Bkapi-Biz-Id"
+	AppIDKey       = "X-Bkapi-App-Id"
 
 	// LanguageKey the language key word.
 	LanguageKey = "HTTP_BLUEKING_LANGUAGE"
@@ -59,6 +60,9 @@ const (
 
 	// TemplateVariablePrefix is the prefix for template variable name
 	TemplateVariablePrefix = "bk_bscp_"
+
+	// MaxRenderBytes is the max bytes to render for template config which is 2MB
+	MaxRenderBytes = 2 * 1024 * 1024
 )
 
 // default resource
@@ -101,4 +105,16 @@ var (
 		RidKey,
 		RidKeyGeneric,
 	}
+)
+
+// 文件状态，未命名版本服务配置项相比上一个版本的变化
+const (
+	// FileStateAdd 增加
+	FileStateAdd = "ADD"
+	// FileStateDelete 删除
+	FileStateDelete = "DELETE"
+	// FileStateRevise 修改
+	FileStateRevise = "REVISE"
+	// FileStateUnchange 不变
+	FileStateUnchange = "UNCHANGE"
 )

@@ -1,4 +1,4 @@
-import { Ref, ref, onUnmounted, getCurrentInstance, onDeactivated, onBeforeUnmount } from 'vue';
+import { getCurrentInstance, onBeforeUnmount, onDeactivated, onUnmounted, Ref, ref } from 'vue';
 
 export type Fn = () => void;
 

@@ -42,6 +42,7 @@ const (
 	Data_DeleteConfigItem_FullMethodName                           = "/pbds.Data/DeleteConfigItem"
 	Data_GetConfigItem_FullMethodName                              = "/pbds.Data/GetConfigItem"
 	Data_ListConfigItems_FullMethodName                            = "/pbds.Data/ListConfigItems"
+	Data_ListReleasedConfigItems_FullMethodName                    = "/pbds.Data/ListReleasedConfigItems"
 	Data_ListConfigItemCount_FullMethodName                        = "/pbds.Data/ListConfigItemCount"
 	Data_UpdateConfigHook_FullMethodName                           = "/pbds.Data/UpdateConfigHook"
 	Data_CreateContent_FullMethodName                              = "/pbds.Data/CreateContent"
@@ -103,6 +104,7 @@ const (
 	Data_DeleteAppTemplateBinding_FullMethodName                   = "/pbds.Data/DeleteAppTemplateBinding"
 	Data_ListAppBoundTemplateRevisions_FullMethodName              = "/pbds.Data/ListAppBoundTemplateRevisions"
 	Data_ListReleasedAppBoundTemplateRevisions_FullMethodName      = "/pbds.Data/ListReleasedAppBoundTemplateRevisions"
+	Data_CheckAppTemplateBinding_FullMethodName                    = "/pbds.Data/CheckAppTemplateBinding"
 	Data_ExtractAppTemplateVariables_FullMethodName                = "/pbds.Data/ExtractAppTemplateVariables"
 	Data_GetAppTemplateVariableReferences_FullMethodName           = "/pbds.Data/GetAppTemplateVariableReferences"
 	Data_GetReleasedAppTemplateVariableReferences_FullMethodName   = "/pbds.Data/GetReleasedAppTemplateVariableReferences"
@@ -167,6 +169,7 @@ type DataClient interface {
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*config_item.ConfigItem, error)
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
+	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
 	// config hook related interface.
 	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
@@ -240,6 +243,7 @@ type DataClient interface {
 	DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListAppBoundTemplateRevisions(ctx context.Context, in *ListAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTemplateRevisionsResp, error)
 	ListReleasedAppBoundTemplateRevisions(ctx context.Context, in *ListReleasedAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListReleasedAppBoundTemplateRevisionsResp, error)
+	CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error)
 	// app template variables related interface.
 	ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(ctx context.Context, in *GetAppTemplateVariableReferencesReq, opts ...grpc.CallOption) (*GetAppTemplateVariableReferencesResp, error)
@@ -422,6 +426,15 @@ func (c *dataClient) GetConfigItem(ctx context.Context, in *GetConfigItemReq, op
 func (c *dataClient) ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error) {
 	out := new(ListConfigItemsResp)
 	err := c.cc.Invoke(ctx, Data_ListConfigItems_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error) {
+	out := new(ListReleasedConfigItemsResp)
+	err := c.cc.Invoke(ctx, Data_ListReleasedConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -977,6 +990,15 @@ func (c *dataClient) ListReleasedAppBoundTemplateRevisions(ctx context.Context, 
 	return out, nil
 }
 
+func (c *dataClient) CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error) {
+	out := new(CheckAppTemplateBindingResp)
+	err := c.cc.Invoke(ctx, Data_CheckAppTemplateBinding_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ExtractAppTemplateVariables(ctx context.Context, in *ExtractAppTemplateVariablesReq, opts ...grpc.CallOption) (*ExtractAppTemplateVariablesResp, error) {
 	out := new(ExtractAppTemplateVariablesResp)
 	err := c.cc.Invoke(ctx, Data_ExtractAppTemplateVariables_FullMethodName, in, out, opts...)
@@ -1375,6 +1397,7 @@ type DataServer interface {
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*base.EmptyResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*config_item.ConfigItem, error)
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
+	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
 	// config hook related interface.
 	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*base.EmptyResp, error)
@@ -1448,6 +1471,7 @@ type DataServer interface {
 	DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*base.EmptyResp, error)
 	ListAppBoundTemplateRevisions(context.Context, *ListAppBoundTemplateRevisionsReq) (*ListAppBoundTemplateRevisionsResp, error)
 	ListReleasedAppBoundTemplateRevisions(context.Context, *ListReleasedAppBoundTemplateRevisionsReq) (*ListReleasedAppBoundTemplateRevisionsResp, error)
+	CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error)
 	// app template variables related interface.
 	ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error)
 	GetAppTemplateVariableReferences(context.Context, *GetAppTemplateVariableReferencesReq) (*GetAppTemplateVariableReferencesResp, error)
@@ -1547,6 +1571,9 @@ func (UnimplementedDataServer) GetConfigItem(context.Context, *GetConfigItemReq)
 }
 func (UnimplementedDataServer) ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItems not implemented")
+}
+func (UnimplementedDataServer) ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedConfigItems not implemented")
 }
 func (UnimplementedDataServer) ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemCount not implemented")
@@ -1730,6 +1757,9 @@ func (UnimplementedDataServer) ListAppBoundTemplateRevisions(context.Context, *L
 }
 func (UnimplementedDataServer) ListReleasedAppBoundTemplateRevisions(context.Context, *ListReleasedAppBoundTemplateRevisionsReq) (*ListReleasedAppBoundTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedAppBoundTemplateRevisions not implemented")
+}
+func (UnimplementedDataServer) CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckAppTemplateBinding not implemented")
 }
 func (UnimplementedDataServer) ExtractAppTemplateVariables(context.Context, *ExtractAppTemplateVariablesReq) (*ExtractAppTemplateVariablesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExtractAppTemplateVariables not implemented")
@@ -2117,6 +2147,24 @@ func _Data_ListConfigItems_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListConfigItems(ctx, req.(*ListConfigItemsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListReleasedConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReleasedConfigItemsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListReleasedConfigItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListReleasedConfigItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListReleasedConfigItems(ctx, req.(*ListReleasedConfigItemsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3219,6 +3267,24 @@ func _Data_ListReleasedAppBoundTemplateRevisions_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CheckAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckAppTemplateBindingReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CheckAppTemplateBinding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CheckAppTemplateBinding_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CheckAppTemplateBinding(ctx, req.(*CheckAppTemplateBindingReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ExtractAppTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ExtractAppTemplateVariablesReq)
 	if err := dec(in); err != nil {
@@ -4039,6 +4105,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListConfigItems_Handler,
 		},
 		{
+			MethodName: "ListReleasedConfigItems",
+			Handler:    _Data_ListReleasedConfigItems_Handler,
+		},
+		{
 			MethodName: "ListConfigItemCount",
 			Handler:    _Data_ListConfigItemCount_Handler,
 		},
@@ -4281,6 +4351,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListReleasedAppBoundTemplateRevisions",
 			Handler:    _Data_ListReleasedAppBoundTemplateRevisions_Handler,
+		},
+		{
+			MethodName: "CheckAppTemplateBinding",
+			Handler:    _Data_CheckAppTemplateBinding_Handler,
 		},
 		{
 			MethodName: "ExtractAppTemplateVariables",

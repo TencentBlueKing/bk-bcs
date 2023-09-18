@@ -64,3 +64,9 @@ type ListConfigItemDetails struct {
 	Count   uint32              `json:"count"`
 	Details []*table.ConfigItem `json:"details"`
 }
+
+// CIUniqueKey defines struct of unique key of config item.
+type CIUniqueKey struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+}

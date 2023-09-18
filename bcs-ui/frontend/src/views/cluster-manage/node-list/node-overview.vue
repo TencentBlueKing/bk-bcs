@@ -234,26 +234,27 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, toRefs, computed } from 'vue';
-import BcsContent from '@/components/layout/Content.vue';
-import $i18n from '@/i18n/i18n-setup';
-import { formatBytes } from '@/common/util';
-import { clusterNodeInfo } from '@/api/modules/monitor';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+
 import { fetchNodePodsData } from '@/api/modules/cluster-resource';
-import { useProject } from '@/composables/use-app';
-import Metric from '@/components/metric.vue';
-import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
-import Row from '@/components/layout/Row.vue';
-import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
-import useSearch from '@/composables/use-search';
-import usePage from '@/composables/use-page';
+import { clusterNodeInfo } from '@/api/modules/monitor';
+import $bkMessage from '@/common/bkmagic';
+import { formatBytes } from '@/common/util';
 import BcsLog from '@/components/bcs-log/log-dialog.vue';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
+import Metric from '@/components/metric.vue';
+import StatusIcon from '@/components/status-icon';
+import { useProject } from '@/composables/use-app';
+import usePage from '@/composables/use-page';
+import useSearch from '@/composables/use-search';
+import useTableSort from '@/composables/use-table-sort';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router/index';
 import $store from '@/store';
-import StatusIcon from '@/components/status-icon';
-import useTableSort from '@/composables/use-table-sort';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import $bkMessage from '@/common/bkmagic';
+import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
+import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 export default defineComponent({
   name: 'NodeOverview',

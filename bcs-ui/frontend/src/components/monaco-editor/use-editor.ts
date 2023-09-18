@@ -1,5 +1,6 @@
-import { ref } from 'vue';
 import * as monaco from 'monaco-editor';
+import { ref } from 'vue';
+
 import BcsEditorTheme from './theme.json';
 
 // 初始化内置主题

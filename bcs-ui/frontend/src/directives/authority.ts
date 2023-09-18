@@ -1,12 +1,13 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-unused-expressions */
-import { DirectiveBinding } from 'vue/types/options';
-import { VueConstructor, VNode } from 'vue';
-import { bus } from '@/common/bus';
 import bkTooltips from 'bk-magic-vue/lib/directives/tooltips';
+import { VNode, VueConstructor } from 'vue';
+import { DirectiveBinding } from 'vue/types/options';
+
 import {  userPerms, userPermsByAction } from '@/api/modules/user-manager';
-import { deepEqual } from '@/common/util';
 import  { messageInfo } from '@/common/bkmagic';
+import { bus } from '@/common/bus';
+import { deepEqual } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
 interface IElement extends HTMLElement {
   [prop: string]: any;

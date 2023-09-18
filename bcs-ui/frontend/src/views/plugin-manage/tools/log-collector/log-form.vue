@@ -278,19 +278,21 @@
   </bk-form>
 </template>
 <script setup lang="ts">
-import { PropType, computed, onBeforeMount, onMounted, ref, watch } from 'vue';
-import $i18n from '@/i18n/i18n-setup';
-import Row from '@/components/layout/Row.vue';
-import PopoverSelector from '@/components/popover-selector.vue';
+import { cloneDeep, isEqual } from 'lodash';
+import { computed, onBeforeMount, onMounted, PropType, ref, watch } from 'vue';
+
+import KeyValue from './key-value.vue';
 import LogPanel from './log-panel.vue';
 import SeparatorConfig from './separator-config.vue';
-import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
 import useLog, { IRuleData } from './use-log';
+
 import { ENCODE_LIST } from '@/common/constant';
-import { cloneDeep, isEqual } from 'lodash';
+import Row from '@/components/layout/Row.vue';
+import PopoverSelector from '@/components/popover-selector.vue';
 import { useCluster } from '@/composables/use-app';
-import KeyValue from './key-value.vue';
 import useFormLabel from '@/composables/use-form-label';
+import $i18n from '@/i18n/i18n-setup';
+import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 const props = defineProps({
   clusterId: {

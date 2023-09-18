@@ -117,8 +117,8 @@ type ReleasedAppTemplateSpec struct {
 	Privilege            string `json:"privilege" gorm:"column:privilege"`
 	Signature            string `json:"signature" gorm:"column:signature"`
 	ByteSize             uint64 `json:"byte_size" gorm:"column:byte_size"`
-	RenderedSignature    string `json:"rendered_signature" gorm:"column:rendered_signature"`
-	RenderedByteSize     uint64 `json:"rendered_byte_size" gorm:"column:rendered_byte_size"`
+	OriginSignature      string `json:"origin_signature" gorm:"column:origin_signature"`
+	OriginByteSize       uint64 `json:"origin_byte_size" gorm:"column:origin_byte_size"`
 }
 
 // ValidateCreate validate ReleasedAppTemplate spec when it is created.

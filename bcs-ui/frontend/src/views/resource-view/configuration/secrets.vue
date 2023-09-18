@@ -76,7 +76,9 @@
 </template>
 <script>
 import { defineComponent } from 'vue';
+
 import SecretsDetail from './secrets-detail.vue';
+
 import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({

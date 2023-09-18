@@ -137,25 +137,28 @@
 
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, ref, computed, onMounted, set } from 'vue';
-import { useClusterList, useClusterOverview, useClusterOperate, useTask, useVCluster } from './use-cluster';
-import { useCluster, useProject } from '@/composables/use-app';
-import useSearch from '@/composables/use-search';
+import { computed, defineComponent, onMounted, ref, set } from 'vue';
+
 import ApplyHost from '../components/apply-host.vue';
-import ProjectConfig from '@/views/project-manage/project/project-config.vue';
-import ConfirmDialog from '@/components/comfirm-dialog.vue';
-import TaskList from '@/views/cluster-manage/components/task-list.vue';
-import Header from '@/components/layout/Header.vue';
-import ClusterGuide from '@/views/app/cluster-guide.vue';
-import Row from '@/components/layout/Row.vue';
-import ListMode from './cluster-list.vue';
+
 import CardMode from './cluster-card.vue';
-import useNode from '@/views/cluster-manage/node-list/use-node';
-import $store from '@/store';
-import $router from '@/router';
-import $i18n from '@/i18n/i18n-setup';
+import ListMode from './cluster-list.vue';
+import { useClusterList, useClusterOperate, useClusterOverview, useTask, useVCluster } from './use-cluster';
+
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import ConfirmDialog from '@/components/comfirm-dialog.vue';
+import Header from '@/components/layout/Header.vue';
+import Row from '@/components/layout/Row.vue';
+import { useCluster, useProject } from '@/composables/use-app';
+import useSearch from '@/composables/use-search';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
+import ClusterGuide from '@/views/app/cluster-guide.vue';
+import TaskList from '@/views/cluster-manage/components/task-list.vue';
+import useNode from '@/views/cluster-manage/node-list/use-node';
+import ProjectConfig from '@/views/project-manage/project/project-config.vue';
 
 export default defineComponent({
   name: 'ClusterOverview',

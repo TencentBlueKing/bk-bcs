@@ -98,6 +98,7 @@
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue';
+
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 
 export default defineComponent({

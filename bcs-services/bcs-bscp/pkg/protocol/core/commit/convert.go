@@ -44,6 +44,32 @@ func PbCommitSpec(spec *table.CommitSpec) *CommitSpec {
 	}
 }
 
+// ReleasedCommitSpec convert pb ReleasedCommitSpec to table ReleasedCommitSpec
+func (m *ReleasedCommitSpec) ReleasedCommitSpec() *table.ReleasedCommitSpec {
+	if m == nil {
+		return nil
+	}
+
+	return &table.ReleasedCommitSpec{
+		ContentID: m.ContentId,
+		Memo:      m.Memo,
+		Content:   m.Content.ReleasedContentSpec(),
+	}
+}
+
+// PbReleasedCommitSpec convert table ReleasedCommitSpec to pb ReleasedCommitSpec
+func PbReleasedCommitSpec(spec *table.ReleasedCommitSpec) *ReleasedCommitSpec {
+	if spec == nil {
+		return nil
+	}
+
+	return &ReleasedCommitSpec{
+		ContentId: spec.ContentID,
+		Memo:      spec.Memo,
+		Content:   pbcontent.PbReleasedContentSpec(spec.Content),
+	}
+}
+
 // CommitAttachment convert pb CommitAttachment to table CommitAttachment
 func (m *CommitAttachment) CommitAttachment() *table.CommitAttachment {
 	if m == nil {

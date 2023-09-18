@@ -47,8 +47,9 @@
 </template>
 
 <script>
-import lockSvg from '@/images/lock-radius.svg';
 import actionsMap from './actions-map';
+
+import lockSvg from '@/images/lock-radius.svg';
 export default {
   name: 'ApplyPerm',
   data() {

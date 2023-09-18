@@ -11,7 +11,8 @@
   import BatchAddTo from '../operations/add-to-pkgs/add-to-button.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
-  const { currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
+  const templateStore = useTemplateStore()
+  const { currentTemplateSpace } = storeToRefs(templateStore)
 
   const configTable = ref()
   const selectedConfigs = ref<ITemplateConfigItem[]>([])
@@ -21,8 +22,15 @@
     return getTemplatesBySpaceId(spaceId.value, currentTemplateSpace.value, params)
   }
 
-  const handleAdded = () => {
+  const refreshConfigList = () => {
     configTable.value.refreshList()
+    updateRefreshFlag()
+  }
+
+  const updateRefreshFlag = () => {
+    templateStore.$patch(state => {
+      state.needRefreshMenuFlag = true
+    })
   }
 
 </script>
@@ -36,8 +44,8 @@
     :current-template-space="currentTemplateSpace"
     :get-config-list="getConfigList">
     <template #tableOperations>
-      <AddConfigs @added="handleAdded" />
-      <BatchAddTo :configs="selectedConfigs" @added="handleAdded" />
+      <AddConfigs @refresh="refreshConfigList" />
+      <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
     </template>
   </CommonConfigTable>
 </template>

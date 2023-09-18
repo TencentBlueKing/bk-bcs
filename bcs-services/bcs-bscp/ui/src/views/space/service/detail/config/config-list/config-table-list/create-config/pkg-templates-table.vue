@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-  import { ref, onMounted, watch } from 'vue'
-  import { RightShape, Close } from 'bkui-vue/lib/icon'
+  import { ref, onMounted } from 'vue'
+  import { RightShape, ExclamationCircleShape , Close } from 'bkui-vue/lib/icon'
   import { IAllPkgsGroupBySpaceInBiz, ITemplateConfigItem, ITemplateVersionsName } from '../../../../../../../../../types/template';
   import { getTemplatesByPackageId, getTemplateVersionsNameByIds } from '../../../../../../../../api/template';
 
@@ -9,13 +9,16 @@
     versions: { id: number; name: string; memo: string; isLatest: boolean; }[]
   }
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     bkBizId: string;
     pkgList: IAllPkgsGroupBySpaceInBiz[];
     pkgId: number;
     selectedVersions: { template_id: number; template_revision_id: number; is_latest: boolean; }[];
     disabled?: boolean;
-  }>()
+    conflictTpls?: number[]
+  }>(), {
+    conflictTpls: () => []
+  })
 
   const emits = defineEmits(['delete', 'expand', 'selectVersion', 'updateVersions'])
 
@@ -129,6 +132,12 @@
     <div class="header" @click="handleToggleExpand">
       <RightShape class="arrow-icon" />
       <span v-overflow-title class="name">{{ title }}</span>
+      <ExclamationCircleShape
+        v-if="props.conflictTpls.length > 0"
+        v-bk-tooltips="{
+          content: '检测到模板冲突，请先删除冲突套餐'
+        }"
+        class="conflict-icon" />
       <Close v-if="!props.disabled" class="close-icon" @click.stop="handleDeletePkg"/>
     </div>
     <table v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
@@ -141,7 +150,7 @@
       </thead>
       <tbody>
         <template v-if="configTemplateList.length > 0">
-          <tr v-for="tpl in configTemplateList" :key="tpl.id">
+          <tr v-for="tpl in configTemplateList" :key="tpl.id" :class="{'has-conflict': props.conflictTpls.includes(tpl.id)}">
             <td><div class="cell">{{ tpl.spec.name }}</div></td>
             <td><div class="cell">{{ tpl.spec.path }}</div></td>
             <td class="select-version">
@@ -205,10 +214,16 @@
     }
     .name {
       margin-left: 5px;
-      max-width: calc(100% - 40px);
+      max-width: calc(100% - 70px);
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
+    }
+    .conflict-icon {
+      margin-left: 10px;
+      font-size: 14px;
+      color: #ff9c01;
+      cursor: pointer;
     }
     .close-icon {
       position: absolute;
@@ -226,6 +241,16 @@
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    tr.has-conflict {
+      .cell {
+        background: #fff3e1;
+      }
+      .select-version {
+        :deep(.bk-input--text) {
+          background: #fff3e1;
+        }
+      }
+    }
     th,td {
       line-height: 20px;
       font-size: 12px;

@@ -10,6 +10,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+
 import BcsContent from '@/components/layout/Content.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';

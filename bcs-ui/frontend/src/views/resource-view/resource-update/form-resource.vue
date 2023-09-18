@@ -110,15 +110,18 @@
   </div>
 </template>
 <script>
+import yamljs from 'js-yaml';
+
 import createForm from '@blueking/bkui-form';
-import '@blueking/bkui-form/dist/bkui-form.css';
-import request from '@/api/request';
+
 import FixedButton from './fixed-button.vue';
+
+import '@blueking/bkui-form/dist/bkui-form.css';
 import { CR_API_URL } from '@/api/base';
+import request from '@/api/request';
+import Header from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
-import yamljs from 'js-yaml';
-import Header from '@/components/layout/Header.vue';
 
 const BKForm = createForm({
   namespace: 'bcs',

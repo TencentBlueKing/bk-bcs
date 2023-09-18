@@ -1,8 +1,9 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable camelcase */
-import { Ref, onBeforeUnmount, computed, toRef, reactive } from 'vue';
-import BCSWebSocket from '@/components/bcs-log/common/websocket';
+import { computed, onBeforeUnmount, reactive, Ref, toRef } from 'vue';
+
 import { crPrefix } from '@/api/base';
+import BCSWebSocket from '@/components/bcs-log/common/websocket';
 import $router from '@/router';
 export interface ISubscribeParams {
   kind: string;

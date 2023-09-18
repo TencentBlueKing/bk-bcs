@@ -467,26 +467,28 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch, computed, onMounted } from 'vue';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+
+import ChartFileTree from './chart-file-tree.vue';
+import useHelm from './use-helm';
+
+import $bkMessage from '@/common/bkmagic';
+import { copyText } from '@/common/util';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
-import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
-import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import StatusIcon from '@/components/status-icon';
-import useHelm from './use-helm';
-import usePageConf from '@/composables/use-page';
+import { useCluster, useProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
 import useInterval from '@/composables/use-interval';
-import { useCluster, useProject } from '@/composables/use-app';
-import { copyText } from '@/common/util';
+import usePageConf from '@/composables/use-page';
+import fullScreen from '@/directives/full-screen';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import $bkMessage from '@/common/bkmagic';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import fullScreen from '@/directives/full-screen';
-import ChartFileTree from './chart-file-tree.vue';
 
 export default defineComponent({
   name: 'ReleaseList',

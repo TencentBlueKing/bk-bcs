@@ -214,7 +214,7 @@ func (dao *templateSetDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, s s
 		}
 	}
 
-	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...)
+	d := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).Where(conds...).Order(m.Name)
 	if opt.All {
 		result, err := d.Find()
 		if err != nil {
@@ -408,6 +408,7 @@ func (dao *templateSetDao) ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([
 	return q.Where(m.BizID.Eq(bizID)).
 		Where(m.Public.Is(true)).
 		Or(rawgen.Cond(datatypes.JSONArrayQuery("bound_apps").Contains(appID))...).
+		Order(m.Name).
 		Find()
 }
 

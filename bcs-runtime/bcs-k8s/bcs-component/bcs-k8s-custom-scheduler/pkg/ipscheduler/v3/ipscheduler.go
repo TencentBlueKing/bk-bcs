@@ -11,18 +11,23 @@
  *
  */
 
+// NOCC:tosa/comment_ratio(none)
+
+// Package v3 scheduler for bcs-netservice-controller
 package v3
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/dynamic/dynamicinformer"
+	"k8s.io/client-go/dynamic/dynamiclister"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 
@@ -32,16 +37,50 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
 )
 
+const (
+	groupNetserviceController   = "netservice.bkbcs.tencent.com"
+	versionNetserviceController = "v1"
+	resourceBCSNetPool          = "bcsnetpools"
+	resourceBCSNetIP            = "bcsnetips"
+	resourceBCsNetIPClaim       = "bcsnetipclaims"
+)
+
+var (
+	bcsNetPoolGVR = schema.GroupVersionResource{
+		Group:    groupNetserviceController,
+		Version:  versionNetserviceController,
+		Resource: resourceBCSNetPool,
+	}
+	bcsNetIPGVR = schema.GroupVersionResource{
+		Group:    groupNetserviceController,
+		Version:  versionNetserviceController,
+		Resource: resourceBCSNetIP,
+	}
+	bcsNetIPClaimGVR = schema.GroupVersionResource{
+		Group:    groupNetserviceController,
+		Version:  versionNetserviceController,
+		Resource: resourceBCsNetIPClaim,
+	}
+	podGVR = schema.GroupVersionResource{
+		Group:    "",
+		Version:  "v1",
+		Resource: "pods",
+	}
+)
+
 // IpScheduler k8s scheduler extender api for bcs netservice
 type IpScheduler struct {
 	DynamicClient        dynamic.Interface
+	InformerFactory      dynamicinformer.DynamicSharedInformerFactory
+	PoolLister           dynamiclister.Lister
+	IPInformer           cache.SharedInformer
+	IPLister             dynamiclister.Lister
+	ClaimLister          dynamiclister.Lister
+	PodLister            dynamiclister.Lister
 	FixedIpAnnotationKey string
-}
 
-type netResource struct {
-	netClaim *BCSNetIPClaim
-	netIP    *BCSNetIP
-	netPool  *BCSNetPool
+	cache  *PoolCache
+	StopCh chan struct{}
 }
 
 // DefaultIpScheduler default v3 IP scheduler
@@ -60,19 +99,52 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 		blog.Errorf("error building kube config: %v", err)
 		return nil, fmt.Errorf("error building kube config: %v", err)
 	}
-
 	dynamicClient, err := dynamic.NewForConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("error building kubernetes dynamic client: %s", err.Error())
 	}
+	informerFactory := dynamicinformer.NewDynamicSharedInformerFactory(dynamicClient, 0)
+	poolInformer := informerFactory.ForResource(bcsNetPoolGVR).Informer()
+	ipInformer := informerFactory.ForResource(bcsNetIPGVR).Informer()
+	claimInformer := informerFactory.ForResource(bcsNetIPClaimGVR).Informer()
+	podInformer := informerFactory.ForResource(podGVR).Informer()
+	poolLister := dynamiclister.New(poolInformer.GetIndexer(), bcsNetPoolGVR)
+	ipLister := dynamiclister.New(ipInformer.GetIndexer(), bcsNetIPGVR)
+	claimLister := dynamiclister.New(claimInformer.GetIndexer(), bcsNetIPClaimGVR)
+	podLister := dynamiclister.New(podInformer.GetIndexer(), podGVR)
+
+	cache := NewPoolCache()
 	ipScheduler := &IpScheduler{
-		DynamicClient: dynamicClient,
+		InformerFactory: informerFactory,
+		DynamicClient:   dynamicClient,
+		PoolLister:      poolLister,
+		IPLister:        ipLister,
+		IPInformer:      ipInformer,
+		ClaimLister:     claimLister,
+		PodLister:       podLister,
+		cache:           cache,
+		StopCh:          make(chan struct{}),
 	}
 	if conf.FixedIpAnnotationKey != "" {
 		ipScheduler.FixedIpAnnotationKey = conf.FixedIpAnnotationKey
 	}
 
 	return ipScheduler, nil
+}
+
+// StartInformers start informers
+func StartInformers() error {
+	if DefaultIpScheduler == nil {
+		return fmt.Errorf("default scheduler is nil")
+	}
+	ih := newIPHander(DefaultIpScheduler.cache)
+
+	DefaultIpScheduler.IPInformer.AddEventHandler(ih)
+	blog.Infof("start informers factory")
+	DefaultIpScheduler.InformerFactory.Start(DefaultIpScheduler.StopCh)
+	DefaultIpScheduler.InformerFactory.WaitForCacheSync(DefaultIpScheduler.StopCh)
+	blog.Infof("informers caches are synced")
+	return nil
 }
 
 // HandleIpSchedulerPredicate handle v3 IpScheduler predicate
@@ -86,47 +158,52 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV3, actions.TotalNodeNumKey,
 		float64(len(extenderArgs.Nodes.Items)))
 
-	fixedIpAnnotationKey, ok := extenderArgs.Pod.ObjectMeta.Annotations[DefaultIpScheduler.FixedIpAnnotationKey]
+	var availableHosts []string
+	claimName, ok := extenderArgs.Pod.ObjectMeta.Annotations[DefaultIpScheduler.FixedIpAnnotationKey]
 	if ok {
-		resource := &netResource{}
-		// get claim from pod annotation
-		if err := getBCSNetCR(extenderArgs.Pod.Namespace, fixedIpAnnotationKey, "bcsnetipclaims", resource); err != nil {
-			return nil, err
+		netClaim, err := getIPClaim(extenderArgs.Pod.Namespace, claimName)
+		if err != nil {
+			return nil, fmt.Errorf("get claim failed")
 		}
-		if resource.netClaim.Status.Phase != "Bound" || resource.netClaim.Status.BoundedIP == "" {
-			blog.Errorf("claim %s/%s hasn't bound an IP", extenderArgs.Pod.Namespace, resource.netClaim.Name)
-			return nil, fmt.Errorf("claim %s/%s hasn't bound an IP", extenderArgs.Pod.Namespace, resource.netClaim.Name)
+		if netClaim.Status.Phase == BCSNetIPClaimExpiredStatus {
+			blog.Errorf("claim %s/%s was expired", extenderArgs.Pod.Namespace, claimName)
+			return nil, fmt.Errorf("claim has expired")
 		}
-
-		// get IP from claim
-		if err := getBCSNetCR("", resource.netClaim.Status.BoundedIP, "bcsnetips", resource); err != nil {
-			return nil, err
-		}
-
-		// get pool
-		poolName, ok := resource.netIP.Labels["pool"]
-		if !ok {
-			return nil, fmt.Errorf("can't find pool name from IP %s lables", resource.netIP.Name)
-		}
-		if err := getBCSNetCR("", poolName, "bcsnetpools", resource); err != nil {
-			return nil, err
-		}
-
-		for _, node := range extenderArgs.Nodes.Items {
-			err := checkSchedulable(node, resource.netPool.Spec.Hosts)
+		// if claim has bound ip, just schedule to the pool of the bounded ip
+		if netClaim.Status.Phase == BCSNetIPClaimBoundedStatus && netClaim.Status.BoundedIP != "" {
+			netIP, err := getIP(netClaim.Status.BoundedIP)
 			if err != nil {
-				canNotSchedule[node.Name] = err.Error()
-			} else {
-				canSchedule = append(canSchedule, node)
+				return nil, fmt.Errorf("get ip of claim failed")
 			}
+			// get pool
+			poolName, ok := netIP.Labels["pool"]
+			if !ok {
+				return nil, fmt.Errorf("can't find pool name from IP %s lables", netIP.Name)
+			}
+			netPool, err := getPool(poolName)
+			if err != nil {
+				return nil, fmt.Errorf("get pool of claim failed")
+			}
+			availableHosts = append(availableHosts, netPool.Spec.Hosts...)
 		}
-		blog.V(5).Infof("pod %s/%s using bcsnetipclaim %s can not schedule on nodes %v",
-			extenderArgs.Pod.Namespace, extenderArgs.Pod.Name, resource.netClaim.Name, canNotSchedule)
-	} else {
-		// unmatched annotation, skip to schedule with IpSchedulerV3
-		blog.Infof("pod %s/%s without fixed annotation, skip to schedule with IpSchedulerV3 ",
-			extenderArgs.Pod.Namespace, extenderArgs.Pod.Name)
-		for _, node := range extenderArgs.Nodes.Items {
+	}
+	blog.Infof("pod %s/%s without claim or bounded fixed ip", extenderArgs.Pod.Namespace, extenderArgs.Pod.Name)
+	availablePools := DefaultIpScheduler.cache.GetAvailablePoolNameList()
+	for _, poolName := range availablePools {
+		netPool, err := getPool(poolName)
+		if err != nil {
+			blog.Warnf("get net pool %s failed, err %s", poolName, err.Error())
+			continue
+		}
+		blog.Infof("find available hosts in pool %s", poolName)
+		availableHosts = append(availableHosts, netPool.Spec.Hosts...)
+	}
+
+	for _, node := range extenderArgs.Nodes.Items {
+		err := checkNodeInHosts(node, availableHosts)
+		if err != nil {
+			canNotSchedule[node.Name] = err.Error()
+		} else {
 			canSchedule = append(canSchedule, node)
 		}
 	}
@@ -145,70 +222,179 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	return scheduleResult, nil
 }
 
-func getBCSNetCR(namespace, name, types string, resource *netResource) error {
-	unstructured, err := DefaultIpScheduler.DynamicClient.Resource(schema.GroupVersionResource{
-		Group:    "netservice.bkbcs.tencent.com",
-		Version:  "v1",
-		Resource: types,
-	}).Namespace(namespace).Get(context.Background(), name, metav1.GetOptions{})
+func getIPClaim(namespace, claimKey string) (*BCSNetIPClaim, error) {
+	claimUnstruct, err := DefaultIpScheduler.ClaimLister.Namespace(namespace).Get(claimKey)
 	if err != nil {
-		return err
+		blog.Warnf("get BCSNetIPClaim %s/%s failed, err %s", namespace, claimKey, err.Error())
+		return nil, fmt.Errorf("get BCSNetIPClaim %s/%s failed, err %s", namespace, claimKey, err.Error())
 	}
-	unstructuredByte, err := json.Marshal(unstructured.Object)
-	if err != nil {
-		return err
+	claim := &BCSNetIPClaim{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
+		claimUnstruct.UnstructuredContent(), claim); err != nil {
+		blog.Warnf("failed to convert unstructured claim %s/%s", namespace, claimKey)
+		return nil, fmt.Errorf("failed to convert unstructured claim %s/%s", namespace, claimKey)
 	}
+	return claim, nil
+}
 
-	switch types {
-	case "bcsnetpools":
+func getIP(ipName string) (*BCSNetIP, error) {
+	ipUnstruct, err := DefaultIpScheduler.IPLister.Get(ipName)
+	if err != nil {
+		blog.Warnf("get BCSNetIP %s failed, err %s", ipName, err.Error())
+		return nil, fmt.Errorf("get BCSNetIP %s failed, err %s", ipName, err.Error())
+	}
+	ip := &BCSNetIP{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
+		ipUnstruct.UnstructuredContent(), ip); err != nil {
+		blog.Warnf("failed to convert unstructured ip %s", ipName)
+		return nil, fmt.Errorf("failed to convert unstructured ip %s", ipName)
+	}
+	return ip, nil
+}
+
+func getPool(poolName string) (*BCSNetPool, error) {
+	poolUnstruct, err := DefaultIpScheduler.PoolLister.Get(poolName)
+	if err != nil {
+		blog.Warnf("get BCSNetPool %s failed, err %s", poolName, err.Error())
+		return nil, fmt.Errorf("get BCSNetPool %s failed, err %s", poolName, err.Error())
+	}
+	pool := &BCSNetPool{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
+		poolUnstruct.UnstructuredContent(), pool); err != nil {
+		blog.Warnf("failed to convert unstructured net pool %s", poolName)
+		return nil, fmt.Errorf("failed to convert unstructured net pool %s", poolName)
+	}
+	return pool, nil
+}
+
+func getPoolByName(hostName string) (*BCSNetPool, error) {
+	poolListUnstruct, err := DefaultIpScheduler.PoolLister.List(labels.Everything())
+	if err != nil {
+		blog.Warnf("get all BCSNetPoolList failed, err %s", err.Error())
+		return nil, fmt.Errorf("get all BCSNetPoolList failed, err %s", err.Error())
+	}
+	for _, poolUnstruct := range poolListUnstruct {
 		pool := &BCSNetPool{}
-		err = json.Unmarshal(unstructuredByte, pool)
-		if err != nil {
-			return err
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
+			poolUnstruct.UnstructuredContent(), pool); err != nil {
+			blog.Warnf("failed to convert unstructured net pool %s", pool.Name)
+			return nil, fmt.Errorf("failed to convert unstructured net pool %s", pool.Name)
 		}
-		resource.netPool = pool
-	case "bcsnetips":
-		ip := &BCSNetIP{}
-		err = json.Unmarshal(unstructuredByte, ip)
-		if err != nil {
-			return err
+		if stringInSlice(pool.Spec.Hosts, hostName) {
+			return pool, nil
 		}
-		resource.netIP = ip
-	case "bcsnetipclaims":
-		claim := &BCSNetIPClaim{}
-		err = json.Unmarshal(unstructuredByte, claim)
-		if err != nil {
-			return err
-		}
-		resource.netClaim = claim
-	default:
-		return fmt.Errorf("invalid bcs netservice resource type")
 	}
+	return nil, fmt.Errorf("host %s is not in any net pool", hostName)
+}
 
+func getPod(ns, name string) (*v1.Pod, error) {
+	podUnstruct, err := DefaultIpScheduler.PodLister.Namespace(ns).Get(name)
+	if err != nil {
+		blog.Warnf("get Pod %s/%s failed, err %s", ns, name, err.Error())
+		return nil, fmt.Errorf("get Pod %s/%s failed, err %s", ns, name, err.Error())
+	}
+	pod := &v1.Pod{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
+		podUnstruct.UnstructuredContent(), pod); err != nil {
+		blog.Warnf("failed to convert unstructured Pod %s/%s", ns, name)
+		return nil, fmt.Errorf("failed to convert unstructured Pod %s/%s", ns, name)
+	}
+	return pod, nil
+}
+
+// HandleIpSchedulerPreBind handle ip scheduler prebind
+func HandleIpSchedulerPreBind(extenderBindingArgs schedulerapi.ExtenderBindingArgs) error {
+	blog.Infof("prebind interface called, args %v", extenderBindingArgs)
+	pod, err := getPod(extenderBindingArgs.PodNamespace, extenderBindingArgs.PodName)
+	if err != nil {
+		return err
+	}
+	claimName, ok := pod.Annotations[DefaultIpScheduler.FixedIpAnnotationKey]
+	if ok {
+		netClaim, gerr := getIPClaim(pod.Namespace, claimName)
+		if gerr != nil {
+			return fmt.Errorf("get claim failed")
+		}
+		if netClaim.Status.Phase == BCSNetIPClaimExpiredStatus {
+			blog.Errorf("claim %s/%s was expired", pod.Namespace, claimName)
+			return fmt.Errorf("claim has expired")
+		}
+		// if claim has bound ip, just schedule to the pool of the bounded ip
+		if netClaim.Status.Phase == BCSNetIPClaimBoundedStatus && netClaim.Status.BoundedIP != "" {
+			// no need to assume ip in cache
+			return nil
+		}
+	}
+	// assume ip in pool cache
+	pool, err := getPoolByName(extenderBindingArgs.Node)
+	if err != nil {
+		return err
+	}
+	DefaultIpScheduler.cache.AssumeOne(pool.Name)
 	return nil
 }
 
 // HandleIpSchedulerBinding handle ip scheduler binding
 func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingArgs) error {
-	return nil
+	return fmt.Errorf("not implements")
 }
 
-// checkSchedulable check whether a node is schedulable
-func checkSchedulable(node v1.Node, hosts []string) error {
+// checkNodeInHosts check whether a node is in hosts
+func checkNodeInHosts(node v1.Node, hosts []string) error {
 	// get the node ip
 	var nodeIP string
 	for _, nodeAddress := range node.Status.Addresses {
-		if nodeAddress.Type == "InternalIP" {
+		if nodeAddress.Type == v1.NodeInternalIP {
 			nodeIP = nodeAddress.Address
 			if stringInSlice(hosts, nodeIP) {
 				return nil
 			}
-			return fmt.Errorf("node %s is not in netPool hosts list", nodeIP)
+			blog.Errorf("node %s is not in netPool hosts list", nodeIP)
+			return fmt.Errorf("no available ip")
 		}
 	}
-	return fmt.Errorf("node %s is not in netPool hosts list", node.Name)
+	blog.Errorf("node with name %s is not in netPool hosts list", node.Name)
+	return fmt.Errorf("no available ip")
 }
 
+func syncCachedPoolByIP(ip *BCSNetIP) {
+	poolName, ok := ip.ObjectMeta.Labels[PodLabelKeyForPool]
+	if !ok {
+		blog.Warnf("ip %s/%s has no pool labels", ip.ObjectMeta.Namespace, ip.ObjectMeta.Name)
+		return
+	}
+	syncCachedPoolIPNum(poolName)
+}
+
+func syncCachedPoolIPNum(poolName string) {
+	if DefaultIpScheduler == nil {
+		blog.Warnf("default scheduler is nil, wait for creation")
+		return
+	}
+	ipNum := 0
+	ipUnstructList, err := DefaultIpScheduler.IPLister.List(labels.SelectorFromSet(labels.Set(map[string]string{
+		PodLabelKeyForPool: poolName,
+	})))
+	if err != nil {
+		blog.Warnf("list ip list of pool %s failed, err %s", poolName, err.Error())
+		return
+	}
+	for _, ipUnstruct := range ipUnstructList {
+		ip := &BCSNetIP{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
+			ipUnstruct.UnstructuredContent(), ip); err != nil {
+			blog.Warnf("failed to convert unstructured, %v", ipUnstruct)
+			return
+		}
+		if ip.Status.Phase == BCSNetIPAvailableStatus {
+			ipNum++
+		}
+	}
+	DefaultIpScheduler.cache.UpdatePool(poolName, ipNum)
+	blog.Infof("update pool %s ipnum %d", poolName, ipNum)
+}
+
+// check if a string is in a string slice
 func stringInSlice(strs []string, str string) bool {
 	for _, item := range strs {
 		if str == item {

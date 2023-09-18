@@ -141,8 +141,9 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, toRefs, computed, onMounted, ref } from 'vue';
 import { bkOverflowTips } from 'bk-magic-vue';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+
 import Metric from '@/components/metric.vue';
 import $store from '@/store';
 

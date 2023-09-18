@@ -1,9 +1,10 @@
 // ansi编码日志解析
 
-import { IAnsiConfig, IChunk, ChunkType, IParseResult, IStyle, IStyleStack, IStyleState, IMeta } from '../types/types';
-import superSplit from './super-split';
+import { ChunkType, IAnsiConfig, IChunk, IMeta, IParseResult, IStyle, IStyleStack, IStyleState } from '../types/types';
+
 import ansiTags from './ansi-tags';
 import decorators from './decorator-names';
+import superSplit from './super-split';
 
 export default class AnsiParser {
   styleStack: IStyleStack = {

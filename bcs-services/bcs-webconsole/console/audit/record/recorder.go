@@ -73,14 +73,19 @@ func ensureDirExist(name string) error {
 
 // NewReplayRecord 初始化Recorder
 // 确认是否开启终端记录 / 创建记录文件 / 初始记录信息
-func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, originTerminalSize *ReplyInfo) (*ReplyRecorder, error) {
+func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, terminalSize *types.TerminalSize) (*ReplyRecorder, error) {
 	if !config.G.Audit.Enabled {
 		return nil, nil
 	}
+
+	orgInfo := &ReplyInfo{TimeStamp: time.Now()}
+	orgInfo.Width = terminalSize.Cols
+	orgInfo.Height = terminalSize.Rows
+
 	recorder := &ReplyRecorder{
 		ctx:       ctx,
 		SessionID: podCtx.SessionId,
-		Info:      originTerminalSize,
+		Info:      orgInfo,
 	}
 	date := time.Now().Format(dateTimeFormat)
 	path := config.G.Audit.DataDir
@@ -100,9 +105,9 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, originTermin
 	}
 	recorder.file = fd
 	options := make([]asciinema.Option, 0, 3)
-	options = append(options, asciinema.WithHeight(originTerminalSize.Height))
-	options = append(options, asciinema.WithWidth(originTerminalSize.Width))
-	options = append(options, asciinema.WithTimestamp(originTerminalSize.TimeStamp))
+	options = append(options, asciinema.WithHeight(orgInfo.Height))
+	options = append(options, asciinema.WithWidth(orgInfo.Width))
+	options = append(options, asciinema.WithTimestamp(orgInfo.TimeStamp))
 	recorder.Writer = asciinema.NewWriter(recorder.file, podCtx, options...)
 	//初始化时写入Header信息
 	err = recorder.Writer.WriteHeader()

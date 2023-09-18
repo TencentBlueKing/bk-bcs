@@ -1,5 +1,6 @@
-import { formatBytes, formatDate } from '@/common/util';
 import { Decimal } from 'decimal.js';
+
+import { formatBytes, formatDate } from '@/common/util';
 
 export default function (unit) {
   const axisLabel = (value) => {

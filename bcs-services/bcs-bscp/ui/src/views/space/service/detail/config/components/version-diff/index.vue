@@ -85,6 +85,7 @@
   <bk-sideslider
     :is-show="props.show"
     title="版本对比"
+    ext-cls="config-version-diff-slider"
     :width="1200"
     @closed="handleClose">
     <bk-loading class="loading-wrapper" :loading="loading">
@@ -237,6 +238,13 @@
     }
     .publish-btn {
       margin-right: 8px;
+    }
+  }
+</style>
+<style lang="scss">
+  .config-version-diff-slider {
+    .bk-modal-body {
+      transform: none;
     }
   }
 </style>

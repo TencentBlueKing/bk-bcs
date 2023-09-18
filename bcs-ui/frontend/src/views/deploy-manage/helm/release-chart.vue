@@ -305,19 +305,21 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, toRefs, ref, watch, computed } from 'vue';
-import BcsContent from '@/components/layout/Content.vue';
-import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
+
 import ChartFileTree from './chart-file-tree.vue';
-import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
-import KeyValue, { IData } from '@/components/key-value.vue';
 import useHelm from './use-helm';
-import { useCluster, useProject } from '@/composables/use-app';
-import $router from '@/router';
-import $i18n from '@/i18n/i18n-setup';
+
 import { copyText } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
+import KeyValue, { IData } from '@/components/key-value.vue';
+import BcsContent from '@/components/layout/Content.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
+import { useCluster, useProject } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'ReleaseChart',

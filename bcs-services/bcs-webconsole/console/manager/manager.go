@@ -16,51 +16,67 @@ package manager
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
+	"regexp"
+	"runtime/debug"
+	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
-	"github.com/pkg/errors"
-
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/gin-gonic/gin"
+	"github.com/pborman/ansi"
+	"github.com/pkg/errors"
+	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
-
-// TerminalSize web终端发来的 resize 包
-type TerminalSize struct {
-	Rows uint16 `json:"rows"`
-	Cols uint16 `json:"cols"`
-}
 
 // ManagerFunc 自定义 Manager 函数
 type ManagerFunc func(podCtx *types.PodContext) error
 
 // ConsoleManager websocket 流式处理器
 type ConsoleManager struct {
-	ctx           context.Context
-	ConnTime      time.Time // 连接时间
-	LastInputTime time.Time // 更新ws时间
-	PodCtx        *types.PodContext
-	redisClient   *redis.Client
-	managerFuncs  []ManagerFunc
+	ctx            context.Context
+	ConnTime       time.Time // 连接时间
+	LastInputTime  time.Time // 更新ws时间
+	keyWaitingTime time.Time // 记录 webconsole key 响应时间
+	keyDec         byte      // 记录特定的key的 ascii 编码
+	podCtx         *types.PodContext
+	managerFuncs   []ManagerFunc
+	cmdParser      *audit.CmdParse
+	recorder       *record.ReplyRecorder
 }
 
 // NewConsoleManager :
-func NewConsoleManager(ctx context.Context, podCtx *types.PodContext) *ConsoleManager {
-	redisClient := storage.GetDefaultRedisSession().Client
+func NewConsoleManager(ctx context.Context, podCtx *types.PodContext, terminalSize *types.TerminalSize) (*ConsoleManager, error) {
+	now := time.Now()
 	mgr := &ConsoleManager{
-		ctx:           ctx,
-		ConnTime:      time.Now(),
-		LastInputTime: time.Now(),
-		PodCtx:        podCtx,
-		redisClient:   redisClient,
-		managerFuncs:  []ManagerFunc{},
+		ctx:            ctx,
+		ConnTime:       now,
+		LastInputTime:  now,
+		keyWaitingTime: now,
+		podCtx:         podCtx,
+		managerFuncs:   []ManagerFunc{},
+		cmdParser:      audit.NewCmdParse(),
 	}
 
-	return mgr
+	// key from env
+	if len(key) > 0 {
+		mgr.keyDec = byte(key[0])
+	}
+
+	// 初始化 terminal record
+	recorder, err := record.NewReplayRecord(ctx, mgr.podCtx, terminalSize)
+	if err != nil {
+		klog.Errorf("init ReplayRecord failed: %s", err)
+		return nil, err
+	}
+	mgr.recorder = recorder
+
+	return mgr, nil
 }
 
 // AddMgrFunc 添加自定义函数
@@ -68,29 +84,60 @@ func (c *ConsoleManager) AddMgrFunc(mgrFunc ManagerFunc) {
 	c.managerFuncs = append(c.managerFuncs, mgrFunc)
 }
 
-// HandleInputMsg : 处理输入数据流
-func (c *ConsoleManager) HandleInputMsg(msg []byte) ([]byte, error) {
-	// 更新ws时间
-	c.LastInputTime = time.Now()
-	return msg, nil
+// HandleBannerMsg 处理 banner
+func (c *ConsoleManager) HandleBannerMsg(msg []byte) error {
+	// replay 记录 banner
+	record.RecordOutputEvent(c.recorder, msg)
+
+	return nil
 }
 
-// HandleResizeMsg xxx
-// HandleInputMsg : 处理 Resize 数据流
-func (c *ConsoleManager) HandleResizeMsg(msg []byte) (*TerminalSize, error) {
-	resizeMsg := TerminalSize{}
+// HandleResizeMsg 处理 resize 数据
+func (c *ConsoleManager) HandleResizeMsg(resizeMsg *types.TerminalSize) error {
+	// replay 记录终端大小变化
+	replaySize := fmt.Sprintf("%vx%v", resizeMsg.Cols, resizeMsg.Rows)
+	record.RecordResizeEvent(c.recorder, []byte(replaySize))
 
-	// 解析Json数据
-	err := json.Unmarshal(msg, &resizeMsg)
-	if err != nil {
-		return nil, err
+	return nil
+}
+
+// HandleInputMsg : 处理输入数据流
+func (c *ConsoleManager) HandleInputMsg(msg []byte) ([]byte, error) {
+	now := time.Now()
+	// 更新ws时间
+	c.LastInputTime = now
+
+	// key 性能统计
+	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
+		c.keyWaitingTime = now
+		klog.InfoS("tracing key input", "key", msg)
 	}
 
-	return &resizeMsg, nil
+	// 命令行解析与审计
+	_, ss, err := ansi.Decode(msg)
+	if err != nil {
+		return msg, nil
+	}
+
+	c.cmdParser.Cmd = ss
+	c.cmdParser.InputSlice = append(c.cmdParser.InputSlice, ss)
+
+	return msg, nil
 }
 
 // HandleOutputMsg : 处理输出数据流
 func (c *ConsoleManager) HandleOutputMsg(msg []byte) ([]byte, error) {
+	// 命令行解析与审计
+	c.auditCmd(msg)
+
+	// replay 记录数据流
+	record.RecordOutputEvent(c.recorder, msg)
+
+	// key 性能统计
+	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
+		klog.InfoS("tracing key output", "key", msg, "waiting", time.Since(c.keyWaitingTime))
+	}
+
 	return msg, nil
 }
 
@@ -99,10 +146,14 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 	interval := time.NewTicker(10 * time.Second)
 	defer interval.Stop()
 
+	// 结束会话时,处理缓存/关闭文件
+	defer c.recorder.End()
+
 	for {
 		select {
 		case <-c.ctx.Done():
-			logger.Infof("close %s ConsoleManager done", c.PodCtx.PodName)
+			c.recorder.GracefulShutdownRecorder()
+			logger.Infof("close %s ConsoleManager done", c.podCtx.PodName)
 			return nil
 		case <-interval.C:
 			if err := c.handleIdleTimeout(ctx); err != nil {
@@ -110,10 +161,48 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 			}
 			// 自定义函数
 			for _, managerFunc := range c.managerFuncs {
-				if err := managerFunc(c.PodCtx); err != nil {
+				if err := managerFunc(c.podCtx); err != nil {
 					return err
 				}
 			}
+
+			// 未开启或文件初始化失败都不记录
+			if c.recorder != nil && c.recorder.Writer != nil {
+				c.recorder.Writer.WriteBuff.Flush()
+			}
+		}
+	}
+}
+
+// auditCmd 命令行审计, 不能影响主流程
+func (c *ConsoleManager) auditCmd(outputMsg []byte) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error("[audit cmd panic], err: %v, debug strace: %s", r, debug.Stack())
+		}
+	}()
+
+	//输入输出映射,用于查找历史命令
+	out, ss, err := ansi.Decode(outputMsg)
+	if err != nil {
+		logger.Error("decode output error: %s", err)
+		return
+	}
+
+	//TODO:历史命令问题,可能解析问题导致
+	if strings.ReplaceAll(string(ss.Code), "\b", "") == "" {
+		rex := regexp.MustCompile("\\x1b\\[\\d+P")
+		l := rex.Split(string(out), -1)
+		ss.Code = ansi.Name(l[len(l)-1])
+	}
+	//时序性问题不可避免
+	c.cmdParser.CmdResult[c.cmdParser.Cmd] = ss
+
+	if c.cmdParser.Cmd != nil && c.cmdParser.Cmd.Code == "\r" {
+		cmd := audit.ResolveInOut(c.cmdParser)
+		if cmd != "" {
+			logger.Infof("UserName=%s  SessionID=%s  Command=%s",
+				c.podCtx.Username, c.podCtx.SessionId, cmd)
 		}
 	}
 }
@@ -121,10 +210,10 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 func (c *ConsoleManager) handleIdleTimeout(ctx *gin.Context) error {
 	nowTime := time.Now()
 	idleTime := nowTime.Sub(c.LastInputTime)
-	if idleTime > c.PodCtx.GetConnIdleTimeout() {
+	if idleTime > c.podCtx.GetConnIdleTimeout() {
 		// BCS Console 已经分钟无操作
 		msg := i18n.GetMessage(ctx, "BCS Console 已经{}分钟无操作", map[string]int64{"time": int64(idleTime.Minutes())})
-		logger.Infof("conn idle timeout, close session %s, idle time, %s", c.PodCtx.PodName, idleTime)
+		logger.Infof("conn idle timeout, close session %s, idle time, %s", c.podCtx.PodName, idleTime)
 		return errors.New(msg)
 	}
 
@@ -132,7 +221,7 @@ func (c *ConsoleManager) handleIdleTimeout(ctx *gin.Context) error {
 	if loginTime > LoginTimeout {
 		// BCS Console 使用已经超过{}小时，请重新登录
 		msg := i18n.GetMessage(ctx, "BCS Console 使用已经超过{}小时，请重新登录", map[string]int{"time": LoginTimeout / 60})
-		logger.Infof("tick timeout, close session %s, login time, %.2f", c.PodCtx.PodName, loginTime)
+		logger.Infof("tick timeout, close session %s, login time, %.2f", c.podCtx.PodName, loginTime)
 		return errors.New(msg)
 	}
 	return nil

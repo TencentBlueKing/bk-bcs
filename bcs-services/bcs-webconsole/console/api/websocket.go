@@ -47,14 +47,15 @@ type wsQuery struct {
 }
 
 // GetTerminalSize 获取初始宽高
-func (q *wsQuery) GetTerminalSize() *manager.TerminalSize {
+func (q *wsQuery) GetTerminalSize() *types.TerminalSize {
 	if q.Rows > 0 && q.Cols > 0 {
-		return &manager.TerminalSize{
+		return &types.TerminalSize{
 			Rows: q.Rows,
 			Cols: q.Cols,
 		}
 	}
-	return nil
+
+	return types.DefaultTerminalSize()
 }
 
 // BCSWebSocketHandler WebSocket 连接处理函数
@@ -92,8 +93,15 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	}
 	// 赋值session id
 	podCtx.SessionId = sessionId
-	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
-	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, query.GetTerminalSize(), query.HideBanner)
+
+	terminalSize := query.GetTerminalSize()
+	consoleMgr, err := manager.NewConsoleManager(ctx, podCtx, terminalSize)
+	if err != nil {
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, i18n.GetMessage(c, "初始化session失败")))
+		return
+	}
+
+	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, terminalSize, query.HideBanner)
 	connected = true
 
 	// kubectl 容器， 需要定时上报心跳
@@ -106,7 +114,9 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	eg.Go(func() error {
 		defer stop()
 
-		// 定时检查任务等
+		// 定时检查任务
+		// 命令行审计
+		// terminal recorder
 		return consoleMgr.Run(c)
 	})
 

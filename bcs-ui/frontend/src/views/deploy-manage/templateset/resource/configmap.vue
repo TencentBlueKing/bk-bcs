@@ -310,9 +310,9 @@
 
 <script>
 import { catchErrorHandler, formatDate } from '@/common/util';
-import fullScreen from '@/directives/full-screen';
-import Header from '@/components/layout/Header.vue';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
+import Header from '@/components/layout/Header.vue';
+import fullScreen from '@/directives/full-screen';
 
 export default {
   directives: {

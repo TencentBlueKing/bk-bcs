@@ -37,6 +37,7 @@ const (
 	Config_DeleteConfigItem_FullMethodName                           = "/pbcs.Config/DeleteConfigItem"
 	Config_GetConfigItem_FullMethodName                              = "/pbcs.Config/GetConfigItem"
 	Config_ListConfigItems_FullMethodName                            = "/pbcs.Config/ListConfigItems"
+	Config_ListReleasedConfigItems_FullMethodName                    = "/pbcs.Config/ListReleasedConfigItems"
 	Config_ListConfigItemCount_FullMethodName                        = "/pbcs.Config/ListConfigItemCount"
 	Config_UpdateConfigHook_FullMethodName                           = "/pbcs.Config/UpdateConfigHook"
 	Config_CreateRelease_FullMethodName                              = "/pbcs.Config/CreateRelease"
@@ -92,6 +93,7 @@ const (
 	Config_ListReleasedAppBoundTemplateRevisions_FullMethodName      = "/pbcs.Config/ListReleasedAppBoundTemplateRevisions"
 	Config_UpdateAppBoundTemplateRevisions_FullMethodName            = "/pbcs.Config/UpdateAppBoundTemplateRevisions"
 	Config_DeleteAppBoundTemplateSets_FullMethodName                 = "/pbcs.Config/DeleteAppBoundTemplateSets"
+	Config_CheckAppTemplateBinding_FullMethodName                    = "/pbcs.Config/CheckAppTemplateBinding"
 	Config_ListTemplateBoundCounts_FullMethodName                    = "/pbcs.Config/ListTemplateBoundCounts"
 	Config_ListTemplateRevisionBoundCounts_FullMethodName            = "/pbcs.Config/ListTemplateRevisionBoundCounts"
 	Config_ListTemplateSetBoundCounts_FullMethodName                 = "/pbcs.Config/ListTemplateSetBoundCounts"
@@ -151,6 +153,7 @@ type ConfigClient interface {
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error)
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
+	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
 	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*UpdateConfigHookResp, error)
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error)
@@ -214,6 +217,7 @@ type ConfigClient interface {
 	ListReleasedAppBoundTemplateRevisions(ctx context.Context, in *ListReleasedAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*ListReleasedAppBoundTemplateRevisionsResp, error)
 	UpdateAppBoundTemplateRevisions(ctx context.Context, in *UpdateAppBoundTemplateRevisionsReq, opts ...grpc.CallOption) (*UpdateAppBoundTemplateRevisionsResp, error)
 	DeleteAppBoundTemplateSets(ctx context.Context, in *DeleteAppBoundTemplateSetsReq, opts ...grpc.CallOption) (*DeleteAppBoundTemplateSetsResp, error)
+	CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error)
 	ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error)
 	ListTemplateRevisionBoundCounts(ctx context.Context, in *ListTemplateRevisionBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateRevisionBoundCountsResp, error)
 	ListTemplateSetBoundCounts(ctx context.Context, in *ListTemplateSetBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundCountsResp, error)
@@ -373,6 +377,15 @@ func (c *configClient) GetConfigItem(ctx context.Context, in *GetConfigItemReq, 
 func (c *configClient) ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error) {
 	out := new(ListConfigItemsResp)
 	err := c.cc.Invoke(ctx, Config_ListConfigItems_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error) {
+	out := new(ListReleasedConfigItemsResp)
+	err := c.cc.Invoke(ctx, Config_ListReleasedConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -874,6 +887,15 @@ func (c *configClient) DeleteAppBoundTemplateSets(ctx context.Context, in *Delet
 	return out, nil
 }
 
+func (c *configClient) CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error) {
+	out := new(CheckAppTemplateBindingResp)
+	err := c.cc.Invoke(ctx, Config_CheckAppTemplateBinding_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error) {
 	out := new(ListTemplateBoundCountsResp)
 	err := c.cc.Invoke(ctx, Config_ListTemplateBoundCounts_FullMethodName, in, out, opts...)
@@ -1235,6 +1257,7 @@ type ConfigServer interface {
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error)
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
+	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
 	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
 	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*UpdateConfigHookResp, error)
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error)
@@ -1298,6 +1321,7 @@ type ConfigServer interface {
 	ListReleasedAppBoundTemplateRevisions(context.Context, *ListReleasedAppBoundTemplateRevisionsReq) (*ListReleasedAppBoundTemplateRevisionsResp, error)
 	UpdateAppBoundTemplateRevisions(context.Context, *UpdateAppBoundTemplateRevisionsReq) (*UpdateAppBoundTemplateRevisionsResp, error)
 	DeleteAppBoundTemplateSets(context.Context, *DeleteAppBoundTemplateSetsReq) (*DeleteAppBoundTemplateSetsResp, error)
+	CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error)
 	ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error)
 	ListTemplateRevisionBoundCounts(context.Context, *ListTemplateRevisionBoundCountsReq) (*ListTemplateRevisionBoundCountsResp, error)
 	ListTemplateSetBoundCounts(context.Context, *ListTemplateSetBoundCountsReq) (*ListTemplateSetBoundCountsResp, error)
@@ -1380,6 +1404,9 @@ func (UnimplementedConfigServer) GetConfigItem(context.Context, *GetConfigItemRe
 }
 func (UnimplementedConfigServer) ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItems not implemented")
+}
+func (UnimplementedConfigServer) ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedConfigItems not implemented")
 }
 func (UnimplementedConfigServer) ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemCount not implemented")
@@ -1545,6 +1572,9 @@ func (UnimplementedConfigServer) UpdateAppBoundTemplateRevisions(context.Context
 }
 func (UnimplementedConfigServer) DeleteAppBoundTemplateSets(context.Context, *DeleteAppBoundTemplateSetsReq) (*DeleteAppBoundTemplateSetsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAppBoundTemplateSets not implemented")
+}
+func (UnimplementedConfigServer) CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckAppTemplateBinding not implemented")
 }
 func (UnimplementedConfigServer) ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateBoundCounts not implemented")
@@ -1902,6 +1932,24 @@ func _Config_ListConfigItems_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListConfigItems(ctx, req.(*ListConfigItemsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListReleasedConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListReleasedConfigItemsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListReleasedConfigItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListReleasedConfigItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListReleasedConfigItems(ctx, req.(*ListReleasedConfigItemsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2896,6 +2944,24 @@ func _Config_DeleteAppBoundTemplateSets_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CheckAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckAppTemplateBindingReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CheckAppTemplateBinding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CheckAppTemplateBinding_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CheckAppTemplateBinding(ctx, req.(*CheckAppTemplateBindingReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ListTemplateBoundCounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateBoundCountsReq)
 	if err := dec(in); err != nil {
@@ -3640,6 +3706,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_ListConfigItems_Handler,
 		},
 		{
+			MethodName: "ListReleasedConfigItems",
+			Handler:    _Config_ListReleasedConfigItems_Handler,
+		},
+		{
 			MethodName: "ListConfigItemCount",
 			Handler:    _Config_ListConfigItemCount_Handler,
 		},
@@ -3858,6 +3928,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteAppBoundTemplateSets",
 			Handler:    _Config_DeleteAppBoundTemplateSets_Handler,
+		},
+		{
+			MethodName: "CheckAppTemplateBinding",
+			Handler:    _Config_CheckAppTemplateBinding_Handler,
 		},
 		{
 			MethodName: "ListTemplateBoundCounts",

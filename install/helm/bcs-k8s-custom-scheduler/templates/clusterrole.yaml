@@ -12,5 +12,5 @@ rules:
   {{- if eq .Values.workMode "netservice-controller" }}
   - apiGroups: ["netservice.bkbcs.tencent.com"]
     resources: ["bcsnetpools", "bcsnetips", "bcsnetipclaims"]
-    verbs: ["get", "list"]
+    verbs: ["get", "list", "watch"]
   {{- end }}

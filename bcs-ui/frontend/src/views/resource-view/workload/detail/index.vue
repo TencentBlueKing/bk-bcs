@@ -17,11 +17,13 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
-import DetailTopNav from './detail-top-nav.vue';
-import WorkloadDetail from './workload-detail.vue';
-import PodDetail from './pod-detail.vue';
+import { computed, defineComponent, ref } from 'vue';
+
 import ContainerDetail from './container-detail.vue';
+import DetailTopNav from './detail-top-nav.vue';
+import PodDetail from './pod-detail.vue';
+import WorkloadDetail from './workload-detail.vue';
+
 import $router from '@/router';
 
 export type ComponentIdType = 'WorkloadDetail' | 'PodDetail' | 'ContainerDetail';

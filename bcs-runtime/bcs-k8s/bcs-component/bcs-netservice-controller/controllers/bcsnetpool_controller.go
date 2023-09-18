@@ -14,16 +14,21 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -92,6 +97,13 @@ func (r *BCSNetPoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			}
 		}
 
+		if err := r.syncNodeResource(ctx, netPool); err != nil {
+			return ctrl.Result{
+				Requeue:      true,
+				RequeueAfter: 5 * time.Second,
+			}, err
+		}
+
 		if err := r.removeFinalizerForPool(netPool); err != nil {
 			return ctrl.Result{
 				Requeue:      true,
@@ -129,6 +141,13 @@ func (r *BCSNetPoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	if err := r.syncReservedBCSNetIP(ctx, netPool); err != nil {
+		return ctrl.Result{
+			Requeue:      true,
+			RequeueAfter: 5 * time.Second,
+		}, err
+	}
+
+	if err := r.syncNodeResource(ctx, netPool); err != nil {
 		return ctrl.Result{
 			Requeue:      true,
 			RequeueAfter: 5 * time.Second,
@@ -350,7 +369,52 @@ func (r *BCSNetPoolReconciler) deleteBCSNetIP(ctx context.Context, netPool *nets
 			return err
 		}
 	}
+	return nil
+}
 
+// patch nodes resource
+func (r *BCSNetPoolReconciler) syncNodeResource(ctx context.Context, netPool *netservicev1.BCSNetPool) error {
+	nodeList := &corev1.NodeList{}
+	if err := r.List(ctx, nodeList); err != nil {
+		blog.Errorf("list all nodes failed, err %s", err.Error())
+		return fmt.Errorf("list all nodes failed, err %s", err.Error())
+	}
+	for _, node := range nodeList.Items {
+		for _, hostIP := range netPool.Spec.Hosts {
+			for _, address := range node.Status.Addresses {
+				if address.Type == corev1.NodeInternalIP && address.Address == hostIP {
+					ipNum := len(netPool.Spec.AvailableIPs)
+					if netPool.DeletionTimestamp != nil {
+						ipNum = 0
+					}
+					if err := r.patchNodeResource(ctx, &node,
+						constant.ResourceNameForBCSNetIP, strconv.Itoa(ipNum)); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (r *BCSNetPoolReconciler) patchNodeResource(ctx context.Context, node *corev1.Node, name, value string) error {
+	patchStruct := map[string]interface{}{
+		"status": map[string]interface{}{
+			"capacity": map[string]interface{}{
+				name: value,
+			},
+		},
+	}
+	patchBytes, err := json.Marshal(patchStruct)
+	if err != nil {
+		return fmt.Errorf("marshal patchStruct for node '%s' failed, err %s", node.GetName(), err.Error())
+	}
+	blog.V(5).Infof("marshaled patchStruct of node '%s', patchStruct: %s", node.GetName(), string(patchBytes))
+	rawPatch := client.RawPatch(k8stypes.MergePatchType, patchBytes)
+	if err := r.Status().Patch(ctx, node, rawPatch, &client.PatchOptions{}); err != nil {
+		return fmt.Errorf("patch node %s capacity failed, err %s", node.GetName(), err.Error())
+	}
 	return nil
 }
 
@@ -377,5 +441,6 @@ func (r *BCSNetPoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netservicev1.BCSNetPool{}).
 		Watches(&source.Kind{Type: &netservicev1.BCSNetIP{}}, r.IPFilter).
+		Watches(&source.Kind{Type: &corev1.Node{}}, &handler.Funcs{}).
 		Complete(r)
 }

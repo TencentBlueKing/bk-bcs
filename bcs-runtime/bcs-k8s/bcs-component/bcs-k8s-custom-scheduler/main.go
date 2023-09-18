@@ -74,6 +74,10 @@ func main() {
 			os.Exit(1)
 		}
 		v3.DefaultIpScheduler = defaultIpScheduler
+		if err := v3.StartInformers(); err != nil {
+			blog.Errorf("start informers failed, err %s", err.Error())
+			os.Exit(1)
+		}
 	}
 
 	// listening OS shutdown singal
@@ -82,6 +86,4 @@ func main() {
 	<-signalChan
 
 	blog.Infof("Got OS shutdown signal, shutting down bcs-cc-agent server gracefully...")
-
-	return
 }

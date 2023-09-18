@@ -24,10 +24,10 @@
 * IN THE SOFTWARE.
 */
 
+import bcsMagic, { bkLink } from 'bk-magic-vue';
 import Vue from 'vue';
 
 import 'bk-magic-vue/dist/bk-magic-vue.min.css';
-import bcsMagic, { bkLink } from 'bk-magic-vue';
 
 Vue.use(bkLink);
 Vue.use(bcsMagic, {
@@ -51,11 +51,22 @@ const Message = Vue.prototype.$bkMessage;
 let messageInstance = null;
 export const messageError = (message, delay = 3000) => {
   messageInstance?.close();
-  messageInstance = Message({
-    message,
-    delay,
-    theme: 'error',
-  });
+  if (typeof message === 'string') {
+    messageInstance = Message({
+      message,
+      delay,
+      theme: 'error',
+    });
+  } else {
+    messageInstance = Message({
+      message,
+      delay,
+      theme: 'error',
+      offsetY: 80,
+      ellipsisLine: 2,
+      ellipsisCopy: true,
+    });
+  }
 };
 
 export const messageSuccess = (message, delay = 3000) => {

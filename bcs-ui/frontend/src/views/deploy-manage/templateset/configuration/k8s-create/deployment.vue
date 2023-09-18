@@ -1618,18 +1618,20 @@
 /* eslint-disable no-multi-assign */
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-this-alias */
-import bkKeyer from '@/components/keyer';
-import bkModuleKeyer from '@/components/module-keyer';
-import ace from '@/components/ace-editor';
+import yamljs from 'js-yaml';
+import _ from 'lodash';
+
 import header from './header.vue';
 import tabs from './tabs.vue';
-import _ from 'lodash';
-import yamljs from 'js-yaml';
-import mixinBase from '@/mixins/configuration/mixin-base';
-import k8sBase from '@/mixins/configuration/k8s-base';
-import applicationParams from '@/json/k8s-deployment.json';
-import containerParams from '@/json/k8s-container.json';
+
 import { clearObjValue } from '@/common/util';
+import ace from '@/components/ace-editor';
+import bkKeyer from '@/components/keyer';
+import bkModuleKeyer from '@/components/module-keyer';
+import containerParams from '@/json/k8s-container.json';
+import applicationParams from '@/json/k8s-deployment.json';
+import k8sBase from '@/mixins/configuration/k8s-base';
+import mixinBase from '@/mixins/configuration/mixin-base';
 
 export default {
   name: 'K8SDeployment',

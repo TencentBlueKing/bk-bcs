@@ -9,10 +9,11 @@
 </template>
 <script lang="ts">
 import moment from 'moment';
+import { defineComponent, onBeforeUnmount, onMounted, PropType, ref, toRefs } from 'vue';
 import ECharts from 'vue-echarts/components/ECharts.vue';
+
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
-import { defineComponent, onBeforeUnmount, onMounted, PropType, ref, toRefs } from 'vue';
 import { clusterMetric } from '@/api/modules/monitor';
 import $i18n from '@/i18n/i18n-setup';
 export default defineComponent({

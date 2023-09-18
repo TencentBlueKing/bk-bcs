@@ -36,10 +36,10 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 	resp := new(pbcs.CreateConfigItemResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,10 +110,10 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 	resp := new(pbcs.BatchUpsertConfigItemsResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -169,10 +169,10 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 	resp := new(pbcs.UpdateConfigItemResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -270,10 +270,10 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbcs.DeleteConfigIt
 	resp := new(pbcs.DeleteConfigItemResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -299,13 +299,12 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 	*pbcs.GetConfigItemResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.GetConfigItemResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -385,7 +384,10 @@ func (s *Service) getReleasedConfigItem(grpcKit *kit.Kit, configItemID, bizID, a
 			Spec:       releasedCI.ConfigItemSpec,
 			Attachment: releasedCI.Attachment,
 		},
-		Content: releasedCI.CommitSpec.Content,
+		Content: &pbcontent.ContentSpec{
+			Signature: releasedCI.CommitSpec.Content.Signature,
+			ByteSize:  releasedCI.CommitSpec.Content.ByteSize,
+		},
 	}
 	return resp, nil
 }
@@ -398,22 +400,22 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	resp := new(pbcs.ListConfigItemsResp)
 
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: &meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...); err != nil {
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
-	// Note: list latest release and compare each config item exists and latest commit id to get changing status
+	// Note: list the latest release and compare each config item exists and latest commit id to get changing status
 	r := &pbds.ListConfigItemsReq{
-		BizId:     grpcKit.BizID,
-		AppId:     req.AppId,
-		ReleaseId: req.ReleaseId,
-		Start:     req.Start,
-		Limit:     req.Limit,
-		All:       req.All,
-		SearchKey: req.SearchKey,
+		BizId:      grpcKit.BizID,
+		AppId:      req.AppId,
+		Start:      req.Start,
+		Limit:      req.Limit,
+		All:        req.All,
+		SearchKey:  req.SearchKey,
+		WithStatus: true,
 	}
 	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {
@@ -428,14 +430,57 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	return resp, nil
 }
 
+// ListReleasedConfigItems list released config items
+func (s *Service) ListReleasedConfigItems(ctx context.Context,
+	req *pbcs.ListReleasedConfigItemsReq) (
+	*pbcs.ListReleasedConfigItemsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListReleasedConfigItemsResp)
+
+	if req.ReleaseId <= 0 {
+		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
+	}
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListReleasedConfigItemsReq{
+		BizId:        req.BizId,
+		AppId:        req.AppId,
+		ReleaseId:    req.ReleaseId,
+		SearchFields: req.SearchFields,
+		SearchValue:  req.SearchValue,
+		Start:        req.Start,
+		Limit:        req.Limit,
+		All:          true,
+	}
+
+	rp, err := s.client.DS.ListReleasedConfigItems(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListReleasedConfigItemsResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
 // ListConfigItemCount get config item count number
 func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigItemCountReq) (*pbcs.ListConfigItemCountResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListConfigItemCountResp)
 	res := []*meta.ResourceAttribute{
-		{Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res...)
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}

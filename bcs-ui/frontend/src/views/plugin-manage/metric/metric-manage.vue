@@ -113,16 +113,18 @@
   </BcsContent>
 </template>
 <script lang="ts" setup>
-import BcsContent from '@/components/layout/Content.vue';
-import Row from '@/components/layout/Row.vue';
-import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
+import { ref, watch } from 'vue';
+
 import EditMetric from './edit-metric.vue';
 import useMetric from './use-metric';
-import { ref, watch } from 'vue';
-import useSideslider from '@/composables/use-sideslider';
+
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
+import BcsContent from '@/components/layout/Content.vue';
+import Row from '@/components/layout/Row.vue';
 import usePageConf from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
 
 const {

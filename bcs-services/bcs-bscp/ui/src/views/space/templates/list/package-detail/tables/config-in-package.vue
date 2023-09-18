@@ -26,13 +26,18 @@
   const handleMovedOut = () => {
     configTable.value.refreshListAfterDeleted(selectedConfigs.value.length)
     selectedConfigs.value = []
-    templateStore.$patch(state => {
-      state.needRefreshMenuFlag = true
-    })
+    updateRefreshFlag()
   }
 
   const refreshConfigList = () => {
     configTable.value.refreshList()
+    updateRefreshFlag()
+  }
+
+  const updateRefreshFlag = () => {
+    templateStore.$patch(state => {
+      state.needRefreshMenuFlag = true
+    })
   }
 
 </script>
@@ -47,8 +52,8 @@
     :current-pkg="currentPkg"
     :get-config-list="getConfigList">
     <template #tableOperations>
-      <AddConfigs :show-add-existing-config-option="true" @added="refreshConfigList" />
-      <BatchAddTo :configs="selectedConfigs" @added="refreshConfigList" />
+      <AddConfigs :show-add-existing-config-option="true" @refresh="refreshConfigList" />
+      <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
       <BatchMoveOutFromPkg :configs="selectedConfigs" :current-pkg="(currentPkg as number)" @movedOut="handleMovedOut" />
     </template>
   </CommonConfigTable>
