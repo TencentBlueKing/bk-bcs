@@ -41,7 +41,7 @@
 
   watch(() => versionData.value.id, val => {
     if (val === 0) {
-      checkCreateServicePerm()
+      checkCreateVersionPerm()
     }
   })
 
@@ -62,7 +62,7 @@
     if (hasCreateVersionPerm.value) {
       isVersionSliderShow.value = true
     } else {
-      permissionQuery.value = permissionQueryResource.value
+      permissionQuery.value = { resources: permissionQueryResource.value }
       showApplyPermDialog.value = true
     }
   }

@@ -22,8 +22,12 @@
   const isDeleteConfigDialogShow = ref(false)
 
   const getConfigList = (params: ICommonQuery) => {
-    console.log('Config Without Package List Loading')
     return getTemplatesWithNoSpecifiedPackage(spaceId.value, currentTemplateSpace.value, params)
+  }
+
+  const refreshConfigList = () => {
+    configTable.value.refreshList()
+    updateRefreshFlag()
   }
 
   const handleAddToPkgsClick = (config: ITemplateConfigItem) => {
@@ -39,6 +43,10 @@
   const handleConfigsDeleted = () => {
     configTable.value.refreshListAfterDeleted(selectedConfigs.value.length)
     selectedConfigs.value = []
+    updateRefreshFlag()
+  }
+
+  const updateRefreshFlag = () => {
     templateStore.$patch(state => {
       state.needRefreshMenuFlag = true
     })
@@ -54,7 +62,7 @@
     :space-id="spaceId"
     :get-config-list="getConfigList">
     <template #tableOperations>
-      <BatchAddTo :configs="selectedConfigs" />
+      <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
       <DeleteConfigs
         :space-id="spaceId"
         :current-template-space="currentTemplateSpace"
@@ -66,7 +74,7 @@
       <bk-button class="delete-btn" theme="primary" text @click="handleDeleteClick(config)">删除</bk-button>
     </template>
   </CommonConfigTable>
-  <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="selectedConfigs" />
+  <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="selectedConfigs" @added="refreshConfigList" />
   <DeleteConfigDialog v-model:show="isDeleteConfigDialogShow" :configs="selectedConfigs" @deleted="handleConfigsDeleted" />
 </template>
 <style lang="scss" scoped>

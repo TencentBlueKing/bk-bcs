@@ -37,7 +37,7 @@
 
   const handleSubmitClick = () => {
     if (clicked.value) {
-      window.reload()
+      window.location.reload()
     } else {
       goToIAM()
     }
