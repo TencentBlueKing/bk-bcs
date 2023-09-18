@@ -48,7 +48,7 @@ type AuthClient interface {
 	// iam pull resource callback.
 	PullResource(ctx context.Context, in *PullResourceReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	// 权限中心权限检测
-	CheckPermission(ctx context.Context, in *ResourceAttribute, opts ...grpc.CallOption) (*CheckPermissionResp, error)
+	CheckPermission(ctx context.Context, in *CheckPermissionReq, opts ...grpc.CallOption) (*CheckPermissionResp, error)
 	// authorize resource batch.
 	AuthorizeBatch(ctx context.Context, in *AuthorizeBatchReq, opts ...grpc.CallOption) (*AuthorizeBatchResp, error)
 	// get iam permission to apply.
@@ -112,7 +112,7 @@ func (c *authClient) PullResource(ctx context.Context, in *PullResourceReq, opts
 	return out, nil
 }
 
-func (c *authClient) CheckPermission(ctx context.Context, in *ResourceAttribute, opts ...grpc.CallOption) (*CheckPermissionResp, error) {
+func (c *authClient) CheckPermission(ctx context.Context, in *CheckPermissionReq, opts ...grpc.CallOption) (*CheckPermissionResp, error) {
 	out := new(CheckPermissionResp)
 	err := c.cc.Invoke(ctx, Auth_CheckPermission_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -180,7 +180,7 @@ type AuthServer interface {
 	// iam pull resource callback.
 	PullResource(context.Context, *PullResourceReq) (*structpb.Struct, error)
 	// 权限中心权限检测
-	CheckPermission(context.Context, *ResourceAttribute) (*CheckPermissionResp, error)
+	CheckPermission(context.Context, *CheckPermissionReq) (*CheckPermissionResp, error)
 	// authorize resource batch.
 	AuthorizeBatch(context.Context, *AuthorizeBatchReq) (*AuthorizeBatchResp, error)
 	// get iam permission to apply.
@@ -210,7 +210,7 @@ func (UnimplementedAuthServer) QuerySpaceByAppID(context.Context, *QuerySpaceByA
 func (UnimplementedAuthServer) PullResource(context.Context, *PullResourceReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PullResource not implemented")
 }
-func (UnimplementedAuthServer) CheckPermission(context.Context, *ResourceAttribute) (*CheckPermissionResp, error) {
+func (UnimplementedAuthServer) CheckPermission(context.Context, *CheckPermissionReq) (*CheckPermissionResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckPermission not implemented")
 }
 func (UnimplementedAuthServer) AuthorizeBatch(context.Context, *AuthorizeBatchReq) (*AuthorizeBatchResp, error) {
@@ -331,7 +331,7 @@ func _Auth_PullResource_Handler(srv interface{}, ctx context.Context, dec func(i
 }
 
 func _Auth_CheckPermission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ResourceAttribute)
+	in := new(CheckPermissionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -343,7 +343,7 @@ func _Auth_CheckPermission_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: Auth_CheckPermission_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).CheckPermission(ctx, req.(*ResourceAttribute))
+		return srv.(AuthServer).CheckPermission(ctx, req.(*CheckPermissionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }

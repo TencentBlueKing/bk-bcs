@@ -24,8 +24,6 @@ type ResourceAttribute struct {
 	Basic `json:",inline"`
 	// BizID biz id of the iam resource.
 	BizID uint32 `json:"biz_id,omitempty"`
-	// GenApplyURL 是否生成申请链接
-	GenApplyURL bool `json:"gen_apply_url,omitempty"`
 }
 
 // Basic defines the basic info for a resource.
