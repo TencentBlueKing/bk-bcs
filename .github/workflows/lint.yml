@@ -2,7 +2,7 @@ name: lint
 on: [push, pull_request]
 jobs:
   bcs-webconsole:
-    name: lint
+    name: bcs-webconsole
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -10,17 +10,17 @@ jobs:
       - name: setup go
         uses: actions/setup-go@v3
         with:
-          go-version-file: bcs-services/bcs-monitor/go.mod
+          go-version-file: bcs-services/bcs-webconsole/go.mod
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
           args: --timeout=30m --issues-exit-code=0
-          working-directory: bcs-services/bcs-monitor
+          working-directory: bcs-services/bcs-webconsole
       - name: go mod tidy check
         uses: katexochen/go-tidy-check@v2
   bcs-monitor:
-    name: lint
+    name: bcs-monitor
     runs-on: ubuntu-latest
     steps:
       - name: checkout
