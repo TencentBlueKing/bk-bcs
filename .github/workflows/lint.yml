@@ -21,7 +21,6 @@ jobs:
           version: v1.54.2
           args: --timeout=30m --issues-exit-code=0
           working-directory: bcs-services/bcs-webconsole
-
   bcs-monitor:
     name: bcs-monitor
     runs-on: ubuntu-latest
@@ -42,3 +41,23 @@ jobs:
           version: v1.54.2
           args: --timeout=30m --issues-exit-code=0
           working-directory: bcs-services/bcs-monitor
+  bcs-bscp:
+    name: bcs-bscp
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: bcs-services/bcs-bscp/go.mod
+      - name: go mod tidy check
+        uses: katexochen/go-tidy-check@v2
+        with:
+          modules: bcs-services/bcs-bscp
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54.2
+          args: --timeout=30m --issues-exit-code=0
+          working-directory: bcs-services/bcs-bscp
