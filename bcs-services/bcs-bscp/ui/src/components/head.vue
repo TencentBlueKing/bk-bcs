@@ -2,7 +2,7 @@
   import { ref, computed, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
-  import { AngleDown } from 'bkui-vue/lib/icon'
+  import { AngleDown,HelpFill } from 'bkui-vue/lib/icon'
   import { useGlobalStore } from '../store/global'
   import { useUserStore } from '../store/user'
   import { useTemplateStore } from '../store/template'
@@ -83,6 +83,27 @@
     }
   }
 
+  // 下拉菜单
+  const dropdownList = [
+    {
+      title: '产品文档',
+      url:'https://iwiki.woa.com/space/BSCP'
+    },
+    {
+      title: '版本日志',
+      url:'https://github.com/TencentBlueKing/bk-bcs/blob/master/bcs-ui/CHANGELOG/zh_CN/v1.29.0_2023-05-11.md'
+    },
+    {
+      title: '功能特性',
+      url:'https://github.com/TencentBlueKing/bk-bcs/blob/master/bcs-ui/frontend/static/features.md'
+    }
+  ]
+  const handleSelectDropdownItem = (url: string) => {
+    window.open(url)
+    isShowDropdown.value = !isShowDropdown.value
+  }
+  const isShowDropdown = ref(false)
+
 </script>
 
 <template>
@@ -130,6 +151,23 @@
           </div>
         </bk-option>
       </bk-select>
+      <bk-dropdown trigger="click" ext-cls="dropdown" :is-show="isShowDropdown" @hide="isShowDropdown = !isShowDropdown">
+        <bk-button text @click="isShowDropdown = !isShowDropdown" :class="['dropdown-trigger', isShowDropdown ? 'active':'']">
+            <help-fill width="16" height="16" :fill="isShowDropdown ? '#fff' : '#96a2b9'"/>
+        </bk-button>
+        <template #content>
+          <bk-dropdown-menu ext-cls="dropdown-menu">
+            <bk-dropdown-item
+              v-for="item in dropdownList"
+              :key="item.title"
+              ext-cls="dropdown-item"
+              @click="handleSelectDropdownItem(item.url)"
+              >
+            {{ item.title }}
+            </bk-dropdown-item>
+          </bk-dropdown-menu>
+        </template>
+      </bk-dropdown>
       <span>{{ userInfo.username }}</span>
     </div>
   </div>
@@ -258,4 +296,32 @@
   .space-selector-popover .bk-select-option {
     padding: 0 !important;
   }
+
+  .dropdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    width: 40px;
+    height: 40px;
+    .dropdown-trigger{
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      &:hover{
+       background-color: rgba($color: #96a2b9, $alpha: 0.3);
+       .bk-icon {
+        fill: #fff !important;
+       }
+      }
+    }
+    .active{
+      background-color: rgba($color: #96a2b9, $alpha: 0.3);
+    }
+  }
+  .dropdown-menu .dropdown-item:hover {
+    background-color: #f0f1f5;
+    color: #3a84ff;
+  }
+
 </style>
