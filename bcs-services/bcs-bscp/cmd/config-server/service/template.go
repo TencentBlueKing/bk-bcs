@@ -32,7 +32,6 @@ import (
 // CreateTemplate create a template
 func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateReq) (*pbcs.CreateTemplateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateTemplateResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -82,7 +81,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 		return nil, err
 	}
 
-	resp = &pbcs.CreateTemplateResp{
+	resp := &pbcs.CreateTemplateResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -91,7 +90,6 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 // DeleteTemplate delete a template
 func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateReq) (*pbcs.DeleteTemplateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteTemplateResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -113,14 +111,13 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateRe
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.DeleteTemplateResp{}, nil
 }
 
 // BatchDeleteTemplate delete templates in batch
 func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDeleteTemplateReq) (
 	*pbcs.BatchDeleteTemplateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.BatchDeleteTemplateResp)
 
 	// validate input param
 	templateIDs, err := tools.GetUint32List(req.TemplateIds)
@@ -153,13 +150,12 @@ func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDelete
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.BatchDeleteTemplateResp{}, nil
 }
 
 // UpdateTemplate update a template
 func (s *Service) UpdateTemplate(ctx context.Context, req *pbcs.UpdateTemplateReq) (*pbcs.UpdateTemplateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateTemplateResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -183,13 +179,12 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbcs.UpdateTemplateRe
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.UpdateTemplateResp{}, nil
 }
 
 // ListTemplates list templates
 func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq) (*pbcs.ListTemplatesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplatesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -214,7 +209,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplatesResp{
+	resp := &pbcs.ListTemplatesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -225,7 +220,6 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbcs.AddTmplsToTmplSetsReq) (
 	*pbcs.AddTmplsToTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.AddTmplsToTmplSetsResp)
 
 	// validate input param
 	idsLen := len(req.TemplateIds)
@@ -259,14 +253,13 @@ func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbcs.AddTmplsToTm
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.AddTmplsToTmplSetsResp{}, nil
 }
 
 // DeleteTmplsFromTmplSets delete templates from template sets
 func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbcs.DeleteTmplsFromTmplSetsReq) (
 	*pbcs.DeleteTmplsFromTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteTmplsFromTmplSetsResp)
 
 	// validate input param
 	idsLen := len(req.TemplateIds)
@@ -300,14 +293,13 @@ func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbcs.DeleteT
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.DeleteTmplsFromTmplSetsResp{}, nil
 }
 
 // ListTemplatesByIDs list templates by ids
 func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplatesByIDsReq) (
 	*pbcs.ListTemplatesByIDsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplatesByIDsResp)
 
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.Ids)
@@ -337,7 +329,7 @@ func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplate
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplatesByIDsResp{
+	resp := &pbcs.ListTemplatesByIDsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
@@ -347,7 +339,6 @@ func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplate
 func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTemplatesNotBoundReq) (
 	*pbcs.ListTemplatesNotBoundResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplatesNotBoundResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -372,7 +363,7 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTempl
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplatesNotBoundResp{
+	resp := &pbcs.ListTemplatesNotBoundResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -383,7 +374,6 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTempl
 func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbcs.ListTmplsOfTmplSetReq) (
 	*pbcs.ListTmplsOfTmplSetResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplsOfTmplSetResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -409,7 +399,7 @@ func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbcs.ListTmplsOfT
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplsOfTmplSetResp{
+	resp := &pbcs.ListTmplsOfTmplSetResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

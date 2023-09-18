@@ -28,9 +28,9 @@ import (
 )
 
 // CreateTemplateSpace create a template space
-func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbcs.CreateTemplateSpaceReq) (*pbcs.CreateTemplateSpaceResp, error) {
+func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbcs.CreateTemplateSpaceReq) (
+	*pbcs.CreateTemplateSpaceResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateTemplateSpaceResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -58,16 +58,16 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbcs.CreateTempl
 		return nil, err
 	}
 
-	resp = &pbcs.CreateTemplateSpaceResp{
+	resp := &pbcs.CreateTemplateSpaceResp{
 		Id: rp.Id,
 	}
 	return resp, nil
 }
 
 // DeleteTemplateSpace delete a template space
-func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbcs.DeleteTemplateSpaceReq) (*pbcs.DeleteTemplateSpaceResp, error) {
+func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbcs.DeleteTemplateSpaceReq) (
+	*pbcs.DeleteTemplateSpaceResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteTemplateSpaceResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -87,13 +87,13 @@ func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbcs.DeleteTempl
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.DeleteTemplateSpaceResp{}, nil
 }
 
 // UpdateTemplateSpace update a template space
-func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbcs.UpdateTemplateSpaceReq) (*pbcs.UpdateTemplateSpaceResp, error) {
+func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbcs.UpdateTemplateSpaceReq) (
+	*pbcs.UpdateTemplateSpaceResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateTemplateSpaceResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -116,13 +116,13 @@ func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbcs.UpdateTempl
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.UpdateTemplateSpaceResp{}, nil
 }
 
 // ListTemplateSpaces list template spaces
-func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbcs.ListTemplateSpacesReq) (*pbcs.ListTemplateSpacesResp, error) {
+func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbcs.ListTemplateSpacesReq) (
+	*pbcs.ListTemplateSpacesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateSpacesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -146,7 +146,7 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbcs.ListTemplate
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateSpacesResp{
+	resp := &pbcs.ListTemplateSpacesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -195,7 +195,6 @@ func (s *Service) CreateDefaultTmplSpace(ctx context.Context, req *pbcs.CreateDe
 func (s *Service) ListTmplSpacesByIDs(ctx context.Context, req *pbcs.ListTmplSpacesByIDsReq) (*pbcs.
 	ListTmplSpacesByIDsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplSpacesByIDsResp)
 
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.Ids)
@@ -225,7 +224,7 @@ func (s *Service) ListTmplSpacesByIDs(ctx context.Context, req *pbcs.ListTmplSpa
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplSpacesByIDsResp{
+	resp := &pbcs.ListTmplSpacesByIDsResp{
 		Details: rp.Details,
 	}
 	return resp, nil

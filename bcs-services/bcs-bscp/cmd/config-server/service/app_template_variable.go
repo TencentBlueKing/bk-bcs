@@ -28,7 +28,6 @@ import (
 func (s *Service) ExtractAppTmplVariables(ctx context.Context, req *pbcs.ExtractAppTmplVariablesReq) (
 	*pbcs.ExtractAppTmplVariablesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ExtractAppTmplVariablesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -49,7 +48,7 @@ func (s *Service) ExtractAppTmplVariables(ctx context.Context, req *pbcs.Extract
 		return nil, err
 	}
 
-	resp = &pbcs.ExtractAppTmplVariablesResp{
+	resp := &pbcs.ExtractAppTmplVariablesResp{
 		Details: rp.Details,
 	}
 	return resp, nil
@@ -59,7 +58,6 @@ func (s *Service) ExtractAppTmplVariables(ctx context.Context, req *pbcs.Extract
 func (s *Service) GetAppTmplVariableRefs(ctx context.Context, req *pbcs.GetAppTmplVariableRefsReq) (
 	*pbcs.GetAppTmplVariableRefsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.GetAppTmplVariableRefsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -80,18 +78,16 @@ func (s *Service) GetAppTmplVariableRefs(ctx context.Context, req *pbcs.GetAppTm
 		return nil, err
 	}
 
-	resp = &pbcs.GetAppTmplVariableRefsResp{
+	resp := &pbcs.GetAppTmplVariableRefsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
 }
 
 // GetReleasedAppTmplVariableRefs get released app template variable references
-func (s *Service) GetReleasedAppTmplVariableRefs(ctx context.Context,
-	req *pbcs.GetReleasedAppTmplVariableRefsReq) (
+func (s *Service) GetReleasedAppTmplVariableRefs(ctx context.Context, req *pbcs.GetReleasedAppTmplVariableRefsReq) (
 	*pbcs.GetReleasedAppTmplVariableRefsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.GetReleasedAppTmplVariableRefsResp)
 
 	if req.ReleaseId <= 0 {
 		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
@@ -117,7 +113,7 @@ func (s *Service) GetReleasedAppTmplVariableRefs(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.GetReleasedAppTmplVariableRefsResp{
+	resp := &pbcs.GetReleasedAppTmplVariableRefsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
@@ -127,7 +123,6 @@ func (s *Service) GetReleasedAppTmplVariableRefs(ctx context.Context,
 func (s *Service) ListAppTmplVariables(ctx context.Context, req *pbcs.ListAppTmplVariablesReq) (
 	*pbcs.ListAppTmplVariablesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListAppTmplVariablesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -148,7 +143,7 @@ func (s *Service) ListAppTmplVariables(ctx context.Context, req *pbcs.ListAppTmp
 		return nil, err
 	}
 
-	resp = &pbcs.ListAppTmplVariablesResp{
+	resp := &pbcs.ListAppTmplVariablesResp{
 		Details: rp.Details,
 	}
 	return resp, nil
@@ -158,7 +153,6 @@ func (s *Service) ListAppTmplVariables(ctx context.Context, req *pbcs.ListAppTmp
 func (s *Service) ListReleasedAppTmplVariables(ctx context.Context, req *pbcs.ListReleasedAppTmplVariablesReq) (
 	*pbcs.ListReleasedAppTmplVariablesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListReleasedAppTmplVariablesResp)
 
 	if req.ReleaseId <= 0 {
 		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
@@ -184,7 +178,7 @@ func (s *Service) ListReleasedAppTmplVariables(ctx context.Context, req *pbcs.Li
 		return nil, err
 	}
 
-	resp = &pbcs.ListReleasedAppTmplVariablesResp{
+	resp := &pbcs.ListReleasedAppTmplVariablesResp{
 		Details: rp.Details,
 	}
 	return resp, nil
@@ -194,7 +188,6 @@ func (s *Service) ListReleasedAppTmplVariables(ctx context.Context, req *pbcs.Li
 func (s *Service) UpdateAppTmplVariables(ctx context.Context, req *pbcs.UpdateAppTmplVariablesReq) (
 	*pbcs.UpdateAppTmplVariablesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateAppTmplVariablesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -220,5 +213,5 @@ func (s *Service) UpdateAppTmplVariables(ctx context.Context, req *pbcs.UpdateAp
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.UpdateAppTmplVariablesResp{}, nil
 }

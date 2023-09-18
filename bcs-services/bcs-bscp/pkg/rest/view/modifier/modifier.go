@@ -10,6 +10,7 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
+// Package modifier is the interface used to modify response
 package modifier
 
 // RespModifier defines methods for modifying response

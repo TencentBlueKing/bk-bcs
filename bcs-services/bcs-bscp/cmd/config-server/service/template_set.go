@@ -30,7 +30,6 @@ import (
 func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplateSetReq) (*pbcs.CreateTemplateSetResp,
 	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateTemplateSetResp)
 
 	// validate input param
 	idsLen := len(req.TemplateIds)
@@ -65,7 +64,7 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplat
 		return nil, err
 	}
 
-	resp = &pbcs.CreateTemplateSetResp{
+	resp := &pbcs.CreateTemplateSetResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -75,7 +74,6 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplat
 func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbcs.DeleteTemplateSetReq) (*pbcs.DeleteTemplateSetResp,
 	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteTemplateSetResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -97,14 +95,13 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbcs.DeleteTemplat
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.DeleteTemplateSetResp{}, nil
 }
 
 // UpdateTemplateSet update a template set
 func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbcs.UpdateTemplateSetReq) (*pbcs.UpdateTemplateSetResp,
 	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateTemplateSetResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -133,14 +130,13 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbcs.UpdateTemplat
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.UpdateTemplateSetResp{}, nil
 }
 
 // ListTemplateSets list template sets
 func (s *Service) ListTemplateSets(ctx context.Context, req *pbcs.ListTemplateSetsReq) (*pbcs.ListTemplateSetsResp,
 	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateSetsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -165,7 +161,7 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbcs.ListTemplateSe
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateSetsResp{
+	resp := &pbcs.ListTemplateSetsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -176,7 +172,6 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbcs.ListTemplateSe
 func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbcs.ListAppTemplateSetsReq) (
 	*pbcs.ListAppTemplateSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListAppTemplateSetsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -197,7 +192,7 @@ func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbcs.ListAppTemp
 		return nil, err
 	}
 
-	resp = &pbcs.ListAppTemplateSetsResp{
+	resp := &pbcs.ListAppTemplateSetsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
@@ -207,7 +202,6 @@ func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbcs.ListAppTemp
 func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbcs.ListTemplateSetsByIDsReq) (
 	*pbcs.ListTemplateSetsByIDsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateSetsByIDsResp)
 
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.Ids)
@@ -237,7 +231,7 @@ func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbcs.ListTempl
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateSetsByIDsResp{
+	resp := &pbcs.ListTemplateSetsByIDsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
@@ -247,7 +241,6 @@ func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbcs.ListTempl
 func (s *Service) ListTmplSetsOfBiz(ctx context.Context, req *pbcs.ListTmplSetsOfBizReq) (
 	*pbcs.ListTmplSetsOfBizResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplSetsOfBizResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -267,7 +260,7 @@ func (s *Service) ListTmplSetsOfBiz(ctx context.Context, req *pbcs.ListTmplSetsO
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplSetsOfBizResp{
+	resp := &pbcs.ListTmplSetsOfBizResp{
 		Details: rp.Details,
 	}
 	return resp, nil

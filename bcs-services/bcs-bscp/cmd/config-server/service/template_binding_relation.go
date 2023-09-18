@@ -29,7 +29,6 @@ import (
 func (s *Service) ListTmplBoundCounts(ctx context.Context, req *pbcs.ListTmplBoundCountsReq) (
 	*pbcs.ListTmplBoundCountsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplBoundCountsResp)
 
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.TemplateIds)
@@ -61,7 +60,7 @@ func (s *Service) ListTmplBoundCounts(ctx context.Context, req *pbcs.ListTmplBou
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplBoundCountsResp{
+	resp := &pbcs.ListTmplBoundCountsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
@@ -71,7 +70,6 @@ func (s *Service) ListTmplBoundCounts(ctx context.Context, req *pbcs.ListTmplBou
 func (s *Service) ListTmplRevisionBoundCounts(ctx context.Context, req *pbcs.ListTmplRevisionBoundCountsReq) (
 	*pbcs.ListTmplRevisionBoundCountsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplRevisionBoundCountsResp)
 
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.TemplateRevisionIds)
@@ -104,7 +102,7 @@ func (s *Service) ListTmplRevisionBoundCounts(ctx context.Context, req *pbcs.Lis
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplRevisionBoundCountsResp{
+	resp := &pbcs.ListTmplRevisionBoundCountsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
@@ -114,7 +112,6 @@ func (s *Service) ListTmplRevisionBoundCounts(ctx context.Context, req *pbcs.Lis
 func (s *Service) ListTmplSetBoundCounts(ctx context.Context, req *pbcs.ListTmplSetBoundCountsReq) (
 	*pbcs.ListTmplSetBoundCountsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplSetBoundCountsResp)
 
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.TemplateSetIds)
@@ -146,18 +143,16 @@ func (s *Service) ListTmplSetBoundCounts(ctx context.Context, req *pbcs.ListTmpl
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplSetBoundCountsResp{
+	resp := &pbcs.ListTmplSetBoundCountsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
 }
 
 // ListTmplBoundUnnamedApps list template bound unnamed app details
-func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
-	req *pbcs.ListTmplBoundUnnamedAppsReq) (
+func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context, req *pbcs.ListTmplBoundUnnamedAppsReq) (
 	*pbcs.ListTmplBoundUnnamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplBoundUnnamedAppsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -181,7 +176,7 @@ func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplBoundUnnamedAppsResp{
+	resp := &pbcs.ListTmplBoundUnnamedAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -189,11 +184,9 @@ func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
 }
 
 // ListTmplBoundNamedApps list template bound named app details
-func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
-	req *pbcs.ListTmplBoundNamedAppsReq) (
+func (s *Service) ListTmplBoundNamedApps(ctx context.Context, req *pbcs.ListTmplBoundNamedAppsReq) (
 	*pbcs.ListTmplBoundNamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplBoundNamedAppsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -217,7 +210,7 @@ func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplBoundNamedAppsResp{
+	resp := &pbcs.ListTmplBoundNamedAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -225,11 +218,9 @@ func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
 }
 
 // ListTmplBoundTmplSets list template bound template set details
-func (s *Service) ListTmplBoundTmplSets(ctx context.Context,
-	req *pbcs.ListTmplBoundTmplSetsReq) (
+func (s *Service) ListTmplBoundTmplSets(ctx context.Context, req *pbcs.ListTmplBoundTmplSetsReq) (
 	*pbcs.ListTmplBoundTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplBoundTmplSetsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -253,7 +244,7 @@ func (s *Service) ListTmplBoundTmplSets(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplBoundTmplSetsResp{
+	resp := &pbcs.ListTmplBoundTmplSetsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -261,11 +252,9 @@ func (s *Service) ListTmplBoundTmplSets(ctx context.Context,
 }
 
 // ListMultiTmplBoundTmplSets list multiple template bound template set details
-func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context,
-	req *pbcs.ListMultiTmplBoundTmplSetsReq) (
+func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context, req *pbcs.ListMultiTmplBoundTmplSetsReq) (
 	*pbcs.ListMultiTmplBoundTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListMultiTmplBoundTmplSetsResp)
 
 	// validate input param
 	templateIDs, err := tools.GetUint32List(req.TemplateIds)
@@ -300,7 +289,7 @@ func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListMultiTmplBoundTmplSetsResp{
+	resp := &pbcs.ListMultiTmplBoundTmplSetsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -308,11 +297,9 @@ func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context,
 }
 
 // ListTmplRevisionBoundUnnamedApps list template revision bound unnamed app details
-func (s *Service) ListTmplRevisionBoundUnnamedApps(ctx context.Context,
-	req *pbcs.ListTmplRevisionBoundUnnamedAppsReq) (
+func (s *Service) ListTmplRevisionBoundUnnamedApps(ctx context.Context, req *pbcs.ListTmplRevisionBoundUnnamedAppsReq) (
 	*pbcs.ListTmplRevisionBoundUnnamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplRevisionBoundUnnamedAppsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -337,7 +324,7 @@ func (s *Service) ListTmplRevisionBoundUnnamedApps(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplRevisionBoundUnnamedAppsResp{
+	resp := &pbcs.ListTmplRevisionBoundUnnamedAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -348,7 +335,6 @@ func (s *Service) ListTmplRevisionBoundUnnamedApps(ctx context.Context,
 func (s *Service) ListTmplRevisionBoundNamedApps(ctx context.Context,
 	req *pbcs.ListTmplRevisionBoundNamedAppsReq) (*pbcs.ListTmplRevisionBoundNamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplRevisionBoundNamedAppsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -373,7 +359,7 @@ func (s *Service) ListTmplRevisionBoundNamedApps(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplRevisionBoundNamedAppsResp{
+	resp := &pbcs.ListTmplRevisionBoundNamedAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -381,11 +367,9 @@ func (s *Service) ListTmplRevisionBoundNamedApps(ctx context.Context,
 }
 
 // ListTmplSetBoundUnnamedApps list template set bound unnamed app details
-func (s *Service) ListTmplSetBoundUnnamedApps(ctx context.Context,
-	req *pbcs.ListTmplSetBoundUnnamedAppsReq) (
+func (s *Service) ListTmplSetBoundUnnamedApps(ctx context.Context, req *pbcs.ListTmplSetBoundUnnamedAppsReq) (
 	*pbcs.ListTmplSetBoundUnnamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplSetBoundUnnamedAppsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -409,7 +393,7 @@ func (s *Service) ListTmplSetBoundUnnamedApps(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplSetBoundUnnamedAppsResp{
+	resp := &pbcs.ListTmplSetBoundUnnamedAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -417,11 +401,9 @@ func (s *Service) ListTmplSetBoundUnnamedApps(ctx context.Context,
 }
 
 // ListMultiTmplSetBoundUnnamedApps list multiple template sets bound unnamed app details
-func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context,
-	req *pbcs.ListMultiTmplSetBoundUnnamedAppsReq) (
+func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context, req *pbcs.ListMultiTmplSetBoundUnnamedAppsReq) (
 	*pbcs.ListMultiTmplSetBoundUnnamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListMultiTmplSetBoundUnnamedAppsResp)
 
 	// validate input param
 	templateSetIDs, err := tools.GetUint32List(req.TemplateSetIds)
@@ -456,7 +438,7 @@ func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListMultiTmplSetBoundUnnamedAppsResp{
+	resp := &pbcs.ListMultiTmplSetBoundUnnamedAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -464,11 +446,9 @@ func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context,
 }
 
 // ListTmplSetBoundNamedApps list template set bound named app details
-func (s *Service) ListTmplSetBoundNamedApps(ctx context.Context,
-	req *pbcs.ListTmplSetBoundNamedAppsReq) (
+func (s *Service) ListTmplSetBoundNamedApps(ctx context.Context, req *pbcs.ListTmplSetBoundNamedAppsReq) (
 	*pbcs.ListTmplSetBoundNamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplSetBoundNamedAppsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -492,7 +472,7 @@ func (s *Service) ListTmplSetBoundNamedApps(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplSetBoundNamedAppsResp{
+	resp := &pbcs.ListTmplSetBoundNamedAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -500,11 +480,9 @@ func (s *Service) ListTmplSetBoundNamedApps(ctx context.Context,
 }
 
 // ListLatestTmplBoundUnnamedApps list the latest template bound unnamed app details
-func (s *Service) ListLatestTmplBoundUnnamedApps(ctx context.Context,
-	req *pbcs.ListLatestTmplBoundUnnamedAppsReq) (
+func (s *Service) ListLatestTmplBoundUnnamedApps(ctx context.Context, req *pbcs.ListLatestTmplBoundUnnamedAppsReq) (
 	*pbcs.ListLatestTmplBoundUnnamedAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListLatestTmplBoundUnnamedAppsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -528,7 +506,7 @@ func (s *Service) ListLatestTmplBoundUnnamedApps(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListLatestTmplBoundUnnamedAppsResp{
+	resp := &pbcs.ListLatestTmplBoundUnnamedAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

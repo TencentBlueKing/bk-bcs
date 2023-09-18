@@ -29,9 +29,9 @@ import (
 )
 
 // CreateTemplateRevision create a template Revision
-func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbcs.CreateTemplateRevisionReq) (*pbcs.CreateTemplateRevisionResp, error) {
+func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbcs.CreateTemplateRevisionReq) (
+	*pbcs.CreateTemplateRevisionResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateTemplateRevisionResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -70,16 +70,16 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbcs.CreateTe
 		return nil, err
 	}
 
-	resp = &pbcs.CreateTemplateRevisionResp{
+	resp := &pbcs.CreateTemplateRevisionResp{
 		Id: rp.Id,
 	}
 	return resp, nil
 }
 
 // DeleteTemplateRevision delete a template Revision
-func (s *Service) DeleteTemplateRevision(ctx context.Context, req *pbcs.DeleteTemplateRevisionReq) (*pbcs.DeleteTemplateRevisionResp, error) {
+func (s *Service) DeleteTemplateRevision(ctx context.Context, req *pbcs.DeleteTemplateRevisionReq) (
+	*pbcs.DeleteTemplateRevisionResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteTemplateRevisionResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -101,13 +101,13 @@ func (s *Service) DeleteTemplateRevision(ctx context.Context, req *pbcs.DeleteTe
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.DeleteTemplateRevisionResp{}, nil
 }
 
 // ListTemplateRevisions list template Revisions
-func (s *Service) ListTemplateRevisions(ctx context.Context, req *pbcs.ListTemplateRevisionsReq) (*pbcs.ListTemplateRevisionsResp, error) {
+func (s *Service) ListTemplateRevisions(ctx context.Context, req *pbcs.ListTemplateRevisionsReq) (
+	*pbcs.ListTemplateRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateRevisionsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -133,7 +133,7 @@ func (s *Service) ListTemplateRevisions(ctx context.Context, req *pbcs.ListTempl
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateRevisionsResp{
+	resp := &pbcs.ListTemplateRevisionsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -144,7 +144,6 @@ func (s *Service) ListTemplateRevisions(ctx context.Context, req *pbcs.ListTempl
 func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbcs.ListTemplateRevisionsByIDsReq) (*pbcs.
 	ListTemplateRevisionsByIDsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateRevisionsByIDsResp)
 
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.Ids)
@@ -174,20 +173,16 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbcs.List
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateRevisionsByIDsResp{
+	resp := &pbcs.ListTemplateRevisionsByIDsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
 }
 
 // ListTmplRevisionNamesByTmplIDs list template Revisions by ids
-func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context,
-	req *pbcs.ListTmplRevisionNamesByTmplIDsReq) (
-	*pbcs.
-		ListTmplRevisionNamesByTmplIDsResp, error) {
+func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context, req *pbcs.ListTmplRevisionNamesByTmplIDsReq) (
+	*pbcs.ListTmplRevisionNamesByTmplIDsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTmplRevisionNamesByTmplIDsResp)
-
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.TemplateIds)
 	if len(ids) > 0 {
@@ -217,7 +212,7 @@ func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListTmplRevisionNamesByTmplIDsResp{
+	resp := &pbcs.ListTmplRevisionNamesByTmplIDsResp{
 		Details: rp.Details,
 	}
 	return resp, nil

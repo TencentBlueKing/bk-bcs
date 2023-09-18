@@ -10,6 +10,7 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
+// Package migrator is the manager of db migrations
 package migrator
 
 import (

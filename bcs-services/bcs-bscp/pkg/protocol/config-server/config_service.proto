@@ -334,8 +334,7 @@ service Config {
             body : "*"
         };
     }
-    rpc ListTmplRevisionNamesByTmplIDs(ListTmplRevisionNamesByTmplIDsReq) returns
-        (ListTmplRevisionNamesByTmplIDsResp) {
+    rpc ListTmplRevisionNamesByTmplIDs(ListTmplRevisionNamesByTmplIDsReq) returns (ListTmplRevisionNamesByTmplIDsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids"
             body : "*"
@@ -414,8 +413,7 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions"
         };
     }
-    rpc UpdateAppBoundTmplRevisions(UpdateAppBoundTmplRevisionsReq) returns
-        (UpdateAppBoundTmplRevisionsResp) {
+    rpc UpdateAppBoundTmplRevisions(UpdateAppBoundTmplRevisionsReq) returns (UpdateAppBoundTmplRevisionsResp) {
         option (google.api.http) = {
             put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_revisions"
             body : "*"
@@ -451,26 +449,22 @@ service Config {
             body : "*"
         };
     }
-    rpc ListTmplBoundUnnamedApps(ListTmplBoundUnnamedAppsReq) returns
-        (ListTmplBoundUnnamedAppsResp) {
+    rpc ListTmplBoundUnnamedApps(ListTmplBoundUnnamedAppsReq) returns (ListTmplBoundUnnamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details"
         };
     }
-    rpc ListTmplBoundNamedApps(ListTmplBoundNamedAppsReq) returns
-        (ListTmplBoundNamedAppsResp) {
+    rpc ListTmplBoundNamedApps(ListTmplBoundNamedAppsReq) returns (ListTmplBoundNamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details"
         };
     }
-    rpc ListTmplBoundTmplSets(ListTmplBoundTmplSetsReq) returns
-        (ListTmplBoundTmplSetsResp) {
+    rpc ListTmplBoundTmplSets(ListTmplBoundTmplSetsReq) returns (ListTmplBoundTmplSetsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details"
         };
     }
-    rpc ListMultiTmplBoundTmplSets(ListMultiTmplBoundTmplSetsReq) returns
-        (ListMultiTmplBoundTmplSetsResp) {
+    rpc ListMultiTmplBoundTmplSets(ListMultiTmplBoundTmplSetsReq) returns (ListMultiTmplBoundTmplSetsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_template_set_details"
         };
@@ -481,14 +475,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details"
         };
     }
-    rpc ListTmplRevisionBoundNamedApps(ListTmplRevisionBoundNamedAppsReq) returns
-        (ListTmplRevisionBoundNamedAppsResp) {
+    rpc ListTmplRevisionBoundNamedApps(ListTmplRevisionBoundNamedAppsReq) returns (ListTmplRevisionBoundNamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details"
         };
     }
-    rpc ListTmplSetBoundUnnamedApps(ListTmplSetBoundUnnamedAppsReq) returns
-        (ListTmplSetBoundUnnamedAppsResp) {
+    rpc ListTmplSetBoundUnnamedApps(ListTmplSetBoundUnnamedAppsReq) returns (ListTmplSetBoundUnnamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details"
         };
@@ -499,14 +491,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_unnamed_app_details"
         };
     }
-    rpc ListTmplSetBoundNamedApps(ListTmplSetBoundNamedAppsReq) returns
-        (ListTmplSetBoundNamedAppsResp) {
+    rpc ListTmplSetBoundNamedApps(ListTmplSetBoundNamedAppsReq) returns (ListTmplSetBoundNamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details"
         };
     }
-    rpc ListLatestTmplBoundUnnamedApps(ListLatestTmplBoundUnnamedAppsReq) returns
-        (ListLatestTmplBoundUnnamedAppsResp) {
+    rpc ListLatestTmplBoundUnnamedApps(ListLatestTmplBoundUnnamedAppsReq) returns (ListLatestTmplBoundUnnamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/latest/bound_unnamed_app_details"
         };
@@ -540,14 +530,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/extract_template_variables"
         };
     }
-    rpc GetAppTmplVariableRefs(GetAppTmplVariableRefsReq) returns
-        (GetAppTmplVariableRefsResp) {
+    rpc GetAppTmplVariableRefs(GetAppTmplVariableRefsReq) returns (GetAppTmplVariableRefsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"
         };
     }
-    rpc GetReleasedAppTmplVariableRefs(GetReleasedAppTmplVariableRefsReq) returns
-        (GetReleasedAppTmplVariableRefsResp) {
+    rpc GetReleasedAppTmplVariableRefs(GetReleasedAppTmplVariableRefsReq) returns (GetReleasedAppTmplVariableRefsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables_references"
         };
@@ -563,8 +551,7 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"
         };
     }
-    rpc ListReleasedAppTmplVariables(ListReleasedAppTmplVariablesReq) returns
-        (ListReleasedAppTmplVariablesResp) {
+    rpc ListReleasedAppTmplVariables(ListReleasedAppTmplVariablesReq) returns (ListReleasedAppTmplVariablesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables"
         };
