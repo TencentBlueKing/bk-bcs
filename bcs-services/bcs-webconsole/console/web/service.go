@@ -15,20 +15,19 @@ package web
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
-	"path/filepath"
 
 	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/gin-gonic/gin"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
@@ -58,7 +57,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web.GET("/replay/files", metrics.RequestCollect("ReplayFilesPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFoldersPageHandler)
 	web.GET("/replay/files/:folder", metrics.RequestCollect("ReplayFilesPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFilesPageHandler)
 	web.GET("/replay/:folderName/:fileName", metrics.RequestCollect("ReplayDetailPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayDetailPageHandler)
-
+	web.GET("/play", s.PlayHandler)
 	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
 	web.GET("/-/ready", s.ReadyHandler)
@@ -68,18 +67,13 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 // ReplayFilesPageHandler 回放文件
 func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 	folderName := c.Param("folder")
-	baseDir := config.G.Audit.DataDir
-	dir := filepath.Join(baseDir, folderName)
-	entries, err := os.ReadDir(dir)
+	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
-		klog.Errorf("read dir err", err)
-		return
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
 	}
-	fileNames := make([]string, 0)
-	for _, entry := range entries {
-		if entry.Type().IsRegular() {
-			fileNames = append(fileNames, entry.Name())
-		}
+	fileNames, err := storage.ListFile(c, folderName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("List storage files err: %v\n", err))
 	}
 	data := gin.H{
 		"folder_name":     folderName,
@@ -91,17 +85,13 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 
 // ReplayFoldersPageHandler 回放文件目录
 func (s *service) ReplayFoldersPageHandler(c *gin.Context) {
-	dirname := config.G.Audit.DataDir
-	entries, err := os.ReadDir(dirname)
+	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
-		klog.Errorf("read dir err", err)
-		return
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
 	}
-	folderNames := make([]string, 0)
-	for _, entry := range entries {
-		if entry.IsDir() {
-			folderNames = append(folderNames, entry.Name())
-		}
+	folderNames, err := storage.ListFolders(c, "")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("List storage folder err: %v\n", err))
 	}
 	data := gin.H{
 		"folder_names":    folderNames,
@@ -114,13 +104,33 @@ func (s *service) ReplayFoldersPageHandler(c *gin.Context) {
 func (s service) ReplayDetailPageHandler(c *gin.Context) {
 	folder := c.Param("folderName")
 	file := c.Param("fileName")
-	routePrefix := config.G.Web.RoutePrefix
-	data := fmt.Sprintf("%s/casts/%s/%s", routePrefix, folder, file)
+
+	data := fmt.Sprintf("http://localhost:8083%s/play?folderName=%s&fileName=%s", s.opts.RoutePrefix, folder, file)
+
 	res := gin.H{
 		"data":            data,
 		"SITE_STATIC_URL": s.opts.RoutePrefix,
 	}
 	c.HTML(http.StatusOK, "asciinema.html", res)
+}
+
+func (s *service) PlayHandler(c *gin.Context) {
+	folder := c.Query("folderName")
+	file := c.Query("fileName")
+	filePath := path.Join(folder, file)
+	storage, err := repository.NewProvider(config.G.Repository.StorageType)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
+	}
+	resp, err := storage.DownloadFile(c, filePath)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("Download storage file err: %v\n", err))
+	}
+
+	defer resp.Close()
+	c.Writer.Header().Set("Content-Type", "application/x-asciicast")
+	c.Writer.Header().Set("Cache-Control", "max-age=0, private, must-revalidate")
+	io.Copy(c.Writer, resp)
 }
 
 // IndexPageHandler index 页面

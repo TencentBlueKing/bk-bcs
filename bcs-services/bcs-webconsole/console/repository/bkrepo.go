@@ -67,7 +67,7 @@ func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]stri
 		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, folderName)
 
 	files := make([]string, 0)
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, rawURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return files, err
 	}
@@ -93,6 +93,42 @@ func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]stri
 		}
 	}
 	return files, nil
+}
+
+// ListFolders list of folders under current bkRepo folder
+func (b *bkrepoStorage) ListFolders(ctx context.Context, folderName string) ([]string, error) {
+	//节点详情 https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/node/node.md
+	//GET /repository/api/node/page/{projectId}/{repoName}/{fullPath}
+	rawURL := fmt.Sprintf("%s/repository/api/node/page/%s/%s/%s", config.G.Repository.Bkrepo.Endpoint,
+		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, folderName)
+
+	folders := make([]string, 0)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
+	if err != nil {
+		return folders, err
+	}
+	resp, err := b.client.Do(req)
+	if err != nil {
+		return folders, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return folders, fmt.Errorf("Get file list failed, Err code: %v\n", resp.StatusCode)
+	}
+	listResult := new(listFileResult)
+	if err := json.NewDecoder(resp.Body).Decode(listResult); err != nil {
+		return folders, fmt.Errorf("Unmarshal resp err: %v\n", err)
+	}
+	if len(listResult.Data.Records) <= 0 {
+		return folders, fmt.Errorf("folder %s is not exit", folderName)
+	}
+
+	for _, record := range listResult.Data.Records {
+		if record.Folder {
+			folders = append(folders, record.Name)
+		}
+	}
+	return folders, nil
 }
 
 // DownloadFile download file from bkRepo

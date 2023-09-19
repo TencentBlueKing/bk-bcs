@@ -32,8 +32,7 @@ type BkRepoConf struct {
 // CosConf cos配置
 type CosConf struct {
 	BucketName string `yaml:"bucket_name"`
-	AppID      string `yaml:"app_id"`
-	Region     string `yaml:"region"`
+	Endpoint   string `yaml:"endpoint"`
 	SecretID   string `yaml:"secret_id"`
 	SecretKey  string `yaml:"secret_key"`
 }
