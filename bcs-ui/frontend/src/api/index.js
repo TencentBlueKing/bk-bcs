@@ -50,7 +50,9 @@ axiosInstance.interceptors.request.use((config) => {
   if (CSRFToken) {
     config.headers['X-CSRFToken'] = CSRFToken;
   }
-  config.headers.Traceparent = `00-${random(32, 'abcdef0123456789')}-${random(16, 'abcdef0123456789')}-01`;
+  if (!window.BCS_CONFIG.disableTracing) {
+    config.headers.Traceparent = `00-${random(32, 'abcdef0123456789')}-${random(16, 'abcdef0123456789')}-01`;
+  }
   return config;
 }, error => Promise.reject(error));
 

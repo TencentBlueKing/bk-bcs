@@ -675,3 +675,23 @@ export const random = (n, str = 'abcdefghijklmnopqrstuvwxyz0123456789') => {
   }
   return result;
 };
+
+export const fullScreen = (ele) => {
+  if (ele.requestFullscreen) {
+    ele.requestFullscreen();
+  } else if (ele.mozRequestFullScreen) {
+    ele.mozRequestFullScreen();
+  } else if (ele.webkitRequestFullscreen) {
+    ele.webkitRequestFullscreen();
+  } else if (ele.msRequestFullscreen) {
+    ele.msRequestFullscreen();
+  }
+};
+
+export const exitFullscreen = (element) => {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } if (element.msExitFullscreen) {
+    element.msExitFullscreen();
+  }
+};

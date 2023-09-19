@@ -44,7 +44,10 @@
           </bk-form-item>
         </template>
         <bk-form-item label="KubeConfig">
-          <bcs-button text class="text-[12px]" @click="handleGotoToken">{{ $t('cluster.nodeTemplate.sops.status.running.detailBtn') }}</bcs-button>
+          <bcs-button
+            text
+            class="text-[12px]"
+            @click="handleGotoToken">{{ $t('cluster.nodeTemplate.sops.status.running.detailBtn') }}</bcs-button>
         </bk-form-item>
         <bk-form-item :label="$t('deploy.variable.clusterEnv')" v-if="$INTERNAL">
           <LoadingIcon v-if="varLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
@@ -93,6 +96,9 @@
             v-if="clusterData.status" />
           <span v-else>--</span>
         </bk-form-item>
+        <bk-form-item :label="$t('cluster.labels.importCategory')">
+          {{ getClusterImportCategory(clusterData) }}
+        </bk-form-item>
         <bk-form-item :label="$t('generic.label.createdBy')">
           {{ clusterData.creator || '--' }}
         </bk-form-item>
@@ -129,7 +135,7 @@
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
 import EditFormItem from '../../components/edit-form-item.vue';
-import { useClusterInfo, useClusterList } from '../use-cluster';
+import { getClusterImportCategory, getClusterTypeName, useClusterInfo, useClusterList } from '../use-cluster';
 
 import $bkMessage from '@/common/bkmagic';
 import { CLUSTER_ENV } from '@/common/constant';
@@ -211,10 +217,7 @@ export default defineComponent({
       if (clusterData.value.clusterType === 'virtual') return clusterData.value?.extraInfo?.provider;
       return clusterData.value?.provider;
     });
-    const clusterType = computed(() => {
-      if (clusterData.value.clusterType === 'virtual') return 'vCluster';
-      return clusterData.value.manageType === 'INDEPENDENT_CLUSTER' ? $i18n.t('bcs.cluster.selfDeployed') : $i18n.t('bcs.cluster.managed');
-    });
+    const clusterType = computed(() => getClusterTypeName(clusterData.value));
     // 修改集群信息
     const handleModifyCluster = async (params  = {}) => {
       isLoading.value = true;
@@ -286,6 +289,7 @@ export default defineComponent({
       CLUSTER_ENV,
       clusterType,
       clusterProvider,
+      getClusterImportCategory,
     };
   },
 });

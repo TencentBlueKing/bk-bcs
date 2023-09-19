@@ -29,6 +29,9 @@ bcs:
     selfDeployed: Self-deployed cluster
     publicIcon: S
     privateIcon: D
+    federation: ''
+    kubeConfig: ''
+    cloud: ''
   msg:
     emptyHostResource: >-
       You do not have any host resources under the current business. Please
@@ -2967,3 +2970,62 @@ ca:
     bandwidthPackage: Package
     button:
       createBandWidth: Create bandWidth
+googleCloud:
+  button:
+    create: ''
+    validate: ''
+    create1: ''
+    cancel: ''
+  placeholder:
+    search: ''
+  label:
+    projectID: ''
+    tokenName: ''
+    desc: ''
+    tokenID: ''
+    oAuth2ID: ''
+    cluster: ''
+    createdAt: ''
+    createdBy: ''
+    operate: ''
+    gcpFile: ''
+  tips:
+    onlySupportJsonFile: ''
+importGoogleCloud:
+  title: ''
+  label:
+    clusterName: ''
+    token: ''
+    region: ''
+    clusterID: ''
+    desc: ''
+  button:
+    test: ''
+    import: ''
+    create: ''
+  clusterRegion:
+    zones: ''
+    regions: ''
+  tips:
+    disabledTips: ''
+publicCloud:
+  tencent:
+    title: ''
+    desc: ''
+  amazon:
+    title: ''
+    desc: ''
+  google:
+    title: ''
+    desc: ''
+  azure:
+    title: ''
+    desc: ''
+regions:
+  asia: ''
+  australia: ''
+  europe: ''
+  northamerica: ''
+  southamerica: ''
+  us: ''
+  other: ''

@@ -16,6 +16,7 @@
       <bk-input
         class="w400"
         :placeholder="$t('projects.cloudToken.search')"
+        right-icon="bk-icon icon-search"
         clearable
         v-model="searchValue">
       </bk-input>
@@ -23,7 +24,7 @@
     <bcs-table
       class="mt20"
       :data="curPageData"
-      :pagination="pageConf"
+      :pagination="pagination"
       v-bkloading="{ isLoading: loading }"
       @page-change="pageChange"
       @page-limit-change="pageSizeChange">
@@ -198,7 +199,7 @@ export default defineComponent({
     const webAnnotations = ref({ perms: {} });
     const keys = ref(['account.accountName', 'account.account.secretID', 'clusters']); // 模糊搜索字段
     const { tableDataMatchSearch, searchValue } = useTableSearch(data, keys);
-    const { pageChange, pageSizeChange, curPageData, pageConf } = usePage(tableDataMatchSearch);
+    const { pageChange, pageSizeChange, curPageData, pagination } = usePage(tableDataMatchSearch);
 
     const handleGetCloud = async () => {
       loading.value = true;
@@ -273,7 +274,7 @@ export default defineComponent({
       formRules,
       account,
       formRef,
-      pageConf,
+      pagination,
       pageChange,
       pageSizeChange,
       handleCreateAccount,

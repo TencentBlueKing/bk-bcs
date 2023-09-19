@@ -27,34 +27,62 @@
             <template v-if="$INTERNAL">
               <bk-table-column :label="$t('generic.ipSelector.label.idc')" prop="idc"></bk-table-column>
               <bk-table-column :label="$t('cluster.labels.rack')" prop="rack"></bk-table-column>
-              <bk-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="deviceClass"></bk-table-column>
+              <bk-table-column
+                :label="$t('generic.ipSelector.label.serverModel')"
+                prop="deviceClass">
+              </bk-table-column>
             </template>
           </bk-table>
         </div>
       </bk-form-item>
     </template>
     <template v-else>
-      <bk-form-item :label="$t('cluster.labels.clusterType')">
-        <span class="text-[#313238]">
-          {{ $t('bcs.cluster.managed') }}
-        </span>
-        <span class="text-[#979BA5]">
-          ({{ $t('cluster.create.label.manageType.managed.desc') }})
-        </span>
-      </bk-form-item>
-      <bk-form-item :label="$t('cluster.create.label.manageType.managed.clusterLevel.text')">
-        <span class="text-[#313238]">{{ clusterLevel }}</span>
-        <span class="text-[#979BA5]">
-          ({{
-            $t('cluster.create.label.manageType.managed.clusterLevel.desc', {
-              nodes: curClusterScale.level.split('L')[1],
-              pods: curClusterScale.scale.maxNodePodNum,
-              service: curClusterScale.scale.maxServiceNum,
-              crd: curClusterScale.scale.cidrStep
-            })
-          }})
-        </span>
-      </bk-form-item>
+      <!-- 谷歌云 -->
+      <template v-if="curCluster.provider === 'gcpCloud'">
+        <bk-form-item :label="$t('cluster.labels.clusterType')">
+          <span class="text-[#313238]">
+            {{ $t('bcs.cluster.managed') }}
+          </span>
+          <span class="text-[#979BA5]">
+            ({{ $t('cluster.create.label.manageType.managed.gkeDesc') }})
+          </span>
+        </bk-form-item>
+        <bk-form-item
+          :label="$t('cluster.create.label.manageType.managed.clusterLevel.text')">
+          <div>
+            <span class="text-[#313238]">{{ $t('googleCloud.label.zoneCluster.title') }}</span>
+            <span class="text-[#979BA5]">({{ $t('googleCloud.label.zoneCluster.desc') }})</span>
+          </div>
+          <div class="mt-[5px]">
+            <span class="text-[#313238]">{{ $t('googleCloud.label.regionCluster.title') }}</span>
+            <span class="text-[#979BA5]">({{ $t('googleCloud.label.regionCluster.desc') }})</span>
+          </div>
+        </bk-form-item>
+      </template>
+      <!-- 腾讯云 -->
+      <template v-else>
+        <bk-form-item :label="$t('cluster.labels.clusterType')">
+          <span class="text-[#313238]">
+            {{ $t('bcs.cluster.managed') }}
+          </span>
+          <span class="text-[#979BA5]">
+            ({{ $t('cluster.create.label.manageType.managed.desc') }})
+          </span>
+        </bk-form-item>
+        <bk-form-item :label="$t('cluster.create.label.manageType.managed.clusterLevel.text')">
+          <span class="text-[#313238]">{{ clusterLevel }}</span>
+          <span class="text-[#979BA5]">
+            ({{
+              $t('cluster.create.label.manageType.managed.clusterLevel.desc', {
+                nodes: curClusterScale.level.split('L')[1],
+                pods: curClusterScale.scale.maxNodePodNum,
+                service: curClusterScale.scale.maxServiceNum,
+                crd: curClusterScale.scale.cidrStep
+              })
+            }})
+          </span>
+        </bk-form-item>
+      </template>
     </template>
   </bk-form>
 </template>

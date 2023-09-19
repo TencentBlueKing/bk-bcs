@@ -70,7 +70,7 @@ export default defineComponent({
           resolveValue = isObject(value.value) ? (yamljs.load(emitValue) || {}) : emitValue;
           break;
         default:
-          resolveValue = '';
+          resolveValue = emitValue;
       }
       ctx.emit('change', resolveValue, value.value);
     };
