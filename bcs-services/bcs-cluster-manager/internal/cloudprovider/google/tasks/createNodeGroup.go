@@ -424,7 +424,6 @@ func newItFromBaseIt(newIt, it *compute.InstanceTemplate, group *proto.NodeGroup
 		}
 	}
 
-	newIt.SelfLink
 	o, err := computeCli.CreateInstanceTemplate(context.Background(), newIt)
 	if err != nil {
 		blog.Errorf("taskID[%s] CreateInstanceTemplate failed: %v", taskID, err)
