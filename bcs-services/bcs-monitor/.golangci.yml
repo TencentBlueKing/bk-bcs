@@ -41,6 +41,7 @@ linters-settings:
       - (*os.File).Close
       - (io.Closer).Close
       - (net/http.ResponseWriter).Write
+      - github.com/go-chi/render.Render
       - io.Copy
       - os.RemoveAll
   govet:
