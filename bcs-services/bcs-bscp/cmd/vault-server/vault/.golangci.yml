@@ -48,12 +48,12 @@ linters-settings:
   gocyclo:
     min-complexity: 30
   goimports:
-    local-prefixes: bscp.io
+    local-prefixes: bscp.io/cmd/vault-server/vault-barrier
   gci:
     sections:
       - standard
       - default
-      - prefix(bscp.io)
+      - prefix(bscp.io/cmd/vault-server/vault-barrier)
   gosec:
     includes:
       - G201 # SQL query construction using format string

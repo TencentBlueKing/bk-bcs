@@ -19,6 +19,7 @@ linters:
     - unused
 
     # custom
+    # - gci
     - goconst
     - gocyclo
     - gofmt
@@ -37,11 +38,20 @@ linters-settings:
     exclude-functions:
       - (*os.File).Close
       - (io.Closer).Close
+      - (net/http.ResponseWriter).Write
+      - io.Copy
       - os.RemoveAll
   govet:
     check-shadowing: true
   gocyclo:
     min-complexity: 30
+  # goimports:
+  #   local-prefixes: github.com/Tencent/bk-bcs
+  # gci:
+  #   sections:
+  #     - standard
+  #     - default
+  #     - prefix(github.com/Tencent/bk-bcs)
   gosec:
     includes:
       - G201 # SQL query construction using format string
