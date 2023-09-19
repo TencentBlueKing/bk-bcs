@@ -15,6 +15,7 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -287,11 +288,15 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 
 	if newIt.Name != oldItName {
 		// 如果使用了新模版,则删除旧模版
-		_, err = computeCli.DeleteInstanceTemplate(context.Background(), oldItName)
+		o, err := computeCli.DeleteInstanceTemplate(context.Background(), oldItName)
 		if err != nil {
 			return nil, nil, err
 		}
+		blog.Infof("taskID[%s] DeleteInstanceTemplate[%s], operationID: %s", oldItName, taskID, o.SelfLink)
 	}
+
+	igmBytes, _ := json.Marshal(igm)
+	blog.Infof("taskID[%s] getIgmAndIt patched igm %s", string(igmBytes))
 
 	return newIt, igm, nil
 }
@@ -308,6 +313,7 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 		blog.Errorf("taskID[%s] PatchInstanceGroupManager failed: %v", taskID, err)
 		return err
 	}
+	blog.Infof("taskID[%s] PatchInstanceGroupManager, operationID: %s", taskID, o.SelfLink)
 	// 检查操作是否成功
 	err = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
 	if err != nil {
