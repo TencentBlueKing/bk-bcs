@@ -306,8 +306,12 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 
 func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager, computeCli *api.ComputeServiceClient,
 	taskID string) error {
+	ItInfo := strings.Split(newIt.SelfLink, "/")
+	ItInfo = ItInfo[:len(ItInfo)-1]
+	newItInfo := append(ItInfo, newIt.Name)
+
 	newIgm := &compute.InstanceGroupManager{
-		InstanceTemplate: newIt.SelfLink,
+		InstanceTemplate: strings.Join(newItInfo, "/"),
 		BaseInstanceName: newIt.Name,
 		//UpdatePolicy:     api.GenerateUpdatePolicy(),
 	}
@@ -420,6 +424,7 @@ func newItFromBaseIt(newIt, it *compute.InstanceTemplate, group *proto.NodeGroup
 		}
 	}
 
+	newIt.SelfLink
 	o, err := computeCli.CreateInstanceTemplate(context.Background(), newIt)
 	if err != nil {
 		blog.Errorf("taskID[%s] CreateInstanceTemplate failed: %v", taskID, err)
