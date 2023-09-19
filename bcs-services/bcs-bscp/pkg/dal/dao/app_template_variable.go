@@ -122,8 +122,6 @@ func (dao *appTemplateVariableDao) UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, g
 	}
 
 	return ad.Do(tx.Query)
-
-	return nil
 }
 
 // Get gets app template variables.

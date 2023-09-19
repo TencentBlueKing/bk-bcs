@@ -66,6 +66,7 @@ type bkrepoClient struct {
 	repoCreated *RepoCreated
 }
 
+// RepoCreated is the created repo data with lock to keep its concurrent security
 type RepoCreated struct {
 	sync.Mutex
 	created map[string]struct{}

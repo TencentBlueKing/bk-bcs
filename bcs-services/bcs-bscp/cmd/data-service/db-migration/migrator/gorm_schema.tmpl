@@ -24,15 +24,15 @@ func init() {
     // add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
 		Version: "{{.Version}}",
-		Name:    "{{.Version}}_gorm_{{.FileName}}",
+		Name:    "{{.Version}}_{{.FileName}}",
 		Mode:    migrator.GormMode,
-		Up:      mig{{.Version}}Gorm{{.FuncName}}Up,
-		Down:    mig{{.Version}}Gorm{{.FuncName}}Down,
+		Up:      mig{{.Version}}Up,
+		Down:    mig{{.Version}}Down,
 	})
 }
 
-// mig{{.Version}}Gorm{{.FuncName}}Up for up migration
-func mig{{.Version}}Gorm{{.FuncName}}Up(tx *gorm.DB) error {
+// mig{{.Version}}Up for up migration
+func mig{{.Version}}Up(tx *gorm.DB) error {
     // ModelExample : 模型示例，实际迁移DB时，需按实际情况进行修改（包括修改该注释）
     type ModelExample struct {
         ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`
@@ -58,8 +58,8 @@ func mig{{.Version}}Gorm{{.FuncName}}Up(tx *gorm.DB) error {
 
 }
 
-// mig{{.Version}}Gorm{{.FuncName}}Down for down migration
-func mig{{.Version}}Gorm{{.FuncName}}Down(tx *gorm.DB) error {
+// mig{{.Version}}Down for down migration
+func mig{{.Version}}Down(tx *gorm.DB) error {
 	if err := tx.Migrator().DropTable("model_example"); err != nil {
 		return err
 	}

@@ -28,11 +28,11 @@ import (
 )
 
 // CreateAppTemplateBinding create an app template binding
-func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.CreateAppTemplateBindingReq) (*pbcs.
-	CreateAppTemplateBindingResp, error) {
+func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.CreateAppTemplateBindingReq) (
+	*pbcs.CreateAppTemplateBindingResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateAppTemplateBindingResp)
 
+	// validate input param
 	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
@@ -55,7 +55,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+	if err = s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -68,23 +68,23 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 			Bindings: req.Bindings,
 		},
 	}
-	rp, err := s.client.DS.CreateAppTemplateBinding(grpcKit.RpcCtx(), r)
+	var rp *pbds.CreateResp
+	rp, err = s.client.DS.CreateAppTemplateBinding(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("create app template binding failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.CreateAppTemplateBindingResp{
+	resp := &pbcs.CreateAppTemplateBindingResp{
 		Id: rp.Id,
 	}
 	return resp, nil
 }
 
 // DeleteAppTemplateBinding delete an app template binding
-func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbcs.DeleteAppTemplateBindingReq) (*pbcs.
-	DeleteAppTemplateBindingResp, error) {
+func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbcs.DeleteAppTemplateBindingReq) (
+	*pbcs.DeleteAppTemplateBindingResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteAppTemplateBindingResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -106,15 +106,15 @@ func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbcs.Delete
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.DeleteAppTemplateBindingResp{}, nil
 }
 
 // UpdateAppTemplateBinding update an app template binding
-func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.UpdateAppTemplateBindingReq) (*pbcs.
-	UpdateAppTemplateBindingResp, error) {
+func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.UpdateAppTemplateBindingReq) (
+	*pbcs.UpdateAppTemplateBindingResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateAppTemplateBindingResp)
 
+	// validate input param
 	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("update app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
@@ -137,7 +137,7 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+	if err = s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -151,20 +151,18 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 			Bindings: req.Bindings,
 		},
 	}
-	if _, err := s.client.DS.UpdateAppTemplateBinding(grpcKit.RpcCtx(), r); err != nil {
+	if _, err = s.client.DS.UpdateAppTemplateBinding(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("update app template binding failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.UpdateAppTemplateBindingResp{}, nil
 }
 
 // ListAppTemplateBindings list app template bindings
-func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbcs.ListAppTemplateBindingsReq) (*pbcs.
-	ListAppTemplateBindingsResp,
-	error) {
+func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbcs.ListAppTemplateBindingsReq) (
+	*pbcs.ListAppTemplateBindingsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListAppTemplateBindingsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -186,13 +184,14 @@ func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbcs.ListApp
 		return nil, err
 	}
 
-	resp = &pbcs.ListAppTemplateBindingsResp{
+	resp := &pbcs.ListAppTemplateBindingsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
 	return resp, nil
 }
 
+// parseBindings parse the bindings param
 func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateIDs []uint32, err error) {
 	if len(bindings) == 0 {
 		return nil, nil, errors.New("bindings can't be empty")
@@ -216,11 +215,10 @@ func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateI
 	return templateSetIDs, templateIDs, nil
 }
 
-// ListAppBoundTemplateRevisions list app bound template revisions
-func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.ListAppBoundTemplateRevisionsReq) (
-	*pbcs.ListAppBoundTemplateRevisionsResp, error) {
+// ListAppBoundTmplRevisions list app bound template revisions
+func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListAppBoundTmplRevisionsReq) (
+	*pbcs.ListAppBoundTmplRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListAppBoundTemplateRevisionsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -230,6 +228,8 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		return nil, err
 	}
 
+	// list the all the template set and template relation for the app so that to get all the template set group
+	// including empty template set group
 	atbReq := &pbds.ListAppTemplateBindingsReq{
 		BizId: req.BizId,
 		AppId: req.AppId,
@@ -242,7 +242,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		return nil, err
 	}
 	if len(atbRsp.Details) == 0 {
-		return &pbcs.ListAppBoundTemplateRevisionsResp{
+		return &pbcs.ListAppBoundTmplRevisionsResp{
 			Details: []*pbatb.AppBoundTmplRevisionGroupBySet{},
 		}, nil
 	}
@@ -251,11 +251,12 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		tmplSetIDs = append(tmplSetIDs, b.TemplateSetId)
 	}
 
-	tsbRsp, err := s.client.DS.ListTemplateSetBriefInfoByIDs(grpcKit.RpcCtx(), &pbds.ListTemplateSetBriefInfoByIDsReq{
+	var tsbRsp *pbds.ListTemplateSetBriefInfoByIDsResp
+	tsbRsp, err = s.client.DS.ListTemplateSetBriefInfoByIDs(grpcKit.RpcCtx(), &pbds.ListTemplateSetBriefInfoByIDsReq{
 		Ids: tmplSetIDs,
 	})
 
-	r := &pbds.ListAppBoundTemplateRevisionsReq{
+	r := &pbds.ListAppBoundTmplRevisionsReq{
 		BizId:        req.BizId,
 		AppId:        req.AppId,
 		SearchFields: req.SearchFields,
@@ -264,7 +265,8 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		WithStatus:   req.WithStatus,
 	}
 
-	rp, err := s.client.DS.ListAppBoundTemplateRevisions(grpcKit.RpcCtx(), r)
+	var rp *pbds.ListAppBoundTmplRevisionsResp
+	rp, err = s.client.DS.ListAppBoundTmplRevisions(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("list app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -314,7 +316,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbcs.L
 		details = append(details, group)
 	}
 
-	resp = &pbcs.ListAppBoundTemplateRevisionsResp{
+	resp := &pbcs.ListAppBoundTmplRevisionsResp{
 		Details: details,
 	}
 	return resp, nil
@@ -351,12 +353,10 @@ func sortFileStateInGroup(g *pbatb.AppBoundTmplRevisionGroupBySet) {
 	g.TemplateRevisions = result
 }
 
-// ListReleasedAppBoundTemplateRevisions list released app bound template revisions
-func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
-	req *pbcs.ListReleasedAppBoundTemplateRevisionsReq) (
-	*pbcs.ListReleasedAppBoundTemplateRevisionsResp, error) {
+// ListReleasedAppBoundTmplRevisions list released app bound template revisions
+func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
+	req *pbcs.ListReleasedAppBoundTmplRevisionsReq) (*pbcs.ListReleasedAppBoundTmplRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListReleasedAppBoundTemplateRevisionsResp)
 
 	if req.ReleaseId <= 0 {
 		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
@@ -370,7 +370,7 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 		return nil, err
 	}
 
-	r := &pbds.ListReleasedAppBoundTemplateRevisionsReq{
+	r := &pbds.ListReleasedAppBoundTmplRevisionsReq{
 		BizId:        req.BizId,
 		AppId:        req.AppId,
 		ReleaseId:    req.ReleaseId,
@@ -379,7 +379,7 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 		All:          true,
 	}
 
-	rp, err := s.client.DS.ListReleasedAppBoundTemplateRevisions(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListReleasedAppBoundTmplRevisions(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("list released app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -425,19 +425,18 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 		details = append(details, group)
 	}
 
-	resp = &pbcs.ListReleasedAppBoundTemplateRevisionsResp{
+	resp := &pbcs.ListReleasedAppBoundTmplRevisionsResp{
 		Details: details,
 	}
 	return resp, nil
 }
 
-// UpdateAppBoundTemplateRevisions update app bound template revisions
-func (s *Service) UpdateAppBoundTemplateRevisions(ctx context.Context, req *pbcs.UpdateAppBoundTemplateRevisionsReq) (
-	*pbcs.
-		UpdateAppBoundTemplateRevisionsResp, error) {
+// UpdateAppBoundTmplRevisions update app bound template revisions
+func (s *Service) UpdateAppBoundTmplRevisions(ctx context.Context, req *pbcs.UpdateAppBoundTmplRevisionsReq) (
+	*pbcs.UpdateAppBoundTmplRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateAppBoundTemplateRevisionsResp)
 
+	// validate input param
 	templateSetIDs, templateIDs, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("update app bound template revisions failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
@@ -460,7 +459,7 @@ func (s *Service) UpdateAppBoundTemplateRevisions(ctx context.Context, req *pbcs
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+	if err = s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -494,12 +493,12 @@ func (s *Service) UpdateAppBoundTemplateRevisions(ctx context.Context, req *pbcs
 			Bindings: bindings,
 		},
 	}
-	if _, err := s.client.DS.UpdateAppTemplateBinding(grpcKit.RpcCtx(), r); err != nil {
+	if _, err = s.client.DS.UpdateAppTemplateBinding(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("update app bound template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.UpdateAppBoundTmplRevisionsResp{}, nil
 }
 
 // getBindingsAfterUpdate get the final template bindings after update
@@ -545,12 +544,12 @@ func getBindingsAfterUpdate(origin, update []*pbatb.TemplateBinding) ([]*pbatb.T
 	return final, nil
 }
 
-// DeleteAppBoundTemplateSets delete app bound template sets
-func (s *Service) DeleteAppBoundTemplateSets(ctx context.Context, req *pbcs.DeleteAppBoundTemplateSetsReq) (
-	*pbcs.DeleteAppBoundTemplateSetsResp, error) {
+// DeleteAppBoundTmplSets delete app bound template sets
+func (s *Service) DeleteAppBoundTmplSets(ctx context.Context, req *pbcs.DeleteAppBoundTmplSetsReq) (
+	*pbcs.DeleteAppBoundTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteAppBoundTemplateSetsResp)
 
+	// validate input param
 	templateSetIDs, err := tools.GetUint32List(req.TemplateSetIds)
 	if err != nil {
 		return nil, fmt.Errorf("invalid template set ids, %s", err)
@@ -566,7 +565,7 @@ func (s *Service) DeleteAppBoundTemplateSets(ctx context.Context, req *pbcs.Dele
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+	if err = s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -600,12 +599,12 @@ func (s *Service) DeleteAppBoundTemplateSets(ctx context.Context, req *pbcs.Dele
 			Bindings: bindings,
 		},
 	}
-	if _, err := s.client.DS.UpdateAppTemplateBinding(grpcKit.RpcCtx(), r); err != nil {
+	if _, err = s.client.DS.UpdateAppTemplateBinding(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("delete app bound template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.DeleteAppBoundTmplSetsResp{}, nil
 }
 
 // getBindingsAfterDelete get the final template bindings after delete
@@ -648,11 +647,11 @@ func getBindingsAfterDelete(origin []*pbatb.TemplateBinding, deletedTmplSetIDs [
 }
 
 // CheckAppTemplateBinding check conflicts of app template binding.
-func (s *Service) CheckAppTemplateBinding(ctx context.Context, req *pbcs.CheckAppTemplateBindingReq) (*pbcs.
-	CheckAppTemplateBindingResp, error) {
+func (s *Service) CheckAppTemplateBinding(ctx context.Context, req *pbcs.CheckAppTemplateBindingReq) (
+	*pbcs.CheckAppTemplateBindingResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CheckAppTemplateBindingResp)
 
+	// validate input param
 	_, templateIDs, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
@@ -667,7 +666,7 @@ func (s *Service) CheckAppTemplateBinding(ctx context.Context, req *pbcs.CheckAp
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+	if err = s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -680,13 +679,14 @@ func (s *Service) CheckAppTemplateBinding(ctx context.Context, req *pbcs.CheckAp
 			Bindings: req.Bindings,
 		},
 	}
-	rp, err := s.client.DS.CheckAppTemplateBinding(grpcKit.RpcCtx(), r)
+	var rp *pbds.CheckAppTemplateBindingResp
+	rp, err = s.client.DS.CheckAppTemplateBinding(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("create app template binding failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.CheckAppTemplateBindingResp{
+	resp := &pbcs.CheckAppTemplateBindingResp{
 		Details: rp.Details,
 	}
 	return resp, nil

@@ -10,9 +10,12 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
+// Package dbmigration is for db migration operations
 package dbmigration
 
 import "embed"
 
+// SQLFiles is an embedded filesystem containing SQL migration files.
+//
 //go:embed migrations/sql
 var SQLFiles embed.FS

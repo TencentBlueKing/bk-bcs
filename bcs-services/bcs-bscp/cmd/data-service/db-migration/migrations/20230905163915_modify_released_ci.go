@@ -26,13 +26,13 @@ func init() {
 		Version: "20230905163915",
 		Name:    "20230905163915_modify_released_ci",
 		Mode:    migrator.GormMode,
-		Up:      mig20230905163915ModifyReleasedCIUp,
-		Down:    mig20230905163915ModifyReleasedCIDown,
+		Up:      mig20230905163915Up,
+		Down:    mig20230905163915Down,
 	})
 }
 
-// mig20230905163915ModifyReleasedCIUp for up migration
-func mig20230905163915ModifyReleasedCIUp(tx *gorm.DB) error {
+// mig20230905163915Up for up migration
+func mig20230905163915Up(tx *gorm.DB) error {
 	// ReleasedConfigItems : 已生成版本的配置项
 	type ReleasedConfigItems struct {
 		// 这里只需要DB操作用到的字段
@@ -96,7 +96,7 @@ func mig20230905163915ModifyReleasedCIUp(tx *gorm.DB) error {
 
 }
 
-// mig20230905163915ModifyReleasedCIDown for down migration
-func mig20230905163915ModifyReleasedCIDown(tx *gorm.DB) error {
+// mig20230905163915Down for down migration
+func mig20230905163915Down(tx *gorm.DB) error {
 	return nil
 }

@@ -22,7 +22,7 @@ func (a Action) String() string {
 }
 
 const (
-	// FindBusinessResource
+	// FindBusinessResource means the operation to find business
 	FindBusinessResource Action = "find_business_resource"
 	// Create operation's bscp auth action type
 	Create Action = "create"

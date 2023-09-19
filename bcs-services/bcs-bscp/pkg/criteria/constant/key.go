@@ -94,9 +94,12 @@ const (
 )
 
 const (
+	// AuthLoginProviderKey is auth login provider
 	AuthLoginProviderKey = "auth-login-provider"
-	AuthLoginUID         = "auth-login-uid"
-	AuthLoginToken       = "auth-login-token" // nolint
+	// AuthLoginUID is auth login uid
+	AuthLoginUID = "auth-login-uid"
+	// AuthLoginToken is auth login token
+	AuthLoginToken = "auth-login-token" // nolint
 )
 
 var (

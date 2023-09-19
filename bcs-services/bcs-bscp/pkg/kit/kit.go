@@ -149,9 +149,9 @@ func (c *Kit) Clone() *Kit {
 }
 
 // GetKitForRepoTmpl get a kit for repo template operations
-func (c *Kit) GetKitForRepoTmpl(TmplSpaceID uint32) *Kit {
+func (c *Kit) GetKitForRepoTmpl(tmplSpaceID uint32) *Kit {
 	c2 := c.Clone()
-	c2.TmplSpaceID = TmplSpaceID
+	c2.TmplSpaceID = tmplSpaceID
 	c2.AppID = 0
 	return c2
 }
