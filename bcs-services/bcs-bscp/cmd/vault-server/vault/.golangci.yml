@@ -50,8 +50,8 @@ linters-settings:
   lll:
     line-length: 120 # widely used and popular community recommended length
   funlen:
-    lines: 120 # default * 2
-    statements: 80 # default * 2
+    lines: 90 # default * 1.5
+    statements: 60 # default * 1.5
   gocyclo:
     min-complexity: 30
   govet:
