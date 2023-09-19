@@ -95,7 +95,7 @@ func (a authorizer) initKitWithCookie(r *http.Request, k *kit.Kit, multiErr *mul
 }
 
 // initKitWithDevEnv Dev环境, 可以设置环境变量鉴权
-func (a authorizer) initKitWithDevEnv(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
+func (a authorizer) initKitWithDevEnv(_ *http.Request, k *kit.Kit, _ *multierror.Error) bool {
 	user := os.Getenv("BK_USER_FOR_TEST")
 	appCode := os.Getenv("BK_APP_CODE_FOR_TEST")
 
@@ -108,8 +108,7 @@ func (a authorizer) initKitWithDevEnv(r *http.Request, k *kit.Kit, multiErr *mul
 	return false
 }
 
-// UnifiedAuthentication
-// HTTP API 鉴权, 异常返回json信息
+// UnifiedAuthentication HTTP API 鉴权, 异常返回json信息
 func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		k := &kit.Kit{
@@ -139,8 +138,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// WebAuthentication
-// HTTP 前端鉴权, 异常跳转302到登入页面
+// WebAuthentication HTTP 前端鉴权, 异常跳转302到登入页面
 func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Handler {
 	ignoreExtMap := map[string]struct{}{
 		".js":  {},
