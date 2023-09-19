@@ -50,14 +50,10 @@ linters-settings:
   funlen:
     lines: 120 # default * 2
     statements: 80 # default * 2
-  govet:
-    check-shadowing: true
   gocyclo:
     min-complexity: 30
-  gocritic:
-    settings:
-      ifElseChain:
-        minThreshold: 3
+  govet:
+    check-shadowing: true
   # goimports:
   #   local-prefixes: github.com/Tencent/bk-bcs
   # gci:
@@ -65,6 +61,10 @@ linters-settings:
   #     - standard
   #     - default
   #     - prefix(github.com/Tencent/bk-bcs)
+  gocritic:
+    settings:
+      ifElseChain:
+        minThreshold: 3
   gosec:
     includes:
       - G201 # SQL query construction using format string
