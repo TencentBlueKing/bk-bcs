@@ -12237,4 +12237,3 @@ message GetScopeHostCheckResponse {
     description : "返回结果"
   }];
 }
-

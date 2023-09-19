@@ -16,7 +16,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"math"
 	"strconv"
 	"strings"
