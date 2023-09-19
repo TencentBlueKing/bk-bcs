@@ -144,6 +144,7 @@ export default defineComponent({
             title: $i18n.t('publicCloud.tencent.title'),
             desc: $i18n.t('publicCloud.tencent.desc'),
             type: 'tencentCloud',
+            disabled: _INTERNAL_.value,
           },
           {
             icon: amazonLogo,
@@ -157,6 +158,7 @@ export default defineComponent({
             title: $i18n.t('publicCloud.google.title'),
             desc: $i18n.t('publicCloud.google.desc'),
             type: 'googleCloud',
+            disabled: _INTERNAL_.value,
           },
           {
             icon: azureLogo,
