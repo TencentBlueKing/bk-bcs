@@ -13,7 +13,8 @@
 package pbci
 
 import (
-	"bscp.io/pkg/criteria/constant"
+	"time"
+
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 )
@@ -147,6 +148,6 @@ func PbConfigItemCount(cc *table.ListConfigItemCounts) *ListConfigItemCounts {
 	return &ListConfigItemCounts{
 		AppId:    cc.AppId,
 		Count:    cc.Count,
-		UpdateAt: cc.UpdatedAt.Format(constant.TimeStdFormat),
+		UpdateAt: cc.UpdatedAt.Format(time.RFC3339),
 	}
 }

@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/gen"
@@ -225,7 +226,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbds.ListA
 				Signature:            d.Spec.ContentSpec.Signature,
 				ByteSize:             d.Spec.ContentSpec.ByteSize,
 				Creator:              d.Revision.Creator,
-				CreateAt:             d.Revision.CreatedAt.Format(constant.TimeStdFormat),
+				CreateAt:             d.Revision.CreatedAt.Format(time.RFC3339),
 			})
 		}
 	}

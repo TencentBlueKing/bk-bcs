@@ -15,8 +15,8 @@ package service
 import (
 	"bytes"
 	"context"
+	"time"
 
-	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -192,8 +192,8 @@ func getPbConfigItemsFromReleased(releasedCIs []*table.ReleasedConfigItem) []*pb
 			Revision: &pbbase.Revision{
 				Creator:  r.Revision.Creator,
 				Reviser:  r.Revision.Creator,
-				CreateAt: r.Revision.CreatedAt.Format(constant.TimeStdFormat),
-				UpdateAt: r.Revision.CreatedAt.Format(constant.TimeStdFormat),
+				CreateAt: r.Revision.CreatedAt.Format(time.RFC3339),
+				UpdateAt: r.Revision.CreatedAt.Format(time.RFC3339),
 			},
 		}
 	}
