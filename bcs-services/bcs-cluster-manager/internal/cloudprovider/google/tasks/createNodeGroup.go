@@ -301,7 +301,7 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 	newIgm := &compute.InstanceGroupManager{
 		InstanceTemplate: newIt.SelfLink,
 		BaseInstanceName: newIt.Name,
-		UpdatePolicy:     api.GenerateUpdatePolicy(),
+		//UpdatePolicy:     api.GenerateUpdatePolicy(),
 	}
 	o, err := api.PatchInstanceGroupManager(computeCli, igm.SelfLink, newIgm)
 	if err != nil {

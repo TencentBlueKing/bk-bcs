@@ -46,7 +46,7 @@ const (
 	InstanceStatusRepairing = "REPAIRING"
 	// InstanceStatusTerminated indicates the instance is terminated
 	InstanceStatusTerminated = "TERMINATED"
-	
+
 	// UpdatePolicyProactive update is proactive
 	UpdatePolicyProactive = "PROACTIVE"
 	// UpdatePolicyOpportunistic update is opportunistic
@@ -61,8 +61,6 @@ const (
 	GKEClusterReleaseChannel = "releaseChannel"
 	// GKEClusterLocationType for GKE cluster location type
 	GKEClusterLocationType = "locationType"
-	// GKEClusterLocations for GKE cluster locations
-	GKEClusterLocations = "locations"
 	// GKEClusterLocations for GKE cluster locations
 	GKEClusterLocations = "locations"
 
