@@ -117,9 +117,9 @@
     <section class="create-version">
         <bk-button
           v-if="versionData.status.publish_status === 'not_released'"
-          v-cursor="{ active: !permCheckLoading && hasPublishVersionPerm }"
+          v-cursor="{ active: !hasPublishVersionPerm }"
           theme="primary"
-          :class="['trigger-button', { 'bk-button-with-no-perm': !permCheckLoading && hasPublishVersionPerm }]"
+          :class="['trigger-button', { 'bk-button-with-no-perm': !hasPublishVersionPerm }]"
           :disabled="permCheckLoading"
           @click="handleBtnClick">
           上线版本

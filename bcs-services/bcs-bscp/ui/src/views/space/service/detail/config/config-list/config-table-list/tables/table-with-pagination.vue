@@ -3,7 +3,8 @@
   import { storeToRefs } from 'pinia'
   import { InfoBox } from "bkui-vue/lib";
   import { useConfigStore } from '../../../../../../../../store/config'
-  import { IConfigItem, IConfigListQueryParams } from '../../../../../../../../../types/config'
+  import { ICommonQuery } from '../../../../../../../../../types/index'
+  import { IConfigItem } from '../../../../../../../../../types/config'
   import { getConfigList, deleteServiceConfigItem } from '../../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../../utils/config'
   import { datetimeFormat } from '../../../../../../../../utils/index'
@@ -47,15 +48,12 @@
   const getListData = async () => {
     loading.value = true
     try {
-      const params: IConfigListQueryParams = {
+      const params: ICommonQuery = {
         start: (pagination.value.current - 1) * pagination.value.limit,
         limit: pagination.value.limit
       }
       if (props.searchStr) {
-        params.searchKey = props.searchStr
-      }
-      if (versionData.value.id !== 0) {
-        params.release_id = versionData.value.id
+        params.search_key = props.searchStr
       }
       const res = await getConfigList(props.bkBizId, props.appId, params)
       configList.value = res.details

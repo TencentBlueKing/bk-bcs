@@ -33,7 +33,7 @@ http.interceptors.response.use(
 
           if (response.status === 401) {
               userStore.$patch((state) => {
-                state.loginUrl = response.data.error.data.login_url
+                state.loginUrl = response.data.error.data.login_plain_url + window.location.href
                 state.showLoginModal = true
               })
               return

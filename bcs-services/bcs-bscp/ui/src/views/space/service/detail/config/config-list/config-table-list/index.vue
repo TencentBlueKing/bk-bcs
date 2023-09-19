@@ -71,6 +71,7 @@
   .config-list-wrapper {
     position: relative;
     padding: 0 24px;
+    height: 100%;
   }
   .operate-area {
     display: flex;
@@ -102,5 +103,9 @@
     .config-search-input {
       margin-left: auto;
     }
+  }
+  .config-list-table {
+    max-height: calc(100% - 64px);
+    overflow: auto;
   }
 </style>

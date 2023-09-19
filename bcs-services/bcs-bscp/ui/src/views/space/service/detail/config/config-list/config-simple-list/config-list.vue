@@ -2,8 +2,9 @@
   import { ref, watch, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../../../store/config'
-  import { IConfigItem, IConfigListQueryParams } from '../../../../../../../../types/config'
-  import { getConfigList } from '../../../../../../../api/config'
+  import { ICommonQuery } from '../../../../../../../../types/index'
+  import { IConfigItem } from '../../../../../../../../types/config'
+  import { getConfigList, getReleasedConfigList } from '../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../utils/config'
   import EditConfig from '../config-table-list/edit-config.vue'
 
@@ -36,15 +37,17 @@
 
     loading.value = true
     try {
-      const params: IConfigListQueryParams = {
+      const params: ICommonQuery = {
         start: 0,
         all: true
       }
-      if (versionData.value.id !== 0) {
-        params.release_id = <number>versionData.value.id
+
+      let res
+      if (versionData.value.id === 0) {
+        res = await getConfigList(props.bkBizId, props.appId, params)
+      } else {
+        res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params)
       }
-      const res = await getConfigList(props.bkBizId, props.appId, params)
-      configList.value = res.details
     } catch (e) {
       console.error(e)
     } finally {

@@ -5,10 +5,10 @@
   import { Search, RightShape } from 'bkui-vue/lib/icon'
   import { useServiceStore } from '../../../../../../../../store/service'
   import { ICommonQuery } from '../../../../../../../../../types/index'
-  import { IConfigItem, IConfigListQueryParams, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config'
+  import { IConfigItem, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config'
   import { IFileConfigContentSummary } from '../../../../../../../../../types/config';
   import { IVariableEditParams } from '../../../../../../../../../types/variable'
-  import { getConfigList, getConfigItemDetail, getConfigContent, getBoundTemplates, getBoundTemplatesByAppVersion } from '../../../../../../../../api/config'
+  import { getConfigList, getReleasedConfigList, getConfigContent, getBoundTemplates, getBoundTemplatesByAppVersion } from '../../../../../../../../api/config'
   import { getReleasedAppVariables } from '../../../../../../../../api/variable'
   import { byteUnitConverse } from '../../../../../../../../utils'
   import SearchInput from '../../../../../../../../components/search-input.vue'
@@ -45,10 +45,12 @@
 
   const props = withDefaults(defineProps<{
     currentVersionId: number;
+    unNamedVersionVariables?: IVariableEditParams[]; // 未命名版本变量列表
     baseVersionId: number|undefined;
     selectedConfig: IConfigDiffSelected;
     actived: boolean;
   }>(), {
+    unNamedVersionVariables: () => [],
     selectedConfig: () => ({ pkgId: 0, id: 0, version: 0 })
   })
 
@@ -96,7 +98,12 @@
 
   onMounted(async() => {
     await getAllConfigList()
-    currentVariables.value = await getVariableList(props.currentVersionId)
+    // 未命名版本变量取正在编辑中的变量列表
+    if (isUnNamedVersion(props.currentVersionId)) {
+      currentVariables.value = props.unNamedVersionVariables
+    } else {
+      currentVariables.value = await getVariableList(props.currentVersionId)
+    }
     baseVariables.value = await getVariableList(props.baseVersionId)
     aggregatedList.value = calcDiff()
     groupedConfigListOnShow.value = aggregatedList.value.slice()
@@ -130,46 +137,54 @@
 
   // 获取非模板配置项列表
   const getCommonConfigList = async(id: number): Promise<IConfigsGroupData[]> => {
-    const params: IConfigListQueryParams = {
+    const unNamedVersion = isUnNamedVersion(id)
+    const params: ICommonQuery = {
       start: 0,
       all: true
     }
-    const configsDetailQueryParams: { release_id?: number } = {}
+    let configsRes
 
-    if (!isUnNamedVersion(id)) {
-      params.release_id = id
-      configsDetailQueryParams.release_id = id
+    if (unNamedVersion) {
+      configsRes = await getConfigList(bkBizId.value, <number>appData.value.id, params)
+    } else {
+      configsRes = await getReleasedConfigList(bkBizId.value, <number>appData.value.id, id, params)
     }
 
-    const configsRes = await getConfigList(bkBizId.value, <number>appData.value.id, params)
     // 未命名版本中包含被删除的配置项，需要过滤掉
     const configs: IConfigItem[] = configsRes.details.filter((item: IConfigItem) => item.file_state !== 'DELETE')
-
-    // 遍历配置项列表，拿到每个配置项的signature
-    const configsDetailRes =  await Promise.all(configs.map(item => getConfigItemDetail(bkBizId.value, item.id, <number>appData.value.id, configsDetailQueryParams)))
 
     return [{
       template_space_id: 0,
       id: 0,
-      name: '非配置项分组',
+      name: '非模板配置',
       expand: true,
-      configs: configs.map((config, index) => {
-        const { id, spec, revision, file_state } = config
+      configs: configs.map(config => {
+        const { id, spec, commit_spec, revision, file_state } = config
         const { name, file_type } = spec
-        const { byte_size, signature } = configsDetailRes[index].content
-        return { type: 'config', id, name, file_type, file_state, update_at: revision.update_at, byte_size, signature, template_revision_id: 0 }
+        const { origin_byte_size, byte_size, origin_signature, signature } = commit_spec.content
+        return {
+          type: 'config',
+          id,
+          name,
+          file_type,
+          file_state,
+          update_at: revision.update_at,
+          byte_size: unNamedVersion ? byte_size : origin_byte_size,
+          signature: unNamedVersion ? signature : origin_signature,
+          template_revision_id: 0 }
       })
     }]
   }
 
   // 获取模板配置项列表
   const getBoundTemplateList = async(id: number) => {
+      const unNamedVersion = isUnNamedVersion(id)
       const params: ICommonQuery = {
         start: 0,
         all: true
       }
       let res
-      if (isUnNamedVersion(id)) {
+      if (unNamedVersion) {
         res = await getBoundTemplates(bkBizId.value, <number>appData.value.id, params)
       } else {
         res = await getBoundTemplatesByAppVersion(bkBizId.value, <number>appData.value.id, id)
@@ -184,7 +199,7 @@
           configs: []
         }
         groupItem.template_revisions.forEach(tpl => {
-          const { template_id, name, file_type, file_state, byte_size, signature, template_revision_id } = tpl
+          const { template_id, name, file_type, file_state, origin_byte_size, byte_size, origin_signature, signature, template_revision_id } = tpl
           if (file_state !== 'DELETE') {
             group.configs.push({
               type: 'template',
@@ -193,8 +208,8 @@
               file_type,
               file_state,
               update_at: '',
-              byte_size,
-              signature,
+              byte_size: unNamedVersion ? byte_size : origin_byte_size,
+              signature: unNamedVersion ? signature : origin_signature,
               template_revision_id: template_revision_id
             })
           }
