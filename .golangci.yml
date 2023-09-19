@@ -46,7 +46,7 @@ linters-settings:
       - io.Copy
       - os.RemoveAll
   lll:
-    line-length: 165 # 1080P vscode 一屏最大宽度所得
+    line-length: 120 # widely used and popular community recommended length
   funlen:
     lines: 120 # default * 2
     statements: 80 # default * 2
