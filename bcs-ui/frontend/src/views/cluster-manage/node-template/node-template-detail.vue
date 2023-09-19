@@ -31,7 +31,7 @@
           class="basic-info-item" v-for="(item, index) in kubeletData"
           :key="index">
           <label>{{ item.key }}</label>
-          <span>{{ item.value }}</span>
+          <span class="bcs-ellipsis" v-bk-overflow-tips>{{ item.value }}</span>
         </div>
       </div>
     </template>
