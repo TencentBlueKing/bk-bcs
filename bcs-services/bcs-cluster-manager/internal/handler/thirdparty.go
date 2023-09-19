@@ -167,6 +167,36 @@ func (cm *ClusterManager) GetTopologyNodes(ctx context.Context,
 	return nil
 }
 
+// GetTopologyHostIdsNodes implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetTopologyHostIdsNodes(ctx context.Context,
+	req *cmproto.GetTopologyHostIdsNodesRequest, resp *cmproto.GetTopologyHostIdsNodesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetTopologyHostIdsNodesAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetTopologyHostIdsNodes", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetTopologyHostIdsNodes, req %v", reqID, req)
+	return nil
+}
+
+// GetHostsDetails implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetHostsDetails(ctx context.Context,
+	req *cmproto.GetHostsDetailsRequest, resp *cmproto.GetHostsDetailsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetHostsDetailsAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetHostsDetailsAction", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetHostsDetailsAction, req %v", reqID, req)
+	return nil
+}
+
 // GetScopeHostCheck implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) GetScopeHostCheck(ctx context.Context,
 	req *cmproto.GetScopeHostCheckRequest, resp *cmproto.GetScopeHostCheckResponse) error {

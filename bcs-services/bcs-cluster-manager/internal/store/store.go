@@ -54,6 +54,7 @@ type ClusterManagerModel interface {
 	DeleteNode(ctx context.Context, nodeID string) error
 	DeleteClusterNode(ctx context.Context, clusterID, nodeID string) error
 	DeleteNodesByIPs(ctx context.Context, ips []string) error
+	DeleteClusterNodesByIPs(ctx context.Context, clusterID string, ips []string) error
 	DeleteNodesByNodeIDs(ctx context.Context, nodeIDs []string) error
 	DeleteNodeByIP(ctx context.Context, ip string) error
 	DeleteClusterNodeByIP(ctx context.Context, clusterID, ip string) error

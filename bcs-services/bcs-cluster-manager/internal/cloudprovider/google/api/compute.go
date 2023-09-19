@@ -440,14 +440,19 @@ func (c *ComputeServiceClient) ListZoneInstances(ctx context.Context) (
 }
 
 // GetInstance get the instance
-func (c *ComputeServiceClient) GetInstance(ctx context.Context, name string) (*compute.Instance, error) {
+func (c *ComputeServiceClient) GetInstance(ctx context.Context, location, name string) (*compute.Instance, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client GetInstance failed: gkeProjectId is required")
 	}
+
+	if location != "" {
+		location = c.location
+	}
+
 	if c.location == "" {
 		return nil, fmt.Errorf("gce client GetInstance failed: location is required")
 	}
-	instance, err := c.computeServiceClient.Instances.Get(c.gkeProjectID, c.location, name).Context(ctx).Do()
+	instance, err := c.computeServiceClient.Instances.Get(c.gkeProjectID, location, name).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gce client GetInstance failed: %v", err)
 	}

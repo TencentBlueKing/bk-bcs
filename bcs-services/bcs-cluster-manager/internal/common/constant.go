@@ -173,6 +173,11 @@ const (
 	// Debug debug env
 	Debug = "debug"
 
+	// Regions gke region cluster
+	Regions = "regions"
+	// Zones gke zone cluster
+	Zones = "zones"
+
 	// ClusterAddNodesLimit cluster addNodes limit
 	ClusterAddNodesLimit = 100
 	// ClusterManagerServiceDomain domain name for service
