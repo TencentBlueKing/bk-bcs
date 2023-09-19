@@ -2,11 +2,12 @@
   import { ref, computed, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
-  import { AngleDown } from 'bkui-vue/lib/icon'
+  import { AngleDown, DownShape } from 'bkui-vue/lib/icon'
   import { useGlobalStore } from '../store/global'
   import { useUserStore } from '../store/user'
   import { useTemplateStore } from '../store/template'
   import { ISpaceDetail } from '../../types/index'
+  import { loginOut } from '../api/index'
 
   const route = useRoute()
   const router = useRouter()
@@ -83,6 +84,10 @@
     }
   }
 
+  const handleLoginOut = () => {
+    loginOut()
+  }
+
 </script>
 
 <template>
@@ -130,7 +135,20 @@
           </div>
         </bk-option>
       </bk-select>
-      <span>{{ userInfo.username }}</span>
+      <bk-popover
+        ext-cls="login-out-popover"
+        placement="bottom-center"
+        theme="light"
+        :arrow="false"
+        :offset="{ mainAxis: 16 }">
+        <div class="username-wrapper">
+          <span class="text">{{ userInfo.username }}</span>
+          <DownShape class="arrow-icon"/>
+        </div>
+        <template #content>
+          <div class="login-out-btn" @click="handleLoginOut">退出登录</div>
+        </template>
+      </bk-popover>
     </div>
   </div>
 </template>
@@ -253,9 +271,37 @@
     transform: scale(0.8);
   }
 }
+.username-wrapper {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #c4c4cc;
+  cursor: pointer;
+  &:hover {
+    color: #3a84ff;
+  }
+  .arrow-icon{
+    font-size: 14px;
+    margin-left: 4px;
+  }
+}
+.login-out-btn {
+  padding: 0 16px;
+  height: 32px;
+  line-height: 32px;
+  font-size: 12px;
+  cursor: pointer;
+  &:hover {
+    background-color: #eaf3ff;
+    color: #3a84ff;
+  }
+}
 </style>
 <style lang="scss">
   .space-selector-popover .bk-select-option {
     padding: 0 !important;
+  }
+  .login-out-popover.bk-popover.bk-pop2-content {
+    padding: 4px 0;
   }
 </style>
