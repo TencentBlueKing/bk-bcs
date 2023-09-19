@@ -49,6 +49,7 @@ type portEntry struct {
 	protocol      string
 	port          int
 	hostPort      bool
+	itemName      string
 }
 
 // combine container port info into port entry format
@@ -60,6 +61,7 @@ func getPortEntryListFromPod(pod *k8scorev1.Pod, annotationPorts []*annotationPo
 			poolName:      port.poolName,
 			protocol:      port.protocol,
 			hostPort:      port.hostPort,
+			itemName:      port.itemName,
 		}
 		if len(port.poolNamespace) == 0 {
 			tmpEntry.poolNamespace = pod.GetNamespace()
@@ -147,13 +149,13 @@ func (s *Server) checkExistedPortBinding(name, namespace string, portList []*por
 	}
 	rsPortMap := make(map[string]struct{})
 	for _, item := range portBinding.Spec.PortBindingList {
-		key := getPoolPortKey(item.PoolNamespace, item.PoolName, item.Protocol, item.RsStartPort)
+		key := getPoolPortKey(item.PoolNamespace, item.PoolName, item.PoolItemName, item.Protocol, item.RsStartPort)
 		if _, ok := rsPortMap[key]; !ok {
 			rsPortMap[key] = struct{}{}
 		}
 	}
 	for _, port := range portList {
-		key := getPoolPortKey(port.poolNamespace, port.poolNamespace, port.protocol, port.port)
+		key := getPoolPortKey(port.poolNamespace, port.poolNamespace, port.itemName, port.protocol, port.port)
 		if _, ok := rsPortMap[key]; !ok {
 			blog.Warnf("port '%d' is not in portbinding '%s/%s', need to delete portbinding first",
 				port.port, portBinding.GetName(), portBinding.GetNamespace())

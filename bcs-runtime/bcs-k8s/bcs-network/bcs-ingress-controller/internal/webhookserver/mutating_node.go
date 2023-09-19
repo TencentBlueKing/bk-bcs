@@ -95,6 +95,7 @@ func (s *Server) getPortEntryListFromNode(annotationPorts []*annotationPort) ([]
 			poolName:      port.poolName,
 			protocol:      port.protocol,
 			hostPort:      port.hostPort,
+			itemName:      port.itemName,
 		}
 		if len(port.poolNamespace) == 0 {
 			// node's namespace is empty, use 'default'

@@ -34,6 +34,7 @@ type annotationPort struct {
 	protocol      string
 	portIntOrStr  string
 	hostPort      bool
+	itemName      string
 }
 
 func parserAnnotation(value string) ([]*annotationPort, error) {
@@ -72,6 +73,17 @@ func parserAnnotation(value string) ([]*annotationPort, error) {
 			poolName = poolKey
 		}
 
+		var itemName string
+		if strings.Contains(poolName, "/") {
+			poolNameStrArray := strings.Split(poolName, "/")
+			if len(poolNameStrArray) != 2 {
+				return nil, fmt.Errorf("invalid poolName %s", poolName)
+			}
+
+			poolName = poolNameStrArray[0]
+			itemName = poolNameStrArray[1]
+		}
+
 		if !isProtocolValid(protocol) {
 			return nil, fmt.Errorf("protocol %s is invalid", protocol)
 		}
@@ -82,6 +94,7 @@ func parserAnnotation(value string) ([]*annotationPort, error) {
 			protocol:      protocol,
 			portIntOrStr:  portStr,
 			hostPort:      hostPort,
+			itemName:      itemName,
 		})
 	}
 	return retPorts, nil
