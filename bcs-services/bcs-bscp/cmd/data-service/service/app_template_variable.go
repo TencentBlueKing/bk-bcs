@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -31,10 +31,10 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// ExtractAppTemplateVariables extract app template variables.
+// ExtractAppTmplVariables extract app template variables.
 // the variables come from template and non-template config items
-func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbds.ExtractAppTemplateVariablesReq) (
-	*pbds.ExtractAppTemplateVariablesResp, error) {
+func (s *Service) ExtractAppTmplVariables(ctx context.Context, req *pbds.ExtractAppTmplVariablesReq) (
+	*pbds.ExtractAppTmplVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	tmplRevisions, cis, err := s.getAllAppCIs(kt)
@@ -60,15 +60,15 @@ func (s *Service) ExtractAppTemplateVariables(ctx context.Context, req *pbds.Ext
 	// extract all template variables
 	variables := s.tmplProc.ExtractVariables(allContent)
 
-	return &pbds.ExtractAppTemplateVariablesResp{
+	return &pbds.ExtractAppTmplVariablesResp{
 		Details: variables,
 	}, nil
 }
 
-// GetAppTemplateVariableReferences get app template variable references.
+// GetAppTmplVariableRefs get app template variable references.
 // the variables come from template and non-template config items
-func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbds.GetAppTemplateVariableReferencesReq) (
-	*pbds.GetAppTemplateVariableReferencesResp, error) {
+func (s *Service) GetAppTmplVariableRefs(ctx context.Context, req *pbds.GetAppTmplVariableRefsReq) (
+	*pbds.GetAppTmplVariableRefsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	tmplRevisions, cis, err := s.getAllAppCIs(kt)
@@ -83,16 +83,16 @@ func (s *Service) GetAppTemplateVariableReferences(ctx context.Context, req *pbd
 		return nil, err
 	}
 
-	return &pbds.GetAppTemplateVariableReferencesResp{
+	return &pbds.GetAppTmplVariableRefsResp{
 		Details: refs,
 	}, nil
 }
 
-// GetReleasedAppTemplateVariableReferences get released app template variable references.
+// GetReleasedAppTmplVariableRefs get released app template variable references.
 // the variables come from template and non-template config items
-func (s *Service) GetReleasedAppTemplateVariableReferences(ctx context.Context,
-	req *pbds.GetReleasedAppTemplateVariableReferencesReq) (
-	*pbds.GetReleasedAppTemplateVariableReferencesResp, error) {
+func (s *Service) GetReleasedAppTmplVariableRefs(ctx context.Context,
+	req *pbds.GetReleasedAppTmplVariableRefsReq) (
+	*pbds.GetReleasedAppTmplVariableRefsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	releasedTmpls, _, err := s.dao.ReleasedAppTemplate().List(kt, req.BizId, req.AppId, req.ReleaseId, nil,
@@ -119,7 +119,7 @@ func (s *Service) GetReleasedAppTemplateVariableReferences(ctx context.Context,
 		return nil, err
 	}
 
-	return &pbds.GetReleasedAppTemplateVariableReferencesResp{
+	return &pbds.GetReleasedAppTmplVariableRefsResp{
 		Details: refs,
 	}, nil
 }
@@ -201,7 +201,7 @@ func getPbConfigItemsFromReleased(releasedCIs []*table.ReleasedConfigItem) []*pb
 	return cis
 }
 
-// GetAppTemplateVariableReferences get app template variable references.
+// GetAppTmplVariableRefs get app template variable references.
 func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.TemplateRevision, cis []*pbci.ConfigItem) (
 	[]*pbatv.AppTemplateVariableReference, error) {
 	contents, err := s.downloadTmplContent(kt, tmplRevisions)
@@ -276,13 +276,13 @@ func (s *Service) getVariableReferences(kt *kit.Kit, tmplRevisions []*table.Temp
 	return refs, nil
 }
 
-// ListAppTemplateVariables list app template variables.
-func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAppTemplateVariablesReq) (
-	*pbds.ListAppTemplateVariablesResp, error) {
+// ListAppTmplVariables list app template variables.
+func (s *Service) ListAppTmplVariables(ctx context.Context, req *pbds.ListAppTmplVariablesReq) (
+	*pbds.ListAppTmplVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	// extract all variables for current app
-	extractRep, err := s.ExtractAppTemplateVariables(ctx, &pbds.ExtractAppTemplateVariablesReq{
+	extractRep, err := s.ExtractAppTmplVariables(ctx, &pbds.ExtractAppTmplVariablesReq{
 		BizId: req.BizId,
 		AppId: req.AppId,
 	})
@@ -292,7 +292,7 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAp
 	}
 	allVariables := extractRep.Details
 	if len(allVariables) == 0 {
-		return &pbds.ListAppTemplateVariablesResp{
+		return &pbds.ListAppTmplVariablesResp{
 			Details: []*pbtv.TemplateVariableSpec{},
 		}, nil
 	}
@@ -335,14 +335,14 @@ func (s *Service) ListAppTemplateVariables(ctx context.Context, req *pbds.ListAp
 		finalVar = append(finalVar, &pbtv.TemplateVariableSpec{Name: name})
 	}
 
-	return &pbds.ListAppTemplateVariablesResp{
+	return &pbds.ListAppTmplVariablesResp{
 		Details: finalVar,
 	}, nil
 }
 
-// ListReleasedAppTemplateVariables get app template variable references.
-func (s *Service) ListReleasedAppTemplateVariables(ctx context.Context, req *pbds.ListReleasedAppTemplateVariablesReq) (
-	*pbds.ListReleasedAppTemplateVariablesResp, error) {
+// ListReleasedAppTmplVariables get app template variable references.
+func (s *Service) ListReleasedAppTmplVariables(ctx context.Context, req *pbds.ListReleasedAppTmplVariablesReq) (
+	*pbds.ListReleasedAppTmplVariablesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	details, err := s.dao.ReleasedAppTemplateVariable().ListVariables(kt, req.BizId, req.AppId, req.ReleaseId)
@@ -351,13 +351,13 @@ func (s *Service) ListReleasedAppTemplateVariables(ctx context.Context, req *pbd
 		return nil, err
 	}
 
-	return &pbds.ListReleasedAppTemplateVariablesResp{
+	return &pbds.ListReleasedAppTmplVariablesResp{
 		Details: pbtv.PbTemplateVariableSpecs(details),
 	}, nil
 }
 
-// UpdateAppTemplateVariables update app template variables.
-func (s *Service) UpdateAppTemplateVariables(ctx context.Context, req *pbds.UpdateAppTemplateVariablesReq) (
+// UpdateAppTmplVariables update app template variables.
+func (s *Service) UpdateAppTmplVariables(ctx context.Context, req *pbds.UpdateAppTmplVariablesReq) (
 	*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 	// set for empty slice to ensure the data in db is not `null` but `[]`

@@ -1,25 +1,25 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package dao
 
 import (
+	"gorm.io/datatypes"
+	rawgen "gorm.io/gen"
+
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/types"
-
-	"gorm.io/datatypes"
-	rawgen "gorm.io/gen"
 )
 
 // TemplateBindingRelation supplies all the template binding relation query operations.
@@ -38,22 +38,22 @@ type TemplateBindingRelation interface {
 	GetTemplateSetBoundUnnamedAppCount(kit *kit.Kit, bizID, templateSetID uint32) (uint32, error)
 	// GetTemplateSetBoundNamedAppCount get bound named app count of the target template set.
 	GetTemplateSetBoundNamedAppCount(kit *kit.Kit, bizID, templateSetID uint32) (uint32, error)
-	// ListTemplateBoundUnnamedAppDetails list bound unnamed app details of the target template.
-	ListTemplateBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateID uint32) ([]*types.TmplBoundUnnamedAppDetail, error)
-	// ListTemplateBoundNamedAppDetails list bound named app details of the target template.
-	ListTemplateBoundNamedAppDetails(kit *kit.Kit, bizID, templateID uint32) ([]*types.TmplBoundNamedAppDetail, error)
-	// ListTemplateBoundTemplateSetDetails list bound template set details of the target template.
-	ListTemplateBoundTemplateSetDetails(kit *kit.Kit, bizID, templateID uint32) ([]uint32, error)
-	// ListTemplateRevisionBoundUnnamedAppDetails list bound unnamed app details of the target template release.
-	ListTemplateRevisionBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateRevisionID uint32) ([]uint32, error)
-	// ListTemplateRevisionBoundNamedAppDetails list bound named app details of the target template release.
-	ListTemplateRevisionBoundNamedAppDetails(kit *kit.Kit, bizID, templateRevisionID uint32) ([]*types.TmplRevisionBoundNamedAppDetail, error)
-	// ListTemplateSetBoundUnnamedAppDetails list bound unnamed app details of the target template set.
-	ListTemplateSetBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateSetID uint32) ([]uint32, error)
-	// ListTemplateSetBoundNamedAppDetails list bound named app details of the target template set.
-	ListTemplateSetBoundNamedAppDetails(kit *kit.Kit, bizID, templateSetID uint32) ([]*types.TmplSetBoundNamedAppDetail, error)
-	// ListLatestTemplateBoundUnnamedAppDetails list bound unnamed app details of the latest target template.
-	ListLatestTemplateBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateID uint32) ([]*table.AppTemplateBinding, error)
+	// ListTmplBoundUnnamedApps list bound unnamed app details of the target template.
+	ListTmplBoundUnnamedApps(kit *kit.Kit, bizID, templateID uint32) ([]*types.TmplBoundUnnamedAppDetail, error)
+	// ListTmplBoundNamedApps list bound named app details of the target template.
+	ListTmplBoundNamedApps(kit *kit.Kit, bizID, templateID uint32) ([]*types.TmplBoundNamedAppDetail, error)
+	// ListTmplBoundTmplSets list bound template set details of the target template.
+	ListTmplBoundTmplSets(kit *kit.Kit, bizID, templateID uint32) ([]uint32, error)
+	// ListTmplRevisionBoundUnnamedApps list bound unnamed app details of the target template release.
+	ListTmplRevisionBoundUnnamedApps(kit *kit.Kit, bizID, templateRevisionID uint32) ([]uint32, error)
+	// ListTmplRevisionBoundNamedApps list bound named app details of the target template release.
+	ListTmplRevisionBoundNamedApps(kit *kit.Kit, bizID, templateRevisionID uint32) ([]*types.TmplRevisionBoundNamedAppDetail, error)
+	// ListTmplSetBoundUnnamedApps list bound unnamed app details of the target template set.
+	ListTmplSetBoundUnnamedApps(kit *kit.Kit, bizID, templateSetID uint32) ([]uint32, error)
+	// ListTmplSetBoundNamedApps list bound named app details of the target template set.
+	ListTmplSetBoundNamedApps(kit *kit.Kit, bizID, templateSetID uint32) ([]*types.TmplSetBoundNamedAppDetail, error)
+	// ListLatestTmplBoundUnnamedApps list bound unnamed app details of the latest target template.
+	ListLatestTmplBoundUnnamedApps(kit *kit.Kit, bizID, templateID uint32) ([]*table.AppTemplateBinding, error)
 	// ListTemplateSetsBoundATBs list bound app template bindings of the target template sets.
 	ListTemplateSetsBoundATBs(kit *kit.Kit, bizID uint32, templateSetIDs []uint32) ([]*table.AppTemplateBinding, error)
 	// ListTemplatesBoundATBs list bound app template bindings of the target templates.
@@ -183,8 +183,8 @@ func (dao *templateBindingRelationDao) GetTemplateSetBoundNamedAppCount(kit *kit
 	return rs.Counts, nil
 }
 
-// ListTemplateBoundUnnamedAppDetails list bound unnamed app details of the target template.
-func (dao *templateBindingRelationDao) ListTemplateBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateID uint32) (
+// ListTmplBoundUnnamedApps list bound unnamed app details of the target template.
+func (dao *templateBindingRelationDao) ListTmplBoundUnnamedApps(kit *kit.Kit, bizID, templateID uint32) (
 	[]*types.TmplBoundUnnamedAppDetail, error) {
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
@@ -199,8 +199,8 @@ func (dao *templateBindingRelationDao) ListTemplateBoundUnnamedAppDetails(kit *k
 	return rs, nil
 }
 
-// ListTemplateBoundNamedAppDetails list bound named app details of the target template.
-func (dao *templateBindingRelationDao) ListTemplateBoundNamedAppDetails(kit *kit.Kit, bizID, templateID uint32) (
+// ListTmplBoundNamedApps list bound named app details of the target template.
+func (dao *templateBindingRelationDao) ListTmplBoundNamedApps(kit *kit.Kit, bizID, templateID uint32) (
 	[]*types.TmplBoundNamedAppDetail, error) {
 	m := dao.genQ.ReleasedAppTemplate
 	q := dao.genQ.ReleasedAppTemplate.WithContext(kit.Ctx)
@@ -214,8 +214,8 @@ func (dao *templateBindingRelationDao) ListTemplateBoundNamedAppDetails(kit *kit
 	return rs, nil
 }
 
-// ListTemplateBoundTemplateSetDetails list bound template set details of the target template.
-func (dao *templateBindingRelationDao) ListTemplateBoundTemplateSetDetails(kit *kit.Kit, bizID, templateID uint32) (
+// ListTmplBoundTmplSets list bound template set details of the target template.
+func (dao *templateBindingRelationDao) ListTmplBoundTmplSets(kit *kit.Kit, bizID, templateID uint32) (
 	[]uint32, error) {
 	m := dao.genQ.TemplateSet
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
@@ -230,8 +230,8 @@ func (dao *templateBindingRelationDao) ListTemplateBoundTemplateSetDetails(kit *
 	return templateSetIDs, nil
 }
 
-// ListTemplateRevisionBoundUnnamedAppDetails list bound unnamed app details of the target template release.
-func (dao *templateBindingRelationDao) ListTemplateRevisionBoundUnnamedAppDetails(kit *kit.Kit, bizID,
+// ListTmplRevisionBoundUnnamedApps list bound unnamed app details of the target template release.
+func (dao *templateBindingRelationDao) ListTmplRevisionBoundUnnamedApps(kit *kit.Kit, bizID,
 	templateRevisionID uint32) ([]uint32, error) {
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
@@ -246,8 +246,8 @@ func (dao *templateBindingRelationDao) ListTemplateRevisionBoundUnnamedAppDetail
 	return appIDs, nil
 }
 
-// ListTemplateRevisionBoundNamedAppDetails list bound named app details of the target template release.
-func (dao *templateBindingRelationDao) ListTemplateRevisionBoundNamedAppDetails(kit *kit.Kit, bizID,
+// ListTmplRevisionBoundNamedApps list bound named app details of the target template release.
+func (dao *templateBindingRelationDao) ListTmplRevisionBoundNamedApps(kit *kit.Kit, bizID,
 	templateRevisionID uint32) ([]*types.TmplRevisionBoundNamedAppDetail, error) {
 	m := dao.genQ.ReleasedAppTemplate
 	q := dao.genQ.ReleasedAppTemplate.WithContext(kit.Ctx)
@@ -261,8 +261,8 @@ func (dao *templateBindingRelationDao) ListTemplateRevisionBoundNamedAppDetails(
 	return rs, nil
 }
 
-// ListTemplateSetBoundUnnamedAppDetails list bound unnamed app details of the target template set.
-func (dao *templateBindingRelationDao) ListTemplateSetBoundUnnamedAppDetails(kit *kit.Kit, bizID,
+// ListTmplSetBoundUnnamedApps list bound unnamed app details of the target template set.
+func (dao *templateBindingRelationDao) ListTmplSetBoundUnnamedApps(kit *kit.Kit, bizID,
 	templateSetID uint32) ([]uint32, error) {
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
@@ -277,8 +277,8 @@ func (dao *templateBindingRelationDao) ListTemplateSetBoundUnnamedAppDetails(kit
 	return appIDs, nil
 }
 
-// ListTemplateSetBoundNamedAppDetails list bound named app details of the target template set.
-func (dao *templateBindingRelationDao) ListTemplateSetBoundNamedAppDetails(kit *kit.Kit, bizID, templateSetID uint32) (
+// ListTmplSetBoundNamedApps list bound named app details of the target template set.
+func (dao *templateBindingRelationDao) ListTmplSetBoundNamedApps(kit *kit.Kit, bizID, templateSetID uint32) (
 	[]*types.TmplSetBoundNamedAppDetail, error) {
 	m := dao.genQ.ReleasedAppTemplate
 	q := dao.genQ.ReleasedAppTemplate.WithContext(kit.Ctx)
@@ -292,8 +292,8 @@ func (dao *templateBindingRelationDao) ListTemplateSetBoundNamedAppDetails(kit *
 	return rs, nil
 }
 
-// ListLatestTemplateBoundUnnamedAppDetails list bound unnamed app details of the latest target template.
-func (dao *templateBindingRelationDao) ListLatestTemplateBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateID uint32) (
+// ListLatestTmplBoundUnnamedApps list bound unnamed app details of the latest target template.
+func (dao *templateBindingRelationDao) ListLatestTmplBoundUnnamedApps(kit *kit.Kit, bizID, templateID uint32) (
 	[]*table.AppTemplateBinding, error) {
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
