@@ -26,7 +26,7 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.13
 	github.com/RichardKnop/machinery/v2 v2.0.11
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230707084844-155f32c8f606
-	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230811095616-815d33d32e2d
+	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230908045126-c9d09981a9c5
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230607093333-1f5cd2719e19
 	github.com/avast/retry-go v2.7.0+incompatible
 	github.com/coreos/etcd v3.3.25+incompatible
@@ -67,7 +67,7 @@ require (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common/pkg/i18n v0.0.0-20230821062822-ccdae7cdfe4a
+	github.com/Tencent/bk-bcs/bcs-common/pkg/i18n v0.0.0-20230908142111-fef103db0120
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8

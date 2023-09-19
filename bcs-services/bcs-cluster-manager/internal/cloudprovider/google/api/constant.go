@@ -61,6 +61,8 @@ const (
 	GKEClusterReleaseChannel = "releaseChannel"
 	// GKEClusterLocationType for GKE cluster location type
 	GKEClusterLocationType = "locationType"
+	// GKEClusterLocations for GKE cluster locations
+	GKEClusterLocations = "locations"
 
 	// MetadataKeySshKey is key name for ssh public keys
 	MetadataKeySshKey = "ssh-keys"

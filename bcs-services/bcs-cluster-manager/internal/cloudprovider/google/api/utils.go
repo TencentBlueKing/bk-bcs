@@ -18,12 +18,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
@@ -71,21 +73,31 @@ func GetTokenSource(ctx context.Context, credential string) (oauth2.TokenSource,
 }
 
 // GetClusterKubeConfig get cloud cluster's kube config
-func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, clusterName string) (string, error) {
+func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region,
+	clusterType string, clusterName string) (string, error) {
 	client, err := GetContainerServiceClient(ctx, saSecret)
 	if err != nil {
 		return "", err
 	}
 
 	// Get the kube cluster in given project.
-	parent := "projects/" + gkeProjectID + "/locations/" + region + "/clusters/" + clusterName
-	gkeCluster, err := client.Projects.Locations.Clusters.Get(parent).Do()
+	var (
+		gkeCluster *container.Cluster
+	)
+	switch clusterType {
+	case common.Regions:
+		parent := "projects/" + gkeProjectID + "/locations/" + region + "/clusters/" + clusterName
+		gkeCluster, err = client.Projects.Locations.Clusters.Get(parent).Do()
+	case common.Zones:
+		gkeCluster, err = client.Projects.Zones.Clusters.Get(gkeProjectID, region, clusterName).Do()
+	default:
+		return "", fmt.Errorf("unsupported gke cluster type[%s]", region)
+	}
 	if err != nil {
 		return "", fmt.Errorf("GetClusterKubeConfig list clusters failed, project=%s: %v", gkeProjectID, err)
 	}
 
 	name := fmt.Sprintf("%s_%s_%s", gkeProjectID, gkeCluster.Location, gkeCluster.Name)
-
 	cert, err := base64.StdEncoding.DecodeString(gkeCluster.MasterAuth.ClusterCaCertificate)
 	if err != nil {
 		return "", fmt.Errorf("GetClusterKubeConfig certificate failed, cluster=%s: %v", name, err)
@@ -148,7 +160,8 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, c
 	if err != nil {
 		return "", fmt.Errorf("GetClusterKubeConfig marsh kubeconfig failed, %v", err)
 	}
-	return base64.StdEncoding.EncodeToString(configByte), nil
+
+	return encrypt.Encrypt(nil, string(configByte))
 }
 
 // MapTaints map cmproto.Taint to Taint

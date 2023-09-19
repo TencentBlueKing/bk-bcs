@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"google.golang.org/api/compute/v1"
@@ -255,12 +256,12 @@ func InstanceToNode(cli *ComputeServiceClient, ins *compute.Instance) *proto.Nod
 		node.ZoneID = zone.Zone
 		zoneID, _ := strconv.Atoi(zone.ZoneID)
 		node.Zone = uint32(zoneID)
+		node.ZoneName = zone.ZoneName
 	}
 	machineInfo, _ := GetGCEResourceInfo(ins.MachineType)
 	node.InstanceType = machineInfo[len(machineInfo)-1]
 	networkInfo := strings.Split(ins.NetworkInterfaces[0].Subnetwork, "/")
 	node.VPC = networkInfo[len(networkInfo)-1]
-	node.Status = ins.Status
-	node.Region = cli.location
+	node.Status = common.StatusRunning
 	return node
 }

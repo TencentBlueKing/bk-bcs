@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"sync"
 	"time"
@@ -90,7 +91,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubenretes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	return opt.Cluster, nil
 }
 
 // ListCluster get cloud cluster list by region
@@ -99,23 +100,38 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 	if err != nil {
 		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
 	}
-	clusters, err := client.ListCluster(context.Background())
+	clusters, err := client.ListCluster(context.Background(), "-")
 	if err != nil {
 		return nil, fmt.Errorf("list google cluster failed, err %s", err.Error())
 	}
+
 	result := make([]*proto.CloudClusterInfo, 0)
 	for _, v := range clusters {
-		info := &proto.CloudClusterInfo{
-			ClusterID:      v.Name,
-			ClusterName:    v.Name,
-			ClusterVersion: v.CurrentMasterVersion,
-			ClusterStatus:  v.Status,
+		if strings.Contains(v.Location, opt.Region) {
+			info := &proto.CloudClusterInfo{
+				ClusterID:      v.Name,
+				ClusterName:    v.Name,
+				ClusterVersion: v.CurrentMasterVersion,
+				ClusterStatus:  v.Status,
+				ClusterType:    api.Standard,
+				Location:       v.Location,
+			}
+			if v.NodeConfig != nil {
+				info.ClusterOS = v.NodeConfig.ImageType
+			}
+			if v.Autopilot != nil && v.Autopilot.Enabled {
+				info.ClusterType = api.Autopilot
+			}
+			if len(strings.Split(v.Location, "-")) == 2 {
+				info.ClusterLevel = api.RegionLevel
+			} else {
+				info.ClusterLevel = api.ZoneLevel
+			}
+
+			result = append(result, info)
 		}
-		if v.NodeConfig != nil {
-			info.ClusterOS = v.NodeConfig.ImageType
-		}
-		result = append(result, info)
 	}
+
 	return result, nil
 }
 

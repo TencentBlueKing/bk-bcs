@@ -83,7 +83,10 @@ func GetContainerServiceClient(ctx context.Context, credentialContent string) (*
 }
 
 // ListCluster list clusters
-func (cs *ContainerServiceClient) ListCluster(ctx context.Context) ([]*container.Cluster, error) {
+func (cs *ContainerServiceClient) ListCluster(ctx context.Context, location string) ([]*container.Cluster, error) {
+	if location != "" {
+		cs.region = location
+	}
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region
 	clusters, err := cs.containerServiceClient.Projects.Locations.Clusters.List(parent).Context(ctx).Do()
 	if err != nil {
