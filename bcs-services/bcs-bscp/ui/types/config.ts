@@ -36,6 +36,14 @@ export interface IConfigItem {
       user_group: string;
     }
   };
+  commit_spec: {
+    content: {
+      byte_size: string;
+      origin_byte_size: string;
+      origin_signature: string;
+      signature: string;
+    }
+  },
   attachment: {
     biz_id: number;
     app_id: number;
@@ -147,9 +155,9 @@ export interface IBoundTemplateDetail {
   user: string;
   user_group: string;
   privilege: string;
-  rendered_signature: string;
+  origin_signature: string;
   signature: string;
-  rendered_byte_size: string;
+  origin_byte_size: string;
   byte_size: string;
   creator: string;
   create_at: string;

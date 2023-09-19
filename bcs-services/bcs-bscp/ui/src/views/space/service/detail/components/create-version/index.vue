@@ -95,9 +95,9 @@
 <template>
   <bk-button
     v-if="versionData.id === 0"
-    v-cursor="{ active: !permCheckLoading && hasCreateVersionPerm }"
+    v-cursor="{ active: !hasCreateVersionPerm }"
     theme="primary"
-    :class="['trigger-button', { 'bk-button-with-no-perm': !permCheckLoading && hasCreateVersionPerm }]"
+    :class="['trigger-button', { 'bk-button-with-no-perm': !hasCreateVersionPerm }]"
     :disabled="allConfigCount === 0 || permCheckLoading"
     @click="handleBtnClick">
     生成版本
@@ -112,7 +112,8 @@
     @created="handleCreated" />
     <VersionDiff
       v-model:show="isDiffSliderShow"
-      :current-version="versionData">
+      :current-version="versionData"
+      :un-named-version-variables="variableList">
       <template #footerActions>
         <bk-button
           class="create-version-btn"
