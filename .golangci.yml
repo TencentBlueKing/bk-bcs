@@ -48,9 +48,10 @@ linters-settings:
   lll:
     line-length: 120 # widely used and popular community recommended length
   funlen:
-    lines: 90 # default * 1.5
+    lines: 90 # 函数长度 default * 1.5
+    statements: -1 # 不限制语句数量, 通过圈复杂度处理
   gocyclo:
-    min-complexity: 30
+    min-complexity: 30 # 函数圈复杂度
   govet:
     check-shadowing: true
   # goimports:
