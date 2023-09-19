@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 
-	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -125,7 +124,6 @@ func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig) (Authorizer, error) {
 }
 
 type authorizer struct {
-	iamClient *bkiam.IAM
 	// authClient auth server's client api
 	authClient      pbas.AuthClient
 	authLoginClient bkpaas.AuthLoginClient
