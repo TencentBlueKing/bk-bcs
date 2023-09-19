@@ -47,6 +47,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/replay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -154,6 +155,14 @@ func (c *WebConsoleManager) Init() error {
 	if err := micro.RegisterHandler(microService.Server(), router); err != nil {
 		return err
 	}
+
+	done := make(chan struct{})
+	go record.UploadRecordFile(c.ctx, done)
+	microService.Init(micro.AfterStop(func() error {
+		<-done
+		logger.Info("upload record file gracefully shutdown")
+		return nil
+	}))
 
 	return nil
 }
