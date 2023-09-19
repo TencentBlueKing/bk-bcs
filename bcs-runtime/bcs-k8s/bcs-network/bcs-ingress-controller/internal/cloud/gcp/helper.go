@@ -138,7 +138,7 @@ func (e *GCLB) ensureListenerService(region string, listener *networkextensionv1
 	if inErr := e.client.Get(context.TODO(), objectKey, service); inErr != nil {
 		if k8serrors.IsNotFound(inErr) {
 			// create service
-			svc := e.generateListenerService(listener, address.Address)
+			svc := e.generateListenerService(listener, address)
 			if inErr = e.client.Create(context.TODO(), svc); inErr != nil {
 				return "", false, inErr
 			}
@@ -153,7 +153,7 @@ func (e *GCLB) ensureListenerService(region string, listener *networkextensionv1
 	}
 
 	// update service
-	generateService := e.generateListenerService(listener, address.Address)
+	generateService := e.generateListenerService(listener, address)
 	if !reflect.DeepEqual(service.Spec, generateService.Spec) {
 		service.Spec = generateService.Spec
 		if err := e.client.Update(context.TODO(), service); err != nil {
@@ -164,17 +164,23 @@ func (e *GCLB) ensureListenerService(region string, listener *networkextensionv1
 }
 
 // generate service for lb listener
-func (e *GCLB) generateListenerService(listener *networkextensionv1.Listener, lbIP string) *k8scorev1.Service {
+func (e *GCLB) generateListenerService(listener *networkextensionv1.Listener,
+	address *compute.Address) *k8scorev1.Service {
 	service := &k8scorev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: listener.Namespace,
 			Name:      listener.Name,
 		},
 		Spec: k8scorev1.ServiceSpec{
-			LoadBalancerIP:        lbIP,
+			LoadBalancerIP:        address.Address,
 			ExternalTrafficPolicy: k8scorev1.ServiceExternalTrafficPolicyTypeLocal,
 			Type:                  k8scorev1.ServiceTypeLoadBalancer,
 		},
+	}
+	if address.AddressType == AddressTypeInternal {
+		service.SetAnnotations(map[string]string{
+			AnnotationKeyLoadBalancerType: AnnotationValueLoadBalancerTypeInternal,
+		})
 	}
 	var ports []k8scorev1.ServicePort
 	// get rs port
@@ -316,19 +322,20 @@ func (e *GCLB) ensureURLMap(listener *networkextensionv1.Listener) (string, erro
 	}
 
 	// ensure url map
-	_, err = e.sdkWrapper.GetURLMaps(e.project, listener.Name)
+	urlMap, err := e.sdkWrapper.GetURLMaps(e.project, listener.Name)
 	if err != nil {
-		if isNotFound(err) {
-			inErr := e.sdkWrapper.CreateURLMap(e.project, &compute.UrlMap{Name: listener.Name, DefaultService: "global/backendServices/" + bsName})
-			if inErr != nil {
-				blog.Errorf("CreateURLMap %s failed, %s", listener.Name, inErr.Error())
-				return "", inErr
-			}
-			return listener.Name, nil
-		}
 		blog.Errorf("GetURLMaps %s failed, %s", listener.Name, err.Error())
 		return "", err
 	}
+	if urlMap == nil {
+		inErr := e.sdkWrapper.CreateURLMap(e.project, &compute.UrlMap{Name: listener.Name, DefaultService: "global/backendServices/" + bsName})
+		if inErr != nil {
+			blog.Errorf("CreateURLMap %s failed, %s", listener.Name, inErr.Error())
+			return "", inErr
+		}
+		return listener.Name, nil
+	}
+
 	return listener.Name, nil
 }
 
@@ -340,18 +347,18 @@ func (e *GCLB) ensureTargetProxy(listener *networkextensionv1.Listener) (string,
 
 	// get target proxy
 	if listener.Spec.Protocol == ProtocolHTTP {
-		_, err = e.sdkWrapper.GetTargetHTTPProxies(e.project, listener.Name)
+		targetHTTPProxy, err := e.sdkWrapper.GetTargetHTTPProxies(e.project, listener.Name)
 		if err != nil {
-			if isNotFound(err) {
-				inErr := e.sdkWrapper.CreateTargetHTTPProxy(e.project, &compute.TargetHttpProxy{Name: listener.Name, UrlMap: "global/urlMaps/" + urlMapName})
-				if inErr != nil {
-					blog.Errorf("CreateTargetHTTPProxy %s failed, %s", listener.Name, inErr.Error())
-					return "", inErr
-				}
-				return listener.Name, nil
-			}
 			blog.Errorf("GetTargetHTTPProxies %s failed, %s", listener.Name, err.Error())
 			return "", err
+		}
+		if targetHTTPProxy == nil {
+			inErr := e.sdkWrapper.CreateTargetHTTPProxy(e.project, &compute.TargetHttpProxy{Name: listener.Name, UrlMap: "global/urlMaps/" + urlMapName})
+			if inErr != nil {
+				blog.Errorf("CreateTargetHTTPProxy %s failed, %s", listener.Name, inErr.Error())
+				return "", inErr
+			}
+			return listener.Name, nil
 		}
 		return listener.Name, nil
 	}
@@ -360,20 +367,20 @@ func (e *GCLB) ensureTargetProxy(listener *networkextensionv1.Listener) (string,
 			blog.Errorf("listener %s certificate is empty", listener.Name)
 			return "", fmt.Errorf("listener %s certificate is empty", listener.Name)
 		}
-		_, err = e.sdkWrapper.GetTargetHTTPSProxies(e.project, listener.Name)
-		if err != nil {
-			if isNotFound(err) {
-				inErr := e.sdkWrapper.CreateTargetHTTPSProxy(e.project, &compute.TargetHttpsProxy{Name: listener.Name,
-					UrlMap:          "global/urlMaps/" + urlMapName,
-					SslCertificates: []string{"global/sslCertificates/" + listener.Spec.Certificate.CertID}})
-				if inErr != nil {
-					blog.Errorf("CreateTargetHTTPSProxy %s failed, %s", listener.Name, inErr.Error())
-					return "", inErr
-				}
-				return listener.Name, nil
+		httpsProxy, err1 := e.sdkWrapper.GetTargetHTTPSProxies(e.project, listener.Name)
+		if err1 != nil {
+			blog.Errorf("GetTargetHTTPSProxies %s failed, %s", listener.Name, err1.Error())
+			return "", err1
+		}
+		if httpsProxy == nil {
+			inErr := e.sdkWrapper.CreateTargetHTTPSProxy(e.project, &compute.TargetHttpsProxy{Name: listener.Name,
+				UrlMap:          "global/urlMaps/" + urlMapName,
+				SslCertificates: []string{"global/sslCertificates/" + listener.Spec.Certificate.CertID}})
+			if inErr != nil {
+				blog.Errorf("CreateTargetHTTPSProxy %s failed, %s", listener.Name, inErr.Error())
+				return "", inErr
 			}
-			blog.Errorf("GetTargetHTTPSProxies %s failed, %s", listener.Name, err.Error())
-			return "", err
+			return listener.Name, nil
 		}
 		return listener.Name, nil
 	}
@@ -389,16 +396,16 @@ func (e *GCLB) ensureForwardingRules(listener *networkextensionv1.Listener) (str
 	// get forwarding rules
 	fr, err := e.sdkWrapper.GetForwardingRules(e.project, listener.Name)
 	if err != nil {
-		if isNotFound(err) {
-			// create forwarding rules
-			inErr := e.sdkWrapper.CreateForwardingRules(e.project, listener.Name, targetProxyName,
-				listener.Spec.LoadbalancerID, listener.Spec.Port)
-			if inErr != nil {
-				return "", inErr
-			}
-			return listener.Name, nil
-		}
 		return "", err
+	}
+	if fr == nil {
+		// create forwarding rules
+		inErr := e.sdkWrapper.CreateForwardingRules(e.project, listener.Name, targetProxyName,
+			listener.Spec.LoadbalancerID, listener.Spec.Port)
+		if inErr != nil {
+			return "", inErr
+		}
+		return listener.Name, nil
 	}
 	return fr.Name, nil
 }
@@ -458,17 +465,17 @@ func getNEGName(backendServiceName, zone string) string {
 
 // ensureL7HealthCheck create health check
 func (e *GCLB) ensureL7HealthCheck(rule networkextensionv1.ListenerRule, port int) error {
-	_, err := e.sdkWrapper.GetHealthChecks(e.project, getRuleName(rule.Domain, rule.Path, port))
+	healthCheck, err := e.sdkWrapper.GetHealthChecks(e.project, getRuleName(rule.Domain, rule.Path, port))
 	if err != nil {
-		if isNotFound(err) {
-			if inErr := e.sdkWrapper.CreateHealthChecks(e.project, e.generateHealthCheck(rule, port)); inErr != nil {
-				blog.Errorf("CreateHealthChecks failed, err: %s", inErr.Error())
-				return inErr
-			}
-			return nil
-		}
 		blog.Errorf("GetHealthChecks failed, %s", err.Error())
 		return err
+	}
+	if healthCheck == nil {
+		if inErr := e.sdkWrapper.CreateHealthChecks(e.project, e.generateHealthCheck(rule, port)); inErr != nil {
+			blog.Errorf("CreateHealthChecks failed, err: %s", inErr.Error())
+			return inErr
+		}
+		return nil
 	}
 
 	if err := e.sdkWrapper.UpdateHealthChecks(e.project, e.generateHealthCheck(rule, port)); err != nil {
@@ -526,26 +533,25 @@ func (e *GCLB) generateHealthCheck(rule networkextensionv1.ListenerRule, port in
 func (e *GCLB) ensureL7BackendService(rule networkextensionv1.ListenerRule, protocol string, port int) (string, error) {
 	// ensure backend-service
 	name := getRuleName(rule.Domain, rule.Path, port)
-	_, err := e.sdkWrapper.GetBackendServices(e.project, name)
+	backendService, err := e.sdkWrapper.GetBackendServices(e.project, name)
 	if err != nil {
-		if isNotFound(err) {
-			bs := &compute.BackendService{
-				Name:                name,
-				LoadBalancingScheme: "EXTERNAL",
-				Protocol:            protocol,
-				HealthChecks:        []string{"global/healthChecks/" + name},
-			}
-			if rule.ListenerAttribute != nil && rule.ListenerAttribute.BackendInsecure {
-				bs.Protocol = ProtocolHTTP
-			}
-			inErr := e.sdkWrapper.CreateBackendService(e.project, bs)
-			if inErr != nil {
-				blog.Errorf("CreateBackendService failed, err: %s", inErr.Error())
-				return "", inErr
-			}
-		} else {
-			blog.Errorf("GetBackendServices failed, err: %s", err.Error())
-			return "", err
+		blog.Errorf("GetBackendServices failed, err: %s", err.Error())
+		return "", err
+	}
+	if backendService == nil {
+		bs := &compute.BackendService{
+			Name:                name,
+			LoadBalancingScheme: "EXTERNAL",
+			Protocol:            protocol,
+			HealthChecks:        []string{"global/healthChecks/" + name},
+		}
+		if rule.ListenerAttribute != nil && rule.ListenerAttribute.BackendInsecure {
+			bs.Protocol = ProtocolHTTP
+		}
+		inErr := e.sdkWrapper.CreateBackendService(e.project, bs)
+		if inErr != nil {
+			blog.Errorf("CreateBackendService failed, err: %s", inErr.Error())
+			return "", inErr
 		}
 	}
 	return name, nil
@@ -882,11 +888,11 @@ func (e *GCLB) deleteL7Listener(listener *networkextensionv1.Listener) error {
 		// get backend service
 		bs, err := e.sdkWrapper.GetBackendServices(e.project, bsName)
 		if err != nil {
-			if isNotFound(err) {
-				continue
-			}
 			blog.Errorf("GetBackendServices failed, err: %s", err.Error())
 			return err
+		}
+		if bs == nil {
+			continue
 		}
 		// delete backend-services
 		if err := e.sdkWrapper.DeleteBackendService(e.project, bsName); isError(err) {

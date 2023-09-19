@@ -11,6 +11,7 @@
  *
  */
 
+// Package namespacecontroller add configmap to specified namespace
 package namespacecontroller
 
 import (

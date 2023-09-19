@@ -11,11 +11,13 @@
  *
  */
 
+// Package middleware defines the middleware for gitops
 package middleware
 
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,8 +25,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/session"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing"
 )
 
@@ -99,7 +103,21 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer func() {
-		blog.Infof("RequestID[%s] handle request cost time: %v", requestID, time.Since(start))
+		cost := time.Since(start)
+		blog.Infof("RequestID[%s] handle request '%s' cost time: %v", requestID, r.URL.Path, cost)
+
+		// 对于包含 stream/webhook 的请求过滤
+		if !strings.Contains(r.URL.Path, "/api/v1/stream") &&
+			!strings.Contains(r.URL.Path, "/api/webhook") &&
+			!strings.Contains(r.URL.Path, "/clean") {
+			if strings.Contains(r.URL.Path, "Service/") {
+				metric.ManagerGRPCRequestTotal.WithLabelValues().Inc()
+				metric.ManagerGRPCRequestDuration.WithLabelValues().Observe(cost.Seconds())
+			} else {
+				metric.ManagerHTTPRequestTotal.WithLabelValues().Inc()
+				metric.ManagerHTTPRequestDuration.WithLabelValues().Observe(cost.Seconds())
+			}
+		}
 	}()
 
 	resp := p.handler(ctx, r)
@@ -108,6 +126,11 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		blog.Errorf("RequestID[%s] response should not be nil", requestID)
 		resp = &HttpResponse{
 			respType: reverseArgo,
+		}
+	}
+	if resp.statusCode >= 500 {
+		if !utils.IsContextCanceled(resp.err) {
+			metric.ManagerReturnErrorNum.WithLabelValues().Inc()
 		}
 	}
 	switch resp.respType {

@@ -11,6 +11,7 @@
  *
  */
 
+// Package homepage used to recorder the commit message
 package homepage
 
 import (
@@ -72,18 +73,12 @@ func (r *Recorder) RecordEvent(ctx context.Context, req *http.Request) error {
 				BcsUsername: commit.Author.Username,
 				Email:       commit.Author.Email,
 				CommitID:    commit.ID,
+				Url:         commit.URL,
 				Modified:    commit.Modified,
 				Added:       commit.Added,
 				Removed:     commit.Removed,
 			}
-			var bs []byte
-			bs, err = hpInfo.Build()
-			if err != nil {
-				blog.Errorf("RequestID[%s] build homepage info for '%s' failed: %s",
-					utils.RequestID(ctx), commit.URL, err.Error())
-			} else {
-				blog.Infof("%s", string(bs))
-			}
+			r.PrintHomePageInfo(ctx, hpInfo)
 		}
 	case gitlab.PushEventPayload:
 		for _, commit := range p.Commits {
@@ -91,21 +86,31 @@ func (r *Recorder) RecordEvent(ctx context.Context, req *http.Request) error {
 				BcsUsername: commit.Author.Name,
 				Email:       commit.Author.Email,
 				CommitID:    commit.ID,
+				Url:         commit.URL,
 				Modified:    commit.Modified,
 				Added:       commit.Added,
 				Removed:     commit.Removed,
 			}
-			var bs []byte
-			bs, err = hpInfo.Build()
-			if err != nil {
-				blog.Errorf("RequestID[%s] build homepage info for '%s' failed: %s",
-					utils.RequestID(ctx), commit.URL, err.Error())
-			} else {
-				blog.Infof("%s", string(bs))
-			}
+			r.PrintHomePageInfo(ctx, hpInfo)
 		}
 	}
 	return nil
+}
+
+// PrintHomePageInfo will print commit info to stdout
+func (r *Recorder) PrintHomePageInfo(ctx context.Context, hpInfo *homePageInfo) {
+	if len(hpInfo.Added)+len(hpInfo.Removed)+len(hpInfo.Modified) == 0 {
+		blog.Warnf("RequestID[%s] repo '%s' commit '%s' with user '%s' not changed files",
+			utils.RequestID(ctx), hpInfo.Url, hpInfo.CommitID, hpInfo.BcsUsername)
+		return
+	}
+	bs, err := hpInfo.Build()
+	if err != nil {
+		blog.Errorf("RequestID[%s] build homepage info for '%s' failed: %s",
+			utils.RequestID(ctx), hpInfo.Url, err.Error())
+	} else {
+		blog.Infof("%s", string(bs))
+	}
 }
 
 // homePageInfo defines the info of homepage
@@ -113,6 +118,7 @@ type homePageInfo struct {
 	BcsUsername string   `json:"bcs_username"`
 	Email       string   `json:"email"`
 	CommitID    string   `json:"commit_id"`
+	Url         string   `json:"url"`
 	Modified    []string `json:"modified"`
 	Added       []string `json:"added"`
 	Removed     []string `json:"removed"`

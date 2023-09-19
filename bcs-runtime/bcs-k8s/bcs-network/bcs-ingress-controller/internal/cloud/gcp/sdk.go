@@ -125,6 +125,10 @@ func (sw *SdkWrapper) GetAddress(project, region, name string) (*compute.Address
 	}
 
 	if err != nil {
+		if isNotFound(err) {
+			blog.V(3).Infof("GetAddress input: project/%s, region/%s, name/%s not found", project, region, name)
+			return nil, err
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("GetAddress failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -271,7 +275,7 @@ func (sw *SdkWrapper) DeleteNetworkEndpointGroups(project, zone, name string) er
 	return nil
 }
 
-// GetForwardingRules get forwarding rules by name
+// GetForwardingRules get forwarding rules by name, return nil if not found
 func (sw *SdkWrapper) GetForwardingRules(project, name string) (*compute.ForwardingRule, error) {
 	blog.V(3).Infof("GetForwardingRules input: project/%s, name/%s", project, name)
 
@@ -287,6 +291,10 @@ func (sw *SdkWrapper) GetForwardingRules(project, name string) (*compute.Forward
 
 	fr, err := sw.computeService.GlobalForwardingRules.Get(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("GetForwardingRules project/%s, name/%s not found", project, name)
+			return nil, nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("GetForwardingRules failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -353,6 +361,10 @@ func (sw *SdkWrapper) GetHealthChecks(project, name string) (*compute.HealthChec
 
 	hc, err := sw.computeService.HealthChecks.Get(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("GetHealthChecks project/%s, name/%s not found", project, name)
+			return nil, nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("GetHealthChecks failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -451,6 +463,10 @@ func (sw *SdkWrapper) GetBackendServices(project, name string) (*compute.Backend
 
 	bs, err := sw.computeService.BackendServices.Get(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("GetBackendServices input: project/%s, name/%s not found", project, name)
+			return nil, nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("GetBackendServices failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -539,6 +555,10 @@ func (sw *SdkWrapper) GetURLMaps(project, name string) (*compute.UrlMap, error) 
 
 	urlMap, err := sw.computeService.UrlMaps.Get(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("GetURLMaps project/%s, name/%s not found", project, name)
+			return nil, nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("GetURLMaps failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -601,6 +621,10 @@ func (sw *SdkWrapper) GetTargetHTTPProxies(project, name string) (*compute.Targe
 
 	targetHTTPProxy, err := sw.computeService.TargetHttpProxies.Get(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("GetTargetHttpProxies project/%s, name/%s not found", project, name)
+			return nil, nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("GetTargetHttpProxies failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -663,6 +687,10 @@ func (sw *SdkWrapper) GetTargetHTTPSProxies(project, name string) (*compute.Targ
 
 	targetHTTPSProxy, err := sw.computeService.TargetHttpsProxies.Get(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.V(3).Infof("GetTargetHTTPSProxies input: project/%s, name/%s", project, name)
+			return nil, nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("GetTargetHTTPSProxies failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -926,6 +954,10 @@ func (sw *SdkWrapper) DeleteForwardingRules(project, name string) error {
 
 	resp, err := sw.computeService.GlobalForwardingRules.Delete(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("DeleteForwardingRules input: project/%s, name/%s is not found, skipped", project, name)
+			return nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("DeleteForwardingRules failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -962,6 +994,10 @@ func (sw *SdkWrapper) DeleteURLMaps(project, name string) error {
 
 	resp, err := sw.computeService.UrlMaps.Delete(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("DeleteURLMaps input: project/%s, name/%s is not found, skipped", project, name)
+			return nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("DeleteURLMaps failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -998,6 +1034,10 @@ func (sw *SdkWrapper) DeleteTargetHTTPProxy(project, name string) error {
 
 	resp, err := sw.computeService.TargetHttpProxies.Delete(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("DeleteTargetHTTPProxy input: project/%s, name/%s is not found, skipped", project, name)
+			return nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("DeleteTargetHTTPProxy failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -1034,6 +1074,10 @@ func (sw *SdkWrapper) DeleteTargetHTTPSProxy(project, name string) error {
 
 	resp, err := sw.computeService.TargetHttpsProxies.Delete(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("DeleteTargetHTTPSProxy input: project/%s, name/%s is not found, skipped", project, name)
+			return nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("DeleteTargetHTTPSProxy failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -1070,6 +1114,10 @@ func (sw *SdkWrapper) DeleteHealthCheck(project, name string) error {
 
 	resp, err := sw.computeService.HttpHealthChecks.Delete(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("DeleteHealthCheck input: project/%s, name/%s is not found, skipped", project, name)
+			return nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("DeleteHealthCheck failed, err %s", err.Error())
 		blog.Errorf(errMsg)
@@ -1106,6 +1154,10 @@ func (sw *SdkWrapper) DeleteBackendService(project, name string) error {
 
 	resp, err := sw.computeService.BackendServices.Delete(project, name).Do()
 	if err != nil {
+		if isNotFound(err) {
+			blog.Info("DeleteBackendService input: project/%s, name/%s is not found, skipped", project, name)
+			return nil
+		}
 		mf(metrics.LibCallStatusErr)
 		errMsg := fmt.Sprintf("DeleteBackendService failed, err %s", err.Error())
 		blog.Errorf(errMsg)

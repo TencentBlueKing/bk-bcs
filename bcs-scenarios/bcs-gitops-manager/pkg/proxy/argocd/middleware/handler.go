@@ -16,11 +16,13 @@ package middleware
 import (
 	"context"
 	"fmt"
-	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"net/http"
 	"reflect"
 	"runtime"
 	"strings"
+
+	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 
 	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
@@ -70,7 +72,8 @@ type MiddlewareInterface interface {
 	CheckCreateApplicationSet(ctx context.Context, appset *v1alpha1.ApplicationSet) (int, error)
 	CheckDeleteApplicationSet(ctx context.Context, appsetName string) (int, error)
 	CheckGetApplicationSet(ctx context.Context, appsetName string) (int, error)
-	ListApplicationSets(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationSetList, error)
+	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
+		*v1alpha1.ApplicationSetList, error)
 }
 
 // handler 定义 http 中间件处理对象

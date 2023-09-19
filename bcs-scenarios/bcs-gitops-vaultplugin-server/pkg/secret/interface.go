@@ -15,14 +15,9 @@ package secret
 import (
 	"context"
 	"time"
-)
 
-// Options secret option
-type Options struct {
-	Type      string
-	Endpoints string
-	Token     string
-}
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/options"
+)
 
 // SecretRequest 密钥结构以 project -> path -> data 为基准
 // project 是项目根路径，作为项目入口，来实现不同项目的软隔离隔离，通过token-policy-project来保证项目的认证
@@ -108,7 +103,7 @@ type SecretManagerWithVersion interface {
 }
 
 // NewSecretManager create storage client
-func NewSecretManager(opt *Options) SecretManagerWithVersion {
+func NewSecretManager(opt *options.Options) SecretManagerWithVersion {
 	return &VaultSecretManager{
 		option: opt,
 	}
