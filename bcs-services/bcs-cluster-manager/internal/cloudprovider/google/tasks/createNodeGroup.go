@@ -266,6 +266,8 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v", taskID, err)
 		return nil, nil, err
 	}
+	igmByte, _ := json.Marshal(igm)
+	blog.Infof("------------taskID[%s] GetInstanceGroupManager mig[%#v]", taskID, string(igmByte))
 
 	// get instanceTemplate info
 	it, err := api.GetInstanceTemplate(computeCli, igm.InstanceTemplate)
@@ -298,9 +300,6 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 		}
 		blog.Infof("taskID[%s] DeleteInstanceTemplate[%s], operationID: %s", oldItName, taskID, o.SelfLink)
 	}
-
-	igmBytes, _ := json.Marshal(igm)
-	blog.Infof("taskID[%s] getIgmAndIt patched igm %s", taskID, string(igmBytes))
 
 	return newIt, igm, nil
 }
