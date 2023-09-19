@@ -37,10 +37,8 @@ export const getConfigList = (biz_id: string, app_id: number, query: ICommonQuer
 export const getReleasedConfigList = (biz_id: string, app_id: number, release_id: number, params: ICommonQuery) => {
   return http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/config_items`, { params }).then(res => {
     res.data.details.forEach((item: any) => {
-      item.spec = { ...item.config_item_spec }
       // 接口返回的config_item_id为实际的配置项id，id字段没有到，统一替换
       item.id = item.config_item_id
-      delete item.config_item_spec
     })
     return res.data
   })
