@@ -369,7 +369,7 @@ func (s *Service) getReleasedConfigItem(grpcKit *kit.Kit, configItemID, bizID, a
 	grciReq := &pbds.GetReleasedCIReq{
 		ConfigItemId: configItemID,
 		ReleaseId:    releaseID,
-		BizId:        uint32(bizID),
+		BizId:        bizID,
 		AppId:        appID,
 	}
 	releasedCI, err := s.client.DS.GetReleasedConfigItem(grpcKit.RpcCtx(), grciReq)

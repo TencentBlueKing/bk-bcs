@@ -10,6 +10,7 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
+// package main is used as the entry of the suit-test tool
 package main
 
 import (

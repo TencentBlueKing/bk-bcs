@@ -10,6 +10,7 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
+// Package types is for dal types
 package types
 
 import (
@@ -18,6 +19,7 @@ import (
 	"errors"
 )
 
+// Uint32Slice is []uint32 type for dal
 type Uint32Slice []uint32
 
 // Value implements the driver.Valuer interface
