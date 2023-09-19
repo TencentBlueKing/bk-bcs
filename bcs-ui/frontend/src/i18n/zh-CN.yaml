@@ -561,6 +561,7 @@ cluster:
     clusterType: 集群类型
     cloudClusterID: 云集群ID
     importCategory: 添加方式
+    maxPodNum: Pod IP数量上限
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
@@ -616,7 +617,9 @@ cluster:
           desc: >-
             Kubernetes 集群的 Master 和 Etcd 会由 TKE 团队集中管理和维护，集群管理员不需要关心集群 Master
             的管理和维护。
-          gkeDesc: Kubernetes 集群的 Master 和 Etcd 会由 GKE 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+          gkeDesc: >-
+            Kubernetes 集群的 Master 和 Etcd 会由 GKE 团队集中管理和维护，集群管理员不需要关心集群
+            Master的管理和维护。
           clusterLevel:
             text: 集群规格
             desc: >-
@@ -642,7 +645,7 @@ cluster:
           text: IP数量
           desc: 集群内总的全局路由容器网络可用IP数量，IP数量 = 集群内Service数量上限 + 单节点Pod数量上限 * 节点数量
         maxServiceNum:
-          text: 集群内Service数量上限
+          text: Service IP数量上限
           desc: 集群Service可用IP数量上限，分配后将无法调整，请谨慎评估后再填写
         maxNodePodNum:
           text: 单节点Pod数量上限
@@ -2431,12 +2434,14 @@ googleCloud:
     createdBy: 创建人
     operate: 操作
     gcpFile: GCP密钥文件
-    zoneCluster: 
+    zoneCluster:
       title: 可用区级
-      desc: 当前集群规格最多管理2000个节点, 20万个Pod, 40万个容器, 每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
-    regionCluster: 
+      desc: '当前集群规格最多管理2000个节点, 20万个Pod, 40万个容器, 每个节点池最多支持1000个节点, 每个节点最多支持256个Pod'
+    regionCluster:
       title: 区域级
-      desc: 当前集群规格最多管理15000个节点, 超过5000个节点需联系GKE服务团队提升集群配额, 20万个Pod, 40万个容器, 每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
+      desc: >-
+        当前集群规格最多管理15000个节点, 超过5000个节点需联系GKE服务团队提升集群配额, 20万个Pod, 40万个容器,
+        每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
 importGoogleCloud:
   title: 导入公有云集群 - 谷歌云
   tips:

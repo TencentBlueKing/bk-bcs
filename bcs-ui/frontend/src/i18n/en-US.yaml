@@ -613,6 +613,7 @@ cluster:
     region: Region
     clusterType: Cluster type
     cloudClusterID: Cloud cluster id
+    importCategory: ''
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
@@ -694,6 +695,7 @@ cluster:
               specification automatically  when the load on control plane
               components reaches the threshold or the number of nodes reaches
               the upper limit.
+          gkeDesc: ''
         independent:
           desc: >-
             Uses requested or existing CVM resources for Master nodes; Only 3
@@ -2989,6 +2991,12 @@ googleCloud:
     createdBy: ''
     operate: ''
     gcpFile: ''
+    zoneCluster:
+      title: ''
+      desc: ''
+    regionCluster:
+      title: ''
+      desc: ''
   tips:
     onlySupportJsonFile: ''
 importGoogleCloud:

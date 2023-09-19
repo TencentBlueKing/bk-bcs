@@ -49,11 +49,11 @@
         </bk-form-item>
         <bk-form-item
           :label="$t('cluster.create.label.manageType.managed.clusterLevel.text')">
-          <div>
+          <div v-if="locationType === 'zones'">
             <span class="text-[#313238]">{{ $t('googleCloud.label.zoneCluster.title') }}</span>
             <span class="text-[#979BA5]">({{ $t('googleCloud.label.zoneCluster.desc') }})</span>
           </div>
-          <div class="mt-[5px]">
+          <div v-else-if="locationType === 'regions'">
             <span class="text-[#313238]">{{ $t('googleCloud.label.regionCluster.title') }}</span>
             <span class="text-[#979BA5]">({{ $t('googleCloud.label.regionCluster.desc') }})</span>
           </div>
@@ -110,6 +110,9 @@ export default defineComponent({
     const { clusterList } = useCluster();
     const curCluster = computed(() => clusterList.value.find(item => item.clusterID === props.clusterId) || {});
 
+    // google cloud locationType
+    const locationType = computed(() => curCluster.value?.extraInfo?.locationType);
+
     // 托管集群集群规格信息
     const clusterLevel = computed(() => curCluster.value?.clusterBasicSettings?.clusterLevel || '--');
     const clusterScale = ref(clusterScaleData.data);
@@ -149,6 +152,7 @@ export default defineComponent({
       curClusterScale,
       isLoading,
       masterData,
+      locationType,
       handleCopyIPv4,
     };
   },

@@ -6,22 +6,19 @@
     <bk-form-item :label="$t('cluster.labels.networkType')">
       {{ clusterData.networkType || '--' }}
     </bk-form-item>
+    <bk-form-item label="VPC">
+      {{ clusterData.vpcID || '--' }}
+    </bk-form-item>
     <bk-form-item
-      :label="$t('cluster.labels.cidr')"
+      :label="$t('cluster.labels.maxPodNum')"
       v-if="clusterData.provider === 'gcpCloud'">
-      <span>({{ cidrStep }})</span>
-      <span>{{ cidr }}</span>
+      <span>{{ cidrStep }}</span>
+      <span>({{ cidr }})</span>
     </bk-form-item>
     <bk-form-item
       :label="$t('cluster.labels.cidr')"
       v-else>
       {{ cidr }}
-    </bk-form-item>
-    <bk-form-item label="VPC">
-      {{ clusterData.vpcID || '--' }}
-    </bk-form-item>
-    <bk-form-item label="IPVS">
-      {{ IPVS }}
     </bk-form-item>
     <bk-form-item
       :label="$t('cluster.create.label.networkSetting.cidrStep.text')"
@@ -29,14 +26,19 @@
     <bk-form-item
       :label="$t('cluster.create.label.networkSetting.maxServiceNum.text')"
       v-if="clusterData.provider === 'gcpCloud'">
-      <span>({{ maxServiceNum }})</span>
-      <span>{{ serviceIPv4CIDR }}</span>
+      <span>{{ maxServiceNum }}</span>
+      <span>({{ serviceIPv4CIDR }})</span>
     </bk-form-item>
     <bk-form-item
       :label="$t('cluster.create.label.networkSetting.maxServiceNum.text')"
       v-else>{{ maxServiceNum }}</bk-form-item>
     <bk-form-item
-      :label="$t('cluster.create.label.networkSetting.maxNodePodNum.text')">{{ maxNodePodNum }}</bk-form-item>
+      :label="$t('cluster.create.label.networkSetting.maxNodePodNum.text')">
+      {{ maxNodePodNum }}
+    </bk-form-item>
+    <bk-form-item label="IPVS">
+      {{ IPVS }}
+    </bk-form-item>
   </bk-form>
 </template>
 <script lang="ts">
