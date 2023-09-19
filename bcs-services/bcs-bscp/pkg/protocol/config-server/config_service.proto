@@ -96,6 +96,11 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/{config_item_id}"
         };
     }
+    rpc GetReleasedConfigItem(GetReleasedConfigItemReq) returns (GetReleasedConfigItemResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/config_items/{config_item_id}"
+        };
+    }
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items"
@@ -841,14 +846,24 @@ message DeleteConfigItemResp {}
 
 message GetConfigItemReq {
     uint32 biz_id         = 1;
-    uint32 config_item_id = 2;
-    uint32 app_id         = 3;
-    uint32 release_id     = 4;
+    uint32 app_id         = 2;
+    uint32 config_item_id = 3;
 }
 
 message GetConfigItemResp {
     pbci.ConfigItem       config_item = 1;
     pbcontent.ContentSpec content     = 2;
+}
+
+message GetReleasedConfigItemReq {
+    uint32 biz_id         = 1;
+    uint32 app_id         = 2;
+    uint32 release_id     = 3;
+    uint32 config_item_id = 4;
+}
+
+message GetReleasedConfigItemResp {
+    pbrci.ReleasedConfigItem config_item = 1;
 }
 
 message ListConfigItemsReq {

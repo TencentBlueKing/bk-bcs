@@ -9,12 +9,13 @@ option go_package = "bscp.io/pkg/protocol/core/config-item;pbci";
 
 // ConfigItem source resource reference: pkg/dal/table/config_item.go
 message ConfigItem {
-    uint32               id          = 1;
-    string               file_state  = 2;
-    ConfigItemSpec       spec        = 3;
-    pbcommit.CommitSpec  commit_spec = 4;
-    ConfigItemAttachment attachment  = 5;
-    pbbase.Revision      revision    = 6;
+    uint32               id             = 1;
+    uint32               config_item_id = 2;
+    string               file_state     = 3;
+    ConfigItemSpec       spec           = 4;
+    pbcommit.CommitSpec  commit_spec    = 5;
+    ConfigItemAttachment attachment     = 6;
+    pbbase.Revision      revision       = 7;
 }
 
 // ConfigItemSpec source resource reference: pkg/dal/table/config_item.go

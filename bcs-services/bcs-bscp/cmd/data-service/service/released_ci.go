@@ -29,7 +29,7 @@ func (s *Service) GetReleasedConfigItem(ctx context.Context, req *pbds.GetReleas
 
 	kt := kit.FromGrpcContext(ctx)
 
-	releasedCI, err := s.dao.ReleasedCI().Get(kt, req.ConfigItemId, req.BizId, req.ReleaseId)
+	releasedCI, err := s.dao.ReleasedCI().Get(kt, req.BizId, req.AppId, req.ReleaseId, req.ConfigItemId)
 	if err != nil {
 		logs.Errorf("get released config item failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package validator is for validating data
 package validator
 
 import (

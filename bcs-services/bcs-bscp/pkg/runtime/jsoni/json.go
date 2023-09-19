@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package jsoni is a replacement for standard json
 package jsoni
 
 import (
