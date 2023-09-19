@@ -292,11 +292,15 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 		if err != nil {
 			return nil, nil, err
 		}
+		if o.Error != nil {
+			return nil, nil,
+				fmt.Errorf("%d, %s, %s", o.HttpErrorStatusCode, o.HttpErrorMessage, o.Error.Errors[0].Message)
+		}
 		blog.Infof("taskID[%s] DeleteInstanceTemplate[%s], operationID: %s", oldItName, taskID, o.SelfLink)
 	}
 
 	igmBytes, _ := json.Marshal(igm)
-	blog.Infof("taskID[%s] getIgmAndIt patched igm %s", string(igmBytes))
+	blog.Infof("taskID[%s] getIgmAndIt patched igm %s", taskID, string(igmBytes))
 
 	return newIt, igm, nil
 }
