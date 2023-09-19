@@ -210,6 +210,7 @@ func (c *ComputeServiceClient) PatchInstanceGroupManager(ctx context.Context, lo
 	// region type && zone type cluster
 	switch c.getLocationType(location) {
 	case locationTypeZones:
+		blog.Infof("------------PatchInstanceGroupManager %s, %s, %s, %#v", c.gkeProjectID, location, name, igm)
 		operation, err = c.computeServiceClient.InstanceGroupManagers.Patch(c.gkeProjectID, location, name, igm).
 			Context(ctx).Do()
 	case locationTypeRegions:

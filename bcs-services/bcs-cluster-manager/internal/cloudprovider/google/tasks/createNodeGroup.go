@@ -311,6 +311,11 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 		BaseInstanceName: newIt.Name,
 		//UpdatePolicy:     api.GenerateUpdatePolicy(),
 	}
+	newItByte, _ := json.Marshal(newIt)
+	blog.Infof("----------taskID[%s] patchIgm newIt %s", taskID, string(newItByte))
+	blog.Infof("----------taskID[%s] patchIgm newIt %s", taskID, newIt.SelfLink)
+	blog.Infof("----------taskID[%s] patchIgm newIt %s", taskID, newIt.SelfLink)
+
 	o, err := api.PatchInstanceGroupManager(computeCli, igm.SelfLink, newIgm)
 	if err != nil {
 		blog.Errorf("taskID[%s] PatchInstanceGroupManager failed: %v", taskID, err)
