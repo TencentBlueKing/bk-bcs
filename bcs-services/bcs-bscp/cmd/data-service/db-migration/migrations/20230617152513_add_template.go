@@ -26,13 +26,13 @@ func init() {
 		Version: "20230617152513",
 		Name:    "20230617152513_add_template",
 		Mode:    migrator.GormMode,
-		Up:      mig20230617152513GormUp,
-		Down:    mig20230617152513GormDown,
+		Up:      mig20230617152513Up,
+		Down:    mig20230617152513Down,
 	})
 }
 
-// mig20230617152513GormUp for up migration
-func mig20230617152513GormUp(tx *gorm.DB) error {
+// mig20230617152513Up for up migration
+func mig20230617152513Up(tx *gorm.DB) error {
 	// TemplateSpaces ：模版空间
 	type TemplateSpaces struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
@@ -146,8 +146,8 @@ func mig20230617152513GormUp(tx *gorm.DB) error {
 
 }
 
-// mig20230617152513GormDown for down migration
-func mig20230617152513GormDown(tx *gorm.DB) error {
+// mig20230617152513Down for down migration
+func mig20230617152513Down(tx *gorm.DB) error {
 	// IDGenerators : ID生成器
 	type IDGenerators struct {
 		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`

@@ -28,13 +28,13 @@ func init() {
 		Version: "20230418102723",
 		Name:    "20230418102723_add_credential",
 		Mode:    migrator.SqlMode,
-		Up:      mig20230418102723AddCredentialUp,
-		Down:    mig20230418102723AddCredentialDown,
+		Up:      mig20230418102723Up,
+		Down:    mig20230418102723Down,
 	})
 }
 
-// mig20230418102723AddCredentialUp for up migration
-func mig20230418102723AddCredentialUp(tx *gorm.DB) error {
+// mig20230418102723Up for up migration
+func mig20230418102723Up(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetUpSQLKey(mig20230418102723)], ";")
 	for _, sql := range sqlArr {
 		sql = strings.TrimSpace(sql)
@@ -50,8 +50,8 @@ func mig20230418102723AddCredentialUp(tx *gorm.DB) error {
 
 }
 
-// mig20230418102723AddCredentialDown for down migration
-func mig20230418102723AddCredentialDown(tx *gorm.DB) error {
+// mig20230418102723Down for down migration
+func mig20230418102723Down(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetDownSQLKey(mig20230418102723)], ";")
 	for _, sql := range sqlArr {
 		sql = strings.TrimSpace(sql)

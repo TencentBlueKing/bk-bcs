@@ -26,13 +26,13 @@ func init() {
 		Version: "20230625152115",
 		Name:    "20230625152115_gorm_add_app_template_related",
 		Mode:    migrator.GormMode,
-		Up:      mig20230625152115GormAddAppTemplateRelatedUp,
-		Down:    mig20230625152115GormAddAppTemplateRelatedDown,
+		Up:      mig20230625152115Up,
+		Down:    mig20230625152115Down,
 	})
 }
 
-// mig20230625152115GormAddAppTemplateRelatedUp for up migration
-func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
+// mig20230625152115Up for up migration
+func mig20230625152115Up(tx *gorm.DB) error {
 	// AppTemplateBindings : 记录未命名版本服务版本与模版套餐及模版版本的绑定情况
 	type AppTemplateBindings struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
@@ -180,8 +180,8 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 
 }
 
-// mig20230625152115GormAddAppTemplateRelatedDown for down migration
-func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
+// mig20230625152115Down for down migration
+func mig20230625152115Down(tx *gorm.DB) error {
 	// IDGenerators : ID生成器
 	type IDGenerators struct {
 		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`

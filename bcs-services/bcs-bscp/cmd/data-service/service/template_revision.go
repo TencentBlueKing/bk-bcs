@@ -70,7 +70,7 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 
 	// 2. update app template bindings if necessary
 	atbs, err := s.dao.TemplateBindingRelation().
-		ListLatestTemplateBoundUnnamedAppDetails(kt, req.Attachment.BizId, req.Attachment.TemplateId)
+		ListLatestTmplBoundUnnamedApps(kt, req.Attachment.BizId, req.Attachment.TemplateId)
 	if err != nil {
 		logs.Errorf("list latest template bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -143,7 +143,7 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbds.List
 	ListTemplateRevisionsByIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateRevisionsExist(kt, req.Ids); err != nil {
+	if err := s.dao.Validator().ValidateTmplRevisionsExist(kt, req.Ids); err != nil {
 		return nil, err
 	}
 
@@ -159,10 +159,10 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbds.List
 	return resp, nil
 }
 
-// ListTemplateRevisionNamesByTemplateIDs list template revision by ids.
-func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
-	req *pbds.ListTemplateRevisionNamesByTemplateIDsReq) (
-	*pbds.ListTemplateRevisionNamesByTemplateIDsResp, error) {
+// ListTmplRevisionNamesByTmplIDs list template revision by ids.
+func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context,
+	req *pbds.ListTmplRevisionNamesByTmplIDsReq) (
+	*pbds.ListTmplRevisionNamesByTmplIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplatesExist(kt, req.TemplateIds); err != nil {
@@ -175,7 +175,7 @@ func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
 		return nil, err
 	}
 	if len(tmplRevisions) == 0 {
-		return &pbds.ListTemplateRevisionNamesByTemplateIDsResp{}, nil
+		return &pbds.ListTmplRevisionNamesByTmplIDsResp{}, nil
 	}
 
 	// get the map of template id => the latest template revision id
@@ -211,7 +211,7 @@ func (s *Service) ListTemplateRevisionNamesByTemplateIDs(ctx context.Context,
 		})
 	}
 
-	resp := &pbds.ListTemplateRevisionNamesByTemplateIDsResp{
+	resp := &pbds.ListTmplRevisionNamesByTmplIDsResp{
 		Details: details,
 	}
 	return resp, nil

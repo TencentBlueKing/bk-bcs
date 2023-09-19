@@ -26,26 +26,26 @@ import (
 
 // Validator supplies all the validate operations.
 type Validator interface {
-	// ValidateTemplateSpacesExist validate if templates spaces exists
-	ValidateTemplateSpacesExist(kit *kit.Kit, templateSpaceIDs []uint32) error
+	// ValidateTmplSpacesExist validate if templates spaces exists
+	ValidateTmplSpacesExist(kit *kit.Kit, templateSpaceIDs []uint32) error
 	// ValidateTemplatesExist validate if templates exists
 	ValidateTemplatesExist(kit *kit.Kit, templateIDs []uint32) error
-	// ValidateTemplateRevisionsExist validate if template releases exists
-	ValidateTemplateRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error
-	// ValidateTemplateRevisionsExistWithTx validate if template releases exists with transaction
-	ValidateTemplateRevisionsExistWithTx(kit *kit.Kit, tx *gen.QueryTx, templateRevisionIDs []uint32) error
-	// ValidateTemplateSetsExist validate if template sets exists
-	ValidateTemplateSetsExist(kit *kit.Kit, templateSetIDs []uint32) error
+	// ValidateTmplRevisionsExist validate if template releases exists
+	ValidateTmplRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error
+	// ValidateTmplRevisionsExistWithTx validate if template releases exists with transaction
+	ValidateTmplRevisionsExistWithTx(kit *kit.Kit, tx *gen.QueryTx, templateRevisionIDs []uint32) error
+	// ValidateTmplSetsExist validate if template sets exists
+	ValidateTmplSetsExist(kit *kit.Kit, templateSetIDs []uint32) error
 	// ValidateTemplateExist validate if one template exists
 	ValidateTemplateExist(kit *kit.Kit, id uint32) error
-	// ValidateTemplateRevisionExist validate if one template release exists
-	ValidateTemplateRevisionExist(kit *kit.Kit, id uint32) error
-	// ValidateTemplateSetExist validate if one template set exists
-	ValidateTemplateSetExist(kit *kit.Kit, id uint32) error
-	// ValidateTemplateSpaceNoSubResource validate if one template space has not subresource
-	ValidateTemplateSpaceNoSubResource(kit *kit.Kit, id uint32) error
-	// ValidateTemplatesBelongToTemplateSet validate if templates belong to a template set
-	ValidateTemplatesBelongToTemplateSet(kit *kit.Kit, templateIDs []uint32, templateSetID uint32) error
+	// ValidateTmplRevisionExist validate if one template release exists
+	ValidateTmplRevisionExist(kit *kit.Kit, id uint32) error
+	// ValidateTmplSetExist validate if one template set exists
+	ValidateTmplSetExist(kit *kit.Kit, id uint32) error
+	// ValidateTmplSpaceNoSubRes validate if one template space has not subresource
+	ValidateTmplSpaceNoSubRes(kit *kit.Kit, id uint32) error
+	// ValidateTmplsBelongToTmplSet validate if templates belong to a template set
+	ValidateTmplsBelongToTmplSet(kit *kit.Kit, templateIDs []uint32, templateSetID uint32) error
 }
 
 var _ Validator = new(validatorDao)
@@ -56,8 +56,8 @@ type validatorDao struct {
 	auditDao AuditDao
 }
 
-// ValidateTemplateSpacesExist validate if templates spaces exists
-func (dao *validatorDao) ValidateTemplateSpacesExist(kit *kit.Kit, templateSpaceIDs []uint32) error {
+// ValidateTmplSpacesExist validate if templates spaces exists
+func (dao *validatorDao) ValidateTmplSpacesExist(kit *kit.Kit, templateSpaceIDs []uint32) error {
 	m := dao.genQ.TemplateSpace
 	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 	var existIDs []uint32
@@ -90,8 +90,8 @@ func (dao *validatorDao) ValidateTemplatesExist(kit *kit.Kit, templateIDs []uint
 	return nil
 }
 
-// ValidateTemplateRevisionsExist validate if template releases exists
-func (dao *validatorDao) ValidateTemplateRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error {
+// ValidateTmplRevisionsExist validate if template releases exists
+func (dao *validatorDao) ValidateTmplRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error {
 	m := dao.genQ.TemplateRevision
 	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
 	var existIDs []uint32
@@ -107,8 +107,8 @@ func (dao *validatorDao) ValidateTemplateRevisionsExist(kit *kit.Kit, templateRe
 	return nil
 }
 
-// ValidateTemplateRevisionsExistWithTx validate if template releases exists with transaction
-func (dao *validatorDao) ValidateTemplateRevisionsExistWithTx(kit *kit.Kit, tx *gen.QueryTx,
+// ValidateTmplRevisionsExistWithTx validate if template releases exists with transaction
+func (dao *validatorDao) ValidateTmplRevisionsExistWithTx(kit *kit.Kit, tx *gen.QueryTx,
 	templateRevisionIDs []uint32) error {
 	m := tx.TemplateRevision
 	q := tx.TemplateRevision.WithContext(kit.Ctx)
@@ -125,8 +125,8 @@ func (dao *validatorDao) ValidateTemplateRevisionsExistWithTx(kit *kit.Kit, tx *
 	return nil
 }
 
-// ValidateTemplateSetsExist validate if template sets exists
-func (dao *validatorDao) ValidateTemplateSetsExist(kit *kit.Kit, templateSetIDs []uint32) error {
+// ValidateTmplSetsExist validate if template sets exists
+func (dao *validatorDao) ValidateTmplSetsExist(kit *kit.Kit, templateSetIDs []uint32) error {
 	m := dao.genQ.TemplateSet
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
 	var existIDs []uint32
@@ -157,8 +157,8 @@ func (dao *validatorDao) ValidateTemplateExist(kit *kit.Kit, id uint32) error {
 	return nil
 }
 
-// ValidateTemplateRevisionExist validate if one template release exists
-func (dao *validatorDao) ValidateTemplateRevisionExist(kit *kit.Kit, id uint32) error {
+// ValidateTmplRevisionExist validate if one template release exists
+func (dao *validatorDao) ValidateTmplRevisionExist(kit *kit.Kit, id uint32) error {
 	m := dao.genQ.TemplateRevision
 	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
 
@@ -172,8 +172,8 @@ func (dao *validatorDao) ValidateTemplateRevisionExist(kit *kit.Kit, id uint32) 
 	return nil
 }
 
-// ValidateTemplateSetExist validate if one template set exists
-func (dao *validatorDao) ValidateTemplateSetExist(kit *kit.Kit, id uint32) error {
+// ValidateTmplSetExist validate if one template set exists
+func (dao *validatorDao) ValidateTmplSetExist(kit *kit.Kit, id uint32) error {
 	m := dao.genQ.TemplateSet
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
 
@@ -187,8 +187,8 @@ func (dao *validatorDao) ValidateTemplateSetExist(kit *kit.Kit, id uint32) error
 	return nil
 }
 
-// ValidateTemplateSpaceNoSubResource validate if one template space has not subresource
-func (dao *validatorDao) ValidateTemplateSpaceNoSubResource(kit *kit.Kit, id uint32) error {
+// ValidateTmplSpaceNoSubRes validate if one template space has not subresource
+func (dao *validatorDao) ValidateTmplSpaceNoSubRes(kit *kit.Kit, id uint32) error {
 	var (
 		tmplSetCnt, tmplCnt int64
 		err                 error
@@ -217,8 +217,8 @@ func (dao *validatorDao) ValidateTemplateSpaceNoSubResource(kit *kit.Kit, id uin
 	return nil
 }
 
-// ValidateTemplatesBelongToTemplateSet validate if templates belong to a template set
-func (dao *validatorDao) ValidateTemplatesBelongToTemplateSet(
+// ValidateTmplsBelongToTmplSet validate if templates belong to a template set
+func (dao *validatorDao) ValidateTmplsBelongToTmplSet(
 	kit *kit.Kit, templateIDs []uint32, templateSetID uint32) error {
 	m := dao.genQ.TemplateSet
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
@@ -231,9 +231,9 @@ func (dao *validatorDao) ValidateTemplatesBelongToTemplateSet(
 		return fmt.Errorf("validate templates in a template set failed, err: %v", err)
 	}
 
-	diffIDs := tools.SliceDiff(templateIDs, []uint32(existIDs.TemplateIDs))
+	diffIDs := tools.SliceDiff(templateIDs, existIDs.TemplateIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("template id in %v is not belong to tempalte set id %d", diffIDs, templateSetID)
+		return fmt.Errorf("template id in %v is not belong to template set id %d", diffIDs, templateSetID)
 	}
 
 	return nil

@@ -96,7 +96,7 @@ type IamResourceAttributeValue struct {
 	ID string `json:"id"`
 }
 
-// Decision defines the authorization decision of a resource.
+// DecisionsMap defines the authorization decision of a resource.
 func DecisionsMap(ds []*Decision) map[ResourceAttribute]bool {
 	result := make(map[ResourceAttribute]bool, len(ds))
 	for _, d := range ds {

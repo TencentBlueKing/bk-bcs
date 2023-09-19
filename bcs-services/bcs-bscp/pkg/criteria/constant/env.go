@@ -10,6 +10,7 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
+// Package constant is for constant
 package constant
 
 const (

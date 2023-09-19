@@ -68,11 +68,11 @@ func (dao *appTemplateBindingDao) Create(kit *kit.Kit, g *table.AppTemplateBindi
 	// 多个使用事务处理
 	createTx := func(tx *gen.Query) error {
 		q := tx.AppTemplateBinding.WithContext(kit.Ctx)
-		if err := q.Create(g); err != nil {
+		if err = q.Create(g); err != nil {
 			return err
 		}
 
-		if err := ad.Do(tx); err != nil {
+		if err = ad.Do(tx); err != nil {
 			return err
 		}
 
@@ -143,7 +143,7 @@ func (dao *appTemplateBindingDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		return err
 	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
-	if err := ad.Do(tx.Query); err != nil {
+	if err = ad.Do(tx.Query); err != nil {
 		return err
 	}
 
@@ -199,12 +199,12 @@ func (dao *appTemplateBindingDao) Delete(kit *kit.Kit, g *table.AppTemplateBindi
 			return err
 		}
 
-		if err := ad.Do(tx); err != nil {
+		if err = ad.Do(tx); err != nil {
 			return err
 		}
 		return nil
 	}
-	if err := dao.genQ.Transaction(deleteTx); err != nil {
+	if err = dao.genQ.Transaction(deleteTx); err != nil {
 		return err
 	}
 

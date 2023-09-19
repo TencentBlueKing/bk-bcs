@@ -3178,26 +3178,26 @@ func local_request_Config_ListTemplateSpaces_0(ctx context.Context, marshaler ru
 
 }
 
-func request_Config_GetAllBizsOfTemplateSpaces_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_Config_GetAllBizsOfTmplSpaces_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq pbbase.EmptyReq
 	var metadata runtime.ServerMetadata
 
-	msg, err := client.GetAllBizsOfTemplateSpaces(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetAllBizsOfTmplSpaces(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_GetAllBizsOfTemplateSpaces_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_Config_GetAllBizsOfTmplSpaces_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq pbbase.EmptyReq
 	var metadata runtime.ServerMetadata
 
-	msg, err := server.GetAllBizsOfTemplateSpaces(ctx, &protoReq)
+	msg, err := server.GetAllBizsOfTmplSpaces(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Config_CreateDefaultTemplateSpace_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CreateDefaultTemplateSpaceReq
+func request_Config_CreateDefaultTmplSpace_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CreateDefaultTmplSpaceReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -3208,13 +3208,13 @@ func request_Config_CreateDefaultTemplateSpace_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateDefaultTemplateSpace(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.CreateDefaultTmplSpace(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_CreateDefaultTemplateSpace_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CreateDefaultTemplateSpaceReq
+func local_request_Config_CreateDefaultTmplSpace_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CreateDefaultTmplSpaceReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -3225,13 +3225,13 @@ func local_request_Config_CreateDefaultTemplateSpace_0(ctx context.Context, mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.CreateDefaultTemplateSpace(ctx, &protoReq)
+	msg, err := server.CreateDefaultTmplSpace(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Config_ListTemplateSpacesByIDs_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateSpacesByIDsReq
+func request_Config_ListTmplSpacesByIDs_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplSpacesByIDsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -3259,13 +3259,13 @@ func request_Config_ListTemplateSpacesByIDs_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
 	}
 
-	msg, err := client.ListTemplateSpacesByIDs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplSpacesByIDs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateSpacesByIDs_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateSpacesByIDsReq
+func local_request_Config_ListTmplSpacesByIDs_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplSpacesByIDsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -3293,7 +3293,7 @@ func local_request_Config_ListTemplateSpacesByIDs_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
 	}
 
-	msg, err := server.ListTemplateSpacesByIDs(ctx, &protoReq)
+	msg, err := server.ListTmplSpacesByIDs(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -3784,8 +3784,8 @@ func local_request_Config_ListTemplates_0(ctx context.Context, marshaler runtime
 
 }
 
-func request_Config_AddTemplatesToTemplateSets_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AddTemplatesToTemplateSetsReq
+func request_Config_AddTmplsToTmplSets_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AddTmplsToTmplSetsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -3823,13 +3823,13 @@ func request_Config_AddTemplatesToTemplateSets_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "template_space_id", err)
 	}
 
-	msg, err := client.AddTemplatesToTemplateSets(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AddTmplsToTmplSets(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_AddTemplatesToTemplateSets_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AddTemplatesToTemplateSetsReq
+func local_request_Config_AddTmplsToTmplSets_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AddTmplsToTmplSetsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -3867,13 +3867,13 @@ func local_request_Config_AddTemplatesToTemplateSets_0(ctx context.Context, mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "template_space_id", err)
 	}
 
-	msg, err := server.AddTemplatesToTemplateSets(ctx, &protoReq)
+	msg, err := server.AddTmplsToTmplSets(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Config_DeleteTemplatesFromTemplateSets_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq DeleteTemplatesFromTemplateSetsReq
+func request_Config_DeleteTmplsFromTmplSets_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteTmplsFromTmplSetsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -3911,13 +3911,13 @@ func request_Config_DeleteTemplatesFromTemplateSets_0(ctx context.Context, marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "template_space_id", err)
 	}
 
-	msg, err := client.DeleteTemplatesFromTemplateSets(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DeleteTmplsFromTmplSets(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_DeleteTemplatesFromTemplateSets_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq DeleteTemplatesFromTemplateSetsReq
+func local_request_Config_DeleteTmplsFromTmplSets_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteTmplsFromTmplSetsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -3955,7 +3955,7 @@ func local_request_Config_DeleteTemplatesFromTemplateSets_0(ctx context.Context,
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "template_space_id", err)
 	}
 
-	msg, err := server.DeleteTemplatesFromTemplateSets(ctx, &protoReq)
+	msg, err := server.DeleteTmplsFromTmplSets(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -4119,11 +4119,11 @@ func local_request_Config_ListTemplatesNotBound_0(ctx context.Context, marshaler
 }
 
 var (
-	filter_Config_ListTemplatesOfTemplateSet_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_set_id": 4, "templateSetId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
+	filter_Config_ListTmplsOfTmplSet_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_set_id": 4, "templateSetId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
 )
 
-func request_Config_ListTemplatesOfTemplateSet_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplatesOfTemplateSetReq
+func request_Config_ListTmplsOfTmplSet_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplsOfTmplSetReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -4166,17 +4166,17 @@ func request_Config_ListTemplatesOfTemplateSet_0(ctx context.Context, marshaler 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplatesOfTemplateSet_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplsOfTmplSet_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListTemplatesOfTemplateSet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplsOfTmplSet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplatesOfTemplateSet_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplatesOfTemplateSetReq
+func local_request_Config_ListTmplsOfTmplSet_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplsOfTmplSetReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -4219,11 +4219,11 @@ func local_request_Config_ListTemplatesOfTemplateSet_0(ctx context.Context, mars
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplatesOfTemplateSet_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplsOfTmplSet_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListTemplatesOfTemplateSet(ctx, &protoReq)
+	msg, err := server.ListTmplsOfTmplSet(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -4514,8 +4514,8 @@ func local_request_Config_ListTemplateRevisionsByIDs_0(ctx context.Context, mars
 
 }
 
-func request_Config_ListTemplateRevisionNamesByTemplateIDs_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateRevisionNamesByTemplateIDsReq
+func request_Config_ListTmplRevisionNamesByTmplIDs_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplRevisionNamesByTmplIDsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -4543,13 +4543,13 @@ func request_Config_ListTemplateRevisionNamesByTemplateIDs_0(ctx context.Context
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
 	}
 
-	msg, err := client.ListTemplateRevisionNamesByTemplateIDs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplRevisionNamesByTmplIDs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateRevisionNamesByTemplateIDs_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateRevisionNamesByTemplateIDsReq
+func local_request_Config_ListTmplRevisionNamesByTmplIDs_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplRevisionNamesByTmplIDsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -4577,7 +4577,7 @@ func local_request_Config_ListTemplateRevisionNamesByTemplateIDs_0(ctx context.C
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
 	}
 
-	msg, err := server.ListTemplateRevisionNamesByTemplateIDs(ctx, &protoReq)
+	msg, err := server.ListTmplRevisionNamesByTmplIDs(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -5119,11 +5119,11 @@ func local_request_Config_ListTemplateSetsByIDs_0(ctx context.Context, marshaler
 }
 
 var (
-	filter_Config_ListTemplateSetsOfBiz_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+	filter_Config_ListTmplSetsOfBiz_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
 )
 
-func request_Config_ListTemplateSetsOfBiz_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateSetsOfBizReq
+func request_Config_ListTmplSetsOfBiz_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplSetsOfBizReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -5146,17 +5146,17 @@ func request_Config_ListTemplateSetsOfBiz_0(ctx context.Context, marshaler runti
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateSetsOfBiz_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplSetsOfBiz_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListTemplateSetsOfBiz(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplSetsOfBiz(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateSetsOfBiz_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateSetsOfBizReq
+func local_request_Config_ListTmplSetsOfBiz_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplSetsOfBizReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -5179,11 +5179,11 @@ func local_request_Config_ListTemplateSetsOfBiz_0(ctx context.Context, marshaler
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateSetsOfBiz_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplSetsOfBiz_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListTemplateSetsOfBiz(ctx, &protoReq)
+	msg, err := server.ListTmplSetsOfBiz(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -5549,11 +5549,11 @@ func local_request_Config_ListAppTemplateBindings_0(ctx context.Context, marshal
 }
 
 var (
-	filter_Config_ListAppBoundTemplateRevisions_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "app_id": 2, "appId": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
+	filter_Config_ListAppBoundTmplRevisions_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "app_id": 2, "appId": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
 )
 
-func request_Config_ListAppBoundTemplateRevisions_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAppBoundTemplateRevisionsReq
+func request_Config_ListAppBoundTmplRevisions_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAppBoundTmplRevisionsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -5586,17 +5586,17 @@ func request_Config_ListAppBoundTemplateRevisions_0(ctx context.Context, marshal
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListAppBoundTemplateRevisions_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListAppBoundTmplRevisions_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListAppBoundTemplateRevisions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListAppBoundTmplRevisions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListAppBoundTemplateRevisions_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAppBoundTemplateRevisionsReq
+func local_request_Config_ListAppBoundTmplRevisions_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAppBoundTmplRevisionsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -5629,21 +5629,21 @@ func local_request_Config_ListAppBoundTemplateRevisions_0(ctx context.Context, m
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListAppBoundTemplateRevisions_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListAppBoundTmplRevisions_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListAppBoundTemplateRevisions(ctx, &protoReq)
+	msg, err := server.ListAppBoundTmplRevisions(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListReleasedAppBoundTemplateRevisions_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "app_id": 2, "appId": 3, "release_id": 4, "releaseId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
+	filter_Config_ListReleasedAppBoundTmplRevisions_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "app_id": 2, "appId": 3, "release_id": 4, "releaseId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
 )
 
-func request_Config_ListReleasedAppBoundTemplateRevisions_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListReleasedAppBoundTemplateRevisionsReq
+func request_Config_ListReleasedAppBoundTmplRevisions_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListReleasedAppBoundTmplRevisionsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -5686,17 +5686,17 @@ func request_Config_ListReleasedAppBoundTemplateRevisions_0(ctx context.Context,
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListReleasedAppBoundTemplateRevisions_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListReleasedAppBoundTmplRevisions_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListReleasedAppBoundTemplateRevisions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListReleasedAppBoundTmplRevisions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListReleasedAppBoundTemplateRevisions_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListReleasedAppBoundTemplateRevisionsReq
+func local_request_Config_ListReleasedAppBoundTmplRevisions_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListReleasedAppBoundTmplRevisionsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -5739,17 +5739,17 @@ func local_request_Config_ListReleasedAppBoundTemplateRevisions_0(ctx context.Co
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListReleasedAppBoundTemplateRevisions_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListReleasedAppBoundTmplRevisions_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListReleasedAppBoundTemplateRevisions(ctx, &protoReq)
+	msg, err := server.ListReleasedAppBoundTmplRevisions(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Config_UpdateAppBoundTemplateRevisions_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq UpdateAppBoundTemplateRevisionsReq
+func request_Config_UpdateAppBoundTmplRevisions_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UpdateAppBoundTmplRevisionsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -5797,13 +5797,13 @@ func request_Config_UpdateAppBoundTemplateRevisions_0(ctx context.Context, marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "binding_id", err)
 	}
 
-	msg, err := client.UpdateAppBoundTemplateRevisions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.UpdateAppBoundTmplRevisions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_UpdateAppBoundTemplateRevisions_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq UpdateAppBoundTemplateRevisionsReq
+func local_request_Config_UpdateAppBoundTmplRevisions_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UpdateAppBoundTmplRevisionsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -5851,17 +5851,17 @@ func local_request_Config_UpdateAppBoundTemplateRevisions_0(ctx context.Context,
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "binding_id", err)
 	}
 
-	msg, err := server.UpdateAppBoundTemplateRevisions(ctx, &protoReq)
+	msg, err := server.UpdateAppBoundTmplRevisions(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_DeleteAppBoundTemplateSets_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "app_id": 2, "appId": 3, "binding_id": 4, "bindingId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
+	filter_Config_DeleteAppBoundTmplSets_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "app_id": 2, "appId": 3, "binding_id": 4, "bindingId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
 )
 
-func request_Config_DeleteAppBoundTemplateSets_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq DeleteAppBoundTemplateSetsReq
+func request_Config_DeleteAppBoundTmplSets_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteAppBoundTmplSetsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -5904,17 +5904,17 @@ func request_Config_DeleteAppBoundTemplateSets_0(ctx context.Context, marshaler 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_DeleteAppBoundTemplateSets_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_DeleteAppBoundTmplSets_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DeleteAppBoundTemplateSets(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DeleteAppBoundTmplSets(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_DeleteAppBoundTemplateSets_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq DeleteAppBoundTemplateSetsReq
+func local_request_Config_DeleteAppBoundTmplSets_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteAppBoundTmplSetsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -5957,11 +5957,11 @@ func local_request_Config_DeleteAppBoundTemplateSets_0(ctx context.Context, mars
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_DeleteAppBoundTemplateSets_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_DeleteAppBoundTmplSets_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.DeleteAppBoundTemplateSets(ctx, &protoReq)
+	msg, err := server.DeleteAppBoundTmplSets(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -6054,8 +6054,8 @@ func local_request_Config_CheckAppTemplateBinding_0(ctx context.Context, marshal
 
 }
 
-func request_Config_ListTemplateBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateBoundCountsReq
+func request_Config_ListTmplBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplBoundCountsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -6093,13 +6093,13 @@ func request_Config_ListTemplateBoundCounts_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "template_space_id", err)
 	}
 
-	msg, err := client.ListTemplateBoundCounts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplBoundCounts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateBoundCountsReq
+func local_request_Config_ListTmplBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplBoundCountsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -6137,13 +6137,13 @@ func local_request_Config_ListTemplateBoundCounts_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "template_space_id", err)
 	}
 
-	msg, err := server.ListTemplateBoundCounts(ctx, &protoReq)
+	msg, err := server.ListTmplBoundCounts(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Config_ListTemplateRevisionBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateRevisionBoundCountsReq
+func request_Config_ListTmplRevisionBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplRevisionBoundCountsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -6191,13 +6191,13 @@ func request_Config_ListTemplateRevisionBoundCounts_0(ctx context.Context, marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "template_id", err)
 	}
 
-	msg, err := client.ListTemplateRevisionBoundCounts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplRevisionBoundCounts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateRevisionBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateRevisionBoundCountsReq
+func local_request_Config_ListTmplRevisionBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplRevisionBoundCountsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -6245,13 +6245,13 @@ func local_request_Config_ListTemplateRevisionBoundCounts_0(ctx context.Context,
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "template_id", err)
 	}
 
-	msg, err := server.ListTemplateRevisionBoundCounts(ctx, &protoReq)
+	msg, err := server.ListTmplRevisionBoundCounts(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Config_ListTemplateSetBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateSetBoundCountsReq
+func request_Config_ListTmplSetBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplSetBoundCountsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -6289,13 +6289,13 @@ func request_Config_ListTemplateSetBoundCounts_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "template_space_id", err)
 	}
 
-	msg, err := client.ListTemplateSetBoundCounts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplSetBoundCounts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateSetBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateSetBoundCountsReq
+func local_request_Config_ListTmplSetBoundCounts_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplSetBoundCountsReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -6333,17 +6333,17 @@ func local_request_Config_ListTemplateSetBoundCounts_0(ctx context.Context, mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "template_space_id", err)
 	}
 
-	msg, err := server.ListTemplateSetBoundCounts(ctx, &protoReq)
+	msg, err := server.ListTmplSetBoundCounts(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListTemplateBoundUnnamedAppDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
+	filter_Config_ListTmplBoundUnnamedApps_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
 )
 
-func request_Config_ListTemplateBoundUnnamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateBoundUnnamedAppDetailsReq
+func request_Config_ListTmplBoundUnnamedApps_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplBoundUnnamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6386,17 +6386,17 @@ func request_Config_ListTemplateBoundUnnamedAppDetails_0(ctx context.Context, ma
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateBoundUnnamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplBoundUnnamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListTemplateBoundUnnamedAppDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplBoundUnnamedApps(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateBoundUnnamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateBoundUnnamedAppDetailsReq
+func local_request_Config_ListTmplBoundUnnamedApps_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplBoundUnnamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6439,21 +6439,21 @@ func local_request_Config_ListTemplateBoundUnnamedAppDetails_0(ctx context.Conte
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateBoundUnnamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplBoundUnnamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListTemplateBoundUnnamedAppDetails(ctx, &protoReq)
+	msg, err := server.ListTmplBoundUnnamedApps(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListTemplateBoundNamedAppDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
+	filter_Config_ListTmplBoundNamedApps_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
 )
 
-func request_Config_ListTemplateBoundNamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateBoundNamedAppDetailsReq
+func request_Config_ListTmplBoundNamedApps_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplBoundNamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6496,17 +6496,17 @@ func request_Config_ListTemplateBoundNamedAppDetails_0(ctx context.Context, mars
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateBoundNamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplBoundNamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListTemplateBoundNamedAppDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplBoundNamedApps(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateBoundNamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateBoundNamedAppDetailsReq
+func local_request_Config_ListTmplBoundNamedApps_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplBoundNamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6549,21 +6549,21 @@ func local_request_Config_ListTemplateBoundNamedAppDetails_0(ctx context.Context
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateBoundNamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplBoundNamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListTemplateBoundNamedAppDetails(ctx, &protoReq)
+	msg, err := server.ListTmplBoundNamedApps(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListTemplateBoundTemplateSetDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
+	filter_Config_ListTmplBoundTmplSets_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
 )
 
-func request_Config_ListTemplateBoundTemplateSetDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateBoundTemplateSetDetailsReq
+func request_Config_ListTmplBoundTmplSets_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplBoundTmplSetsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6606,17 +6606,17 @@ func request_Config_ListTemplateBoundTemplateSetDetails_0(ctx context.Context, m
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateBoundTemplateSetDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplBoundTmplSets_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListTemplateBoundTemplateSetDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplBoundTmplSets(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateBoundTemplateSetDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateBoundTemplateSetDetailsReq
+func local_request_Config_ListTmplBoundTmplSets_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplBoundTmplSetsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6659,21 +6659,21 @@ func local_request_Config_ListTemplateBoundTemplateSetDetails_0(ctx context.Cont
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateBoundTemplateSetDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplBoundTmplSets_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListTemplateBoundTemplateSetDetails(ctx, &protoReq)
+	msg, err := server.ListTmplBoundTmplSets(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListMultiTemplateBoundTemplateSetDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
+	filter_Config_ListMultiTmplBoundTmplSets_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
 )
 
-func request_Config_ListMultiTemplateBoundTemplateSetDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListMultiTemplateBoundTemplateSetDetailsReq
+func request_Config_ListMultiTmplBoundTmplSets_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListMultiTmplBoundTmplSetsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6706,17 +6706,17 @@ func request_Config_ListMultiTemplateBoundTemplateSetDetails_0(ctx context.Conte
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListMultiTemplateBoundTemplateSetDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListMultiTmplBoundTmplSets_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListMultiTemplateBoundTemplateSetDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListMultiTmplBoundTmplSets(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListMultiTemplateBoundTemplateSetDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListMultiTemplateBoundTemplateSetDetailsReq
+func local_request_Config_ListMultiTmplBoundTmplSets_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListMultiTmplBoundTmplSetsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6749,21 +6749,21 @@ func local_request_Config_ListMultiTemplateBoundTemplateSetDetails_0(ctx context
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListMultiTemplateBoundTemplateSetDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListMultiTmplBoundTmplSets_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListMultiTemplateBoundTemplateSetDetails(ctx, &protoReq)
+	msg, err := server.ListMultiTmplBoundTmplSets(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListTemplateRevisionBoundUnnamedAppDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5, "template_revision_id": 6, "templateRevisionId": 7}, Base: []int{1, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
+	filter_Config_ListTmplRevisionBoundUnnamedApps_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5, "template_revision_id": 6, "templateRevisionId": 7}, Base: []int{1, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
 )
 
-func request_Config_ListTemplateRevisionBoundUnnamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateRevisionBoundUnnamedAppDetailsReq
+func request_Config_ListTmplRevisionBoundUnnamedApps_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplRevisionBoundUnnamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6816,17 +6816,17 @@ func request_Config_ListTemplateRevisionBoundUnnamedAppDetails_0(ctx context.Con
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateRevisionBoundUnnamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplRevisionBoundUnnamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListTemplateRevisionBoundUnnamedAppDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplRevisionBoundUnnamedApps(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateRevisionBoundUnnamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateRevisionBoundUnnamedAppDetailsReq
+func local_request_Config_ListTmplRevisionBoundUnnamedApps_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplRevisionBoundUnnamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6879,21 +6879,21 @@ func local_request_Config_ListTemplateRevisionBoundUnnamedAppDetails_0(ctx conte
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateRevisionBoundUnnamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplRevisionBoundUnnamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListTemplateRevisionBoundUnnamedAppDetails(ctx, &protoReq)
+	msg, err := server.ListTmplRevisionBoundUnnamedApps(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListTemplateRevisionBoundNamedAppDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5, "template_revision_id": 6, "templateRevisionId": 7}, Base: []int{1, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
+	filter_Config_ListTmplRevisionBoundNamedApps_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5, "template_revision_id": 6, "templateRevisionId": 7}, Base: []int{1, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
 )
 
-func request_Config_ListTemplateRevisionBoundNamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateRevisionBoundNamedAppDetailsReq
+func request_Config_ListTmplRevisionBoundNamedApps_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplRevisionBoundNamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -6946,17 +6946,17 @@ func request_Config_ListTemplateRevisionBoundNamedAppDetails_0(ctx context.Conte
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateRevisionBoundNamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplRevisionBoundNamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListTemplateRevisionBoundNamedAppDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplRevisionBoundNamedApps(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateRevisionBoundNamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateRevisionBoundNamedAppDetailsReq
+func local_request_Config_ListTmplRevisionBoundNamedApps_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplRevisionBoundNamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7009,21 +7009,21 @@ func local_request_Config_ListTemplateRevisionBoundNamedAppDetails_0(ctx context
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateRevisionBoundNamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplRevisionBoundNamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListTemplateRevisionBoundNamedAppDetails(ctx, &protoReq)
+	msg, err := server.ListTmplRevisionBoundNamedApps(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListTemplateSetBoundUnnamedAppDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_set_id": 4, "templateSetId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
+	filter_Config_ListTmplSetBoundUnnamedApps_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_set_id": 4, "templateSetId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
 )
 
-func request_Config_ListTemplateSetBoundUnnamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateSetBoundUnnamedAppDetailsReq
+func request_Config_ListTmplSetBoundUnnamedApps_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplSetBoundUnnamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7066,17 +7066,17 @@ func request_Config_ListTemplateSetBoundUnnamedAppDetails_0(ctx context.Context,
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateSetBoundUnnamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplSetBoundUnnamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListTemplateSetBoundUnnamedAppDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplSetBoundUnnamedApps(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateSetBoundUnnamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateSetBoundUnnamedAppDetailsReq
+func local_request_Config_ListTmplSetBoundUnnamedApps_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplSetBoundUnnamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7119,21 +7119,21 @@ func local_request_Config_ListTemplateSetBoundUnnamedAppDetails_0(ctx context.Co
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateSetBoundUnnamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplSetBoundUnnamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListTemplateSetBoundUnnamedAppDetails(ctx, &protoReq)
+	msg, err := server.ListTmplSetBoundUnnamedApps(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
+	filter_Config_ListMultiTmplSetBoundUnnamedApps_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
 )
 
-func request_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListMultiTemplateSetBoundUnnamedAppDetailsReq
+func request_Config_ListMultiTmplSetBoundUnnamedApps_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListMultiTmplSetBoundUnnamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7166,17 +7166,17 @@ func request_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0(ctx context.Con
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListMultiTmplSetBoundUnnamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListMultiTemplateSetBoundUnnamedAppDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListMultiTmplSetBoundUnnamedApps(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListMultiTemplateSetBoundUnnamedAppDetailsReq
+func local_request_Config_ListMultiTmplSetBoundUnnamedApps_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListMultiTmplSetBoundUnnamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7209,21 +7209,21 @@ func local_request_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0(ctx conte
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListMultiTmplSetBoundUnnamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListMultiTemplateSetBoundUnnamedAppDetails(ctx, &protoReq)
+	msg, err := server.ListMultiTmplSetBoundUnnamedApps(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListTemplateSetBoundNamedAppDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_set_id": 4, "templateSetId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
+	filter_Config_ListTmplSetBoundNamedApps_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_set_id": 4, "templateSetId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
 )
 
-func request_Config_ListTemplateSetBoundNamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateSetBoundNamedAppDetailsReq
+func request_Config_ListTmplSetBoundNamedApps_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplSetBoundNamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7266,17 +7266,17 @@ func request_Config_ListTemplateSetBoundNamedAppDetails_0(ctx context.Context, m
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateSetBoundNamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplSetBoundNamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListTemplateSetBoundNamedAppDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTmplSetBoundNamedApps(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListTemplateSetBoundNamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListTemplateSetBoundNamedAppDetailsReq
+func local_request_Config_ListTmplSetBoundNamedApps_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTmplSetBoundNamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7319,21 +7319,21 @@ func local_request_Config_ListTemplateSetBoundNamedAppDetails_0(ctx context.Cont
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTemplateSetBoundNamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListTmplSetBoundNamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListTemplateSetBoundNamedAppDetails(ctx, &protoReq)
+	msg, err := server.ListTmplSetBoundNamedApps(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Config_ListLatestTemplateBoundUnnamedAppDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
+	filter_Config_ListLatestTmplBoundUnnamedApps_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "template_space_id": 2, "templateSpaceId": 3, "template_id": 4, "templateId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
 )
 
-func request_Config_ListLatestTemplateBoundUnnamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListLatestTemplateBoundUnnamedAppDetailsReq
+func request_Config_ListLatestTmplBoundUnnamedApps_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListLatestTmplBoundUnnamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7376,17 +7376,17 @@ func request_Config_ListLatestTemplateBoundUnnamedAppDetails_0(ctx context.Conte
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListLatestTemplateBoundUnnamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListLatestTmplBoundUnnamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListLatestTemplateBoundUnnamedAppDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListLatestTmplBoundUnnamedApps(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListLatestTemplateBoundUnnamedAppDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListLatestTemplateBoundUnnamedAppDetailsReq
+func local_request_Config_ListLatestTmplBoundUnnamedApps_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListLatestTmplBoundUnnamedAppsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7429,11 +7429,11 @@ func local_request_Config_ListLatestTemplateBoundUnnamedAppDetails_0(ctx context
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListLatestTemplateBoundUnnamedAppDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListLatestTmplBoundUnnamedApps_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListLatestTemplateBoundUnnamedAppDetails(ctx, &protoReq)
+	msg, err := server.ListLatestTmplBoundUnnamedApps(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -7736,8 +7736,8 @@ func local_request_Config_ListTemplateVariables_0(ctx context.Context, marshaler
 
 }
 
-func request_Config_ExtractAppTemplateVariables_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ExtractAppTemplateVariablesReq
+func request_Config_ExtractAppTmplVariables_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExtractAppTmplVariablesReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7767,13 +7767,13 @@ func request_Config_ExtractAppTemplateVariables_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
 	}
 
-	msg, err := client.ExtractAppTemplateVariables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ExtractAppTmplVariables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ExtractAppTemplateVariables_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ExtractAppTemplateVariablesReq
+func local_request_Config_ExtractAppTmplVariables_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExtractAppTmplVariablesReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7803,13 +7803,13 @@ func local_request_Config_ExtractAppTemplateVariables_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
 	}
 
-	msg, err := server.ExtractAppTemplateVariables(ctx, &protoReq)
+	msg, err := server.ExtractAppTmplVariables(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Config_GetAppTemplateVariableReferences_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetAppTemplateVariableReferencesReq
+func request_Config_GetAppTmplVariableRefs_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetAppTmplVariableRefsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7839,13 +7839,13 @@ func request_Config_GetAppTemplateVariableReferences_0(ctx context.Context, mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
 	}
 
-	msg, err := client.GetAppTemplateVariableReferences(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetAppTmplVariableRefs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_GetAppTemplateVariableReferences_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetAppTemplateVariableReferencesReq
+func local_request_Config_GetAppTmplVariableRefs_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetAppTmplVariableRefsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7875,59 +7875,13 @@ func local_request_Config_GetAppTemplateVariableReferences_0(ctx context.Context
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
 	}
 
-	msg, err := server.GetAppTemplateVariableReferences(ctx, &protoReq)
+	msg, err := server.GetAppTmplVariableRefs(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Config_GetReleasedAppTemplateVariableReferences_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetReleasedAppTemplateVariableReferencesReq
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["biz_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
-	}
-
-	protoReq.BizId, err = runtime.Uint32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
-	}
-
-	val, ok = pathParams["app_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
-	}
-
-	protoReq.AppId, err = runtime.Uint32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
-	}
-
-	val, ok = pathParams["release_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "release_id")
-	}
-
-	protoReq.ReleaseId, err = runtime.Uint32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "release_id", err)
-	}
-
-	msg, err := client.GetReleasedAppTemplateVariableReferences(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_Config_GetReleasedAppTemplateVariableReferences_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetReleasedAppTemplateVariableReferencesReq
+func request_Config_GetReleasedAppTmplVariableRefs_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetReleasedAppTmplVariableRefsReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -7967,13 +7921,59 @@ func local_request_Config_GetReleasedAppTemplateVariableReferences_0(ctx context
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "release_id", err)
 	}
 
-	msg, err := server.GetReleasedAppTemplateVariableReferences(ctx, &protoReq)
+	msg, err := client.GetReleasedAppTmplVariableRefs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_Config_UpdateAppTemplateVariables_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq UpdateAppTemplateVariablesReq
+func local_request_Config_GetReleasedAppTmplVariableRefs_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetReleasedAppTmplVariableRefsReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	val, ok = pathParams["app_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
+	}
+
+	protoReq.AppId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
+	}
+
+	val, ok = pathParams["release_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "release_id")
+	}
+
+	protoReq.ReleaseId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "release_id", err)
+	}
+
+	msg, err := server.GetReleasedAppTmplVariableRefs(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Config_UpdateAppTmplVariables_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UpdateAppTmplVariablesReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -8011,13 +8011,13 @@ func request_Config_UpdateAppTemplateVariables_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
 	}
 
-	msg, err := client.UpdateAppTemplateVariables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.UpdateAppTmplVariables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_UpdateAppTemplateVariables_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq UpdateAppTemplateVariablesReq
+func local_request_Config_UpdateAppTmplVariables_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UpdateAppTmplVariablesReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -8055,13 +8055,13 @@ func local_request_Config_UpdateAppTemplateVariables_0(ctx context.Context, mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
 	}
 
-	msg, err := server.UpdateAppTemplateVariables(ctx, &protoReq)
+	msg, err := server.UpdateAppTmplVariables(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Config_ListAppTemplateVariables_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAppTemplateVariablesReq
+func request_Config_ListAppTmplVariables_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAppTmplVariablesReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -8091,13 +8091,13 @@ func request_Config_ListAppTemplateVariables_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
 	}
 
-	msg, err := client.ListAppTemplateVariables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListAppTmplVariables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Config_ListAppTemplateVariables_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAppTemplateVariablesReq
+func local_request_Config_ListAppTmplVariables_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAppTmplVariablesReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -8127,59 +8127,13 @@ func local_request_Config_ListAppTemplateVariables_0(ctx context.Context, marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
 	}
 
-	msg, err := server.ListAppTemplateVariables(ctx, &protoReq)
+	msg, err := server.ListAppTmplVariables(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Config_ListReleasedAppTemplateVariables_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListReleasedAppTemplateVariablesReq
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["biz_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
-	}
-
-	protoReq.BizId, err = runtime.Uint32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
-	}
-
-	val, ok = pathParams["app_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
-	}
-
-	protoReq.AppId, err = runtime.Uint32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
-	}
-
-	val, ok = pathParams["release_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "release_id")
-	}
-
-	protoReq.ReleaseId, err = runtime.Uint32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "release_id", err)
-	}
-
-	msg, err := client.ListReleasedAppTemplateVariables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_Config_ListReleasedAppTemplateVariables_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListReleasedAppTemplateVariablesReq
+func request_Config_ListReleasedAppTmplVariables_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListReleasedAppTmplVariablesReq
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -8219,7 +8173,53 @@ func local_request_Config_ListReleasedAppTemplateVariables_0(ctx context.Context
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "release_id", err)
 	}
 
-	msg, err := server.ListReleasedAppTemplateVariables(ctx, &protoReq)
+	msg, err := client.ListReleasedAppTmplVariables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Config_ListReleasedAppTmplVariables_0(ctx context.Context, marshaler runtime.Marshaler, server ConfigServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListReleasedAppTmplVariablesReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	val, ok = pathParams["app_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
+	}
+
+	protoReq.AppId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_id", err)
+	}
+
+	val, ok = pathParams["release_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "release_id")
+	}
+
+	protoReq.ReleaseId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "release_id", err)
+	}
+
+	msg, err := server.ListReleasedAppTmplVariables(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -10301,7 +10301,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
-	mux.Handle("GET", pattern_Config_GetAllBizsOfTemplateSpaces_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_GetAllBizsOfTmplSpaces_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -10309,12 +10309,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/GetAllBizsOfTemplateSpaces", runtime.WithHTTPPathPattern("/api/v1/config/template_spaces/bizs"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/GetAllBizsOfTmplSpaces", runtime.WithHTTPPathPattern("/api/v1/config/template_spaces/bizs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_GetAllBizsOfTemplateSpaces_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_GetAllBizsOfTmplSpaces_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -10322,11 +10322,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_GetAllBizsOfTemplateSpaces_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_GetAllBizsOfTmplSpaces_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Config_CreateDefaultTemplateSpace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_CreateDefaultTmplSpace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -10334,12 +10334,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/CreateDefaultTemplateSpace", runtime.WithHTTPPathPattern("/api/v1/config/template_spaces/default"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/CreateDefaultTmplSpace", runtime.WithHTTPPathPattern("/api/v1/config/template_spaces/default"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_CreateDefaultTemplateSpace_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_CreateDefaultTmplSpace_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -10347,11 +10347,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_CreateDefaultTemplateSpace_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_CreateDefaultTmplSpace_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Config_ListTemplateSpacesByIDs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_ListTmplSpacesByIDs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -10359,12 +10359,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateSpacesByIDs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/list_by_ids"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplSpacesByIDs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/list_by_ids"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateSpacesByIDs_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplSpacesByIDs_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -10372,7 +10372,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateSpacesByIDs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplSpacesByIDs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -10501,7 +10501,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
-	mux.Handle("POST", pattern_Config_AddTemplatesToTemplateSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_AddTmplsToTmplSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -10509,12 +10509,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/AddTemplatesToTemplateSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/add_to_template_sets"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/AddTmplsToTmplSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/add_to_template_sets"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_AddTemplatesToTemplateSets_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_AddTmplsToTmplSets_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -10522,11 +10522,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_AddTemplatesToTemplateSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_AddTmplsToTmplSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Config_DeleteTemplatesFromTemplateSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_DeleteTmplsFromTmplSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -10534,12 +10534,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/DeleteTemplatesFromTemplateSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/delete_from_template_sets"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/DeleteTmplsFromTmplSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/delete_from_template_sets"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_DeleteTemplatesFromTemplateSets_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_DeleteTmplsFromTmplSets_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -10547,7 +10547,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_DeleteTemplatesFromTemplateSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_DeleteTmplsFromTmplSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -10601,7 +10601,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplatesOfTemplateSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplsOfTmplSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -10609,12 +10609,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplatesOfTemplateSet", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/templates"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplsOfTmplSet", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/templates"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplatesOfTemplateSet_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplsOfTmplSet_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -10622,7 +10622,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplatesOfTemplateSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplsOfTmplSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -10701,7 +10701,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
-	mux.Handle("POST", pattern_Config_ListTemplateRevisionNamesByTemplateIDs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_ListTmplRevisionNamesByTmplIDs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -10709,12 +10709,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateRevisionNamesByTemplateIDs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplRevisionNamesByTmplIDs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateRevisionNamesByTemplateIDs_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplRevisionNamesByTmplIDs_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -10722,7 +10722,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateRevisionNamesByTemplateIDs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplRevisionNamesByTmplIDs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -10876,7 +10876,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateSetsOfBiz_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplSetsOfBiz_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -10884,12 +10884,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateSetsOfBiz", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_sets/list_all_of_biz"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplSetsOfBiz", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_sets/list_all_of_biz"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateSetsOfBiz_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplSetsOfBiz_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -10897,7 +10897,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateSetsOfBiz_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplSetsOfBiz_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -11001,7 +11001,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListAppBoundTemplateRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListAppBoundTmplRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11009,12 +11009,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListAppBoundTemplateRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_revisions"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListAppBoundTmplRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_revisions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListAppBoundTemplateRevisions_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListAppBoundTmplRevisions_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11022,11 +11022,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListAppBoundTemplateRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListAppBoundTmplRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListReleasedAppBoundTemplateRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListReleasedAppBoundTmplRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11034,12 +11034,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListReleasedAppBoundTemplateRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListReleasedAppBoundTmplRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListReleasedAppBoundTemplateRevisions_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListReleasedAppBoundTmplRevisions_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11047,11 +11047,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListReleasedAppBoundTemplateRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListReleasedAppBoundTmplRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_Config_UpdateAppBoundTemplateRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_Config_UpdateAppBoundTmplRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11059,12 +11059,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/UpdateAppBoundTemplateRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_revisions"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/UpdateAppBoundTmplRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_revisions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_UpdateAppBoundTemplateRevisions_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_UpdateAppBoundTmplRevisions_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11072,11 +11072,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_UpdateAppBoundTemplateRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_UpdateAppBoundTmplRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_Config_DeleteAppBoundTemplateSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_Config_DeleteAppBoundTmplSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11084,12 +11084,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/DeleteAppBoundTemplateSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_sets"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/DeleteAppBoundTmplSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_sets"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_DeleteAppBoundTemplateSets_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_DeleteAppBoundTmplSets_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11097,7 +11097,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_DeleteAppBoundTemplateSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_DeleteAppBoundTmplSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -11126,7 +11126,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
-	mux.Handle("POST", pattern_Config_ListTemplateBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_ListTmplBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11134,12 +11134,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateBoundCounts_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplBoundCounts_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11147,11 +11147,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Config_ListTemplateRevisionBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_ListTmplRevisionBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11159,12 +11159,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateRevisionBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplRevisionBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateRevisionBoundCounts_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplRevisionBoundCounts_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11172,11 +11172,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateRevisionBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplRevisionBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Config_ListTemplateSetBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_ListTmplSetBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11184,12 +11184,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateSetBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplSetBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateSetBoundCounts_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplSetBoundCounts_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11197,11 +11197,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateSetBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplSetBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateBoundUnnamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplBoundUnnamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11209,12 +11209,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateBoundUnnamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplBoundUnnamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateBoundUnnamedAppDetails_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplBoundUnnamedApps_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11222,11 +11222,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateBoundUnnamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplBoundUnnamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateBoundNamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplBoundNamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11234,12 +11234,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateBoundNamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplBoundNamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateBoundNamedAppDetails_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplBoundNamedApps_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11247,11 +11247,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateBoundNamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplBoundNamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateBoundTemplateSetDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplBoundTmplSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11259,12 +11259,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateBoundTemplateSetDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplBoundTmplSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateBoundTemplateSetDetails_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplBoundTmplSets_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11272,11 +11272,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateBoundTemplateSetDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplBoundTmplSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListMultiTemplateBoundTemplateSetDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListMultiTmplBoundTmplSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11284,12 +11284,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListMultiTemplateBoundTemplateSetDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_template_set_details"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListMultiTmplBoundTmplSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_template_set_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListMultiTemplateBoundTemplateSetDetails_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListMultiTmplBoundTmplSets_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11297,11 +11297,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListMultiTemplateBoundTemplateSetDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListMultiTmplBoundTmplSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateRevisionBoundUnnamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplRevisionBoundUnnamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11309,12 +11309,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateRevisionBoundUnnamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplRevisionBoundUnnamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateRevisionBoundUnnamedAppDetails_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplRevisionBoundUnnamedApps_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11322,11 +11322,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateRevisionBoundUnnamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplRevisionBoundUnnamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateRevisionBoundNamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplRevisionBoundNamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11334,12 +11334,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateRevisionBoundNamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplRevisionBoundNamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateRevisionBoundNamedAppDetails_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplRevisionBoundNamedApps_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11347,11 +11347,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateRevisionBoundNamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplRevisionBoundNamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateSetBoundUnnamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplSetBoundUnnamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11359,12 +11359,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateSetBoundUnnamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplSetBoundUnnamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateSetBoundUnnamedAppDetails_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplSetBoundUnnamedApps_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11372,11 +11372,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateSetBoundUnnamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplSetBoundUnnamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListMultiTmplSetBoundUnnamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11384,12 +11384,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListMultiTemplateSetBoundUnnamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_unnamed_app_details"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListMultiTmplSetBoundUnnamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_unnamed_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListMultiTmplSetBoundUnnamedApps_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11397,11 +11397,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListMultiTmplSetBoundUnnamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateSetBoundNamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplSetBoundNamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11409,12 +11409,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTemplateSetBoundNamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListTmplSetBoundNamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListTemplateSetBoundNamedAppDetails_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListTmplSetBoundNamedApps_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11422,11 +11422,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListTemplateSetBoundNamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplSetBoundNamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListLatestTemplateBoundUnnamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListLatestTmplBoundUnnamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11434,12 +11434,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListLatestTemplateBoundUnnamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/latest/bound_unnamed_app_details"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListLatestTmplBoundUnnamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/latest/bound_unnamed_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListLatestTemplateBoundUnnamedAppDetails_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListLatestTmplBoundUnnamedApps_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11447,7 +11447,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListLatestTemplateBoundUnnamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListLatestTmplBoundUnnamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -11551,7 +11551,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
-	mux.Handle("GET", pattern_Config_ExtractAppTemplateVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ExtractAppTmplVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11559,12 +11559,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ExtractAppTemplateVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/extract_template_variables"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ExtractAppTmplVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/extract_template_variables"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ExtractAppTemplateVariables_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ExtractAppTmplVariables_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11572,11 +11572,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ExtractAppTemplateVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ExtractAppTmplVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_GetAppTemplateVariableReferences_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_GetAppTmplVariableRefs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11584,12 +11584,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/GetAppTemplateVariableReferences", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/GetAppTmplVariableRefs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_GetAppTemplateVariableReferences_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_GetAppTmplVariableRefs_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11597,11 +11597,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_GetAppTemplateVariableReferences_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_GetAppTmplVariableRefs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_GetReleasedAppTemplateVariableReferences_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_GetReleasedAppTmplVariableRefs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11609,12 +11609,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/GetReleasedAppTemplateVariableReferences", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables_references"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/GetReleasedAppTmplVariableRefs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables_references"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_GetReleasedAppTemplateVariableReferences_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_GetReleasedAppTmplVariableRefs_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11622,11 +11622,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_GetReleasedAppTemplateVariableReferences_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_GetReleasedAppTmplVariableRefs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_Config_UpdateAppTemplateVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_Config_UpdateAppTmplVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11634,12 +11634,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/UpdateAppTemplateVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/UpdateAppTmplVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_UpdateAppTemplateVariables_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_UpdateAppTmplVariables_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11647,11 +11647,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_UpdateAppTemplateVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_UpdateAppTmplVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListAppTemplateVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListAppTmplVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11659,12 +11659,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListAppTemplateVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListAppTmplVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListAppTemplateVariables_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListAppTmplVariables_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11672,11 +11672,11 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListAppTemplateVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListAppTmplVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListReleasedAppTemplateVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListReleasedAppTmplVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -11684,12 +11684,12 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListReleasedAppTemplateVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListReleasedAppTmplVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Config_ListReleasedAppTemplateVariables_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Config_ListReleasedAppTmplVariables_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -11697,7 +11697,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_Config_ListReleasedAppTemplateVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListReleasedAppTmplVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -12931,69 +12931,69 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
-	mux.Handle("GET", pattern_Config_GetAllBizsOfTemplateSpaces_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_GetAllBizsOfTmplSpaces_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/GetAllBizsOfTemplateSpaces", runtime.WithHTTPPathPattern("/api/v1/config/template_spaces/bizs"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/GetAllBizsOfTmplSpaces", runtime.WithHTTPPathPattern("/api/v1/config/template_spaces/bizs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_GetAllBizsOfTemplateSpaces_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_GetAllBizsOfTmplSpaces_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_GetAllBizsOfTemplateSpaces_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_GetAllBizsOfTmplSpaces_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Config_CreateDefaultTemplateSpace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_CreateDefaultTmplSpace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/CreateDefaultTemplateSpace", runtime.WithHTTPPathPattern("/api/v1/config/template_spaces/default"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/CreateDefaultTmplSpace", runtime.WithHTTPPathPattern("/api/v1/config/template_spaces/default"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_CreateDefaultTemplateSpace_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_CreateDefaultTmplSpace_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_CreateDefaultTemplateSpace_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_CreateDefaultTmplSpace_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Config_ListTemplateSpacesByIDs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_ListTmplSpacesByIDs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateSpacesByIDs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/list_by_ids"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplSpacesByIDs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/list_by_ids"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateSpacesByIDs_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplSpacesByIDs_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateSpacesByIDs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplSpacesByIDs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -13107,47 +13107,47 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
-	mux.Handle("POST", pattern_Config_AddTemplatesToTemplateSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_AddTmplsToTmplSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/AddTemplatesToTemplateSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/add_to_template_sets"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/AddTmplsToTmplSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/add_to_template_sets"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_AddTemplatesToTemplateSets_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_AddTmplsToTmplSets_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_AddTemplatesToTemplateSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_AddTmplsToTmplSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Config_DeleteTemplatesFromTemplateSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_DeleteTmplsFromTmplSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/DeleteTemplatesFromTemplateSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/delete_from_template_sets"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/DeleteTmplsFromTmplSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/delete_from_template_sets"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_DeleteTemplatesFromTemplateSets_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_DeleteTmplsFromTmplSets_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_DeleteTemplatesFromTemplateSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_DeleteTmplsFromTmplSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -13195,25 +13195,25 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplatesOfTemplateSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplsOfTmplSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplatesOfTemplateSet", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/templates"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplsOfTmplSet", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/templates"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplatesOfTemplateSet_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplsOfTmplSet_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplatesOfTemplateSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplsOfTmplSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -13283,25 +13283,25 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
-	mux.Handle("POST", pattern_Config_ListTemplateRevisionNamesByTemplateIDs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_ListTmplRevisionNamesByTmplIDs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateRevisionNamesByTemplateIDs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplRevisionNamesByTmplIDs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateRevisionNamesByTemplateIDs_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplRevisionNamesByTmplIDs_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateRevisionNamesByTemplateIDs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplRevisionNamesByTmplIDs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -13437,25 +13437,25 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateSetsOfBiz_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplSetsOfBiz_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateSetsOfBiz", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_sets/list_all_of_biz"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplSetsOfBiz", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_sets/list_all_of_biz"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateSetsOfBiz_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplSetsOfBiz_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateSetsOfBiz_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplSetsOfBiz_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -13547,91 +13547,91 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListAppBoundTemplateRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListAppBoundTmplRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListAppBoundTemplateRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_revisions"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListAppBoundTmplRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_revisions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListAppBoundTemplateRevisions_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListAppBoundTmplRevisions_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListAppBoundTemplateRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListAppBoundTmplRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListReleasedAppBoundTemplateRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListReleasedAppBoundTmplRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListReleasedAppBoundTemplateRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListReleasedAppBoundTmplRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListReleasedAppBoundTemplateRevisions_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListReleasedAppBoundTmplRevisions_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListReleasedAppBoundTemplateRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListReleasedAppBoundTmplRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_Config_UpdateAppBoundTemplateRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_Config_UpdateAppBoundTmplRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/UpdateAppBoundTemplateRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_revisions"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/UpdateAppBoundTmplRevisions", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_revisions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_UpdateAppBoundTemplateRevisions_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_UpdateAppBoundTmplRevisions_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_UpdateAppBoundTemplateRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_UpdateAppBoundTmplRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_Config_DeleteAppBoundTemplateSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_Config_DeleteAppBoundTmplSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/DeleteAppBoundTemplateSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_sets"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/DeleteAppBoundTmplSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_sets"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_DeleteAppBoundTemplateSets_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_DeleteAppBoundTmplSets_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_DeleteAppBoundTemplateSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_DeleteAppBoundTmplSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -13657,289 +13657,289 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
-	mux.Handle("POST", pattern_Config_ListTemplateBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_ListTmplBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateBoundCounts_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplBoundCounts_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Config_ListTemplateRevisionBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_ListTmplRevisionBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateRevisionBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplRevisionBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateRevisionBoundCounts_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplRevisionBoundCounts_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateRevisionBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplRevisionBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Config_ListTemplateSetBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Config_ListTmplSetBoundCounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateSetBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplSetBoundCounts", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateSetBoundCounts_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplSetBoundCounts_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateSetBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplSetBoundCounts_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateBoundUnnamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplBoundUnnamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateBoundUnnamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplBoundUnnamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateBoundUnnamedAppDetails_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplBoundUnnamedApps_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateBoundUnnamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplBoundUnnamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateBoundNamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplBoundNamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateBoundNamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplBoundNamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateBoundNamedAppDetails_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplBoundNamedApps_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateBoundNamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplBoundNamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateBoundTemplateSetDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplBoundTmplSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateBoundTemplateSetDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplBoundTmplSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateBoundTemplateSetDetails_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplBoundTmplSets_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateBoundTemplateSetDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplBoundTmplSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListMultiTemplateBoundTemplateSetDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListMultiTmplBoundTmplSets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListMultiTemplateBoundTemplateSetDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_template_set_details"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListMultiTmplBoundTmplSets", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_template_set_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListMultiTemplateBoundTemplateSetDetails_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListMultiTmplBoundTmplSets_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListMultiTemplateBoundTemplateSetDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListMultiTmplBoundTmplSets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateRevisionBoundUnnamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplRevisionBoundUnnamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateRevisionBoundUnnamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplRevisionBoundUnnamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateRevisionBoundUnnamedAppDetails_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplRevisionBoundUnnamedApps_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateRevisionBoundUnnamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplRevisionBoundUnnamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateRevisionBoundNamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplRevisionBoundNamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateRevisionBoundNamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplRevisionBoundNamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateRevisionBoundNamedAppDetails_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplRevisionBoundNamedApps_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateRevisionBoundNamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplRevisionBoundNamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateSetBoundUnnamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplSetBoundUnnamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateSetBoundUnnamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplSetBoundUnnamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateSetBoundUnnamedAppDetails_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplSetBoundUnnamedApps_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateSetBoundUnnamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplSetBoundUnnamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListMultiTmplSetBoundUnnamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListMultiTemplateSetBoundUnnamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_unnamed_app_details"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListMultiTmplSetBoundUnnamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_unnamed_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListMultiTmplSetBoundUnnamedApps_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListMultiTmplSetBoundUnnamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListTemplateSetBoundNamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListTmplSetBoundNamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTemplateSetBoundNamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListTmplSetBoundNamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListTemplateSetBoundNamedAppDetails_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListTmplSetBoundNamedApps_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListTemplateSetBoundNamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListTmplSetBoundNamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListLatestTemplateBoundUnnamedAppDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListLatestTmplBoundUnnamedApps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListLatestTemplateBoundUnnamedAppDetails", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/latest/bound_unnamed_app_details"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListLatestTmplBoundUnnamedApps", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/latest/bound_unnamed_app_details"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListLatestTemplateBoundUnnamedAppDetails_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListLatestTmplBoundUnnamedApps_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListLatestTemplateBoundUnnamedAppDetails_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListLatestTmplBoundUnnamedApps_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -14031,135 +14031,135 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
-	mux.Handle("GET", pattern_Config_ExtractAppTemplateVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ExtractAppTmplVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ExtractAppTemplateVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/extract_template_variables"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ExtractAppTmplVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/extract_template_variables"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ExtractAppTemplateVariables_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ExtractAppTmplVariables_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ExtractAppTemplateVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ExtractAppTmplVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_GetAppTemplateVariableReferences_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_GetAppTmplVariableRefs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/GetAppTemplateVariableReferences", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/GetAppTmplVariableRefs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_GetAppTemplateVariableReferences_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_GetAppTmplVariableRefs_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_GetAppTemplateVariableReferences_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_GetAppTmplVariableRefs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_GetReleasedAppTemplateVariableReferences_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_GetReleasedAppTmplVariableRefs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/GetReleasedAppTemplateVariableReferences", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables_references"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/GetReleasedAppTmplVariableRefs", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables_references"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_GetReleasedAppTemplateVariableReferences_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_GetReleasedAppTmplVariableRefs_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_GetReleasedAppTemplateVariableReferences_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_GetReleasedAppTmplVariableRefs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_Config_UpdateAppTemplateVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_Config_UpdateAppTmplVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/UpdateAppTemplateVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/UpdateAppTmplVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_UpdateAppTemplateVariables_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_UpdateAppTmplVariables_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_UpdateAppTemplateVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_UpdateAppTmplVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListAppTemplateVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListAppTmplVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListAppTemplateVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListAppTmplVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListAppTemplateVariables_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListAppTmplVariables_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListAppTemplateVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListAppTmplVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Config_ListReleasedAppTemplateVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Config_ListReleasedAppTmplVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListReleasedAppTemplateVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListReleasedAppTmplVariables", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Config_ListReleasedAppTemplateVariables_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Config_ListReleasedAppTmplVariables_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Config_ListReleasedAppTemplateVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Config_ListReleasedAppTmplVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -14571,11 +14571,11 @@ var (
 
 	pattern_Config_ListTemplateSpaces_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces"}, ""))
 
-	pattern_Config_GetAllBizsOfTemplateSpaces_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "config", "template_spaces", "bizs"}, ""))
+	pattern_Config_GetAllBizsOfTmplSpaces_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "config", "template_spaces", "bizs"}, ""))
 
-	pattern_Config_CreateDefaultTemplateSpace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "config", "template_spaces", "default"}, ""))
+	pattern_Config_CreateDefaultTmplSpace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "config", "template_spaces", "default"}, ""))
 
-	pattern_Config_ListTemplateSpacesByIDs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "list_by_ids"}, ""))
+	pattern_Config_ListTmplSpacesByIDs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "list_by_ids"}, ""))
 
 	pattern_Config_CreateTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates"}, ""))
 
@@ -14587,15 +14587,15 @@ var (
 
 	pattern_Config_ListTemplates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates"}, ""))
 
-	pattern_Config_AddTemplatesToTemplateSets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "add_to_template_sets"}, ""))
+	pattern_Config_AddTmplsToTmplSets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "add_to_template_sets"}, ""))
 
-	pattern_Config_DeleteTemplatesFromTemplateSets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "delete_from_template_sets"}, ""))
+	pattern_Config_DeleteTmplsFromTmplSets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "delete_from_template_sets"}, ""))
 
 	pattern_Config_ListTemplatesByIDs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"api", "v1", "config", "biz", "biz_id", "templates", "list_by_ids"}, ""))
 
 	pattern_Config_ListTemplatesNotBound_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "list_not_bound"}, ""))
 
-	pattern_Config_ListTemplatesOfTemplateSet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets", "template_set_id", "templates"}, ""))
+	pattern_Config_ListTmplsOfTmplSet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets", "template_set_id", "templates"}, ""))
 
 	pattern_Config_CreateTemplateRevision_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "template_revisions"}, ""))
 
@@ -14603,7 +14603,7 @@ var (
 
 	pattern_Config_ListTemplateRevisionsByIDs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"api", "v1", "config", "biz", "biz_id", "template_revisions", "list_by_ids"}, ""))
 
-	pattern_Config_ListTemplateRevisionNamesByTemplateIDs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"api", "v1", "config", "biz", "biz_id", "template_revisions", "list_names_by_template_ids"}, ""))
+	pattern_Config_ListTmplRevisionNamesByTmplIDs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"api", "v1", "config", "biz", "biz_id", "template_revisions", "list_names_by_template_ids"}, ""))
 
 	pattern_Config_CreateTemplateSet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets"}, ""))
 
@@ -14617,7 +14617,7 @@ var (
 
 	pattern_Config_ListTemplateSetsByIDs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"api", "v1", "config", "biz", "biz_id", "template_sets", "list_by_ids"}, ""))
 
-	pattern_Config_ListTemplateSetsOfBiz_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"api", "v1", "config", "biz", "biz_id", "template_sets", "list_all_of_biz"}, ""))
+	pattern_Config_ListTmplSetsOfBiz_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"api", "v1", "config", "biz", "biz_id", "template_sets", "list_all_of_biz"}, ""))
 
 	pattern_Config_CreateAppTemplateBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_bindings"}, ""))
 
@@ -14627,41 +14627,41 @@ var (
 
 	pattern_Config_ListAppTemplateBindings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_bindings"}, ""))
 
-	pattern_Config_ListAppBoundTemplateRevisions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_revisions"}, ""))
+	pattern_Config_ListAppBoundTmplRevisions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_revisions"}, ""))
 
-	pattern_Config_ListReleasedAppBoundTemplateRevisions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "releases", "release_id", "template_revisions"}, ""))
+	pattern_Config_ListReleasedAppBoundTmplRevisions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "releases", "release_id", "template_revisions"}, ""))
 
-	pattern_Config_UpdateAppBoundTemplateRevisions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_bindings", "binding_id", "template_revisions"}, ""))
+	pattern_Config_UpdateAppBoundTmplRevisions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_bindings", "binding_id", "template_revisions"}, ""))
 
-	pattern_Config_DeleteAppBoundTemplateSets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_bindings", "binding_id", "template_sets"}, ""))
+	pattern_Config_DeleteAppBoundTmplSets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_bindings", "binding_id", "template_sets"}, ""))
 
 	pattern_Config_CheckAppTemplateBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_bindings", "conflict_check"}, ""))
 
-	pattern_Config_ListTemplateBoundCounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "bound_counts"}, ""))
+	pattern_Config_ListTmplBoundCounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "bound_counts"}, ""))
 
-	pattern_Config_ListTemplateRevisionBoundCounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9, 2, 10}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "template_revisions", "bound_counts"}, ""))
+	pattern_Config_ListTmplRevisionBoundCounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9, 2, 10}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "template_revisions", "bound_counts"}, ""))
 
-	pattern_Config_ListTemplateSetBoundCounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets", "bound_counts"}, ""))
+	pattern_Config_ListTmplSetBoundCounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets", "bound_counts"}, ""))
 
-	pattern_Config_ListTemplateBoundUnnamedAppDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "bound_unnamed_app_details"}, ""))
+	pattern_Config_ListTmplBoundUnnamedApps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "bound_unnamed_app_details"}, ""))
 
-	pattern_Config_ListTemplateBoundNamedAppDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "bound_named_app_details"}, ""))
+	pattern_Config_ListTmplBoundNamedApps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "bound_named_app_details"}, ""))
 
-	pattern_Config_ListTemplateBoundTemplateSetDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "bound_template_set_details"}, ""))
+	pattern_Config_ListTmplBoundTmplSets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "bound_template_set_details"}, ""))
 
-	pattern_Config_ListMultiTemplateBoundTemplateSetDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "bound_template_set_details"}, ""))
+	pattern_Config_ListMultiTmplBoundTmplSets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "bound_template_set_details"}, ""))
 
-	pattern_Config_ListTemplateRevisionBoundUnnamedAppDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9, 1, 0, 4, 1, 5, 10, 2, 11}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "template_revisions", "template_revision_id", "bound_unnamed_app_details"}, ""))
+	pattern_Config_ListTmplRevisionBoundUnnamedApps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9, 1, 0, 4, 1, 5, 10, 2, 11}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "template_revisions", "template_revision_id", "bound_unnamed_app_details"}, ""))
 
-	pattern_Config_ListTemplateRevisionBoundNamedAppDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9, 1, 0, 4, 1, 5, 10, 2, 11}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "template_revisions", "template_revision_id", "bound_named_app_details"}, ""))
+	pattern_Config_ListTmplRevisionBoundNamedApps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9, 1, 0, 4, 1, 5, 10, 2, 11}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "template_revisions", "template_revision_id", "bound_named_app_details"}, ""))
 
-	pattern_Config_ListTemplateSetBoundUnnamedAppDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets", "template_set_id", "bound_unnamed_app_details"}, ""))
+	pattern_Config_ListTmplSetBoundUnnamedApps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets", "template_set_id", "bound_unnamed_app_details"}, ""))
 
-	pattern_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets", "bound_unnamed_app_details"}, ""))
+	pattern_Config_ListMultiTmplSetBoundUnnamedApps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets", "bound_unnamed_app_details"}, ""))
 
-	pattern_Config_ListTemplateSetBoundNamedAppDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets", "template_set_id", "bound_named_app_details"}, ""))
+	pattern_Config_ListTmplSetBoundNamedApps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "template_sets", "template_set_id", "bound_named_app_details"}, ""))
 
-	pattern_Config_ListLatestTemplateBoundUnnamedAppDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9, 2, 10}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "latest", "bound_unnamed_app_details"}, ""))
+	pattern_Config_ListLatestTmplBoundUnnamedApps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9, 2, 10}, []string{"api", "v1", "config", "biz", "biz_id", "template_spaces", "template_space_id", "templates", "template_id", "latest", "bound_unnamed_app_details"}, ""))
 
 	pattern_Config_CreateTemplateVariable_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "config", "biz", "biz_id", "template_variables"}, ""))
 
@@ -14671,17 +14671,17 @@ var (
 
 	pattern_Config_ListTemplateVariables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "config", "biz", "biz_id", "template_variables"}, ""))
 
-	pattern_Config_ExtractAppTemplateVariables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "extract_template_variables"}, ""))
+	pattern_Config_ExtractAppTmplVariables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "extract_template_variables"}, ""))
 
-	pattern_Config_GetAppTemplateVariableReferences_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_variables_references"}, ""))
+	pattern_Config_GetAppTmplVariableRefs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_variables_references"}, ""))
 
-	pattern_Config_GetReleasedAppTemplateVariableReferences_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "releases", "release_id", "template_variables_references"}, ""))
+	pattern_Config_GetReleasedAppTmplVariableRefs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "releases", "release_id", "template_variables_references"}, ""))
 
-	pattern_Config_UpdateAppTemplateVariables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_variables"}, ""))
+	pattern_Config_UpdateAppTmplVariables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_variables"}, ""))
 
-	pattern_Config_ListAppTemplateVariables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_variables"}, ""))
+	pattern_Config_ListAppTmplVariables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "template_variables"}, ""))
 
-	pattern_Config_ListReleasedAppTemplateVariables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "releases", "release_id", "template_variables"}, ""))
+	pattern_Config_ListReleasedAppTmplVariables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "releases", "release_id", "template_variables"}, ""))
 
 	pattern_Config_CreateGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "config", "biz", "biz_id", "groups"}, ""))
 
@@ -14789,11 +14789,11 @@ var (
 
 	forward_Config_ListTemplateSpaces_0 = runtime.ForwardResponseMessage
 
-	forward_Config_GetAllBizsOfTemplateSpaces_0 = runtime.ForwardResponseMessage
+	forward_Config_GetAllBizsOfTmplSpaces_0 = runtime.ForwardResponseMessage
 
-	forward_Config_CreateDefaultTemplateSpace_0 = runtime.ForwardResponseMessage
+	forward_Config_CreateDefaultTmplSpace_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateSpacesByIDs_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplSpacesByIDs_0 = runtime.ForwardResponseMessage
 
 	forward_Config_CreateTemplate_0 = runtime.ForwardResponseMessage
 
@@ -14805,15 +14805,15 @@ var (
 
 	forward_Config_ListTemplates_0 = runtime.ForwardResponseMessage
 
-	forward_Config_AddTemplatesToTemplateSets_0 = runtime.ForwardResponseMessage
+	forward_Config_AddTmplsToTmplSets_0 = runtime.ForwardResponseMessage
 
-	forward_Config_DeleteTemplatesFromTemplateSets_0 = runtime.ForwardResponseMessage
+	forward_Config_DeleteTmplsFromTmplSets_0 = runtime.ForwardResponseMessage
 
 	forward_Config_ListTemplatesByIDs_0 = runtime.ForwardResponseMessage
 
 	forward_Config_ListTemplatesNotBound_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplatesOfTemplateSet_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplsOfTmplSet_0 = runtime.ForwardResponseMessage
 
 	forward_Config_CreateTemplateRevision_0 = runtime.ForwardResponseMessage
 
@@ -14821,7 +14821,7 @@ var (
 
 	forward_Config_ListTemplateRevisionsByIDs_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateRevisionNamesByTemplateIDs_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplRevisionNamesByTmplIDs_0 = runtime.ForwardResponseMessage
 
 	forward_Config_CreateTemplateSet_0 = runtime.ForwardResponseMessage
 
@@ -14835,7 +14835,7 @@ var (
 
 	forward_Config_ListTemplateSetsByIDs_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateSetsOfBiz_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplSetsOfBiz_0 = runtime.ForwardResponseMessage
 
 	forward_Config_CreateAppTemplateBinding_0 = runtime.ForwardResponseMessage
 
@@ -14845,41 +14845,41 @@ var (
 
 	forward_Config_ListAppTemplateBindings_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListAppBoundTemplateRevisions_0 = runtime.ForwardResponseMessage
+	forward_Config_ListAppBoundTmplRevisions_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListReleasedAppBoundTemplateRevisions_0 = runtime.ForwardResponseMessage
+	forward_Config_ListReleasedAppBoundTmplRevisions_0 = runtime.ForwardResponseMessage
 
-	forward_Config_UpdateAppBoundTemplateRevisions_0 = runtime.ForwardResponseMessage
+	forward_Config_UpdateAppBoundTmplRevisions_0 = runtime.ForwardResponseMessage
 
-	forward_Config_DeleteAppBoundTemplateSets_0 = runtime.ForwardResponseMessage
+	forward_Config_DeleteAppBoundTmplSets_0 = runtime.ForwardResponseMessage
 
 	forward_Config_CheckAppTemplateBinding_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateBoundCounts_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplBoundCounts_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateRevisionBoundCounts_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplRevisionBoundCounts_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateSetBoundCounts_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplSetBoundCounts_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateBoundUnnamedAppDetails_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplBoundUnnamedApps_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateBoundNamedAppDetails_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplBoundNamedApps_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateBoundTemplateSetDetails_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplBoundTmplSets_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListMultiTemplateBoundTemplateSetDetails_0 = runtime.ForwardResponseMessage
+	forward_Config_ListMultiTmplBoundTmplSets_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateRevisionBoundUnnamedAppDetails_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplRevisionBoundUnnamedApps_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateRevisionBoundNamedAppDetails_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplRevisionBoundNamedApps_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateSetBoundUnnamedAppDetails_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplSetBoundUnnamedApps_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListMultiTemplateSetBoundUnnamedAppDetails_0 = runtime.ForwardResponseMessage
+	forward_Config_ListMultiTmplSetBoundUnnamedApps_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListTemplateSetBoundNamedAppDetails_0 = runtime.ForwardResponseMessage
+	forward_Config_ListTmplSetBoundNamedApps_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListLatestTemplateBoundUnnamedAppDetails_0 = runtime.ForwardResponseMessage
+	forward_Config_ListLatestTmplBoundUnnamedApps_0 = runtime.ForwardResponseMessage
 
 	forward_Config_CreateTemplateVariable_0 = runtime.ForwardResponseMessage
 
@@ -14889,17 +14889,17 @@ var (
 
 	forward_Config_ListTemplateVariables_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ExtractAppTemplateVariables_0 = runtime.ForwardResponseMessage
+	forward_Config_ExtractAppTmplVariables_0 = runtime.ForwardResponseMessage
 
-	forward_Config_GetAppTemplateVariableReferences_0 = runtime.ForwardResponseMessage
+	forward_Config_GetAppTmplVariableRefs_0 = runtime.ForwardResponseMessage
 
-	forward_Config_GetReleasedAppTemplateVariableReferences_0 = runtime.ForwardResponseMessage
+	forward_Config_GetReleasedAppTmplVariableRefs_0 = runtime.ForwardResponseMessage
 
-	forward_Config_UpdateAppTemplateVariables_0 = runtime.ForwardResponseMessage
+	forward_Config_UpdateAppTmplVariables_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListAppTemplateVariables_0 = runtime.ForwardResponseMessage
+	forward_Config_ListAppTmplVariables_0 = runtime.ForwardResponseMessage
 
-	forward_Config_ListReleasedAppTemplateVariables_0 = runtime.ForwardResponseMessage
+	forward_Config_ListReleasedAppTmplVariables_0 = runtime.ForwardResponseMessage
 
 	forward_Config_CreateGroup_0 = runtime.ForwardResponseMessage
 

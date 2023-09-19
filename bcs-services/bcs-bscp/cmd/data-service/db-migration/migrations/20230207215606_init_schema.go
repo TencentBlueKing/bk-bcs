@@ -28,13 +28,13 @@ func init() {
 		Version: "20230207215606",
 		Name:    "20230207215606_init_schema",
 		Mode:    migrator.SqlMode,
-		Up:      mig20230207215606InitSchemaUp,
-		Down:    mig20230207215606InitSchemaDown,
+		Up:      mig20230207215606Up,
+		Down:    mig20230207215606Down,
 	})
 }
 
-// mig20230511114513GormTestUp for up migration
-func mig20230207215606InitSchemaUp(tx *gorm.DB) error {
+// mig20230207215606Up for up migration
+func mig20230207215606Up(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetUpSQLKey(mig20230207215606)], ";")
 	for _, sql := range sqlArr {
 		sql = strings.TrimSpace(sql)
@@ -49,8 +49,8 @@ func mig20230207215606InitSchemaUp(tx *gorm.DB) error {
 
 }
 
-// mig20230207215606InitSchemaDown for down migration
-func mig20230207215606InitSchemaDown(tx *gorm.DB) error {
+// mig20230207215606Down for down migration
+func mig20230207215606Down(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetDownSQLKey(mig20230207215606)], ";")
 	for _, sql := range sqlArr {
 		sql = strings.TrimSpace(sql)
