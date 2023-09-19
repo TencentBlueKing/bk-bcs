@@ -13,10 +13,10 @@ limitations under the License.
 package lcache
 
 import (
-	"bscp.io/pkg/metrics"
-
 	"github.com/prometheus/client_golang/prometheus"
 	prm "github.com/prometheus/client_golang/prometheus"
+
+	"bscp.io/pkg/metrics"
 )
 
 func initMetric() *metric {

@@ -15,9 +15,9 @@ package eventc
 import (
 	"sync"
 
-	"bscp.io/pkg/tools"
-
 	prm "github.com/prometheus/client_golang/prometheus"
+
+	"bscp.io/pkg/tools"
 )
 
 func newRetryList(mc *metric) *retryList {

@@ -16,12 +16,12 @@ import (
 	"errors"
 	"time"
 
+	pbstruct "github.com/golang/protobuf/ptypes/struct"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
-
-	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
 // BasePage convert pb BasePage to types BasePage

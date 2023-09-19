@@ -46,8 +46,8 @@ func (m *ResourceAttribute) ResourceAttribute() *meta.ResourceAttribute {
 	}
 
 	return &meta.ResourceAttribute{
-		Basic:       m.Basic.Basic(),
-		BizID:       m.BizId,
+		Basic: m.Basic.Basic(),
+		BizID: m.BizId,
 	}
 }
 

@@ -16,11 +16,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	pbstruct "github.com/golang/protobuf/ptypes/struct"
+
 	"bscp.io/cmd/auth-server/types"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/client"
-
-	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
 // Validate InitAuthCenterReq.

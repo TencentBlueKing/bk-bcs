@@ -17,10 +17,10 @@ import (
 	"strings"
 	"time"
 
-	"bscp.io/pkg/cc"
-
 	_ "github.com/go-sql-driver/mysql" // import mysql drive, used to create conn.
 	"github.com/jmoiron/sqlx"
+
+	"bscp.io/pkg/cc"
 )
 
 // connect to mysql

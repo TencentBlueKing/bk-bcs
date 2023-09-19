@@ -26,7 +26,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"bscp.io/cmd/data-service/db-migration"
+	dbmigration "bscp.io/cmd/data-service/db-migration"
 	"bscp.io/pkg/criteria/constant"
 )
 

@@ -13,13 +13,13 @@ limitations under the License.
 package metrics
 
 import (
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/version"
-
 	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"bscp.io/pkg/cc"
+	"bscp.io/pkg/version"
 )
 
 // globalRegister is a global register which is used to collect metrics we need.

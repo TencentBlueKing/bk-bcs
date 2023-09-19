@@ -19,11 +19,11 @@ import (
 	"errors"
 	"fmt"
 
+	pbstruct "github.com/golang/protobuf/ptypes/struct"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/validator"
 	"bscp.io/pkg/runtime/jsoni"
-
-	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
 // Selector defines a group's working scope.

@@ -13,11 +13,11 @@ limitations under the License.
 package pbgroup
 
 import (
+	pbstruct "github.com/golang/protobuf/ptypes/struct"
+
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	"bscp.io/pkg/runtime/selector"
-
-	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
 // Group convert pb Group to table Group

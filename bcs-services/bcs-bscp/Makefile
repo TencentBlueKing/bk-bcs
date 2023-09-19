@@ -80,6 +80,10 @@ pb:
 gen:
 	@go run scripts/gen/main.go
 
+.PHONY: lint
+lint:
+	@golangci-lint run --issues-exit-code=0 --fix
+
 test: pre
 	@cd test/suite && make && cp -rf suite-test ${OUTPUT_DIR}/ && rm -rf suite-test
 	@cd test/benchmark && make && cp -rf bench-test ${OUTPUT_DIR}/ && rm -rf bench-test

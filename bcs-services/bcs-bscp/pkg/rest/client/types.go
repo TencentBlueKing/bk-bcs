@@ -15,9 +15,9 @@ package client
 import (
 	"time"
 
-	"bscp.io/pkg/rest/discovery"
-
 	"github.com/prometheus/client_golang/prometheus"
+
+	"bscp.io/pkg/rest/discovery"
 )
 
 // Capability http request limit.

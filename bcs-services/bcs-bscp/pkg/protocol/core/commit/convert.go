@@ -14,8 +14,8 @@ package pbcommit
 
 import (
 	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/protocol/core/content"
+	pbbase "bscp.io/pkg/protocol/core/base"
+	pbcontent "bscp.io/pkg/protocol/core/content"
 )
 
 // CommitSpec convert pb CommitSpec to table CommitSpec

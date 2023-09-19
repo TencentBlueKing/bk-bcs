@@ -16,15 +16,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
+
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"gorm.io/gorm"
-
-	"github.com/jmoiron/sqlx"
 )
 
 // AuditDao supplies all the audit operations.

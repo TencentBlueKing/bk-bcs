@@ -98,7 +98,7 @@ func (c *Cache) Purge(kt *kit.Kit, es []*types.EventMeta) {
 }
 
 func formatEvent(meta *types.EventMeta) string {
-	return fmt.Sprintf("id: %d, biz: %d, app: %d, resource: %s, op: %s, resouce_id: %d, uid: %s", meta.ID,
+	return fmt.Sprintf("id: %d, biz: %d, app: %d, resource: %s, op: %s, resource_id: %d, uid: %s", meta.ID,
 		meta.Attachment.BizID, meta.Attachment.AppID, meta.Spec.Resource, meta.Spec.OpType, meta.Spec.ResourceID,
 		meta.Spec.ResourceUid)
 }

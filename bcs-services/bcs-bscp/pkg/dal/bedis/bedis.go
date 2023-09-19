@@ -21,13 +21,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v8"
+	"golang.org/x/time/rate"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/tools"
-
-	"github.com/go-redis/redis/v8"
-	"golang.org/x/time/rate"
 )
 
 // ExpireMode defines the mode that how a key is to expire.

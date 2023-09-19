@@ -17,12 +17,12 @@ import (
 	"context"
 	"encoding/json"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"bscp.io/pkg/criteria/errf"
 	pbcs "bscp.io/pkg/protocol/cache-service"
 	"bscp.io/pkg/types"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Client cache service client

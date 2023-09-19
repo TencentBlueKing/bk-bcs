@@ -20,10 +20,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tidwall/gjson"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/tools"
-
-	"github.com/tidwall/gjson"
 )
 
 // isNumericOrTime test if a value is a standard time

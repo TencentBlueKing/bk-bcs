@@ -17,15 +17,15 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/bluele/gcache"
+	"github.com/prometheus/client_golang/prometheus"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/tools"
-
-	"github.com/bluele/gcache"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // newAuth create an auth cache instance.

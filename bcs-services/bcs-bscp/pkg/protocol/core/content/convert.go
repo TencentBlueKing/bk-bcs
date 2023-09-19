@@ -13,11 +13,11 @@ limitations under the License.
 package pbcontent
 
 import (
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/runtime/jsoni"
-
 	"github.com/golang/protobuf/jsonpb"
+
+	"bscp.io/pkg/dal/table"
+	pbbase "bscp.io/pkg/protocol/core/base"
+	"bscp.io/pkg/runtime/jsoni"
 )
 
 // ContentSpec convert pb ContentSpec to table ContentSpec

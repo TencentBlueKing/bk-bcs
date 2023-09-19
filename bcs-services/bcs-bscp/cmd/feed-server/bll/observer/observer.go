@@ -18,6 +18,9 @@ import (
 	"fmt"
 	"time"
 
+	prm "github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/atomic"
+
 	clientset "bscp.io/cmd/feed-server/bll/client-set"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -25,9 +28,6 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/types"
-
-	prm "github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/atomic"
 )
 
 // New create an observer instance.

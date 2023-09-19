@@ -21,12 +21,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/sdk/operator"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/rest/client"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (

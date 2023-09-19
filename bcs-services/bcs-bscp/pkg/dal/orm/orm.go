@@ -17,14 +17,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/jmoiron/sqlx"
+	prm "github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/time/rate"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/logs"
-
-	"github.com/jmoiron/sqlx"
-	prm "github.com/prometheus/client_golang/prometheus"
-	"golang.org/x/time/rate"
 )
 
 // DoOrm defines all the orm method.

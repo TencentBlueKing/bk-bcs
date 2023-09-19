@@ -16,7 +16,6 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/types"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/criteria/errf"
@@ -24,6 +23,7 @@ import (
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	"bscp.io/pkg/types"
 )
 
 // ConfigItem supplies all the configItem related operations.

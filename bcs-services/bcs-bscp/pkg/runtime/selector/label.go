@@ -17,9 +17,9 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/criteria/validator"
-
 	"github.com/tidwall/gjson"
+
+	"bscp.io/pkg/criteria/validator"
 )
 
 // Label defines the basic label elements

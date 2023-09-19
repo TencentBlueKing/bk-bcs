@@ -16,11 +16,12 @@ import (
 	"encoding/base64"
 	"errors"
 
+	"gorm.io/gorm"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"gorm.io/gorm"
 )
 
 // ReleasedHook supplies all the group related operations.

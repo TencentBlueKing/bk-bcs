@@ -18,9 +18,9 @@ import (
 	"net"
 	"os"
 
-	"bscp.io/pkg/cc"
-
 	"gopkg.in/yaml.v3"
+
+	"bscp.io/pkg/cc"
 )
 
 // Setting repo mock related setting.

@@ -15,8 +15,8 @@ package pbtr
 import (
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/protocol/core/config-item"
-	"bscp.io/pkg/protocol/core/content"
+	pbci "bscp.io/pkg/protocol/core/config-item"
+	pbcontent "bscp.io/pkg/protocol/core/content"
 )
 
 // TemplateRevision convert pb TemplateRevision to table TemplateRevision

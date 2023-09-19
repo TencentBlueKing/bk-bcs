@@ -16,10 +16,10 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/dal/types"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/gen"
+	"bscp.io/pkg/dal/types"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/tools"
 )

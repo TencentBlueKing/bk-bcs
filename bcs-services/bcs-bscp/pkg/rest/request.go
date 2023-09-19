@@ -28,12 +28,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest/client"
 	"bscp.io/pkg/runtime/jsoni"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // VerbType http request verb type

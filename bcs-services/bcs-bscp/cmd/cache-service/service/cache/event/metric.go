@@ -13,9 +13,9 @@ limitations under the License.
 package event
 
 import (
-	"bscp.io/pkg/metrics"
-
 	"github.com/prometheus/client_golang/prometheus"
+
+	"bscp.io/pkg/metrics"
 )
 
 func initMetric() *metric {

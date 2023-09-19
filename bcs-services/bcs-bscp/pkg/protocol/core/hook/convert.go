@@ -13,10 +13,11 @@ limitations under the License.
 package pbhook
 
 import (
+	pbstruct "github.com/golang/protobuf/ptypes/struct"
+
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	"bscp.io/pkg/runtime/selector"
-	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
 // Hook convert pb Hook to table Hook

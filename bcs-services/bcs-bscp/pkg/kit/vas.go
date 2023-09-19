@@ -17,10 +17,10 @@ import (
 	"errors"
 	"time"
 
+	"google.golang.org/grpc/metadata"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/uuid"
-
-	"google.golang.org/grpc/metadata"
 )
 
 // NewVas create a vas instance.

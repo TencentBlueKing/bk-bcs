@@ -14,10 +14,10 @@ limitations under the License.
 package options
 
 import (
+	"github.com/spf13/pflag"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/runtime/flags"
-
-	"github.com/spf13/pflag"
 )
 
 // Option defines the app's runtime flag options.

@@ -16,13 +16,13 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/atomic"
+
 	"bscp.io/cmd/feed-server/bll/eventc"
 	"bscp.io/cmd/feed-server/bll/lcache"
 	"bscp.io/pkg/logs"
 	pbfs "bscp.io/pkg/protocol/feed-server"
 	sfs "bscp.io/pkg/sf-share"
-
-	"go.uber.org/atomic"
 )
 
 // Watch handle watch messages delivered from sidecar.

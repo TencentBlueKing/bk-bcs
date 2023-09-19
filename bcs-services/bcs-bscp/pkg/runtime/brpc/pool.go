@@ -17,13 +17,13 @@ import (
 	"sync"
 	"time"
 
-	"bscp.io/pkg/serviced"
-	"bscp.io/pkg/tools"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
+
+	"bscp.io/pkg/serviced"
+	"bscp.io/pkg/tools"
 )
 
 // PoolInterface defines the gRPC client pool supported operations.

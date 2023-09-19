@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/spf13/pflag"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/runtime/flags"
 	"bscp.io/pkg/tools"
-
-	"github.com/spf13/pflag"
 )
 
 // Option defines the app's runtime flag options.

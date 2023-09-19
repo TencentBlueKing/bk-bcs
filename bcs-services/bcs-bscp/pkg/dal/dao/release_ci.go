@@ -16,13 +16,14 @@ import (
 	"errors"
 	"fmt"
 
+	rawgen "gorm.io/gen"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
-	rawgen "gorm.io/gen"
 )
 
 // ReleasedCI supplies all the released config item related operations.

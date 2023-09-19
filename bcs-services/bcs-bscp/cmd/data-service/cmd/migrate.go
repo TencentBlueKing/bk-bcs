@@ -18,10 +18,10 @@ import (
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 
-	"bscp.io/cmd/data-service/db-migration/migrator"
-	"bscp.io/pkg/cc"
 	// run the init function to add migrations
 	_ "bscp.io/cmd/data-service/db-migration/migrations"
+	"bscp.io/cmd/data-service/db-migration/migrator"
+	"bscp.io/pkg/cc"
 )
 
 // cmd for migration

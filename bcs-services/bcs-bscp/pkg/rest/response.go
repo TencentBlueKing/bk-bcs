@@ -28,7 +28,7 @@ import (
 var (
 	// grpcCodeMap 蓝鲸 Code 映射
 	grpcCodeMap = map[codes.Code]string{
-		codes.Canceled:           "CANCELLED",
+		codes.Canceled:           "CANCELED",
 		codes.Unknown:            "UNKNOWN",
 		codes.InvalidArgument:    "INVALID_ARGUMENT",
 		codes.DeadlineExceeded:   "DEADLINE_EXCEEDED",

@@ -19,12 +19,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/rest/client"
 	"bscp.io/pkg/tools"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Client is repo client.

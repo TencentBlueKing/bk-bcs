@@ -16,14 +16,14 @@ import (
 	"fmt"
 	"time"
 
+	prm "github.com/prometheus/client_golang/prometheus"
+
 	"bscp.io/cmd/cache-service/service/cache/keys"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/runtime/jsoni"
 	"bscp.io/pkg/tools"
-
-	prm "github.com/prometheus/client_golang/prometheus"
 )
 
 // GetAppID get app's id by app name.

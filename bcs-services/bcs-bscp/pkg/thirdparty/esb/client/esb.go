@@ -13,14 +13,14 @@
 package client
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/rest/client"
 	"bscp.io/pkg/thirdparty/esb/bklogin"
 	"bscp.io/pkg/thirdparty/esb/cmdb"
 	"bscp.io/pkg/tools"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Client NOTES

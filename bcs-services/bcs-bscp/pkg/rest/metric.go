@@ -13,9 +13,9 @@ limitations under the License.
 package rest
 
 import (
-	"bscp.io/pkg/metrics"
-
 	"github.com/prometheus/client_golang/prometheus"
+
+	"bscp.io/pkg/metrics"
 )
 
 // restMetric is used to collect restfull metrics.

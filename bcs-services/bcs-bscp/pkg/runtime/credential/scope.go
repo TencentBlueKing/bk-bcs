@@ -16,8 +16,9 @@ import (
 	"fmt"
 	"strings"
 
-	"bscp.io/pkg/tools"
 	"github.com/gobwas/glob"
+
+	"bscp.io/pkg/tools"
 )
 
 type CredentialScope string

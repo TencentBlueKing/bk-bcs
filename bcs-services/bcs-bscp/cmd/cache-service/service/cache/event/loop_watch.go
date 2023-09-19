@@ -253,7 +253,7 @@ func (lw *loopWatch) doOneStep(kt *kit.Kit, start uint32, limit uint, lagSeconds
 }
 
 func formatEvent(one *table.Event) string {
-	return fmt.Sprintf("id: %d, biz: %d, app: %d, resource: %s, op: %s, resouce_id: %d, uid: %s, status: %d", one.ID,
+	return fmt.Sprintf("id: %d, biz: %d, app: %d, resource: %s, op: %s, resource_id: %d, uid: %s, status: %d", one.ID,
 		one.Attachment.BizID, one.Attachment.AppID, one.Spec.Resource, one.Spec.OpType, one.Spec.ResourceID,
 		one.Spec.ResourceUid, one.State.FinalStatus)
 }

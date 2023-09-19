@@ -14,7 +14,7 @@ package pbrelease
 
 import (
 	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/protocol/core/base"
+	pbbase "bscp.io/pkg/protocol/core/base"
 )
 
 // ReleaseSpec convert pb ReleaseSpec to table ReleaseSpec

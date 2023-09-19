@@ -16,6 +16,10 @@ import (
 	"context"
 	"fmt"
 
+	prm "github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -24,10 +28,6 @@ import (
 	"bscp.io/pkg/runtime/jsoni"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/tools"
-
-	prm "github.com/prometheus/client_golang/prometheus"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Handshake received handshake from sidecar to validate the app instance's authorization and legality.

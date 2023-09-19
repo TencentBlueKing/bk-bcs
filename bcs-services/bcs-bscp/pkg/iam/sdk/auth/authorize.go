@@ -18,11 +18,10 @@ import (
 	"fmt"
 	"sync"
 
-	"bscp.io/pkg/iam/sys"
-
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/sdk/operator"
+	"bscp.io/pkg/iam/sys"
 	"bscp.io/pkg/logs"
 )
 

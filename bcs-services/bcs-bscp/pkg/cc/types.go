@@ -21,11 +21,11 @@ import (
 	"strings"
 	"time"
 
+	etcd3 "go.etcd.io/etcd/client/v3"
+
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/version"
-
-	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
 const (
@@ -207,7 +207,7 @@ func (rs RedisCluster) validate() error {
 // IAM defines all the iam related runtime.
 type IAM struct {
 	// IAM api url.
-	APIURL    string   `yaml:"api_url"`
+	APIURL string `yaml:"api_url"`
 	// Host is the host of current system, in the other word bk-bscp.
 	Host string `yaml:"host"`
 	// AppCode blueking belong to bscp's appcode.

@@ -13,10 +13,10 @@ limitations under the License.
 package sharding
 
 import (
+	"github.com/jmoiron/sqlx"
+
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-
-	"github.com/jmoiron/sqlx"
 )
 
 // Tx db affairs.

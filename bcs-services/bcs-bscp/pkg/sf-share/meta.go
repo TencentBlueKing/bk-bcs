@@ -17,11 +17,11 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/grpc/metadata"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/runtime/jsoni"
-
-	"google.golang.org/grpc/metadata"
 )
 
 // SidecarMetaHeader defines the metadata stored at the request header

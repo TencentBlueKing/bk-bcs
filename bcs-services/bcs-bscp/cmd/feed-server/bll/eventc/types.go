@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"sync"
 
+	"go.uber.org/atomic"
+
 	"bscp.io/pkg/logs"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/types"
-
-	"go.uber.org/atomic"
 )
 
 // SubscribeSpec defines the metadata to watch the event.
@@ -113,7 +113,7 @@ type member struct {
 }
 
 func formatEvent(meta *types.EventMeta) string {
-	return fmt.Sprintf("id: %d, biz: %d, app: %d, resource: %s, op: %s, resouce_id: %d, uid: %s", meta.ID,
+	return fmt.Sprintf("id: %d, biz: %d, app: %d, resource: %s, op: %s, resource_id: %d, uid: %s", meta.ID,
 		meta.Attachment.BizID, meta.Attachment.AppID, meta.Spec.Resource, meta.Spec.OpType, meta.Spec.ResourceID,
 		meta.Spec.ResourceUid)
 }

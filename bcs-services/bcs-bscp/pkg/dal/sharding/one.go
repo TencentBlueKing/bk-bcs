@@ -19,10 +19,10 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/jmoiron/sqlx"
+
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-
-	"github.com/jmoiron/sqlx"
 )
 
 // One represent one mysql sharding instance.

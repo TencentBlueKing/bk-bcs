@@ -17,9 +17,7 @@ import (
 	"context"
 	"fmt"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/uuid"
-	"bscp.io/pkg/dal/gen"
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -28,7 +26,9 @@ import (
 	"gorm.io/sharding"
 	"k8s.io/klog/v2"
 
-	"github.com/jmoiron/sqlx"
+	"bscp.io/pkg/cc"
+	"bscp.io/pkg/criteria/uuid"
+	"bscp.io/pkg/dal/gen"
 )
 
 // InitSharding initialize a sharding management instance.
