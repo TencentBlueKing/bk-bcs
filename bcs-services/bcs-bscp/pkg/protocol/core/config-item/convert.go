@@ -107,11 +107,12 @@ func PbConfigItem(ci *table.ConfigItem, fileState string) *ConfigItem {
 	}
 
 	return &ConfigItem{
-		Id:         ci.ID,
-		FileState:  fileState,
-		Spec:       PbConfigItemSpec(ci.Spec),
-		Attachment: PbConfigItemAttachment(ci.Attachment),
-		Revision:   pbbase.PbRevision(ci.Revision),
+		Id:           ci.ID,
+		ConfigItemId: ci.ID,
+		FileState:    fileState,
+		Spec:         PbConfigItemSpec(ci.Spec),
+		Attachment:   PbConfigItemAttachment(ci.Attachment),
+		Revision:     pbbase.PbRevision(ci.Revision),
 	}
 }
 

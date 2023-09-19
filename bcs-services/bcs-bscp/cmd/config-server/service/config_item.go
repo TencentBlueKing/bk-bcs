@@ -308,12 +308,7 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 		return nil, err
 	}
 
-	if req.ReleaseId == 0 {
-		return s.getEditingConfigItem(grpcKit, req.ConfigItemId, grpcKit.BizID, req.AppId)
-	}
-
-	return s.getReleasedConfigItem(grpcKit, req.ConfigItemId, grpcKit.BizID, req.AppId, req.ReleaseId)
-
+	return s.getEditingConfigItem(grpcKit, req.ConfigItemId, grpcKit.BizID, req.AppId)
 }
 
 // getEditingConfigItem get edit config item
@@ -322,7 +317,7 @@ func (s *Service) getEditingConfigItem(grpcKit *kit.Kit, configItemID, bizID, ap
 	// 1. get config item
 	gciReq := &pbds.GetConfigItemReq{
 		Id:    configItemID,
-		BizId: uint32(bizID),
+		BizId: bizID,
 		AppId: appID,
 	}
 	gciResp, err := s.client.DS.GetConfigItem(grpcKit.RpcCtx(), gciReq)
@@ -333,7 +328,7 @@ func (s *Service) getEditingConfigItem(grpcKit *kit.Kit, configItemID, bizID, ap
 
 	// 2. get latest commit
 	glcReq := &pbds.GetLatestCommitReq{
-		BizId:        uint32(bizID),
+		BizId:        bizID,
 		AppId:        appID,
 		ConfigItemId: configItemID,
 	}
@@ -346,7 +341,7 @@ func (s *Service) getEditingConfigItem(grpcKit *kit.Kit, configItemID, bizID, ap
 	// 3. get content
 	gcReq := &pbds.GetContentReq{
 		Id:    glcResp.Spec.ContentId,
-		BizId: uint32(bizID),
+		BizId: bizID,
 		AppId: appID,
 	}
 	gcResp, err := s.client.DS.GetContent(grpcKit.RpcCtx(), gcReq)
@@ -362,34 +357,36 @@ func (s *Service) getEditingConfigItem(grpcKit *kit.Kit, configItemID, bizID, ap
 	return resp, nil
 }
 
-// getReleasedConfigItem get release config item
-func (s *Service) getReleasedConfigItem(grpcKit *kit.Kit, configItemID, bizID, appID, releaseID uint32) (
-	*pbcs.GetConfigItemResp, error) {
-	// 1. get config item
-	grciReq := &pbds.GetReleasedCIReq{
-		ConfigItemId: configItemID,
-		ReleaseId:    releaseID,
-		BizId:        bizID,
-		AppId:        appID,
+// GetReleasedConfigItem get released config item
+func (s *Service) GetReleasedConfigItem(ctx context.Context, req *pbcs.GetReleasedConfigItemReq) (
+	*pbcs.GetReleasedConfigItemResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
 	}
-	releasedCI, err := s.client.DS.GetReleasedConfigItem(grpcKit.RpcCtx(), grciReq)
-	if err != nil {
-		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
-	resp := &pbcs.GetConfigItemResp{
-		ConfigItem: &pbci.ConfigItem{
-			Id:         releasedCI.ConfigItemId,
-			Spec:       releasedCI.ConfigItemSpec,
-			Attachment: releasedCI.Attachment,
-		},
-		Content: &pbcontent.ContentSpec{
-			Signature: releasedCI.CommitSpec.Content.Signature,
-			ByteSize:  releasedCI.CommitSpec.Content.ByteSize,
-		},
+	grciReq := &pbds.GetReleasedCIReq{
+		BizId:        req.BizId,
+		AppId:        req.AppId,
+		ReleaseId:    req.ReleaseId,
+		ConfigItemId: req.ConfigItemId,
+	}
+	releasedCI, err := s.client.DS.GetReleasedConfigItem(grpcKit.RpcCtx(), grciReq)
+	if err != nil {
+		logs.Errorf("get released config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.GetReleasedConfigItemResp{
+		ConfigItem: releasedCI,
 	}
 	return resp, nil
+
 }
 
 // ListConfigItems list config item with filter
@@ -415,7 +412,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		Limit:      req.Limit,
 		All:        req.All,
 		SearchKey:  req.SearchKey,
-		WithStatus: true,
+		WithStatus: req.WithStatus,
 	}
 	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {
