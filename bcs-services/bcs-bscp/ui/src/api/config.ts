@@ -1,5 +1,5 @@
 import http from "../request"
-import { IConfigEditParams, IConfigListQueryParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config'
+import { IConfigEditParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config'
 import { IVariableEditParams } from '../../types/variable'
 import { ICommonQuery } from "../../types/index"
 
@@ -16,14 +16,34 @@ export const getDefaultConfigScriptData = () => {
 }
 
 /**
- * 获取配置项列表，通过params中的release_id区分是否拿某个版本下的配置项列表
+ * 获取未命名版本的配置项列表
  * @param biz_id 空间ID
  * @param app_id 应用ID
+ * @param query 查询参数
+ * @returns
+ */
+export const getConfigList = (biz_id: string, app_id: number, query: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/config_items`, { params: { ...query, with_status: true } }).then(res => res.data)
+}
+
+/**
+ * 获取已发布版本的非模板配置项列表
+ * @param biz_id 空间ID
+ * @param app_id 应用ID
+ * @param release_id 版本ID
  * @param params 查询参数
  * @returns
  */
-export const getConfigList = (biz_id: string, app_id: number, params: IConfigListQueryParams = {}) => {
-  return http.get(`/config/biz/${biz_id}/apps/${app_id}/config_items`, { params }).then(res => res.data)
+export const getReleasedConfigList = (biz_id: string, app_id: number, release_id: number, params: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/config_items`, { params }).then(res => {
+    res.data.details.forEach((item: any) => {
+      item.spec = { ...item.config_item_spec }
+      // 接口返回的config_item_id为实际的配置项id，id字段没有到，统一替换
+      item.id = item.config_item_id
+      delete item.config_item_spec
+    })
+    return res.data
+  })
 }
 
 /**

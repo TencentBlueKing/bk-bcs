@@ -152,12 +152,11 @@ const router = createRouter({
 });
 
 // 路由切换时，取消无权限页面
-router.beforeEach((from, to, next) => {
+router.afterEach((to, from) => {
   const globalStore = useGlobalStore()
   globalStore.$patch((state) => {
     state.showPermApplyPage = false
   })
-  next()
 })
 
 export default router;
