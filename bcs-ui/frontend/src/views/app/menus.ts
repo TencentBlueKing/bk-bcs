@@ -195,18 +195,6 @@ const menus: IMenu[] = [
         route: 'nodeTemplate',
         id: 'NODETEMPLATE',
       },
-      {
-        title: $i18n.t('nav.cloudToken'),
-        icon: 'bcs-icon-yunpingzhengguanli',
-        id: 'CLOUDTOKEN',
-        children: [
-          {
-            title: 'Tencent Cloud',
-            id: 'TENCENTCLOUD',
-            route: 'tencentCloud',
-          },
-        ],
-      },
     ],
   },
   {
@@ -327,18 +315,23 @@ const menus: IMenu[] = [
         icon: 'bcs-icon-operate-audit',
         route: 'operateAudit',
       },
-      // {
-      //   title: $i18n.t('iam.actionMap.cloud_account_manage'),
-      //   id: 'CLOUDTOKEN',
-      //   icon: 'bcs-icon-yunpingzhengguanli',
-      //   children: [
-      //     {
-      //       title: 'Tencent Cloud',
-      //       id: 'TENCENTCLOUD',
-      //       route: 'tencentCloud',
-      //     },
-      //   ],
-      // },
+      {
+        title: $i18n.t('nav.cloudToken'),
+        icon: 'bcs-icon-yunpingzhengguanli',
+        id: 'CLOUDTOKEN',
+        children: [
+          {
+            title: 'Tencent Cloud',
+            id: 'TENCENTCLOUD',
+            route: 'tencentCloud',
+          },
+          {
+            title: 'Google Cloud',
+            id: 'GOOGLECLOUD',
+            route: 'googleCloud',
+          },
+        ],
+      },
       {
         title: $i18n.t('nav.projectInfo'),
         id: 'PROJECT',

@@ -9,6 +9,7 @@
         <button place="action" class="bk-text-button" @click="handleClear">{{$t('generic.button.clearSearch')}}</button>
       </i18n>
     </template>
+    <slot></slot>
   </bcs-exception>
 </template>
 <script lang="ts">
