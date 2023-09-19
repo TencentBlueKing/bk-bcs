@@ -47,6 +47,8 @@ func (p *proxy) routers() http.Handler {
 
 	// 用户信息
 	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/auth/user/info", UserInfoHandler)
+	// 登入接口, 不带鉴权信息
+	r.Get("/api/v1/logout", p.LogoutHandler)
 
 	// authserver通用接口
 	r.Route("/api/v1/auth", func(r chi.Router) {

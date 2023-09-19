@@ -34,6 +34,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
+	"bscp.io/pkg/rest"
 	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
@@ -58,6 +59,8 @@ type Authorizer interface {
 	BizVerified(next http.Handler) http.Handler
 	// ContentVerified 内容(上传下载)鉴权
 	ContentVerified(next http.Handler) http.Handler
+	// LogOut handler will build login url, client should make redirect
+	LogOut(r *http.Request) *rest.UnauthorizedData
 }
 
 // NewAuthorizer create an authorizer for iam authorize related operation.
@@ -215,4 +218,10 @@ func (a authorizer) GrantResourceCreatorAction(kt *kit.Kit, opts *client.GrantRe
 	req := pbas.PbGrantResourceCreatorActionOption(opts)
 	_, err := a.authClient.GrantResourceCreatorAction(kt.RpcCtx(), req)
 	return err
+}
+
+// LogOut handler will build login url, client should make redirect
+func (a authorizer) LogOut(r *http.Request) *rest.UnauthorizedData {
+	loginURL, loginPlainURL := a.authLoginClient.BuildLoginURL(r)
+	return &rest.UnauthorizedData{LoginURL: loginURL, LoginPlainURL: loginPlainURL}
 }
