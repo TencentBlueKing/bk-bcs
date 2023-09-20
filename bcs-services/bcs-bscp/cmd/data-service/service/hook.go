@@ -269,9 +269,10 @@ func (s *Service) ListHookReferences(ctx context.Context,
 
 	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
 	opt := &types.ListHookReferencesOption{
-		BizID:  req.BizId,
-		HookID: req.HookId,
-		Page:   page,
+		BizID:     req.BizId,
+		HookID:    req.HookId,
+		Page:      page,
+		SearchKey: req.SearchKey,
 	}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err

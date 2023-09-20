@@ -56,9 +56,10 @@ type ListHooksWithReferDetail struct {
 
 // ListHookReferencesOption defines options to list hook references.
 type ListHookReferencesOption struct {
-	BizID  uint32 `json:"biz_id"`
-	HookID uint32 `json:"hook_id"`
-	Page   *BasePage
+	BizID     uint32 `json:"biz_id"`
+	HookID    uint32 `json:"hook_id"`
+	SearchKey string `json:"search_key"`
+	Page      *BasePage
 }
 
 // Validate the list hook references options
