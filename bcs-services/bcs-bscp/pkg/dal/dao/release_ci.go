@@ -13,7 +13,6 @@
 package dao
 
 import (
-	"errors"
 	"fmt"
 
 	rawgen "gorm.io/gen"
@@ -58,7 +57,7 @@ type releasedCIDao struct {
 // BulkCreateWithTx bulk create released config items.
 func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error {
 	if len(items) == 0 {
-		return errors.New("released config items is empty")
+		return nil
 	}
 
 	// validate released config item field.

@@ -13,7 +13,6 @@
 package dao
 
 import (
-	"errors"
 	"fmt"
 
 	rawgen "gorm.io/gen"
@@ -48,7 +47,7 @@ type releasedAppTemplateDao struct {
 func (dao *releasedAppTemplateDao) BulkCreateWithTx(
 	kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedAppTemplate) error {
 	if len(items) == 0 {
-		return errors.New("released template config items is empty")
+		return nil
 	}
 
 	// validate released config item field.
