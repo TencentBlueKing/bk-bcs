@@ -61,6 +61,8 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	dependInfo.NodeGroup.Region = dependInfo.Cluster.Region
+	dependInfo.NodeGroup.CloudNodeGroupID = strings.ToLower(nodeGroupID)
 	err = createGKENodeGroup(dependInfo.CmOption, dependInfo.NodeGroup, dependInfo.Cluster, nodeGroupID, taskID, stepName)
 	if err != nil {
 		_ = state.UpdateStepFailure(start, stepName, err)
@@ -104,20 +106,17 @@ func createGKENodeGroup(cmOption *cloudprovider.CommonOption, group *proto.NodeG
 		return fmt.Errorf("get cloud gke client err, %s", err.Error())
 	}
 
-	operationID, err := gkeCli.CreateClusterNodePool(context.Background(),
+	operation, err := gkeCli.CreateClusterNodePool(context.Background(),
 		generateCreateNodePoolInput(group, cluster), cluster.SystemID)
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool[%s] api in task %s "+
-			"step %s failed, %s, operation ID: %s", taskID, nodeGroupID, taskID, stepName, err.Error(), operationID)
-		return fmt.Errorf("call CreateClusterNodePool[%s] api err, %s, operation ID: %s",
-			nodeGroupID, err.Error(), operationID)
+			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
+		return fmt.Errorf("call CreateClusterNodePool[%s] api err, %s",
+			nodeGroupID, err.Error())
 	}
-	gceCli, err := api.NewComputeServiceClient(cmOption)
-	if err != nil {
-		return err
-	}
-	if err = checkOperationStatus(gceCli, operationID, taskID, 3*time.Second); err != nil {
-		return err
+
+	if err = checkGKEOperationStatus(gkeCli, operation, taskID, 3*time.Second); err != nil {
+		return fmt.Errorf("CreateCloudNodeGroupTask[%s]: checkGKEOperationStatus failed, %v", taskID, err)
 	}
 	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool successful", taskID)
 
@@ -131,9 +130,10 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 	return &api.CreateNodePoolRequest{
 		NodePool: &api.NodePool{
 			// gke nodePool名称中不允许有大写字母
-			Name:             strings.ToLower(group.NodeGroupID),
+			Name:             group.CloudNodeGroupID,
 			Config:           generateNodeConfig(group),
 			InitialNodeCount: 0,
+			Locations:        group.AutoScaling.Zones,
 			MaxPodsConstraint: &api.MaxPodsConstraint{
 				MaxPodsPerNode: int64(group.NodeTemplate.MaxPodsPerNode),
 			},
@@ -225,7 +225,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	newIt, igm, err := getIgmAndIt(computeCli, cloudNodeGroup, group, cluster, taskID)
+	newIt, igm, err := getIgmAndIt(computeCli, cloudNodeGroup, group, taskID)
 	if err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: getIgmAndIt failed: %v", taskID, err)
 		retErr := fmt.Errorf("getIgmAndIt failed, %s", err.Error())
@@ -258,7 +258,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 }
 
 func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container.NodePool, group *proto.NodeGroup,
-	cluster *proto.Cluster, taskID string) (*compute.InstanceTemplate, *compute.InstanceGroupManager, error) {
+	taskID string) (*compute.InstanceTemplate, *compute.InstanceGroupManager, error) {
 	// get instanceGroupManager
 	igm, err := api.GetInstanceGroupManager(computeCli, cloudNodeGroup.InstanceGroupUrls[0])
 	if err != nil {
@@ -273,77 +273,158 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 		return nil, nil, err
 	}
 
+	oldItName := it.Name
 	newIt := it
-	err = newItFromBaseIt(newIt, it, group, cluster, computeCli, taskID)
+	err = newItFromBaseIt(newIt, group, computeCli, taskID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	err = patchIgm(newIt, igm, computeCli, group, taskID)
+	err = patchIgm(newIt, igm, computeCli, taskID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if newIt.Name != it.Name {
+	if newIt.Name != oldItName {
 		// 如果使用了新模版,则删除旧模版
-		_, err = computeCli.DeleteInstanceTemplate(context.Background(), it.Name)
+		o, err := computeCli.DeleteInstanceTemplate(context.Background(), oldItName)
 		if err != nil {
 			return nil, nil, err
 		}
+		if o.Error != nil {
+			return nil, nil,
+				fmt.Errorf("%d, %s, %s", o.HttpErrorStatusCode, o.HttpErrorMessage, o.Error.Errors[0].Message)
+		}
+		blog.Infof("taskID[%s] DeleteInstanceTemplate[%s], operationID: %s", oldItName, taskID, o.SelfLink)
 	}
 
 	return newIt, igm, nil
 }
 
 func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager, computeCli *api.ComputeServiceClient,
-	group *proto.NodeGroup, taskID string) error {
+	taskID string) error {
+	ItInfo := strings.Split(newIt.SelfLink, "/")
+	ItInfo[len(ItInfo)-1] = newIt.Name
 	newIgm := &compute.InstanceGroupManager{
-		InstanceTemplate: newIt.SelfLink,
+		InstanceTemplate: strings.Join(ItInfo, "/"),
 		BaseInstanceName: newIt.Name,
-		UpdatePolicy:     api.GenerateUpdatePolicy(group),
+		UpdatePolicy:     api.GenerateUpdatePolicy(),
 	}
+
 	o, err := api.PatchInstanceGroupManager(computeCli, igm.SelfLink, newIgm)
 	if err != nil {
-		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v, operation ID: %s", taskID, err, o.SelfLink)
+		blog.Errorf("taskID[%s] PatchInstanceGroupManager failed: %v", taskID, err)
 		return err
 	}
+	blog.Infof("taskID[%s] PatchInstanceGroupManager, operationID: %s", taskID, o.SelfLink)
 	// 检查操作是否成功
 	err = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
 	if err != nil {
-		return fmt.Errorf("CheckCloudNodeGroupStatusTask[%s] GetOperation failed: %v", taskID, err)
+		return fmt.Errorf("CheckCloudNodeGroupStatusTask[%s] checkOperationStatus failed: %v", taskID, err)
 	}
 
 	return nil
 }
 
-func newItFromBaseIt(newIt, it *compute.InstanceTemplate, group *proto.NodeGroup, cluster *proto.Cluster,
+func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup,
 	computeCli *api.ComputeServiceClient, taskID string) error {
+	oldItNameInfo := strings.Split(newIt.Name, "-")
+	randStr := utils.RandomHexString(8)
+	oldItNameInfo[len(oldItNameInfo)-1] = randStr
+	newIt.Name = strings.Join(oldItNameInfo, "-")
+
 	if len(group.LaunchTemplate.DataDisks) != 0 {
-		newIt.Name = strings.Join([]string{"gke", cluster.SystemID, group.CloudNodeGroupID, utils.RandomHexString(8)}, "-")
 		dataDisks := make([]*compute.AttachedDisk, 0)
-		bootDisk := it.Properties.Disks[0]
 		for _, d := range group.LaunchTemplate.DataDisks {
 			diskSize, _ := strconv.Atoi(d.DiskSize)
 			dataDisks = append(dataDisks, &compute.AttachedDisk{
-				Type:             d.DiskType,
-				DiskSizeGb:       int64(diskSize),
-				Mode:             "READ_WRITE",
-				Boot:             false,
-				AutoDelete:       true,
-				InitializeParams: bootDisk.InitializeParams,
+				Type:       d.DiskType,
+				DiskSizeGb: int64(diskSize),
+				Mode:       "READ_WRITE",
+				Boot:       false,
+				AutoDelete: true,
+				InitializeParams: &compute.AttachedDiskInitializeParams{
+					DiskSizeGb: int64(diskSize),
+					DiskType:   d.DiskType,
+				},
 			})
 		}
 		newIt.Properties.Disks = append(newIt.Properties.Disks, dataDisks...)
-		o, err := computeCli.CreateInstanceTemplate(context.Background(), newIt)
-		if err != nil {
-			blog.Errorf("taskID[%s] CreateInstanceTemplate failed: %v, operation ID: %s", taskID, err, o.SelfLink)
-			return err
+	}
+
+	// TODO: 设置网络
+	if group.LaunchTemplate.InternetAccess != nil && !group.LaunchTemplate.InternetAccess.PublicIPAssigned {
+		newIt.Properties.NetworkInterfaces[0].AccessConfigs = make([]*compute.AccessConfig, 0)
+	}
+
+	if group.LaunchTemplate.KeyPair != nil && len(group.LaunchTemplate.KeyPair.KeyPublic) > 0 {
+		var existSshKeys string
+		rawKeyPub, _ := utils.Base64Decode(group.LaunchTemplate.KeyPair.KeyPublic)
+		newSshKey := group.LaunchTemplate.InitLoginUsername + ":" + rawKeyPub
+		for k := range newIt.Properties.Metadata.Items {
+			if newIt.Properties.Metadata.Items[k].Key == api.MetadataKeySshKey {
+				existSshKeys = *newIt.Properties.Metadata.Items[k].Value
+				sshKeys := existSshKeys + "\n" + newSshKey
+				newIt.Properties.Metadata.Items[k].Value = &sshKeys
+				break
+			}
 		}
-		// 检查实例模版是否创建成功
-		err = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
-		if err != nil {
-			return fmt.Errorf("CheckCloudNodeGroupStatusTask[%s] GetOperation failed: %v", taskID, err)
+		if existSshKeys == "" {
+			newIt.Properties.Metadata.Items = append(newIt.Properties.Metadata.Items,
+				&compute.MetadataItems{
+					Key:   api.MetadataKeySshKey,
+					Value: &newSshKey,
+				},
+			)
 		}
+
+		blockValue := "true"
+		blockKeyExist := false
+		for k := range newIt.Properties.Metadata.Items {
+			if newIt.Properties.Metadata.Items[k].Key == api.MetadataKeyBlockProjectSshKey {
+				newIt.Properties.Metadata.Items[k].Value = &blockValue
+				blockKeyExist = true
+				break
+			}
+		}
+		if !blockKeyExist {
+			newIt.Properties.Metadata.Items = append(newIt.Properties.Metadata.Items,
+				&compute.MetadataItems{
+					Key:   api.MetadataKeyBlockProjectSshKey,
+					Value: &blockValue,
+				},
+			)
+		}
+	}
+
+	if group.NodeTemplate.PreStartUserScript != "" {
+		var startupScript string
+		for k := range newIt.Properties.Metadata.Items {
+			if newIt.Properties.Metadata.Items[k].Key == api.MetadataKeyStartupScript {
+				startupScript = group.NodeTemplate.PreStartUserScript
+				newIt.Properties.Metadata.Items[k].Value = &startupScript
+				break
+			}
+		}
+		if startupScript == "" {
+			newIt.Properties.Metadata.Items = append(newIt.Properties.Metadata.Items,
+				&compute.MetadataItems{
+					Key:   api.MetadataKeyStartupScript,
+					Value: &group.NodeTemplate.PreStartUserScript,
+				},
+			)
+		}
+	}
+
+	o, err := computeCli.CreateInstanceTemplate(context.Background(), newIt)
+	if err != nil {
+		blog.Errorf("taskID[%s] CreateInstanceTemplate failed: %v", taskID, err)
+		return err
+	}
+	// 检查实例模版是否创建成功
+	err = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
+	if err != nil {
+		return fmt.Errorf("CheckCloudNodeGroupStatusTask[%s] checkOperationStatus failed: %v", taskID, err)
 	}
 
 	return nil
@@ -374,9 +455,8 @@ func generateNodeGroupFromIt(group *proto.NodeGroup, it *compute.InstanceTemplat
 			if group.AutoScaling == nil {
 				group.AutoScaling = &proto.AutoScalingGroup{}
 			}
-			networkInfo := strings.Split(prop.NetworkInterfaces[0].Subnetwork, "/")
+			networkInfo := strings.Split(prop.NetworkInterfaces[0].Network, "/")
 			group.AutoScaling.VpcID = networkInfo[len(networkInfo)-1]
-			group.AutoScaling.SubnetIDs = append(group.AutoScaling.SubnetIDs, prop.NetworkInterfaces[0].Subnetwork)
 		}
 		if prop.Disks != nil {
 			group.LaunchTemplate.ImageInfo = &proto.ImageInfo{
