@@ -77,7 +77,7 @@
     v-cursor="{ active: !props.hasPerm }"
     theme="primary"
     :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
-    :disabled="allConfigCount === 0 || props.permCheckLoading"
+    :disabled="(props.hasPerm && allConfigCount === 0) || props.permCheckLoading"
     @click="handleBtnClick">
     生成版本
   </bk-button>

@@ -32,6 +32,7 @@
 
   watch(() => spaceId.value, () => {
     createPending.value = false
+    getPermData()
     refreshListWithLoading()
   })
 
@@ -48,7 +49,7 @@
           biz_id: spaceId.value,
           basic: {
             type: 'credential',
-            action: 'manange'
+            action: 'manage'
           }
         }
       ]

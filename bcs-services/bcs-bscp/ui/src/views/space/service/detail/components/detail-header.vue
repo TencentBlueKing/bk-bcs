@@ -45,38 +45,44 @@
     activeTab.value = getDefaultTab()
   })
 
+  watch(() => props.bkBizId, () => {
+    getVersionPerms()
+  })
+
   onMounted(() => {
     getVersionPerms()
   })
 
   const getVersionPerms = async () => {
     permCheckLoading.value = true
-    const res = await permissionCheck({
-      resources: [
-        {
-          biz_id: props.bkBizId,
-          basic: {
-            type: 'app',
-            action: 'generate_release',
-            resource_id: props.appId
+    const [createRes, publishRes] = await Promise.all([
+      permissionCheck({
+        resources: [
+          {
+            biz_id: props.bkBizId,
+            basic: {
+              type: 'app',
+              action: 'generate_release',
+              resource_id: props.appId
+            }
           }
-        },
-        {
-          biz_id: props.bkBizId,
-          basic: {
-            type: 'app',
-            action: 'publish',
-            resource_id: props.appId
+        ]
+      }),
+      permissionCheck({
+        resources: [
+          {
+            biz_id: props.bkBizId,
+            basic: {
+              type: 'app',
+              action: 'publish',
+              resource_id: props.appId
+            }
           }
-        }
-      ]
-    })
-    if (res.is_allowed) {
-      perms.value = {
-        create: true,
-        publish: true
-      }
-    }
+        ]
+      })
+    ])
+    perms.value.create = createRes.is_allowed
+    perms.value.publish = publishRes.is_allowed
     permCheckLoading.value = false
   }
 
