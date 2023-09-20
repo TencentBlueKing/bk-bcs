@@ -211,7 +211,6 @@ const handleLoginOut = () => {
           </bk-dropdown-menu>
         </template>
       </bk-dropdown>
-      <span>{{ userInfo.username }}</span>
       <bk-popover ext-cls="login-out-popover" placement="bottom-center" theme="light" :arrow="false"
         :offset="{ mainAxis: 16 }">
         <div class="username-wrapper">
