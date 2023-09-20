@@ -139,8 +139,7 @@
         ext-cls="login-out-popover"
         placement="bottom-center"
         theme="light"
-        :arrow="false"
-        :offset="{ mainAxis: 16 }">
+        :arrow="false">
         <div class="username-wrapper">
           <span class="text">{{ userInfo.username }}</span>
           <DownShape class="arrow-icon"/>
