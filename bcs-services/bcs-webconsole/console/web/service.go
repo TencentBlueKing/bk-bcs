@@ -70,10 +70,12 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
+		return
 	}
 	fileNames, err := storage.ListFile(c, folderName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("List storage files err: %v\n", err))
+		return
 	}
 	data := gin.H{
 		"folder_name":     folderName,
@@ -88,10 +90,12 @@ func (s *service) ReplayFoldersPageHandler(c *gin.Context) {
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
+		return
 	}
 	folderNames, err := storage.ListFolders(c, "")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("List storage folder err: %v\n", err))
+		return
 	}
 	data := gin.H{
 		"folder_names":    folderNames,
@@ -105,7 +109,7 @@ func (s service) ReplayDetailPageHandler(c *gin.Context) {
 	folder := c.Param("folderName")
 	file := c.Param("fileName")
 
-	data := fmt.Sprintf("http://localhost:8083%s/play?folderName=%s&fileName=%s", s.opts.RoutePrefix, folder, file)
+	data := fmt.Sprintf("%s%s/play?folderName=%s&fileName=%s", config.G.Web.Host, s.opts.RoutePrefix, folder, file)
 
 	res := gin.H{
 		"data":            data,
@@ -121,10 +125,12 @@ func (s *service) PlayHandler(c *gin.Context) {
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
+		return
 	}
 	resp, err := storage.DownloadFile(c, filePath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, fmt.Sprintf("Download storage file err: %v\n", err))
+		return
 	}
 
 	defer resp.Close()
