@@ -47,6 +47,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
+	consoleAudit "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/record"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/replay"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -127,6 +128,8 @@ func (c *WebConsoleManager) Init() error {
 	microService.Init(
 		micro.Server(mhttp.NewServer(mhttp.Listener(dualStackListener))),
 		micro.AfterStop(func() error {
+			// close audit client
+			consoleAudit.GetAuditClient().Close()
 			// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
 			logger.Info("receive interput, gracefully shutdown")
 			<-c.ctx.Done()
