@@ -20,12 +20,13 @@ import (
 
 // ListHooksWithReferOption defines options to list group.
 type ListHooksWithReferOption struct {
-	BizID  uint32    `json:"biz_id"`
-	Name   string    `json:"name"`
-	Tag    string    `json:"tag"`
-	All    bool      `json:"all"`
-	NotTag bool      `json:"not_tag"`
-	Page   *BasePage `json:"page"`
+	BizID     uint32    `json:"biz_id"`
+	Name      string    `json:"name"`
+	Tag       string    `json:"tag"`
+	All       bool      `json:"all"`
+	NotTag    bool      `json:"not_tag"`
+	Page      *BasePage `json:"page"`
+	SearchKey string    `json:"search_key"`
 }
 
 // Validate the list group options

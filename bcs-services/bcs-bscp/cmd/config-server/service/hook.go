@@ -101,11 +101,12 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 	}
 
 	r := &pbds.ListHooksReq{
-		BizId:  grpcKit.BizID,
-		Name:   req.Name,
-		Tag:    req.Tag,
-		All:    req.All,
-		NotTag: req.NotTag,
+		BizId:     grpcKit.BizID,
+		Name:      req.Name,
+		Tag:       req.Tag,
+		All:       req.All,
+		NotTag:    req.NotTag,
+		SearchKey: req.SearchKey,
 	}
 
 	if !req.All {
