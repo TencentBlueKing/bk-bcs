@@ -121,7 +121,6 @@ type resource struct {
 	Name        string `json:"name" yaml:"name"`
 	ProjectID   string `json:"projectID" yaml:"projectID"`
 	ProjectCode string `json:"projectCode" yaml:"projectCode"`
-	Key         string `json:"key" yaml:"key"`
 }
 
 // resource to map
@@ -141,9 +140,6 @@ func (r resource) toMap() map[string]interface{} {
 	}
 	if r.ProjectCode != "" {
 		result["ProjectCode"] = r.ProjectCode
-	}
-	if r.Key != "" {
-		result["Key"] = r.Key
 	}
 	return result
 }
@@ -165,7 +161,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ProjectCode:  res.ProjectCode,
 			ResourceType: audit.ResourceTypeProject, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "create_project", ActivityType: audit.ActivityTypeCreate}
+		}, audit.Action{ActionID: "project_create", ActivityType: audit.ActivityTypeCreate}
 	},
 	"BCSProject.UpdateProject": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
@@ -177,7 +173,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ProjectCode:  res.ProjectCode,
 			ResourceType: audit.ResourceTypeProject, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "update_project", ActivityType: audit.ActivityTypeUpdate}
+		}, audit.Action{ActionID: "project_edit", ActivityType: audit.ActivityTypeUpdate}
 	},
 	"Namespace.CreateNamespace": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
@@ -185,7 +181,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ProjectCode:  res.ProjectCode,
 			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "create_namespace", ActivityType: audit.ActivityTypeCreate}
+		}, audit.Action{ActionID: "namespace_create", ActivityType: audit.ActivityTypeCreate}
 	},
 	"Namespace.CreateNamespaceCallback": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
@@ -201,7 +197,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ProjectCode:  res.ProjectCode,
 			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "update_namespace", ActivityType: audit.ActivityTypeUpdate}
+		}, audit.Action{ActionID: "namespace_update", ActivityType: audit.ActivityTypeUpdate}
 	},
 	"Namespace.UpdateNamespaceCallback": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
@@ -217,7 +213,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ProjectCode:  res.ProjectCode,
 			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "delete_namespace", ActivityType: audit.ActivityTypeDelete}
+		}, audit.Action{ActionID: "namespace_delete", ActivityType: audit.ActivityTypeDelete}
 	},
 	"Namespace.DeleteNamespaceCallback": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
@@ -226,22 +222,6 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "delete_namespace_callback", ActivityType: audit.ActivityTypeDelete}
-	},
-	"Namespace.SyncNamespace": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
-		res := getResourceID(req)
-		return audit.Resource{
-			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "sync_namespace", ActivityType: audit.ActivityTypeUpdate}
-	},
-	"Namespace.WithdrawNamespace": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
-		res := getResourceID(req)
-		return audit.Resource{
-			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "withdraw_namespace", ActivityType: audit.ActivityTypeUpdate}
 	},
 	"Variable.CreateVariable": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)

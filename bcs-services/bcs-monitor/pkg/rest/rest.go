@@ -172,7 +172,6 @@ type resource struct {
 	ClusterID string `json:"cluster_id" yaml:"cluster_id"`
 	ProjectID string `json:"project_id" yaml:"project_id"`
 	Name      string `json:"name" yaml:"name"`
-	FromRule  string `json:"from_rule" yaml:"from_rule"`
 }
 
 // resource to map
@@ -189,10 +188,6 @@ func (r resource) toMap() map[string]any {
 
 	if r.Name != "" {
 		result["Name"] = r.Name
-	}
-
-	if r.FromRule != "" {
-		result["FromRule"] = r.FromRule
 	}
 
 	return result
