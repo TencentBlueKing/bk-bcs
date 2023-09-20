@@ -86,6 +86,7 @@
   const close = () => {
     isSliderShow.value = false
     isFormChange.value = false
+    variableList.value = []
   }
 
 </script>

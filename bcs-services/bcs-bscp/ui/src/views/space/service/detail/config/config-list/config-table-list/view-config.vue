@@ -2,7 +2,7 @@
   import { ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import ConfigForm from './config-form.vue'
-  import { getConfigItemDetail, getConfigContent } from '../../../../../../../api/config'
+  import { getConfigItemDetail, getReleasedConfigItemDetail, getConfigContent } from '../../../../../../../api/config'
   import { getTemplateVersionsDetailByIds, downloadTemplateContent } from '../../../../../../../api/template'
   import { getConfigEditParams } from '../../../../../../../utils/config'
   import { IVariableEditParams } from '../../../../../../../../types/variable';
@@ -44,26 +44,33 @@
       getConfigDetail()
     } else if (props.type === 'template') {
       getTemplateDetail()
-      // 未命名版本id为0，不需要展示变量替换
-      if (props.versionId) {
-        getVariableList()
-      }
+    }
+    // 未命名版本id为0，不需要展示变量替换
+    if (props.versionId) {
+      getVariableList()
     }
   }
 
   // 获取非模板套餐下配置项详情配置，非文件类型配置项内容下载内容，文件类型手动点击时再下载
   const getConfigDetail = async() => {
     try {
-      const params: { release_id?: number } = {}
+      let detail
+      let signature
+      let byte_size
       if (versionData.value.id) {
-        params.release_id = versionData.value.id
+        detail = await getReleasedConfigItemDetail(props.bkBizId, props.appId, versionData.value.id, props.id)
+        const { origin_byte_size, origin_signature } = detail.config_item.commit_spec.content
+        byte_size = origin_byte_size
+        signature = origin_signature
+      } else {
+        detail = await getConfigItemDetail(props.bkBizId, props.id, props.appId)
+        byte_size = detail.content.byte_size
+        signature = detail.content.signature
       }
-      const detail = await getConfigItemDetail(props.bkBizId, props.id, props.appId, params)
       const { name, memo, path, file_type, permission } = detail.config_item.spec
       configForm.value = { id: props.id, name, memo, file_type, path, ...permission }
-      const signature = detail.content.signature
       if (file_type === 'binary') {
-        content.value = { name, signature, size: detail.content.byte_size }
+        content.value = { name, signature, size: byte_size }
       } else {
         const configContent = await getConfigContent(props.bkBizId, props.appId, signature)
         content.value = String(configContent)
