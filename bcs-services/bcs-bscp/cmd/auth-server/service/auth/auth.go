@@ -102,7 +102,7 @@ func (a *Auth) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) 
 	resources := pbas.ResourceAttributes(req.Resources)
 	opts, decisions, err := parseAttributesToBatchOptions(kt, req.User.UserInfo(), resources...)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	// all resources are skipped
@@ -227,7 +227,7 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 
 	permission, err := a.getPermissionToApply(kt, pbas.ResourceAttributes(req.Resources))
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	resourceAttributes := pbas.ResourceAttributes(req.Resources)
