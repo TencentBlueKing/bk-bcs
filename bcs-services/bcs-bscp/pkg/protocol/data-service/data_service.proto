@@ -511,13 +511,14 @@ message GetHookInfoSpec {
 }
 
 message ListHooksReq {
-    uint32 biz_id  = 1;
-    string name    = 2;
-    string tag     = 3;
-    bool   all     = 5;
-    bool   not_tag = 6;
-    uint32 start   = 7;
-    uint32 limit   = 8;
+    uint32 biz_id    = 1;
+    string name      = 2;
+    string tag       = 3;
+    bool   all       = 5;
+    bool   not_tag   = 6;
+    uint32 start     = 7;
+    uint32 limit     = 8;
+    string searchKey = 9;
 }
 
 message ListHooksResp {
@@ -536,10 +537,11 @@ message ListHookTagResp {
 }
 
 message ListHookReferencesReq {
-    uint32 biz_id  = 1;
-    uint32 hook_id = 2;
-    uint32 start   = 3;
-    uint32 limit   = 4;
+    uint32 biz_id    = 1;
+    uint32 hook_id   = 2;
+    uint32 start     = 3;
+    uint32 limit     = 4;
+    string SearchKey = 5;
 }
 
 message ListHookReferencesResp {

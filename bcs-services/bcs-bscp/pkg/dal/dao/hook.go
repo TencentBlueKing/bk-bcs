@@ -102,6 +102,11 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 		}
 	}
 
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		q = q.Where(h.Name.Like(searchKey)).Or(h.Memo.Like(searchKey)).Or(h.Creator.Like(searchKey)).Or(h.Reviser.Like(searchKey))
+	}
+
 	details := make([]*types.ListHooksWithReferDetail, 0)
 
 	q = q.Select(h.ALL, rh.ID.Count().As("refer_count"), rh.ReleaseID.Min().Eq(0).As("refer_editing_release"),
@@ -132,12 +137,18 @@ func (dao *hookDao) ListHookReferences(kit *kit.Kit, opt *types.ListHookReferenc
 	rh := dao.genQ.ReleasedHook
 	r := dao.genQ.Release
 	a := dao.genQ.App
+	query := rh.WithContext(kit.Ctx)
 
 	details := make([]*types.ListHookReferencesDetail, 0)
 	var count int64
 	var err error
 
-	count, err = rh.WithContext(kit.Ctx).
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		query = query.Where(a.Name.Like(searchKey)).Or(r.Name.Like(searchKey)).Or(rh.HookRevisionName.Like(searchKey))
+	}
+
+	count, err = query.
 		Select(rh.ID.As("hook_revision_id"), rh.HookRevisionName.As("hook_revision_name"), rh.HookType.As("hook_type"),
 			a.ID.As("app_id"), a.Name.As("app_name"), r.ID.As("release_id"), r.Name.As("release_name")).
 		LeftJoin(a, rh.AppID.EqCol(a.ID)).
