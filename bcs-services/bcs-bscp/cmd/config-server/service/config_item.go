@@ -406,13 +406,14 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 
 	// Note: list the latest release and compare each config item exists and latest commit id to get changing status
 	r := &pbds.ListConfigItemsReq{
-		BizId:      grpcKit.BizID,
-		AppId:      req.AppId,
-		Start:      req.Start,
-		Limit:      req.Limit,
-		All:        req.All,
-		SearchKey:  req.SearchKey,
-		WithStatus: req.WithStatus,
+		BizId:        grpcKit.BizID,
+		AppId:        req.AppId,
+		SearchFields: req.SearchFields,
+		SearchValue:  req.SearchValue,
+		Start:        req.Start,
+		Limit:        req.Limit,
+		All:          req.All,
+		WithStatus:   req.WithStatus,
 	}
 	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {
