@@ -1603,9 +1603,11 @@ message ListTmplBoundUnnamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
-    bool   all               = 6;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
 }
 
 message ListTmplBoundUnnamedAppsResp {
@@ -1617,9 +1619,11 @@ message ListTmplBoundNamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
-    bool   all               = 6;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
 }
 
 message ListTmplBoundNamedAppsResp {
@@ -1660,9 +1664,11 @@ message ListTmplRevisionBoundUnnamedAppsReq {
     uint32 template_space_id    = 2;
     uint32 template_id          = 3;
     uint32 template_revision_id = 4;
-    uint32 start                = 5;
-    uint32 limit                = 6;
-    bool   all                  = 7;
+    string search_fields        = 5;
+    string search_value         = 6;
+    uint32 start                = 7;
+    uint32 limit                = 8;
+    bool   all                  = 9;
 }
 
 message ListTmplRevisionBoundUnnamedAppsResp {
@@ -1675,9 +1681,11 @@ message ListTmplRevisionBoundNamedAppsReq {
     uint32 template_space_id    = 2;
     uint32 template_id          = 3;
     uint32 template_revision_id = 4;
-    uint32 start                = 5;
-    uint32 limit                = 6;
-    bool   all                  = 7;
+    string search_fields        = 5;
+    string search_value         = 6;
+    uint32 start                = 7;
+    uint32 limit                = 8;
+    bool   all                  = 9;
 }
 
 message ListTmplRevisionBoundNamedAppsResp {

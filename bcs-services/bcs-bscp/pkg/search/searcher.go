@@ -41,10 +41,24 @@ const (
 	ConfigItem TableName = "config_items"
 	// ReleasedConfigItem is released config item table
 	ReleasedConfigItem TableName = "released_config_items"
+
+	/*
+		Following tables are not real database tables which only used for search due to convenience and consistency
+	*/
+
+	// TmplBoundUnnamedApp is template bound unnamed app table
+	TmplBoundUnnamedApp TableName = "template_bound_unnamed_apps"
+	// TmplBoundNamedApp is template bound named app table
+	TmplBoundNamedApp TableName = "template_bound_named_apps"
+	// TmplRevisionBoundUnnamedApp is template revision bound unnamed app table
+	TmplRevisionBoundUnnamedApp TableName = "template_revision_bound_unnamed_apps"
+	// TmplRevisionBoundNamedApp is template revision bound unnamed app table
+	TmplRevisionBoundNamedApp TableName = "template_revision_bound_named_apps"
 )
 
 // supportedFields is supported search fields of tables
 var supportedFields = map[TableName][]string{
+	// real tables
 	TemplateSpace:       {"name", "memo", "creator", "reviser"},
 	Template:            {"name", "path", "memo", "creator", "reviser"},
 	TemplateRevision:    {"revision_name", "revision_memo", "name", "path", "creator"},
@@ -53,10 +67,17 @@ var supportedFields = map[TableName][]string{
 	ReleasedAppTemplate: {"revision_name", "revision_memo", "name", "path", "creator"},
 	ConfigItem:          {"name", "path", "memo", "creator", "reviser"},
 	ReleasedConfigItem:  {"name", "path", "memo", "creator"},
+
+	// unreal tables
+	TmplBoundUnnamedApp:         {"app_name", "template_revision_name"},
+	TmplBoundNamedApp:           {"app_name", "template_revision_name", "release_name"},
+	TmplRevisionBoundUnnamedApp: {"app_name"},
+	TmplRevisionBoundNamedApp:   {"app_name", "release_name"},
 }
 
 // supportedFieldsMap is supported search fields map of tables
 var supportedFieldsMap = map[TableName]map[string]struct{}{
+	// real tables
 	TemplateSpace:       {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 	Template:            {"name": {}, "path": {}, "memo": {}, "creator": {}, "reviser": {}},
 	TemplateRevision:    {"revision_name": {}, "revision_memo": {}, "name": {}, "path": {}, "creator": {}},
@@ -65,10 +86,17 @@ var supportedFieldsMap = map[TableName]map[string]struct{}{
 	ReleasedAppTemplate: {"revision_name": {}, "revision_memo": {}, "name": {}, "path": {}, "creator": {}},
 	ConfigItem:          {"name": {}, "path": {}, "memo": {}, "creator": {}, "reviser": {}},
 	ReleasedConfigItem:  {"name": {}, "path": {}, "memo": {}, "creator": {}},
+
+	// unreal tables
+	TmplBoundUnnamedApp:         {"app_name": {}, "template_revision_name": {}},
+	TmplBoundNamedApp:           {"app_name": {}, "template_revision_name": {}, "release_name": {}},
+	TmplRevisionBoundUnnamedApp: {"app_name": {}},
+	TmplRevisionBoundNamedApp:   {"app_name": {}, "release_name": {}},
 }
 
 // defaultFields is default search fields when field is not specified
 var defaultFields = map[TableName][]string{
+	// real tables
 	TemplateSpace:       {"name"},
 	Template:            {"name"},
 	TemplateRevision:    {"revision_name"},
@@ -77,6 +105,12 @@ var defaultFields = map[TableName][]string{
 	ReleasedAppTemplate: {"revision_name"},
 	ConfigItem:          {"name"},
 	ReleasedConfigItem:  {"name"},
+
+	// unreal tables
+	TmplBoundUnnamedApp:         {"app_name"},
+	TmplBoundNamedApp:           {"app_name"},
+	TmplRevisionBoundUnnamedApp: {"app_name"},
+	TmplRevisionBoundNamedApp:   {"app_name"},
 }
 
 // getGenFieldsMap get the map for `table column name` => `gorm/gen field object`
