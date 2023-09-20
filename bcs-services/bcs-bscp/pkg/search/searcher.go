@@ -37,6 +37,8 @@ const (
 	TemplateVariable TableName = "template_variables"
 	// ReleasedAppTemplate is released app template table
 	ReleasedAppTemplate TableName = "released_app_templates"
+	// ConfigItem is config item table
+	ConfigItem TableName = "config_items"
 	// ReleasedConfigItem is released config item table
 	ReleasedConfigItem TableName = "released_config_items"
 
@@ -63,6 +65,7 @@ var supportedFields = map[TableName][]string{
 	TemplateSet:         {"name", "memo", "creator", "reviser"},
 	TemplateVariable:    {"name", "memo", "creator", "reviser"},
 	ReleasedAppTemplate: {"revision_name", "revision_memo", "name", "path", "creator"},
+	ConfigItem:          {"name", "path", "memo", "creator", "reviser"},
 	ReleasedConfigItem:  {"name", "path", "memo", "creator"},
 
 	// unreal tables
@@ -81,6 +84,7 @@ var supportedFieldsMap = map[TableName]map[string]struct{}{
 	TemplateSet:         {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 	TemplateVariable:    {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 	ReleasedAppTemplate: {"revision_name": {}, "revision_memo": {}, "name": {}, "path": {}, "creator": {}},
+	ConfigItem:          {"name": {}, "path": {}, "memo": {}, "creator": {}, "reviser": {}},
 	ReleasedConfigItem:  {"name": {}, "path": {}, "memo": {}, "creator": {}},
 
 	// unreal tables
@@ -99,6 +103,7 @@ var defaultFields = map[TableName][]string{
 	TemplateSet:         {"name"},
 	TemplateVariable:    {"name"},
 	ReleasedAppTemplate: {"revision_name"},
+	ConfigItem:          {"name"},
 	ReleasedConfigItem:  {"name"},
 
 	// unreal tables
@@ -149,6 +154,13 @@ func getGenFieldsMap(q *gen.Query) map[TableName]map[string]field.String {
 			"name":          q.ReleasedAppTemplate.Name,
 			"path":          q.ReleasedAppTemplate.Path,
 			"creator":       q.ReleasedAppTemplate.Creator,
+		},
+		ConfigItem: {
+			"name":    q.ConfigItem.Name,
+			"path":    q.ConfigItem.Path,
+			"memo":    q.ConfigItem.Memo,
+			"creator": q.ConfigItem.Creator,
+			"reviser": q.ConfigItem.Reviser,
 		},
 		ReleasedConfigItem: {
 			"name":    q.ReleasedConfigItem.Name,

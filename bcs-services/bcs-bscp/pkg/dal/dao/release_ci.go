@@ -32,8 +32,8 @@ type ReleasedCI interface {
 	BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error
 	// Get released config item.
 	Get(kit *kit.Kit, bizID, appID, releasedID, configItemID uint32) (*table.ReleasedConfigItem, error)
-	// GetReleasedLately released config item by app id and biz id
-	GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) ([]*table.ReleasedConfigItem, error)
+	// GetReleasedLately get released config items lately.
+	GetReleasedLately(kit *kit.Kit, bizID, appId uint32) ([]*table.ReleasedConfigItem, error)
 	// List released config items with options.
 	List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher, opt *types.BasePage) (
 		[]*table.ReleasedConfigItem, int64, error)
@@ -173,26 +173,21 @@ func (dao *releasedCIDao) ListAllByReleaseIDs(kit *kit.Kit,
 	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
 	}
-
 	m := dao.genQ.ReleasedConfigItem
 	return m.WithContext(kit.Ctx).Where(m.ReleaseID.In(releaseIDs...), m.BizID.Eq(bizID)).Find()
 }
 
-// GetReleasedLately
-func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) (
-	[]*table.ReleasedConfigItem, error) {
+// GetReleasedLately get released config items lately.
+func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, bizID, appId uint32) ([]*table.ReleasedConfigItem, error) {
 	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
 	}
 
 	m := dao.genQ.ReleasedConfigItem
 	q := dao.genQ.ReleasedConfigItem.WithContext(kit.Ctx)
+
 	// m.ConfigItemID.Neq(0) means not to match template config items
 	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId), m.ConfigItemID.Neq(0))
-	if searchKey != "" {
-		param := "%" + searchKey + "%"
-		query = q.Where(query, q.Where(m.Name.Like(param)).Or(m.Creator.Like(param)).Or(m.Reviser.Like(param)))
-	}
 	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).Order(m.ReleaseID.Desc()).Limit(1).Select(m.ReleaseID)
 	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()
 }

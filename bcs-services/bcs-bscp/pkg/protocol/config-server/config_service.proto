@@ -867,13 +867,14 @@ message GetReleasedConfigItemResp {
 }
 
 message ListConfigItemsReq {
-    uint32 biz_id      = 1;
-    uint32 app_id      = 2;
-    uint32 start       = 3;
-    uint32 limit       = 4;
-    bool   all         = 5;
-    string searchKey   = 6;
-    bool   with_status = 7;
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    string search_fields = 3;
+    string search_value  = 4;
+    uint32 start         = 5;
+    uint32 limit         = 6;
+    bool   all           = 7;
+    bool   with_status   = 8;
 }
 
 message ListConfigItemsResp {
