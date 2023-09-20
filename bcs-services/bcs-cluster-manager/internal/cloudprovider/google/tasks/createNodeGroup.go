@@ -15,7 +15,6 @@ package tasks
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -226,7 +225,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	newIt, igm, err := getIgmAndIt(computeCli, cloudNodeGroup, group, cluster, taskID)
+	newIt, igm, err := getIgmAndIt(computeCli, cloudNodeGroup, group, taskID)
 	if err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: getIgmAndIt failed: %v", taskID, err)
 		retErr := fmt.Errorf("getIgmAndIt failed, %s", err.Error())
@@ -259,15 +258,13 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 }
 
 func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container.NodePool, group *proto.NodeGroup,
-	cluster *proto.Cluster, taskID string) (*compute.InstanceTemplate, *compute.InstanceGroupManager, error) {
+	taskID string) (*compute.InstanceTemplate, *compute.InstanceGroupManager, error) {
 	// get instanceGroupManager
 	igm, err := api.GetInstanceGroupManager(computeCli, cloudNodeGroup.InstanceGroupUrls[0])
 	if err != nil {
 		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v", taskID, err)
 		return nil, nil, err
 	}
-	igmByte, _ := json.Marshal(igm)
-	blog.Infof("------------taskID[%s] GetInstanceGroupManager mig[%#v]", taskID, string(igmByte))
 
 	// get instanceTemplate info
 	it, err := api.GetInstanceTemplate(computeCli, igm.InstanceTemplate)
@@ -278,7 +275,7 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 
 	oldItName := it.Name
 	newIt := it
-	err = newItFromBaseIt(newIt, it, group, cluster, computeCli, oldItName, taskID)
+	err = newItFromBaseIt(newIt, group, computeCli, taskID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -307,18 +304,12 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager, computeCli *api.ComputeServiceClient,
 	taskID string) error {
 	ItInfo := strings.Split(newIt.SelfLink, "/")
-	ItInfo = ItInfo[:len(ItInfo)-1]
-	newItInfo := append(ItInfo, newIt.Name)
-
+	ItInfo[len(ItInfo)-1] = newIt.Name
 	newIgm := &compute.InstanceGroupManager{
-		InstanceTemplate: strings.Join(newItInfo, "/"),
+		InstanceTemplate: strings.Join(ItInfo, "/"),
 		BaseInstanceName: newIt.Name,
-		//UpdatePolicy:     api.GenerateUpdatePolicy(),
+		UpdatePolicy:     api.GenerateUpdatePolicy(),
 	}
-	newItByte, _ := json.Marshal(newIt)
-	blog.Infof("----------taskID[%s] patchIgm newIt %s", taskID, string(newItByte))
-	blog.Infof("----------taskID[%s] patchIgm newIt %s", taskID, newIt.SelfLink)
-	blog.Infof("----------taskID[%s] patchIgm newIt %s", taskID, newIt.SelfLink)
 
 	o, err := api.PatchInstanceGroupManager(computeCli, igm.SelfLink, newIgm)
 	if err != nil {
@@ -335,26 +326,27 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 	return nil
 }
 
-func newItFromBaseIt(newIt, it *compute.InstanceTemplate, group *proto.NodeGroup, cluster *proto.Cluster,
-	computeCli *api.ComputeServiceClient, oldItName, taskID string) error {
-	oldItNameInfo := strings.Split(oldItName, "-")
+func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup,
+	computeCli *api.ComputeServiceClient, taskID string) error {
+	oldItNameInfo := strings.Split(newIt.Name, "-")
 	randStr := utils.RandomHexString(8)
-	oldItNameInfo = oldItNameInfo[:len(oldItNameInfo)-1]
-	newItNameInfo := append(oldItNameInfo, randStr)
-	newIt.Name = strings.Join(newItNameInfo, "-")
+	oldItNameInfo[len(oldItNameInfo)-1] = randStr
+	newIt.Name = strings.Join(oldItNameInfo, "-")
 
 	if len(group.LaunchTemplate.DataDisks) != 0 {
 		dataDisks := make([]*compute.AttachedDisk, 0)
-		bootDisk := it.Properties.Disks[0]
 		for _, d := range group.LaunchTemplate.DataDisks {
 			diskSize, _ := strconv.Atoi(d.DiskSize)
 			dataDisks = append(dataDisks, &compute.AttachedDisk{
-				Type:             d.DiskType,
-				DiskSizeGb:       int64(diskSize),
-				Mode:             "READ_WRITE",
-				Boot:             false,
-				AutoDelete:       true,
-				InitializeParams: bootDisk.InitializeParams,
+				Type:       d.DiskType,
+				DiskSizeGb: int64(diskSize),
+				Mode:       "READ_WRITE",
+				Boot:       false,
+				AutoDelete: true,
+				InitializeParams: &compute.AttachedDiskInitializeParams{
+					DiskSizeGb: int64(diskSize),
+					DiskType:   d.DiskType,
+				},
 			})
 		}
 		newIt.Properties.Disks = append(newIt.Properties.Disks, dataDisks...)

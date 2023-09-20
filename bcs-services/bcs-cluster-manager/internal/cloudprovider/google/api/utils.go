@@ -270,12 +270,8 @@ func PatchInstanceGroupManager(computeCli *ComputeServiceClient, url string, igm
 		blog.Errorf("PatchInstanceGroupManager failed: %v", err)
 		return nil, err
 	}
-	blog.Infof("------------PatchInstanceGroupManager igmInfo: %#v", igmInfo)
-	blog.Infof("------------PatchInstanceGroupManager igm url: %#v", url)
 
 	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
-
-		blog.Infof("------------PatchInstanceGroupManager igmInfo3,,: %s, %s", igmInfo[3], igmInfo[(len(igmInfo)-1)])
 		o, err := computeCli.PatchInstanceGroupManager(context.Background(), igmInfo[3], igmInfo[(len(igmInfo)-1)], igm)
 		if err != nil {
 			blog.Errorf("PatchInstanceGroupManager failed, err: %v", err)
