@@ -61,7 +61,9 @@
   })
 
   watch(() => props.variables, val => {
-    const model = editor.getModel()
+    if (Array.isArray(val) && val.length > 0) {
+      editorHoverProvider = useEditorVariableReplace(editor, val)
+    }
   })
 
   onMounted(() => {

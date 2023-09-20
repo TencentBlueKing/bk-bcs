@@ -79,14 +79,29 @@ export const deleteServiceConfigItem = (id: number, bizId: string, appId: number
 }
 
 /**
- * 获取配置项详情
+ * 获取未命名版本配置项详情
  * @param biz_id 空间ID
  * @param id 配置ID
  * @param appId 应用ID
  * @returns
  */
-export const getConfigItemDetail = (biz_id: string, id: number, appId: number, params: { release_id?: number } = {}) => {
-  return http.get(`/config/biz/${biz_id}/apps/${appId}/config_items/${id}`, { params }).then(resp => resp.data);
+export const getConfigItemDetail = (biz_id: string, id: number, appId: number) => {
+  return http.get(`/config/biz/${biz_id}/apps/${appId}/config_items/${id}`).then(resp => resp.data);
+}
+
+/**
+ * 获取已发布版本配置项详情
+ * @param biz_id 空间ID
+ * @param app_id 应用ID
+ * @param release_id 版本ID
+ * @param config_item_id 配置项ID
+ * @returns
+ */
+export const getReleasedConfigItemDetail = (biz_id: string, app_id: number, release_id: number, config_item_id: number) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/config_items/${config_item_id}`).then(resp => {
+    resp.data.config_item.id = resp.data.config_item_id
+    return resp.data
+  });
 }
 
 /**

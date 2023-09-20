@@ -34,6 +34,7 @@
 
   const close = () => {
     isSliderShow.value = false
+    variableList.value = []
   }
 
 </script>
