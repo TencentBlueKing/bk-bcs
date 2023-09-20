@@ -100,12 +100,13 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 
 	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
 	opt := &types.ListHooksWithReferOption{
-		BizID:  req.BizId,
-		Name:   req.Name,
-		Tag:    req.Tag,
-		All:    req.All,
-		NotTag: req.NotTag,
-		Page:   page,
+		BizID:     req.BizId,
+		Name:      req.Name,
+		Tag:       req.Tag,
+		All:       req.All,
+		NotTag:    req.NotTag,
+		Page:      page,
+		SearchKey: req.SearchKey,
 	}
 
 	po := &types.PageOption{
