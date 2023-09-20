@@ -44,8 +44,6 @@ type ConfigItem interface {
 	GetByUniqueKey(kit *kit.Kit, bizID, appID uint32, name, path string) (*table.ConfigItem, error)
 	// GetUniqueKeys get unique keys of all config items in one app
 	GetUniqueKeys(kit *kit.Kit, bizID, appID uint32) ([]types.CIUniqueKey, error)
-	// SearchAll search all configItem with searchKey.
-	SearchAll(kit *kit.Kit, searchKey string, appID, bizID uint32) ([]*table.ConfigItem, error)
 	// ListAllByAppID list all configItem by appID
 	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32) ([]*table.ConfigItem, error)
 	// Delete one configItem instance.
@@ -233,20 +231,6 @@ func (dao *configItemDao) GetUniqueKeys(kit *kit.Kit, bizID, appID uint32) ([]ty
 		return nil, err
 	}
 	return rs, nil
-}
-
-// SearchAll search all configItem by searchKey
-func (dao *configItemDao) SearchAll(kit *kit.Kit, searchKey string, appID, bizID uint32) ([]*table.ConfigItem, error) {
-	if bizID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "bizID can not be 0")
-	}
-	m := dao.genQ.ConfigItem
-	query := dao.genQ.ConfigItem.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID))
-	if searchKey != "" {
-		searchKey = "%" + searchKey + "%"
-		query = query.Where(m.Name.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))
-	}
-	return query.Find()
 }
 
 // ListAllByAppID list all configItem by appID
