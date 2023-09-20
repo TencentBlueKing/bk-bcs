@@ -102,6 +102,11 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 		}
 	}
 
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		q = q.Where(h.Name.Like(searchKey)).Or(h.Memo.Like(searchKey)).Or(h.Creator.Like(searchKey)).Or(h.Reviser.Like(searchKey))
+	}
+
 	details := make([]*types.ListHooksWithReferDetail, 0)
 
 	q = q.Select(h.ALL, rh.ID.Count().As("refer_count"), rh.ReleaseID.Min().Eq(0).As("refer_editing_release"),
