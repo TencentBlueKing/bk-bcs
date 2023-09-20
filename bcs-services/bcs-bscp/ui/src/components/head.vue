@@ -132,7 +132,7 @@ const isShowDropdown = ref(false)
 // 版本日志
 const logList = ref<IVersionLogItem[]>([])
 const isShowVersionLog = ref(false)
-const modules = import.meta.glob('../../../docs/changelog/*.md', {
+const modules = import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
   as: 'raw',
   eager: true,
 })
@@ -148,7 +148,7 @@ for (const path in modules) {
 const featuresContent = ref('')
 const isShowFeatures = ref(false)
 const module = import.meta.glob(
-  '../../../../../bcs-ui/frontend/static/features.md',
+  '../../../docs/features/features.md',
   { as: 'raw', eager: true }
 )
 for (const path in module) {
