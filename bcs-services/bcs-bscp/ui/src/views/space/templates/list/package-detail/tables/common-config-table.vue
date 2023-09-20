@@ -194,7 +194,7 @@
   }
 
   const goToVersionManage = (id: number) => {
-    router.push({ name: 'template-version-manange', params: {
+    router.push({ name: 'template-version-manage', params: {
       templateSpaceId: props.currentTemplateSpace,
       packageId: props.currentPkg,
       templateId: id
@@ -279,7 +279,7 @@
           </template>
         </bk-table-column>
         <bk-table-column label="操作" width="120" fixed="right">
-          <template #default="{ row }">
+          <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
                 <bk-button theme='primary' text @click="goToVersionManage(row.id)">版本管理</bk-button>
@@ -293,7 +293,7 @@
                   <template #content>
                     <div class="config-actions">
                       <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">添加至套餐</div>
-                      <div class="action-item" @click="handleOpenMoveOutFromPkgsDialog(row)">移出套餐</div>
+                      <div v-if="citeByPkgsList[index].length > 0" class="action-item" @click="handleOpenMoveOutFromPkgsDialog(row)">移出套餐</div>
                     </div>
                   </template>
                 </bk-popover>

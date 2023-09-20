@@ -5,8 +5,8 @@
   import { AngleDoubleRight } from 'bkui-vue/lib/icon'
   import { useServiceStore } from '../../../../store/service'
   import { useConfigStore } from '../../../../store/config'
-  import { getAppDetail } from '../../../../api';
   import { GET_UNNAMED_VERSION_DATE } from '../../../../constants/config'
+  import { permissionCheck, getAppDetail } from '../../../../api';
   import ServiceSelector from './components/service-selector.vue'
   import DetailHeader from "./components/detail-header.vue"
   import VersionListAside from './config/version-list-aside/index.vue'
@@ -16,6 +16,7 @@
   const serviceStore = useServiceStore()
   const configStore = useConfigStore()
 
+  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
   const { versionData, versionDetailView } = storeToRefs(configStore)
 
   const bkBizId = ref(String(route.params.spaceId))
@@ -27,11 +28,13 @@
       appId.value = Number(val)
       bkBizId.value = String(route.params.spaceId)
       versionData.value = GET_UNNAMED_VERSION_DATE()
+      getPermData()
       getAppData()
     }
   })
 
   onMounted(() => {
+    getPermData()
     getAppData()
   })
 
@@ -39,6 +42,24 @@
     serviceStore.$reset()
     configStore.$reset()
   })
+
+  const getPermData = async () => {
+    permCheckLoading.value = true
+    const res = await permissionCheck({
+      resources: [
+        {
+          biz_id: bkBizId.value,
+          basic: {
+            type: 'app',
+            action: 'update',
+            resource_id: appId.value
+          }
+        }
+      ]
+    })
+    hasEditServicePerm.value = res.is_allowed
+    permCheckLoading.value = false
+  }
 
   // 加载服务详情数据
   const getAppData = async() => {
