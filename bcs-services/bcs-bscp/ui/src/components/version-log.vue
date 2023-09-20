@@ -1,20 +1,27 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-import type { IVersionLogItem } from '../../types/version-log'
-const props = withDefaults(
-  defineProps<{
-    logList: IVersionLogItem[]
-    isShow: boolean
-  }>(),
-  {}
-)
-const emits = defineEmits(['update:isShow'])
-const active = ref(0)
+  import { ref } from 'vue'
+  import type { IVersionLogItem } from '../../types/version-log'
+  const props = withDefaults(
+    defineProps<{
+      logList: IVersionLogItem[]
+      isShow: boolean
+    }>(),
+    {}
+  )
+  const emits = defineEmits(['update:isShow'])
+  const active = ref(0)
 </script>
 
 <template>
-  <bk-dialog :is-show="props.isShow" :theme="'primary'" :show-mask="true" quick-close width="1105" :show-footer="false"
-    dialog-type="show" :scrollable="false" @closed="emits('update:isShow', false)" ext-cls="version-dialog">
+  <bk-dialog 
+  :is-show="props.isShow"
+  :theme="'primary'"
+  :show-mask="true"
+  quick-close width="1105"
+  :show-footer="false"
+  dialog-type="show"
+  :scrollable="false"
+  @closed="emits('update:isShow', false)" ext-cls="version-dialog">
     <div class="log-version">
       <div class="log-version-left">
         <ul class="left-list">
@@ -40,7 +47,6 @@ const active = ref(0)
 <style scoped lang="scss">
 .log-version {
   display: flex;
-
   &-left {
     flex: 0 0 180px;
     background-color: #fafbfd;
@@ -49,7 +55,6 @@ const active = ref(0)
     display: flex;
     font-size: 12px;
     overflow: hidden;
-
     .left-list {
       border-top: 1px solid #dcdee5;
       border-bottom: 1px solid #dcdee5;
@@ -58,7 +63,6 @@ const active = ref(0)
       display: flex;
       flex-direction: column;
       width: 100%;
-
       &-item {
         flex: 0 0 54px;
         display: flex;
@@ -67,21 +71,17 @@ const active = ref(0)
         padding-left: 30px;
         position: relative;
         border-bottom: 1px solid #dcdee5;
-
         &:hover {
           cursor: pointer;
           background-color: #ffffff;
         }
-
         .item-title {
           color: #313238;
           font-size: 16px;
         }
-
         .item-date {
           color: #979ba5;
         }
-
         .item-current {
           position: absolute;
           right: 20px;
@@ -95,7 +95,6 @@ const active = ref(0)
           justify-content: center;
           color: #ffffff;
         }
-
         &.item-active {
           &::before {
             content: ' ';
@@ -106,23 +105,19 @@ const active = ref(0)
             width: 6px;
             background-color: #3a84ff;
           }
-
           background-color: #ffffff;
         }
       }
     }
   }
-
   &-right {
     flex: 1;
     padding: 25px 30px 50px 45px;
-
     .detail-container {
       overflow: auto;
     }
   }
 }
-
 .bk-modal-wrapper.bk-dialog-wrapper .bk-modal-content {
   padding: 0;
 }
