@@ -83,6 +83,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbcs.Gener
 		ReleaseMemo: req.ReleaseMemo,
 		All:         req.All,
 		Groups:      req.Groups,
+		Variables:   req.Variables,
 	}
 	rp, err := s.client.DS.GenerateReleaseAndPublish(grpcKit.RpcCtx(), r)
 	if err != nil {

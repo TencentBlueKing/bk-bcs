@@ -78,49 +78,24 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		}
 	}
 
-	releasedCIs := make([]*table.ReleasedConfigItem, 0)
 	// Note: need to change batch operator to query config item and it's commit.
 	// step2: query app's all config items.
-	cfgItems, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, req.AppId, req.BizId)
+	cfgItems, err := s.getAppConfigItems(grpcKit)
 	if err != nil {
 		logs.Errorf("query app config item list failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	// if no config item, return directly.
-	if len(cfgItems) == 0 {
-		return nil, errors.New("app config items is empty")
+	// step3: get app template revisions which are template config items
+	tmplRevisions, err := s.getAppTmplRevisions(grpcKit)
+	if err != nil {
+		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
 	}
 
-	// step3: query config item newest commit
-	for _, item := range cfgItems {
-		commit, e := s.dao.Commit().GetLatestCommit(grpcKit, req.BizId, req.AppId, item.ID)
-		if e != nil {
-			logs.Errorf("query config item latest commit failed, err: %v, rid: %s", e, grpcKit.Rid)
-			return nil, e
-		}
-
-		releasedCIs = append(releasedCIs, &table.ReleasedConfigItem{
-			CommitID: commit.ID,
-			CommitSpec: &table.ReleasedCommitSpec{
-				ContentID: commit.Spec.ContentID,
-				Content: &table.ReleasedContentSpec{
-					// Note: use the rendered data when rendering config
-					Signature:       commit.Spec.Content.Signature,
-					ByteSize:        commit.Spec.Content.ByteSize,
-					OriginSignature: commit.Spec.Content.Signature,
-					OriginByteSize:  commit.Spec.Content.ByteSize,
-				},
-				Memo: commit.Spec.Memo,
-			},
-			ConfigItemID:   item.ID,
-			ConfigItemSpec: item.Spec,
-			Attachment:     item.Attachment,
-			Revision: &table.CreatedRevision{
-				Creator:   item.Revision.Creator,
-				CreatedAt: item.Revision.CreatedAt,
-			},
-		})
+	// if no config item, return directly.
+	if len(cfgItems) == 0 && len(tmplRevisions) == 0 {
+		return nil, errors.New("app config items is empty")
 	}
 
 	if _, e := s.dao.Release().GetByName(grpcKit, req.BizId, req.AppId, req.ReleaseName); e == nil {
@@ -157,14 +132,10 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		return nil, err
 	}
 
-	// step7: create released config item.
-	for _, rci := range releasedCIs {
-		rci.ReleaseID = releaseID
-	}
-
-	if err = s.dao.ReleasedCI().BulkCreateWithTx(grpcKit, tx, releasedCIs); err != nil {
-		logs.Errorf("bulk create released config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+	// step7: do template and non-template config item related operations for create release.
+	if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cfgItems); err != nil {
 		tx.Rollback()
+		logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

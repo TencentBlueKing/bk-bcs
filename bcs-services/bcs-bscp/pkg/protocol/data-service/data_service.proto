@@ -1336,12 +1336,13 @@ message PublishReq {
 }
 
 message GenerateReleaseAndPublishReq {
-    uint32          biz_id       = 1;
-    uint32          app_id       = 2;
-    string          release_name = 3;
-    string          release_memo = 4;
-    bool            all          = 5;
-    repeated string groups       = 6;
+    uint32                             biz_id       = 1;
+    uint32                             app_id       = 2;
+    string                             release_name = 3;
+    string                             release_memo = 4;
+    bool                               all          = 5;
+    repeated string                    groups       = 6;
+    repeated pbtv.TemplateVariableSpec variables    = 7;
 }
 
 message PublishResp {

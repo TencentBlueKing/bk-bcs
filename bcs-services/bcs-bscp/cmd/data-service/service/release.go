@@ -27,6 +27,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbrelease "bscp.io/pkg/protocol/core/release"
+	pbtv "bscp.io/pkg/protocol/core/template-variable"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
@@ -106,7 +107,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 	}
 
 	// 3: do template and non-template config item related operations for create release.
-	if err = s.doConfigItemOperations(grpcKit, req, tx, release.ID, tmplRevisions, cis); err != nil {
+	if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cis); err != nil {
 		tx.Rollback()
 		logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -130,11 +131,11 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 6.创建已生成版本服务的模版变量
 7.将当前使用变量更新到未命名版本的服务模版变量
 */
-func (s *Service) doConfigItemOperations(kt *kit.Kit, req *pbds.CreateReleaseReq, tx *gen.QueryTx,
-	releaseID uint32, tmplRevisions []*table.TemplateRevision, cis []*pbci.ConfigItem) error {
+func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.TemplateVariableSpec,
+	tx *gen.QueryTx, releaseID uint32, tmplRevisions []*table.TemplateRevision, cis []*pbci.ConfigItem) error {
 	// validate input variables and get the map
 	inputVarMap := make(map[string]*table.TemplateVariableSpec)
-	for _, v := range req.Variables {
+	for _, v := range variables {
 		if v == nil {
 			continue
 		}
