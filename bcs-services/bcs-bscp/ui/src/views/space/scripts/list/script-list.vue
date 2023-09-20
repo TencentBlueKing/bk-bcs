@@ -135,7 +135,7 @@
   }
 </script>
 <template>
-  <section class="scripts-manange-page">
+  <section class="scripts-manage-page">
     <div class="side-menu">
       <div class="group-wrapper">
         <li :class="['group-item', { actived: showAllTag }]" @click="handleSelectTag('', true)">
@@ -219,7 +219,7 @@
   </section>
 </template>
 <style lang="scss" scoped>
-  .scripts-manange-page {
+  .scripts-manage-page {
     display: flex;
     align-items: center;
     height: 100%;

@@ -5,6 +5,7 @@
   import { AngleRight } from 'bkui-vue/lib/icon';
   import { IScriptItem } from '../../../../../../types/script'
   import { useGlobalStore } from '../../../../../store/global'
+  import { useServiceStore } from '../../../../../store/service'
   import { useConfigStore } from '../../../../../store/config'
   import { getScriptList, getScriptVersionDetail } from '../../../../../api/script'
   import { getConfigScript, getDefaultConfigScriptData, updateConfigInitScript } from '../../../../../api/config'
@@ -13,6 +14,9 @@
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const { versionData } = storeToRefs(useConfigStore())
+  const serviceStore = useServiceStore()
+  const { checkPermBeforeOperate } = serviceStore
+  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
 
   const props = defineProps<{
     appId: number;
@@ -143,6 +147,9 @@
 
   // 保存配置
   const handleSubmit = async() => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     try {
       pending.value = true
       const { pre, post } = formData.value
@@ -210,9 +217,10 @@
       </bk-form>
       <bk-button
         v-if="!viewMode"
-        class="submit-button"
+        v-cursor="{ active: !hasEditServicePerm }"
+        :class="['submit-button', {'bk-button-with-no-perm': !hasEditServicePerm}]"
         theme="primary"
-        :disabled="!dataChanged"
+        :disabled="hasEditServicePerm && !dataChanged"
         :loading="pending"
         @click="handleSubmit">
         保存设置
