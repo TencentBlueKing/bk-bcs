@@ -1,6 +1,4 @@
 @import './font.css';
-@import './common.scss';
-@import './markdown.scss';
 
 :root {
 	font-family: -apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei,

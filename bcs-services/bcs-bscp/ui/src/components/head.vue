@@ -382,4 +382,14 @@ for (const path in module) {
   background-color: #f0f1f5;
   color: #3a84ff;
 }
+
+.version-dialog {
+  .bk-dialog-header {
+    display: none;
+  }
+
+  .bk-modal-content {
+    padding: 0 !important;
+  }
+}
 </style>
