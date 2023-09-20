@@ -64,7 +64,7 @@
         biz_id: spaceId.value,
         basic: {
           type: 'credential',
-          action: 'manange'
+          action: 'manage'
         }
       }] }
       showApplyPermDialog.value = true
@@ -386,8 +386,11 @@
     <AssociateConfigItems
       :show="isAssociateSliderShow"
       :id="currentCredential"
+      :perm-check-loading="permCheckLoading"
+      :has-manage-perm="hasManagePerm"
       @close="handleAssociateSliderClose"
-      @refresh="refreshListWithLoading(pagination.current)" />
+      @refresh="refreshListWithLoading(pagination.current)"
+      @applyPerm="checkPermBeforeOperate" />
   </section>
 </template>
 <style lang="scss" scoped>

@@ -194,7 +194,7 @@
   }
 
   const goToVersionManage = (id: number) => {
-    router.push({ name: 'template-version-manange', params: {
+    router.push({ name: 'template-version-manage', params: {
       templateSpaceId: props.currentTemplateSpace,
       packageId: props.currentPkg,
       templateId: id
