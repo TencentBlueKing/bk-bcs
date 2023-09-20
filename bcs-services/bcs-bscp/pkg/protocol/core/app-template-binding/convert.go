@@ -13,7 +13,8 @@
 package pbatb
 
 import (
-	"bscp.io/pkg/criteria/constant"
+	"time"
+
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 )
@@ -227,7 +228,7 @@ func PbReleasedAppBoundTmplRevision(s *table.ReleasedAppTemplate) *ReleasedAppBo
 		OriginSignature:      s.Spec.OriginSignature,
 		OriginByteSize:       s.Spec.OriginByteSize,
 		Creator:              s.Revision.Creator,
-		CreateAt:             s.Revision.CreatedAt.Format(constant.TimeStdFormat),
+		CreateAt:             s.Revision.CreatedAt.Format(time.RFC3339),
 	}
 }
 
@@ -255,7 +256,7 @@ func PbAppBoundTmplRevisionsFromReleased(releasedTmpls []*table.ReleasedAppTempl
 			Signature:            r.Spec.Signature,
 			ByteSize:             r.Spec.ByteSize,
 			Creator:              r.Revision.Creator,
-			CreateAt:             r.Revision.CreatedAt.Format(constant.TimeStdFormat),
+			CreateAt:             r.Revision.CreatedAt.Format(time.RFC3339),
 		}
 	}
 	return tmplRevisions

@@ -61,7 +61,6 @@
   })
 
   onBeforeUnmount(() => {
-    console.log('unmount: ', diffEditorHoverProvider)
     diffEditor.dispose()
     if (diffEditorHoverProvider) {
       diffEditorHoverProvider.dispose()

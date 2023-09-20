@@ -411,3 +411,221 @@ func (gt *GetScopeHostCheckAction) Handle(ctx context.Context, req *cmproto.GetS
 	gt.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }
+
+// GetTopologyHostIdsNodesAction action for get biz topology hostIds
+type GetTopologyHostIdsNodesAction struct {
+	ctx  context.Context
+	req  *cmproto.GetTopologyHostIdsNodesRequest
+	resp *cmproto.GetTopologyHostIdsNodesResponse
+}
+
+// NewGetTopologyHostIdsNodesAction create action
+func NewGetTopologyHostIdsNodesAction() *GetTopologyHostIdsNodesAction {
+	return &GetTopologyHostIdsNodesAction{}
+}
+
+func (gt *GetTopologyHostIdsNodesAction) validate() error {
+	if err := gt.req.Validate(); err != nil {
+		return err
+	}
+
+	if gt.req.ScopeType != common.Biz {
+		return fmt.Errorf("GetTopologyHostIdsNodesAction scopeType[%s] not supported", gt.req.ScopeType)
+	}
+
+	if gt.req.Start <= 0 {
+		gt.req.Start = 0
+	}
+
+	return nil
+}
+
+func (gt *GetTopologyHostIdsNodesAction) setResp(code uint32, msg string) {
+	gt.resp.Code = code
+	gt.resp.ErrorMsg = msg
+	gt.resp.Success = (code == common.BcsErrClusterManagerSuccess)
+}
+
+func (gt *GetTopologyHostIdsNodesAction) buildModuleInfo() []cmdb.HostModuleInfo {
+	modules := make([]cmdb.HostModuleInfo, 0)
+	for i := range gt.req.NodeList {
+		modules = append(modules, cmdb.HostModuleInfo{
+			ObjectID:   gt.req.NodeList[i].ObjectId,
+			InstanceID: int64(gt.req.NodeList[i].InstanceId),
+		})
+	}
+
+	return modules
+}
+
+func (gt *GetTopologyHostIdsNodesAction) buildFilterCondition() cmdb.HostFilter {
+	if gt.req.Alive == nil && gt.req.SearchContent == "" {
+		return &cmdb.HostFilterEmpty{}
+	}
+
+	filter := &cmdb.HostFilterTopoNodes{Alive: nil, SearchContent: ""}
+	if gt.req.Alive != nil {
+		alive := int(gt.req.Alive.GetValue())
+		filter.Alive = &alive
+	}
+	if gt.req.SearchContent != "" {
+		filter.SearchContent = gt.req.SearchContent
+	}
+
+	return filter
+}
+
+func (gt *GetTopologyHostIdsNodesAction) listBizTopologyHostIdsNodes() error {
+	ipSelector := cmdb.NewIpSelector(cmdb.GetCmdbClient(), gse.GetGseClient())
+
+	bizID, _ := strconv.Atoi(gt.req.ScopeId)
+	modules := gt.buildModuleInfo()
+	filter := gt.buildFilterCondition()
+
+	topoNodes, err := ipSelector.GetBizTopoHostData(bizID, modules, filter)
+	if err != nil {
+		blog.Errorf("GetTopologyHostIdsNodesAction GetBizTopoHostData[%v] failed: %v", bizID, err)
+		return err
+	}
+
+	gt.resp.Data = &cmproto.GetTopologyHostIdsNodesData{
+		Start:    gt.req.Start,
+		PageSize: gt.req.PageSize,
+		Total:    uint64(len(topoNodes)),
+	}
+
+	data := make([]*cmproto.HostIDsNodeData, 0)
+	endIndex := gt.req.Start + gt.req.PageSize
+	if gt.req.PageSize <= 0 {
+		endIndex = uint64(len(topoNodes))
+	}
+
+	for index, host := range topoNodes {
+		if index >= int(gt.req.Start) && index < int(endIndex) {
+			data = append(data, &cmproto.HostIDsNodeData{
+				HostId: uint64(host.HostId),
+			})
+		}
+	}
+	gt.resp.Data.Data = data
+
+	return nil
+}
+
+// Handle handles customSetting data
+func (gt *GetTopologyHostIdsNodesAction) Handle(ctx context.Context, req *cmproto.GetTopologyHostIdsNodesRequest,
+	resp *cmproto.GetTopologyHostIdsNodesResponse) {
+	gt.ctx = ctx
+	gt.req = req
+	gt.resp = resp
+
+	if err := gt.validate(); err != nil {
+		gt.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	if err := gt.listBizTopologyHostIdsNodes(); err != nil {
+		gt.setResp(common.BcsErrClusterManagerCommonErr, err.Error())
+		return
+	}
+
+	blog.Infof("GetTopologyNodesAction get biz[%v] topologyNodes successfully", gt.req.ScopeId)
+	gt.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
+}
+
+// GetHostsDetailsAction action for get biz host details
+type GetHostsDetailsAction struct {
+	ctx     context.Context
+	req     *cmproto.GetHostsDetailsRequest
+	resp    *cmproto.GetHostsDetailsResponse
+	hostIds []int
+}
+
+// NewGetHostsDetailsAction create action
+func NewGetHostsDetailsAction() *GetHostsDetailsAction {
+	return &GetHostsDetailsAction{
+		hostIds: make([]int, 0),
+	}
+}
+
+func (gt *GetHostsDetailsAction) validate() error {
+	if err := gt.req.Validate(); err != nil {
+		return err
+	}
+
+	if gt.req.ScopeType != common.Biz {
+		return fmt.Errorf("GetTopologyHostIdsNodesAction scopeType[%s] not supported", gt.req.ScopeType)
+	}
+	if len(gt.req.GetHostList()) <= 0 {
+		return fmt.Errorf("GetTopologyHostIdsNodesAction hostList empty")
+	}
+
+	for i := range gt.req.GetHostList() {
+		gt.hostIds = append(gt.hostIds, int(gt.req.GetHostList()[i].HostId))
+	}
+
+	return nil
+}
+
+func (gt *GetHostsDetailsAction) setResp(code uint32, msg string) {
+	gt.resp.Code = code
+	gt.resp.ErrorMsg = msg
+	gt.resp.Success = (code == common.BcsErrClusterManagerSuccess)
+}
+
+func (gt *GetHostsDetailsAction) listBizTopologyHostIdsNodes() error {
+	ipSelector := cmdb.NewIpSelector(cmdb.GetCmdbClient(), gse.GetGseClient())
+
+	bizID, _ := strconv.Atoi(gt.req.ScopeId)
+
+	topoNodes, err := ipSelector.GetBizTopoHostData(bizID, []cmdb.HostModuleInfo{{InstanceID: int64(bizID)}}, nil)
+	if err != nil {
+		blog.Errorf("GetHostsDetailsAction GetBizTopoHostData[%v] failed: %v", bizID, err)
+		return err
+	}
+
+	gt.resp.Data = make([]*cmproto.HostDataWithMeta, 0)
+
+	for _, host := range topoNodes {
+		if utils.IntInSlice(host.HostId, gt.hostIds) {
+			gt.resp.Data = append(gt.resp.Data, &cmproto.HostDataWithMeta{
+				HostId:   uint64(host.HostId),
+				Ip:       host.Ip,
+				Ipv6:     host.Ipv6,
+				HostName: host.HostName,
+				Alive:    uint32(host.Alive),
+				OsName:   host.OsName,
+				CloudArea: &cmproto.HostCloudArea{
+					Id:   uint32(host.CloudArea.ID),
+					Name: host.CloudArea.Name,
+				},
+				Meta: nil,
+			})
+		}
+	}
+
+	return nil
+}
+
+// Handle handles customSetting data
+func (gt *GetHostsDetailsAction) Handle(ctx context.Context, req *cmproto.GetHostsDetailsRequest,
+	resp *cmproto.GetHostsDetailsResponse) {
+	gt.ctx = ctx
+	gt.req = req
+	gt.resp = resp
+
+	if err := gt.validate(); err != nil {
+		gt.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	if err := gt.listBizTopologyHostIdsNodes(); err != nil {
+		gt.setResp(common.BcsErrClusterManagerCommonErr, err.Error())
+		return
+	}
+
+	blog.Infof("GetTopologyNodesAction get biz[%v] topologyNodes successfully", gt.req.ScopeId)
+	gt.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
+}

@@ -52,6 +52,12 @@ func (p *proxy) Healthz(w http.ResponseWriter, r *http.Request) {
 	rest.WriteResp(w, rest.NewBaseResp(errf.OK, "healthy"))
 }
 
+// LogoutHandler return redirect url
+func (p *proxy) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	data := p.authorizer.LogOut(r)
+	render.Render(w, r, rest.OKRender(data))
+}
+
 // UserInfoHandler 鉴权后的用户信息接口
 func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	k := kit.MustGetKit(r.Context())

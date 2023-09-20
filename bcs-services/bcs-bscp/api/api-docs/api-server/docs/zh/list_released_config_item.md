@@ -45,7 +45,7 @@
           "memo": ""
         },
         "config_item_id": 1,
-        "config_item_spec": {
+        "spec": {
           "name": "bscp-config.json",
           "path": "/etc",
           "file_type": "json",
@@ -86,16 +86,16 @@
 
 #### data.detail[n]
 
-| 参数名称         | 参数类型 | 描述                   |
-| ---------------- | -------- | ---------------------- |
-| id               | uint32   | 已生成版本配置项唯一ID |
-| release_id       | uint32   | 版本ID                 |
-| commit_id        | uint32   | 提交ID                 |
-| commit_spec      | object   | 提交详情               |
-| config_item_id   | uint32   | 配置项ID               |
-| config_item_spec | object   | 配置项详情             |
-| attachment       | object   | 关联信息               |
-| revision         | object   | 修改信息               |
+| 参数名称         | 参数类型 | 描述                                           |
+| ---------------- | -------- | ---------------------------------------------- |
+| id               | uint32   | 已生成版本配置项记录唯一ID(不是config_item_id) |
+| release_id       | uint32   | 版本ID                                         |
+| commit_id        | uint32   | 提交ID                                         |
+| commit_spec      | object   | 提交详情                                       |
+| config_item_id   | uint32   | 配置项ID                                       |
+| config_item_spec | object   | 配置项详情                                     |
+| attachment       | object   | 关联信息                                       |
+| revision         | object   | 修改信息                                       |
 
 #### commit_spec
 
@@ -114,7 +114,8 @@
 | origin_signature | string   | 渲染前文件内容的sha256   |
 | origin_byte_size | uint64   | 渲染前文件内容的字节数   |
 
-#### config_item_spec
+
+#### spec
 
 | 参数名称   | 参数类型 | 描述           |
 | ---------- | -------- | -------------- |
@@ -125,7 +126,7 @@
 | memo       | string   | 备注           |
 | permission | object   | 配置项权限信息 |
 
-#### config_item_spec.permission
+#### spec.permission
 
 | 参数名称   | 参数类型 | 描述                     |
 | ---------- | -------- | ------------------------ |
@@ -146,3 +147,4 @@
 | --------- | -------- | -------- |
 | creator   | string   | 创建者   |
 | create_at | string   | 创建时间 |
+

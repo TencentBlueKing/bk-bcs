@@ -792,6 +792,20 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.GetTopologyHostIdsNodes",
+			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostids/nodes"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetHostsDetails",
+			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/hosts/details"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.GetScopeHostCheck",
 			Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"},
 			Method:  []string{"POST"},
@@ -973,6 +987,10 @@ type ClusterManagerService interface {
 	GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, opts ...client.CallOption) (*GetBizTopologyHostResponse, error)
 	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机信息(当前仅支持业务拓扑节点)
 	GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, opts ...client.CallOption) (*GetTopologyNodesResponse, error)
+	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机ID，用于IP选择器全选（当前仅支持业务拓扑节点，业务集仅支持传入业务集根节点）
+	GetTopologyHostIdsNodes(ctx context.Context, in *GetTopologyHostIdsNodesRequest, opts ...client.CallOption) (*GetTopologyHostIdsNodesResponse, error)
+	// 根据主机IDs获取机器详情信息
+	GetHostsDetails(ctx context.Context, in *GetHostsDetailsRequest, opts ...client.CallOption) (*GetHostsDetailsResponse, error)
 	// 根据用户手动输入的IP/IPv6/主机名/hostId等关键字信息获取真实存在的机器信息
 	GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, opts ...client.CallOption) (*GetScopeHostCheckResponse, error)
 	// Cloud module flag management
@@ -2136,6 +2154,26 @@ func (c *clusterManagerService) GetTopologyNodes(ctx context.Context, in *GetTop
 	return out, nil
 }
 
+func (c *clusterManagerService) GetTopologyHostIdsNodes(ctx context.Context, in *GetTopologyHostIdsNodesRequest, opts ...client.CallOption) (*GetTopologyHostIdsNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetTopologyHostIdsNodes", in)
+	out := new(GetTopologyHostIdsNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetHostsDetails(ctx context.Context, in *GetHostsDetailsRequest, opts ...client.CallOption) (*GetHostsDetailsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetHostsDetails", in)
+	out := new(GetHostsDetailsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, opts ...client.CallOption) (*GetScopeHostCheckResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetScopeHostCheck", in)
 	out := new(GetScopeHostCheckResponse)
@@ -2335,6 +2373,10 @@ type ClusterManagerHandler interface {
 	GetBizTopologyHost(context.Context, *GetBizTopologyHostRequest, *GetBizTopologyHostResponse) error
 	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机信息(当前仅支持业务拓扑节点)
 	GetTopologyNodes(context.Context, *GetTopologyNodesRequest, *GetTopologyNodesResponse) error
+	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机ID，用于IP选择器全选（当前仅支持业务拓扑节点，业务集仅支持传入业务集根节点）
+	GetTopologyHostIdsNodes(context.Context, *GetTopologyHostIdsNodesRequest, *GetTopologyHostIdsNodesResponse) error
+	// 根据主机IDs获取机器详情信息
+	GetHostsDetails(context.Context, *GetHostsDetailsRequest, *GetHostsDetailsResponse) error
 	// 根据用户手动输入的IP/IPv6/主机名/hostId等关键字信息获取真实存在的机器信息
 	GetScopeHostCheck(context.Context, *GetScopeHostCheckRequest, *GetScopeHostCheckResponse) error
 	// Cloud module flag management
@@ -2462,6 +2504,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, out *GetBatchCustomSettingResponse) error
 		GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, out *GetBizTopologyHostResponse) error
 		GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, out *GetTopologyNodesResponse) error
+		GetTopologyHostIdsNodes(ctx context.Context, in *GetTopologyHostIdsNodesRequest, out *GetTopologyHostIdsNodesResponse) error
+		GetHostsDetails(ctx context.Context, in *GetHostsDetailsRequest, out *GetHostsDetailsResponse) error
 		GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, out *GetScopeHostCheckResponse) error
 		CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, out *CreateCloudModuleFlagResponse) error
 		UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, out *UpdateCloudModuleFlagResponse) error
@@ -3223,6 +3267,20 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetTopologyHostIdsNodes",
+		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostids/nodes"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetHostsDetails",
+		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/hosts/details"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetScopeHostCheck",
 		Path:    []string{"/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check"},
 		Method:  []string{"POST"},
@@ -3723,6 +3781,14 @@ func (h *clusterManagerHandler) GetBizTopologyHost(ctx context.Context, in *GetB
 
 func (h *clusterManagerHandler) GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, out *GetTopologyNodesResponse) error {
 	return h.ClusterManagerHandler.GetTopologyNodes(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetTopologyHostIdsNodes(ctx context.Context, in *GetTopologyHostIdsNodesRequest, out *GetTopologyHostIdsNodesResponse) error {
+	return h.ClusterManagerHandler.GetTopologyHostIdsNodes(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetHostsDetails(ctx context.Context, in *GetHostsDetailsRequest, out *GetHostsDetailsResponse) error {
+	return h.ClusterManagerHandler.GetHostsDetails(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, out *GetScopeHostCheckResponse) error {

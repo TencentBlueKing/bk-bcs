@@ -29,8 +29,8 @@ import (
 type ReleasedCI interface {
 	// BulkCreateWithTx bulk create released config items with tx.
 	BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error
-	// Get released config item by id and released id
-	Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error)
+	// Get released config item.
+	Get(kit *kit.Kit, bizID, appID, releasedID, configItemID uint32) (*table.ReleasedConfigItem, error)
 	// GetReleasedLately released config item by app id and biz id
 	GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) ([]*table.ReleasedConfigItem, error)
 	// List released config items with options.
@@ -93,20 +93,11 @@ func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items 
 	return nil
 }
 
-// Get released config item by ID and config item id and release id.
-func (dao *releasedCIDao) Get(kit *kit.Kit, configItemID, bizID, releaseID uint32) (*table.ReleasedConfigItem, error) {
-
-	if configItemID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
-	}
-
-	if releaseID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "release id can not be 0")
-	}
-
+// Get released config item.
+func (dao *releasedCIDao) Get(kit *kit.Kit, bizID, appID, releaseID, configItemID uint32) (*table.ReleasedConfigItem, error) {
 	m := dao.genQ.ReleasedConfigItem
 	return m.WithContext(kit.Ctx).Where(
-		m.ConfigItemID.Eq(configItemID), m.ReleaseID.Eq(releaseID), m.BizID.Eq(bizID)).Take()
+		m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID), m.ConfigItemID.Eq(configItemID)).Take()
 }
 
 // List released config items with options.

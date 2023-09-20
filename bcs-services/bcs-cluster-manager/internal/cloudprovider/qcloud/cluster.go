@@ -383,10 +383,10 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 		return nil, err
 	}
 
-	return transTKEClusterToCloudCluster(tkeClusters), nil
+	return transTKEClusterToCloudCluster(opt.Region, tkeClusters), nil
 }
 
-func transTKEClusterToCloudCluster(clusters []*tke.Cluster) []*proto.CloudClusterInfo {
+func transTKEClusterToCloudCluster(region string, clusters []*tke.Cluster) []*proto.CloudClusterInfo {
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
 	for _, cls := range clusters {
 		cloudClusterList = append(cloudClusterList, &proto.CloudClusterInfo{
@@ -397,6 +397,7 @@ func transTKEClusterToCloudCluster(clusters []*tke.Cluster) []*proto.CloudCluste
 			ClusterOS:          *cls.ClusterOs,
 			ClusterType:        *cls.ClusterType,
 			ClusterStatus:      *cls.ClusterStatus,
+			Location:           region,
 		})
 	}
 

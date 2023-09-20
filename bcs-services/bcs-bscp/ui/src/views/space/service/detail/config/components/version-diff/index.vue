@@ -3,6 +3,7 @@
   import { useRoute } from 'vue-router'
   import { IConfigVersion, IConfigDiffSelected } from '../../../../../../../../types/config'
   import { IDiffDetail } from '../../../../../../../../types/service'
+  import { IVariableEditParams } from '../../../../../../../../types/variable'
   import { getConfigVersionList } from '../../../../../../../api/config'
   import AsideMenu from './aside-menu/index.vue'
   import Diff from '../../../../../../../components/diff/index.vue'
@@ -11,6 +12,7 @@
     show: boolean;
     showPublishBtn?: boolean; // 是否显示发布按钮
     currentVersion: IConfigVersion; // 当前版本详情
+    unNamedVersionVariables?: IVariableEditParams[];
     baseVersionId?: number; // 默认选中的基准版本id
     selectedConfig?: IConfigDiffSelected; // 默认选中的配置项id
   }>()
@@ -93,6 +95,7 @@
           <AsideMenu
             :base-version-id="selectedBaseVersion"
             :current-version-id="currentVersion.id"
+            :un-named-version-variables="props.unNamedVersionVariables"
             :selected-config="props.selectedConfig"
             @selected="handleSelectDiffItem" />
           <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
