@@ -113,13 +113,22 @@ func (c *ComputeServiceClient) ListZones(ctx context.Context) ([]*proto.ZoneInfo
 		return nil, fmt.Errorf("gce client ListZones failed: %v", err)
 	}
 
+	var region string
+	if c.location != "" {
+		locationList := strings.Split(c.location, "-")
+		if len(locationList) == 3 {
+			region = strings.Join(locationList[:2], "-")
+		}
+		region = c.location
+	}
+
 	result := make([]*proto.ZoneInfo, 0)
 	for _, v := range zones.Items {
-		if v.Name != "" && v.Description != "" {
+		if strings.Contains(v.Name, region) {
 			result = append(result, &proto.ZoneInfo{
 				ZoneID:    strconv.FormatUint(v.Id, 10),
 				Zone:      v.Name,
-				ZoneName:  v.Description,
+				ZoneName:  v.Name,
 				ZoneState: v.Status,
 			})
 		}
@@ -147,27 +156,34 @@ func (c *ComputeServiceClient) GetZone(ctx context.Context, name string) (*proto
 	return result, nil
 }
 
+func (c *ComputeServiceClient) getLocationType(location string) string {
+	if len(strings.Split(location, "-")) == 2 {
+		return locationTypeRegions
+	}
+	if len(strings.Split(location, "-")) == 3 {
+		return locationTypeZones
+	}
+
+	return location
+}
+
 // GetInstanceGroupManager get instanceGroupManager
-func (c *ComputeServiceClient) GetInstanceGroupManager(ctx context.Context, locationType, name string) (
+func (c *ComputeServiceClient) GetInstanceGroupManager(ctx context.Context, location, name string) (
 	*compute.InstanceGroupManager, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client GetZoneInstanceGroupManager failed: gkeProjectId is required")
-	}
-	if c.location == "" {
-		return nil, fmt.Errorf("gce client GetZoneInstanceGroupManager failed: location is required")
 	}
 
 	var (
 		igm *compute.InstanceGroupManager
 		err error
 	)
-
 	// region type && zone type cluster
-	switch locationType {
+	switch c.getLocationType(location) {
 	case locationTypeZones:
-		igm, err = c.computeServiceClient.InstanceGroupManagers.Get(c.gkeProjectID, c.location, name).Context(ctx).Do()
+		igm, err = c.computeServiceClient.InstanceGroupManagers.Get(c.gkeProjectID, location, name).Context(ctx).Do()
 	case locationTypeRegions:
-		igm, err = c.computeServiceClient.RegionInstanceGroupManagers.Get(c.gkeProjectID, c.location, name).Context(ctx).Do()
+		igm, err = c.computeServiceClient.RegionInstanceGroupManagers.Get(c.gkeProjectID, location, name).Context(ctx).Do()
 	default:
 		return nil, fmt.Errorf("gce client GetZoneInstanceGroupManager[%s] failed:"+
 			" location type is neither zones nor regions", name)
@@ -181,13 +197,10 @@ func (c *ComputeServiceClient) GetInstanceGroupManager(ctx context.Context, loca
 }
 
 // PatchInstanceGroupManager update zonal instanceGroupManager
-func (c *ComputeServiceClient) PatchInstanceGroupManager(ctx context.Context, locationType, name string,
+func (c *ComputeServiceClient) PatchInstanceGroupManager(ctx context.Context, location, name string,
 	igm *compute.InstanceGroupManager) (*compute.Operation, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client UpdateZoneInstanceGroupManager failed: gkeProjectId is required")
-	}
-	if c.location == "" {
-		return nil, fmt.Errorf("gce client UpdateZoneInstanceGroupManager failed: location is required")
 	}
 
 	var (
@@ -195,12 +208,12 @@ func (c *ComputeServiceClient) PatchInstanceGroupManager(ctx context.Context, lo
 		err       error
 	)
 	// region type && zone type cluster
-	switch locationType {
+	switch c.getLocationType(location) {
 	case locationTypeZones:
-		operation, err = c.computeServiceClient.InstanceGroupManagers.Patch(c.gkeProjectID, c.location, name, igm).
+		operation, err = c.computeServiceClient.InstanceGroupManagers.Patch(c.gkeProjectID, location, name, igm).
 			Context(ctx).Do()
 	case locationTypeRegions:
-		operation, err = c.computeServiceClient.RegionInstanceGroupManagers.Patch(c.gkeProjectID, c.location, name, igm).
+		operation, err = c.computeServiceClient.RegionInstanceGroupManagers.Patch(c.gkeProjectID, location, name, igm).
 			Context(ctx).Do()
 	default:
 		return nil, fmt.Errorf("gce client UpdateZoneInstanceGroupManager failed:" +
@@ -216,13 +229,10 @@ func (c *ComputeServiceClient) PatchInstanceGroupManager(ctx context.Context, lo
 }
 
 // ResizeInstanceGroupManager set instanceGroupManager size
-func (c *ComputeServiceClient) ResizeInstanceGroupManager(ctx context.Context, locationType, name string, size int64) (
-	*compute.Operation, error) {
+func (c *ComputeServiceClient) ResizeInstanceGroupManager(
+	ctx context.Context, location, name string, size int64) (*compute.Operation, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client ResizeZoneInstanceGroupManager failed: gkeProjectId is required")
-	}
-	if c.location == "" {
-		return nil, fmt.Errorf("gce client ResizeZoneInstanceGroupManager failed: location is required")
 	}
 
 	var (
@@ -230,13 +240,13 @@ func (c *ComputeServiceClient) ResizeInstanceGroupManager(ctx context.Context, l
 		err       error
 	)
 	// region type && zone type cluster
-	switch locationType {
+	switch c.getLocationType(location) {
 	case locationTypeZones:
 		operation, err = c.computeServiceClient.InstanceGroupManagers.
-			Resize(c.gkeProjectID, c.location, name, size).Context(ctx).Do()
+			Resize(c.gkeProjectID, location, name, size).Context(ctx).Do()
 	case locationTypeRegions:
 		operation, err = c.computeServiceClient.RegionInstanceGroupManagers.
-			Resize(c.gkeProjectID, c.location, name, size).Context(ctx).Do()
+			Resize(c.gkeProjectID, location, name, size).Context(ctx).Do()
 	default:
 		return nil, fmt.Errorf("gce client ResizeZoneInstanceGroupManager failed:" +
 			" location type is neither zones nor regions")
@@ -301,13 +311,10 @@ func (c *ComputeServiceClient) DeleteInstanceTemplate(ctx context.Context, name 
 }
 
 // GetOperation get zonal operation
-func (c *ComputeServiceClient) GetOperation(ctx context.Context, locationType, name string) (
+func (c *ComputeServiceClient) GetOperation(ctx context.Context, location, name string) (
 	*compute.Operation, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client GetOperation failed: gkeProjectId is required")
-	}
-	if c.location == "" {
-		return nil, fmt.Errorf("gce client GetOperation failed: location is required")
 	}
 
 	var (
@@ -315,12 +322,12 @@ func (c *ComputeServiceClient) GetOperation(ctx context.Context, locationType, n
 		err       error
 	)
 	// region type && zone type cluster
-	switch locationType {
+	switch c.getLocationType(location) {
 	case locationTypeZones:
-		operation, err = c.computeServiceClient.ZoneOperations.Get(c.gkeProjectID, c.location, name).Context(ctx).Do()
+		operation, err = c.computeServiceClient.ZoneOperations.Get(c.gkeProjectID, location, name).Context(ctx).Do()
 	case locationTypeRegions:
-		operation, err = c.computeServiceClient.RegionOperations.Get(c.gkeProjectID, c.location, name).Context(ctx).Do()
-	case "global":
+		operation, err = c.computeServiceClient.RegionOperations.Get(c.gkeProjectID, location, name).Context(ctx).Do()
+	case "operations":
 		operation, err = c.computeServiceClient.GlobalOperations.Get(c.gkeProjectID, name).Context(ctx).Do()
 	default:
 		return nil, fmt.Errorf("gce client GetOperation failed: location type is not in [zones,regions,global]")
@@ -334,13 +341,10 @@ func (c *ComputeServiceClient) GetOperation(ctx context.Context, locationType, n
 }
 
 // ListInstanceGroupsInstances list instances of instance group
-func (c *ComputeServiceClient) ListInstanceGroupsInstances(ctx context.Context, locationType, name string) (
+func (c *ComputeServiceClient) ListInstanceGroupsInstances(ctx context.Context, location, name string) (
 	[]*compute.InstanceWithNamedPorts, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client ListInstanceGroupsInstances failed: gkeProjectId is required")
-	}
-	if c.location == "" {
-		return nil, fmt.Errorf("gce client ListInstanceGroupsInstances failed: location is required")
 	}
 
 	var (
@@ -349,10 +353,10 @@ func (c *ComputeServiceClient) ListInstanceGroupsInstances(ctx context.Context, 
 		insts          []*compute.InstanceWithNamedPorts
 		err            error
 	)
-	switch locationType {
+	switch c.getLocationType(location) {
 	case locationTypeZones:
 		req := &compute.InstanceGroupsListInstancesRequest{}
-		zoneInstance, err = c.computeServiceClient.InstanceGroups.ListInstances(c.gkeProjectID, c.location, name, req).
+		zoneInstance, err = c.computeServiceClient.InstanceGroups.ListInstances(c.gkeProjectID, location, name, req).
 			Context(ctx).Do()
 		if err != nil {
 			return nil, fmt.Errorf("gce client ListInstanceGroupsInstances[%s] failed: %v", name, err)
@@ -361,7 +365,7 @@ func (c *ComputeServiceClient) ListInstanceGroupsInstances(ctx context.Context, 
 	case locationTypeRegions:
 		req := &compute.RegionInstanceGroupsListInstancesRequest{}
 		regionInstance, err = c.computeServiceClient.RegionInstanceGroups.
-			ListInstances(c.gkeProjectID, c.location, name, req).Context(ctx).Do()
+			ListInstances(c.gkeProjectID, location, name, req).Context(ctx).Do()
 		if err != nil {
 			return nil, fmt.Errorf("gce client ListInstanceGroupsInstances[%s] failed: %v", name, err)
 		}
@@ -422,19 +426,18 @@ func (c *ComputeServiceClient) ListZoneInstanceWithFilter(ctx context.Context, f
 }
 
 // ListZoneInstances list zonal instances
-func (c *ComputeServiceClient) ListZoneInstances(ctx context.Context) (
-	*compute.InstanceList, error) {
+func (c *ComputeServiceClient) ListZoneInstances(ctx context.Context) (*compute.InstanceList, error) {
 	if c.gkeProjectID == "" {
-		return nil, fmt.Errorf("gce client ListZoneInstanceWithFilter failed: gkeProjectId is required")
+		return nil, fmt.Errorf("gce client ListZoneInstances failed: gkeProjectId is required")
 	}
 	if c.location == "" {
-		return nil, fmt.Errorf("gce client ListInstanceGroupsInstances failed: location is required")
+		return nil, fmt.Errorf("gce client ListZoneInstances failed: location is required")
 	}
 	instanceList, err := c.computeServiceClient.Instances.List(c.gkeProjectID, c.location).Context(ctx).Do()
 	if err != nil {
-		return nil, fmt.Errorf("gce client ListZoneInstanceWithFilter failed: %v", err)
+		return nil, fmt.Errorf("gce client ListZoneInstances failed: %v", err)
 	}
-	blog.Infof("gce client ListInstanceGroupsInstances successful")
+	blog.Infof("gce client ListZoneInstances successful")
 
 	return instanceList, nil
 }
@@ -503,4 +506,64 @@ func (c *ComputeServiceClient) DeleteInstancesInMIG(ctx context.Context, locatio
 	blog.Infof("gce client DeleteInstancesInMIG operation ID: %s", operation.SelfLink)
 
 	return nil
+}
+
+// ListMachineTypes lists machine types
+func (c *ComputeServiceClient) ListMachineTypes(ctx context.Context, location, filter string) (*compute.MachineTypeList, error) {
+	if c.gkeProjectID == "" {
+		return nil, fmt.Errorf("gce client ListMachineTypes failed: gkeProjectId is required")
+	}
+
+	mtList, err := c.computeServiceClient.MachineTypes.List(c.gkeProjectID, location).Filter(filter).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gce client ListMachineTypes failed: %v", err)
+	}
+	blog.Infof("gce client ListMachineTypes successful")
+
+	return mtList, nil
+}
+
+// GetMachineType gets machine type
+func (c *ComputeServiceClient) GetMachineType(ctx context.Context, location, mt string) (*compute.MachineType, error) {
+	if c.gkeProjectID == "" {
+		return nil, fmt.Errorf("gce client GetMachineType failed: gkeProjectId is required")
+	}
+
+	t, err := c.computeServiceClient.MachineTypes.Get(c.gkeProjectID, location, mt).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gce client GetMachineType failed: %v", err)
+	}
+	blog.Infof("gce client GetMachineType successful")
+
+	return t, nil
+}
+
+// ListSubnetworks lists subnetworks
+func (c *ComputeServiceClient) ListSubnetworks(ctx context.Context, location string) (*compute.SubnetworkList, error) {
+	if c.gkeProjectID == "" {
+		return nil, fmt.Errorf("gce client ListSubnetworks failed: gkeProjectId is required")
+	}
+
+	subnetsList, err := c.computeServiceClient.Subnetworks.List(c.gkeProjectID, location).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gce client ListSubnetworks failed: %v", err)
+	}
+	blog.Infof("gce client ListSubnetworks successful")
+
+	return subnetsList, nil
+}
+
+// ListOSImages lists OS images
+func (c *ComputeServiceClient) ListOSImages(ctx context.Context, gkeProjectID string) (*compute.ImageList, error) {
+	if c.gkeProjectID == "" {
+		return nil, fmt.Errorf("gce client ListSubnetworks failed: gkeProjectId is required")
+	}
+
+	subnetsList, err := c.computeServiceClient.Images.List(gkeProjectID).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gce client ListSubnetworks failed: %v", err)
+	}
+	blog.Infof("gce client ListSubnetworks successful")
+
+	return subnetsList, nil
 }

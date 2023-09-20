@@ -37,7 +37,7 @@ func init() {
 	})
 }
 
-// CloudValidate qcloud validate management implementation
+// CloudValidate google cloud validate management implementation
 type CloudValidate struct {
 }
 
@@ -131,10 +131,6 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 	if len(account.ServiceAccountSecret) == 0 {
 		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid crendential info", cloudName)
 	}
-
-	//if len(account.GkeProjectID) == 0 {
-	//	return fmt.Errorf("%s ImportCloudAccountValidate request lost valid gkeProjectID info", cloudName)
-	//}
 
 	sas := &types.GCPServiceAccount{}
 	err := json.Unmarshal([]byte(account.ServiceAccountSecret), sas)

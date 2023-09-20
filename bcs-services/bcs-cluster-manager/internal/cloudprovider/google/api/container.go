@@ -142,20 +142,20 @@ func (cs *ContainerServiceClient) DeleteCluster(ctx context.Context, clusterName
 
 // CreateClusterNodePool create a node pool
 func (cs *ContainerServiceClient) CreateClusterNodePool(ctx context.Context, req *CreateNodePoolRequest,
-	clusterName string) (string, error) {
+	clusterName string) (*container.Operation, error) {
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
 	req.Parent = parent
 	newReq := genCreateNodePoolRequest(req)
 	o, err := cs.containerServiceClient.Projects.Locations.Clusters.NodePools.Create(parent, newReq).Context(ctx).Do()
 	if err != nil {
-		return "", fmt.Errorf("gke client CreateClusterNodePool failed: %v", err)
+		return nil, fmt.Errorf("gke client CreateClusterNodePool failed: %v", err)
 	}
 	blog.Infof("gke client CreateClusterNodePool[%s] successful, operation ID: %s", req.NodePool.Name, o.SelfLink)
 
-	return o.SelfLink, nil
+	return o, nil
 }
 
-// GetClusterNodePool create the node pool
+// GetClusterNodePool get the node pool
 func (cs *ContainerServiceClient) GetClusterNodePool(ctx context.Context, clusterName, nodePoolName string) (
 	*container.NodePool, error) {
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName +
@@ -194,4 +194,16 @@ func (cs *ContainerServiceClient) DeleteClusterNodePool(ctx context.Context, clu
 	blog.Infof("gke client DeleteClusterNodePool[%s] successful, operation ID: %s", nodePoolName, o.SelfLink)
 
 	return o.SelfLink, nil
+}
+
+// GetGKEOperation get GKE operation
+func (cs *ContainerServiceClient) GetGKEOperation(ctx context.Context, operationName string) (
+	*container.Operation, error) {
+	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/operations/" + operationName
+	op, err := cs.containerServiceClient.Projects.Locations.Operations.Get(parent).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gke client GetGKEOperation failed: %v", err)
+	}
+
+	return op, nil
 }

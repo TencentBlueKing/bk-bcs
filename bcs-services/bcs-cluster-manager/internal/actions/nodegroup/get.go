@@ -79,6 +79,7 @@ func removeSensitiveInfo(group *cmproto.NodeGroup) *cmproto.NodeGroup {
 		group.LaunchTemplate.InitLoginPassword = ""
 		if group.LaunchTemplate.KeyPair != nil {
 			group.LaunchTemplate.KeyPair.KeySecret = ""
+			group.LaunchTemplate.KeyPair.KeyPublic = ""
 		}
 	}
 	return group

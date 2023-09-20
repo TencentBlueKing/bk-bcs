@@ -95,16 +95,16 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup,
 	// 所以先不支持labels和taints的更新
 
 	// update instanceGroupManager
-	if o, err := api.PatchInstanceGroupManager(computeCli, group.AutoScaling.AutoScalingID,
+	if _, err := api.PatchInstanceGroupManager(computeCli, group.AutoScaling.AutoScalingID,
 		ng.generatePatchInstanceGroupManager(group)); err != nil {
-		return nil, fmt.Errorf("update node pool failed, operation: %s, err: %s", o.SelfLink, err.Error())
+		return nil, fmt.Errorf("update node pool failed, err: %s", err.Error())
 	}
 	return nil, nil
 }
 
 func (ng *NodeGroup) generatePatchInstanceGroupManager(group *proto.NodeGroup) *compute.InstanceGroupManager {
 	igm := &compute.InstanceGroupManager{
-		UpdatePolicy: api.GenerateUpdatePolicy(group),
+		UpdatePolicy: api.GenerateUpdatePolicy(),
 	}
 	return igm
 }
