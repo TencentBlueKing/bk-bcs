@@ -472,7 +472,8 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context,
 }
 
 // ListConfigItemCount get config item count number
-func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigItemCountReq) (*pbcs.ListConfigItemCountResp, error) {
+func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigItemCountReq) (
+	*pbcs.ListConfigItemCountResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListConfigItemCountResp)
 	res := []*meta.ResourceAttribute{

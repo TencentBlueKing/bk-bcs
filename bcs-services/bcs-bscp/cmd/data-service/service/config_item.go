@@ -525,7 +525,8 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	configItems := make([]*pbci.ConfigItem, 0)
 	// if WithStatus is true, the config items includes the deleted ones and file state, else  without these data
 	if req.WithStatus {
-		fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.BizId, req.AppId)
+		var fileReleased []*table.ReleasedConfigItem
+		fileReleased, err = s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.BizId, req.AppId)
 		if err != nil {
 			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
@@ -544,7 +545,8 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 
 	// search by logic
 	if req.SearchValue != "" {
-		searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.ConfigItem)
+		var searcher search.Searcher
+		searcher, err = search.NewSearcher(req.SearchFields, req.SearchValue, search.ConfigItem)
 		if err != nil {
 			return nil, err
 		}
@@ -585,6 +587,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	return resp, nil
 }
 
+// setCommitSpecForCIs set commit spec for config items
 func (s *Service) setCommitSpecForCIs(kt *kit.Kit, cis []*pbci.ConfigItem) error {
 	ids := make([]uint32, len(cis))
 	for i, ci := range cis {
