@@ -228,10 +228,11 @@ func (s *Service) ListHookReferences(ctx context.Context,
 	}
 
 	r := &pbds.ListHookReferencesReq{
-		BizId:  req.BizId,
-		HookId: req.HookId,
-		Limit:  req.Limit,
-		Start:  req.Start,
+		BizId:     req.BizId,
+		HookId:    req.HookId,
+		Limit:     req.Limit,
+		Start:     req.Start,
+		SearchKey: req.SearchKey,
 	}
 
 	rp, err := s.client.DS.ListHookReferences(grpcKit.RpcCtx(), r)
