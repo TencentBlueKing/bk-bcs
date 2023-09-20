@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package migrations
 
@@ -26,13 +26,13 @@ func init() {
 		Version: "20230625152115",
 		Name:    "20230625152115_gorm_add_app_template_related",
 		Mode:    migrator.GormMode,
-		Up:      mig20230625152115GormAddAppTemplateRelatedUp,
-		Down:    mig20230625152115GormAddAppTemplateRelatedDown,
+		Up:      mig20230625152115Up,
+		Down:    mig20230625152115Down,
 	})
 }
 
-// mig20230625152115GormAddAppTemplateRelatedUp for up migration
-func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
+// mig20230625152115Up for up migration
+func mig20230625152115Up(tx *gorm.DB) error {
 	// AppTemplateBindings : 记录未命名版本服务版本与模版套餐及模版版本的绑定情况
 	type AppTemplateBindings struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
@@ -180,8 +180,8 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 
 }
 
-// mig20230625152115GormAddAppTemplateRelatedDown for down migration
-func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
+// mig20230625152115Down for down migration
+func mig20230625152115Down(tx *gorm.DB) error {
 	// IDGenerators : ID生成器
 	type IDGenerators struct {
 		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package common utils functions
 package common
 
 import (

@@ -44,6 +44,7 @@ type MetricPlugin struct {
 	k8sClient     *kubernetes.Clientset
 }
 
+// Init will init the metric proxy
 func (plugin *MetricPlugin) Init() error {
 	plugin.Path("/{namespace}/{servicemonitor}").Methods("GET").
 		Handler(plugin.middleware.HttpWrapper(plugin.metric))

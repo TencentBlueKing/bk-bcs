@@ -3,6 +3,10 @@ const OperateAudit = () => import(/* webpackChunkName: 'project' */'@/views/proj
 const EventQuery = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/event-query/new-event-query.vue');
 const ProjectInfo = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/project/project-info.vue');
 
+// 云凭证
+const tencentCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/tencentCloud.vue');
+const googleCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/googleCloud.vue');
+
 export default [
   {
     path: 'operate-audit',
@@ -18,5 +22,23 @@ export default [
     path: 'project-info',
     name: 'projectInfo',
     component: ProjectInfo,
+  },
+  {
+    path: 'tencent-cloud',
+    name: 'tencentCloud',
+    component: tencentCloud,
+    meta: {
+      title: 'Tencent Cloud',
+      hideBack: true,
+    },
+  },
+  {
+    path: 'google-cloud',
+    name: 'googleCloud',
+    component: googleCloud,
+    meta: {
+      title: 'Google Cloud',
+      hideBack: true,
+    },
   },
 ];

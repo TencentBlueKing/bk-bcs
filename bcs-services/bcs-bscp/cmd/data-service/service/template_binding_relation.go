@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -26,9 +26,9 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// ListTemplateBoundCounts list template bound counts.
-func (s *Service) ListTemplateBoundCounts(ctx context.Context, req *pbds.ListTemplateBoundCountsReq) (
-	*pbds.ListTemplateBoundCountsResp, error) {
+// ListTmplBoundCounts list template bound counts.
+func (s *Service) ListTmplBoundCounts(ctx context.Context, req *pbds.ListTmplBoundCountsReq) (
+	*pbds.ListTmplBoundCountsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplatesExist(kt, req.TemplateIds); err != nil {
@@ -87,18 +87,18 @@ func (s *Service) ListTemplateBoundCounts(ctx context.Context, req *pbds.ListTem
 		return nil, hitError
 	}
 
-	resp := &pbds.ListTemplateBoundCountsResp{
+	resp := &pbds.ListTmplBoundCountsResp{
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListTemplateRevisionBoundCounts list template revision bound counts.
-func (s *Service) ListTemplateRevisionBoundCounts(ctx context.Context, req *pbds.ListTemplateRevisionBoundCountsReq) (
-	*pbds.ListTemplateRevisionBoundCountsResp, error) {
+// ListTmplRevisionBoundCounts list template revision bound counts.
+func (s *Service) ListTmplRevisionBoundCounts(ctx context.Context, req *pbds.ListTmplRevisionBoundCountsReq) (
+	*pbds.ListTmplRevisionBoundCountsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateRevisionsExist(kt, req.TemplateRevisionIds); err != nil {
+	if err := s.dao.Validator().ValidateTmplRevisionsExist(kt, req.TemplateRevisionIds); err != nil {
 		return nil, err
 	}
 
@@ -148,18 +148,18 @@ func (s *Service) ListTemplateRevisionBoundCounts(ctx context.Context, req *pbds
 		return nil, hitError
 	}
 
-	resp := &pbds.ListTemplateRevisionBoundCountsResp{
+	resp := &pbds.ListTmplRevisionBoundCountsResp{
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListTemplateSetBoundCounts list template bound counts.
-func (s *Service) ListTemplateSetBoundCounts(ctx context.Context, req *pbds.ListTemplateSetBoundCountsReq) (
-	*pbds.ListTemplateSetBoundCountsResp, error) {
+// ListTmplSetBoundCounts list template bound counts.
+func (s *Service) ListTmplSetBoundCounts(ctx context.Context, req *pbds.ListTmplSetBoundCountsReq) (
+	*pbds.ListTmplSetBoundCountsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.TemplateSetIds); err != nil {
+	if err := s.dao.Validator().ValidateTmplSetsExist(kt, req.TemplateSetIds); err != nil {
 		return nil, err
 	}
 
@@ -209,16 +209,16 @@ func (s *Service) ListTemplateSetBoundCounts(ctx context.Context, req *pbds.List
 		return nil, hitError
 	}
 
-	resp := &pbds.ListTemplateSetBoundCountsResp{
+	resp := &pbds.ListTmplSetBoundCountsResp{
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListTemplateBoundUnnamedAppDetails list template bound unnamed app details.
-func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
-	req *pbds.ListTemplateBoundUnnamedAppDetailsReq) (
-	*pbds.ListTemplateBoundUnnamedAppDetailsResp, error) {
+// ListTmplBoundUnnamedApps list template bound unnamed app details.
+func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
+	req *pbds.ListTmplBoundUnnamedAppsReq) (
+	*pbds.ListTmplBoundUnnamedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
@@ -226,7 +226,7 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 	}
 
 	relations, err := s.dao.TemplateBindingRelation().
-		ListTemplateBoundUnnamedAppDetails(kt, req.BizId, req.TemplateId)
+		ListTmplBoundUnnamedApps(kt, req.BizId, req.TemplateId)
 	if err != nil {
 		logs.Errorf("list template bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -280,7 +280,7 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 
 	if req.All {
 		// return all data
-		return &pbds.ListTemplateBoundUnnamedAppDetailsResp{
+		return &pbds.ListTmplBoundUnnamedAppsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -295,17 +295,17 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListTemplateBoundUnnamedAppDetailsResp{
+	resp := &pbds.ListTmplBoundUnnamedAppsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListTemplateBoundNamedAppDetails list template bound named app details.
-func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
-	req *pbds.ListTemplateBoundNamedAppDetailsReq) (
-	*pbds.ListTemplateBoundNamedAppDetailsResp, error) {
+// ListTmplBoundNamedApps list template bound named app details.
+func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
+	req *pbds.ListTmplBoundNamedAppsReq) (
+	*pbds.ListTmplBoundNamedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
@@ -313,7 +313,7 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 	}
 
 	relations, err := s.dao.TemplateBindingRelation().
-		ListTemplateBoundNamedAppDetails(kt, req.BizId, req.TemplateId)
+		ListTmplBoundNamedApps(kt, req.BizId, req.TemplateId)
 	if err != nil {
 		logs.Errorf("list template bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -381,7 +381,7 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 
 	if req.All {
 		// return all data
-		return &pbds.ListTemplateBoundNamedAppDetailsResp{
+		return &pbds.ListTmplBoundNamedAppsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -396,17 +396,17 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListTemplateBoundNamedAppDetailsResp{
+	resp := &pbds.ListTmplBoundNamedAppsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListTemplateBoundTemplateSetDetails list template bound template set details.
-func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
-	req *pbds.ListTemplateBoundTemplateSetDetailsReq) (
-	*pbds.ListTemplateBoundTemplateSetDetailsResp, error) {
+// ListTmplBoundTmplSets list template bound template set details.
+func (s *Service) ListTmplBoundTmplSets(ctx context.Context,
+	req *pbds.ListTmplBoundTmplSetsReq) (
+	*pbds.ListTmplBoundTmplSetsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
@@ -414,7 +414,7 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 	}
 
 	tmplSetIDs, err := s.dao.TemplateBindingRelation().
-		ListTemplateBoundTemplateSetDetails(kt, req.BizId, req.TemplateId)
+		ListTmplBoundTmplSets(kt, req.BizId, req.TemplateId)
 	if err != nil {
 		logs.Errorf("list template bound template set details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -445,7 +445,7 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 
 	if req.All {
 		// return all data
-		return &pbds.ListTemplateBoundTemplateSetDetailsResp{
+		return &pbds.ListTmplBoundTmplSetsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -460,17 +460,17 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListTemplateBoundTemplateSetDetailsResp{
+	resp := &pbds.ListTmplBoundTmplSetsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListMultiTemplateBoundTemplateSetDetails list template bound template set details.
-func (s *Service) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context,
-	req *pbds.ListMultiTemplateBoundTemplateSetDetailsReq) (
-	*pbds.ListMultiTemplateBoundTemplateSetDetailsResp, error) {
+// ListMultiTmplBoundTmplSets list template bound template set details.
+func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context,
+	req *pbds.ListMultiTmplBoundTmplSetsReq) (
+	*pbds.ListMultiTmplBoundTmplSetsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	templateIDs := tools.RemoveDuplicates(req.TemplateIds)
@@ -496,7 +496,7 @@ func (s *Service) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context,
 			}()
 
 			tmplSetIDs, err := s.dao.TemplateBindingRelation().
-				ListTemplateBoundTemplateSetDetails(kt, req.BizId, tmplID)
+				ListTmplBoundTmplSets(kt, req.BizId, tmplID)
 			if err != nil {
 				hitError = err
 				return
@@ -556,7 +556,7 @@ func (s *Service) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context,
 
 	if req.All {
 		// return all data
-		return &pbds.ListMultiTemplateBoundTemplateSetDetailsResp{
+		return &pbds.ListMultiTmplBoundTmplSetsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -571,25 +571,25 @@ func (s *Service) ListMultiTemplateBoundTemplateSetDetails(ctx context.Context,
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListMultiTemplateBoundTemplateSetDetailsResp{
+	resp := &pbds.ListMultiTmplBoundTmplSetsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListTemplateRevisionBoundUnnamedAppDetails list template revision bound unnamed app details.
-func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context,
-	req *pbds.ListTemplateRevisionBoundUnnamedAppDetailsReq) (
-	*pbds.ListTemplateRevisionBoundUnnamedAppDetailsResp, error) {
+// ListTmplRevisionBoundUnnamedApps list template revision bound unnamed app details.
+func (s *Service) ListTmplRevisionBoundUnnamedApps(ctx context.Context,
+	req *pbds.ListTmplRevisionBoundUnnamedAppsReq) (
+	*pbds.ListTmplRevisionBoundUnnamedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateRevisionExist(kt, req.TemplateRevisionId); err != nil {
+	if err := s.dao.Validator().ValidateTmplRevisionExist(kt, req.TemplateRevisionId); err != nil {
 		return nil, err
 	}
 
 	appIDs, err := s.dao.TemplateBindingRelation().
-		ListTemplateRevisionBoundUnnamedAppDetails(kt, req.BizId, req.TemplateRevisionId)
+		ListTmplRevisionBoundUnnamedApps(kt, req.BizId, req.TemplateRevisionId)
 	if err != nil {
 		logs.Errorf("list template revision bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -620,7 +620,7 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 
 	if req.All {
 		// return all data
-		return &pbds.ListTemplateRevisionBoundUnnamedAppDetailsResp{
+		return &pbds.ListTmplRevisionBoundUnnamedAppsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -635,25 +635,25 @@ func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListTemplateRevisionBoundUnnamedAppDetailsResp{
+	resp := &pbds.ListTmplRevisionBoundUnnamedAppsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListTemplateRevisionBoundNamedAppDetails list template revision bound named app details.
-func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
-	req *pbds.ListTemplateRevisionBoundNamedAppDetailsReq) (
-	*pbds.ListTemplateRevisionBoundNamedAppDetailsResp, error) {
+// ListTmplRevisionBoundNamedApps list template revision bound named app details.
+func (s *Service) ListTmplRevisionBoundNamedApps(ctx context.Context,
+	req *pbds.ListTmplRevisionBoundNamedAppsReq) (
+	*pbds.ListTmplRevisionBoundNamedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateRevisionExist(kt, req.TemplateRevisionId); err != nil {
+	if err := s.dao.Validator().ValidateTmplRevisionExist(kt, req.TemplateRevisionId); err != nil {
 		return nil, err
 	}
 
 	relations, err := s.dao.TemplateBindingRelation().
-		ListTemplateRevisionBoundNamedAppDetails(kt, req.BizId, req.TemplateRevisionId)
+		ListTmplRevisionBoundNamedApps(kt, req.BizId, req.TemplateRevisionId)
 	if err != nil {
 		logs.Errorf("list template revision bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -704,7 +704,7 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 
 	if req.All {
 		// return all data
-		return &pbds.ListTemplateRevisionBoundNamedAppDetailsResp{
+		return &pbds.ListTmplRevisionBoundNamedAppsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -719,25 +719,25 @@ func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListTemplateRevisionBoundNamedAppDetailsResp{
+	resp := &pbds.ListTmplRevisionBoundNamedAppsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListTemplateSetBoundUnnamedAppDetails list template set bound unnamed app details.
-func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
-	req *pbds.ListTemplateSetBoundUnnamedAppDetailsReq) (
-	*pbds.ListTemplateSetBoundUnnamedAppDetailsResp, error) {
+// ListTmplSetBoundUnnamedApps list template set bound unnamed app details.
+func (s *Service) ListTmplSetBoundUnnamedApps(ctx context.Context,
+	req *pbds.ListTmplSetBoundUnnamedAppsReq) (
+	*pbds.ListTmplSetBoundUnnamedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateSetExist(kt, req.TemplateSetId); err != nil {
+	if err := s.dao.Validator().ValidateTmplSetExist(kt, req.TemplateSetId); err != nil {
 		return nil, err
 	}
 
 	appIDs, err := s.dao.TemplateBindingRelation().
-		ListTemplateSetBoundUnnamedAppDetails(kt, req.BizId, req.TemplateSetId)
+		ListTmplSetBoundUnnamedApps(kt, req.BizId, req.TemplateSetId)
 	if err != nil {
 		logs.Errorf("list template set bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -768,7 +768,7 @@ func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
 
 	if req.All {
 		// return all data
-		return &pbds.ListTemplateSetBoundUnnamedAppDetailsResp{
+		return &pbds.ListTmplSetBoundUnnamedAppsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -783,21 +783,21 @@ func (s *Service) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context,
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListTemplateSetBoundUnnamedAppDetailsResp{
+	resp := &pbds.ListTmplSetBoundUnnamedAppsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListMultiTemplateSetBoundUnnamedAppDetails list template set bound unnamed app details.
-func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context,
-	req *pbds.ListMultiTemplateSetBoundUnnamedAppDetailsReq) (
-	*pbds.ListMultiTemplateSetBoundUnnamedAppDetailsResp, error) {
+// ListMultiTmplSetBoundUnnamedApps list template set bound unnamed app details.
+func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context,
+	req *pbds.ListMultiTmplSetBoundUnnamedAppsReq) (
+	*pbds.ListMultiTmplSetBoundUnnamedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	templateSetIDs := tools.RemoveDuplicates(req.TemplateSetIds)
-	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, templateSetIDs); err != nil {
+	if err := s.dao.Validator().ValidateTmplSetsExist(kt, templateSetIDs); err != nil {
 		return nil, err
 	}
 
@@ -819,7 +819,7 @@ func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context
 			}()
 
 			appIDs, err := s.dao.TemplateBindingRelation().
-				ListTemplateSetBoundUnnamedAppDetails(kt, req.BizId, tmplSetID)
+				ListTmplSetBoundUnnamedApps(kt, req.BizId, tmplSetID)
 			if err != nil {
 				hitError = err
 				return
@@ -879,7 +879,7 @@ func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context
 
 	if req.All {
 		// return all data
-		return &pbds.ListMultiTemplateSetBoundUnnamedAppDetailsResp{
+		return &pbds.ListMultiTmplSetBoundUnnamedAppsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -894,25 +894,25 @@ func (s *Service) ListMultiTemplateSetBoundUnnamedAppDetails(ctx context.Context
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListMultiTemplateSetBoundUnnamedAppDetailsResp{
+	resp := &pbds.ListMultiTmplSetBoundUnnamedAppsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListTemplateSetBoundNamedAppDetails list template set bound named app details.
-func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
-	req *pbds.ListTemplateSetBoundNamedAppDetailsReq) (
-	*pbds.ListTemplateSetBoundNamedAppDetailsResp, error) {
+// ListTmplSetBoundNamedApps list template set bound named app details.
+func (s *Service) ListTmplSetBoundNamedApps(ctx context.Context,
+	req *pbds.ListTmplSetBoundNamedAppsReq) (
+	*pbds.ListTmplSetBoundNamedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateSetExist(kt, req.TemplateSetId); err != nil {
+	if err := s.dao.Validator().ValidateTmplSetExist(kt, req.TemplateSetId); err != nil {
 		return nil, err
 	}
 
 	relations, err := s.dao.TemplateBindingRelation().
-		ListTemplateSetBoundNamedAppDetails(kt, req.BizId, req.TemplateSetId)
+		ListTmplSetBoundNamedApps(kt, req.BizId, req.TemplateSetId)
 	if err != nil {
 		logs.Errorf("list template set bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -970,7 +970,7 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 
 	if req.All {
 		// return all data
-		return &pbds.ListTemplateSetBoundNamedAppDetailsResp{
+		return &pbds.ListTmplSetBoundNamedAppsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -985,17 +985,17 @@ func (s *Service) ListTemplateSetBoundNamedAppDetails(ctx context.Context,
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListTemplateSetBoundNamedAppDetailsResp{
+	resp := &pbds.ListTmplSetBoundNamedAppsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListLatestTemplateBoundUnnamedAppDetails list the latest template bound unnamed app details.
-func (s *Service) ListLatestTemplateBoundUnnamedAppDetails(ctx context.Context,
-	req *pbds.ListLatestTemplateBoundUnnamedAppDetailsReq) (
-	*pbds.ListLatestTemplateBoundUnnamedAppDetailsResp, error) {
+// ListLatestTmplBoundUnnamedApps list the latest template bound unnamed app details.
+func (s *Service) ListLatestTmplBoundUnnamedApps(ctx context.Context,
+	req *pbds.ListLatestTmplBoundUnnamedAppsReq) (
+	*pbds.ListLatestTmplBoundUnnamedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
@@ -1003,13 +1003,13 @@ func (s *Service) ListLatestTemplateBoundUnnamedAppDetails(ctx context.Context,
 	}
 
 	atbs, err := s.dao.TemplateBindingRelation().
-		ListLatestTemplateBoundUnnamedAppDetails(kt, req.BizId, req.TemplateId)
+		ListLatestTmplBoundUnnamedApps(kt, req.BizId, req.TemplateId)
 	if err != nil {
 		logs.Errorf("list the latest template bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	if len(atbs) == 0 {
-		return &pbds.ListLatestTemplateBoundUnnamedAppDetailsResp{
+		return &pbds.ListLatestTmplBoundUnnamedAppsResp{
 			Count:   0,
 			Details: []*pbtbr.LatestTemplateBoundUnnamedAppDetail{},
 		}, nil
@@ -1076,7 +1076,7 @@ func (s *Service) ListLatestTemplateBoundUnnamedAppDetails(ctx context.Context,
 
 	if req.All {
 		// return all data
-		return &pbds.ListLatestTemplateBoundUnnamedAppDetailsResp{
+		return &pbds.ListLatestTmplBoundUnnamedAppsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -1091,7 +1091,7 @@ func (s *Service) ListLatestTemplateBoundUnnamedAppDetails(ctx context.Context,
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListLatestTemplateBoundUnnamedAppDetailsResp{
+	resp := &pbds.ListLatestTmplBoundUnnamedAppsResp{
 		Count:   totalCnt,
 		Details: details,
 	}

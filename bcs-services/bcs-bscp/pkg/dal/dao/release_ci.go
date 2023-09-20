@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package dao
 
@@ -16,21 +16,22 @@ import (
 	"errors"
 	"fmt"
 
+	rawgen "gorm.io/gen"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
-	rawgen "gorm.io/gen"
 )
 
 // ReleasedCI supplies all the released config item related operations.
 type ReleasedCI interface {
 	// BulkCreateWithTx bulk create released config items with tx.
 	BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error
-	// Get released config item by id and released id
-	Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error)
+	// Get released config item.
+	Get(kit *kit.Kit, bizID, appID, releasedID, configItemID uint32) (*table.ReleasedConfigItem, error)
 	// GetReleasedLately released config item by app id and biz id
 	GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) ([]*table.ReleasedConfigItem, error)
 	// List released config items with options.
@@ -93,20 +94,11 @@ func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items 
 	return nil
 }
 
-// Get released config item by ID and config item id and release id.
-func (dao *releasedCIDao) Get(kit *kit.Kit, configItemID, bizID, releaseID uint32) (*table.ReleasedConfigItem, error) {
-
-	if configItemID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
-	}
-
-	if releaseID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "release id can not be 0")
-	}
-
+// Get released config item.
+func (dao *releasedCIDao) Get(kit *kit.Kit, bizID, appID, releaseID, configItemID uint32) (*table.ReleasedConfigItem, error) {
 	m := dao.genQ.ReleasedConfigItem
 	return m.WithContext(kit.Ctx).Where(
-		m.ConfigItemID.Eq(configItemID), m.ReleaseID.Eq(releaseID), m.BizID.Eq(bizID)).Take()
+		m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID), m.ConfigItemID.Eq(configItemID)).Take()
 }
 
 // List released config items with options.

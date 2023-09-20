@@ -202,7 +202,8 @@ func (a *AgaSupporter) listCustomRoutingPortMappingsByDest(sess *session.Session
 	result, err := svc.ListCustomRoutingPortMappingsByDestination(input)
 	if err != nil {
 		mf(metrics.LibCallStatusErr)
-		blog.Errorf("ListCustomRoutingByDefinition req[subnetID='%s', IPAddr='%s'] failed: %s", subnetID, err.Error())
+		blog.Errorf("ListCustomRoutingByDefinition req[subnetID='%s', IPAddr='%s'] failed: %s", subnetID,
+			ipAddress, err.Error())
 		return nil, errors.Wrapf(err, "ListCustomRoutingByDefinition req[subnetID='%s', IPAddr='%s'] failed", subnetID,
 			ipAddress)
 	}

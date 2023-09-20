@@ -11,6 +11,7 @@
  *
  */
 
+// Package ingresscache 缓存service/workload到ingress的对应信息，提高ingress的调谐效率
 package ingresscache
 
 import (

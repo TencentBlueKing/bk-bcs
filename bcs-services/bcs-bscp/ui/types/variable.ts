@@ -30,8 +30,9 @@ export interface IVariableEditParams {
 export interface IVariableCitedByConfigDetailItem {
   variable_name: string;
   references: {
-    template_id: number;
+    id: number;
     template_revision_id: number;
-    name: string
+    name: string;
+    path: string;
   }[]
 }

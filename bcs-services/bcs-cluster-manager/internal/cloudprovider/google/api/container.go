@@ -16,6 +16,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -23,6 +24,18 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/api/container/v1"
 	"google.golang.org/api/option"
+)
+
+const (
+	// Autopilot auto cluster
+	Autopilot = "autopilot"
+	// Standard standard cluster
+	Standard = "standard"
+
+	// RegionLevel xxx
+	RegionLevel = "regions"
+	// ZoneLevel xxx
+	ZoneLevel = "zones"
 )
 
 // ContainerServiceClient container service client
@@ -70,7 +83,10 @@ func GetContainerServiceClient(ctx context.Context, credentialContent string) (*
 }
 
 // ListCluster list clusters
-func (cs *ContainerServiceClient) ListCluster(ctx context.Context) ([]*container.Cluster, error) {
+func (cs *ContainerServiceClient) ListCluster(ctx context.Context, location string) ([]*container.Cluster, error) {
+	if location != "" {
+		cs.region = location
+	}
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region
 	clusters, err := cs.containerServiceClient.Projects.Locations.Clusters.List(parent).Context(ctx).Do()
 	if err != nil {
@@ -80,15 +96,36 @@ func (cs *ContainerServiceClient) ListCluster(ctx context.Context) ([]*container
 	return clusters.Clusters, nil
 }
 
+func (cs *ContainerServiceClient) getClusterLevel() string {
+	if len(strings.Split(cs.region, "-")) == 2 {
+		return RegionLevel
+	}
+
+	return ZoneLevel
+}
+
 // GetCluster get cluster
 func (cs *ContainerServiceClient) GetCluster(ctx context.Context, clusterName string) (*container.Cluster, error) {
-	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
-	cluster, err := cs.containerServiceClient.Projects.Locations.Clusters.Get(parent).Context(ctx).Do()
+	clusterLevel := cs.getClusterLevel()
+
+	var (
+		gkeCluster *container.Cluster
+		err        error
+	)
+
+	switch clusterLevel {
+	case RegionLevel:
+		parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
+		gkeCluster, err = cs.containerServiceClient.Projects.Locations.Clusters.Get(parent).Context(ctx).Do()
+	case ZoneLevel:
+		gkeCluster, err = cs.containerServiceClient.Projects.Zones.
+			Clusters.Get(cs.gkeProjectID, cs.region, clusterName).Do()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("gke client GetCluster failed: %v", err)
 	}
 
-	return cluster, nil
+	return gkeCluster, nil
 }
 
 // DeleteCluster delete cluster

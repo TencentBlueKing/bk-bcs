@@ -117,7 +117,8 @@ func (plugin *GrpcPlugin) serve(ctx context.Context, req *http.Request) *mw.Http
 	}
 	handler, ok := grpcAccessUrlHandlers[strings.TrimPrefix(req.URL.Path, common.GitOpsProxyURL)]
 	if !ok {
-		return mw.ReturnGRPCErrorResponse(http.StatusForbidden, fmt.Errorf("request url '%s' unahtourized", req.URL.Path))
+		return mw.ReturnGRPCErrorResponse(http.StatusForbidden,
+			fmt.Errorf("request url '%s' unahtourized", req.URL.Path))
 	}
 	return handler(ctx, req)
 }
@@ -188,7 +189,7 @@ func (plugin *GrpcPlugin) handleProjectGet(ctx context.Context, req *http.Reques
 	if statusCode != http.StatusOK {
 		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check project '%s' view permission failed", query.Name))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 // handleRepoList will return repo list
@@ -235,7 +236,7 @@ func (plugin *GrpcPlugin) handleRepoAccess(ctx context.Context, req *http.Reques
 		return mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check project '%s' edit permission failed", repoAccess.Project))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 // handleRepoCreate will create repo to argocd
@@ -252,7 +253,7 @@ func (plugin *GrpcPlugin) handleRepoCreate(ctx context.Context, req *http.Reques
 		return mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check project '%s' edit permission failed", repoCreate.Repo.Project))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 // handleRepoDelete will delete repo from argocd
@@ -269,7 +270,7 @@ func (plugin *GrpcPlugin) handleRepoDelete(ctx context.Context, req *http.Reques
 		return mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check repo '%s' permission failed", query.Repo))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 // handleRepoListRefs will list repo refs from argocd
@@ -286,7 +287,7 @@ func (plugin *GrpcPlugin) handleRepoListRefs(ctx context.Context, req *http.Requ
 		return mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check repo '%s' permission failed", query.Repo))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 // handleRepoListApps will handle repo list apps
@@ -303,7 +304,7 @@ func (plugin *GrpcPlugin) handleRepoListApps(ctx context.Context, req *http.Requ
 		return mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check repo '%s' permission failed", query.Repo))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 // handleRepoGetAppDetails will handle repo get application details
@@ -320,7 +321,7 @@ func (plugin *GrpcPlugin) handleRepoGetAppDetails(ctx context.Context, req *http
 		return mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check repo '%s' permission failed", query.Source.RepoURL))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 // handleRepoGetHelmCharts will handle repo get helm charts
@@ -336,7 +337,7 @@ func (plugin *GrpcPlugin) handleRepoGetHelmCharts(ctx context.Context, req *http
 	if statusCode != http.StatusOK {
 		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check repo '%s' permission failed", query.Repo))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 // handleClusterList will handle cluster list
@@ -377,11 +378,11 @@ func (plugin *GrpcPlugin) handleClusterGet(ctx context.Context, req *http.Reques
 	if err != nil {
 		return mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check application '%s' permission failed", query.Name))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 func (plugin *GrpcPlugin) handleClusterSettingGet(ctx context.Context, req *http.Request) *mw.HttpResponse {
-	return nil
+	return mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("deny operation"))
 }
 
 // handleAppSetList will handle applicationSet list, return applicationSets
@@ -412,7 +413,8 @@ func (plugin *GrpcPlugin) handleAppSetList(ctx context.Context, req *http.Reques
 			names = append(names, item.Name)
 		}
 	}
-	appsetList, err := plugin.middleware.ListApplicationSets(ctx, names)
+	query.Projects = names
+	appsetList, err := plugin.middleware.ListApplicationSets(ctx, query)
 	if err != nil {
 		return mw.ReturnGRPCErrorResponse(http.StatusInternalServerError,
 			errors.Wrapf(err, "list applicationsets by project '%s' from storage failed", names))
@@ -520,7 +522,7 @@ func (plugin *GrpcPlugin) handleAppGet(ctx context.Context, req *http.Request) *
 		return mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check application '%s' permission failed", *query.Name))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }
 
 // handleAppCreate handle application create
@@ -747,5 +749,5 @@ func (plugin *GrpcPlugin) handleAppCommon(ctx context.Context, appName string, a
 		return mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check application '%s' permission failed", appName))
 	}
-	return nil
+	return mw.ReturnArgoReverse()
 }

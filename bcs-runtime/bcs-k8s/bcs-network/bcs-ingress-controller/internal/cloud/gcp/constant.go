@@ -26,4 +26,14 @@ const (
 	ProtocolTCP = "TCP"
 	// ProtocolUDP udp protocol
 	ProtocolUDP = "UDP"
+
+	// AddressTypeInternal internal address
+	AddressTypeInternal = "INTERNAL"
+	// AddressTypeExternal external address
+	AddressTypeExternal = "EXTERNAL"
+
+	// AnnotationKeyLoadBalancerType service load-balancer-type annotation
+	AnnotationKeyLoadBalancerType = "cloud.google.com/load-balancer-type"
+	// AnnotationValueLoadBalancerTypeInternal internal value, need to be set when lb ip is internal
+	AnnotationValueLoadBalancerTypeInternal = "Internal"
 )

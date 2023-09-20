@@ -17,6 +17,7 @@ require (
 	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230707084844-155f32c8f606
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-00010101000000-000000000000
+	github.com/bitfield/script v0.22.0
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/containernetworking/cni v0.6.0
 	github.com/coredns/coredns v1.3.0
@@ -92,7 +93,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/go-cmp v0.5.4 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.3.1 // indirect
@@ -102,11 +103,12 @@ require (
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
+	github.com/itchyny/gojq v0.12.12 // indirect
+	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/juju/ratelimit v1.0.1 // indirect
 	github.com/klauspost/compress v1.9.5 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/micro/go-micro/v2 v2.9.1 // indirect
@@ -138,8 +140,8 @@ require (
 	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
-	golang.org/x/sys v0.0.0-20201214210602-f9fddec55a1e // indirect
+	golang.org/x/sync v0.1.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	golang.org/x/tools v0.0.0-20210106214847-113979e3529a // indirect
@@ -155,6 +157,7 @@ require (
 	k8s.io/klog/v2 v2.0.0 // indirect
 	k8s.io/utils v0.0.0-20200912215256-4140de9c8800 // indirect
 	moul.io/http2curl v1.0.0 // indirect
+	mvdan.cc/sh/v3 v3.6.0 // indirect
 	sigs.k8s.io/controller-runtime v0.6.3 // indirect
 	sigs.k8s.io/structured-merge-diff/v3 v3.0.0 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect

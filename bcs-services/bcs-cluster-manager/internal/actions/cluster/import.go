@@ -18,13 +18,13 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -34,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
 	"github.com/golang/protobuf/ptypes/wrappers"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -172,6 +173,7 @@ func (ia *ImportAction) setResponseData(result bool) {
 		return
 	}
 
+	ia.cluster.KubeConfig = ""
 	respData := map[string]interface{}{
 		"cluster": ia.cluster,
 		"task":    ia.task,

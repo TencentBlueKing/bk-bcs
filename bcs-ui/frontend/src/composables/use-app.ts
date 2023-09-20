@@ -31,6 +31,7 @@ export interface ICluster {
     clusterIPv4CIDR: number
     multiClusterCIDR: number[]
     cidrStep: number
+    serviceIPv4CIDR: string
   }
   master: any
   provider: string
@@ -42,6 +43,14 @@ export interface ICluster {
   is_shared: boolean
   cluster_id: string // 兼容旧版数据（不要再使用）
   importCategory: string
+  clusterAdvanceSettings: any
+  systemID: string
+  description: string
+  creator: string
+  createTime: string
+  updateTime: string
+  vpcID: string
+  networkType: string
 }
 /**
  * 获取项目文档配置信息

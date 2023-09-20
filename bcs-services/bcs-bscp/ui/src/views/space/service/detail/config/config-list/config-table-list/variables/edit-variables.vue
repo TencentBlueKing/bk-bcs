@@ -51,8 +51,6 @@
     if (!tableRef.value.validate()) {
       return
     }
-    console.log(tableRef.value.validate())
-    debugger
     try {
       pending.value = true
       await updateUnReleasedAppVariables(props.bkBizId, props.appId, variableList.value)

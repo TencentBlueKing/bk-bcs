@@ -83,6 +83,9 @@ func (ca *CreateAction) createCloudAccount() error {
 		return err
 	}
 
+	ca.resp.Data = cloudAccount
+	ca.resp.Data.Account = nil
+
 	return nil
 }
 

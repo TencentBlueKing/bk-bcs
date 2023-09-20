@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/gen"
@@ -128,9 +129,9 @@ func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbds.Delete
 	return new(pbbase.EmptyResp), nil
 }
 
-// ListAppBoundTemplateRevisions list app bound template revisions.
-func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.ListAppBoundTemplateRevisionsReq) (
-	*pbds.ListAppBoundTemplateRevisionsResp, error) {
+// ListAppBoundTmplRevisions list app bound template revisions.
+func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbds.ListAppBoundTmplRevisionsReq) (
+	*pbds.ListAppBoundTmplRevisionsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	// validate the page params
@@ -146,7 +147,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.L
 		return nil, err
 	}
 	if len(atb) == 0 {
-		return &pbds.ListAppBoundTemplateRevisionsResp{
+		return &pbds.ListAppBoundTmplRevisionsResp{
 			Count:   0,
 			Details: []*pbatb.AppBoundTmplRevision{},
 		}, nil
@@ -225,7 +226,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.L
 				Signature:            d.Spec.ContentSpec.Signature,
 				ByteSize:             d.Spec.ContentSpec.ByteSize,
 				Creator:              d.Revision.Creator,
-				CreateAt:             d.Revision.CreatedAt.Format(constant.TimeStdFormat),
+				CreateAt:             d.Revision.CreatedAt.Format(time.RFC3339),
 			})
 		}
 	}
@@ -266,7 +267,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.L
 
 	if req.All {
 		// return all data
-		return &pbds.ListAppBoundTemplateRevisionsResp{
+		return &pbds.ListAppBoundTmplRevisionsResp{
 			Count:   totalCnt,
 			Details: details,
 		}, nil
@@ -281,7 +282,7 @@ func (s *Service) ListAppBoundTemplateRevisions(ctx context.Context, req *pbds.L
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListAppBoundTemplateRevisionsResp{
+	resp := &pbds.ListAppBoundTmplRevisionsResp{
 		Count:   totalCnt,
 		Details: details,
 	}
@@ -342,10 +343,10 @@ func (s *Service) setFileState(kt *kit.Kit, unreleased []*pbatb.AppBoundTmplRevi
 	return result, nil
 }
 
-// ListReleasedAppBoundTemplateRevisions list app bound template revisions.
-func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
-	req *pbds.ListReleasedAppBoundTemplateRevisionsReq) (
-	*pbds.ListReleasedAppBoundTemplateRevisionsResp, error) {
+// ListReleasedAppBoundTmplRevisions list app bound template revisions.
+func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
+	req *pbds.ListReleasedAppBoundTmplRevisionsReq) (
+	*pbds.ListReleasedAppBoundTmplRevisionsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	// validate the page params
@@ -365,7 +366,7 @@ func (s *Service) ListReleasedAppBoundTemplateRevisions(ctx context.Context,
 		return nil, err
 	}
 
-	resp := &pbds.ListReleasedAppBoundTemplateRevisionsResp{
+	resp := &pbds.ListReleasedAppBoundTmplRevisionsResp{
 		Count:   uint32(count),
 		Details: pbatb.PbReleasedAppBoundTmplRevisions(details),
 	}
@@ -698,7 +699,7 @@ func (s *Service) genFinalATB(kt *kit.Kit, atb *table.AppTemplateBinding) error 
 		return err
 	}
 
-	if err := s.dao.Validator().ValidateTemplateRevisionsExist(kt, pbs.TemplateRevisionIDs); err != nil {
+	if err := s.dao.Validator().ValidateTmplRevisionsExist(kt, pbs.TemplateRevisionIDs); err != nil {
 		return err
 	}
 	tmplRevisions, err := s.dao.TemplateRevision().ListByIDs(kt, pbs.TemplateRevisionIDs)
@@ -823,7 +824,7 @@ func (s *Service) fillUnspecifiedTemplates(kt *kit.Kit, pbs *parsedBindings) err
 			templateIDs = append(templateIDs, r.TemplateID)
 		}
 
-		if err := s.dao.Validator().ValidateTemplatesBelongToTemplateSet(kt, templateIDs, b.TemplateSetID); err != nil {
+		if err := s.dao.Validator().ValidateTmplsBelongToTmplSet(kt, templateIDs, b.TemplateSetID); err != nil {
 			return err
 		}
 
@@ -839,9 +840,9 @@ func (s *Service) fillUnspecifiedTemplates(kt *kit.Kit, pbs *parsedBindings) err
 		if len(unspecified) > 0 {
 			pbs.TemplateIDs = append(pbs.TemplateIDs, unspecified...)
 
-			templateRevisions, err := s.ListTemplateRevisionNamesByTemplateIDs(
+			templateRevisions, err := s.ListTmplRevisionNamesByTmplIDs(
 				kt.Ctx,
-				&pbds.ListTemplateRevisionNamesByTemplateIDsReq{
+				&pbds.ListTmplRevisionNamesByTmplIDsReq{
 					BizId:       kt.BizID,
 					TemplateIds: unspecified,
 				})
@@ -879,7 +880,7 @@ type parsedBindings struct {
 
 // validateUpsert validate for create or update operation of app template binding
 func (s *Service) validateATBUpsert(kt *kit.Kit, b *parsedBindings) error {
-	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, b.TemplateSetIDs); err != nil {
+	if err := s.dao.Validator().ValidateTmplSetsExist(kt, b.TemplateSetIDs); err != nil {
 		return err
 	}
 
@@ -897,9 +898,9 @@ func (s *Service) validateATBLatestRevisions(kt *kit.Kit, b *parsedBindings) err
 	}
 
 	// the method will validate whether template ids exist as well
-	templateRevisions, err := s.ListTemplateRevisionNamesByTemplateIDs(
+	templateRevisions, err := s.ListTmplRevisionNamesByTmplIDs(
 		kt.Ctx,
-		&pbds.ListTemplateRevisionNamesByTemplateIDsReq{
+		&pbds.ListTmplRevisionNamesByTmplIDsReq{
 			BizId:       kt.BizID,
 			TemplateIds: b.TemplateIDs,
 		})

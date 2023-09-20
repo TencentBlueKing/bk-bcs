@@ -131,7 +131,7 @@
               </template>
               <template v-else>
                 {{ formData.memo || '--' }}
-                <i :class="['bk-bscp-icon icon-edit-small edit-icon', { 'no-edit-perm': props.service.permissions.update }]" @click="handleEditMemo" />
+                <i :class="['bk-bscp-icon icon-edit-small edit-icon', { 'no-edit-perm': !props.service.permissions.update }]" @click="handleEditMemo" />
               </template>
             </div>
           </bk-form-item>

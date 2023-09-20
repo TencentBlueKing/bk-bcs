@@ -11,6 +11,7 @@
  *
  */
 
+// Package printer defines the table writer
 package printer
 
 import (

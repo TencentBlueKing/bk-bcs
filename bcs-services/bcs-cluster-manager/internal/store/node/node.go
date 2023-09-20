@@ -179,6 +179,26 @@ func (m *ModelNode) DeleteNodesByNodeIDs(ctx context.Context, nodeIDs []string) 
 	return nil
 }
 
+// DeleteClusterNodesByIPs delete cluster nodes
+func (m *ModelNode) DeleteClusterNodesByIPs(ctx context.Context, clusterID string, ips []string) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+	if len(ips) == 0 || clusterID == "" {
+		return nil
+	}
+
+	condIP := operator.NewLeafCondition(operator.In, operator.M{nodeIPKeyName: ips})
+	condCls := operator.NewLeafCondition(operator.Eq, operator.M{nodeClusterIDKey: clusterID})
+	cond := operator.NewBranchCondition(operator.And, condIP, condCls)
+
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // DeleteNodesByIPs delete node
 func (m *ModelNode) DeleteNodesByIPs(ctx context.Context, ips []string) error {
 	if err := m.ensureTable(ctx); err != nil {

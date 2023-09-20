@@ -16,6 +16,9 @@ bcs:
     share: 共享集群
     managed: 托管集群
     selfDeployed: 独立集群
+    federation: 联邦集群
+    kubeConfig: kubeConfig导入
+    cloud: 云凭证导入
     publicIcon: 共享
     privateIcon: 专用
   msg:
@@ -557,6 +560,7 @@ cluster:
     region: 所属地域
     clusterType: 集群类型
     cloudClusterID: 云集群ID
+    importCategory: 添加方式
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
@@ -612,6 +616,7 @@ cluster:
           desc: >-
             Kubernetes 集群的 Master 和 Etcd 会由 TKE 团队集中管理和维护，集群管理员不需要关心集群 Master
             的管理和维护。
+          gkeDesc: Kubernetes 集群的 Master 和 Etcd 会由 GKE 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
           clusterLevel:
             text: 集群规格
             desc: >-
@@ -2405,3 +2410,77 @@ ca:
     bandwidthPackage: 带宽包
     button:
       createBandWidth: 新建带宽包
+googleCloud:
+  button:
+    create: 新建凭证
+    validate: 校验
+    create1: 创建
+    cancel: 取消
+  placeholder:
+    search: 搜索名称/集群
+  tips:
+    onlySupportJsonFile: 仅支持创建服务账号时生成的 json 文件
+  label:
+    projectID: Google项目ID
+    tokenName: 凭证名称
+    desc: 描述
+    tokenID: 密钥ID
+    oAuth2ID: OAuth2客户端ID
+    cluster: 关联集群
+    createdAt: 创建时间
+    createdBy: 创建人
+    operate: 操作
+    gcpFile: GCP密钥文件
+    zoneCluster: 
+      title: 可用区级
+      desc: 当前集群规格最多管理2000个节点, 20万个Pod, 40万个容器, 每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
+    regionCluster: 
+      title: 区域级
+      desc: 当前集群规格最多管理15000个节点, 超过5000个节点需联系GKE服务团队提升集群配额, 20万个Pod, 40万个容器, 每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
+importGoogleCloud:
+  title: 导入公有云集群 - 谷歌云
+  tips:
+    disabledTips: 已关联集群的凭证，不可删除
+  label:
+    clusterName: 集群名称
+    token: 云凭证
+    region: 所属区域
+    clusterID: 云集群 ID
+    desc: 集群描述
+  button:
+    test: 连通性测试
+    import: 导入
+    create: 立即新建
+  clusterRegion:
+    zones: 可用区级集群
+    regions: 区域级集群
+regions:
+  asia: 亚洲
+  australia: 澳洲
+  europe: 欧洲
+  northamerica: 北美
+  southamerica: 南美
+  us: 美国
+  other: 其他
+publicCloud:
+  tencent:
+    title: 腾讯云
+    desc: >-
+      腾讯云容器服务 (Tencent Kubernetes Engine,TKE) 基于原生 kubernetes
+      提供以容器未核心的、高度可扩展的高性能容器管理服务。
+  amazon:
+    title: 亚马逊云
+    desc: >-
+      Amazon Elastic Kubernetes Service (Amazon EKS) 是一项托管容器服务，可以在云中和本地运行和扩展
+      Kubernetes 应用程序。
+  google:
+    title: 谷歌云
+    desc: >-
+      Google Kubernetes Engine (GKE) 提供了一个受管环境，您可以使用 Google
+      基础架构在其中部署、受理和扩缩容器化应用。GKE 环境包括多个机器，这些机器组合在一起就形成了集群。
+  azure:
+    title: 微软云
+    desc: >-
+      Azure Kubernetes Service (AKS)
+      内置代码到云端管道以及护栏，能够帮助开发人员以最快速的方式开始开发和部署云原生应用。在本地、边缘和多云 Kubernetes
+      集群试试统一的管理和治理。提供与 Azure 安全、身份、成本管理和迁移服务的互操作性。

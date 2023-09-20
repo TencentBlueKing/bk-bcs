@@ -2,12 +2,14 @@
   import { ref } from 'vue'
   import { IDiffDetail } from '../../../../../../../../../types/service';
   import { IConfigDiffSelected } from '../../../../../../../../../types/config'
+  import { IVariableEditParams } from '../../../../../../../../../types/variable'
   import Configs from './configs.vue'
   import Scripts from './scripts.vue'
 
   const props = defineProps<{
     baseVersionId: number;
     currentVersionId: number;
+    unNamedVersionVariables?: IVariableEditParams[];
     selectedConfig?: IConfigDiffSelected;
   }>()
 
@@ -26,6 +28,7 @@
       <Configs
         :base-version-id="props.baseVersionId"
         :current-version-id="props.currentVersionId"
+        :un-named-version-variables="props.unNamedVersionVariables"
         :selected-config="props.selectedConfig"
         :actived="selectedType === 'config'"
         @selected="handleSelect($event, 'config')" />

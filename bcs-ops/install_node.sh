@@ -72,7 +72,7 @@ init_bap_rule() {
         utils::log "ERROR" "docker client: docker is not found"
       fi
       docker run -v "${PROXY_TOOL_PATH}":/tmp --rm --entrypoint /bin/cp "${bap_image}" \
-        -f /data/bcs/bcs-apiserver-proxy/apiserver-proxy-tools /tmp/ || utils::log "ERROR" "pull ${bap_image} image failed"
+        -f /data/bcs/bcs-apiserver-proxy/bcs-apiserver-proxy-tools /tmp/ || utils::log "ERROR" "pull ${bap_image} image failed"
       ;;
     "containerd")
       if ! command -v ctr &>/dev/null; then
@@ -80,7 +80,7 @@ init_bap_rule() {
       fi
       if ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "${bap_image}"; then
         if ! ctr -n k8s.io run --rm --mount type=bind,src="${PROXY_TOOL_PATH}",dst=/tmp,options=rbind:rw "${bap_image}" \
-          bap-copy."$(date +%s)" /bin/cp -f /data/bcs/bcs-apiserver-proxy/apiserver-proxy-tools /tmp/; then
+          bap-copy."$(date +%s)" /bin/cp -f /data/bcs/bcs-apiserver-proxy/bcs-apiserver-proxy-tools /tmp/; then
           utils::log "ERROR" "containerd fail to run ${bap_image}"
         fi
       else
@@ -95,8 +95,8 @@ init_bap_rule() {
   esac
 
   [[ -z "${VIP}" ]] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
-  "${PROXY_TOOL_PATH}"/bcs-apiserver-proxy -cmd init -vs "${VIP}":"${VS_PORT}" -rs "${LAN_IP}":6443 \
-    -scheduler "${LVS_SCHEDULER}" -toolPath "${PROXY_TOOL_PATH}"/bcs-apiserver-proxy
+  "${PROXY_TOOL_PATH}"/bcs-apiserver-proxy-tools -cmd init -vs "${VIP}":"${VS_PORT}" -rs "${LAN_IP}":6443 \
+    -scheduler "${LVS_SCHEDULER}" -toolPath "${PROXY_TOOL_PATH}"/bcs-apiserver-proxy-tools
   "${ROOT_DIR}"/system/config_bcs_dns -u "${VIP}" k8s-api.bcs.local
   k8s::restart_kubelet
 }

@@ -168,9 +168,9 @@
     <div class="service-list-content">
       <div class="head-section">
         <bk-button
-          v-cursor="{ active: !props.permCheckLoading && props.hasCreateServicePerm }"
+          v-cursor="{ active: props.permCheckLoading || !props.hasCreateServicePerm }"
           theme="primary"
-          :class="{ 'bk-button-with-no-perm': !props.permCheckLoading && props.hasCreateServicePerm }"
+          :class="{ 'bk-button-with-no-perm': props.permCheckLoading || !props.hasCreateServicePerm }"
           :disabled="props.permCheckLoading"
           @click="handleCreateServiceClick">
           <Plus class="create-icon" />
