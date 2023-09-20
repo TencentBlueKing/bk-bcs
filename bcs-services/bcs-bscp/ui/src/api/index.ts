@@ -99,3 +99,14 @@ export const updateApp = (params: any) => {
 export const permissionCheck = (params: { resources: IPermissionQueryResourceItem[] }) => {
   return http.post(`/auth/iam/permission/check`, params).then(resp => resp.data);
 }
+
+/**
+ * 退出登录
+ * @returns
+ */
+export const loginOut = () => {
+  return http.get(`/logout`).then(resp => {
+    console.log(resp.data);
+    window.location.href = resp.data.login_plain_url + window.location.href
+  })
+}

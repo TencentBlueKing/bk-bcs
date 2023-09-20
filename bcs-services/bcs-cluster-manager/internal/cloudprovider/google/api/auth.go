@@ -47,12 +47,15 @@ type googleAuthProvider struct {
 	persister   rest.AuthProviderConfigPersister
 }
 
+// WrapTransport implement AuthProvider interface
 func (g *googleAuthProvider) WrapTransport(rt http.RoundTripper) http.RoundTripper {
 	return &oauth2.Transport{
 		Base:   rt,
 		Source: g.tokenSource,
 	}
 }
+
+// Login implement AuthProvider interface
 func (g *googleAuthProvider) Login() error { return nil }
 
 func newGoogleAuthProvider(_ string, config map[string]string, persister rest.AuthProviderConfigPersister) (rest.AuthProvider, error) {
@@ -95,6 +98,7 @@ func newCachedTokenSource(accessToken, expiry string, persister rest.AuthProvide
 	}, nil
 }
 
+// Token get a token
 func (t *cachedTokenSource) Token() (*oauth2.Token, error) {
 	tok := t.cachedToken()
 	if tok.Valid() && !tok.Expiry.IsZero() {

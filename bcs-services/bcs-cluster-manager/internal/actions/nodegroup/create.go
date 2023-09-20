@@ -121,9 +121,13 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 	}
 
 	// base64 encode secret file
-	if group.LaunchTemplate != nil && group.LaunchTemplate.KeyPair != nil &&
-		len(group.LaunchTemplate.KeyPair.KeySecret) > 0 {
-		group.LaunchTemplate.KeyPair.KeySecret = utils.Base64Encode(group.LaunchTemplate.KeyPair.KeySecret)
+	if group.LaunchTemplate != nil && group.LaunchTemplate.KeyPair != nil {
+		if len(group.LaunchTemplate.KeyPair.KeySecret) > 0 {
+			group.LaunchTemplate.KeyPair.KeySecret = utils.Base64Encode(group.LaunchTemplate.KeyPair.KeySecret)
+		}
+		if len(group.LaunchTemplate.KeyPair.KeyPublic) > 0 {
+			group.LaunchTemplate.KeyPair.KeyPublic = utils.Base64Encode(group.LaunchTemplate.KeyPair.KeyPublic)
+		}
 	}
 
 	// base64 encode script file

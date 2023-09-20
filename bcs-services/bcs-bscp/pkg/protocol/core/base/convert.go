@@ -18,7 +18,6 @@ import (
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 
-	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
@@ -61,7 +60,7 @@ func PbCreatedRevision(r *table.CreatedRevision) *CreatedRevision {
 
 	return &CreatedRevision{
 		Creator:  r.Creator,
-		CreateAt: r.CreatedAt.Format(constant.TimeStdFormat),
+		CreateAt: r.CreatedAt.Format(time.RFC3339),
 	}
 }
 

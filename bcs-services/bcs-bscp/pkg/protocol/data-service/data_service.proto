@@ -44,6 +44,7 @@ service Data {
     rpc UpdateConfigItem(UpdateConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
+
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
     rpc ListReleasedConfigItems(ListReleasedConfigItemsReq) returns (ListReleasedConfigItemsResp) {}
     rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {}
@@ -472,8 +473,8 @@ message GetReleaseByNameReq {
 message GetReleasedCIReq {
     uint32 biz_id         = 1;
     uint32 app_id         = 2;
-    uint32 config_item_id = 3;
-    uint32 release_id     = 4;
+    uint32 release_id     = 3;
+    uint32 config_item_id = 4;
 }
 
 message CreateHookReq {
@@ -510,13 +511,14 @@ message GetHookInfoSpec {
 }
 
 message ListHooksReq {
-    uint32 biz_id  = 1;
-    string name    = 2;
-    string tag     = 3;
-    bool   all     = 5;
-    bool   not_tag = 6;
-    uint32 start   = 7;
-    uint32 limit   = 8;
+    uint32 biz_id    = 1;
+    string name      = 2;
+    string tag       = 3;
+    bool   all       = 5;
+    bool   not_tag   = 6;
+    uint32 start     = 7;
+    uint32 limit     = 8;
+    string searchKey = 9;
 }
 
 message ListHooksResp {

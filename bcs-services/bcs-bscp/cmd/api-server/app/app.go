@@ -143,5 +143,5 @@ func (as *apiServer) listenAndServe() error {
 }
 
 func (as *apiServer) finalizer() {
-	return
+	// for structural consistency
 }

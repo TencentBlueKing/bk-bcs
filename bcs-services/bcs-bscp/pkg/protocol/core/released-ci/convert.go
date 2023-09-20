@@ -13,6 +13,8 @@
 package pbrci
 
 import (
+	"time"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
@@ -67,7 +69,7 @@ func PbReleasedCIFromCache(rs []*types.ReleaseCICache) []*ReleasedConfigItem {
 				},
 			},
 			ConfigItemId: one.ConfigItemID,
-			ConfigItemSpec: &pbci.ConfigItemSpec{
+			Spec: &pbci.ConfigItemSpec{
 				Name:     one.ConfigItemSpec.Name,
 				Path:     one.ConfigItemSpec.Path,
 				FileType: string(one.ConfigItemSpec.FileType),
@@ -95,14 +97,14 @@ func PbReleasedConfigItem(rci *table.ReleasedConfigItem) *ReleasedConfigItem {
 	}
 
 	return &ReleasedConfigItem{
-		Id:             rci.ID,
-		ReleaseId:      rci.ReleaseID,
-		CommitId:       rci.CommitID,
-		CommitSpec:     pbcommit.PbReleasedCommitSpec(rci.CommitSpec),
-		ConfigItemId:   rci.ConfigItemID,
-		ConfigItemSpec: pbci.PbConfigItemSpec(rci.ConfigItemSpec),
-		Attachment:     pbci.PbConfigItemAttachment(rci.Attachment),
-		Revision:       pbbase.PbCreatedRevision(rci.Revision),
+		Id:           rci.ID,
+		ReleaseId:    rci.ReleaseID,
+		CommitId:     rci.CommitID,
+		CommitSpec:   pbcommit.PbReleasedCommitSpec(rci.CommitSpec),
+		ConfigItemId: rci.ConfigItemID,
+		Spec:         pbci.PbConfigItemSpec(rci.ConfigItemSpec),
+		Attachment:   pbci.PbConfigItemAttachment(rci.Attachment),
+		Revision:     pbbase.PbCreatedRevision(rci.Revision),
 	}
 }
 
@@ -120,8 +122,8 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 		Revision: &pbbase.Revision{
 			Creator:  rci.Revision.Creator,
 			Reviser:  rci.Revision.Creator,
-			CreateAt: rci.Revision.CreatedAt.Format(constant.TimeStdFormat),
-			UpdateAt: rci.Revision.CreatedAt.Format(constant.TimeStdFormat),
+			CreateAt: rci.Revision.CreatedAt.Format(time.RFC3339),
+			UpdateAt: rci.Revision.CreatedAt.Format(time.RFC3339),
 		},
 	}
 }

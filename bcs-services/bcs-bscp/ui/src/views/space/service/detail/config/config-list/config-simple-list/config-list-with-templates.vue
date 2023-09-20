@@ -5,7 +5,7 @@
   import { useConfigStore } from '../../../../../../../store/config'
   import { IConfigItem, IConfigListQueryParams, IBoundTemplateGroup, IBoundTemplateDetail } from '../../../../../../../../types/config'
   import { ICommonQuery } from '../../../../../../../../types/index'
-  import { getConfigList, getBoundTemplates, getBoundTemplatesByAppVersion } from '../../../../../../../api/config'
+  import { getConfigList, getReleasedConfigList, getBoundTemplates, getBoundTemplatesByAppVersion } from '../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../utils/config'
   import SearchInput from '../../../../../../../components/search-input.vue'
   import EditConfig from '../config-table-list/edit-config.vue'
@@ -87,17 +87,22 @@
   const getCommonConfigList = async() => {
     commonConfigListLoading.value = true
     try {
-      const params: IConfigListQueryParams = {
+      const params: ICommonQuery = {
         start: 0,
         all: true
       }
       if (searchStr.value) {
-        params.searchKey = searchStr.value
+        params.search_fields = 'revision_name,revision_memo,name,path,creator'
+        params.search_value = searchStr.value
       }
-      if (!isUnNamedVersion.value) {
-        params.release_id = versionData.value.id
+
+      let res
+      if (isUnNamedVersion.value) {
+        res = await getConfigList(props.bkBizId, props.appId, params)
+      } else {
+        res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params)
       }
-      const res = await getConfigList(props.bkBizId, props.appId, params)
+
       configList.value = res.details
     } catch (e) {
       console.error(e)

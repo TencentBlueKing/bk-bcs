@@ -6,8 +6,8 @@
   import { useConfigStore } from '../../../../../../../../store/config'
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import { datetimeFormat } from '../../../../../../../../utils/index'
-  import { IConfigItem, IConfigListQueryParams, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config'
-  import { getConfigList, getBoundTemplates, getBoundTemplatesByAppVersion, deleteServiceConfigItem, deleteBoundPkg } from '../../../../../../../../api/config'
+  import { IConfigItem, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config'
+  import { getConfigList, getReleasedConfigList, getBoundTemplates, getBoundTemplatesByAppVersion, deleteServiceConfigItem, deleteBoundPkg } from '../../../../../../../../api/config'
   import { getAppPkgBindingRelations } from '../../../../../../../../api/template'
   import StatusTag from './status-tag'
   import EditConfig from '../edit-config.vue'
@@ -116,17 +116,21 @@
   const getCommonConfigList = async() => {
     commonConfigListLoading.value = true
     try {
-      const params: IConfigListQueryParams = {
+      const params: ICommonQuery = {
         start: 0,
         all: true
       }
       if (props.searchStr) {
-        params.searchKey = props.searchStr
+        params.search_fields = 'revision_name,revision_memo,name,path,creator'
+        params.search_value = props.searchStr
       }
-      if (!isUnNamedVersion.value) {
-        params.release_id = versionData.value.id
+
+      let res
+      if (isUnNamedVersion.value) {
+        res = await getConfigList(props.bkBizId, props.appId, params)
+      } else {
+        res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params)
       }
-      const res = await getConfigList(props.bkBizId, props.appId, params)
       configList.value = res.details
       configsCount.value = res.count
     } catch (e) {
@@ -156,7 +160,9 @@
         res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id)
       }
       templateGroupList.value = res.details
-      templatesCount.value = res.count
+      templatesCount.value = res.details.reduce((acc: number, crt: IBoundTemplateGroup) => {
+        return acc + crt.template_revisions.length
+      }, 0)
     } catch (e) {
       console.error(e)
     } finally {
@@ -279,7 +285,7 @@
 
 </script>
 <template>
-  <bk-loading :loading="loading" style="min-height: 200px">
+  <bk-loading :loading="loading" style="height: 100%">
     <table class="config-groups-table">
       <thead>
         <tr class="config-groups-table-tr">

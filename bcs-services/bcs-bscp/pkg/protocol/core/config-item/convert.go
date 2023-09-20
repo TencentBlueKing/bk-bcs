@@ -13,7 +13,8 @@
 package pbci
 
 import (
-	"bscp.io/pkg/criteria/constant"
+	"time"
+
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 )
@@ -107,11 +108,12 @@ func PbConfigItem(ci *table.ConfigItem, fileState string) *ConfigItem {
 	}
 
 	return &ConfigItem{
-		Id:         ci.ID,
-		FileState:  fileState,
-		Spec:       PbConfigItemSpec(ci.Spec),
-		Attachment: PbConfigItemAttachment(ci.Attachment),
-		Revision:   pbbase.PbRevision(ci.Revision),
+		Id:           ci.ID,
+		ConfigItemId: ci.ID,
+		FileState:    fileState,
+		Spec:         PbConfigItemSpec(ci.Spec),
+		Attachment:   PbConfigItemAttachment(ci.Attachment),
+		Revision:     pbbase.PbRevision(ci.Revision),
 	}
 }
 
@@ -146,6 +148,6 @@ func PbConfigItemCount(cc *table.ListConfigItemCounts) *ListConfigItemCounts {
 	return &ListConfigItemCounts{
 		AppId:    cc.AppId,
 		Count:    cc.Count,
-		UpdateAt: cc.UpdatedAt.Format(constant.TimeStdFormat),
+		UpdateAt: cc.UpdatedAt.Format(time.RFC3339),
 	}
 }

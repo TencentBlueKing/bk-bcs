@@ -59,7 +59,7 @@ func (rk resKind) ReleasedInstance(appID uint32) string {
 	return fmt.Sprintf("released-inst-%d", appID)
 }
 
-// ReleasedGroup return the credential matched ci resource kind.
+// CredentialMatchedCI return the credential matched ci resource kind.
 func (rk resKind) CredentialMatchedCI(bizID uint32) string {
 	return fmt.Sprintf("credential-matched-ci-%d", bizID)
 }

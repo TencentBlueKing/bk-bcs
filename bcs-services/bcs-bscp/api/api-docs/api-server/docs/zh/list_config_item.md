@@ -13,6 +13,7 @@
 |start    |uint32    |否    | 记录开始位置，start 起始值为0 |
 |limit    |uint32    |否    | 每页限制条数，最大200，不能为0  |
 |searchKey |string |否 | 筛选条件（名称、创建人、更新人） |
+|with_status |bool |否 | 是否返回模版配置项相对上个版本的状态，默认为否 |
 
 ### 响应示例
 
@@ -22,7 +23,8 @@
     "count": 1,
     "details": [
       {
-        "id": 1,
+        "id":1,
+        "config_item_id":1,
         "spec": {
           "name": "server.yaml",
           "path": "/etc",
@@ -75,14 +77,15 @@
 
 #### data.detail[n]
 
-| 参数名称     | 参数类型   | 描述                           |
-| ------------ | ---------- | ------------------------------ |
-|      id        |      uint32      |            配置项ID                    |
-|      spec        |      object      |            配置项详情               |
-| commit_spec | object | 提交详情 |
-|      attachment        |      object      |            配置项关联信息                  |
-|      revision        |      object      |            修改信息                    |
-| file_state | string | 配置文件状态      |
+| 参数名称           | 参数类型   | 描述                           |
+|----------------| ---------- | ------------------------------ |
+| id             |      uint32      |            配置项记录唯一ID                    |
+| config_item_id |      uint32      |            配置项ID                    |
+| spec           |      object      |            配置项详情               |
+| commit_spec    | object | 提交详情 |
+| attachment     |      object      |            配置项关联信息                  |
+| revision       |      object      |            修改信息                    |
+| file_state     | string | 配置文件状态      |
 
 ##### file_state 的字段说明
 

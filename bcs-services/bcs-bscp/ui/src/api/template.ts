@@ -206,7 +206,11 @@ export const downloadTemplateContent = (biz_id: string, templateSpaceId: number,
     headers: {
       'X-Bscp-Template-Space-Id': templateSpaceId,
       'X-Bkapi-File-Content-Id': signature,
-    }}).then(res => res)
+    },
+    transitional: {
+      forcedJSONParsing: false
+    }
+  }).then(res => res)
 }
 
 /**
