@@ -39,6 +39,7 @@ import (
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/server"
+	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
@@ -474,6 +475,7 @@ func (crSvc *clusterResourcesService) initModel() error {
 		Password:              password,
 		MaxPoolSize:           uint64(crSvc.conf.Mongo.MaxPoolSize),
 		MinPoolSize:           uint64(crSvc.conf.Mongo.MinPoolSize),
+		Monitor:               otelmongo.NewMonitor(),
 	}
 
 	mongoDB, err := mongo.NewDB(mongoOptions)

@@ -3,9 +3,9 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-monitor
 go 1.20
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230913035118-2b1c8961a700
-	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230913035118-2b1c8961a700
-	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230913035118-2b1c8961a700
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230920065036-5ec367ec2378
+	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230921024236-fc3b5f7e6d87
+	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230918042150-6020611e4f01
 	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230901032130-5c3e207129c5
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20230506100250-1d5620f4abf4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230602131736-2c6f5ea23f31
@@ -17,7 +17,7 @@ require (
 	github.com/gin-contrib/requestid v0.0.4
 	github.com/gin-contrib/sse v0.1.0
 	github.com/gin-gonic/gin v1.9.0
-	github.com/go-kit/log v0.2.1
+	github.com/go-kit/log v0.2.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-resty/resty/v2 v2.7.0
@@ -44,6 +44,7 @@ require (
 	github.com/swaggo/swag v1.8.1
 	github.com/thanos-io/thanos v0.26.0
 	go-micro.dev/v4 v4.10.2
+	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.44.0
 	go.uber.org/automaxprocs v1.5.1
 	golang.org/x/sync v0.2.0
 	google.golang.org/grpc v1.57.0
@@ -65,7 +66,7 @@ require (
 	github.com/TencentBlueKing/gopkg v1.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.21.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.41 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.15.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.17.0 // indirect
 	github.com/bytedance/sonic v1.8.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
@@ -73,7 +74,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/frankban/quicktest v1.14.4 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
-	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/golang-migrate/migrate/v4 v4.16.2 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
@@ -86,14 +86,15 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/onsi/ginkgo/v2 v2.9.2 // indirect
 	github.com/onsi/gomega v1.27.6 // indirect
 	github.com/openzipkin/zipkin-go v0.3.0 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
-	github.com/xdg-go/scram v1.1.1 // indirect
-	github.com/xdg-go/stringprep v1.0.3 // indirect
+	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.28.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.43.0 // indirect
@@ -101,7 +102,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.17.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.17.0 // indirect
 	go.opentelemetry.io/otel/exporters/zipkin v1.3.0 // indirect
-	go.opentelemetry.io/otel/metric v1.17.0 // indirect
+	go.opentelemetry.io/otel/metric v1.18.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc // indirect
@@ -225,13 +226,13 @@ require (
 	go.etcd.io/etcd/api/v3 v3.5.4 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.4 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.4 // indirect
-	go.mongodb.org/mongo-driver v1.7.5
+	go.mongodb.org/mongo-driver v1.12.1
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/propagators/ot v1.4.0 // indirect
-	go.opentelemetry.io/otel v1.17.0
+	go.opentelemetry.io/otel v1.18.0
 	go.opentelemetry.io/otel/bridge/opentracing v1.17.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.17.0 // indirect
-	go.opentelemetry.io/otel/trace v1.17.0
+	go.opentelemetry.io/otel/trace v1.18.0
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/goleak v1.2.1 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
@@ -287,4 +288,6 @@ replace (
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
 	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20230707020703-bac1f168813b
 	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
+	// from github.com/thanos-io/thanos
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp => go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
 )
