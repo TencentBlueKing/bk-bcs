@@ -2,6 +2,12 @@ module github.com/Tencent/bk-bcs/bcs-services/cluster-resources
 
 go 1.20
 
+replace (
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp => go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.40.0
+	go.opentelemetry.io/otel => go.opentelemetry.io/otel v1.14.0
+	go.opentelemetry.io/otel/metric => go.opentelemetry.io/otel/metric v0.37.0
+)
+
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
@@ -23,7 +29,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang/glog v1.1.0
 	github.com/golang/protobuf v1.5.3
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
@@ -31,12 +37,12 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.16.0
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cast v1.3.1
 	github.com/stretchr/testify v1.8.4
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802
 	go-micro.dev/v4 v4.10.2
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.35.1
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.43.0
 	go.uber.org/zap v1.19.1
 	google.golang.org/genproto v0.0.0-20230526203410-71b5a4ffd15e // indirect
 	google.golang.org/grpc v1.56.2
@@ -49,14 +55,15 @@ require (
 )
 
 require (
-	go.opentelemetry.io/otel v1.14.0
+	go.opentelemetry.io/otel v1.18.0
 	go.opentelemetry.io/otel/exporters/jaeger v1.3.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.14.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.14.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.14.0 // indirect
 	go.opentelemetry.io/otel/exporters/zipkin v1.3.0 // indirect
+	go.opentelemetry.io/otel/metric v1.18.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.14.0 // indirect
-	go.opentelemetry.io/otel/trace v1.14.0
+	go.opentelemetry.io/otel/trace v1.18.0
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 )
 
@@ -123,7 +130,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
-	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/leodido/go-urn v1.2.2 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
@@ -198,6 +205,7 @@ require (
 )
 
 require (
+	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230911061621-d47f5fe58e35
 	github.com/go-redis/redis/extra/redisotel/v8 v8.11.5
 	github.com/google/gnostic-models v0.6.8
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc
@@ -226,11 +234,11 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/spf13/cobra v1.7.0 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
-	go.opentelemetry.io/otel/metric v0.31.0 // indirect
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	k8s.io/cli-runtime v0.28.0 // indirect
 	k8s.io/component-base v0.28.0 // indirect
+	k8s.io/klog v1.0.0 // indirect
 	sigs.k8s.io/kustomize/api v0.13.5-0.20230601165947-6ce0bf390ce3 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.14.3-0.20230601165947-6ce0bf390ce3 // indirect
 )
