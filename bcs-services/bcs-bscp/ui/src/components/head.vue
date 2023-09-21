@@ -98,7 +98,7 @@
     {
       title: '产品文档',
       click () {
-        window.open('https://iwiki.woa.com/space/BSCP')
+        window.open(BSCP_CONFIG.help)
         isShowDropdown.value = !isShowDropdown.value
       },
     },

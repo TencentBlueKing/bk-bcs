@@ -300,7 +300,7 @@
         <bk-input v-model="localVal.user_group" :disabled="!editable" @change="change"></bk-input>
       </bk-form-item>
     </div>
-    <bk-form-item v-if="localVal.file_type === 'binary'" label="配置内容" :required="true">
+    <bk-form-item v-if="localVal.file_type === 'binary'" label="配置内容">
       <bk-upload
         class="config-uploader"
         url=""
