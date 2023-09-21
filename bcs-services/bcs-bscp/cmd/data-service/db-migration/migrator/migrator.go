@@ -26,8 +26,7 @@ import (
 
 	"gorm.io/gorm"
 
-	dbmigration "bscp.io/cmd/data-service/db-migration"
-	"bscp.io/pkg/criteria/constant"
+	"bscp.io/cmd/data-service/db-migration"
 )
 
 const (
@@ -154,7 +153,7 @@ func (m *Migrator) Up(step int) error {
 		}
 
 		if result := tx.Exec("INSERT INTO `schema_migrations` (applied, version) VALUES(?, ?)",
-			time.Now().Format(constant.TimeStdFormat), mg.Version); result.Error != nil {
+			time.Now().UTC(), mg.Version); result.Error != nil {
 			tx.Rollback()
 			return result.Error
 		}

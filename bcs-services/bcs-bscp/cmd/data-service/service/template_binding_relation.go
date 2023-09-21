@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"strconv"
+	"strings"
 	"sync"
 
 	"bscp.io/pkg/dal/table"
@@ -22,6 +23,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbtbr "bscp.io/pkg/protocol/core/template-binding-relation"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
@@ -275,6 +277,28 @@ func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
 		}
 	}
 
+	// search by logic
+	if req.SearchValue != "" {
+		searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.TmplBoundUnnamedApp)
+		if err != nil {
+			return nil, err
+		}
+		fields := searcher.SearchFields()
+		fieldsMap := make(map[string]bool)
+		for _, f := range fields {
+			fieldsMap[f] = true
+		}
+		newDetails := make([]*pbtbr.TemplateBoundUnnamedAppDetail, 0)
+		for _, detail := range details {
+			if (fieldsMap["app_name"] && strings.Contains(detail.AppName, req.SearchValue)) ||
+				(fieldsMap["template_revision_name"] && strings.Contains(detail.TemplateRevisionName,
+					req.SearchValue)) {
+				newDetails = append(newDetails, detail)
+			}
+		}
+		details = newDetails
+	}
+
 	// totalCnt is all data count
 	totalCnt := uint32(len(details))
 
@@ -374,6 +398,29 @@ func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
 				ReleaseName:          releaseMap[r.ReleaseID].Spec.Name,
 			})
 		}
+	}
+
+	// search by logic
+	if req.SearchValue != "" {
+		searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.TmplBoundNamedApp)
+		if err != nil {
+			return nil, err
+		}
+		fields := searcher.SearchFields()
+		fieldsMap := make(map[string]bool)
+		for _, f := range fields {
+			fieldsMap[f] = true
+		}
+		newDetails := make([]*pbtbr.TemplateBoundNamedAppDetail, 0)
+		for _, detail := range details {
+			if (fieldsMap["app_name"] && strings.Contains(detail.AppName, req.SearchValue)) ||
+				(fieldsMap["template_revision_name"] && strings.Contains(detail.TemplateRevisionName,
+					req.SearchValue)) ||
+				(fieldsMap["release_name"] && strings.Contains(detail.ReleaseName, req.SearchValue)) {
+				newDetails = append(newDetails, detail)
+			}
+		}
+		details = newDetails
 	}
 
 	// totalCnt is all data count
@@ -615,6 +662,26 @@ func (s *Service) ListTmplRevisionBoundUnnamedApps(ctx context.Context,
 		})
 	}
 
+	// search by logic
+	if req.SearchValue != "" {
+		searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.TmplRevisionBoundUnnamedApp)
+		if err != nil {
+			return nil, err
+		}
+		fields := searcher.SearchFields()
+		fieldsMap := make(map[string]bool)
+		for _, f := range fields {
+			fieldsMap[f] = true
+		}
+		newDetails := make([]*pbtbr.TemplateRevisionBoundUnnamedAppDetail, 0)
+		for _, detail := range details {
+			if fieldsMap["app_name"] && strings.Contains(detail.AppName, req.SearchValue) {
+				newDetails = append(newDetails, detail)
+			}
+		}
+		details = newDetails
+	}
+
 	// totalCnt is all data count
 	totalCnt := uint32(len(details))
 
@@ -697,6 +764,27 @@ func (s *Service) ListTmplRevisionBoundNamedApps(ctx context.Context,
 			ReleaseId:   r.ReleaseID,
 			ReleaseName: releaseMap[r.ReleaseID].Spec.Name,
 		})
+	}
+
+	// search by logic
+	if req.SearchValue != "" {
+		searcher, err := search.NewSearcher(req.SearchFields, req.SearchValue, search.TmplRevisionBoundNamedApp)
+		if err != nil {
+			return nil, err
+		}
+		fields := searcher.SearchFields()
+		fieldsMap := make(map[string]bool)
+		for _, f := range fields {
+			fieldsMap[f] = true
+		}
+		newDetails := make([]*pbtbr.TemplateRevisionBoundNamedAppDetail, 0)
+		for _, detail := range details {
+			if (fieldsMap["app_name"] && strings.Contains(detail.AppName, req.SearchValue)) ||
+				(fieldsMap["release_name"] && strings.Contains(detail.ReleaseName, req.SearchValue)) {
+				newDetails = append(newDetails, detail)
+			}
+		}
+		details = newDetails
 	}
 
 	// totalCnt is all data count

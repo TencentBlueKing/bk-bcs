@@ -109,7 +109,7 @@ func deleteIgmInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 	var (
 		instanceIDList, validateInstances = make([]string, 0), make([]string, 0)
 	)
-	igmInstances, err := client.ListInstanceGroupsInstances(ctx, igmInfo[2], igmInfo[(len(igmInfo)-1)])
+	igmInstances, err := client.ListInstanceGroupsInstances(ctx, igmInfo[3], igmInfo[(len(igmInfo)-1)])
 	if err != nil {
 		blog.Errorf("deleteIgmInstances[%s] ListInstanceGroupsInstances[%s] failed: %v", taskID,
 			igmInfo[(len(igmInfo)-1)], err.Error())

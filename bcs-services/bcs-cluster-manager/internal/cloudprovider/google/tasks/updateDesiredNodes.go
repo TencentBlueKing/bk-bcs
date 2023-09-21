@@ -15,8 +15,13 @@ package tasks
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"strings"
 	"time"
@@ -97,7 +102,9 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 // applyInstanceMachines apply machines from MIG
 func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum uint64) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-
+	if len(info.NodeGroup.AutoScaling.Zones) != 0 {
+		info.CmOption.Region = info.NodeGroup.AutoScaling.Zones[0]
+	}
 	client, err := api.NewComputeServiceClient(info.CmOption)
 	if err != nil {
 		return err
@@ -132,8 +139,10 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 	igm, _ := api.GetInstanceGroupManager(client, info.NodeGroup.AutoScaling.AutoScalingID)
 	instances, err := api.ListInstanceGroupsInstances(client, igm.InstanceGroup)
 	if err != nil {
+		blog.Errorf("ApplyInstanceMachinesTask[%s]: ListInstanceGroupsInstances failed: %s", taskID, err.Error())
 		return err
 	}
+	blog.Infof("ApplyInstanceMachinesTask[%s]: ListInstanceGroupsInstances got %d instances, %#v", taskID, len(instances), instances)
 	for _, ins := range instances {
 		insInfo := strings.Split(ins.Instance, "/")
 		insID := insInfo[(len(insInfo) - 1)]
@@ -236,23 +245,33 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		return nil, nil, err
 	}
 
+	kubeConfig, err := encrypt.Decrypt(nil, info.Cluster.KubeConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+	kubeCli, err := clusterops.NewKubeClient(base64.StdEncoding.EncodeToString([]byte(kubeConfig)))
+	if err != nil {
+		return nil, nil, fmt.Errorf("checkClusterInstanceStatus[%s] create kube client failed: %v", taskID, err)
+	}
+
 	// wait node group state to normal
 	timeCtx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
 	defer cancel()
 
 	// wait all nodes to be ready
 	err = loop.LoopDoFunc(timeCtx, func() error {
-		instances, errFilter := cli.ListZoneInstanceWithFilter(ctx, api.InstanceNameFilter(instanceIDs))
-		if errFilter != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] ListZoneInstanceWithFilter failed: %v", taskID, errFilter)
-			return nil
-		}
-
 		running := make([]string, 0)
-		for _, ins := range instances.Items {
-			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, ins.Name, ins.Status)
-			if ins.Status == api.InstanceStatusRunning {
-				running = append(running, ins.Name)
+		for _, ins := range instanceIDs {
+			node, err := kubeCli.CoreV1().Nodes().Get(ctx, ins, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			if len(node.Status.Conditions) == 0 {
+				return fmt.Errorf("checkClusterInstanceStatus[%s] failed, can't get status conditions", node.Name)
+			}
+			if node.Status.Conditions[len(node.Status.Conditions)-1].Type == corev1.NodeReady &&
+				node.Status.Conditions[len(node.Status.Conditions)-1].Status == corev1.ConditionTrue {
+				running = append(running, ins)
 			}
 		}
 
@@ -265,7 +284,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	}, loop.LoopInterval(20*time.Second))
 	// other error
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
-		blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
+		blog.Errorf("checkClusterInstanceStatus[%s] check nodes status failed: %v", taskID, err)
 		return nil, nil, err
 	}
 	// timeout error
@@ -273,7 +292,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		running, failure := make([]string, 0), make([]string, 0)
 		instances, errFilter := cli.ListZoneInstanceWithFilter(ctx, api.InstanceNameFilter(instanceIDs))
 		if errFilter != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errFilter)
+			blog.Errorf("checkClusterInstanceStatus[%s] check nodes status failed: %v", taskID, errFilter)
 			return nil, nil, err
 		}
 		for _, ins := range instances.Items {
@@ -300,7 +319,8 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	return addSucessNodes, addFailureNodes, nil
 }
 
-// CheckClusterNodesStatusTask check update desired nodes status task. nodes already add to cluster, thus not rollback desiredNum and only record status
+// CheckClusterNodesStatusTask check update desired nodes status task. nodes already add to cluster,
+// thus not rollback desiredNum and only record status
 func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	start := time.Now()
 
@@ -366,6 +386,94 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CheckClusterNodesStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
+	}
+
+	return nil
+}
+
+// RemoveClusterNodesTaintTask removes cluster nodes taint
+func RemoveClusterNodesTaintTask(taskID string, stepName string) error {
+	start := time.Now()
+
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	// previous step successful when retry task
+	if step == nil {
+		return nil
+	}
+
+	// step login started here
+	// extract parameter && check validate
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	successInstanceID := strings.Split(state.Task.CommonParams[cloudprovider.SuccessNodeIDsKey.String()], ",")
+
+	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(successInstanceID) == 0 {
+		blog.Errorf("RemoveClusterNodesTaintTask[%s]: check parameter validate failed", taskID)
+		retErr := fmt.Errorf("RemoveClusterNodesTaintTask check parameters failed")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
+	if err != nil {
+		blog.Errorf("RemoveClusterNodesTaintTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
+		retErr := fmt.Errorf("RemoveClusterNodesTaintTask GetClusterDependBasicInfo failed")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	err = removeClusterNodesTaint(dependInfo.Cluster, successInstanceID)
+	if err != nil {
+		blog.Errorf("RemoveClusterNodesTaintTask[%s]: removeClusterNodesTaint failed: %s", taskID, err.Error())
+		retErr := fmt.Errorf("RemoveClusterNodesTaintTask removeClusterNodesTaint failed")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	// update step
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("RemoveClusterNodesTaintTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		return err
+	}
+
+	return nil
+}
+
+func removeClusterNodesTaint(cluster *proto.Cluster, successInstanceID []string) error {
+	kubeConfig, err := encrypt.Decrypt(nil, cluster.KubeConfig)
+	if err != nil {
+		return err
+	}
+	kubeCli, err := clusterops.NewKubeClient(base64.StdEncoding.EncodeToString([]byte(kubeConfig)))
+	if err != nil {
+		return fmt.Errorf("removeClusterNodesTaint create kube client failed: %v", err)
+	}
+
+	for _, ins := range successInstanceID {
+		node, err := kubeCli.CoreV1().Nodes().Get(context.Background(), ins, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		newTaints := []corev1.Taint{}
+		for _, taint := range node.Spec.Taints {
+			if taint.Key != api.BCSNodeGroupTaintKey {
+				newTaints = append(newTaints, taint)
+			}
+		}
+		node.Spec.Taints = newTaints
+		_, err = kubeCli.CoreV1().Nodes().Update(context.TODO(), node, metav1.UpdateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

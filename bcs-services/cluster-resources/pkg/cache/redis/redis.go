@@ -64,13 +64,14 @@ func (c *Cache) genKey(key string) string {
 }
 
 // Set 将 value 存储到 redis 中（键为 key 值），若 duration 为 0，则使用默认值（Cache.exp）
-func (c *Cache) Set(key crCache.Key, value interface{}, duration time.Duration) error {
+func (c *Cache) Set(ctx context.Context, key crCache.Key, value interface{}, duration time.Duration) error {
 	if duration == time.Duration(0) {
 		duration = c.exp
 	}
 
 	k := c.genKey(key.Key())
 	return c.codec.Set(&cache.Item{
+		Ctx:   ctx,
 		Key:   k,
 		Value: value,
 		TTL:   duration,
@@ -78,28 +79,27 @@ func (c *Cache) Set(key crCache.Key, value interface{}, duration time.Duration) 
 }
 
 // Exists 检查 key 在 redis 中是否存在
-func (c *Cache) Exists(key crCache.Key) bool {
+func (c *Cache) Exists(ctx context.Context, key crCache.Key) bool {
 	k := c.genKey(key.Key())
-	count, err := c.cli.Exists(context.TODO(), k).Result()
+	count, err := c.cli.Exists(ctx, k).Result()
 	return err == nil && count == 1
 }
 
 // Get 从 redis 中获取值，并存储到 value 中，如果获取不到，返回 error
-func (c *Cache) Get(key crCache.Key, value interface{}) error {
+func (c *Cache) Get(ctx context.Context, key crCache.Key, value interface{}) error {
 	k := c.genKey(key.Key())
-	return c.codec.Get(context.TODO(), k, value)
+	return c.codec.Get(ctx, k, value)
 }
 
 // Delete 从 redis 中删除指定的键
-func (c *Cache) Delete(key crCache.Key) error {
+func (c *Cache) Delete(ctx context.Context, key crCache.Key) error {
 	k := c.genKey(key.Key())
-	_, err := c.cli.Del(context.TODO(), k).Result()
+	_, err := c.cli.Del(ctx, k).Result()
 	return err
 }
 
 // DeleteByPrefix 根据键前缀删除缓存，慎用！
-func (c *Cache) DeleteByPrefix(prefix string) error {
-	ctx := context.TODO()
+func (c *Cache) DeleteByPrefix(ctx context.Context, prefix string) error {
 	iter := c.cli.Scan(ctx, 0, c.genKey(prefix)+"*", 0).Iterator()
 	for iter.Next(ctx) {
 		if err := c.cli.Del(ctx, iter.Val()).Err(); err != nil {

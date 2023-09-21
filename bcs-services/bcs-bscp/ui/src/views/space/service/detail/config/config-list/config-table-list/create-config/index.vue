@@ -2,10 +2,16 @@
   import { onMounted, ref } from 'vue'
   import { useRoute } from 'vue-router'
   import { AngleDown } from 'bkui-vue/lib/icon'
+  import { storeToRefs } from 'pinia';
+  import { useServiceStore } from '../../../../../../../../store/service'
   import ManualCreate from './manual-create.vue';
   import ImportFromTemplate from './import-from-templates.vue'
 
   const route = useRoute()
+
+  const serviceStore = useServiceStore()
+  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
+  const { checkPermBeforeOperate } = serviceStore
 
   const props = defineProps<{
     bkBizId: string,
@@ -26,13 +32,19 @@
   })
 
   const handleManualCreateSlideOpen = () => {
-    isManualCreateSliderOpen.value = true
     buttonRef.value.hide()
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
+    isManualCreateSliderOpen.value = true
   }
 
   const handleImportTemplateDialogOpen = () => {
-    isImportTemplatesDialogOpen.value = true
     buttonRef.value.hide()
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
+    isImportTemplatesDialogOpen.value = true
   }
 
   const handleImported = () => {}
@@ -56,8 +68,18 @@
     </div>
     <template #content>
       <div class="add-config-operations">
-        <div class="operation-item" @click="handleManualCreateSlideOpen">手动新增</div>
-        <div class="operation-item" @click="handleImportTemplateDialogOpen">从配置模板导入</div>
+        <div
+          v-cursor="{ active: !hasEditServicePerm }"
+          :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
+          @click="handleManualCreateSlideOpen">
+          手动新增
+        </div>
+        <div
+          v-cursor="{ active: !hasEditServicePerm }"
+          :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
+          @click="handleImportTemplateDialogOpen">
+          从配置模板导入
+        </div>
       </div>
     </template>
   </bk-popover>

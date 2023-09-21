@@ -95,7 +95,7 @@ const routes = [
           },
           {
             path: ':templateSpaceId/:packageId/version_manage/:templateId',
-            name: 'template-version-manange',
+            name: 'template-version-manage',
             meta: {
               navModule: 'templates'
             },

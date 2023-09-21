@@ -14,6 +14,7 @@
 package usermanager
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -143,7 +144,7 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 		if err != nil {
 			return fmt.Errorf("error creating jwt for user [%s]: %s", user.Name, err.Error())
 		}
-		_, err = cache.RDB.SetNX(constant.TokenKeyPrefix+user.UserToken, jwtString, user.ExpiresAt.Sub(time.Now()))
+		_, err = cache.RDB.SetNX(context.TODO(), constant.TokenKeyPrefix+user.UserToken, jwtString, user.ExpiresAt.Sub(time.Now()))
 		if err != nil {
 			return fmt.Errorf("error storing user [%s] jwt: %s", user.Name, err.Error())
 		}
@@ -176,7 +177,7 @@ func syncTokenToRedis() {
 			blog.Errorf("error creating jwt for user [%s]: %s", v.Name, err.Error())
 			continue
 		}
-		set, err := cache.RDB.SetNX(constant.TokenKeyPrefix+v.UserToken, jwtString, time.Until(v.ExpiresAt))
+		set, err := cache.RDB.SetNX(context.TODO(), constant.TokenKeyPrefix+v.UserToken, jwtString, time.Until(v.ExpiresAt))
 		if err != nil {
 			blog.Errorf("error storing user [%s] jwt: %s", v.Name, err.Error())
 		}

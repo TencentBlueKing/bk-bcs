@@ -867,13 +867,14 @@ message GetReleasedConfigItemResp {
 }
 
 message ListConfigItemsReq {
-    uint32 biz_id      = 1;
-    uint32 app_id      = 2;
-    uint32 start       = 3;
-    uint32 limit       = 4;
-    bool   all         = 5;
-    string searchKey   = 6;
-    bool   with_status = 7;
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    string search_fields = 3;
+    string search_value  = 4;
+    uint32 start         = 5;
+    uint32 limit         = 6;
+    bool   all           = 7;
+    bool   with_status   = 8;
 }
 
 message ListConfigItemsResp {
@@ -970,13 +971,14 @@ message DeleteHookReq {
 message DeleteHookResp {}
 
 message ListHooksReq {
-    uint32 biz_id  = 1;
-    string name    = 2;
-    string tag     = 3;
-    bool   all     = 4;
-    bool   not_tag = 5;
-    uint32 start   = 6;
-    uint32 limit   = 7;
+    uint32 biz_id    = 1;
+    string name      = 2;
+    string tag       = 3;
+    bool   all       = 4;
+    bool   not_tag   = 5;
+    uint32 start     = 6;
+    uint32 limit     = 7;
+    string searchKey = 8;
 }
 
 message ListHooksResp {
@@ -1109,10 +1111,11 @@ message ListHookRevisionReferencesResp {
 }
 
 message ListHookReferencesReq {
-    uint32 biz_id  = 1;
-    uint32 hook_id = 2;
-    uint32 start   = 3;
-    uint32 limit   = 4;
+    uint32 biz_id    = 1;
+    uint32 hook_id   = 2;
+    uint32 start     = 3;
+    uint32 limit     = 4;
+    string SearchKey = 5;
 }
 
 message ListHookReferencesResp {
@@ -1600,9 +1603,11 @@ message ListTmplBoundUnnamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
-    bool   all               = 6;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
 }
 
 message ListTmplBoundUnnamedAppsResp {
@@ -1614,9 +1619,11 @@ message ListTmplBoundNamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
-    bool   all               = 6;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
 }
 
 message ListTmplBoundNamedAppsResp {
@@ -1657,9 +1664,11 @@ message ListTmplRevisionBoundUnnamedAppsReq {
     uint32 template_space_id    = 2;
     uint32 template_id          = 3;
     uint32 template_revision_id = 4;
-    uint32 start                = 5;
-    uint32 limit                = 6;
-    bool   all                  = 7;
+    string search_fields        = 5;
+    string search_value         = 6;
+    uint32 start                = 7;
+    uint32 limit                = 8;
+    bool   all                  = 9;
 }
 
 message ListTmplRevisionBoundUnnamedAppsResp {
@@ -1672,9 +1681,11 @@ message ListTmplRevisionBoundNamedAppsReq {
     uint32 template_space_id    = 2;
     uint32 template_id          = 3;
     uint32 template_revision_id = 4;
-    uint32 start                = 5;
-    uint32 limit                = 6;
-    bool   all                  = 7;
+    string search_fields        = 5;
+    string search_value         = 6;
+    uint32 start                = 7;
+    uint32 limit                = 8;
+    bool   all                  = 9;
 }
 
 message ListTmplRevisionBoundNamedAppsResp {
@@ -1944,12 +1955,13 @@ message PublishReq {
 }
 
 message GenerateReleaseAndPublishReq {
-    uint32          biz_id       = 1;
-    uint32          app_id       = 2;
-    string          release_name = 3;
-    string          release_memo = 4;
-    bool            all          = 5;
-    repeated string groups       = 6;
+    uint32                             biz_id       = 1;
+    uint32                             app_id       = 2;
+    string                             release_name = 3;
+    string                             release_memo = 4;
+    bool                               all          = 5;
+    repeated string                    groups       = 6;
+    repeated pbtv.TemplateVariableSpec variables    = 7;
 }
 
 message GenerateReleaseAndPublishResp {

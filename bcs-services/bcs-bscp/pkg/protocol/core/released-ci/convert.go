@@ -13,6 +13,8 @@
 package pbrci
 
 import (
+	"time"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
@@ -120,8 +122,8 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 		Revision: &pbbase.Revision{
 			Creator:  rci.Revision.Creator,
 			Reviser:  rci.Revision.Creator,
-			CreateAt: rci.Revision.CreatedAt.Format(constant.TimeStdFormat),
-			UpdateAt: rci.Revision.CreatedAt.Format(constant.TimeStdFormat),
+			CreateAt: rci.Revision.CreatedAt.Format(time.RFC3339),
+			UpdateAt: rci.Revision.CreatedAt.Format(time.RFC3339),
 		},
 	}
 }

@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"path"
 	"reflect"
+	"strings"
 	"time"
 
 	"bscp.io/pkg/dal/gen"
@@ -28,6 +29,8 @@ import (
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbrci "bscp.io/pkg/protocol/core/released-ci"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/search"
+	"bscp.io/pkg/types"
 )
 
 // CreateConfigItem create config item.
@@ -504,10 +507,16 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq)
 // ListConfigItems list config items by query condition.
 func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp,
 	error) {
-
 	grpcKit := kit.FromGrpcContext(ctx)
+
+	// validate the page params
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
+
 	// search all editing config items
-	details, err := s.dao.ConfigItem().SearchAll(grpcKit, req.SearchKey, req.AppId, req.BizId)
+	details, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, req.AppId, req.BizId)
 	if err != nil {
 		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -516,7 +525,8 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	configItems := make([]*pbci.ConfigItem, 0)
 	// if WithStatus is true, the config items includes the deleted ones and file state, else  without these data
 	if req.WithStatus {
-		fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.AppId, req.BizId, req.SearchKey)
+		var fileReleased []*table.ReleasedConfigItem
+		fileReleased, err = s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.BizId, req.AppId)
 		if err != nil {
 			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
@@ -528,11 +538,37 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 		}
 	}
 
-	if err := s.setCommitSpecForCIs(grpcKit, configItems); err != nil {
+	if err = s.setCommitSpecForCIs(grpcKit, configItems); err != nil {
 		logs.Errorf("set commit spec for config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
+	// search by logic
+	if req.SearchValue != "" {
+		var searcher search.Searcher
+		searcher, err = search.NewSearcher(req.SearchFields, req.SearchValue, search.ConfigItem)
+		if err != nil {
+			return nil, err
+		}
+		fields := searcher.SearchFields()
+		fieldsMap := make(map[string]bool)
+		for _, f := range fields {
+			fieldsMap[f] = true
+		}
+		cis := make([]*pbci.ConfigItem, 0)
+		for _, ci := range configItems {
+			if (fieldsMap["name"] && strings.Contains(ci.Spec.Name, req.SearchValue)) ||
+				(fieldsMap["path"] && strings.Contains(ci.Spec.Path, req.SearchValue)) ||
+				(fieldsMap["memo"] && strings.Contains(ci.Spec.Memo, req.SearchValue)) ||
+				(fieldsMap["creator"] && strings.Contains(ci.Revision.Creator, req.SearchValue)) ||
+				(fieldsMap["reviser"] && strings.Contains(ci.Revision.Reviser, req.SearchValue)) {
+				cis = append(cis, ci)
+			}
+		}
+		configItems = cis
+	}
+
+	// page by logic
 	var start, end uint32 = 0, uint32(len(configItems))
 	if !req.All {
 		if req.Start < uint32(len(configItems)) {
@@ -551,6 +587,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	return resp, nil
 }
 
+// setCommitSpecForCIs set commit spec for config items
 func (s *Service) setCommitSpecForCIs(kt *kit.Kit, cis []*pbci.ConfigItem) error {
 	ids := make([]uint32, len(cis))
 	for i, ci := range cis {

@@ -35,6 +35,7 @@ type Configurations struct {
 	Etcd        *EtcdConf                `yaml:"etcd"`
 	Tracing     *TracingConf             `yaml:"tracing"`
 	Audit       *AuditConf               `yaml:"audit"`
+	Repository  *RepositoryConf          `yaml:"repository"`
 }
 
 // newConfigurations 新增配置
@@ -70,6 +71,8 @@ func newConfigurations() (*Configurations, error) {
 	c.Tracing.Init()
 
 	c.Audit = &AuditConf{}
+	// repository conf
+	c.Repository = &RepositoryConf{}
 
 	c.Credentials = map[string][]*Credential{}
 
