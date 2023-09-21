@@ -273,15 +273,21 @@ func (dao *hookRevisionDao) ListHookRevisionReferences(kit *kit.Kit, opt *types.
 	var count int64
 	var err error
 
-	count, err = rh.WithContext(kit.Ctx).
+	query := rh.WithContext(kit.Ctx).
 		Select(rh.HookRevisionID.As("revision_id"), rh.HookRevisionName.As("revision_name"),
 			rh.HookType.As("hook_type"), a.ID.As("app_id"), a.Name.As("app_name"),
 			r.ID.As("release_id"), r.Name.As("release_name")).
 		LeftJoin(a, rh.AppID.EqCol(a.ID)).
 		LeftJoin(r, rh.ReleaseID.EqCol(r.ID)).
-		Where(rh.HookID.Eq(opt.HookID), rh.HookRevisionID.Eq(opt.HookRevisionsID), rh.BizID.Eq(opt.BizID)).
-		Order(rh.ID.Desc()).
-		ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
+		Where(rh.HookID.Eq(opt.HookID), rh.HookRevisionID.Eq(opt.HookRevisionsID), rh.BizID.Eq(opt.BizID))
+
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		query = query.Where(query.Where(
+			a.Name.Like(searchKey)).Or(r.Name.Like(searchKey)).Or(rh.HookRevisionName.Like(searchKey)))
+	}
+
+	count, err = query.Order(rh.ID.Desc()).ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
 
 	for i := range details {
 		if details[i].ReleaseID == 0 {

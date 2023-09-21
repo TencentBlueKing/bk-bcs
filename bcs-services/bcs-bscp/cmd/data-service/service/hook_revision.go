@@ -299,6 +299,7 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 		BizID:           req.BizId,
 		HookID:          req.HookId,
 		HookRevisionsID: req.RevisionId,
+		SearchKey:       req.SearchKey,
 		Page:            page,
 	}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {

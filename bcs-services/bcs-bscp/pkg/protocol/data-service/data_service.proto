@@ -542,7 +542,7 @@ message ListHookReferencesReq {
     uint32 hook_id   = 2;
     uint32 start     = 3;
     uint32 limit     = 4;
-    string SearchKey = 5;
+    string searchKey = 5;
 }
 
 message ListHookReferencesResp {
@@ -627,6 +627,7 @@ message ListHookRevisionReferencesReq {
     uint32 revision_id = 3;
     uint32 start       = 4;
     uint32 limit       = 5;
+    string searchKey   = 6;
 }
 
 message ListHookRevisionReferencesResp {
