@@ -222,3 +222,38 @@ func getResourceID(req server.Request) (*resource, error) {
 	}
 	return resourceID, nil
 }
+
+// GetUserAgentFromCtx 通过 ctx 获取 userAgent
+func GetUserAgentFromCtx(ctx context.Context) string {
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return ""
+	}
+	userAgent, _ := md.Get(ctxkey.UserAgentHeaderKey)
+	return userAgent
+}
+
+// GetSourceIPFromCtx 通过 ctx 获取 sourceIP
+func GetSourceIPFromCtx(ctx context.Context) string {
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return ""
+	}
+	forwarded, _ := md.Get(ctxkey.ForwardedForHeaderKey)
+	return forwarded
+}
+
+// GetProjectCodeFromCtx 通过 ctx 获取 projectCode
+func GetProjectCodeFromCtx(ctx context.Context) string {
+	p := ctx.Value(ctxkey.ProjKey)
+	if p == nil {
+		return ""
+	}
+	return p.(*project.Project).Code
+}
+
+// GetUserFromCtx 通过 ctx 获取当前用户
+func GetUserFromCtx(ctx context.Context) string {
+	username, _ := ctx.Value(ctxkey.UsernameKey).(string)
+	return username
+}

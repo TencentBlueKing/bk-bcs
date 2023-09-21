@@ -16,12 +16,19 @@ package wrapper
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"reflect"
+	"strings"
+	"time"
+	"unicode"
 
 	"go-micro.dev/v4/errors"
 	"go-micro.dev/v4/server"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
+	audit2 "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
@@ -35,7 +42,11 @@ import (
 func NewResponseFormatWrapper() server.HandlerWrapper {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) error {
+			startTime := time.Now()
 			err := fn(ctx, req, rsp)
+			endTime := time.Now()
+			// 添加审计
+			go addAudit(ctx, req, rsp, startTime, endTime)
 			// 若返回结构是标准结构，则这里将错误信息捕获，按照规范格式化到结构体中
 			switch r := rsp.(type) {
 			case *clusterRes.CommonResp:
@@ -95,4 +106,244 @@ func genNewRespData(ctx context.Context, err interface{}) *structpb.Struct {
 	default:
 		return nil
 	}
+}
+
+// actionDesc 操作描述
+type actionDesc string
+
+// String string
+func (a actionDesc) String() string {
+	return string(a)
+}
+
+type reqResource struct {
+	ProjectID   string `json:"projectID" yaml:"projectID"`
+	ClusterID   string `json:"clusterID" yaml:"clusterID"`
+	ProjectCode string `json:"projectCode" yaml:"projectCode"`
+	Namespace   string `json:"namespace" yaml:"namespace"`
+	Name        string `json:"name" yaml:"name"`
+	Kind        string `json:"kind" yaml:"kind"`
+	Version     string `json:"apiVersion" yaml:"apiVersion"`
+	RawData     *struct {
+		Version  string `json:"apiVersion" yaml:"apiVersion"`
+		Kind     string `json:"kind,omitempty" yaml:"kind"`
+		Metadata *struct {
+			Namespace string `json:"namespace" yaml:"namespace"`
+			Name      string `json:"name" yaml:"name"`
+		} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	} `json:"rawData" yaml:"rawData"`
+}
+
+// resource to map
+func (r reqResource) toMap() map[string]any {
+	result := make(map[string]any, 0)
+	if r.ProjectID != "" {
+		result["ProjectID"] = r.ProjectID
+	}
+	if r.ProjectCode != "" {
+		result["ProjectCode"] = r.ProjectCode
+	}
+	if r.ClusterID != "" {
+		result["ClusterID"] = r.ClusterID
+	}
+	if r.Namespace != "" {
+		result["Namespace"] = r.Namespace
+	}
+	if r.Name != "" {
+		result["Name"] = r.Name
+	}
+	if r.Kind != "" {
+		result["Kind"] = r.Kind
+	}
+	if r.Version != "" {
+		result["Version"] = r.Version
+	}
+	return result
+}
+
+func getReqResource(req server.Request) reqResource {
+	body := req.Body()
+	b, _ := json.Marshal(body)
+
+	resourceID := reqResource{}
+	_ = json.Unmarshal(b, &resourceID)
+
+	// 防止rawData数据不存或者格式错误
+	if resourceID.RawData != nil && resourceID.RawData.Metadata != nil {
+		if resourceID.RawData.Metadata.Name != "" {
+			resourceID.Name = resourceID.RawData.Metadata.Name
+		}
+		if resourceID.RawData.Metadata.Namespace != "" {
+			resourceID.Namespace = resourceID.RawData.Metadata.Namespace
+		}
+		if resourceID.RawData.Kind != "" {
+			resourceID.Kind = resourceID.RawData.Kind
+		}
+		if resourceID.RawData.Version != "" {
+			resourceID.Version = resourceID.RawData.Version
+		}
+	}
+	return resourceID
+}
+
+var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.Resource, audit.Action){
+	"Create": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getReqResource(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeCreate}
+	},
+	"Update": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getReqResource(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+	},
+	"Delete": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getReqResource(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeDelete}
+	},
+	"Restart": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getReqResource(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+	},
+	"PauseOrResume": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getReqResource(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+	},
+	"Scale": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getReqResource(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+	},
+	"Rollout": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getReqResource(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+	},
+	"Reschedule": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+		res := getReqResource(req)
+		return audit.Resource{
+			ResourceType: audit.ResourceTypeK8SResource, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: camelToSnake(req.Method()), ActivityType: audit.ActivityTypeUpdate}
+	},
+}
+
+func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTime, endTime time.Time) {
+	method := req.Method()
+	if req.Method() != "" {
+		arr := strings.Split(req.Method(), ".")
+		if len(arr) >= 2 {
+			if strings.Contains(arr[1], "Create") {
+				method = "Create"
+			}
+			if strings.Contains(arr[1], "Update") {
+				method = "Update"
+			}
+			if strings.Contains(arr[1], "Delete") {
+				method = "Delete"
+			}
+			if strings.Contains(arr[1], "Restart") {
+				method = "Restart"
+			}
+			if strings.Contains(arr[1], "PauseOrResume") {
+				method = "PauseOrResume"
+			}
+			if strings.Contains(arr[1], "Scale") {
+				method = "Scale"
+			}
+			if strings.Contains(arr[1], "Reschedule") {
+				method = "Reschedule"
+			}
+			if strings.Contains(arr[1], "Rollout") {
+				method = "Rollout"
+			}
+		}
+	}
+
+	// get method audit func
+	fn, ok := auditFuncMap[method]
+	if !ok {
+		return
+	}
+
+	res, act := fn(req, rsp)
+
+	auditCtx := audit.RecorderContext{
+		Username:  GetUserFromCtx(ctx),
+		SourceIP:  GetSourceIPFromCtx(ctx),
+		UserAgent: GetUserAgentFromCtx(ctx),
+		RequestID: getRequestID(ctx),
+		StartTime: startTime,
+		EndTime:   endTime,
+	}
+	resource := audit.Resource{
+		ProjectCode:  GetProjectCodeFromCtx(ctx),
+		ResourceType: res.ResourceType,
+		ResourceID:   res.ResourceID,
+		ResourceName: res.ResourceName,
+		ResourceData: res.ResourceData,
+	}
+	action := audit.Action{
+		ActionID:     act.ActionID,
+		ActivityType: act.ActivityType,
+	}
+
+	result := audit.ActionResult{
+		Status: audit.ActivityStatusSuccess,
+	}
+
+	// get handle result
+	v := reflect.ValueOf(rsp)
+	codeField := v.Elem().FieldByName("Code")
+	messageField := v.Elem().FieldByName("Message")
+	if codeField.CanInterface() {
+		code := int(codeField.Interface().(int32))
+		result.ResultCode = code
+	}
+	if messageField.CanInterface() {
+		message := messageField.Interface().(string)
+		result.ResultContent = message
+	}
+	if result.ResultCode != errcode.NoErr {
+		result.Status = audit.ActivityStatusFailed
+	}
+	audit2.GetAuditClient().R().
+		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+}
+
+// 驼峰转蛇形
+func camelToSnake(s string) string {
+	arr := strings.Split(s, ".")
+	if len(arr) <= 1 {
+		return ""
+	}
+	var result strings.Builder
+	for i, c := range arr[1] {
+		if unicode.IsUpper(c) {
+			if i > 0 {
+				result.WriteRune('_')
+			}
+			result.WriteRune(unicode.ToLower(c))
+		} else {
+			result.WriteRune(c)
+		}
+	}
+	return result.String()
 }
