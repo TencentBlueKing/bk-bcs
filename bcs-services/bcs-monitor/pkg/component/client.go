@@ -25,13 +25,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/dustin/go-humanize"
 	resty "github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 	tracingTransport "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/tracing"

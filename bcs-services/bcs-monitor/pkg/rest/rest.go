@@ -20,12 +20,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
@@ -292,7 +292,7 @@ func addAudit(ctx *Context, b []byte, startTime, endTime time.Time, code int, me
 	if code != 0 {
 		result.Status = audit.ActivityStatusFailed
 	}
-	component.GetAuditClient().R().
+	_ = component.GetAuditClient().R().
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 }
 
