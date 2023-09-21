@@ -135,20 +135,20 @@ func mergeConfig() ([]byte, error) {
 		c[k] = v
 	}
 
-	bcsConfigBytes, err := json.Marshal(c)
+	configBytes, err := json.Marshal(c)
 	if err != nil {
 		return nil, err
 	}
-	return bcsConfigBytes, nil
+	return configBytes, nil
 }
 
 // RenderIndexHandler vue html 模板渲染
 func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
-	bscpConfigBytes, err := mergeConfig()
+	configBytes, err := mergeConfig()
 	if err != nil {
 		panic(fmt.Errorf("init bscp config err, %s", err))
 	}
-	bscpConfig := string(bscpConfigBytes)
+	bscpConfig := string(configBytes)
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		tplData := map[string]string{
