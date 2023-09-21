@@ -388,6 +388,7 @@
                                   text
                                   theme="primary"
                                   :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                                  :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
                                   @click="handleEditOpen(config)">
                                   编辑
                                 </bk-button>
@@ -396,6 +397,7 @@
                                   text
                                   theme="primary"
                                   :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                                  :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
                                   @click="handleDel(config)">
                                   删除
                                 </bk-button>
