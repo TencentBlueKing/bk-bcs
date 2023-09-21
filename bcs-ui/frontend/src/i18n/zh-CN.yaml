@@ -393,6 +393,7 @@ generic:
     taskKill: 强制终止
     taskNotEnable: 未启动
   validate:
+    name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
     required: 必填项
     labelValueEmpty: 标签值不能为空

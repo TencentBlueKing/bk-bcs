@@ -64,7 +64,10 @@
           </div>
           <div class="text-[12px]" v-else>
             {{ $t('plugin.metric.tips.noLabel') }}
-            <bk-button text class="text-[12px]" @click="handleGotoService">{{ $t('plugin.metric.action.add') }}</bk-button>
+            <bk-button
+              text
+              class="text-[12px]"
+              @click="handleGotoService">{{ $t('plugin.metric.action.add') }}</bk-button>
           </div>
         </bk-form-item>
         <bk-form-item
@@ -112,7 +115,10 @@
       </div>
     </bk-form>
     <div class="flex mt-[30px]">
-      <bk-button :loading="saveLoading" theme="primary" @click="handleSubmit">{{ $t('generic.button.submit') }}</bk-button>
+      <bk-button
+        :loading="saveLoading"
+        theme="primary"
+        @click="handleSubmit">{{ $t('generic.button.submit') }}</bk-button>
       <bk-button :disabled="saveLoading" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </div>
   </div>
@@ -163,6 +169,13 @@ const metricDataRules = ref({
       required: true,
       message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
+    },
+    {
+      message: $i18n.t('generic.validate.name'),
+      trigger: 'blur',
+      validator(val) {
+        return /^[a-z][-a-z0-9]*$/.test(val);
+      },
     },
   ],
   service_name: [
@@ -254,6 +267,7 @@ const handleSubmit = async () => {
   let result = false;
   const params = {
     ...metricData.value,
+    sample_limit: Number(metricData.value.sample_limit),
     interval: `${metricData.value.interval}s`,
     $clusterId: clusterID.value,
   };

@@ -614,6 +614,7 @@ cluster:
     clusterType: Cluster type
     cloudClusterID: Cloud cluster id
     importCategory: ''
+    maxPodNum: ''
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
