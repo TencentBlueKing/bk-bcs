@@ -42,7 +42,7 @@
       limit: pagination.value.limit
     }
     if (searchStr.value) {
-      params.search_fields = 'name,id'
+      params.search_fields = 'app_name,template_revision_name'
       params.search_value = searchStr.value
     }
     const res = await getUnNamedVersionAppsBoundByTemplate(props.spaceId, props.currentTemplateSpace, props.config.id, params)
