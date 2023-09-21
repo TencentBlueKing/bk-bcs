@@ -25,8 +25,8 @@ import (
 )
 
 var (
-	// UnauthorizedError 错误
-	UnauthorizedError = errors.New("用户未登入")
+	// ErrorUnauthorized 错误
+	ErrorUnauthorized = errors.New("用户未登入")
 )
 
 // Result 返回的标准结构
@@ -96,19 +96,19 @@ func InitRestContext(c *gin.Context) *Context {
 func GetRestContext(c *gin.Context) (*Context, error) {
 	ctxObj, ok := c.Get("rest_context")
 	if !ok {
-		return nil, UnauthorizedError
+		return nil, ErrorUnauthorized
 	}
 
 	restContext, ok := ctxObj.(*Context)
 	if !ok {
-		return nil, UnauthorizedError
+		return nil, ErrorUnauthorized
 	}
 
 	return restContext, nil
 }
 
 // RestHandlerFunc rest handler
-func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
+func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc { // nolint
 	return func(c *gin.Context) {
 		restContext, err := GetRestContext(c)
 		if err != nil {

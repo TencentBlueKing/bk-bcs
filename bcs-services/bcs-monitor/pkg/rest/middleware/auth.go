@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package middleware ...
 package middleware
 
 import (
@@ -45,7 +45,7 @@ func AuthenticationRequired() gin.HandlerFunc {
 		case initContextWithBCSJwt(restContext):
 		case initContextWithDevEnv(restContext):
 		default:
-			rest.AbortWithUnauthorizedError(restContext, rest.UnauthorizedError)
+			rest.AbortWithUnauthorizedError(restContext, rest.ErrorUnauthorized)
 			return
 		}
 

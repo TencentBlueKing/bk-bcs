@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package k8sclient ...
 package k8sclient
 
 import (

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package bkmonitor xxx
@@ -43,7 +42,7 @@ type Config struct {
 }
 
 // BKMonitorStore implements the store node API on top of the Prometheus remote read API.
-type BKMonitorStore struct {
+type BKMonitorStore struct { // nolint
 	config   *Config
 	dispatch map[string]clientutil.DispatchConf
 }
@@ -77,7 +76,7 @@ func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*sto
 	}
 
 	// NOCC:ineffassign/assign(误报)
-	grayClusterMap := make(map[string]struct{}, 0)
+	var grayClusterMap map[string]struct{}
 	if config.G.BKMonitor.EnableGrey {
 		grayClusterMap, err = bkmonitor_client.QueryGrayClusterMap(ctx, config.G.BKMonitor.MetadataURL)
 		if err != nil {

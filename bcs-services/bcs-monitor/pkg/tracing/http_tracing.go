@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package tracing ...
 package tracing
 
 import (
@@ -36,7 +36,7 @@ const (
 )
 
 // TracingTransport  used by http Transport
-type TracingTransport struct {
+type TracingTransport struct { // nolint
 	Transport      http.RoundTripper
 	TracerProvider trace.TracerProvider
 	Propagators    propagation.TextMapPropagator
@@ -80,7 +80,7 @@ func (t *TracingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	}
 	span.SetAttributes(attribute.Key("query").String(query))
 
-	//记录body
+	// 记录body
 	body := string(getRequestBody(r))
 	if len(body) > 1024 {
 		body = fmt.Sprintf("%s...(Total %s)", body[:1024], humanize.Bytes(uint64(len(body))))

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bcsmonitor ...
 package bcsmonitor
 
 import (
@@ -26,7 +27,8 @@ import (
 
 func TestQueryInstant(t *testing.T) {
 	promql := fmt.Sprintf(`up{cluster_id="%s"}`, bcstesting.GetTestClusterId())
-	vector, warnings, err := QueryInstantVector(context.Background(), bcstesting.GetTestProjectId(), promql, nil, time.Now())
+	vector, warnings, err := QueryInstantVector(context.Background(), bcstesting.GetTestProjectId(), promql,
+		nil, time.Now())
 	assert.NoError(t, err)
 	fmt.Println(vector, warnings)
 }
@@ -35,7 +37,8 @@ func TestQueryRange(t *testing.T) {
 	promql := fmt.Sprintf(`up{cluster_id="%s"}`, bcstesting.GetTestClusterId())
 	end := time.Now()
 	start := end.Add(-time.Minute * 5)
-	vector, warnings, err := QueryRangeMatrix(context.Background(), bcstesting.GetTestProjectId(), promql, nil, start, end, time.Minute)
+	vector, warnings, err := QueryRangeMatrix(context.Background(), bcstesting.GetTestProjectId(), promql,
+		nil, start, end, time.Minute)
 	assert.NoError(t, err)
 	fmt.Println(vector, warnings)
 }
@@ -51,7 +54,8 @@ func TestQueryMultiValues(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			vector, err := QueryMultiValues(context.Background(), bcstesting.GetTestProjectId(), promqlMap, nil, time.Now())
+			vector, err := QueryMultiValues(context.Background(), bcstesting.GetTestProjectId(), promqlMap,
+				nil, time.Now())
 			assert.NoError(t, err)
 			fmt.Println(vector)
 		}()

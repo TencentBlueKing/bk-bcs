@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package storegw xxx
@@ -109,10 +108,10 @@ func (s *StoreGW) Run() error {
 			// 因为阻塞, 另外启动，同时打印日志
 			err := s.ListenAndServe()
 			if err != nil {
-				level.Error(logger).Log("msg", "ListenAndServe grpc server done", "err", err)
+				_ = level.Error(logger).Log("msg", "ListenAndServe grpc server done", "err", err)
 				return
 			}
-			level.Info(logger).Log("msg", "ListenAndServe grpc server done")
+			_ = level.Info(logger).Log("msg", "ListenAndServe grpc server done")
 		}(idx, *s)
 	}
 

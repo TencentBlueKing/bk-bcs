@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package query
@@ -71,7 +70,7 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 	dnsStoreProvider := dns.NewProvider(
 		kitLogger,
 		extprom.WrapRegistererWithPrefix("bcs_monitor_query_store_apis_", reg),
-		dns.ResolverType(dns.MiekgdnsResolverType),
+		dns.MiekgdnsResolverType,
 	)
 
 	dialOpts, err := extgrpc.StoreClientGRPCOpts(kitLogger, reg, tracer, false, false, "", "", "", "")
@@ -181,7 +180,7 @@ func getEndpoints(kitLogger gokit.Logger, reg *prometheus.Registry, strictStoreL
 	)
 }
 
-func (c *DiscoveryClient) addStaticDiscovery(name string, tgs []*targetgroup.Group) error {
+func (c *DiscoveryClient) addStaticDiscovery(name string, tgs []*targetgroup.Group) {
 	httpSDCache := cache.New()
 
 	c.mtx.Lock()
@@ -189,7 +188,6 @@ func (c *DiscoveryClient) addStaticDiscovery(name string, tgs []*targetgroup.Gro
 	c.mtx.Unlock()
 
 	httpSDCache.Update(tgs)
-	return nil
 }
 
 func (c *DiscoveryClient) addHTTPDiscovery(ctx context.Context, kitLogger gokit.Logger, conf *httpdiscovery.SDConfig,
@@ -281,7 +279,7 @@ func NewHTTPSDClientGroup(ctx context.Context, kitLogger gokit.Logger, reg *prom
 					klog.ErrorS(err, "create http sd client failed", "url", conf.URL, "addr", addr)
 					continue
 				}
-				s.Run()
+				_ = s.Run()
 
 				c.mtx.Lock()
 				httpSDClientMap[addr] = s
@@ -309,7 +307,7 @@ func (c *HTTPSDClientGroup) parseURLHost(rawURL string) (map[string]*url.URL, er
 	dnsStoreProvider := dns.NewProvider(
 		c.kitLogger,
 		nil,
-		dns.ResolverType(dns.MiekgdnsResolverType),
+		dns.MiekgdnsResolverType,
 	)
 	u, err := url.Parse(rawURL)
 	if err != nil {

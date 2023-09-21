@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package storage ...
 package storage
 
 import (
@@ -67,5 +67,5 @@ func (r *RedisSession) Init() error {
 
 // Close : close redis session
 func (r *RedisSession) Close() {
-	r.Client.Close()
+	_ = r.Client.Close()
 }

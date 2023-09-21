@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package compute ...
 package compute
 
 import (
@@ -119,7 +120,7 @@ func (p *Compute) GetClusterDiskioUsed(ctx context.Context, projectId, clusterId
 }
 
 // GetClusterDiskioTotal 集群磁盘IO
-func (m *Compute) GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Compute) GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }

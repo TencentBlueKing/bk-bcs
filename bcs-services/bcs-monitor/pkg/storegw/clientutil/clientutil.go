@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package clientutil xxx
@@ -48,8 +47,8 @@ func ChunkSamples(series *prompb.TimeSeries) (chks []storepb.AggrChunk, err erro
 		}
 
 		chks = append(chks, storepb.AggrChunk{
-			MinTime: int64(samples[0].Timestamp),
-			MaxTime: int64(samples[chunkSize-1].Timestamp),
+			MinTime: samples[0].Timestamp,
+			MaxTime: samples[chunkSize-1].Timestamp,
 			Raw:     &storepb.Chunk{Type: enc, Data: cb},
 		})
 

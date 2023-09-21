@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package logrule ...
 package logrule
 
 import (
@@ -265,7 +265,7 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 		resp.Config.ExtraLabels = append(resp.Config.ExtraLabels, bklog.Label{Key: tagk, Value: tagv})
 	}
 	for tagk, tagv := range logConfig.Spec.Selector.MatchLabels {
-		resp.Config.LogRuleContainer.LabelSelector.MatchLabels = append(resp.Config.ExtraLabels,
+		resp.Config.LogRuleContainer.LabelSelector.MatchLabels = append(resp.Config.ExtraLabels, // nolint
 			bklog.Label{Key: tagk, Value: tagv})
 	}
 	if logConfig.Spec.WorkloadNamespace != "" {

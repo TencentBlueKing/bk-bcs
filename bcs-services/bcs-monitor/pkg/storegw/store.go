@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package storegw
@@ -56,7 +55,7 @@ type Store struct {
 
 // GetStoreSvr 工厂模式
 func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.StoreConf) (storepb.StoreServer, error) {
-	level.Info(logger).Log("msg", "loading store configuration")
+	_ = level.Info(logger).Log("msg", "loading store configuration")
 
 	c, err := yaml.Marshal(conf.Config)
 	if err != nil {

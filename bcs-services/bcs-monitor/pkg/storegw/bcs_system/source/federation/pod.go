@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package federation ...
 package federation
 
 import (
@@ -60,7 +61,7 @@ func (m *Federation) handlePodMetric(ctx context.Context, projectID, clusterID, 
 		}
 		eg.Go(groupFunc)
 	}
-	eg.Wait()
+	_ = eg.Wait()
 	return series, nil
 }
 

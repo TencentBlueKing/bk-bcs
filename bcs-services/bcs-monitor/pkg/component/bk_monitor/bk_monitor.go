@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package bkmonitor ...
 package bkmonitor
 
 import (
@@ -199,7 +199,7 @@ type BaseResponse struct {
 }
 
 // BKMonitorResult 蓝鲸监控返回的结构体, 和component下的BKResult数据接口规范不一致, 重新定义一份
-type BKMonitorResult struct {
+type BKMonitorResult struct { // nolint
 	BaseResponse
 	Data *GrayClusterList `json:"data"`
 }
