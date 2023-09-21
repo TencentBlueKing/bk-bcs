@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package podmanager xxx
 package podmanager
 
 import (
@@ -117,8 +117,12 @@ func (p *CleanUpManager) CleanupRes() error {
 	namespace := GetNamespace()
 
 	for _, clusterId := range aliveClusters {
-		p.cleanUserPodByCluster(clusterId, namespace, alivePodMap)
-		p.cleanConfigMap(clusterId, namespace, alivePodMap)
+		if err := p.cleanUserPodByCluster(clusterId, namespace, alivePodMap); err != nil {
+			return err
+		}
+		if err := p.cleanConfigMap(clusterId, namespace, alivePodMap); err != nil {
+			return err
+		}
 	}
 
 	return nil

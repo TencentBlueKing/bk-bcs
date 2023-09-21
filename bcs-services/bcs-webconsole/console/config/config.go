@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package config xxx
@@ -43,7 +42,10 @@ func newConfigurations() (*Configurations, error) {
 	c := &Configurations{}
 
 	c.Base = &BaseConf{}
-	c.Base.Init()
+	err := c.Base.Init()
+	if err != nil {
+		return c, err
+	}
 
 	// Auth Config
 	c.Auth = &AuthConf{}
@@ -61,7 +63,10 @@ func newConfigurations() (*Configurations, error) {
 	c.Redis.Init()
 
 	c.WebConsole = &WebConsoleConf{}
-	c.WebConsole.Init()
+	err = c.WebConsole.Init()
+	if err != nil {
+		return c, err
+	}
 
 	c.Etcd = &EtcdConf{}
 	c.Etcd.Init()
@@ -200,7 +205,9 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		c.Audit.DataDir = c.Audit.defaultPath()
 	}
 
-	c.Logging.InitBlog()
+	if err := c.Logging.InitBlog(); err != nil {
+		return err
+	}
 	c.Base.InitManagers()
 	c.BCS.initInnerHost()
 

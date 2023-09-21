@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package podmanager xxx
 package podmanager
 
 import (
@@ -27,7 +27,7 @@ import (
 
 // queryByContainerId 通过cluster_id, containerId 直连容器
 func queryByContainerId(ctx context.Context,
-	clusterId, username, containerId, shell string) (*types.PodContext, error) {
+	clusterId, containerId, shell string) (*types.PodContext, error) {
 	startupMgr, err := NewStartupManager(ctx, clusterId)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func queryByContainerId(ctx context.Context,
 
 // queryByContainerName 通过cluster_id, namespace, podName, containerName 直连容器
 func queryByContainerName(ctx context.Context,
-	clusterId, username, namespace, podName, containerName, shell string) (*types.PodContext, error) {
+	clusterId, namespace, podName, containerName, shell string) (*types.PodContext, error) {
 	startupMgr, err := NewStartupManager(ctx, clusterId)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,9 @@ func queryByClusterIdExternal(ctx context.Context,
 	// kubeconfig cm 配置
 	configmapName := getConfigMapName(targetClusterId, username)
 	uid := getUid(targetClusterId, username)
-	startupMgr.ensureConfigmap(namespace, configmapName, uid, kubeConfig)
+	if err = startupMgr.ensureConfigmap(namespace, configmapName, uid, kubeConfig); err != nil {
+		return nil, err
+	}
 
 	imageTag, err := GetKubectldVersion(targetClusterId)
 	if err != nil {
@@ -121,7 +123,7 @@ func queryByClusterIdExternal(ctx context.Context,
 	podName := GetPodName(targetClusterId, username)
 	// 外部集群, 默认 default 即可
 	serviceAccountName := "default"
-	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName, uid)
+	podManifest := genPod(podName, image, configmapName, serviceAccountName, uid)
 
 	if err := startupMgr.ensurePod(namespace, podName, podManifest); err != nil {
 		return nil, err
@@ -131,65 +133,6 @@ func queryByClusterIdExternal(ctx context.Context,
 		Mode:           types.ClusterExternalMode,
 		AdminClusterId: clusterId,
 		ClusterId:      targetClusterId,
-		PodName:        podName,
-		Namespace:      namespace,
-		ContainerName:  KubectlContainerName,
-		Commands:       manager.BashCommand, // 进入 kubectld pod， 默认使用 bash
-	}
-	switch shell {
-	case manager.ShellSH:
-		podCtx.Commands = manager.ShCommand
-	case manager.ShellBash:
-		podCtx.Commands = manager.BashCommand
-	}
-	return podCtx, nil
-}
-
-// queryByClusterIdInternal 通过clusterId, 使用inCluster的方式访问 kubectl 容器
-// NOCC:deadcode/unused(设计如此:)
-func queryByClusterIdInternal(ctx context.Context, clusterId, username, shell string) (*types.PodContext, error) {
-	startupMgr, err := NewStartupManager(ctx, clusterId)
-	if err != nil {
-		return nil, err
-	}
-
-	namespace := GetNamespace()
-	if e := startupMgr.ensureNamespace(namespace); e != nil {
-		return nil, e
-	}
-
-	// kubeconfig cm 配置
-	kubeConfig, err := startupMgr.getInternalKubeConfig(namespace, username)
-	if err != nil {
-		return nil, err
-	}
-
-	uid := getUid(clusterId, username)
-
-	configmapName := getConfigMapName(clusterId, username)
-	if e := startupMgr.ensureConfigmap(namespace, configmapName, uid, kubeConfig); e != nil {
-		return nil, e
-	}
-
-	// 确保 pod 配置正确
-	imageTag, err := GetKubectldVersion(clusterId)
-	if err != nil {
-		return nil, err
-	}
-	image := config.G.WebConsole.KubectldImage + ":" + imageTag
-
-	podName := GetPodName(clusterId, username)
-	serviceAccountName := namespace
-	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName, uid)
-
-	if err := startupMgr.ensurePod(namespace, podName, podManifest); err != nil {
-		return nil, err
-	}
-
-	podCtx := &types.PodContext{
-		Mode:           types.ClusterInternalMode,
-		AdminClusterId: clusterId,
-		ClusterId:      clusterId,
 		PodName:        podName,
 		Namespace:      namespace,
 		ContainerName:  KubectlContainerName,
@@ -253,7 +196,6 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 		podCtx, err := queryByContainerName(
 			ctx,
 			clusterId,
-			username,
 			consoleQuery.Namespace,
 			consoleQuery.PodName,
 			consoleQuery.ContainerName,
@@ -267,7 +209,6 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 		podCtx, err := queryByContainerId(
 			ctx,
 			clusterId,
-			username,
 			consoleQuery.ContainerId,
 			consoleQuery.Shell,
 		)
@@ -338,7 +279,6 @@ func QueryOpenPodCtx(ctx context.Context, clusterId string, consoleQuery *OpenQu
 		podCtx, err := queryByContainerName(
 			ctx,
 			clusterId,
-			consoleQuery.Operator,
 			consoleQuery.Namespace,
 			consoleQuery.PodName,
 			consoleQuery.ContainerName,
@@ -352,7 +292,6 @@ func QueryOpenPodCtx(ctx context.Context, clusterId string, consoleQuery *OpenQu
 		podCtx, err := queryByContainerId(
 			ctx,
 			clusterId,
-			consoleQuery.Operator,
 			consoleQuery.ContainerId,
 			"",
 		)
