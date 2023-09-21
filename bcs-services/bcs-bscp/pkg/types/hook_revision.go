@@ -107,6 +107,7 @@ type ListHookRevisionReferencesOption struct {
 	BizID           uint32    `json:"biz_id"`
 	HookID          uint32    `json:"hook_id"`
 	HookRevisionsID uint32    `json:"hook_revision_id"`
+	SearchKey       string    `json:"search_key"`
 	Page            *BasePage `json:"page"`
 }
 
