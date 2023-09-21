@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package main xxx
 package main
 
 import (
@@ -34,10 +35,10 @@ func main() {
 	mgr := app.NewWebConsoleManager(ctx, nil)
 	if err := mgr.Init(); err != nil {
 		logger.Errorf("init webconsole error: %s", err)
-		os.Exit(1)
+		os.Exit(1) // nolint
 	}
 
-	//初始化 Tracer
+	// 初始化 Tracer
 	shutdown, err := tracing.InitTracing(config.G.Tracing)
 	if err != nil {
 		klog.Info(err.Error())
@@ -52,6 +53,6 @@ func main() {
 
 	if err := mgr.Run(); err != nil {
 		logger.Errorf("run webconsole error: %s", err)
-		os.Exit(1)
+		os.Exit(1) // nolint
 	}
 }

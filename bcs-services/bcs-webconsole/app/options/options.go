@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package options xxx
@@ -133,9 +132,10 @@ func (m *MultiCredConf) watch(name string, conf microConf.Config, eg *errgroup.G
 }
 
 // Stop 停止所有监听
-func (m *MultiCredConf) Stop() {
+func (m *MultiCredConf) Stop() error {
 	for name, w := range m.watcherMap {
 		logger.Infof("receive interput, stop watch %s", name)
-		w.Stop()
+		return w.Stop()
 	}
+	return nil
 }

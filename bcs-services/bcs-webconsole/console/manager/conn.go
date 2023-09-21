@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package manager
@@ -97,7 +96,7 @@ func (r *RemoteStreamConn) readInputMsg() <-chan wsMessage {
 }
 
 // handleResizeMsg : 处理 Resize 数据流
-func (c *RemoteStreamConn) handleResizeMsg(msg []byte) (*types.TerminalSize, error) {
+func (r *RemoteStreamConn) handleResizeMsg(msg []byte) (*types.TerminalSize, error) {
 	resizeMsg := types.TerminalSize{}
 
 	// 解析Json数据
@@ -127,12 +126,15 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	if channel == ResizeChannel {
 		resizeMsg, resizeErr := r.handleResizeMsg(decodeMsg)
 		if resizeErr != nil {
-			return nil, nil
+			return nil, resizeErr
 		}
 
-		r.bindMgr.HandleResizeMsg(resizeMsg)
-
 		r.resizeMsgChan <- resizeMsg
+
+		if err = r.bindMgr.HandleResizeMsg(resizeMsg); err != nil {
+			return nil, err
+		}
+
 		return nil, nil
 	}
 
@@ -219,8 +221,12 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 			}
 			// 收到首个字节才发送 hello 信息
 			if notSendMsg && !r.hideBanner {
-				r.bindMgr.HandleBannerMsg([]byte(guideMessages))
-				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
+				if err := r.bindMgr.HandleBannerMsg([]byte(guideMessages)); err != nil {
+					return err
+				}
+				if err := PreparedGuideMessage(r.ctx, r.wsConn, guideMessages); err != nil {
+					return err
+				}
 				notSendMsg = false
 			}
 

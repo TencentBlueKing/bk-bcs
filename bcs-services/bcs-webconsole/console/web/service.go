@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package web
@@ -55,9 +54,12 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web.GET("/projects/:projectId/mgr/", metrics.RequestCollect("MgrPage"), s.MgrPageHandler)
 	web.GET("/portal/container/", metrics.RequestCollect("ContainerGatePage"), s.ContainerGatePageHandler)
 	web.GET("/portal/cluster/", metrics.RequestCollect("ClusterGatePage"), s.ClusterGatePageHandler)
-	web.GET("/replay/files", metrics.RequestCollect("ReplayFilesPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFoldersPageHandler)
-	web.GET("/replay/files/:folder", metrics.RequestCollect("ReplayFilesPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFilesPageHandler)
-	web.GET("/replay/:folderName/:fileName", metrics.RequestCollect("ReplayDetailPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayDetailPageHandler)
+	web.GET("/replay/files", metrics.RequestCollect("ReplayFilesPage"),
+		route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFoldersPageHandler)
+	web.GET("/replay/files/:folder", metrics.RequestCollect("ReplayFilesPage"),
+		route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFilesPageHandler)
+	web.GET("/replay/:folderName/:fileName", metrics.RequestCollect("ReplayDetailPage"),
+		route.APIAuthRequired(), route.ManagersRequired(), s.ReplayDetailPageHandler)
 
 	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
@@ -128,7 +130,7 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 	consoleQuery := new(podmanager.ConsoleQuery)
-	c.BindQuery(consoleQuery)
+	_ = c.BindQuery(consoleQuery)
 
 	// 权限申请Url
 	promRequestQuery := url.Values{}

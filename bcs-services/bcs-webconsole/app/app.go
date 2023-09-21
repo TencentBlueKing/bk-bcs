@@ -103,7 +103,7 @@ func (c *WebConsoleManager) Init() error {
 
 	// 绑定主端口
 	dualStackListener := listener.NewDualStackListener()
-	if err := dualStackListener.AddListenerWithAddr(getListenAddr(c.serverAddress, c.listenPort)); err != nil {
+	if err = dualStackListener.AddListenerWithAddr(getListenAddr(c.serverAddress, c.listenPort)); err != nil {
 		return err
 	}
 
@@ -117,7 +117,7 @@ func (c *WebConsoleManager) Init() error {
 	// 单栈IPv6 可能重复
 	if ipv6Addr != "" && ipv6Addr != c.serverAddress {
 		listenAddr := getListenAddr(ipv6Addr, c.listenPort)
-		if err := dualStackListener.AddListenerWithAddr(listenAddr); err != nil {
+		if err = dualStackListener.AddListenerWithAddr(listenAddr); err != nil {
 			return err
 		}
 		logger.Infof("dualStackListener with ipv6: %s", listenAddr)
@@ -146,10 +146,7 @@ func (c *WebConsoleManager) Init() error {
 	}
 
 	// http 路由注册
-	router, err := c.initHTTPService()
-	if err != nil {
-		return err
-	}
+	router := c.initHTTPService()
 
 	if err := micro.RegisterHandler(microService.Server(), router); err != nil {
 		return err
@@ -158,7 +155,7 @@ func (c *WebConsoleManager) Init() error {
 	return nil
 }
 
-func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config, *options.MultiCredConf) {
+func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config, *options.MultiCredConf) {
 	// new config
 	conf, _ := microConf.NewConfig(microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))))
 	var multiCredConf *options.MultiCredConf
@@ -172,8 +169,8 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 	microCmd := cmd.NewCmd(cmdOptions...)
 	microCmd.App().Flags = buildFlags()
 	microCmd.App().Commands = buildCommands()
-	microCmd.App().Action = func(c *cli.Context) error {
-		if c.Bool("confinfo") {
+	microCmd.App().Action = func(ctx *cli.Context) error {
+		if ctx.Bool("confinfo") {
 			encoder := yaml2.NewEncoder(os.Stdout)
 			encoder.SetIndent(2)
 			if err := encoder.Encode(config.G); err != nil {
@@ -183,15 +180,15 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 			os.Exit(0)
 			return nil
 		}
-		if c.String(serverAddressFlag) == "" || c.String("config") == "" {
+		if ctx.String(serverAddressFlag) == "" || ctx.String("config") == "" {
 			logger.Error("--config and --server-address not set")
 			os.Exit(1)
 		}
 		if err := conf.Load(file.NewSource(file.WithPath(configPath))); err != nil {
 			return err
 		}
-		m.listenPort = c.Value(serverPortFlag).(string)
-		m.serverAddress = c.Value(serverAddressFlag).(string)
+		c.listenPort = ctx.Value(serverPortFlag).(string)
+		c.serverAddress = ctx.Value(serverAddressFlag).(string)
 		// 初始化配置文件
 		if err := config.G.ReadFrom(conf.Bytes()); err != nil {
 			logger.Errorf("config not valid, err: %s, exited", err)
@@ -221,7 +218,7 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 }
 
 // initHTTPService 初始化 gin Http 配置
-func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
+func (c *WebConsoleManager) initHTTPService() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery(), gin.Logger())
@@ -238,7 +235,7 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 	if routePrefix == "" {
 		routePrefix = "/webconsole"
 	}
-	//回放文件
+	// 回放文件
 	replayPath := config.G.Audit.DataDir
 
 	// 支持路径 prefix 透传和 rewrite 的场景
@@ -262,7 +259,7 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 		r.RegisterRoute(router.Group(""))
 	}
 
-	return router, nil
+	return router
 }
 
 // initEtcdRegistry etcd 服务注册
@@ -288,7 +285,9 @@ func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
 		if err != nil {
 			return nil, err
 		}
-		etcdRegistry.Init(registry.TLSConfig(tlsConfig))
+		if err := etcdRegistry.Init(registry.TLSConfig(tlsConfig)); err != nil {
+			return nil, err
+		}
 	}
 
 	return etcdRegistry, nil
@@ -414,8 +413,7 @@ func (c *WebConsoleManager) Run() error {
 
 	if c.multiCredConf != nil {
 		c.microService.Init(micro.AfterStop(func() error {
-			c.multiCredConf.Stop()
-			return nil
+			return c.multiCredConf.Stop()
 		}))
 
 		eg.Go(func() error {
