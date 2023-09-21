@@ -24,6 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/logrule"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
@@ -62,7 +63,7 @@ func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 	storage.InitStorage()
 
 	// 启动 apiserver
-	g.Add(server.Run, func(err error) { server.Close() })
+	g.Add(server.Run, func(err error) { server.Close(); component.GetAuditClient().Close() })
 	g.Add(sd.Run, func(error) {})
 
 	bcs.CacheListClusters()

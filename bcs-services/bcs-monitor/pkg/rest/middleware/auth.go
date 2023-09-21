@@ -83,7 +83,7 @@ func ProjectAuthorization() gin.HandlerFunc {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
 		}
-		allow, url, resourceAction, err := client.CanViewProject(username, projectID)
+		allow, url, _, err := client.CanViewProject(username, projectID)
 		if err != nil {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
@@ -94,17 +94,6 @@ func ProjectAuthorization() gin.HandlerFunc {
 			return
 		}
 
-		//
-		instanceData := map[string]interface{}{
-			"ProjectID": projectID,
-			"ClusterID": clusterID,
-			"Namespace": c.Param("namespace"),
-		}
-
-		for _, data := range resourceAction {
-			// 接入审计
-			audit.AddEvent(data.Action, data.Type, projectID, username, allow, instanceData)
-		}
 		c.Next()
 	}
 }
@@ -140,7 +129,7 @@ func NsScopeAuthorization() gin.HandlerFunc {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
 		}
-		allow, url, resourceAction, err := client.CanViewNamespaceScopedResource(username, projectID, clusterID, namespace)
+		allow, url, _, err := client.CanViewNamespaceScopedResource(username, projectID, clusterID, namespace)
 		if err != nil {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
@@ -149,17 +138,6 @@ func NsScopeAuthorization() gin.HandlerFunc {
 			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
 			rest.AbortWithWithForbiddenError(restContext, errMsg)
 			return
-		}
-
-		instanceData := map[string]interface{}{
-			"ProjectID": projectID,
-			"ClusterID": clusterID,
-			"Namespace": namespace,
-		}
-
-		for _, data := range resourceAction {
-			// 接入审计
-			audit.AddEvent(data.Action, data.Type, projectID, username, allow, instanceData)
 		}
 
 		c.Next()
