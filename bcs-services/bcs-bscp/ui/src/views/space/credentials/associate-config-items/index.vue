@@ -12,11 +12,13 @@ import RuleEdit from './rule-edit.vue'
 const { spaceId } = storeToRefs(useGlobalStore())
 
 const props = defineProps<{
-  show: boolean,
-  id: number
+  show: boolean;
+  id: number;
+  permCheckLoading: boolean;
+  hasManagePerm: boolean;
 }>()
 
-const emits = defineEmits(['close', 'refresh'])
+const emits = defineEmits(['close', 'refresh', 'applyPerm'])
 
 const loading = ref(true)
 const rules = ref<ICredentialRule[]>([])
@@ -45,6 +47,13 @@ const loadRules = async () => {
   const res = await getCredentialScopes(spaceId.value, props.id)
   rules.value = res.details
   loading.value = false
+}
+
+const handleOpenEdit = () => {
+  if (props.permCheckLoading || !props.hasManagePerm) {
+    emits('applyPerm')
+  }
+  isRuleEdit.value = true
 }
 
 const handleRuleChange = (val: IRuleUpdateParams) => {
@@ -102,8 +111,21 @@ const handleClose = () => {
       </div> -->
     </section>
     <div class="action-btns">
-      <bk-button v-if="isRuleEdit" theme="primary" :loading="pending" @click="handleSave">保存</bk-button>
-      <bk-button v-else theme="primary" @click="isRuleEdit = true">编辑规则</bk-button>
+      <bk-button
+        v-if="isRuleEdit"
+        theme="primary"
+        :loading="pending"
+        @click="handleSave">
+        保存
+      </bk-button>
+      <bk-button
+        v-else
+        v-cursor="{ active: !props.hasManagePerm }"
+        :class="{ 'bk-button-with-no-perm': !props.hasManagePerm }"
+        theme="primary"
+        @click="handleOpenEdit">
+        编辑规则
+      </bk-button>
       <bk-button @click="handleClose">{{ isRuleEdit ? '取消' : '关闭' }}</bk-button>
     </div>
   </bk-sideslider>

@@ -25,6 +25,10 @@
     activeTabName.value = <string>val
   })
 
+  watch(() => spaceId.value, () => {
+    checkCreateServicePerm()
+  })
+
   onMounted(() => {
     checkCreateServicePerm()
   })

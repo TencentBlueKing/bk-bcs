@@ -21,14 +21,14 @@
   const { versionData } = storeToRefs(versionStore)
 
   const props = defineProps<{
-    bkBizId: string,
-    appId: number
+    bkBizId: string;
+    appId: number;
+    permCheckLoading: boolean;
+    hasPerm: boolean;
   }>()
 
   const emit = defineEmits(['confirm'])
 
-  const permCheckLoading = ref(false)
-  const hasPublishVersionPerm = ref(false)
   const isSelectGroupPanelOpen = ref(false)
   const isDiffSliderShow = ref(false)
   const isConfirmDialogShow = ref(false)
@@ -47,27 +47,8 @@
     }]
   })
 
-  watch(() => versionData.value.status.publish_status, val => {
-    if (val === 'not_released') {
-      checkPublishVersionPerm()
-    }
-  })
-
-  onMounted(() => {
-    if (versionData.value.status.publish_status === 'not_released') {
-      checkPublishVersionPerm()
-    }
-  })
-
-  const checkPublishVersionPerm = async () => {
-    permCheckLoading.value = true
-    const res = await permissionCheck({ resources: permissionQueryResource.value })
-    hasPublishVersionPerm.value = res.is_allowed
-    permCheckLoading.value = false
-  }
-
   const handleBtnClick = () => {
-    if (hasPublishVersionPerm.value) {
+    if (props.hasPerm) {
       isSelectGroupPanelOpen.value = true
     } else {
       permissionQuery.value = { resources: permissionQueryResource.value }
@@ -117,10 +98,10 @@
     <section class="create-version">
         <bk-button
           v-if="versionData.status.publish_status === 'not_released'"
-          v-cursor="{ active: !hasPublishVersionPerm }"
+          v-cursor="{ active: !props.hasPerm }"
           theme="primary"
-          :class="['trigger-button', { 'bk-button-with-no-perm': !hasPublishVersionPerm }]"
-          :disabled="permCheckLoading"
+          :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
+          :disabled="props.permCheckLoading"
           @click="handleBtnClick">
           上线版本
         </bk-button>

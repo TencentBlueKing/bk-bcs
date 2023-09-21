@@ -33,6 +33,13 @@ export default defineConfig(({ command, mode }) => {
     base: "./",
     publicDir: 'static',
     plugins,
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: '@import "./src/css/style.scss";',
+        },
+      },
+    },
     resolve: {
       alias: {
         'vue-i18n': 'vue-i18n/dist/vue-i18n.cjs.js'
@@ -60,7 +67,7 @@ export default defineConfig(({ command, mode }) => {
         `monaco-editor/esm/vs/language/html/html.worker`,
         `monaco-editor/esm/vs/language/typescript/ts.worker`,
         `monaco-editor/esm/vs/editor/editor.worker`
-      ], 
+      ],
     },
     server: {
       https: true,

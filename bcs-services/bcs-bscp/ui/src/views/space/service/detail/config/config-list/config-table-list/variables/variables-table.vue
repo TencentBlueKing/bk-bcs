@@ -62,6 +62,7 @@
   }
 
   const deleteCellError = (name: string, key: string) => {
+    change()
     if (errorDetails.value[name]?.includes(key)) {
       if (errorDetails.value[name].length === 0) {
         delete errorDetails.value[name]

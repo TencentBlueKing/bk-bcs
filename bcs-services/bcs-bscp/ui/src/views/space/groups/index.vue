@@ -187,6 +187,17 @@
     refreshTableData()
   }
 
+  // hover提示文字
+  const handleTooltip = (flag:boolean,info:string) => {
+    if(flag){
+      return {
+        content:`分组已上线,不能${info}`,
+        placement: 'top',
+      }
+    }
+    return {disabled:true}
+   }
+
 </script>
 <template>
   <section class="groups-management-page">
@@ -268,8 +279,18 @@
             <bk-table-column label="操作" :width="120">
               <template #default="{ row }">
                 <div v-if="!row.IS_CATEORY_ROW" class="action-btns">
-                  <bk-button text theme="primary" :disabled="row.released_apps_num > 0" @click="openEditGroupDialog(row)">编辑分组</bk-button>
-                  <bk-button text theme="primary" :disabled="row.released_apps_num > 0" @click="handleDeleteGroup(row)">删除</bk-button>
+                  <bk-button
+                  text
+                  theme="primary"
+                  :disabled="row.released_apps_num > 0"
+                  @click="openEditGroupDialog(row)"
+                  v-bk-tooltips="handleTooltip(row.released_apps_num,'编辑')">编辑分组</bk-button>
+                  <bk-button
+                  text
+                  theme="primary"
+                  :disabled="row.released_apps_num > 0"
+                  @click="handleDeleteGroup(row)"
+                  v-bk-tooltips="handleTooltip(row.released_apps_num,'删除')">删除</bk-button>
                 </div>
               </template>
             </bk-table-column>

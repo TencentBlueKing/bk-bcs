@@ -81,12 +81,12 @@
     .title {
       margin-right: 16px;
       padding-right: 16px;
-      line-height: 24px;
+      line-height: 26px;
       border-right: 1px solid #dcdee5;
     }
     .space-name {
       flex: 1;
-      line-height: 24px;
+      line-height: 26px;
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;

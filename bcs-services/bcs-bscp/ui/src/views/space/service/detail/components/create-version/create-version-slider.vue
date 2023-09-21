@@ -69,8 +69,12 @@
     loading.value = false
   }
 
-  const handleVariablesChange = (variables: IVariableEditParams[]) => {
+  const formChange = () => {
     isFormChange.value = true
+  }
+
+  const handleVariablesChange = (variables: IVariableEditParams[]) => {
+    formChange()
     variableList.value = variables
   }
 
@@ -137,15 +141,16 @@
           <div class="section-title">版本信息</div>
           <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="formData">
             <bk-form-item label="版本名称" property="name" :required="true">
-              <bk-input v-model="formData.name"></bk-input>
+              <bk-input v-model="formData.name" @change="formChange" />
             </bk-form-item>
             <bk-form-item label="版本描述" property="memo">
-              <bk-input v-model="formData.memo" type="textarea" :maxlength="100"></bk-input>
+              <bk-input v-model="formData.memo" type="textarea" :maxlength="100" @change="formChange" />
             </bk-form-item>
             <bk-checkbox
               v-model="isPublish"
               :true-label="true"
-              :false-label="false">
+              :false-label="false"
+              @change="formChange">
               同时上线版本
             </bk-checkbox>
           </bk-form>

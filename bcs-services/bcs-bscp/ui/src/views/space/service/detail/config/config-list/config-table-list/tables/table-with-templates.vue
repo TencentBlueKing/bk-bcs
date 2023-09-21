@@ -4,6 +4,7 @@
   import { InfoBox, Message } from "bkui-vue/lib";
   import { DownShape, Close } from 'bkui-vue/lib/icon';
   import { useConfigStore } from '../../../../../../../../store/config'
+  import { useServiceStore } from '../../../../../../../../store/service'
   import { ICommonQuery } from '../../../../../../../../../types/index';
   import { datetimeFormat } from '../../../../../../../../utils/index'
   import { IConfigItem, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config'
@@ -35,7 +36,10 @@
   }
 
   const configStore = useConfigStore()
+  const serviceStore = useServiceStore()
   const { versionData } = storeToRefs(configStore)
+  const { checkPermBeforeOperate } = serviceStore
+  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
 
   const props = defineProps<{
     bkBizId: string;
@@ -211,6 +215,9 @@
   }
 
   const handleEditOpen = (config: IConfigTableItem) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     activeConfig.value = config.id
     editPanelShow.value = true
   }
@@ -230,6 +237,9 @@
   }
 
   const handleOpenReplaceVersionDialog = (pkgId: number, config: IConfigTableItem) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     const { id: templateId, versionId, versionName } = config
     replaceDialogData.value = {
       open: true,
@@ -239,6 +249,9 @@
 
   // 删除模板套餐
   const handleDeletePkg = async(pkgId: number, name: string) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     InfoBox({
       title: `确认是否删除模板套餐【${name}】?`,
       headerAlign: "center" as const,
@@ -267,6 +280,9 @@
 
   // 删除配置项
   const handleDel = (config: IConfigTableItem) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     InfoBox({
       title: `确认是否删除配置项【${config.name}】?`,
       headerAlign: "center" as const,
@@ -308,7 +324,11 @@
                   <DownShape :class="['fold-icon', { fold: !group.expand }]" />
                   {{ group.name }}
                 </div>
-                <div v-if="isUnNamedVersion && group.id !== 0" class="delete-btn" @click="handleDeletePkg(group.id, group.name)">
+                <div
+                  v-if="isUnNamedVersion && group.id !== 0"
+                  v-cursor="{ active: !hasEditServicePerm }"
+                  :class="['delete-btn', {'bk-text-with-no-perm': !hasEditServicePerm}]"
+                  @click="handleDeletePkg(group.id, group.name)">
                   <Close class="close-icon" />
                   删除套餐
                 </div>
@@ -326,9 +346,11 @@
                           <template v-if="group.id === 0">
                             <bk-button
                               v-if="isUnNamedVersion"
+                              v-cursor="{ active: !hasEditServicePerm }"
                               text
                               theme="primary"
-                              :disabled="config.file_state === 'DELETE'"
+                              :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                              :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
                               @click="handleEditOpen(config)">
                               {{ config.name }}
                             </bk-button>
@@ -361,8 +383,24 @@
                             <!-- 非套餐配置项 -->
                             <template v-if="group.id === 0">
                               <template v-if="isUnNamedVersion">
-                                <bk-button text theme="primary" @click="handleEditOpen(config)">编辑</bk-button>
-                                <bk-button text theme="primary" @click="handleDel(config)">删除</bk-button>
+                                <bk-button
+                                  v-cursor="{ active: !hasEditServicePerm }"
+                                  text
+                                  theme="primary"
+                                  :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                                  :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
+                                  @click="handleEditOpen(config)">
+                                  编辑
+                                </bk-button>
+                                <bk-button
+                                  v-cursor="{ active: !hasEditServicePerm }"
+                                  text
+                                  theme="primary"
+                                  :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                                  :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
+                                  @click="handleDel(config)">
+                                  删除
+                                </bk-button>
                               </template>
                               <template v-else>
                                 <bk-button text theme="primary" @click="handleViewConfig(config.id, 'config')">查看</bk-button>
@@ -371,7 +409,15 @@
                             </template>
                             <!-- 套餐模板 -->
                             <template v-else>
-                              <bk-button v-if="isUnNamedVersion" text theme="primary" @click="handleOpenReplaceVersionDialog(group.id, config)">替换版本</bk-button>
+                              <bk-button
+                                v-if="isUnNamedVersion"
+                                v-cursor="{ active: !hasEditServicePerm }"
+                                text
+                                theme="primary"
+                                :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                                @click="handleOpenReplaceVersionDialog(group.id, config)">
+                                替换版本
+                              </bk-button>
                               <template v-else>
                                 <bk-button text theme="primary" @click="handleViewConfig(config.versionId, 'template')">查看</bk-button>
                                 <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleConfigDiff(group.id, config)">对比</bk-button>

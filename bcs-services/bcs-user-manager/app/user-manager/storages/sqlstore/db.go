@@ -17,9 +17,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql" // mysql
+	"github.com/signalfx/splunk-otel-go/instrumentation/github.com/jinzhu/gorm/splunkgorm"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 // GCoreDB global DB client
@@ -35,7 +37,7 @@ func InitCoreDatabase(conf *config.UserMgrConfig) error {
 	if dsn == "" {
 		return fmt.Errorf("core_database dsn not configured")
 	}
-	db, err := gorm.Open("mysql", dsn)
+	db, err := splunkgorm.Open("mysql", dsn)
 	if err != nil {
 		return err
 	}

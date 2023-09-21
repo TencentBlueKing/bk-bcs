@@ -5,6 +5,7 @@
   import { IPagination } from '../../../../../types/index';
   import { ITemplateVersionItem, ITemplateCitedCountDetailItem } from '../../../../../types/template';
   import { deleteTemplateVersion } from '../../../../api/template'
+  import { datetimeFormat } from '../../../../utils/index'
   import VersionBoundByAppsDetail from './version-bound-by-apps-detail.vue'
   import TemplateVersionDiff from './template-version-diff.vue';
 
@@ -95,7 +96,13 @@
       </template>
     </bk-table-column>
     <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
-    <bk-table-column label="创建时间" prop="revision.create_at"></bk-table-column>
+    <bk-table-column label="创建时间" prop="revision.create_at">
+      <template #default="{ row }">
+        <template v-if="row.revision">
+          {{ datetimeFormat(row.revision.create_at) }}
+        </template>
+      </template>
+    </bk-table-column>
     <bk-table-column label="操作" width="180">
       <template #default="{ row }">
         <div class="actions-wrapper">

@@ -8,12 +8,12 @@
 <body>
   <script>
     if (window.opener) {
-      $(document).ready(function () {
+      document.addEventListener("DOMContentLoaded", function() {
         // 关闭登录弹出框
         window.opener.postMessage("login", '*');
       });
     } else {
-      $(document).ready(function () {
+      document.addEventListener("DOMContentLoaded", function() {
         // 关闭登录弹出框
         try{
           window.top.BLUEKING.corefunc.close_login_dialog();

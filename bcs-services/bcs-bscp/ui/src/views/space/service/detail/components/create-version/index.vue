@@ -6,22 +6,20 @@
   import { useConfigStore } from '../../../../../../store/config'
   import { IConfigVersion } from '../../../../../../../types/config'
   import { IVariableEditParams } from '../../../../../../../types/variable';
-  import { permissionCheck } from '../../../../../../api/index'
   import CreateVersionSlider from './create-version-slider.vue'
   import VersionDiff from '../../config/components/version-diff/index.vue'
 
   const props = defineProps<{
-    bkBizId: string,
-    appId: number
+    bkBizId: string;
+    appId: number;
+    permCheckLoading: boolean;
+    hasPerm: boolean;
   }>()
 
   const emits = defineEmits(['confirm'])
 
   const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore())
   const { allConfigCount, versionData } = storeToRefs(useConfigStore())
-
-  const permCheckLoading = ref(false)
-  const hasCreateVersionPerm = ref(false)
   const isVersionSliderShow = ref(false)
   const isDiffSliderShow = ref(false)
   const variableList = ref<IVariableEditParams[]>([])
@@ -39,27 +37,8 @@
     }]
   })
 
-  watch(() => versionData.value.id, val => {
-    if (val === 0) {
-      checkCreateVersionPerm()
-    }
-  })
-
-  onMounted(() => {
-    if (versionData.value.id === 0) {
-      checkCreateVersionPerm()
-    }
-  })
-
-  const checkCreateVersionPerm = async () => {
-    permCheckLoading.value = true
-    const res = await permissionCheck({ resources: permissionQueryResource.value })
-    hasCreateVersionPerm.value = res.is_allowed
-    permCheckLoading.value = false
-  }
-
   const handleBtnClick = () => {
-    if (hasCreateVersionPerm.value) {
+    if (props.hasPerm) {
       isVersionSliderShow.value = true
     } else {
       permissionQuery.value = { resources: permissionQueryResource.value }
@@ -95,10 +74,10 @@
 <template>
   <bk-button
     v-if="versionData.id === 0"
-    v-cursor="{ active: !hasCreateVersionPerm }"
+    v-cursor="{ active: !props.hasPerm }"
     theme="primary"
-    :class="['trigger-button', { 'bk-button-with-no-perm': !hasCreateVersionPerm }]"
-    :disabled="allConfigCount === 0 || permCheckLoading"
+    :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
+    :disabled="(props.hasPerm && allConfigCount === 0) || props.permCheckLoading"
     @click="handleBtnClick">
     生成版本
   </bk-button>

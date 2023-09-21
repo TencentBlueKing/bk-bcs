@@ -32,16 +32,18 @@
   const headerInfo = computed(() => {
     let name = ''
     let memo = ''
+    let isPublic = false
     if (isPackage.value) {
       const pkgDetail = packageList.value.find(item => item.id === currentPkg.value)
       if (pkgDetail) {
-        name = pkgDetail.spec.name,
+        name = pkgDetail.spec.name
         memo = pkgDetail.spec.memo
+        isPublic = pkgDetail.spec.public
       }
     } else {
       name = PACKAGE_MENU_OTHER_TYPE_MAP[currentPkg.value as keyof typeof PACKAGE_MENU_OTHER_TYPE_MAP]
     }
-    return { name, memo }
+    return { name, memo, isPublic }
   })
 
 </script>
@@ -49,7 +51,7 @@
   <div :class="['package-content-detail', { 'with-apps-panel': isPackage && isAppsPanelOpen }]">
     <div class="detail-container">
       <div class="header-wrapper">
-        <div class="tag">公开</div>
+        <div v-if="headerInfo.isPublic" class="tag">公开</div>
         <h4 class="package-name">{{ headerInfo.name }}</h4>
         <p class="package-desc" :title="headerInfo.memo">{{ headerInfo.memo }}</p>
       </div>

@@ -4,10 +4,10 @@ go 1.20
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230808080908-7c46cf1bd956
-	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230911112816-85f490b1c029
-	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230808080908-7c46cf1bd956
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230808080908-7c46cf1bd956
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230921034852-f07df6e705c2
+	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230921064043-a8ed550f5a77
+	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230918042150-6020611e4f01
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230921034852-f07df6e705c2
 	github.com/TencentBlueKing/iam-go-sdk v0.1.4
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/avast/retry-go v3.0.0+incompatible
@@ -15,7 +15,8 @@ require (
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
-	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-redis/redis/extra/redisotel/v8 v8.11.5
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/gorilla/schema v1.2.0
@@ -24,8 +25,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
 	github.com/robfig/cron v1.2.0
+	github.com/signalfx/splunk-otel-go/instrumentation/github.com/jinzhu/gorm/splunkgorm v1.5.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.28.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	k8s.io/apimachinery v0.23.1
@@ -58,19 +60,21 @@ require (
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-git/go-git/v5 v5.4.2 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/spec v0.19.3 // indirect
 	github.com/go-openapi/swag v0.19.14 // indirect
 	github.com/go-playground/validator/v10 v10.11.2 // indirect
+	github.com/go-redis/redis/extra/rediscmd/v8 v8.11.5 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -80,6 +84,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/juju/ratelimit v1.0.1 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
 	github.com/leodido/go-urn v1.2.2 // indirect
@@ -103,6 +108,9 @@ require (
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
+	github.com/signalfx/splunk-otel-go v1.4.0 // indirect
+	github.com/signalfx/splunk-otel-go/instrumentation/database/sql/splunksql v1.4.0 // indirect
+	github.com/signalfx/splunk-otel-go/instrumentation/internal v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/ugorji/go/codec v1.2.9 // indirect
@@ -152,7 +160,9 @@ require (
 	go-micro.dev/v4 v4.10.2
 	go.etcd.io/etcd/client/v3 v3.5.2
 	go.opentelemetry.io/otel v1.14.0
-	go.opentelemetry.io/otel/metric v0.26.0
+	go.opentelemetry.io/otel/metric v0.37.0
 	go.opentelemetry.io/otel/trace v1.14.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )
+
+replace go.opentelemetry.io/otel/metric => go.opentelemetry.io/otel/metric v0.26.0

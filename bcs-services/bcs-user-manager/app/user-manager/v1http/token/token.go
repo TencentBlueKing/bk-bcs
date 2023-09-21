@@ -14,6 +14,7 @@
 package token
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -180,7 +181,7 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
-	_, err = t.cache.Set(key, jwtString, time.Duration(form.Expiration)*time.Second)
+	_, err = t.cache.Set(context.TODO(), key, jwtString, time.Duration(form.Expiration)*time.Second)
 	if err != nil {
 		blog.Errorf("set user %s token fail", form.Username)
 		metrics.ReportRequestAPIMetrics("CreateToken", request.Request.Method, metrics.ErrStatus, start)
@@ -200,7 +201,7 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 	err = t.tokenStore.CreateToken(userToken)
 	if err != nil {
 		// delete token from redis when fail to insert token in db
-		_, _ = t.cache.Del(key)
+		_, _ = t.cache.Del(context.TODO(), key)
 		metrics.ReportRequestAPIMetrics("CreateToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to insert user token record [%s]: %s", userToken.Name, err.Error())
 		message := fmt.Sprintf("errcode: %d, creating token for user [%s] failed, error: %s",
@@ -277,7 +278,7 @@ func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.R
 		return
 	}
 
-	_, err := t.cache.Del(constant.TokenKeyPrefix + token)
+	_, err := t.cache.Del(context.TODO(), constant.TokenKeyPrefix+token)
 	if err != nil {
 		blog.Errorf("delete token failed")
 		metrics.ReportRequestAPIMetrics("DeleteToken", request.Request.Method, metrics.ErrStatus, start)
@@ -369,7 +370,7 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
-	_, err = t.cache.Set(key, jwtString, time.Duration(form.Expiration)*time.Second)
+	_, err = t.cache.Set(context.TODO(), key, jwtString, time.Duration(form.Expiration)*time.Second)
 	if err != nil {
 		blog.Errorf("set user [%s] token fail, err: %s", tokenInDB.Name, err.Error())
 		metrics.ReportRequestAPIMetrics("UpdateToken", request.Request.Method, metrics.ErrStatus, start)
@@ -431,7 +432,7 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
-	_, err = t.cache.Set(key, jwtString, time.Duration(form.Expiration)*time.Second)
+	_, err = t.cache.Set(context.TODO(), key, jwtString, time.Duration(form.Expiration)*time.Second)
 	if err != nil {
 		blog.Errorf("set user %s token fail", form.Username)
 		metrics.ReportRequestAPIMetrics("CreateTempToken", request.Request.Method, metrics.ErrStatus, start)
@@ -452,7 +453,7 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 	err = t.tokenStore.CreateTemporaryToken(userToken)
 	if err != nil {
 		// delete token from redis when fail to insert token in db
-		_, _ = t.cache.Del(key)
+		_, _ = t.cache.Del(context.TODO(), key)
 		metrics.ReportRequestAPIMetrics("CreateTempToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to insert user token record [%s]: %s", userToken.Username, err.Error())
 		message := fmt.Sprintf("errcode: %d, creating temporary token for user [%s] failed, error: %s",
@@ -515,7 +516,7 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 	// check exist token
 	exist := t.tokenStore.GetTokenByCondition(&models.BcsUser{Name: form.ClientName, UserType: models.ClientUser})
 	if exist != nil {
-		jwtString, _ := t.cache.Get(constant.TokenKeyPrefix + exist.UserToken)
+		jwtString, _ := t.cache.Get(context.TODO(), constant.TokenKeyPrefix+exist.UserToken)
 		resp := &TokenResp{Token: exist.UserToken, ExpiredAt: &exist.ExpiresAt, JWT: jwtString}
 		// transfer never expired token
 		if resp.ExpiredAt.After(NeverExpired) {
@@ -551,7 +552,7 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
-	_, err = t.cache.Set(key, jwtString, time.Duration(form.Expiration)*time.Second)
+	_, err = t.cache.Set(context.TODO(), key, jwtString, time.Duration(form.Expiration)*time.Second)
 	if err != nil {
 		blog.Errorf("set client %s token fail", form.ClientName)
 		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
@@ -572,7 +573,7 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 	err = t.tokenStore.CreateToken(userToken)
 	if err != nil {
 		// delete token from redis when fail to insert token in db
-		_, _ = t.cache.Del(key)
+		_, _ = t.cache.Del(context.TODO(), key)
 		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to insert client token record [%s]: %s", userToken.Name, err.Error())
 		message := fmt.Sprintf("errcode: %d, creating client token for client [%s] failed, error: %s",
