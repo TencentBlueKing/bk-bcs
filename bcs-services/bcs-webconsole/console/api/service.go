@@ -64,7 +64,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 
 	// 用户登入态鉴权, session鉴权
 	api.GET("/api/projects/:projectId/clusters/:clusterId/session/",
-		metrics.RequestCollect("CreateWebConsoleSession"), route.PermissionRequired(), s.CreateWebConsoleSession)
+		metrics.RequestCollect("CreateWebConsoleSession"), route.PermissionRequired(), route.AuditHandler(), s.CreateWebConsoleSession)
 	api.GET("/api/projects/:projectId/clusters/",
 		metrics.RequestCollect("ListClusters"), s.ListClusters)
 

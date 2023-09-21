@@ -50,8 +50,8 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 		s.UserPermRequestRedirect)
 
 	// html 页面
-	web.GET("/projects/:projectId/clusters/:clusterId/", metrics.RequestCollect("IndexPage"), route.AuditHandler(), s.IndexPageHandler)
-	web.GET("/projects/:projectId/mgr/", metrics.RequestCollect("MgrPage"), route.AuditHandler(), s.MgrPageHandler)
+	web.GET("/projects/:projectId/clusters/:clusterId/", metrics.RequestCollect("IndexPage"), s.IndexPageHandler)
+	web.GET("/projects/:projectId/mgr/", metrics.RequestCollect("MgrPage"), s.MgrPageHandler)
 	web.GET("/portal/container/", metrics.RequestCollect("ContainerGatePage"), s.ContainerGatePageHandler)
 	web.GET("/portal/cluster/", metrics.RequestCollect("ClusterGatePage"), s.ClusterGatePageHandler)
 	web.GET("/replay/files", metrics.RequestCollect("ReplayFilesPage"), route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFoldersPageHandler)
