@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package record 终端session record
 package record
 
 import (
@@ -54,9 +55,8 @@ type ReplyRecorder struct {
 	ctx         context.Context
 	lock        *sync.Mutex
 	uploadChan  chan struct{}
-
-	file *os.File
-	once sync.Once
+	file        *os.File
+	once        sync.Once
 }
 
 func fileExists(name string) bool {
@@ -77,7 +77,8 @@ func ensureDirExist(name string) error {
 
 // NewReplayRecord 初始化Recorder
 // 确认是否开启终端记录 / 创建记录文件 / 初始记录信息
-func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, terminalSize *types.TerminalSize) (*ReplyRecorder, error) {
+func NewReplayRecord(ctx context.Context, podCtx *types.PodContext,
+	terminalSize *types.TerminalSize) (*ReplyRecorder, error) {
 	if !config.G.Audit.Enabled {
 		return nil, nil
 	}
@@ -98,7 +99,7 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, terminalSize
 	path = filepath.Join(path, date)
 	err := ensureDirExist(path)
 	if err != nil {
-		return nil, fmt.Errorf("Create dir %s error: %s\n", path, err)
+		return nil, fmt.Errorf("create dir %s error: %s", path, err)
 	}
 	d := time.Now().Format(dayTimeFormat)
 	f := fmt.Sprintf("%s_%s_%s_%s", d, podCtx.ClusterId, podCtx.Username, podCtx.SessionId[:6])
@@ -107,7 +108,7 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, terminalSize
 	recorder.absFilePath = absFilePath
 	fd, err := os.Create(recorder.absFilePath)
 	if err != nil {
-		return nil, fmt.Errorf("Create replay file %s error: %s\n", recorder.absFilePath, err)
+		return nil, fmt.Errorf("create replay file %s error: %s", recorder.absFilePath, err)
 	}
 	recorder.file = fd
 	options := make([]asciinema.Option, 0, 3)
@@ -115,12 +116,12 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, terminalSize
 	options = append(options, asciinema.WithWidth(orgInfo.Width))
 	options = append(options, asciinema.WithTimestamp(orgInfo.TimeStamp))
 	recorder.Writer = asciinema.NewWriter(recorder.file, podCtx, options...)
-	//初始化时写入Header信息
+	// 初始化时写入Header信息
 	err = recorder.Writer.WriteHeader()
 	if err != nil {
-		return recorder, fmt.Errorf("Session %s write replay header failed: %s\n", recorder.SessionID, err)
+		return recorder, fmt.Errorf("session %s write replay header failed: %s", recorder.SessionID, err)
 	}
-	//初始化完成,等待文件上传
+	// 初始化完成,等待文件上传
 	go recorder.UploadFile()
 	return recorder, nil
 }
@@ -130,10 +131,10 @@ func (r *ReplyRecorder) isNullError() bool {
 	if r.err != nil {
 		r.once.Do(func() {
 			end := append([]byte(recordEnd), []byte("\n")...)
-			r.Writer.WriteBuff.Write(end)
-			r.Writer.WriteBuff.Flush()
-			//异常退出: 直接关闭文件
-			r.file.Close()
+			_, _ = r.Writer.WriteBuff.Write(end)
+			r.Writer.WriteBuff.Flush() // nolint
+			// 异常退出: 直接关闭文件
+			r.file.Close() // nolint
 			r.uploadChan <- struct{}{}
 		})
 		return true
@@ -142,12 +143,12 @@ func (r *ReplyRecorder) isNullError() bool {
 }
 
 // RecordOutputEvent 记录终端输出信息
-func RecordOutputEvent(r *ReplyRecorder, p []byte) {
-	//不开启terminal recorder时, ReplyRecorder返回nil
+func RecordOutputEvent(r *ReplyRecorder, p []byte) { // nolint
+	// 不开启terminal recorder时, ReplyRecorder返回nil
 	if r == nil {
 		return
 	}
-	//有错误异常就退出本次记录
+	// 有错误异常就退出本次记录
 	if r.isNullError() {
 		return
 	}
@@ -160,12 +161,12 @@ func RecordOutputEvent(r *ReplyRecorder, p []byte) {
 }
 
 // RecordResizeEvent 记录终端变化
-func RecordResizeEvent(r *ReplyRecorder, p []byte) {
-	//不开启terminal recorder时, ReplyRecorder返回nil
+func RecordResizeEvent(r *ReplyRecorder, p []byte) { // nolint
+	// 不开启terminal recorder时, ReplyRecorder返回nil
 	if r == nil {
 		return
 	}
-	//有错误异常就退出本次记录
+	// 有错误异常就退出本次记录
 	if r.isNullError() {
 		return
 	}
@@ -179,25 +180,23 @@ func RecordResizeEvent(r *ReplyRecorder, p []byte) {
 
 // End 正常退出: 关闭缓存和文件
 func (r *ReplyRecorder) End() {
-	if r == nil {
-		return
-	} else {
-		//关闭前将剩余缓冲区数据写入
+	if r != nil {
+		// 关闭前将剩余缓冲区数据写入
 		end := append([]byte(recordEnd), []byte("\n")...)
-		r.Writer.WriteBuff.Write(end)
-		r.Writer.WriteBuff.Flush()
-		r.file.Close()
+		_, _ = r.Writer.WriteBuff.Write(end)
+		r.Writer.WriteBuff.Flush() // nolint
+		r.file.Close()             // nolint
 		r.uploadChan <- struct{}{}
-		return
 	}
 }
 
 // GracefulShutdownRecorder 关闭文件
 func (r *ReplyRecorder) GracefulShutdownRecorder() {
-	r.Writer.WriteBuff.Flush()
-	r.file.Close()
+	r.Writer.WriteBuff.Flush() // nolint
+	r.file.Close()             // nolint
 }
 
+// UploadFile 实时上传文件
 func (r *ReplyRecorder) UploadFile() {
 	<-r.uploadChan
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)

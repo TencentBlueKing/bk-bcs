@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package types xxx
@@ -33,8 +32,10 @@ const (
 const (
 	defaultSessionTimeout  = time.Minute * 30 // session 过期时间
 	defaultConnIdleTimeout = time.Minute * 30 // 链接自动断开时间, 30分钟
-	MaxSessionTimeout      = 24 * 60
-	MaxConnIdleTimeout     = 24 * 60
+	// MaxSessionTimeout session最多等待时间
+	MaxSessionTimeout = 24 * 60
+	// MaxConnIdleTimeout xx
+	MaxConnIdleTimeout = 24 * 60
 )
 
 const (

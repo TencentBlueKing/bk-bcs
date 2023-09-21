@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package iam 权限中心
 package iam
 
 import (
@@ -221,7 +221,7 @@ func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, namespaceNa
 // md5Digest 字符串转 MD5
 func md5Digest(key string) string {
 	// NOCC:gas/crypto(设计如此:)
-	hash := md5.New()
+	hash := md5.New() // nolint
 	hash.Write([]byte(key))
 	return hex.EncodeToString(hash.Sum(nil))
 }
