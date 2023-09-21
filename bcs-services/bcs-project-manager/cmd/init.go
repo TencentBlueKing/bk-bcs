@@ -48,6 +48,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
@@ -307,6 +308,11 @@ func (p *ProjectService) initMicro() error {
 			p.clusterDiscovery.Stop()
 			p.discovery.Stop()
 			etcd.Close()
+			return nil
+		}),
+		microSvc.AfterStop(func() error {
+			// close audit client
+			component.GetAuditClient().Close()
 			return nil
 		}),
 		microSvc.WrapHandler(

@@ -31,6 +31,7 @@ import (
 	"github.com/thanos-io/thanos/pkg/store"
 	"k8s.io/klog/v2"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 	tracingTransport "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/tracing"
@@ -248,4 +249,20 @@ func (r *BKResult) ValidateCode() error {
 		return errors.Errorf("resp code %d != 0, %s", resultCode, r.Message)
 	}
 	return nil
+}
+
+var (
+	auditClient *audit.Client
+	auditOnce   sync.Once
+)
+
+// GetAuditClient 获取审计客户端
+func GetAuditClient() *audit.Client {
+	if auditClient == nil {
+		auditOnce.Do(func() {
+			auditClient =
+				audit.NewClient(config.G.BCS.Host, config.G.BCS.Token, nil)
+		})
+	}
+	return auditClient
 }

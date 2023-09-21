@@ -39,9 +39,11 @@ import (
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/server"
+	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
+	audit2 "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -156,6 +158,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		server.RegisterTTL(time.Duration(crSvc.conf.Server.RegisterTTL)*time.Second),
 		server.RegisterInterval(time.Duration(crSvc.conf.Server.RegisterInterval)*time.Second),
 		server.Version(version.Version),
+
 		server.WrapHandler(
 			//	链路追踪
 			wrapper.NewTracingWrapper(),
@@ -181,7 +184,10 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		return err
 	}
 
-	crSvc.microSvc = micro.NewService(micro.Server(grpcServer), micro.Metadata(metadata))
+	crSvc.microSvc = micro.NewService(micro.AfterStop(func() error {
+		audit2.GetAuditClient().Close()
+		return nil
+	}), micro.Server(grpcServer), micro.Metadata(metadata))
 	log.Info(crSvc.ctx, "register cluster resources handler to micro successfully.")
 	return nil
 }
@@ -469,6 +475,7 @@ func (crSvc *clusterResourcesService) initModel() error {
 		Password:              password,
 		MaxPoolSize:           uint64(crSvc.conf.Mongo.MaxPoolSize),
 		MinPoolSize:           uint64(crSvc.conf.Mongo.MinPoolSize),
+		Monitor:               otelmongo.NewMonitor(),
 	}
 
 	mongoDB, err := mongo.NewDB(mongoOptions)

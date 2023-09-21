@@ -32,6 +32,10 @@ const (
 	ClusterKey = types.ContextKey("cluster")
 	// LangKey 语言版本
 	LangKey = types.ContextKey("lang")
+	// UserAgentHeaderKey is the header name of User-Agent.
+	UserAgentHeaderKey = "Grpcgateway-User-Agent"
+	// ForwardedForHeaderKey is the header name of X-Forwarded-For.
+	ForwardedForHeaderKey = "X-Forwarded-For"
 )
 
 // GetUsernameFromCtx 通过 ctx 获取 username

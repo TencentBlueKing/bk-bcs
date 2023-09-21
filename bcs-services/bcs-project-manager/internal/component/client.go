@@ -17,10 +17,13 @@ package component
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	goReq "github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 )
@@ -64,4 +67,20 @@ func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string
 		return "", errors.New(stringx.Errs2String(errs))
 	}
 	return body, nil
+}
+
+var (
+	auditClient *audit.Client
+	auditOnce   sync.Once
+)
+
+// GetAuditClient 获取审计客户端
+func GetAuditClient() *audit.Client {
+	if auditClient == nil {
+		auditOnce.Do(func() {
+			auditClient =
+				audit.NewClient(config.GlobalConf.BcsGateway.Host, config.GlobalConf.BcsGateway.Token, nil)
+		})
+	}
+	return auditClient
 }
