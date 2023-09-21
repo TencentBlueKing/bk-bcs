@@ -10,11 +10,14 @@
  * limitations under the License.
  */
 
+// Package bscp use embed ui
 package bscp
 
 import (
 	"embed"
 	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"mime"
@@ -22,10 +25,16 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"bscp.io/pkg/config"
 )
 
 //go:embed ui/dist
 var frontendAssets embed.FS
+
+const (
+	confFilePath = "ui/dist/config.json"
+)
 
 var (
 	allowCompressExtentions = map[string]bool{
@@ -101,14 +110,53 @@ func (e *EmbedWeb) FaviconHandler(w http.ResponseWriter, r *http.Request) {
 	e.fsServer.ServeHTTP(w, r)
 }
 
+// readConfigFile 读取前端配置文件
+func readConfigFile() (map[string]string, error) {
+	data, err := frontendAssets.ReadFile(confFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	c := new(map[string]string)
+	if err := json.Unmarshal(data, &c); err != nil {
+		return nil, err
+	}
+
+	return *c, nil
+}
+
+// mergeConfig 合并默认和自定义配置
+func mergeConfig() ([]byte, error) {
+	c, err := readConfigFile()
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range config.G.Frontend.Docs {
+		c[k] = v
+	}
+
+	bcsConfigBytes, err := json.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return bcsConfigBytes, nil
+}
+
 // RenderIndexHandler vue html 模板渲染
 func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
+	bscpConfigBytes, err := mergeConfig()
+	if err != nil {
+		panic(fmt.Errorf("init bscp config err, %s", err))
+	}
+	bscpConfig := string(bscpConfigBytes)
+
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		tplData := map[string]string{
 			"BK_STATIC_URL":   conf.StaticURL,
 			"RUN_ENV":         conf.RunEnv,
 			"BK_BCS_BSCP_API": conf.APIURL,
 			"BK_IAM_HOST":     conf.IAMHost,
+			"BK_BSCP_CONFIG":  bscpConfig,
 			"SITE_URL":        conf.SiteURL,
 		}
 
@@ -117,7 +165,7 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 			tplData["BK_BCS_BSCP_API"] = "/bscp"
 		}
 
-		e.tpl.ExecuteTemplate(w, "index.html", tplData)
+		e.tpl.ExecuteTemplate(w, "index.html", tplData) // nolint
 	}
 
 	return http.HandlerFunc(fn)
@@ -146,7 +194,7 @@ func (e *EmbedWeb) Render403Handler(conf *IndexConfig) http.Handler {
 			"BK_STATIC_URL": conf.StaticURL,
 		}
 
-		e.tpl.ExecuteTemplate(w, "403.html", tplData)
+		e.tpl.ExecuteTemplate(w, "403.html", tplData) // nolint
 	}
 
 	return http.HandlerFunc(fn)
