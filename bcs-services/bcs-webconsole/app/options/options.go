@@ -133,9 +133,10 @@ func (m *MultiCredConf) watch(name string, conf microConf.Config, eg *errgroup.G
 
 // Stop 停止所有监听
 func (m *MultiCredConf) Stop() error {
+	var err error
 	for name, w := range m.watcherMap {
 		logger.Infof("receive interput, stop watch %s", name)
-		return w.Stop()
+		err = w.Stop()
 	}
-	return nil
+	return err
 }
