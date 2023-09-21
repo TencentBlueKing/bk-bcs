@@ -98,6 +98,7 @@
     {
       title: '产品文档',
       click () {
+        // @ts-ignore
         window.open(BSCP_CONFIG.help)
         isShowDropdown.value = !isShowDropdown.value
       },
