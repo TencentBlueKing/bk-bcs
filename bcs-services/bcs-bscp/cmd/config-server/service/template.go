@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -32,7 +32,6 @@ import (
 // CreateTemplate create a template
 func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateReq) (*pbcs.CreateTemplateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateTemplateResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -41,6 +40,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 		return nil, err
 	}
 
+	// validate input param
 	idsLen := len(req.TemplateSetIds)
 	if idsLen > constant.ArrayInputLenLimit {
 		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [0,%d]",
@@ -81,7 +81,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 		return nil, err
 	}
 
-	resp = &pbcs.CreateTemplateResp{
+	resp := &pbcs.CreateTemplateResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -90,7 +90,6 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 // DeleteTemplate delete a template
 func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateReq) (*pbcs.DeleteTemplateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteTemplateResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -112,15 +111,15 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateRe
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.DeleteTemplateResp{}, nil
 }
 
 // BatchDeleteTemplate delete templates in batch
 func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDeleteTemplateReq) (
 	*pbcs.BatchDeleteTemplateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.BatchDeleteTemplateResp)
 
+	// validate input param
 	templateIDs, err := tools.GetUint32List(req.TemplateIds)
 	if err != nil {
 		return nil, fmt.Errorf("invalid template ids, %s", err)
@@ -151,13 +150,12 @@ func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDelete
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.BatchDeleteTemplateResp{}, nil
 }
 
 // UpdateTemplate update a template
 func (s *Service) UpdateTemplate(ctx context.Context, req *pbcs.UpdateTemplateReq) (*pbcs.UpdateTemplateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateTemplateResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -181,13 +179,12 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbcs.UpdateTemplateRe
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.UpdateTemplateResp{}, nil
 }
 
 // ListTemplates list templates
 func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq) (*pbcs.ListTemplatesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplatesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -212,19 +209,19 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplatesResp{
+	resp := &pbcs.ListTemplatesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
 	return resp, nil
 }
 
-// AddTemplatesToTemplateSets add templates to template sets
-func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbcs.AddTemplatesToTemplateSetsReq) (
-	*pbcs.AddTemplatesToTemplateSetsResp, error) {
+// AddTmplsToTmplSets add templates to template sets
+func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbcs.AddTmplsToTmplSetsReq) (
+	*pbcs.AddTmplsToTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.AddTemplatesToTemplateSetsResp)
 
+	// validate input param
 	idsLen := len(req.TemplateIds)
 	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
 		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
@@ -244,27 +241,27 @@ func (s *Service) AddTemplatesToTemplateSets(ctx context.Context, req *pbcs.AddT
 		return nil, err
 	}
 
-	r := &pbds.AddTemplatesToTemplateSetsReq{
+	r := &pbds.AddTmplsToTmplSetsReq{
 		BizId:           req.BizId,
 		TemplateSpaceId: req.TemplateSpaceId,
 		TemplateIds:     req.TemplateIds,
 		TemplateSetIds:  req.TemplateSetIds,
 	}
 
-	if _, err := s.client.DS.AddTemplatesToTemplateSets(grpcKit.RpcCtx(), r); err != nil {
+	if _, err := s.client.DS.AddTmplsToTmplSets(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("update template failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.AddTmplsToTmplSetsResp{}, nil
 }
 
-// DeleteTemplatesFromTemplateSets delete templates from template sets
-func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbcs.DeleteTemplatesFromTemplateSetsReq) (
-	*pbcs.DeleteTemplatesFromTemplateSetsResp, error) {
+// DeleteTmplsFromTmplSets delete templates from template sets
+func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbcs.DeleteTmplsFromTmplSetsReq) (
+	*pbcs.DeleteTmplsFromTmplSetsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteTemplatesFromTemplateSetsResp)
 
+	// validate input param
 	idsLen := len(req.TemplateIds)
 	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
 		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
@@ -284,27 +281,25 @@ func (s *Service) DeleteTemplatesFromTemplateSets(ctx context.Context, req *pbcs
 		return nil, err
 	}
 
-	r := &pbds.DeleteTemplatesFromTemplateSetsReq{
+	r := &pbds.DeleteTmplsFromTmplSetsReq{
 		BizId:           req.BizId,
 		TemplateSpaceId: req.TemplateSpaceId,
 		TemplateIds:     req.TemplateIds,
 		TemplateSetIds:  req.TemplateSetIds,
 	}
 
-	if _, err := s.client.DS.DeleteTemplatesFromTemplateSets(grpcKit.RpcCtx(), r); err != nil {
+	if _, err := s.client.DS.DeleteTmplsFromTmplSets(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("update template failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.DeleteTmplsFromTmplSetsResp{}, nil
 }
 
 // ListTemplatesByIDs list templates by ids
-func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplatesByIDsReq) (*pbcs.
-	ListTemplatesByIDsResp,
-	error) {
+func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplatesByIDsReq) (
+	*pbcs.ListTemplatesByIDsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplatesByIDsResp)
 
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.Ids)
@@ -334,18 +329,16 @@ func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbcs.ListTemplate
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplatesByIDsResp{
+	resp := &pbcs.ListTemplatesByIDsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
 }
 
 // ListTemplatesNotBound list templates not bound
-func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTemplatesNotBoundReq) (*pbcs.
-	ListTemplatesNotBoundResp,
-	error) {
+func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTemplatesNotBoundReq) (
+	*pbcs.ListTemplatesNotBoundResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplatesNotBoundResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -370,19 +363,17 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbcs.ListTempl
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplatesNotBoundResp{
+	resp := &pbcs.ListTemplatesNotBoundResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
 	return resp, nil
 }
 
-// ListTemplatesOfTemplateSet list templates of template set
-func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.ListTemplatesOfTemplateSetReq) (*pbcs.
-	ListTemplatesOfTemplateSetResp,
-	error) {
+// ListTmplsOfTmplSet list templates of template set
+func (s *Service) ListTmplsOfTmplSet(ctx context.Context, req *pbcs.ListTmplsOfTmplSetReq) (
+	*pbcs.ListTmplsOfTmplSetResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplatesOfTemplateSetResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -391,7 +382,7 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.List
 		return nil, err
 	}
 
-	r := &pbds.ListTemplatesOfTemplateSetReq{
+	r := &pbds.ListTmplsOfTmplSetReq{
 		BizId:           grpcKit.BizID,
 		TemplateSpaceId: req.TemplateSpaceId,
 		TemplateSetId:   req.TemplateSetId,
@@ -402,13 +393,13 @@ func (s *Service) ListTemplatesOfTemplateSet(ctx context.Context, req *pbcs.List
 		All:             req.All,
 	}
 
-	rp, err := s.client.DS.ListTemplatesOfTemplateSet(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListTmplsOfTmplSet(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("list templates of template set failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplatesOfTemplateSetResp{
+	resp := &pbcs.ListTmplsOfTmplSetResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

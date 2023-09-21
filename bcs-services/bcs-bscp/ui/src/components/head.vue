@@ -2,18 +2,27 @@
   import { ref, computed, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
-  import { AngleDown } from 'bkui-vue/lib/icon'
+  import { AngleDown, HelpFill, DownShape } from 'bkui-vue/lib/icon'
   import { useGlobalStore } from '../store/global'
   import { useUserStore } from '../store/user'
   import { useTemplateStore } from '../store/template'
   import { ISpaceDetail } from '../../types/index'
+  import { loginOut } from '../api/index'
+  import type { IVersionLogItem } from '../../types/version-log'
+  import VersionLog from './version-log.vue'
+  import features from './features-dialog.vue'
+  import MarkdownIt from 'markdown-it'
 
   const route = useRoute()
   const router = useRouter()
   const { spaceId, spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore())
   const { userInfo } = storeToRefs(useUserStore())
   const templateStore = useTemplateStore()
-
+  const md = new MarkdownIt({
+    html: true,
+    linkify: true,
+    typographer: true,
+  })
   const navList = [
     { id: 'service-mine', module: 'service', name: '服务管理'},
     { id: 'groups-management', module: 'groups', name: '分组管理'},
@@ -54,19 +63,21 @@
     if (space) {
       if (!space.permission) {
         permissionQuery.value = {
-          biz_id: id,
-          basic: {
-            type: "biz",
-            action: "find_business_resource",
-            resource_id: id
-          },
-          gen_apply_url: true
+          resources: [
+            {
+              biz_id: id,
+              basic: {
+                type: "biz",
+                action: "find_business_resource",
+                resource_id: id
+              }
+            }
+          ]
         }
 
         showApplyPermDialog.value = true
         return
       }
-      console.log(route)
       templateStore.$patch((state) => {
         state.templateSpaceList = []
         state.currentTemplateSpace = 0
@@ -79,6 +90,63 @@
         router.push({ name: 'service-mine', params: { spaceId: id } })
       }
     }
+  }
+
+
+  // 下拉菜单
+  const dropdownList = [
+    {
+      title: '产品文档',
+      click () {
+        window.open('https://iwiki.woa.com/space/BSCP')
+        isShowDropdown.value = !isShowDropdown.value
+      },
+    },
+    {
+      title: '版本日志',
+      click () {
+        isShowVersionLog.value = true
+        isShowDropdown.value = !isShowDropdown.value
+      },
+    },
+    {
+      title: '功能特性',
+      click () {
+        isShowFeatures.value = true
+        isShowDropdown.value = !isShowDropdown.value
+      },
+    },
+  ]
+
+  const isShowDropdown = ref(false)
+
+// 版本日志
+  const logList = ref<IVersionLogItem[]>([])
+  const isShowVersionLog = ref(false)
+  const modules = import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
+    as: 'raw',
+    eager: true,
+  })
+  for (const path in modules) {
+    logList.value!.push({
+      title: path.split('CN/')[1].split('_')[0],
+      date: path.split('CN/')[1].split('_')[1].slice(0, -3),
+      detail: md.render(modules[path]),
+    })
+  }
+
+// 功能特性
+  const featuresContent = ref('')
+  const isShowFeatures = ref(false)
+  const module = import.meta.glob(
+    '../../../docs/features/features.md',
+    { as: 'raw', eager: true }
+  )
+  for (const path in module) {
+    featuresContent.value = md.render(module[path])
+  }
+  const handleLoginOut = () => {
+    loginOut()
   }
 
 </script>
@@ -128,11 +196,41 @@
           </div>
         </bk-option>
       </bk-select>
-      <span>{{ userInfo.username }}</span>
+      <bk-dropdown
+        trigger="click"
+        ext-cls="dropdown"
+        :is-show="isShowDropdown"
+        @hide="isShowDropdown = !isShowDropdown">
+        <bk-button text @click="isShowDropdown = !isShowDropdown"
+          :class="['dropdown-trigger', isShowDropdown ? 'active' : '']">
+          <help-fill width="16" height="16" :fill="isShowDropdown ? '#fff' : '#96a2b9'" />
+        </bk-button>
+        <template #content>
+          <bk-dropdown-menu ext-cls="dropdown-menu">
+            <bk-dropdown-item v-for="item in dropdownList" :key="item.title" ext-cls="dropdown-item" @click="item.click">
+              {{ item.title }}
+            </bk-dropdown-item>
+          </bk-dropdown-menu>
+        </template>
+      </bk-dropdown>
+      <bk-popover
+        ext-cls="login-out-popover"
+        placement="bottom-center"
+        theme="light"
+        :arrow="false">
+        <div class="username-wrapper">
+          <span class="text">{{ userInfo.username }}</span>
+          <DownShape class="arrow-icon"/>
+        </div>
+        <template #content>
+          <div class="login-out-btn" @click="handleLoginOut">退出登录</div>
+        </template>
+      </bk-popover>
     </div>
   </div>
+  <version-log :log-list="logList" v-model:is-show="isShowVersionLog"></version-log>
+  <features :detail="featuresContent" v-model:is-show="isShowFeatures"></features>
 </template>
-
 
 <style lang="scss" scoped>
 .header {
@@ -217,6 +315,7 @@
 .biz-option-item {
   position: relative;
   padding: 0 12px;
+  width: 100%;
   &.no-perm {
     background-color: #fafafa !important;
     color: #cccccc !important;
@@ -250,9 +349,71 @@
     transform: scale(0.8);
   }
 }
+.username-wrapper {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #c4c4cc;
+  cursor: pointer;
+  &:hover {
+    color: #3a84ff;
+  }
+  .arrow-icon{
+    font-size: 14px;
+    margin-left: 4px;
+  }
+}
+.login-out-btn {
+  padding: 0 16px;
+  height: 32px;
+  line-height: 32px;
+  font-size: 12px;
+  cursor: pointer;
+  &:hover {
+    background-color: #eaf3ff;
+    color: #3a84ff;
+  }
+}
 </style>
 <style lang="scss">
-  .space-selector-popover .bk-select-option {
+.space-selector-popover .bk-select-option {
+  padding: 0 !important;
+}
+.dropdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  width: 40px;
+  height: 40px;
+  .dropdown-trigger {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    &:hover {
+      background-color: rgba($color: #96a2b9, $alpha: 0.3);
+      .bk-icon {
+        fill: #fff !important;
+      }
+    }
+  }
+  .active {
+    background-color: rgba($color: #96a2b9, $alpha: 0.3);
+  }
+}
+.dropdown-menu .dropdown-item:hover {
+  background-color: #f0f1f5;
+  color: #3a84ff;
+}
+.version-dialog {
+  .bk-dialog-header {
+    display: none;
+  }
+  .bk-modal-content {
     padding: 0 !important;
   }
+}
+.login-out-popover.bk-popover.bk-pop2-content {
+  padding: 4px 0;
+}
 </style>

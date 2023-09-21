@@ -92,10 +92,11 @@ export const getTemplatePackageList = (biz_id: string, template_space_id: string
 /**
  * 获取业务下所有模板套餐（按模板空间分组）
  * @param biz_id 业务ID
+ * @param params 查询参数，传app_id可筛选服务下的套餐模板
  * @returns
  */
-export const getAllPackagesGroupBySpace = (biz_id: string) => {
-  return http.get(`/config/biz/${biz_id}/template_sets/list_all_of_biz`).then(res => res.data);
+export const getAllPackagesGroupBySpace = (biz_id: string, params: { app_id?: number }) => {
+  return http.get(`/config/biz/${biz_id}/template_sets/list_all_of_biz`, { params }).then(res => res.data);
 }
 
 /**
@@ -205,7 +206,11 @@ export const downloadTemplateContent = (biz_id: string, templateSpaceId: number,
     headers: {
       'X-Bscp-Template-Space-Id': templateSpaceId,
       'X-Bkapi-File-Content-Id': signature,
-    }}).then(res => res)
+    },
+    transitional: {
+      forcedJSONParsing: false
+    }
+  }).then(res => res)
 }
 
 /**

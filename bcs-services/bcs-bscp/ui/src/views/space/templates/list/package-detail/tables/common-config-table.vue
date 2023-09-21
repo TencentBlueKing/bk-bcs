@@ -8,6 +8,7 @@
   import { ICommonQuery } from '../../../../../../../types/index';
   import { ITemplateConfigItem, ITemplateCitedCountDetailItem, ITemplateCitedByPkgs } from '../../../../../../../types/template';
   import { getPackagesByTemplateIds, getCountsByTemplateIds } from '../../../../../../api/template'
+  import { datetimeFormat } from '../../../../../../utils/index'
   import AddToDialog from '../operations/add-to-pkgs/add-to-dialog.vue'
   import MoveOutFromPkgsDialog from '../operations/move-out-from-pkg/move-out-from-pkgs-dialog.vue'
   import PkgsTag from '../../components/packages-tag.vue'
@@ -165,12 +166,15 @@
     crtConfig.value = [config]
   }
 
+  const handleAdded = () => {
+    refreshList()
+    updateRefreshFlag()
+  }
+
   const handleMovedOut = () => {
     refreshListAfterDeleted(1)
     crtConfig.value = []
-    templateStore.$patch(state => {
-      state.needRefreshMenuFlag = true
-    })
+    updateRefreshFlag()
   }
 
   const handleOpenAppBoundByTemplateSlider = (config: ITemplateConfigItem) => {
@@ -183,12 +187,14 @@
     }
   }
 
-  const refreshConfigList = () => {
-    refreshList()
+  const updateRefreshFlag = () => {
+    templateStore.$patch(state => {
+      state.needRefreshMenuFlag = true
+    })
   }
 
   const goToVersionManage = (id: number) => {
-    router.push({ name: 'template-version-manange', params: {
+    router.push({ name: 'template-version-manage', params: {
       templateSpaceId: props.currentTemplateSpace,
       packageId: props.currentPkg,
       templateId: id
@@ -236,7 +242,7 @@
           </template>
         </bk-table-column>
         <template v-if="showCitedByPkgsCol">
-          <bk-table-column label="所在套餐">
+          <bk-table-column label="所在套餐" :width="200">
             <template #default="{ index }">
               <template v-if="citedByPkgsLoading"><Spinner /></template>
               <template v-else-if="citeByPkgsList[index]">
@@ -265,9 +271,15 @@
         </template>
         <bk-table-column label="创建人" prop="revision.creator" :width="100"></bk-table-column>
         <bk-table-column label="更新人" prop="revision.reviser" :width="100"></bk-table-column>
-        <bk-table-column label="更新时间" prop="revision.update_at" :width="180"></bk-table-column>
-        <bk-table-column label="操作" width="120" fixed="right">
+        <bk-table-column label="更新时间" prop="" :width="180">
           <template #default="{ row }">
+            <template v-if="row.revision">
+              {{ datetimeFormat(row.revision.update_at) }}
+            </template>
+          </template>
+        </bk-table-column>
+        <bk-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
                 <bk-button theme='primary' text @click="goToVersionManage(row.id)">版本管理</bk-button>
@@ -281,7 +293,7 @@
                   <template #content>
                     <div class="config-actions">
                       <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">添加至套餐</div>
-                      <div class="action-item" @click="handleOpenMoveOutFromPkgsDialog(row)">移出套餐</div>
+                      <div v-if="citeByPkgsList[index].length > 0" class="action-item" @click="handleOpenMoveOutFromPkgsDialog(row)">移出套餐</div>
                     </div>
                   </template>
                 </bk-popover>
@@ -291,7 +303,7 @@
         </bk-table-column>
       </bk-table>
     </bk-loading>
-    <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" @added="refreshConfigList" />
+    <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" @added="handleAdded" />
     <MoveOutFromPkgsDialog
       v-model:show="isMoveOutFromPkgsDialogShow"
       :id="crtConfig.length > 0 ? crtConfig[0].id : 0"

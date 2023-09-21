@@ -11,6 +11,7 @@
  *
  */
 
+// Package eventer defines watch the event of pod create failed
 package eventer
 
 import (

@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
-  import { InfoBox } from 'bkui-vue'
+  import { InfoBox, Message } from 'bkui-vue'
   import { Plus, Search } from 'bkui-vue/lib/icon'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
@@ -97,7 +97,6 @@
     InfoBox({
       title: `确认是否删除脚本【${script.hook.spec.name}?】`,
       subTitle: `${script.confirm_delete ? '当前脚本有被服务未命名版本引用，删除后，未命名版本里的引用将会被删除，是否确认删除？' : ''}`,
-      infoType: "warning",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
@@ -105,6 +104,10 @@
         if (scriptsData.value.length === 1 && pagination.value.current > 1) {
           pagination.value.current = pagination.value.current - 1
         }
+        Message({
+          theme: 'success',
+          message: '删除版本成功',
+        });
         getScripts()
       },
     } as any)
@@ -132,7 +135,7 @@
   }
 </script>
 <template>
-  <section class="scripts-manange-page">
+  <section class="scripts-manage-page">
     <div class="side-menu">
       <div class="group-wrapper">
         <li :class="['group-item', { actived: showAllTag }]" @click="handleSelectTag('', true)">
@@ -216,7 +219,7 @@
   </section>
 </template>
 <style lang="scss" scoped>
-  .scripts-manange-page {
+  .scripts-manage-page {
     display: flex;
     align-items: center;
     height: 100%;

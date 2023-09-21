@@ -1,6 +1,6 @@
 /*
- * Tencent is pleased to support the open source community by making 蓝鲸 available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 
-	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -35,6 +34,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
+	"bscp.io/pkg/rest"
 	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
@@ -59,6 +59,8 @@ type Authorizer interface {
 	BizVerified(next http.Handler) http.Handler
 	// ContentVerified 内容(上传下载)鉴权
 	ContentVerified(next http.Handler) http.Handler
+	// LogOut handler will build login url, client should make redirect
+	LogOut(r *http.Request) *rest.UnauthorizedData
 }
 
 // NewAuthorizer create an authorizer for iam authorize related operation.
@@ -125,7 +127,6 @@ func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig) (Authorizer, error) {
 }
 
 type authorizer struct {
-	iamClient *bkiam.IAM
 	// authClient auth server's client api
 	authClient      pbas.AuthClient
 	authLoginClient bkpaas.AuthLoginClient
@@ -217,4 +218,10 @@ func (a authorizer) GrantResourceCreatorAction(kt *kit.Kit, opts *client.GrantRe
 	req := pbas.PbGrantResourceCreatorActionOption(opts)
 	_, err := a.authClient.GrantResourceCreatorAction(kt.RpcCtx(), req)
 	return err
+}
+
+// LogOut handler will build login url, client should make redirect
+func (a authorizer) LogOut(r *http.Request) *rest.UnauthorizedData {
+	loginURL, loginPlainURL := a.authLoginClient.BuildLoginURL(r)
+	return &rest.UnauthorizedData{LoginURL: loginURL, LoginPlainURL: loginPlainURL}
 }

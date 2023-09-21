@@ -1,11 +1,17 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
   import { Message } from 'bkui-vue';
+  import { storeToRefs } from 'pinia';
+  import { useServiceStore } from '../../../../../../../../store/service'
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation'
   import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
   import { getUnReleasedAppVariables, getUnReleasedAppVariablesCitedDetail, updateUnReleasedAppVariables } from '../../../../../../../../api/variable'
   import VariablesTable from './variables-table.vue';
   import ResetDefaultValue from './reset-default-value.vue';
+
+  const serviceStore = useServiceStore()
+  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
+  const { checkPermBeforeOperate } = serviceStore
 
   const props = defineProps<{
     bkBizId: string;
@@ -34,6 +40,9 @@
   }
 
   const handleOpenSlider = () => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     isSliderShow.value = true
     getVariableList()
   }
@@ -48,7 +57,9 @@
   }
 
   const handleSubmit = async() => {
-    await tableRef.value.validate()
+    if (!tableRef.value.validate()) {
+      return
+    }
     try {
       pending.value = true
       await updateUnReleasedAppVariables(props.bkBizId, props.appId, variableList.value)
@@ -75,11 +86,17 @@
   const close = () => {
     isSliderShow.value = false
     isFormChange.value = false
+    variableList.value = []
   }
 
 </script>
 <template>
-  <bk-button @click="handleOpenSlider">设置变量</bk-button>
+  <bk-button
+    v-cursor="{ active: !hasEditServicePerm }"
+    :class="{'bk-button-with-no-perm': !hasEditServicePerm}"
+    @click="handleOpenSlider">
+    设置变量
+  </bk-button>
   <bk-sideslider
     width="960"
     title="设置变量"

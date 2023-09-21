@@ -176,7 +176,7 @@ func (da *DeleteAction) cleanLocalInformation(connect bool) error {
 				nodeIPs = append(nodeIPs, node.InnerIP)
 			}
 
-			err := da.model.DeleteNodesByIPs(da.ctx, nodeIPs)
+			err := da.model.DeleteClusterNodesByIPs(da.ctx, da.req.ClusterID, nodeIPs)
 			if err != nil {
 				blog.Errorf("clean Cluster %s node %v storage information failed, %s",
 					da.req.ClusterID, nodeIPs, err.Error())
@@ -249,7 +249,7 @@ func (da *DeleteAction) deleteRelativeResource() error {
 		for i := range da.nodes {
 			nodeIPs = append(nodeIPs, da.nodes[i].InnerIP)
 		}
-		if err := da.model.DeleteNodesByIPs(da.ctx, nodeIPs); err != nil {
+		if err := da.model.DeleteClusterNodesByIPs(da.ctx, da.req.ClusterID, nodeIPs); err != nil {
 			blog.Errorf("delete Cluster %s relative Nodes %v failed, %s",
 				da.req.ClusterID, nodeIPs, err.Error())
 			return err
@@ -798,7 +798,7 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 			return
 		}
 
-		err = da.model.DeleteNodesByIPs(da.ctx, nodeInnerIPs)
+		err = da.model.DeleteClusterNodesByIPs(da.ctx, da.req.ClusterID, nodeInnerIPs)
 		if err != nil {
 			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 			return

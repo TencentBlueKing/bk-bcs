@@ -11,6 +11,7 @@
  *
  */
 
+// Package jsonq used to reserve some field from object
 package jsonq
 
 import (

@@ -193,13 +193,13 @@ func validateInitOptions(opt options) bool {
 	tool, err := os.Stat(opt.toolPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
+			log.Println("error path, please set the valid absolute path for bcs-apiserver-proxy-tools")
 			return false
 		}
-		log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
+		log.Println("error path, please set the valid absolute path for bcs-apiserver-proxy-tools")
 	}
 	if tool.IsDir() {
-		log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
+		log.Println("error path, please set the valid absolute path for bcs-apiserver-proxy-tools")
 		return false
 	}
 	return true
@@ -212,7 +212,7 @@ func init() {
 	flag.Var(&opts.realServer, "rs", "virtual server backend real server, for example: "+
 		"-rs=127.0.0.1:6443 -rs=127.0.0.2:6443")
 	flag.StringVar(&opts.ipvsPersistDir, "persistDir", "/root/.bcs", "persistent ipvs rules path")
-	flag.StringVar(&opts.toolPath, "toolPath", "/root/apiserver-proxy-tools", "absolute path for apiserver-proxy-tools")
+	flag.StringVar(&opts.toolPath, "toolPath", "/root/bcs-apiserver-proxy-tools", "absolute path for bcs-apiserver-proxy-tools")
 	flag.StringVar(&opts.healthScheme, "healthScheme", "https", "scheme for health check")
 	flag.StringVar(&opts.healthPath, "healthPath", "/healthz", "path for health check")
 

@@ -33,14 +33,16 @@ http.interceptors.response.use(
 
           if (response.status === 401) {
               userStore.$patch((state) => {
-                state.loginUrl = response.data.error.data.login_url
+                state.loginUrl = response.data.error.data.login_plain_url + window.location.origin + '/web/login_success.html'
                 state.showLoginModal = true
               })
               return
           } else if (response.status === 403) {
+
             globalStore.$patch((state) => {
-              state.showSpacePermApply = true
+              state.showPermApplyPage = true
               state.applyPermUrl = response.data.error.data.apply_url
+              state.applyPermResource = response.data.error.data.resources
             })
             return response.data.error
           }

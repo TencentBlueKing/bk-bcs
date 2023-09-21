@@ -20,6 +20,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	mopt "go.mongodb.org/mongo-driver/mongo/options"
 
@@ -39,6 +40,7 @@ type Options struct {
 	MaxPoolSize           uint64
 	MinPoolSize           uint64
 	Hosts                 []string
+	Monitor               *event.CommandMonitor
 }
 
 // DB mongodb
@@ -61,8 +63,9 @@ func NewDB(opt *Options) (*DB, error) {
 	}
 	// construct mongo client options
 	mCliOpt := &mopt.ClientOptions{
-		Auth:  &credential,
-		Hosts: opt.Hosts,
+		Auth:    &credential,
+		Hosts:   opt.Hosts,
+		Monitor: opt.Monitor,
 	}
 	if opt.MaxPoolSize != 0 {
 		mCliOpt.MaxPoolSize = &opt.MaxPoolSize

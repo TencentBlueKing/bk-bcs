@@ -350,6 +350,8 @@ netservice-controller:pre
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-netservice-controller ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-netservice-controller && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/bcs-netservice-controller ./main.go
 	cd ${BCS_COMPONENT_PATH}/bcs-netservice-controller && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/bcs-netservice-ipam ./ipam/main.go
+	cd ${BCS_COMPONENT_PATH}/bcs-netservice-controller/cni && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/bcs-underlay-cni ./cni.go
+
 
 # network plugins section
 networkpolicy:pre
@@ -493,7 +495,7 @@ gitops-webhook:
 
 gitops-vaultplugin-server:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-vaultplugin-server
-	cd bcs-scenarios/bcs-gitops-manager && make vaultplugin && cd -
+	cd bcs-scenarios/bcs-gitops-vaultplugin-server && make vaultplugin && cd -
 
 test: test-bcs-runtime
 

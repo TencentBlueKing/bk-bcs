@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/audit"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
@@ -27,7 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/audit"
 )
 
 // AuthenticationRequired API类型, 兼容多种认证模式
@@ -83,7 +83,7 @@ func ProjectAuthorization() gin.HandlerFunc {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
 		}
-		allow, url, resourceAction, err := client.CanViewProject(username, projectID)
+		allow, url, _, err := client.CanViewProject(username, projectID)
 		if err != nil {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
@@ -94,17 +94,6 @@ func ProjectAuthorization() gin.HandlerFunc {
 			return
 		}
 
-		//
-		instanceData := map[string]interface{}{
-			"ProjectID": projectID,
-			"ClusterID": clusterID,
-			"Namespace": c.Param("namespace"),
-		}
-
-		for _, data := range resourceAction {
-			// 接入审计
-			audit.AddEvent(data.Action, data.Type, projectID, username, allow, instanceData)
-		}
 		c.Next()
 	}
 }
@@ -140,7 +129,7 @@ func NsScopeAuthorization() gin.HandlerFunc {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
 		}
-		allow, url, resourceAction, err := client.CanViewNamespaceScopedResource(username, projectID, clusterID, namespace)
+		allow, url, _, err := client.CanViewNamespaceScopedResource(username, projectID, clusterID, namespace)
 		if err != nil {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
@@ -149,17 +138,6 @@ func NsScopeAuthorization() gin.HandlerFunc {
 			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
 			rest.AbortWithWithForbiddenError(restContext, errMsg)
 			return
-		}
-
-		instanceData := map[string]interface{}{
-			"ProjectID": projectID,
-			"ClusterID": clusterID,
-			"Namespace": namespace,
-		}
-
-		for _, data := range resourceAction {
-			// 接入审计
-			audit.AddEvent(data.Action, data.Type, projectID, username, allow, instanceData)
 		}
 
 		c.Next()

@@ -3,7 +3,7 @@
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue';
   import ConfigForm from './config-form.vue'
-  import { getConfigItemDetail, updateConfigContent, getConfigContent, updateServiceConfigItem } from '../../../../../../../api/config'
+  import { getConfigItemDetail, getReleasedConfigItemDetail, updateConfigContent, getConfigContent, updateServiceConfigItem } from '../../../../../../../api/config'
   import { getConfigEditParams } from '../../../../../../../utils/config'
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config'
   import { useConfigStore } from '../../../../../../../store/config'
@@ -42,16 +42,24 @@
   const getConfigDetail = async() => {
     try {
       configDetailLoading.value = true
-      const params: { release_id?: number } = {}
+      let detail
+      let signature
+      let byte_size
       if (versionData.value.id) {
-        params.release_id = versionData.value.id
+        detail = await getReleasedConfigItemDetail(props.bkBizId, props.appId, versionData.value.id, props.configId)
+        const { origin_byte_size, origin_signature } = detail.config_item.commit_spec.content
+        byte_size = origin_byte_size
+        signature = origin_signature
+      } else {
+        detail = await getConfigItemDetail(props.bkBizId, props.configId, props.appId)
+        byte_size = detail.content.byte_size
+        signature = detail.content.signature
       }
-      const detail = await getConfigItemDetail(props.bkBizId, props.configId, props.appId, params)
       const { name, memo, path, file_type, permission } = detail.config_item.spec
       configForm.value = { id: props.configId, name, memo, file_type, path, ...permission }
-      const signature = detail.content.signature
+
       if (file_type === 'binary') {
-        content.value = { name, signature, size: detail.content.byte_size }
+        content.value = { name, signature, size: byte_size }
       } else {
         const configContent = await getConfigContent(props.bkBizId, props.appId, signature)
         content.value = String(configContent)

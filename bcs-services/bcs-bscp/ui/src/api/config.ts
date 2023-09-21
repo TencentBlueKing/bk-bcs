@@ -1,5 +1,5 @@
 import http from "../request"
-import { IConfigEditParams, IConfigListQueryParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config'
+import { IConfigEditParams, IConfigVersionQueryParams, ITemplateBoundByAppData } from '../../types/config'
 import { IVariableEditParams } from '../../types/variable'
 import { ICommonQuery } from "../../types/index"
 
@@ -16,14 +16,32 @@ export const getDefaultConfigScriptData = () => {
 }
 
 /**
- * 获取配置项列表，通过params中的release_id区分是否拿某个版本下的配置项列表
+ * 获取未命名版本的配置项列表
  * @param biz_id 空间ID
  * @param app_id 应用ID
+ * @param query 查询参数
+ * @returns
+ */
+export const getConfigList = (biz_id: string, app_id: number, query: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/config_items`, { params: { ...query, with_status: true } }).then(res => res.data)
+}
+
+/**
+ * 获取已发布版本的非模板配置项列表
+ * @param biz_id 空间ID
+ * @param app_id 应用ID
+ * @param release_id 版本ID
  * @param params 查询参数
  * @returns
  */
-export const getConfigList = (biz_id: string, app_id: number, params: IConfigListQueryParams = {}) => {
-  return http.get(`/config/biz/${biz_id}/apps/${app_id}/config_items`, { params }).then(res => res.data)
+export const getReleasedConfigList = (biz_id: string, app_id: number, release_id: number, params: ICommonQuery) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/config_items`, { params }).then(res => {
+    res.data.details.forEach((item: any) => {
+      // 接口返回的config_item_id为实际的配置项id，id字段没有到，统一替换
+      item.id = item.config_item_id
+    })
+    return res.data
+  })
 }
 
 /**
@@ -61,14 +79,29 @@ export const deleteServiceConfigItem = (id: number, bizId: string, appId: number
 }
 
 /**
- * 获取配置项详情
+ * 获取未命名版本配置项详情
  * @param biz_id 空间ID
  * @param id 配置ID
  * @param appId 应用ID
  * @returns
  */
-export const getConfigItemDetail = (biz_id: string, id: number, appId: number, params: { release_id?: number } = {}) => {
-  return http.get(`/config/biz/${biz_id}/apps/${appId}/config_items/${id}`, { params }).then(resp => resp.data);
+export const getConfigItemDetail = (biz_id: string, id: number, appId: number) => {
+  return http.get(`/config/biz/${biz_id}/apps/${appId}/config_items/${id}`).then(resp => resp.data);
+}
+
+/**
+ * 获取已发布版本配置项详情
+ * @param biz_id 空间ID
+ * @param app_id 应用ID
+ * @param release_id 版本ID
+ * @param config_item_id 配置项ID
+ * @returns
+ */
+export const getReleasedConfigItemDetail = (biz_id: string, app_id: number, release_id: number, config_item_id: number) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/config_items/${config_item_id}`).then(resp => {
+    resp.data.config_item.id = resp.data.config_item_id
+    return resp.data
+  });
 }
 
 /**
@@ -186,6 +219,26 @@ export const updateConfigInitScript = (bizId: string, appId: number, params: { p
 }
 
 /**
+ * 检测导入模板与已存在配置项的冲突详情
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @returns
+ */
+export const checkAppTemplateBinding = (bizId: string, appId: number, params: { bindings: ITemplateBoundByAppData[] }) => {
+  return http.post(`/config/biz/${bizId}/apps/${appId}/template_bindings/conflict_check`, params).then(res => {
+    const conflictData: {[key: number]: number[]} = {}
+    res.data.details.forEach((item: { template_id: number; template_name: string; template_set_id: number; template_set_name: string; }) => {
+      if (Array.isArray(conflictData[item.template_set_id])) {
+        conflictData[item.template_set_id].push(item.template_id)
+      } else {
+        conflictData[item.template_set_id] = [item.template_id]
+      }
+    })
+    return conflictData
+  })
+}
+
+/**
  * 新建模板配置项和服务绑定关系
  * @param bizId 业务ID
  * @param appId 应用ID
@@ -212,11 +265,11 @@ export const updateTemplateConfigPkgs = (bizId: string, appId: number, bindingId
  * 获取服务下未命名版本绑定的模板配置项列表
  * @param bizId 业务ID
  * @param appId 应用ID
- * @param params 查询参数
+ * @param query 查询参数
  * @returns
  */
-export const getBoundTemplates = (bizId: string, appId: number, params: ICommonQuery) => {
-  return http.get(`/config/biz/${bizId}/apps/${appId}/template_revisions`, { params }).then(res => res.data)
+export const getBoundTemplates = (bizId: string, appId: number, query: ICommonQuery) => {
+  return http.get(`/config/biz/${bizId}/apps/${appId}/template_revisions`, { params: { ...query, with_status: true } }).then(res => res.data)
 }
 
 /**

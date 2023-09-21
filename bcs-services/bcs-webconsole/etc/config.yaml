@@ -60,3 +60,16 @@ tracing:
 audit:
   enabled: false
   data_dir: ""
+repository:
+  storage_type: ""
+  bkrepo:
+    endpoint: ""
+    project: ""
+    user_name: ""
+    password: ""
+    repo: ""
+  cos:
+    bucket_name: ""
+    endpoint: ""
+    secret_id: ""
+    secret_key: ""

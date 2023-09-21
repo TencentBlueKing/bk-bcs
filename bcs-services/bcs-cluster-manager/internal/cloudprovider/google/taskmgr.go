@@ -15,7 +15,6 @@ package google
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/tasks"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 
 	"github.com/google/uuid"
 )
@@ -60,6 +60,7 @@ func newtask() *Task {
 	// update desired nodes task
 	task.works[applyInstanceMachinesStep.StepMethod] = tasks.ApplyInstanceMachinesTask
 	task.works[checkClusterNodesStatusStep.StepMethod] = tasks.CheckClusterNodesStatusTask
+	task.works[removeClusterNodesTaintStep.StepMethod] = tasks.RemoveClusterNodesTaintTask
 
 	// clean node in nodeGroup task
 	task.works[cleanNodeGroupNodesStep.StepMethod] = tasks.CleanNodeGroupNodesTask
@@ -458,7 +459,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		Desired:  desired,
 		Operator: opt.Operator,
 	}
-	// step1. call qcloud interface to set desired nodes
+	// step1. call gcp interface to set desired nodes
 	updateDesired.BuildApplyInstanceMachinesStep(task)
 	// step2. check cluster nodes and all nodes status is running
 	updateDesired.BuildCheckClusterNodeStatusStep(task)
@@ -470,6 +471,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, group.NodeTemplate.Module.ScaleOutModuleID)
 	}
 	common.BuildUnCordonNodesTaskStep(task, group.ClusterID, nil)
+	updateDesired.BuildRemoveClusterNodesTaintStep(task)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

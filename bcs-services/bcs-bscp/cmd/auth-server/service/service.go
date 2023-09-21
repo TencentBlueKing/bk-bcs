@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 // Package service NOTES
 package service
@@ -17,10 +17,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+	bkiamlogger "github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -202,6 +205,15 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, di
 		return nil, err
 	}
 
+	log := &logrus.Logger{
+		Out:          os.Stderr,
+		Formatter:    new(logrus.TextFormatter),
+		Hooks:        make(logrus.LevelHooks),
+		Level:        logrus.DebugLevel,
+		ExitFunc:     os.Exit,
+		ReportCaller: false,
+	}
+	bkiamlogger.SetLogger(log)
 	iam := bkiam.NewAPIGatewayIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.APIURL)
 
 	cs := &ClientSet{
@@ -270,14 +282,71 @@ func (s *Service) GrantResourceCreatorAction(ctx context.Context, req *pbas.Gran
 }
 
 // CheckPermission grpc check permission
-func (s *Service) CheckPermission(ctx context.Context, req *pbas.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
-	biz, err := s.client.Esb.Cmdb().GeBusinessbyID(ctx, req.BizId)
+func (s *Service) CheckPermission(ctx context.Context, req *pbas.CheckPermissionReq) (
+	*pbas.CheckPermissionResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	resp := &pbas.CheckPermissionResp{
+		IsAllowed: false,
+		ApplyUrl:  "",
+		Resources: []*pbas.BasicDetail{},
+	}
+
+	userInfo := &meta.UserInfo{UserName: kt.User}
+	abReq := &pbas.AuthorizeBatchReq{
+		User:      pbas.PbUserInfo(userInfo),
+		Resources: req.Resources,
+	}
+
+	abResp, err := s.AuthorizeBatch(kt.RpcCtx(), abReq)
 	if err != nil {
+		logs.Errorf("authorize failed, req: %#v, err: %v, rid: %s", req, err, kt.Rid)
 		return nil, err
 	}
 
-	resp, err := s.auth.CheckPermission(ctx, biz, s.iamSettings, req.ResourceAttribute())
-	return resp, err
+	authorized := true
+	for _, decision := range abResp.Decisions {
+		if !decision.Authorized {
+			authorized = false
+			break
+		}
+	}
+
+	if authorized {
+		resp.IsAllowed = true
+		return resp, nil
+	}
+
+	gpReq := &pbas.GetPermissionToApplyReq{
+		Resources: req.Resources,
+	}
+
+	permResp, err := s.GetPermissionToApply(kt.RpcCtx(), gpReq)
+	if err != nil {
+		logs.Errorf("get permission to apply failed, req: %#v, err: %v, rid: %s", req, err, kt.Rid)
+		return nil, errf.New(errf.DoAuthorizeFailed, "get permission to apply failed")
+	}
+	resp.ApplyUrl = permResp.ApplyUrl
+	for _, action := range permResp.Permission.Actions {
+		for _, resourceType := range action.RelatedResourceTypes {
+			for _, instance := range resourceType.Instances {
+				for _, i := range instance.Instances {
+					if i.Type != resourceType.Type {
+						continue
+					}
+					resp.Resources = append(resp.Resources, &pbas.BasicDetail{
+						Type:         resourceType.Type,
+						TypeName:     resourceType.TypeName,
+						Action:       action.Id,
+						ActionName:   action.Name,
+						ResourceId:   i.Id,
+						ResourceName: i.Id,
+					})
+				}
+			}
+		}
+	}
+	return resp, nil
 }
 
 // initLogicModule init logic module.

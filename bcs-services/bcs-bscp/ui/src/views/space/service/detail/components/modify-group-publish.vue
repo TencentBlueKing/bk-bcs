@@ -1,30 +1,35 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
   import InfoBox from 'bkui-vue/lib/info-box';
   import BkMessage from 'bkui-vue/lib/message';
   import { storeToRefs } from 'pinia'
+  import { useGlobalStore } from '../../../../../store/global'
   import { useServiceStore } from '../../../../../store/service'
   import { useConfigStore } from '../../../../../store/config'
+  import { IGroupToPublish } from '../../../../../../types/group';
+  import { permissionCheck } from '../../../../../api/index'
   import VersionLayout from '../config/components/version-layout.vue'
   import ConfirmDialog from './publish-version/confirm-dialog.vue'
-  import { IGroupToPublish } from '../../../../../../types/group';
   import SelectGroup from './publish-version/select-group/index.vue'
   import VersionDiff from '../config/components/version-diff/index.vue';
 
+  const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore())
   const serviceStore = useServiceStore()
   const versionStore = useConfigStore()
   const { appData } = storeToRefs(serviceStore)
   const { versionData } = storeToRefs(versionStore)
 
   const props = defineProps<{
-    bkBizId: string,
-    appId: number
+    bkBizId: string;
+    appId: number;
+    permCheckLoading: boolean;
+    hasPerm: boolean;
   }>()
 
   const emit = defineEmits(['confirm'])
 
-  const openSelectGroupPanel = ref(false)
+  const isSelectGroupPanelOpen = ref(false)
   const isDiffSliderShow = ref(false)
   const isConfirmDialogShow = ref(false)
   const groupType = ref('select')
@@ -35,9 +40,29 @@
     return versionData.value.status.released_groups.map(group => group.id)
   })
 
+  const permissionQueryResource = computed(() => {
+    return [{
+      biz_id: props.bkBizId,
+      basic: {
+        type: 'app',
+        action: 'publish',
+        resource_id: props.appId
+      }
+    }]
+  })
+
+  const handleBtnClick = () => {
+    if (props.hasPerm) {
+      openSelectGroupPanel()
+    } else {
+      permissionQuery.value = { resources: permissionQueryResource.value }
+      showApplyPermDialog.value = true
+    }
+  }
+
 // 打开选择分组面板
-  const handleOpenSelectGroupPanel = () => {
-    openSelectGroupPanel.value = true
+  const openSelectGroupPanel = () => {
+    isSelectGroupPanelOpen.value = true
     groups.value = versionData.value.status.released_groups.map(group => {
       const { id, name} = group
       const selector = group.new_selector
@@ -84,16 +109,24 @@
   // 关闭选择分组面板
   const handlePanelClose = () => {
     groupType.value = 'select'
-    openSelectGroupPanel.value = false
+    isSelectGroupPanelOpen.value = false
     groups.value = []
   }
 
 </script>
 <template>
     <section class="create-version">
-        <bk-button v-if="versionData.status.publish_status === 'partial_released'" theme="primary" @click="handleOpenSelectGroupPanel">调整分组上线</bk-button>
+        <bk-button
+          v-if="versionData.status.publish_status === 'partial_released'"
+          v-cursor="{ active: !props.hasPerm }"
+          theme="primary"
+          :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
+          :disabled="props.permCheckLoading"
+          @click="handleBtnClick">
+          调整分组上线
+        </bk-button>
         <Teleport to="body">
-          <VersionLayout v-if="openSelectGroupPanel">
+          <VersionLayout v-if="isSelectGroupPanelOpen">
               <template #header>
                   <section class="header-wrapper">
                       <span class="header-name" @click="handlePanelClose">

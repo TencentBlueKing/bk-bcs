@@ -50,7 +50,9 @@ axiosInstance.interceptors.request.use((config) => {
   if (CSRFToken) {
     config.headers['X-CSRFToken'] = CSRFToken;
   }
-  config.headers.Traceparent = `00-${random(32, 'abcdef0123456789')}-${random(16, 'abcdef0123456789')}-01`;
+  if (!window.BCS_CONFIG.disableTracing) {
+    config.headers.Traceparent = `00-${random(32, 'abcdef0123456789')}-${random(16, 'abcdef0123456789')}-01`;
+  }
   return config;
 }, error => Promise.reject(error));
 
@@ -225,7 +227,6 @@ function handleReject(error, config) {
     }
 
     if (config.globalError && !CUSTOM_HANDLE_CODE.includes(data?.code)) {
-      const traceID = String(error.response?.config?.headers?.Traceparent || '').split('-')?.[1];
       messageError({
         code: data?.code,
         overview: message,
@@ -233,7 +234,8 @@ function handleReject(error, config) {
         assistant: window.BCS_CONFIG?.contact,
         type: 'key-value',
         details: {
-          Traceparent: traceID,
+          traceparent: error.response?.config?.headers?.Traceparent,
+          requestId: error.response?.headers?.['x-request-id'],
           message: data.message,
         },
       });

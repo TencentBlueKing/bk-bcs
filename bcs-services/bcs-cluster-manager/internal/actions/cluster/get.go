@@ -57,6 +57,18 @@ func (ga *GetAction) getCluster() error {
 		return err
 	}
 	ga.cluster = shieldClusterInfo(cluster)
+
+	if ga.cluster != nil && ga.cluster.NetworkSettings != nil {
+		if ga.cluster.NetworkSettings.ServiceIPv4CIDR != "" {
+			step, _ := utils.ConvertCIDRToStep(ga.cluster.NetworkSettings.ServiceIPv4CIDR)
+			ga.cluster.NetworkSettings.MaxServiceNum = step
+		}
+		if ga.cluster.NetworkSettings.ClusterIPv4CIDR != "" {
+			step, _ := utils.ConvertCIDRToStep(ga.cluster.NetworkSettings.ClusterIPv4CIDR)
+			ga.cluster.NetworkSettings.CidrStep = step
+		}
+	}
+
 	return nil
 }
 

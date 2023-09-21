@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package dao
 
@@ -53,20 +53,20 @@ type TemplateSet interface {
 	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSet, error)
 	// ListByIDsWithTx list template sets by template set ids with transaction.
 	ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32) ([]*table.TemplateSet, error)
-	// AddTemplatesToTemplateSetsWithTx add templates to template sets with transaction.
-	AddTemplatesToTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32, tmplSetIDs []uint32) error
-	// DeleteTemplatesFromTemplateSetsWithTx delete templates from template sets with transaction.
-	DeleteTemplatesFromTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32, tmplSetIDs []uint32) error
-	// AddTemplateToTemplateSetsWithTx add a template to template sets with transaction.
-	AddTemplateToTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplID uint32, tmplSetIDs []uint32) error
+	// AddTmplsToTmplSetsWithTx add templates to template sets with transaction.
+	AddTmplsToTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32, tmplSetIDs []uint32) error
+	// DeleteTmplsFromTmplSetsWithTx delete templates from template sets with transaction.
+	DeleteTmplsFromTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32, tmplSetIDs []uint32) error
+	// AddTmplToTmplSetsWithTx add a template to template sets with transaction.
+	AddTmplToTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplID uint32, tmplSetIDs []uint32) error
 	// DeleteTmplFromAllTmplSetsWithTx delete a template from all template sets with transaction.
 	DeleteTmplFromAllTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error
 	// ListAppTmplSets list all the template sets of the app.
 	ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
 	// ListAllTemplateIDs list all template ids of all template sets in one template space.
 	ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpaceID uint32) ([]uint32, error)
-	// ListAllTemplateSetsOfBiz list all template sets of one biz
-	ListAllTemplateSetsOfBiz(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
+	// ListAllTmplSetsOfBiz list all template sets of one biz
+	ListAllTmplSetsOfBiz(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -339,8 +339,8 @@ func (dao *templateSetDao) ListByIDsWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []
 	return result, nil
 }
 
-// AddTemplatesToTemplateSetsWithTx add templates to template sets with transaction.
-func (dao *templateSetDao) AddTemplatesToTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32,
+// AddTmplsToTmplSetsWithTx add templates to template sets with transaction.
+func (dao *templateSetDao) AddTmplsToTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs []uint32,
 	tmplSetIDs []uint32) error {
 	m := tx.TemplateSet
 	q := tx.TemplateSet.WithContext(kit.Ctx)
@@ -354,8 +354,8 @@ func (dao *templateSetDao) AddTemplatesToTemplateSetsWithTx(kit *kit.Kit, tx *ge
 	return nil
 }
 
-// DeleteTemplatesFromTemplateSetsWithTx delete templates from template sets with transaction.
-func (dao *templateSetDao) DeleteTemplatesFromTemplateSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs,
+// DeleteTmplsFromTmplSetsWithTx delete templates from template sets with transaction.
+func (dao *templateSetDao) DeleteTmplsFromTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplIDs,
 	tmplSetIDs []uint32) error {
 	m := tx.TemplateSet
 	q := tx.TemplateSet.WithContext(kit.Ctx)
@@ -372,8 +372,8 @@ func (dao *templateSetDao) DeleteTemplatesFromTemplateSetsWithTx(kit *kit.Kit, t
 	return nil
 }
 
-// AddTemplateToTemplateSetsWithTx add a template to template sets with transaction.
-func (dao *templateSetDao) AddTemplateToTemplateSetsWithTx(
+// AddTmplToTmplSetsWithTx add a template to template sets with transaction.
+func (dao *templateSetDao) AddTmplToTmplSetsWithTx(
 	kit *kit.Kit, tx *gen.QueryTx, tmplID uint32, tmplSetIDs []uint32) error {
 	m := tx.TemplateSet
 	q := tx.TemplateSet.WithContext(kit.Ctx)
@@ -439,8 +439,8 @@ func (dao *templateSetDao) ListAllTemplateIDs(kit *kit.Kit, bizID, templateSpace
 	return ids, nil
 }
 
-// ListAllTemplateSetsOfBiz list all template sets of one biz
-func (dao *templateSetDao) ListAllTemplateSetsOfBiz(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error) {
+// ListAllTmplSetsOfBiz list all template sets of one biz
+func (dao *templateSetDao) ListAllTmplSetsOfBiz(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error) {
 	m := dao.genQ.TemplateSet
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID))
 	// if appID > 0 , return the app's all visible template sets

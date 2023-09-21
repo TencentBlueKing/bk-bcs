@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit/asciinema"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
@@ -32,6 +34,7 @@ const (
 	dayTimeFormat  = "150405"
 
 	replayFilenameSuffix = ".cast"
+	recordEnd            = "RECORD END"
 )
 
 // ReplyInfo 回访记录初始信息
@@ -46,10 +49,11 @@ type ReplyRecorder struct {
 	SessionID   string
 	Info        *ReplyInfo
 	absFilePath string
-	//Target      string
-	Writer *asciinema.Writer
-	err    error
-	ctx    context.Context
+	Writer      *asciinema.Writer
+	err         error
+	ctx         context.Context
+	lock        *sync.Mutex
+	uploadChan  chan struct{}
 
 	file *os.File
 	once sync.Once
@@ -83,9 +87,11 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, terminalSize
 	orgInfo.Height = terminalSize.Rows
 
 	recorder := &ReplyRecorder{
-		ctx:       ctx,
-		SessionID: podCtx.SessionId,
-		Info:      orgInfo,
+		ctx:        ctx,
+		SessionID:  podCtx.SessionId,
+		Info:       orgInfo,
+		uploadChan: make(chan struct{}),
+		lock:       &sync.Mutex{},
 	}
 	date := time.Now().Format(dateTimeFormat)
 	path := config.G.Audit.DataDir
@@ -114,6 +120,8 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, terminalSize
 	if err != nil {
 		return recorder, fmt.Errorf("Session %s write replay header failed: %s\n", recorder.SessionID, err)
 	}
+	//初始化完成,等待文件上传
+	go recorder.UploadFile()
 	return recorder, nil
 }
 
@@ -121,8 +129,12 @@ func NewReplayRecord(ctx context.Context, podCtx *types.PodContext, terminalSize
 func (r *ReplyRecorder) isNullError() bool {
 	if r.err != nil {
 		r.once.Do(func() {
+			end := append([]byte(recordEnd), []byte("\n")...)
+			r.Writer.WriteBuff.Write(end)
+			r.Writer.WriteBuff.Flush()
 			//异常退出: 直接关闭文件
 			r.file.Close()
+			r.uploadChan <- struct{}{}
 		})
 		return true
 	}
@@ -171,8 +183,11 @@ func (r *ReplyRecorder) End() {
 		return
 	} else {
 		//关闭前将剩余缓冲区数据写入
+		end := append([]byte(recordEnd), []byte("\n")...)
+		r.Writer.WriteBuff.Write(end)
 		r.Writer.WriteBuff.Flush()
 		r.file.Close()
+		r.uploadChan <- struct{}{}
 		return
 	}
 }
@@ -181,4 +196,23 @@ func (r *ReplyRecorder) End() {
 func (r *ReplyRecorder) GracefulShutdownRecorder() {
 	r.Writer.WriteBuff.Flush()
 	r.file.Close()
+}
+
+func (r *ReplyRecorder) UploadFile() {
+	<-r.uploadChan
+	storage, err := repository.NewProvider(config.G.Repository.StorageType)
+	if err != nil {
+		klog.Errorf("Init storage err: %v\n", err)
+		return
+	}
+	dir := config.G.Audit.DataDir
+	path := strings.TrimPrefix(r.absFilePath, dir)
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	err = storage.UploadFile(context.Background(), r.absFilePath, path)
+	if err != nil {
+		klog.Errorf("Upload File err: %v\n", err)
+		return
+	}
+	klog.Info("Upload File success.")
 }

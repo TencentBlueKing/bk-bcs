@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package migrations
 
@@ -26,13 +26,13 @@ func init() {
 		Version: "20230526152150",
 		Name:    "20230526152150_add_hook",
 		Mode:    migrator.GormMode,
-		Up:      mig20230526152150GormUp,
-		Down:    mig20230526152150GormDown,
+		Up:      mig20230526152150Up,
+		Down:    mig20230526152150Down,
 	})
 }
 
-// mig20230526152150GormUp for up migration
-func mig20230526152150GormUp(tx *gorm.DB) error {
+// mig20230526152150Up for up migration
+func mig20230526152150Up(tx *gorm.DB) error {
 
 	// Hook 脚本
 	type Hook struct {
@@ -117,8 +117,8 @@ func mig20230526152150GormUp(tx *gorm.DB) error {
 	return nil
 }
 
-// mig20230526152150GormDown for down migration
-func mig20230526152150GormDown(tx *gorm.DB) error {
+// mig20230526152150Down for down migration
+func mig20230526152150Down(tx *gorm.DB) error {
 
 	// IDGenerators : ID生成器
 	type IDGenerators struct {

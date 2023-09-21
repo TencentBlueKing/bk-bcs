@@ -3463,6 +3463,35 @@ func (m *CreateCloudAccountResponse) validate(all bool) error {
 
 	// no validation rules for Result
 
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateCloudAccountResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateCloudAccountResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCloudAccountResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return CreateCloudAccountResponseMultiError(errors)
 	}
@@ -9928,6 +9957,8 @@ func (m *KeyInfo) validate(all bool) error {
 	// no validation rules for KeyID
 
 	// no validation rules for KeySecret
+
+	// no validation rules for KeyPublic
 
 	if len(errors) > 0 {
 		return KeyInfoMultiError(errors)
@@ -39538,6 +39569,10 @@ func (m *CloudClusterInfo) validate(all bool) error {
 
 	// no validation rules for ClusterStatus
 
+	// no validation rules for Location
+
+	// no validation rules for ClusterLevel
+
 	if len(errors) > 0 {
 		return CloudClusterInfoMultiError(errors)
 	}
@@ -52437,6 +52472,1165 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = HostCloudAreaValidationError{}
+
+// Validate checks the field values on GetTopologyHostIdsNodesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetTopologyHostIdsNodesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetTopologyHostIdsNodesRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetTopologyHostIdsNodesRequestMultiError, or nil if none found.
+func (m *GetTopologyHostIdsNodesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetTopologyHostIdsNodesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ScopeType
+
+	// no validation rules for ScopeId
+
+	if len(m.GetNodeList()) < 1 {
+		err := GetTopologyHostIdsNodesRequestValidationError{
+			field:  "NodeList",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetNodeList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetTopologyHostIdsNodesRequestValidationError{
+						field:  fmt.Sprintf("NodeList[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetTopologyHostIdsNodesRequestValidationError{
+						field:  fmt.Sprintf("NodeList[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetTopologyHostIdsNodesRequestValidationError{
+					field:  fmt.Sprintf("NodeList[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for SearchContent
+
+	if all {
+		switch v := interface{}(m.GetAlive()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetTopologyHostIdsNodesRequestValidationError{
+					field:  "Alive",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetTopologyHostIdsNodesRequestValidationError{
+					field:  "Alive",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAlive()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetTopologyHostIdsNodesRequestValidationError{
+				field:  "Alive",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Start
+
+	// no validation rules for PageSize
+
+	if len(errors) > 0 {
+		return GetTopologyHostIdsNodesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetTopologyHostIdsNodesRequestMultiError is an error wrapping multiple
+// validation errors returned by GetTopologyHostIdsNodesRequest.ValidateAll()
+// if the designated constraints aren't met.
+type GetTopologyHostIdsNodesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetTopologyHostIdsNodesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetTopologyHostIdsNodesRequestMultiError) AllErrors() []error { return m }
+
+// GetTopologyHostIdsNodesRequestValidationError is the validation error
+// returned by GetTopologyHostIdsNodesRequest.Validate if the designated
+// constraints aren't met.
+type GetTopologyHostIdsNodesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTopologyHostIdsNodesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTopologyHostIdsNodesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTopologyHostIdsNodesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTopologyHostIdsNodesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTopologyHostIdsNodesRequestValidationError) ErrorName() string {
+	return "GetTopologyHostIdsNodesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetTopologyHostIdsNodesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTopologyHostIdsNodesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTopologyHostIdsNodesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTopologyHostIdsNodesRequestValidationError{}
+
+// Validate checks the field values on GetTopologyHostIdsNodesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetTopologyHostIdsNodesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetTopologyHostIdsNodesResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetTopologyHostIdsNodesResponseMultiError, or nil if none found.
+func (m *GetTopologyHostIdsNodesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetTopologyHostIdsNodesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Success
+
+	// no validation rules for ErrorMsg
+
+	// no validation rules for RequestId
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetTopologyHostIdsNodesResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetTopologyHostIdsNodesResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetTopologyHostIdsNodesResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetTopologyHostIdsNodesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetTopologyHostIdsNodesResponseMultiError is an error wrapping multiple
+// validation errors returned by GetTopologyHostIdsNodesResponse.ValidateAll()
+// if the designated constraints aren't met.
+type GetTopologyHostIdsNodesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetTopologyHostIdsNodesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetTopologyHostIdsNodesResponseMultiError) AllErrors() []error { return m }
+
+// GetTopologyHostIdsNodesResponseValidationError is the validation error
+// returned by GetTopologyHostIdsNodesResponse.Validate if the designated
+// constraints aren't met.
+type GetTopologyHostIdsNodesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTopologyHostIdsNodesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTopologyHostIdsNodesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTopologyHostIdsNodesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTopologyHostIdsNodesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTopologyHostIdsNodesResponseValidationError) ErrorName() string {
+	return "GetTopologyHostIdsNodesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetTopologyHostIdsNodesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTopologyHostIdsNodesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTopologyHostIdsNodesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTopologyHostIdsNodesResponseValidationError{}
+
+// Validate checks the field values on GetTopologyHostIdsNodesData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetTopologyHostIdsNodesData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetTopologyHostIdsNodesData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetTopologyHostIdsNodesDataMultiError, or nil if none found.
+func (m *GetTopologyHostIdsNodesData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetTopologyHostIdsNodesData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Start
+
+	// no validation rules for PageSize
+
+	// no validation rules for Total
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetTopologyHostIdsNodesDataValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetTopologyHostIdsNodesDataValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetTopologyHostIdsNodesDataValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetTopologyHostIdsNodesDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetTopologyHostIdsNodesDataMultiError is an error wrapping multiple
+// validation errors returned by GetTopologyHostIdsNodesData.ValidateAll() if
+// the designated constraints aren't met.
+type GetTopologyHostIdsNodesDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetTopologyHostIdsNodesDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetTopologyHostIdsNodesDataMultiError) AllErrors() []error { return m }
+
+// GetTopologyHostIdsNodesDataValidationError is the validation error returned
+// by GetTopologyHostIdsNodesData.Validate if the designated constraints
+// aren't met.
+type GetTopologyHostIdsNodesDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTopologyHostIdsNodesDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTopologyHostIdsNodesDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTopologyHostIdsNodesDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTopologyHostIdsNodesDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTopologyHostIdsNodesDataValidationError) ErrorName() string {
+	return "GetTopologyHostIdsNodesDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetTopologyHostIdsNodesDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTopologyHostIdsNodesData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTopologyHostIdsNodesDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTopologyHostIdsNodesDataValidationError{}
+
+// Validate checks the field values on HostIDsNodeData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *HostIDsNodeData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on HostIDsNodeData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// HostIDsNodeDataMultiError, or nil if none found.
+func (m *HostIDsNodeData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *HostIDsNodeData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for HostId
+
+	if all {
+		switch v := interface{}(m.GetMeta()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, HostIDsNodeDataValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, HostIDsNodeDataValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMeta()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return HostIDsNodeDataValidationError{
+				field:  "Meta",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return HostIDsNodeDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// HostIDsNodeDataMultiError is an error wrapping multiple validation errors
+// returned by HostIDsNodeData.ValidateAll() if the designated constraints
+// aren't met.
+type HostIDsNodeDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m HostIDsNodeDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m HostIDsNodeDataMultiError) AllErrors() []error { return m }
+
+// HostIDsNodeDataValidationError is the validation error returned by
+// HostIDsNodeData.Validate if the designated constraints aren't met.
+type HostIDsNodeDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e HostIDsNodeDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e HostIDsNodeDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e HostIDsNodeDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e HostIDsNodeDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e HostIDsNodeDataValidationError) ErrorName() string { return "HostIDsNodeDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e HostIDsNodeDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sHostIDsNodeData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = HostIDsNodeDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = HostIDsNodeDataValidationError{}
+
+// Validate checks the field values on Meta with the rules defined in the proto
+// definition for this message. If any rules are violated, the first error
+// encountered is returned, or nil if there are no violations.
+func (m *Meta) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Meta with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in MetaMultiError, or nil if none found.
+func (m *Meta) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Meta) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ScopeType
+
+	// no validation rules for ScopeId
+
+	// no validation rules for BkBizId
+
+	if len(errors) > 0 {
+		return MetaMultiError(errors)
+	}
+
+	return nil
+}
+
+// MetaMultiError is an error wrapping multiple validation errors returned by
+// Meta.ValidateAll() if the designated constraints aren't met.
+type MetaMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m MetaMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m MetaMultiError) AllErrors() []error { return m }
+
+// MetaValidationError is the validation error returned by Meta.Validate if the
+// designated constraints aren't met.
+type MetaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MetaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MetaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MetaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MetaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MetaValidationError) ErrorName() string { return "MetaValidationError" }
+
+// Error satisfies the builtin error interface
+func (e MetaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMeta.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MetaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MetaValidationError{}
+
+// Validate checks the field values on GetHostsDetailsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetHostsDetailsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetHostsDetailsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetHostsDetailsRequestMultiError, or nil if none found.
+func (m *GetHostsDetailsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetHostsDetailsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ScopeType
+
+	// no validation rules for ScopeId
+
+	for idx, item := range m.GetHostList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetHostsDetailsRequestValidationError{
+						field:  fmt.Sprintf("HostList[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetHostsDetailsRequestValidationError{
+						field:  fmt.Sprintf("HostList[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetHostsDetailsRequestValidationError{
+					field:  fmt.Sprintf("HostList[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetHostsDetailsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetHostsDetailsRequestMultiError is an error wrapping multiple validation
+// errors returned by GetHostsDetailsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetHostsDetailsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetHostsDetailsRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetHostsDetailsRequestMultiError) AllErrors() []error { return m }
+
+// GetHostsDetailsRequestValidationError is the validation error returned by
+// GetHostsDetailsRequest.Validate if the designated constraints aren't met.
+type GetHostsDetailsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetHostsDetailsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetHostsDetailsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetHostsDetailsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetHostsDetailsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetHostsDetailsRequestValidationError) ErrorName() string {
+	return "GetHostsDetailsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetHostsDetailsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetHostsDetailsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetHostsDetailsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetHostsDetailsRequestValidationError{}
+
+// Validate checks the field values on GetHostsDetailsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetHostsDetailsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetHostsDetailsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetHostsDetailsResponseMultiError, or nil if none found.
+func (m *GetHostsDetailsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetHostsDetailsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Success
+
+	// no validation rules for ErrorMsg
+
+	// no validation rules for RequestId
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetHostsDetailsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetHostsDetailsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetHostsDetailsResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetHostsDetailsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetHostsDetailsResponseMultiError is an error wrapping multiple validation
+// errors returned by GetHostsDetailsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetHostsDetailsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetHostsDetailsResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetHostsDetailsResponseMultiError) AllErrors() []error { return m }
+
+// GetHostsDetailsResponseValidationError is the validation error returned by
+// GetHostsDetailsResponse.Validate if the designated constraints aren't met.
+type GetHostsDetailsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetHostsDetailsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetHostsDetailsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetHostsDetailsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetHostsDetailsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetHostsDetailsResponseValidationError) ErrorName() string {
+	return "GetHostsDetailsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetHostsDetailsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetHostsDetailsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetHostsDetailsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetHostsDetailsResponseValidationError{}
+
+// Validate checks the field values on HostDataWithMeta with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *HostDataWithMeta) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on HostDataWithMeta with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// HostDataWithMetaMultiError, or nil if none found.
+func (m *HostDataWithMeta) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *HostDataWithMeta) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for HostId
+
+	// no validation rules for Ip
+
+	// no validation rules for Ipv6
+
+	// no validation rules for HostName
+
+	// no validation rules for Alive
+
+	// no validation rules for OsName
+
+	if all {
+		switch v := interface{}(m.GetCloudArea()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, HostDataWithMetaValidationError{
+					field:  "CloudArea",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, HostDataWithMetaValidationError{
+					field:  "CloudArea",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCloudArea()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return HostDataWithMetaValidationError{
+				field:  "CloudArea",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMeta()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, HostDataWithMetaValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, HostDataWithMetaValidationError{
+					field:  "Meta",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMeta()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return HostDataWithMetaValidationError{
+				field:  "Meta",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return HostDataWithMetaMultiError(errors)
+	}
+
+	return nil
+}
+
+// HostDataWithMetaMultiError is an error wrapping multiple validation errors
+// returned by HostDataWithMeta.ValidateAll() if the designated constraints
+// aren't met.
+type HostDataWithMetaMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m HostDataWithMetaMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m HostDataWithMetaMultiError) AllErrors() []error { return m }
+
+// HostDataWithMetaValidationError is the validation error returned by
+// HostDataWithMeta.Validate if the designated constraints aren't met.
+type HostDataWithMetaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e HostDataWithMetaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e HostDataWithMetaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e HostDataWithMetaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e HostDataWithMetaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e HostDataWithMetaValidationError) ErrorName() string { return "HostDataWithMetaValidationError" }
+
+// Error satisfies the builtin error interface
+func (e HostDataWithMetaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sHostDataWithMeta.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = HostDataWithMetaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = HostDataWithMetaValidationError{}
 
 // Validate checks the field values on GetScopeHostCheckRequest with the rules
 // defined in the proto definition for this message. If any rules are

@@ -11,6 +11,7 @@
  *
  */
 
+// Package conflicthandler 判断新增ingress/portpool是否和集群内现有ingress/portpool产生端口冲突
 package conflicthandler
 
 import (

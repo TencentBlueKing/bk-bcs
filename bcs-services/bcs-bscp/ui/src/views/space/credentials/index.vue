@@ -5,13 +5,16 @@
   import { Plus, Search, Eye, Unvisible, Copy, EditLine } from 'bkui-vue/lib/icon'
   import BkMessage from 'bkui-vue/lib/message'
   import { InfoBox } from 'bkui-vue/lib'
+  import { permissionCheck } from '../../../api/index'
   import { getCredentialList, createCredential, updateCredential, deleteCredential } from '../../../api/credentials'
   import { copyToClipBoard, datetimeFormat } from '../../../utils/index'
   import { ICredentialItem } from '../../../../types/credential'
   import AssociateConfigItems from './associate-config-items/index.vue'
 
-  const { spaceId } = storeToRefs(useGlobalStore())
+  const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore())
 
+  const permCheckLoading = ref(false)
+  const hasManagePerm = ref(false)
   const credentialList = ref<ICredentialItem[]>([])
   const listLoading = ref(false)
   const createPending = ref(false)
@@ -29,12 +32,46 @@
 
   watch(() => spaceId.value, () => {
     createPending.value = false
+    getPermData()
     refreshListWithLoading()
   })
 
   onMounted(() => {
+    getPermData()
     refreshListWithLoading()
   })
+
+  const getPermData = async() => {
+    permCheckLoading.value = true
+    const res = await permissionCheck({
+      resources: [
+        {
+          biz_id: spaceId.value,
+          basic: {
+            type: 'credential',
+            action: 'manage'
+          }
+        }
+      ]
+    })
+    hasManagePerm.value = res.is_allowed
+    permCheckLoading.value = false
+  }
+
+  const checkPermBeforeOperate = () => {
+    if (!hasManagePerm.value) {
+      permissionQuery.value = { resources: [{
+        biz_id: spaceId.value,
+        basic: {
+          type: 'credential',
+          action: 'manage'
+        }
+      }] }
+      showApplyPermDialog.value = true
+      return false
+    }
+    return true
+  }
 
   // 加载密钥列表
   const loadCredentialList = async () => {
@@ -85,6 +122,9 @@
 
   // 创建密钥
   const handleCreateCredential = async () => {
+    if (!checkPermBeforeOperate()) {
+      return
+    }
     try {
       createPending.value = true
       const params = { memo: '' }
@@ -143,6 +183,9 @@
 
   // 禁用/启用
   const handelToggleEnable = async(credential: ICredentialItem) => {
+    if (!checkPermBeforeOperate()) {
+      return
+    }
     if (credential.spec.enable) {
       InfoBox({
         title: '确定禁用此密钥',
@@ -188,11 +231,13 @@
 
   // 删除配置项
   const handleDelete = (credential: ICredentialItem) => {
+    if (!checkPermBeforeOperate()) {
+      return
+    }
     InfoBox({
       title: '确定删除此密钥',
       subTitle: '删除密钥后，使用此密钥的应用将无法正常使用 SDK/API 拉取配置，且密钥无法恢复',
       confirmText: '删除',
-      infoType: 'warning',
       onConfirm: async () => {
         await deleteCredential(spaceId.value, credential.id)
         if (credentialList.value.length === 1 && pagination.value.current > 1) {
@@ -201,6 +246,18 @@
         loadCredentialList()
       },
     } as any)
+  }
+  // 删除配置项提示文字
+  const deleteTooltip = (isShowTooltip: boolean) => {
+    if (isShowTooltip) {
+      return {
+        content: '已启用，不能删除',
+        placement: 'top'
+      }
+    }
+    return {
+      disabled:true
+    }
   }
 
   // 更改每页条数
@@ -224,7 +281,16 @@
     </bk-alert>
     <div class="management-data-container">
       <div class="operate-area">
-        <bk-button theme="primary" :loading="createPending" @click="handleCreateCredential"><Plus class="button-icon" />新建密钥</bk-button>
+        <bk-button
+          v-cursor="{ active: !hasManagePerm }"
+          theme="primary"
+          :class="{ 'bk-button-with-no-perm': !hasManagePerm }"
+          :disabled="permCheckLoading"
+          :loading="createPending"
+          @click="handleCreateCredential">
+          <Plus class="button-icon" />
+          新建密钥
+        </bk-button>
         <div class="filter-actions">
           <bk-input
             v-model="searchStr"
@@ -283,7 +349,15 @@
           <bk-table-column label="状态" width="110">
             <template #default="{ row }">
               <div v-if="row.spec" class="status-action">
-                <bk-switcher size="small" theme="primary" :key="row.id" :value="row.spec.enable" @change="handelToggleEnable(row)"></bk-switcher>
+                <bk-switcher
+                  v-cursor="{ active: !hasManagePerm }"
+                  size="small"
+                  theme="primary"
+                  :key="row.id"
+                  :value="row.spec.enable"
+                  :disabled="permCheckLoading"
+                  :class="{ 'bk-switcher-with-no-perm': !hasManagePerm }"
+                  @change="handelToggleEnable(row)" />
                 <span class="text">{{ row.spec.enable ? '已启用' : '已禁用' }}</span>
               </div>
             </template>
@@ -293,10 +367,13 @@
               <template v-if="row.spec">
                 <bk-button text theme="primary" @click="handleOpenAssociate(row)">关联配置项</bk-button>
                 <bk-button
+                  v-cursor="{ active: !hasManagePerm }"
                   style="margin-left: 8px;"
                   text
                   theme="primary"
-                  :disabled="row.spec.enable"
+                  :class="{ 'bk-text-with-no-perm': !hasManagePerm }"
+                  :disabled="hasManagePerm && row.spec.enable"
+                  v-bk-tooltips="deleteTooltip(hasManagePerm && row.spec.enable)"
                   @click="handleDelete(row)">
                   删除
                 </bk-button>
@@ -309,8 +386,11 @@
     <AssociateConfigItems
       :show="isAssociateSliderShow"
       :id="currentCredential"
+      :perm-check-loading="permCheckLoading"
+      :has-manage-perm="hasManagePerm"
       @close="handleAssociateSliderClose"
-      @refresh="refreshListWithLoading(pagination.current)" />
+      @refresh="refreshListWithLoading(pagination.current)"
+      @applyPerm="checkPermBeforeOperate" />
   </section>
 </template>
 <style lang="scss" scoped>

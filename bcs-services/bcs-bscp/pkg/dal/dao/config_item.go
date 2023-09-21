@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package dao
 
@@ -16,7 +16,6 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/types"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/criteria/errf"
@@ -24,6 +23,7 @@ import (
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	"bscp.io/pkg/types"
 )
 
 // ConfigItem supplies all the configItem related operations.
@@ -44,8 +44,6 @@ type ConfigItem interface {
 	GetByUniqueKey(kit *kit.Kit, bizID, appID uint32, name, path string) (*table.ConfigItem, error)
 	// GetUniqueKeys get unique keys of all config items in one app
 	GetUniqueKeys(kit *kit.Kit, bizID, appID uint32) ([]types.CIUniqueKey, error)
-	// SearchAll search all configItem with searchKey.
-	SearchAll(kit *kit.Kit, searchKey string, appID, bizID uint32) ([]*table.ConfigItem, error)
 	// ListAllByAppID list all configItem by appID
 	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32) ([]*table.ConfigItem, error)
 	// Delete one configItem instance.
@@ -233,20 +231,6 @@ func (dao *configItemDao) GetUniqueKeys(kit *kit.Kit, bizID, appID uint32) ([]ty
 		return nil, err
 	}
 	return rs, nil
-}
-
-// SearchAll search all configItem by searchKey
-func (dao *configItemDao) SearchAll(kit *kit.Kit, searchKey string, appID, bizID uint32) ([]*table.ConfigItem, error) {
-	if bizID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "bizID can not be 0")
-	}
-	m := dao.genQ.ConfigItem
-	query := dao.genQ.ConfigItem.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID))
-	if searchKey != "" {
-		searchKey = "%" + searchKey + "%"
-		query = query.Where(m.Name.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))
-	}
-	return query.Find()
 }
 
 // ListAllByAppID list all configItem by appID

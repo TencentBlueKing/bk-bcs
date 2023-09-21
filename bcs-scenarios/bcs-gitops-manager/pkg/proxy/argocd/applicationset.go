@@ -101,7 +101,10 @@ func (plugin *ApplicationSetPlugin) List(ctx context.Context, r *http.Request) *
 				errors.Wrapf(err, "check project '%s' permission failed", projectName))
 		}
 	}
-	appsetList, err := plugin.middleware.ListApplicationSets(ctx, projects)
+	appsetList, err := plugin.middleware.ListApplicationSets(ctx, &applicationset.ApplicationSetListQuery{
+		Projects: projects,
+		Selector: r.URL.Query().Get("selector"),
+	})
 	if err != nil {
 		return mw.ReturnErrorResponse(http.StatusInternalServerError,
 			errors.Wrapf(err, "list applications by project '%v' from storage failed", projects))

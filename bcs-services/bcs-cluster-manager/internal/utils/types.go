@@ -65,6 +65,20 @@ const (
 	DrainDelayKey = "node.bkbcs.tencent.com/drain-delay"
 	// DeviceLabelFlag for device labels flag
 	DeviceLabelFlag = "bkbcs.tencent.com"
+
+	// RegionKubernetesFlag region
+	RegionKubernetesFlag = "failure-domain.beta.kubernetes.io/region"
+	// ZoneKubernetesFlag zone
+	ZoneKubernetesFlag = "failure-domain.beta.kubernetes.io/zone"
+	// RegionTopologyFlag region
+	RegionTopologyFlag = "topology.kubernetes.io/region"
+	// ZoneTopologyFlag zone
+	ZoneTopologyFlag = "topology.kubernetes.io/zone"
+
+	// NodeInstanceTypeFlag instance type
+	NodeInstanceTypeFlag = "node.kubernetes.io/instance-type"
+	// NodeNameFlag nodeName
+	NodeNameFlag = "kubernetes.io/hostname"
 )
 
 const (

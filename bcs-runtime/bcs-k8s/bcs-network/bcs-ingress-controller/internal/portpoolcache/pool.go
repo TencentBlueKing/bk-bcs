@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package portpoolcache 维护端口池中端口的使用情况, 新增Pod时从该缓存中分配端口使用
 package portpoolcache
 
 import (

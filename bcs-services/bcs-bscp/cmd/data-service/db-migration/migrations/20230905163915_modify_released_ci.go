@@ -1,18 +1,20 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package migrations
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"bscp.io/cmd/data-service/db-migration/migrator"
@@ -24,18 +26,21 @@ func init() {
 		Version: "20230905163915",
 		Name:    "20230905163915_modify_released_ci",
 		Mode:    migrator.GormMode,
-		Up:      mig20230905163915ModifyReleasedCIUp,
-		Down:    mig20230905163915ModifyReleasedCIDown,
+		Up:      mig20230905163915Up,
+		Down:    mig20230905163915Down,
 	})
 }
 
-// mig20230905163915ModifyReleasedCIUp for up migration
-func mig20230905163915ModifyReleasedCIUp(tx *gorm.DB) error {
+// mig20230905163915Up for up migration
+func mig20230905163915Up(tx *gorm.DB) error {
 	// ReleasedConfigItems : 已生成版本的配置项
 	type ReleasedConfigItems struct {
 		// 这里只需要DB操作用到的字段
 		OriginSignature string `gorm:"type:varchar(64) not null"`
 		OriginByteSize  uint   `gorm:"type:bigint(1) unsigned not null"`
+
+		Reviser   string    `gorm:"type:varchar(64) not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 
 		BizID     uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:1"`
 		AppID     uint `gorm:"type:bigint(1) unsigned not null;index:idx_bizID_appID_relID,priority:2"`
@@ -43,6 +48,18 @@ func mig20230905163915ModifyReleasedCIUp(tx *gorm.DB) error {
 	}
 
 	/*** 字段变更 ***/
+	// delete old column
+	if tx.Migrator().HasColumn(&ReleasedConfigItems{}, "Reviser") {
+		if err := tx.Migrator().DropColumn(&ReleasedConfigItems{}, "Reviser"); err != nil {
+			return err
+		}
+	}
+	if tx.Migrator().HasColumn(&ReleasedConfigItems{}, "UpdatedAt") {
+		if err := tx.Migrator().DropColumn(&ReleasedConfigItems{}, "UpdatedAt"); err != nil {
+			return err
+		}
+	}
+
 	// add new column
 	if !tx.Migrator().HasColumn(&ReleasedConfigItems{}, "OriginSignature") {
 		if err := tx.Migrator().AddColumn(&ReleasedConfigItems{}, "OriginSignature"); err != nil {
@@ -79,7 +96,7 @@ func mig20230905163915ModifyReleasedCIUp(tx *gorm.DB) error {
 
 }
 
-// mig20230905163915ModifyReleasedCIDown for down migration
-func mig20230905163915ModifyReleasedCIDown(tx *gorm.DB) error {
+// mig20230905163915Down for down migration
+func mig20230905163915Down(tx *gorm.DB) error {
 	return nil
 }

@@ -11,6 +11,7 @@ const CreateVCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cl
 const CreateCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-cluster.vue');
 // import模式
 const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/import-cluster.vue');
+const ImportGoogleCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/google-cloud.vue');
 // 集群详情
 const ClusterDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-detail.vue');
 const ClusterNodeOverview = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/node-overview.vue');
@@ -26,9 +27,6 @@ const InternalNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/
 const InternalNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/node-pool-detail.vue');
 const InternalEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/edit-node-pool.vue');
 const PodDetail = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/detail/index.vue');
-
-// 云凭证
-const tencentCloud = () => import(/* webpackChunkName: 'project' */'@/views/cluster-manage/cloudtoken/tencentCloud.vue');
 
 // 集群管理
 export default [
@@ -80,6 +78,17 @@ export default [
     path: 'clusters/:importType/import',
     name: 'importCluster',
     component: ImportCluster,
+    props: true,
+    meta: {
+      menuId: 'CLUSTER',
+      title: window.i18n.t('cluster.create.title.import'),
+    },
+  },
+  // 导入集群 - 谷歌云
+  {
+    path: 'clusters/import/google-cloud',
+    name: 'importGoogleCluster',
+    component: ImportGoogleCluster,
     props: true,
     meta: {
       menuId: 'CLUSTER',
@@ -235,15 +244,6 @@ export default [
     component: window.REGION === 'ieod' ? InternalNodePoolDetail : NodePoolDetail,
     meta: {
       menuId: 'CLUSTER',
-    },
-  },
-  {
-    path: 'cluster/tencent-cloud',
-    name: 'tencentCloud',
-    component: tencentCloud,
-    meta: {
-      title: 'Tencent Cloud',
-      hideBack: true,
     },
   },
 ] as RouteConfig[];

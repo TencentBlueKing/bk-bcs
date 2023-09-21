@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -27,11 +27,9 @@ import (
 )
 
 // CreateTemplateVariable create a template variable
-func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbcs.CreateTemplateVariableReq) (*pbcs.
-	CreateTemplateVariableResp,
-	error) {
+func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbcs.CreateTemplateVariableReq) (
+	*pbcs.CreateTemplateVariableResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateTemplateVariableResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -61,18 +59,16 @@ func (s *Service) CreateTemplateVariable(ctx context.Context, req *pbcs.CreateTe
 		return nil, err
 	}
 
-	resp = &pbcs.CreateTemplateVariableResp{
+	resp := &pbcs.CreateTemplateVariableResp{
 		Id: rp.Id,
 	}
 	return resp, nil
 }
 
 // DeleteTemplateVariable delete a template variable
-func (s *Service) DeleteTemplateVariable(ctx context.Context, req *pbcs.DeleteTemplateVariableReq) (*pbcs.
-	DeleteTemplateVariableResp,
-	error) {
+func (s *Service) DeleteTemplateVariable(ctx context.Context, req *pbcs.DeleteTemplateVariableReq) (
+	*pbcs.DeleteTemplateVariableResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteTemplateVariableResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -92,15 +88,13 @@ func (s *Service) DeleteTemplateVariable(ctx context.Context, req *pbcs.DeleteTe
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.DeleteTemplateVariableResp{}, nil
 }
 
 // UpdateTemplateVariable update a template variable
-func (s *Service) UpdateTemplateVariable(ctx context.Context, req *pbcs.UpdateTemplateVariableReq) (*pbcs.
-	UpdateTemplateVariableResp,
-	error) {
+func (s *Service) UpdateTemplateVariable(ctx context.Context, req *pbcs.UpdateTemplateVariableReq) (
+	*pbcs.UpdateTemplateVariableResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateTemplateVariableResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -124,15 +118,13 @@ func (s *Service) UpdateTemplateVariable(ctx context.Context, req *pbcs.UpdateTe
 		return nil, err
 	}
 
-	return resp, nil
+	return &pbcs.UpdateTemplateVariableResp{}, nil
 }
 
 // ListTemplateVariables list template variables
-func (s *Service) ListTemplateVariables(ctx context.Context, req *pbcs.ListTemplateVariablesReq) (*pbcs.
-	ListTemplateVariablesResp,
-	error) {
+func (s *Service) ListTemplateVariables(ctx context.Context, req *pbcs.ListTemplateVariablesReq) (
+	*pbcs.ListTemplateVariablesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateVariablesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -156,7 +148,7 @@ func (s *Service) ListTemplateVariables(ctx context.Context, req *pbcs.ListTempl
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateVariablesResp{
+	resp := &pbcs.ListTemplateVariablesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

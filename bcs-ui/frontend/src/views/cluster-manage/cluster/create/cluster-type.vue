@@ -28,18 +28,44 @@
         :key="item.type"
         :class="['cluster-type-card', { disabled: item.disabled }]"
         @click="handleAddCluster(item)">
-        <div class="cluster-type-card-top">
-          <div :style="{ filter: item.disabled ? 'grayscale(1)' : '' }">
-            <svg class="icon svg-icon" width="48px" height="48px">
-              <use :xlink:href="`#${item.icon}`"></use>
-            </svg>
+        <bcs-popover trigger="click" :disabled="!item.children" theme="light cloud-cluster-popover">
+          <div>
+            <div class="cluster-type-card-top">
+              <div :style="{ filter: item.disabled ? 'grayscale(1)' : '' }">
+                <svg class="icon svg-icon" width="48px" height="48px">
+                  <use :xlink:href="`#${item.icon}`"></use>
+                </svg>
+              </div>
+              <div class="text-[14px] font-bold mt-[10px]">{{ item.title }}</div>
+              <div class="text-[14px] mt-[10px] bcs-ellipsis line-clamp-2">{{ item.subTitle }}</div>
+            </div>
+            <div class="flex-1 flex items-center justify-center text-[#979BA5] text-[12px] h-[78px]">
+              {{ item.desc }}
+            </div>
           </div>
-          <div class="text-[14px] font-bold mt-[10px]">{{ item.title }}</div>
-          <div class="text-[14px] mt-[10px] bcs-ellipsis line-clamp-2">{{ item.subTitle }}</div>
-        </div>
-        <div class="flex-1 flex items-center justify-center text-[#979BA5] text-[12px] h-[78px]">
-          {{ item.desc }}
-        </div>
+          <template #content>
+            <div class="bg-[#F0F1F5] grid grid-cols-2 gap-[16px]">
+              <div
+                v-for="child in item.children"
+                :key="child.type"
+                :class="['cluster-type-card-2', { disabled: child.disabled }]"
+                @click="handleAddCluster(child)">
+                <div class="flex items-center">
+                  <div :style="{ filter: child.disabled ? 'grayscale(1)' : '' }">
+                    <img :src="child.icon" v-if="child.icon.indexOf('data:image/png') === 0" />
+                    <svg class="icon svg-icon" width="48px" height="48px" v-else>
+                      <use :xlink:href="`#${child.icon}`"></use>
+                    </svg>
+                  </div>
+                  <span class="font-bold text-[14px] ml-[16px]">{{ child.title }}</span>
+                </div>
+                <div class="mt-[6px] text-[#979BA5]">
+                  {{ child.desc }}
+                </div>
+              </div>
+            </div>
+          </template>
+        </bcs-popover>
       </div>
     </div>
   </BcsContent>
@@ -51,10 +77,13 @@ import BcsContent from '../../components/bcs-content.vue';
 
 import { useAppData, useConfig } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
+import amazonLogo from '@/images/amazon.png';
+import azureLogo from '@/images/azure.png';
+import googleLogo from '@/images/google.png';
 import $router from '@/router';
 
 export default defineComponent({
-  name: 'CreateCluster',
+  name: 'ClusterType',
   components: { BcsContent },
   setup() {
     const { _INTERNAL_ } = useConfig();
@@ -109,6 +138,36 @@ export default defineComponent({
         desc: $i18n.t('cluster.create.type.cloudProvider.desc'),
         type: 'import-cloud',
         disabled: _INTERNAL_.value,
+        children: [
+          {
+            icon: 'bcs-icon-color-tencentcloud',
+            title: $i18n.t('publicCloud.tencent.title'),
+            desc: $i18n.t('publicCloud.tencent.desc'),
+            type: 'tencentCloud',
+            disabled: _INTERNAL_.value,
+          },
+          {
+            icon: amazonLogo,
+            title: $i18n.t('publicCloud.amazon.title'),
+            desc: $i18n.t('publicCloud.amazon.desc'),
+            type: 'amazonCloud',
+            disabled: true,
+          },
+          {
+            icon: googleLogo,
+            title: $i18n.t('publicCloud.google.title'),
+            desc: $i18n.t('publicCloud.google.desc'),
+            type: 'googleCloud',
+            disabled: _INTERNAL_.value,
+          },
+          {
+            icon: azureLogo,
+            title: $i18n.t('publicCloud.azure.title'),
+            desc: $i18n.t('publicCloud.azure.desc'),
+            type: 'azureCloud',
+            disabled: true,
+          },
+        ],
       },
     ]);
 
@@ -131,10 +190,15 @@ export default defineComponent({
             params: { importType: 'kubeconfig' },
           });
           break;
-        case 'import-cloud':
+        case 'tencentCloud':
           $router.push({
             name: 'importCluster',
             params: { importType: 'provider' },
+          });
+          break;
+        case 'googleCloud':
+          $router.push({
+            name: 'importGoogleCluster',
           });
           break;
       }
@@ -148,6 +212,16 @@ export default defineComponent({
   },
 });
 </script>
+<style lang="postcss">
+.cloud-cluster-popover-theme {
+  min-width: 800px !important;
+  padding: 16px !important;
+  background-color: #F0F1F5 !important;
+  .tippy-content {
+    max-width: 1000px;
+  }
+}
+</style>
 <style lang="postcss" scoped>
 .cluster-type-card {
   display: flex;
@@ -162,6 +236,22 @@ export default defineComponent({
   border-radius: 2px;
   margin-right: 16px;
   margin-bottom: 16px;
+  cursor: pointer;
+  border: 1px solid #fff;
+  &:hover {
+    border:1px solid #3A84FF;
+  }
+  &.disabled {
+    cursor: not-allowed;
+    border: unset;
+    div {
+      color: #c4c6cc;
+    }
+  }
+}
+.cluster-type-card-2 {
+  background-color: #fff;
+  padding: 24px 16px;
   cursor: pointer;
   border: 1px solid #fff;
   &:hover {

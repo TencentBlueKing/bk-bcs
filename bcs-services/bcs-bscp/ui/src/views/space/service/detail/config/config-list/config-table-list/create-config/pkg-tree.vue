@@ -108,7 +108,6 @@
         }
       }
     }
-    console.log(list)
     emits('change', list)
   }
 

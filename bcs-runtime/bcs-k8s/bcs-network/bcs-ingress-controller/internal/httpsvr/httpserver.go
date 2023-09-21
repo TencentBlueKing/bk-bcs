@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package httpsvr 对外提供http接口（通过service域名访问）
 package httpsvr
 
 import (

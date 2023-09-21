@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useGlobalStore } from './store/global';
 import { ISpaceDetail } from '../types/index';
 
+
+
 const routes = [
   {
     path: '/',
@@ -93,7 +95,7 @@ const routes = [
           },
           {
             path: ':templateSpaceId/:packageId/version_manage/:templateId',
-            name: 'template-version-manange',
+            name: 'template-version-manage',
             meta: {
               navModule: 'templates'
             },
@@ -148,5 +150,13 @@ const router = createRouter({
   history: createWebHistory((<any>window).SITE_URL),
   routes,
 });
+
+// 路由切换时，取消无权限页面
+router.afterEach((to, from) => {
+  const globalStore = useGlobalStore()
+  globalStore.$patch((state) => {
+    state.showPermApplyPage = false
+  })
+})
 
 export default router;

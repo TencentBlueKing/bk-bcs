@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -103,7 +103,7 @@ func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTempl
 func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbds.DeleteTemplateSpaceReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateSpaceNoSubResource(kt, req.Id); err != nil {
+	if err := s.dao.Validator().ValidateTmplSpaceNoSubRes(kt, req.Id); err != nil {
 		return nil, err
 	}
 
@@ -119,9 +119,9 @@ func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbds.DeleteTempl
 	return new(pbbase.EmptyResp), nil
 }
 
-// GetAllBizsOfTemplateSpaces get all biz ids of template spaces
-func (s *Service) GetAllBizsOfTemplateSpaces(ctx context.Context, req *pbbase.EmptyReq) (
-	*pbds.GetAllBizsOfTemplateSpacesResp, error) {
+// GetAllBizsOfTmplSpaces get all biz ids of template spaces
+func (s *Service) GetAllBizsOfTmplSpaces(ctx context.Context, req *pbbase.EmptyReq) (
+	*pbds.GetAllBizsOfTmplSpacesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	bizIDs, err := s.dao.TemplateSpace().GetAllBizs(kt)
@@ -130,12 +130,12 @@ func (s *Service) GetAllBizsOfTemplateSpaces(ctx context.Context, req *pbbase.Em
 		return nil, err
 	}
 
-	resp := &pbds.GetAllBizsOfTemplateSpacesResp{BizIds: bizIDs}
+	resp := &pbds.GetAllBizsOfTmplSpacesResp{BizIds: bizIDs}
 	return resp, nil
 }
 
-// CreateDefaultTemplateSpace get all biz ids of template spaces
-func (s *Service) CreateDefaultTemplateSpace(ctx context.Context, req *pbds.CreateDefaultTemplateSpaceReq) (
+// CreateDefaultTmplSpace get all biz ids of template spaces
+func (s *Service) CreateDefaultTmplSpace(ctx context.Context, req *pbds.CreateDefaultTmplSpaceReq) (
 	*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -149,12 +149,12 @@ func (s *Service) CreateDefaultTemplateSpace(ctx context.Context, req *pbds.Crea
 	return resp, nil
 }
 
-// ListTemplateSpacesByIDs list template space by ids.
-func (s *Service) ListTemplateSpacesByIDs(ctx context.Context, req *pbds.ListTemplateSpacesByIDsReq) (*pbds.
-	ListTemplateSpacesByIDsResp, error) {
+// ListTmplSpacesByIDs list template space by ids.
+func (s *Service) ListTmplSpacesByIDs(ctx context.Context, req *pbds.ListTmplSpacesByIDsReq) (*pbds.
+	ListTmplSpacesByIDsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateSpacesExist(kt, req.Ids); err != nil {
+	if err := s.dao.Validator().ValidateTmplSpacesExist(kt, req.Ids); err != nil {
 		return nil, err
 	}
 
@@ -164,7 +164,7 @@ func (s *Service) ListTemplateSpacesByIDs(ctx context.Context, req *pbds.ListTem
 		return nil, err
 	}
 
-	resp := &pbds.ListTemplateSpacesByIDsResp{
+	resp := &pbds.ListTmplSpacesByIDsResp{
 		Details: pbts.PbTemplateSpaces(details),
 	}
 	return resp, nil

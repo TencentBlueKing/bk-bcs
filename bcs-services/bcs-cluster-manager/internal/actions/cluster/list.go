@@ -32,7 +32,6 @@ import (
 	iauth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
@@ -711,9 +710,7 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 	}
 
 	// cloud nodes addition features
-	if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
-		la.handleNodes()
-	}
+	la.handleNodes()
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
@@ -740,10 +737,6 @@ func (la *ListNodesInClusterAction) handleNodes() {
 	lang := i18n.LanguageFromCtx(la.ctx)
 	// get node zoneName
 	for i := range la.nodes {
-		if len(la.nodes[i].GetZoneName()) > 0 {
-			continue
-		}
-
 		node, ok := instanceMap[la.nodes[i].InnerIP]
 		if ok {
 			la.nodes[i].ZoneName = node.ZoneName

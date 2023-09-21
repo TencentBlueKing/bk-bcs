@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 // Package auth NOTES
 package auth
@@ -16,17 +16,12 @@ package auth
 import (
 	"context"
 	"fmt"
-	"os"
-	"strconv"
 	"strings"
 
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
-	bkiamlogger "github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
 	"bscp.io/cmd/auth-server/options"
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
@@ -36,7 +31,6 @@ import (
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/thirdparty/esb/cmdb"
 )
 
 // Auth related operate.
@@ -108,7 +102,7 @@ func (a *Auth) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) 
 	resources := pbas.ResourceAttributes(req.Resources)
 	opts, decisions, err := parseAttributesToBatchOptions(kt, req.User.UserInfo(), resources...)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	// all resources are skipped
@@ -233,7 +227,7 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 
 	permission, err := a.getPermissionToApply(kt, pbas.ResourceAttributes(req.Resources))
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	resourceAttributes := pbas.ResourceAttributes(req.Resources)
@@ -248,67 +242,6 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 	resp.ApplyUrl = url
 
 	resp.Permission = pbas.PbIamPermission(permission)
-	return resp, nil
-}
-
-// CheckPermission check permission by attr
-func (a *Auth) CheckPermission(ctx context.Context, biz *cmdb.Biz, iamSettings cc.IAM, req *meta.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	log := &logrus.Logger{
-		Out:          os.Stderr,
-		Formatter:    new(logrus.TextFormatter),
-		Hooks:        make(logrus.LevelHooks),
-		Level:        logrus.DebugLevel,
-		ExitFunc:     os.Exit,
-		ReportCaller: false,
-	}
-
-	bkiamlogger.SetLogger(log)
-
-	actionRequest, err := AdaptIAMResourceOptions(req)
-	if err != nil {
-		return nil, err
-	}
-
-	actionRequest.Subject = bkiam.NewSubject("user", kt.User)
-	allowed, err := a.iamClient.IsAllowed(*actionRequest)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := &pbas.CheckPermissionResp{
-		IsAllowed: false,
-		ApplyUrl:  "",
-		Resources: []*pbas.BasicDetail{},
-	}
-
-	if allowed {
-		resp.IsAllowed = true
-		return resp, nil
-	}
-
-	if req.GenApplyURL {
-		resp.Resources = append(resp.Resources, &pbas.BasicDetail{
-			Type:         string(req.Type),
-			Action:       req.Action.String(),
-			ResourceId:   strconv.FormatInt(int64(req.ResourceID), 10),
-			TypeName:     "业务",
-			ActionName:   "业务访问",
-			ResourceName: biz.BizName,
-		})
-
-		application, err := AdaptIAMApplicationOptions([]*meta.ResourceAttribute{req})
-		if err != nil {
-			return nil, err
-		}
-		url, err := a.iamClient.GetApplyURL(*application, "", kt.User)
-		if err != nil {
-			return nil, errors.Wrap(err, "gen apply url")
-		}
-		resp.ApplyUrl = url
-	}
-
 	return resp, nil
 }
 

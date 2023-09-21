@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package search
 
@@ -37,41 +37,80 @@ const (
 	TemplateVariable TableName = "template_variables"
 	// ReleasedAppTemplate is released app template table
 	ReleasedAppTemplate TableName = "released_app_templates"
+	// ConfigItem is config item table
+	ConfigItem TableName = "config_items"
 	// ReleasedConfigItem is released config item table
 	ReleasedConfigItem TableName = "released_config_items"
+
+	/*
+		Following tables are not real database tables which only used for search due to convenience and consistency
+	*/
+
+	// TmplBoundUnnamedApp is template bound unnamed app table
+	TmplBoundUnnamedApp TableName = "template_bound_unnamed_apps"
+	// TmplBoundNamedApp is template bound named app table
+	TmplBoundNamedApp TableName = "template_bound_named_apps"
+	// TmplRevisionBoundUnnamedApp is template revision bound unnamed app table
+	TmplRevisionBoundUnnamedApp TableName = "template_revision_bound_unnamed_apps"
+	// TmplRevisionBoundNamedApp is template revision bound unnamed app table
+	TmplRevisionBoundNamedApp TableName = "template_revision_bound_named_apps"
 )
 
 // supportedFields is supported search fields of tables
 var supportedFields = map[TableName][]string{
+	// real tables
 	TemplateSpace:       {"name", "memo", "creator", "reviser"},
 	Template:            {"name", "path", "memo", "creator", "reviser"},
 	TemplateRevision:    {"revision_name", "revision_memo", "name", "path", "creator"},
 	TemplateSet:         {"name", "memo", "creator", "reviser"},
 	TemplateVariable:    {"name", "memo", "creator", "reviser"},
 	ReleasedAppTemplate: {"revision_name", "revision_memo", "name", "path", "creator"},
+	ConfigItem:          {"name", "path", "memo", "creator", "reviser"},
 	ReleasedConfigItem:  {"name", "path", "memo", "creator"},
+
+	// unreal tables
+	TmplBoundUnnamedApp:         {"app_name", "template_revision_name"},
+	TmplBoundNamedApp:           {"app_name", "template_revision_name", "release_name"},
+	TmplRevisionBoundUnnamedApp: {"app_name"},
+	TmplRevisionBoundNamedApp:   {"app_name", "release_name"},
 }
 
 // supportedFieldsMap is supported search fields map of tables
 var supportedFieldsMap = map[TableName]map[string]struct{}{
+	// real tables
 	TemplateSpace:       {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 	Template:            {"name": {}, "path": {}, "memo": {}, "creator": {}, "reviser": {}},
 	TemplateRevision:    {"revision_name": {}, "revision_memo": {}, "name": {}, "path": {}, "creator": {}},
 	TemplateSet:         {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 	TemplateVariable:    {"name": {}, "memo": {}, "creator": {}, "reviser": {}},
 	ReleasedAppTemplate: {"revision_name": {}, "revision_memo": {}, "name": {}, "path": {}, "creator": {}},
+	ConfigItem:          {"name": {}, "path": {}, "memo": {}, "creator": {}, "reviser": {}},
 	ReleasedConfigItem:  {"name": {}, "path": {}, "memo": {}, "creator": {}},
+
+	// unreal tables
+	TmplBoundUnnamedApp:         {"app_name": {}, "template_revision_name": {}},
+	TmplBoundNamedApp:           {"app_name": {}, "template_revision_name": {}, "release_name": {}},
+	TmplRevisionBoundUnnamedApp: {"app_name": {}},
+	TmplRevisionBoundNamedApp:   {"app_name": {}, "release_name": {}},
 }
 
 // defaultFields is default search fields when field is not specified
 var defaultFields = map[TableName][]string{
+	// real tables
 	TemplateSpace:       {"name"},
 	Template:            {"name"},
 	TemplateRevision:    {"revision_name"},
 	TemplateSet:         {"name"},
 	TemplateVariable:    {"name"},
 	ReleasedAppTemplate: {"revision_name"},
+	ConfigItem:          {"name"},
 	ReleasedConfigItem:  {"name"},
+
+	// unreal tables
+	TmplBoundUnnamedApp:         {"app_name"},
+	TmplBoundNamedApp:           {"app_name"},
+	TmplRevisionBoundUnnamedApp: {"app_name"},
+	TmplRevisionBoundNamedApp:   {"app_name"},
 }
 
 // getGenFieldsMap get the map for `table column name` => `gorm/gen field object`
@@ -115,6 +154,13 @@ func getGenFieldsMap(q *gen.Query) map[TableName]map[string]field.String {
 			"name":          q.ReleasedAppTemplate.Name,
 			"path":          q.ReleasedAppTemplate.Path,
 			"creator":       q.ReleasedAppTemplate.Creator,
+		},
+		ConfigItem: {
+			"name":    q.ConfigItem.Name,
+			"path":    q.ConfigItem.Path,
+			"memo":    q.ConfigItem.Memo,
+			"creator": q.ConfigItem.Creator,
+			"reviser": q.ConfigItem.Reviser,
 		},
 		ReleasedConfigItem: {
 			"name":    q.ReleasedConfigItem.Name,

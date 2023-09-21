@@ -233,7 +233,7 @@ export function useTask() {
 
 export function useClusterInfo() {
   const isLoading = ref(false);
-  const clusterData = ref<Record<string, any>>({});
+  const clusterData = ref<ICluster>({} as unknown as any);
   const clusterOS = computed(() => clusterData.value?.clusterBasicSettings?.OS);
   const clusterAdvanceSettings = computed(() => clusterData.value?.clusterAdvanceSettings || {});
   const extraInfo = computed(() => clusterData.value?.extraInfo || {});
@@ -318,4 +318,27 @@ export function useCloud() {
     getCloudAccountType,
     getCloudBwps,
   };
+}
+
+export function getClusterTypeName(clusterData) {
+  if (clusterData.clusterType === 'virtual') return 'vCluster'; // 虚拟集群
+  if (clusterData.clusterType === 'federation') return $i18n.t('bcs.cluster.federation'); // 联邦集群
+
+  if (clusterData.clusterCategory === 'builder') {
+    // 托管和独立集群
+    return clusterData.manageType === 'INDEPENDENT_CLUSTER' ? $i18n.t('bcs.cluster.selfDeployed') : $i18n.t('bcs.cluster.managed');
+  }
+
+  return '--';
+}
+
+export function getClusterImportCategory(clusterData: ICluster) {
+  // 导入方式
+  // kubeconfig
+  if (clusterData?.importCategory === 'kubeConfig') return $i18n.t('bcs.cluster.kubeConfig');
+
+  // 云凭证
+  if (clusterData?.importCategory === 'cloud') return $i18n.t('bcs.cluster.cloud');
+
+  return '--';
 }

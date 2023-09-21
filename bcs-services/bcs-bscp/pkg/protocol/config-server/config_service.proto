@@ -96,6 +96,11 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/{config_item_id}"
         };
     }
+    rpc GetReleasedConfigItem(GetReleasedConfigItemReq) returns (GetReleasedConfigItemResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/config_items/{config_item_id}"
+        };
+    }
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items"
@@ -234,20 +239,20 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces"
         };
     }
-    // GetAllBizsOfTemplateSpaces called only by system itself
-    rpc GetAllBizsOfTemplateSpaces(pbbase.EmptyReq) returns (GetAllBizsOfTemplateSpacesResp) {
+    // GetAllBizsOfTmplSpaces called only by system itself
+    rpc GetAllBizsOfTmplSpaces(pbbase.EmptyReq) returns (GetAllBizsOfTmplSpacesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/template_spaces/bizs"
         };
     }
-    // CreateDefaultTemplateSpace called only by system itself
-    rpc CreateDefaultTemplateSpace(CreateDefaultTemplateSpaceReq) returns (CreateDefaultTemplateSpaceResp) {
+    // CreateDefaultTmplSpace called only by system itself
+    rpc CreateDefaultTmplSpace(CreateDefaultTmplSpaceReq) returns (CreateDefaultTmplSpaceResp) {
         option (google.api.http) = {
             post : "/api/v1/config/template_spaces/default"
             body : "*"
         };
     }
-    rpc ListTemplateSpacesByIDs(ListTemplateSpacesByIDsReq) returns (ListTemplateSpacesByIDsResp) {
+    rpc ListTmplSpacesByIDs(ListTmplSpacesByIDsReq) returns (ListTmplSpacesByIDsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_spaces/list_by_ids"
             body : "*"
@@ -281,13 +286,13 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates"
         };
     }
-    rpc AddTemplatesToTemplateSets(AddTemplatesToTemplateSetsReq) returns (AddTemplatesToTemplateSetsResp) {
+    rpc AddTmplsToTmplSets(AddTmplsToTmplSetsReq) returns (AddTmplsToTmplSetsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/add_to_template_sets"
             body : "*"
         };
     }
-    rpc DeleteTemplatesFromTemplateSets(DeleteTemplatesFromTemplateSetsReq) returns(DeleteTemplatesFromTemplateSetsResp) {
+    rpc DeleteTmplsFromTmplSets(DeleteTmplsFromTmplSetsReq) returns(DeleteTmplsFromTmplSetsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/delete_from_template_sets"
             body : "*"
@@ -304,7 +309,7 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/list_not_bound"
         };
     }
-    rpc ListTemplatesOfTemplateSet(ListTemplatesOfTemplateSetReq) returns (ListTemplatesOfTemplateSetResp) {
+    rpc ListTmplsOfTmplSet(ListTmplsOfTmplSetReq) returns (ListTmplsOfTmplSetResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/templates"
         };
@@ -334,8 +339,7 @@ service Config {
             body : "*"
         };
     }
-    rpc ListTemplateRevisionNamesByTemplateIDs(ListTemplateRevisionNamesByTemplateIDsReq) returns
-        (ListTemplateRevisionNamesByTemplateIDsResp) {
+    rpc ListTmplRevisionNamesByTmplIDs(ListTmplRevisionNamesByTmplIDsReq) returns (ListTmplRevisionNamesByTmplIDsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_revisions/list_names_by_template_ids"
             body : "*"
@@ -375,7 +379,7 @@ service Config {
             body : "*"
         };
     }
-    rpc ListTemplateSetsOfBiz(ListTemplateSetsOfBizReq) returns (ListTemplateSetsOfBizResp) {
+    rpc ListTmplSetsOfBiz(ListTmplSetsOfBizReq) returns (ListTmplSetsOfBizResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_sets/list_all_of_biz"
         };
@@ -403,25 +407,24 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings"
         };
     }
-    rpc ListAppBoundTemplateRevisions(ListAppBoundTemplateRevisionsReq) returns (ListAppBoundTemplateRevisionsResp) {
+    rpc ListAppBoundTmplRevisions(ListAppBoundTmplRevisionsReq) returns (ListAppBoundTmplRevisionsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_revisions"
         };
     }
-    rpc ListReleasedAppBoundTemplateRevisions(ListReleasedAppBoundTemplateRevisionsReq) returns
-        (ListReleasedAppBoundTemplateRevisionsResp) {
+    rpc ListReleasedAppBoundTmplRevisions(ListReleasedAppBoundTmplRevisionsReq) returns
+        (ListReleasedAppBoundTmplRevisionsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions"
         };
     }
-    rpc UpdateAppBoundTemplateRevisions(UpdateAppBoundTemplateRevisionsReq) returns
-        (UpdateAppBoundTemplateRevisionsResp) {
+    rpc UpdateAppBoundTmplRevisions(UpdateAppBoundTmplRevisionsReq) returns (UpdateAppBoundTmplRevisionsResp) {
         option (google.api.http) = {
             put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_revisions"
             body : "*"
         };
     }
-    rpc DeleteAppBoundTemplateSets(DeleteAppBoundTemplateSetsReq) returns (DeleteAppBoundTemplateSetsResp) {
+    rpc DeleteAppBoundTmplSets(DeleteAppBoundTmplSetsReq) returns (DeleteAppBoundTmplSetsResp) {
         option (google.api.http) = {
             delete : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_sets"
         };
@@ -433,80 +436,72 @@ service Config {
         };
     }
 
-    rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {
+    rpc ListTmplBoundCounts(ListTmplBoundCountsReq) returns (ListTmplBoundCountsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts"
             body : "*"
         };
     }
-    rpc ListTemplateRevisionBoundCounts(ListTemplateRevisionBoundCountsReq) returns (ListTemplateRevisionBoundCountsResp) {
+    rpc ListTmplRevisionBoundCounts(ListTmplRevisionBoundCountsReq) returns (ListTmplRevisionBoundCountsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts"
             body : "*"
         };
     }
-    rpc ListTemplateSetBoundCounts(ListTemplateSetBoundCountsReq) returns (ListTemplateSetBoundCountsResp) {
+    rpc ListTmplSetBoundCounts(ListTmplSetBoundCountsReq) returns (ListTmplSetBoundCountsResp) {
         option (google.api.http) = {
             post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts"
             body : "*"
         };
     }
-    rpc ListTemplateBoundUnnamedAppDetails(ListTemplateBoundUnnamedAppDetailsReq) returns
-        (ListTemplateBoundUnnamedAppDetailsResp) {
+    rpc ListTmplBoundUnnamedApps(ListTmplBoundUnnamedAppsReq) returns (ListTmplBoundUnnamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details"
         };
     }
-    rpc ListTemplateBoundNamedAppDetails(ListTemplateBoundNamedAppDetailsReq) returns
-        (ListTemplateBoundNamedAppDetailsResp) {
+    rpc ListTmplBoundNamedApps(ListTmplBoundNamedAppsReq) returns (ListTmplBoundNamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details"
         };
     }
-    rpc ListTemplateBoundTemplateSetDetails(ListTemplateBoundTemplateSetDetailsReq) returns
-        (ListTemplateBoundTemplateSetDetailsResp) {
+    rpc ListTmplBoundTmplSets(ListTmplBoundTmplSetsReq) returns (ListTmplBoundTmplSetsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details"
         };
     }
-    rpc ListMultiTemplateBoundTemplateSetDetails(ListMultiTemplateBoundTemplateSetDetailsReq) returns
-        (ListMultiTemplateBoundTemplateSetDetailsResp) {
+    rpc ListMultiTmplBoundTmplSets(ListMultiTmplBoundTmplSetsReq) returns (ListMultiTmplBoundTmplSetsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_template_set_details"
         };
     }
-    rpc ListTemplateRevisionBoundUnnamedAppDetails(ListTemplateRevisionBoundUnnamedAppDetailsReq) returns
-        (ListTemplateRevisionBoundUnnamedAppDetailsResp) {
+    rpc ListTmplRevisionBoundUnnamedApps(ListTmplRevisionBoundUnnamedAppsReq) returns
+        (ListTmplRevisionBoundUnnamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details"
         };
     }
-    rpc ListTemplateRevisionBoundNamedAppDetails(ListTemplateRevisionBoundNamedAppDetailsReq) returns
-        (ListTemplateRevisionBoundNamedAppDetailsResp) {
+    rpc ListTmplRevisionBoundNamedApps(ListTmplRevisionBoundNamedAppsReq) returns (ListTmplRevisionBoundNamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details"
         };
     }
-    rpc ListTemplateSetBoundUnnamedAppDetails(ListTemplateSetBoundUnnamedAppDetailsReq) returns
-        (ListTemplateSetBoundUnnamedAppDetailsResp) {
+    rpc ListTmplSetBoundUnnamedApps(ListTmplSetBoundUnnamedAppsReq) returns (ListTmplSetBoundUnnamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details"
         };
     }
-    rpc ListMultiTemplateSetBoundUnnamedAppDetails(ListMultiTemplateSetBoundUnnamedAppDetailsReq) returns
-        (ListMultiTemplateSetBoundUnnamedAppDetailsResp) {
+    rpc ListMultiTmplSetBoundUnnamedApps(ListMultiTmplSetBoundUnnamedAppsReq) returns
+        (ListMultiTmplSetBoundUnnamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_unnamed_app_details"
         };
     }
-    rpc ListTemplateSetBoundNamedAppDetails(ListTemplateSetBoundNamedAppDetailsReq) returns
-        (ListTemplateSetBoundNamedAppDetailsResp) {
+    rpc ListTmplSetBoundNamedApps(ListTmplSetBoundNamedAppsReq) returns (ListTmplSetBoundNamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details"
         };
     }
-    rpc ListLatestTemplateBoundUnnamedAppDetails(ListLatestTemplateBoundUnnamedAppDetailsReq) returns
-        (ListLatestTemplateBoundUnnamedAppDetailsResp) {
+    rpc ListLatestTmplBoundUnnamedApps(ListLatestTmplBoundUnnamedAppsReq) returns (ListLatestTmplBoundUnnamedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/latest/bound_unnamed_app_details"
         };
@@ -535,36 +530,33 @@ service Config {
         };
     }
 
-    rpc ExtractAppTemplateVariables(ExtractAppTemplateVariablesReq) returns (ExtractAppTemplateVariablesResp) {
+    rpc ExtractAppTmplVariables(ExtractAppTmplVariablesReq) returns (ExtractAppTmplVariablesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/extract_template_variables"
         };
     }
-    rpc GetAppTemplateVariableReferences(GetAppTemplateVariableReferencesReq) returns
-        (GetAppTemplateVariableReferencesResp) {
+    rpc GetAppTmplVariableRefs(GetAppTmplVariableRefsReq) returns (GetAppTmplVariableRefsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables_references"
         };
     }
-    rpc GetReleasedAppTemplateVariableReferences(GetReleasedAppTemplateVariableReferencesReq) returns
-        (GetReleasedAppTemplateVariableReferencesResp) {
+    rpc GetReleasedAppTmplVariableRefs(GetReleasedAppTmplVariableRefsReq) returns (GetReleasedAppTmplVariableRefsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables_references"
         };
     }
-    rpc UpdateAppTemplateVariables(UpdateAppTemplateVariablesReq) returns (UpdateAppTemplateVariablesResp) {
+    rpc UpdateAppTmplVariables(UpdateAppTmplVariablesReq) returns (UpdateAppTmplVariablesResp) {
         option (google.api.http) = {
             put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"
             body : "*"
         };
     }
-    rpc ListAppTemplateVariables(ListAppTemplateVariablesReq) returns (ListAppTemplateVariablesResp) {
+    rpc ListAppTmplVariables(ListAppTmplVariablesReq) returns (ListAppTmplVariablesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_variables"
         };
     }
-    rpc ListReleasedAppTemplateVariables(ListReleasedAppTemplateVariablesReq) returns
-        (ListReleasedAppTemplateVariablesResp) {
+    rpc ListReleasedAppTmplVariables(ListReleasedAppTmplVariablesReq) returns (ListReleasedAppTmplVariablesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_variables"
         };
@@ -854,9 +846,8 @@ message DeleteConfigItemResp {}
 
 message GetConfigItemReq {
     uint32 biz_id         = 1;
-    uint32 config_item_id = 2;
-    uint32 app_id         = 3;
-    uint32 release_id     = 4;
+    uint32 app_id         = 2;
+    uint32 config_item_id = 3;
 }
 
 message GetConfigItemResp {
@@ -864,13 +855,26 @@ message GetConfigItemResp {
     pbcontent.ContentSpec content     = 2;
 }
 
+message GetReleasedConfigItemReq {
+    uint32 biz_id         = 1;
+    uint32 app_id         = 2;
+    uint32 release_id     = 3;
+    uint32 config_item_id = 4;
+}
+
+message GetReleasedConfigItemResp {
+    pbrci.ReleasedConfigItem config_item = 1;
+}
+
 message ListConfigItemsReq {
-    uint32 biz_id     = 1;
-    uint32 app_id     = 2;
-    uint32 start      = 3;
-    uint32 limit      = 4;
-    bool   all        = 5;
-    string searchKey  = 6;
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    string search_fields = 3;
+    string search_value  = 4;
+    uint32 start         = 5;
+    uint32 limit         = 6;
+    bool   all           = 7;
+    bool   with_status   = 8;
 }
 
 message ListConfigItemsResp {
@@ -967,13 +971,14 @@ message DeleteHookReq {
 message DeleteHookResp {}
 
 message ListHooksReq {
-    uint32 biz_id  = 1;
-    string name    = 2;
-    string tag     = 3;
-    bool   all     = 4;
-    bool   not_tag = 5;
-    uint32 start   = 6;
-    uint32 limit   = 7;
+    uint32 biz_id    = 1;
+    string name      = 2;
+    string tag       = 3;
+    bool   all       = 4;
+    bool   not_tag   = 5;
+    uint32 start     = 6;
+    uint32 limit     = 7;
+    string searchKey = 8;
 }
 
 message ListHooksResp {
@@ -1106,10 +1111,11 @@ message ListHookRevisionReferencesResp {
 }
 
 message ListHookReferencesReq {
-    uint32 biz_id  = 1;
-    uint32 hook_id = 2;
-    uint32 start   = 3;
-    uint32 limit   = 4;
+    uint32 biz_id    = 1;
+    uint32 hook_id   = 2;
+    uint32 start     = 3;
+    uint32 limit     = 4;
+    string SearchKey = 5;
 }
 
 message ListHookReferencesResp {
@@ -1184,24 +1190,24 @@ message ListTemplateSpacesResp {
     repeated pbts.TemplateSpace details = 2;
 }
 
-message GetAllBizsOfTemplateSpacesResp {
+message GetAllBizsOfTmplSpacesResp {
     repeated uint32 biz_ids = 1;
 }
 
-message CreateDefaultTemplateSpaceReq{
+message CreateDefaultTmplSpaceReq{
     uint32 biz_id = 1;
 }
 
-message CreateDefaultTemplateSpaceResp{
+message CreateDefaultTmplSpaceResp{
     uint32 id = 1;
 }
 
-message ListTemplateSpacesByIDsReq {
+message ListTmplSpacesByIDsReq {
     uint32          biz_id = 1;
     repeated uint32 ids    = 2;
 }
 
-message ListTemplateSpacesByIDsResp {
+message ListTmplSpacesByIDsResp {
     repeated pbts.TemplateSpace details = 1;
 }
 
@@ -1269,24 +1275,24 @@ message ListTemplatesResp {
     repeated pbtemplate.Template details = 2;
 }
 
-message AddTemplatesToTemplateSetsReq {
+message AddTmplsToTmplSetsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     repeated uint32 template_ids      = 3;
     repeated uint32 template_set_ids  = 4;
 }
 
-message AddTemplatesToTemplateSetsResp {}
+message AddTmplsToTmplSetsResp {}
 
 
-message DeleteTemplatesFromTemplateSetsReq {
+message DeleteTmplsFromTmplSetsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     repeated uint32 template_ids      = 3;
     repeated uint32 template_set_ids  = 4;
 }
 
-message DeleteTemplatesFromTemplateSetsResp {}
+message DeleteTmplsFromTmplSetsResp {}
 
 message ListTemplatesByIDsReq {
     uint32          biz_id = 1;
@@ -1312,7 +1318,7 @@ message ListTemplatesNotBoundResp {
     repeated pbtemplate.Template details = 2;
 }
 
-message ListTemplatesOfTemplateSetReq {
+message ListTmplsOfTmplSetReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_set_id   = 3;
@@ -1323,7 +1329,7 @@ message ListTemplatesOfTemplateSetReq {
     bool   all               = 8;
 }
 
-message ListTemplatesOfTemplateSetResp {
+message ListTmplsOfTmplSetResp {
     uint32                       count   = 1;
     repeated pbtemplate.Template details = 2;
 }
@@ -1383,12 +1389,12 @@ message ListTemplateRevisionsByIDsResp {
     repeated pbtr.TemplateRevision details = 1;
 }
 
-message ListTemplateRevisionNamesByTemplateIDsReq {
+message ListTmplRevisionNamesByTmplIDsReq {
     uint32          biz_id       = 1;
     repeated uint32 template_ids = 2;
 }
 
-message ListTemplateRevisionNamesByTemplateIDsResp {
+message ListTmplRevisionNamesByTmplIDsResp {
     repeated pbtr.TemplateRevisionNamesDetail details = 1;
 }
 
@@ -1463,12 +1469,12 @@ message ListTemplateSetsByIDsResp {
     repeated pbtset.TemplateSet details = 1;
 }
 
-message ListTemplateSetsOfBizReq {
+message ListTmplSetsOfBizReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
 }
 
-message ListTemplateSetsOfBizResp {
+message ListTmplSetsOfBizResp {
     repeated pbtset.TemplateSetOfBizDetail details = 1;
 }
 
@@ -1509,7 +1515,7 @@ message ListAppTemplateBindingsResp {
     repeated pbatb.AppTemplateBinding details = 2;
 }
 
-message ListAppBoundTemplateRevisionsReq {
+message ListAppBoundTmplRevisionsReq {
     uint32 biz_id        = 1;
     uint32 app_id        = 2;
     string search_fields = 3;
@@ -1517,11 +1523,11 @@ message ListAppBoundTemplateRevisionsReq {
     bool   with_status   = 5;
 }
 
-message ListAppBoundTemplateRevisionsResp {
+message ListAppBoundTmplRevisionsResp {
     repeated pbatb.AppBoundTmplRevisionGroupBySet details = 1;
 }
 
-message ListReleasedAppBoundTemplateRevisionsReq {
+message ListReleasedAppBoundTmplRevisionsReq {
     uint32 biz_id        = 1;
     uint32 app_id        = 2;
     uint32 release_id    = 3;
@@ -1529,28 +1535,28 @@ message ListReleasedAppBoundTemplateRevisionsReq {
     string search_value  = 5;
 }
 
-message ListReleasedAppBoundTemplateRevisionsResp {
+message ListReleasedAppBoundTmplRevisionsResp {
     repeated pbatb.ReleasedAppBoundTmplRevisionGroupBySet details = 1;
 }
 
-message UpdateAppBoundTemplateRevisionsReq {
+message UpdateAppBoundTmplRevisionsReq {
     uint32                         biz_id     = 1;
     uint32                         app_id     = 2;
     uint32                         binding_id = 3;
     repeated pbatb.TemplateBinding bindings   = 4;
 }
 
-message UpdateAppBoundTemplateRevisionsResp {
+message UpdateAppBoundTmplRevisionsResp {
 }
 
-message DeleteAppBoundTemplateSetsReq {
+message DeleteAppBoundTmplSetsReq {
     uint32 biz_id           = 1;
     uint32 app_id           = 2;
     uint32 binding_id       = 3;
     string template_set_ids = 4;
 }
 
-message DeleteAppBoundTemplateSetsResp {}
+message DeleteAppBoundTmplSetsResp {}
 
 message CheckAppTemplateBindingReq {
     uint32                         biz_id   = 1;
@@ -1562,66 +1568,70 @@ message CheckAppTemplateBindingResp {
     repeated pbatb.Conflict details = 1;
 }
 
-message ListTemplateBoundCountsReq {
+message ListTmplBoundCountsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     repeated uint32 template_ids      = 3;
 }
 
-message ListTemplateBoundCountsResp {
+message ListTmplBoundCountsResp {
     repeated pbtbr.TemplateBoundCounts details = 1;
 }
 
-message ListTemplateRevisionBoundCountsReq {
+message ListTmplRevisionBoundCountsReq {
     uint32          biz_id                = 1;
     uint32          template_space_id     = 2;
     uint32          template_id           = 3;
     repeated uint32 template_revision_ids = 4;
 }
 
-message ListTemplateRevisionBoundCountsResp {
+message ListTmplRevisionBoundCountsResp {
     repeated pbtbr.TemplateRevisionBoundCounts details = 1;
 }
 
-message ListTemplateSetBoundCountsReq {
+message ListTmplSetBoundCountsReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
     repeated uint32 template_set_ids  = 3;
 }
 
-message ListTemplateSetBoundCountsResp {
+message ListTmplSetBoundCountsResp {
     repeated pbtbr.TemplateSetBoundCounts details = 1;
 }
 
-message ListTemplateBoundUnnamedAppDetailsReq {
+message ListTmplBoundUnnamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
-    bool   all               = 6;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
 }
 
-message ListTemplateBoundUnnamedAppDetailsResp {
+message ListTmplBoundUnnamedAppsResp {
     uint32                                       count   = 1;
     repeated pbtbr.TemplateBoundUnnamedAppDetail details = 2;
 }
 
-message ListTemplateBoundNamedAppDetailsReq {
+message ListTmplBoundNamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
-    bool   all               = 6;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
 }
 
-message ListTemplateBoundNamedAppDetailsResp {
+message ListTmplBoundNamedAppsResp {
     uint32                                     count   = 1;
     repeated pbtbr.TemplateBoundNamedAppDetail details = 2;
 }
 
-message ListTemplateBoundTemplateSetDetailsReq {
+message ListTmplBoundTmplSetsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
@@ -1630,12 +1640,12 @@ message ListTemplateBoundTemplateSetDetailsReq {
     bool   all               = 6;
 }
 
-message ListTemplateBoundTemplateSetDetailsResp {
+message ListTmplBoundTmplSetsResp {
     uint32                                        count   = 1;
     repeated pbtbr.TemplateBoundTemplateSetDetail details = 2;
 }
 
-message ListMultiTemplateBoundTemplateSetDetailsReq {
+message ListMultiTmplBoundTmplSetsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     string template_ids      = 3;
@@ -1644,42 +1654,46 @@ message ListMultiTemplateBoundTemplateSetDetailsReq {
     bool   all               = 6;
 }
 
-message ListMultiTemplateBoundTemplateSetDetailsResp {
+message ListMultiTmplBoundTmplSetsResp {
     uint32                                             count   = 1;
     repeated pbtbr.MultiTemplateBoundTemplateSetDetail details = 2;
 }
 
-message ListTemplateRevisionBoundUnnamedAppDetailsReq {
+message ListTmplRevisionBoundUnnamedAppsReq {
     uint32 biz_id               = 1;
     uint32 template_space_id    = 2;
     uint32 template_id          = 3;
     uint32 template_revision_id = 4;
-    uint32 start                = 5;
-    uint32 limit                = 6;
-    bool   all                  = 7;
+    string search_fields        = 5;
+    string search_value         = 6;
+    uint32 start                = 7;
+    uint32 limit                = 8;
+    bool   all                  = 9;
 }
 
-message ListTemplateRevisionBoundUnnamedAppDetailsResp {
+message ListTmplRevisionBoundUnnamedAppsResp {
     uint32                                               count   = 1;
     repeated pbtbr.TemplateRevisionBoundUnnamedAppDetail details = 2;
 }
 
-message ListTemplateRevisionBoundNamedAppDetailsReq {
+message ListTmplRevisionBoundNamedAppsReq {
     uint32 biz_id               = 1;
     uint32 template_space_id    = 2;
     uint32 template_id          = 3;
     uint32 template_revision_id = 4;
-    uint32 start                = 5;
-    uint32 limit                = 6;
-    bool   all                  = 7;
+    string search_fields        = 5;
+    string search_value         = 6;
+    uint32 start                = 7;
+    uint32 limit                = 8;
+    bool   all                  = 9;
 }
 
-message ListTemplateRevisionBoundNamedAppDetailsResp {
+message ListTmplRevisionBoundNamedAppsResp {
     uint32                                             count   = 1;
     repeated pbtbr.TemplateRevisionBoundNamedAppDetail details = 2;
 }
 
-message ListTemplateSetBoundUnnamedAppDetailsReq {
+message ListTmplSetBoundUnnamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_set_id   = 3;
@@ -1688,12 +1702,12 @@ message ListTemplateSetBoundUnnamedAppDetailsReq {
     bool   all               = 6;
 }
 
-message ListTemplateSetBoundUnnamedAppDetailsResp {
+message ListTmplSetBoundUnnamedAppsResp {
     uint32                                          count   = 1;
     repeated pbtbr.TemplateSetBoundUnnamedAppDetail details = 2;
 }
 
-message ListMultiTemplateSetBoundUnnamedAppDetailsReq {
+message ListMultiTmplSetBoundUnnamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     string template_set_ids  = 3;
@@ -1702,13 +1716,13 @@ message ListMultiTemplateSetBoundUnnamedAppDetailsReq {
     bool   all               = 6;
 }
 
-message ListMultiTemplateSetBoundUnnamedAppDetailsResp {
+message ListMultiTmplSetBoundUnnamedAppsResp {
     uint32                                               count   = 1;
     repeated pbtbr.MultiTemplateSetBoundUnnamedAppDetail details = 2;
 }
 
 
-message ListTemplateSetBoundNamedAppDetailsReq {
+message ListTmplSetBoundNamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_set_id   = 3;
@@ -1717,12 +1731,12 @@ message ListTemplateSetBoundNamedAppDetailsReq {
     bool   all               = 6;
 }
 
-message ListTemplateSetBoundNamedAppDetailsResp {
+message ListTmplSetBoundNamedAppsResp {
     uint32                                        count   = 1;
     repeated pbtbr.TemplateSetBoundNamedAppDetail details = 2;
 }
 
-message ListLatestTemplateBoundUnnamedAppDetailsReq {
+message ListLatestTmplBoundUnnamedAppsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
@@ -1731,7 +1745,7 @@ message ListLatestTemplateBoundUnnamedAppDetailsReq {
     bool   all               = 6;
 }
 
-message ListLatestTemplateBoundUnnamedAppDetailsResp {
+message ListLatestTmplBoundUnnamedAppsResp {
     uint32                                             count   = 1;
     repeated pbtbr.LatestTemplateBoundUnnamedAppDetail details = 2;
 }
@@ -1778,58 +1792,58 @@ message ListTemplateVariablesResp {
     repeated pbtv.TemplateVariable details = 2;
 }
 
-message ExtractAppTemplateVariablesReq {
+message ExtractAppTmplVariablesReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
 }
 
-message ExtractAppTemplateVariablesResp {
+message ExtractAppTmplVariablesResp {
     repeated string details = 1;
 }
 
-message GetAppTemplateVariableReferencesReq {
+message GetAppTmplVariableRefsReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
 }
 
-message GetAppTemplateVariableReferencesResp {
+message GetAppTmplVariableRefsResp {
     repeated pbatv.AppTemplateVariableReference details = 1;
 }
 
-message GetReleasedAppTemplateVariableReferencesReq {
+message GetReleasedAppTmplVariableRefsReq {
     uint32 biz_id     = 1;
     uint32 app_id     = 2;
     uint32 release_id = 3;
 }
 
-message GetReleasedAppTemplateVariableReferencesResp {
+message GetReleasedAppTmplVariableRefsResp {
     repeated pbatv.AppTemplateVariableReference details = 1;
 }
 
-message UpdateAppTemplateVariablesReq {
+message UpdateAppTmplVariablesReq {
     uint32                             biz_id    = 1;
     uint32                             app_id    = 2;
     repeated pbtv.TemplateVariableSpec variables = 3;
 }
 
-message UpdateAppTemplateVariablesResp {}
+message UpdateAppTmplVariablesResp {}
 
-message ListAppTemplateVariablesReq {
+message ListAppTmplVariablesReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
 }
 
-message ListAppTemplateVariablesResp {
+message ListAppTmplVariablesResp {
     repeated pbtv.TemplateVariableSpec details = 1;
 }
 
-message ListReleasedAppTemplateVariablesReq {
+message ListReleasedAppTmplVariablesReq {
     uint32 biz_id     = 1;
     uint32 app_id     = 2;
     uint32 release_id = 3;
 }
 
-message ListReleasedAppTemplateVariablesResp {
+message ListReleasedAppTmplVariablesResp {
     repeated pbtv.TemplateVariableSpec details = 1;
 }
 
@@ -1941,12 +1955,13 @@ message PublishReq {
 }
 
 message GenerateReleaseAndPublishReq {
-    uint32          biz_id       = 1;
-    uint32          app_id       = 2;
-    string          release_name = 3;
-    string          release_memo = 4;
-    bool            all          = 5;
-    repeated string groups       = 6;
+    uint32                             biz_id       = 1;
+    uint32                             app_id       = 2;
+    string                             release_name = 3;
+    string                             release_memo = 4;
+    bool                               all          = 5;
+    repeated string                    groups       = 6;
+    repeated pbtv.TemplateVariableSpec variables    = 7;
 }
 
 message GenerateReleaseAndPublishResp {

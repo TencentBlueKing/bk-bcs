@@ -4,9 +4,11 @@
   import { InfoBox, Message } from "bkui-vue/lib";
   import { DownShape, Close } from 'bkui-vue/lib/icon';
   import { useConfigStore } from '../../../../../../../../store/config'
+  import { useServiceStore } from '../../../../../../../../store/service'
   import { ICommonQuery } from '../../../../../../../../../types/index';
-  import { IConfigItem, IConfigListQueryParams, IBoundTemplateGroup, IBoundTemplateDetail, IConfigDiffSelected } from '../../../../../../../../../types/config'
-  import { getConfigList, getBoundTemplates, getBoundTemplatesByAppVersion, deleteServiceConfigItem, deleteBoundPkg } from '../../../../../../../../api/config'
+  import { datetimeFormat } from '../../../../../../../../utils/index'
+  import { IConfigItem, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config'
+  import { getConfigList, getReleasedConfigList, getBoundTemplates, getBoundTemplatesByAppVersion, deleteServiceConfigItem, deleteBoundPkg } from '../../../../../../../../api/config'
   import { getAppPkgBindingRelations } from '../../../../../../../../api/template'
   import StatusTag from './status-tag'
   import EditConfig from '../edit-config.vue'
@@ -34,7 +36,10 @@
   }
 
   const configStore = useConfigStore()
+  const serviceStore = useServiceStore()
   const { versionData } = storeToRefs(configStore)
+  const { checkPermBeforeOperate } = serviceStore
+  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
 
   const props = defineProps<{
     bkBizId: string;
@@ -115,17 +120,21 @@
   const getCommonConfigList = async() => {
     commonConfigListLoading.value = true
     try {
-      const params: IConfigListQueryParams = {
+      const params: ICommonQuery = {
         start: 0,
         all: true
       }
       if (props.searchStr) {
-        params.searchKey = props.searchStr
+        params.search_fields = 'revision_name,revision_memo,name,path,creator'
+        params.search_value = props.searchStr
       }
-      if (!isUnNamedVersion.value) {
-        params.release_id = versionData.value.id
+
+      let res
+      if (isUnNamedVersion.value) {
+        res = await getConfigList(props.bkBizId, props.appId, params)
+      } else {
+        res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params)
       }
-      const res = await getConfigList(props.bkBizId, props.appId, params)
       configList.value = res.details
       configsCount.value = res.count
     } catch (e) {
@@ -155,7 +164,9 @@
         res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id)
       }
       templateGroupList.value = res.details
-      templatesCount.value = res.count
+      templatesCount.value = res.details.reduce((acc: number, crt: IBoundTemplateGroup) => {
+        return acc + crt.template_revisions.length
+      }, 0)
     } catch (e) {
       console.error(e)
     } finally {
@@ -177,7 +188,7 @@
         const { id, spec, revision, file_state } = item
         const { name, path } = spec
         const { creator, reviser, update_at } = revision
-        return { id, name, versionId: 0, versionName: '--', path, creator, reviser, update_at, file_state }
+        return { id, name, versionId: 0, versionName: '--', path, creator, reviser, update_at: datetimeFormat(update_at), file_state }
       })
   }
 
@@ -194,9 +205,9 @@
       template_revisions.forEach(tpl => {
         const {
           template_id: id, name, template_revision_id: versionId,
-          template_revision_name: versionName, path, creator, file_state
+          template_revision_name: versionName, path, creator, create_at, file_state
         } = tpl
-        group.configs.push({ id, name, versionId, versionName, path, creator, reviser: '--', update_at: '--', file_state })
+        group.configs.push({ id, name, versionId, versionName, path, creator, reviser: creator, update_at: datetimeFormat(create_at), file_state })
       })
       return group
     })
@@ -204,6 +215,9 @@
   }
 
   const handleEditOpen = (config: IConfigTableItem) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     activeConfig.value = config.id
     editPanelShow.value = true
   }
@@ -223,6 +237,9 @@
   }
 
   const handleOpenReplaceVersionDialog = (pkgId: number, config: IConfigTableItem) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     const { id: templateId, versionId, versionName } = config
     replaceDialogData.value = {
       open: true,
@@ -232,9 +249,11 @@
 
   // 删除模板套餐
   const handleDeletePkg = async(pkgId: number, name: string) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     InfoBox({
       title: `确认是否删除模板套餐【${name}】?`,
-      infoType: "danger",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
@@ -261,9 +280,11 @@
 
   // 删除配置项
   const handleDel = (config: IConfigTableItem) => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     InfoBox({
       title: `确认是否删除配置项【${config.name}】?`,
-      infoType: "danger",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
@@ -280,7 +301,7 @@
 
 </script>
 <template>
-  <bk-loading :loading="loading" style="min-height: 200px">
+  <bk-loading :loading="loading" style="height: 100%">
     <table class="config-groups-table">
       <thead>
         <tr class="config-groups-table-tr">
@@ -303,7 +324,11 @@
                   <DownShape :class="['fold-icon', { fold: !group.expand }]" />
                   {{ group.name }}
                 </div>
-                <div v-if="isUnNamedVersion && group.id !== 0" class="delete-btn" @click="handleDeletePkg(group.id, group.name)">
+                <div
+                  v-if="isUnNamedVersion && group.id !== 0"
+                  v-cursor="{ active: !hasEditServicePerm }"
+                  :class="['delete-btn', {'bk-text-with-no-perm': !hasEditServicePerm}]"
+                  @click="handleDeletePkg(group.id, group.name)">
                   <Close class="close-icon" />
                   删除套餐
                 </div>
@@ -321,9 +346,11 @@
                           <template v-if="group.id === 0">
                             <bk-button
                               v-if="isUnNamedVersion"
+                              v-cursor="{ active: !hasEditServicePerm }"
                               text
                               theme="primary"
-                              :disabled="config.file_state === 'DELETE'"
+                              :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                              :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
                               @click="handleEditOpen(config)">
                               {{ config.name }}
                             </bk-button>
@@ -356,8 +383,22 @@
                             <!-- 非套餐配置项 -->
                             <template v-if="group.id === 0">
                               <template v-if="isUnNamedVersion">
-                                <bk-button text theme="primary" @click="handleEditOpen(config)">编辑</bk-button>
-                                <bk-button text theme="primary" @click="handleDel(config)">删除</bk-button>
+                                <bk-button
+                                  v-cursor="{ active: !hasEditServicePerm }"
+                                  text
+                                  theme="primary"
+                                  :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                                  @click="handleEditOpen(config)">
+                                  编辑
+                                </bk-button>
+                                <bk-button
+                                  v-cursor="{ active: !hasEditServicePerm }"
+                                  text
+                                  theme="primary"
+                                  :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                                  @click="handleDel(config)">
+                                  删除
+                                </bk-button>
                               </template>
                               <template v-else>
                                 <bk-button text theme="primary" @click="handleViewConfig(config.id, 'config')">查看</bk-button>
@@ -366,7 +407,15 @@
                             </template>
                             <!-- 套餐模板 -->
                             <template v-else>
-                              <bk-button v-if="isUnNamedVersion" text theme="primary" @click="handleOpenReplaceVersionDialog(group.id, config)">替换版本</bk-button>
+                              <bk-button
+                                v-if="isUnNamedVersion"
+                                v-cursor="{ active: !hasEditServicePerm }"
+                                text
+                                theme="primary"
+                                :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                                @click="handleOpenReplaceVersionDialog(group.id, config)">
+                                替换版本
+                              </bk-button>
                               <template v-else>
                                 <bk-button text theme="primary" @click="handleViewConfig(config.versionId, 'template')">查看</bk-button>
                                 <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleConfigDiff(group.id, config)">对比</bk-button>

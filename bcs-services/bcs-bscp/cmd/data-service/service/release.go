@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -18,41 +18,41 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/tools"
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 	"gorm.io/gorm"
 
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbrelease "bscp.io/pkg/protocol/core/release"
+	pbtv "bscp.io/pkg/protocol/core/template-variable"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
 // CreateRelease create release.
 func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq) (*pbds.CreateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	// the url path doesn't include appID, set the appID which used by create released rendered template config items
-	grpcKit.AppID = req.Attachment.AppId
 	// Note: need to change batch operator to query config item and its commit.
-	// step1: query app's all config items.
-	cfgItems, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, req.Attachment.AppId, req.Attachment.BizId)
+	// get app's all config items.
+	cis, err := s.getAppConfigItems(grpcKit)
 	if err != nil {
-		logs.Errorf("query app config item list failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("get app's all config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
 	// get app template revisions which are template config items
-	tmplRevisions, err := s.getAppTmplRevisions(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
+	tmplRevisions, err := s.getAppTmplRevisions(grpcKit)
 	if err != nil {
 		logs.Errorf("get app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
 	// if no config item, return directly.
-	if len(cfgItems) == 0 && len(tmplRevisions) == 0 {
+	if len(cis) == 0 && len(tmplRevisions) == 0 {
 		return nil, errors.New("app config items is empty")
 	}
 
@@ -106,21 +106,14 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		return nil, err
 	}
 
-	// 3. do config item action for create release.
-	if err = s.doConfigItemActionForCreateRelease(grpcKit, req, tx, release.ID, cfgItems); err != nil {
-		tx.Rollback()
-		logs.Errorf("do config item action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	// 4: do template action for create release.
-	if err = s.doTemplateActionForCreateRelease(grpcKit, req, tx, release.ID, tmplRevisions); err != nil {
+	// 3: do template and non-template config item related operations for create release.
+	if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cis); err != nil {
 		tx.Rollback()
 		logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	// 5: commit transaction.
+	// commit transaction.
 	if err = tx.Commit(); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -128,74 +121,21 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 	return &pbds.CreateResp{Id: id}, nil
 }
 
-// doConfigItemActionForCreateRelease do config item action for create release
-func (s *Service) doConfigItemActionForCreateRelease(kt *kit.Kit, req *pbds.CreateReleaseReq, tx *gen.QueryTx,
-	releaseID uint32, cfgItems []*table.ConfigItem) error {
-	releasedCIs := make([]*table.ReleasedConfigItem, 0)
-	if len(cfgItems) == 0 {
-		return nil
-	}
-
-	// query config item newest commit
-	for _, item := range cfgItems {
-		commit, e := s.dao.Commit().GetLatestCommit(kt, req.Attachment.BizId, req.Attachment.AppId, item.ID)
-		if e != nil {
-			logs.Errorf("query config item latest commit failed, err: %v, rid: %s", e, kt.Rid)
-			return e
-		}
-		releasedCIs = append(releasedCIs, &table.ReleasedConfigItem{
-			CommitID: commit.ID,
-			CommitSpec: &table.ReleasedCommitSpec{
-				ContentID: commit.Spec.ContentID,
-				Content: &table.ReleasedContentSpec{
-					// Note: use the rendered data when rendering config
-					Signature:       commit.Spec.Content.Signature,
-					ByteSize:        commit.Spec.Content.ByteSize,
-					OriginSignature: commit.Spec.Content.Signature,
-					OriginByteSize:  commit.Spec.Content.ByteSize,
-				},
-				Memo: commit.Spec.Memo,
-			},
-			ConfigItemID:   item.ID,
-			ConfigItemSpec: item.Spec,
-			Attachment:     item.Attachment,
-			Revision: &table.CreatedRevision{
-				Creator: kt.User,
-			},
-		})
-	}
-
-	// create released config item
-	for _, rci := range releasedCIs {
-		rci.ReleaseID = releaseID
-	}
-	if err := s.dao.ReleasedCI().BulkCreateWithTx(kt, tx, releasedCIs); err != nil {
-		logs.Errorf("bulk create released config item failed, err: %v, rid: %s", err, kt.Rid)
-		return err
-	}
-
-	return nil
-}
-
-// doTemplateActionForCreateRelease do template action for create release.
+// doConfigItemOperations do config item related operations for create release.
 /*
-1.下载服务的所有模版文件内容，提取服务模版变量
+1.下载服务的所有模版和非模版配置文件内容，提取服务模版变量
 2.获取入参变量和业务变量，判断是否缺少变量，缺少则报错
-3.使用变量渲染模版文件，上传渲染后的内容
-4.创建已生成版本服务的模版配置项
+3.使用变量渲染模版和非模版配置文件，上传渲染后的内容
+4.创建已生成版本服务的模版和非模版配置项
 5.创建已生成版本服务的服务模版详情
 6.创建已生成版本服务的模版变量
 7.将当前使用变量更新到未命名版本的服务模版变量
 */
-func (s *Service) doTemplateActionForCreateRelease(kt *kit.Kit, req *pbds.CreateReleaseReq, tx *gen.QueryTx,
-	releaseID uint32, tmplRevisions []*table.TemplateRevision) error {
-	if len(tmplRevisions) == 0 {
-		return nil
-	}
-
+func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.TemplateVariableSpec,
+	tx *gen.QueryTx, releaseID uint32, tmplRevisions []*table.TemplateRevision, cis []*pbci.ConfigItem) error {
 	// validate input variables and get the map
 	inputVarMap := make(map[string]*table.TemplateVariableSpec)
-	for _, v := range req.Variables {
+	for _, v := range variables {
 		if v == nil {
 			continue
 		}
@@ -206,21 +146,124 @@ func (s *Service) doTemplateActionForCreateRelease(kt *kit.Kit, req *pbds.Create
 		inputVarMap[v.Name] = v.TemplateVariableSpec()
 	}
 
-	contents, err := s.downloadTmplContent(kt, tmplRevisions)
+	// NOTE: optimize to get config items whose content really contains variable
+	tmplRevisionsNeedRender := filterSizeForTmplRevisions(tmplRevisions)
+	cisNeedRender := filterSizeForConfigItems(cis)
+
+	contents, err := s.downloadTmplContent(kt, tmplRevisionsNeedRender)
 	if err != nil {
 		logs.Errorf("download template content failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
+	ciContents, err := s.downloadCIContent(kt, cisNeedRender)
+	if err != nil {
+		logs.Errorf("download config item content failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+	contents = append(contents, ciContents...)
+
 	// merge all template content
 	allContent := bytes.Join(contents, []byte(" "))
 	// extract all template variables
 	allVars := s.tmplProc.ExtractVariables(allContent)
 
+	usedVars, renderKV, err := s.getRenderedVars(kt, allVars, inputVarMap)
+	if err != nil {
+		logs.Errorf("get rendered variables failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	// get rendered content map which is template revision id => rendered content
+	renderedContentMap := make(map[uint32][]byte, len(tmplRevisions))
+	signatureMap := make(map[uint32]string, len(tmplRevisions))
+	byteSizeMap := make(map[uint32]uint64, len(tmplRevisions))
+	revisionMap := make(map[uint32]*table.TemplateRevision, len(tmplRevisions))
+	// data which need render
+	for idx, r := range tmplRevisionsNeedRender {
+		revisionMap[r.ID] = r
+		renderedContentMap[r.ID] = s.tmplProc.Render(contents[idx], renderKV)
+		signatureMap[r.ID] = tools.ByteSHA256(renderedContentMap[r.ID])
+		byteSizeMap[r.ID] = uint64(len(renderedContentMap[r.ID]))
+	}
+	// data which doesn't need render
+	for _, r := range tmplRevisions {
+		if _, ok := revisionMap[r.ID]; ok {
+			continue
+		}
+		revisionMap[r.ID] = r
+		signatureMap[r.ID] = r.Spec.ContentSpec.Signature
+		byteSizeMap[r.ID] = r.Spec.ContentSpec.ByteSize
+	}
+
+	// get rendered content map which is config item id => rendered content
+	ciRenderedContentMap := make(map[uint32][]byte, len(cis))
+	ciSignatureMap := make(map[uint32]string, len(cis))
+	ciByteSizeMap := make(map[uint32]uint64, len(cis))
+	ciMap := make(map[uint32]*pbci.ConfigItem, len(cis))
+	// data which need render
+	for idx, ci := range cisNeedRender {
+		ciMap[ci.Id] = ci
+		ciRenderedContentMap[ci.Id] = s.tmplProc.Render(ciContents[idx], renderKV)
+		ciSignatureMap[ci.Id] = tools.ByteSHA256(ciRenderedContentMap[ci.Id])
+		ciByteSizeMap[ci.Id] = uint64(len(ciRenderedContentMap[ci.Id]))
+	}
+	// data which doesn't need render
+	for _, ci := range cis {
+		if _, ok := ciMap[ci.Id]; ok {
+			continue
+		}
+		ciMap[ci.Id] = ci
+		ciSignatureMap[ci.Id] = ci.CommitSpec.Content.Signature
+		ciByteSizeMap[ci.Id] = ci.CommitSpec.Content.ByteSize
+	}
+
+	// upload rendered template content
+	if err := s.uploadRenderedTmplContent(kt, renderedContentMap, signatureMap, revisionMap); err != nil {
+		logs.Errorf("upload rendered template failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+	// upload rendered config item content
+	if err := s.uploadRenderedCIContent(kt, ciRenderedContentMap, ciSignatureMap, ciMap); err != nil {
+		logs.Errorf("upload rendered config item failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	if err := s.createReleasedRenderedTemplateCIs(kt, tx, releaseID, tmplRevisions, byteSizeMap, signatureMap); err != nil {
+		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	if err = s.createReleasedRenderedCIs(kt, tx, releaseID, cis, ciByteSizeMap, ciSignatureMap); err != nil {
+		tx.Rollback()
+		logs.Errorf("create released config items failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	if err := s.createReleasedAppTemplates(kt, tx, releaseID, byteSizeMap, signatureMap); err != nil {
+		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	if err := s.createReleasedAppTemplateVariable(kt, tx, releaseID, usedVars); err != nil {
+		logs.Errorf("create released app template variable failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	if err := s.updateAppTemplateVariable(kt, tx, usedVars); err != nil {
+		logs.Errorf("update app template variable failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	return nil
+}
+
+func (s *Service) getRenderedVars(kt *kit.Kit, allVars []string, inputVarMap map[string]*table.TemplateVariableSpec) (
+	[]*table.TemplateVariableSpec, map[string]interface{}, error) {
 	// get biz template variables
-	bizVars, _, err := s.dao.TemplateVariable().List(kt, req.Attachment.BizId, nil, &types.BasePage{All: true})
+	bizVars, _, err := s.dao.TemplateVariable().List(kt, kt.BizID, nil, &types.BasePage{All: true})
 	if err != nil {
 		logs.Errorf("list template variables failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+		return nil, nil, err
 	}
 	bizVarMap := make(map[string]*table.TemplateVariableSpec, len(bizVars))
 	for _, v := range bizVars {
@@ -245,51 +288,15 @@ func (s *Service) doTemplateActionForCreateRelease(kt *kit.Kit, req *pbds.Create
 		missingVars = append(missingVars, name)
 	}
 	if len(missingVars) > 0 {
-		return fmt.Errorf("variable name in %v is missing for render the app's template config", missingVars)
+		return nil, nil, fmt.Errorf("variable name in %v is missing for render the app's template config", missingVars)
 	}
 
-	// get rendered content map which is template revision id => rendered content
-	renderedContentMap := make(map[uint32][]byte, len(tmplRevisions))
-	signatureMap := make(map[uint32]string, len(tmplRevisions))
-	revisionMap := make(map[uint32]*table.TemplateRevision, len(tmplRevisions))
-	for idx, r := range tmplRevisions {
-		revisionMap[r.ID] = r
-		renderedContentMap[r.ID] = s.tmplProc.Render(contents[idx], renderKV)
-		signatureMap[r.ID] = tools.ByteSHA256(renderedContentMap[r.ID])
-	}
-
-	// upload rendered template content
-	if err := s.uploadRenderedTmplContent(kt, renderedContentMap, signatureMap, revisionMap); err != nil {
-		logs.Errorf("upload rendered template failed, err: %v, rid: %s", err, kt.Rid)
-		return err
-	}
-
-	if err := s.createReleasedRenderedTemplateCIs(kt, tx, releaseID, tmplRevisions, renderedContentMap, signatureMap); err != nil {
-		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", err, kt.Rid)
-		return err
-	}
-
-	if err := s.createReleasedAppTemplates(kt, tx, releaseID, renderedContentMap, signatureMap); err != nil {
-		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", err, kt.Rid)
-		return err
-	}
-
-	if err := s.createReleasedAppTemplateVariable(kt, tx, releaseID, usedVars); err != nil {
-		logs.Errorf("create released app template variable failed, err: %v, rid: %s", err, kt.Rid)
-		return err
-	}
-
-	if err := s.updateAppTemplateVariable(kt, tx, usedVars); err != nil {
-		logs.Errorf("update app template variable failed, err: %v, rid: %s", err, kt.Rid)
-		return err
-	}
-
-	return nil
+	return usedVars, renderKV, nil
 }
 
 // createReleasedRenderedTemplateCIs create released rendered templates config items.
 func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
-	tmplRevisions []*table.TemplateRevision, renderedContentMap map[uint32][]byte, signatureMap map[uint32]string) error {
+	tmplRevisions []*table.TemplateRevision, byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
 	releasedCIs := make([]*table.ReleasedConfigItem, len(tmplRevisions))
 	for idx, r := range tmplRevisions {
 		releasedCIs[idx] = &table.ReleasedConfigItem{
@@ -298,7 +305,7 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 				ContentID: 0,
 				Content: &table.ReleasedContentSpec{
 					Signature:       signatureMap[r.ID],
-					ByteSize:        uint64(len(renderedContentMap[r.ID])),
+					ByteSize:        byteSizeMap[r.ID],
 					OriginSignature: r.Spec.ContentSpec.Signature,
 					OriginByteSize:  r.Spec.ContentSpec.ByteSize,
 				},
@@ -329,10 +336,72 @@ func (s *Service) createReleasedRenderedTemplateCIs(kt *kit.Kit, tx *gen.QueryTx
 	return nil
 }
 
+// createReleasedRenderedCIs create released rendered config items
+func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32, cis []*pbci.ConfigItem,
+	byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
+	releasedCIs := make([]*table.ReleasedConfigItem, 0)
+	if len(cis) == 0 {
+		return nil
+	}
+
+	for _, ci := range cis {
+		// query config item newest commit
+		commit, e := s.dao.Commit().GetLatestCommit(kt, kt.BizID, kt.AppID, ci.Id)
+		if e != nil {
+			logs.Errorf("query config item latest commit failed, err: %v, rid: %s", e, kt.Rid)
+			return e
+		}
+		releasedCIs = append(releasedCIs, &table.ReleasedConfigItem{
+			CommitID: commit.ID,
+			CommitSpec: &table.ReleasedCommitSpec{
+				ContentID: commit.Spec.ContentID,
+				Content: &table.ReleasedContentSpec{
+					Signature:       signatureMap[ci.Id],
+					ByteSize:        byteSizeMap[ci.Id],
+					OriginSignature: ci.CommitSpec.Content.Signature,
+					OriginByteSize:  ci.CommitSpec.Content.ByteSize,
+				},
+				Memo: commit.Spec.Memo,
+			},
+			ConfigItemID: ci.Id,
+			ConfigItemSpec: &table.ConfigItemSpec{
+				Name:     ci.Spec.Name,
+				Path:     ci.Spec.Path,
+				FileType: table.FileFormat(ci.Spec.FileType),
+				FileMode: table.FileMode(ci.Spec.FileMode),
+				Memo:     ci.Spec.Memo,
+				Permission: &table.FilePermission{
+					User:      ci.Spec.Permission.User,
+					UserGroup: ci.Spec.Permission.UserGroup,
+					Privilege: ci.Spec.Permission.Privilege,
+				},
+			},
+			Attachment: &table.ConfigItemAttachment{
+				BizID: ci.Attachment.BizId,
+				AppID: ci.Attachment.AppId,
+			},
+			Revision: &table.CreatedRevision{
+				Creator: kt.User,
+			},
+		})
+	}
+
+	// create released config item
+	for _, rci := range releasedCIs {
+		rci.ReleaseID = releaseID
+	}
+	if err := s.dao.ReleasedCI().BulkCreateWithTx(kt, tx, releasedCIs); err != nil {
+		logs.Errorf("bulk create released config item failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+
+	return nil
+}
+
 // createReleasedAppTemplates create released app templates.
 func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, releaseID uint32,
-	renderedContentMap map[uint32][]byte, signatureMap map[uint32]string) error {
-	revisionsResp, err := s.ListAppBoundTemplateRevisions(kt.Ctx, &pbds.ListAppBoundTemplateRevisionsReq{
+	byteSizeMap map[uint32]uint64, signatureMap map[uint32]string) error {
+	revisionsResp, err := s.ListAppBoundTmplRevisions(kt.Ctx, &pbds.ListAppBoundTmplRevisionsReq{
 		BizId: kt.BizID,
 		AppId: kt.AppID,
 		All:   true,
@@ -365,7 +434,7 @@ func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, relea
 				UserGroup:            r.UserGroup,
 				Privilege:            r.Privilege,
 				Signature:            signatureMap[r.TemplateRevisionId],
-				ByteSize:             uint64(len(renderedContentMap[r.TemplateRevisionId])),
+				ByteSize:             byteSizeMap[r.TemplateRevisionId],
 				OriginSignature:      r.Signature,
 				OriginByteSize:       r.ByteSize,
 			},

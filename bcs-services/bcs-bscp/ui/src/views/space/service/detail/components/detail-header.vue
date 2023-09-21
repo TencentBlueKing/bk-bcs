@@ -1,11 +1,12 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../store/config'
   import { VERSION_STATUS_MAP } from '../../../../../constants/config'
   import { IConfigVersion } from '../../../../../../types/config'
+  import { permissionCheck } from '../../../../../api/index'
   import PublishVersion from './publish-version/index.vue'
   import CreateVersion from './create-version/index.vue'
   import ModifyGroupPublish from './modify-group-publish.vue'
@@ -15,6 +16,11 @@
 
   const configStore = useConfigStore()
   const { versionData } = storeToRefs(configStore)
+  const permCheckLoading = ref(false)
+  const perms = ref({
+    create: false,
+    publish: false
+  })
 
   const props = defineProps<{
     bkBizId: string;
@@ -39,12 +45,53 @@
     activeTab.value = getDefaultTab()
   })
 
+  watch(() => props.bkBizId, () => {
+    getVersionPerms()
+  })
+
+  onMounted(() => {
+    getVersionPerms()
+  })
+
+  const getVersionPerms = async () => {
+    permCheckLoading.value = true
+    const [createRes, publishRes] = await Promise.all([
+      permissionCheck({
+        resources: [
+          {
+            biz_id: props.bkBizId,
+            basic: {
+              type: 'app',
+              action: 'generate_release',
+              resource_id: props.appId
+            }
+          }
+        ]
+      }),
+      permissionCheck({
+        resources: [
+          {
+            biz_id: props.bkBizId,
+            basic: {
+              type: 'app',
+              action: 'publish',
+              resource_id: props.appId
+            }
+          }
+        ]
+      })
+    ])
+    perms.value.create = createRes.is_allowed
+    perms.value.publish = publishRes.is_allowed
+    permCheckLoading.value = false
+  }
+
   // 创建版本成功后，刷新版本列表，若选择同时上线，则打开选择分组面板
   const handleVersionCreated = (version: IConfigVersion, isPublish: boolean) => {
     refreshVesionList()
     if (isPublish && publishVersionRef.value) {
         versionData.value = version
-        publishVersionRef.value.handleOpenSelectGroupPanel()
+        publishVersionRef.value.openSelectGroupPanel()
       }
   }
 
@@ -86,15 +133,21 @@
         <CreateVersion
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
+          :perm-check-loading="permCheckLoading"
+          :has-perm="perms.create"
           @confirm="handleVersionCreated" />
         <PublishVersion
           ref="publishVersionRef"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
+          :perm-check-loading="permCheckLoading"
+          :has-perm="perms.publish"
           @confirm="refreshVesionList" />
         <ModifyGroupPublish
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
+          :perm-check-loading="permCheckLoading"
+          :has-perm="perms.publish"
           @confirm="refreshVesionList" />
       </section>
     </template>

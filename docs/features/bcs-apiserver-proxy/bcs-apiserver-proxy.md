@@ -25,7 +25,7 @@ RS：Real Server，指真实的apiserver服务地址
 
 ### 使用步骤
 
-1. 下载`bk-bcs`代码，进行代码编译，生成 `bcs-apiserver-proxy`和`apiserver-proxy-tools`
+1. 下载`bk-bcs`代码，进行代码编译，生成 `bcs-apiserver-proxy`和`bcs-apiserver-proxy-tools`
 
   ```
 git clone https://github.com/Tencent/bk-bcs.git
@@ -33,12 +33,12 @@ make apiserver-proxy
 make apiserver-proxy-tools
   ```
 
-2. 将工具`apiserver-proxy-tools`分发至各个`node`节点的 `/root`目录下, 通过工具`apiserver-proxy-tools`生成本地负载均衡的代理规则
+2. 将工具`bcs-apiserver-proxy-tools`分发至各个`node`节点的 `/root`目录下, 通过工具`bcs-apiserver-proxy-tools`生成本地负载均衡的代理规则
 
   ```
-apiserver-proxy-tools --help 查看帮助
+bcs-apiserver-proxy-tools --help 查看帮助
 初始化vs本地负载均衡规则(如果是ipv6,需要使用"[]"将ip地址括起来)
-apiserver-proxy-tools -cmd init -vs vip:vport -rs master0:port -rs master1:port -rs master2:port -scheduler sh
+bcs-apiserver-proxy-tools -cmd init -vs vip:vport -rs master0:port -rs master1:port -rs master2:port -scheduler sh
   ```
 
 3. 将VIP添加到K8S apiserver证书中
@@ -70,7 +70,7 @@ kubectl rollout restart daemonset -n kube-system kube-proxy
 首先要修改master节点kube-public命名空间下名为cluster-info的ConfigMap，将server地址改为vip, 然后使用kubeadm join vip:port添加节点, 添加节点成功后会自动启动`daemonset`的`pod`守护代理规则
 
 ####  重启node节点
-`apiserver-proxy-tools`第一次初始化同时会创建自动启动任务，重启时从本地持久化文件中恢复负载均衡代理规则。
+`bcs-apiserver-proxy-tools`第一次初始化同时会创建自动启动任务，重启时从本地持久化文件中恢复负载均衡代理规则。
 
 #### 新增master节点/master节点IP改变/master节点down/master节点恢复
 `node`节点上`pod`自动守护规则，当新增master节点、master节点IP改变、master节点down、master节点恢复，均会自动增加或者剔除后端rs节点，实现内部master节点的高可用访问
@@ -79,7 +79,7 @@ kubectl rollout restart daemonset -n kube-system kube-proxy
 
 * VIP授权问题，生成K8S证书文件时需要将上述`vip`添加至授权IP列表
 * 集群VIP地址不能和集群其他地址段重复
-* bcs-apiserver-proxy组件的参数`lvsScheduler`和`ipvsPersistDir`需要与节点上使用apiserver-proxy-tools初始化时一致,建议默认不修改
+* bcs-apiserver-proxy组件的参数`lvsScheduler`和`ipvsPersistDir`需要与节点上使用bcs-apiserver-proxy-tools初始化时一致,建议默认不修改
 
 ## 参考
    [lvscare设计](https://github.com/sealyun/lvscare) 
