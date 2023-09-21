@@ -29,7 +29,6 @@ type resource struct {
 	ClusterID   string `json:"cluster_id" yaml:"cluster_id"`
 	ProjectID   string `json:"project_id" yaml:"project_id"`
 	ProjectCode string `json:"project_code" yaml:"project_code"`
-	RequestID   string `json:"request_id" yaml:"request_id"`
 }
 
 // resource to map
@@ -43,9 +42,6 @@ func (r resource) toMap() map[string]any {
 	if r.ProjectCode != "" {
 		result["ProjectCode"] = r.ProjectCode
 	}
-	if r.RequestID != "" {
-		result["RequestID"] = r.RequestID
-	}
 
 	return result
 }
@@ -54,7 +50,7 @@ var auditFuncMap = map[string]func(c *gin.Context) (audit.Resource, audit.Action
 	"GET./api/projects/:projectId/clusters/:clusterId/session/": func(c *gin.Context) (audit.Resource, audit.Action) {
 		res := getResourceID(c)
 		return audit.Resource{ResourceType: audit.ResourceTypeWebConsole, ProjectCode: res.ProjectCode,
-				ResourceID: res.ProjectID, ResourceData: res.toMap()},
+				ResourceID: res.ClusterID, ResourceName: res.ClusterID, ResourceData: res.toMap()},
 			audit.Action{ActionID: "web_console_start", ActivityType: audit.ActivityTypeStart}
 	},
 }
@@ -82,7 +78,6 @@ func getResourceID(ctx *gin.Context) resource {
 	return resource{
 		ClusterID:   authCtx.ClusterId,
 		ProjectID:   authCtx.ProjectId,
-		RequestID:   authCtx.RequestId,
 		ProjectCode: authCtx.ProjectCode,
 	}
 }
@@ -120,10 +115,14 @@ func addAudit(c *gin.Context, startTime, endTime time.Time, data *types.APIRespo
 	}
 
 	result := audit.ActionResult{
-		Status: audit.ActivityStatusSuccess,
+		ResultCode: data.Code,
+		ExtraData:  map[string]any{"Message": data.Message},
 	}
-	result.ResultCode = data.Code
-	result.ExtraData["Message"] = data.Message
+	if data.Code != 0 {
+		result.Status = audit.ActivityStatusFailed
+	} else {
+		result.Status = audit.ActivityStatusSuccess
+	}
 
 	consoleAudit.GetAuditClient().R().
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
