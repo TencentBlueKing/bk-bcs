@@ -27,8 +27,8 @@ import { onMounted } from 'vue';
   <div class="templates-page">
     <bk-alert class="template-tips" theme="info">
       <div class="tips-wrapper">
-        <div class="message">配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。模板变量使用方法请参考</div>
-        <bk-button text theme="primary">go template</bk-button>
+        <div class="message">配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。</div>
+        <!-- <bk-button text theme="primary">go template</bk-button> -->
       </div>
     </bk-alert>
     <div class="main-content-container">
