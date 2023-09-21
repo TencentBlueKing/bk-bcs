@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package config
@@ -30,15 +29,13 @@ type LogConf struct {
 }
 
 // Init : init default logging config
-func (c *LogConf) Init() error {
+func (c *LogConf) Init() {
 	// only for development
 	c.Level = "info"
 	c.File = ""
 	c.Stderr = true
 	c.CmdFile = ""
 	c.CmdLevel = "info"
-
-	return nil
 }
 
 // InitBlog 初始化 blog 模块, 注意只能初始化一次

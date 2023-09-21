@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package asciinema xxx
 package asciinema
 
 import (
@@ -33,7 +34,9 @@ const (
 	defaultShell = "/bin/bash"
 	defaultTerm  = "xterm"
 
+	// OutputEvent std event
 	OutputEvent EventType = "o"
+	// ResizeEvent terminal resize event
 	ResizeEvent EventType = "r"
 )
 
@@ -124,7 +127,7 @@ func (w *Writer) WriteStdout(ts float64, data []byte, event EventType) error {
 
 	// buff 做批量写入文件
 	if w.written >= w.limit {
-		w.WriteBuff.Flush()
+		w.WriteBuff.Flush() // nolint
 		return errors.New("Exceeds the file size")
 	}
 	n, err := w.WriteBuff.Write(raw)

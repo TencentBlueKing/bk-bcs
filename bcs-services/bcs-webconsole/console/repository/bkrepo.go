@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package repository xxx
 package repository
 
 import (
@@ -32,13 +32,13 @@ type bkrepoStorage struct {
 
 // UploadFile upload file to bkRepo
 func (b *bkrepoStorage) UploadFile(ctx context.Context, localFile, filePath string) error {
-	//上传文件API PUT /generic/{project}/{repoName}/{fullPath}
+	// 上传文件API PUT /generic/{project}/{repoName}/{fullPath}
 	rawURL := fmt.Sprintf("%s/generic/%s/%s/%s", config.G.Repository.Bkrepo.Endpoint,
 		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, filePath)
 
 	f, err := os.Open(localFile)
 	if err != nil {
-		return fmt.Errorf("Open local file %s failed: %v\n", localFile, err)
+		return fmt.Errorf("open local file %s failed: %v", localFile, err)
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, rawURL, f)
 	if err != nil {
@@ -54,15 +54,15 @@ func (b *bkrepoStorage) UploadFile(ctx context.Context, localFile, filePath stri
 	if resp.StatusCode != 200 {
 		body, _ := io.ReadAll(resp.Body)
 		klog.Errorf("Upload file failed, resp: %s\n", string(body))
-		return fmt.Errorf("Upload file failed, Err code: %v\n", resp.StatusCode)
+		return fmt.Errorf("upload file failed, Err code: %v", resp.StatusCode)
 	}
 	return nil
 }
 
 // ListFile list of files under a bkRepo folder
 func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]string, error) {
-	//节点详情 https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/node/node.md
-	//GET /repository/api/node/page/{projectId}/{repoName}/{fullPath}
+	// 节点详情 https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/node/node.md
+	// GET /repository/api/node/page/{projectId}/{repoName}/{fullPath}
 	rawURL := fmt.Sprintf("%s/repository/api/node/page/%s/%s/%s", config.G.Repository.Bkrepo.Endpoint,
 		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, folderName)
 
@@ -77,13 +77,13 @@ func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]stri
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return files, fmt.Errorf("Get file list failed, Err code: %v\n", resp.StatusCode)
+		return files, fmt.Errorf("get file list failed, Err code: %v", resp.StatusCode)
 	}
 	listResult := new(listFileResult)
 	if err := json.NewDecoder(resp.Body).Decode(listResult); err != nil {
-		return files, fmt.Errorf("Unmarshal resp err: %v\n", err)
+		return files, fmt.Errorf("unmarshal resp err: %v", err)
 	}
-	if len(listResult.Data.Records) <= 0 {
+	if len(listResult.Data.Records) == 0 {
 		return files, fmt.Errorf("folder %s is not exit", folderName)
 	}
 
@@ -97,8 +97,8 @@ func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]stri
 
 // ListFolders list of folders under current bkRepo folder
 func (b *bkrepoStorage) ListFolders(ctx context.Context, folderName string) ([]string, error) {
-	//节点详情 https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/node/node.md
-	//GET /repository/api/node/page/{projectId}/{repoName}/{fullPath}
+	// 节点详情 https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/node/node.md
+	// GET /repository/api/node/page/{projectId}/{repoName}/{fullPath}
 	rawURL := fmt.Sprintf("%s/repository/api/node/page/%s/%s/%s", config.G.Repository.Bkrepo.Endpoint,
 		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, folderName)
 
@@ -113,13 +113,13 @@ func (b *bkrepoStorage) ListFolders(ctx context.Context, folderName string) ([]s
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return folders, fmt.Errorf("Get file list failed, Err code: %v\n", resp.StatusCode)
+		return folders, fmt.Errorf("get file list failed, Err code: %v", resp.StatusCode)
 	}
 	listResult := new(listFileResult)
 	if err := json.NewDecoder(resp.Body).Decode(listResult); err != nil {
-		return folders, fmt.Errorf("Unmarshal resp err: %v\n", err)
+		return folders, fmt.Errorf("unmarshal resp err: %v", err)
 	}
-	if len(listResult.Data.Records) <= 0 {
+	if len(listResult.Data.Records) == 0 {
 		return folders, fmt.Errorf("folder %s is not exit", folderName)
 	}
 
@@ -133,7 +133,7 @@ func (b *bkrepoStorage) ListFolders(ctx context.Context, folderName string) ([]s
 
 // DownloadFile download file from bkRepo
 func (b *bkrepoStorage) DownloadFile(ctx context.Context, filePath string) (io.ReadCloser, error) {
-	//下载文件API PUT /generic/{project}/{repoName}/{fullPath}
+	// 下载文件API PUT /generic/{project}/{repoName}/{fullPath}
 	rawURL := fmt.Sprintf("%s/generic/%s/%s/%s?download=true", config.G.Repository.Bkrepo.Endpoint,
 		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, filePath)
 
@@ -150,7 +150,7 @@ func (b *bkrepoStorage) DownloadFile(ctx context.Context, filePath string) (io.R
 		body, _ := io.ReadAll(resp.Body)
 		klog.Errorf("Download file failed, resp: %s\n", string(body))
 		resp.Body.Close()
-		return nil, fmt.Errorf("Download file failed, Err code: %v\n", resp.StatusCode)
+		return nil, fmt.Errorf("download file failed, Err code: %v", resp.StatusCode)
 	}
 
 	return resp.Body, nil

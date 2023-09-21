@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package route
@@ -34,7 +33,7 @@ import (
 
 var (
 	// UnauthorizedError xxx
-	UnauthorizedError = errors.New("用户未登入")
+	UnauthorizedError = errors.New("用户未登入") // nolint
 )
 
 // RequestIdGenerator xxx
@@ -44,7 +43,7 @@ func RequestIdGenerator(r *http.Request) string {
 	}
 
 	uid := uuid.New().String()
-	requestId := strings.Replace(uid, "-", "", -1)
+	requestId := strings.ReplaceAll(uid, "-", "")
 	return requestId
 }
 

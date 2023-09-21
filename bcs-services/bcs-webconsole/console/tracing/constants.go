@@ -8,14 +8,18 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package tracing xxx
 package tracing
 
 const (
-	ServiceName        = "bcs-webconsole"
-	RequestIDKey       = "requestID"
-	TracerName         = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	// ServiceName 服务名
+	ServiceName = "bcs-webconsole"
+	// RequestIDKey xxx
+	RequestIDKey = "requestID"
+	// TracerName trace name
+	TracerName = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	// RequestIDHeaderKey xxx
 	RequestIDHeaderKey = "X-Request-Id"
 )
