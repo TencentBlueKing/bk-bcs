@@ -19,12 +19,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
-const (
-	// PODMETRIC ...
-	PODMETRIC = `cluster_id="%<clusterId>s", namespace="%<namespace>s", ` +
-		`pod_name=~"%<podNameList>s", %<provider>s`
-)
-
 // PodUsageQuery Pod 查询
 type PodUsageQuery struct {
 	UsageQuery  `json:",inline"`
@@ -66,7 +60,7 @@ func handlePodMetric(c *rest.Context, promql string) (interface{}, error) {
 // @Router  /namespaces/:namespace/pods/cpu_usage [POST]
 func PodCPUUsage(c *rest.Context) (interface{}, error) {
 	promql :=
-		`bcs:pod:cpu_usage{` + PODMETRIC + `}`
+		`bcs:pod:cpu_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}` // nolint
 
 	return handlePodMetric(c, promql)
 }
@@ -78,7 +72,7 @@ func PodCPUUsage(c *rest.Context) (interface{}, error) {
 // @Router  /namespaces/:namespace/pods/memory_used [POST]
 func PodMemoryUsed(c *rest.Context) (interface{}, error) {
 	promql :=
-		`bcs:pod:memory_used{` + PODMETRIC + `}`
+		`bcs:pod:memory_used{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}` // nolint
 
 	return handlePodMetric(c, promql)
 }
@@ -90,7 +84,7 @@ func PodMemoryUsed(c *rest.Context) (interface{}, error) {
 // @Router  /namespaces/:namespace/pods/network_receive [POST]
 func PodNetworkReceive(c *rest.Context) (interface{}, error) {
 	promql :=
-		`bcs:pod:network_receive{` + PODMETRIC + `}`
+		`bcs:pod:network_receive{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}` // nolint
 
 	return handlePodMetric(c, promql)
 }
@@ -102,7 +96,7 @@ func PodNetworkReceive(c *rest.Context) (interface{}, error) {
 // @Router  /namespaces/:namespace/pods/network_transmit [POST]
 func PodNetworkTransmit(c *rest.Context) (interface{}, error) {
 	promql :=
-		`bcs:pod:network_transmit{` + PODMETRIC + `}`
+		`bcs:pod:network_transmit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}` // nolint
 
 	return handlePodMetric(c, promql)
 }

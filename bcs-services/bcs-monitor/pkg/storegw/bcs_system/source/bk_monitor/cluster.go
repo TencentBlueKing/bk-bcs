@@ -42,16 +42,6 @@ const (
 	// 默认查询分片，每10个节点一组并发查询，限制并发为 20，防止对数据源造成压力
 	scale                  = 10
 	defaultQueryConcurrent = 20
-
-	// sumMax ...
-	sumMax = `sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, ` +
-		`bk_instance=~"%<instance>s", %<provider>s}[2m])))`
-	// countMax ...
-	countMax = `count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, ` +
-		`bk_instance=~"%<instance>s", %<provider>s}[2m])))`
-	// sumNode ...
-	sumNode = `%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` +
-		`mountpoint=~"%<mountpoint>s", %<provider>s`
 )
 
 // BKMonitor :
@@ -294,7 +284,9 @@ func (m *BKMonitor) GetClusterMemoryRequestUsage(ctx context.Context, projectID,
 // GetClusterDiskTotal 集群磁盘总量
 func (m *BKMonitor) GetClusterDiskTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(node_filesystem_size_bytes{` + sumNode + `})` // nolint
+	promql :=
+		`sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` + // nolint
+			`mountpoint=~"%<mountpoint>s", %<provider>s})` // nolint
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -302,8 +294,11 @@ func (m *BKMonitor) GetClusterDiskTotal(ctx context.Context, projectID, clusterI
 // GetClusterDiskUsed 集群磁盘使用
 func (m *BKMonitor) GetClusterDiskUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `sum(node_filesystem_size_bytes{` + sumNode + `}) - 
-		sum(node_filesystem_free_bytes{` + sumNode + `})` // nolint
+	promql :=
+		`sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` +
+			`mountpoint=~"%<mountpoint>s", %<provider>s}) -
+		sum(node_filesystem_free_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` +
+			`mountpoint=~"%<mountpoint>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -311,9 +306,14 @@ func (m *BKMonitor) GetClusterDiskUsed(ctx context.Context, projectID, clusterID
 // GetClusterDiskUsage 集群磁盘使用率
 func (m *BKMonitor) GetClusterDiskUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promqlA := `(sum(node_filesystem_size_bytes{` + sumNode + `}) -
-		sum(node_filesystem_free_bytes{` + sumNode + `}))` // nolint
-	promqlB := `sum(node_filesystem_size_bytes{` + sumNode + `})`
+	promqlA :=
+		`(sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` +
+			`mountpoint=~"%<mountpoint>s", %<provider>s}) -
+		sum(node_filesystem_free_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` +
+			`mountpoint=~"%<mountpoint>s", %<provider>s}))`
+	promqlB :=
+		`sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` +
+			`mountpoint=~"%<mountpoint>s", %<provider>s})`
 
 	seriesA, err := m.handleClusterMetric(ctx, projectID, clusterID, promqlA, start, end, step)
 	if err != nil {
@@ -330,8 +330,12 @@ func (m *BKMonitor) GetClusterDiskUsage(ctx context.Context, projectID, clusterI
 // GetClusterDiskioUsage 集群磁盘IO使用率
 func (m *BKMonitor) GetClusterDiskioUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promqlA := sumMax
-	promqlB := countMax
+	promqlA :=
+		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", ` +
+			`%<provider>s}[2m])))` // nolint
+	promqlB :=
+		`count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", ` +
+			`%<provider>s}[2m])))`
 
 	seriesA, err := m.handleClusterMetric(ctx, projectID, clusterID, promqlA, start, end, step)
 	if err != nil {
@@ -348,7 +352,9 @@ func (m *BKMonitor) GetClusterDiskioUsage(ctx context.Context, projectID, cluste
 // GetClusterDiskioUsed 集群磁盘IO使用量
 func (m *BKMonitor) GetClusterDiskioUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := sumMax
+	promql :=
+		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", ` +
+			`%<provider>s}[2m])))`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -356,6 +362,9 @@ func (m *BKMonitor) GetClusterDiskioUsed(ctx context.Context, projectID, cluster
 // GetClusterDiskioTotal 集群磁盘IO
 func (m *BKMonitor) GetClusterDiskioTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := countMax
+	promql :=
+		`count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", ` +
+			`%<provider>s}[2m])))`
+
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }

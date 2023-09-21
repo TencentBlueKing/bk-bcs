@@ -59,7 +59,8 @@ func (m *VCluster) GetContainerCPUUsage(ctx context.Context, projectID, clusterI
 func (m *VCluster) GetContainerMemoryUsed(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`max by(container_name) (container_memory_working_set_bytes{` + base.ContainerMatcher + `})`
+		`max by(container_name) (container_memory_working_set_bytes{cluster_id="%<clusterID>s", ` +
+			`namespace="%<namespace>s", pod_name="%<podname>s", container_name=~"%<containerName>s", %<provider>s})` // nolint
 
 	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList, promql, start, end,
 		step)
@@ -68,8 +69,9 @@ func (m *VCluster) GetContainerMemoryUsed(ctx context.Context, projectID, cluste
 // GetContainerCPULimit 容器CPU限制
 func (m *VCluster) GetContainerCPULimit(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `label_replace(max by(container_name) (container_spec_cpu_quota{` + base.ContainerMatcher +
-		`}) / 1000 > 0, "container_name", "cpu_limit", "container_name", ".*")`
+	promql := `label_replace(max by(container_name) (container_spec_cpu_quota{cluster_id="%<clusterID>s", ` +
+		`namespace="%<namespace>s", pod_name="%<podname>s", container_name=~"%<containerName>s", ` +
+		`%<provider>s}) / 1000 > 0, "container_name", "cpu_limit", "container_name", ".*")`
 
 	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList, promql, start, end,
 		step)
@@ -78,8 +80,9 @@ func (m *VCluster) GetContainerCPULimit(ctx context.Context, projectID, clusterI
 // GetContainerMemoryLimit 容器内存限制
 func (m *VCluster) GetContainerMemoryLimit(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `label_replace(max by(container_name) (container_spec_memory_limit_bytes{` + base.ContainerMatcher +
-		`}) > 0, "container_name", "memory_limit", "container_name", ".*")`
+	promql := `label_replace(max by(container_name) (container_spec_memory_limit_bytes{cluster_id="%<clusterID>s", ` +
+		`namespace="%<namespace>s", pod_name="%<podname>s", container_name=~"%<containerName>s", %<provider>s}) > 0, ` +
+		`"container_name", "memory_limit", "container_name", ".*")`
 
 	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList, promql, start, end,
 		step)
@@ -107,7 +110,8 @@ func (m *VCluster) GetContainerGPUUsage(ctx context.Context, projectID, clusterI
 func (m *VCluster) GetContainerDiskReadTotal(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum by(container_name) (container_fs_reads_bytes_total{` + base.ContainerMatcher + `})`
+		`sum by(container_name) (container_fs_reads_bytes_total{cluster_id="%<clusterID>s", ` +
+			`namespace="%<namespace>s", pod_name="%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
 
 	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList, promql, start, end,
 		step)
@@ -117,7 +121,8 @@ func (m *VCluster) GetContainerDiskReadTotal(ctx context.Context, projectID, clu
 func (m *VCluster) GetContainerDiskWriteTotal(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum by(container_name) (container_fs_writes_bytes_total{` + base.ContainerMatcher + `})`
+		`sum by(container_name) (container_fs_writes_bytes_total{cluster_id="%<clusterID>s", ` +
+			`namespace="%<namespace>s", pod_name="%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
 
 	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList, promql, start, end,
 		step)
