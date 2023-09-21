@@ -68,7 +68,7 @@
           <template #default="{ row }">
             <div v-if="row.app_id" class="app-info">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
-              <LinkToApp class="link-icon" :id="row.app_id" />
+              <LinkToApp class="link-icon" :id="row.app_id" auto-jump/>
             </div>
           </template>
         </bk-table-column>
