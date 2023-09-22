@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package podmanager
@@ -225,90 +224,6 @@ func (m *StartupManager) getExternalKubeConfig(targetClusterId, username string)
 	return kubeConfig, nil
 }
 
-// getInternalKubeConfig 集群内鉴权
-func (m *StartupManager) getInternalKubeConfig(namespace, username string) (*clientcmdv1.Config, error) {
-	// serviceAccount 名称和 namespace 保持一致
-	if err := m.ensureServiceAccountRBAC(namespace); err != nil {
-		logger.Errorf("create ServiceAccountRbac failed, err : %s", err)
-		return nil, err
-	}
-
-	token, err := m.getServiceAccountToken(namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	authInfo := &clusterAuth{
-		Token: token,
-		Cluster: clientcmdv1.Cluster{
-			Server:               "https://kubernetes.default.svc",
-			CertificateAuthority: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
-		},
-	}
-
-	kubeConfig := genKubeConfig(m.clusterId, username, authInfo)
-
-	return kubeConfig, nil
-}
-
-// ensureServiceAccountRBAC 创建serviceAccount, 绑定Role
-func (m *StartupManager) ensureServiceAccountRBAC(name string) error {
-	// ensure serviceAccount
-	serviceAccount := genServiceAccount(name)
-	if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Get(m.ctx, serviceAccount.Name,
-		metav1.GetOptions{}); err != nil {
-		if !k8sErr.IsNotFound(err) {
-			return err
-		}
-
-		if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Create(m.ctx, serviceAccount,
-			metav1.CreateOptions{}); err != nil {
-			return err
-		}
-	}
-
-	// ensure rolebind
-	clusterRoleBinding := genClusterRoleBinding(name)
-	if _, err := m.k8sClient.RbacV1().ClusterRoleBindings().Get(m.ctx, clusterRoleBinding.Name,
-		metav1.GetOptions{}); err != nil {
-		if !k8sErr.IsNotFound(err) {
-			return err
-		}
-
-		if _, err = m.k8sClient.RbacV1().ClusterRoleBindings().Create(m.ctx, clusterRoleBinding,
-			metav1.CreateOptions{}); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// getServiceAccountToken 获取web-console token
-func (m *StartupManager) getServiceAccountToken(namespace string) (string, error) {
-	secrets, err := m.k8sClient.CoreV1().Secrets(namespace).List(m.ctx, metav1.ListOptions{})
-	if err != nil {
-		return "", err
-	}
-	for _, item := range secrets.Items {
-		if !strings.HasPrefix(item.Name, namespace) {
-			continue
-		}
-
-		if item.Type != "kubernetes.io/service-account-token" {
-			continue
-		}
-
-		if _, ok := item.Data["token"]; !ok {
-			continue
-		}
-
-		return string(item.Data["token"]), nil
-	}
-
-	return "", errors.New("not found ServiceAccountToken")
-}
-
 // waitPodReady 等待pod启动成功
 func (m *StartupManager) waitPodReady(namespace, name string) error {
 	// 错误次数
@@ -371,7 +286,7 @@ func GetNamespace() string {
 // 符合k8s规则 https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#rfc-1035-label-names
 // 返回格式{hash[8]}-{slugname[20]}
 func makeSlugName(username string) string {
-	h := sha1.New()
+	h := sha1.New() // nolint
 	h.Write([]byte(username))
 	hashId := hex.EncodeToString(h.Sum(nil))[:8]
 
@@ -466,16 +381,6 @@ func IsContainerReady(container *v1.ContainerStatus) (string, bool) {
 		return fmt.Sprintf("ExitCode: %d", container.State.Terminated.Signal), false
 	}
 	return "", true
-}
-
-// NOCC:deadcode/unused(设计如此:)
-func hasPodReadyCondition(conditions []v1.PodCondition) bool {
-	for _, condition := range conditions {
-		if condition.Type == v1.PodReady && condition.Status == v1.ConditionTrue {
-			return true
-		}
-	}
-	return false
 }
 
 // GetKubectldVersion 获取服务端 Kubectld 版本

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package replay xxx
 package replay
 
 import (
@@ -20,8 +21,8 @@ import (
 )
 
 var (
-	maxWait time.Duration = 2 * time.Second
-	speed   float64       = 1
+	maxWait         = 2 * time.Second
+	speed   float64 = 1
 )
 
 // Replay 回放文件
@@ -39,7 +40,8 @@ func Replay(f string) error {
 		return err
 	}
 
-	p, err := player.NewPlayer(source, term, player.WithSpeed(speed), player.WithMaxWait(maxWait), player.WithIgnoreSizeCheck())
+	p, err := player.NewPlayer(source, term, player.WithSpeed(speed),
+		player.WithMaxWait(maxWait), player.WithIgnoreSizeCheck())
 	if err != nil {
 		return err
 	}
@@ -49,8 +51,8 @@ func Replay(f string) error {
 	}
 
 	defer func() {
-		file.Close()
-		term.Close()
+		file.Close() // nolint
+		term.Close() // nolint
 	}()
 	return nil
 }

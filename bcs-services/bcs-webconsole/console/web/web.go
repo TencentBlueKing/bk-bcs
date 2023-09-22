@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package web xxx
@@ -26,13 +25,13 @@ import (
 var FS embed.FS
 
 // WebTemplate html 摸版
-func WebTemplate() *template.Template {
+func WebTemplate() *template.Template { // nolint
 	tpl := template.Must(template.New("").ParseFS(FS, "templates/*.html"))
 	return tpl
 }
 
 // WebStatic 静态资源
-func WebStatic() fs.FS {
+func WebStatic() fs.FS { // nolint
 	static, _ := fs.Sub(FS, "static")
 	return static
 }
