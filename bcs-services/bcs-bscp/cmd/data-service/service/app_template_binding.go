@@ -85,9 +85,8 @@ func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbds.ListApp
 }
 
 // UpdateAppTemplateBinding update app template binding.
-func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbds.UpdateAppTemplateBindingReq) (*pbbase.
-	EmptyResp,
-	error) {
+func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbds.UpdateAppTemplateBindingReq) (
+	*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	appTemplateBinding := &table.AppTemplateBinding{
@@ -369,6 +368,24 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 	resp := &pbds.ListReleasedAppBoundTmplRevisionsResp{
 		Count:   uint32(count),
 		Details: pbatb.PbReleasedAppBoundTmplRevisions(details),
+	}
+	return resp, nil
+}
+
+// GetReleasedAppBoundTmplRevision get app bound template revision.
+func (s *Service) GetReleasedAppBoundTmplRevision(ctx context.Context,
+	req *pbds.GetReleasedAppBoundTmplRevisionReq) (
+	*pbds.GetReleasedAppBoundTmplRevisionResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	detail, err := s.dao.ReleasedAppTemplate().Get(kt, req.BizId, req.AppId, req.ReleaseId, req.TemplateRevisionId)
+	if err != nil {
+		logs.Errorf("get released app bound template revision failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.GetReleasedAppBoundTmplRevisionResp{
+		Detail: pbatb.PbReleasedAppBoundTmplRevision(detail),
 	}
 	return resp, nil
 }
