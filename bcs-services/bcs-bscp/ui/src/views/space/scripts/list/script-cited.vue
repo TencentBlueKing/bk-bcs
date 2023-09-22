@@ -71,6 +71,9 @@
 
   const handleClose = () => {
     emits('update:show', false)
+    list.value = []
+    pagination.value.count = 0
+    pagination.value.current = 1
   }
 </script>
 <template>
@@ -84,11 +87,13 @@
     </div>
     <div class="cited-data-table">
       <bk-table
+        v-bkloading="{ loading }"
         :border="['outer']"
         :data="list"
+        :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-change="refreshList">
+        @page-value-change="refreshList">
         <bk-table-column label="脚本版本">
           <template #default="{ row }">
             <template v-if="row.hook_revision_name || row.revision_name">{{ row.hook_revision_name || row.revision_name }}</template>

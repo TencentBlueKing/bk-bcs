@@ -305,7 +305,7 @@
         class="config-uploader"
         url=""
         theme="button"
-        tip="支持扩展名：.bin，文件大小100M以内"
+        tip="文件大小100M以内"
         :size="100"
         :disabled="!editable"
         :multiple="false"

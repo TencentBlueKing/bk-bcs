@@ -87,9 +87,10 @@
       <bk-table
         :border="['outer']"
         :data="appList"
+        :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-change="getList">
+        @page-value-change="getList">
         <bk-table-column label="配置项版本" prop="template_revision_name"></bk-table-column>
         <bk-table-column label="引用此配置项的服务">
           <template #default="{ row }">

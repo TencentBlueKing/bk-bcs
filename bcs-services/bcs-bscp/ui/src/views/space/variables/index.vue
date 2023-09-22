@@ -104,9 +104,10 @@
         empty-text="暂无变量"
         :border="['outer']"
         :data="list"
+        :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-change="refreshList()">
+        @page-value-change="refreshList">
         <bk-table-column label="变量名称">
           <template #default="{ row }">
             <bk-button v-if="row.spec" text theme="primary" @click="handleEditVar(row)">{{ row.spec.name }}</bk-button>
