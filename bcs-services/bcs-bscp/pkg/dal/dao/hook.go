@@ -104,7 +104,10 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
-		q = q.Where(h.Name.Like(searchKey)).Or(h.Memo.Like(searchKey)).Or(h.Creator.Like(searchKey)).Or(h.Reviser.Like(searchKey))
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
+		q = q.Where(q.Where(h.Name.Like(searchKey)).Or(h.Memo.Like(searchKey)).Or(h.Creator.Like(searchKey)).
+			Or(h.Reviser.Like(searchKey)))
 	}
 
 	details := make([]*types.ListHooksWithReferDetail, 0)
@@ -150,6 +153,8 @@ func (dao *hookDao) ListHookReferences(kit *kit.Kit, opt *types.ListHookReferenc
 		Where(rh.HookID.Eq(opt.HookID), rh.BizID.Eq(opt.BizID))
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
 		query = query.Where(query.Where(
 			a.Name.Like(searchKey)).Or(r.Name.Like(searchKey)).Or(rh.HookRevisionName.Like(searchKey)))
 	}
