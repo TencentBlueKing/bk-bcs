@@ -148,10 +148,11 @@
           :border="['outer']"
           :data="versionList"
           :row-class="getRowCls"
+          :remote-pagination="true"
           :pagination="pagination"
           @row-click="handleSelectVersion"
           @page-limit-change="handlePageLimitChange"
-          @page-change="refreshVersionList($event)">
+          @page-value-change="refreshVersionList($event)">
           <bk-table-column label="版本" prop="spec.name" show-overflow-tooltip></bk-table-column>
           <bk-table-column label="版本描述" prop="spec.memo" show-overflow-tooltip>
             <template v-slot="{ row }">

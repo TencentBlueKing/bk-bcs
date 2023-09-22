@@ -112,9 +112,10 @@
       v-if="!loading"
       :border="['outer']"
       :data="configList"
+      :remote-pagination="true"
       :pagination="pagination"
       @page-limit-change="handlePageLimitChange"
-      @page-change="refresh($event)">
+      @page-value-change="refresh($event)">
       <bk-table-column label="配置文件名" prop="spec.name" :sort="true" :min-width="240" show-overflow-tooltip>
         <template #default="{ row }">
           <bk-button
