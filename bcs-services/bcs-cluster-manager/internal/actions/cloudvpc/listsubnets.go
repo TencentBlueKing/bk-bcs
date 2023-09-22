@@ -15,6 +15,7 @@ package cloudvpc
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -132,7 +133,22 @@ func (la *ListSubnetsAction) ListCloudSubnets() error {
 	for i := range subnets {
 		subnets[i].ZoneName = zoneMap[subnets[i].Zone]
 	}
+
 	la.subnets = subnets
+
+	if la.req.Zone != "" {
+		tmp := make([]*cmproto.Subnet, 0)
+		zones := strings.Split(la.req.Zone, ",")
+		for _, zone := range zones {
+			for _, subnet := range la.subnets {
+				if zone == subnet.Zone {
+					tmp = append(tmp, subnet)
+				}
+			}
+		}
+
+		la.subnets = tmp
+	}
 
 	return nil
 }
