@@ -3,7 +3,7 @@
   import { storeToRefs } from 'pinia'
   import ConfigForm from './config-form.vue'
   import { getConfigItemDetail, getReleasedConfigItemDetail, getConfigContent } from '../../../../../../../api/config'
-  import { getTemplateVersionsDetailByIds, downloadTemplateContent } from '../../../../../../../api/template'
+  import { getTemplateVersionsDetailByIds, getTemplateVersionDetail, downloadTemplateContent } from '../../../../../../../api/template'
   import { getConfigEditParams } from '../../../../../../../utils/config'
   import { IVariableEditParams } from '../../../../../../../../types/variable';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config'
@@ -86,18 +86,24 @@
   const getTemplateDetail = async() => {
     try {
       detailLoading.value = true
-      const res = await getTemplateVersionsDetailByIds(props.bkBizId, [props.id])
-      if (res.details.length === 1) {
-        const { attachment, spec } = res.details[0]
-        const { name, path, revision_memo, file_type, permission } = spec
-        const { signature, byte_size } = spec.content_spec
-        configForm.value = { id: props.id, name: name, memo: revision_memo, file_type, path, ...permission }
-        if (file_type === 'binary') {
-          content.value = { name: name, signature, size: String(byte_size) }
-        } else {
-          const configContent = await downloadTemplateContent(props.bkBizId, attachment.template_space_id, signature)
-          content.value = String(configContent)
-        }
+      let detail
+      if (versionData.value.id) {
+        const res = await getTemplateVersionDetail(props.bkBizId, props.appId, versionData.value.id, props.id)
+        detail = res.detail
+      } else {
+        const res = await getTemplateVersionsDetailByIds(props.bkBizId, [props.id])
+        detail = res.details[0]
+      }
+
+      const { attachment, spec } = detail
+      const { name, path, revision_memo, file_type, permission } = spec
+      const { signature, byte_size } = spec.content_spec
+      configForm.value = { id: props.id, name: name, memo: revision_memo, file_type, path, ...permission }
+      if (file_type === 'binary') {
+        content.value = { name: name, signature, size: String(byte_size) }
+      } else {
+        const configContent = await downloadTemplateContent(props.bkBizId, attachment.template_space_id, signature)
+        content.value = String(configContent)
       }
     } catch (e) {
       console.error(e)
