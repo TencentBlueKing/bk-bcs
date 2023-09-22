@@ -321,7 +321,7 @@
       </thead>
       <tbody>
         <template v-for="group in tableGroupsData" :key="group.id">
-          <tr class="config-groups-table-tr group-title-row">
+          <tr class="config-groups-table-tr group-title-row" v-if="group.id === 0 && group.configs.length > 0">
             <td colspan="8" class="config-groups-table-td">
               <div class="configs-group">
                 <div class="name-wrapper" @click="group.expand = !group.expand">
