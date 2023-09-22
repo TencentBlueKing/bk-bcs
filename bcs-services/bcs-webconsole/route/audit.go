@@ -19,7 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/gin-gonic/gin"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	consoleAudit "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
