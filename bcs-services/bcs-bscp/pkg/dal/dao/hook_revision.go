@@ -179,6 +179,8 @@ func (dao *hookRevisionDao) List(kit *kit.Kit,
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
 		q = q.Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
 	}
 
@@ -226,6 +228,8 @@ func (dao *hookRevisionDao) ListWithRefer(kit *kit.Kit, opt *types.ListHookRevis
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
 		q = q.Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
 	}
 
@@ -285,6 +289,8 @@ func (dao *hookRevisionDao) ListHookRevisionReferences(kit *kit.Kit, opt *types.
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
 		query = query.Where(query.Where(
 			a.Name.Like(searchKey)).Or(r.Name.Like(searchKey)).Or(rh.HookRevisionName.Like(searchKey)))
 	}
