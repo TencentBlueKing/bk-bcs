@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
@@ -27,16 +26,16 @@ type MeshClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	//version, istio version
+	// version, istio version
 	Version string `json:"version,omitempty"`
-	//ClusterID
+	// ClusterID
 	ClusterID string `json:"clusterId,omitempty"`
-	//MeshType, default ISTIO
+	// MeshType, default ISTIO
 	MeshType      MeshType `json:"type,omitempty"`
 	Configuration []string `json:"configuration,omitempty"`
 }
 
-//MeshType mesh type: istio、tbuspp
+// MeshType mesh type: istio、tbuspp
 type MeshType string
 
 const (

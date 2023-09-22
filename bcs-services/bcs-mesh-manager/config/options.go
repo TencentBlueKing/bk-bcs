@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package config
@@ -32,10 +31,10 @@ type MeshManagerOptions struct {
 	ServerAddress       string `json:"apigateway-addr" value:"" usage:"bcs apigateway address"`
 	UserToken           string `json:"user-token" value:"" usage:"bcs apigateway usertoken to control k8s cluster"`
 	Kubeconfig          string `json:"kubeconfig" value:"" usage:"kube-apiserver kubeconfig"`
-	EtcdCaFile          string `json:"etcd-cafile" value:"" usage:"SSL Certificate Authority file used to secure etcd communication"`
-	EtcdCertFile        string `json:"etcd-certfile" value:"" usage:"SSL certification file used to secure etcd communication"`
+	EtcdCaFile          string `json:"etcd-cafile" value:"" usage:"SSL Certificate Authority file used to secure etcd communication"` // nolint
+	EtcdCertFile        string `json:"etcd-certfile" value:"" usage:"SSL certification file used to secure etcd communication"`       // nolint
 	EtcdKeyFile         string `json:"etcd-keyfile" value:"" usage:"SSL key file used to secure etcd communication"`
-	EtcdServers         string `json:"etcd-servers" value:"" usage:"List of etcd servers to connect with (scheme://ip:port), comma separated"`
+	EtcdServers         string `json:"etcd-servers" value:"" usage:"List of etcd servers to connect with (scheme://ip:port), comma separated"` // nolint
 }
 
 // ParseConfig parse command-line parameters to mesh-manager config struct
