@@ -37,17 +37,21 @@
           </bcs-select>
         </div>
         <div class="form-item-tips" v-if="!ccList.length && $INTERNAL">
-          {{ $t('bcs.registry.label.business.emptyMsg') }}
-          <bk-link
-            theme="primary"
-            :href="iamDocLink"
-            target="_blank">
-            {{ $t('iam.button.apply2') }}
-          </bk-link>
+          <i18n path="bcs.registry.label.business.emptyMsg">
+            <bk-link
+              theme="primary"
+              :href="PROJECT_CONFIG.teaApply"
+              target="_blank">
+              {{ $t('bcs.registry.button.viewAndApplyOperation') }}
+            </bk-link>
+          </i18n>
         </div>
       </div>
       <div class="form-item enable-bcs">
-        <bk-button theme="primary" :disabled="!enableBtn" @click="updateProject">{{ $t('bcs.registry.text') }}</bk-button>
+        <bk-button
+          theme="primary"
+          :disabled="!enableBtn"
+          @click="updateProject">{{ $t('bcs.registry.text') }}</bk-button>
       </div>
       <div class="form-item guide" v-if="$INTERNAL">
         <div

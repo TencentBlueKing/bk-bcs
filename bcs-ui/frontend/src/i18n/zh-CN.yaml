@@ -35,6 +35,7 @@ bcs:
         desc: 开启容器服务时，若没有查看业务权限，去“权限中心”申请权限
       docs:
         desc: 如果遇到更多问题，需要了解详细信息，请阅产品文档
+      viewAndApplyOperation: 查看与申请运维角色
     label:
       projectKind:
         text: 业务编排类型
@@ -42,7 +43,7 @@ bcs:
       business:
         text: 关联CMDB业务
         placeholder: 请选择关联业务
-        emptyMsg: 请联系需要关联的CMDB业务的运维
+        emptyMsg: 启用容器服务需要CMDB业务的业务运维角色 {0}
 blueking:
   onCall: 联系BK助手
   support: 技术支持
