@@ -247,7 +247,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 	var rp *pbds.ListAppBoundTmplRevisionsResp
 	rp, err = s.client.DS.ListAppBoundTmplRevisions(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -393,7 +393,7 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 
 	rp, err := s.client.DS.ListReleasedAppBoundTmplRevisions(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list released app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list released app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -439,6 +439,42 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 
 	resp := &pbcs.ListReleasedAppBoundTmplRevisionsResp{
 		Details: details,
+	}
+	return resp, nil
+}
+
+// GetReleasedAppBoundTmplRevision get released app bound template revision
+func (s *Service) GetReleasedAppBoundTmplRevision(ctx context.Context,
+	req *pbcs.GetReleasedAppBoundTmplRevisionReq) (*pbcs.GetReleasedAppBoundTmplRevisionResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	if req.ReleaseId <= 0 {
+		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
+	}
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetReleasedAppBoundTmplRevisionReq{
+		BizId:              req.BizId,
+		AppId:              req.AppId,
+		ReleaseId:          req.ReleaseId,
+		TemplateRevisionId: req.TemplateRevisionId,
+	}
+
+	rp, err := s.client.DS.GetReleasedAppBoundTmplRevision(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("get released app template revision failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.GetReleasedAppBoundTmplRevisionResp{
+		Detail: rp.Detail,
 	}
 	return resp, nil
 }
