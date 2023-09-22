@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package bcssystem xxx
 package bcssystem
 
 import (

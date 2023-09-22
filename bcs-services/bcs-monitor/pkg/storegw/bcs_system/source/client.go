@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package source ...
+// Package source client
 package source
 
 import (

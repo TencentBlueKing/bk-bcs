@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package metrics prometheus metric
 package metrics
 
 import (

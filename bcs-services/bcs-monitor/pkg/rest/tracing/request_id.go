@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package tracing ...
+// Package tracing request id
 package tracing
 
 import (

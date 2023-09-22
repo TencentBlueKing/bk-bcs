@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package bcs ...
 package bcs
 
 import (

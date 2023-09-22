@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package logging xxx
+// Package logging log
 package logging
 
 import (

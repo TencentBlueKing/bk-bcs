@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package podmonitor ...
 package podmonitor
 
 // SampleLimitMax xxx

@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package servicemonitor ...
 package servicemonitor
 
 // SampleLimitMax xxx

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package bkmonitor ...
+// Package bkmonitor bk monitor
 package bkmonitor
 
 import (
@@ -43,17 +43,15 @@ const (
 	scale                  = 10
 	defaultQueryConcurrent = 20
 
-	// SUMMAX ...
-	SUMMAX = `sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, ` +
+	// sumMax ...
+	sumMax = `sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, ` +
 		`bk_instance=~"%<instance>s", %<provider>s}[2m])))`
-	// COUNTMAX ...
-	COUNTMAX = `count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, ` +
+	// countMax ...
+	countMax = `count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, ` +
 		`bk_instance=~"%<instance>s", %<provider>s}[2m])))`
-	// SUMNODE ...
-	SUMNODE = `%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` +
+	// sumNode ...
+	sumNode = `%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", ` +
 		`mountpoint=~"%<mountpoint>s", %<provider>s`
-	// SUMNODEFILE ...
-	SUMNODEFILE = `sum(node_filesystem_size_bytes{`
 )
 
 // BKMonitor :
@@ -296,7 +294,7 @@ func (m *BKMonitor) GetClusterMemoryRequestUsage(ctx context.Context, projectID,
 // GetClusterDiskTotal 集群磁盘总量
 func (m *BKMonitor) GetClusterDiskTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := SUMNODEFILE + SUMNODE + `})`
+	promql := `sum(node_filesystem_size_bytes{` + sumNode + `})` // nolint
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -304,8 +302,8 @@ func (m *BKMonitor) GetClusterDiskTotal(ctx context.Context, projectID, clusterI
 // GetClusterDiskUsed 集群磁盘使用
 func (m *BKMonitor) GetClusterDiskUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := SUMNODEFILE + SUMNODE + `}) -
-		sum(node_filesystem_free_bytes{` + SUMNODE + `})`
+	promql := `sum(node_filesystem_size_bytes{` + sumNode + `}) - 
+		sum(node_filesystem_free_bytes{` + sumNode + `})` // nolint
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -313,9 +311,9 @@ func (m *BKMonitor) GetClusterDiskUsed(ctx context.Context, projectID, clusterID
 // GetClusterDiskUsage 集群磁盘使用率
 func (m *BKMonitor) GetClusterDiskUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promqlA := `(` + SUMNODEFILE + SUMNODE + `}) -
-		sum(node_filesystem_free_bytes{` + SUMNODE + `}))`
-	promqlB := SUMNODEFILE + SUMNODE + `})`
+	promqlA := `(sum(node_filesystem_size_bytes{` + sumNode + `}) -
+		sum(node_filesystem_free_bytes{` + sumNode + `}))` // nolint
+	promqlB := `sum(node_filesystem_size_bytes{` + sumNode + `})`
 
 	seriesA, err := m.handleClusterMetric(ctx, projectID, clusterID, promqlA, start, end, step)
 	if err != nil {
@@ -332,8 +330,8 @@ func (m *BKMonitor) GetClusterDiskUsage(ctx context.Context, projectID, clusterI
 // GetClusterDiskioUsage 集群磁盘IO使用率
 func (m *BKMonitor) GetClusterDiskioUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promqlA := SUMMAX
-	promqlB := COUNTMAX
+	promqlA := sumMax
+	promqlB := countMax
 
 	seriesA, err := m.handleClusterMetric(ctx, projectID, clusterID, promqlA, start, end, step)
 	if err != nil {
@@ -350,7 +348,7 @@ func (m *BKMonitor) GetClusterDiskioUsage(ctx context.Context, projectID, cluste
 // GetClusterDiskioUsed 集群磁盘IO使用量
 func (m *BKMonitor) GetClusterDiskioUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := SUMMAX
+	promql := sumMax
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -358,6 +356,6 @@ func (m *BKMonitor) GetClusterDiskioUsed(ctx context.Context, projectID, cluster
 // GetClusterDiskioTotal 集群磁盘IO
 func (m *BKMonitor) GetClusterDiskioTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := COUNTMAX
+	promql := countMax
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }

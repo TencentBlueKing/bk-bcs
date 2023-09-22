@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package api ...
+// Package api router
 package api
 
 import (

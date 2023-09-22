@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package vcluster ...
+// Package vcluster cluster operate
 package vcluster
 
 import (

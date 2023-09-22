@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package compute ...
+// Package compute cluster operate
 package compute
 
 import (

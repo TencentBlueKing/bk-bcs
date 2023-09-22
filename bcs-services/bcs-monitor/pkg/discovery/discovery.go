@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package discovery xxx
+// Package discovery service discovery
 package discovery
 
 import (

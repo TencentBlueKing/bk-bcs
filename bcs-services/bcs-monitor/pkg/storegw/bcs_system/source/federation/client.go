@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package federation ...
+// Package federation Factory
 package federation
 
 import (

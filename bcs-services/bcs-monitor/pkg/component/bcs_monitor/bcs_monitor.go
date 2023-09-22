@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package bcsmonitor ...
+// Package bcsmonitor monitor query
 package bcsmonitor
 
 import (

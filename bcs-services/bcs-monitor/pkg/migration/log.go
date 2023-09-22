@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package migration ...
+// Package migration log rule
 package migration
 
 import (

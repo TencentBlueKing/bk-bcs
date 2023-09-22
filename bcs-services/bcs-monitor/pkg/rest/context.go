@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package rest ...
+// Package rest rest context
 package rest
 
 import (

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package bcs xxx
+// Package bcs 集群操作
 package bcs
 
 import (

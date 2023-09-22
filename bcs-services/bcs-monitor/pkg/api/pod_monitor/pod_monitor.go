@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package podmonitor ...
+// Package podmonitor prometheus pods monitor
 package podmonitor
 
 import (

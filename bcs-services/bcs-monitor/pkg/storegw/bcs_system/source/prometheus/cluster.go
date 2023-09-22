@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package prometheus ...
+// Package prometheus prometheus
 package prometheus
 
 import (

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package component ...
+// Package component get client
 package component
 
 import (

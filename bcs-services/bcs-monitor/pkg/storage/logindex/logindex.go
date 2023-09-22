@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package logindex ...
+// Package logindex log index
 package logindex
 
 import (

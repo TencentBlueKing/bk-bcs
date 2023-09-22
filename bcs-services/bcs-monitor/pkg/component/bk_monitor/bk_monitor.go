@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package bkmonitor ...
+// Package bkmonitor bk_monitor query
 package bkmonitor
 
 import (

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package watch xxx
+// Package watch load config
 package watch
 
 import (

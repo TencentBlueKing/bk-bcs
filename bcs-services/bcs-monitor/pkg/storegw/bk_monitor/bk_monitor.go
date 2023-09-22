@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package bkmonitor xxx
+// Package bkmonitor bk monitor
 package bkmonitor
 
 import (

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package middleware ...
+// Package middleware Authorization
 package middleware
 
 import (

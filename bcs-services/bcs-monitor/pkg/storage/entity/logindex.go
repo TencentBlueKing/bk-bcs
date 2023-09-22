@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package entity ...
 package entity
 
 // LogIndex for log index

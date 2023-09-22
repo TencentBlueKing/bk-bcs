@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package iam ...
+// Package iam client
 package iam
 
 import (

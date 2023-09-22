@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// package main
 package main
 
 import (

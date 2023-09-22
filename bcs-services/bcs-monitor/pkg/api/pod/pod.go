@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package pod xxx
+// Package pod pod operate
 package pod
 
 import (

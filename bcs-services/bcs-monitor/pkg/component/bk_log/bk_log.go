@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package bklog ...
+// Package bklog log
 package bklog
 
 import (

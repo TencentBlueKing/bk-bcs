@@ -10,36 +10,10 @@
  * limitations under the License.
  */
 
-package main
+package base
 
-import (
-	"context"
-
-	"github.com/oklog/run"
-	"github.com/spf13/cobra"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/migration"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
+const (
+	// ContainerMatcher container matcher
+	ContainerMatcher = `cluster_id="%<clusterID>s", namespace="%<namespace>s", ` +
+		`pod_name="%<podname>s", container_name=~"%<containerName>s", %<provider>s`
 )
-
-// MigrateCmd :
-func MigrateCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "migrate",
-		Short: "migrate monitor data",
-	}
-
-	cmd.Run = func(cmd *cobra.Command, args []string) {
-		runCmd(cmd, runMigrate)
-	}
-
-	return cmd
-}
-
-// 运行 migrate
-func runMigrate(ctx context.Context, g *run.Group, opt *option) error {
-	// init storage
-	storage.InitStorage()
-	g.Add(migration.MigrateLogRule, func(err error) {})
-	return nil
-}

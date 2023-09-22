@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package entity ...
 package entity
 
 // 定义一批统一的key, 用在db相关的字段

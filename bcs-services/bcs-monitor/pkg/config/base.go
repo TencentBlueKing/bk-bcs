@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package config project config
 package config
 
 import (

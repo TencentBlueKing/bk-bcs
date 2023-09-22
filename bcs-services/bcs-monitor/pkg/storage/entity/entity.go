@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package entity ...
+// Package entity storage entity
 package entity
 
 // M used for incremental update
