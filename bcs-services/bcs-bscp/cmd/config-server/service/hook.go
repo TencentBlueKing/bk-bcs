@@ -91,7 +91,6 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbcs.DeleteHookReq) (*pbc
 func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.ListHooksResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListHooksResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -133,7 +132,7 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 		})
 	}
 
-	resp = &pbcs.ListHooksResp{
+	resp := &pbcs.ListHooksResp{
 		Count:   rp.Count,
 		Details: details,
 	}
@@ -145,7 +144,6 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 func (s *Service) ListHookTags(ctx context.Context, req *pbcs.ListHookTagsReq) (*pbcs.ListHookTagsResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListHookTagsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -161,7 +159,7 @@ func (s *Service) ListHookTags(ctx context.Context, req *pbcs.ListHookTagsReq) (
 		return nil, err
 	}
 
-	resp = &pbcs.ListHookTagsResp{
+	resp := &pbcs.ListHookTagsResp{
 		Details: ht.Details,
 	}
 
@@ -172,7 +170,6 @@ func (s *Service) ListHookTags(ctx context.Context, req *pbcs.ListHookTagsReq) (
 func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbcs.GetHookResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.GetHookResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -192,7 +189,7 @@ func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbcs.GetH
 		return nil, err
 	}
 
-	resp = &pbcs.GetHookResp{
+	resp := &pbcs.GetHookResp{
 		Id: hook.Id,
 		Spec: &pbcs.GetHookInfoSpec{
 			Name:     hook.Spec.Name,

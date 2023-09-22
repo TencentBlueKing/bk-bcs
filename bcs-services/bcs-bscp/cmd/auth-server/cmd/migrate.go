@@ -57,6 +57,7 @@ var migrateInitCmd = &cobra.Command{
 	},
 }
 
+// NewIamSys new a iamSystem
 func NewIamSys() (*sys.Sys, error) {
 
 	iamSettings := cc.AuthServer().IAM

@@ -44,7 +44,7 @@ func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredent
 	masterKey := cc.ConfigServer().Credential.MasterKey
 	encryptionAlgorithm := cc.ConfigServer().Credential.EncryptionAlgorithm
 
-	//create token
+	// create token
 	credential, err := tools.CreateCredential(masterKey, encryptionAlgorithm)
 	if err != nil {
 		return nil, err

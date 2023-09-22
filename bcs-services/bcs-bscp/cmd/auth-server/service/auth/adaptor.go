@@ -44,29 +44,29 @@ func AdaptAuthOptions(a *meta.ResourceAttribute) (client.ActionID, []client.Reso
 		return genCredResource(a)
 	case meta.Commit, meta.ConfigItem, meta.Content, meta.CRInstance, meta.Release, meta.ReleasedCI, meta.Strategy, meta.StrategySet, meta.PSH, meta.Repo, meta.Sidecar:
 		return genSkipResource(a)
-	//case meta.Commit:
+	// case meta.Commit:
 	//	return genCommitResource(a)
-	//case meta.ConfigItem:
+	// case meta.ConfigItem:
 	//	return genConfigItemResource(a)
-	//case meta.Content:
+	// case meta.Content:
 	//	return genContentResource(a)
-	//case meta.CRInstance:
+	// case meta.CRInstance:
 	//	return genCRInstanceResource(a)
-	//case meta.Release:
+	// case meta.Release:
 	//	return genReleaseRes(a)
-	//case meta.ReleasedCI:
+	// case meta.ReleasedCI:
 	//	return genReleasedCIRes(a)
-	//case meta.Strategy:
+	// case meta.Strategy:
 	//	return genStrategyRes(a)
-	//case meta.StrategySet:
+	// case meta.StrategySet:
 	//	return genStrategySetRes(a)
-	//case meta.PSH:
+	// case meta.PSH:
 	//	return genPSHRes(a)
-	//case meta.Repo:
+	// case meta.Repo:
 	//	return genRepoRes(a)
-	//case meta.Sidecar:
+	// case meta.Sidecar:
 	//	return genSidecarRes(a)
-	//case meta.Credential:
+	// case meta.Credential:
 	//	return genCredentialRes(a)
 
 	default:
