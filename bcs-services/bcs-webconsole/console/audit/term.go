@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package audit xxx
 package audit
 
 import (
@@ -19,12 +19,14 @@ import (
 	"github.com/pborman/ansi"
 )
 
+// CmdParse 命令行解析
 type CmdParse struct {
 	Cmd        *ansi.S
 	InputSlice []*ansi.S
 	CmdResult  map[*ansi.S]*ansi.S
 }
 
+// NewCmdParse 新建命令行解析
 func NewCmdParse() *CmdParse {
 	c := new(CmdParse)
 
@@ -45,30 +47,6 @@ func str2Struct(s string) []*ansi.S {
 	return result
 }
 
-// 是否在vim状态
-func notInVim(a []*ansi.S) bool {
-	if len(a) == 1 && a[0].Code == "\r\n" {
-		return true
-	}
-	if len(a) >= 2 {
-		t1 := contains(a, "\r\n")
-		t2 := contains(a, ansi.SM)
-		return t1 && t2
-	}
-
-	return false
-}
-
-// contains 切片是否包含某元素
-func contains(s []*ansi.S, params ansi.Name) bool {
-	for _, v := range s {
-		if v.Code == params {
-			return true
-		}
-	}
-	return false
-}
-
 // insertByIndex 指定位置插入
 func insertByIndex(slice []*ansi.S, index int, element *ansi.S) []*ansi.S {
 	slice = append(slice[:index], append([]*ansi.S{element}, slice[index:]...)...)
@@ -79,14 +57,14 @@ func insertByIndex(slice []*ansi.S, index int, element *ansi.S) []*ansi.S {
 // parseUpDown 解析上下键,历史命令
 func parseUpDown(s []*ansi.S, m map[*ansi.S]*ansi.S) []*ansi.S {
 	result := make([]*ansi.S, 0)
-	//获取最后一个
+	// 获取最后一个
 	var last *ansi.S
 	for i := len(s) - 1; i >= 0; i-- {
 		if s[i].Code == ansi.CUD || s[i].Code == ansi.CUU {
 			last = s[i]
 			cmdS := m[last]
 			cmd := strings.TrimLeft(string(cmdS.Code), "\b")
-			//完整命令解析拆分字节流形式
+			// 完整命令解析拆分字节流形式
 			lis := str2Struct(cmd)
 			result = append(append(result, lis...), s[i+1:]...)
 			return result
@@ -103,27 +81,27 @@ func parseTab(s []*ansi.S, m map[*ansi.S]*ansi.S) []*ansi.S {
 			outCmd := m[v]
 			outCmdStr := string(outCmd.Code)
 			switch {
-			//情形一:有多个结果展示,但不补全
+			// 情形一:有多个结果展示,但不补全
 			case strings.Contains(outCmdStr, "\r\n"):
 				continue
-			//情形二:后面有字符的补全 eg:j/t(obs)h (命令不能是中文)
+			// 情形二:后面有字符的补全 eg:j/t(obs)h (命令不能是中文)
 			case strings.HasSuffix(outCmdStr, "\b"):
 				i := 0
 				for _, v := range outCmdStr {
 					if string(v) == "\b" {
-						i += 1
+						i++
 					}
 				}
 				outCmdStr = outCmdStr[:len(outCmdStr)-i*2]
 				tmplist := str2Struct(outCmdStr)
 				result = append(result, tmplist...)
-			//和情形二一样,只是多余\a字符
+			// 和情形二一样,只是多余\a字符
 			case strings.HasPrefix(outCmdStr, "\a"):
 				outCmdStr = strings.TrimPrefix(outCmdStr, "\a")
 				tmplist := str2Struct(outCmdStr)
 				result = append(result, tmplist...)
 			default:
-				//情形三:直接补全
+				// 情形三:直接补全
 				result = append(result, outCmd)
 
 			}
@@ -141,7 +119,7 @@ func parseShortCut(s []*ansi.S) ([]*ansi.S, []*ansi.S) {
 	result2 := make([]*ansi.S, 0)
 	for _, v := range s {
 		switch v.Code {
-		case "\x01": //CTRL A
+		case "\x01": // CTRL A
 			result2 = result1
 			result1 = []*ansi.S{}
 		default:
@@ -158,20 +136,20 @@ func parseLeftRight(lc []*ansi.S, rc []*ansi.S) []*ansi.S {
 	p := 0
 	for _, v := range lc {
 		switch {
-		//左键
+		// 左键
 		case v.Code == ansi.CUB:
-			cursor -= 1
-		//右键
+			cursor--
+		// 右键
 		case v.Code == ansi.CUF:
-			//在行尾就不移动
+			// 在行尾就不移动
 			if len(rc) > p {
 				result = append(result, rc[p])
-				p += 1
+				p++
 			}
-			cursor += 1
+			cursor++
 		default:
 			result = insertByIndex(result, cursor, v)
-			cursor = cursor + 1
+			cursor++
 		}
 	}
 	if len(rc) > p {
@@ -206,7 +184,7 @@ func ResolveInOut(c *CmdParse) string {
 				readyParseMap = map[*ansi.S]*ansi.S{}
 			}
 
-			//无效信号
+			// 无效信号
 			if c.CmdResult[v].Code == "\a" || v.Code == "\r" {
 				continue
 			}

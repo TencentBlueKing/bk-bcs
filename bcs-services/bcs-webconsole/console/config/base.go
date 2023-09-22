@@ -1,4 +1,3 @@
-// Package config xxx
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -9,8 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
+
+// Package config xxx
 package config
 
 import (
@@ -60,9 +60,8 @@ func (c *BaseConf) Init() error {
 }
 
 // InitManagers xxx
-func (c *BaseConf) InitManagers() error {
+func (c *BaseConf) InitManagers() {
 	for _, manager := range c.Managers {
 		c.ManagerMap[manager] = struct{}{}
 	}
-	return nil
 }

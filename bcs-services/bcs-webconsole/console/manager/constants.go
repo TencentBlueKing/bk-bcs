@@ -1,4 +1,3 @@
-// Package manager xxx
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -9,8 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
+
+// Package manager xxx
 package manager
 
 import "os"
@@ -36,7 +36,8 @@ const (
 	AnsiEscape = "r\"\\x1B\\[[0-?]*[ -/]*[@-~]\""
 
 	// StdinChannel xxx
-	// same as kubernete client https://github.com/kubernetes-client/python/blob/master/kubernetes/base/stream/ws_client.py#L3
+	// same as kubernete client
+	// https://github.com/kubernetes-client/python/blob/master/kubernetes/base/stream/ws_client.py#L3
 	StdinChannel = "0"
 	// StdoutChannel xxx
 	StdoutChannel = "1"
@@ -49,7 +50,9 @@ const (
 
 	helloBcsMessage = "Welcome to the BCS Console"
 
-	ShellSH   = "sh"
+	// ShellSH sh type
+	ShellSH = "sh"
+	// ShellBash bash type
 	ShellBash = "bash"
 )
 
