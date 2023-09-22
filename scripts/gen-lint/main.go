@@ -23,9 +23,9 @@ import (
 )
 
 var testMod = []string{
-	"bcs-webconsole",
-	"bcs-bscp",
-	"bcs-monitor",
+	"bcs-ui",
+	"bcs-common",
+	"bcs-services",
 }
 
 func matchTestMod(line string) bool {
