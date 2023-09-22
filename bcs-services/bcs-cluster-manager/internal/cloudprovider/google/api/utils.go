@@ -41,8 +41,14 @@ const (
 	gceURLPrefix = "https://www.googleapis.com/compute/v1/"
 
 	BCSNodeGroupTaintKey    = "bcs-cluster-manager"
+	BCSNodeGroupTaintValue  = "noSchedule"
 	BCSNodeGroupTaintEffect = "NO_EXECUTE"
 )
+
+// GenerateInstanceUrl generates url for instance.
+func GenerateInstanceUrl(zone, name string) string {
+	return fmt.Sprintf("/zones/%s/instances/%s", zone, name)
+}
 
 // GCPClientSet google cloud platform client set
 type GCPClientSet struct {
@@ -164,6 +170,19 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region,
 	return encrypt.Encrypt(nil, string(configByte))
 }
 
+func taintTransEffect(ori string) string {
+	switch ori {
+	case "NoSchedule":
+		return "NO_SCHEDULE"
+	case "PreferNoSchedule":
+		return "PREFER_NO_SCHEDULE"
+	case "NoExecute":
+		return "NO_EXECUTE"
+	}
+
+	return ori
+}
+
 // MapTaints map cmproto.Taint to Taint
 func MapTaints(cmt []*cmproto.Taint) []*Taint {
 	t := make([]*Taint, 0)
@@ -171,13 +190,14 @@ func MapTaints(cmt []*cmproto.Taint) []*Taint {
 		t = append(t, &Taint{
 			Key:    v.Key,
 			Value:  v.Value,
-			Effect: v.Effect,
+			Effect: taintTransEffect(v.Effect),
 		})
 	}
 
+	// attention: gke not support addNodes to set unScheduled nodes, thus realize this feature by taint
 	t = append(t, &Taint{
 		Key:    BCSNodeGroupTaintKey,
-		Value:  "",
+		Value:  BCSNodeGroupTaintValue,
 		Effect: BCSNodeGroupTaintEffect})
 
 	return t
@@ -300,6 +320,26 @@ func ResizeInstanceGroupManager(computeCli *ComputeServiceClient, url string, si
 	}
 
 	return nil, fmt.Errorf("ResizeInstanceGroupManager failed, incorrect InstanceGroupManager url: %s", url)
+}
+
+// CreateInstanceForGroupManager create zonal/regional instances
+func CreateInstanceForGroupManager(computeCli *ComputeServiceClient, url string, names []string) (*compute.Operation, error) {
+	igmInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("CreateInstanceForGroupManager failed: %v", err)
+		return nil, err
+	}
+	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
+		var o *compute.Operation
+		o, err = computeCli.CreateMigInstances(context.Background(), igmInfo[3], igmInfo[(len(igmInfo)-1)], names)
+		if err != nil {
+			blog.Errorf("CreateInstanceForGroupManager failed, err: %v", err)
+			return nil, err
+		}
+		return o, nil
+	}
+
+	return nil, fmt.Errorf("CreateInstanceForGroupManager failed, incorrect InstanceGroupManager url: %s", url)
 }
 
 // GetInstanceTemplate get zonal/regional InstanceTemplate

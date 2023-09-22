@@ -430,6 +430,7 @@ generic:
     fileName: >-
       The filename can only contain numbers, letters, mid-range lines (-), down
       line (_), point (.), The beginning and end must be numbers or letters
+    notRootName: ''
   title:
     curVersion: Current
     basicInfo: Basic Information
@@ -1083,6 +1084,8 @@ cluster:
             premium: High -performance cloud hard disk
             ssd: SSD cloud hard disk
             hssd: Enhanced SSD cloud hard disk
+            balanced: ''
+            standard: ''
           disk:
             system: System disk
             data: Data disk
@@ -2998,6 +3001,7 @@ googleCloud:
     regionCluster:
       title: ''
       desc: ''
+    loginUser: ''
   tips:
     onlySupportJsonFile: ''
 importGoogleCloud:
@@ -3038,3 +3042,11 @@ regions:
   southamerica: ''
   us: ''
   other: ''
+googleCA:
+  tips:
+    system: ''
+    zone: ''
+    dataDisk: ''
+    securityGroup: ''
+  button:
+    vpcRule: ''

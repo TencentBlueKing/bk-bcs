@@ -46,12 +46,14 @@ func RegisterCommonActions() map[string]interface{} {
 		cloudprovider.CreateNamespaceAction:         CreateNamespaceTask,
 		cloudprovider.DeleteNamespaceAction:         DeleteNamespaceTask,
 		cloudprovider.SetNodeLabelsAction:           SetNodeLabelsTask,
+		cloudprovider.SetNodeTaintsAction:           SetNodeTaintsTask,
 		cloudprovider.SetNodeAnnotationsAction:      SetNodeAnnotationsTask,
 		cloudprovider.CheckKubeAgentStatusAction:    CheckKubeAgentStatusTask,
 		cloudprovider.CreateResourceQuotaAction:     CreateResourceQuotaTask,
 		cloudprovider.DeleteResourceQuotaAction:     DeleteResourceQuotaTask,
 		cloudprovider.ResourcePoolLabelAction:       SetResourcePoolDeviceLabels,
 		cloudprovider.LadderResourcePoolLabelAction: EmptyAction,
+		cloudprovider.CheckClusterCleanNodesAction:  CheckClusterCleanNodsTask,
 	}
 }
 
