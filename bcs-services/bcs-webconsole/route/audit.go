@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -17,9 +17,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
+	"github.com/gin-gonic/gin"
+	"k8s.io/klog"
+
 	consoleAudit "github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
@@ -124,8 +125,11 @@ func addAudit(c *gin.Context, startTime, endTime time.Time, data *types.APIRespo
 		result.Status = audit.ActivityStatusSuccess
 	}
 
-	consoleAudit.GetAuditClient().R().
+	err := consoleAudit.GetAuditClient().R().
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+	if err != nil {
+		klog.Errorf("audit recorder err: %v", err)
+	}
 }
 
 // 自定义respRecorder, 实现http.ResponseWriter 接口
