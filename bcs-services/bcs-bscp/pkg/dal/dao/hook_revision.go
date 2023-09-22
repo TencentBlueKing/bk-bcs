@@ -178,7 +178,8 @@ func (dao *hookRevisionDao) List(kit *kit.Kit,
 		m.HookID.Eq(opt.HookID)).Order(m.ID.Desc())
 
 	if opt.SearchKey != "" {
-		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.SearchKey)))
+		searchKey := "%" + opt.SearchKey + "%"
+		q = q.Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
 	}
 
 	if opt.State != "" {
@@ -224,7 +225,8 @@ func (dao *hookRevisionDao) ListWithRefer(kit *kit.Kit, opt *types.ListHookRevis
 		m.HookID.Eq(opt.HookID)).Order(m.ID.Desc())
 
 	if opt.SearchKey != "" {
-		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.SearchKey)))
+		searchKey := "%" + opt.SearchKey + "%"
+		q = q.Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
 	}
 
 	if opt.State != "" {
