@@ -498,6 +498,10 @@ func (s *Service) ListTemplatesNotBound(ctx context.Context, req *pbds.ListTempl
 
 	ids := tools.SliceDiff(idsAll, idsBound)
 	templates, err := s.dao.Template().ListByIDs(kt, ids)
+	if err != nil {
+		logs.Errorf("list app bound template revisions failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 	details := pbtemplate.PbTemplates(templates)
 
 	// search by logic

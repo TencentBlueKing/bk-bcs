@@ -394,7 +394,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	*pbcs.ListConfigItemsResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListConfigItemsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -421,7 +420,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		return nil, err
 	}
 
-	resp = &pbcs.ListConfigItemsResp{
+	resp := &pbcs.ListConfigItemsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -475,7 +474,6 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context,
 func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigItemCountReq) (
 	*pbcs.ListConfigItemCountResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListConfigItemCountResp)
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
@@ -494,7 +492,7 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigI
 		return nil, err
 	}
 
-	resp = &pbcs.ListConfigItemCountResp{
+	resp := &pbcs.ListConfigItemCountResp{
 		Details: rp.Details,
 	}
 	return resp, nil

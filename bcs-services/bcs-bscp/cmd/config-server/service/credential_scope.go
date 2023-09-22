@@ -25,7 +25,6 @@ import (
 // ListCredentialScopes get credential scopes
 func (s *Service) ListCredentialScopes(ctx context.Context, req *pbcs.ListCredentialScopesReq) (*pbcs.ListCredentialScopesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListCredentialScopesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -46,7 +45,7 @@ func (s *Service) ListCredentialScopes(ctx context.Context, req *pbcs.ListCreden
 		return nil, err
 	}
 
-	resp = &pbcs.ListCredentialScopesResp{
+	resp := &pbcs.ListCredentialScopesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

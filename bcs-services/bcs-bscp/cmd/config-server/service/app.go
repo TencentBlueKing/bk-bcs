@@ -208,7 +208,6 @@ func (s *Service) GetAppByName(ctx context.Context, req *pbcs.GetAppByNameReq) (
 // ListAppsRest list apps with rest filter
 func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (*pbcs.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListAppsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -264,7 +263,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 		}
 	}
 
-	resp = &pbcs.ListAppsResp{
+	resp := &pbcs.ListAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -274,7 +273,6 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 // ListAppsBySpaceRest list apps with rest filter
 func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsBySpaceRestReq) (*pbcs.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListAppsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -335,7 +333,7 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsByS
 		}
 	}
 
-	resp = &pbcs.ListAppsResp{
+	resp := &pbcs.ListAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
