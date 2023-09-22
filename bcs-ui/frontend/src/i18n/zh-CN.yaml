@@ -404,6 +404,7 @@ generic:
     labelKey1: 仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾
     kindName: 名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     fileName: 文件名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
+    notRootName: 用户名不能为root
   title:
     curVersion: 当前版本
     basicInfo: 基础信息
@@ -893,6 +894,8 @@ cluster:
             premium: 高性能云硬盘
             ssd: SSD云硬盘
             hssd: 增强型SSD云硬盘
+            balanced: 平衡性磁盘
+            standard: 标准磁盘
           disk:
             system: 系统盘
             data: 数据盘
@@ -2426,6 +2429,7 @@ googleCloud:
   tips:
     onlySupportJsonFile: 仅支持创建服务账号时生成的 json 文件
   label:
+    loginUser: 登录用户
     projectID: Google项目ID
     tokenName: 凭证名称
     desc: 描述
@@ -2461,6 +2465,17 @@ importGoogleCloud:
   clusterRegion:
     zones: 可用区级集群
     regions: 区域级集群
+googleCA:
+  tips:
+    zone: 目前只支持单可用区
+    system: >-
+      因为操作系统“包含 Containerd 的 Container-Optimized OS (cos_containerd)
+      （默认）”有诸多限制，蓝鲸组件依赖这些被限制的功能，目前只支持操作系统“包含 Containerd 的 Ubuntu
+      (ubuntu_containerd)”
+    dataDisk: 购买数据盘后添加节点后需要手工格式化与挂载磁盘
+    securityGroup: '节点池使用 VPC 防火墙规则控制节点实例的出/入流量，请前往{0}页面设置'
+  button:
+    vpcRule: VPC 防火墙规则
 regions:
   asia: 亚洲
   australia: 澳洲

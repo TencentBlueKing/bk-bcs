@@ -361,6 +361,8 @@ export default defineComponent({
               params: {
                 clusterId: props.clusterId,
               },
+            }).catch((err) => {
+              console.warn(err);
             });
           },
           cancelFn: () => {
