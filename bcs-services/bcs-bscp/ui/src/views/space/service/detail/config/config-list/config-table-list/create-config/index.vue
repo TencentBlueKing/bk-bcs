@@ -137,7 +137,4 @@
       }
     }
   }
-  .bk-popover.bk-pop2-content.bk-select-popover {
-    width: auto !important;
-  }
 </style>

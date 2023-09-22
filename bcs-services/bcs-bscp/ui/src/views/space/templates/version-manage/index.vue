@@ -77,7 +77,7 @@
       limit: pagination.value.limit
     }
     if (searchStr.value) {
-      params.search_key = searchStr.value
+      params.search_value = searchStr.value
       params.search_fields = 'revision_name,revision_memo,creator'
     }
     const res = await getTemplateVersionList(spaceId.value, templateSpaceId.value, templateId.value, params)
