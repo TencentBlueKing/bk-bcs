@@ -156,3 +156,17 @@ var ImageOsList = []*proto.OsImage{
 		Provider:        common.MarketImageProvider,
 	},
 }
+
+// GkeImageOsList gke default images
+var GkeImageOsList = []*proto.OsImage{
+	{
+		Alias:           "",
+		Arch:            "x86_64",
+		ImageID:         "UBUNTU_CONTAINERD",
+		OsCustomizeType: "GENERAL",
+		OsName:          "UBUNTU_CONTAINERD",
+		SeriesName:      "带有 containerd 的 Ubuntu (ubuntu_containerd)",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
+}

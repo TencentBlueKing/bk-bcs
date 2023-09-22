@@ -48,15 +48,22 @@ func checkOperationStatus(computeCli *api.ComputeServiceClient, url, taskID stri
 	return loop.LoopDoFunc(context.Background(), func() error {
 		o, err := api.GetOperation(computeCli, url)
 		if err != nil {
-			return err
+			blog.Warnf("Error[%s] while getting operation %s on %s: %v", taskID, o.Name, o.TargetLink, err)
+			return nil
 		}
+		blog.Infof("Operation[%s] [%s] %s status: %s", taskID, url, o.Name, o.Status)
 		if o.Status == "DONE" {
 			if o.Error != nil {
-				return fmt.Errorf("%d, %s, %s", o.HttpErrorStatusCode, o.HttpErrorMessage, o.Error.Errors[0].Message)
+				errBytes, err := o.Error.MarshalJSON()
+				if err != nil {
+					errBytes = []byte(fmt.Sprintf("operation failed, but error couldn't be recovered: %v", err))
+				}
+				return fmt.Errorf("error while getting operation %s on %s: %s", o.Name, o.TargetLink, errBytes)
 			}
 			return loop.EndLoop
 		}
 		blog.Infof("taskID[%s] operation %s still running", taskID, o.SelfLink)
+
 		return nil
 	}, loop.LoopInterval(d))
 }

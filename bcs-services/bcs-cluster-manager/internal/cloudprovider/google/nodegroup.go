@@ -37,7 +37,7 @@ func init() {
 	})
 }
 
-// NodeGroup nodegroup management for blueking resource pool solution
+// NodeGroup management for blueking resource pool solution
 type NodeGroup struct {
 }
 
@@ -90,7 +90,7 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup,
 		blog.Errorf("create google compute client failed, err: %s", err.Error())
 		return nil, err
 	}
-	// 1. 因为更新节点池OS镜像会导致vm实例被立即替换,暂时禁止替换OS镜像
+	// 1. 更改映像类型将删除并重新创建您节点池中的所有节点。
 	// 2. 当前版本的google api不支持labels和taints更新,而较高版本的google api会导致与现在的grpc版本冲突,
 	// 所以先不支持labels和taints的更新
 
@@ -99,7 +99,22 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup,
 		ng.generatePatchInstanceGroupManager(group)); err != nil {
 		return nil, fmt.Errorf("update node pool failed, err: %s", err.Error())
 	}
-	return nil, nil
+
+	// build task
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when BuildUpdateNodeGroupTask in NodeGroup %s failed, %s",
+			opt.Cloud.CloudProvider, group.NodeGroupID, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildUpdateNodeGroupTask(group, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("BuildUpdateNodeGroupTask failed: %v", err)
+		return nil, err
+	}
+
+	return task, nil
 }
 
 func (ng *NodeGroup) generatePatchInstanceGroupManager(group *proto.NodeGroup) *compute.InstanceGroupManager {
@@ -194,11 +209,20 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 		return nil, err
 	}
 	if len(taskList) != 0 {
-		return nil, fmt.Errorf("%d %s task(s) is still running", len(taskList), taskType)
+		return nil, fmt.Errorf("gke task(%d) %s is still running", len(taskList), taskType)
+	}
+
+	needScaleOutNodes := desired - group.GetAutoScaling().GetDesiredSize()
+
+	blog.Infof("cluster[%s] nodeGroup[%s] current nodes[%d] desired nodes[%d] needNodes[%s]",
+		group.ClusterID, group.NodeGroupID, group.GetAutoScaling().GetDesiredSize(), desired, needScaleOutNodes)
+
+	if needScaleOutNodes <= 0 {
+		return nil, fmt.Errorf("current nodeCount gt desired nodeCount")
 	}
 
 	return &cloudprovider.ScalingResponse{
-		ScalingUp: desired,
+		ScalingUp: needScaleOutNodes,
 	}, nil
 }
 

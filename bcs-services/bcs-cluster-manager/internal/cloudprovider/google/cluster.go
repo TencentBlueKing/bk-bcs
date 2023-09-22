@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"strings"
 
 	"sync"
@@ -165,7 +166,12 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 
 // ListOsImage get osi  mage list
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	if opt == nil || opt.Account == nil || len(opt.Account.ServiceAccountSecret) == 0 ||
+		len(opt.Account.GkeProjectID) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("google ListOsImage lost authoration")
+	}
+
+	return utils.GkeImageOsList, nil
 }
 
 // CheckClusterEndpointStatus check cluster endpoint status

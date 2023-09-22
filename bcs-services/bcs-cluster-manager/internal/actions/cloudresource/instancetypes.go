@@ -134,8 +134,8 @@ func (la *ListNodeTypeAction) listCloudInstancetypes() error {
 		return err
 	}
 	if len(insTypes) != 0 {
-		for _, item := range insTypes {
-			item.TypeName = translate(la.ctx, item.NodeFamily, item.TypeName)
+		for i := range insTypes {
+			insTypes[i].TypeName = translate(la.ctx, insTypes[i].NodeFamily, insTypes[i].TypeName)
 		}
 	}
 	la.nodeTypeList = insTypes

@@ -1101,14 +1101,6 @@ func getTransModuleInfo(asOption *proto.ClusterAutoScalingOption, group *proto.N
 	return asOption.GetModule().GetScaleOutModuleID()
 }
 
-func getAnnotationsByNg(group *proto.NodeGroup) map[string]string {
-	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Annotations) == 0 {
-		return nil
-	}
-
-	return group.GetNodeTemplate().GetAnnotations()
-}
-
 // BuildUpdateDesiredNodesTask build update desired nodes task
 func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
 	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
@@ -1258,7 +1250,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	updateDesiredNodesTask.BuildNodeLabelsStep(task)
 
 	// step4: set node annotations
-	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil, getAnnotationsByNg(opt.NodeGroup))
+	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil,
+		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
 
 	// step5: set resourcePool labels
 	common.BuildResourcePoolLabelTaskStep(task, opt.Cluster.ClusterID)

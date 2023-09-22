@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/avast/retry-go"
+	"google.golang.org/api/compute/v1"
 )
 
 // CleanNodeGroupNodesTask clean node group nodes task
@@ -74,6 +75,7 @@ func CleanNodeGroupNodesTask(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
 	err = deleteIgmInstances(ctx, dependInfo, nodeIDs)
 	if err != nil {
 		blog.Errorf("CleanNodeGroupNodesTask[%s] nodegroup %s removeAsgInstances failed: %v",
@@ -91,7 +93,7 @@ func CleanNodeGroupNodesTask(taskID string, stepName string) error {
 	return nil
 }
 
-func deleteIgmInstances(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs []string) error {
+func deleteIgmInstances(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNames []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	igmInfo, err := api.GetGCEResourceInfo(info.NodeGroup.AutoScaling.AutoScalingID)
@@ -107,7 +109,7 @@ func deleteIgmInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 
 	// check instances if exist
 	var (
-		instanceIDList, validateInstances = make([]string, 0), make([]string, 0)
+		instanceNameList, validateInstances = make([]string, 0), make([]string, 0)
 	)
 	igmInstances, err := client.ListInstanceGroupsInstances(ctx, igmInfo[3], igmInfo[(len(igmInfo)-1)])
 	if err != nil {
@@ -120,10 +122,10 @@ func deleteIgmInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 		if errInfo != nil {
 			return err
 		}
-		instanceIDList = append(instanceIDList, insInfo[len(insInfo)-1])
+		instanceNameList = append(instanceNameList, insInfo[len(insInfo)-1])
 	}
-	for _, id := range nodeIDs {
-		if utils.StringInSlice(id, instanceIDList) {
+	for _, id := range nodeNames {
+		if utils.StringInSlice(id, instanceNameList) {
 			validateInstances = append(validateInstances, id)
 		}
 	}
@@ -131,20 +133,32 @@ func deleteIgmInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 		blog.Infof("deleteIgmInstances[%s] validateInstances is empty", taskID)
 		return nil
 	}
-
 	blog.Infof("deleteIgmInstances[%s] validateInstances[%v]", taskID, validateInstances)
+
+	var (
+		operation *compute.Operation
+		zone      = info.NodeGroup.Region
+	)
+
+	zones := info.NodeGroup.GetAutoScaling().GetZones()
+	if len(zones) > 0 {
+		zone = zones[0]
+	}
+
 	err = retry.Do(func() error {
-		err = client.DeleteInstancesInMIG(ctx, info.NodeGroup.Region, igmInfo[len(igmInfo)-1], validateInstances)
-		if err != nil {
-			blog.Errorf("deleteIgmInstances[%s] DeleteInstancesInMIG failed: %v", taskID, err)
-			return err
+		var errLocal error
+		operation, errLocal = client.DeleteMigInstances(ctx, zone, igmInfo[len(igmInfo)-1], validateInstances)
+		if errLocal != nil {
+			blog.Errorf("deleteIgmInstances[%s] DeleteInstancesInMIG failed: %v", taskID, errLocal)
+			return errLocal
 		}
-		blog.Infof("deleteIgmInstances[%s] DeleteInstancesInMIG[%v] successful", taskID, nodeIDs)
+		blog.Infof("deleteIgmInstances[%s] DeleteInstancesInMIG[%v] successful", taskID, validateInstances)
+
 		return nil
 	}, retry.Attempts(3))
 	if err != nil {
 		return err
 	}
 
-	return nil
+	return checkOperationStatus(client, operation.SelfLink, taskID, time.Second*5)
 }
