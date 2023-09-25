@@ -21,6 +21,11 @@
   const rules = {
     name: [
       {
+        required: true,
+        message: '变量名称不能为空',
+        trigger: 'blur'
+      },
+      {
         validator: (value: string) => value.length <= 128,
         message: '最大长度128个字符'
       },

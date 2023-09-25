@@ -124,15 +124,19 @@
         start: 0,
         all: true
       }
-      if (props.searchStr) {
-        params.search_fields = 'revision_name,revision_memo,name,path,creator'
-        params.search_value = props.searchStr
-      }
 
       let res
       if (isUnNamedVersion.value) {
+        if (props.searchStr) {
+          params.search_fields = 'name,path,memo,creator,reviser'
+          params.search_value = props.searchStr
+        }
         res = await getConfigList(props.bkBizId, props.appId, params)
       } else {
+        if (props.searchStr) {
+          params.search_fields = 'name,path,memo,creator'
+          params.search_value = props.searchStr
+        }
         res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params)
       }
       configList.value = res.details
@@ -161,7 +165,7 @@
       if (isUnNamedVersion.value) {
         res = await getBoundTemplates(props.bkBizId, props.appId, params)
       } else {
-        res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id)
+        res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id, params)
       }
       templateGroupList.value = res.details
       templatesCount.value = res.details.reduce((acc: number, crt: IBoundTemplateGroup) => {
@@ -317,7 +321,7 @@
       </thead>
       <tbody>
         <template v-for="group in tableGroupsData" :key="group.id">
-          <tr class="config-groups-table-tr group-title-row">
+          <tr class="config-groups-table-tr group-title-row" v-if="group.id === 0 && group.configs.length > 0">
             <td colspan="8" class="config-groups-table-td">
               <div class="configs-group">
                 <div class="name-wrapper" @click="group.expand = !group.expand">

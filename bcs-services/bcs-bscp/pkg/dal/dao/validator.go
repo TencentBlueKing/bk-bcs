@@ -101,7 +101,7 @@ func (dao *validatorDao) ValidateTmplRevisionsExist(kit *kit.Kit, templateRevisi
 
 	diffIDs := tools.SliceDiff(templateRevisionIDs, existIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("template release id in %v is not exist", diffIDs)
+		return fmt.Errorf("template revision id in %v is not exist", diffIDs)
 	}
 
 	return nil
@@ -119,7 +119,7 @@ func (dao *validatorDao) ValidateTmplRevisionsExistWithTx(kit *kit.Kit, tx *gen.
 
 	diffIDs := tools.SliceDiff(templateRevisionIDs, existIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("template release id in %v is not exist", diffIDs)
+		return fmt.Errorf("template revision id in %v is not exist", diffIDs)
 	}
 
 	return nil
@@ -199,9 +199,7 @@ func (dao *validatorDao) ValidateTmplSpaceNoSubRes(kit *kit.Kit, id uint32) erro
 	if tmplSetCnt, err = q.Where(m.TemplateSpaceID.Eq(id)).Count(); err != nil {
 		return fmt.Errorf("get template set count failed, err: %v", err)
 	}
-	// when the tmplSetCnt is 1, the template set must be default template set
-	// in this scenario, allow the template space to be deleted
-	if tmplSetCnt > 1 {
+	if tmplSetCnt > 0 {
 		return fmt.Errorf("there are template sets under the template space, need to delete them first")
 	}
 

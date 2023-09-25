@@ -38,6 +38,8 @@ const (
 	createNodeGroupTaskTemplate = "gke-create node group: %s/%s"
 	// deleteNodeGroupTaskTemplate bk-sops add task template
 	deleteNodeGroupTaskTemplate = "gke-delete node group: %s/%s"
+	// updateNodeGroupTaskTemplate bk-sops add task template
+	updateNodeGroupTaskTemplate = "gke-update node group: %s/%s"
 	// updateNodeGroupDesiredNode bk-sops add task template
 	updateNodeGroupDesiredNodeTemplate = "gke-update node group desired node: %s/%s"
 	// cleanNodeGroupNodesTaskTemplate bk-sops add task template

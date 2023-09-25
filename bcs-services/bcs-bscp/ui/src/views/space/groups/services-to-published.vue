@@ -77,9 +77,10 @@
         <bk-table
           :data="list"
           :border="['outer']"
+          :remote-pagination="true"
           :pagination="pagination"
           @page-limit-change="handlePageLimitChange"
-          @page-change="loadServicesList">
+          @page-value-change="loadServicesList">
           <bk-table-column label="服务名称" prop="app_name"></bk-table-column>
           <bk-table-column label="服务版本">
             <template #default="{ row }">

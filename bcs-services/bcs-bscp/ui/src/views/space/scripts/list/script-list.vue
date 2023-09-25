@@ -176,9 +176,10 @@
         <bk-table
           :border="['outer']"
           :data="scriptsData"
+          :remote-pagination="true"
           :pagination="pagination"
           @page-limit-change="handlePageLimitChange"
-          @page-change="refreshList">
+          @page-value-change="refreshList">
           <bk-table-column label="脚本名称">
             <template #default="{ row }">
               <div v-if="row.hook" class="hook-name" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">{{ row.hook.spec.name }}</div>

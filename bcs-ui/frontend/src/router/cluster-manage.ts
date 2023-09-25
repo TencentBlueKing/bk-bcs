@@ -1,4 +1,7 @@
 import { RouteConfig } from 'vue-router';
+
+import { ICluster } from '@/composables/use-app';
+import $store from '@/store';
 // 集群首页
 const Cluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/index.vue');
 // 创建集群
@@ -27,6 +30,11 @@ const InternalNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/
 const InternalNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/node-pool-detail.vue');
 const InternalEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/edit-node-pool.vue');
 const PodDetail = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/detail/index.vue');
+
+// google ca
+const GoogleNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/google/node-pool.vue');
+const GoogleNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/google/node-pool-detail.vue');
+const GoogleEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/google/edit-node-pool.vue');
 
 // 集群管理
 export default [
@@ -227,6 +235,23 @@ export default [
     meta: {
       menuId: 'CLUSTER',
     },
+    beforeEnter(to, from, next) {
+      const clusterList = $store.state.cluster.clusterList as ICluster[];
+      const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
+      if (cluster?.provider === 'gcpCloud') {
+        next({
+          name: 'googleNodePool',
+          params: {
+            ...to.params,
+          },
+          query: {
+            ...to.query,
+          },
+        });
+      } else {
+        next();
+      }
+    },
   },
   {
     path: 'cluster/:clusterId/nodepools/:nodeGroupID',
@@ -236,12 +261,74 @@ export default [
     meta: {
       menuId: 'CLUSTER',
     },
+    beforeEnter(to, from, next) {
+      const clusterList = $store.state.cluster.clusterList as ICluster[];
+      const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
+      if (cluster?.provider === 'gcpCloud') {
+        next({
+          name: 'googleEditNodePool',
+          params: {
+            ...to.params,
+          },
+          query: {
+            ...to.query,
+          },
+        });
+      } else {
+        next();
+      }
+    },
   },
   {
     path: 'cluster/:clusterId/nodepools/:nodeGroupID/detail',
     name: 'nodePoolDetail',
     props: true,
     component: window.REGION === 'ieod' ? InternalNodePoolDetail : NodePoolDetail,
+    meta: {
+      menuId: 'CLUSTER',
+    },
+    beforeEnter(to, from, next) {
+      const clusterList = $store.state.cluster.clusterList as ICluster[];
+      const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
+      if (cluster?.provider === 'gcpCloud') {
+        next({
+          name: 'googleNodePoolDetail',
+          params: {
+            ...to.params,
+          },
+          query: {
+            ...to.query,
+          },
+        });
+      } else {
+        next();
+      }
+    },
+  },
+  // google ca
+  {
+    path: 'cluster/:clusterId/google/nodepools',
+    name: 'googleNodePool',
+    props: true,
+    component: GoogleNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+    },
+  },
+  {
+    path: 'cluster/:clusterId/google/nodepools/:nodeGroupID',
+    name: 'googleEditNodePool',
+    props: true,
+    component: GoogleEditNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+    },
+  },
+  {
+    path: 'cluster/:clusterId/google/nodepools/:nodeGroupID/detail',
+    name: 'googleNodePoolDetail',
+    props: true,
+    component: GoogleNodePoolDetail,
     meta: {
       menuId: 'CLUSTER',
     },

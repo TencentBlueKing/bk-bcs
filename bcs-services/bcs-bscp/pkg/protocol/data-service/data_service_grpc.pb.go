@@ -104,6 +104,7 @@ const (
 	Data_DeleteAppTemplateBinding_FullMethodName          = "/pbds.Data/DeleteAppTemplateBinding"
 	Data_ListAppBoundTmplRevisions_FullMethodName         = "/pbds.Data/ListAppBoundTmplRevisions"
 	Data_ListReleasedAppBoundTmplRevisions_FullMethodName = "/pbds.Data/ListReleasedAppBoundTmplRevisions"
+	Data_GetReleasedAppBoundTmplRevision_FullMethodName   = "/pbds.Data/GetReleasedAppBoundTmplRevision"
 	Data_CheckAppTemplateBinding_FullMethodName           = "/pbds.Data/CheckAppTemplateBinding"
 	Data_ExtractAppTmplVariables_FullMethodName           = "/pbds.Data/ExtractAppTmplVariables"
 	Data_GetAppTmplVariableRefs_FullMethodName            = "/pbds.Data/GetAppTmplVariableRefs"
@@ -243,6 +244,7 @@ type DataClient interface {
 	DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListAppBoundTmplRevisions(ctx context.Context, in *ListAppBoundTmplRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTmplRevisionsResp, error)
 	ListReleasedAppBoundTmplRevisions(ctx context.Context, in *ListReleasedAppBoundTmplRevisionsReq, opts ...grpc.CallOption) (*ListReleasedAppBoundTmplRevisionsResp, error)
+	GetReleasedAppBoundTmplRevision(ctx context.Context, in *GetReleasedAppBoundTmplRevisionReq, opts ...grpc.CallOption) (*GetReleasedAppBoundTmplRevisionResp, error)
 	CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error)
 	// app template variables related interface.
 	ExtractAppTmplVariables(ctx context.Context, in *ExtractAppTmplVariablesReq, opts ...grpc.CallOption) (*ExtractAppTmplVariablesResp, error)
@@ -990,6 +992,15 @@ func (c *dataClient) ListReleasedAppBoundTmplRevisions(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *dataClient) GetReleasedAppBoundTmplRevision(ctx context.Context, in *GetReleasedAppBoundTmplRevisionReq, opts ...grpc.CallOption) (*GetReleasedAppBoundTmplRevisionResp, error) {
+	out := new(GetReleasedAppBoundTmplRevisionResp)
+	err := c.cc.Invoke(ctx, Data_GetReleasedAppBoundTmplRevision_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error) {
 	out := new(CheckAppTemplateBindingResp)
 	err := c.cc.Invoke(ctx, Data_CheckAppTemplateBinding_FullMethodName, in, out, opts...)
@@ -1471,6 +1482,7 @@ type DataServer interface {
 	DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*base.EmptyResp, error)
 	ListAppBoundTmplRevisions(context.Context, *ListAppBoundTmplRevisionsReq) (*ListAppBoundTmplRevisionsResp, error)
 	ListReleasedAppBoundTmplRevisions(context.Context, *ListReleasedAppBoundTmplRevisionsReq) (*ListReleasedAppBoundTmplRevisionsResp, error)
+	GetReleasedAppBoundTmplRevision(context.Context, *GetReleasedAppBoundTmplRevisionReq) (*GetReleasedAppBoundTmplRevisionResp, error)
 	CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error)
 	// app template variables related interface.
 	ExtractAppTmplVariables(context.Context, *ExtractAppTmplVariablesReq) (*ExtractAppTmplVariablesResp, error)
@@ -1757,6 +1769,9 @@ func (UnimplementedDataServer) ListAppBoundTmplRevisions(context.Context, *ListA
 }
 func (UnimplementedDataServer) ListReleasedAppBoundTmplRevisions(context.Context, *ListReleasedAppBoundTmplRevisionsReq) (*ListReleasedAppBoundTmplRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedAppBoundTmplRevisions not implemented")
+}
+func (UnimplementedDataServer) GetReleasedAppBoundTmplRevision(context.Context, *GetReleasedAppBoundTmplRevisionReq) (*GetReleasedAppBoundTmplRevisionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedAppBoundTmplRevision not implemented")
 }
 func (UnimplementedDataServer) CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckAppTemplateBinding not implemented")
@@ -3267,6 +3282,24 @@ func _Data_ListReleasedAppBoundTmplRevisions_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_GetReleasedAppBoundTmplRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasedAppBoundTmplRevisionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetReleasedAppBoundTmplRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetReleasedAppBoundTmplRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetReleasedAppBoundTmplRevision(ctx, req.(*GetReleasedAppBoundTmplRevisionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_CheckAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CheckAppTemplateBindingReq)
 	if err := dec(in); err != nil {
@@ -4351,6 +4384,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListReleasedAppBoundTmplRevisions",
 			Handler:    _Data_ListReleasedAppBoundTmplRevisions_Handler,
+		},
+		{
+			MethodName: "GetReleasedAppBoundTmplRevision",
+			Handler:    _Data_GetReleasedAppBoundTmplRevision_Handler,
 		},
 		{
 			MethodName: "CheckAppTemplateBinding",

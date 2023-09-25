@@ -26,7 +26,7 @@
 
   const cols = computed(() => {
     const tableCols = [
-      { label: '变量说明', cls: 'name', prop: 'name' },
+      { label: '变量名称', cls: 'name', prop: 'name' },
       { label: '类型', cls: 'type', prop: 'type' },
       { label: '变量值', cls: 'default_value', prop: 'default_val' },
       { label: '变量说明', cls: 'memo', prop: 'memo' }

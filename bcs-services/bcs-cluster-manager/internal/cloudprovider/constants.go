@@ -215,6 +215,8 @@ var (
 	OriginNodeIPsKey ParamKey = "originNodeIPs"
 	// NodeIDsKey xxx
 	NodeIDsKey ParamKey = "nodeIDs"
+	// NodeNamesKey xxx
+	NodeNamesKey ParamKey = "nodeNames"
 	// DeviceIDsKey xxx
 	DeviceIDsKey ParamKey = "deviceIDs"
 	// NodeSchedule node schedule status
@@ -226,6 +228,8 @@ var (
 	QuotaNameKey ParamKey = "name"
 	// LabelsKey xxx
 	LabelsKey ParamKey = "labels"
+	// TaintsKey xxx
+	TaintsKey ParamKey = "taints"
 	// AnnotationsKey xxx
 	AnnotationsKey ParamKey = "annotations"
 	// ResourceQuotaKey xxx
