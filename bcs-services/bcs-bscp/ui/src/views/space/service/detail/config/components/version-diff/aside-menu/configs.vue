@@ -187,7 +187,7 @@
       if (unNamedVersion) {
         res = await getBoundTemplates(bkBizId.value, <number>appData.value.id, params)
       } else {
-        res = await getBoundTemplatesByAppVersion(bkBizId.value, <number>appData.value.id, id)
+        res = await getBoundTemplatesByAppVersion(bkBizId.value, <number>appData.value.id, id, params)
       }
       return res.details.map((groupItem: IBoundTemplateGroup) => {
         const { template_space_id, template_space_name, template_set_id, template_set_name } = groupItem
