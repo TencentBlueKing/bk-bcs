@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -19,9 +19,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/panjf2000/ants/v2"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
@@ -47,11 +46,11 @@ func NewTaskController(option *Options) Controller {
 
 // Init task controller
 func (c *taskController) Init(opts ...Option) error {
-	//init all custom Option
+	// init all custom Option
 	for _, opt := range opts {
 		opt(c.opt)
 	}
-	//init all dependent resource, such as storage, client and etc.
+	// init all dependent resource, such as storage, client and etc.
 	if c.opt.ResourceManager == nil {
 		blog.Errorf("[taskController] Controller lost resource-manager interface in Init Stage")
 		return fmt.Errorf("controller lost resource-manager instance")
@@ -78,7 +77,7 @@ func (c *taskController) Run(cxt context.Context) {
 	for {
 		select {
 		case now := <-tick.C:
-			//main loops
+			// main loops
 			blog.Infof("[taskController] ############## task controller ticker: %s################", now.Format(time.RFC3339))
 			c.controllerLoops()
 		case <-cxt.Done():
@@ -98,7 +97,7 @@ func (c *taskController) controllerLoops() {
 	c.handleNormalTask()
 	// handleTerminatedTask
 	c.handleTerminatedTask()
-	//handleExpiredTask
+	// handleExpiredTask
 	c.handleExpiredTask()
 	// traceExecutingTask
 	c.traceExecutingTask()
@@ -128,6 +127,7 @@ func (c *taskController) handleNormalTask() {
 			blog.Errorf("[taskController] get strategy %s tasks err:%s", strategy.Name, listErr.Error())
 			return
 		}
+		// nolint
 		if task != nil && len(task) != 0 {
 			for _, oneTask := range task {
 				oneTask.NodeGroupStrategy = strategy.Name
@@ -194,9 +194,9 @@ func (c *taskController) handleOneNormalTask(task *storage.ScaleDownTask) {
 	blog.Infof("[taskController] originalTotal:%d", originTotal)
 	// 如果ip数量和任务的数量一致，说明上一轮没有ip被剔除，此时检查节点状态
 	if originTotal == task.TotalNum {
-		//先检查ScaleDownGroups里的节点状态是否都是ready，如果不是，从切片里删除
-		//检查nodegroup里带标签的节点跟切片里的是否一致，不在切片里但有标签的，去掉
-		//如果执行时间在1小时内，不操作？
+		// 先检查ScaleDownGroups里的节点状态是否都是ready，如果不是，从切片里删除
+		// 检查nodegroup里带标签的节点跟切片里的是否一致，不在切片里但有标签的，去掉
+		// 如果执行时间在1小时内，不操作？
 		wg := sync.WaitGroup{}
 		pool, initErr := ants.NewPool(c.opt.Concurrency)
 		if err != nil {
@@ -370,12 +370,13 @@ func (c *taskController) handleOneExpiredTask(task *storage.ScaleDownTask) error
 		if err != nil {
 			return fmt.Errorf("get nodegroup %s error:%s", scaleDownDetail.NodeGroupID, getErr.Error())
 		}
-		nodegroupInfo.DesiredSize = nodegroupInfo.DesiredSize - scaleDownDetail.NodeNum
+		nodegroupInfo.DesiredSize -= scaleDownDetail.NodeNum
 		nodegroupInfo.UpdatedTime = time.Now()
 		nodegroupInfo.LastStatus = nodegroupInfo.Status
 		nodegroupInfo.Status = storage.ScaleDownByTaskState
 		nodegroupInfo.HookConfirm = false
 		nodegroupInfo.Message = fmt.Sprintf("scale down %d nodes by task %s", scaleDownDetail.NodeNum, task.TaskID)
+		// nolint
 		if _, err = c.opt.Storage.UpdateNodeGroup(nodegroupInfo, &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}); err != nil {
 			return fmt.Errorf("update nodegroup %s desire size error:%s", scaleDownDetail.NodeGroupID, err.Error())
 		}

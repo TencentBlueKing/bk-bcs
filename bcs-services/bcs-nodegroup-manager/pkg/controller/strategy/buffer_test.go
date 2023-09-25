@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -35,7 +35,7 @@ func TestIsAbleToScaleDown(t *testing.T) {
 		message           string
 		on                func(f *MockFields)
 	}{
-		{ //resource is not idle
+		{ // resource is not idle
 			name: "scaleDown",
 			strategy: &storage.NodeGroupMgrStrategy{
 				Name:              "test",
@@ -65,7 +65,7 @@ func TestIsAbleToScaleDown(t *testing.T) {
 					}, nil)
 			},
 		},
-		{ //resource is idle
+		{ // resource is idle
 			name: "notScaleDown",
 			strategy: &storage.NodeGroupMgrStrategy{
 				ResourcePool: "testpool",
@@ -116,6 +116,8 @@ func TestIsAbleToScaleDown(t *testing.T) {
 	}
 }
 
+// NOCC:golint/funlen(设计如此)
+// nolint
 func TestIsAbleToScaleUp(t *testing.T) {
 	// construct test data
 	testcases := []struct {
@@ -126,7 +128,7 @@ func TestIsAbleToScaleUp(t *testing.T) {
 		message         string
 		on              func(f *MockFields)
 	}{
-		{ //resource is not idle enough
+		{ // resource is not idle enough
 			name: "notScaleUp",
 			strategy: &storage.NodeGroupMgrStrategy{
 				ResourcePool: "testpool",
@@ -157,7 +159,7 @@ func TestIsAbleToScaleUp(t *testing.T) {
 					}, nil)
 			},
 		},
-		{ //resource is not idle enough time
+		{ // resource is not idle enough time
 			name: "notEnoughTime",
 			strategy: &storage.NodeGroupMgrStrategy{
 				ResourcePool: "testpool",

@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -136,7 +136,9 @@ func TestScaleUp_updateNodeGroupErr(t *testing.T) {
 	// storage return failure
 	store.On("GetNodeGroup", nodeGroups[0].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[0], nil)
 	store.On("GetNodeGroup", nodeGroups[1].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[1], nil)
-	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{}).Return(nodeGroups[0], fmt.Errorf("data storage failure"))
+	store.On("UpdateNodeGroup",
+		nodeGroups[0], &storage.UpdateOptions{}).
+		Return(nodeGroups[0], fmt.Errorf("data storage failure"))
 
 	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleUpNum)
 	assertion.NotNil(err, "UpdateNodeGroup met any failure must stop testcase")
@@ -293,7 +295,8 @@ func TestScaleDown_updateNodeGroupErr(t *testing.T) {
 	// storage return failure
 	store.On("GetNodeGroup", nodeGroups[0].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[0], nil)
 	store.On("GetNodeGroup", nodeGroups[1].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[1], nil)
-	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{}).Return(nodeGroups[0], fmt.Errorf("data storage failure"))
+	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{}).
+		Return(nodeGroups[0], fmt.Errorf("data storage failure"))
 
 	err := ctl.handleElasticNodeGroupScaleUp(strategy, scaleDownNum)
 	assertion.NotNil(err, "UpdateNodeGroup met any failure must stop testcase")
@@ -329,7 +332,8 @@ func TestScaleDown_createActionErr(t *testing.T) {
 
 	store.On("GetNodeGroup", nodeGroups[0].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[0], nil)
 	store.On("GetNodeGroup", nodeGroups[1].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[1], nil)
-	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}).Return(nodeGroups[0], nil)
+	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}).
+		Return(nodeGroups[0], nil)
 	// store.On("UpdateNodeGroup", nodeGroups[1], &storage.UpdateOptions{}).Return(nodeGroups[1], nil)
 	store.On("CreateNodeGroupAction",
 		basemock.MatchedBy(func(action *storage.NodeGroupAction) bool {
@@ -375,7 +379,8 @@ func TestScaleDown_createNodeGroupEvent(t *testing.T) {
 	store.On("GetNodeGroup", nodeGroups[0].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[0], nil)
 	store.On("GetNodeGroup", nodeGroups[1].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[1], nil)
 	// !first loop, create Event failure but still go on
-	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}).Return(nodeGroups[0], nil)
+	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}).
+		Return(nodeGroups[0], nil)
 	store.On("CreateNodeGroupAction",
 		basemock.MatchedBy(func(action *storage.NodeGroupAction) bool {
 			return action.NodeGroupID == expectedActions[0].NodeGroupID &&
@@ -389,7 +394,8 @@ func TestScaleDown_createNodeGroupEvent(t *testing.T) {
 		&storage.CreateOptions{},
 	).Return(fmt.Errorf("database connection lost"))
 	// !second loop
-	store.On("UpdateNodeGroup", nodeGroups[1], &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}).Return(nodeGroups[1], nil)
+	store.On("UpdateNodeGroup", nodeGroups[1], &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}).
+		Return(nodeGroups[1], nil)
 	store.On("CreateNodeGroupAction",
 		basemock.MatchedBy(func(action *storage.NodeGroupAction) bool {
 			return action.NodeGroupID == expectedActions[1].NodeGroupID &&
@@ -536,7 +542,8 @@ func TestTracingDown_releaseResNotEnough(t *testing.T) {
 		// expected create NodeGroupEvent, no matter what error
 		store.On("CreateNodeGroupEvent",
 			basemock.MatchedBy(func(event *storage.NodeGroupEvent) bool {
-				t.Logf("create new NodeGroup Event, %s, Desired, %d, message: %s", event.NodeGroupID, event.DesiredNum, event.Message)
+				t.Logf("create new NodeGroup Event, %s, Desired, %d, message: %s",
+					event.NodeGroupID, event.DesiredNum, event.Message)
 				return true
 			}),
 			&storage.CreateOptions{},
