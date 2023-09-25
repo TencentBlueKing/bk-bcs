@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package mesos xxx
 package mesos
 
 import (
@@ -24,13 +24,13 @@ import (
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/emicklei/go-restful"
+	"github.com/ghodss/yaml"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/regdiscv"
-
-	"github.com/emicklei/go-restful"
-	"github.com/ghodss/yaml"
 )
 
 const (
@@ -40,7 +40,7 @@ const (
 	// mediaHeader key for http media content type
 	medieTypeHeader = "Content-Type"
 	// mediaTypeApplicationJSON json payload for http body
-	mediaTypeApplicationJSON = "application/json"
+	mediaTypeApplicationJSON = "application/json" // nolint
 	// mediaTypeApplicationYaml yaml payload for http body
 	mediaTypeApplicationYaml = "application/x-yaml"
 )
@@ -56,7 +56,7 @@ func init() {
 		Handler: handlerDeleteActions})
 }
 
-func request2mesosapi(req *restful.Request, uri, method string) (string, error) {
+func request2mesosapi(req *restful.Request, uri, method string) (string, error) { // nolint
 	start := time.Now()
 
 	data, err := ioutil.ReadAll(req.Request.Body)
@@ -107,20 +107,22 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 	if found {
 		url = fmt.Sprintf("%s/mesosdriver/v4/%s", serverAddr, uri)
 		if strings.HasPrefix(serverAddr, "https") {
-			cliTls, err := rd.GetClientTls()
-			if err != nil {
-				blog.Errorf("get client tls error %s", err.Error())
+			cliTls, tlsErr := rd.GetClientTls()
+			if tlsErr != nil {
+				blog.Errorf("get client tls error %s", tlsErr.Error())
 			}
 			tp.TLSClientConfig = cliTls
 		}
 		httpcli.SetTransPort(tp)
 	} else {
-		serv, err := rd.GetModuleServers(fmt.Sprintf("%s/%s", types.BCS_MODULE_MESOSAPISERVER, cluster))
-		if err != nil {
+		serv, moduleErr := rd.GetModuleServers(fmt.Sprintf("%s/%s", types.BCS_MODULE_MESOSAPISERVER, cluster))
+		if moduleErr != nil {
 			metric.RequestErrorCount.WithLabelValues("mesos", method).Inc()
 			metric.RequestErrorLatency.WithLabelValues("mesos", method).Observe(time.Since(start).Seconds())
-			blog.Error("get cluster %s servers %s error %s", cluster, types.BCS_MODULE_MESOSAPISERVER, err.Error())
-			err1 := bhttp.InternalError(common.BcsErrApiGetMesosApiFail, fmt.Sprintf("mesos cluster %s not found", cluster))
+			blog.Error("get cluster %s servers %s error %s", cluster, types.BCS_MODULE_MESOSAPISERVER,
+				moduleErr.Error())
+			err1 := bhttp.InternalError(common.BcsErrApiGetMesosApiFail,
+				fmt.Sprintf("mesos cluster %s not found", cluster))
 			return err1.Error(), nil
 		}
 
@@ -145,9 +147,9 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 		blog.V(3).Infof("do request to url(%s), method(%s)", url, method)
 
 		if strings.ToLower(ser.Scheme) == "https" {
-			cliTls, err := rd.GetClientTls()
-			if err != nil {
-				blog.Errorf("get client tls error %s", err.Error())
+			cliTls, tlsErr := rd.GetClientTls()
+			if tlsErr != nil {
+				blog.Errorf("get client tls error %s", tlsErr.Error())
 			}
 			httpcli.SetTlsVerityConfig(cliTls)
 		}
@@ -178,7 +180,7 @@ func handlerPostActions(req *restful.Request, resp *restful.Response) {
 	}
 
 	data, _ := request2mesosapi(req, url, "POST")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 func handlerGetActions(req *restful.Request, resp *restful.Response) {
@@ -190,7 +192,7 @@ func handlerGetActions(req *restful.Request, resp *restful.Response) {
 	}
 
 	data, _ := request2mesosapi(req, url, "GET")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 func handlerDeleteActions(req *restful.Request, resp *restful.Response) {
@@ -202,7 +204,7 @@ func handlerDeleteActions(req *restful.Request, resp *restful.Response) {
 	}
 
 	data, _ := request2mesosapi(req, url, "DELETE")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 func handlerPutActions(req *restful.Request, resp *restful.Response) {
@@ -214,7 +216,7 @@ func handlerPutActions(req *restful.Request, resp *restful.Response) {
 	}
 
 	data, _ := request2mesosapi(req, url, "PUT")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 // yamlTOJSON check if mesos request body is yaml,

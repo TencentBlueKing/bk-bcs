@@ -8,14 +8,14 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package processor xxx
 package processor
 
 import (
 	// import v4 http clusterkeeper actions
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/clusterkeeper"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/clusterkeeper" // nolint
 	// import v4 http k8s actions
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/k8s"
 	// import v4 http mesos actions
@@ -26,6 +26,6 @@ import (
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/netservice"
 	// import v4 http storage actions
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/storage"
-	// import v4 http detection actions
+	// nolint // import v4 http detection actions
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/detection"
 )

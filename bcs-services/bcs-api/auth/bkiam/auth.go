@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package bkiam xxx
 package bkiam
 
 import (
@@ -25,11 +25,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/golang-jwt/jwt/v4"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
-
-	"github.com/golang-jwt/jwt/v4"
 )
 
 const (

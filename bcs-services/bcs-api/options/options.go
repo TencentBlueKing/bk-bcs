@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package options xxx
@@ -31,7 +30,7 @@ type ServerOption struct {
 	conf.LocalConfig
 	conf.CustomCertConfig
 
-	VerifyClientTLS bool `json:"verify_client_tls" value:"false" usage:"verify client when brings up a tls server" mapstructure:"verify_client_tls"`
+	VerifyClientTLS bool `json:"verify_client_tls" value:"false" usage:"verify client when brings up a tls server" mapstructure:"verify_client_tls"` // nolint
 
 	BKIamAuth AuthOption `json:"bkiam_auth"`
 
@@ -39,11 +38,11 @@ type ServerOption struct {
 
 	Edition string `json:"edition" value:"ieod" usage:"api edition"`
 
-	MesosWebconsoleProxyPort uint `json:"mesos_webconsole_proxy_port" value:"8083" usage:"Port to connect to mesos webconsole proxy"`
+	MesosWebconsoleProxyPort uint `json:"mesos_webconsole_proxy_port" value:"8083" usage:"Port to connect to mesos webconsole proxy"` // nolint
 
 	TKE TKEOptions `json:"tke"`
 
-	PeerToken string `json:"peer_token" value:"" usage:"peer token to auth with each other, only used to websocket peer"`
+	PeerToken string `json:"peer_token" value:"" usage:"peer token to auth with each other, only used to websocket peer"` // nolint
 }
 
 // BKEOptions bke options
@@ -99,23 +98,23 @@ type BootStrapUser struct {
 // AuthOption bkiam auth options
 type AuthOption struct {
 	Auth          bool `json:"auth" value:"false" usage:"use auth mode or not" mapstructure:"auth"`
-	RemoteCheck   bool `json:"remote_check" value:"false" usage:"check auth in remote host or not" mapstructure:"remote_check"`
-	SkipNoneToken bool `json:"skip_none_token" value:"false" usage:"skip auth check when token no specified" mapstructure:"skip_none_token"`
+	RemoteCheck   bool `json:"remote_check" value:"false" usage:"check auth in remote host or not" mapstructure:"remote_check"`              // nolint
+	SkipNoneToken bool `json:"skip_none_token" value:"false" usage:"skip auth check when token no specified" mapstructure:"skip_none_token"` // nolint
 
 	Version string `json:"auth_version" value:"3" usage:"bkiam version, 2 or 3." mapstructure:"auth_version"`
 
 	ApiGwRsaFile string `json:"apigw_rsa_file" value:"" usage:"apigw rsa public key file" mapstructure:"apigw_rsa_file"`
 
-	AuthTokenSyncTime int `json:"auth_token_sync_time" value:"10" usage:"time ticker for syncing token in cache, seconds" mapstructure:"auth_token_sync_time"`
+	AuthTokenSyncTime int `json:"auth_token_sync_time" value:"10" usage:"time ticker for syncing token in cache, seconds" mapstructure:"auth_token_sync_time"` // nolint
 
-	BKIamAuthHost       string          `json:"bkiam_auth_host" value:"" usage:"bkiam auth server host" mapstructure:"bkiam_auth_host"`
-	BKIamAuthAppCode    string          `json:"bkiam_auth_app_code" value:"" usage:"app code for communicating with auth" mapstructure:"bkiam_auth_app_code"`
-	BKIamAuthAppSecret  string          `json:"bkiam_auth_app_secret" value:"" usage:"app secret for communicating with auth" mapstructure:"bkiam_auth_app_secret"`
-	BKIamAuthSystemID   string          `json:"bkiam_auth_system_id" value:"" usage:"system id in auth service" mapstructure:"bkiam_auth_system_id"`
-	BKIamAuthScopeID    string          `json:"bkiam_auth_scope_id" value:"" usage:"scope id in auth service" mapstructure:"bkiam_auth_scope_id"`
-	BKIamZookeeper      string          `json:"bkiam_auth_zookeeper" value:"" usage:"zookeeper for auth token storage" mapstructure:"bkiam_auth_zookeeper"`
+	BKIamAuthHost       string          `json:"bkiam_auth_host" value:"" usage:"bkiam auth server host" mapstructure:"bkiam_auth_host"`                             // nolint
+	BKIamAuthAppCode    string          `json:"bkiam_auth_app_code" value:"" usage:"app code for communicating with auth" mapstructure:"bkiam_auth_app_code"`       // nolint
+	BKIamAuthAppSecret  string          `json:"bkiam_auth_app_secret" value:"" usage:"app secret for communicating with auth" mapstructure:"bkiam_auth_app_secret"` // nolint
+	BKIamAuthSystemID   string          `json:"bkiam_auth_system_id" value:"" usage:"system id in auth service" mapstructure:"bkiam_auth_system_id"`                // nolint
+	BKIamAuthScopeID    string          `json:"bkiam_auth_scope_id" value:"" usage:"scope id in auth service" mapstructure:"bkiam_auth_scope_id"`                   // nolint
+	BKIamZookeeper      string          `json:"bkiam_auth_zookeeper" value:"" usage:"zookeeper for auth token storage" mapstructure:"bkiam_auth_zookeeper"`         // nolint
 	BKIamTokenWhiteList []AuthWhitelist `json:"bkiam_auth_token_whitelist" value:"" usage:"token whitelist for bkiam"`
-	BKIamAuthSubServer  string          `json:"bkiam_auth_sub_server" value:"" usage:"bkiam auth subserver" mapstructure:"bkiam_auth_sub_server"`
+	BKIamAuthSubServer  string          `json:"bkiam_auth_sub_server" value:"" usage:"bkiam auth subserver" mapstructure:"bkiam_auth_sub_server"` // nolint
 }
 
 // AuthWhitelist white list for bkiam

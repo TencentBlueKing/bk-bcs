@@ -8,15 +8,15 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
 
 import (
 	"encoding/json"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
 	"net/http"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
 )
 
 // WriteErrorResponse writes a standard error response

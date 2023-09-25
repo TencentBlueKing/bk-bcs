@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package filter xxx
@@ -19,9 +18,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcshttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
-
 	"github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 )
 
 // NewFilter general filter for bcs-api
@@ -54,7 +53,7 @@ func (gf *GeneralFilter) Filter(req *restful.Request, resp *restful.Response, ch
 	for _, filterFunction := range gf.filterFunctions {
 		errCode, err := filterFunction.Execute(req)
 		if err != nil {
-			resp.WriteHeaderAndEntity(http.StatusBadRequest, bcshttp.APIRespone{
+			_ = resp.WriteHeaderAndEntity(http.StatusBadRequest, bcshttp.APIRespone{
 				Result:  false,
 				Code:    errCode,
 				Message: err.Error(),
