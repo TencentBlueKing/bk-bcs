@@ -217,6 +217,9 @@ type GameDeploymentStatus struct {
 	// indicated by updateRevision and have a Ready Condition.
 	UpdatedReadyReplicas int32 `json:"updatedReadyReplicas"`
 
+	// currentRevision, if not empty, indicates the version of the GameDeployment used to generate Pods in partition
+	CurrentRevision string `json:"currentRevision,omitempty" protobuf:"bytes,6,opt,name=currentRevision"`
+
 	// UpdateRevision, if not empty, indicates the latest revision of the GameDeployment.
 	UpdateRevision string `json:"updateRevision,omitempty"`
 
