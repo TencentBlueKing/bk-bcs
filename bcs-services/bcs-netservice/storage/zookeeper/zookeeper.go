@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package zookeeper xxx
@@ -19,13 +18,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
-
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
 )
 
 var (
@@ -246,28 +244,23 @@ func (zks *zkStorage) RegisterAndWatch(path string, data []byte) error {
 	go func() {
 		tick := time.NewTicker(20 * time.Second)
 		defer tick.Stop()
-		for {
-			select {
-			case <-tick.C:
-				started := time.Now()
-				isExisted, err := zks.zkClient.Exists(newPath)
+		for started := range tick.C {
+			isExisted, err := zks.zkClient.Exists(newPath)
+			if err != nil {
+				reportMetrics("exist", statusFailure, started)
+				blog.Warnf("zkClient.exists failed, wait next tick, err %s", err.Error())
+			} else {
+				reportMetrics("exist", statusFailure, started)
+			}
+			if !isExisted {
+				blog.Warnf("server node(%s) does not exist, try to create new server node", path)
+				newPath, err = zks.zkClient.CreateEphAndSeqEx(path, data)
 				if err != nil {
-					reportMetrics("exist", statusFailure, started)
-					blog.Warnf("zkClient.exists failed, wait next tick, err %s", err.Error())
+					blog.Warnf("failed to create node(%s), wait next tick", path)
+					reportMetrics("createEphAndSeq", statusFailure, started)
 				} else {
-					reportMetrics("exist", statusFailure, started)
-				}
-				if !isExisted {
-					started = time.Now()
-					blog.Warnf("server node(%s) does not exist, try to create new server node", path)
-					newPath, err = zks.zkClient.CreateEphAndSeqEx(path, data)
-					if err != nil {
-						blog.Warnf("failed to create node(%s), wait next tick", path)
-						reportMetrics("createEphAndSeq", statusFailure, started)
-					} else {
-						blog.Warnf("create server node(%s) successfully", newPath)
-						reportMetrics("createEphAndSeq", statusSuccess, started)
-					}
+					blog.Warnf("create server node(%s) successfully", newPath)
+					reportMetrics("createEphAndSeq", statusSuccess, started)
 				}
 			}
 		}

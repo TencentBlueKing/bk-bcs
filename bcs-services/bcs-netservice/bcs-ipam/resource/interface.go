@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package resource
@@ -22,6 +21,6 @@ type IPDriver interface {
 	GetIPAddr(host, containerID, requestIP string) (*types.IPInfo,
 		error) // GetIPAddr get available ip resource for contaienr
 	ReleaseIPAddr(host string, containerID string,
-		ipInfo *types.IPInfo) error // ReleaseIPAddr release ip address for container
+		ipInfo *types.IPInfo) error                   // ReleaseIPAddr release ip address for container
 	GetHostInfo(host string) (*types.HostInfo, error) // Get host info from driver
 }
