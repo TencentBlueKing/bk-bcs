@@ -46,15 +46,16 @@ func NewTracingWrapper() server.HandlerWrapper {
 				return errorx.New(errcode.General, "failed to get micro's metadata")
 			}
 
+			// 获取或生成 request id 注入到 context
+			requestID := getOrCreateReqID(md)
+			ctx = context.WithValue(ctx, ctxkey.RequestIDKey, requestID)
+
 			// 判断Header 是否有放置Transparent
 			if value, ok := md.Get("traceparent"); ok {
 				md["traceparent"] = value
 				// 有则从上游解析Transparent
 				ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.MapCarrier(md))
 			} else {
-				// 获取或生成 request id 注入到 context
-				requestID := getOrCreateReqID(md)
-				ctx = context.WithValue(ctx, ctxkey.RequestIDKey, requestID)
 				ctx = tracing.ContextWithRequestID(ctx, requestID)
 			}
 

@@ -38,7 +38,7 @@ func (h *Handler) ListRS(
 	}
 
 	respDataBuilder, err := respUtil.NewRespDataBuilder(
-		ctx, respUtil.DataBuilderParams{ret, resCsts.RS, req.Format, req.Scene},
+		ctx, respUtil.DataBuilderParams{Manifest: ret, Kind: resCsts.RS, Format: req.Format, Scene: req.Scene},
 	)
 	if err != nil {
 		return err
@@ -56,18 +56,17 @@ func (h *Handler) ListRS(
 }
 
 // GetDeployHistoryRevision 获取deployment history revision
-func (h *Handler) GetDeployHistoryRevision(ctx context.Context, req *clusterRes.GetDeployHistoryRevisionReq,
-	resp *clusterRes.CommonResp) error {
+func (h *Handler) GetDeployHistoryRevision(ctx context.Context, req *clusterRes.GetResHistoryReq,
+	resp *clusterRes.CommonListResp) error {
 
 	// 根据deployment name namespace筛选
-	ret, err := cli.NewRSCliByClusterID(ctx, req.ClusterID).GetDeployHistoryRevision(
-		ctx, req.Name, req.Namespace)
-
+	ret, err := cli.NewRSCliByClusterID(ctx, req.ClusterID).GetResHistoryRevision(
+		ctx, resCsts.Deploy, req.Namespace, req.Name)
 	if err != nil {
 		return err
 	}
 
-	resp.Data, err = pbstruct.Map2pbStruct(ret)
+	resp.Data, err = pbstruct.MapSlice2ListValue(ret)
 	if err != nil {
 		return err
 	}
@@ -76,13 +75,10 @@ func (h *Handler) GetDeployHistoryRevision(ctx context.Context, req *clusterRes.
 }
 
 // GetDeployRevisionDiff 获取deployment revision差异信息
-func (h *Handler) GetDeployRevisionDiff(ctx context.Context, req *clusterRes.GetDeployRevisionDetailReq,
+func (h *Handler) GetDeployRevisionDiff(ctx context.Context, req *clusterRes.RolloutRevisionReq,
 	resp *clusterRes.CommonResp) error {
-
-	// 根据deployment name筛选
-	ret, err := cli.NewRSCliByClusterID(ctx, req.ClusterID).GetDeployRevisionDiff(
-		ctx, req.Name, req.Namespace, req.Revision)
-
+	ret, err := cli.NewRSCliByClusterID(ctx, req.ClusterID).GetResRevisionDiff(
+		ctx, resCsts.Deploy, req.Namespace, req.Name, req.Revision)
 	if err != nil {
 		return err
 	}
@@ -95,21 +91,9 @@ func (h *Handler) GetDeployRevisionDiff(ctx context.Context, req *clusterRes.Get
 }
 
 // RolloutDeployRevision 回滚deployment history revision
-func (h *Handler) RolloutDeployRevision(ctx context.Context, req *clusterRes.RolloutDeployRevisionReq,
+func (h *Handler) RolloutDeployRevision(ctx context.Context, req *clusterRes.RolloutRevisionReq,
 	resp *clusterRes.CommonResp) error {
-
-	// 根据Namespace, OwnerName筛选回滚的deploy 版本
-	ret, err := cli.NewRSCliByClusterID(ctx, req.ClusterID).RolloutDeployRevision(
-		ctx, req.Namespace, req.Revision, req.Name,
+	return cli.NewRSCliByClusterID(ctx, req.ClusterID).RolloutResRevision(
+		ctx, req.Namespace, req.Name, resCsts.Deploy, req.Revision,
 	)
-
-	if err != nil {
-		return err
-	}
-
-	resp.Data, err = pbstruct.Map2pbStruct(ret)
-	if err != nil {
-		return err
-	}
-	return nil
 }

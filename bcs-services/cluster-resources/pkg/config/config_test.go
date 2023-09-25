@@ -48,10 +48,6 @@ func TestLoadConf(t *testing.T) { //nolint:cyclop
 	if clientCert := ""; c.Client.Cert != clientCert {
 		t.Errorf("Conf client.cert, Excepted: %v, Result: %v", clientCert, c.Client.Cert)
 	}
-	// 检查 swagger 配置
-	if swaggerDir := ""; c.Swagger.Dir != swaggerDir {
-		t.Errorf("Conf swagger.dir, Excepted: %v, Result: %v", swaggerDir, c.Swagger.Dir)
-	}
 	// 检查 log 配置
 	level, fileName := "info", "cr.log"
 	if c.Log.Level != level {

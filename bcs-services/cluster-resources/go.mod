@@ -2,6 +2,20 @@ module github.com/Tencent/bk-bcs/bcs-services/cluster-resources
 
 go 1.20
 
+replace (
+	k8s.io/api => k8s.io/api v0.23.1
+	k8s.io/apimachinery => k8s.io/apimachinery v0.23.1
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.23.1
+	k8s.io/client-go => k8s.io/client-go v0.23.1
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65
+	k8s.io/kubectl => k8s.io/kubectl v0.23.1
+	k8s.io/kubectl/pkg/polymorphichelpers => k8s.io/kubectl/pkg/polymorphichelpers v0.26.1
+	sigs.k8s.io/kustomize/api => sigs.k8s.io/kustomize/api v0.10.1
+	sigs.k8s.io/kustomize/kyaml => sigs.k8s.io/kustomize/kyaml v0.13.0
+	sigs.k8s.io/structured-merge-diff/v4 => sigs.k8s.io/structured-merge-diff/v4 v4.3.0
+	sigs.k8s.io/yaml => sigs.k8s.io/yaml v1.2.0
+)
+
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230920065036-5ec367ec2378
@@ -48,6 +62,7 @@ require (
 	k8s.io/api v0.28.0
 	k8s.io/apimachinery v0.28.0
 	k8s.io/client-go v0.28.0
+	k8s.io/kubectl v0.28.0
 )
 
 require (
@@ -94,10 +109,10 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-openapi/jsonpointer v0.19.6 // indirect
+	github.com/go-openapi/jsonpointer v0.20.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/spec v0.20.6 // indirect
-	github.com/go-openapi/swag v0.22.3 // indirect
+	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.11.2 // indirect
@@ -141,7 +156,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/signalfx/splunk-otel-go v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/swaggo/http-swagger v1.3.4
@@ -180,13 +194,13 @@ require (
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/klog/v2 v2.100.1 // indirect
+	k8s.io/klog/v2 v2.100.1
 	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9 // indirect
-	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 // indirect
+	k8s.io/utils v0.0.0-20230711102312-30195339c3c7 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.3.0 // indirect
+	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
@@ -198,17 +212,15 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common/pkg/audit v0.0.0-20230921024236-fc3b5f7e6d87
 	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230921024236-fc3b5f7e6d87
 	github.com/go-redis/redis/extra/redisotel/v8 v8.11.5
-	github.com/google/gnostic-models v0.6.8
+	github.com/googleapis/gnostic v0.5.5
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.44.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98
-	k8s.io/kubectl v0.28.0
 )
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
-	github.com/chai2010/gettext-go v1.0.2 // indirect
-	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
+	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
@@ -227,8 +239,9 @@ require (
 	github.com/moby/term v0.5.0 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
-	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
+	github.com/russross/blackfriday v1.5.2 // indirect
+	github.com/signalfx/splunk-otel-go v1.4.0 // indirect
 	github.com/spf13/cobra v1.7.0 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
@@ -237,5 +250,5 @@ require (
 	k8s.io/component-base v0.28.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	sigs.k8s.io/kustomize/api v0.13.5-0.20230601165947-6ce0bf390ce3 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.14.3-0.20230601165947-6ce0bf390ce3 // indirect
+	sigs.k8s.io/kustomize/kyaml v0.14.2 // indirect
 )

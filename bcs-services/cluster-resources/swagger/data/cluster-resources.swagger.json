@@ -149,6 +149,240 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/view_configs": {
+      "get": {
+        "summary": "Get view configs",
+        "description": "获取视图配置列表",
+        "operationId": "ViewConfig_ListViewConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ViewConfig"
+        ]
+      },
+      "post": {
+        "summary": "Create view config",
+        "description": "创建视图配置1",
+        "operationId": "ViewConfig_CreateViewConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCreateViewConfigReq"
+            }
+          }
+        ],
+        "tags": [
+          "ViewConfig"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/view_configs/{id}": {
+      "get": {
+        "summary": "Get view config detail",
+        "description": "获取视图配置详情",
+        "operationId": "ViewConfig_GetViewConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ViewConfig"
+        ]
+      },
+      "delete": {
+        "summary": "Delete view config",
+        "description": "删除单个视图配置",
+        "operationId": "ViewConfig_DeleteViewConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ViewConfig"
+        ]
+      },
+      "put": {
+        "summary": "Update view config",
+        "description": "更新视图配置",
+        "operationId": "ViewConfig_UpdateViewConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesUpdateViewConfigReq"
+            }
+          }
+        ],
+        "tags": [
+          "ViewConfig"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/view_configs/{id}/rename": {
+      "put": {
+        "summary": "Update view config name",
+        "description": "视图重命名",
+        "operationId": "ViewConfig_RenameViewConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesRenameViewConfigReq"
+            }
+          }
+        ],
+        "tags": [
+          "ViewConfig"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/configmaps": {
       "post": {
         "summary": "CreateCM API",
@@ -3588,114 +3822,6 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/history/{name}": {
-      "get": {
-        "summary": "GetDSHistoryRevision API",
-        "description": "获取 DaemonSet Revision",
-        "operationId": "Workload_GetDSHistoryRevision",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "namespace",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "Workload"
-        ]
-      }
-    },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/rollout/{name}": {
-      "put": {
-        "summary": "RolloutDSRevision API",
-        "description": "回滚 DaemonSet Revision",
-        "operationId": "Workload_RolloutDSRevision",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "namespace",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesRolloutDeployRevisionReq"
-            }
-          }
-        ],
-        "tags": [
-          "Workload"
-        ]
-      }
-    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}": {
       "get": {
         "summary": "GetDS API",
@@ -3864,6 +3990,56 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/history": {
+      "get": {
+        "summary": "GetDSHistoryRevision API",
+        "description": "获取 DaemonSet Revision",
+        "operationId": "Workload_GetDSHistoryRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/restart": {
       "put": {
         "summary": "RestartDeploy API",
@@ -3914,6 +4090,128 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterresourcesResRestartReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/revisions/{revision}": {
+      "get": {
+        "summary": "GetDSRevisionDiff API",
+        "description": "获取 DaemonSet revision差异信息",
+        "operationId": "Workload_GetDSRevisionDiff",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/rollout/{revision}": {
+      "put": {
+        "summary": "RolloutDSRevision API",
+        "description": "回滚 DaemonSet Revision",
+        "operationId": "Workload_RolloutDSRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesRolloutRevisionReq"
             }
           }
         ],
@@ -4001,171 +4299,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          }
-        ],
-        "tags": [
-          "Workload"
-        ]
-      }
-    },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/{name}": {
-      "get": {
-        "summary": "GetHistoryDeployRevision API",
-        "description": "获取 Deployment Revision",
-        "operationId": "Workload_GetDeployHistoryRevision",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "namespace",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "Workload"
-        ]
-      }
-    },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/diff/{name}": {
-      "get": {
-        "summary": "GetDeployRevisionDetail API",
-        "description": "获取deployment revision差异信息",
-        "operationId": "Workload_GetDeployRevisionDiff",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "namespace",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "revision",
-            "description": "deployment revision版本.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "Workload"
-        ]
-      }
-    },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/{name}": {
-      "put": {
-        "summary": "RolloutDeployRevision API",
-        "description": "回滚 Deployment Revision",
-        "operationId": "Workload_RolloutDeployRevision",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "namespace",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesRolloutDeployRevisionReq"
-            }
           }
         ],
         "tags": [
@@ -4334,6 +4467,56 @@
             "schema": {
               "$ref": "#/definitions/clusterresourcesResUpdateReq"
             }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/history": {
+      "get": {
+        "summary": "GetHistoryDeployRevision API",
+        "description": "获取 Deployment Revision",
+        "operationId": "Workload_GetDeployHistoryRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4514,6 +4697,128 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterresourcesResRestartReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/revisions/{revision}": {
+      "get": {
+        "summary": "GetDeployRevisionDetail API",
+        "description": "获取deployment revision差异信息",
+        "operationId": "Workload_GetDeployRevisionDiff",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/rollout/{revision}": {
+      "put": {
+        "summary": "RolloutDeployRevision API",
+        "description": "回滚 Deployment Revision",
+        "operationId": "Workload_RolloutDeployRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesRolloutRevisionReq"
             }
           }
         ],
@@ -5672,114 +5977,6 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/history/{name}": {
-      "get": {
-        "summary": "GetSTSHistoryRevision API",
-        "description": "获取 StatefulSet Revision",
-        "operationId": "Workload_GetSTSHistoryRevision",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "namespace",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "Workload"
-        ]
-      }
-    },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/rollout/{name}": {
-      "put": {
-        "summary": "RolloutSTSRevision API",
-        "description": "回滚 StatefulSet Revision",
-        "operationId": "Workload_RolloutSTSRevision",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "namespace",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesRolloutDeployRevisionReq"
-            }
-          }
-        ],
-        "tags": [
-          "Workload"
-        ]
-      }
-    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}": {
       "get": {
         "summary": "GetSTS API",
@@ -5948,6 +6145,56 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/history": {
+      "get": {
+        "summary": "GetSTSHistoryRevision API",
+        "description": "获取 StatefulSet Revision",
+        "operationId": "Workload_GetSTSHistoryRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/reschedule": {
       "put": {
         "summary": "RescheduleSTSPo API",
@@ -6056,6 +6303,128 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterresourcesResRestartReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/revisions/{revision}": {
+      "get": {
+        "summary": "GetSTSRevisionDiff API",
+        "description": "获取 StatefulSet revision差异信息",
+        "operationId": "Workload_GetSTSRevisionDiff",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/rollout/{revision}": {
+      "put": {
+        "summary": "RolloutSTSRevision API",
+        "description": "回滚 StatefulSet Revision",
+        "operationId": "Workload_RolloutSTSRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesRolloutRevisionReq"
             }
           }
         ],
@@ -7763,6 +8132,37 @@
       "description": "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体",
       "title": "CommonResp"
     },
+    "clusterresourcesCreateViewConfigReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "name": {
+          "type": "string",
+          "title": "视图名称"
+        },
+        "filter": {
+          "$ref": "#/definitions/clusterresourcesViewFilter",
+          "title": "筛选条件"
+        },
+        "saveAs": {
+          "type": "boolean",
+          "title": "另存为"
+        }
+      },
+      "description": "创建视图配置",
+      "title": "CreateViewConfigReq"
+    },
     "clusterresourcesEchoReq": {
       "type": "object",
       "properties": {
@@ -7862,6 +8262,25 @@
       },
       "description": "Ping API 响应",
       "title": "PingResp"
+    },
+    "clusterresourcesRenameViewConfigReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "视图 ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "name": {
+          "type": "string",
+          "title": "视图名称"
+        }
+      },
+      "description": "更新视图配置",
+      "title": "UpdateViewConfigReq"
     },
     "clusterresourcesResBatchRescheduleReq": {
       "type": "object",
@@ -8030,7 +8449,7 @@
       "description": "更新单个 k8s 资源请求体",
       "title": "ResUpdateReq"
     },
-    "clusterresourcesRolloutDeployRevisionReq": {
+    "clusterresourcesRolloutRevisionReq": {
       "type": "object",
       "properties": {
         "projectID": {
@@ -8051,11 +8470,11 @@
         },
         "revision": {
           "type": "string",
-          "title": "deployment revision版本"
+          "format": "int64",
+          "title": "revision 版本"
         }
       },
-      "description": "删除单个 k8s 资源请求体",
-      "title": "ResDeleteReq"
+      "title": "RolloutRevisionReq"
     },
     "clusterresourcesSubscribeResp": {
       "type": "object",
@@ -8098,6 +8517,37 @@
         }
       }
     },
+    "clusterresourcesUpdateViewConfigReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "视图 ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "name": {
+          "type": "string",
+          "title": "视图名称"
+        },
+        "filter": {
+          "$ref": "#/definitions/clusterresourcesViewFilter",
+          "title": "筛选条件"
+        }
+      },
+      "description": "更新视图配置",
+      "title": "UpdateViewConfigReq"
+    },
     "clusterresourcesVersionResp": {
       "type": "object",
       "properties": {
@@ -8134,6 +8584,26 @@
       },
       "description": "Version API 响应",
       "title": "VersionResp"
+    },
+    "clusterresourcesViewFilter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "creator": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "labelSelector": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
     },
     "protobufAny": {
       "type": "object",

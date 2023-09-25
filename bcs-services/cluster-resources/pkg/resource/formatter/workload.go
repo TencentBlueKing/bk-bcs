@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/TencentBlueKing/gopkg/collection/set"
@@ -214,6 +215,13 @@ func (p *WorkloadStatusParser) Parse() string {
 	// 若非正常情况，检查 generation，若为 1（第一个版本），则状态为创建中
 	if gen := mapx.GetInt64(p.manifest, "metadata.generation"); gen == int64(1) {
 		return WorkloadStatusCreating
+	}
+	// 如果包含重启标识，则状态为重启中
+	restartPath := []string{"spec", "template", "metadata", "annotations", WorkloadRestartAnnotationKey}
+	versionPath := []string{"spec", "template", "metadata", "annotations", WorkloadRestartVersionAnnotationKey}
+	if mapx.GetStr(p.manifest, restartPath) != "" &&
+		mapx.GetStr(p.manifest, versionPath) == strconv.Itoa(int(mapx.GetInt64(p.manifest, "metadata.generation"))) {
+		return WorkloadStatusRestarting
 	}
 	return WorkloadStatusUpdating
 }

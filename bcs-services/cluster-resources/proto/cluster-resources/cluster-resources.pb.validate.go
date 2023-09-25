@@ -2380,30 +2380,30 @@ var _ResDeleteReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResDeleteReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
-// Validate checks the field values on GetDeployHistoryRevisionReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetDeployHistoryRevisionReq) Validate() error {
+// Validate checks the field values on GetResHistoryReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetResHistoryReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetDeployHistoryRevisionReq with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on GetResHistoryReq with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetDeployHistoryRevisionReqMultiError, or nil if none found.
-func (m *GetDeployHistoryRevisionReq) ValidateAll() error {
+// GetResHistoryReqMultiError, or nil if none found.
+func (m *GetResHistoryReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetDeployHistoryRevisionReq) validate(all bool) error {
+func (m *GetResHistoryReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if !_GetDeployHistoryRevisionReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := GetDeployHistoryRevisionReqValidationError{
+	if !_GetResHistoryReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := GetResHistoryReqValidationError{
 			field:  "ProjectID",
 			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
 		}
@@ -2414,7 +2414,7 @@ func (m *GetDeployHistoryRevisionReq) validate(all bool) error {
 	}
 
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
-		err := GetDeployHistoryRevisionReqValidationError{
+		err := GetResHistoryReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
@@ -2425,7 +2425,7 @@ func (m *GetDeployHistoryRevisionReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
-		err := GetDeployHistoryRevisionReqValidationError{
+		err := GetResHistoryReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be at most 63 runes",
 		}
@@ -2435,8 +2435,8 @@ func (m *GetDeployHistoryRevisionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_GetDeployHistoryRevisionReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
-		err := GetDeployHistoryRevisionReqValidationError{
+	if !_GetResHistoryReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := GetResHistoryReqValidationError{
 			field:  "Namespace",
 			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
 		}
@@ -2447,7 +2447,7 @@ func (m *GetDeployHistoryRevisionReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetName()) > 253 {
-		err := GetDeployHistoryRevisionReqValidationError{
+		err := GetResHistoryReqValidationError{
 			field:  "Name",
 			reason: "value length must be at most 253 runes",
 		}
@@ -2457,8 +2457,8 @@ func (m *GetDeployHistoryRevisionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_GetDeployHistoryRevisionReq_Name_Pattern.MatchString(m.GetName()) {
-		err := GetDeployHistoryRevisionReqValidationError{
+	if !_GetResHistoryReq_Name_Pattern.MatchString(m.GetName()) {
+		err := GetResHistoryReqValidationError{
 			field:  "Name",
 			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
 		}
@@ -2469,216 +2469,19 @@ func (m *GetDeployHistoryRevisionReq) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return GetDeployHistoryRevisionReqMultiError(errors)
+		return GetResHistoryReqMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetDeployHistoryRevisionReqMultiError is an error wrapping multiple
-// validation errors returned by GetDeployHistoryRevisionReq.ValidateAll() if
-// the designated constraints aren't met.
-type GetDeployHistoryRevisionReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m GetDeployHistoryRevisionReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m GetDeployHistoryRevisionReqMultiError) AllErrors() []error { return m }
-
-// GetDeployHistoryRevisionReqValidationError is the validation error returned
-// by GetDeployHistoryRevisionReq.Validate if the designated constraints
+// GetResHistoryReqMultiError is an error wrapping multiple validation errors
+// returned by GetResHistoryReq.ValidateAll() if the designated constraints
 // aren't met.
-type GetDeployHistoryRevisionReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GetDeployHistoryRevisionReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GetDeployHistoryRevisionReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GetDeployHistoryRevisionReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GetDeployHistoryRevisionReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GetDeployHistoryRevisionReqValidationError) ErrorName() string {
-	return "GetDeployHistoryRevisionReqValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e GetDeployHistoryRevisionReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGetDeployHistoryRevisionReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GetDeployHistoryRevisionReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GetDeployHistoryRevisionReqValidationError{}
-
-var _GetDeployHistoryRevisionReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
-
-var _GetDeployHistoryRevisionReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
-
-var _GetDeployHistoryRevisionReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
-
-// Validate checks the field values on GetDeployRevisionDetailReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetDeployRevisionDetailReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on GetDeployRevisionDetailReq with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// GetDeployRevisionDetailReqMultiError, or nil if none found.
-func (m *GetDeployRevisionDetailReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *GetDeployRevisionDetailReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if !_GetDeployRevisionDetailReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := GetDeployRevisionDetailReqValidationError{
-			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
-		err := GetDeployRevisionDetailReqValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 13 and 14 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
-		err := GetDeployRevisionDetailReqValidationError{
-			field:  "Namespace",
-			reason: "value length must be at most 63 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_GetDeployRevisionDetailReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
-		err := GetDeployRevisionDetailReqValidationError{
-			field:  "Namespace",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetName()) > 253 {
-		err := GetDeployRevisionDetailReqValidationError{
-			field:  "Name",
-			reason: "value length must be at most 253 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_GetDeployRevisionDetailReq_Name_Pattern.MatchString(m.GetName()) {
-		err := GetDeployRevisionDetailReqValidationError{
-			field:  "Name",
-			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetRevision()) > 20 {
-		err := GetDeployRevisionDetailReqValidationError{
-			field:  "Revision",
-			reason: "value length must be at most 20 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_GetDeployRevisionDetailReq_Revision_Pattern.MatchString(m.GetRevision()) {
-		err := GetDeployRevisionDetailReqValidationError{
-			field:  "Revision",
-			reason: "value does not match regex pattern \"^[0-9]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if len(errors) > 0 {
-		return GetDeployRevisionDetailReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// GetDeployRevisionDetailReqMultiError is an error wrapping multiple
-// validation errors returned by GetDeployRevisionDetailReq.ValidateAll() if
-// the designated constraints aren't met.
-type GetDeployRevisionDetailReqMultiError []error
+type GetResHistoryReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetDeployRevisionDetailReqMultiError) Error() string {
+func (m GetResHistoryReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2687,11 +2490,11 @@ func (m GetDeployRevisionDetailReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetDeployRevisionDetailReqMultiError) AllErrors() []error { return m }
+func (m GetResHistoryReqMultiError) AllErrors() []error { return m }
 
-// GetDeployRevisionDetailReqValidationError is the validation error returned
-// by GetDeployRevisionDetailReq.Validate if the designated constraints aren't met.
-type GetDeployRevisionDetailReqValidationError struct {
+// GetResHistoryReqValidationError is the validation error returned by
+// GetResHistoryReq.Validate if the designated constraints aren't met.
+type GetResHistoryReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2699,24 +2502,22 @@ type GetDeployRevisionDetailReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetDeployRevisionDetailReqValidationError) Field() string { return e.field }
+func (e GetResHistoryReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetDeployRevisionDetailReqValidationError) Reason() string { return e.reason }
+func (e GetResHistoryReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetDeployRevisionDetailReqValidationError) Cause() error { return e.cause }
+func (e GetResHistoryReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetDeployRevisionDetailReqValidationError) Key() bool { return e.key }
+func (e GetResHistoryReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetDeployRevisionDetailReqValidationError) ErrorName() string {
-	return "GetDeployRevisionDetailReqValidationError"
-}
+func (e GetResHistoryReqValidationError) ErrorName() string { return "GetResHistoryReqValidationError" }
 
 // Error satisfies the builtin error interface
-func (e GetDeployRevisionDetailReqValidationError) Error() string {
+func (e GetResHistoryReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2728,14 +2529,14 @@ func (e GetDeployRevisionDetailReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetDeployRevisionDetailReq.%s: %s%s",
+		"invalid %sGetResHistoryReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetDeployRevisionDetailReqValidationError{}
+var _ error = GetResHistoryReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -2743,40 +2544,38 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetDeployRevisionDetailReqValidationError{}
+} = GetResHistoryReqValidationError{}
 
-var _GetDeployRevisionDetailReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+var _GetResHistoryReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
-var _GetDeployRevisionDetailReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+var _GetResHistoryReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
-var _GetDeployRevisionDetailReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+var _GetResHistoryReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
-var _GetDeployRevisionDetailReq_Revision_Pattern = regexp.MustCompile("^[0-9]+$")
-
-// Validate checks the field values on RolloutDeployRevisionReq with the rules
+// Validate checks the field values on RolloutRevisionReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *RolloutDeployRevisionReq) Validate() error {
+func (m *RolloutRevisionReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on RolloutDeployRevisionReq with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on RolloutRevisionReq with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// RolloutDeployRevisionReqMultiError, or nil if none found.
-func (m *RolloutDeployRevisionReq) ValidateAll() error {
+// RolloutRevisionReqMultiError, or nil if none found.
+func (m *RolloutRevisionReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *RolloutDeployRevisionReq) validate(all bool) error {
+func (m *RolloutRevisionReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if !_RolloutDeployRevisionReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := RolloutDeployRevisionReqValidationError{
+	if !_RolloutRevisionReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := RolloutRevisionReqValidationError{
 			field:  "ProjectID",
 			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
 		}
@@ -2787,7 +2586,7 @@ func (m *RolloutDeployRevisionReq) validate(all bool) error {
 	}
 
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
-		err := RolloutDeployRevisionReqValidationError{
+		err := RolloutRevisionReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 13 and 14 runes, inclusive",
 		}
@@ -2798,7 +2597,7 @@ func (m *RolloutDeployRevisionReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
-		err := RolloutDeployRevisionReqValidationError{
+		err := RolloutRevisionReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be at most 63 runes",
 		}
@@ -2808,8 +2607,8 @@ func (m *RolloutDeployRevisionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_RolloutDeployRevisionReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
-		err := RolloutDeployRevisionReqValidationError{
+	if !_RolloutRevisionReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := RolloutRevisionReqValidationError{
 			field:  "Namespace",
 			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
 		}
@@ -2820,7 +2619,7 @@ func (m *RolloutDeployRevisionReq) validate(all bool) error {
 	}
 
 	if utf8.RuneCountInString(m.GetName()) > 253 {
-		err := RolloutDeployRevisionReqValidationError{
+		err := RolloutRevisionReqValidationError{
 			field:  "Name",
 			reason: "value length must be at most 253 runes",
 		}
@@ -2830,8 +2629,8 @@ func (m *RolloutDeployRevisionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_RolloutDeployRevisionReq_Name_Pattern.MatchString(m.GetName()) {
-		err := RolloutDeployRevisionReqValidationError{
+	if !_RolloutRevisionReq_Name_Pattern.MatchString(m.GetName()) {
+		err := RolloutRevisionReqValidationError{
 			field:  "Name",
 			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
 		}
@@ -2841,21 +2640,10 @@ func (m *RolloutDeployRevisionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetRevision()) > 20 {
-		err := RolloutDeployRevisionReqValidationError{
+	if m.GetRevision() < 0 {
+		err := RolloutRevisionReqValidationError{
 			field:  "Revision",
-			reason: "value length must be at most 20 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_RolloutDeployRevisionReq_Revision_Pattern.MatchString(m.GetRevision()) {
-		err := RolloutDeployRevisionReqValidationError{
-			field:  "Revision",
-			reason: "value does not match regex pattern \"^[0-9]+$\"",
+			reason: "value must be greater than or equal to 0",
 		}
 		if !all {
 			return err
@@ -2864,19 +2652,19 @@ func (m *RolloutDeployRevisionReq) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return RolloutDeployRevisionReqMultiError(errors)
+		return RolloutRevisionReqMultiError(errors)
 	}
 
 	return nil
 }
 
-// RolloutDeployRevisionReqMultiError is an error wrapping multiple validation
-// errors returned by RolloutDeployRevisionReq.ValidateAll() if the designated
-// constraints aren't met.
-type RolloutDeployRevisionReqMultiError []error
+// RolloutRevisionReqMultiError is an error wrapping multiple validation errors
+// returned by RolloutRevisionReq.ValidateAll() if the designated constraints
+// aren't met.
+type RolloutRevisionReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m RolloutDeployRevisionReqMultiError) Error() string {
+func (m RolloutRevisionReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2885,11 +2673,11 @@ func (m RolloutDeployRevisionReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m RolloutDeployRevisionReqMultiError) AllErrors() []error { return m }
+func (m RolloutRevisionReqMultiError) AllErrors() []error { return m }
 
-// RolloutDeployRevisionReqValidationError is the validation error returned by
-// RolloutDeployRevisionReq.Validate if the designated constraints aren't met.
-type RolloutDeployRevisionReqValidationError struct {
+// RolloutRevisionReqValidationError is the validation error returned by
+// RolloutRevisionReq.Validate if the designated constraints aren't met.
+type RolloutRevisionReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2897,24 +2685,24 @@ type RolloutDeployRevisionReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e RolloutDeployRevisionReqValidationError) Field() string { return e.field }
+func (e RolloutRevisionReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e RolloutDeployRevisionReqValidationError) Reason() string { return e.reason }
+func (e RolloutRevisionReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e RolloutDeployRevisionReqValidationError) Cause() error { return e.cause }
+func (e RolloutRevisionReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e RolloutDeployRevisionReqValidationError) Key() bool { return e.key }
+func (e RolloutRevisionReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e RolloutDeployRevisionReqValidationError) ErrorName() string {
-	return "RolloutDeployRevisionReqValidationError"
+func (e RolloutRevisionReqValidationError) ErrorName() string {
+	return "RolloutRevisionReqValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e RolloutDeployRevisionReqValidationError) Error() string {
+func (e RolloutRevisionReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2926,14 +2714,14 @@ func (e RolloutDeployRevisionReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sRolloutDeployRevisionReq.%s: %s%s",
+		"invalid %sRolloutRevisionReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = RolloutDeployRevisionReqValidationError{}
+var _ error = RolloutRevisionReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -2941,15 +2729,13 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = RolloutDeployRevisionReqValidationError{}
+} = RolloutRevisionReqValidationError{}
 
-var _RolloutDeployRevisionReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+var _RolloutRevisionReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
 
-var _RolloutDeployRevisionReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+var _RolloutRevisionReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
-var _RolloutDeployRevisionReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
-
-var _RolloutDeployRevisionReq_Revision_Pattern = regexp.MustCompile("^[0-9]+$")
+var _RolloutRevisionReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
 
 // Validate checks the field values on ResBatchRescheduleReq with the rules
 // defined in the proto definition for this message. If any rules are

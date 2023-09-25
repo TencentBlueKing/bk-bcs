@@ -395,19 +395,19 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 		},
 		{
 			Name:    "Workload.GetDeployHistoryRevision",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/{name}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/history"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.GetDeployRevisionDiff",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/diff/{name}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/revisions/{revision}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.RolloutDeployRevision",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/{name}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/rollout/{revision}"},
 			Method:  []string{"PUT"},
 			Handler: "rpc",
 		},
@@ -449,13 +449,19 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 		},
 		{
 			Name:    "Workload.GetDSHistoryRevision",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/history/{name}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/history"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetDSRevisionDiff",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/revisions/{revision}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.RolloutDSRevision",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/rollout/{name}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/rollout/{revision}"},
 			Method:  []string{"PUT"},
 			Handler: "rpc",
 		},
@@ -497,13 +503,19 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 		},
 		{
 			Name:    "Workload.GetSTSHistoryRevision",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/history/{name}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/history"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.GetSTSRevisionDiff",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/revisions/{revision}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.RolloutSTSRevision",
-			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/rollout/{name}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/rollout/{revision}"},
 			Method:  []string{"PUT"},
 			Handler: "rpc",
 		},
@@ -678,25 +690,27 @@ type WorkloadService interface {
 	ScaleDeploy(ctx context.Context, in *ResScaleReq, opts ...client.CallOption) (*CommonResp, error)
 	RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
-	GetDeployHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, opts ...client.CallOption) (*CommonResp, error)
-	GetDeployRevisionDiff(ctx context.Context, in *GetDeployRevisionDetailReq, opts ...client.CallOption) (*CommonResp, error)
-	RolloutDeployRevision(ctx context.Context, in *RolloutDeployRevisionReq, opts ...client.CallOption) (*CommonResp, error)
+	GetDeployHistoryRevision(ctx context.Context, in *GetResHistoryReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetDeployRevisionDiff(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error)
+	RolloutDeployRevision(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error)
 	ListRS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	ListDS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetDS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateDS(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateDS(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	RestartDS(ctx context.Context, in *ResRestartReq, opts ...client.CallOption) (*CommonResp, error)
-	GetDSHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, opts ...client.CallOption) (*CommonResp, error)
-	RolloutDSRevision(ctx context.Context, in *RolloutDeployRevisionReq, opts ...client.CallOption) (*CommonResp, error)
+	GetDSHistoryRevision(ctx context.Context, in *GetResHistoryReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetDSRevisionDiff(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error)
+	RolloutDSRevision(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteDS(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	ListSTS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetSTS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateSTS(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateSTS(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	RestartSTS(ctx context.Context, in *ResRestartReq, opts ...client.CallOption) (*CommonResp, error)
-	GetSTSHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, opts ...client.CallOption) (*CommonResp, error)
-	RolloutSTSRevision(ctx context.Context, in *RolloutDeployRevisionReq, opts ...client.CallOption) (*CommonResp, error)
+	GetSTSHistoryRevision(ctx context.Context, in *GetResHistoryReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetSTSRevisionDiff(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error)
+	RolloutSTSRevision(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error)
 	ScaleSTS(ctx context.Context, in *ResScaleReq, opts ...client.CallOption) (*CommonResp, error)
 	RescheduleSTSPo(ctx context.Context, in *ResBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteSTS(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
@@ -827,9 +841,9 @@ func (c *workloadService) DeleteDeploy(ctx context.Context, in *ResDeleteReq, op
 	return out, nil
 }
 
-func (c *workloadService) GetDeployHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *workloadService) GetDeployHistoryRevision(ctx context.Context, in *GetResHistoryReq, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.GetDeployHistoryRevision", in)
-	out := new(CommonResp)
+	out := new(CommonListResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -837,7 +851,7 @@ func (c *workloadService) GetDeployHistoryRevision(ctx context.Context, in *GetD
 	return out, nil
 }
 
-func (c *workloadService) GetDeployRevisionDiff(ctx context.Context, in *GetDeployRevisionDetailReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *workloadService) GetDeployRevisionDiff(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.GetDeployRevisionDiff", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -847,7 +861,7 @@ func (c *workloadService) GetDeployRevisionDiff(ctx context.Context, in *GetDepl
 	return out, nil
 }
 
-func (c *workloadService) RolloutDeployRevision(ctx context.Context, in *RolloutDeployRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *workloadService) RolloutDeployRevision(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.RolloutDeployRevision", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -917,8 +931,18 @@ func (c *workloadService) RestartDS(ctx context.Context, in *ResRestartReq, opts
 	return out, nil
 }
 
-func (c *workloadService) GetDSHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *workloadService) GetDSHistoryRevision(ctx context.Context, in *GetResHistoryReq, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.GetDSHistoryRevision", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetDSRevisionDiff(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetDSRevisionDiff", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -927,7 +951,7 @@ func (c *workloadService) GetDSHistoryRevision(ctx context.Context, in *GetDeplo
 	return out, nil
 }
 
-func (c *workloadService) RolloutDSRevision(ctx context.Context, in *RolloutDeployRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *workloadService) RolloutDSRevision(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.RolloutDSRevision", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -997,8 +1021,18 @@ func (c *workloadService) RestartSTS(ctx context.Context, in *ResRestartReq, opt
 	return out, nil
 }
 
-func (c *workloadService) GetSTSHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *workloadService) GetSTSHistoryRevision(ctx context.Context, in *GetResHistoryReq, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.GetSTSHistoryRevision", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) GetSTSRevisionDiff(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.GetSTSRevisionDiff", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -1007,7 +1041,7 @@ func (c *workloadService) GetSTSHistoryRevision(ctx context.Context, in *GetDepl
 	return out, nil
 }
 
-func (c *workloadService) RolloutSTSRevision(ctx context.Context, in *RolloutDeployRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *workloadService) RolloutSTSRevision(ctx context.Context, in *RolloutRevisionReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.RolloutSTSRevision", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -1289,25 +1323,27 @@ type WorkloadHandler interface {
 	ScaleDeploy(context.Context, *ResScaleReq, *CommonResp) error
 	RescheduleDeployPo(context.Context, *ResBatchRescheduleReq, *CommonResp) error
 	DeleteDeploy(context.Context, *ResDeleteReq, *CommonResp) error
-	GetDeployHistoryRevision(context.Context, *GetDeployHistoryRevisionReq, *CommonResp) error
-	GetDeployRevisionDiff(context.Context, *GetDeployRevisionDetailReq, *CommonResp) error
-	RolloutDeployRevision(context.Context, *RolloutDeployRevisionReq, *CommonResp) error
+	GetDeployHistoryRevision(context.Context, *GetResHistoryReq, *CommonListResp) error
+	GetDeployRevisionDiff(context.Context, *RolloutRevisionReq, *CommonResp) error
+	RolloutDeployRevision(context.Context, *RolloutRevisionReq, *CommonResp) error
 	ListRS(context.Context, *ResListReq, *CommonResp) error
 	ListDS(context.Context, *ResListReq, *CommonResp) error
 	GetDS(context.Context, *ResGetReq, *CommonResp) error
 	CreateDS(context.Context, *ResCreateReq, *CommonResp) error
 	UpdateDS(context.Context, *ResUpdateReq, *CommonResp) error
 	RestartDS(context.Context, *ResRestartReq, *CommonResp) error
-	GetDSHistoryRevision(context.Context, *GetDeployHistoryRevisionReq, *CommonResp) error
-	RolloutDSRevision(context.Context, *RolloutDeployRevisionReq, *CommonResp) error
+	GetDSHistoryRevision(context.Context, *GetResHistoryReq, *CommonListResp) error
+	GetDSRevisionDiff(context.Context, *RolloutRevisionReq, *CommonResp) error
+	RolloutDSRevision(context.Context, *RolloutRevisionReq, *CommonResp) error
 	DeleteDS(context.Context, *ResDeleteReq, *CommonResp) error
 	ListSTS(context.Context, *ResListReq, *CommonResp) error
 	GetSTS(context.Context, *ResGetReq, *CommonResp) error
 	CreateSTS(context.Context, *ResCreateReq, *CommonResp) error
 	UpdateSTS(context.Context, *ResUpdateReq, *CommonResp) error
 	RestartSTS(context.Context, *ResRestartReq, *CommonResp) error
-	GetSTSHistoryRevision(context.Context, *GetDeployHistoryRevisionReq, *CommonResp) error
-	RolloutSTSRevision(context.Context, *RolloutDeployRevisionReq, *CommonResp) error
+	GetSTSHistoryRevision(context.Context, *GetResHistoryReq, *CommonListResp) error
+	GetSTSRevisionDiff(context.Context, *RolloutRevisionReq, *CommonResp) error
+	RolloutSTSRevision(context.Context, *RolloutRevisionReq, *CommonResp) error
 	ScaleSTS(context.Context, *ResScaleReq, *CommonResp) error
 	RescheduleSTSPo(context.Context, *ResBatchRescheduleReq, *CommonResp) error
 	DeleteSTS(context.Context, *ResDeleteReq, *CommonResp) error
@@ -1347,25 +1383,27 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		ScaleDeploy(ctx context.Context, in *ResScaleReq, out *CommonResp) error
 		RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, out *CommonResp) error
 		DeleteDeploy(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
-		GetDeployHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, out *CommonResp) error
-		GetDeployRevisionDiff(ctx context.Context, in *GetDeployRevisionDetailReq, out *CommonResp) error
-		RolloutDeployRevision(ctx context.Context, in *RolloutDeployRevisionReq, out *CommonResp) error
+		GetDeployHistoryRevision(ctx context.Context, in *GetResHistoryReq, out *CommonListResp) error
+		GetDeployRevisionDiff(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error
+		RolloutDeployRevision(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error
 		ListRS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		ListDS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetDS(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreateDS(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdateDS(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		RestartDS(ctx context.Context, in *ResRestartReq, out *CommonResp) error
-		GetDSHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, out *CommonResp) error
-		RolloutDSRevision(ctx context.Context, in *RolloutDeployRevisionReq, out *CommonResp) error
+		GetDSHistoryRevision(ctx context.Context, in *GetResHistoryReq, out *CommonListResp) error
+		GetDSRevisionDiff(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error
+		RolloutDSRevision(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error
 		DeleteDS(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
 		ListSTS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetSTS(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreateSTS(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdateSTS(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		RestartSTS(ctx context.Context, in *ResRestartReq, out *CommonResp) error
-		GetSTSHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, out *CommonResp) error
-		RolloutSTSRevision(ctx context.Context, in *RolloutDeployRevisionReq, out *CommonResp) error
+		GetSTSHistoryRevision(ctx context.Context, in *GetResHistoryReq, out *CommonListResp) error
+		GetSTSRevisionDiff(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error
+		RolloutSTSRevision(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error
 		ScaleSTS(ctx context.Context, in *ResScaleReq, out *CommonResp) error
 		RescheduleSTSPo(ctx context.Context, in *ResBatchRescheduleReq, out *CommonResp) error
 		DeleteSTS(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
@@ -1453,19 +1491,19 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.GetDeployHistoryRevision",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/{name}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/history"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.GetDeployRevisionDiff",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/diff/{name}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/revisions/{revision}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.RolloutDeployRevision",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/{name}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/rollout/{revision}"},
 		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
@@ -1507,13 +1545,19 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.GetDSHistoryRevision",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/history/{name}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/history"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetDSRevisionDiff",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/revisions/{revision}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.RolloutDSRevision",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/rollout/{name}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/rollout/{revision}"},
 		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
@@ -1555,13 +1599,19 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.GetSTSHistoryRevision",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/history/{name}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/history"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.GetSTSRevisionDiff",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/revisions/{revision}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.RolloutSTSRevision",
-		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/rollout/{name}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/rollout/{revision}"},
 		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
@@ -1764,15 +1814,15 @@ func (h *workloadHandler) DeleteDeploy(ctx context.Context, in *ResDeleteReq, ou
 	return h.WorkloadHandler.DeleteDeploy(ctx, in, out)
 }
 
-func (h *workloadHandler) GetDeployHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, out *CommonResp) error {
+func (h *workloadHandler) GetDeployHistoryRevision(ctx context.Context, in *GetResHistoryReq, out *CommonListResp) error {
 	return h.WorkloadHandler.GetDeployHistoryRevision(ctx, in, out)
 }
 
-func (h *workloadHandler) GetDeployRevisionDiff(ctx context.Context, in *GetDeployRevisionDetailReq, out *CommonResp) error {
+func (h *workloadHandler) GetDeployRevisionDiff(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error {
 	return h.WorkloadHandler.GetDeployRevisionDiff(ctx, in, out)
 }
 
-func (h *workloadHandler) RolloutDeployRevision(ctx context.Context, in *RolloutDeployRevisionReq, out *CommonResp) error {
+func (h *workloadHandler) RolloutDeployRevision(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error {
 	return h.WorkloadHandler.RolloutDeployRevision(ctx, in, out)
 }
 
@@ -1800,11 +1850,15 @@ func (h *workloadHandler) RestartDS(ctx context.Context, in *ResRestartReq, out 
 	return h.WorkloadHandler.RestartDS(ctx, in, out)
 }
 
-func (h *workloadHandler) GetDSHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, out *CommonResp) error {
+func (h *workloadHandler) GetDSHistoryRevision(ctx context.Context, in *GetResHistoryReq, out *CommonListResp) error {
 	return h.WorkloadHandler.GetDSHistoryRevision(ctx, in, out)
 }
 
-func (h *workloadHandler) RolloutDSRevision(ctx context.Context, in *RolloutDeployRevisionReq, out *CommonResp) error {
+func (h *workloadHandler) GetDSRevisionDiff(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetDSRevisionDiff(ctx, in, out)
+}
+
+func (h *workloadHandler) RolloutDSRevision(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error {
 	return h.WorkloadHandler.RolloutDSRevision(ctx, in, out)
 }
 
@@ -1832,11 +1886,15 @@ func (h *workloadHandler) RestartSTS(ctx context.Context, in *ResRestartReq, out
 	return h.WorkloadHandler.RestartSTS(ctx, in, out)
 }
 
-func (h *workloadHandler) GetSTSHistoryRevision(ctx context.Context, in *GetDeployHistoryRevisionReq, out *CommonResp) error {
+func (h *workloadHandler) GetSTSHistoryRevision(ctx context.Context, in *GetResHistoryReq, out *CommonListResp) error {
 	return h.WorkloadHandler.GetSTSHistoryRevision(ctx, in, out)
 }
 
-func (h *workloadHandler) RolloutSTSRevision(ctx context.Context, in *RolloutDeployRevisionReq, out *CommonResp) error {
+func (h *workloadHandler) GetSTSRevisionDiff(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error {
+	return h.WorkloadHandler.GetSTSRevisionDiff(ctx, in, out)
+}
+
+func (h *workloadHandler) RolloutSTSRevision(ctx context.Context, in *RolloutRevisionReq, out *CommonResp) error {
 	return h.WorkloadHandler.RolloutSTSRevision(ctx, in, out)
 }
 

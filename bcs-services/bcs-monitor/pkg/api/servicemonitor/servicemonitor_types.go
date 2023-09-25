@@ -34,7 +34,7 @@ type CreateServiceMonitorReq struct {
 
 // Validate validate
 func (r CreateServiceMonitorReq) Validate() bool {
-	if validateName(r.Name) && validateSelector(r.Selector) && validateSampleLimit(r.SampleLimit) {
+	if validateName(r.Name) && validateSelector(r.Selector) {
 		return true
 	}
 	return false

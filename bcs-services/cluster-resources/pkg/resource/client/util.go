@@ -14,7 +14,11 @@
 
 package client
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+import (
+	"sort"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+)
 
 // filterByOwnerRefs 根据 ownerReferences 过滤子资源
 func filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
@@ -36,3 +40,6 @@ func filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string)
 	}
 	return rets
 }
+
+// SortInts64Desc sorts []int64 in decreasing order
+func SortInts64Desc(a []int64) { sort.Slice(a, func(i, j int) bool { return a[i] > a[j] }) }

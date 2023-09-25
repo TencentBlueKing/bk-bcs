@@ -172,6 +172,7 @@ type resource struct {
 	ClusterID string `json:"cluster_id" yaml:"cluster_id"`
 	ProjectID string `json:"project_id" yaml:"project_id"`
 	Name      string `json:"name" yaml:"name"`
+	RuleID    string `json:"-" yaml:"-"`
 }
 
 // resource to map
@@ -190,6 +191,10 @@ func (r resource) toMap() map[string]any {
 		result["Name"] = r.Name
 	}
 
+	if r.RuleID != "" {
+		result["RuleID"] = r.RuleID
+	}
+
 	return result
 }
 
@@ -199,6 +204,7 @@ func getResourceID(b []byte, ctx *Context) resource {
 	_ = json.Unmarshal(b, &resourceID)
 	resourceID.ClusterID = ctx.ClusterId
 	resourceID.ProjectID = ctx.ProjectId
+	resourceID.RuleID = ctx.Param("id")
 	return resourceID
 }
 
@@ -216,7 +222,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -224,7 +230,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "delete_log_rule", ActivityType: audit.ActivityTypeDelete}
 	},
@@ -232,7 +238,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "retry_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -240,7 +246,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "enable_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -248,7 +254,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "disable_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -271,9 +277,9 @@ func addAudit(ctx *Context, b []byte, startTime, endTime time.Time, code int, me
 		EndTime:   endTime,
 	}
 	resource := audit.Resource{
-		ProjectCode:  ctx.ProjectId,
+		ProjectCode:  ctx.ProjectCode,
 		ResourceType: res.ResourceType,
-		ResourceID:   ctx.RequestId,
+		ResourceID:   res.ResourceID,
 		ResourceName: res.ResourceName,
 		ResourceData: res.ResourceData,
 	}

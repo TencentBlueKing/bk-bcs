@@ -119,6 +119,9 @@ type resource struct {
 	ClusterID   string `json:"clusterID" yaml:"clusterID"`
 	Namespace   string `json:"namespace" yaml:"namespace"`
 	Name        string `json:"name" yaml:"name"`
+	Key         string `json:"key" yaml:"key"`
+	IDs         string `json:"idList" yaml:"idList"`
+	VariableID  string `json:"variableID" yaml:"variableID"`
 	ProjectID   string `json:"projectID" yaml:"projectID"`
 	ProjectCode string `json:"projectCode" yaml:"projectCode"`
 }
@@ -134,6 +137,12 @@ func (r resource) toMap() map[string]interface{} {
 	}
 	if r.Name != "" {
 		result["Name"] = r.Name
+	}
+	if r.Key != "" {
+		result["Key"] = r.Key
+	}
+	if r.VariableID != "" {
+		result["VariableID"] = r.VariableID
 	}
 	if r.ProjectID != "" {
 		result["ProjectID"] = r.ProjectID
@@ -159,7 +168,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeProject, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeProject, ResourceID: res.ProjectCode, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "project_create", ActivityType: audit.ActivityTypeCreate}
 	},
@@ -171,7 +180,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 		}
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeProject, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeProject, ResourceID: res.ProjectID, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "project_edit", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -183,51 +192,27 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "namespace_create", ActivityType: audit.ActivityTypeCreate}
 	},
-	"Namespace.CreateNamespaceCallback": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
-		res := getResourceID(req)
-		return audit.Resource{
-			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "create_namespace_callback", ActivityType: audit.ActivityTypeCreate}
-	},
 	"Namespace.UpdateNamespace": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Namespace, ResourceName: res.Namespace,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "namespace_update", ActivityType: audit.ActivityTypeUpdate}
-	},
-	"Namespace.UpdateNamespaceCallback": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
-		res := getResourceID(req)
-		return audit.Resource{
-			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "update_namespace_callback", ActivityType: audit.ActivityTypeUpdate}
 	},
 	"Namespace.DeleteNamespace": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Namespace, ResourceName: res.Namespace,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "namespace_delete", ActivityType: audit.ActivityTypeDelete}
-	},
-	"Namespace.DeleteNamespaceCallback": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
-		res := getResourceID(req)
-		return audit.Resource{
-			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Name, ResourceName: res.Name,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "delete_namespace_callback", ActivityType: audit.ActivityTypeDelete}
 	},
 	"Variable.CreateVariable": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Key, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "create_variable", ActivityType: audit.ActivityTypeCreate}
 	},
@@ -235,7 +220,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Key, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_variable", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -243,7 +228,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeVariable, ResourceID: res.IDs, ResourceName: res.IDs,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "deleteVariable_definitions", ActivityType: audit.ActivityTypeDelete}
 	},
@@ -251,7 +236,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeVariable, ResourceID: res.VariableID, ResourceName: res.VariableID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_clusters_variables", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -259,7 +244,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeVariable, ResourceID: res.VariableID, ResourceName: res.VariableID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_namespaces_variables", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -267,7 +252,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeVariable, ResourceID: res.ClusterID, ResourceName: res.ClusterID,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_cluster_variables", ActivityType: audit.ActivityTypeUpdate}
 	},
@@ -275,17 +260,9 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 		res := getResourceID(req)
 		return audit.Resource{
 			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Name, ResourceName: res.Name,
+			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Namespace, ResourceName: res.Namespace,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_namespace_variables", ActivityType: audit.ActivityTypeUpdate}
-	},
-	"Variable.ImportVariables": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
-		res := getResourceID(req)
-		return audit.Resource{
-			ProjectCode:  res.ProjectCode,
-			ResourceType: audit.ResourceTypeVariable, ResourceID: res.Name, ResourceName: res.Name,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "import_variables", ActivityType: audit.ActivityTypeUpdate}
 	},
 }
 
