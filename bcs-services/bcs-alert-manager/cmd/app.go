@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package cmd xxx
 package cmd
 
 import (
@@ -32,13 +32,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/cmd/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/cmd/pkgs"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/consumer"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/proto/alertmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/server/service"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/types"
-
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro/v2/registry"
@@ -48,6 +41,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/cmd/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/cmd/pkgs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/consumer"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/proto/alertmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/server/service"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/types"
 )
 
 const (
@@ -391,7 +391,7 @@ func (am *AlertManager) initMicroService() error {
 
 	// create handler && register handler
 	am.serverHandler = service.NewAlertManager(pkgs.GetAlertClient(am.options))
-	alertmanager.RegisterAlertManagerHandler(microService.Server(), am.serverHandler)
+	_ = alertmanager.RegisterAlertManagerHandler(microService.Server(), am.serverHandler)
 
 	am.microService = microService
 
@@ -429,8 +429,8 @@ func (am *AlertManager) close() {
 	defer cancel()
 
 	am.consumer.Stop()
-	am.extraServer.Shutdown(timeCtx)
-	am.mainServer.Shutdown(timeCtx)
+	_ = am.extraServer.Shutdown(timeCtx)
+	_ = am.mainServer.Shutdown(timeCtx)
 
 	am.cancel()
 }

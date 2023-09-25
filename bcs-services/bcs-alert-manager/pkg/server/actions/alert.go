@@ -8,22 +8,21 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package actions xxx
 package actions
 
 import (
 	"context"
-	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/proto/alertmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/remote/alert"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/server/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/types"
-
-	"github.com/google/uuid"
 )
 
 // Console interface for business logic
@@ -52,7 +51,7 @@ func (ac *AlertAction) CreateRawAlertInfo(ctx context.Context, req *alertmanager
 	tracer := utils.GetTraceFromContext(ctx)
 
 	if req == nil || resp == nil {
-		errMsg := fmt.Sprintf("CreateRawAlertInfo req or resp is nil")
+		errMsg := "CreateRawAlertInfo req or resp is nil"
 		tracer.Error(errMsg)
 		resp.ErrCode = types.BcsErrAlertManagerInvalidParameter
 		resp.ErrMsg = errMsg
@@ -89,8 +88,6 @@ func (ac *AlertAction) CreateRawAlertInfo(ctx context.Context, req *alertmanager
 
 	resp.ErrCode = types.BcsErrAlertManagerSuccess
 	resp.ErrMsg = types.BcsErrAlertManagerSuccessStr
-
-	return
 }
 
 // CreateBusinessAlertInfo create business alert info
@@ -99,7 +96,7 @@ func (ac *AlertAction) CreateBusinessAlertInfo(ctx context.Context, req *alertma
 	tracer := utils.GetTraceFromContext(ctx)
 
 	if req == nil || resp == nil {
-		errMsg := fmt.Sprintf("CreateRawAlertInfo req or resp is nil")
+		errMsg := "CreateRawAlertInfo req or resp is nil"
 		tracer.Error(errMsg)
 		resp.ErrCode = types.BcsErrAlertManagerInvalidParameter
 		resp.ErrMsg = errMsg
@@ -150,7 +147,7 @@ func (ac *AlertAction) CreateBusinessAlertInfo(ctx context.Context, req *alertma
 	default:
 		tracer.Errorf("invalid alarmType, please input[resource|module]")
 		resp.ErrCode = types.BcsErrAlertManagerInvalidParameter
-		resp.ErrMsg = fmt.Sprintf("invalid alarmType, please input[resource|module]")
+		resp.ErrMsg = "invalid alarmType, please input[resource|module]"
 		return
 	}
 
@@ -164,8 +161,6 @@ func (ac *AlertAction) CreateBusinessAlertInfo(ctx context.Context, req *alertma
 
 	resp.ErrCode = types.BcsErrAlertManagerSuccess
 	resp.ErrMsg = types.BcsErrAlertManagerSuccessStr
-
-	return
 }
 
 func timeUnixToTime(timeUnix int64) time.Time {
