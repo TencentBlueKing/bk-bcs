@@ -68,7 +68,7 @@ func GetAPIResource() *APIResource {
 }
 
 // SetConfig Set storageConfig to APIResource
-func (a *APIResource) SetConfig(op *options.StorageOptions) {
+func (a *APIResource) SetConfig(op *options.StorageOptions) error {
 	a.Conf = op
 	// parse config-map from file
 	dbConfig := a.ParseDBConfig()
@@ -125,8 +125,10 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 		switch key {
 		case queueConfigKey:
 			if err = a.parseQueueInit(key, queueConfig); err != nil {
-				blog.Errorf("parse queue config failed, err %s", err.Error())
-				SetUnhealthy(queueConfigKey, err.Error())
+				queueErr := fmt.Errorf("parse queue config failed, err %s", err.Error())
+				blog.Errorf(queueErr.Error())
+				SetUnhealthy(queueConfigKey, queueErr.Error())
+				return queueErr
 			}
 		default:
 			err = storageErr.QueueConfigUnknown
@@ -138,6 +140,7 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 		}
 	}
 	blog.Infof("MsgQueue parsing completed.")
+	return nil
 }
 
 // InitActions init actions
