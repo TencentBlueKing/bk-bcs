@@ -1,6 +1,6 @@
 /*
- * Tencent is pleased to support the open source community by making 蓝鲸 available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -21,11 +21,9 @@ type UserInfo struct {
 
 // ResourceAttribute represent one iam resource
 type ResourceAttribute struct {
-	*Basic
+	Basic `json:",inline"`
 	// BizID biz id of the iam resource.
 	BizID uint32 `json:"biz_id,omitempty"`
-	// GenApplyURL 是否生成申请链接
-	GenApplyURL bool `json:"gen_apply_url,omitempty"`
 }
 
 // Basic defines the basic info for a resource.
@@ -50,6 +48,7 @@ type BasicDetail struct {
 
 // Decision defines the authorization decision of a resource.
 type Decision struct {
+	Resource *ResourceAttribute
 	// Authorized the authorization decision, whether a user has permission to the resource or not.
 	Authorized bool
 }
@@ -95,4 +94,13 @@ type IamResourceAttribute struct {
 // IamResourceAttributeValue defines the iam resource attribute value info.
 type IamResourceAttributeValue struct {
 	ID string `json:"id"`
+}
+
+// DecisionsMap defines the authorization decision of a resource.
+func DecisionsMap(ds []*Decision) map[ResourceAttribute]bool {
+	result := make(map[ResourceAttribute]bool, len(ds))
+	for _, d := range ds {
+		result[*d.Resource] = d.Authorized
+	}
+	return result
 }

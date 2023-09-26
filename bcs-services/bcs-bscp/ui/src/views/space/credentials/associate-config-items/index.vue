@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useGlobalStore } from '../../../../store/global'
 import { getCredentialScopes, updateCredentialScopes } from '../../../../api/credentials'
 import { ICredentialRule, IRuleUpdateParams } from '../../../../../types/credential'
+import useModalCloseConfirmation from '../../../../utils/hooks/use-modal-close-confirmation'
 // import MatchingResult from './matching-result.vue'
 import RuleView from './rule-view.vue'
 import RuleEdit from './rule-edit.vue'
@@ -11,11 +12,13 @@ import RuleEdit from './rule-edit.vue'
 const { spaceId } = storeToRefs(useGlobalStore())
 
 const props = defineProps<{
-  show: boolean,
-  id: number
+  show: boolean;
+  id: number;
+  permCheckLoading: boolean;
+  hasManagePerm: boolean;
 }>()
 
-const emits = defineEmits(['close'])
+const emits = defineEmits(['close', 'refresh', 'applyPerm'])
 
 const loading = ref(true)
 const rules = ref<ICredentialRule[]>([])
@@ -25,6 +28,7 @@ const ruleChangeParams = ref<IRuleUpdateParams>({
   alter_scope: []
 })
 const isRuleEdit = ref(false)
+const isFormChange = ref(false)
 const pending = ref(false)
 
 watch(() => props.show, (val) => {
@@ -45,7 +49,15 @@ const loadRules = async () => {
   loading.value = false
 }
 
+const handleOpenEdit = () => {
+  if (props.permCheckLoading || !props.hasManagePerm) {
+    emits('applyPerm')
+  }
+  isRuleEdit.value = true
+}
+
 const handleRuleChange = (val: IRuleUpdateParams) => {
+  isFormChange.value = true
   ruleChangeParams.value = Object.assign({}, ruleChangeParams.value, val)
 }
 
@@ -59,11 +71,20 @@ const handleSave = async() => {
       alter_scope: []
     }
     handleClose()
+    emits('refresh')
   } catch (e) {
     console.error(e)
   } finally {
     pending.value = false
   }
+}
+
+const handleBeforeClose = async () => {
+  if (isRuleEdit.value && isFormChange.value) {
+    const result = await useModalCloseConfirmation()
+    return result
+  }
+  return true
 }
 
 const handleClose = () => {
@@ -78,6 +99,7 @@ const handleClose = () => {
     title="关联配置项"
     width="400"
     :is-show="props.show"
+    :before-close="handleBeforeClose"
     @closed="handleClose">
     <section class="associate-config-items">
       <div :class="['rules-wrapper', { 'edit-mode': isRuleEdit }]">
@@ -89,8 +111,21 @@ const handleClose = () => {
       </div> -->
     </section>
     <div class="action-btns">
-      <bk-button v-if="isRuleEdit" theme="primary" :loading="pending" @click="handleSave">保存</bk-button>
-      <bk-button v-else theme="primary" @click="isRuleEdit = true">编辑规则</bk-button>
+      <bk-button
+        v-if="isRuleEdit"
+        theme="primary"
+        :loading="pending"
+        @click="handleSave">
+        保存
+      </bk-button>
+      <bk-button
+        v-else
+        v-cursor="{ active: !props.hasManagePerm }"
+        :class="{ 'bk-button-with-no-perm': !props.hasManagePerm }"
+        theme="primary"
+        @click="handleOpenEdit">
+        编辑规则
+      </bk-button>
       <bk-button @click="handleClose">{{ isRuleEdit ? '取消' : '关闭' }}</bk-button>
     </div>
   </bk-sideslider>

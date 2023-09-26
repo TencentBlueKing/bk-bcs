@@ -2,7 +2,7 @@
   <div class="cursor-default">
     <div class="cluster-view">
       <span :class="['cluster-view-type', { 'shared': isSharedCluster }]">
-        {{ isSharedCluster ? $t('共享') : $t('专用') }}
+        {{ isSharedCluster ? $t('bcs.cluster.publicIcon') : $t('bcs.cluster.privateIcon') }}
       </span>
       <span class="flex flex-1 flex-col ml-[10px]">
         <span
@@ -29,14 +29,16 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, toRef, reactive, ref } from 'vue';
-import SideMenu from '@/views/app/side-menu.vue';
+import { computed, defineComponent, reactive, ref, toRef } from 'vue';
+
+import useMenu from '../app/use-menu';
+
 import ClusterSelectPopover from '@/components/cluster-selector/cluster-select-popover.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
 import { useCluster } from '@/composables/use-app';
-import useMenu from '../app/use-menu';
 import $router from '@/router';
 import $store from '@/store';
+import SideMenu from '@/views/app/side-menu.vue';
 
 export default defineComponent({
   name: 'DashboardSideBar',

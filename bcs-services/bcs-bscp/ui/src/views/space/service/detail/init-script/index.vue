@@ -2,15 +2,21 @@
   import { ref, computed, onMounted, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import BkMessage from 'bkui-vue/lib/message';
+  import { AngleRight } from 'bkui-vue/lib/icon';
   import { IScriptItem } from '../../../../../../types/script'
   import { useGlobalStore } from '../../../../../store/global'
+  import { useServiceStore } from '../../../../../store/service'
   import { useConfigStore } from '../../../../../store/config'
   import { getScriptList, getScriptVersionDetail } from '../../../../../api/script'
   import { getConfigScript, getDefaultConfigScriptData, updateConfigInitScript } from '../../../../../api/config'
   import ScriptEditor from '../../../scripts/components/script-editor.vue'
+  import ScriptSelector from './script-selector.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const { versionData } = storeToRefs(useConfigStore())
+  const serviceStore = useServiceStore()
+  const { checkPermBeforeOperate } = serviceStore
+  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
 
   const props = defineProps<{
     appId: number;
@@ -71,7 +77,7 @@
       all: true
     }
     const res = await getScriptList(spaceId.value, params)
-    const list = (<IScriptItem[]>res.details).filter(item => item.published_revision_id).map(item => {
+    const list = (<IScriptItem[]>res.details).map(item => {
       return { id: item.hook.id, versionId: item.published_revision_id, name: item.hook.spec.name, type: item.hook.spec.type }
     })
     scriptsData.value = [{ id: 0, versionId: 0, name: '<不使用脚本>', type: '' }, ...list]
@@ -95,6 +101,7 @@
     }
   }
 
+  // 获取脚本预览内容
   const getPreviewContent = async (scriptId: number, versionId: number) => {
     contentLoading.value = true
     const res = await getScriptVersionDetail(spaceId.value, scriptId, versionId)
@@ -102,14 +109,20 @@
     contentLoading.value = false
   }
 
+  // 选择脚本
   const handleSelectScript = (id: number, type: string) => {
     const script = scriptsData.value.find(item => item.id === id)
     if (script) {
       if (type === 'pre') {
         formData.value.pre.versionId = script.versionId
+        formData.value.pre.id = id
       } else {
         formData.value.post.versionId = script.versionId
+        formData.value.post.id = id
       }
+    }
+    if (id === 0) {
+      previewConfig.value.open = false
     }
     if (previewConfig.value.open) {
       handleOpenPreview(type)
@@ -134,6 +147,9 @@
 
   // 保存配置
   const handleSubmit = async() => {
+    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+      return
+    }
     try {
       pending.value = true
       const { pre, post } = formData.value
@@ -160,14 +176,14 @@
       <bk-form form-type="vertical">
         <bk-form-item label="前置脚本">
           <div class="select-wrapper">
-            <bk-select
-              v-model="formData.pre.id"
-              :clearable="false"
+            <ScriptSelector
+              type="pre"
+              :id="formData.pre.id"
               :disabled="viewMode"
               :loading="scriptsLoading"
-              @change="handleSelectScript($event, 'pre')">
-              <bk-option v-for="script in scriptsData" :key="script.id" :value="script.id" :label="script.name"></bk-option>
-            </bk-select>
+              :list="scriptsData"
+              @change="handleSelectScript"
+              @refresh="getScripts" />
             <bk-button
               class="preview-button"
               text
@@ -180,14 +196,14 @@
         </bk-form-item>
         <bk-form-item label="后置脚本">
           <div class="select-wrapper">
-            <bk-select
-              v-model="formData.post.id"
-              :clearable="false"
+            <ScriptSelector
+              type="post"
+              :id="formData.post.id"
               :disabled="viewMode"
               :loading="scriptsLoading"
-              @change="handleSelectScript($event, 'post')">
-              <bk-option v-for="script in scriptsData" :key="script.id" :value="script.id" :label="script.name"></bk-option>
-            </bk-select>
+              :list="scriptsData"
+              @change="handleSelectScript"
+              @refresh="getScripts" />
             <bk-button
               class="preview-button"
               text
@@ -201,9 +217,10 @@
       </bk-form>
       <bk-button
         v-if="!viewMode"
-        class="submit-button"
+        v-cursor="{ active: !hasEditServicePerm }"
+        :class="['submit-button', {'bk-button-with-no-perm': !hasEditServicePerm}]"
         theme="primary"
-        :disabled="!dataChanged"
+        :disabled="hasEditServicePerm && !dataChanged"
         :loading="pending"
         @click="handleSubmit">
         保存设置
@@ -212,7 +229,12 @@
     <bk-loading v-if="previewConfig.open" class="preview-area" :loading="contentLoading">
       <ScriptEditor :model-value="previewConfig.content" :editable="false" :upload-icon="false" :language="previewConfig.type">
         <template #header>
-          <div class="script-preview-title">{{ `脚本预览 - ${previewConfig.name}` }}</div>
+          <div class="script-preview-title">
+            <div class="close-area" @click="previewConfig.open = false">
+              <AngleRight class="arrow-icon" />
+            </div>
+            <div class="title">{{ `脚本预览 - ${previewConfig.name}` }}</div>
+          </div>
         </template>
       </ScriptEditor>
     </bk-loading>
@@ -242,12 +264,30 @@
     height: 100%;
   }
   .script-preview-title {
-    padding: 0 24px;
-    line-height: 40px;
-    color: #c4c6cc;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    padding-right: 24px;
+    width: 100%;
+    height: 40px;
+    .close-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 100%;
+      background: #63656e;
+      color: #ffffff;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .title {
+      padding: 0 5px;
+      line-height: 40px;
+      color: #c4c6cc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
   :deep(.script-editor) {
     height: 100%;

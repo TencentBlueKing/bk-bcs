@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package components xxx
 package components
 
 import (
@@ -67,7 +67,7 @@ var (
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 		// NOCC:gas/tls(设计如此)
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
 	}
 )
 
@@ -200,8 +200,6 @@ func GetClient() *resty.Client {
 				OnAfterResponse(restyAfterResponseHook).
 				SetPreRequestHook(restyBeforeRequestHook).
 				OnError(restyErrHook).
-				// NOCC:gas/tls(设计如此:)
-				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
 				SetHeader("User-Agent", userAgent)
 		})
 	}

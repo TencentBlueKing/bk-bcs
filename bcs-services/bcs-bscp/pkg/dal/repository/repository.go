@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package repository
 
@@ -17,6 +17,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -92,6 +93,36 @@ func GetFileSign(r *http.Request) (string, error) {
 	}
 
 	return sign, nil
+}
+
+// GetContentLevelID get content level id, including app id and template space id
+func GetContentLevelID(r *http.Request) (uint32, uint32, error) {
+	appIDStr := r.Header.Get(constant.AppIDHeaderKey)
+	tmplSpaceIDStr := r.Header.Get(constant.TmplSpaceIDHeaderKey)
+
+	if appIDStr == "" && tmplSpaceIDStr == "" {
+		return 0, 0, errors.Errorf("one of %s, %s must be set in header",
+			constant.AppIDHeaderKey, constant.TmplSpaceIDHeaderKey)
+	}
+
+	if appIDStr != "" && tmplSpaceIDStr != "" {
+		return 0, 0, errors.Errorf("only one of %s, %s can be set in header",
+			constant.AppIDHeaderKey, constant.TmplSpaceIDHeaderKey)
+	}
+
+	if appIDStr != "" {
+		appID, err := strconv.Atoi(appIDStr)
+		if err != nil || appID == 0 {
+			return 0, 0, errors.Errorf("not valid %s in header", constant.AppIDHeaderKey)
+		}
+		return uint32(appID), 0, nil
+	}
+
+	tmplSpaceID, err := strconv.Atoi(tmplSpaceIDStr)
+	if err != nil || tmplSpaceID == 0 {
+		return 0, 0, errors.Errorf("not valid %s in header", constant.TmplSpaceIDHeaderKey)
+	}
+	return 0, uint32(tmplSpaceID), nil
 }
 
 type uriDecoratorInter struct {

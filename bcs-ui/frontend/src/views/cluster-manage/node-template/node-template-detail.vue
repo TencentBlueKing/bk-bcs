@@ -1,15 +1,15 @@
 <template>
   <div class="detail p30" v-bkloading="{ isLoading: loading }">
     <div class="detail-title">
-      {{ $t('基础信息') }}
+      {{ $t('generic.title.basicInfo') }}
     </div>
     <div class="detail-content basic-info">
       <div class="basic-info-item">
-        <label>{{ $t('名称') }}</label>
+        <label>{{ $t('generic.label.name') }}</label>
         <span>{{ data.name }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{$t('描述')}}</label>
+        <label>{{$t('cluster.create.label.desc')}}</label>
         <span
           class="bcs-ellipsis"
           v-bk-tooltips="{
@@ -18,38 +18,38 @@
           }">{{ data.desc || '--' }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('更新时间') }}</label>
+        <label>{{ $t('cluster.labels.updatedAt') }}</label>
         <span>{{ data.updateTime }}</span>
       </div>
     </div>
     <template v-if="kubeletData.length">
       <div class="detail-title mt20">
-        {{ $t('Kubelet组件参数') }}
+        {{ $t('cluster.nodeTemplate.kubelet.title.argsConfig') }}
       </div>
       <div class="detail-content basic-info">
         <div
           class="basic-info-item" v-for="(item, index) in kubeletData"
           :key="index">
           <label>{{ item.key }}</label>
-          <span>{{ item.value }}</span>
+          <span class="bcs-ellipsis" v-bk-overflow-tips>{{ item.value }}</span>
         </div>
       </div>
     </template>
     <bcs-tab class="mt20" type="card" :label-height="42">
-      <bcs-tab-panel name="label" :label="$t('标签')">
+      <bcs-tab-panel name="label" :label="$t('k8s.label')">
         <bk-table :data="handleTransformObjToArr(data.labels)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="taints" :label="$t('污点')">
+      <bcs-tab-panel name="taints" :label="$t('k8s.taint')">
         <bk-table :data="data.taints">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
           <bk-table-column label="Effect" prop="effect"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="annotations" :label="$t('注解')">
+      <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')">
         <bk-table :data="handleTransformObjToArr(data.annotations)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
@@ -58,36 +58,37 @@
     </bcs-tab>
 
     <bcs-tab class="mt20" type="card" :label-height="42">
-      <bcs-tab-panel name="label" :label="$t('前置初始化')">
+      <bcs-tab-panel name="label" :label="$t('cluster.nodeTemplate.label.preInstall.title')">
         <pre class="bash-script" v-if="data.preStartUserScript">{{data.preStartUserScript}}</pre>
         <bcs-exception type="empty" scene="part" v-else></bcs-exception>
       </bcs-tab-panel>
-      <bcs-tab-panel name="taints" :label="$t('后置初始化')">
+      <bcs-tab-panel name="taints" :label="$t('cluster.nodeTemplate.label.postInstall.title')">
         <pre class="bash-script" v-if="data.userScript">{{data.userScript}}</pre>
         <template v-else-if="paramsList.length && currentSops">
           <div class="mb15">{{currentSops.templateName}}</div>
           <bk-table :data="paramsList">
-            <bk-table-column :label="$t('参数名')" prop="key"></bk-table-column>
-            <bk-table-column :label="$t('值')" prop="value"></bk-table-column>
+            <bk-table-column :label="$t('cluster.ca.nodePool.detail.label.params')" prop="key"></bk-table-column>
+            <bk-table-column :label="$t('generic.label.value')" prop="value"></bk-table-column>
           </bk-table>
         </template>
         <bcs-exception type="empty" scene="part" v-else></bcs-exception>
       </bcs-tab-panel>
     </bcs-tab>
     <div class="mt15" v-if="operate">
-      <bcs-button theme="primary" @click="handleEditTemplate">{{$t('编辑')}}</bcs-button>
-      <bcs-button @click="handleDeleteTemplate">{{$t('删除')}}</bcs-button>
-      <!-- <bcs-button @click="handleCancel">{{$t('取消')}}</bcs-button> -->
+      <bcs-button theme="primary" @click="handleEditTemplate">{{$t('generic.button.edit')}}</bcs-button>
+      <bcs-button @click="handleDeleteTemplate">{{$t('generic.button.delete')}}</bcs-button>
+      <!-- <bcs-button @click="handleCancel">{{$t('generic.button.cancel')}}</bcs-button> -->
     </div>
   </div>
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from 'vue';
-import $store from '@/store/index';
-import $router from '@/router';
-import $i18n from '@/i18n/i18n-setup';
+
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store/index';
 
 export default defineComponent({
   props: {
@@ -160,7 +161,7 @@ export default defineComponent({
         type: 'warning',
         clsName: 'custom-info-confirm',
         subTitle: props.data.name,
-        title: $i18n.t('确认删除配置模版？'),
+        title: $i18n.t('cluster.nodeTemplate.title.confirmDelete'),
         defaultInfo: true,
         confirmFn: async () => {
           loading.value = true;
@@ -170,7 +171,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('删除成功'),
+              message: $i18n.t('generic.msg.success.delete'),
             });
             ctx.emit('delete');
           }

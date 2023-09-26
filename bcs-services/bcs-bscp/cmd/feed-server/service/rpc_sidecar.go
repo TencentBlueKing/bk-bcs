@@ -1,20 +1,24 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
 import (
 	"context"
 	"fmt"
+
+	prm "github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/iam/meta"
@@ -24,10 +28,6 @@ import (
 	"bscp.io/pkg/runtime/jsoni"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/tools"
-
-	prm "github.com/prometheus/client_golang/prometheus"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // Handshake received handshake from sidecar to validate the app instance's authorization and legality.
@@ -52,7 +52,7 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 		return nil, status.Error(codes.InvalidArgument, "sdk's version is too low, should be upgraded")
 	}
 
-	ra := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: hm.Spec.BizId}
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: hm.Spec.BizId}
 	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, err.Error())
@@ -122,7 +122,7 @@ func (s *Service) Watch(swm *pbfs.SideWatchMeta, fws pbfs.Upstream_WatchServer) 
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	ra := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
 	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
 	if err != nil {
 		return status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())
@@ -179,7 +179,7 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	ra := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
 	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, err.Error())
@@ -208,7 +208,7 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	ra := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
+	ra := &meta.ResourceAttribute{Basic: meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
 	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())

@@ -54,6 +54,7 @@ type Cluster struct {
 	Creator     string `json:"creator"`
 	Updater     string `json:"updater"`
 	Status      string `json:"status"`
+	IsShared    bool   `json:"is_shared"`
 }
 
 // GetClusterByClusterID get cluster by clusterID
@@ -68,7 +69,7 @@ func GetClusterByClusterID(ctx context.Context, clusterID string) (*Cluster, err
 		}
 	}
 	blog.V(3).Infof("GetClusterByClusterID miss clusterID cache")
-	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", config.GetGlobalConfig().BcsAPI.Host, clusterID)
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", config.GetGlobalConfig().BcsAPI.InnerHost, clusterID)
 
 	resp, err := GetClient().R().
 		SetContext(ctx).
@@ -91,7 +92,7 @@ func GetClusterByClusterID(ctx context.Context, clusterID string) (*Cluster, err
 
 // GetClustersByProjectID get clusters by projectID
 func GetClustersByProjectID(ctx context.Context, projectID string) ([]*Cluster, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/projects/%s/clusters", config.GetGlobalConfig().BcsAPI.Host,
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/projects/%s/clusters", config.GetGlobalConfig().BcsAPI.InnerHost,
 		projectID)
 
 	resp, err := GetClient().R().
@@ -114,7 +115,7 @@ func GetAllCluster() ([]*Cluster, error) {
 	if config.GetGlobalConfig() == nil || config.GetGlobalConfig().BcsAPI == nil {
 		return nil, fmt.Errorf("bcs-api config not found")
 	}
-	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.GetGlobalConfig().BcsAPI.Host)
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.GetGlobalConfig().BcsAPI.InnerHost)
 
 	resp, err := GetClient().R().
 		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
@@ -154,7 +155,7 @@ type CloudAccount struct {
 
 // ListCloudAccount get cloudaccount by projectID
 func ListCloudAccount(ctx context.Context, projectID string, accountIDs []string) ([]*CloudAccount, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/accounts", config.GetGlobalConfig().BcsAPI.Host)
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/accounts", config.GetGlobalConfig().BcsAPI.InnerHost)
 
 	params := neturl.Values{}
 	if projectID != "" {

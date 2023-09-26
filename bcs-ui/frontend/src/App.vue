@@ -15,12 +15,13 @@
 </template>
 <script lang="ts">
 import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
-import Navigation from '@/views/app/navigation.vue';
-import BkPaaSLogin from '@/views/app/login.vue';
-import PermDialog from '@/views/app/apply-perm.vue';
-import $i18n from '@/i18n/i18n-setup';
+
 import { bus } from '@/common/bus';
 import { useAppData } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
+import PermDialog from '@/views/app/apply-perm.vue';
+import BkPaaSLogin from '@/views/app/login.vue';
+import Navigation from '@/views/app/navigation.vue';
 
 export default defineComponent({
   name: 'App',
@@ -64,7 +65,7 @@ export default defineComponent({
       isLoading.value = true;
       await getUserInfo();
       isLoading.value = false;
-      document.title = $i18n.t('容器管理平台 | 腾讯蓝鲸智云');
+      document.title = $i18n.t('bcs.title');
     });
 
     return {

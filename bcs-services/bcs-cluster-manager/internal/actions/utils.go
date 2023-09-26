@@ -16,6 +16,7 @@ package actions
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -125,6 +126,35 @@ func K8sTaintToTaint(taint []corev1.Taint) []*proto.Taint {
 		})
 	}
 	return taints
+}
+
+// UpdateNodeGroupDesiredSize update group desired size
+func UpdateNodeGroupDesiredSize(model store.ClusterManagerModel, groupID string, nodeNum int, out bool) error {
+	group, err := model.GetNodeGroup(context.Background(), groupID)
+	if err != nil {
+		blog.Errorf("updateNodeGroupDesiredSize failed when update group[%s] desiredSize: %v", groupID, err)
+		return err
+	}
+
+	if out {
+		if group.AutoScaling.DesiredSize >= uint32(nodeNum) {
+			group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize - uint32(nodeNum)
+		} else {
+			group.AutoScaling.DesiredSize = 0
+			blog.Warnf("updateNodeGroupDesiredSize abnormal, desiredSize[%v] scaleNodesNum[%v]",
+				group.AutoScaling.DesiredSize, nodeNum)
+		}
+	} else {
+		group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize + uint32(nodeNum)
+	}
+
+	err = model.UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		blog.Errorf("updateNodeGroupDesiredSize failed when update group[%s] desiredSize: %v", err, groupID)
+		return err
+	}
+
+	return nil
 }
 
 // TransNodeStatus 转换节点状态

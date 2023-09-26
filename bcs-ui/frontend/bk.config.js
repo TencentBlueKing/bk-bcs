@@ -64,6 +64,7 @@ module.exports = {
           }
         }
       },
+      // plugins: [new MonacoWebpackPlugin()]
     };
   },
   chainWebpack(config) {
@@ -110,11 +111,11 @@ module.exports = {
     config.devServer
       .set('allowedHosts', 'all')
 
-    // config
-    //   .plugin('monaco')
-    //   .use(MonacoWebpackPlugin, [{
-    //     languages: ['yaml'],
-    //   }])
+    config
+      .plugin('monaco')
+      .use(MonacoWebpackPlugin, [{
+        languages: ['yaml', 'json'],
+      }])
     return config;
   }
 };

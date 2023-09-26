@@ -114,7 +114,8 @@ func (ts *TaskServer) Dispatch(task *proto.Task) error {
 			UUID: fmt.Sprintf("task-%s-%s", task.TaskID, stepName),
 			Name: step.TaskMethod,
 			// two parameters: taskID, stepName
-			Args: []tasks.Arg{{Type: "string", Value: task.TaskID}, {Type: "string", Value: stepName}},
+			Args:                        []tasks.Arg{{Type: "string", Value: task.TaskID}, {Type: "string", Value: stepName}},
+			IgnoreWhenTaskNotRegistered: true,
 		}
 		signatures = append(signatures, signature)
 	}

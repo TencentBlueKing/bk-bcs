@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package portpoolcache 维护端口池中端口的使用情况, 新增Pod时从该缓存中分配端口使用
 package portpoolcache
 
 import (
@@ -97,9 +98,12 @@ func (cp *CachePool) SetItemStatus(itemStatus *networkextensionv1.PortPoolItemSt
 }
 
 // AllocatePortBinding allocate port by protocol
-func (cp *CachePool) AllocatePortBinding(protocol string) (
+func (cp *CachePool) AllocatePortBinding(protocol, itemName string) (
 	*networkextensionv1.PortPoolItemStatus, AllocatedPortItem, error) {
 	for _, item := range cp.ItemList {
+		if itemName != "" && item.ItemStatus.ItemName != itemName {
+			continue
+		}
 		retPort := item.Allocate(protocol)
 		if retPort != nil {
 			return item.ItemStatus, AllocatedPortItem{
@@ -115,10 +119,14 @@ func (cp *CachePool) AllocatePortBinding(protocol string) (
 	return nil, AllocatedPortItem{}, fmt.Errorf("no available port in pool %s for protocol %s", cp.PoolKey, protocol)
 }
 
-// AllocateAllProtocolPortBinding allocate ports with all protocols
-func (cp *CachePool) AllocateAllProtocolPortBinding() (
+// AllocateAllProtocolPortBinding allocate ports with all protocols, if itemName is set,
+// only allocate port from the specified item
+func (cp *CachePool) AllocateAllProtocolPortBinding(itemName string) (
 	*networkextensionv1.PortPoolItemStatus, map[string]AllocatedPortItem, error) {
 	for _, item := range cp.ItemList {
+		if itemName != "" && item.ItemStatus.ItemName != itemName {
+			continue
+		}
 		retPortMap := item.AllocateAllProtocolPort()
 		if retPortMap == nil {
 			continue

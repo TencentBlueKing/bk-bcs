@@ -30,7 +30,7 @@ Usage:
     $PROGRAM [ -h --help -?  show usage ]
              [ -v -V --version show script version]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {

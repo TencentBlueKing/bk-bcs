@@ -39,7 +39,7 @@ import (
 
 // NewDynamicClient xxx
 func NewDynamicClient(conf *res.ClusterConf) dynamic.Interface {
-	conf.Rest.WrapTransport = transport.NewWrapperFunc()
+	conf.Rest.Wrap(transport.NewWrapperFunc())
 	dynamicCli, _ := dynamic.NewForConfig(conf.Rest)
 	return dynamicCli
 }

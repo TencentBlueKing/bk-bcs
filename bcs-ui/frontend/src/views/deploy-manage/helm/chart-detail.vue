@@ -1,8 +1,8 @@
 <template>
   <div class="bcs-sideslider-content" v-bkloading="{ isLoading }">
-    <DetailItem :label="$t('名称')">{{ chart ? chart.name : '--' }}</DetailItem>
-    <DetailItem :label="$t('简介')">{{ chart ? chart.latestDescription : '--' }}</DetailItem>
-    <DetailItem :label="$t('版本')">
+    <DetailItem :label="$t('generic.label.name')">{{ chart ? chart.name : '--' }}</DetailItem>
+    <DetailItem :label="$t('plugin.tools.intro')">{{ chart ? chart.latestDescription : '--' }}</DetailItem>
+    <DetailItem :label="$t('generic.label.version')">
       <bcs-select :clearable="false" v-model="curVersion">
         <bcs-option
           v-for="item in versions"
@@ -13,10 +13,10 @@
       </bcs-select>
     </DetailItem>
     <bcs-tab class="mt-[16px]">
-      <bcs-tab-panel :label="$t('资源文件')" name="1">
+      <bcs-tab-panel :label="$t('deploy.helm.manifests')" name="1">
         <ChartFileTree class="h-full" :contents="detail.contents"></ChartFileTree>
       </bcs-tab-panel>
-      <bcs-tab-panel :label="$t('详细说明')" name="2">
+      <bcs-tab-panel :label="$t('deploy.helm.detail')" name="2">
         <BcsMd :code="mdCode" v-if="mdCode"></BcsMd>
         <bcs-exception type="empty" scene="part" v-else></bcs-exception>
       </bcs-tab-panel>
@@ -25,10 +25,12 @@
 </template>
 <script lang="ts">
 import {  computed, defineComponent, ref, toRefs, watch } from 'vue';
-import DetailItem from '@/components/layout/DetailItem.vue';
+
 import ChartFileTree from './chart-file-tree.vue';
-import BcsMd from '@/components/bcs-md/index.vue';
 import useHelm from './use-helm';
+
+import BcsMd from '@/components/bcs-md/index.vue';
+import DetailItem from '@/components/layout/DetailItem.vue';
 
 export default defineComponent({
   name: 'ChartDetail',

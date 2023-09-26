@@ -1,6 +1,6 @@
 /*
- * Tencent is pleased to support the open source community by making 蓝鲸 available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -17,7 +17,7 @@ import "bscp.io/pkg/iam/client"
 // ResourceTypeIDMap resource type map.
 var ResourceTypeIDMap = map[client.TypeID]string{
 	Business:    "业务",
-	Application: "应用",
+	Application: "服务",
 }
 
 // GenerateStaticResourceTypes generate all the resource types registered to IAM.
@@ -35,7 +35,7 @@ func genBusinessResources() []client.ResourceType {
 			ID:            Application,
 			Name:          ResourceTypeIDMap[Application],
 			NameEn:        "Application",
-			Description:   "应用",
+			Description:   "服务",
 			DescriptionEn: "application under a business",
 			Parents: []client.Parent{{
 				SystemID:   SystemIDCMDB,

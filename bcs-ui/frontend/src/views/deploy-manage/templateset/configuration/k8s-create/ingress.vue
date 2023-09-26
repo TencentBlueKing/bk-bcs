@@ -23,11 +23,11 @@
           <template slot="content">
             <div style="margin: -20px;">
               <div class="ingress-type-header">
-                {{$t('请选择类型')}}
+                {{$t('deploy.templateset.selectType')}}
               </div>
               <div class="bk-form" style="padding: 30px 0 10px 0;">
                 <div class="bk-form-item">
-                  <label class="bk-label" style="width: 140px;">{{$t('类型')}}：</label>
+                  <label class="bk-label" style="width: 140px;">{{$t('generic.label.kind')}}：</label>
                   <div class="bk-form-content" style="margin-left: 140px">
                     <label class="bk-form-radio">
                       <input type="radio" name="type" value="STGW" disabled="disabled">
@@ -39,12 +39,12 @@
                     </label>
                     <label class="bk-form-radio">
                       <input type="radio" name="type" value="K8S" checked="checked">
-                      <i class="bk-radio-text">{{$t('K8S原生')}}</i>
+                      <i class="bk-radio-text">{{$t('deploy.templateset.k8sNative')}}</i>
                     </label>
                   </div>
                 </div>
               </div>
-              <p class="pb30 f12 biz-danger-text">{{$t('提示：调度引擎为BCS-K8S的集群，需在左侧菜单“网络” => “LoadBalancer”中新建LoadBalancer，Ingress规则才能生效（通常单个集群只需要创建一个LoadBalancer）')}}</p>
+              <p class="pb30 f12 biz-danger-text">{{$t('deploy.templateset.tip4')}}</p>
             </div>
           </template>
         </bk-dialog>
@@ -53,18 +53,18 @@
           <bk-alert type="info" class="mb20">
             <div slot="title">
               <div>
-                {{$t('Ingress是管理外部访问集群内服务的对象，可配置访问的URL、基于名称的虚拟主机等。 Ingress controller负责实现Ingress，BCS使用的是nginx-controller')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sIngress" target="_blank">{{$t('详情查看文档')}}</a>
+                {{$t('deploy.templateset.tip5')}}，
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sIngress" target="_blank">{{$t('plugin.tools.docs')}}</a>
               </div>
               <div class="mt5">
-                {{$t('提示：调度引擎为BCS-K8S的集群，需在左侧菜单“网络” => “LoadBalancer”中新建LoadBalancer，Ingress规则才能生效（通常单个集群只需要创建一个LoadBalancer）')}}
+                {{$t('deploy.templateset.tip4')}}
               </div>
             </div>
           </bk-alert>
           <template v-if="!ingresss.length">
             <div class="biz-guide-box mt0">
               <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalIngress">
-                <span style="margin-left: 0;">{{$t('添加')}}Ingress</span>
+                <span style="margin-left: 0;">{{$t('generic.button.add')}}Ingress</span>
               </bk-button>
             </div>
           </template>
@@ -73,13 +73,13 @@
               <div class="biz-list-operation">
                 <div class="item" v-for="(ingress, index) in ingresss" :key="ingress.id">
                   <bk-button :class="['bk-button', { 'bk-primary': curIngress.id === ingress.id }]" @click.stop="setCurIngress(ingress, index)">
-                    {{(ingress && ingress.config.metadata.name) || $t('未命名')}}
+                    {{(ingress && ingress.config.metadata.name) || $t('deploy.templateset.unnamed')}}
                     <span class="biz-update-dot" v-show="ingress.isEdited"></span>
                   </bk-button>
                   <span class="bcs-icon bcs-icon-close" @click.stop="removeIngress(ingress, index)"></span>
                 </div>
 
-                <bcs-popover ref="applicationTooltip" :content="$t('添加Ingress')" placement="top">
+                <bcs-popover ref="applicationTooltip" :content="$t('deploy.templateset.addIngress')" placement="top">
                   <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalIngress">
                     <i class="bcs-icon bcs-icon-plus"></i>
                   </bk-button>
@@ -105,6 +105,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 import header from './header.vue';
 import tabs from './tabs.vue';
+
 import ingressParams from '@/json/k8s-ingress.json';
 
 export default {
@@ -338,8 +339,8 @@ export default {
       const version = this.curVersion;
       const ingressId = ingress.id;
       this.$bkInfo({
-        title: this.$t('确认删除'),
-        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('删除Ingress')}：${ingress.config.metadata.name || this.$t('未命名')}`),
+        title: this.$t('generic.title.confirmDelete'),
+        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('deploy.templateset.deleteIngress')}：${ingress.config.metadata.name || this.$t('deploy.templateset.unnamed')}`),
         confirmFn() {
           if (ingressId.indexOf && ingressId.indexOf('local_') > -1) {
             self.removeLocalIngress(ingress, index);

@@ -159,6 +159,8 @@ func (h *EventHandler) doHandleMulti() error {
 		if err := h.k8sCli.Get(context.TODO(), nsName, listener); err != nil {
 			if k8serrors.IsNotFound(err) {
 				blog.Infof("listener '%s' is deleted, skip", nsName.String())
+				h.eventQueue.Forget(nsName)
+				h.eventQueue.Done(nsName)
 				continue
 			}
 

@@ -23,9 +23,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
 	bcshttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/emicklei/go-restful"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -33,12 +35,12 @@ import (
 	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v3http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/migrations"
@@ -99,8 +101,8 @@ func (u *UserManager) Start() error {
 	}
 
 	// usermanager api
-	ws := u.httpServ.NewWebService("/usermanager", nil)
-	u.initRouters(ws)
+	v1http.InitV1Routers(u.httpServ.NewWebService("/usermanager", nil), u.permService)
+	v3http.InitV3Routers(u.httpServ.NewWebService("/usermanager/v3", nil))
 
 	router := u.httpServ.GetRouter()
 	webContainer := u.httpServ.GetWebContainer()
@@ -130,14 +132,6 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 	}
 
 	chain.ProcessFilter(req, resp)
-}
-
-// initRouters init usermanager http router
-func (u *UserManager) initRouters(ws *restful.WebService) {
-	ws.Filter(middleware.RequestIDFilter)
-	ws.Filter(middleware.TracingFilter)
-	v1http.InitV1Routers(ws, u.permService)
-	// register pull resource API
 }
 
 func (u *UserManager) initPermService() error {
@@ -244,6 +238,39 @@ func (u *UserManager) initEtcdRegistry() error {
 	return nil
 }
 
+func (u *UserManager) initCryptor() error {
+	if !u.config.Encrypt.Enable {
+		return nil
+	}
+	conf := &encryptv2.Config{
+		Enabled:   u.config.Encrypt.Enable,
+		Algorithm: encryptv2.Algorithm(u.config.Encrypt.Algorithm),
+	}
+	switch conf.Algorithm {
+	case encryptv2.Sm4:
+		conf.Sm4 = &encryptv2.Sm4Conf{
+			Key: u.config.Encrypt.Secret.Key,
+			Iv:  u.config.Encrypt.Secret.Secret,
+		}
+	case encryptv2.AesGcm:
+		conf.AesGcm = &encryptv2.AesGcmConf{
+			Key:   u.config.Encrypt.Secret.Key,
+			Nonce: u.config.Encrypt.Secret.Secret,
+		}
+	case encryptv2.Normal:
+		conf.Normal = &encryptv2.NormalConf{
+			PriKey: static.EncryptionKey,
+		}
+	}
+	cryptor, err := encryptv2.NewCrypto(conf)
+	if err != nil {
+		return fmt.Errorf("init cryptor failed, %s", err.Error())
+	}
+	config.GlobalCryptor = cryptor
+	blog.Info("init cryptor successfully")
+	return nil
+}
+
 // Migrate migrates something.
 //
 // op is a pointer to options.Migration.
@@ -276,7 +303,13 @@ func (u *UserManager) migrate() {
 }
 
 func (u *UserManager) initUserManagerServer() error {
-	err := u.initEtcdRegistry()
+	var err error
+	err = u.initCryptor()
+	if err != nil {
+		return err
+	}
+
+	err = u.initEtcdRegistry()
 	if err != nil {
 		return err
 	}

@@ -2,9 +2,9 @@
   <div class="taint-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
     <template v-if="values.length">
       <div class="labels">
-        <span>{{$t('键')}}：</span>
-        <span>{{$t('值')}}：</span>
-        <span>{{$t('影响')}}：</span>
+        <span>{{$t('generic.label.key')}}：</span>
+        <span>{{$t('generic.label.value')}}：</span>
+        <span>{{$t('generic.label.effect')}}：</span>
       </div>
       <BcsTaints
         class="taints"
@@ -19,25 +19,27 @@
       v-else
       @click="handleAddTaint">
       <i class="bk-icon icon-plus-circle-shape mr5"></i>
-      {{$t('添加')}}
+      {{$t('generic.button.add')}}
     </span>
     <div>
       <bk-button
         theme="primary"
         class="min-w-[88px]"
         :loading="isSubmitting"
-        @click="handleSubmit">{{$t('确定')}}</bk-button>
+        @click="handleSubmit">{{$t('generic.button.confirm')}}</bk-button>
       <bk-button
         theme="default"
         class="min-w-[88px]"
-        @click="handleCancel">{{$t('取消')}}</bk-button>
+        @click="handleCancel">{{$t('generic.button.cancel')}}</bk-button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, toRefs, PropType, watch } from 'vue';
+import { defineComponent, onMounted, PropType, ref, toRefs, watch } from 'vue';
+
 import useNode from '../node-list/use-node';
+
 import BcsTaints from './new-taints.vue';
 
 interface IValueItem {

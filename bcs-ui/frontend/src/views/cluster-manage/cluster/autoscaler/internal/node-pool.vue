@@ -2,7 +2,7 @@
   <BcsContent>
     <template #header>
       <HeaderNav :list="navList">
-        <bcs-steps style="max-width: 360px" :steps="steps" :cur-step="curStep"></bcs-steps>
+        <bcs-steps style="max-width: 380px" :steps="steps" :cur-step="curStep"></bcs-steps>
       </HeaderNav>
     </template>
     <div v-bkloading="{ isLoading }" class="node-pool">
@@ -23,17 +23,19 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, toRefs } from 'vue';
-import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
-import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
-import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
-import $i18n from '@/i18n/i18n-setup';
-import NodePoolInfo from './node-pool-info.vue';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+
 import NodeConfig from './node-config.vue';
+import NodePoolInfo from './node-pool-info.vue';
+
+import { mergeDeep } from '@/common/util';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 import $store from '@/store/index';
 import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
-import { mergeDeep } from '@/common/util';
-import $router from '@/router';
+import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
+import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
+import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 
 export default defineComponent({
   components: {
@@ -72,7 +74,7 @@ export default defineComponent({
           },
         },
         {
-          title: $i18n.t('新建节点规格'),
+          title: $i18n.t('cluster.ca.button.createNodePool'),
           link: null,
         },
       ];
@@ -80,11 +82,11 @@ export default defineComponent({
     });
     const steps = ref([
       {
-        title: $i18n.t('节点配置'),
+        title: $i18n.t('cluster.ca.nodePool.title.nodeConfig'),
         icon: 1,
       },
       {
-        title: $i18n.t('初始化配置'),
+        title: $i18n.t('cluster.ca.nodePool.title.initConfig'),
         icon: 2,
       },
     ]);

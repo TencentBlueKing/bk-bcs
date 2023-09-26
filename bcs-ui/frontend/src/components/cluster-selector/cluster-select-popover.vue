@@ -5,7 +5,7 @@
       clearable
       right-icon="bk-icon icon-search"
       v-model="keyword"
-      :placeholder="$t('输入集群名或ID搜索')">
+      :placeholder="$t('cluster.placeholder.searchCluster')">
     </bcs-input>
     <bcs-exception
       type="empty"
@@ -49,6 +49,7 @@
 <script lang="ts" setup>
 // popover场景的集群选择器
 import { PropType } from 'vue';
+
 import CollapseTitle from './collapse-title.vue';
 import useClusterSelector, { ClusterType } from './use-cluster-selector';
 

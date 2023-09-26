@@ -18,8 +18,10 @@
 </template>
 <script lang="ts">
 import { defineComponent, reactive, toRefs, watch } from 'vue';
-import { useProject } from '@/composables/use-app';
+
 import Log from './index';
+
+import { useProject } from '@/composables/use-app';
 import $store from '@/store';
 
 export default defineComponent({

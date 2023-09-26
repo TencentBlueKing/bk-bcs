@@ -240,6 +240,8 @@ type CloudValidateManager interface {
 	AddNodesToClusterValidate(req *proto.AddNodesRequest, opt *CommonOption) error
 	// DeleteNodesFromClusterValidate validate
 	DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest, opt *CommonOption) error
+	// CreateCloudAccountValidate create cloud account validate
+	CreateCloudAccountValidate(account *proto.Account) error
 	// ImportCloudAccountValidate import cloud account validate
 	ImportCloudAccountValidate(account *proto.Account) error
 	// GetCloudRegionZonesValidate get cloud region zones validate
@@ -290,6 +292,8 @@ type ClusterManager interface {
 	EnableExternalNodeSupport(cls *proto.Cluster, opt *EnableExternalNodeOption) error
 	// ListOsImage get osimage list
 	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
+	// CheckClusterEndpointStatus check cluster endpoint status
+	CheckClusterEndpointStatus(clusterID string, isExtranet bool, opt *CheckEndpointStatusOption) (bool, error)
 }
 
 // NodeGroupManager cloud interface for nodegroup management
@@ -346,6 +350,10 @@ type VPCManager interface {
 	ListSubnets(vpcID string, opt *CommonOption) ([]*proto.Subnet, error)
 	// ListSecurityGroups list security groups
 	ListSecurityGroups(opt *CommonOption) ([]*proto.SecurityGroup, error)
+	// GetCloudNetworkAccountType get cloud account type
+	GetCloudNetworkAccountType(opt *CommonOption) (*proto.CloudAccountType, error)
+	// ListBandwidthPacks list bandWidthPacks
+	ListBandwidthPacks(opt *CommonOption) ([]*proto.BandwidthPackageInfo, error)
 }
 
 // TaskManager backgroup back management

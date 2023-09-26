@@ -20,10 +20,14 @@ import (
 	"fmt"
 	"time"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	k8scorev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -170,9 +174,29 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		return fmt.Errorf("list nodes failed, %s", err.Error())
 	}
 
-	err = cloudprovider.ImportClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)
+	err = importClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)
 	if err != nil {
 		return fmt.Errorf("inport cluster nodes to cm failed, %s", err.Error())
+	}
+
+	return nil
+}
+
+// ImportClusterNodesToCM writes cluster nodes to DB
+func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error {
+	for i := range nodes {
+		ipv4, ipv6 := utils.GetNodeIPAddress(&nodes[i])
+		node := &proto.Node{
+			InnerIP:   utils.SliceToString(ipv4),
+			InnerIPv6: utils.SliceToString(ipv6),
+			Status:    common.StatusRunning,
+			NodeName:  nodes[i].Name,
+			ClusterID: clusterID,
+		}
+		err := cloudprovider.GetStorageModel().CreateNode(ctx, node)
+		if err != nil {
+			blog.Errorf("ImportClusterNodesToCM CreateNode[%s] failed: %v", nodes[i].Name, err)
+		}
 	}
 
 	return nil

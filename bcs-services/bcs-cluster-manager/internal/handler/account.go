@@ -54,6 +54,21 @@ func (cm *ClusterManager) UpdateCloudAccount(ctx context.Context,
 	return nil
 }
 
+// MigrateCloudAccount implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) MigrateCloudAccount(ctx context.Context,
+	req *cmproto.MigrateCloudAccountRequest, resp *cmproto.MigrateCloudAccountResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := account.NewMigrateAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("MigrateCloudAccount", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: MigrateCloudAccount, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // DeleteCloudAccount implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) DeleteCloudAccount(ctx context.Context,
 	req *cmproto.DeleteCloudAccountRequest, resp *cmproto.DeleteCloudAccountResponse) error {
@@ -100,5 +115,20 @@ func (cm *ClusterManager) ListCloudAccountToPerm(ctx context.Context,
 	blog.Infof("reqID: %s, action: ListCloudAccountToPerm, req %v, resp.Code %d, "+
 		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudAccountToPerm, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// VerifyCloudAccount implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) VerifyCloudAccount(ctx context.Context,
+	req *cmproto.VerifyCloudAccountRequest, resp *cmproto.VerifyCloudAccountResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	va := account.NewVerifyAction(cm.model)
+	va.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("VerifyCloudAccount", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: VerifyCloudAccount, req %v, resp %v", reqID, req, resp)
 	return nil
 }

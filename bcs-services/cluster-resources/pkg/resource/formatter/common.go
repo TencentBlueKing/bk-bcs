@@ -63,10 +63,12 @@ func FormatPodManifestRes(kind string, manifest map[string]interface{}) map[stri
 			name, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.name")
 			namespace, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.namespace")
 			uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
+			labels, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.labels")
 			hostIP, _ := mapx.GetItems(item.(map[string]interface{}), "status.hostIP")
 			nodeName, _ := mapx.GetItems(item.(map[string]interface{}), "spec.nodeName")
 			items = append(items, map[string]interface{}{
-				"metadata":   map[string]interface{}{"name": name, "namespace": namespace, "uid": uid},
+				"metadata": map[string]interface{}{
+					"name": name, "namespace": namespace, "uid": uid, "labels": labels},
 				"status":     map[string]interface{}{"hostIP": hostIP},
 				"spec":       map[string]interface{}{"nodeName": nodeName},
 				"kind":       mapx.GetStr(item.(map[string]interface{}), "kind"),

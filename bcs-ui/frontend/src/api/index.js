@@ -26,10 +26,14 @@
 
 import axios from 'axios';
 import cookie from 'cookie';
+
+import { messageError } from '../common/bkmagic';
 import { bus } from '../common/bus';
+
 import CachedPromise from './cached-promise';
 import RequestQueue from './request-queue';
-import { messageError } from '../common/bkmagic';
+
+import { random } from '@/common/util';
 
 // axios 实例
 const axiosInstance = axios.create({
@@ -45,6 +49,9 @@ axiosInstance.interceptors.request.use((config) => {
   const CSRFToken = cookie.parse(document.cookie).bcs_csrftoken;
   if (CSRFToken) {
     config.headers['X-CSRFToken'] = CSRFToken;
+  }
+  if (!window.BCS_CONFIG.disableTracing) {
+    config.headers.Traceparent = `00-${random(32, 'abcdef0123456789')}-${random(16, 'abcdef0123456789')}-01`;
   }
   return config;
 }, error => Promise.reject(error));
@@ -204,9 +211,9 @@ function handleReject(error, config) {
 
       return;
     } if (status === 500) {
-      message = window.i18n.t('系统出现异常');
+      message = window.i18n.t('generic.msg.error.system');
     } else if (status === 403) {
-      message = window.i18n.t('无权限操作');
+      message = window.i18n.t('generic.msg.warning.403');
     } else if ([4005, 40300].includes(data?.code)) {
       bus.$emit('show-apply-perm-modal', data?.data);
     } else if (data?.code === 40403) {
@@ -220,10 +227,21 @@ function handleReject(error, config) {
     }
 
     if (config.globalError && !CUSTOM_HANDLE_CODE.includes(data?.code)) {
-      messageError(message);
+      messageError({
+        code: data?.code,
+        overview: message,
+        suggestion: '',
+        assistant: window.BCS_CONFIG?.contact,
+        type: 'key-value',
+        details: {
+          traceparent: error.response?.config?.headers?.Traceparent,
+          requestId: error.response?.headers?.['x-request-id'],
+          message: data.message,
+        },
+      });
     }
   } else if (error.message === 'Network Error') {
-    messageError(window.i18n.t('网络错误'));
+    messageError(window.i18n.t('generic.msg.error.network'));
   } else if (error.message && config.globalError) {
     messageError(error.message);
   }

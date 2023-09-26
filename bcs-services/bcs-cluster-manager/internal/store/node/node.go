@@ -35,6 +35,7 @@ const (
 	nodeIPKeyName         = "innerip"
 	nodeClusterIDKey      = "clusterid"
 	nodeTableName         = "node"
+	nodeNameKey           = "nodename"
 	defaultNodeListLength = 5000
 )
 
@@ -159,6 +160,26 @@ func (m *ModelNode) DeleteClusterNode(ctx context.Context, clusterID, nodeID str
 	return nil
 }
 
+// DeleteClusterNodeByName delete node by name
+func (m *ModelNode) DeleteClusterNodeByName(ctx context.Context, clusterID, nodeName string) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+	if len(nodeName) == 0 {
+		return nil
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		nodeClusterIDKey: clusterID,
+		nodeNameKey:      nodeName,
+	})
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // DeleteNodesByNodeIDs delete node
 func (m *ModelNode) DeleteNodesByNodeIDs(ctx context.Context, nodeIDs []string) error {
 	if err := m.ensureTable(ctx); err != nil {
@@ -171,6 +192,26 @@ func (m *ModelNode) DeleteNodesByNodeIDs(ctx context.Context, nodeIDs []string) 
 	cond := operator.NewLeafCondition(operator.In, operator.M{
 		nodeIDKeyName: nodeIDs,
 	})
+
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteClusterNodesByIPs delete cluster nodes
+func (m *ModelNode) DeleteClusterNodesByIPs(ctx context.Context, clusterID string, ips []string) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+	if len(ips) == 0 || clusterID == "" {
+		return nil
+	}
+
+	condIP := operator.NewLeafCondition(operator.In, operator.M{nodeIPKeyName: ips})
+	condCls := operator.NewLeafCondition(operator.Eq, operator.M{nodeClusterIDKey: clusterID})
+	cond := operator.NewBranchCondition(operator.And, condIP, condCls)
 
 	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
 	if err != nil {
@@ -275,6 +316,22 @@ func (m *ModelNode) GetNodeByIP(ctx context.Context, ip string) (*types.Node, er
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		nodeIPKeyName: ip,
+	})
+	retNode := &types.Node{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retNode); err != nil {
+		return nil, err
+	}
+	return retNode, nil
+}
+
+// GetNodeByName get node by name
+func (m *ModelNode) GetNodeByName(ctx context.Context, clusterID, name string) (*types.Node, error) {
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		nodeClusterIDKey: clusterID,
+		nodeNameKey:      name,
 	})
 	retNode := &types.Node{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retNode); err != nil {

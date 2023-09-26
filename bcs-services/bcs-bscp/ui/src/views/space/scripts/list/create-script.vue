@@ -56,7 +56,7 @@
       console.error(e)
     } finally {
       pending.value = false
-    }    
+    }
   }
 
   const handleClose = () => {
@@ -101,7 +101,7 @@
                 </template>
               </ScriptEditor>
             </div>
-          </bk-form-item> 
+          </bk-form-item>
         </bk-form>
       </div>
     </template>
@@ -126,7 +126,7 @@
   .script-content-wrapper {
     min-width: 520px;
   }
-  
+
   .language-tabs {
     display: flex;
     align-items: center;

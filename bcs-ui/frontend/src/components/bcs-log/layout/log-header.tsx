@@ -1,5 +1,6 @@
-import { defineComponent, PropType, ref, toRefs, watch, computed } from 'vue';
+import { computed, defineComponent, PropType, ref, toRefs, watch } from 'vue';
 import { TranslateResult } from 'vue-i18n';
+
 import $i18n from '@/i18n/i18n-setup';
 
 interface IOption {
@@ -54,22 +55,22 @@ export default defineComponent({
     const operateList = computed<IOperate[]>(() => [
       {
         event: 'time-stamp-change',
-        tips: showTimeStamp.value ? $i18n.t('隐藏时间') : $i18n.t('显示时间'),
+        tips: showTimeStamp.value ? $i18n.t('generic.log.button.hideTime') : $i18n.t('generic.log.button.showTime'),
         icon: 'bcs-icon bcs-icon-clock',
       },
       {
         event: 'refresh',
-        tips: $i18n.t('刷新'),
+        tips: $i18n.t('generic.log.button.refresh'),
         icon: 'bcs-icon bcs-icon-refresh',
       },
       {
         event: 'real-time',
-        tips: realTimeLog.value ? $i18n.t('关闭实时日志') : $i18n.t('开启实时日志'),
+        tips: realTimeLog.value ? $i18n.t('generic.log.button.offRealTimeLog') : $i18n.t('generic.log.button.onRealTimeLog'),
         icon: realTimeLog.value ? 'bcs-icon bcs-icon-pause' : 'bcs-icon bcs-icon-play2',
       },
       {
         event: 'download',
-        tips: $i18n.t('下载'),
+        tips: $i18n.t('generic.log.button.download'),
         icon: 'bcs-icon bcs-icon-download',
       },
     ]);

@@ -1,21 +1,21 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package client
 
 import (
-	"bscp.io/pkg/metrics"
-
 	"github.com/prometheus/client_golang/prometheus"
+
+	"bscp.io/pkg/metrics"
 )
 
 func initMetric() *metric {
@@ -41,55 +41,15 @@ func initMetric() *metric {
 	}, []string{"rsc", "biz"})
 	metrics.Register().MustRegister(m.refreshLagMS)
 
-	m.strategyByteSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	m.cacheItemByteSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace:   metrics.Namespace,
 		Subsystem:   metrics.CSCacheSubSys,
-		Name:        "strategy_size_bytes",
-		Help:        "the total strategy size of an app's instance to be matched in bytes",
+		Name:        "cache_item_size_bytes",
+		Help:        "the size of an item in the bedis cache",
 		ConstLabels: labels,
 		Buckets:     []float64{400, 600, 800, 1000, 1200, 1400, 1800, 2000, 2500, 3000, 3500, 4000, 5000, 6000},
 	}, []string{"rsc", "biz"})
-	metrics.Register().MustRegister(m.strategyByteSize)
-
-	m.releasedGroupByteSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace:   metrics.Namespace,
-		Subsystem:   metrics.CSCacheSubSys,
-		Name:        "released_group_size_bytes",
-		Help:        "the total released groups size of an app's instance to be matched in bytes",
-		ConstLabels: labels,
-		Buckets:     []float64{400, 600, 800, 1000, 1200, 1400, 1800, 2000, 2500, 3000, 3500, 4000, 5000, 6000},
-	}, []string{"rsc", "biz"})
-	metrics.Register().MustRegister(m.releasedGroupByteSize)
-
-	m.releasedCIByteSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace:   metrics.Namespace,
-		Subsystem:   metrics.CSCacheSubSys,
-		Name:        "released_ci_size_bytes",
-		Help:        "the total configure items size of an app's release in bytes",
-		ConstLabels: labels,
-		Buckets:     []float64{500, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 7000, 10000},
-	}, []string{"rsc", "biz"})
-	metrics.Register().MustRegister(m.releasedCIByteSize)
-
-	m.releasedHookByteSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace:   metrics.Namespace,
-		Subsystem:   metrics.CSCacheSubSys,
-		Name:        "released_hook_size_bytes",
-		Help:        "the total hook size of an biz's hooks in bytes",
-		ConstLabels: labels,
-		Buckets:     []float64{500, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 7000, 10000},
-	}, []string{"rsc", "biz"})
-	metrics.Register().MustRegister(m.releasedHookByteSize)
-
-	m.credentialByteSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace:   metrics.Namespace,
-		Subsystem:   metrics.CSCacheSubSys,
-		Name:        "credential_size_bytes",
-		Help:        "the total credentials size of an biz in bytes",
-		ConstLabels: labels,
-		Buckets:     []float64{500, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 7000, 10000},
-	}, []string{"rsc", "biz"})
-	metrics.Register().MustRegister(m.credentialByteSize)
+	metrics.Register().MustRegister(m.cacheItemByteSize)
 
 	return m
 }
@@ -101,20 +61,8 @@ type metric struct {
 	// record the cost time in a milliseconds of refresh the cache.
 	refreshLagMS *prometheus.HistogramVec
 
-	// record the total strategy size of an app's instance to be matched with bytes.
-	strategyByteSize *prometheus.HistogramVec
-
-	// record the total size of an app's all the released-groups of one release with bytes.
-	releasedGroupByteSize *prometheus.HistogramVec
-
-	// record the total size of an app's all the configure-items of one release with bytes.
-	releasedCIByteSize *prometheus.HistogramVec
-
-	// record the total size of an release's pre hook and post hook of one release with bytes.
-	releasedHookByteSize *prometheus.HistogramVec
-
-	// record the total size of an biz's credentials with bytes.
-	credentialByteSize *prometheus.HistogramVec
+	// cacheItemByteSize site of one cached item in bytes.
+	cacheItemByteSize *prometheus.HistogramVec
 }
 
 const (
@@ -124,5 +72,6 @@ const (
 	releasedCIRes    = "release-ci"
 	releasedHookRes  = "release-hook"
 	strategyRes      = "strategy"
+	credentialRes    = "credential"
 	releasedGroupRes = "released-group"
 )

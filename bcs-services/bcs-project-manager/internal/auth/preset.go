@@ -47,10 +47,11 @@ var ActionPermissions = map[string]string{
 	"Variable.ImportVariables":           project.CanViewProjectOperation,
 	"Variable.RenderVariables":           project.CanViewProjectOperation,
 	// Namespace
-	"Namespace.SyncNamespace":   namespace.CanCreateNamespaceOperation,
-	"Namespace.CreateNamespace": namespace.CanCreateNamespaceOperation,
-	"Namespace.UpdateNamespace": namespace.CanUpdateNamespaceOperation,
-	"Namespace.GetNamespace":    namespace.CanViewNamespaceOperation,
-	"Namespace.ListNamespaces":  namespace.CanListNamespaceOperation,
-	"Namespace.DeleteNamespace": namespace.CanDeleteNamespaceOperation,
+	"Namespace.SyncNamespace":        namespace.CanCreateNamespaceOperation,
+	"Namespace.CreateNamespace":      namespace.CanCreateNamespaceOperation,
+	"Namespace.UpdateNamespace":      namespace.CanUpdateNamespaceOperation,
+	"Namespace.GetNamespace":         namespace.CanViewNamespaceOperation,
+	"Namespace.ListNamespaces":       namespace.CanListNamespaceOperation,
+	"Namespace.ListNativeNamespaces": namespace.CanListNamespaceOperation,
+	"Namespace.DeleteNamespace":      namespace.CanDeleteNamespaceOperation,
 }

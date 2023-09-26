@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useGlobalStore } from './store/global';
 import { ISpaceDetail } from '../types/index';
 
+
+
 const routes = [
   {
     path: '/',
@@ -70,6 +72,38 @@ const routes = [
         component: () => import('./views/space/groups/index.vue')
       },
       {
+        path: 'variables',
+        name: 'variables-management',
+        meta: {
+          navModule: 'variables'
+        },
+        component: () => import('./views/space/variables/index.vue')
+      },
+      {
+        path: 'templates',
+        meta: {
+          navModule: 'templates'
+        },
+        children: [
+          {
+            path: 'list/:templateSpaceId?/:packageId?',
+            name: 'templates-list',
+            meta: {
+              navModule: 'templates'
+            },
+            component: () => import('./views/space/templates/list/index.vue'),
+          },
+          {
+            path: ':templateSpaceId/:packageId/version_manage/:templateId',
+            name: 'template-version-manage',
+            meta: {
+              navModule: 'templates'
+            },
+            component: () => import('./views/space/templates/version-manage/index.vue'),
+          }
+        ]
+      },
+      {
         path: 'scripts',
         name: 'scripts-management',
         meta: {
@@ -116,5 +150,13 @@ const router = createRouter({
   history: createWebHistory((<any>window).SITE_URL),
   routes,
 });
+
+// 路由切换时，取消无权限页面
+router.afterEach((to, from) => {
+  const globalStore = useGlobalStore()
+  globalStore.$patch((state) => {
+    state.showPermApplyPage = false
+  })
+})
 
 export default router;

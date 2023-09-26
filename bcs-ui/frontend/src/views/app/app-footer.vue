@@ -2,20 +2,20 @@
   <div class="bcs-footer">
     <div v-if="$INTERNAL">
       <div class="mb5 link">
-        <a href="wxwork://message?uin=8444252571319680">{{ $t('联系BK助手') }}</a> |
-        <a :href="PAAS_HOST" target="_blank">{{ $t('蓝鲸桌面') }}</a>
+        <a href="wxwork://message?uin=8444252571319680">{{ $t('blueking.onCall') }}</a> |
+        <a :href="PAAS_HOST" target="_blank">{{ $t('blueking.desktop') }}</a>
       </div>
       <p>
-        Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved
+        Copyright © 2012 Tencent BlueKing. All Rights Reserved. {{ version }}
       </p>
     </div>
     <div v-else>
       <div class="mb5 link">
-        <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('技术支持') }}</a> |
-        <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('社区论坛') }}</a> |
-        <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('产品官网') }}</a>
+        <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('blueking.support') }}</a> |
+        <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('blueking.community') }}</a> |
+        <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('blueking.website') }}</a>
       </div>
-      <p>Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved. {{ version }}</p>
+      <p>Copyright © 2012 Tencent BlueKing. All Rights Reserved. {{ version }}</p>
     </div>
   </div>
 </template>
@@ -27,7 +27,7 @@ export default defineComponent({
   setup() {
     return {
       PAAS_HOST: window.PAAS_HOST,
-      version: localStorage.getItem('__bcs_latest_version__')
+      version: localStorage.getItem('__bcs_latest_version__'),
     };
   },
 });

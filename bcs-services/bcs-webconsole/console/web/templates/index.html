@@ -130,7 +130,7 @@
         var localeLang = "{{ .Language }}"
         if (localeLang == "en") {
             localeLang = "enUS"
-        }else {
+        } else {
             localeLang = "zhCN"
         }
         window.bkMagicVue.locale.use(window.bkMagicVue.locale.lang[localeLang])
@@ -365,21 +365,6 @@
                         // STDIN_CHANNEL = 0
                         self.ws.send('0' + Base64.encode(data));
                     });
-
-                    // 记录输入内容
-                    self.term.onKey(function (e) {
-                        // 获取光标所在行的行号 相对于窗口 + 光标位置
-                        const row = self.term.buffer.active.viewportY + self.term.buffer.active.cursorY;
-                        // 获取光标所在行的内容
-                        const text = self.term.buffer.normal.getLine(row).translateToString();
-                        // 过滤其他字符串
-                        const str = text.trim()
-                        if (e.domEvent.keyCode === 13) {
-                            if (str.length !== 0 && self.term.buffer.active.type === "normal") {
-                                self.ws.send('5' + Base64.encode(str));
-                            }
-                        }
-                    })
 
                     // 使用 BCS API 首个字节流判断是否连接
                     notConnected = true

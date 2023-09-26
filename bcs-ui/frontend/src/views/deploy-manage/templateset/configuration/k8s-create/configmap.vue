@@ -14,14 +14,14 @@
           <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
             <bk-alert type="info" class="mb20">
               <div slot="title">
-                {{$t('ConfigMap是用来存储配置文件的k8s资源对象，它的作用是将配置文件从容器镜像中解耦，从而增强容器应用的可移植性')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sConfigmap" target="_blank">{{$t('详情查看文档')}}</a>
+                {{$t('deploy.templateset.configMapExplanation')}}，
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sConfigmap" target="_blank">{{$t('plugin.tools.docs')}}</a>
               </div>
             </bk-alert>
             <template v-if="!configmaps.length">
               <div class="biz-guide-box mt0">
                 <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalConfigmap">
-                  <span style="margin-left: 0;">{{$t('添加')}}ConfigMap</span>
+                  <span style="margin-left: 0;">{{$t('generic.button.add')}}ConfigMap</span>
                 </bk-button>
               </div>
             </template>
@@ -32,13 +32,13 @@
                     <bk-button
                       :class="['bk-button', { 'bk-primary': curConfigmap.id === configmap.id }]"
                       @click.stop="setCurConfigmap(configmap, index)">
-                      {{(configmap && configmap.config.metadata.name) || $t('未命名')}}
+                      {{(configmap && configmap.config.metadata.name) || $t('deploy.templateset.unnamed')}}
                       <span class="biz-update-dot" v-show="configmap.isEdited"></span>
                     </bk-button>
                     <span class="bcs-icon bcs-icon-close" @click.stop="removeConfigmap(configmap, index)"></span>
                   </div>
 
-                  <bcs-popover ref="configmapTooltip" :content="$t('添加ConfigMap')" placement="top">
+                  <bcs-popover ref="configmapTooltip" :content="$t('deploy.templateset.addConfigMap')" placement="top">
                     <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalConfigmap">
                       <i class="bcs-icon bcs-icon-plus"></i>
                     </bk-button>
@@ -50,7 +50,7 @@
                 <div class="bk-form biz-configuration-form">
                   <a
                     href="javascript:void(0);" class="bk-text-button from-json-btn"
-                    @click.stop.prevent="showJsonPanel">{{$t('导入YAML')}}</a>
+                    @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
 
                   <bk-sideslider
                     :is-show.sync="toJsonDialogConf.isShow"
@@ -66,10 +66,10 @@
                         v-bkloading="{ isLoading: toJsonDialogConf.loading }">
                         <bk-button
                           class="bk-button bk-primary save-json-btn"
-                          @click.stop.prevent="saveApplicationJson">{{$t('导入')}}</bk-button>
+                          @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
                         <bk-button
                           class="bk-button bk-default hide-json-btn"
-                          @click.stop.prevent="hideApplicationJson">{{$t('取消')}}</bk-button>
+                          @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
                         <ace
                           :value="editorConfig.value"
                           :width="editorConfig.width"
@@ -84,12 +84,12 @@
                   </bk-sideslider>
 
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 105px;">{{$t('名称')}}：</label>
+                    <label class="bk-label" style="width: 105px;">{{$t('generic.label.name')}}：</label>
                     <div class="bk-form-content" style="margin-left: 105px;">
                       <input
                         type="text"
                         :class="['bk-form-input',{ 'is-danger': errors.has('configmapName') }]"
-                        :placeholder="$t('请输入64个以内的字符')"
+                        :placeholder="$t('deploy.templateset.enterCharacterLimit')"
                         style="width: 310px;"
                         maxlength="64"
                         v-model="curConfigmap.config.metadata.name"
@@ -99,13 +99,13 @@
                           regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/
                         }">
                       <div class="bk-form-tip" v-if="errors.has('configmapName')">
-                        <p class="bk-tip-text">{{$t('名称必填，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)')}}</p>
+                        <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
                       </div>
                     </div>
                   </div>
                   <template>
                     <div class="bk-form-item is-required">
-                      <label class="bk-label" style="width: 105px;">{{$t('键')}}：</label>
+                      <label class="bk-label" style="width: 105px;">{{$t('generic.label.key')}}：</label>
                       <div class="bk-form-content" style="margin-left: 105px;">
                         <div class="biz-list-operation">
                           <div class="item" v-for="(data, index) in curConfigmap.configmapKeyList" :key="index">
@@ -113,7 +113,7 @@
                               :class="['bk-button', { 'bk-primary': curKeyIndex === index }]"
                               @click.stop.prevent="setCurKey(data, index)"
                               v-if="!data.isEdit">
-                              {{data.key || $t('未命名')}}
+                              {{data.key || $t('deploy.templateset.unnamed')}}
                             </bk-button>
                             <bkbcs-input
                               type="text"
@@ -132,7 +132,7 @@
                               class="bcs-icon bcs-icon-close" v-show="!data.isEdit"
                               @click.stop.prevent="removeKey(data, index)"></span>
                           </div>
-                          <bcs-popover ref="keyTooltip" :content="$t('添加Key')" placement="top">
+                          <bcs-popover ref="keyTooltip" :content="$t('deploy.templateset.addKey')" placement="top">
                             <bk-button class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addKey">
                               <i class="bcs-icon bcs-icon-plus"></i>
                             </bk-button>
@@ -142,7 +142,7 @@
                     </div>
                     <template v-if="curKeyParams">
                       <div class="bk-form-item">
-                        <label class="bk-label" style="width: 105px;">{{$t('值')}}：</label>
+                        <label class="bk-label" style="width: 105px;">{{$t('generic.label.value')}}：</label>
                         <div class="bk-form-content" style="margin-left: 105px;">
                           <bk-input
                             type="textarea"
@@ -150,7 +150,7 @@
                             ext-style="height: 300px;"
                             :rows="15"
                             v-model="curKeyParams.content"
-                            :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')">
+                            :placeholder="$t('deploy.templateset.enterKeyName') + curKeyParams.key + $t('deploy.templateset.keyContent')">
                           </bk-input>
                         </div>
                       </div>
@@ -167,15 +167,17 @@
 </template>
 
 <script>
-import configmapParams from '@/json/k8s-configmap.json';
-import ace from '@/components/ace-editor';
-import header from './header.vue';
 import yamljs from 'js-yaml';
 import _ from 'lodash';
+
+import header from './header.vue';
 import tabs from './tabs.vue';
-import mixinBase from '@/mixins/configuration/mixin-base';
-import k8sBase from '@/mixins/configuration/k8s-base';
+
 import { catchErrorHandler } from '@/common/util';
+import ace from '@/components/ace-editor';
+import configmapParams from '@/json/k8s-configmap.json';
+import k8sBase from '@/mixins/configuration/k8s-base';
+import mixinBase from '@/mixins/configuration/mixin-base';
 
 export default {
   name: 'ConfigMap',
@@ -310,7 +312,7 @@ export default {
         if (!nameReg.test(data.key.replace(varReg, 'key'))) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('键名错误，只能包含：字母、数字、连字符(-)、点(.)、下划线(_)，首字母必须是字母，长度小于30个字符'),
+            message: this.$t('deploy.templateset.msg.labelKey'),
             delay: 5000,
           });
           return false;
@@ -323,7 +325,7 @@ export default {
           } else {
             this.$bkMessage({
               theme: 'error',
-              message: this.$t('键不可重复'),
+              message: this.$t('deploy.templateset.keyNotDuplicate'),
               delay: 5000,
             });
             return false;
@@ -466,8 +468,8 @@ export default {
       const configmapId = configmap.id;
 
       this.$bkInfo({
-        title: this.$t('确认删除'),
-        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('删除ConfigMap')}：${configmap.config.metadata.name || this.$t('未命名')}`),
+        title: this.$t('generic.title.confirmDelete'),
+        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('deploy.templateset.deleteConfigMap')}：${configmap.config.metadata.name || this.$t('deploy.templateset.unnamed')}`),
         async confirmFn() {
           if (configmapId.indexOf && configmapId.indexOf('local_') > -1) {
             self.removeLocalConfigmap(configmap, index);
@@ -612,7 +614,7 @@ export default {
         if (!appParamKeys.includes(key)) {
           this.$bkMessage({
             theme: 'error',
-            message: `${key}${this.$t('为无效字段')}`,
+            message: `${key}${this.$t('deploy.templateset.invalidField')}`,
           });
           const match = editor.find(`${key}`);
           if (match) {
@@ -633,7 +635,7 @@ export default {
       if (!yaml) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入YAML'),
+          message: this.$t('deploy.templateset.enterYAML'),
         });
         return false;
       }
@@ -643,7 +645,7 @@ export default {
       } catch (err) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入合法的YAML'),
+          message: this.$t('deploy.templateset.enterValidYAML'),
         });
         return false;
       }

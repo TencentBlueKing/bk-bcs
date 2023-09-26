@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -29,10 +29,10 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbcs.CreateGroupReq) (*p
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateGroupResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Create,
-		ResourceID: req.BizId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -66,9 +66,10 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbcs.DeleteGroupReq) (*p
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteGroupResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Delete,
-		ResourceID: req.GroupId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -93,9 +94,10 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbcs.UpdateGroupReq) (*p
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateGroupResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Update,
-		ResourceID: req.GroupId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(grpcKit, res...)
 	if err != nil {
 		return nil, err
 	}
@@ -128,9 +130,10 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAllGroupsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -221,9 +224,10 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbcs.ListAppGroupsReq)
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAppGroupsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -261,9 +265,10 @@ func (s *Service) ListGroupReleasedApps(ctx context.Context, req *pbcs.ListGroup
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListGroupReleasedAppsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -296,11 +301,11 @@ func (s *Service) ListGroupReleasedApps(ctx context.Context, req *pbcs.ListGroup
 // GetGroupByName get group by name
 func (s *Service) GetGroupByName(ctx context.Context, req *pbcs.GetGroupByNameReq) (*pbgroup.Group, error) {
 	kt := kit.FromGrpcContext(ctx)
-	resp := new(pbgroup.Group)
 
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
-	if err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(kt, res...); err != nil {
 		return nil, err
 	}
 

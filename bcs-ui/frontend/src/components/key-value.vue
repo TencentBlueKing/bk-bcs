@@ -3,7 +3,7 @@
     <template v-if="keyValueData.length">
       <div class="key-value-item" v-if="showHeader">
         <span class="key desc">
-          {{$t('键')}}:
+          {{$t('generic.label.key')}}:
           <i
             v-bk-tooltips="keyDesc"
             class="ml10 bcs-icon bcs-icon-question-circle"
@@ -11,7 +11,7 @@
           ></i>
         </span>
         <span class="value desc">
-          {{$t('值')}}:
+          {{$t('generic.label.value')}}:
           <i
             v-bk-tooltips="valueDesc"
             class="ml10 bcs-icon bcs-icon-question-circle"
@@ -35,7 +35,7 @@
               :required="keyRequired"
               ref="validateRefs">
               <bcs-input
-                :placeholder="$t('键')"
+                :placeholder="$t('generic.label.key')"
                 :disabled="item.disabled"
                 v-model="item.key">
               </bcs-input>
@@ -68,7 +68,7 @@
           ref="validateRefs"
           v-else>
           <bcs-input
-            :placeholder="$t('键')"
+            :placeholder="$t('generic.label.key')"
             :disabled="item.disabled"
             v-model="item.key">
           </bcs-input>
@@ -80,7 +80,7 @@
           :value="item.value"
           :meta="index"
           ref="validateRefs">
-          <bcs-input :placeholder="item.placeholder || $t('值')" class="value" v-model="item.value"></bcs-input>
+          <bcs-input :placeholder="item.placeholder || $t('generic.label.value')" class="value" v-model="item.value"></bcs-input>
         </Validate>
         <template v-if="showOperate">
           <i class="bk-icon icon-plus-circle ml10 mr5" @click="handleAddKeyValue(index)"></i>
@@ -96,7 +96,7 @@
       v-else
       @click="handleAddKeyValue(-1)">
       <i class="bk-icon icon-plus-circle-shape mr5"></i>
-      {{$t('添加')}}
+      {{$t('generic.button.add')}}
     </span>
     <div class="mt15" v-if="showFooter">
       <bcs-button
@@ -106,17 +106,19 @@
         :disalbed="loading"
         @click="confirmSetLabel"
       >
-        {{$t('保存')}}
+        {{$t('generic.button.save')}}
       </bcs-button>
       <bcs-button class="bcs-btn" :disalbed="loading" @click="hideSetLabel">
-        {{$t('取消')}}
+        {{$t('generic.button.cancel')}}
       </bcs-button>
     </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, toRefs, watch, ref, computed, PropType, onMounted } from 'vue';
+import { computed, defineComponent, onMounted, PropType, ref, toRefs, watch } from 'vue';
+
 import Validate from './validate.vue';
+
 import $i18n from '@/i18n/i18n-setup';
 
 export interface IData {
@@ -279,7 +281,7 @@ export default defineComponent({
     onMounted(() => {
       if (uniqueKey.value) {
         rules.value.push({
-          message: $i18n.t('重复键'),
+          message: $i18n.t('generic.validate.repeatKey'),
           validator: (value, index) => keyValueData.value.filter((_, i) => i !== index).every(d => d.key !== value),
         });
       }

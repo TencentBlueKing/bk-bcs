@@ -38,6 +38,8 @@ const (
 	createNodeGroupTaskTemplate = "gke-create node group: %s/%s"
 	// deleteNodeGroupTaskTemplate bk-sops add task template
 	deleteNodeGroupTaskTemplate = "gke-delete node group: %s/%s"
+	// updateNodeGroupTaskTemplate bk-sops add task template
+	updateNodeGroupTaskTemplate = "gke-update node group: %s/%s"
 	// updateNodeGroupDesiredNode bk-sops add task template
 	updateNodeGroupDesiredNodeTemplate = "gke-update node group desired node: %s/%s"
 	// cleanNodeGroupNodesTaskTemplate bk-sops add task template
@@ -98,6 +100,10 @@ var (
 	checkClusterNodesStatusStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName),
 		StepName:   "检测节点状态",
+	}
+	removeClusterNodesTaintStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-RemoveClusterNodesTaintTask", cloudName),
+		StepName:   "删除预置的污点",
 	}
 	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName),
@@ -272,4 +278,16 @@ func (ud *UpdateDesiredNodesTaskOption) BuildCheckClusterNodeStatusStep(task *pr
 
 	task.Steps[checkClusterNodesStatusStep.StepMethod] = checkClusterNodeStatusStep
 	task.StepSequence = append(task.StepSequence, checkClusterNodesStatusStep.StepMethod)
+}
+
+// BuildRemoveClusterNodesTaintStep 删除预置的污点
+func (ud *UpdateDesiredNodesTaskOption) BuildRemoveClusterNodesTaintStep(task *proto.Task) {
+	removeTaintStep := cloudprovider.InitTaskStep(removeClusterNodesTaintStep)
+
+	removeTaintStep.Params[cloudprovider.ClusterIDKey.String()] = ud.Group.ClusterID
+	removeTaintStep.Params[cloudprovider.NodeGroupIDKey.String()] = ud.Group.NodeGroupID
+	removeTaintStep.Params[cloudprovider.CloudIDKey.String()] = ud.Group.Provider
+
+	task.Steps[removeClusterNodesTaintStep.StepMethod] = removeTaintStep
+	task.StepSequence = append(task.StepSequence, removeClusterNodesTaintStep.StepMethod)
 }

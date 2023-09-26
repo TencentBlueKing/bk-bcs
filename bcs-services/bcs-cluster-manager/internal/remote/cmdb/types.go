@@ -56,6 +56,10 @@ const (
 	fieldHostOutIP   = "bk_host_outerip"
 	fieldHostOutIPV6 = "bk_host_outerip_v6"
 	fieldHostID      = "bk_host_id"
+	fieldHostName    = "bk_host_name" // 主机名称
+	fieldOsType      = "bk_os_type"   // 操作系统类型
+	fieldOsName      = "bk_os_name"   // 操作系统名称
+
 	fieldDeviceType  = "bk_svr_device_cls_name"
 	fieldIDCCityName = "idc_city_name"
 	fieldIDCCityID   = "idc_city_id"
@@ -86,8 +90,11 @@ const (
 
 var (
 	fieldHostDetailInfo = []string{fieldCloudID, fieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6, fieldHostID,
-		fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU, fieldCpuModule,
-		fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName, fieldSubZoneID, fieldIspName}
+		fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU, fieldCpuModule, fieldHostMem,
+		fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName, fieldSubZoneID, fieldIspName, fieldAgentId}
+
+	fieldHostIPSelectorInfo = []string{fieldHostIP, fieldHostIPv6, fieldCloudID, fieldHostName, fieldOsType,
+		fieldOsName, fieldHostID, fieldOperator, fieldBakOperator, fieldAgentId}
 )
 
 // condition result
@@ -182,10 +189,46 @@ type HostResp struct {
 
 // HostData host info
 type HostData struct {
-	BKHostID      int64  `json:"bk_host_id"`
-	BKHostInnerIP string `json:"bk_host_innerip"`
-	Operator      string `json:"operator"`
-	BKBakOperator string `json:"bk_bak_operator"`
+	BKHostInnerIP   string `json:"bk_host_innerip"`
+	BKHostInnerIPV6 string `json:"bk_host_innerip_v6"`
+	BKHostCloudID   int    `json:"bk_cloud_id"`
+	BKHostID        int64  `json:"bk_host_id"`
+	BKHostName      string `json:"bk_host_name"`
+	BKHostOsType    string `json:"bk_os_type"`
+	BKHostOsName    string `json:"bk_os_name"`
+	Operator        string `json:"operator"`
+	BKBakOperator   string `json:"bk_bak_operator"`
+	BkAgentID       string `json:"bk_agent_id"`
+}
+
+// HostTopoRelationReq request
+type HostTopoRelationReq struct {
+	Page        Page  `json:"page"`
+	BkBizID     int   `json:"bk_biz_id"`
+	BkSetIDs    []int `json:"bk_set_ids"`
+	BkModuleIDs []int `json:"bk_module_ids"`
+	BkHostIDs   []int `json:"bk_host_ids"`
+}
+
+// HostTopoRelationResp host topo
+type HostTopoRelationResp struct {
+	BaseResponse
+	Data HostTopoData `json:"data"`
+}
+
+// HostTopoData topo data
+type HostTopoData struct {
+	Count int                `json:"count"`
+	Data  []HostTopoRelation `json:"data"`
+}
+
+// HostTopoRelation host topo relation
+type HostTopoRelation struct {
+	BkBizID           int    `json:"bk_biz_id"`
+	BkSetID           int    `json:"bk_set_id"`
+	BkModuleID        int    `json:"bk_module_id"`
+	BkHostID          int    `json:"bk_host_id"`
+	BkSupplierAccount string `json:"bk_supplier_account"`
 }
 
 // ListHostsWithoutBizRequest list hosts request
@@ -255,7 +298,6 @@ type HostDetailData struct {
 	Rack             string `json:"rack"`
 	SubZoneID        string `json:"sub_zone_id"`
 	CpuModule        string `json:"bk_cpu_module"`
-	BkAgentID        string `json:"bk_agent_id"`
 }
 
 const (
@@ -464,4 +506,38 @@ type TransferHostModuleRequest struct {
 	BKHostID    []int `json:"bk_host_id"`
 	BKModuleID  []int `json:"bk_module_id"`
 	IsIncrement bool  `json:"is_increment"`
+}
+
+// BuildCloudAreaCondition build cloudID condition
+func BuildCloudAreaCondition(cloudID int) map[string]interface{} {
+	return map[string]interface{}{
+		fieldCloudID: cloudID,
+	}
+}
+
+// SearchCloudAreaRequest search area request
+type SearchCloudAreaRequest struct {
+	Condition map[string]interface{} `json:"condition"`
+	Page      Page                   `json:"page"`
+}
+
+// SearchCloudAreaResp search cloud area
+type SearchCloudAreaResp struct {
+	BaseResponse
+	Data SearchCloudAreaData `json:"data"`
+}
+
+// SearchCloudAreaData search cloud data
+type SearchCloudAreaData struct {
+	Count int                    `json:"count"`
+	Info  []*SearchCloudAreaInfo `json:"info"`
+}
+
+// SearchCloudAreaInfo search cloud info
+type SearchCloudAreaInfo struct {
+	CloudID         int    `json:"bk_cloud_id"`
+	CloudName       string `json:"bk_cloud_name"`
+	SupplierAccount string `json:"bk_supplier_account"`
+	CreateTime      string `json:"create_time"`
+	LastTime        string `json:"last_time"`
 }

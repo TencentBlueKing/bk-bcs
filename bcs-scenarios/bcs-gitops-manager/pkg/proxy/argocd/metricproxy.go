@@ -16,7 +16,7 @@ package argocd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -32,17 +32,19 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
+	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 )
 
 // MetricPlugin defines the metric plugin to proxy all the metrics
 type MetricPlugin struct {
 	*mux.Router
-	middleware MiddlewareInterface
+	middleware mw.MiddlewareInterface
 
 	monitorClient *monitoring.Clientset
 	k8sClient     *kubernetes.Clientset
 }
 
+// Init will init the metric proxy
 func (plugin *MetricPlugin) Init() error {
 	plugin.Path("/{namespace}/{servicemonitor}").Methods("GET").
 		Handler(plugin.middleware.HttpWrapper(plugin.metric))
@@ -69,7 +71,7 @@ func (plugin *MetricPlugin) inClusterClient() error {
 	return nil
 }
 
-func (plugin *MetricPlugin) metric(ctx context.Context, r *http.Request) *httpResponse {
+func (plugin *MetricPlugin) metric(ctx context.Context, r *http.Request) *mw.HttpResponse {
 	namespace, smName, resp := plugin.parseParam(ctx, r)
 	if resp != nil {
 		return resp
@@ -77,10 +79,8 @@ func (plugin *MetricPlugin) metric(ctx context.Context, r *http.Request) *httpRe
 	serviceMonitor, err := plugin.monitorClient.MonitoringV1().ServiceMonitors(namespace).
 		Get(ctx, smName, metav1.GetOptions{})
 	if err != nil {
-		return &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        errors.Wrapf(err, "get service monitor '%s/%s' failed", namespace, smName),
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest,
+			errors.Wrapf(err, "get service monitor '%s/%s' failed", namespace, smName))
 	}
 	metricPortPath := make(map[string][]string)
 	for _, ep := range serviceMonitor.Spec.Endpoints {
@@ -97,10 +97,8 @@ func (plugin *MetricPlugin) metric(ctx context.Context, r *http.Request) *httpRe
 		LabelSelector: labelSelector.String(),
 	})
 	if err != nil {
-		return &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        errors.Wrapf(err, "get endpoints by label '%s' failed", labelSelector.String()),
-		}
+		return mw.ReturnErrorResponse(http.StatusBadRequest,
+			errors.Wrapf(err, "get endpoints by label '%s' failed", labelSelector.String()))
 	}
 
 	result := make([]string, 0)
@@ -108,11 +106,7 @@ func (plugin *MetricPlugin) metric(ctx context.Context, r *http.Request) *httpRe
 		epMetrics := plugin.buildEndpointsMetrics(smName, metricPortPath, &ep)
 		result = append(result, epMetrics...)
 	}
-	return &httpResponse{
-		statusCode:   http.StatusOK,
-		obj:          strings.Join(result, "\n"),
-		notUnmarshal: true,
-	}
+	return mw.ReturnDirectResponse(strings.Join(result, "\n"))
 }
 
 func (plugin *MetricPlugin) buildEndpointsMetrics(smName string, metricPortPath map[string][]string,
@@ -165,7 +159,7 @@ func (plugin *MetricPlugin) getMetric(url string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	var bs []byte
-	bs, err = ioutil.ReadAll(resp.Body)
+	bs, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get metric '%s' read resp body failed", url)
 	}
@@ -235,28 +229,21 @@ func (plugin *MetricPlugin) matchPortPath(metricPortPath map[string][]string,
 	return result
 }
 
-func (plugin *MetricPlugin) parseParam(ctx context.Context, r *http.Request) (string, string, *httpResponse) {
+func (plugin *MetricPlugin) parseParam(ctx context.Context, r *http.Request) (string, string, *mw.HttpResponse) {
 	var namespace, smName string
-	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
+	user := mw.User(ctx)
 	if user.ClientID != proxy.AdminClientUser && user.ClientID != proxy.AdminGitOpsUser {
-		return namespace, smName, &httpResponse{
-			statusCode: http.StatusUnauthorized,
-			err:        errors.Errorf("not authorized"),
-		}
+		return namespace, smName, mw.ReturnErrorResponse(http.StatusUnauthorized, errors.Errorf("not authorized"))
 	}
 	namespace = mux.Vars(r)["namespace"]
 	if namespace == "" {
-		return namespace, smName, &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        errors.Errorf("namespace cannot be empty"),
-		}
+		return namespace, smName,
+			mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("namespace cannot be empty"))
 	}
 	smName = mux.Vars(r)["servicemonitor"]
 	if smName == "" {
-		return namespace, smName, &httpResponse{
-			statusCode: http.StatusBadRequest,
-			err:        errors.Errorf("service monitor cannot be empty"),
-		}
+		return namespace, smName,
+			mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("service monitor cannot be empty"))
 	}
 	return namespace, smName, nil
 }

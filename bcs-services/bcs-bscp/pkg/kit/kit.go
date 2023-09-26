@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 // Package kit NOTES
 package kit
@@ -44,6 +44,7 @@ var (
 	lowSpaceIDKey     = strings.ToLower(constant.SpaceIDKey)
 	lowSpaceTypeIDKey = strings.ToLower(constant.SpaceTypeIDKey)
 	lowBizIDKey       = strings.ToLower(constant.BizIDKey)
+	lowAppIDKey       = strings.ToLower(constant.AppIDKey)
 )
 
 // FromGrpcContext used only to obtain Kit through grpc context.
@@ -90,6 +91,16 @@ func FromGrpcContext(ctx context.Context) *Kit {
 		}
 	}
 
+	appIDs := md[lowAppIDKey]
+	if len(appIDs) != 0 {
+		appID, err := strconv.ParseUint(appIDs[0], 10, 64)
+		if err != nil {
+			klog.ErrorS(err, "parse lowBizID %s", appIDs[0])
+		} else {
+			kit.AppID = uint32(appID)
+		}
+	}
+
 	kit.Ctx = context.WithValue(kit.Ctx, constant.RidKey, rid)
 
 	// Note: need to add supplier id and authorization field.
@@ -119,6 +130,37 @@ type Kit struct {
 	BizID       uint32 // 对应的业务ID
 	SpaceID     string // 应用对应的SpaceID
 	SpaceTypeID string // 应用对应的SpaceTypeID
+	TmplSpaceID uint32 // 配置模版对应的TemplateSpaceID
+}
+
+// Clone clones a Kit
+func (c *Kit) Clone() *Kit {
+	return &Kit{
+		Ctx:         c.Ctx,
+		User:        c.User,
+		Rid:         c.Rid,
+		AppCode:     c.AppCode,
+		AppID:       c.AppID,
+		BizID:       c.BizID,
+		SpaceID:     c.SpaceID,
+		SpaceTypeID: c.SpaceTypeID,
+		TmplSpaceID: c.TmplSpaceID,
+	}
+}
+
+// GetKitForRepoTmpl get a kit for repo template operations
+func (c *Kit) GetKitForRepoTmpl(tmplSpaceID uint32) *Kit {
+	c2 := c.Clone()
+	c2.TmplSpaceID = tmplSpaceID
+	c2.AppID = 0
+	return c2
+}
+
+// GetKitForRepoCfg get a kit for repo config item operations
+func (c *Kit) GetKitForRepoCfg() *Kit {
+	c2 := c.Clone()
+	c2.TmplSpaceID = 0
+	return c2
 }
 
 // ContextWithRid NOTES
@@ -135,6 +177,7 @@ func (c *Kit) RPCMetaData() metadata.MD {
 		constant.SpaceIDKey:     c.SpaceID,
 		constant.SpaceTypeIDKey: c.SpaceTypeID,
 		constant.BizIDKey:       strconv.FormatUint(uint64(c.BizID), 10),
+		constant.AppIDKey:       strconv.FormatUint(uint64(c.AppID), 10),
 	}
 
 	md := metadata.New(m)

@@ -5,13 +5,13 @@
   "items": [
     {
       "name": "simple_deployment",
-      "alias": "Deployment Simple Demo",
+      "alias": "Deployment simple demo",
       "description": "A simple deployment demo with only basic configuration",
       "manifest": null
     },
     {
       "name": "deploy_with_res_quota",
-      "alias": "Deployment with resource quotas",
+      "alias": "Deployment with resources",
       "description": "Configuring resources.requests for containers in Deployment can ensure that Pods are scheduled to nodes with sufficient resources; configuring resources.limits for containers can ensure that Pods are stopped in time after they occupy too many resources to avoid affecting the other pods on same node",
       "manifest": null
     },
@@ -23,13 +23,13 @@
     },
     {
       "name": "deploy_with_mount_volume",
-      "alias": "Deployment with mount volumes",
+      "alias": "Deployment with volumeMounts",
       "description": "Mounting data volumes for containers separates data from running containers, avoid data lost after pod rescheduling. Common data volume types are PersistentVolumeClaim, NFS, HostPath, etc.",
       "manifest": null
     },
     {
       "name": "deploy_with_node_selector",
-      "alias": "Deployment with node selector",
+      "alias": "Deployment with nodeSelector",
       "description": "In some scenarios, you may want the Pod to run on a certain type of node (for example, during AI model training, the Pod runs on a high-performance GPU node), which can be achieved through the node selector (ensure that on the GPU node with labels like 'beta.amd.com/gpu.family.AI': '1')",
       "manifest": null
     },

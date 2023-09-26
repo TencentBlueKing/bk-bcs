@@ -53,6 +53,7 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, ref, toRefs, watch } from 'vue';
+
 import $i18n from '@/i18n/i18n-setup';
 export enum CheckType {
   Uncheck, // 0 未选
@@ -96,11 +97,11 @@ export default defineComponent({
     const checkTypeList = ref([
       {
         id: CheckType.Checked,
-        name: $i18n.t('本页全选'),
+        name: $i18n.t('cluster.nodeList.button.selectPage'),
       },
       {
         id: CheckType.AcrossChecked,
-        name: $i18n.t('跨页全选'),
+        name: $i18n.t('cluster.nodeList.button.selectAcrossPage'),
       },
     ]);
     const handleCheckChange = (value) => {

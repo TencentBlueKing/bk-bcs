@@ -1,15 +1,16 @@
+import { ref } from 'vue';
+
+import { dashbordList } from '@/api/modules/cluster-resource';
 import {
+  batchDeleteServiceMonitor,
+  createServiceMonitor,
+  deleteServiceMonitor,
   getServiceMonitor,
   getServiceMonitorDetail,
-  createServiceMonitor,
   updateServiceMonitor,
-  deleteServiceMonitor,
-  batchDeleteServiceMonitor,
 } from '@/api/modules/monitor';
-import { dashbordList } from '@/api/modules/cluster-resource';
 import $bkMessage from '@/common/bkmagic';
 import $i18n from '@/i18n/i18n-setup';
-import { ref } from 'vue';
 
 export interface IMetricData {
   'service_name': string
@@ -45,7 +46,7 @@ export default function useMetric() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('创建成功'),
+      message: $i18n.t('generic.msg.success.create'),
     });
     return result;
   };
@@ -58,7 +59,7 @@ export default function useMetric() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('修改成功'),
+      message: $i18n.t('generic.msg.success.modify'),
     });
     return result;
   };
@@ -71,7 +72,7 @@ export default function useMetric() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('删除成功'),
+      message: $i18n.t('generic.msg.success.delete'),
     });
     return result;
   };
@@ -86,7 +87,7 @@ export default function useMetric() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('删除成功'),
+      message: $i18n.t('generic.msg.success.delete'),
     });
     return result;
   };

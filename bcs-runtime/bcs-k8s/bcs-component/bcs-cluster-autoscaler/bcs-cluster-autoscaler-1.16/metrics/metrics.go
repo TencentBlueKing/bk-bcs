@@ -16,7 +16,8 @@ package metrics
 import (
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	k8smetrics "k8s.io/component-base/metrics"
+	"k8s.io/component-base/metrics/legacyregistry"
 )
 
 const (
@@ -24,8 +25,8 @@ const (
 )
 
 var (
-	webhookParams = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
+	webhookParams = k8smetrics.NewGaugeVec(
+		&k8smetrics.GaugeOpts{
 			Namespace: caNamespace,
 			Name:      "webhook_parameters",
 			Help:      "Parameters of webhook mode of CA",
@@ -33,16 +34,16 @@ var (
 		[]string{"mode", "config"},
 	)
 
-	webhookExecDuration = prometheus.NewGauge(
-		prometheus.GaugeOpts{
+	webhookExecDuration = k8smetrics.NewGauge(
+		&k8smetrics.GaugeOpts{
 			Namespace: caNamespace,
 			Name:      "webhook_exec_duration",
 			Help:      "Exec duration of webhook mode of CA",
 		},
 	)
 
-	webhookScaleUpResponse = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
+	webhookScaleUpResponse = k8smetrics.NewGaugeVec(
+		&k8smetrics.GaugeOpts{
 			Namespace: caNamespace,
 			Name:      "webhook_scale_up_response",
 			Help:      "Scale up response of webhook mode of CA",
@@ -50,8 +51,8 @@ var (
 		[]string{"node_group"},
 	)
 
-	webhookScaleDownIPResponse = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
+	webhookScaleDownIPResponse = k8smetrics.NewGaugeVec(
+		&k8smetrics.GaugeOpts{
 			Namespace: caNamespace,
 			Name:      "webhook_scale_down_ip_response",
 			Help:      "Scale down response (type of NodeIPs) of webhook mode of CA",
@@ -59,8 +60,8 @@ var (
 		[]string{"node_group", "node_IPs"},
 	)
 
-	webhookScaleDownNumResponse = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
+	webhookScaleDownNumResponse = k8smetrics.NewGaugeVec(
+		&k8smetrics.GaugeOpts{
 			Namespace: caNamespace,
 			Name:      "webhook_scale_down_num_response",
 			Help:      "Scale down response (type of NodeNum) of webhook mode of CA",
@@ -68,8 +69,8 @@ var (
 		[]string{"node_group"},
 	)
 
-	scaleTask = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
+	scaleTask = k8smetrics.NewGaugeVec(
+		&k8smetrics.GaugeOpts{
 			Namespace: caNamespace,
 			Name:      "scale_task",
 			Help:      "Scale task status of CA",
@@ -77,23 +78,31 @@ var (
 		[]string{"task_id", "node_group", "scale_type", "status"},
 	)
 
-	failedScaleDownCount = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
+	failedScaleDownCount = k8smetrics.NewCounterVec(
+		&k8smetrics.CounterOpts{
 			Namespace: caNamespace,
 			Name:      "failed_scale_downs_total",
 			Help:      "Number of times scale-down operation has failed.",
 		}, []string{"node", "reason"},
 	)
+
+	resourceUsedRatio = k8smetrics.NewGaugeVec(
+		&k8smetrics.GaugeOpts{
+			Namespace: caNamespace,
+			Name:      "resource_used_ratio",
+			Help:      "Ratio of resource has been used",
+		}, []string{"resource"})
 )
 
 // RegisterLocal registers local metrics
 func RegisterLocal() {
-	prometheus.MustRegister(webhookParams)
-	prometheus.MustRegister(webhookExecDuration)
-	prometheus.MustRegister(webhookScaleUpResponse)
-	prometheus.MustRegister(webhookScaleDownIPResponse)
-	prometheus.MustRegister(webhookScaleDownNumResponse)
-	prometheus.MustRegister(failedScaleDownCount)
+	legacyregistry.MustRegister(webhookParams)
+	legacyregistry.MustRegister(webhookExecDuration)
+	legacyregistry.MustRegister(webhookScaleUpResponse)
+	legacyregistry.MustRegister(webhookScaleDownIPResponse)
+	legacyregistry.MustRegister(webhookScaleDownNumResponse)
+	legacyregistry.MustRegister(failedScaleDownCount)
+	legacyregistry.MustRegister(resourceUsedRatio)
 }
 
 // RegisterWebhookParams collects parameters fo webhook mode
@@ -124,7 +133,7 @@ func UpdateWebhookScaleDownNumResponse(nodeGroup string, num int) {
 
 // RegisterScaleTask registers scale task metrics
 func RegisterScaleTask() {
-	prometheus.MustRegister(scaleTask)
+	legacyregistry.MustRegister(scaleTask)
 }
 
 // UpdateScaleTask updates scale task status of CA
@@ -135,4 +144,9 @@ func UpdateScaleTask(id, nodeGroup, scaleType, status string) {
 // RegisterFailedScaleDown records a failed scale-down operation
 func RegisterFailedScaleDown(node, reason string) {
 	failedScaleDownCount.WithLabelValues(node, reason).Inc()
+}
+
+// UpdateResourceUsedRatio updates the ratio of resource used
+func UpdateResourceUsedRatio(name string, ratio float64) {
+	resourceUsedRatio.WithLabelValues(name).Set(ratio)
 }

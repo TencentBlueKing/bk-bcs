@@ -2,7 +2,7 @@
   <div class="detail p30">
     <!-- 基础信息 -->
     <div class="detail-title">
-      {{ $t('基础信息') }}
+      {{ $t('generic.title.basicInfo') }}
     </div>
     <div class="detail-content basic-info">
       <div class="basic-info-item">
@@ -10,52 +10,52 @@
         <span class="bcs-ellipsis">{{ data.uid || '--' }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('状态') }}</label>
+        <label>{{ $t('generic.label.status') }}</label>
         <span class="bcs-ellipsis">{{ data.status || '--' }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('创建时间') }}</label>
+        <label>{{ $t('cluster.labels.createdAt') }}</label>
         <span>{{ data.createTime ? timeZoneTransForm(data.createTime, false) : '--' }}</span>
       </div>
     </div>
     <div class="detail-title mt-[20px]">
-      {{ $t('配置信息') }}
+      {{ $t('logCollector.label.configInfo') }}
     </div>
     <div class="detail-content basic-info">
       <div class="basic-info-item">
-        <label>{{ $t('CPU使用率') }}</label>
+        <label>{{ $t('metrics.cpuUsage') }}</label>
         <span class="bcs-ellipsis" v-if="data.quota">
           {{data.cpuUseRate.toFixed(2) * 100 }}%
-          （{{`${unitConvert(data.used ? data.used.cpuLimits : '0', '', 'cpu')}${$t('核')}`}}
-          / {{`${unitConvert(data.quota ? data.quota.cpuLimits : '0', '', 'cpu')}${$t('核')}`}}）
+          （{{`${unitConvert(data.used ? data.used.cpuLimits : '0', '', 'cpu')}${$t('units.suffix.cores')}`}}
+          / {{`${unitConvert(data.quota ? data.quota.cpuLimits : '0', '', 'cpu')}${$t('units.suffix.cores')}`}}）
         </span>
-        <span class="bcs-ellipsis" v-else>{{ $t('未开启命名空间配额') }}</span>
+        <span class="bcs-ellipsis" v-else>{{ $t('dashboard.ns.tips.notEnabledNamespaceQuota') }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('内存使用率') }}</label>
+        <label>{{ $t('metrics.memUsage') }}</label>
         <span class="bcs-ellipsis" v-if="data.quota">
           {{data.memoryUseRate.toFixed(2) * 100}}%
           （{{`${unitConvert(data.used ? data.used.memoryLimits : '0', 'Gi', 'mem')}Gi`}}
           / {{`${unitConvert(data.quota ? data.quota.memoryLimits : '0', 'Gi', 'mem')}Gi`}}）
         </span>
-        <span class="bcs-ellipsis" v-else>{{ $t('未开启命名空间配额') }}</span>
+        <span class="bcs-ellipsis" v-else>{{ $t('dashboard.ns.tips.notEnabledNamespaceQuota') }}</span>
       </div>
     </div>
     <!-- 变量、标签、注解 -->
     <bcs-tab class="mt20" type="card" :label-height="42">
-      <bcs-tab-panel name="label" :label="$t('标签')">
+      <bcs-tab-panel name="label" :label="$t('k8s.label')">
         <bk-table :data="data.labels">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="annotations" :label="$t('注解')">
+      <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')">
         <bk-table :data="data.annotations">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="config" :label="$t('变量')">
+      <bcs-tab-panel name="config" :label="$t('generic.label.var')">
         <bk-table :data="data.variables">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
@@ -67,6 +67,7 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import { defineComponent } from 'vue';
+
 import { timeZoneTransForm } from '@/common/util';
 
 

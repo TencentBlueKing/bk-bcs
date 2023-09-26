@@ -15,6 +15,8 @@ package nodegroup
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	"sort"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -68,13 +70,49 @@ func (la *ListClusterGroupAction) Handle(
 		return
 	}
 
-	la.groupList, err = listNodeGroupByConds(la.model, filterNodeGroupOption{
+	var (
+		groupList              []*cmproto.NodeGroup
+		enableAutoscalerGroup  []*cmproto.NodeGroup
+		disableAutoscalerGroup []*cmproto.NodeGroup
+		enableCA               bool
+	)
+
+	asOption, _ := la.model.GetAutoScalingOption(la.ctx, la.req.ClusterID)
+	if asOption != nil && asOption.EnableAutoscale {
+		enableCA = true
+	}
+
+	groupList, err = listNodeGroupByConds(la.model, filterNodeGroupOption{
 		ClusterID: la.req.GetClusterID(),
 	})
 	if err != nil {
 		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+
+	if !la.req.GetEnableFilter() {
+		sort.Sort(utils.NodeGroupSlice(groupList))
+		la.groupList = groupList
+
+		la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+		return
+	}
+
+	for i := range groupList {
+		if enableCA && groupList[i].GetEnableAutoscale() {
+			enableAutoscalerGroup = append(enableAutoscalerGroup, groupList[i])
+			continue
+		}
+
+		groupList[i].EnableAutoscale = false
+		disableAutoscalerGroup = append(disableAutoscalerGroup, groupList[i])
+	}
+	sort.Sort(utils.NodeGroupSlice(enableAutoscalerGroup))
+	sort.Sort(utils.NodeGroupSlice(disableAutoscalerGroup))
+
+	la.groupList = append(la.groupList, disableAutoscalerGroup...)
+	la.groupList = append(la.groupList, enableAutoscalerGroup...)
+
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -161,24 +162,14 @@ func BuildListContainerAPIResp(ctx context.Context, clusterID, namespace, podNam
 	}
 
 	containers := []map[string]interface{}{}
+	// 获取container statuses
 	for _, containerStatus := range mapx.GetList(podManifest, "status.containerStatuses") {
-		cs, _ := containerStatus.(map[string]interface{})
-		status, reason, message := "", "", ""
-		// state 有且只有一对键值：running / terminated / waiting
-		// https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#containerstate-v1-core
-		for k := range cs["state"].(map[string]interface{}) {
-			status = k
-			reason, _ = mapx.Get(cs, []string{"state", k, "reason"}, k).(string)
-			message, _ = mapx.Get(cs, []string{"state", k, "message"}, k).(string)
-		}
-		containers = append(containers, map[string]interface{}{
-			"containerID": extractContainerID(mapx.GetStr(cs, "containerID")),
-			"image":       cs["image"].(string),
-			"name":        cs["name"].(string),
-			"status":      status,
-			"reason":      reason,
-			"message":     message,
-		})
+		containers = append(containers, getContainerStatuses(containerStatus, constants.Containers)...)
+	}
+
+	// 获取initContainer statuses
+	for _, initContainerStatus := range mapx.GetList(podManifest, "status.initContainerStatuses") {
+		containers = append(containers, getContainerStatuses(initContainerStatus, constants.InitContainers)...)
 	}
 	return pbstruct.MapSlice2ListValue(containers)
 }
@@ -281,4 +272,31 @@ func BuildUpdateCObjAPIResp(
 // extractContainerID 去除容器 ID 前缀，原格式：docker://[a-zA-Z0-9]{64}
 func extractContainerID(rawContainerID string) string {
 	return strings.Replace(rawContainerID, "docker://", "", 1)
+}
+
+// getContainerStatuses 获取container statuses 想关参数
+func getContainerStatuses(containerStatus interface{}, containerType string) (containers []map[string]interface{}) {
+	cs, ok := containerStatus.(map[string]interface{})
+	// 取不出则退出
+	if !ok {
+		return
+	}
+	status, reason, message := "", "", ""
+	// state 有且只有一对键值：running / terminated / waiting
+	// https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#containerstate-v1-core
+	for k := range cs["state"].(map[string]interface{}) {
+		status = k
+		reason, _ = mapx.Get(cs, []string{"state", k, "reason"}, k).(string)
+		message, _ = mapx.Get(cs, []string{"state", k, "message"}, k).(string)
+	}
+	containers = append(containers, map[string]interface{}{
+		"containerID":    extractContainerID(mapx.GetStr(cs, "containerID")),
+		"image":          cs["image"].(string),
+		"name":           cs["name"].(string),
+		"container_type": containerType,
+		"status":         status,
+		"reason":         reason,
+		"message":        message,
+	})
+	return containers
 }

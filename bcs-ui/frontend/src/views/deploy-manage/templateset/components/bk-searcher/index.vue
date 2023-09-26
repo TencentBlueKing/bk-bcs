@@ -66,7 +66,7 @@
         </ul>
         <ul class="bk-searcher-dropdown-list" v-else>
           <li>
-            <a href="javascript:void(0);">{{$t('没有数据')}}</a>
+            <a href="javascript:void(0);">{{$t('generic.msg.empty.noData3')}}</a>
           </li>
         </ul>
       </div>
@@ -78,6 +78,7 @@
 <script>
 // eslint-disable-next-line vue/no-mutating-props
 import clickoutside from './clickoutside';
+
 import { getActualLeft, getStringLen, insertAfter } from '@/common/util';
 
 export default {

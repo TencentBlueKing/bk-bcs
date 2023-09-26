@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
-  import { InfoBox } from 'bkui-vue'
+  import { InfoBox, Message } from 'bkui-vue'
   import { Plus, Search } from 'bkui-vue/lib/icon'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
@@ -30,6 +30,11 @@
     current: 1,
     count: 0,
     limit: 10,
+  })
+
+  watch(() => spaceId.value, () => {
+    refreshList()
+    getTags()
   })
 
   onMounted(() => {
@@ -92,7 +97,6 @@
     InfoBox({
       title: `确认是否删除脚本【${script.hook.spec.name}?】`,
       subTitle: `${script.confirm_delete ? '当前脚本有被服务未命名版本引用，删除后，未命名版本里的引用将会被删除，是否确认删除？' : ''}`,
-      infoType: "warning",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
@@ -100,6 +104,10 @@
         if (scriptsData.value.length === 1 && pagination.value.current > 1) {
           pagination.value.current = pagination.value.current - 1
         }
+        Message({
+          theme: 'success',
+          message: '删除版本成功',
+        });
         getScripts()
       },
     } as any)
@@ -127,7 +135,7 @@
   }
 </script>
 <template>
-  <section class="scripts-manange-page">
+  <section class="scripts-manage-page">
     <div class="side-menu">
       <div class="group-wrapper">
         <li :class="['group-item', { actived: showAllTag }]" @click="handleSelectTag('', true)">
@@ -164,15 +172,26 @@
            </template>
         </bk-input>
       </div>
-      <bk-table :border="['outer']" :data="scriptsData">
-        <bk-table-column label="脚本名称" prop="hook.spec.name"></bk-table-column>
-        <bk-table-column label="脚本语言" prop="hook.spec.type" width="120"></bk-table-column>
-        <bk-table-column label="分类标签">
-          <template #default="{ row }">
-            <span v-if="row.hook">{{ row.hook.spec.tag || '--' }}</span>
-          </template>
-        </bk-table-column>
-        <bk-table-column label="被引用" width="100">
+      <bk-loading style="min-height: 300px;" :loading="scriptsLoading">
+        <bk-table
+          :border="['outer']"
+          :data="scriptsData"
+          :remote-pagination="true"
+          :pagination="pagination"
+          @page-limit-change="handlePageLimitChange"
+          @page-value-change="refreshList">
+          <bk-table-column label="脚本名称">
+            <template #default="{ row }">
+              <div v-if="row.hook" class="hook-name" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">{{ row.hook.spec.name }}</div>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="脚本语言" prop="hook.spec.type" width="120"></bk-table-column>
+          <bk-table-column label="分类标签">
+            <template #default="{ row }">
+              <span v-if="row.hook">{{ row.hook.spec.tag || '--' }}</span>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="被引用" width="100">
           <template #default="{ row }">
               <bk-button v-if="row.bound_num > 0" text theme="primary" @click="handleOpenCitedSlider(row.hook.id)">{{ row.bound_num }}</bk-button>
               <span v-else>0</span>
@@ -187,29 +206,21 @@
         <bk-table-column label="操作">
           <template #default="{ row }" width="180">
             <div class="action-btns">
-              <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button>
+              <!-- <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button> -->
               <bk-button text theme="primary" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">版本管理</bk-button>
               <bk-button text theme="primary" @click="handleDeleteScript(row)">删除</bk-button>
             </div>
           </template>
         </bk-table-column>
-      </bk-table>
-      <bk-pagination
-        class="table-list-pagination"
-        v-model="pagination.current"
-        location="left"
-        :layout="['total', 'limit', 'list']"
-        :count="pagination.count"
-        :limit="pagination.limit"
-        @change="refreshList"
-        @limit-change="handlePageLimitChange"/>
+        </bk-table>
+      </bk-loading>
     </div>
     <CreateScript v-if="showCreateScript" v-model:show="showCreateScript" @created="handleCreatedScript" />
     <ScriptCited v-model:show="showCiteSlider" :id="currentId" />
   </section>
 </template>
 <style lang="scss" scoped>
-  .scripts-manange-page {
+  .scripts-manage-page {
     display: flex;
     align-items: center;
     height: 100%;
@@ -310,13 +321,8 @@
       margin-right: 8px;
     }
   }
-  .table-list-pagination {
-    padding: 12px;
-    border: 1px solid #dcdee5;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    :deep(.bk-pagination-list.is-last) {
-      margin-left: auto;
-    }
+  .hook-name {
+    color: #348aff;
+    cursor: pointer;
   }
 </style>

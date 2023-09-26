@@ -16,7 +16,7 @@
         </bk-button>
         <span
           class="bcs-icon-btn apply-record flex items-center justify-center w-[32px] h-[32px] ml-[-1px] bg-[#fff]"
-          v-bk-tooltips="$t('查看申请记录')"
+          v-bk-tooltips="$t('cluster.button.applyRecord')"
           @click="handleOpenLink">
           <i class="bcs-icon bcs-icon-wenjian"></i>
         </span>
@@ -38,7 +38,7 @@
             target="_blank"
             class="bk-button-text bk-primary"
             style="font-size: 12px;"
-          >{{$t('查看资源申请记录')}}</a>
+          >{{$t('cluster.button.applyRecord')}}</a>
         </template>
       </bk-alert>
       <bk-form
@@ -47,9 +47,9 @@
         :label-width="100"
         :model="formdata"
         :rules="rules">
-        <bk-form-item property="region" :label="$t('所属地域')" :required="true" :desc="defaultInfo.areaDesc">
+        <bk-form-item property="region" :label="$t('cluster.labels.region')" :required="true" :desc="defaultInfo.areaDesc">
           <bcs-select
-            :placeholder="$t('请选择地域')"
+            :placeholder="$t('cluster.placeholder.region')"
             v-model="formdata.region"
             searchable
             id-key="areaName"
@@ -63,7 +63,7 @@
               :name="item.regionName" />
           </bcs-select>
         </bk-form-item>
-        <bk-form-item property="networkKey" :label="$t('网络类型')" :desc="defaultInfo.netWorkDesc" :required="true">
+        <bk-form-item property="networkKey" :label="$t('cluster.labels.networkType')" :desc="defaultInfo.netWorkDesc" :required="true">
           <div class="bk-button-group">
             <bcs-button
               :disabled="defaultInfo.networkKey && defaultInfo.networkKey !== 'overlay'"
@@ -83,9 +83,9 @@
               @click="formdata.networkKey = 'underlay'">underlay</bcs-button>
           </div>
         </bk-form-item>
-        <bk-form-item property="zone_id" :label="$t('园区')" :required="true">
+        <bk-form-item property="zone_id" :label="$t('generic.applyHost.label.zone')" :required="true">
           <bcs-select
-            :placeholder="$t('请选择园区')"
+            :placeholder="$t('generic.applyHost.placeholder.zone')"
             v-model="formdata.zone_id"
             searchable
             :clearable="false"
@@ -98,9 +98,9 @@
               :name="item.label" />
           </bcs-select>
         </bk-form-item>
-        <bk-form-item property="vpc_name" :label="$t('所属VPC')" :required="true" :desc="defaultInfo.vpcDesc">
+        <bk-form-item property="vpc_name" :label="$t('cluster.create.label.vpc.text')" :required="true" :desc="defaultInfo.vpcDesc">
           <bcs-select
-            :placeholder="$t('请选择VPC')"
+            :placeholder="$t('generic.applyHost.placeholder.vpc')"
             v-model="formdata.vpc_name"
             :list="vpcList"
             searchable
@@ -110,7 +110,7 @@
             <bcs-option v-for="item in vpcList" :key="item.vpcId" :id="item.vpcId" :name="item.vpcName" />
           </bcs-select>
         </bk-form-item>
-        <bk-form-item ext-cls="has-append-item" :label="$t('数据盘')" property="disk_size">
+        <bk-form-item ext-cls="has-append-item" :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')" property="disk_size">
           <div class="disk-inner">
             <bcs-select class="w200" v-model="formdata.disk_type" :clearable="false">
               <bcs-option
@@ -123,22 +123,22 @@
             </bcs-select>
             <bk-input
               class="ml-[-1px]"
-              v-model="formdata.disk_size" type="number" :min="50" :placeholder="$t('请输入50的倍数的数值')">
+              v-model="formdata.disk_size" type="number" :min="50" :placeholder="$t('generic.applyHost.validate.diskSize')">
               <div class="group-text" slot="append">GB</div>
             </bk-input>
           </div>
         </bk-form-item>
-        <bk-form-item :label="$t('需求数量')">
+        <bk-form-item :label="$t('generic.applyHost.label.replicas')">
           <bk-input
             v-model="formdata.replicas"
             type="number"
             :min="1"
             :max="50"
             :style="{ 'width': '100%' }"
-            :placeholder="$t('请输入')">
+            :placeholder="$t('generic.placeholder.input')">
           </bk-input>
         </bk-form-item>
-        <bk-form-item class="custom-item" :label="$t('机型')">
+        <bk-form-item class="custom-item" :label="$t('generic.ipSelector.label.serverModel')">
           <div class="form-item-inner">
             <label class="inner-label">CPU</label>
             <div class="inner-content">
@@ -151,7 +151,7 @@
             </div>
           </div>
           <div :class="['form-item-inner', !isEn && 'ml40']" :style="{ width: isEn ? '310px' : '286px' }">
-            <label class="inner-label">{{$t('内存')}}</label>
+            <label class="inner-label">{{$t('generic.label.mem')}}</label>
             <div class="inner-content">
               <bcs-select
                 v-model="hostData.mem"
@@ -161,7 +161,7 @@
               </bcs-select>
             </div>
           </div>
-          <bk-button theme="primary" :disabled="isHostLoading" @click.stop="hanldeReloadHosts">{{$t('查询')}}</bk-button>
+          <bk-button theme="primary" :disabled="isHostLoading" @click.stop="hanldeReloadHosts">{{$t('generic.button.query')}}</bk-button>
         </bk-form-item>
         <bk-form-item
           ref="hostItem"
@@ -178,7 +178,7 @@
                 <template slot-scope="{ row }">
                   <span
                     v-bk-tooltips="{
-                      content: $t('当前区域CVM资源不足，请选择其它机型'),
+                      content: $t('generic.applyHost.tips.insufficientResource'),
                       disabled: !((cvmData[row.specifications] || 0) < formdata.replicas) || isCvmLoading
                     }">
                     <bk-radio
@@ -191,23 +191,23 @@
                 </template>
               </bk-table-column>
               <bk-table-column
-                :label="$t('机型')"
+                :label="$t('generic.ipSelector.label.serverModel')"
                 prop="model" show-overflow-tooltip></bk-table-column>
               <bk-table-column
-                :label="$t('规格')"
+                :label="$t('generic.label.specifications')"
                 prop="specifications" show-overflow-tooltip></bk-table-column>
-              <bk-table-column :label="$t('园区')" prop="zone" key="zone">
+              <bk-table-column :label="$t('generic.applyHost.label.zone')" prop="zone" key="zone">
                 {{ zoneName }}
               </bk-table-column>
               <bk-table-column label="CPU" prop="cpu" width="80"></bk-table-column>
-              <bk-table-column :label="$t('内存')" prop="mem" width="80"></bk-table-column>
-              <bk-table-column :label="$t('可生产实例数')" prop="mem">
+              <bk-table-column :label="$t('generic.label.mem')" prop="mem" width="80"></bk-table-column>
+              <bk-table-column :label="$t('generic.applyHost.label.specifications')">
                 <template #default="{ row }">
-                  <LoadingIcon v-if="isCvmLoading">{{ $t('加载中') }}...</LoadingIcon>
+                  <LoadingIcon v-if="isCvmLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
                   <span v-else>{{ cvmData[row.specifications] }}</span>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('备注')" prop="description" show-overflow-tooltip>
+              <bk-table-column :label="$t('generic.label.memo')" prop="description" show-overflow-tooltip>
                 <template #default="{ row }">
                   {{ row.description || '--' }}
                 </template>
@@ -215,19 +215,19 @@
             </bk-table>
           </bk-radio-group>
           <span class="checked-host-tips" style="height: 30px;">
-            {{formdata.cvm_type ? $t('已选择') + '：' + getHostInfoString : ' '}}
+            {{formdata.cvm_type ? $t('generic.applyHost.title.selected') + '：' + getHostInfoString : ' '}}
           </span>
         </bk-form-item>
       </bk-form>
       <template slot="footer">
-        <i18n v-show="isShowFooterTips" class="tips" target path="数据盘大小/CPU核数 > 50，申请的服务器有运管人工审批环节；如需加急，请联系{name}协助推动">
+        <i18n v-show="isShowFooterTips" class="tips" target path="generic.applyHost.msg.path">
           <a href="wxwork://message/?username=dommyzhang" style="color: #3A84FF;" place="name">dommyzhang</a>
         </i18n>
-        <bk-button theme="primary" :loading="isSubmitLoading" @click.stop="handleSubmitApply">{{$t('确定')}}</bk-button>
+        <bk-button theme="primary" :loading="isSubmitLoading" @click.stop="handleSubmitApply">{{$t('generic.button.confirm')}}</bk-button>
         <bk-button
           theme="default"
           :disabled="isSubmitLoading"
-          @click.stop="handleApplyHostClose">{{$t('取消')}}</bk-button>
+          @click.stop="handleApplyHostClose">{{$t('generic.button.cancel')}}</bk-button>
       </template>
     </bcs-dialog>
   </div>
@@ -289,17 +289,17 @@ export default {
         region: [{
           required: true,
           trigger: 'blur',
-          message: this.$t('请选择地域'),
+          message: this.$t('cluster.placeholder.region'),
         }],
         disk_size: [{
           validator: value => value >= 50 && value % 50 === 0,
           trigger: 'blur',
-          message: this.$t('请输入50的倍数的数值'),
+          message: this.$t('generic.applyHost.validate.diskSize'),
         }],
         cvm_type: [{
           validator: value => this.isQuery || !!value,
           trigger: 'change',
-          message: this.$t('请选择机型'),
+          message: this.$t('generic.applyHost.tips.emptyCvm'),
         }],
       },
       hostData: {
@@ -317,77 +317,80 @@ export default {
       clusterInfo: {},
       cpuList: [{
         id: 0,
-        name: this.$t('全部'),
+        name: this.$t('generic.label.total'),
       }, {
         id: 4,
-        name: 4 + this.$t('核'),
+        name: 4 + this.$t('units.suffix.cores'),
       }, {
         id: 8,
-        name: 8 + this.$t('核'),
+        name: 8 + this.$t('units.suffix.cores'),
       }, {
         id: 12,
-        name: 12 + this.$t('核'),
+        name: 12 + this.$t('units.suffix.cores'),
       }, {
         id: 16,
-        name: 16 + this.$t('核'),
+        name: 16 + this.$t('units.suffix.cores'),
       }, {
         id: 20,
-        name: 20 + this.$t('核'),
+        name: 20 + this.$t('units.suffix.cores'),
       }, {
         id: 24,
-        name: 24 + this.$t('核'),
+        name: 24 + this.$t('units.suffix.cores'),
       }, {
         id: 28,
-        name: 28 + this.$t('核'),
+        name: 28 + this.$t('units.suffix.cores'),
       }, {
         id: 32,
-        name: 32 + this.$t('核'),
+        name: 32 + this.$t('units.suffix.cores'),
+      }, {
+        id: 48,
+        name: 48 + this.$t('units.suffix.cores'),
       }, {
         id: 84,
-        name: 84 + this.$t('核'),
+        name: 84 + this.$t('units.suffix.cores'),
       }],
       memList: [{
         id: 0,
-        name: this.$t('全部'),
+        name: this.$t('generic.label.total'),
       }, {
         id: 8,
-        name: '8GB',
+        name: '8GiB',
       }, {
         id: 16,
-        name: '16GB',
+        name: '16GiB',
       }, {
         id: 24,
-        name: '24GB',
+        name: '24GiB',
       }, {
         id: 32,
-        name: '32GB',
+        name: '32GiB',
       }, {
         id: 36,
-        name: '36GB',
+        name: '36GiB',
       }, {
         id: 48,
-        name: '48GB',
+        name: '48GiB',
       }, {
         id: 56,
-        name: '56GB',
+        name: '56GiB',
       }, {
         id: 60,
-        name: '60GB',
+        name: '60GiB',
       }, {
         id: 64,
-        name: '64GB',
+        name: '64GiB',
       }, {
         id: 80,
-        name: '80GB',
+        name: '80GiB',
       }, {
         id: 128,
-        name: '128GB',
+        name: '128GiB',
       }, {
         id: 160,
-        name: '160GB',
+        name: '160GiB',
       }, {
         id: 320,
-        name: '320GB',
+        name: '320GiB',
       }],
     };
   },
@@ -412,7 +415,7 @@ export default {
     },
     authTips() {
       return {
-        content: this.$t('您不是当前项目绑定业务的运维人员，请联系业务运维人员'),
+        content: this.$t('bcs.msg.notDevOps'),
         width: 240,
       };
     },
@@ -458,9 +461,9 @@ export default {
     if (!this.hasAuth) return;
     if (this.isBackfill) {
       this.defaultInfo = {
-        areaDesc: this.$t('和集群所属区域一致'),
-        vpcDesc: this.$t('和集群所属vpc一致'),
-        netWorkDesc: this.$t('和集群网络类型一致'),
+        areaDesc: this.$t('generic.applyHost.desc.regionDesc'),
+        vpcDesc: this.$t('generic.applyHost.desc.vpcDesc'),
+        netWorkDesc: this.$t('generic.applyHost.desc.networkDesc'),
         disabled: true,
       };
     }
@@ -668,7 +671,7 @@ export default {
         }));
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('主机申请提交成功'),
+          message: this.$t('generic.applyHost.msg.submit'),
         });
         this.handleApplyHostClose();
       } catch (e) {

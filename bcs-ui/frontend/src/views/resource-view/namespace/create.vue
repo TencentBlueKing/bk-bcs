@@ -1,5 +1,5 @@
 <template>
-  <LayoutContent :title="$tc('新建命名空间')">
+  <LayoutContent :title="$tc('dashboard.ns.create.title')">
     <div class="p-[20px] h-full overflow-auto">
       <div class="border border-solid border-[#dcdee5] p-[20px] bg-[#ffffff]">
         <bk-form
@@ -10,11 +10,11 @@
           <!-- 共享集群 -->
           <template v-if="isSharedCluster">
             <bk-form-item
-              :label="$t('名称')"
+              :label="$t('generic.label.name')"
               required
               property="name"
               error-display-type="normal"
-              :desc="$t('命名规则：ieg-项目英文名称-自定义名称')">
+              :desc="$t('dashboard.ns.validate.sharedClusterNs')">
               <bk-input v-model="formData.name" class="w-[620px]" maxlength="30">
                 <div slot="prepend">
                   <div class="group-text">{{ 'ieg-' + projectCode + '-' }}</div>
@@ -25,14 +25,14 @@
           <!-- 普通集群 -->
           <template v-else>
             <bk-form-item
-              :label="$t('名称')"
+              :label="$t('generic.label.name')"
               :required="true"
               error-display-type="normal"
               property="name">
               <bk-input v-model="formData.name" class="w-[620px]"></bk-input>
             </bk-form-item>
             <bk-form-item
-              :label="$t('标签')"
+              :label="$t('k8s.label')"
               error-display-type="normal"
               property="labels">
               <bk-form
@@ -45,7 +45,7 @@
                 </bk-form-item>
                 <span class="px-[5px]">=</span>
                 <bk-form-item>
-                  <bk-input :placeholder="$t('值')" v-model="label.value" class="w-[300px]" @blur="validate"></bk-input>
+                  <bk-input :placeholder="$t('generic.label.value')" v-model="label.value" class="w-[300px]" @blur="validate"></bk-input>
                 </bk-form-item>
                 <i class="bk-icon icon-minus-line ml-[5px] cursor-pointer" @click="handleRemoveLabel(index)" />
               </bk-form>
@@ -53,11 +53,11 @@
                 class="text-[14px] text-[#3a84ff] cursor-pointer flex items-center h-[32px]"
                 @click="handleAddLabel">
                 <i class="bk-icon icon-plus-circle-shape mr5"></i>
-                {{$t('添加')}}
+                {{$t('generic.button.add')}}
               </span>
             </bk-form-item>
             <bk-form-item
-              :label="$t('注解')"
+              :label="$t('k8s.annotation')"
               error-display-type="normal"
               property="annotations">
               <bk-form
@@ -83,15 +83,15 @@
                 class="text-[14px] text-[#3a84ff] cursor-pointer flex items-center h-[32px]"
                 @click="handleAddAnnotation">
                 <i class="bk-icon icon-plus-circle-shape mr5"></i>
-                {{$t('添加')}}
+                {{$t('generic.button.add')}}
               </span>
             </bk-form-item>
           </template>
           <bk-form-item
-            :label="$t('配额设置')"
+            :label="$t('dashboard.ns.create.quota')"
             :required="isSharedCluster"
             :desc="isSharedCluster ? {
-              content: $t('1.创建命名会进入审批流程，如需加急审批请主动联系审批人 2.为了避免产生过多资源碎片，CPU/内存资源比不应大于1/4'),
+              content: $t('dashboard.ns.create.sharedClusterQuotaTips'),
               width: 360,
             } : ''"
             error-display-type="normal"
@@ -106,11 +106,11 @@
                   :min="1"
                   :max="512000"
                   :precision="0">
-                  <div class="group-text" slot="append">{{ $t('核') }}</div>
+                  <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
                 </bcs-input>
               </div>
               <div class="flex">
-                <span class="mr-[15px] text-[14px]">MEN</span>
+                <span class="mr-[15px] text-[14px]">Mem</span>
                 <bcs-input
                   v-model="formData.quota.memoryRequests"
                   class="w-[250px]"
@@ -118,7 +118,7 @@
                   :min="1"
                   :max="1024000"
                   :precision="0">
-                  <div class="group-text" slot="append">G</div>
+                  <div class="group-text" slot="append">GiB</div>
                 </bcs-input>
               </div>
             </div>
@@ -131,21 +131,23 @@
         theme="primary"
         class="w-[88px] mr-[10px] ml-[20px]"
         @click="handleCreated"
-        :loading="isLoading">{{ $t('创建') }}</bcs-button>
-      <bcs-button class="w-[88px]" :disabled="isLoading" @click="handleCancel">{{ $t('取消') }}</bcs-button>
+        :loading="isLoading">{{ $t('generic.button.create') }}</bcs-button>
+      <bcs-button class="w-[88px]" :disabled="isLoading" @click="handleCancel">{{ $t('generic.button.cancel') }}</bcs-button>
     </div>
   </LayoutContent>
 </template>
 
 <script lang='ts'>
-import { defineComponent, computed, ref, toRef, reactive } from 'vue';
-import LayoutContent from '@/components/layout/Content.vue';
+import { computed, defineComponent, reactive, ref, toRef } from 'vue';
+
 import { useNamespace } from './use-namespace';
-import { useCluster } from '@/composables/use-app';
-import { KEY_REGEXP } from '@/common/constant';
-import $i18n from '@/i18n/i18n-setup';
+
 import $bkMessage from '@/common/bkmagic';
+import { KEY_REGEXP } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import LayoutContent from '@/components/layout/Content.vue';
+import { useCluster } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 
 export default defineComponent({
@@ -189,7 +191,7 @@ export default defineComponent({
           validator() {
             return /^[a-z0-9]([-a-z0-9]*[a-z0-9]){0,64}?$/g.test(formData.value.name);
           },
-          message: $i18n.t('命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字'),
+          message: $i18n.t('dashboard.ns.validate.name'),
           trigger: 'blur',
         },
       ],
@@ -198,7 +200,7 @@ export default defineComponent({
           validator() {
             return Number(formData.value.quota.cpuRequests) >= 1 && Number(formData.value.quota.memoryRequests) >= 1;
           },
-          message: $i18n.t('共享集群需设置MEN、CPU配额，且两者最小值不小于0'),
+          message: $i18n.t('dashboard.ns.validate.sharedQuota'),
           trigger: 'blur',
         },
       ] : [],
@@ -209,7 +211,7 @@ export default defineComponent({
             const regx = new RegExp(KEY_REGEXP);
             return formData.value.labels.every(item => regx.test(item.key) && regx.test(item.value));
           },
-          message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
+          message: $i18n.t('generic.validate.labelKey1'),
           trigger: 'blur',
         },
       ],
@@ -220,7 +222,7 @@ export default defineComponent({
             const regx = new RegExp(KEY_REGEXP);
             return formData.value.annotations.every(item => regx.test(item.key) && regx.test(item.value));
           },
-          message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
+          message: $i18n.t('generic.validate.labelKey1'),
           trigger: 'blur',
         },
       ],
@@ -235,8 +237,8 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认退出当前编辑状态'),
-        subTitle: $i18n.t('退出后，你修改的内容将丢失'),
+        title: $i18n.t('generic.msg.info.exitEdit.text'),
+        subTitle: $i18n.t('generic.msg.info.exitEdit.subTitle'),
         defaultInfo: true,
         confirmFn: () => {
           $router.back();
@@ -291,7 +293,7 @@ export default defineComponent({
         if (result) {
           $bkMessage({
             theme: 'success',
-            message: $i18n.t('创建成功'),
+            message: $i18n.t('generic.msg.success.create'),
           });
           $router.back();
         };

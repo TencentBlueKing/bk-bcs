@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 
 	"github.com/kirito41dd/xslice"
 	"github.com/micro/go-micro/v2/registry"
@@ -83,10 +84,20 @@ func StringInSlice(s string, l []string) bool {
 	return false
 }
 
+// SliceContainInString return true if slice contain in string
+func SliceContainInString(l []string, s string) bool {
+	for _, objStr := range l {
+		if strings.Contains(s, objStr) {
+			return true
+		}
+	}
+	return false
+}
+
 // StringContainInSlice returns true if given string contain in slice
 func StringContainInSlice(s string, l []string) bool {
 	for _, objStr := range l {
-		if strings.Contains(s, objStr) {
+		if strings.Contains(objStr, s) {
 			return true
 		}
 	}
@@ -299,6 +310,25 @@ func GetNodeIPAddress(node *corev1.Node) ([]string, []string) {
 	return ipv4Address, ipv6Address
 }
 
+func CheckNodeIfReady(n *corev1.Node) bool {
+	if n == nil {
+		return false
+	}
+
+	if len(n.Status.Conditions) == 0 {
+		return false
+	}
+
+	// 检查Node是否处于Ready状态
+	for _, condition := range n.Status.Conditions {
+		if condition.Type == corev1.NodeReady && condition.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+
+	return false
+}
+
 // GetValueFromMap get value from map
 func GetValueFromMap(m map[string]string, key string) string {
 	v, ok := m[key]
@@ -396,3 +426,46 @@ func GenerateNamespaceName(prefix, projectCode string, clusterID string) string 
 
 	return fmt.Sprintf("%s-%s-%s", prefix, projectCode, strings.ToLower(clusterID))
 }
+
+// Split 分割字符串，支持 " ", ";", "," 分隔符
+func Split(originStr string) []string {
+	originStr = strings.ReplaceAll(originStr, ";", ",")
+	originStr = strings.ReplaceAll(originStr, " ", ",")
+	return strings.FieldsFunc(originStr, func(c rune) bool { return c == ',' })
+}
+
+// Partition 从指定分隔符的第一个位置，将字符串分为两段
+func Partition(s string, sep string) (string, string) {
+	parts := strings.SplitN(s, sep, 2)
+	if len(parts) == 1 {
+		return parts[0], ""
+	}
+	return parts[0], parts[1]
+}
+
+// TaintToK8sTaint convert taint to k8s taint
+func TaintToK8sTaint(taint []*proto.Taint) []corev1.Taint {
+	taints := make([]corev1.Taint, 0)
+	for _, v := range taint {
+		taints = append(taints, corev1.Taint{
+			Key:    v.Key,
+			Value:  v.Value,
+			Effect: corev1.TaintEffect(v.Effect),
+		})
+	}
+	return taints
+}
+
+// K8sTaintToTaint convert k8s taint to taint
+func K8sTaintToTaint(taint []corev1.Taint) []*proto.Taint {
+	taints := make([]*proto.Taint, 0)
+	for _, v := range taint {
+		taints = append(taints, &proto.Taint{
+			Key:    v.Key,
+			Value:  v.Value,
+			Effect: string(v.Effect),
+		})
+	}
+	return taints
+}
+

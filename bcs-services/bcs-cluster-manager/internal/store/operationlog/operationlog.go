@@ -176,7 +176,7 @@ func (m *ModelOperationLog) CountOperationLog(ctx context.Context, cond *operato
 }
 
 // ListAggreOperationLog aggre logs
-func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, conds []bson.E, opt *options.ListOption) (
+func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, condSrc, condDst []bson.E, opt *options.ListOption) (
 	[]types.TaskOperationLog, error) {
 
 	retTaskOpLogs := make([]types.TaskOperationLog, 0)
@@ -187,6 +187,11 @@ func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, conds []b
 
 	pipeline := make([]map[string]interface{}, 0)
 
+	// from src table filter
+	if len(condSrc) > 0 {
+		pipeline = append(pipeline, util.BuildMatchCond(util.TransBsonEToMap(condSrc)))
+	}
+
 	pipeline = append(pipeline, util.BuildLookUpCond(util.UnionTable{
 		DstTable:   util.DataTableNamePrefix + task.TableName,
 		FromFields: taskID,
@@ -196,8 +201,9 @@ func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, conds []b
 	pipeline = append(pipeline, util.BuildUnWindCond(asField))
 	pipeline = append(pipeline, util.BuildProjectOutput(util.BuildTaskOperationLogProject()))
 
-	if len(conds) > 0 {
-		pipeline = append(pipeline, util.BuildMatchCond(util.TransBsonEToMap(conds)))
+	// from dst table filter
+	if len(condDst) > 0 {
+		pipeline = append(pipeline, util.BuildMatchCond(util.TransBsonEToMap(condDst)))
 	}
 
 	if len(opt.Sort) != 0 {

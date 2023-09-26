@@ -22,13 +22,14 @@ import (
 	"sync"
 	"time"
 
-	openapiv2 "github.com/googleapis/gnostic/openapiv2"
+	openapi_v2 "github.com/google/gnostic-models/openapiv2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/openapi"
 	"k8s.io/client-go/rest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
@@ -68,6 +69,16 @@ type RedisCacheClient struct {
 
 	// cacheValid 为 false 则缓存无效
 	cacheValid bool
+}
+
+// OpenAPIV3 获取 openapi client
+func (d *RedisCacheClient) OpenAPIV3() openapi.Client {
+	return d.delegate.OpenAPIV3()
+}
+
+// WithLegacy 获取 discovery DiscoveryInterface
+func (d *RedisCacheClient) WithLegacy() discovery.DiscoveryInterface {
+	return d.delegate
 }
 
 // RESTClient xxx
@@ -110,7 +121,7 @@ func (d *RedisCacheClient) ServerVersion() (*version.Info, error) {
 }
 
 // OpenAPISchema 获取集群支持的 Swagger API Schema
-func (d *RedisCacheClient) OpenAPISchema() (*openapiv2.Document, error) {
+func (d *RedisCacheClient) OpenAPISchema() (*openapi_v2.Document, error) {
 	return d.delegate.OpenAPISchema()
 }
 
@@ -137,7 +148,7 @@ func (d *RedisCacheClient) ClearCache() error {
 
 	var ret []byte
 	allGroupCacheKey := genCacheKey(d.clusterID, "")
-	if err := d.rdsCache.Get(allGroupCacheKey, &ret); err != nil {
+	if err := d.rdsCache.Get(d.ctx, allGroupCacheKey, &ret); err != nil {
 		// 如果集群没有对应缓存，是取不到数据的，也不需要清理，因此忽略异常
 		log.Warn(d.ctx, "failed to get all group cache: %v", err)
 		return nil
@@ -151,13 +162,13 @@ func (d *RedisCacheClient) ClearCache() error {
 		for _, ver := range mapx.GetList(group.(map[string]interface{}), "versions") {
 			groupVersion := mapx.GetStr(ver.(map[string]interface{}), "groupVersion")
 			cacheKey := genCacheKey(d.clusterID, groupVersion)
-			if err := d.rdsCache.Delete(cacheKey); err != nil {
+			if err := d.rdsCache.Delete(d.ctx, cacheKey); err != nil {
 				log.Warn(d.ctx, "delete cache key %s failed: %v, continue", cacheKey, err)
 			}
 		}
 	}
 	// 最后再删除 AllGroup 的缓存
-	if err := d.rdsCache.Delete(allGroupCacheKey); err != nil {
+	if err := d.rdsCache.Delete(d.ctx, allGroupCacheKey); err != nil {
 		return err
 	}
 
@@ -240,12 +251,12 @@ func (d *RedisCacheClient) readCache(groupVersion string) ([]byte, error) {
 	}
 
 	key := genCacheKey(d.clusterID, groupVersion)
-	if !d.rdsCache.Exists(key) {
+	if !d.rdsCache.Exists(d.ctx, key) {
 		return nil, errorx.New(errcode.General, "key %s cache not exists", key.Key())
 	}
 
 	var ret []byte
-	err := d.rdsCache.Get(key, &ret)
+	err := d.rdsCache.Get(d.ctx, key, &ret)
 	return ret, err
 }
 
@@ -258,7 +269,7 @@ func (d *RedisCacheClient) writeCache(groupVersion string, obj runtime.Object) e
 		return err
 	}
 
-	err = d.rdsCache.Set(key, bytes, 0)
+	err = d.rdsCache.Set(d.ctx, key, bytes, 0)
 	if err != nil {
 		return err
 	}
@@ -272,7 +283,7 @@ func (d *RedisCacheClient) writeCache(groupVersion string, obj runtime.Object) e
 // checkCacheLock 检查缓存锁
 func (d *RedisCacheClient) checkCacheLock() error {
 	lockCacheKey := genLockKey(d.clusterID)
-	if d.rdsCache.Exists(lockCacheKey) {
+	if d.rdsCache.Exists(d.ctx, lockCacheKey) {
 		log.Warn(d.ctx, "the interval is too short for reset cluster %s cache, please try again later", d.clusterID)
 		return errorx.New(errcode.General, i18n.GetMsg(d.ctx, "清理集群资源缓存时间间隔过短，请稍后再试"))
 	}
@@ -282,7 +293,7 @@ func (d *RedisCacheClient) checkCacheLock() error {
 // setCacheLock 设置缓存锁
 func (d *RedisCacheClient) setCacheLock() error {
 	lockCacheKey := genLockKey(d.clusterID)
-	return d.rdsCache.Set(lockCacheKey, "locked", CacheLockTTL*time.Second)
+	return d.rdsCache.Set(d.ctx, lockCacheKey, "locked", CacheLockTTL*time.Second)
 }
 
 // GetServerVersion 获取集群版本信息

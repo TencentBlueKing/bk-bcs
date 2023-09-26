@@ -1,6 +1,6 @@
 /*
- * Tencent is pleased to support the open source community by making 蓝鲸 available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -16,12 +16,13 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/TencentBlueKing/iam-go-sdk"
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/iam/sys"
-	"github.com/TencentBlueKing/iam-go-sdk"
-	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 )
 
 // bizIDAssembleSymbol used to assemble biz_id and resource id's symbol, used in app id generation.
@@ -55,11 +56,10 @@ func genBizResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resour
 }
 
 func genBizIAMResource(a *meta.ResourceAttribute) (*bkiam.Request, error) {
-	iamReq := bkiam.NewRequest(
-		sys.SystemIDBSCP,
-		dummyIAMUser,
-		bkiam.NewAction(string(sys.BusinessViewResource)),
-		[]iam.ResourceNode{
+	iamReq := bkiam.Request{
+		System:  sys.SystemIDBSCP,
+		Subject: dummyIAMUser,
+		Resources: []iam.ResourceNode{
 			{
 				System:    sys.SystemIDCMDB,
 				Type:      string(sys.Business),
@@ -67,46 +67,178 @@ func genBizIAMResource(a *meta.ResourceAttribute) (*bkiam.Request, error) {
 				Attribute: map[string]interface{}{},
 			},
 		},
-	)
+	}
 
 	switch a.Basic.Action {
 	case meta.FindBusinessResource:
 		// create app is related to cmdb business resource
-		return &iamReq, nil
+		iamReq.Action = bkiam.NewAction(string(sys.BusinessViewResource))
 	default:
 		return nil, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
 	}
+	return &iamReq, nil
 }
 
-func genBizIAMApplication(a *meta.ResourceAttribute) (*bkiam.Application, error) {
-	actions := []bkiam.ApplicationAction{
-		{
-			ID: string(sys.BusinessViewResource),
-			RelatedResourceTypes: []bkiam.ApplicationRelatedResourceType{
-				{
-					SystemID: sys.SystemIDCMDB,
-					Type:     string(sys.Business),
-					Instances: []bkiam.ApplicationResourceInstance{
-						[]iam.ApplicationResourceNode{
-							{
-								Type: string(sys.Business),
-								ID:   strconv.FormatUint(uint64(a.BizID), 10),
-							},
+func genAppIAMResource(a *meta.ResourceAttribute) (*bkiam.Request, error) {
+	iamReq := bkiam.Request{
+		System:  sys.SystemIDBSCP,
+		Subject: dummyIAMUser,
+		Resources: []iam.ResourceNode{
+			{
+				System:    sys.SystemIDBSCP,
+				Type:      string(sys.Business),
+				ID:        strconv.FormatUint(uint64(a.ResourceID), 10),
+				Attribute: map[string]interface{}{},
+			},
+		},
+	}
+
+	switch a.Basic.Action {
+	case meta.Create:
+		iamReq.Action = bkiam.NewAction(string(sys.AppCreate))
+	case meta.View:
+		iamReq.Action = bkiam.NewAction(string(sys.AppView))
+	case meta.Update:
+		iamReq.Action = bkiam.NewAction(string(sys.AppEdit))
+	case meta.Publish:
+		iamReq.Action = bkiam.NewAction(string(sys.ReleasePublish))
+	case meta.GenerateRelease:
+		iamReq.Action = bkiam.NewAction(string(sys.ReleaseGenerate))
+	case meta.Delete:
+		iamReq.Action = bkiam.NewAction(string(sys.AppDelete))
+	default:
+		return nil, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
+	}
+	return &iamReq, nil
+}
+
+func genCredIAMResource(a *meta.ResourceAttribute) (*bkiam.Request, error) {
+	iamReq := bkiam.Request{
+		System:  sys.SystemIDBSCP,
+		Subject: dummyIAMUser,
+		Resources: []iam.ResourceNode{
+			{
+				System:    sys.SystemIDCMDB,
+				Type:      string(sys.Business),
+				ID:        strconv.FormatUint(uint64(a.BizID), 10),
+				Attribute: map[string]interface{}{},
+			},
+		},
+	}
+
+	switch a.Basic.Action {
+	case meta.View:
+		iamReq.Action = bkiam.NewAction(string(sys.CredentialView))
+	case meta.Manage:
+		iamReq.Action = bkiam.NewAction(string(sys.CredentialManage))
+	default:
+		return nil, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
+	}
+	return &iamReq, nil
+}
+
+func genBizIAMApplication(a *meta.ResourceAttribute) (bkiam.ApplicationAction, error) {
+	action := bkiam.ApplicationAction{
+		RelatedResourceTypes: []bkiam.ApplicationRelatedResourceType{
+			{
+				SystemID: sys.SystemIDCMDB,
+				Type:     string(sys.Business),
+				Instances: []bkiam.ApplicationResourceInstance{
+					[]iam.ApplicationResourceNode{
+						{
+							Type: string(sys.Business),
+							ID:   strconv.FormatUint(uint64(a.BizID), 10),
 						},
 					},
 				},
 			},
 		},
 	}
-	application := bkiam.NewApplication(sys.SystemIDBSCP, actions)
 
 	switch a.Basic.Action {
 	case meta.FindBusinessResource:
 		// create app is related to cmdb business resource
-		return &application, nil
+		action.ID = string(sys.BusinessViewResource)
 	default:
-		return nil, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
+		return action, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
 	}
+	return action, nil
+}
+
+func genAppIAMApplication(a *meta.ResourceAttribute) (bkiam.ApplicationAction, error) {
+	action := bkiam.ApplicationAction{}
+	resourceNodes := []iam.ApplicationResourceNode{}
+	resourceNodeBiz := iam.ApplicationResourceNode{
+		Type: string(sys.Business),
+		ID:   strconv.FormatUint(uint64(a.BizID), 10),
+	}
+	resourceNodeApp := iam.ApplicationResourceNode{
+		Type: string(sys.Application),
+		ID:   strconv.FormatUint(uint64(a.ResourceID), 10),
+	}
+
+	switch a.Basic.Action {
+	case meta.Create:
+		action.ID = string(sys.AppCreate)
+		resourceNodes = append(resourceNodes, resourceNodeBiz)
+		action.RelatedResourceTypes = []bkiam.ApplicationRelatedResourceType{
+			{
+				SystemID:  sys.SystemIDCMDB,
+				Type:      string(sys.Business),
+				Instances: []bkiam.ApplicationResourceInstance{resourceNodes},
+			},
+		}
+		return action, nil
+	case meta.View:
+		action.ID = string(sys.AppView)
+		resourceNodes = append(resourceNodes, resourceNodeBiz, resourceNodeApp)
+	case meta.Update:
+		action.ID = string(sys.AppEdit)
+		resourceNodes = append(resourceNodes, resourceNodeBiz, resourceNodeApp)
+	case meta.Delete:
+		action.ID = string(sys.AppDelete)
+		resourceNodes = append(resourceNodes, resourceNodeBiz, resourceNodeApp)
+	case meta.Publish:
+		action.ID = string(sys.ReleasePublish)
+		resourceNodes = append(resourceNodes, resourceNodeBiz, resourceNodeApp)
+	case meta.GenerateRelease:
+		action.ID = string(sys.ReleaseGenerate)
+		resourceNodes = append(resourceNodes, resourceNodeBiz, resourceNodeApp)
+	default:
+		return action, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
+	}
+	action.RelatedResourceTypes = []bkiam.ApplicationRelatedResourceType{
+		{
+			SystemID:  sys.SystemIDBSCP,
+			Type:      string(sys.Application),
+			Instances: []bkiam.ApplicationResourceInstance{resourceNodes},
+		},
+	}
+	return action, nil
+}
+func genCredIAMApplication(a *meta.ResourceAttribute) (bkiam.ApplicationAction, error) {
+	action := bkiam.ApplicationAction{
+		RelatedResourceTypes: []bkiam.ApplicationRelatedResourceType{{
+			SystemID: sys.SystemIDCMDB,
+			Type:     string(sys.Business),
+			Instances: []bkiam.ApplicationResourceInstance{
+				[]iam.ApplicationResourceNode{{
+					Type: string(sys.Business),
+					ID:   strconv.FormatUint(uint64(a.BizID), 10),
+				}},
+			},
+		}},
+	}
+
+	switch a.Basic.Action {
+	case meta.View:
+		action.ID = string(sys.CredentialView)
+	case meta.Manage:
+		action.ID = string(sys.CredentialManage)
+	default:
+		return action, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
+	}
+	return action, nil
 }
 
 // genAppResource generate application related iam resource.
@@ -120,8 +252,7 @@ func genAppResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resour
 	appRes := client.Resource{
 		System: sys.SystemIDBSCP,
 		Type:   sys.Application,
-		ID: strconv.FormatUint(uint64(a.BizID), 10) + bizIDAssembleSymbol +
-			strconv.FormatUint(uint64(a.ResourceID), 10),
+		ID:     strconv.FormatUint(uint64(a.ResourceID), 10),
 		// can be authorized based on business
 		Attribute: map[string]interface{}{
 			client.IamPathKey: []string{fmt.Sprintf("/%s,%d/", sys.Business, a.BizID)},
@@ -138,11 +269,37 @@ func genAppResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resour
 	case meta.Delete:
 		// delete app is related to bscp application resource
 		return sys.AppDelete, []client.Resource{appRes}, nil
+	case meta.View:
+		// view app is related to bscp application resource
+		return sys.AppView, []client.Resource{appRes}, nil
+	case meta.GenerateRelease:
+		// generate release is related to bscp application resource
+		return sys.ReleaseGenerate, []client.Resource{appRes}, nil
+	case meta.Publish:
+		// publish release is related to bscp application resource
+		return sys.ReleasePublish, []client.Resource{appRes}, nil
 	case meta.Find:
 		// find app is related to cmdb business resource, using view biz action
 		return sys.BusinessViewResource, []client.Resource{bizRes}, nil
 	default:
 		return "", nil, errf.New(errf.InvalidParameter, fmt.Sprintf("unsupported bscp action: %s", a.Basic.Action))
+	}
+}
+
+func genCredResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
+	bizRes := client.Resource{
+		System: sys.SystemIDCMDB,
+		Type:   sys.Business,
+		ID:     strconv.FormatUint(uint64(a.BizID), 10),
+	}
+
+	switch a.Basic.Action {
+	case meta.View:
+		return sys.CredentialView, []client.Resource{bizRes}, nil
+	case meta.Manage:
+		return sys.CredentialManage, []client.Resource{bizRes}, nil
+	default:
+		return "", nil, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
 	}
 }
 
@@ -307,7 +464,7 @@ func genReleaseRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resourc
 	switch a.Basic.Action {
 	case meta.Create:
 		// create current released instance is related to bscp application resource, using config item packing action
-		return sys.ConfigItemPacking, []client.Resource{appRes}, nil
+		return sys.ReleaseGenerate, []client.Resource{appRes}, nil
 	case meta.Find:
 		// find release is related to cmdb business resource, using view biz action
 		return sys.BusinessViewResource, []client.Resource{bizRes}, nil
@@ -364,7 +521,7 @@ func genStrategyRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resour
 		return sys.StrategyDelete, []client.Resource{appRes}, nil
 	case meta.Publish:
 		// publish strategy is related to bscp application resource, using strategy publish action
-		return sys.ConfigItemPublish, []client.Resource{appRes}, nil
+		return sys.ReleasePublish, []client.Resource{appRes}, nil
 	case meta.FinishPublish:
 		// finish publish strategy is related to bscp application resource, using strategy finish publish action
 		return sys.ConfigItemFinishPublish, []client.Resource{appRes}, nil
@@ -459,6 +616,27 @@ func genSidecarRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resourc
 	case meta.Access:
 		// request from sidecar is related to business view resource
 		return sys.BusinessViewResource, []client.Resource{bizRes}, nil
+	default:
+		return "", nil, errf.New(errf.InvalidParameter, fmt.Sprintf("unsupported bscp action: %s", a.Basic.Action))
+	}
+}
+
+// genCredentialRes generate application credential related iam resource.
+func genCredentialRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
+	bizRes := client.Resource{
+		System: sys.SystemIDCMDB,
+		Type:   sys.Business,
+		ID:     strconv.FormatUint(uint64(a.BizID), 10),
+	}
+
+	switch a.Basic.Action {
+	case meta.Access:
+		// request from credential is related to business view resource
+		return sys.CredentialView, []client.Resource{bizRes}, nil
+	case meta.Manage:
+		// manage credential is related to bscp application resource
+		return sys.CredentialManage, []client.Resource{bizRes}, nil
+
 	default:
 		return "", nil, errf.New(errf.InvalidParameter, fmt.Sprintf("unsupported bscp action: %s", a.Basic.Action))
 	}

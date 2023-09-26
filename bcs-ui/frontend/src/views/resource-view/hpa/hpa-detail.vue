@@ -1,11 +1,11 @@
 <template>
   <div class="detail p30">
     <div class="detail-title">
-      {{ $t('基础信息') }}
+      {{ $t('generic.title.basicInfo') }}
     </div>
     <div class="detail-content basic-info">
       <div class="basic-info-item">
-        <label>{{ $t('命名空间') }}</label>
+        <label>{{ $t('k8s.namespace') }}</label>
         <span>{{ data.metadata.namespace }}</span>
       </div>
       <div class="basic-info-item">
@@ -33,54 +33,54 @@
         <span>{{ data.metadata.uid }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('创建时间') }}</label>
+        <label>{{ $t('cluster.labels.createdAt') }}</label>
         <span>{{ extData.createTime }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('存在时间') }}</label>
+        <label>{{ $t('k8s.age') }}</label>
         <span>{{ extData.age }}</span>
       </div>
     </div>
     <!-- 状态、标签、注解 -->
     <bcs-tab class="mt20" :label-height="42">
-      <bcs-tab-panel name="conditions" :label="$t('状态（Conditions）')">
+      <bcs-tab-panel name="conditions" :label="$t('k8s.conditions')">
         <bk-table :data="data.status.conditions || []">
-          <bk-table-column :label="$t('类别')" prop="type"></bk-table-column>
-          <bk-table-column :label="$t('状态')" prop="status">
+          <bk-table-column :label="$t('generic.label.type')" prop="type"></bk-table-column>
+          <bk-table-column :label="$t('generic.label.status')" prop="status">
             <template #default="{ row }">
               <StatusIcon :status="row.status"></StatusIcon>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('最后迁移时间')" prop="lastTransitionTime">
+          <bk-table-column :label="$t('k8s.lastTransitionTime')" prop="lastTransitionTime">
             <template #default="{ row }">
               {{ formatTime(row.lastTransitionTime, 'yyyy-MM-dd hh:mm:ss') }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('原因')">
+          <bk-table-column :label="$t('dashboard.workload.label.reason')">
             <template #default="{ row }">
               {{ row.reason || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('消息')">
+          <bk-table-column :label="$t('generic.label.message')">
             <template #default="{ row }">
               {{ row.message || '--' }}
             </template>
           </bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="label" :label="$t('标签')">
+      <bcs-tab-panel name="label" :label="$t('k8s.label')">
         <bk-table :data="handleTransformObjToArr(data.metadata.labels)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="annotations" :label="$t('注解')">
+      <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')">
         <bk-table :data="handleTransformObjToArr(data.metadata.annotations)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="event" :label="$t('事件')">
+      <bcs-tab-panel name="event" :label="$t('generic.label.event')">
         <EventQueryTableVue
           hide-cluster-and-namespace
           :kinds="data.kind"
@@ -92,7 +92,9 @@
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue';
+
 import StatusIcon from '../../../components/status-icon';
+
 import { formatTime } from '@/common/util';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 

@@ -1,20 +1,22 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package dao
 
 import (
 	"errors"
 	"fmt"
+
+	rawgen "gorm.io/gen"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
@@ -141,8 +143,13 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 	m := dao.genQ.Credential
 	q := dao.genQ.Credential.WithContext(kit.Ctx)
 
+	var conds []rawgen.Condition
+	if searchKey != "" {
+		conds = append(conds, q.Where(m.Memo.Regexp("(?i)"+searchKey)).Or(m.Reviser.Regexp("(?i)"+searchKey)))
+	}
+
 	result, count, err := q.Where(m.BizID.Eq(bizID)).
-		Where(q.Where(m.Memo.Regexp("(?i)"+searchKey)).Or(m.Reviser.Regexp("(?i)"+searchKey))).
+		Where(conds...).
 		Order(m.ID.Desc()).
 		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
@@ -207,7 +214,7 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Credential.WithContext(kit.Ctx)
 		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-			Select(m.Memo, m.Enable).Updates(g); err != nil {
+			Select(m.Memo, m.Enable, m.Reviser).Updates(g); err != nil {
 			return err
 		}
 

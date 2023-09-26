@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package auth
@@ -33,7 +32,7 @@ import (
 	"bscp.io/pkg/components"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/sys"
+	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/kit"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	"bscp.io/pkg/rest"
@@ -96,7 +95,7 @@ func (a authorizer) initKitWithCookie(r *http.Request, k *kit.Kit, multiErr *mul
 }
 
 // initKitWithDevEnv Dev环境, 可以设置环境变量鉴权
-func (a authorizer) initKitWithDevEnv(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
+func (a authorizer) initKitWithDevEnv(_ *http.Request, k *kit.Kit, _ *multierror.Error) bool {
 	user := os.Getenv("BK_USER_FOR_TEST")
 	appCode := os.Getenv("BK_APP_CODE_FOR_TEST")
 
@@ -109,8 +108,7 @@ func (a authorizer) initKitWithDevEnv(r *http.Request, k *kit.Kit, multiErr *mul
 	return false
 }
 
-// UnifiedAuthentication
-// HTTP API 鉴权, 异常返回json信息
+// UnifiedAuthentication HTTP API 鉴权, 异常返回json信息
 func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		k := &kit.Kit{
@@ -140,8 +138,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// WebAuthentication
-// HTTP 前端鉴权, 异常跳转302到登入页面
+// WebAuthentication HTTP 前端鉴权, 异常跳转302到登入页面
 func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Handler {
 	ignoreExtMap := map[string]struct{}{
 		".js":  {},
@@ -191,6 +188,44 @@ func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Ha
 		}
 		return http.HandlerFunc(fn)
 	}
+}
+
+// ContentVerified 内容操作校验中间件, 需要放到UnifiedAuthentication和BizVerified后面
+// 服务下的配置项内容需要校验服务权限，模版空间下的模版配置项内容需要校验模版空间权限
+func (a authorizer) ContentVerified(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		kt := kit.MustGetKit(r.Context())
+
+		appID, tmplSpaceID, err := repository.GetContentLevelID(r)
+		if err != nil {
+			render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+
+		if appID > 0 {
+			// NOTE: authenticate app on iam
+
+			space, err := a.authClient.QuerySpaceByAppID(r.Context(), &pbas.QuerySpaceByAppIDReq{AppId: appID})
+			if err != nil {
+				s := status.Convert(err)
+				render.Render(w, r, rest.BadRequest(errors.New(s.Message())))
+				return
+			}
+			kt.AppID = appID
+			kt.SpaceID = space.SpaceId
+			kt.SpaceTypeID = space.SpaceTypeId
+		}
+
+		if tmplSpaceID > 0 {
+			// NOTE: authenticate template space on iam
+
+			kt.TmplSpaceID = tmplSpaceID
+		}
+
+		ctx := kit.WithKit(r.Context(), kt)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+	return http.HandlerFunc(fn)
 }
 
 // AppVerified App校验中间件, 需要放到 UnifiedAuthentication 后面, url 需要添加 {app_id} 变量
@@ -270,22 +305,6 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			return
 		}
 
-		req := &pbas.ResourceAttribute{
-			BizId:       uint32(bizID),
-			Basic:       &pbas.Basic{Type: string(sys.Business), Action: string(sys.BusinessViewResource), ResourceId: uint32(bizID)},
-			GenApplyUrl: true,
-		}
-
-		resp, err := a.authClient.CheckPermission(kt.RpcCtx(), req)
-		if err != nil {
-			render.Render(w, r, rest.BadRequest(err))
-			return
-		}
-
-		if !resp.IsAllowed {
-			render.Render(w, r, rest.PermissionDenied(errf.ErrPermissionDenied, resp))
-			return
-		}
 		ctx := kit.WithKit(r.Context(), kt)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}

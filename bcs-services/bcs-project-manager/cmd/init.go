@@ -17,6 +17,7 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
+	"embed"
 	"net"
 	"net/http"
 	"path"
@@ -24,11 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -42,9 +38,17 @@ import (
 	"google.golang.org/grpc"
 	grpcCred "google.golang.org/grpc/credentials"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
+	i18n2 "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
@@ -118,6 +122,7 @@ func (p *ProjectService) Init() error {
 		p.initHttpService,
 		p.initNamespaceManager,
 		p.initMetric,
+		p.initI18n,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -305,9 +310,15 @@ func (p *ProjectService) initMicro() error {
 			etcd.Close()
 			return nil
 		}),
+		microSvc.AfterStop(func() error {
+			// close audit client
+			component.GetAuditClient().Close()
+			return nil
+		}),
 		microSvc.WrapHandler(
 			wrapper.NewAPILatencyWrapper,
 			wrapper.NewInjectContextWrapper,
+			wrapper.HandleLanguageWrapper,
 			wrapper.NewResponseWrapper,
 			wrapper.NewLogWrapper,
 			wrapper.NewValidatorWrapper,
@@ -522,5 +533,16 @@ func (p *ProjectService) initMetric() error {
 			p.stopCh <- struct{}{}
 		}
 	}()
+	return nil
+}
+
+// init i18n
+func (p *ProjectService) initI18n() error {
+	i18n.Instance()
+	// 加载翻译文件路径
+	i18n.SetPath([]embed.FS{i18n2.Assets})
+	// 设置默认语言
+	// 默认是 zh
+	i18n.SetLanguage("zh")
 	return nil
 }

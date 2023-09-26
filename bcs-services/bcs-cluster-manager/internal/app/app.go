@@ -15,6 +15,7 @@ package app
 import (
 	"context"
 	"crypto/tls"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,20 +31,31 @@ import (
 	"syscall"
 	"time"
 
+	restful "github.com/emicklei/go-restful"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
+	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
+	microsvc "github.com/micro/go-micro/v2/service"
+	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc"
+	grpccred "google.golang.org/grpc/credentials"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	i18n2 "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
@@ -60,6 +72,7 @@ import (
 	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/helm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/job"
@@ -75,18 +88,7 @@ import (
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	restful "github.com/emicklei/go-restful"
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
-	microsvc "github.com/micro/go-micro/v2/service"
-	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
-	grpccred "google.golang.org/grpc/credentials"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // ClusterManager cluster manager
@@ -234,10 +236,6 @@ func (cm *ClusterManager) initModel() error {
 		return fmt.Errorf("mongo database cannot be empty")
 	}
 	password := cm.opt.Mongo.Password
-	if password != "" {
-		realPwd, _ := encrypt.DesDecryptFromBase([]byte(password))
-		password = string(realPwd)
-	}
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(cm.opt.Mongo.Address, ","),
 		ConnectTimeoutSeconds: int(cm.opt.Mongo.ConnectTimeout),
@@ -379,6 +377,12 @@ func (cm *ClusterManager) initRemoteClient() error {
 		return err
 	}
 
+	// init encrypt client
+	err = encrypt.SetEncryptClient(cm.opt.Encrypt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -414,14 +418,11 @@ func (cm *ClusterManager) initAlarmClient() error {
 // init bk-ops client
 func (cm *ClusterManager) initBKOpsClient() error {
 	err := common.SetBKOpsClient(common.Options{
-		Server:        cm.opt.BKOps.Server,
-		AppCode:       cm.opt.BKOps.AppCode,
-		AppSecret:     cm.opt.BKOps.AppSecret,
-		BKUserName:    cm.opt.BKOps.BkUserName,
-		Debug:         cm.opt.BKOps.Debug,
-		CreateTaskURL: cm.opt.BKOps.CreateTaskURL,
-		TaskStatusURL: cm.opt.BKOps.TaskStatusURL,
-		StartTaskURL:  cm.opt.BKOps.StartTaskURL,
+		Server:     cm.opt.BKOps.Server,
+		AppCode:    cm.opt.BKOps.AppCode,
+		AppSecret:  cm.opt.BKOps.AppSecret,
+		BKUserName: cm.opt.BKOps.BkUserName,
+		Debug:      cm.opt.BKOps.Debug,
 	})
 	if err != nil {
 		blog.Errorf("initBKOpsClient failed: %v", err)
@@ -509,6 +510,8 @@ func (cm *ClusterManager) initCloudTemplateConfig() error {
 		return fmt.Errorf("cloud template path empty, please manual build cloud")
 	}
 
+	blog.Infof("initCloudTemplateConfig %s", cm.opt.CloudTemplatePath)
+
 	cloudList := &options.CloudTemplateList{}
 	cloudBytes, err := ioutil.ReadFile(cm.opt.CloudTemplatePath)
 	if err != nil {
@@ -521,6 +524,8 @@ func (cm *ClusterManager) initCloudTemplateConfig() error {
 		blog.Errorf("initCloudTemplateConfig Unmarshal err: %v", err)
 		return err
 	}
+
+	blog.Infof("initCloudTemplateConfig cloudList %+v", cloudList)
 
 	// init cloud config
 	for i := range cloudList.CloudList {
@@ -553,6 +558,7 @@ func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
 			return err
 		}
 
+		blog.Infof("updateCloudConfig[%s] success", cloud.CloudID)
 		return nil
 	}
 
@@ -614,6 +620,7 @@ func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
 		return err
 	}
 
+	blog.Infof("updateCloudConfig[%s] success", cloud.CloudID)
 	return nil
 }
 
@@ -783,6 +790,9 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	}
+	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(
+		grpc.MaxCallRecvMsgSize(utils.MaxBodySize), grpc.MaxCallSendMsgSize(utils.MaxBodySize)))
+
 	err := cmproto.RegisterClusterManagerGwFromEndpoint(
 		context.TODO(),
 		gwmux,
@@ -925,6 +935,7 @@ func (cm *ClusterManager) initMicro() error {
 		microsvc.RegisterTTL(30*time.Second),
 		microsvc.RegisterInterval(25*time.Second),
 		microsvc.Context(cm.ctx),
+		utils.MaxMsgSize(utils.MaxBodySize),
 		microsvc.BeforeStart(func() error {
 			return nil
 		}),
@@ -948,6 +959,7 @@ func (cm *ClusterManager) initMicro() error {
 			return nil
 		}),
 		microsvc.WrapHandler(
+			utils.HandleLanguageWrapper,
 			utils.RequestLogWarpper,
 			utils.ResponseWrapper,
 			authWrapper.AuthenticationFunc,
@@ -1023,16 +1035,20 @@ func (cm *ClusterManager) Init() error {
 	if err := cm.initLocker(); err != nil {
 		return err
 	}
+	// init registry
+	if err := cm.initRegistry(); err != nil {
+		return err
+	}
+	// init remote cloud depend client
+	if err := cm.initRemoteClient(); err != nil {
+		return err
+	}
 	// init model
 	if err := cm.initModel(); err != nil {
 		return err
 	}
 	// init kube operator
 	cm.initK8SOperator()
-	// init registry
-	if err := cm.initRegistry(); err != nil {
-		return err
-	}
 	// init IAM client
 	if err := cm.initIAMClient(); err != nil {
 		return err
@@ -1075,11 +1091,6 @@ func (cm *ClusterManager) Init() error {
 	if err != nil {
 		return err
 	}
-	// init remote cloud depend client
-	err = cm.initRemoteClient()
-	if err != nil {
-		return err
-	}
 	// init cloud template config
 	err = cm.initCloudTemplateConfig()
 	if err != nil {
@@ -1090,8 +1101,18 @@ func (cm *ClusterManager) Init() error {
 	cm.initExtraModules()
 	// init system signal handler
 	cm.initSignalHandler()
-
+	// init i18n
+	cm.initI18n()
 	return nil
+}
+
+func (cm *ClusterManager) initI18n() {
+	i18n.Instance()
+	// 加载翻译文件路径
+	i18n.SetPath([]embed.FS{i18n2.Assets})
+	// 设置默认语言
+	// 默认是 zh
+	i18n.SetLanguage("zh")
 }
 
 // Run run cluster manager server

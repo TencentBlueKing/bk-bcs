@@ -32,13 +32,15 @@ type Addons struct {
 }
 
 // AddonsSlice add-ons slice
-type AddonsSlice []*Addons
+type AddonsSlice struct {
+	Addons []*Addons `yaml:"addons"`
+}
 
 // FindByName find add-ons by name
 func (a AddonsSlice) FindByName(name string) *Addons {
-	for i := range a {
-		if a[i].Name == name {
-			return a[i]
+	for i := range a.Addons {
+		if a.Addons[i].Name == name {
+			return a.Addons[i]
 		}
 	}
 	return nil
@@ -50,6 +52,7 @@ func (a Addons) ToAddonsProto() *helmmanager.Addons {
 		Name:             &a.Name,
 		ChartName:        &a.ChartName,
 		Description:      &a.Description,
+		Logo:             common.GetStringP(""),
 		DocsLink:         &a.DocsLink,
 		Version:          common.GetStringP(""),
 		CurrentVersion:   common.GetStringP(""),

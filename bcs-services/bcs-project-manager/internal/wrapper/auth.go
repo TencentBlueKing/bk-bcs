@@ -119,6 +119,7 @@ func SkipClient(ctx context.Context, req server.Request, client string) bool {
 			}
 		}
 		for _, method := range p.NamespaceActions {
+			// 允许指定 client 在指定 namespace 下执行指定方法，包括：CreateNamespace、UpdateNamespace、DeleteNamespace
 			if method == req.Method() {
 				for _, namespace := range p.NamespaceNames {
 					if namespace == resourceID.Namespace {

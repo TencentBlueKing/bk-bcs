@@ -10,27 +10,38 @@
  * limitations under the License.
  */
 
+// Package httpsvr 对外提供http接口（通过service域名访问）
 package httpsvr
 
 import (
 	"github.com/emicklei/go-restful"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/aws"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/nodecache"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portbindingcontroller"
 )
 
 // HttpServerClient http server client
 type HttpServerClient struct {
 	Mgr manager.Manager
 
-	NodeCache *nodecache.NodeCache
+	NodeCache         *nodecache.NodeCache
+	NodePortBindCache *portbindingcontroller.NodePortBindingCache
+
+	AgaSupporter *aws.AgaSupporter
+
+	Ops *option.ControllerOption
 }
 
 // InitRouters init router
 func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 	ws.Route(ws.GET("/api/v1/ingresss").To(httpServerClient.listIngress))
 	ws.Route(ws.GET("/api/v1/portpools").To(httpServerClient.listPortPool))
+	ws.Route(ws.GET("/api/v1/nodeportbindings").To(httpServerClient.getNodePortBindings))
 	ws.Route(ws.GET("/api/v1/listeners/{condition}/{namespace}/{name}").To(httpServerClient.listListener))
 
 	ws.Route(ws.GET("/api/v1/node").To(httpServerClient.listNode))
+	ws.Route(ws.GET("/api/v1/aga_entrance").To(httpServerClient.getPodRelatedAgaEntrance))
 }

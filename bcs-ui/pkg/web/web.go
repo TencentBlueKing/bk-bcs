@@ -111,12 +111,6 @@ func (w *WebServer) newRouter() http.Handler {
 		r.Mount(routePrefix+"/", http.StripPrefix(routePrefix, w.subRouter()))
 	}
 
-	// 前端地址, 默认/bcs
-	siteURL := config.G.FrontendConf.Host.SiteURL
-	if siteURL != "" && siteURL != "/" && siteURL != routePrefix {
-		r.Mount(siteURL+"/", http.StripPrefix(siteURL, w.subRouter()))
-	}
-
 	r.Mount("/", w.subRouter())
 
 	return r

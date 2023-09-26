@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package sfs
 
@@ -16,7 +16,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"bscp.io/pkg/cc"
@@ -314,17 +314,17 @@ func LoadTLSBytes(tls cc.Repository) (*TLSBytes, error) {
 			return new(TLSBytes), nil
 		}
 
-		ca, err := ioutil.ReadFile(tls.BkRepo.TLS.CAFile)
+		ca, err := os.ReadFile(tls.BkRepo.TLS.CAFile)
 		if err != nil {
 			return nil, err
 		}
 
-		cert, err := ioutil.ReadFile(tls.BkRepo.TLS.CertFile)
+		cert, err := os.ReadFile(tls.BkRepo.TLS.CertFile)
 		if err != nil {
 			return nil, err
 		}
 
-		key, err := ioutil.ReadFile(tls.BkRepo.TLS.KeyFile)
+		key, err := os.ReadFile(tls.BkRepo.TLS.KeyFile)
 		if err != nil {
 			return nil, err
 		}

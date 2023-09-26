@@ -1,23 +1,23 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package pbcontent
 
 import (
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/runtime/jsoni"
-
 	"github.com/golang/protobuf/jsonpb"
+
+	"bscp.io/pkg/dal/table"
+	pbbase "bscp.io/pkg/protocol/core/base"
+	"bscp.io/pkg/runtime/jsoni"
 )
 
 // ContentSpec convert pb ContentSpec to table ContentSpec
@@ -41,6 +41,34 @@ func PbContentSpec(spec *table.ContentSpec) *ContentSpec {
 	return &ContentSpec{
 		Signature: spec.Signature,
 		ByteSize:  spec.ByteSize,
+	}
+}
+
+// ReleasedContentSpec convert pb ReleasedContentSpec to table ReleasedContentSpec
+func (m *ReleasedContentSpec) ReleasedContentSpec() *table.ReleasedContentSpec {
+	if m == nil {
+		return nil
+	}
+
+	return &table.ReleasedContentSpec{
+		Signature:       m.Signature,
+		ByteSize:        m.ByteSize,
+		OriginSignature: m.OriginSignature,
+		OriginByteSize:  m.OriginByteSize,
+	}
+}
+
+// PbReleasedContentSpec convert table ReleasedContentSpec to pb ReleasedContentSpec
+func PbReleasedContentSpec(spec *table.ReleasedContentSpec) *ReleasedContentSpec {
+	if spec == nil {
+		return nil
+	}
+
+	return &ReleasedContentSpec{
+		Signature:       spec.Signature,
+		ByteSize:        spec.ByteSize,
+		OriginSignature: spec.OriginSignature,
+		OriginByteSize:  spec.OriginByteSize,
 	}
 }
 
@@ -99,7 +127,7 @@ func PbContent(c *table.Content) *Content {
 }
 
 // MarshalJSONPB ContentSpec to json.
-func (m ContentSpec) MarshalJSONPB(mars *jsonpb.Marshaler) ([]byte, error) {
+func (m *ContentSpec) MarshalJSONPB(mars *jsonpb.Marshaler) ([]byte, error) {
 	return jsoni.Marshal(m)
 }
 

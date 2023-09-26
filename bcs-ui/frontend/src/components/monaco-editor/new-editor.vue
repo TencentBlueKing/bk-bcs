@@ -7,10 +7,12 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref, toRefs, watch, onMounted, onBeforeMount } from 'vue';
 import yamljs from 'js-yaml';
-import { isObject } from '@/common/util';
+import { computed, defineComponent, onBeforeMount, onMounted, ref, toRefs, watch } from 'vue';
+
 import useEditor, { IDiffValue } from './use-editor';
+
+import { isObject } from '@/common/util';
 import fullScreen from '@/directives/full-screen';
 
 export default defineComponent({
@@ -68,7 +70,7 @@ export default defineComponent({
           resolveValue = isObject(value.value) ? (yamljs.load(emitValue) || {}) : emitValue;
           break;
         default:
-          resolveValue = '';
+          resolveValue = emitValue;
       }
       ctx.emit('change', resolveValue, value.value);
     };

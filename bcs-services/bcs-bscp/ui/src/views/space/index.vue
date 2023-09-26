@@ -3,19 +3,18 @@
   import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia';
   import { useGlobalStore } from '../../store/global';
-  import applySpacePerm from './apply-space-perm.vue'
+  import applyPermPage from './apply-perm-page.vue'
 
-  const { spaceId, showSpacePermApply } = storeToRefs(useGlobalStore())
+  const { spaceId, showPermApplyPage } = storeToRefs(useGlobalStore())
 
   const route = useRoute()
 
   watch(() => route.params.spaceId, (val) => {
-    showSpacePermApply.value = false
     spaceId.value = <string>val
   }, { immediate: true })
 
 </script>
 <template>
-  <apply-space-perm v-if="showSpacePermApply"></apply-space-perm>
+  <apply-perm-page v-if="showPermApplyPage"></apply-perm-page>
   <router-view v-else></router-view>
 </template>

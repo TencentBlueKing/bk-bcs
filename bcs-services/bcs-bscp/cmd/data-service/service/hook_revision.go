@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -180,19 +180,6 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 	*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	r := &table.HookRevision{
-		Attachment: &table.HookRevisionAttachment{
-			BizID:  req.BizId,
-			HookID: req.HookId,
-		},
-		Spec: &table.HookRevisionSpec{
-			State: table.HookRevisionStatusNotDeployed,
-		},
-		Revision: &table.Revision{
-			Reviser: kt.User,
-		},
-	}
-
 	tx := s.dao.GenQuery().Begin()
 
 	// 1. 上线的版本下线
@@ -203,20 +190,33 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 	}
 	old, err := s.dao.HookRevision().GetByPubState(kt, opt)
 	if err == nil {
-		r.ID = old.ID
-		r.Spec.State = table.HookRevisionStatusShutdown
-		if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, r); e != nil {
+		old.Spec.State = table.HookRevisionStatusShutdown
+		if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, old); e != nil {
 			logs.Errorf("update HookRevision State failed, err: %v, rid: %s", err, kt.Rid)
 			tx.Rollback()
 			return nil, e
 		}
 	}
 
-	// 2. 未上线的版本上线
-	r.ID = req.Id
-	r.Spec.State = table.HookRevisionStatusDeployed
-	if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, r); e != nil {
+	// 2. 上线脚本版本
+	hr, err := s.dao.HookRevision().Get(kt, req.BizId, req.HookId, req.Id)
+	if err != nil {
+		logs.Errorf("get HookRevision failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
+		return nil, err
+	}
+	hr.Revision.Reviser = kt.User
+	hr.Spec.State = table.HookRevisionStatusDeployed
+	if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, hr); e != nil {
 		logs.Errorf("update HookRevision State failed, err: %v, rid: %s", e, kt.Rid)
+		tx.Rollback()
+		return nil, err
+	}
+
+	// 3. 修改未命名版本绑定的脚本版本为上线版本
+	if err := s.dao.ReleasedHook().UpdateHookRevisionByReleaseIDWithTx(kt, tx,
+		req.BizId, 0, req.HookId, hr); err != nil {
+		logs.Errorf("update released hook failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
 	}
@@ -299,6 +299,7 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 		BizID:           req.BizId,
 		HookID:          req.HookId,
 		HookRevisionsID: req.RevisionId,
+		SearchKey:       req.SearchKey,
 		Page:            page,
 	}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
@@ -314,11 +315,13 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 	details := make([]*pbds.ListHookRevisionReferencesResp_Detail, 0, len(results))
 	for _, result := range results {
 		details = append(details, &pbds.ListHookRevisionReferencesResp_Detail{
-			AppId:       result.AppID,
-			AppName:     result.AppName,
-			ReleaseId:   result.ReleaseID,
-			ReleaseName: result.ReleaseName,
-			Type:        result.HookType,
+			RevisionId:   result.RevisionID,
+			RevisionName: result.RevisionName,
+			AppId:        result.AppID,
+			AppName:      result.AppName,
+			ReleaseId:    result.ReleaseID,
+			ReleaseName:  result.ReleaseName,
+			Type:         result.HookType,
 		})
 	}
 

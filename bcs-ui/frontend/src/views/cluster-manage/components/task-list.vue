@@ -4,7 +4,7 @@
       :data="data"
       :row-class-name="rowClass"
       @row-click="handleRowClick">
-      <bk-table-column :label="$t('步骤')" prop="taskName" min-width="155">
+      <bk-table-column :label="$t('generic.label.step')" prop="taskName" min-width="155">
         <template #default="{ row }">
           <span class="task-name">
             <span class="bcs-ellipsis">
@@ -17,17 +17,17 @@
           </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('状态')" prop="status" width="90">
+      <bk-table-column :label="$t('generic.label.status')" prop="status">
         <template #default="{ row }">
           <LoadingIcon v-if="row.status === 'RUNNING'">
-            <span class="bcs-ellipsis">{{ $t('运行中') }}</span>
+            <span class="bcs-ellipsis">{{ $t('generic.status.running') }}</span>
           </LoadingIcon>
           <StatusIcon type="result" :status="row.status" :status-color-map="taskStatusColorMap" v-else>
             {{ taskStatusTextMap[row.status.toLowerCase()] }}
           </StatusIcon>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('执行时间')" width="165">
+      <bk-table-column :label="$t('generic.label.execTime')" width="165">
         <template #default="{ row }">
           <template v-if="row.status.toLowerCase() === 'notstarted'">
             --
@@ -37,7 +37,7 @@
           </template>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('耗时')">
+      <bk-table-column :label="$t('generic.label.execTime2')">
         <template #default="{ row }">
           <template v-if="row.status === 'RUNNING'">
             {{timeDelta(row.start, new Date()) || '--'}}
@@ -51,16 +51,17 @@
         </template>
       </bk-table-column>
     </bk-table>
-    <div class="bg-[#F5F7FA] p-[16px] w-[420px] text-[#313238] text-[12px] task-message">
+    <div class="bg-[#F5F7FA] p-[16px] w-[280px] text-[#313238] text-[12px] task-message">
       {{ curTaskRow.message }}
     </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
+
 import { timeDelta, timeFormat } from '@/common/util';
-import StatusIcon from '@/components/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
+import StatusIcon from '@/components/status-icon';
 
 export default defineComponent({
   name: 'TaskList',
@@ -76,12 +77,12 @@ export default defineComponent({
   },
   setup(props) {
     const taskStatusTextMap = {
-      initialzing: window.i18n.t('初始化中'),
-      running: window.i18n.t('运行中'),
-      success: window.i18n.t('成功'),
-      failure: window.i18n.t('失败'),
-      timeout: window.i18n.t('超时'),
-      notstarted: window.i18n.t('未执行'),
+      initialzing: window.i18n.t('generic.status.initializing'),
+      running: window.i18n.t('generic.status.running'),
+      success: window.i18n.t('generic.status.success'),
+      failure: window.i18n.t('generic.status.failed'),
+      timeout: window.i18n.t('generic.status.timeout'),
+      notstarted: window.i18n.t('generic.status.todo'),
     };
     const taskStatusColorMap = {
       initialzing: 'blue',

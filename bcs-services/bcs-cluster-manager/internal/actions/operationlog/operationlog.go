@@ -15,9 +15,15 @@ package operationlog
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -26,8 +32,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // ListOperationLogsAction action for list operation logs
@@ -60,39 +64,45 @@ func (ua *ListOperationLogsAction) setResp(code uint32, msg string) {
 }
 
 func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
-	conds := make([]bson.E, 0)
+	var (
+		conds   = make([]bson.E, 0)
+		condDst = make([]bson.E, 0)
+	)
 	if ua.req.ResourceType != "" {
-		conds = append(conds, util.Condition(operator.Eq, "resourcetype", ua.req.ResourceType))
+		conds = append(conds, util.Condition(operator.Eq, "resourcetype", []string{ua.req.ResourceType}))
 	}
 	if ua.req.ResourceID != "" {
-		conds = append(conds, util.Condition(operator.Eq, "resourceid", ua.req.ResourceID))
+		conds = append(conds, util.Condition(operator.Eq, "resourceid", []string{ua.req.ResourceID}))
 	}
 	if ua.req.ClusterID != "" {
-		conds = append(conds, util.Condition(operator.Eq, "clusterid", ua.req.ClusterID))
-		conds = append(conds, bson.E{Key: "clusterid", Value: ua.req.ClusterID})
+		conds = append(conds, util.Condition(operator.Eq, "clusterid", []string{ua.req.ClusterID}))
 	}
 	if ua.req.ProjectID != "" {
-		conds = append(conds, util.Condition(operator.Eq, "projectid", ua.req.ProjectID))
+		conds = append(conds, util.Condition(operator.Eq, "projectid", []string{ua.req.ProjectID}))
 	}
 
 	// time range condition
 	start := time.Unix(int64(ua.req.StartTime), 0).Format(time.RFC3339)
 	end := time.Unix(int64(ua.req.EndTime), 0).Format(time.RFC3339)
-	conds = append(conds, util.Condition(operator.Gte, "createtime", start))
-	conds = append(conds, util.Condition(operator.Lte, "createtime", end))
+	conds = append(conds, util.Condition(util.Range, "createtime", []string{start, end}))
 
 	// default taskID empty filter
 	if !ua.req.TaskIDNull {
-		conds = append(conds, util.Condition(operator.Ne, "taskid", ""))
+		conds = append(conds, util.Condition(operator.Ne, "taskid", []string{""}))
 	}
 	if ua.req.Status != "" {
-		conds = append(conds, util.Condition(operator.Eq, "status", ua.req.Status))
+		conds = append(conds, util.Condition(operator.Eq, "status", []string{ua.req.Status}))
 	}
 	if ua.req.TaskType != "" {
-		conds = append(conds, util.Condition(util.Regex, "tasktype", ua.req.TaskType))
+		conds = append(conds, util.Condition(util.Regex, "tasktype", []string{ua.req.TaskType}))
 	}
 
-	sumLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, &options.ListOption{
+	if len(ua.req.IpList) > 0 {
+		ipList := strings.Split(ua.req.IpList, ",")
+		condDst = append(condDst, util.Condition(operator.In, "nodeiplist", ipList))
+	}
+
+	sumLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, condDst, &options.ListOption{
 		Count: true,
 	})
 	if err != nil {
@@ -103,7 +113,7 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error {
 	offset := (ua.req.Page - 1) * ua.req.Limit
 	sort := map[string]int{"createtime": -1}
 
-	opLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, &options.ListOption{
+	opLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, condDst, &options.ListOption{
 		Limit: int64(ua.req.Limit), Offset: int64(offset), Sort: sort})
 	if err != nil {
 		return err
@@ -232,6 +242,7 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 					}
 					delete(t.Steps[i].Params, k)
 				}
+				t.Steps[i].TaskName = translate(ua.ctx, t.Steps[i].TaskMethod, t.Steps[i].TaskName)
 				if t.Steps[i].Start != "" {
 					t.Steps[i].Start = utils.TransTimeFormat(t.Steps[i].Start)
 				}
@@ -243,8 +254,12 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 			endTime := utils.TransTimeFormat(t.End)
 			t.Start = startTime
 			t.End = endTime
+
+			t.TaskName = translate(ua.ctx, t.TaskType, t.TaskName)
+			ua.resp.Data.Results[i].Message = translateMsg(ua.ctx, v.ResourceType, v.TaskType, v.Message, t)
 			ua.resp.Data.Results[i].Task = t
 		}
+
 	}
 	return nil
 }
@@ -277,4 +292,80 @@ func (ua *ListOperationLogsAction) Handle(ctx context.Context, req *cmproto.List
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
+}
+
+// 处理任务名称
+func translate(ctx context.Context, taskType, taskName string) (content string) {
+	arr := strings.Split(taskType, "-")
+	if len(arr) > 1 {
+		content = i18n.T(ctx, arr[1])
+	} else {
+		content = i18n.T(ctx, taskType)
+	}
+	if len(content) == 0 || content == taskType {
+		return taskName
+	}
+	return content
+}
+
+// 处理任务返回的msg
+func translateMsg(ctx context.Context, resourceType, taskType, message string, t *cmproto.Task) string {
+	// 获取语言
+	lang := i18n.LanguageFromCtx(ctx)
+	if lang == "zh" {
+		return message
+	}
+	arr := strings.Split(taskType, "-")
+	if len(arr) > 1 {
+		taskType = arr[1]
+	}
+	if resourceType == "nodegroup" {
+		switch taskType {
+		case "SwitchNodeGroupAutoScaling":
+			msg, ok := getTranslateFormat(ctx, "{{.SwitchNodeGroupAutoScalingOpenMsg}}",
+				message, t.GetNodeGroupID())
+			if ok {
+				return msg
+			}
+			msg, ok = getTranslateFormat(ctx, "{{.SwitchNodeGroupAutoScalingCloseMsg}}",
+				message, t.GetNodeGroupID())
+			if ok {
+				return msg
+			}
+		case "UpdateNodeGroupDesiredNode":
+			msg, ok := getTranslateFormat(ctx, "{{.UpdateNodeGroupDesiredNodeMsg}}",
+				message,
+				t.GetClusterID(),
+				t.GetNodeGroupID(),
+				extractLastNumber(message))
+			if ok {
+				return msg
+			}
+		default:
+			key := fmt.Sprintf("{{.%sMsg}}", taskType)
+			msg, ok := getTranslateFormat(ctx, key,
+				message,
+				t.GetClusterID(),
+				t.GetNodeGroupID())
+			if ok {
+				return msg
+			}
+		}
+	}
+	return message
+}
+
+func getTranslateFormat(ctx context.Context, key, message string, values ...interface{}) (string, bool) {
+	msg := i18n.Tf(i18n.WithLanguage(context.Background(), "zh"), key, values...)
+	if msg == message {
+		return i18n.Tf(ctx, key, values...), true
+	}
+	return message, false
+}
+
+// 匹配以数字结尾的部分
+func extractLastNumber(input string) string {
+	re := regexp.MustCompile(`\d+$`)
+	match := re.FindString(input)
+	return match
 }

@@ -1,7 +1,8 @@
 import { computed, ref } from 'vue';
-import $store from '@/store';
-import { userInfo } from '@/api/modules/user-manager';
+
 import { featureFlags as featureFlagsApi } from '@/api/modules/project';
+import { userInfo } from '@/api/modules/user-manager';
+import $store from '@/store';
 
 // todo 完善类型
 export interface IProject {
@@ -30,6 +31,7 @@ export interface ICluster {
     clusterIPv4CIDR: number
     multiClusterCIDR: number[]
     cidrStep: number
+    serviceIPv4CIDR: string
   }
   master: any
   provider: string
@@ -40,6 +42,16 @@ export interface ICluster {
   clusterType: string
   is_shared: boolean
   cluster_id: string // 兼容旧版数据（不要再使用）
+  importCategory: string
+  clusterAdvanceSettings: any
+  systemID: string
+  description: string
+  creator: string
+  createTime: string
+  updateTime: string
+  vpcID: string
+  networkType: string
+  cloudAccountID: string
 }
 /**
  * 获取项目文档配置信息

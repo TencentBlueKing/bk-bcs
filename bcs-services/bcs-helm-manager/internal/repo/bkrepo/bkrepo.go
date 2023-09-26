@@ -169,6 +169,11 @@ func (ch *chartHandler) Download(ctx context.Context, version string) ([]byte, e
 	return ch.downloadChartVersion(ctx, version)
 }
 
+// Upload 上传自定义版本chart
+func (ch *chartHandler) Upload(ctx context.Context, option repo.UploadOption) error {
+	return ch.uploadChart(ctx, option)
+}
+
 // Delete delete chart
 func (ch *chartHandler) Delete(ctx context.Context) error {
 	return ch.deleteChart(ctx)

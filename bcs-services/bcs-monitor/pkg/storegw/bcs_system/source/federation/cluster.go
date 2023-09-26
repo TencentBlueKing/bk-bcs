@@ -38,6 +38,12 @@ func (p *Federation) GetClusterPodTotal(ctx context.Context, projectID, clusterI
 	return nil, nil
 }
 
+// GetClusterPodUsage 获取集群pod使用率
+func (p *Federation) GetClusterPodUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
 // NewFederation xxx
 func NewFederation(dispatch map[string]clientutil.DispatchConf) *Federation {
 	return &Federation{dispatch: dispatch}

@@ -56,8 +56,9 @@ func (ua *UpdateNodeLabelsAction) updateNodeLabels() error {
 
 	barrier := utils.NewRoutinePool(50)
 	defer barrier.Close()
-	barrier.Add(len(ua.req.Nodes))
+
 	for i := range ua.req.Nodes {
+		barrier.Add(1)
 		go func(node *cmproto.NodeLabel) {
 			defer barrier.Done()
 			ctx, cancel := context.WithTimeout(context.Background(), clusterops.DefaultTimeout)

@@ -289,7 +289,7 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	// 如果是业务运维，查询全量主机
 	if utils.StringInSlice(user, maintainers) {
 		var hostList []cmdb.HostData
-		hostList, err = cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID)
+		hostList, err = cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID, false)
 		if err != nil {
 			blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 			return nil
@@ -302,7 +302,7 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	}
 
 	// 查询有主机负责人权限的主机
-	hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID)
+	hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID, false)
 	if err != nil {
 		blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 		return nil
@@ -462,6 +462,7 @@ func transNodeToClusterNode(model store.ClusterManagerModel, node *proto.Node) *
 		NodeName:      node.NodeName,
 		NodeGroupName: nodeGroupName,
 		InnerIPv6:     node.InnerIPv6,
+		TaskID:        node.TaskID,
 	}
 }
 
@@ -593,6 +594,13 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 				InnerIPv6:     ipv6,
 				NodeGroupName: n.NodeGroupName,
 				Annotations:   node.Annotations,
+				ZoneName: func() string {
+					zoneName, ok := node.Labels[utils.ZoneTopologyFlag]
+					if ok {
+						return zoneName
+					}
+					return ""
+				}(),
 			})
 		} else {
 			nodes2 = append(nodes2, &proto.ClusterNode{
@@ -610,6 +618,34 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 				}(node.Spec.Unschedulable),
 				InnerIPv6:   ipv6,
 				Annotations: node.Annotations,
+				ZoneName: func() string {
+					zoneName, ok := node.Labels[utils.ZoneTopologyFlag]
+					if ok {
+						return zoneName
+					}
+					return ""
+				}(),
+				ZoneID: func() string {
+					zoneName, ok := node.Labels[utils.ZoneTopologyFlag]
+					if ok {
+						return zoneName
+					}
+					return ""
+				}(),
+				Region: func() string {
+					region, ok := node.Labels[utils.RegionLabelKey]
+					if ok {
+						return region
+					}
+					return ""
+				}(),
+				InstanceType: func() string {
+					insType, ok := node.Labels[utils.NodeInstanceTypeFlag]
+					if ok {
+						return insType
+					}
+					return ""
+				}(),
 			})
 		}
 	}

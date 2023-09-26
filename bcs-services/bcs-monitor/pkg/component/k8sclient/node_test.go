@@ -16,12 +16,13 @@ import (
 	"context"
 	"testing"
 
-	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
 	"github.com/stretchr/testify/assert"
+
+	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
 )
 
 func TestGetNodeList(t *testing.T) {
-	c, _, err := GetNodeList(context.Background(), bcstesting.GetTestClusterId(), true)
+	c, _, err := GetNodeList(context.Background(), bcstesting.GetTestClusterId(), true, true)
 	assert.NoError(t, err)
 	assert.True(t, true, len(c) > 0)
 }

@@ -106,6 +106,10 @@ func (sopStep *BkSopsStepAction) BuildBkSopsStepAction(task *proto.Task, cluster
 				taskName = pluginName
 			}
 
+			if plugin.Params == nil || len(plugin.Params) == 0 {
+				continue
+			}
+
 			stepName := cloudprovider.BKSOPTask + "-" + utils.RandomString(8)
 			step, err := GenerateBKopsStep(taskName, stepName, cluster, plugin, info)
 			if err != nil {
@@ -136,8 +140,9 @@ func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *pr
 		Start:  now,
 		Status: cloudprovider.TaskStatusNotStarted,
 		// method name is registered name to taskServer
-		TaskMethod: cloudprovider.BKSOPTask,
-		TaskName:   taskName,
+		TaskMethod:   cloudprovider.BKSOPTask,
+		TaskName:     taskName,
+		SkipOnFailed: plugin.AllowSkipWhenFailed,
 	}
 	step.Params[cloudprovider.BkSopsUrlKey.String()] = plugin.Link
 	step.Params[cloudprovider.ShowSopsUrlKey.String()] = fmt.Sprintf("%v", info.ShowSopsUrl)

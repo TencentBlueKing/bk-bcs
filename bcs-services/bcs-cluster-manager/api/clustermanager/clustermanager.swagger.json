@@ -28,7 +28,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -79,7 +79,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -113,7 +113,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -165,7 +165,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -199,7 +199,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -237,7 +237,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -256,8 +256,7 @@
             "description": "isForce. 强制删除AutoScalingOption信息，即使未正常执行完成，也会进入终止。对于自定义cluster-autoscaler安装的场景下，是需要清理已部署的CA模块。",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -276,7 +275,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -317,7 +316,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -358,7 +357,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -399,7 +398,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -453,7 +452,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -514,7 +513,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -548,7 +547,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -588,7 +587,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -614,8 +613,7 @@
             "description": "editable. 对于SaaS层面该信息是否可编辑，BCS默认提供的预定义信息不可编译",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "creator",
@@ -655,7 +653,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -689,7 +687,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -723,7 +721,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -754,7 +752,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -772,8 +770,7 @@
             "name": "isForce",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -792,7 +789,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -833,7 +830,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -866,7 +863,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -918,7 +915,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -944,6 +941,86 @@
         "tags": [
           "ClusterManager"
         ]
+      },
+      "put": {
+        "summary": "迁移云账号",
+        "description": "迁移加密云账号信息(支持单个账号迁移、多账号、全部账号迁移)",
+        "operationId": "ClusterManager_MigrateCloudAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerMigrateCloudAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云类型，英文字符串",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerMigrateCloudAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/accounts/available": {
+      "post": {
+        "summary": "检查云账号可用性",
+        "description": "检查云账号可用性",
+        "operationId": "ClusterManager_VerifyCloudAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerVerifyCloudAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "cloud云类型",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerVerifyCloudAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
       }
     },
     "/clustermanager/v1/clouds/{cloudID}/accounts/{accountID}": {
@@ -959,7 +1036,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -997,7 +1074,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1032,6 +1109,100 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/accounttype": {
+      "get": {
+        "summary": "查询云账号类型",
+        "description": "根据AKSK查询云账号类型",
+        "operationId": "ClusterManager_GetCloudAccountType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetCloudAccountTypeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID, 通过指定的云账号信息获取",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/bwps": {
+      "get": {
+        "summary": "查询云共享带宽包",
+        "description": "查询云共享带宽包",
+        "operationId": "ClusterManager_GetCloudBandwidthPackages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetCloudBandwidthPackagesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID, 通过指定的云账号信息获取",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/clusters": {
       "get": {
         "summary": "查询cloud地域集群列表",
@@ -1045,7 +1216,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1079,6 +1250,67 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/clusters/{clusterID}/connect": {
+      "get": {
+        "summary": "kubeConfig内/外网访问状态",
+        "description": "kubeConfig访问集群内/外网状态",
+        "operationId": "ClusterManager_CheckCloudKubeConfigConnect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerKubeConfigConnectResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云模版ID, 集群所属云进行流程管理",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "云集群ID(例如: 腾讯云: cls-xxx)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "isExtranet",
+            "description": "isExtranet. 默认false 获取内网，是否获取外网访问的kubeconfig",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 集群所在地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/instances": {
       "get": {
         "summary": "查询Node列表",
@@ -1092,7 +1324,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1146,7 +1378,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1251,7 +1483,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1298,7 +1530,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1352,7 +1584,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1392,7 +1624,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1439,7 +1671,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1507,7 +1739,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1555,7 +1787,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1618,7 +1850,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1681,7 +1913,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1736,7 +1968,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1783,7 +2015,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1842,7 +2074,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1876,7 +2108,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1914,7 +2146,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1962,7 +2194,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2030,8 +2262,7 @@
             "description": "isExclusive. 是否为业务独占集群",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "clusterType",
@@ -2096,8 +2327,7 @@
             "description": "isCommonCluster. 是否为公共集群,默认false",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "clusterID",
@@ -2123,7 +2353,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2157,7 +2387,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2191,7 +2421,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2210,8 +2440,7 @@
             "description": "cloudInfo. 集群关联的云集群信息, 默认从数据库获取数据",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2230,7 +2459,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2249,8 +2478,7 @@
             "description": "isForced. 是否强制删除，默认false。强制删除会一并删除clustermanager管理的资源，例如节点，节点池等。强制删除周期较长，清理工作会进入长后台任务运行，集群信息不会立刻被清空，而是处于删除状态。",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "instanceDeleteMode",
@@ -2264,8 +2492,7 @@
             "description": "onlyDeleteInfo. 默认为false。设置为true时，仅删除cluster-manager所记录的信息，不会触发任何自动化流程。该参数可以与isForced同时协同工作。",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "operator",
@@ -2279,8 +2506,7 @@
             "description": "deleteClusterRecord. 管理员操作, 设置true时仅删除集群数据库记录",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2299,7 +2525,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2340,7 +2566,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2366,8 +2592,7 @@
             "description": "filterInter. 是否屏蔽空闲机池",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2388,7 +2613,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2421,7 +2646,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2491,8 +2716,7 @@
             "description": "showPwd. 节点密码是否展示(默认不展示)",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2511,7 +2735,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2544,8 +2768,7 @@
             "description": "isForce. 不管节点处于任何状态都强制删除，例如可能刚初始化，NotReady等",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "operator",
@@ -2559,8 +2782,7 @@
             "description": "onlyDeleteInfo. 默认为false。设置为true时，仅删除cluster-manager所记录的信息，不会触发任何自动化流程.",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "nodeTemplateID",
@@ -2581,8 +2803,7 @@
             "description": "是否是第三方节点(IDC节点). 下架第三方节点需置为true, 且必须关联nodeGroupID",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2601,7 +2822,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2642,7 +2863,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2683,7 +2904,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2753,7 +2974,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2784,7 +3005,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2815,7 +3036,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2856,7 +3077,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2868,6 +3089,67 @@
             "description": "节点组所关联的集群，该ID为BCS集群ID",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "enableFilter",
+            "description": "enableFilter. enableFilter为true时, 输出结果按照是否开启弹性伸缩排序(开启的排序在后面)",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clusters/{clusterID}/nodes/-/batch": {
+      "delete": {
+        "summary": "批量下架集群节点",
+        "description": "批量下架集群节点(包括集群手动上下架节点、CA节点、第三方节点等)",
+        "operationId": "ClusterManager_BatchDeleteNodesFromCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerBatchDeleteClusterNodesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "缩容集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nodeIPs",
+            "description": "nodeIPs. 需要缩容的IP列表,字符','隔开",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "virtualNodeIDs",
+            "description": "virtualNodeIDs. 需要缩容的虚拟节点列表,字符','隔开",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "operator. 操作者",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -2889,7 +3171,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2913,7 +3195,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2947,7 +3229,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2979,7 +3261,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2992,6 +3274,40 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerUpdateNodeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/node/annotations": {
+      "put": {
+        "summary": "更新节点注解",
+        "description": "更新节点注解",
+        "operationId": "ClusterManager_UpdateNodeAnnotations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateNodeAnnotationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateNodeAnnotationsRequest"
             }
           }
         ],
@@ -3013,7 +3329,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3047,7 +3363,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3081,7 +3397,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3115,7 +3431,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3149,7 +3465,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3183,7 +3499,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3217,7 +3533,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3236,8 +3552,7 @@
             "description": "showPwd. 节点密码是否展示(默认不展示)",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -3258,7 +3573,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3291,7 +3606,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3343,7 +3658,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3377,7 +3692,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3408,7 +3723,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3427,24 +3742,21 @@
             "description": "isForce. 强制删除，包括清理节点池管理的机器。外部资源删除转入后台删除长任务对列，默认会返回Task信息方便确认进度。",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "reserveNodesInCluster",
             "description": "reserveNodesInCluster. 保留节点在集群中，仅删除节点池，解除节点与节点池关联。当且仅当强制删除时生效。",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "keepNodesInstance",
             "description": "keepNodesInstance. 节点从集群移除，清理资源，但不销毁机器，保留机器运行。当且仅当强制删除时生效。",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "operator",
@@ -3458,8 +3770,7 @@
             "description": "onlyDeleteInfo. onlyDeleteInfo仅删除数据,不执行流程",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -3478,7 +3789,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3519,7 +3830,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3560,7 +3871,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3601,7 +3912,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3642,7 +3953,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3683,7 +3994,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3724,7 +4035,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3765,7 +4076,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3796,7 +4107,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3835,7 +4146,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3876,7 +4187,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3916,7 +4227,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3940,7 +4251,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3998,16 +4309,14 @@
             "description": "simple. 只展示 operationLogs 信息",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "taskIDNull",
             "description": "taskIDNull. 默认false,过滤taskID为空的场景; 当为true时,不过滤taskID为空的",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "clusterID",
@@ -4042,8 +4351,14 @@
             "description": "v2. 是否使用v2的查询版本",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
+          },
+          {
+            "name": "ipList",
+            "description": "ipList. 通过,隔开ipList过滤任务",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4064,7 +4379,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4105,7 +4420,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4159,7 +4474,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4197,7 +4512,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4238,7 +4553,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4276,7 +4591,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4314,7 +4629,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4362,7 +4677,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4395,7 +4710,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4435,7 +4750,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4447,8 +4762,7 @@
             "description": "showVCluster. 展示vcluster集群的host共享集群(默认全部展示)",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -4469,7 +4783,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4549,7 +4863,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4583,7 +4897,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4614,7 +4928,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4633,8 +4947,7 @@
             "description": "isForce. 强制删除Task信息，即使未正常执行完成，也会进入终止。",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -4653,7 +4966,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4694,7 +5007,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4735,7 +5048,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4769,7 +5082,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4788,8 +5101,7 @@
             "description": "onlyDeleteInfo. 默认为false。设置为true时，仅删除cluster-manager所记录的信息，不会触发任何自动化流程。该参数可以与isForced同时协同工作。",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "operator",
@@ -4797,6 +5109,47 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/vcluster/{clusterID}/quota": {
+      "put": {
+        "summary": "更新配额",
+        "description": "更新虚拟集群配额",
+        "operationId": "ClusterManager_UpdateVirtualClusterQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateVirtualClusterQuotaResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateVirtualClusterQuotaReq"
+            }
           }
         ],
         "tags": [
@@ -4817,7 +5170,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4830,6 +5183,294 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/web/customSettings/scope/{scopeType}/{scopeId}/batchGet": {
+      "post": {
+        "summary": "获取IP选择器配置项信息",
+        "description": "获取IP选择器配置项信息",
+        "operationId": "ClusterManager_GetBatchCustomSetting",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetBatchCustomSettingResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopeType",
+            "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scopeId",
+            "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetBatchCustomSettingRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/host/check": {
+      "post": {
+        "summary": "根据IP/IPv6/主机名等信息获取主机列表",
+        "description": "获取某个业务下 用户手动输入的IP/IPv6/主机名等信息获取主机信息",
+        "operationId": "ClusterManager_GetScopeHostCheck",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetScopeHostCheckResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopeType",
+            "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scopeId",
+            "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetScopeHostCheckRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/hosts/details": {
+      "post": {
+        "summary": "根据主机IDs获取机器详情信息",
+        "description": "根据主机IDs获取机器详情信息",
+        "operationId": "ClusterManager_GetHostsDetails",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetHostsDetailsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopeType",
+            "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scopeId",
+            "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetHostsDetailsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostCount": {
+      "post": {
+        "summary": "获取业务的拓扑树, 目前仅支持业务维度",
+        "description": "获取业务的拓扑树, 目前仅支持业务维度",
+        "operationId": "ClusterManager_GetBizTopologyHost",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetBizTopologyHostResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopeType",
+            "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scopeId",
+            "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetBizTopologyHostRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hostids/nodes": {
+      "post": {
+        "summary": "获取拓扑主机ID",
+        "description": "获取拓扑的主机ID, 目前仅支持业务维度下的其他集群或者模块",
+        "operationId": "ClusterManager_GetTopologyHostIdsNodes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetTopologyHostIdsNodesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopeType",
+            "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scopeId",
+            "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetTopologyHostIdsNodesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/web/scope/{scopeType}/{scopeId}/topology/hosts/nodes": {
+      "post": {
+        "summary": "获取拓扑主机",
+        "description": "获取拓扑的主机, 目前仅支持业务维度下的其他集群或者模块",
+        "operationId": "ClusterManager_GetTopologyNodes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetTopologyNodesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopeType",
+            "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scopeId",
+            "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetTopologyNodesRequest"
+            }
           }
         ],
         "tags": [
@@ -4850,7 +5491,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4904,7 +5545,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -5008,7 +5649,9 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "具体行为流程动作定义",
+          "title": "plugins"
         }
       },
       "description": "记录各模块功能自动化行为模板, 对接job系统, 完成自定义操作; 针对不同云的不同操作模版参数需自定义针对大部分操作，仅需要前置动作或后置动作即可. 可自由扩展",
@@ -5051,7 +5694,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         }
@@ -5092,7 +5734,6 @@
         },
         "onlyCreateInfo": {
           "type": "boolean",
-          "format": "boolean",
           "description": "仅写入节点信息，默认是false。仅写入节点信息时，会通过cluster所属cloudprovider查询节点信息，并设置为RUNNING。",
           "title": "onlyCreateInfo"
         },
@@ -5108,7 +5749,6 @@
         },
         "isExternalNode": {
           "type": "boolean",
-          "format": "boolean",
           "description": "上架第三方节点需置为true, 且必须关联nodeGroupID",
           "title": "是否是第三方节点(IDC节点)"
         }
@@ -5136,7 +5776,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -5228,7 +5867,6 @@
         },
         "replaceUnhealthy": {
           "type": "boolean",
-          "format": "boolean",
           "description": "开启监控不健康节点替换服务，默认false。连续1分钟ping不通则视为不健康！",
           "title": "replaceUnhealthy"
         },
@@ -5247,7 +5885,6 @@
         },
         "autoUpgrade": {
           "type": "boolean",
-          "format": "boolean",
           "description": "开启自动升级GKE版本功能,如果集群为发布版本,则强制开启",
           "title": "autoUpgrade"
         }
@@ -5271,11 +5908,105 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "bksops模板默认通用参数，实际调用时根据实际行为可覆盖或定制化",
+          "title": "params"
+        },
+        "allowSkipWhenFailed": {
+          "type": "boolean",
+          "description": "allowSkipWhenFailed插件执行失败时是否允许跳过, 默认不允许跳过",
+          "title": "allowSkipWhenFailed"
         }
       },
       "description": "标准运维模板信息记录，用于自动化工作流程记录",
       "title": "BKOpsPlugin"
+    },
+    "clustermanagerBandwidthPackageInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "networkType": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "bandwidth": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "clustermanagerBatchDeleteClusterNodesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerBatchNodesStatus"
+          },
+          "description": "返回节点下架结果",
+          "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属集群权限",
+          "title": "web_annotations"
+        }
+      },
+      "description": "批量下架节点返回，主要是返回相应下架节点的任务，确认节点下架是否成功",
+      "title": "BatchDeleteClusterNodesResponse",
+      "required": [
+        "code",
+        "data"
+      ]
+    },
+    "clustermanagerBatchNodesStatus": {
+      "type": "object",
+      "properties": {
+        "nodeIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "taskID": {
+          "type": "string"
+        },
+        "nodeGroupID": {
+          "type": "string"
+        },
+        "nodeGroupType": {
+          "type": "string"
+        }
+      }
     },
     "clustermanagerCheckNodesRequest": {
       "type": "object",
@@ -5311,7 +6042,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -5319,7 +6049,9 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerNodeResult"
-          }
+          },
+          "description": "返回node检查结果,key是IP",
+          "title": "data"
         }
       },
       "description": "返回节点状态",
@@ -5381,7 +6113,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -5415,7 +6146,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -5448,7 +6178,6 @@
         },
         "editable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "对于SaaS层面该信息是否可编辑，BCS默认提供的预定义信息不可编译",
           "title": "editable"
         },
@@ -5456,13 +6185,17 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "通过标准运维实现的扩展流程或者插件",
+          "title": "opsPlugins"
         },
         "extraPlugins": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "额外扩展流程，用于自定义扩展，该部分允许用户编辑",
+          "title": "extraPlugins"
         },
         "cloudCredential": {
           "$ref": "#/definitions/clustermanagerCredential",
@@ -5543,7 +6276,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "平台不同云的配置信息",
+          "title": "platformInfo"
         }
       },
       "description": "云信息，多云管理下用于定义共享信息，BCS默认地提供蓝鲸云预定义，腾讯云预定义信息",
@@ -5584,7 +6319,6 @@
         },
         "enable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "cloud账号是否启用,默认是启用的",
           "title": "enable"
         },
@@ -5626,6 +6360,16 @@
         }
       },
       "title": "CloudAccountInfo return account relative info"
+    },
+    "clustermanagerCloudAccountType": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "云账号类型(用户账号的网络类型，STANDARD为标准用户，LEGACY为传统用户)",
+          "title": "type"
+        }
+      }
     },
     "clustermanagerCloudArea": {
       "type": "object",
@@ -5680,6 +6424,16 @@
           "type": "string",
           "description": "集群状态(Running 运行中 Creating 创建中 Idling 闲置中 Abnormal 异常)",
           "title": "clusterStatus"
+        },
+        "location": {
+          "type": "string",
+          "description": "云地域信息(gke支持区域级别和可用区级别集群)",
+          "title": "location"
+        },
+        "clusterLevel": {
+          "type": "string",
+          "description": "集群级别(region、zone级别)",
+          "title": "clusterLevel"
         }
       },
       "description": "云集群信息",
@@ -5690,7 +6444,6 @@
       "properties": {
         "cloudInternalEnable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "cloud是否开启内部配置",
           "title": "cloudInternalEnable"
         },
@@ -5706,19 +6459,16 @@
         },
         "disableCreateCluster": {
           "type": "boolean",
-          "format": "boolean",
           "description": "cloud是否关闭创建集群特性",
           "title": "disableCreateCluster"
         },
         "disableImportCluster": {
           "type": "boolean",
-          "format": "boolean",
           "description": "cloud是否关闭导入集群特性",
           "title": "disableImportCluster"
         },
         "disableNodeGroup": {
           "type": "boolean",
-          "format": "boolean",
           "description": "cloud是否关闭节点池特性",
           "title": "disableNodeGroup"
         },
@@ -5751,7 +6501,6 @@
         },
         "autoFormatAndMount": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否自动化格式盘并挂载",
           "title": "autoFormatAndMount"
         },
@@ -5803,7 +6552,6 @@
         },
         "enable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否启用该参数",
           "title": "enable"
         },
@@ -5938,7 +6686,6 @@
         },
         "cloudRegionNode": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否是该云的某个地域节点",
           "title": "cloudRegionNode"
         }
@@ -6151,7 +6898,6 @@
         },
         "isExclusive": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否业务独占集群，默认为false",
           "title": "isExclusive"
         },
@@ -6164,7 +6910,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "集群标签",
+          "title": "labels"
         },
         "creator": {
           "type": "string",
@@ -6181,13 +6929,17 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "创建集群时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，Addons默认在集群正常初始化之后进行调用。",
+          "title": "bcsAddons"
         },
         "extraAddons": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "创建集群时额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后进行调用与安装。",
+          "title": "extraAddons"
         },
         "systemID": {
           "type": "string",
@@ -6203,7 +6955,9 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerNode"
-          }
+          },
+          "description": "集群master IP列表",
+          "title": "master"
         },
         "networkSettings": {
           "$ref": "#/definitions/clustermanagerNetworkSetting",
@@ -6242,7 +6996,6 @@
         },
         "autoGenerateMasterNodes": {
           "type": "boolean",
-          "format": "boolean",
           "description": "创建集群是否使用已存在节点, 默认false, 即使用已经存在的节点, 从创建集群参数中获取",
           "title": "autoGenerateMasterNodes"
         },
@@ -6258,7 +7011,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "存储集群扩展信息, 例如esb_url/webhook_image/priviledge_image等扩展信息或者是针对不同云特性开关",
+          "title": "extraInfo"
         },
         "moduleID": {
           "type": "string",
@@ -6272,7 +7027,6 @@
         },
         "isCommonCluster": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为公共集群,默认false",
           "title": "isCommonCluster"
         },
@@ -6288,7 +7042,6 @@
         },
         "is_shared": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为共享集群,默认false",
           "title": "is_shared"
         },
@@ -6316,7 +7069,6 @@
       "properties": {
         "IPVS": {
           "type": "boolean",
-          "format": "boolean",
           "description": "Kubernetes集群IPVS特性，默认为false",
           "title": "IPVS"
         },
@@ -6334,7 +7086,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "配置各模块自定义参数，预定义的key为KubeAPIServer，KubeController，Etcd，KubeScheduler。value为各模块进程启动参数，多个参数之间使用;间隔，例如Etcd: node-data-dir=/data/bcs/lib/etcd;",
+          "title": "extraArgs"
         },
         "networkType": {
           "type": "string",
@@ -6343,13 +7097,11 @@
         },
         "deletionProtection": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否启用集群删除保护",
           "title": "deletionProtection"
         },
         "auditEnabled": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否开启审计开关",
           "title": "auditEnabled"
         }
@@ -6360,7 +7112,6 @@
       "properties": {
         "isScaleDownEnable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "scale-down-enabled,是否允许缩容节点",
           "title": "isScaleDownEnable"
         },
@@ -6395,19 +7146,16 @@
         },
         "skipNodesWithLocalStorage": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略有本地存储的节点，默认为false",
           "title": "skipNodesWithLocalStorage"
         },
         "skipNodesWithSystemPods": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略kube-system NS下非DaemonSet管理的Pod的节点，默认false",
           "title": "skipNodesWithSystemPods"
         },
         "ignoreDaemonSetsUtilization": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略DaemonSet的资源计算",
           "title": "ignoreDaemonSetsUtilization"
         },
@@ -6472,7 +7220,6 @@
         },
         "enableAutoscale": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否开启自动扩缩容，开启后会在该集群部署 ClusterAutoScaling 组件，默认为 false",
           "title": "enableAutoscale"
         },
@@ -6502,7 +7249,6 @@
         },
         "scaleUpFromZero": {
           "type": "boolean",
-          "format": "boolean",
           "description": "scale-up-from-zero,允许自动扩容（没有 ready 节点时）",
           "title": "scaleUpFromZero"
         },
@@ -6594,7 +7340,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "集群相关tag信息，用于集群管理标签信息注入. 可自定义设置, 可根据不同云实现业务定制tags(例如:可根据businessID绑定业务信息)",
+          "title": "clusterTags"
         },
         "versionName": {
           "type": "string",
@@ -6613,7 +7361,6 @@
         },
         "isAutoUpgradeClusterLevel": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否开启自动变配集群等级，针对托管集群生效",
           "title": "isAutoUpgradeClusterLevel"
         }
@@ -6788,7 +7535,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "节点标签信息",
+          "title": "labels"
         },
         "taints": {
           "type": "array",
@@ -6850,12 +7599,19 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "节点注解信息",
+          "title": "annotations"
         },
         "zoneName": {
           "type": "string",
           "description": "云上节点可用区名称",
           "title": "zoneName"
+        },
+        "taskID": {
+          "type": "string",
+          "description": "节点所属的扩容IP,主要是针对虚拟节点展示任务详情",
+          "title": "taskID"
         }
       },
       "description": "记录节点信息，用于节点列表展示",
@@ -6877,7 +7633,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -6909,7 +7664,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -6984,7 +7738,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -7006,7 +7759,6 @@
       "properties": {
         "isScaleDownEnable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "scale-down-enabled,是否允许缩容节点",
           "title": "isScaleDownEnable"
         },
@@ -7041,19 +7793,16 @@
         },
         "skipNodesWithLocalStorage": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略有本地存储的节点，默认为false",
           "title": "skipNodesWithLocalStorage"
         },
         "skipNodesWithSystemPods": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略kube-system NS下非DaemonSet管理的Pod的节点，默认false",
           "title": "skipNodesWithSystemPods"
         },
         "ignoreDaemonSetsUtilization": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略DaemonSet的资源计算，默认false",
           "title": "ignoreDaemonSetsUtilization"
         },
@@ -7098,7 +7847,6 @@
         },
         "enableAutoscale": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否开启自动扩缩容，开启后会在该集群部署 ClusterAutoScaling 组件，默认为 false",
           "title": "enableAutoscale"
         },
@@ -7128,7 +7876,6 @@
         },
         "scaleUpFromZero": {
           "type": "boolean",
-          "format": "boolean",
           "description": "scale-up-from-zero,允许自动扩容（没有 ready 节点时）",
           "title": "scaleUpFromZero"
         },
@@ -7193,7 +7940,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -7227,7 +7973,6 @@
         },
         "enable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "cloud云账号是否开启，默认开启",
           "title": "enable"
         },
@@ -7267,9 +8012,13 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerCloudAccount",
+          "description": "返回数据",
+          "title": "data"
         }
       }
     },
@@ -7351,7 +8100,6 @@
         },
         "editable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "对于SaaS层面该信息是否可编辑，BCS默认提供的预定义信息不可编译",
           "title": "editable"
         },
@@ -7359,13 +8107,17 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "通过标准运维实现的扩展流程或者插件",
+          "title": "opsPlugins"
         },
         "extraPlugins": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "额外扩展流程，用于自定义扩展，该部分允许用户编辑",
+          "title": "extraPlugins"
         },
         "cloudCredential": {
           "$ref": "#/definitions/clustermanagerCredential",
@@ -7431,7 +8183,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "平台不同云的配置信息",
+          "title": "platformInfo"
         }
       },
       "description": "创建cloud请求",
@@ -7459,7 +8213,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         }
@@ -7551,7 +8304,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         }
@@ -7607,7 +8359,6 @@
         },
         "isExclusive": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为业务独占集群",
           "title": "isExclusive"
         },
@@ -7625,7 +8376,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "集群的labels，用于携带额外的信息，最大不得超过20个",
+          "title": "labels"
         },
         "creator": {
           "type": "string",
@@ -7634,7 +8387,6 @@
         },
         "onlyCreateInfo": {
           "type": "boolean",
-          "format": "boolean",
           "description": "仅创建集群信息，不进行真实集群创建，默认为false",
           "title": "onlyCreateInfo"
         },
@@ -7642,13 +8394,17 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "创建集群时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，如果填写错误直接报错",
+          "title": "bcsAddons"
         },
         "extraAddons": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "创建集群时额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，如果填错直接报错",
+          "title": "extraAddons"
         },
         "cloudID": {
           "type": "string",
@@ -7698,7 +8454,6 @@
         },
         "systemReinstall": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否重装master节点的系统，机器被托管情况下有效",
           "title": "systemReinstall"
         },
@@ -7714,7 +8469,6 @@
         },
         "autoGenerateMasterNodes": {
           "type": "boolean",
-          "format": "boolean",
           "description": "创建集群是否使用已存在节点, 默认false; 为true时, 需要生成master instance",
           "title": "autoGenerateMasterNodes"
         },
@@ -7730,7 +8484,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "存储集群扩展信息, 例如esb_url/webhook_image/priviledge_image等扩展信息",
+          "title": "extraInfo"
         },
         "moduleID": {
           "type": "string",
@@ -7744,7 +8500,6 @@
         },
         "isCommonCluster": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为公共集群,默认false",
           "title": "isCommonCluster"
         },
@@ -7760,7 +8515,6 @@
         },
         "is_shared": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为共享集群,默认false",
           "title": "is_shared"
         },
@@ -7807,7 +8561,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -7855,7 +8608,6 @@
         },
         "enableAutoscale": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否开启弹性伸缩，默认false",
           "title": "enableAutoscale"
         },
@@ -7873,13 +8625,17 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化label信息",
+          "title": "labels"
         },
         "taints": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化的污点信息(废弃)",
+          "title": "taints"
         },
         "nodeOS": {
           "type": "string",
@@ -7910,7 +8666,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化的资源标签信息",
+          "title": "tags"
         },
         "nodeGroupType": {
           "type": "string",
@@ -7935,7 +8693,6 @@
         },
         "onlyCreateInfo": {
           "type": "boolean",
-          "format": "boolean",
           "description": "onlyCreateInfo仅录入数据,不执行流程",
           "title": "onlyCreateInfo"
         }
@@ -7968,7 +8725,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8021,7 +8777,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化label信息",
+          "title": "labels"
         },
         "taints": {
           "type": "array",
@@ -8064,7 +8822,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "配置各模块自定义参数，预定义的key为kubeletvalue为各模块进程启动参数，多个参数之间使用;间隔，例如Kubelet: root-dir=/var/lib/kubelet;",
+          "title": "extraArgs"
         },
         "preStartUserScript": {
           "type": "string",
@@ -8141,7 +8901,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8203,7 +8962,9 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerStep"
-          }
+          },
+          "description": "任务详细步骤信息，主要用于信息确认，异常时",
+          "title": "steps"
         },
         "clusterID": {
           "type": "string",
@@ -8253,7 +9014,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8312,7 +9072,6 @@
         },
         "isExclusive": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为业务独占集群",
           "title": "isExclusive"
         },
@@ -8335,7 +9094,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "集群的labels，用于携带额外的信息，最大不得超过20个",
+          "title": "labels"
         },
         "creator": {
           "type": "string",
@@ -8344,7 +9105,6 @@
         },
         "onlyCreateInfo": {
           "type": "boolean",
-          "format": "boolean",
           "description": "仅创建集群信息，不进行真实集群创建，默认为false",
           "title": "onlyCreateInfo"
         },
@@ -8380,7 +9140,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "存储集群扩展信息, 例如esb_url/webhook_image/priviledge_image等扩展信息",
+          "title": "extraInfo"
         },
         "description": {
           "type": "string",
@@ -8430,7 +9192,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8543,7 +9304,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "标准运维任务的全局变量参数",
+          "title": "constant"
         }
       },
       "description": "调试标准运维任务请求参数",
@@ -8598,7 +9361,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8630,7 +9392,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         }
@@ -8674,7 +9435,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8701,7 +9461,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8728,7 +9487,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         }
@@ -8757,7 +9515,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8800,7 +9557,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8847,7 +9603,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8874,7 +9629,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8912,7 +9666,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8939,7 +9692,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -8997,7 +9749,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9035,24 +9786,21 @@
           "title": "nodes"
         },
         "force": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "gracePeriodSeconds": {
           "type": "integer",
           "format": "int32"
         },
         "ignoreAllDaemonSets": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "timeout": {
           "type": "integer",
           "format": "int64"
         },
         "deleteLocalData": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "selector": {
           "type": "string"
@@ -9061,16 +9809,14 @@
           "type": "string"
         },
         "disableEviction": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "skipWaitForDeleteTimeoutSeconds": {
           "type": "integer",
           "format": "int64"
         },
         "dryRun": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -9090,7 +9836,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9132,7 +9877,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9173,7 +9917,6 @@
       "properties": {
         "canDeleted": {
           "type": "boolean",
-          "format": "boolean",
           "description": "集群列表的集群是否能够删除(集群无所属node节点时才允许删除)",
           "title": "canDeleted"
         },
@@ -9184,7 +9927,6 @@
         },
         "autoScale": {
           "type": "boolean",
-          "format": "boolean",
           "description": "集群是否支持弹性伸缩, 在云支持弹性伸缩的前提下, 某些类型集群支持弹性伸缩",
           "title": "autoScale"
         }
@@ -9206,7 +9948,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9227,6 +9968,126 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerGetBatchCustomSettingRequest": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string",
+          "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+          "title": "scopeType"
+        },
+        "scopeId": {
+          "type": "string",
+          "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+          "title": "scopeId"
+        },
+        "moduleList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "moduleList获取配置项的模块列表，不传表示获取所有模块(目前仅支持 ip_selector_host_list)",
+          "title": "moduleList"
+        }
+      },
+      "description": "查询配置项内容请求",
+      "title": "GetBatchCustomSettingRequest"
+    },
+    "clustermanagerGetBatchCustomSettingResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "是否成功",
+          "title": "success"
+        },
+        "errorMsg": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMsg"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "data": {
+          "type": "object",
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
+    },
+    "clustermanagerGetBizTopologyHostRequest": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string",
+          "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+          "title": "scopeType"
+        },
+        "scopeId": {
+          "type": "string",
+          "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+          "title": "scopeId"
+        },
+        "allScope": {
+          "type": "boolean",
+          "description": "是否获取所有资源范围的拓扑结构，默认为false",
+          "title": "allScope"
+        },
+        "scopeList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerScopeInfo"
+          },
+          "description": "要获取拓扑结构的资源范围数组(目前仅支持biz维度的拓扑)",
+          "title": "scopeList"
+        }
+      },
+      "description": "查询配置项内容请求",
+      "title": "GetBatchCustomSettingRequest"
+    },
+    "clustermanagerGetBizTopologyHostResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "是否成功",
+          "title": "success"
+        },
+        "errorMsg": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMsg"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
     },
     "clustermanagerGetBkSopsTemplateInfoResponse": {
       "type": "object",
@@ -9285,6 +10146,73 @@
         "message"
       ]
     },
+    "clustermanagerGetCloudAccountTypeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerCloudAccountType",
+          "description": "获取节点列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询云账号类型返回",
+      "title": "GetCloudAccountTypeResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerGetCloudBandwidthPackagesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerBandwidthPackageInfo"
+          },
+          "description": "获取云共享带宽包列表",
+          "title": "data"
+        }
+      },
+      "description": "查询云共享带宽包",
+      "title": "GetCloudBandwidthPackagesResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerGetCloudRegionZonesResponse": {
       "type": "object",
       "properties": {
@@ -9301,7 +10229,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9333,7 +10260,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9365,7 +10291,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9399,7 +10324,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9433,7 +10357,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9477,7 +10400,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9498,6 +10420,65 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerGetHostsDetailsRequest": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string",
+          "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+          "title": "scopeType"
+        },
+        "scopeId": {
+          "type": "string",
+          "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+          "title": "scopeId"
+        },
+        "hostList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerHostIDsNodeData"
+          },
+          "description": "hostIds列表",
+          "title": "hostList"
+        }
+      },
+      "description": "根据主机IDs获取机器详情信息",
+      "title": "GetHostsDetailsRequest"
+    },
+    "clustermanagerGetHostsDetailsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "是否成功",
+          "title": "success"
+        },
+        "errorMsg": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMsg"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerHostDataWithMeta"
+          },
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
     },
     "clustermanagerGetInnerTemplateValuesResponse": {
       "type": "object",
@@ -9545,7 +10526,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9584,7 +10564,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9618,7 +10597,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9655,7 +10633,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9677,6 +10654,81 @@
         "message"
       ]
     },
+    "clustermanagerGetScopeHostCheckRequest": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string",
+          "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+          "title": "scopeType"
+        },
+        "scopeId": {
+          "type": "string",
+          "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+          "title": "scopeId"
+        },
+        "ipList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IPv4数组, 支持对云区域进行模糊匹配",
+          "title": "ipList"
+        },
+        "ipv6List": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IPv6数组, 支持对云区域进行模糊匹配",
+          "title": "ipv6List"
+        },
+        "keyList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "关键字数组, 解析出的主机名/hostId等关键字信息",
+          "title": "keyList"
+        }
+      },
+      "description": "过滤拓扑的主机列表",
+      "title": "GetScopeHostCheckRequest"
+    },
+    "clustermanagerGetScopeHostCheckResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "是否成功",
+          "title": "success"
+        },
+        "errorMsg": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMsg"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerHostData"
+          },
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
+    },
     "clustermanagerGetTaskResponse": {
       "type": "object",
       "properties": {
@@ -9693,7 +10745,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9711,6 +10762,210 @@
         "data"
       ]
     },
+    "clustermanagerGetTopologyHostIdsNodesData": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "pageSize": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "total": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerHostIDsNodeData"
+          }
+        }
+      }
+    },
+    "clustermanagerGetTopologyHostIdsNodesRequest": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string",
+          "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+          "title": "scopeType"
+        },
+        "scopeId": {
+          "type": "string",
+          "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+          "title": "scopeId"
+        },
+        "nodeList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeData"
+          },
+          "description": "拓扑节点数组",
+          "title": "nodeList"
+        },
+        "searchContent": {
+          "type": "string",
+          "description": "模糊搜索内容（支持同时对主机IP/主机名/操作系统/云区域名称进行模糊搜索）",
+          "title": "searchContent"
+        },
+        "alive": {
+          "type": "integer",
+          "format": "int32",
+          "description": "筛选条件：alive：0为Agent异常，1为Agent正常，不传则不筛选",
+          "title": "alive"
+        },
+        "start": {
+          "type": "string",
+          "format": "uint64",
+          "description": "数据起始位置，不传默认为0",
+          "title": "start"
+        },
+        "pageSize": {
+          "type": "string",
+          "format": "uint64",
+          "description": "拉取数据数量，不传默认拉取所有",
+          "title": "pageSize"
+        }
+      },
+      "description": "查询拓扑的主机ID列表",
+      "title": "GetTopologyHostIdsNodesRequest"
+    },
+    "clustermanagerGetTopologyHostIdsNodesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "是否成功",
+          "title": "success"
+        },
+        "errorMsg": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMsg"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerGetTopologyHostIdsNodesData",
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
+    },
+    "clustermanagerGetTopologyNodesData": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "pageSize": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "total": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerHostData"
+          }
+        }
+      }
+    },
+    "clustermanagerGetTopologyNodesRequest": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string",
+          "description": "资源范围类型(biz/biz_set), 目前仅支持biz",
+          "title": "scopeType"
+        },
+        "scopeId": {
+          "type": "string",
+          "description": "资源范围ID(业务ID/业务集ID), 目前仅支持biz",
+          "title": "scopeId"
+        },
+        "nodeList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeData"
+          },
+          "description": "拓扑节点数组",
+          "title": "nodeList"
+        },
+        "searchContent": {
+          "type": "string",
+          "description": "模糊搜索内容（支持同时对主机IP/主机名/操作系统/云区域名称进行模糊搜索）",
+          "title": "searchContent"
+        },
+        "alive": {
+          "type": "integer",
+          "format": "int32",
+          "description": "筛选条件：alive：0为Agent异常，1为Agent正常，不传则不筛选",
+          "title": "alive"
+        },
+        "start": {
+          "type": "string",
+          "format": "uint64",
+          "description": "数据起始位置，不传默认为0",
+          "title": "start"
+        },
+        "pageSize": {
+          "type": "string",
+          "format": "uint64",
+          "description": "拉取数据数量，最大500，不传默认为20",
+          "title": "pageSize"
+        }
+      },
+      "description": "查询拓扑的主机列表",
+      "title": "GetTopologyNodesRequest"
+    },
+    "clustermanagerGetTopologyNodesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "是否成功",
+          "title": "success"
+        },
+        "errorMsg": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMsg"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerGetTopologyNodesData",
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
+    },
     "clustermanagerGetVPCCidrResponse": {
       "type": "object",
       "properties": {
@@ -9727,7 +10982,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -9784,6 +11038,89 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerHostCloudArea": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "clustermanagerHostData": {
+      "type": "object",
+      "properties": {
+        "hostId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "ipv6": {
+          "type": "string"
+        },
+        "hostName": {
+          "type": "string"
+        },
+        "alive": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "osName": {
+          "type": "string"
+        },
+        "cloudArea": {
+          "$ref": "#/definitions/clustermanagerHostCloudArea"
+        }
+      }
+    },
+    "clustermanagerHostDataWithMeta": {
+      "type": "object",
+      "properties": {
+        "hostId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "ipv6": {
+          "type": "string"
+        },
+        "hostName": {
+          "type": "string"
+        },
+        "alive": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "osName": {
+          "type": "string"
+        },
+        "cloudArea": {
+          "$ref": "#/definitions/clustermanagerHostCloudArea"
+        },
+        "meta": {
+          "$ref": "#/definitions/clustermanagerMeta"
+        }
+      }
+    },
+    "clustermanagerHostIDsNodeData": {
+      "type": "object",
+      "properties": {
+        "hostId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "meta": {
+          "$ref": "#/definitions/clustermanagerMeta"
+        }
+      }
     },
     "clustermanagerImageInfo": {
       "type": "object",
@@ -9873,7 +11210,6 @@
         },
         "isExclusive": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为业务独占集群,默认为true",
           "title": "isExclusive"
         },
@@ -9886,7 +11222,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "集群的labels，用于携带额外的信息，最大不得超过20个",
+          "title": "labels"
         },
         "creator": {
           "type": "string",
@@ -9912,7 +11250,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "存储集群扩展信息, 例如esb_url/webhook_image/priviledge_image等扩展信息",
+          "title": "extraInfo"
         },
         "extraClusterID": {
           "type": "string",
@@ -9926,7 +11266,6 @@
         },
         "is_shared": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为共享集群,默认false",
           "title": "is_shared"
         },
@@ -9971,7 +11310,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10085,13 +11423,11 @@
         },
         "isSecurityService": {
           "type": "boolean",
-          "format": "boolean",
           "description": "新实例启动时的是否开启云安全, 选填 qcloud默认开启",
           "title": "isSecurityService"
         },
         "isMonitorService": {
           "type": "boolean",
-          "format": "boolean",
           "description": "新实例启动时的是否开启云监控, 选填 默认开启",
           "title": "isMonitorService"
         }
@@ -10195,9 +11531,13 @@
         },
         "publicIPAssigned": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否分配公网IP。默认为false。",
           "title": "publicIPAssigned"
+        },
+        "bandwidthPackageId": {
+          "type": "string",
+          "description": "共享带宽包ID",
+          "title": "bandwidthPackageId"
         }
       },
       "title": "InternetAccessible 公网带宽设置"
@@ -10214,6 +11554,11 @@
           "type": "string",
           "description": "key私钥信息(base64存储)",
           "title": "keySecret"
+        },
+        "keyPublic": {
+          "type": "string",
+          "description": "key公钥信息(base64存储)",
+          "title": "keyPublic"
         }
       }
     },
@@ -10238,6 +11583,34 @@
       },
       "description": "密钥对信息",
       "title": "KeyPair"
+    },
+    "clustermanagerKubeConfigConnectResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "检测kubeConfig可用性结果返回",
+      "title": "KubeConfigResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
     },
     "clustermanagerKubeConfigReq": {
       "type": "object",
@@ -10270,7 +11643,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         }
@@ -10367,13 +11739,11 @@
         },
         "isSecurityService": {
           "type": "boolean",
-          "format": "boolean",
           "description": "新实例启动时的是否开启云安全, 选填 yunti默认关闭",
           "title": "isSecurityService"
         },
         "isMonitorService": {
           "type": "boolean",
-          "format": "boolean",
           "description": "新实例启动时的是否开启云监控, 选填 默认开启",
           "title": "isMonitorService"
         },
@@ -10391,7 +11761,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "节点通过selector的匹配策略,目前仅用作第三方节点匹配",
+          "title": "selector"
         },
         "keyPair": {
           "$ref": "#/definitions/clustermanagerKeyInfo",
@@ -10417,7 +11789,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10453,7 +11824,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10489,7 +11859,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10530,7 +11899,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10566,7 +11934,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10632,7 +11999,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10668,7 +12034,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10700,7 +12065,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10736,7 +12100,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10772,7 +12135,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10808,7 +12170,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10844,7 +12205,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10880,7 +12240,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10917,7 +12276,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10958,7 +12316,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -10974,7 +12331,9 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerExtraInfo"
-          }
+          },
+          "description": "集群其他标识信息,cluster结构之外的数据获取",
+          "title": "clusterExtraInfo"
         },
         "web_annotations": {
           "$ref": "#/definitions/clustermanagerWebAnnotations",
@@ -11006,7 +12365,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11048,7 +12406,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11084,7 +12441,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11126,7 +12482,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11162,7 +12517,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11198,7 +12552,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11240,7 +12593,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11281,7 +12633,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11322,7 +12673,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11368,7 +12718,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11384,7 +12733,9 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerExtraInfo"
-          }
+          },
+          "description": "集群其他标识信息,cluster结构之外的数据获取",
+          "title": "clusterExtraInfo"
         },
         "web_annotations": {
           "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
@@ -11416,7 +12767,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11449,6 +12799,71 @@
           "additionalProperties": {
             "type": "string"
           }
+        }
+      }
+    },
+    "clustermanagerMeta": {
+      "type": "object",
+      "properties": {
+        "scope_type": {
+          "type": "string"
+        },
+        "scope_id": {
+          "type": "string"
+        },
+        "bk_biz_id": {
+          "type": "string"
+        }
+      }
+    },
+    "clustermanagerMigrateCloudAccountRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "云类型，英文字符串",
+          "title": "cloudID"
+        },
+        "accountIDs": {
+          "type": "string",
+          "description": "cloud云账号ID",
+          "title": "accountIDs通过,隔开，可操作多个账号"
+        },
+        "encrypt": {
+          "$ref": "#/definitions/clustermanagerOriginEncrypt",
+          "description": "encrypt原始加密方式转换",
+          "title": "encrypt原始的加密方式转换为该环境的加密方式，为空表示明文存储"
+        },
+        "all": {
+          "type": "boolean",
+          "description": "all操作所有的账号迁移",
+          "title": "all"
+        }
+      },
+      "description": "迁移cloud账号请求，主要用于环境存量账号的加密迁移",
+      "title": "MigrateCloudAccountRequest",
+      "required": [
+        "cloudID"
+      ]
+    },
+    "clustermanagerMigrateCloudAccountResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       }
     },
@@ -11533,7 +12948,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -11567,13 +12981,17 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "命名空间标签",
+          "title": "labels"
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "命名空间注解",
+          "title": "annotations"
         },
         "quota": {
           "$ref": "#/definitions/clustermanagerNamespaceQuota",
@@ -11626,7 +13044,6 @@
         },
         "enableVPCCni": {
           "type": "boolean",
-          "format": "boolean",
           "description": "enableVPCCni是否开启VPC-CNI网络模式(使能vpc-cni模式时,新增流程开启)",
           "title": "enableVPCCni"
         },
@@ -11645,7 +13062,6 @@
         },
         "isStaticIpMode": {
           "type": "boolean",
-          "format": "boolean",
           "description": "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP",
           "title": "isNonStaticIpMode"
         },
@@ -11788,10 +13204,38 @@
           "type": "string",
           "description": "节点ipv6地址",
           "title": "innerIPv6"
+        },
+        "zoneName": {
+          "type": "string",
+          "description": "节点所在可用区名称",
+          "title": "zoneName"
+        },
+        "taskID": {
+          "type": "string",
+          "description": "节点对应的任务ID, 仅在申请资源时追踪节点数据",
+          "title": "taskID"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
       "title": "Node"
+    },
+    "clustermanagerNodeAnnotation": {
+      "type": "object",
+      "properties": {
+        "nodeName": {
+          "type": "string",
+          "description": "节点名称",
+          "title": "nodeName"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "节点注解信息",
+          "title": "annotations"
+        }
+      }
     },
     "clustermanagerNodeConfig": {
       "type": "object",
@@ -11821,6 +13265,18 @@
         }
       }
     },
+    "clustermanagerNodeData": {
+      "type": "object",
+      "properties": {
+        "objectId": {
+          "type": "string"
+        },
+        "instanceId": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
     "clustermanagerNodeGroup": {
       "type": "object",
       "properties": {
@@ -11846,7 +13302,6 @@
         },
         "enableAutoscale": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否开启弹性伸缩，默认false",
           "title": "enableAutoscale"
         },
@@ -11864,13 +13319,17 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化label信息",
+          "title": "labels"
         },
         "taints": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化的污点信息",
+          "title": "taints"
         },
         "nodeOS": {
           "type": "string",
@@ -11923,7 +13382,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化的资源标签信息",
+          "title": "tags"
         },
         "nodeGroupType": {
           "type": "string",
@@ -12165,7 +13626,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "节点标签信息",
+          "title": "labels"
         }
       }
     },
@@ -12202,7 +13665,6 @@
       "properties": {
         "isExist": {
           "type": "boolean",
-          "format": "boolean",
           "description": "节点是否存在集群中",
           "title": "isExist"
         },
@@ -12241,13 +13703,17 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "节点通用的labels设置",
+          "title": "labels"
         },
         "extraArgs": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "配置各模块自定义参数，预定义的key为kubeletvalue为各模块进程启动参数，多个参数之间使用;间隔，例如Kubelet: root-dir=/var/lib/kubelet;",
+          "title": "extraArgs"
         }
       }
     },
@@ -12308,7 +13774,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化label信息",
+          "title": "labels"
         },
         "taints": {
           "type": "array",
@@ -12351,7 +13819,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "配置各模块自定义参数，预定义的key为kubeletvalue为各模块进程启动参数，多个参数之间使用;间隔，例如Kubelet: root-dir=/var/lib/kubelet;",
+          "title": "extraArgs"
         },
         "preStartUserScript": {
           "type": "string",
@@ -12412,7 +13882,7 @@
         },
         "scaleInPreScript": {
           "type": "string",
-          "description": "缩容节点后置脚本, base64编码的用户脚本.",
+          "description": "缩容节点前置脚本, base64编码的用户脚本.",
           "title": "scaleInPreScript"
         },
         "scaleInPostScript": {
@@ -12424,7 +13894,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "节点annotation设置",
+          "title": "annotations"
         },
         "maxPodsPerNode": {
           "type": "integer",
@@ -12434,8 +13906,17 @@
         },
         "skipSystemInit": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否跳过执行系统初始化, 默认执行",
+          "title": "skipSystemInit"
+        },
+        "allowSkipScaleOutWhenFailed": {
+          "type": "boolean",
+          "description": "扩容失败时是否允许跳过流程, 默认不允许跳过",
+          "title": "allowSkipScaleOutWhenFailed"
+        },
+        "allowSkipScaleInWhenFailed": {
+          "type": "boolean",
+          "description": "缩容失败时是否允许跳过流程, 默认不允许跳过",
           "title": "skipSystemInit"
         }
       },
@@ -12486,7 +13967,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "云上默认置入的区域信息，key是字符串，values是中文说明",
+          "title": "regions"
         }
       },
       "description": "用于记录一些固定的系统信息，用于帮助OS层面信息展示",
@@ -12539,6 +14022,20 @@
           "type": "string",
           "description": "任务状态",
           "title": "status"
+        }
+      }
+    },
+    "clustermanagerOriginEncrypt": {
+      "type": "object",
+      "properties": {
+        "encryptType": {
+          "type": "string"
+        },
+        "kv": {
+          "type": "string"
+        },
+        "iv": {
+          "type": "string"
         }
       }
     },
@@ -12759,7 +14256,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -12813,7 +14309,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -12873,7 +14368,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -12899,6 +14393,17 @@
         }
       },
       "title": "RunTimeInfo cluster runTime info"
+    },
+    "clustermanagerScopeInfo": {
+      "type": "object",
+      "properties": {
+        "scopeType": {
+          "type": "string"
+        },
+        "scopeId": {
+          "type": "string"
+        }
+      }
     },
     "clustermanagerSecurityGroup": {
       "type": "object",
@@ -12944,7 +14449,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "步骤定义的参数，key、value对",
+          "title": "params"
         },
         "retry": {
           "type": "integer",
@@ -12995,7 +14502,6 @@
         },
         "skipOnFailed": {
           "type": "boolean",
-          "format": "boolean",
           "description": "失败时跳过",
           "title": "skipOnFailed"
         }
@@ -13041,6 +14547,11 @@
           "format": "uint64",
           "description": "剩余 IP 数",
           "title": "availableIPAddressCount"
+        },
+        "zoneName": {
+          "type": "string",
+          "description": "子网所在可用区",
+          "title": "zoneName"
         }
       },
       "description": "子网信息",
@@ -13066,7 +14577,6 @@
       "properties": {
         "isScaleDownEnable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "scale-down-enabled,是否允许缩容节点",
           "title": "isScaleDownEnable"
         },
@@ -13101,19 +14611,16 @@
         },
         "skipNodesWithLocalStorage": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略有本地存储的节点，默认为true",
           "title": "skipNodesWithLocalStorage"
         },
         "skipNodesWithSystemPods": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略kube-system NS下非DaemonSet管理的Pod的节点，默认true",
           "title": "skipNodesWithSystemPods"
         },
         "ignoreDaemonSetsUtilization": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略DaemonSet的资源计算, 默认为true",
           "title": "ignoreDaemonSetsUtilization"
         },
@@ -13189,7 +14696,6 @@
         },
         "scaleUpFromZero": {
           "type": "boolean",
-          "format": "boolean",
           "description": "scale-up-from-zero,允许自动扩容（没有 ready 节点时）",
           "title": "scaleUpFromZero"
         },
@@ -13264,7 +14770,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -13357,7 +14862,9 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerStep"
-          }
+          },
+          "description": "任务详细步骤信息，主要用于信息确认，异常时",
+          "title": "steps"
         },
         "clusterID": {
           "type": "string",
@@ -13386,7 +14893,6 @@
         },
         "forceTerminate": {
           "type": "boolean",
-          "format": "boolean",
           "description": "任务设置为强制终止，用于流程控制",
           "title": "forceTerminate"
         },
@@ -13394,7 +14900,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "公共参数，便于跨Step完成信息传递",
+          "title": "commonParams"
         },
         "taskName": {
           "type": "string",
@@ -13452,6 +14960,9 @@
           "type": "string"
         },
         "editor": {
+          "type": "string"
+        },
+        "projectID": {
           "type": "string"
         }
       }
@@ -13548,7 +15059,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -13570,7 +15080,6 @@
       "properties": {
         "isScaleDownEnable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "scale-down-enabled,是否允许缩容节点",
           "title": "isScaleDownEnable"
         },
@@ -13605,19 +15114,16 @@
         },
         "skipNodesWithLocalStorage": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略有本地存储的节点，默认为false",
           "title": "skipNodesWithLocalStorage"
         },
         "skipNodesWithSystemPods": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略kube-system NS下非DaemonSet管理的Pod的节点，默认false",
           "title": "skipNodesWithSystemPods"
         },
         "ignoreDaemonSetsUtilization": {
           "type": "boolean",
-          "format": "boolean",
           "description": "忽略DaemonSet的资源计算",
           "title": "ignoreDaemonSetsUtilization"
         },
@@ -13697,7 +15203,6 @@
         },
         "scaleUpFromZero": {
           "type": "boolean",
-          "format": "boolean",
           "description": "scale-up-from-zero,允许自动扩容（没有 ready 节点时）",
           "title": "scaleUpFromZero"
         },
@@ -13743,7 +15248,6 @@
         },
         "onlyUpdateInfo": {
           "type": "boolean",
-          "format": "boolean",
           "description": "仅更新CA组件配置参数信息,不触发流程",
           "title": "onlyUpdateInfo"
         },
@@ -13784,7 +15288,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -13805,7 +15308,6 @@
       "properties": {
         "enable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否开启集群扩缩容",
           "title": "enable"
         },
@@ -13842,7 +15344,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -13883,7 +15384,6 @@
         },
         "enable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "cloud云账号是否开启，默认开启",
           "title": "enable"
         },
@@ -13896,6 +15396,11 @@
           "type": "string",
           "description": "更新者",
           "title": "updater"
+        },
+        "account": {
+          "$ref": "#/definitions/clustermanagerAccount",
+          "description": "cloud更新云账号信息",
+          "title": "account"
         }
       },
       "description": "更新cloud账号请求，不允许更改账号信息，防止对存量集群产生影响",
@@ -13922,7 +15427,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         }
@@ -14006,7 +15510,6 @@
         },
         "editable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "对于SaaS层面该信息是否可编辑，BCS默认提供的预定义信息不可编译",
           "title": "editable"
         },
@@ -14014,13 +15517,17 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "通过标准运维实现的扩展流程或者插件",
+          "title": "opsPlugins"
         },
         "extraPlugins": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "额外扩展流程，用于自定义扩展，该部分允许用户编辑",
+          "title": "extraPlugins"
         },
         "cloudCredential": {
           "$ref": "#/definitions/clustermanagerCredential",
@@ -14086,7 +15593,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "平台不同云的配置信息",
+          "title": "platformInfo"
         }
       },
       "description": "创建项目请求",
@@ -14112,7 +15621,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -14202,7 +15710,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -14289,7 +15796,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         }
@@ -14352,7 +15858,6 @@
         },
         "isExclusive": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为业务独占集群",
           "title": "isExclusive"
         },
@@ -14370,7 +15875,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "集群的labels，用于携带额外的信息，最大不得超过20个",
+          "title": "labels"
         },
         "updater": {
           "type": "string",
@@ -14386,13 +15893,17 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "创建集群时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，如果填写错误直接报错",
+          "title": "bcsAddons"
         },
         "extraAddons": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerBKOpsPlugin"
-          }
+          },
+          "description": "创建集群时额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，如果填错直接报错",
+          "title": "extraAddons"
         },
         "systemID": {
           "type": "string",
@@ -14441,7 +15952,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "存储集群扩展信息, 例如esb_url/webhook_image/priviledge_image等扩展信息",
+          "title": "ExtraInfo"
         },
         "moduleID": {
           "type": "string",
@@ -14455,7 +15968,6 @@
         },
         "isCommonCluster": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为公共集群,默认false",
           "title": "isCommonCluster"
         },
@@ -14471,7 +15983,6 @@
         },
         "is_shared": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为共享集群,默认false",
           "title": "is_shared"
         },
@@ -14518,7 +16029,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -14558,6 +16068,11 @@
           "type": "string",
           "description": "扩容操作人员",
           "title": "operator"
+        },
+        "manual": {
+          "type": "boolean",
+          "description": "手动扩容操作,用户手动扩容操作不做数据回退清理，展示具体的步骤，支持用户重试",
+          "title": "manual"
         }
       },
       "description": "更新NodeGroup期望的节点数",
@@ -14584,7 +16099,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -14645,7 +16159,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -14706,7 +16219,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -14718,6 +16230,56 @@
       },
       "description": "修改NodeGroup最小最大的扩容限额的请求结果",
       "title": "UpdateGroupMinMaxSizeResponse"
+    },
+    "clustermanagerUpdateNodeAnnotationsRequest": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "更新节点所属的clusterID",
+          "title": "clusterID"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeAnnotation"
+          },
+          "description": "节点列表",
+          "title": "nodes"
+        }
+      }
+    },
+    "clustermanagerUpdateNodeAnnotationsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerNodeOperationStatus",
+          "description": "返回数据",
+          "title": "data"
+        }
+      },
+      "description": "更新节点annotation",
+      "title": "UpdateNodeAnnotationsResponse",
+      "required": [
+        "code",
+        "message"
+      ]
     },
     "clustermanagerUpdateNodeGroupRequest": {
       "type": "object",
@@ -14744,7 +16306,6 @@
         },
         "enableAutoscale": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否开启弹性伸缩，默认false",
           "title": "enableAutoscale"
         },
@@ -14767,19 +16328,25 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化label信息",
+          "title": "labels"
         },
         "taints": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化的污点信息",
+          "title": "taints"
         },
         "tags": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化的资源标签信息",
+          "title": "tags"
         },
         "nodeOS": {
           "type": "string",
@@ -14819,7 +16386,6 @@
         },
         "onlyUpdateInfo": {
           "type": "boolean",
-          "format": "boolean",
           "description": "onlyUpdateInfo仅更新数据,不执行流程",
           "title": "onlyUpdateInfo"
         }
@@ -14843,7 +16409,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -14893,7 +16458,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -14964,7 +16528,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -15015,7 +16578,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -15059,7 +16621,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "新实例初始化label信息",
+          "title": "labels"
         },
         "taints": {
           "type": "array",
@@ -15102,7 +16666,9 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "配置各模块自定义参数，预定义的key为kubeletvalue为各模块进程启动参数，多个参数之间使用;间隔，例如Kubelet: root-dir=/var/lib/kubelet;",
+          "title": "extraArgs"
         },
         "preStartUserScript": {
           "type": "string",
@@ -15179,7 +16745,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -15228,7 +16793,9 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/clustermanagerStep"
-          }
+          },
+          "description": "任务详细步骤信息，主要用于信息确认，异常时",
+          "title": "steps"
         },
         "updater": {
           "type": "string",
@@ -15259,7 +16826,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -15269,6 +16835,64 @@
           "title": "data"
         }
       }
+    },
+    "clustermanagerUpdateVirtualClusterQuotaReq": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "quota": {
+          "$ref": "#/definitions/clustermanagerNamespaceQuota",
+          "description": "quota限制",
+          "title": "quota"
+        },
+        "updater": {
+          "type": "string",
+          "description": "操作人员名称",
+          "title": "updater"
+        }
+      },
+      "description": "更新虚拟集群配额",
+      "title": "UpdateVirtualClusterQuotaReq",
+      "required": [
+        "clusterID",
+        "quota"
+      ]
+    },
+    "clustermanagerUpdateVirtualClusterQuotaResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerNamespaceQuota",
+          "description": "返回更新后的命名空间配置",
+          "title": "data"
+        }
+      },
+      "description": "更新虚拟集群命名空间配额的返回",
+      "title": "UpdateVirtualClusterQuotaResp",
+      "required": [
+        "code",
+        "message"
+      ]
     },
     "clustermanagerVPCCidr": {
       "type": "object",
@@ -15285,6 +16909,53 @@
         },
         "status": {
           "type": "string"
+        }
+      }
+    },
+    "clustermanagerVerifyCloudAccountRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "cloud云类型",
+          "title": "cloudID"
+        },
+        "desc": {
+          "type": "string",
+          "description": "cloud账号描述信息",
+          "title": "desc"
+        },
+        "account": {
+          "$ref": "#/definitions/clustermanagerAccount",
+          "description": "cloud云账号信息,不同cloud进行有效性及兼容处理",
+          "title": "account"
+        }
+      },
+      "description": "检查cloud account可用性",
+      "title": "VerifyCloudAccountRequest",
+      "required": [
+        "cloudID",
+        "account"
+      ]
+    },
+    "clustermanagerVerifyCloudAccountResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       }
     },
@@ -15371,8 +17042,7 @@
           "type": "string"
         },
         "enable": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "flagType": {
           "type": "string"

@@ -1,10 +1,10 @@
 <template>
   <section class="create-form-cluster bcs-content-wrapper !overflow-auto">
     <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicFormRef">
-      <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
+      <bk-form-item :label="$t('cluster.labels.name')" property="clusterName" error-display-type="normal" required>
         <bk-input :maxlength="64" class="w640" v-model="basicInfo.clusterName"></bk-input>
       </bk-form-item>
-      <bk-form-item :label="$t('云服务商')" property="provider" error-display-type="normal" required>
+      <bk-form-item :label="$t('cluster.create.label.provider')" property="provider" error-display-type="normal" required>
         <bcs-select :loading="templateLoading" class="w640" v-model="basicInfo.provider" :clearable="false">
           <bcs-option
             v-for="item in availableTemplateList"
@@ -14,15 +14,15 @@
           </bcs-option>
         </bcs-select>
       </bk-form-item>
-      <bk-form-item :label="$t('版本')" property="clusterBasicSettings.version" error-display-type="normal" required>
+      <bk-form-item :label="$t('generic.label.version')" property="clusterBasicSettings.version" error-display-type="normal" required>
         <bcs-select class="w640" v-model="basicInfo.clusterBasicSettings.version" searchable :clearable="false">
           <bcs-option v-for="item in versionList" :key="item" :id="item" :name="item"></bcs-option>
         </bcs-select>
       </bk-form-item>
-      <bk-form-item :label="$t('集群描述')">
+      <bk-form-item :label="$t('cluster.create.label.desc1')">
         <bk-input v-model="basicInfo.description" type="textarea"></bk-input>
       </bk-form-item>
-      <bk-form-item :label="$t('附加参数')" ref="extraInfoRef" v-show="expanded">
+      <bk-form-item :label="$t('cluster.create.label.params.text')" ref="extraInfoRef" v-show="expanded">
         <KeyValue
           class="w700"
           :show-footer="false"
@@ -34,40 +34,40 @@
       <bk-form-item>
         <div class="action">
           <i :class="['bk-icon', expanded ? 'icon-angle-double-up' : 'icon-angle-double-down']"></i>
-          <span @click="toggleSettings">{{ expanded ? $t('收起更多设置') : $t('展开更多设置')}}</span>
+          <span @click="toggleSettings">{{ expanded ? $t('cluster.create.button.putAwayConfig') : $t('cluster.create.button.expandConfig')}}</span>
         </div>
       </bk-form-item>
-      <bk-form-item :label="$t('选择Master')" property="ipList" error-display-type="normal" required>
+      <bk-form-item :label="$t('cluster.create.label.chooseMaster')" property="ipList" error-display-type="normal" required>
         <bk-button icon="plus" @click="handleShowIpSelector">
-          {{$t('选择服务器')}}
+          {{$t('generic.ipSelector.action.selectHost')}}
         </bk-button>
         <bk-table class="ip-list mt10" :data="basicInfo.ipList" v-if="basicInfo.ipList.length">
-          <bk-table-column type="index" :label="$t('序列')" width="60"></bk-table-column>
-          <bk-table-column :label="$t('内网IP')" prop="bk_host_innerip"></bk-table-column>
-          <bk-table-column :label="$t('机房')" prop="idc_name"></bk-table-column>
-          <bk-table-column :label="$t('机型')" prop="svr_device_class"></bk-table-column>
-          <bk-table-column :label="$t('操作')" width="100">
+          <bk-table-column type="index" :label="$t('cluster.create.label.index')" width="60"></bk-table-column>
+          <bk-table-column :label="$t('generic.ipSelector.label.innerIp')" prop="bk_host_innerip"></bk-table-column>
+          <bk-table-column :label="$t('generic.ipSelector.label.idc')" prop="idc_name"></bk-table-column>
+          <bk-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="svr_device_class"></bk-table-column>
+          <bk-table-column :label="$t('generic.label.action')" width="100">
             <template #default="{ row }">
-              <bcs-button text @click="handleRemoveServer(row)">{{$t('移除')}}</bcs-button>
+              <bcs-button text @click="handleRemoveServer(row)">{{$t('cluster.create.button.remove')}}</bcs-button>
             </template>
           </bk-table-column>
         </bk-table>
       </bk-form-item>
       <bk-form-item>
-        <bk-button class="btn" theme="primary" @click="handleShowConfirmDialog">{{$t('确定')}}</bk-button>
-        <bk-button class="btn" @click="handleCancel">{{$t('取消')}}</bk-button>
+        <bk-button class="btn" theme="primary" @click="handleShowConfirmDialog">{{$t('generic.button.confirm')}}</bk-button>
+        <bk-button class="btn" @click="handleCancel">{{$t('generic.button.cancel')}}</bk-button>
       </bk-form-item>
     </bk-form>
     <bcs-dialog
       v-model="confirmDialog"
       theme="primary"
       header-position="left"
-      :title="$t('确定创建集群')"
+      :title="$t('cluster.create.button.confirmCreateCluster.text')"
       width="640">
       <div class="create-cluster-dialog">
-        <div class="title">{{$t('请确认以下配置')}}:</div>
+        <div class="title">{{$t('cluster.create.button.confirmCreateCluster.doc.title')}}:</div>
         <bcs-checkbox-group class="confirm-wrapper" v-model="createConfirm">
-          <bcs-checkbox value="2" class="mt10">{{$t('服务器将安装容器服务相关组件')}}</bcs-checkbox>
+          <bcs-checkbox value="2" class="mt10">{{$t('cluster.create.button.confirmCreateCluster.doc.article0')}}</bcs-checkbox>
         </bcs-checkbox-group>
       </div>
       <template #footer>
@@ -77,8 +77,8 @@
             theme="primary"
             :loading="loading"
             @click="handleCreateCluster"
-          >{{$t('确定，创建集群')}}</bcs-button>
-          <bcs-button @click="confirmDialog = false">{{$t('我再想想')}}</bcs-button>
+          >{{$t('cluster.create.button.confirmCreateCluster.text2')}}</bcs-button>
+          <bcs-button @click="confirmDialog = false">{{$t('cluster.create.button.cancel')}}</bcs-button>
         </div>
       </template>
     </bcs-dialog>
@@ -86,14 +86,15 @@
   </section>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed, watch } from 'vue';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+
+import $bkMessage from '@/common/bkmagic';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import KeyValue from '@/components/key-value.vue';
 import useFormLabel from '@/composables/use-form-label';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import $i18n from '@/i18n/i18n-setup';
-import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'CreateCluster',
@@ -131,27 +132,27 @@ export default defineComponent({
       clusterName: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       provider: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       'clusterBasicSettings.version': [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       ipList: [
         {
-          message: $i18n.t('仅支持奇数个服务器'),
+          message: $i18n.t('cluster.create.validate.masterNum2'),
           validator(val) {
             return val.length % 2 !== 0;
           },
@@ -168,32 +169,32 @@ export default defineComponent({
     const keyAdvice = ref([
       {
         name: 'DOCKER_LIB',
-        desc: $i18n.t('Docker数据目录'),
+        desc: $i18n.t('cluster.create.label.params.dockerPath'),
         default: '',
       },
       {
         name: 'DOCKER_VERSION',
-        desc: $i18n.t('Docker版本'),
+        desc: $i18n.t('cluster.create.label.params.dockerVersion'),
         default: '19.03.9',
       },
       {
         name: 'KUBELET_LIB',
-        desc: $i18n.t('kubelet数据目录'),
+        desc: $i18n.t('cluster.create.label.params.kubeletPath'),
         default: '',
       },
       {
         name: 'K8S_VER',
-        desc: $i18n.t('集群版本'),
+        desc: $i18n.t('cluster.create.label.clusterVersion'),
         default: '',
       },
       {
         name: 'K8S_SVC_CIDR',
-        desc: $i18n.t('集群Service网段'),
+        desc: $i18n.t('cluster.create.label.params.k8sServiceCIDR'),
         default: '',
       },
       {
         name: 'K8S_POD_CIDR',
-        desc: $i18n.t('集群Pod网段'),
+        desc: $i18n.t('cluster.create.label.params.k8sPodCIDR'),
         default: '',
       },
     ]);
@@ -255,7 +256,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('创建成功'),
+          message: $i18n.t('generic.msg.success.create'),
         });
         $router.push({ name: 'clusterMain' });
       }

@@ -20,13 +20,13 @@
           @page-change="handlePageChange"
           @page-limit-change="handlePageSizeChange"
           @sort-change="handleSortChange">
-          <bk-table-column :label="$t('名称')" min-width="130" prop="metadata.name" sortable fixed="left">
+          <bk-table-column :label="$t('generic.label.name')" min-width="130" prop="metadata.name" sortable fixed="left">
             <template #default="{ row }">
               <bk-button class="bcs-button-ellipsis" text @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('命名空间')" width="150" prop="metadata.namespace" sortable></bk-table-column>
-          <bk-table-column :label="$t('镜像')" min-width="200" :show-overflow-tooltip="false">
+          <bk-table-column :label="$t('k8s.namespace')" width="150" prop="metadata.namespace" sortable></bk-table-column>
+          <bk-table-column :label="$t('k8s.image')" min-width="200" :show-overflow-tooltip="false">
             <template #default="{ row }">
               <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
                 {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
@@ -63,23 +63,23 @@
               <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('编辑模式')" width="100">
+          <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
             <template #default="{ row }">
               <span>
                 {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
-                  ? $t('表单') : 'YAML'}}
+                  ? $t('generic.label.editMode.form') : 'YAML'}}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('操作')" :resizable="false" width="180" fixed="right">
+          <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="180" fixed="right">
             <template #default="{ row }">
-              <bk-button text @click="handleShowLog(row)">{{ $t('日志') }}</bk-button>
+              <bk-button text @click="handleShowLog(row)">{{ $t('generic.button.log1') }}</bk-button>
               <bk-button
                 text class="ml10"
-                @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
+                @click="handleUpdateResource(row)">{{ $t('generic.button.update') }}</bk-button>
               <bk-button
                 class="ml10" text
-                @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
+                @click="handleDeleteResource(row)">{{ $t('generic.button.delete') }}</bk-button>
             </template>
           </bk-table-column>
           <template #empty>
@@ -97,11 +97,12 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, computed, ref } from 'vue';
-import BaseLayout from '@/views/resource-view/common/base-layout';
-import StatusIcon from '@/components/status-icon';
+import { computed, defineComponent, ref } from 'vue';
+
 import BcsLog from '@/components/bcs-log/log-dialog.vue';
+import StatusIcon from '@/components/status-icon';
 import $store from '@/store';
+import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'WorkloadPods',

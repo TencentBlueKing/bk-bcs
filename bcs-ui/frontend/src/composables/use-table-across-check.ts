@@ -1,13 +1,14 @@
-import { ref, Ref, CreateElement } from 'vue';
+import { CreateElement, Ref, ref } from 'vue';
+
 import AcrossCheck, { CheckType } from '@/components/across-check.vue';
 
 export interface IAcrossCheckConfig {
   tableData: Ref<any[]>;
   curPageData: Ref<any[]>;
-  rowKey?: string;
+  rowKey?: string[];
 }
 // 表格跨页全选功能
-export default function useTableAcrossCheck({ tableData, curPageData, rowKey = 'inner_ip' }: IAcrossCheckConfig) {
+export default function useTableAcrossCheck({ tableData, curPageData, rowKey = ['nodeName', 'nodeID'] }: IAcrossCheckConfig) {
   // 0 未选，1 当前页半选， 2 跨页半选，3 当前页全选，4 跨页全选
   const selectType = ref(CheckType.Uncheck);
   const selections = ref<any[]>([]);
@@ -75,7 +76,7 @@ export default function useTableAcrossCheck({ tableData, curPageData, rowKey = '
   };
   // 当前行选中事件
   const handleRowCheckChange = (value, row) => {
-    const index = selections.value.findIndex(item => item[rowKey] === row[rowKey]);
+    const index = selections.value.findIndex(item => rowKey.every(key => item[key] === row[key]));
     if (value && index === -1) {
       selections.value.push(row);
     } else if (!value && index > -1) {

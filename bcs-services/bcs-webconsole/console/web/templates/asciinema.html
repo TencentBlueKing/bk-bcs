@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="icon" href="{{ .SITE_STATIC_URL }}/web/static/images/favicon.ico" />
+  <title>BCS Console Replayer</title>
+  <link rel="stylesheet" type="text/css" href="{{ .SITE_STATIC_URL }}/web/static/assets/asciinema-player.css" />
+  <style>
+    /* 使用 CSS 设置容器元素的高度 */
+    .fixed-height-container {
+      height: 600px; /* 设置高度为 600 像素 */
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="cast" class="fixed-height-container"></div>
+  <script src="{{ .SITE_STATIC_URL }}/web/static/assets/asciinema-player.min.js"></script>
+  <script>
+    //回放文件
+    AsciinemaPlayer.create("{{ .data }}", document.getElementById('cast'),{
+      fit: "both"
+    });
+  </script>
+</body>
+</html>

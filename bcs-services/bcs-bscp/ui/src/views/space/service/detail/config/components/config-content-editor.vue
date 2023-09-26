@@ -1,20 +1,28 @@
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { ref, onBeforeUnmount } from 'vue';
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon'
+  import { IVariableEditParams } from '../../../../../../../types/variable';
   import ReadFileContent from './read-file-content.vue';
   import CodeEditor from '../../../../../../components/code-editor/index.vue'
 
   const props = withDefaults(defineProps<{
     content: string;
+    variables?: IVariableEditParams[];
     editable: boolean;
   }>(), {
+    variables: () => [],
     editable: true
   })
 
   const emits = defineEmits(['change'])
 
   const isOpenFullScreen = ref(false)
+  const codeEditorRef = ref()
+
+  onBeforeUnmount(() => {
+    codeEditorRef.value.destroy()
+  })
 
   const handleFileReadComplete = (content: string) => {
     emits('change', content)
@@ -49,10 +57,16 @@
       <div class="editor-title">
         <div class="tips">
           <InfoLine class="info-icon" />
-          仅支持大小不超过 40M
+          仅支持大小不超过 50M
         </div>
         <div v-if="editable" class="btns">
-            <ReadFileContent @completed="handleFileReadComplete" />
+            <ReadFileContent
+              v-bk-tooltips="{
+                content: '上传',
+                placement: 'top',
+                distance: 20
+              }"
+            @completed="handleFileReadComplete" />
             <FilliscreenLine
               v-if="!isOpenFullScreen"
               v-bk-tooltips="{
@@ -72,14 +86,19 @@
         </div>
       </div>
       <div class="editor-content">
-        <CodeEditor :model-value="props.content" :editable="editable" @update:model-value="emits('change', $event)" />
+        <CodeEditor
+          ref="codeEditorRef"
+          :model-value="props.content"
+          :variables="props.variables"
+          :editable="editable"
+          @update:model-value="emits('change', $event)" />
       </div>
     </div>
   </Teleport>
 </template>
 <style lang="scss" scoped>
 .config-content-editor {
-  height: 440px;
+  height: 640px;
   &.fullscreen {
     position: fixed;
     top: 0;

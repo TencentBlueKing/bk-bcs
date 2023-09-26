@@ -73,12 +73,12 @@ export function catchErrorHandler(err, ctx) {
     if (!err.code || err.code === 404) {
       ctx.exceptionCode = {
         code: '404',
-        msg: window.i18n.t('当前访问的页面不存在'),
+        msg: window.i18n.t('generic.msg.warning.404'),
       };
     } else if (err.code === 403) {
       ctx.exceptionCode = {
         code: '403',
-        msg: window.i18n.t('Sorry，您的权限不足!'),
+        msg: window.i18n.t('generic.msg.warning.403'),
       };
     } else {
       console.error(err);
@@ -660,3 +660,38 @@ export function compareVersion(v1, v2) {
 
   return 0;
 }
+
+/**
+ * 生成随机数
+ * @param {Number} n
+ * @param str,默认26位字母及数字
+ */
+export const random = (n, str = 'abcdefghijklmnopqrstuvwxyz0123456789') => {
+  // 生成n位长度的字符串
+  // const str = 'abcdefghijklmnopqrstuvwxyz0123456789' // 可以作为常量放到random外面
+  let result = '';
+  for (let i = 0; i < n; i++) {
+    result += str[parseInt(String(Math.random() * str.length), 10)];
+  }
+  return result;
+};
+
+export const fullScreen = (ele) => {
+  if (ele.requestFullscreen) {
+    ele.requestFullscreen();
+  } else if (ele.mozRequestFullScreen) {
+    ele.mozRequestFullScreen();
+  } else if (ele.webkitRequestFullscreen) {
+    ele.webkitRequestFullscreen();
+  } else if (ele.msRequestFullscreen) {
+    ele.msRequestFullscreen();
+  }
+};
+
+export const exitFullscreen = (element) => {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } if (element.msExitFullscreen) {
+    element.msExitFullscreen();
+  }
+};

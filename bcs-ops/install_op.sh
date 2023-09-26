@@ -39,12 +39,11 @@ done
 
 if [[ -n "${BKREPO_URL:-}" ]]; then
   if command -v helm &>/dev/null; then
-    utils::log "INFO" "Add repo bk: ${BKREPO_URL}"
-    helm repo add bk "${BKREPO_URL}"
-    helm repo update
-    utils::log "OK" "bkrepo added"
+    utils::log "INFO" "Add repo blueking: ${BKREPO_URL}"
+    k8s::safe_add_helmrepo blueking "${BKREPO_URL}"
+    utils::log "OK" "blueking community helm chart repo added"
   else
-    warning "Add bkrepo: helm not found, skipping"
+    warning "helm command not found, skipping"
     return 0
   fi
 else

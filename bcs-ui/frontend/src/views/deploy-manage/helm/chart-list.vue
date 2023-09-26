@@ -12,12 +12,12 @@
         class="bk-text-button"
         :href="PROJECT_CONFIG.helm"
         target="_blank">
-        {{ $t('如何推送Helm Chart到项目仓库？') }}
+        {{ $t('deploy.helm.pushRepo') }}
       </a>
     </template>
     <!-- 空仓库状态 -->
     <bcs-exception type="empty" v-if="!repos.length && !loading">
-      <div>{{$t('没有数据')}}</div>
+      <div>{{$t('generic.msg.empty.noData3')}}</div>
       <bcs-button
         theme="primary"
         class="mt-[10px]"
@@ -31,7 +31,7 @@
           }
         }"
         @click="handleInitRepo">
-        {{$t('创建仓库')}}
+        {{$t('deploy.helm.createRepo')}}
       </bcs-button>
     </bcs-exception>
     <!-- 仓库列表 -->
@@ -40,11 +40,11 @@
         <!-- 搜索功能 -->
         <template #left>
           <bcs-popover trigger="click" theme="light">
-            <bcs-button>{{$t('查看仓库信息')}}</bcs-button>
+            <bcs-button>{{$t('deploy.helm.repoInfo')}}</bcs-button>
             <template #content>
               <div class="py-[10px]">
                 <div class="flex leading-[20px]">
-                  <span class="flex w-[80px]">{{$t('仓库地址')}}:</span>
+                  <span class="flex w-[80px]">{{$t('deploy.helm.repo')}}:</span>
                   {{curRepoItem.repoURL}}
                   <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(curRepoItem.repoURL)">
                     <i class="bcs-icon bcs-icon-copy"></i>
@@ -52,14 +52,14 @@
                 </div>
                 <template v-if="curRepoItem.username && curRepoItem.password">
                   <div class="flex leading-[20px]">
-                    <span class="flex w-[80px]">{{$t('用户名')}}:</span>
+                    <span class="flex w-[80px]">{{$t('deploy.helm.username')}}:</span>
                     {{curRepoItem.username}}
                     <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(curRepoItem.username)">
                       <i class="bcs-icon bcs-icon-copy"></i>
                     </span>
                   </div>
                   <div class="flex leading-[20px]">
-                    <span class="flex w-[80px]">{{$t('密码')}}:</span>
+                    <span class="flex w-[80px]">{{$t('deploy.helm.password')}}:</span>
                     {{showPassword ? curRepoItem.password : new Array(10).fill('*').join('')}}
                     <span class="bcs-icon-btn ml-[8px]" @click="showPassword = !showPassword">
                       <i :class="['bcs-icon', showPassword ? 'bcs-icon-eye' : 'bcs-icon-eye-slash']"></i>
@@ -69,13 +69,13 @@
                     </span>
                   </div>
                   <div class="flex items-center leading-[20px]">
-                    <span class="flex w-[100px]">{{$t('添加repo仓库')}}:</span>
+                    <span class="flex w-[100px]">{{$t('deploy.helm.addRepo')}}:</span>
                     <bcs-button
                       text
                       size="small"
                       class="!px-0"
                       @click="handleCopyData(`helm repo add ${projectCode} ${curRepoItem.repoURL} --username=${curRepoItem.username} --password=${curRepoItem.password}`)">
-                      {{$t('点击复制')}}
+                      {{$t('deploy.helm.copy')}}
                     </bcs-button>
                   </div>
                 </template>
@@ -88,12 +88,12 @@
             right-icon="bk-icon icon-search"
             class="min-w-[360px]"
             clearable
-            :placeholder="$t('输入名称搜索')"
+            :placeholder="$t('generic.placeholder.searchName')"
             v-model="searchName">
           </bcs-input>
           <!-- <bcs-button class="ml-[8px]" @click="handleGetChartsTableData">
             <i class="bcs-icon bcs-icon-reset"></i>
-            {{$t('刷新')}}
+            {{$t('generic.log.button.refresh')}}
           </bcs-button> -->
         </template>
       </Row>
@@ -103,7 +103,7 @@
         v-bkloading="{ isLoading: chartsLoading }"
         @page-change="(page) => pageChange(page, curRepoItem.name)"
         @page-limit-change="(size) => pageSizeChange(size, curRepoItem.name)">
-        <bcs-table-column :label="$t('名称')" prop="name" show-overflow-tooltip>
+        <bcs-table-column :label="$t('generic.label.name')" prop="name" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="flex items-center">
               <span class="flex items-center justify-center w-[24px] h-[24px] text-[24px] text-[#C4C6CC] mr-[8px]">
@@ -116,17 +116,17 @@
             </div>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('版本')" prop="latestVersion" width="160" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column :label="$t('最近更新')" prop="updateTime" width="200"></bcs-table-column>
-        <bcs-table-column :label="$t('描述')" prop="latestDescription" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column :label="$t('操作')" width="180">
+        <bcs-table-column :label="$t('generic.label.version')" prop="latestVersion" width="160" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column :label="$t('deploy.helm.latestUpdate')" prop="updateTime" width="200"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.create.label.desc')" prop="latestDescription" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.action')" width="180">
           <template #default="{ row }">
-            <bcs-button text @click="handleReleaseChart(row)">{{ $t('部署') }}</bcs-button>
+            <bcs-button text @click="handleReleaseChart(row)">{{ $t('deploy.helm.install') }}</bcs-button>
             <bcs-button
               text
               class="ml-[10px]"
               @click="handleShowVersionDialog(row, 'download')">
-              {{$t('下载版本')}}
+              {{$t('deploy.helm.download')}}
             </bcs-button>
             <bk-popover
               placement="bottom"
@@ -148,7 +148,7 @@
                         project_id: curProject.project_id
                       }
                     }"
-                    @click="handleDeleteChart(row)">{{$t('删除Chart')}}</li>
+                    @click="handleDeleteChart(row)">{{$t('deploy.helm.deleteChart')}}</li>
                   <li
                     class="bcs-dropdown-item"
                     v-authority="{
@@ -159,7 +159,7 @@
                         project_id: curProject.project_id
                       }
                     }"
-                    @click="handleShowVersionDialog(row, 'delete')">{{$t('删除版本')}}</li>
+                    @click="handleShowVersionDialog(row, 'delete')">{{$t('deploy.helm.deleteVersion')}}</li>
                 </ul>
               </template>
             </bk-popover>
@@ -178,7 +178,7 @@
         <template #header>
           <div class="flex justify-between items-center pr-[30px]">
             {{curRow.name}}
-            <bcs-button theme="primary" @click="handleReleaseChart(curRow)">{{$t('部署')}}</bcs-button>
+            <bcs-button theme="primary" @click="handleReleaseChart(curRow)">{{$t('deploy.helm.install')}}</bcs-button>
           </div>
         </template>
         <template #content>
@@ -188,8 +188,8 @@
       <!-- 删除chart版本或者下载chart版本 -->
       <bcs-dialog
         :title="versionDialogType === 'delete'
-          ? $t('删除 {name} Chart的版本', { name: curRow.name })
-          : $t('下载 {name} Chart的版本', { name: curRow.name })"
+          ? $t('deploy.helm.deleteChartVer', { name: curRow.name })
+          : $t('deploy.helm.downloadChartVer', { name: curRow.name })"
         :width="600"
         v-model="showChartVersion">
         <bcs-select :loading="versionLoading" searchable :clearable="false" v-model="version">
@@ -209,13 +209,13 @@
             theme="primary"
             :loading="dialogLoading"
             :disabled="!!chartReleaseData.length && versionDialogType === 'delete'"
-            @click="handleDeleteOrDownloadVersion">{{$t('确定')}}</bcs-button>
-          <bcs-button @click="handleCancelVersionDialog">{{$t('取消')}}</bcs-button>
+            @click="handleDeleteOrDownloadVersion">{{$t('generic.button.confirm')}}</bcs-button>
+          <bcs-button @click="handleCancelVersionDialog">{{$t('generic.button.cancel')}}</bcs-button>
         </template>
       </bcs-dialog>
       <!-- 删除chart -->
       <bcs-dialog
-        :title="$t('确定删除 {name}', { name: curRow.name })"
+        :title="$t('deploy.helm.confirmDeleteChart', { name: curRow.name })"
         width="600"
         v-model="showDeleteChartDialog">
         <ChartReleasesTable
@@ -226,8 +226,8 @@
             theme="primary"
             :loading="dialogLoading"
             :disabled="!!chartReleaseData.length"
-            @click="handleConfirmDelete">{{$t('确定')}}</bcs-button>
-          <bcs-button @click="showDeleteChartDialog = false">{{$t('取消')}}</bcs-button>
+            @click="handleConfirmDelete">{{$t('generic.button.confirm')}}</bcs-button>
+          <bcs-button @click="showDeleteChartDialog = false">{{$t('generic.button.cancel')}}</bcs-button>
         </template>
       </bcs-dialog>
     </template>
@@ -235,18 +235,20 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+
+import ChartDetail from './chart-detail.vue';
+import ChartReleasesTable from './chart-releases-table.vue';
+import useHelm from './use-helm';
+
+import $bkMessage from '@/common/bkmagic';
+import { copyText } from '@/common/util';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
-import ChartReleasesTable from './chart-releases-table.vue';
-import ChartDetail from './chart-detail.vue';
-import useHelm from './use-helm';
-import { IPagination } from '@/composables/use-page';
 import { useProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
-import $router from '@/router';
-import { copyText } from '@/common/util';
+import { IPagination } from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
-import $bkMessage from '@/common/bkmagic';
+import $router from '@/router';
 
 interface ITableConfig {
   name: string;
@@ -292,7 +294,7 @@ export default defineComponent({
       copyText(value);
       $bkMessage({
         theme: 'success',
-        message: $i18n.t('复制成功'),
+        message: $i18n.t('generic.msg.success.copy'),
       });
     };
     // 切换仓库

@@ -12,6 +12,10 @@
 
 package common
 
+import (
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+)
+
 // GetBCSProjectID get projectID from annotations
 func GetBCSProjectID(data map[string]string) string {
 	// projectID is required in Authentication(hash id, not readable).
@@ -25,4 +29,22 @@ func GetBCSProjectID(data map[string]string) string {
 		return ""
 	}
 	return projectID
+}
+
+// GetBCSProjectBusinessKey return the business id of project
+func GetBCSProjectBusinessKey(data map[string]string) string {
+	if data == nil {
+		return ""
+	}
+	businessID, ok := data[ProjectBusinessIDKey]
+	if !ok {
+		return ""
+	}
+	return businessID
+}
+
+// AddCustomAnnotationForApplication add custom annotation for application
+func AddCustomAnnotationForApplication(argoProj *v1alpha1.AppProject, app *v1alpha1.Application) {
+	app.Annotations[ProjectIDKey] = GetBCSProjectID(argoProj.Annotations)
+	app.Annotations[ProjectBusinessIDKey] = GetBCSProjectBusinessKey(argoProj.Annotations)
 }

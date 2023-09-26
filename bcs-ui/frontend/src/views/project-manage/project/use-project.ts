@@ -1,10 +1,10 @@
 import {
-  fetchProjectList,
-  fetchAllProjectList,
-  editProject,
-  getProject,
   businessList,
   createProject as handleCreateProject,
+  editProject,
+  fetchAllProjectList,
+  fetchProjectList,
+  getProject,
 } from '@/api/modules/project';
 import { IProject } from '@/composables/use-app';
 import $store from '@/store';
@@ -74,7 +74,7 @@ export default function useProjects() {
   }
 
   async function fetchProjectInfo(params: { $projectId: string }) {
-    const { data, web_annotations, code } = await getProject(params, {
+    const { data, web_annotations, code, message } = await getProject(params, {
       needRes: true,
       globalError: false,
     }).catch(() => ({}));
@@ -97,6 +97,7 @@ export default function useProjects() {
       code,
       data: bcsProjectData as IProject,
       web_annotations,
+      message,
     };
   }
 

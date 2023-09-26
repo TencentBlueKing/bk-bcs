@@ -112,10 +112,15 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 	if len(ua.req.NodeOS) != 0 {
 		group.NodeOS = ua.req.NodeOS
 	}
-	if ua.req.BkCloudID != nil && ua.req.CloudAreaName != nil {
+	if ua.req.BkCloudID != nil {
 		group.Area = &cmproto.CloudArea{
-			BkCloudID:   ua.req.BkCloudID.GetValue(),
-			BkCloudName: ua.req.CloudAreaName.GetValue(),
+			BkCloudID: ua.req.BkCloudID.GetValue(),
+			BkCloudName: func() string {
+				if ua.req.CloudAreaName != nil {
+					return ua.req.CloudAreaName.GetValue()
+				}
+				return ""
+			}(),
 		}
 	}
 	group.Labels = ua.req.Labels
@@ -304,11 +309,16 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 		} else {
 			group.NodeTemplate.ScaleInPostScript = ua.req.NodeTemplate.ScaleInPostScript
 		}
+
+		// attention: field will be full update
 		group.NodeTemplate.UnSchedulable = ua.req.NodeTemplate.UnSchedulable
 		group.NodeTemplate.Taints = ua.req.NodeTemplate.Taints
 		group.NodeTemplate.Labels = ua.req.NodeTemplate.Labels
 		group.NodeTemplate.Annotations = ua.req.NodeTemplate.Annotations
-		group.NodeTemplate.SkipSystemInit = ua.req.NodeTemplate.SkipSystemInit
+		// avoid update mixed deployment switch
+		// group.NodeTemplate.SkipSystemInit = ua.req.NodeTemplate.SkipSystemInit
+		group.NodeTemplate.AllowSkipScaleOutWhenFailed = ua.req.NodeTemplate.AllowSkipScaleOutWhenFailed
+		group.NodeTemplate.AllowSkipScaleInWhenFailed = ua.req.NodeTemplate.AllowSkipScaleInWhenFailed
 	}
 }
 
@@ -713,10 +723,12 @@ type UpdateDesiredNodeAction struct {
 	resp   *cmproto.UpdateGroupDesiredNodeResponse
 	locker lock.DistributedLock
 
-	group    *cmproto.NodeGroup
-	cluster  *cmproto.Cluster
-	cloud    *cmproto.Cloud
-	asOption *cmproto.ClusterAutoScalingOption
+	group        *cmproto.NodeGroup
+	cluster      *cmproto.Cluster
+	cloud        *cmproto.Cloud
+	asOption     *cmproto.ClusterAutoScalingOption
+	commonOption *cloudprovider.CommonOption
+
 	// 兼容clusterManager和nodeManager
 	clusterCloud *cmproto.Cloud
 	task         *cmproto.Task
@@ -778,11 +790,13 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 
 	// build scale nodes task and dispatch to run
 	task, err := mgr.BuildUpdateDesiredNodesTask(scaling, ua.group, &cloudprovider.UpdateDesiredNodeOption{
-		Cloud:     ua.cloud,
-		Cluster:   ua.cluster,
-		NodeGroup: ua.group,
-		AsOption:  ua.asOption,
-		Operator:  ua.req.Operator,
+		CommonOption: *ua.commonOption,
+		Cloud:        ua.cloud,
+		Cluster:      ua.cluster,
+		NodeGroup:    ua.group,
+		AsOption:     ua.asOption,
+		Operator:     ua.req.Operator,
+		Manual:       ua.req.Manual,
 	})
 	if err != nil {
 		blog.Errorf("build scaling task for NodeGroup %s with cloudprovider %s failed, %s",
@@ -850,6 +864,9 @@ func (ua *UpdateDesiredNodeAction) returnCurrentScaleNodesNum() (uint32, error) 
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return 0, err
 	}
+	cmOption.Region = ua.group.Region
+	ua.commonOption = cmOption
+
 	mgr, err := cloudprovider.GetNodeGroupMgr(ua.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloud %s NodeGroupMgr when updateDesiredNode %d in NodeGroup %s failed, %s",
@@ -858,7 +875,6 @@ func (ua *UpdateDesiredNodeAction) returnCurrentScaleNodesNum() (uint32, error) 
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return 0, err
 	}
-	cmOption.Region = ua.group.Region
 	// pay more attention, in order to compatible with aws/tencentcloud/blueking
 	// implementation, no common UpdateDesiredNodes task flow definition, just
 	// try to encapsulate in cloudprovider implementation
@@ -986,6 +1002,11 @@ func (ua *UpdateDesiredNodeAction) Handle(
 		return
 	}
 
+	// inject virtual nodes
+	if ua.req.Manual {
+		ua.injectVirtualNodeData(scaleResp)
+	}
+
 	// record operation log
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
@@ -1004,6 +1025,27 @@ func (ua *UpdateDesiredNodeAction) Handle(
 	blog.Infof("updateDesiredNode %d to NodeGroup %s successfully", req.DesiredNode, req.NodeGroupID)
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
+}
+
+func (ua *UpdateDesiredNodeAction) injectVirtualNodeData(nodeNum uint32) {
+	var i uint32 = 0
+
+	for ; i < nodeNum; i++ {
+		err := ua.model.CreateNode(context.Background(), &cmproto.Node{
+			NodeID:      virtualNodeID(),
+			Status:      common.StatusResourceApplying,
+			ZoneID:      "",
+			NodeGroupID: ua.group.NodeGroupID,
+			ClusterID:   ua.group.ClusterID,
+			VPC:         ua.cluster.VpcID,
+			Region:      ua.cluster.Region,
+			TaskID:      ua.task.GetTaskID(),
+		})
+		if err != nil {
+			blog.Errorf("UpdateDesiredNodeAction injectVirtualNodeData failed: %v", err)
+		}
+	}
+	blog.Infof("UpdateDesiredNodeAction injectVirtualNodeData success")
 }
 
 // UpdateDesiredSizeAction update nodegroup autoscaling desiredSize

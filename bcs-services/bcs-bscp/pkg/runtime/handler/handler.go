@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 // Package handler NOTES
 package handler
@@ -17,7 +17,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	_ "net/http/pprof" // nolint
@@ -104,13 +104,12 @@ func ReverseProxyHandler(name, remoteURL string) http.Handler {
 	}
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		proxy := httputil.NewSingleHostReverseProxy(remote)
-		proxy.Director = func(req *http.Request) {
-			req.Header = r.Header
-			req.Host = remote.Host
-			req.URL.Scheme = remote.Scheme
-			req.URL.Host = remote.Host
-			klog.InfoS("forward request", "name", name, "url", req.URL)
+		proxy := httputil.ReverseProxy{
+			Rewrite: func(req *httputil.ProxyRequest) {
+				req.SetURL(remote)
+				req.SetXForwarded()
+				klog.InfoS("forward request", "name", name, "url", r.URL)
+			},
 		}
 
 		proxy.ServeHTTP(w, r)
@@ -137,6 +136,8 @@ func CORS(next http.Handler) http.Handler {
 			"X-Requested-With",
 			"X-Bkapi-File-Content-Id",
 			"X-Bkapi-File-Content-Overwrite",
+			"X-Bscp-App-Id",
+			"X-Bscp-Template-Space-Id",
 		}
 		w.Header().Set("Access-Control-Allow-Headers", strings.Join(allowHeaders, ","))
 
@@ -195,7 +196,7 @@ func RequestBodyLogger(ignorePattern ...string) func(http.Handler) http.Handler 
 			buf := bytes.NewBuffer(nil)
 			ww.Tee(buf)
 
-			body, err := ioutil.ReadAll(r.Body)
+			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				render.Render(w, r, rest.BadRequest(err))
 				return
@@ -212,7 +213,7 @@ func RequestBodyLogger(ignorePattern ...string) func(http.Handler) http.Handler 
 				)
 			}()
 
-			r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+			r.Body = io.NopCloser(bytes.NewBuffer(body))
 			next.ServeHTTP(ww, r)
 		}
 

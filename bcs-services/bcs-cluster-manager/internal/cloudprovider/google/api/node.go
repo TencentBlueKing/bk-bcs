@@ -16,6 +16,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"google.golang.org/api/compute/v1"
@@ -89,12 +91,79 @@ func (n *NodeManager) GetZoneList(opt *cloudprovider.CommonOption) ([]*proto.Zon
 // ListNodeInstanceType list node type by zone and node family
 func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
+		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
+
+	client, err := NewComputeServiceClient(opt)
+	if err != nil {
+		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
+	}
+
+	var filter string
+	if info.NodeFamily != "" {
+		filter = fmt.Sprintf("name eq %s-*", info.NodeFamily)
+	}
+	list, err := client.ListMachineTypes(context.Background(), opt.Region, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	result := convertToInstanceType(list.Items, info.NodeFamily)
+
+	var instanceTypes = make([]*proto.InstanceType, 0)
+	for _, item := range result {
+		if info.Cpu > 0 {
+			if item.Cpu != info.Cpu {
+				continue
+			}
+		}
+		if info.Memory > 0 {
+			if item.Memory != info.Memory {
+				continue
+			}
+		}
+		instanceTypes = append(instanceTypes, item)
+	}
+
+	return instanceTypes, nil
+}
+
+func convertToInstanceType(mt []*compute.MachineType, family string) []*proto.InstanceType {
+	result := make([]*proto.InstanceType, 0)
+
+	for _, m := range mt {
+		nameList := strings.Split(m.Name, "-")
+		memGb := math.Ceil(float64(m.MemoryMb / 1024))
+
+		insType := &proto.InstanceType{}
+		insType.Status = common.InstanceSell
+		if m.Deprecated != nil {
+			insType.Status = common.InstanceSoldOut
+		}
+		insType.NodeType = m.Name
+		insType.TypeName = nameList[1]
+		insType.NodeFamily = family
+
+		insType.Cpu = uint32(m.GuestCpus)
+		insType.Memory = uint32(memGb)
+		insType.Zones = []string{m.Zone}
+
+		result = append(result, insType)
+	}
+
+	return result
 }
 
 // ListOsImage get osimage list
 func (n *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// 先返回固定的UBUNTU_CONTAINERD
+	images := make([]*proto.OsImage, 0)
+	images = append(images, &proto.OsImage{
+		ImageID:  "UBUNTU_CONTAINERD",
+		Status:   "NORMAL",
+		Provider: common.PublicImageProvider,
+	})
+	return images, nil
 }
 
 // GetExternalNodeByIP get specified Node by innerIP address
@@ -169,13 +238,9 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 		if _, ok := nodeMap[node.NodeID]; ok {
 			continue
 		}
+
 		nodeMap[node.NodeID] = node
 		node.InnerIP = inst.NetworkInterfaces[0].NetworkIP
-		node.Region = opt.Common.Region
-		// check node vpc and cluster vpc
-		if !strings.Contains(node.VPC, opt.ClusterVPCID) {
-			return nil, fmt.Errorf(cloudprovider.ErrCloudNodeVPCDiffWithClusterResponse, node.InnerIP)
-		}
 		nodes = append(nodes, node)
 	}
 
@@ -188,15 +253,24 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 func InstanceToNode(cli *ComputeServiceClient, ins *compute.Instance) *proto.Node {
 	zoneInfo, _ := GetGCEResourceInfo(ins.Zone)
 	zone, _ := cli.GetZone(context.Background(), zoneInfo[len(zoneInfo)-1])
+
 	node := &proto.Node{}
+	node.NodeID = strconv.Itoa(int(ins.Id))
+	node.NodeName = ins.Name
+
 	if zoneInfo != nil {
 		node.ZoneID = zone.Zone
 		zoneID, _ := strconv.Atoi(zone.ZoneID)
 		node.Zone = uint32(zoneID)
+		node.ZoneName = zone.ZoneName
 	}
+
 	machineInfo, _ := GetGCEResourceInfo(ins.MachineType)
-	node.NodeID = ins.Name
 	node.InstanceType = machineInfo[len(machineInfo)-1]
-	node.VPC = ins.NetworkInterfaces[0].Network
+
+	networkInfo := strings.Split(ins.NetworkInterfaces[0].Subnetwork, "/")
+	node.VPC = networkInfo[len(networkInfo)-1]
+	node.Status = common.StatusRunning
+
 	return node
 }

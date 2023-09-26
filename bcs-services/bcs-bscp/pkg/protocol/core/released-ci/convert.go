@@ -1,18 +1,21 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package pbrci
 
 import (
+	"time"
+
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbcommit "bscp.io/pkg/protocol/core/commit"
@@ -58,15 +61,15 @@ func PbReleasedCIFromCache(rs []*types.ReleaseCICache) []*ReleasedConfigItem {
 			Id:        one.ID,
 			ReleaseId: one.ReleaseID,
 			CommitId:  one.CommitID,
-			CommitSpec: &pbcommit.CommitSpec{
+			CommitSpec: &pbcommit.ReleasedCommitSpec{
 				ContentId: one.CommitSpec.ContentID,
-				Content: &pbcontent.ContentSpec{
+				Content: &pbcontent.ReleasedContentSpec{
 					Signature: one.CommitSpec.Signature,
 					ByteSize:  one.CommitSpec.ByteSize,
 				},
 			},
 			ConfigItemId: one.ConfigItemID,
-			ConfigItemSpec: &pbci.ConfigItemSpec{
+			Spec: &pbci.ConfigItemSpec{
 				Name:     one.ConfigItemSpec.Name,
 				Path:     one.ConfigItemSpec.Path,
 				FileType: string(one.ConfigItemSpec.FileType),
@@ -94,14 +97,14 @@ func PbReleasedConfigItem(rci *table.ReleasedConfigItem) *ReleasedConfigItem {
 	}
 
 	return &ReleasedConfigItem{
-		Id:             rci.ID,
-		ReleaseId:      rci.ReleaseID,
-		CommitId:       rci.CommitID,
-		CommitSpec:     pbcommit.PbCommitSpec(rci.CommitSpec),
-		ConfigItemId:   rci.ConfigItemID,
-		ConfigItemSpec: pbci.PbConfigItemSpec(rci.ConfigItemSpec),
-		Attachment:     pbci.PbConfigItemAttachment(rci.Attachment),
-		Revision:       pbbase.PbRevision(rci.Revision),
+		Id:           rci.ID,
+		ReleaseId:    rci.ReleaseID,
+		CommitId:     rci.CommitID,
+		CommitSpec:   pbcommit.PbReleasedCommitSpec(rci.CommitSpec),
+		ConfigItemId: rci.ConfigItemID,
+		Spec:         pbci.PbConfigItemSpec(rci.ConfigItemSpec),
+		Attachment:   pbci.PbConfigItemAttachment(rci.Attachment),
+		Revision:     pbbase.PbCreatedRevision(rci.Revision),
 	}
 }
 
@@ -116,7 +119,12 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 		FileState:  fileState,
 		Spec:       pbci.PbConfigItemSpec(rci.ConfigItemSpec),
 		Attachment: pbci.PbConfigItemAttachment(rci.Attachment),
-		Revision:   pbbase.PbRevision(rci.Revision),
+		Revision: &pbbase.Revision{
+			Creator:  rci.Revision.Creator,
+			Reviser:  rci.Revision.Creator,
+			CreateAt: rci.Revision.CreatedAt.Format(time.RFC3339),
+			UpdateAt: rci.Revision.CreatedAt.Format(time.RFC3339),
+		},
 	}
 }
 
@@ -131,62 +139,50 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 	for _, ci := range cis {
 		var fileState string
 		if len(fileRelease) == 0 {
-			fileState = ADD
+			fileState = constant.FileStateAdd
 		} else {
 			if _, ok := releaseMap[ci.ID]; ok {
-				if ci.Revision.UpdatedAt == releaseMap[ci.ID].Revision.UpdatedAt {
-					fileState = UNCHANGE
+				if ci.Revision.UpdatedAt.After(releaseMap[ci.ID].Revision.CreatedAt) {
+					fileState = constant.FileStateRevise
 				} else {
-					fileState = REVISE
+					fileState = constant.FileStateUnchange
 				}
 				delete(releaseMap, ci.ID)
 			}
 		}
 		if len(fileState) == 0 {
-			fileState = ADD
+			fileState = constant.FileStateAdd
 		}
 		result = append(result, pbci.PbConfigItem(ci, fileState))
 	}
 	for _, file := range releaseMap {
-		result = append(result, PbConfigItem(file, DELETE))
+		result = append(result, PbConfigItem(file, constant.FileStateDelete))
 	}
 	return sortConfigItemsByState(result)
 }
 
+// sortConfigItemsByState sort as add > revise > unchange > delete
 func sortConfigItemsByState(cis []*pbci.ConfigItem) []*pbci.ConfigItem {
 	result := make([]*pbci.ConfigItem, 0)
 	add := make([]*pbci.ConfigItem, 0)
-	delete := make([]*pbci.ConfigItem, 0)
+	del := make([]*pbci.ConfigItem, 0)
 	revise := make([]*pbci.ConfigItem, 0)
 	unchange := make([]*pbci.ConfigItem, 0)
 	for _, ci := range cis {
 		switch ci.FileState {
-		case ADD:
+		case constant.FileStateAdd:
 			add = append(add, ci)
-		case DELETE:
-			delete = append(delete, ci)
-		case REVISE:
+		case constant.FileStateDelete:
+			del = append(del, ci)
+		case constant.FileStateRevise:
 			revise = append(revise, ci)
-		case UNCHANGE:
+		case constant.FileStateUnchange:
 			unchange = append(unchange, ci)
 		}
 	}
 	result = append(result, add...)
 	result = append(result, revise...)
-	result = append(result, delete...)
 	result = append(result, unchange...)
+	result = append(result, del...)
 	return result
-
 }
-
-// 文件状态
-const (
-	// 增加
-	ADD = "ADD"
-	//删除
-	DELETE = "DELETE"
-	//修改
-	REVISE = "REVISE"
-	//不变
-	UNCHANGE = "UNCHANGE"
-)

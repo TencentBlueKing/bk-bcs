@@ -2,7 +2,7 @@
   <div v-bkloading="{ isLoading: loading }">
     <Header>
       <div class="flex items-center">
-        {{ $t('日志采集') }}
+        {{ $t('nav.log') }}
         <ClusterSelect
           size="small"
           class="small-select"
@@ -24,7 +24,7 @@
               class="text-[12px] ml-[8px]"
               v-else-if="showUpdateBtn"
               @click="handleShowUpdateDialog">
-              {{ $t('更新') }}
+              {{ $t('generic.button.update') }}
             </bcs-button>
             <bcs-popover
               class="ml-[4px]"
@@ -48,24 +48,24 @@
         </bcs-badge>
       </div>
       <bcs-dialog
-        :title="$t('组件更新')"
+        :title="$t('logCollector.label.updateChart')"
         header-position="left"
-        :ok-text="$t('立即更新')"
+        :ok-text="$t('logCollector.button.updateChart')"
         :loading="updateLoading"
         v-model="showUpdateDialog"
         @confirm="confirmUpdate">
-        <bk-form :label-width="120">
-          <bk-form-item :label="$t('当前版本号')">
+        <bk-form :label-width="labelWidth" ref="formRef">
+          <bk-form-item :label="$t('deploy.templateset.currentVersionNumber')">
             <div class="flex items-end">
               {{ onsData.currentVersion }}
             </div>
           </bk-form-item>
-          <bk-form-item class="!mt-[0px]" :label="$t('最新版本号')">
+          <bk-form-item class="!mt-[0px]" :label="$t('logCollector.label.newChartVersion')">
             <div class="flex items-end">
               {{ onsData.version }}
             </div>
           </bk-form-item>
-          <bk-form-item class="!mt-[0px]" :label="$t('最新版本描述')">
+          <bk-form-item class="!mt-[0px]" :label="$t('logCollector.label.newChartDesc')">
             <div class="flex items-end">
               {{ onsData.description }}
             </div>
@@ -74,40 +74,50 @@
       </bcs-dialog>
     </Header>
     <bcs-exception type="empty" v-if="!onsData.status && !loading">
-      <div>{{ isSharedOrVirtual ? $t('当前集群日志采集组件未启用，请联系集群管理员处理') : $t('当前集群日志采集组件未启用') }}</div>
+      <div>{{ isSharedOrVirtual ? $t('logCollector.msg.notEnable1') : $t('logCollector.msg.notEnable') }}</div>
       <!-- shared 和 virtual集群不支持启用 -->
       <bcs-button
         theme="primary"
         class="w-[88px] mt-[16px]"
         v-if="!isSharedOrVirtual"
         @click="confirmUpdate">
-        {{ $t('启用') }}
+        {{ $t('logCollector.action.enable') }}
       </bcs-button>
     </bcs-exception>
     <bcs-exception
       type="empty"
       v-else-if="['failed-upgrade', 'failed-install','failed'].includes(onsData.status || '') && !loading">
-      <div>{{ $t('当前集群日志采集组件安装失败') }}</div>
+      <div>{{ $t('logCollector.msg.installFailed') }}</div>
       <div class="text-[#979BA5] mt-[16px]" v-if="onsData.message">{{ onsData.message }}</div>
-      <bcs-button theme="primary" class="w-[88px] mt-[16px]" @click="confirmUpdate">{{ $t('重新安装') }}</bcs-button>
+      <bcs-button
+        theme="primary"
+        class="w-[88px] mt-[16px]"
+        @click="confirmUpdate">{{ $t('logCollector.action.reInstall') }}</bcs-button>
     </bcs-exception>
-    <div class="pb-[16px] overflow-hidden" :key="clusterId" v-else>
+    <div class="pb-[16px] max-h-[calc(100vh-104px)] overflow-auto" :key="clusterId" v-else>
       <bcs-alert type="info" closable>
         <template #title>
-          <div class="flex items-center h-[16px]">
-            {{ $t('支持容器标准输出日志和文件路径日志的采集设置。日志采集服务已升级，旧版本规则建议「生成新规则」并及时清理。') }}
-            <bcs-button text class="text-[12px]" @click="openLink(PROJECT_CONFIG.rule)">{{ $t('了解更多') }}</bcs-button>
+          <div class="flex items-center">
+            <span class="flex-1">
+              {{ $t('logCollector.msg.logCollector') }}
+            </span>
+            <bcs-button
+              text
+              class="text-[12px]"
+              @click="openLink(PROJECT_CONFIG.rule)">
+              {{ $t('generic.button.learnMore') }}
+            </bcs-button>
           </div>
         </template>
       </bcs-alert>
       <Row class="mt-[16px] px-[24px]">
         <template #left>
-          <bcs-button theme="primary" icon="plus" @click="handleCreateRule">{{ $t('新建规则') }}</bcs-button>
+          <bcs-button theme="primary" icon="plus" @click="handleCreateRule">{{ $t('plugin.tools.create') }}</bcs-button>
         </template>
         <template #right>
           <bcs-input
             class="w-[320px]"
-            :placeholder="$t('规则名称/命名空间/更新人')"
+            :placeholder="$t('logCollector.placeholder.search')"
             right-icon="bk-icon icon-search"
             v-model="searchValue"
             clearable>
@@ -121,7 +131,7 @@
           @page-change="pageChange"
           @page-limit-change="pageSizeChange"
           v-if="!showEditStatus">
-          <bcs-table-column :label="$t('规则名称')" prop="name" sortable>
+          <bcs-table-column :label="$t('plugin.tools.ruleName')" prop="name" sortable>
             <template #default="{ row }">
               <div class="flex">
                 <!-- 是否旧规则 -->
@@ -129,14 +139,14 @@
                   class="inline-flex items-center justify-center w-[24px] relative
                   h-[24px] bg-[#F0F1F5] rounded-sm text-[#979BA5] mr-[8px]"
                   v-bk-tooltips="{
-                    content: $t('已生成新规则: <br/> {0}<br/>此规则自动清理期限:<br/>{1}', [
+                    content: $t('logCollector.tips.oldRuleHasNewRule', [
                       row.new_rule_name,
                       moment(row.new_rule_created_at).add(30, 'days').format('YYYY-MM-DD')
                     ]),
                     disabled: !row.new_rule_id
                   }"
                   v-if="row.old">
-                  {{ $t('旧') }}
+                  {{ $t('logCollector.msg.oldRuleFlag') }}
                   <!-- 是否转换过 -->
                   <i
                     class="absolute bottom-[0px] right-[-6px] text-[#87cfab] bcs-icon bcs-icon-check-circle-shape"
@@ -153,19 +163,23 @@
               </div>
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('命名空间')" show-overflow-tooltip>
+          <bcs-table-column :label="$t('k8s.namespace')" show-overflow-tooltip>
             <template #default="{ row }">
               {{ getNs(row) }}
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('备注')" show-overflow-tooltip prop="description">
+          <bcs-table-column :label="$t('generic.label.memo')" show-overflow-tooltip prop="description">
             <template #default="{ row }">
               {{ row.description || '--' }}
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('更新人')" prop="updator"></bcs-table-column>
-          <bcs-table-column :label="$t('更新时间')" sortable prop="updated_at" width="180"></bcs-table-column>
-          <bcs-table-column :label="$t('状态')" width="120">
+          <bcs-table-column :label="$t('generic.label.updator')" prop="updator"></bcs-table-column>
+          <bcs-table-column
+            :label="$t('cluster.labels.updatedAt')"
+            sortable
+            prop="updated_at"
+            width="180"></bcs-table-column>
+          <bcs-table-column :label="$t('generic.label.status')" width="120">
             <template #default="{ row }">
               <StatusIcon
                 :status-color-map="statusColorMap"
@@ -179,19 +193,19 @@
                     theme: 'bcs-tippy'
                   }"
                   :class="row.message && row.status === 'FAILED' ? 'border-dashed border-0 border-b' : ''">
-                  {{statusTextMap[row.status] || $t('未知状态')}}
+                  {{statusTextMap[row.status] || $t('generic.status.unknown1')}}
                 </span>
               </StatusIcon>
             </template>
           </bcs-table-column>
-          <bcs-table-column :label="$t('操作')" width="280">
+          <bcs-table-column :label="$t('generic.label.action')" width="280">
             <template #default="{ row }">
               <template v-if="row.status === 'TERMINATED'">
                 <bcs-button text class="text-[12px] mr-[10px]" @click="handleToggleRule(row)">
-                  {{ $t('启用') }}
+                  {{ $t('logCollector.action.enable') }}
                 </bcs-button>
                 <bcs-button text class="text-[12px] mr-[10px]" @click="handleDeleteRule(row)">
-                  {{ $t('删除') }}
+                  {{ $t('generic.button.delete') }}
                 </bcs-button>
               </template>
               <template v-if="row.status === 'SUCCESS'">
@@ -200,14 +214,14 @@
                   class="text-[12px] mr-[10px]"
                   v-if="row.entrypoint.file_log_url && row.rule.config.paths && row.rule.config.paths.length"
                   @click="openLink(row.entrypoint.file_log_url)">
-                  {{ $t('文件日志') }}
+                  {{ $t('logCollector.action.fileLog') }}
                 </bcs-button>
                 <bcs-button
                   text
                   class="text-[12px] mr-[10px]"
                   v-if="row.entrypoint.std_log_url && row.rule.config.enable_stdout"
                   @click="openLink(row.entrypoint.std_log_url)">
-                  {{ $t('标准输出日志') }}
+                  {{ $t('logCollector.action.stdLog') }}
                 </bcs-button>
               </template>
               <bcs-button
@@ -216,7 +230,7 @@
                 :disabled="row.status !== 'FAILED'"
                 @click="handleRetryRule(row)"
                 v-if="row.status === 'FAILED'">
-                {{ $t('重试') }}
+                {{ $t('cluster.ca.nodePool.records.action.retry') }}
               </bcs-button>
               <!-- 旧规则不允许编辑 -->
               <bcs-button
@@ -224,7 +238,7 @@
                 class="text-[12px] mr-[10px]"
                 v-if="row.old"
                 @click="handleCreateNewRule(row)">
-                {{ $t('生成新规则') }}
+                {{ $t('logCollector.action.newRule') }}
               </bcs-button>
               <bcs-button
                 text
@@ -232,7 +246,7 @@
                 :disabled="['PENDING', 'RUNNING'].includes(row.status)"
                 v-else-if="row.status !== 'TERMINATED'"
                 @click="handleEditRule(row)">
-                {{ $t('编辑') }}
+                {{ $t('generic.button.edit') }}
               </bcs-button>
 
               <PopoverSelector
@@ -246,9 +260,10 @@
                     class="bcs-dropdown-item"
                     v-if="['SUCCESS', 'TERMINATED'].includes(row.status) && !row.old"
                     @click="handleToggleRule(row)">
-                    {{ row.status === 'TERMINATED' ? $t('启用') : $t('停用') }}
+                    {{ row.status === 'TERMINATED'
+                      ? $t('logCollector.action.enable') : $t('logCollector.action.stop') }}
                   </li>
-                  <li class="bcs-dropdown-item" @click="handleDeleteRule(row)">{{ $t('删除') }}</li>
+                  <li class="bcs-dropdown-item" @click="handleDeleteRule(row)">{{ $t('generic.button.delete') }}</li>
                 </template>
               </PopoverSelector>
             </template>
@@ -277,25 +292,28 @@
   </div>
 </template>
 <script setup lang="ts">
+import moment from 'moment';
 import { computed, onBeforeMount, ref, watch } from 'vue';
-import Header from '@/components/layout/Header.vue';
-import Row from '@/components/layout/Row.vue';
-import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
-import LoadingIcon from '@/components/loading-icon.vue';
-import StatusIcon from '@/components/status-icon';
-import PopoverSelector from '@/components/popover-selector.vue';
+
 import EditLogCollector from './edit-log-collector.vue';
 import useLog, { IRuleData } from './use-log';
-import { useCluster } from '@/composables/use-app';
+
+import $bkMessage from '@/common/bkmagic';
 import { LOG_COLLECTOR } from '@/common/constant';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
+import Header from '@/components/layout/Header.vue';
+import Row from '@/components/layout/Row.vue';
+import LoadingIcon from '@/components/loading-icon.vue';
+import PopoverSelector from '@/components/popover-selector.vue';
+import StatusIcon from '@/components/status-icon';
+import { useCluster } from '@/composables/use-app';
+import useFormLabel from '@/composables/use-form-label';
 import useInterval from '@/composables/use-interval';
 import usePageConf from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import $bkMessage from '@/common/bkmagic';
 import $router from '@/router';
-import moment from 'moment';
 
 const { curClusterId, clusterList } = useCluster();
 
@@ -345,11 +363,16 @@ const handleGetOnsData = async () => {
 const { start, stop } = useInterval(handleGetOnsData, 5000);
 
 // 组件更新
+const { labelWidth, initFormLabelWidth } = useFormLabel();
+const formRef = ref();
 const showUpdateDialog = ref(false);
 const showUpdateBtn = computed(() => onsData.value.currentVersion !== onsData.value.version
 && !isSharedOrVirtual.value);
 const handleShowUpdateDialog = () => {
   showUpdateDialog.value = true;
+  setTimeout(() => {
+    initFormLabelWidth(formRef.value);
+  }, 0);
 };
 const confirmUpdate = async () => {
   ruleList.value = []; // 清空上一次列表数据
@@ -364,7 +387,7 @@ const confirmUpdate = async () => {
   if (result) {
     $bkMessage({
       theme: 'success',
-      message: $i18n.t('更新任务提交成功'),
+      message: $i18n.t('deploy.helm.upgradeTaskSubmit'),
     });
     showUpdateDialog.value = false;
     handleGetOnsData();
@@ -378,11 +401,11 @@ const statusColorMap = ref({
   TERMINATED: 'gray',
 });
 const statusTextMap = ref({
-  PENDING: $i18n.t('下发中'),
-  RUNNING: $i18n.t('下发中'),
-  FAILED: $i18n.t('下发失败'),
-  SUCCESS: $i18n.t('正常'),
-  TERMINATED: $i18n.t('已停用'),
+  PENDING: $i18n.t('logCollector.status.pending'),
+  RUNNING: $i18n.t('logCollector.status.pending'),
+  FAILED: $i18n.t('logCollector.status.failed'),
+  SUCCESS: $i18n.t('generic.status.ready'),
+  TERMINATED: $i18n.t('generic.status.terminated'),
 });
 const searchKeys = ref(['name', 'status', 'updator', 'rule.config.namespaces']);
 const { searchValue, tableDataMatchSearch } = useTableSearch(ruleList, searchKeys);
@@ -420,7 +443,7 @@ const { start: startLoopRuleList, stop: stopLoopRuleList } = useInterval(() => h
 
 const getNs = row => (row?.rule?.config?.namespaces?.length
   ? row.rule.config.namespaces.join(';')
-  : $i18n.t('全部'));
+  : $i18n.t('generic.label.total'));
 
 // 规则 - 操作
 const edit = ref(false);
@@ -435,10 +458,10 @@ const openLink = (link) => {
 const handleRetryRule = (row) => {
   $bkInfo({
     type: 'warning',
-    title: $i18n.t('确定重试规则 {0}', [row.name]),
+    title: $i18n.t('logCollector.title.confirmRetry', [row.name]),
     clsName: 'custom-info-confirm default-info',
-    okText: $i18n.t('重试'),
-    cancelText: $i18n.t('取消'),
+    okText: $i18n.t('cluster.ca.nodePool.records.action.retry'),
+    cancelText: $i18n.t('generic.button.cancel'),
     async confirmFn() {
       const result = await retryLogCollectorRule({
         $clusterId: clusterId.value,
@@ -447,7 +470,7 @@ const handleRetryRule = (row) => {
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('重试任务提交成功'),
+          message: $i18n.t('logCollector.msg.success.retry'),
         });
         handleGetLogCollectorRules();
       }
@@ -458,10 +481,10 @@ const handleRetryRule = (row) => {
 const handleToggleRule = (row) => {
   $bkInfo({
     type: 'warning',
-    title: row.status === 'TERMINATED' ? $i18n.t('确定启用规则 {0}', [row.name]) : $i18n.t('确定停用规则 {0}', [row.name]),
+    title: row.status === 'TERMINATED' ? $i18n.t('logCollector.title.confirmEnable', [row.name]) : $i18n.t('logCollector.title.confirmStop', [row.name]),
     clsName: 'custom-info-confirm default-info',
-    okText: row.status === 'TERMINATED' ? $i18n.t('启用') : $i18n.t('停用'),
-    cancelText: $i18n.t('取消'),
+    okText: row.status === 'TERMINATED' ? $i18n.t('logCollector.action.enable') : $i18n.t('logCollector.action.stop'),
+    cancelText: $i18n.t('generic.button.cancel'),
     async confirmFn() {
       const params = {
         $clusterId: clusterId.value,
@@ -473,7 +496,7 @@ const handleToggleRule = (row) => {
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: row.status === 'TERMINATED' ? $i18n.t('启用成功') :  $i18n.t('停用成功'),
+          message: row.status === 'TERMINATED' ? $i18n.t('logCollector.msg.success.enable') :  $i18n.t('logCollector.msg.success.stop'),
         });
         handleGetLogCollectorRules();
         editLogRef.value?.handleGetDetail();
@@ -485,10 +508,10 @@ const handleToggleRule = (row) => {
 const handleDeleteRule = (row) => {
   $bkInfo({
     type: 'warning',
-    title: $i18n.t('确定删除规则 {0}', [row.name]),
+    title: $i18n.t('logCollector.title.confirmDelete', [row.name]),
     clsName: 'custom-info-confirm default-info',
-    okText: $i18n.t('删除'),
-    cancelText: $i18n.t('取消'),
+    okText: $i18n.t('generic.button.delete'),
+    cancelText: $i18n.t('generic.button.cancel'),
     async confirmFn() {
       const result = await deleteLogCollectorRule({
         $clusterId: clusterId.value,
@@ -497,7 +520,7 @@ const handleDeleteRule = (row) => {
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('删除成功'),
+          message: $i18n.t('generic.msg.success.delete'),
         });
         showEditStatus.value = false;
         handleGetLogCollectorRules();
@@ -535,10 +558,10 @@ const handleCreateNewRule = (row) => {
   if (row.new_rule_id) {
     $bkInfo({
       type: 'warning',
-      title: $i18n.t('{0} 已生成新规则，是否再次生成？', [row.name]),
+      title: $i18n.t('logCollector.title.exitNewRule', [row.name]),
       clsName: 'custom-info-confirm default-info',
-      okText: $i18n.t('继续生成'),
-      cancelText: $i18n.t('取消'),
+      okText: $i18n.t('logCollector.button.continueCreateNewRule'),
+      cancelText: $i18n.t('generic.button.cancel'),
       async confirmFn() {
         createNewRule(row);
       },

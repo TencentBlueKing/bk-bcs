@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package webhookserver contains webhook logic
 package webhookserver
 
 import (
@@ -75,12 +76,14 @@ type Server struct {
 	ingressConverter *generator.IngressConverter
 	defaultRegion    string
 	conflictHandler  *conflicthandler.ConflictHandler
+	// if node's annotation have not related portpool namespace, will use NodePortBindingNs as default
+	nodePortBindingNs string
 }
 
 // NewHookServer create new hook server object
 func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.LoadBalance, poolCache *portpoolcache.Cache,
 	eventWatcher eventer.WatchEventInterface, validater cloud.Validater, converter *generator.IngressConverter,
-	conflictHandler *conflicthandler.ConflictHandler) (*Server, error) {
+	conflictHandler *conflicthandler.ConflictHandler, nodePortBindingNs string) (*Server, error) {
 	pair, err := tls.LoadX509KeyPair(opt.ServerCertFile, opt.ServerKeyFile)
 	if err != nil {
 		return nil, fmt.Errorf("load x509 key pair cert %s, key %s failed, err %s",
@@ -90,15 +93,16 @@ func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.Lo
 	return &Server{
 		ipv6Server: ipv6server.NewTlsIPv6Server(opt.Addrs, strconv.Itoa(opt.Port), "",
 			&tls.Config{Certificates: []tls.Certificate{pair}}, nil),
-		k8sClient:        k8sClient,
-		lbClient:         lbClient,
-		eventWatcher:     eventWatcher,
-		poolCache:        poolCache,
-		podName:          os.Getenv(constant.EnvIngressPodName),
-		podNamespace:     os.Getenv(constant.EnvIngressPodNamespace),
-		ingressValidater: validater,
-		ingressConverter: converter,
-		conflictHandler:  conflictHandler,
+		k8sClient:         k8sClient,
+		lbClient:          lbClient,
+		eventWatcher:      eventWatcher,
+		poolCache:         poolCache,
+		podName:           os.Getenv(constant.EnvIngressPodName),
+		podNamespace:      os.Getenv(constant.EnvIngressPodNamespace),
+		ingressValidater:  validater,
+		ingressConverter:  converter,
+		conflictHandler:   conflictHandler,
+		nodePortBindingNs: nodePortBindingNs,
 	}, nil
 }
 
@@ -110,7 +114,8 @@ func (s *Server) Start(stop <-chan struct{}) error {
 	mux.HandleFunc("/portpool/v1/validate", s.HandleValidatingWebhook)
 	mux.HandleFunc("/portpool/v1/mutate", s.HandleMutatingWebhook)
 	mux.HandleFunc("/crd/v1/validate", s.HandleValidatingCRD)
-	mux.HandleFunc("/ingress/v1/mutate", s.HandlerValidatingIngress)
+	mux.HandleFunc("/ingress/v1/mutate", s.HandleValidatingIngress)
+	mux.HandleFunc("/node/v1/mutate", s.HandleMutatingNodeWebhook)
 	// 兼容IPV6
 	s.ipv6Server.Server.Handler = mux
 
@@ -159,9 +164,14 @@ func (s *Server) HandleValidatingCRD(w http.ResponseWriter, r *http.Request) {
 	s.handleWebhook(w, r, "validateCRD", newDelegateToV1AdmitHandler(s.validatingCRDDelete))
 }
 
-// HandlerValidatingIngress handler validating ingress webhook request
-func (s *Server) HandlerValidatingIngress(w http.ResponseWriter, r *http.Request) {
+// HandleValidatingIngress handler validating ingress
+func (s *Server) HandleValidatingIngress(w http.ResponseWriter, r *http.Request) {
 	s.handleWebhook(w, r, "validateIngress", newDelegateToV1AdmitHandler(s.mutatingIngress))
+}
+
+// HandleMutatingNodeWebhook handle mutating node webhook request
+func (s *Server) HandleMutatingNodeWebhook(w http.ResponseWriter, r *http.Request) {
+	s.handleWebhook(w, r, "mutateNode", newDelegateToV1AdmitHandler(s.mutatingNodeWebhook))
 }
 
 // handleWebhook 新旧版本K8S Webhook的返回结构体不一致， 这里需要自动适配
@@ -408,6 +418,57 @@ func (s *Server) validatingCRDDelete(ar v1.AdmissionReview) *v1.AdmissionRespons
 	}
 
 	return allowResp
+}
+
+func (s *Server) mutatingNodeWebhook(ar v1.AdmissionReview) (response *v1.AdmissionResponse) {
+	req := ar.Request
+	if req.Operation != v1.Create && req.Operation != v1.Update {
+		blog.Warnf("operation is not create, ignore")
+		return &v1.AdmissionResponse{Allowed: true}
+	}
+	// only hook create operation of pod
+	if req.Kind.Kind != "Node" {
+		blog.Warnf("kind %s is not Node", req.Kind.Kind)
+		return errResponse(fmt.Errorf("kind %s is not Node", req.Kind.Kind))
+	}
+	node := &k8scorev1.Node{}
+	if err := json.Unmarshal(req.Object.Raw, node); err != nil {
+		blog.Warnf("decode %s to node failed, err %s", string(req.Object.Raw), err.Error)
+		return errResponse(fmt.Errorf("decode %s to node failed, err %s", string(req.Object.Raw), err.Error()))
+	}
+	if len(node.Namespace) == 0 {
+		node.Namespace = req.Namespace
+	}
+	if len(node.Name) == 0 {
+		node.Name = req.Name
+	}
+	_, ok := node.Annotations[constant.AnnotationForPortPool]
+	if !ok {
+		blog.Infof("node %s/%s has no portpool annotation", node.GetName(), node.GetNamespace())
+		return &v1.AdmissionResponse{Allowed: true}
+	}
+
+	blog.Infof("received node '%s/%s' create/update event", node.GetNamespace(), node.GetName())
+	patches, err := s.mutatingNode(node)
+	if err != nil {
+		blog.Errorf("mutating node '%s/%s' got an error: %s", node.GetNamespace(), node.GetName(), err.Error())
+		return errResponse(errors.Wrapf(err, "mutating node '%s/%s' failed",
+			node.GetNamespace(), node.GetNamespace()))
+	}
+	patchesBytes, err := json.Marshal(patches)
+	if err != nil {
+		blog.Errorf("marshal node'%s/%s' patches failed: %s", node.GetNamespace(), node.GetName(), err.Error())
+		return errResponse(errors.Wrapf(err, "encoding patches for '%s/%s' failed",
+			node.GetNamespace(), node.GetNamespace()))
+	}
+	return &v1.AdmissionResponse{
+		Allowed: true,
+		Patch:   patchesBytes,
+		PatchType: func() *v1.PatchType {
+			pt := v1.PatchTypeJSONPatch
+			return &pt
+		}(),
+	}
 }
 
 // convert error to admission response

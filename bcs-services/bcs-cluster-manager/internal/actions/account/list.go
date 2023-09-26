@@ -27,6 +27,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ListAction action for list online cloudAccount
@@ -63,7 +65,9 @@ func (la *ListAction) listCloudAccount() error {
 	}
 
 	cond := operator.NewLeafCondition(operator.Eq, condM)
-	cloudAccounts, err := la.model.ListCloudAccount(la.ctx, cond, &storeopt.ListOption{})
+	cloudAccounts, err := la.model.ListCloudAccount(la.ctx, cond, &storeopt.ListOption{
+		SkipDecrypt: false,
+	})
 	if err != nil {
 		return err
 	}
@@ -85,6 +89,9 @@ func (la *ListAction) listCloudAccount() error {
 		if err != nil {
 			blog.Errorf("shieldCloudSecretKey[%s] failed: %v", cloudAccounts[i].AccountID, err)
 		}
+
+		cloudAccounts[i].CreatTime = utils.TransTimeFormat(cloudAccounts[i].CreatTime)
+		cloudAccounts[i].UpdateTime = utils.TransTimeFormat(cloudAccounts[i].UpdateTime)
 
 		cloudAccountInfo := &cmproto.CloudAccountInfo{
 			Account:  &cloudAccounts[i],
@@ -177,7 +184,7 @@ func shieldCloudSecretKey(account *cmproto.Account) (*cmproto.Account, error) {
 	account.ClientSecret = shield(account.ClientSecret)
 
 	if account.ServiceAccountSecret != "" {
-		sa := &cmproto.GkeServiceAccount{}
+		sa := &types.GCPServiceAccount{}
 		if err := json.Unmarshal([]byte(account.ServiceAccountSecret), sa); err != nil {
 			return nil, err
 		}

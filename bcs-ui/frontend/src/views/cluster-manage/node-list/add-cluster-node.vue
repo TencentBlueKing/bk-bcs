@@ -1,55 +1,166 @@
 <template>
   <div class="choose-node-template bcs-content-wrapper">
-    <bk-form>
+    <bk-form :rules="formRules" ref="formRef">
       <FormGroup :allow-toggle="false" class="choose-node">
-        <bk-form-item :label="$t('选择节点')">
-          <bcs-button theme="primary" icon="plus" @click="handleAddNode">{{$t('添加节点')}}</bcs-button>
-          <bcs-table class="mt15" :data="ipList">
-            <bcs-table-column type="index" :label="$t('序号')" width="60"></bcs-table-column>
-            <bcs-table-column :label="$t('内网IP')" prop="bk_host_innerip" width="120"></bcs-table-column>
-            <bcs-table-column :label="$t('Agent状态')" width="100">
-              <template #default="{ row }">
-                <StatusIcon :status="String(row.agent_alive)" :status-color-map="statusColorMap">
-                  {{row.agent_alive ? $t('正常') : $t('异常')}}
-                </StatusIcon>
-              </template>
-            </bcs-table-column>
-            <bcs-table-column :label="$t('机房')" prop="idc_unit_name"></bcs-table-column>
-            <bcs-table-column :label="$t('机型')" prop="svr_device_class"></bcs-table-column>
-            <bcs-table-column :label="$t('操作')" width="100">
-              <template #default="{ row }">
-                <bk-button text @click="handleRemoveIp(row)">{{$t('移除')}}</bk-button>
-              </template>
-            </bcs-table-column>
-          </bcs-table>
+        <bk-form-item :label="$t('manualNode.title.source.text')">
+          <bk-radio-group v-model="nodeSource" @change="handleNodeSourceChange">
+            <bk-radio
+              value="ip"
+              :disabled="isImportCluster">
+              <span
+                v-bk-tooltips="{
+                  disabled: !isImportCluster,
+                  content: $t('cluster.nodeList.tips.disableImportClusterAddNode')
+                }">
+                {{ $t('manualNode.title.source.existingServer') }}
+              </span>
+            </bk-radio>
+            <bk-radio value="nodePool">{{ $t('manualNode.title.source.addFromNodePool') }}</bk-radio>
+          </bk-radio-group>
         </bk-form-item>
-        <bk-form-item :label="$t('节点初始化模板')" v-if="$INTERNAL">
-          <TemplateSelector
-            :is-tke-cluster="isTkeCluster"
-            :cluster-id="clusterId"
-            @template-change="handleTemplateChange" />
-        </bk-form-item>
+        <template v-if="nodeSource === 'ip'">
+          <bk-form-item
+            :label="$t('cluster.nodeList.label.selectNode')"
+            property="ip"
+            error-display-type="normal">
+            <bcs-button
+              theme="primary"
+              icon="plus"
+              @click="handleAddNode">
+              {{$t('cluster.nodeList.create.text')}}
+            </bcs-button>
+            <bcs-table class="mt15" :data="ipList">
+              <bcs-table-column type="index" :label="$t('cluster.nodeList.label.index')" width="60"></bcs-table-column>
+              <bcs-table-column
+                :label="$t('generic.ipSelector.label.innerIp')"
+                prop="bk_host_innerip"
+                width="120">
+              </bcs-table-column>
+              <bcs-table-column :label="$t('generic.ipSelector.label.agentStatus')" width="100">
+                <template #default="{ row }">
+                  <StatusIcon :status="String(row.agent_alive)" :status-color-map="statusColorMap">
+                    {{row.agent_alive ? $t('generic.status.ready') : $t('generic.status.error')}}
+                  </StatusIcon>
+                </template>
+              </bcs-table-column>
+              <bcs-table-column :label="$t('generic.ipSelector.label.idc')" prop="idc_unit_name"></bcs-table-column>
+              <bcs-table-column
+                :label="$t('generic.ipSelector.label.serverModel')"
+                prop="svr_device_class">
+              </bcs-table-column>
+              <bcs-table-column :label="$t('generic.label.action')" width="100">
+                <template #default="{ row }">
+                  <bk-button text @click="handleRemoveIp(row)">{{$t('cluster.create.button.remove')}}</bk-button>
+                </template>
+              </bcs-table-column>
+            </bcs-table>
+          </bk-form-item>
+          <bk-form-item :label="$t('cluster.create.label.initNodeTemplate')" v-if="$INTERNAL">
+            <TemplateSelector
+              :is-tke-cluster="isTkeCluster"
+              :cluster-id="clusterId"
+              @template-change="handleTemplateChange" />
+          </bk-form-item>
+        </template>
+        <template v-else-if="nodeSource === 'nodePool'">
+          <bk-form-item :label="$t('manualNode.title.nodePool.text')" property="nodePool" error-display-type="normal">
+            <div class="flex items-center">
+              <bcs-select class="max-w-[600px] flex-1" :loading="nodeGroupLoading" v-model="nodePoolID">
+                <bcs-option-group
+                  :name="$t('manualNode.title.nodePool.disabledGroup')"
+                  v-if="nodeGroupData.disabled.length">
+                  <bcs-option
+                    v-for="item in nodeGroupData.disabled"
+                    :key="item.nodeGroupID"
+                    :id="item.nodeGroupID"
+                    :name="item.name"
+                    :disabled="(item.autoScaling.maxSize - item.autoScaling.desiredSize) <= 0">
+                    <div
+                      v-bk-tooltips="{
+                        disabled: (item.autoScaling.maxSize - item.autoScaling.desiredSize) > 0,
+                        content: $t('manualNode.tips.insufficientNode')
+                      }">
+                      {{ item.name }}
+                    </div>
+                  </bcs-option>
+                </bcs-option-group>
+                <bcs-option-group
+                  :name="$t('manualNode.title.nodePool.enableGroup')"
+                  v-if="nodeGroupData.enabled.length">
+                  <bcs-option
+                    v-for="item in nodeGroupData.enabled"
+                    :key="item.nodeGroupID"
+                    :id="item.nodeGroupID"
+                    :name="item.name"
+                    :disabled="(item.autoScaling.maxSize - item.autoScaling.desiredSize) <= 0">
+                    <div
+                      v-bk-tooltips="{
+                        disabled: (item.autoScaling.maxSize - item.autoScaling.desiredSize) > 0,
+                        content: $t('manualNode.tips.insufficientNode')
+                      }">
+                      {{ item.name }}
+                    </div>
+                  </bcs-option>
+                </bcs-option-group>
+                <span slot="extension" class="cursor-pointer" @click="handleGotoNodePool('')">
+                  <i class="bcs-icon bcs-icon-fenxiang mr5 !text-[12px]"></i>
+                  {{ $t('manualNode.button.gotoNodePool') }}
+                </span>
+              </bcs-select>
+              <span
+                class="ml10 text-[12px] cursor-pointer"
+                v-bk-tooltips.top="$t('generic.button.refresh')"
+                @click="handleGetNodeGroupList">
+                <i class="bcs-icon bcs-icon-reset"></i>
+              </span>
+              <span class="text-[12px] cursor-pointer ml15" v-if="nodePoolID">
+                <i
+                  class="bcs-icon bcs-icon-yulan"
+                  v-bk-tooltips.top="$t('generic.title.preview')"
+                  @click="handleGotoNodePool(nodePoolID)">
+                </i>
+              </span>
+            </div>
+          </bk-form-item>
+          <bk-form-item :label="$t('manualNode.title.desiredSize')" property="desiredSize" error-display-type="normal">
+            <bcs-input
+              type="number"
+              class="w-[74px]"
+              :max="maxCount"
+              :min="1"
+              :precision="0"
+              v-model="desiredSize"></bcs-input>
+            <span class="text-[#979BA5] ml-[8px]">
+              {{ $t('manualNode.tips.desiredSize', [maxCount]) }}
+            </span>
+          </bk-form-item>
+        </template>
       </FormGroup>
     </bk-form>
     <div class="mt25">
-      <span v-bk-tooltips="{ content: $t('请选择节点'), disabled: ipList.length }">
-        <bk-button
-          class="mw88"
-          theme="primary"
-          :disabled="!ipList.length"
-          @click="handleShowConfirmDialog">
-          {{$t('确定')}}
-        </bk-button>
-      </span>
-      <bk-button class="mw88 ml10" @click="handleCancel">{{$t('取消')}}</bk-button>
+      <bk-button
+        class="mw88"
+        theme="primary"
+        @click="handleShowConfirmDialog"
+        v-if="nodeSource === 'ip'">
+        {{$t('generic.button.confirm')}}
+      </bk-button>
+      <bk-button
+        class="mw88"
+        theme="primary"
+        @click="handleAddDesiredSize"
+        v-else-if="nodeSource === 'nodePool'">
+        {{$t('generic.button.confirm')}}
+      </bk-button>
+      <bk-button class="mw88 ml10" @click="handleCancel">{{$t('generic.button.cancel')}}</bk-button>
     </div>
     <ConfirmDialog
       v-model="showConfirmDialog"
-      :title="$t('确定添加节点')"
-      :sub-title="$t('请确认以下配置:')"
+      :title="$t('cluster.nodeList.title.confirmAddNode')"
+      :sub-title="$t('generic.subTitle.confirmConfig')"
       :tips="checkList"
-      :ok-text="$t('确定添加')"
-      :cancel-text="$t('取消')"
+      :ok-text="$t('cluster.nodeList.create.button.confirmAdd.text')"
+      :cancel-text="$t('generic.button.cancel')"
       :confirm="handleConfirm"
       theme="primary">
     </ConfirmDialog>
@@ -65,17 +176,22 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue';
-import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
-import $router from '@/router';
+import { computed, defineComponent, onBeforeMount, ref } from 'vue';
+
+import TemplateSelector from '../components/template-selector.vue';
+
+import useNode from './use-node';
+
+import { desirednode, nodeGroups } from '@/api/modules/cluster-manager';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import ConfirmDialog from '@/components/comfirm-dialog.vue';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import StatusIcon from '@/components/status-icon';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 import $store from '@/store/index';
-import useNode from './use-node';
-import ConfirmDialog from '@/components/comfirm-dialog.vue';
-import TemplateSelector from '../components/template-selector.vue';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 
 export default defineComponent({
   components: { FormGroup, IpSelector, StatusIcon, ConfirmDialog, TemplateSelector },
@@ -86,9 +202,28 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const formRef = ref();
+    const formRules = ref({
+      ip: [{
+        message: $i18n.t('generic.validate.required'),
+        trigger: 'blur',
+        validator: () => ipList.value.length > 0,
+      }],
+      nodePool: [{
+        message: $i18n.t('generic.validate.required'),
+        trigger: 'blur',
+        validator: () => !!nodePoolID.value,
+      }],
+      desiredSize: [{
+        message: $i18n.t('generic.validate.required'),
+        trigger: 'blur',
+        validator: () => desiredSize.value > 0,
+      }],
+    });
     const curCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === props.clusterId) || {});
     const isTkeCluster = computed(() => curCluster.value?.provider === 'tencentCloud');
+    const isImportCluster = computed(() => curCluster.value.clusterCategory === 'importer');
     const statusColorMap = ref({
       0: 'red',
       1: 'green',
@@ -111,23 +246,25 @@ export default defineComponent({
     };
     const { addNode } = useNode();
     const checkList = computed(() => [
-      $i18n.t('请确认是否对 {ip} 等 {num} 个IP进行操作系统初始化和安装容器服务相关组件操作', {
+      $i18n.t('cluster.nodeList.create.button.confirmAdd.article1', {
         ip: ipList.value[0]?.bk_host_innerip,
         num: ipList.value.length,
       }),
-      $i18n.t('为了保证集群环境标准化，添加节点会格式化数据盘/dev/vdb，盘内数据将被清除，请确认该数据盘内没有放置业务数据'),
+      $i18n.t('cluster.nodeList.create.button.confirmAdd.article2'),
     ]);
     const currentTemplate = ref<Record<string, string>>({});
     const handleTemplateChange = (item) => {
       currentTemplate.value = item;
     };
     const showConfirmDialog = ref(false);
-    const handleShowConfirmDialog = () => {
+    const handleShowConfirmDialog = async () => {
+      const result = await formRef.value?.validate().catch(() => false);
+      if (!result) return;
       currentTemplate.value.nodeTemplateID
         ? $bkInfo({
           type: 'warning',
           clsName: 'custom-info-confirm',
-          title: $i18n.t('确定使用节点模板 {name}', { name: currentTemplate.value.name }),
+          title: $i18n.t('cluster.nodeList.title.confirmUseTemplate', { name: currentTemplate.value.name }),
           defaultInfo: true,
           confirmFn: () => {
             showConfirmDialog.value = true;
@@ -161,7 +298,118 @@ export default defineComponent({
       $router.back();
     };
 
+    // nodeGroups
+    const nodePoolID = ref('');
+    const desiredSize = ref(1);
+    const nodeSource = ref<'nodePool'|'ip'>(isImportCluster.value ? 'nodePool' : 'ip');
+    const handleNodeSourceChange = (value: 'nodePool'|'ip') => {
+      if (value === 'nodePool') {
+        handleGetNodeGroupList();
+      }
+    };
+    const nodeGroupsList = ref<INodePool[]>([]);
+    const curNodePool = computed(() => nodeGroupsList.value.find(item => item.nodeGroupID === nodePoolID.value));
+    // 分组数据
+    const nodeGroupData = computed(() => {
+      const groupData: {
+        enabled: INodePool[]
+        disabled: INodePool[]
+      } = {
+        enabled: [],
+        disabled: [],
+      };
+      nodeGroupsList.value.forEach((item) => {
+        if (item.enableAutoscale) {
+          groupData.enabled.push(item);
+        } else {
+          groupData.disabled.push(item);
+        }
+      });
+      return groupData;
+    });
+    // 最大可添加节点数量
+    const maxCount = computed(() => {
+      const maxSize = curNodePool.value?.autoScaling?.maxSize || 0;
+      const desiredSize = curNodePool.value?.autoScaling?.desiredSize || 0;
+      return maxSize - desiredSize;
+    });
+    const nodeGroupLoading = ref(false);
+    const handleGetNodeGroupList = async () => {
+      nodeGroupLoading.value = true;
+      nodeGroupsList.value = await nodeGroups({
+        $clusterId: props.clusterId,
+        enableFilter: true,
+      }).catch(() => []);
+      nodeGroupLoading.value = false;
+    };
+    const user = computed(() => $store.state.user);
+    const handleAddDesiredSize = async () => {
+      const result = await formRef.value?.validate().catch(() => false);
+      if (!result) return;
+      $bkInfo({
+        type: 'warning',
+        clsName: 'custom-info-confirm',
+        title: curNodePool.value?.enableAutoscale ? $i18n.t('manualNode.msg.confirmText1') : $i18n.t('manualNode.msg.confirmText'),
+        defaultInfo: true,
+        confirmFn: async () => {
+          const result = await desirednode({
+            $id: nodePoolID.value,
+            desiredNode: Number(desiredSize.value) + Number(curNodePool.value?.autoScaling?.desiredSize || 0),
+            manual: true,
+            operator: user.value.username,
+          });
+          if (result) {
+            $bkMessage({
+              theme: 'success',
+              message: $i18n.t('generic.msg.success.deliveryTask'),
+            });
+            $router.push({
+              name: 'clusterDetail',
+              params: {
+                clusterId: props.clusterId,
+              },
+              query: {
+                active: 'node',
+              },
+            });
+          }
+        },
+      });
+    };
+    const handleGotoNodePool = (id?: string) => {
+      if (id) {
+        const { href } = $router.resolve({
+          name: 'nodePoolDetail',
+          params: {
+            clusterId: props.clusterId,
+            nodeGroupID: id,
+          },
+        });
+        window.open(href);
+      } else {
+        const { href } = $router.resolve({
+          name: 'clusterDetail',
+          params: {
+            clusterId: props.clusterId,
+          },
+          query: {
+            active: 'autoscaler',
+          },
+        });
+        window.open(href);
+      }
+    };
+
+    onBeforeMount(() => {
+      if (nodeSource.value === 'nodePool') {
+        handleGetNodeGroupList();
+      }
+    });
+
     return {
+      isImportCluster,
+      formRef,
+      formRules,
       curCluster,
       isTkeCluster,
       confirmLoading,
@@ -170,6 +418,13 @@ export default defineComponent({
       showIpSelector,
       ipList,
       statusColorMap,
+      nodeSource,
+      nodePoolID,
+      nodeGroupData,
+      nodeGroupLoading,
+      maxCount,
+      desiredSize,
+      handleNodeSourceChange,
       handleRemoveIp,
       chooseServer,
       handleCancel,
@@ -177,6 +432,9 @@ export default defineComponent({
       handleConfirm,
       handleAddNode,
       handleTemplateChange,
+      handleGetNodeGroupList,
+      handleAddDesiredSize,
+      handleGotoNodePool,
     };
   },
 });

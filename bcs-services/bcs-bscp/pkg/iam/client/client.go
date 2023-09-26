@@ -1,6 +1,6 @@
 /*
- * Tencent is pleased to support the open source community by making 蓝鲸 available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -21,12 +21,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/sdk/operator"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/rest/client"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -65,8 +65,8 @@ func NewClient(cfg *Config, reg prometheus.Registerer) (*Client, error) {
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
 	header.Set("Accept", "application/json")
-	header.Set(appCodeHeader, cfg.AppCode)
-	header.Set(appSecretHeader, cfg.AppSecret)
+	header.Set(bkapiAuthHeader, fmt.Sprintf("{\"bk_app_code\":\"%s\", \"bk_app_secret\":\"%s\"}",
+		cfg.AppCode, cfg.AppSecret))
 
 	cli := &Client{
 		config:      cfg,
@@ -745,4 +745,29 @@ func (c *Client) cloneHeader(ctx context.Context) http.Header {
 		h.Set(key, c.basicHeader.Get(key))
 	}
 	return h
+}
+
+// GrantResourceCreatorAction grant resource creator action in IAM
+func (c *Client) GrantResourceCreatorAction(ctx context.Context, opt GrantResourceCreatorActionOption) error {
+	resp := new(BaseResponse)
+	result := c.client.Post().
+		SubResourcef("api/v1/open/authorization/resource_creator_action").
+		WithContext(ctx).
+		WithHeaders(c.basicHeader).
+		Body(opt).Do()
+
+	err := result.Into(resp)
+	if err != nil {
+		return err
+	}
+
+	if resp.Code != 0 {
+		return &AuthError{
+			RequestID: result.Header.Get(RequestIDHeader),
+			Reason: fmt.Errorf("grant resource creator action %v failed, code: %d, msg: %s",
+				opt, resp.Code, resp.Message),
+		}
+	}
+
+	return nil
 }

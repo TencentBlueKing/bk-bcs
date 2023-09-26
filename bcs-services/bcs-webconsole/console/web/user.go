@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package web
@@ -16,12 +15,14 @@ package web
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-
-	"github.com/gin-gonic/gin"
 )
 
 // UserPermRequestRedirect 用户权限申请URL
@@ -32,8 +33,14 @@ func (s *service) UserPermRequestRedirect(c *gin.Context) {
 		api.APIError(c, i18n.GetMessage(c, "project_id is required"))
 		return
 	}
+	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
+	if err != nil {
+		api.APIError(c, i18n.GetMessage(c, "项目不正确"))
+		return
+	}
 
-	redirectUrl, err := iam.MakeResourceApplyUrl(c.Request.Context(), projectId, clusterId, route.GetNamespace(c), "")
+	redirectUrl, err := iam.MakeResourceApplyUrl(c.Request.Context(),
+		project.ProjectId, clusterId, route.GetNamespace(c), "")
 	if err != nil {
 		api.APIError(c, i18n.GetMessage(c, err.Error()))
 		return

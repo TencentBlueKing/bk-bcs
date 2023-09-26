@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package dao
 
@@ -57,100 +57,33 @@ func (dao *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, erro
 		return 0, err
 	}
 
-	eDecorator := dao.event.Eventf(kit)
-	var pubID uint32
-
-	// 多个使用事务处理
-	createTx := func(tx *gen.Query) error {
-		groupIDs := opt.Groups
-		if opt.All {
-			m := dao.genQ.ReleasedGroup
-			q := dao.genQ.ReleasedGroup.WithContext(kit.Ctx)
-			err := q.Select(m.GroupID).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID),
-				m.GroupID.Neq(0)).Scan(&groupIDs)
-			if err != nil {
-				logs.Errorf("get to be published groups(all) failed, err: %v, rid: %s", err, kit.Rid)
-				return err
-			}
-			opt.Default = true
-		}
-
-		groups := make([]*table.Group, 0, len(groupIDs))
+	// 手动事务处理
+	tx := dao.genQ.Begin()
+	stgID, err := func() (uint32, error) {
+		groups := make([]*table.Group, 0, len(opt.Groups))
 		var err error
-		if len(groupIDs) > 0 {
+		if len(opt.Groups) > 0 {
 			m := dao.genQ.Group
 			q := dao.genQ.Group.WithContext(kit.Ctx)
-			groups, err = q.Where(m.ID.In(groupIDs...), m.BizID.Eq(opt.BizID)).Find()
+			groups, err = q.Where(m.ID.In(opt.Groups...), m.BizID.Eq(opt.BizID)).Find()
 			if err != nil {
 				logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",
-					tools.JoinUint32(groupIDs, ","), err, kit.Rid)
-				return err
+					tools.JoinUint32(opt.Groups, ","), err, kit.Rid)
+				return 0, err
 			}
 		}
-
-		// create strategy to publish it later
-		stgID, err := dao.idGen.One(kit, table.StrategyTable)
-		if err != nil {
-			logs.Errorf("generate strategy id failed, err: %v, rid: %s", err, kit.Rid)
-			return err
-		}
-		pubID = stgID
-		stg := genStrategy(kit, opt, stgID, groups)
-
-		sq := tx.Strategy.WithContext(kit.Ctx)
-		if err := sq.Create(stg); err != nil {
-			return err
-		}
-
-		// audit this to create strategy details
-		ad := dao.auditDao.DecoratorV2(kit, opt.BizID).PrepareCreate(stg)
-		if err := ad.Do(tx); err != nil {
-			return err
-		}
-		// audit this to publish details
-		ad = dao.auditDao.DecoratorV2(kit, opt.BizID).PreparePublish(stg)
-		if err := ad.Do(tx); err != nil {
-			return err
-		}
-
-		// add release publish num
-		if err := dao.increaseReleasePublishNum(kit, tx, stg.Spec.ReleaseID); err != nil {
-			logs.Errorf("increate release publish num failed, err: %v, rid: %s", err, kit.Rid)
-			return err
-		}
-
-		if err := dao.upsertReleasedGroups(kit, tx, opt, stg); err != nil {
-			logs.Errorf("upsert group current releases failed, err: %v, rid: %s", err, kit.Rid)
-			return err
-		}
-
-		// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
-		one := types.Event{
-			Spec: &table.EventSpec{
-				Resource: table.Publish,
-				// use the published strategy history id, which represent a real publish operation.
-				ResourceID: opt.ReleaseID,
-				OpType:     table.InsertOp,
-			},
-			Attachment: &table.EventAttachment{BizID: opt.BizID, AppID: opt.AppID},
-			Revision:   &table.CreatedRevision{Creator: kit.User},
-		}
-		if err := eDecorator.Fire(one); err != nil {
-			logs.Errorf("fire publish strategy event failed, err: %v, rid: %s", err, kit.Rid)
-			return errors.New("fire event failed, " + err.Error())
-		}
-
-		return nil
-	}
-	err := dao.genQ.Transaction(createTx)
-
-	eDecorator.Finalizer(err)
-
+		return dao.publish(kit, tx, opt, groups)
+	}()
 	if err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit publish transaction failed, err: %v, rid: %s", err, kit.Rid)
 		return 0, err
 	}
 
-	return pubID, nil
+	return stgID, nil
 }
 
 func genStrategy(kit *kit.Kit, opt *types.PublishOption, stgID uint32, groups []*table.Group) *table.Strategy {
@@ -191,43 +124,30 @@ func (dao *pubDao) PublishWithTx(kit *kit.Kit, tx *gen.QueryTx, opt *types.Publi
 		return 0, err
 	}
 
-	eDecorator := dao.event.Eventf(kit)
-	var pubID uint32
-
-	groupIDs := opt.Groups
-	if opt.All {
-		m := tx.ReleasedGroup
-		q := tx.ReleasedGroup.WithContext(kit.Ctx)
-		err := q.Select(m.GroupID).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID),
-			m.GroupID.Neq(0)).Scan(&groupIDs)
-		if err != nil {
-			logs.Errorf("get to be published groups(all) failed, err: %v, rid: %s", err, kit.Rid)
-			return 0, err
-		}
-		opt.Default = true
-	}
-
-	groups := make([]*table.Group, 0, len(groupIDs))
+	groups := make([]*table.Group, 0, len(opt.Groups))
 	var err error
-	// list groups if gray release
-	if len(groupIDs) > 0 {
-		m := tx.Group
-		q := tx.Group.WithContext(kit.Ctx)
-		groups, err = q.Where(m.ID.In(groupIDs...)).Find()
+	if len(opt.Groups) > 0 {
+		m := dao.genQ.Group
+		q := dao.genQ.Group.WithContext(kit.Ctx)
+		groups, err = q.Where(m.ID.In(opt.Groups...), m.BizID.Eq(opt.BizID)).Find()
 		if err != nil {
 			logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",
 				tools.JoinUint32(opt.Groups, ","), err, kit.Rid)
 			return 0, err
 		}
 	}
+	return dao.publish(kit, tx, opt, groups)
+}
 
+func (dao *pubDao) publish(kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOption, groups []*table.Group) (
+	uint32, error) {
+	eDecorator := dao.event.Eventf(kit)
 	// create strategy to publish it later
 	stgID, err := dao.idGen.One(kit, table.StrategyTable)
 	if err != nil {
 		logs.Errorf("generate strategy id failed, err: %v, rid: %s", err, kit.Rid)
 		return 0, err
 	}
-	pubID = stgID
 	stg := genStrategy(kit, opt, stgID, groups)
 
 	sq := tx.Strategy.WithContext(kit.Ctx)
@@ -273,7 +193,7 @@ func (dao *pubDao) PublishWithTx(kit *kit.Kit, tx *gen.QueryTx, opt *types.Publi
 		return 0, errors.New("fire event failed, " + err.Error())
 	}
 
-	return pubID, nil
+	return stgID, nil
 }
 
 // increaseReleasePublishNum increase release publish num by 1
@@ -289,56 +209,88 @@ func (dao *pubDao) increaseReleasePublishNum(kit *kit.Kit, tx *gen.Query, releas
 
 func (dao *pubDao) upsertReleasedGroups(kit *kit.Kit, tx *gen.Query, opt *types.PublishOption,
 	stg *table.Strategy) error {
-	groups := stg.Spec.Scope.Groups
-	if opt.Default {
-		groups = append(groups, &table.Group{
-			ID: 0,
-			Spec: &table.GroupSpec{
-				Name:     "默认分组",
-				Mode:     table.Default,
-				Public:   true,
-				Selector: new(selector.Selector),
-				UID:      "",
-			},
-		})
+	defaultGroup := &table.Group{
+		ID: 0,
+		Spec: &table.GroupSpec{
+			Name:     "默认分组",
+			Mode:     table.Default,
+			Public:   true,
+			Selector: new(selector.Selector),
+			UID:      "",
+		},
 	}
-
-	for _, group := range groups {
+	if opt.All {
+		// 1. delete all released groups
+		m := tx.ReleasedGroup
+		if _, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID)).Delete(); err != nil {
+			logs.Errorf("delete all released groups failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
+		// 2. insert default group
+		rgID, err := dao.idGen.One(kit, table.ReleasedGroupTable)
+		if err != nil {
+			logs.Errorf("generate released group id failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
 		rg := &table.ReleasedGroup{
-			GroupID:    group.ID,
+			ID:         rgID,
+			GroupID:    defaultGroup.ID,
 			AppID:      opt.AppID,
 			ReleaseID:  opt.ReleaseID,
 			StrategyID: stg.ID,
-			Mode:       group.Spec.Mode,
-			Selector:   group.Spec.Selector,
-			UID:        group.Spec.UID,
+			Mode:       defaultGroup.Spec.Mode,
+			Selector:   defaultGroup.Spec.Selector,
+			UID:        defaultGroup.Spec.UID,
 			Edited:     false,
 			BizID:      opt.BizID,
 			Reviser:    kit.User,
 		}
-
-		m := tx.ReleasedGroup
-		q := tx.ReleasedGroup.WithContext(kit.Ctx)
-
-		result, err := q.Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.GroupID.Eq(group.ID)).
-			Omit(m.ID).Updates(rg)
-		if err != nil {
+		if err := tx.ReleasedGroup.WithContext(kit.Ctx).Create(rg); err != nil {
+			logs.Errorf("insert default released group failed, err: %v, rid: %s", err, kit.Rid)
 			return err
 		}
-		if result.RowsAffected == 1 {
-			continue
+		return nil
+	} else {
+		groups := stg.Spec.Scope.Groups
+		if opt.Default {
+			groups = append(groups, defaultGroup)
 		}
+		for _, group := range groups {
+			rg := &table.ReleasedGroup{
+				GroupID:    group.ID,
+				AppID:      opt.AppID,
+				ReleaseID:  opt.ReleaseID,
+				StrategyID: stg.ID,
+				Mode:       group.Spec.Mode,
+				Selector:   group.Spec.Selector,
+				UID:        group.Spec.UID,
+				Edited:     false,
+				BizID:      opt.BizID,
+				Reviser:    kit.User,
+			}
 
-		id, err := dao.idGen.One(kit, table.ReleasedGroupTable)
-		if err != nil {
-			return err
-		}
-		rg.ID = id
+			m := tx.ReleasedGroup
+			q := tx.ReleasedGroup.WithContext(kit.Ctx)
 
-		if err := q.Create(rg); err != nil {
-			return err
+			result, err := q.Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.GroupID.Eq(group.ID)).
+				Omit(m.ID).Updates(rg)
+			if err != nil {
+				return err
+			}
+			if result.RowsAffected == 1 {
+				continue
+			}
+
+			id, err := dao.idGen.One(kit, table.ReleasedGroupTable)
+			if err != nil {
+				return err
+			}
+			rg.ID = id
+
+			if err := q.Create(rg); err != nil {
+				return err
+			}
 		}
+		return nil
 	}
-
-	return nil
 }

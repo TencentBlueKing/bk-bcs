@@ -11,6 +11,7 @@
  *
  */
 
+// Package check 通过额外goroutine，定时检查组件运行状态
 package check
 
 import (

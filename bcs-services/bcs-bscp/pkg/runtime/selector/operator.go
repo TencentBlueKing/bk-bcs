@@ -1,20 +1,21 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package selector
 
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strconv"
 
 	"bscp.io/pkg/criteria/validator"
@@ -51,6 +52,8 @@ const (
 	LessThanEqual    OperatorType = "le"
 	In               OperatorType = "in"
 	NotIn            OperatorType = "nin"
+	Regex            OperatorType = "re"
+	NotRegex         OperatorType = "nre"
 )
 
 // supported default operators
@@ -63,6 +66,8 @@ var (
 	LessThanEqualOperator    = LessThanEqualType(LessThanEqual)
 	InOperator               = InType(In)
 	NotInOperator            = NotInType(NotIn)
+	RegexOperator            = RegexType(Regex)
+	NotRegexOperator         = NotRegexType(NotRegex)
 )
 
 // OperatorEnums enum all the supported operators.
@@ -75,6 +80,8 @@ var OperatorEnums = map[OperatorType]Operator{
 	LessThanEqual:    &LessThanEqualOperator,
 	In:               &InOperator,
 	NotIn:            &NotInOperator,
+	Regex:            &RegexOperator,
+	NotRegex:         &NotRegexOperator,
 }
 
 var _ Operator = new(EqualType)
@@ -186,7 +193,7 @@ func (gt *GreaterThanType) Match(match *Element, labels map[string]string) (bool
 		return false, nil
 	}
 
-	to, err := strconv.ParseFloat(compare, 10)
+	to, err := strconv.ParseFloat(compare, 32)
 	if err != nil {
 		return false, fmt.Errorf("parse gt oper's target label value: %s to float failed, err: %v", compare, err)
 	}
@@ -225,7 +232,7 @@ func (ge *GreaterThanEqualType) Match(match *Element, with map[string]string) (b
 		return false, nil
 	}
 
-	to, err := strconv.ParseFloat(compare, 10)
+	to, err := strconv.ParseFloat(compare, 32)
 	if err != nil {
 		return false, fmt.Errorf("parse ge oper's target label value: %s to float failed, err: %v", compare, err)
 	}
@@ -264,7 +271,7 @@ func (lt *LessThanType) Match(match *Element, labels map[string]string) (bool, e
 		return false, nil
 	}
 
-	to, err := strconv.ParseFloat(compare, 10)
+	to, err := strconv.ParseFloat(compare, 32)
 	if err != nil {
 		return false, fmt.Errorf("parse lt oper's target label value: %s to float failed, err: %v", compare, err)
 	}
@@ -426,6 +433,93 @@ func (nin *NotInType) Match(match *Element, labels map[string]string) (bool, err
 	}
 
 	return true, nil
+}
+
+var _ Operator = new(RegexType)
+
+// RegexType is a regex operator
+type RegexType OperatorType
+
+// Name is the name of in operator
+func (re *RegexType) Name() OperatorType {
+	return Regex
+}
+
+// Validate valid the match element is valid to match regex operator or not
+func (re *RegexType) Validate(match *Element) error {
+	v, ok := match.Value.(string)
+	if !ok {
+		return fmt.Errorf("invalid re oper with value: %v, should be string", match.Value)
+	}
+
+	if err := validator.ValidateLabelValue(v); err != nil {
+		return fmt.Errorf("invalid label key's value, key: %s value: %s, %v", match.Key, v, err)
+	}
+	if err := validator.ValidateLabelValueRegex(v); err != nil {
+		return fmt.Errorf("invalid label key's value, key: %s value: %s, %v", match.Key, v, err)
+	}
+	return nil
+}
+
+// Match matched only when the match key is exist and test value is matched with regular expression.
+func (re *RegexType) Match(match *Element, labels map[string]string) (bool, error) {
+	val, ok := match.Value.(string)
+	if !ok {
+		return false, fmt.Errorf("invalid re oper with value: %v, should be string", match.Value)
+	}
+
+	to, exists := labels[match.Key]
+	if !exists {
+		return false, nil
+	}
+
+	return regexp.MatchString(val, to)
+}
+
+var _ Operator = new(NotRegexType)
+
+// NotRegexType is a not regex operator
+type NotRegexType OperatorType
+
+// Name is the name of not regex operator
+func (nre *NotRegexType) Name() OperatorType {
+	return NotRegex
+}
+
+// Validate valid the match element is valid to match not regex operator or not
+func (nre *NotRegexType) Validate(match *Element) error {
+	v, ok := match.Value.(string)
+	if !ok {
+		return fmt.Errorf("invalid nre oper with value: %v, should be string", match.Value)
+	}
+
+	if err := validator.ValidateLabelValue(v); err != nil {
+		return fmt.Errorf("invalid label key's value, key: %s value: %s, %v", match.Key, v, err)
+	}
+	if err := validator.ValidateLabelValueRegex(v); err != nil {
+		return fmt.Errorf("invalid label key's value, key: %s value: %s, %v", match.Key, v, err)
+	}
+
+	return nil
+}
+
+// Match matched only when the match key is exist and test value is not matched with regular expression.
+func (nre *NotRegexType) Match(match *Element, labels map[string]string) (bool, error) {
+	val, ok := match.Value.(string)
+	if !ok {
+		return false, fmt.Errorf("invalid nre oper with value: %v, should be string", match.Value)
+	}
+
+	to, exists := labels[match.Key]
+	if !exists {
+		return false, nil
+	}
+
+	matched, err := regexp.MatchString(val, to)
+	if err != nil {
+		return false, err
+	}
+	return !matched, nil
 }
 
 func isNumeric(val interface{}) bool {

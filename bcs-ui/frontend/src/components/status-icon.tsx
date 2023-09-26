@@ -1,6 +1,7 @@
-import { defineComponent, computed, toRefs } from 'vue';
-import LoadingIcon from '@/components/loading-icon.vue';
+import { computed, defineComponent, toRefs } from 'vue';
+
 import './status-icon.css';
+import LoadingIcon from '@/components/loading-icon.vue';
 import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({
@@ -50,7 +51,7 @@ export default defineComponent({
       : `status-icon-result status-${color.value}-result`));
     const statusText = computed(() => {
       if (hideText.value) return '';
-      return statusTextMap.value[status.value] || status.value || $i18n.t('未知状态');
+      return statusTextMap.value[status.value] || status.value || $i18n.t('generic.status.unknown1');
     });
 
     return {

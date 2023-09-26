@@ -18,6 +18,8 @@ package resource
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"time"
 
 	"github.com/TencentBlueKing/gopkg/collection/set"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -207,4 +209,29 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 		return err
 	}
 	return nil
+}
+
+// Restart 对某个资源进行调度
+func (m *ResMgr) Restart(
+	ctx context.Context, namespace, name string, opts metav1.PatchOptions,
+) (*structpb.Struct, error) {
+	patchByte := fmt.Sprintf(`{"spec":{"template":{"metadata":{"annotations":{"kubectl.kubernetes.io/restartedAt":"%s"}}}}}`,
+		metav1.Now().Format(time.RFC3339))
+	return resp.BuildPatchAPIResp(
+		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte), opts,
+	)
+}
+
+// PauseOrResume 对某个资源进行暂停或恢复
+func (m *ResMgr) PauseOrResume(
+	ctx context.Context, namespace, name string, paused bool, opts metav1.PatchOptions,
+) (*structpb.Struct, error) {
+	opts.FieldManager = "kubectl-resume"
+	if paused {
+		opts.FieldManager = "kubectl-pause"
+	}
+	patchByte := fmt.Sprintf(`{"spec":{"paused":%v}}`, paused)
+	return resp.BuildPatchAPIResp(
+		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte), opts,
+	)
 }

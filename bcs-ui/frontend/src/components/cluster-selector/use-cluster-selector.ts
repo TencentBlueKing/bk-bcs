@@ -1,7 +1,8 @@
+import { computed, onBeforeMount, ref } from 'vue';
+
 import { ICluster, useCluster } from '@/composables/use-app';
-import { ref, computed, onBeforeMount } from 'vue';
-import $store from '@/store';
 import $i18n from '@/i18n/i18n-setup';
+import $store from '@/store';
 
 export type ClusterType = 'independent' | 'managed' |'virtual' | 'shared' | 'all';
 export default function useClusterSelector(
@@ -57,17 +58,17 @@ export default function useClusterSelector(
     {
       type: 'managed',
       list: [],
-      title: $i18n.t('托管集群'),
+      title: $i18n.t('bcs.cluster.managed'),
     },
     {
       type: 'independent',
       list: [],
-      title: $i18n.t('独立集群'),
+      title: $i18n.t('bcs.cluster.selfDeployed'),
     },
     {
       type: 'shared',
       list: [],
-      title: $i18n.t('共享集群'),
+      title: $i18n.t('bcs.cluster.share'),
     },
   ])
     .filter(item => !!item.list.length));

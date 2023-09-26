@@ -3,35 +3,35 @@
     <div class="user-token-header">
       <span>
         <i class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></i>
-        <span class="title">{{$t('API密钥')}}</span>
+        <span class="title">{{$t('apiToken.text')}}</span>
       </span>
       <a class="bk-text-button help" :href="PROJECT_CONFIG.token" target="_blank">
-        {{ $t('使用说明') }}
+        {{ $t('apiToken.action.link.Instructions') }}
       </a>
     </div>
     <bcs-alert type="info" class="mb15">
       <template #title>
-        <div class="info-item">1. {{$t('API密钥适用于 BCS API 调用与 kubeconfig')}}</div>
+        <div class="info-item">1. {{$t('apiToken.desc.article1')}}</div>
         <div class="info-item">2.
-          <i18n path="API密钥与个人账户绑定，使用蓝鲸权限中心做权限控制，点击{0}可以查看与设置您的API密钥权限">
+          <i18n path="apiToken.desc.article2">
             <a class="bk-text-button" :href="BK_IAM_HOST" target="_blank">
-              {{ $t('权限中心') }}
+              {{ $t('apiToken.action.link.iam') }}
             </a>
           </i18n>
         </div>
-        <div class="info-item">3. {{$t('为了您的应用安全，请妥善保存API密钥，请勿通过任何方式上传或者分享您的API密钥信息')}}</div>
+        <div class="info-item">3. {{$t('apiToken.desc.article3')}}</div>
       </template>
     </bcs-alert>
     <bk-table :data="data" v-bkloading="{ isLoading: loading }">
-      <bk-table-column :label="$t('用户名')">
+      <bk-table-column :label="$t('deploy.helm.username')">
         <template #default>
           <span>{{user.username}}</span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('API密钥')" min-width="300">
+      <bk-table-column :label="$t('apiToken.text')" min-width="300">
         <template #default="{ row }">
           <div class="token-row">
-            <span>{{hiddenToken ? new Array(row.token.length).fill('*').join('') : row.token}}</span>
+            <span>{{hiddenToken ? new Array(12).fill('*').join('') : row.token}}</span>
             <i
               :class="['ml10 bcs-icon', `bcs-icon-${hiddenToken ? 'eye-slash' : 'eye'}`]"
               @click="toggleHiddenToken"></i>
@@ -39,12 +39,12 @@
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('过期时间')" prop="expired_at">
+      <bk-table-column :label="$t('apiToken.label.expiredTime')" prop="expired_at">
         <template #default="{ row }">
-          <div>{{!row.expired_at ? $t('永久') : row.expired_at}}</div>
+          <div>{{!row.expired_at ? $t('apiToken.label.perpetual') : row.expired_at}}</div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('状态')">
+      <bk-table-column :label="$t('generic.label.status')">
         <template #default="{ row }">
           <StatusIcon
             :status="String(row.status)"
@@ -52,11 +52,11 @@
               '1': 'green',
               '0': 'gray'
             }">
-            {{row.status === 1 ? $t('正常') : $t('已过期')}}
+            {{row.status === 1 ? $t('generic.status.ready') : $t('apiToken.status.expired')}}
           </StatusIcon>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('操作')" width="150">
+      <bk-table-column :label="$t('generic.label.action')" width="150">
         <template #default="{ row }">
           <bk-button
             class="mr10"
@@ -64,19 +64,19 @@
             text
             :disabled="!row.expired_at"
             @click="handleRenewalToken(row)"
-          >{{$t('续期')}}</bk-button>
+          >{{$t('apiToken.action.renewal')}}</bk-button>
           <bk-button
             theme="primary" text
-            @click="handleDeleteToken(row)">{{$t('删除')}}</bk-button>
+            @click="handleDeleteToken(row)">{{$t('generic.button.delete')}}</bk-button>
         </template>
       </bk-table-column>
       <template #empty>
         <bcs-exception type="empty" scene="part">
-          <div>{{$t('您暂无当前操作权限，请新建API密钥后继续操作')}}</div>
+          <div>{{$t('apiToken.msg.emptyDataTips')}}</div>
           <bcs-button
             class="create-token-btn" icon="plus" theme="primary"
             @click="handleCreateToken">
-            {{$t('新建API密钥')}}
+            {{$t('apiToken.button.newToken')}}
           </bcs-button>
         </bcs-exception>
       </template>
@@ -84,7 +84,7 @@
     <!-- 独立集群使用案例 -->
     <div class="user-token-example" v-if="data.length">
       <div class="example-item">
-        <div class="title total-title">{{$t('独立集群/托管集群/vCluster kubectl 与 BCS API 使用示例')}}:</div>
+        <div class="title total-title">{{$t('apiToken.example.title1')}}:</div>
         <div class="code-wrapper">
           <p>kubectl:</p>
           <br>
@@ -92,7 +92,7 @@
         </div>
       </div>
       <div class="example-item">
-        <div class="title">{{$t('/root/.kube/demo_config内容示例如下')}}:</div>
+        <div class="title">{{$t('apiToken.example.kubeConfigPath')}}:</div>
         <div class="code-wrapper">
           <CodeEditor
             :height="330"
@@ -105,7 +105,7 @@
         </div>
       </div>
       <div class="example-item">
-        <div class="title">{{$t('BCS API')}}:</div>
+        <div class="title">{{$t('apiToken.bcsAPI')}}:</div>
         <div class="code-wrapper">
           <CodeEditor
             :height="50"
@@ -122,7 +122,7 @@
     <!-- 共享集群使用案例 -->
     <div class="user-token-example mt50" v-if="data.length && hasSharedCluster">
       <div class="example-item">
-        <div class="title total-title">{{$t('共享集群kubectl与BCS API使用示例')}}:</div>
+        <div class="title total-title">{{$t('apiToken.example.title2')}}:</div>
         <div class="code-wrapper">
           <p>kubectl:</p>
           <br>
@@ -130,7 +130,7 @@
         </div>
       </div>
       <div class="example-item">
-        <div class="title">{{$t('/root/.kube/demo_config内容示例如下')}}:</div>
+        <div class="title">{{$t('apiToken.example.kubeConfigPath')}}:</div>
         <div class="code-wrapper">
           <CodeEditor
             :height="330"
@@ -143,7 +143,7 @@
         </div>
       </div>
       <div class="example-item">
-        <div class="title">{{$t('BCS API')}}:</div>
+        <div class="title">{{$t('apiToken.bcsAPI')}}:</div>
         <div class="code-wrapper">
           <CodeEditor
             :height="50"
@@ -162,13 +162,13 @@
       theme="primary"
       :mask-close="false"
       header-position="left"
-      :title="operateType === 'create' ? $t('新建API密钥') : $t('续期API密钥')"
+      :title="operateType === 'create' ? $t('apiToken.button.newToken') : $t('apiToken.title.renewToken')"
       width="640"
       :loading="updateLoading"
       @confirm="confirmUpdateTokenDialog"
       @cancel="cancelUpdateTokenDialog">
       <div class="create-token-dialog">
-        <div class="title">{{$t('申请期限')}}</div>
+        <div class="title">{{$t('apiToken.title.deadLine')}}</div>
         <div class="bk-button-group">
           <bk-button
             v-for="item in timeList"
@@ -189,10 +189,10 @@
             v-model="active"
             v-if="isCustomTime">
             <template slot="append">
-              <div class="custom-input-append">{{$t('天')}}</div>
+              <div class="custom-input-append">{{$t('units.suffix.days')}}</div>
             </template>
           </bcs-input>
-          <bk-button class="group-btn" v-else @click="handleCustomTime">{{$t('自定义')}}</bk-button>
+          <bk-button class="group-btn" v-else @click="handleCustomTime">{{$t('generic.label.custom')}}</bk-button>
         </div>
       </div>
     </bcs-dialog>
@@ -201,12 +201,12 @@
       v-model="showDeleteDialog"
       theme="primary"
       header-position="left"
-      :title="$t('删除该API密钥')"
+      :title="$t('apiToken.title.deleteToken')"
       width="640">
       <div class="delete-token-dialog">
-        <div class="title">{{$t('此操作无法撤回，请确认')}}:</div>
+        <div class="title">{{$t('apiToken.subTitle.deleteConfirm.text')}}:</div>
         <bcs-checkbox v-model="deleteConfirm">
-          {{$t('所有使用API密钥的 API 接口与 kubeconfig 将无法使用')}}
+          {{$t('apiToken.subTitle.deleteConfirm.desc')}}
         </bcs-checkbox>
       </div>
       <template #footer>
@@ -216,26 +216,27 @@
             theme="primary"
             :loading="deleteLoading"
             @click="confirmDeleteToken"
-          >{{$t('确定')}}</bcs-button>
-          <bcs-button @click="cancelDeleteDialog">{{$t('取消')}}</bcs-button>
+          >{{$t('generic.button.confirm')}}</bcs-button>
+          <bcs-button @click="cancelDeleteDialog">{{$t('generic.button.cancel')}}</bcs-button>
         </div>
       </template>
     </bcs-dialog>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
-import StatusIcon from '@/components/status-icon';
-import { copyText, renderTemplate } from '@/common/util';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import fullScreen from '@/directives/full-screen';
 import clusterDemoConfig from 'text-loader?modules!./cluster-demo.yaml';
 import shareClusterDemoConfig from 'text-loader?modules!./share-cluster-demo.yaml';
-import $store from '@/store';
-import $router from '@/router';
+import { computed, defineComponent, onMounted, ref } from 'vue';
+
 import $bkMessage from '@/common/bkmagic';
-import $i18n from '@/i18n/i18n-setup';
+import { copyText, renderTemplate } from '@/common/util';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import StatusIcon from '@/components/status-icon';
 import { useCluster } from '@/composables/use-app';
+import fullScreen from '@/directives/full-screen';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'UserToken',
@@ -263,13 +264,13 @@ export default defineComponent({
 
     const demoConfigExample = ref(renderTemplate(clusterDemoConfig, {
       username: user.value.username,
-      token: `\${${$i18n.t('API密钥')}}`,
+      token: `\${${$i18n.t('apiToken.text')}}`,
       bcs_api_host: window.BCS_API_HOST,
       projectID: projectID.value,
     }));
     const apiExample = 'curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}/clusters/${cluster_id}/version"';
     const bcsApiExample = ref(renderTemplate(apiExample, {
-      token: `\${${$i18n.t('API密钥')}}`,
+      token: `\${${$i18n.t('apiToken.text')}}`,
       bcs_api_host: window.BCS_API_HOST,
       projectID: projectID.value,
     }));
@@ -277,13 +278,13 @@ export default defineComponent({
     const shareKubeConfigExample = ref('kubectl --kubeconfig=/root/.kube/demo_config get all -n <namespace>');
     const shareDemoConfigExample = ref(renderTemplate(shareClusterDemoConfig, {
       username: user.value.username,
-      token: `\${${$i18n.t('API密钥')}}`,
+      token: `\${${$i18n.t('apiToken.text')}}`,
       bcs_api_host: window.BCS_API_HOST,
       projectID: projectID.value,
     }));
     const shareApiExample = 'curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}/projects/${projectID}/clusters/${cluster_id}/version"';
     const shareBcsApiExample = ref(renderTemplate(shareApiExample, {
-      token: `\${${$i18n.t('API密钥')}}`,
+      token: `\${${$i18n.t('apiToken.text')}}`,
       bcs_api_host: window.BCS_API_HOST,
       projectID: projectID.value,
     }));
@@ -291,23 +292,23 @@ export default defineComponent({
     const timeList = ref([
       {
         id: -1,
-        name: $i18n.t('永久'),
+        name: $i18n.t('apiToken.label.perpetual'),
       },
       {
         id: 30,
-        name: $i18n.t('{num}天', { num: 30 }),
+        name: $i18n.t('units.time.nDays', { num: 30 }),
       },
       {
         id: 3 * 30,
-        name: $i18n.t('{num}天', { num: 3 * 30 }),
+        name: $i18n.t('units.time.nDays', { num: 3 * 30 }),
       },
       {
         id: 6 * 30,
-        name: $i18n.t('{num}天', { num: 6 * 30 }),
+        name: $i18n.t('units.time.nDays', { num: 6 * 30 }),
       },
       {
         id: 365,
-        name: $i18n.t('{num}天', { num: 365 }),
+        name: $i18n.t('units.time.nDays', { num: 365 }),
       },
     ]);
     const active = ref(-1);
@@ -338,7 +339,7 @@ export default defineComponent({
       copyText(row.token);
       $bkMessage({
         theme: 'success',
-        message: $i18n.t('复制成功'),
+        message: $i18n.t('generic.msg.success.copy'),
       });
     };
     // token操作
@@ -398,7 +399,7 @@ export default defineComponent({
         });
         result && $bkMessage({
           theme: 'success',
-          message: $i18n.t('创建成功'),
+          message: $i18n.t('generic.msg.success.create'),
         });
       } else if (operateType.value === 'edit' && curEditRow.value) {
         const result = await $store.dispatch('token/updateToken', {
@@ -407,7 +408,7 @@ export default defineComponent({
         });
         result && $bkMessage({
           theme: 'success',
-          message: $i18n.t('续期成功'),
+          message: $i18n.t('apiToken.msg.renewOK'),
         });
       }
       updateLoading.value = false;
@@ -426,7 +427,7 @@ export default defineComponent({
       cancelDeleteDialog();
       result && $bkMessage({
         theme: 'success',
-        message: $i18n.t('删除成功'),
+        message: $i18n.t('generic.msg.success.delete'),
       });
       getTokenList();
     };

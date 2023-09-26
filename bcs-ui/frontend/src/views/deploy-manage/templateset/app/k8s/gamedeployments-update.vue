@@ -2,7 +2,7 @@
   <bk-dialog
     :is-show.sync="isVisible"
     :width="1050"
-    :title="$t('更新')"
+    :title="$t('generic.button.update')"
     :close-icon="true"
     :ext-cls="'biz-rolling-update-dialog'"
     :quick-close="false"
@@ -10,7 +10,7 @@
     @cancel="hide">
     <template slot="content">
       <div class="gamestatefulset-update-wrapper" v-bkloading="{ isLoading: isLoading, opacity: 1 }">
-        <bk-radio class="mb5" value="1" name="method" v-model="method" checked>{{$t('原地升级')}}</bk-radio>
+        <bk-radio class="mb5" value="1" name="method" v-model="method" checked>{{$t('k8s.updateStrategy.inplaceUpdate')}}</bk-radio>
         <monaco-editor
           v-if="!isLoading"
           ref="jsonEditor"
@@ -25,7 +25,7 @@
         <div class="tip">
           <i class="bcs-icon bcs-icon-alarm-insufficient" style="font-size: 16px;"></i>
           <span>
-            {{$t('此操作相当于kubectl patch gamestatefulset {name} -n {namespace} --type=json -p={文本中的内容}',
+            {{$t('deploy.templateset.pathMsg',
                  { name: renderItem.name, namespace: renderItem.namespace })}}</span>
         </div>
       </div>
@@ -34,20 +34,20 @@
       <div class="bk-dialog-outer">
         <template v-if="isUpdating">
           <bk-button type="primary" disabled>
-            {{$t('更新中...')}}
+            {{$t('generic.status.updating')}}
           </bk-button>
           <bk-button type="button" class="bk-dialog-btn bk-dialog-btn-cancel disabled">
-            {{$t('取消')}}
+            {{$t('generic.button.cancel')}}
           </bk-button>
         </template>
         <template v-else>
           <bk-button
             type="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
             @click="confirm">
-            {{$t('更新')}}
+            {{$t('generic.button.update')}}
           </bk-button>
           <bk-button type="button" @click="hide">
-            {{$t('取消')}}
+            {{$t('generic.button.cancel')}}
           </bk-button>
         </template>
       </div>
@@ -56,9 +56,8 @@
 </template>
 
 <script>
-import MonacoEditor from '@/components/monaco-editor/editor.vue';
-
 import { catchErrorHandler } from '@/common/util';
+import MonacoEditor from '@/components/monaco-editor/editor.vue';
 
 export default {
   components: {
@@ -150,7 +149,7 @@ export default {
         this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请填写内容'),
+          message: this.$t('deploy.templateset.input'),
         });
         return;
       }
@@ -163,7 +162,7 @@ export default {
         this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('请填写正确的JSON格式字符串'),
+          message: this.$t('deploy.templateset.json'),
         });
         return;
       }
@@ -183,7 +182,7 @@ export default {
         this.bkMessageInstance?.close();
         this.bkMessageInstance = this.$bkMessage({
           theme: 'success',
-          message: this.$t('更新成功'),
+          message: this.$t('generic.msg.success.update'),
         });
         this.$emit('update-success');
       } catch (e) {

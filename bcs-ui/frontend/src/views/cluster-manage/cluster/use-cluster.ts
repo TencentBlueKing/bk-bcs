@@ -1,12 +1,20 @@
 /* eslint-disable camelcase */
-import { computed, ref, watch, Ref, set, reactive, toRef } from 'vue';
-import useInterval from '@/composables/use-interval';
-import { clusterDetail, cloudNodes, sharedclusters, createVCluster, deleteVCluster } from '@/api/modules/cluster-manager';
-import $store from '@/store';
-import $router from '@/router';
-import { ICluster } from '@/composables/use-app';
+import { computed, reactive, Ref, ref, set, toRef, watch } from 'vue';
+
+import {
+  cloudAccountType,
+  cloudBwps,
+  cloudNodes,
+  clusterDetail,
+  createVCluster,
+  deleteVCluster,
+  sharedclusters  } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
+import { ICluster } from '@/composables/use-app';
+import useInterval from '@/composables/use-interval';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
 
 /**
  * 获取集群列表
@@ -225,7 +233,7 @@ export function useTask() {
 
 export function useClusterInfo() {
   const isLoading = ref(false);
-  const clusterData = ref<Record<string, any>>({});
+  const clusterData = ref<ICluster>({} as unknown as any);
   const clusterOS = computed(() => clusterData.value?.clusterBasicSettings?.OS);
   const clusterAdvanceSettings = computed(() => clusterData.value?.clusterAdvanceSettings || {});
   const extraInfo = computed(() => clusterData.value?.extraInfo || {});
@@ -265,7 +273,7 @@ export function useVCluster() {
     const result = await createVCluster(params).catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('任务下发成功'),
+      message: $i18n.t('generic.msg.success.deliveryTask'),
     });
     return result;
   }
@@ -283,4 +291,54 @@ export function useVCluster() {
     handleCreateVCluster,
     handleDeleteVCluster,
   };
+}
+
+export function useCloud() {
+  const accountType = ref<'STANDARD'|'LEGACY'>();
+  const getCloudAccountType = async (params: {
+    $cloudId: string
+    accountID: string
+  }) => {
+    const data = await cloudAccountType(params).catch(() => ({}));
+    accountType.value = data.type;
+    return accountType.value;
+  };
+
+  const getCloudBwps = async (params: {
+    $cloudId: string
+    accountID: string
+    region: string
+  }) => {
+    const data = await cloudBwps(params).catch(() => []);
+    return data;
+  };
+
+  return {
+    accountType,
+    getCloudAccountType,
+    getCloudBwps,
+  };
+}
+
+export function getClusterTypeName(clusterData) {
+  if (clusterData.clusterType === 'virtual') return 'vCluster'; // 虚拟集群
+  if (clusterData.clusterType === 'federation') return $i18n.t('bcs.cluster.federation'); // 联邦集群
+
+  if (clusterData.clusterCategory === 'builder') {
+    // 托管和独立集群
+    return clusterData.manageType === 'INDEPENDENT_CLUSTER' ? $i18n.t('bcs.cluster.selfDeployed') : $i18n.t('bcs.cluster.managed');
+  }
+
+  return '--';
+}
+
+export function getClusterImportCategory(clusterData: ICluster) {
+  // 导入方式
+  // kubeconfig
+  if (clusterData?.importCategory === 'kubeConfig') return $i18n.t('bcs.cluster.kubeConfig');
+
+  // 云凭证
+  if (clusterData?.importCategory === 'cloud') return $i18n.t('bcs.cluster.cloud');
+
+  return '--';
 }

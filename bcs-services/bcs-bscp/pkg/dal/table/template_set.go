@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package table
 
@@ -27,7 +27,7 @@ type TemplateSet struct {
 	Revision   *Revision              `json:"revision" gorm:"embedded"`
 }
 
-// TableName is the TemplateSet's database table name.
+// TableName is the template set's database table name.
 func (t *TemplateSet) TableName() string {
 	return "template_sets"
 }
@@ -47,7 +47,7 @@ func (t *TemplateSet) ResType() string {
 	return "template_set"
 }
 
-// ValidateCreate validate TemplateSet is valid or not when create it.
+// ValidateCreate validate template set is valid or not when create it.
 func (t *TemplateSet) ValidateCreate() error {
 	if t.ID > 0 {
 		return errors.New("id should not be set")
@@ -80,7 +80,7 @@ func (t *TemplateSet) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate validate TemplateSet is valid or not when update it.
+// ValidateUpdate validate template set is valid or not when update it.
 func (t *TemplateSet) ValidateUpdate() error {
 
 	if t.ID <= 0 {
@@ -112,10 +112,10 @@ func (t *TemplateSet) ValidateUpdate() error {
 	return nil
 }
 
-// ValidateDelete validate the TemplateSet's info when delete it.
+// ValidateDelete validate the template set's info when delete it.
 func (t *TemplateSet) ValidateDelete() error {
 	if t.ID <= 0 {
-		return errors.New("TemplateSet id should be set")
+		return errors.New("template set id should be set")
 	}
 
 	if t.Attachment == nil {
@@ -129,19 +129,16 @@ func (t *TemplateSet) ValidateDelete() error {
 	return nil
 }
 
-// TemplateSetSpec defines all the specifics for TemplateSet set by user.
+// TemplateSetSpec defines all the specifics for template set set by user.
 type TemplateSetSpec struct {
 	Name        string            `json:"name" gorm:"column:name"`
 	Memo        string            `json:"memo" gorm:"column:memo"`
-	TemplateIDs types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json"`
+	TemplateIDs types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json;default:'[]'"`
 	Public      bool              `json:"public" gorm:"column:public"`
-	BoundApps   types.Uint32Slice `json:"bound_apps" gorm:"column:bound_apps;type:json"`
+	BoundApps   types.Uint32Slice `json:"bound_apps" gorm:"column:bound_apps;type:json;default:'[]'"`
 }
 
-// TemplateSetType is the type of TemplateSet
-type TemplateSetType string
-
-// ValidateCreate validate TemplateSet spec when it is created.
+// ValidateCreate validate template set spec when it is created.
 func (t *TemplateSetSpec) ValidateCreate() error {
 	if err := validator.ValidateName(t.Name); err != nil {
 		return err
@@ -150,7 +147,7 @@ func (t *TemplateSetSpec) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate validate TemplateSet spec when it is updated.
+// ValidateUpdate validate template set spec when it is updated.
 func (t *TemplateSetSpec) ValidateUpdate() error {
 	if err := validator.ValidateMemo(t.Memo, false); err != nil {
 		return err
@@ -159,7 +156,7 @@ func (t *TemplateSetSpec) ValidateUpdate() error {
 	return nil
 }
 
-// TemplateSetAttachment defines the TemplateSet attachments.
+// TemplateSetAttachment defines the template set attachments.
 type TemplateSetAttachment struct {
 	BizID           uint32 `json:"biz_id" gorm:"column:biz_id"`
 	TemplateSpaceID uint32 `json:"template_space_id" gorm:"column:template_space_id"`

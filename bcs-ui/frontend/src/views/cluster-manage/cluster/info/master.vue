@@ -1,15 +1,15 @@
 <template>
   <bk-form class="bcs-small-form px-[60px] py-[24px]">
     <template v-if="curCluster.manageType === 'INDEPENDENT_CLUSTER'">
-      <bk-form-item :label="$t('集群类型')">
+      <bk-form-item :label="$t('cluster.labels.clusterType')">
         <span class="text-[#313238]">
-          {{ $t('独立集群') }}
+          {{ $t('bcs.cluster.selfDeployed') }}
         </span>
       </bk-form-item>
-      <bk-form-item :label="$t('Master信息')">
+      <bk-form-item :label="$t('cluster.labels.masterInfo')">
         <div class="flex max-w-[800px]">
           <bk-table :data="masterData" v-bkloading="{ isLoading }">
-            <bk-table-column :label="$t('主机名称')">
+            <bk-table-column :label="$t('cluster.labels.hostName')">
               <template #default="{ row }">
                 {{ row.nodeName || '--' }}
               </template>
@@ -25,46 +25,76 @@
               </template>
             </bk-table-column>
             <template v-if="$INTERNAL">
-              <bk-table-column :label="$t('机房')" prop="idc"></bk-table-column>
-              <bk-table-column :label="$t('机架')" prop="rack"></bk-table-column>
-              <bk-table-column :label="$t('机型')" prop="deviceClass"></bk-table-column>
+              <bk-table-column :label="$t('generic.ipSelector.label.idc')" prop="idc"></bk-table-column>
+              <bk-table-column :label="$t('cluster.labels.rack')" prop="rack"></bk-table-column>
+              <bk-table-column
+                :label="$t('generic.ipSelector.label.serverModel')"
+                prop="deviceClass">
+              </bk-table-column>
             </template>
           </bk-table>
         </div>
       </bk-form-item>
     </template>
     <template v-else>
-      <bk-form-item :label="$t('集群类型')">
-        <span class="text-[#313238]">
-          {{ $t('托管集群') }}
-        </span>
-        <span class="text-[#979BA5]">
-          ({{ $t('Kubernetes 集群的 Master 和 Etcd 会由 TKE 团队集中管理和维护，不需要关心集群 Master 的管理和维护。') }})
-        </span>
-      </bk-form-item>
-      <bk-form-item :label="$t('集群规格')">
-        <span class="text-[#313238]">{{ clusterLevel }}</span>
-        <span class="text-[#979BA5]">
-          ({{
-            $t('当前集群规格最多管理 {nodes} 个节点，{pods} 个 Pod，{service} 个 ConfigMap，{crd} 个 CRD', {
-              nodes: curClusterScale.level.split('L')[1],
-              pods: curClusterScale.scale.maxNodePodNum,
-              service: curClusterScale.scale.maxServiceNum,
-              crd: curClusterScale.scale.cidrStep
-            })
-          }})
-        </span>
-      </bk-form-item>
+      <!-- 谷歌云 -->
+      <template v-if="curCluster.provider === 'gcpCloud'">
+        <bk-form-item :label="$t('cluster.labels.clusterType')">
+          <span class="text-[#313238]">
+            {{ $t('bcs.cluster.managed') }}
+          </span>
+          <span class="text-[#979BA5]">
+            ({{ $t('cluster.create.label.manageType.managed.gkeDesc') }})
+          </span>
+        </bk-form-item>
+        <bk-form-item
+          :label="$t('cluster.create.label.manageType.managed.clusterLevel.text')">
+          <div v-if="locationType === 'zones'">
+            <span class="text-[#313238]">{{ $t('googleCloud.label.zoneCluster.title') }}</span>
+            <span class="text-[#979BA5]">({{ $t('googleCloud.label.zoneCluster.desc') }})</span>
+          </div>
+          <div v-else-if="locationType === 'regions'">
+            <span class="text-[#313238]">{{ $t('googleCloud.label.regionCluster.title') }}</span>
+            <span class="text-[#979BA5]">({{ $t('googleCloud.label.regionCluster.desc') }})</span>
+          </div>
+        </bk-form-item>
+      </template>
+      <!-- 腾讯云 -->
+      <template v-else>
+        <bk-form-item :label="$t('cluster.labels.clusterType')">
+          <span class="text-[#313238]">
+            {{ $t('bcs.cluster.managed') }}
+          </span>
+          <span class="text-[#979BA5]">
+            ({{ $t('cluster.create.label.manageType.managed.desc') }})
+          </span>
+        </bk-form-item>
+        <bk-form-item :label="$t('cluster.create.label.manageType.managed.clusterLevel.text')">
+          <span class="text-[#313238]">{{ clusterLevel }}</span>
+          <span class="text-[#979BA5]">
+            ({{
+              $t('cluster.create.label.manageType.managed.clusterLevel.desc', {
+                nodes: curClusterScale.level.split('L')[1],
+                pods: curClusterScale.scale.maxNodePodNum,
+                service: curClusterScale.scale.maxServiceNum,
+                crd: curClusterScale.scale.cidrStep
+              })
+            }})
+          </span>
+        </bk-form-item>
+      </template>
     </template>
   </bk-form>
 </template>
 <script lang="ts">
-import { useCluster } from '@/composables/use-app';
-import { defineComponent, ref, computed, onBeforeMount } from 'vue';
-import { masterList } from '@/api/modules/cluster-manager';
+import { computed, defineComponent, onBeforeMount, ref } from 'vue';
+
 import clusterScaleData from '../create/cluster-scale.json';
-import { copyText } from '@/common/util';
+
+import { masterList } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
+import { copyText } from '@/common/util';
+import { useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({
@@ -79,6 +109,9 @@ export default defineComponent({
   setup(props) {
     const { clusterList } = useCluster();
     const curCluster = computed(() => clusterList.value.find(item => item.clusterID === props.clusterId) || {});
+
+    // google cloud locationType
+    const locationType = computed(() => curCluster.value?.extraInfo?.locationType);
 
     // 托管集群集群规格信息
     const clusterLevel = computed(() => curCluster.value?.clusterBasicSettings?.clusterLevel || '--');
@@ -103,7 +136,7 @@ export default defineComponent({
       copyText(masterData.value.map(item => item.innerIP).join('\n'));
       $bkMessage({
         theme: 'success',
-        message: $i18n.t('复制成功'),
+        message: $i18n.t('generic.msg.success.copy'),
       });
     };
 
@@ -119,6 +152,7 @@ export default defineComponent({
       curClusterScale,
       isLoading,
       masterData,
+      locationType,
       handleCopyIPv4,
     };
   },

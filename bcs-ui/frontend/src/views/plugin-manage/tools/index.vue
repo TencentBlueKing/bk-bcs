@@ -2,7 +2,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header hide-back :title="crdKind === 'BcsLog' ? $t('日志采集') : $t('组件库')" />
+    <Header hide-back :title="crdKind === 'BcsLog' ? $t('nav.log') : $t('plugin.tools.title')" />
     <div class="biz-content-wrapper" style="padding: 0;">
       <template>
         <div class="biz-panel-header">
@@ -19,7 +19,7 @@
         </div>
         <div class="biz-crdcontroller" v-bkloading="{ isLoading: isPageLoading }" style="min-height: 180px;">
           <svg style="display: none;">
-            <title>{{$t('模板集默认图标')}}</title>
+            <title>{{$t('deploy.templateset.icon')}}</title>
             <symbol id="biz-set-icon" viewBox="0 0 60 60">
               <g id="图层_6">
                 <g id="图层_32_1_">
@@ -53,12 +53,12 @@
           <table class="bk-table biz-templateset-table mb20" v-if="crdKind !== 'BcsLog'">
             <thead>
               <tr>
-                <th style="width: 120px; padding-left: 0;" class="center">{{$t('图标')}}</th>
-                <th style="width: 250px; padding-left: 20px;">{{$t('组件名称')}}</th>
-                <th style="width: 120px; padding-left: 20px">{{$t('版本')}}</th>
-                <th style="width: 150px; padding-left: 20px;">{{$t('状态')}}</th>
-                <th style="padding-left: 0;">{{$t('描述')}}</th>
-                <th style="width: 170px; padding-left: 0;">{{$t('操作')}}</th>
+                <th style="width: 120px; padding-left: 0;" class="center">{{$t('plugin.tools.icon')}}</th>
+                <th style="width: 250px; padding-left: 20px;">{{$t('plugin.tools.toolName')}}</th>
+                <th style="width: 120px; padding-left: 20px">{{$t('generic.label.version')}}</th>
+                <th style="width: 150px; padding-left: 20px;">{{$t('generic.label.status')}}</th>
+                <th style="padding-left: 0;">{{$t('cluster.create.label.desc')}}</th>
+                <th style="width: 170px; padding-left: 0;">{{$t('generic.label.action')}}</th>
               </tr>
             </thead>
             <tbody>
@@ -85,19 +85,19 @@
                         </td>
                         <td class="status">
                           <span class="biz-mark" v-if="crdcontroller.status === 'deployed'">
-                            <bk-tag type="filled" theme="success">{{$t('已部署')}}</bk-tag>
+                            <bk-tag type="filled" theme="success">{{$t('plugin.tools.deployed')}}</bk-tag>
                           </span>
                           <span class="biz-mark" v-else-if="!crdcontroller.status">
-                            <bk-tag type="filled">{{$t('未启用')}}</bk-tag>
+                            <bk-tag type="filled">{{$t('generic.status.notEnable')}}</bk-tag>
                           </span>
                           <span class="biz-mark" v-else-if="crdcontroller.status === 'failed'">
                             <bcs-popover :width="500" :content="crdcontroller.message" placement="top">
-                              <bk-tag type="filled" theme="danger">{{$t('异常')}}</bk-tag>
+                              <bk-tag type="filled" theme="danger">{{$t('generic.status.error')}}</bk-tag>
                             </bcs-popover>
                           </span>
                           <span class="biz-mark" v-else-if="crdcontroller.status === 'unknown'">
-                            <bcs-popover :content="$t('请联系蓝鲸容器助手')" placement="top">
-                              <bk-tag type="filled" theme="warning">{{$t('未知')}}</bk-tag>
+                            <bcs-popover :content="$t('plugin.tools.contact')" placement="top">
+                              <bk-tag type="filled" theme="warning">{{$t('generic.status.unknown')}}</bk-tag>
                             </bcs-popover>
                           </span>
                           <template v-else-if="crdcontroller.status === 'pending'">
@@ -111,13 +111,13 @@
                               <div class="rotate rotate7"></div>
                               <div class="rotate rotate8"></div>
                             </div>
-                            <span class="vm">{{$t('变更中...')}}</span>
+                            <span class="vm">{{$t('plugin.tools.doing')}}</span>
                           </template>
                         </td>
                         <td class="description">
                           <p class="text">
                             {{crdcontroller.description || '--'}}
-                            <a :href="crdcontroller.help_link" class="bk-text-button f12" target="_blank" v-if="crdcontroller.help_link">{{$t('详情查看文档')}}</a>
+                            <a :href="crdcontroller.help_link" class="bk-text-button f12" target="_blank" v-if="crdcontroller.help_link">{{$t('plugin.tools.docs')}}</a>
                           </p>
                         </td>
                         <td class="action">
@@ -127,31 +127,31 @@
                               :align="'left'"
                               ref="dropdown">
                               <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
-                                <span>{{$t('操作')}}</span>
+                                <span>{{$t('generic.label.action')}}</span>
                                 <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
                               </bk-button>
 
                               <ul class="bk-dropdown-list" slot="dropdown-content">
                                 <li v-if="crdcontroller.supported_actions.includes('config')">
-                                  <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('前往配置')}}</a>
+                                  <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('plugin.tools.config')}}</a>
                                 </li>
                                 <li v-if="crdcontroller.supported_actions.includes('upgrade')">
-                                  <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('更新组件')}}</a>
+                                  <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</a>
                                 </li>
                                 <li v-if="crdcontroller.supported_actions.includes('uninstall')">
-                                  <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('卸载组件')}}</a>
+                                  <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</a>
                                 </li>
                               </ul>
                             </bk-dropdown-menu>
                           </template>
                           <template v-else-if="!crdcontroller.status">
-                            <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('启用')}}</bk-button>
+                            <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('logCollector.action.enable')}}</bk-button>
                           </template>
                           <template v-else-if="crdcontroller.status === 'failed'">
                             <template
                               v-if="!crdcontroller.supported_actions.includes('upgrade')
                                 && !crdcontroller.supported_actions.includes('uninstall')">
-                              <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('重新启用')}}</bk-button>
+                              <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('plugin.tools.restart')}}</bk-button>
                             </template>
                             <template v-else>
                               <bk-dropdown-menu
@@ -159,27 +159,27 @@
                                 :align="'left'"
                                 ref="dropdown">
                                 <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
-                                  <span>{{$t('操作')}}</span>
+                                  <span>{{$t('generic.label.action')}}</span>
                                   <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
                                 </bk-button>
                                 <ul class="bk-dropdown-list" slot="dropdown-content">
                                   <li v-if="crdcontroller.supported_actions.includes('upgrade')">
-                                    <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('更新组件')}}</a>
+                                    <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</a>
                                   </li>
                                   <li v-if="crdcontroller.supported_actions.includes('uninstall')">
-                                    <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('卸载组件')}}</a>
+                                    <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</a>
                                   </li>
                                 </ul>
                               </bk-dropdown-menu>
                             </template>
                           </template>
                           <template v-else-if="crdcontroller.status === 'unknown'">
-                            <span v-bk-tooltips="$t('请联系蓝鲸容器助手')">
-                              <bk-button :disabled="true">{{$t('启用')}}</bk-button>
+                            <span v-bk-tooltips="$t('plugin.tools.contact')">
+                              <bk-button :disabled="true">{{$t('logCollector.action.enable')}}</bk-button>
                             </span>
                           </template>
                           <template v-else-if="crdcontroller.status === 'pending'">
-                            <bk-button :disabled="true">{{$t('变更中...')}}</bk-button>
+                            <bk-button :disabled="true">{{$t('plugin.tools.doing')}}</bk-button>
                           </template>
                         </td>
                       </tr>
@@ -200,14 +200,14 @@
           <table class="bk-table biz-templateset-table mb20" v-else>
             <thead>
               <tr>
-                <th style="width: 120px; padding-left: 0;" class="center">{{$t('图标')}}</th>
-                <th style="width: 150px; padding-left: 20px;">{{$t('组件名称')}}</th>
-                <th style="width: 120px; padding-left: 20px">{{$t('版本')}}</th>
-                <th style="width: 150px; padding-left: 20px;">{{$t('状态')}}</th>
-                <th style="width: 390px; padding-left: 20px;" v-if="$INTERNAL">{{$t('数据源信息')}}</th>
-                <th style="width: 390px; padding-left: 20px;" v-else>{{$t('日志查询入口')}}</th>
-                <th style="padding-left: 0;">{{$t('描述')}}</th>
-                <th style="width: 170px; padding-left: 0;">{{$t('操作')}}</th>
+                <th style="width: 120px; padding-left: 0;" class="center">{{$t('plugin.tools.icon')}}</th>
+                <th style="width: 150px; padding-left: 20px;">{{$t('plugin.tools.toolName')}}</th>
+                <th style="width: 120px; padding-left: 20px">{{$t('generic.label.version')}}</th>
+                <th style="width: 150px; padding-left: 20px;">{{$t('generic.label.status')}}</th>
+                <th style="width: 390px; padding-left: 20px;" v-if="$INTERNAL">{{$t('plugin.tools.dataSourseInfo')}}</th>
+                <th style="width: 390px; padding-left: 20px;" v-else>{{$t('plugin.tools.logSearch')}}</th>
+                <th style="padding-left: 0;">{{$t('cluster.create.label.desc')}}</th>
+                <th style="width: 170px; padding-left: 0;">{{$t('generic.label.action')}}</th>
               </tr>
             </thead>
             <tbody>
@@ -234,30 +234,30 @@
                         </td>
                         <td class="status">
                           <span class="biz-mark" v-if="crdcontroller.status === 'deployed'">
-                            <bk-tag type="filled" theme="success">{{$t('已启用')}}</bk-tag>
+                            <bk-tag type="filled" theme="success">{{$t('generic.status.enabled')}}</bk-tag>
                           </span>
                           <span class="biz-mark" v-else-if="!crdcontroller.status">
-                            <bk-tag type="filled">{{$t('未启用')}}</bk-tag>
+                            <bk-tag type="filled">{{$t('generic.status.notEnable')}}</bk-tag>
                           </span>
                           <span class="biz-mark" v-else-if="crdcontroller.status === 'failed'">
                             <bcs-popover :content="crdcontroller.message || '--'" placement="top" width="500">
-                              <bk-tag type="filled" theme="danger">{{$t('启用失败')}}</bk-tag>
+                              <bk-tag type="filled" theme="danger">{{$t('plugin.tools.failed')}}</bk-tag>
                             </bcs-popover>
                           </span>
                         </td>
                         <td class="log-source" v-if="$INTERNAL">
-                          <p>{{$t('标准日志')}}：{{dataSource.std_data_name || '--'}}</p>
-                          <p>{{$t('文件路径日志')}}：{{dataSource.file_data_name || '--'}}</p>
-                          <!-- <p>{{$t('系统日志')}}：{{dataSource.sys_data_name || '--'}}</p> -->
+                          <p>{{$t('plugin.tools.standardLog')}}：{{dataSource.std_data_name || '--'}}</p>
+                          <p>{{$t('plugin.tools.fileLogPath')}}：{{dataSource.file_data_name || '--'}}</p>
+                          <!-- <p>{{$t('plugin.tools.OSLog')}}：{{dataSource.sys_data_name || '--'}}</p> -->
                         </td>
                         <td class="log-source" v-else>
-                          <p><a :href="dataSource.std_log_link" class="bk-text-button" target="_blank">{{$t('标准日志')}}</a></p>
-                          <p class="mt5"><a :href="dataSource.file_log_link" class="bk-text-button" target="_blank">{{$t('文件路径日志')}}</a></p>
+                          <p><a :href="dataSource.std_log_link" class="bk-text-button" target="_blank">{{$t('plugin.tools.standardLog')}}</a></p>
+                          <p class="mt5"><a :href="dataSource.file_log_link" class="bk-text-button" target="_blank">{{$t('plugin.tools.fileLogPath')}}</a></p>
                         </td>
                         <td class="description">
                           <p class="text">
                             {{crdcontroller.description || '--'}}
-                            <a :href="crdcontroller.help_link" class="bk-text-button f12" target="_blank" v-if="crdcontroller.help_link">{{$t('详情查看文档')}}</a>
+                            <a :href="crdcontroller.help_link" class="bk-text-button f12" target="_blank" v-if="crdcontroller.help_link">{{$t('plugin.tools.docs')}}</a>
                           </p>
                         </td>
                         <td class="action">
@@ -267,29 +267,29 @@
                               :align="'left'"
                               ref="dropdown">
                               <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
-                                <span>{{$t('操作')}}</span>
+                                <span>{{$t('generic.label.action')}}</span>
                                 <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
                               </bk-button>
 
                               <ul class="bk-dropdown-list" slot="dropdown-content">
                                 <li v-if="crdcontroller.supported_actions.includes('config')">
-                                  <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('前往配置')}}</a>
+                                  <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('plugin.tools.config')}}</a>
                                 </li>
                                 <li v-if="crdcontroller.supported_actions.includes('upgrade')">
-                                  <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('更新组件')}}</a>
+                                  <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</a>
                                 </li>
                                 <li v-if="crdcontroller.supported_actions.includes('uninstall')">
-                                  <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('卸载组件')}}</a>
+                                  <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</a>
                                 </li>
                               </ul>
                             </bk-dropdown-menu>
                           </template>
                           <template v-else-if="!crdcontroller.status">
-                            <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('启用')}}</bk-button>
+                            <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('logCollector.action.enable')}}</bk-button>
                           </template>
                           <template v-else-if="crdcontroller.status === 'failed'">
                             <template v-if="!crdcontroller.supported_actions.length">
-                              <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('重新启用')}}</bk-button>
+                              <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('plugin.tools.restart')}}</bk-button>
                             </template>
                             <template v-else>
                               <bk-dropdown-menu
@@ -297,30 +297,30 @@
                                 :align="'left'"
                                 ref="dropdown">
                                 <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
-                                  <span>{{$t('操作')}}</span>
+                                  <span>{{$t('generic.label.action')}}</span>
                                   <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
                                 </bk-button>
                                 <ul class="bk-dropdown-list" slot="dropdown-content">
                                   <li v-if="crdcontroller.supported_actions.includes('config')">
-                                    <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('前往配置')}}</a>
+                                    <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('plugin.tools.config')}}</a>
                                   </li>
                                   <li v-if="crdcontroller.supported_actions.includes('upgrade')">
-                                    <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('更新组件')}}</a>
+                                    <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</a>
                                   </li>
                                   <li v-if="crdcontroller.supported_actions.includes('uninstall')">
-                                    <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('卸载组件')}}</a>
+                                    <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</a>
                                   </li>
                                 </ul>
                               </bk-dropdown-menu>
                             </template>
                           </template>
                           <template v-else-if="crdcontroller.status === 'unknown'">
-                            <span v-bk-tooltips="$t('请联系蓝鲸容器助手')">
-                              <bk-button :disabled="true">{{$t('启用')}}</bk-button>
+                            <span v-bk-tooltips="$t('plugin.tools.contact')">
+                              <bk-button :disabled="true">{{$t('logCollector.action.enable')}}</bk-button>
                             </span>
                           </template>
                           <template v-else-if="crdcontroller.status === 'pending'">
-                            <bk-button :disabled="true">{{$t('变更中...')}}</bk-button>
+                            <bk-button :disabled="true">{{$t('plugin.tools.doing')}}</bk-button>
                           </template>
                         </td>
                       </tr>
@@ -351,8 +351,8 @@
         <div class="flex place-content-between">
           <div>{{ valueSlider.title }}</div>
           <div>
-            <bk-button class="bk-button bk-primary save-crd-btn" @click.stop.prevent="enableCrdController">{{$t('启用')}}</bk-button>
-            <bk-button class="bk-button bk-default hide-crd-btn" @click.stop.prevent="hideApplicationJson">{{$t('取消')}}</bk-button>
+            <bk-button class="bk-button bk-primary save-crd-btn" @click.stop.prevent="enableCrdController">{{$t('logCollector.action.enable')}}</bk-button>
+            <bk-button class="bk-button bk-default hide-crd-btn" @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
           </div>
         </div>
       </template>
@@ -378,9 +378,9 @@
 
 <script>
 import { catchErrorHandler } from '@/common/util';
-import MonacoEditor from '@/components/monaco-editor/editor.vue';
-import Header from '@/components/layout/Header.vue';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
+import Header from '@/components/layout/Header.vue';
+import MonacoEditor from '@/components/monaco-editor/editor.vue';
 
 export default {
   components: {
@@ -510,7 +510,7 @@ export default {
 
       this.curCrdcontroller = crdcontroller;
       if (crdcontroller.default_values) {
-        this.valueSlider.title = `${this.$t('启用组件：')}${crdcontroller.name}`;
+        this.valueSlider.title = `${this.$t('plugin.tools.enable')}${crdcontroller.name}`;
         this.editorOptions.content = crdcontroller.default_values;
         this.editorOptions.originContent = crdcontroller.default_values;
         // eslint-disable-next-line no-plusplus
@@ -742,7 +742,7 @@ export default {
         type: 'warning',
         clsName: 'custom-info-confirm',
         subTitle: crdcontroller.name,
-        title: this.$t('确定卸载'),
+        title: this.$t('plugin.tools.confirmUninstall'),
         defaultInfo: true,
         confirmFn: async () => {
           const result = await this.$store.dispatch('crdcontroller/clusterToolsUninstall', {

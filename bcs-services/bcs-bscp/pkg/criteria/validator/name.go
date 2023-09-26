@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package validator
 
@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"bscp.io/pkg/criteria/constant"
 )
 
 // reservedResNamePrefix internal reserved string prefix, case-insensitive.
@@ -26,6 +28,10 @@ var reservedResNamePrefix = []string{"_bk", "bk_"}
 func validResNamePrefix(name string) error {
 	lowerName := strings.ToLower(name)
 	for _, prefix := range reservedResNamePrefix {
+		// ignore the template variable name which also has prefix `bk_`
+		if strings.HasPrefix(lowerName, constant.TemplateVariablePrefix) {
+			continue
+		}
 		if strings.HasPrefix(lowerName, prefix) {
 			return fmt.Errorf("resource name '%s' is prefixed with '%s' is reserved name, "+
 				"which is not allows to use", lowerName, prefix)

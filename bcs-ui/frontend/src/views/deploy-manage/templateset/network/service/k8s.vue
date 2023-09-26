@@ -2,13 +2,13 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header hide-back title="Service" :desc="$t('请通过模板集或Helm创建Service')" />
+    <Header hide-back title="Service" :desc="$t('deploy.templateset.createFromTemplateOrHelmService')" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading }">
 
       <div class="biz-panel-header">
         <div class="left">
           <bk-button @click.stop.prevent="removeServices" v-if="curPageData.length">
-            <span>{{$t('批量删除')}}</span>
+            <span>{{$t('generic.button.batchDelete')}}</span>
           </bk-button>
           <bk-button style="opacity: 0">
             <span>.</span>
@@ -16,7 +16,7 @@
         </div>
         <div class="right">
           <ClusterSelectComb
-            :placeholder="$t('输入关键字，按Enter搜索')"
+            :placeholder="$t('generic.placeholder.search')"
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
             cluster-type="all"
@@ -37,7 +37,7 @@
             @select="handlePageSelect"
             @select-all="handlePageSelectAll">
             <bk-table-column type="selection" width="60" :selectable="rowSelectable"></bk-table-column>
-            <bk-table-column :label="$t('名称')" :show-overflow-tooltip="true" min-width="200">
+            <bk-table-column :label="$t('generic.label.name')" :show-overflow-tooltip="true" min-width="200">
               <template slot-scope="props">
                 <a
                   href="javascript: void(0)"
@@ -58,26 +58,26 @@
                 >{{props.row.resourceName ? props.row.resourceName : '--'}}</a>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('所属集群/命名空间')" min-width="200">
+            <bk-table-column :label="$t('deploy.templateset.belongingClusterNamespace')" min-width="200">
               <template slot-scope="props">
                 <div class="lh20">
-                  <span :class="['cluster-namespace-source', { en: isEn }]">{{$t('所属集群: ')}}</span>
+                  <span :class="['cluster-namespace-source', { en: isEn }]">{{$t('deploy.templateset.belongingCluster')}}</span>
                   <bcs-popover :content="props.row.clusterId || '--'" placement="top">
                     <div class="cluster-name">{{curCluster ? curCluster.clusterName : '--'}}</div>
                   </bcs-popover>
                 </div>
                 <div class="lh20">
-                  <span :class="['cluster-namespace-source', { en: isEn }]">{{$t('命名空间: ')}}</span>
+                  <span :class="['cluster-namespace-source', { en: isEn }]">{{$t('deploy.templateset.namespace')}}</span>
                   {{props.row.namespace ? props.row.namespace : '--'}}
                 </div>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('类型')" min-width="150">
+            <bk-table-column :label="$t('generic.label.kind')" min-width="150">
               <template slot-scope="props">
                 {{props.row.data.spec.type}}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('集群内访问')" min-width="200" :show-overflow-tooltip="false">
+            <bk-table-column :label="$t('deploy.templateset.clusterInternalAccess')" min-width="200" :show-overflow-tooltip="false">
               <template slot-scope="props">
                 <bcs-popover>
                   <template v-for="(internal, internalIndex) in props.row.accessInternal">
@@ -96,7 +96,7 @@
                 </bcs-popover>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('集群外访问')" min-width="150" :show-overflow-tooltip="false">
+            <bk-table-column :label="$t('deploy.templateset.clusterExternalAccess')" min-width="150" :show-overflow-tooltip="false">
               <template slot-scope="props">
                 <bcs-popover>
                   <template v-for="(external, externalIndex) in props.row.accessExternal">
@@ -115,7 +115,7 @@
                 </bcs-popover>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('操作')" width="240">
+            <bk-table-column :label="$t('generic.label.action')" width="240">
               <template slot-scope="props">
                 <template v-if="props.row.can_update">
                   <a
@@ -134,11 +134,11 @@
                       }
                     }"
                     @click="showUpdateServicePanel(props.row)"
-                  >{{$t('更新')}}</a>
+                  >{{$t('generic.button.update')}}</a>
                 </template>
                 <template v-else>
                   <bcs-popover :content="props.row.can_update_msg" placement="left">
-                    <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('更新')}}</a>
+                    <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('generic.button.update')}}</a>
                   </bcs-popover>
                 </template>
                 <template v-if="props.row.can_delete">
@@ -158,11 +158,11 @@
                       }
                     }"
                     @click="removeService(props.row)"
-                  >{{$t('删除')}}</a>
+                  >{{$t('generic.button.delete')}}</a>
                 </template>
                 <template v-else>
                   <bcs-popover :content="props.row.can_delete_msg" placement="left" style="margin-left: 15px;">
-                    <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('删除')}}</a>
+                    <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('generic.button.delete')}}</a>
                   </bcs-popover>
                 </template>
                 <bcs-button
@@ -182,7 +182,7 @@
                     }
                   }"
                   @click="showCreateCL5(props.row)">
-                  {{$t('CL5路由')}}
+                  {{$t('deploy.templateset.cl5Route')}}
                 </bcs-button>
               </template>
             </bk-table-column>
@@ -202,19 +202,19 @@
         <div class="p30" slot="content" v-bkloading="{ isLoading: isDetailLoading }" style="overflow: hidden;">
           <div class="bk-form bk-form-vertical">
             <div class="bk-form-item">
-              <label class="bk-label">{{$t('名称')}}：</label>
+              <label class="bk-label">{{$t('generic.label.name')}}：</label>
               <div class="bk-form-content">
                 <bk-input
-                  :placeholder="$t('请输入')"
+                  :placeholder="$t('generic.placeholder.input')"
                   v-model="curServiceDetail.name"
                   disabled style="width: 600px;" />
               </div>
             </div>
             <div class="bk-form-item">
-              <label class="bk-label">{{$t('关联应用')}}：</label>
+              <label class="bk-label">{{$t('deploy.templateset.associateApplication')}}：</label>
               <div class="bk-form-content" style="width: 600px;">
                 <bk-selector
-                  :placeholder="$t('请选择要关联的Application')"
+                  :placeholder="$t('deploy.templateset._selectAssociatedApplication')"
                   :setting-key="'deploy_tag'"
                   :multi-select="true"
                   :display-key="'deploy_name'"
@@ -227,7 +227,7 @@
               </div>
             </div>
             <div class="bk-form-item">
-              <label class="bk-label">{{$t('关联标签')}}：</label>
+              <label class="bk-label">{{$t('deploy.templateset.associateLabel')}}：</label>
               <div class="bk-form-content key-tip-wrapper" style="width: 705px;">
                 <ul class="key-list" v-if="appLabels.length && !isLabelsLoading">
                   <li v-for="(label, index) in appLabels" @click="selectLabel(label)" :key="index">
@@ -238,17 +238,17 @@
                   </li>
                 </ul>
                 <div v-else-if="!isLabelsLoading" class="key-tip">
-                  {{curServiceDetail.config.webCache.link_app ? $t('关联的应用没有公共的标签（注：Key、Value都相同的标签为公共标签）') : $t('请先关联应用')}}
+                  {{curServiceDetail.config.webCache.link_app ? $t('deploy.templateset.noCommonLabel') : $t('deploy.templateset.associateApplicationFirst')}}
                 </div>
               </div>
             </div>
             <div class="bk-form-item">
-              <label class="bk-label">{{$t('Service类型')}}：</label>
+              <label class="bk-label">{{$t('deploy.templateset.serviceType')}}：</label>
               <div class="bk-form-content">
                 <bk-selector
                   style="width: 360px;"
                   :disabled="true"
-                  :placeholder="$t('请选择')"
+                  :placeholder="$t('generic.placeholder.select')"
                   :setting-key="'id'"
                   :display-key="'name'"
                   :selected.sync="curServiceDetail.config.spec.type"
@@ -257,7 +257,7 @@
               </div>
             </div>
             <div class="bk-form-item">
-              <label class="bk-label">{{$t('端口映射')}}：</label>
+              <label class="bk-label">{{$t('dashboard.network.portmapping')}}：</label>
               <div class="bk-form-content">
                 <div class="biz-keys-list mt10">
                   <template v-if="curServiceDetail.config.webCache.link_app.length">
@@ -265,10 +265,10 @@
                       <table class="biz-simple-table">
                         <thead>
                           <tr>
-                            <th style="width: 100px;">{{$t('端口名称')}}</th>
-                            <th style="width: 100px;">{{$t('端口')}}</th>
-                            <th style="width: 120px;">{{$t('协议')}}</th>
-                            <th style="width: 120px;">{{$t('目标端口')}}</th>
+                            <th style="width: 100px;">{{$t('deploy.templateset.portName')}}</th>
+                            <th style="width: 100px;">{{$t('deploy.helm.port')}}</th>
+                            <th style="width: 120px;">{{$t('deploy.templateset.protocol')}}</th>
+                            <th style="width: 120px;">{{$t('deploy.templateset.targetPort')}}</th>
                             <th style="width: 100px;">NodePort</th>
                             <th></th>
                           </tr>
@@ -276,7 +276,7 @@
                         <tbody>
                           <tr v-for="(port, index) in curServiceDetail.config.spec.ports" :key="index">
                             <td>
-                              <bk-input class="list-input" :placeholder="$t('请输入')" v-model="port.name" />
+                              <bk-input class="list-input" :placeholder="$t('generic.placeholder.input')" v-model="port.name" />
                             </td>
                             <td>
                               <bk-input
@@ -286,12 +286,12 @@
                                 :max="65535"
                                 :hide-operation="true"
                                 :ex-style="{ 'width': '100px' }"
-                                :placeholder="$t('请输入')">
+                                :placeholder="$t('generic.placeholder.input')">
                               </bk-input>
                             </td>
                             <td>
                               <bk-selector
-                                :placeholder="$t('协议')"
+                                :placeholder="$t('deploy.templateset.protocol')"
                                 :setting-key="'id'"
                                 :allow-clear="true"
                                 :selected.sync="port.protocol"
@@ -301,7 +301,7 @@
                             <td>
                               <!-- {{appPortList}} -->
                               <bk-selector
-                                :placeholder="$t('请输入')"
+                                :placeholder="$t('generic.placeholder.input')"
                                 :setting-key="'name'"
                                 :display-key="'name'"
                                 :selected.sync="port.targetPort"
@@ -322,7 +322,7 @@
                                 :max="32767"
                                 :hide-operation="true"
                                 :style="{ 'width': '100px' }"
-                                :placeholder="$t('请输入')">
+                                :placeholder="$t('generic.placeholder.input')">
                               </bk-input>
                             </td>
                             <td>
@@ -339,33 +339,33 @@
                     </template>
                     <template v-else>
                       <p class="mt5">
-                        <router-link :to="{ name: 'k8sTemplatesetDeployment', params: { templateId: curServiceDetail.template_id } }" class="bk-text-button">{{$t('点此')}}</router-link>{{$t('去模板集配置端口映射信息')}}
+                        <router-link :to="{ name: 'k8sTemplatesetDeployment', params: { templateId: curServiceDetail.template_id } }" class="bk-text-button">{{$t('deploy.templateset.clickHere')}}</router-link>{{$t('deploy.templateset.configurePortMappingInTemplateSet')}}
                       </p>
                     </template>
                   </template>
                   <template v-else>
-                    <p class="mt5">{{$t('请关联相应的应用')}}</p>
+                    <p class="mt5">{{$t('deploy.templateset.associateRelevantApp')}}</p>
                   </template>
                 </div>
               </div>
             </div>
             <div class="bk-form-item">
-              <label class="bk-label">{{$t('标签管理')}}：</label>
+              <label class="bk-label">{{$t('generic.label.labelManage')}}：</label>
               <div class="bk-form-content">
                 <bk-keyer :key-list.sync="curLabelList" ref="labelKeyer" @change="updateLabelList"></bk-keyer>
               </div>
             </div>
 
             <div class="bk-form-item">
-              <label class="bk-label">{{$t('注解管理')}}：</label>
+              <label class="bk-label">{{$t('deploy.templateset.annotationManagement')}}：</label>
               <div class="bk-form-content">
                 <bk-keyer :key-list.sync="curRemarkList" ref="labelKeyer" @change="updateRemarkList"></bk-keyer>
               </div>
             </div>
 
             <div class="bk-form-item mt25">
-              <bk-button type="primary" :loading="isDetailSaving" @click.stop.prevent="saveServiceDetail">{{$t('保存并更新')}}</bk-button>
-              <bk-button :disabled="isDetailSaving" @click.stop.prevent="hideServiceSlider">{{$t('取消')}}</bk-button>
+              <bk-button type="primary" :loading="isDetailSaving" @click.stop.prevent="saveServiceDetail">{{$t('deploy.templateset.saveAndUpdate')}}</bk-button>
+              <bk-button :disabled="isDetailSaving" @click.stop.prevent="hideServiceSlider">{{$t('generic.button.cancel')}}</bk-button>
             </div>
           </div>
         </div>
@@ -379,17 +379,17 @@
         :width="800">
         <div class="p30" slot="content" v-bkloading="{ isLoading: isEndpointLoading }">
           <p class="data-title">
-            {{$t('基础信息')}}
+            {{$t('generic.title.basicInfo')}}
           </p>
           <div class="biz-metadata-box">
             <div class="data-item" style="width: 260px;">
-              <p class="key">{{$t('选择器')}}：</p>
+              <p class="key">{{$t('k8s.selector')}}：</p>
               <p class="value" v-bk-tooltips="{ direction: 'top', content: selector }">
                 {{selector ? selector : '--'}}
               </p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('类型')}}：</p>
+              <p class="key">{{$t('generic.label.kind')}}：</p>
               <p class="value">{{curService.data.spec.type}}</p>
             </div>
             <div class="data-item">
@@ -402,15 +402,15 @@
             </div>
           </div>
           <p class="data-title">
-            {{$t('端口映射')}}
+            {{$t('dashboard.network.portmapping')}}
           </p>
           <table class="bk-table biz-data-table">
             <thead>
               <tr>
-                <th>{{$t('端口名称')}}</th>
-                <th>{{$t('端口')}}</th>
-                <th>{{$t('协议')}}</th>
-                <th>{{$t('目标端口')}}</th>
+                <th>{{$t('deploy.templateset.portName')}}</th>
+                <th>{{$t('deploy.helm.port')}}</th>
+                <th>{{$t('deploy.templateset.protocol')}}</th>
+                <th>{{$t('deploy.templateset.targetPort')}}</th>
                 <th>NodePort</th>
               </tr>
             </thead>
@@ -450,7 +450,7 @@
           <table class="bk-table biz-data-table">
             <thead>
               <tr>
-                <th>{{$t('名称')}}</th>
+                <th>{{$t('generic.label.name')}}</th>
                 <th>Pod IP</th>
                 <th>Node IP</th>
               </tr>
@@ -483,33 +483,33 @@
           </table>
 
           <p class="data-title">
-            {{$t('其他信息')}}
+            {{$t('deploy.templateset.otherInfo')}}
           </p>
           <div class="biz-metadata-box">
             <div class="data-item" style="width: 260px;">
-              <p class="key">{{$t('创建时间')}}：</p>
+              <p class="key">{{$t('cluster.labels.createdAt')}}：</p>
               <p class="value">
                 {{curService.createTime ? formatDate(curService.createTime) : '--'}}
               </p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('更新时间')}}：</p>
+              <p class="key">{{$t('cluster.labels.updatedAt')}}：</p>
               <p class="value">
                 {{curService.updateTime ? formatDate(curService.updateTime) : '--'}}
               </p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('更新人')}}：</p>
+              <p class="key">{{$t('generic.label.updator')}}：</p>
               <p class="value">{{curService.updator ? curService.updator : '--'}}</p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('来源')}}：</p>
+              <p class="key">{{$t('deploy.templateset.sources')}}：</p>
               <p class="value">{{curService.source_type ? curService.source_type : '--'}}</p>
             </div>
           </div>
 
           <div class="data-title">
-            {{$t('标签')}}
+            {{$t('k8s.label')}}
           </div>
           <div class="point-box">
             <template v-if="labelList.length">
@@ -530,7 +530,7 @@
       </bk-sideslider>
 
       <bk-dialog
-        :title="$t('确认删除')"
+        :title="$t('generic.title.confirmDelete')"
         :is-show="batchDialogConfig.isShow"
         :width="600"
         :has-header="false"
@@ -539,7 +539,7 @@
         @cancel="batchDialogConfig.isShow = false">
         <template slot="content">
           <div class="biz-batch-wrapper">
-            <p class="batch-title">{{$t('确定要删除以下Service？')}}</p>
+            <p class="batch-title">{{$t('deploy.templateset.confirmDeleteService')}}</p>
             <ul class="batch-list">
               <li v-for="(item, index) of batchDialogConfig.list" :key="index">{{item}}</li>
             </ul>
@@ -549,7 +549,7 @@
 
       <bk-dialog
         class="createcl5-dialog"
-        :title="$t('新建CL5')"
+        :title="$t('deploy.templateset.newCL5')"
         :is-show="createCL5DialogConf.isShow"
         :width="500"
         :quick-close="false"
@@ -558,30 +558,30 @@
           <div class="biz-batch-wrapper">
             <bcs-alert type="info" class="mb15">
               <div slot="title">
-                <i18n path="具体使用方法参考{article}">
-                  <a place="article" :href="PROJECT_CONFIG.cl5" target="_blank" class="bk-text-button ml5">{{$t('文章')}}</a>
+                <i18n path="deploy.templateset.usageRefArticle">
+                  <a place="article" :href="PROJECT_CONFIG.cl5" target="_blank" class="bk-text-button ml5">{{$t('deploy.templateset.article')}}</a>
                 </i18n>
               </div>
             </bcs-alert>
             <bk-form ref="formRef" :label-width="labelWidth">
-              <bk-form-item :label="$t('是否有sid')">
+              <bk-form-item :label="$t('deploy.templateset.includesSid')">
                 <bk-radio-group v-model="createCL5DialogConf.isHasSid">
-                  <bk-radio value="yes">{{$t('是')}}</bk-radio>
-                  <bk-radio value="no">{{$t('否')}}</bk-radio>
+                  <bk-radio value="yes">{{$t('units.boolean.true')}}</bk-radio>
+                  <bk-radio value="no">{{$t('units.boolean.false')}}</bk-radio>
                 </bk-radio-group>
               </bk-form-item>
-              <bk-form-item :label="createCL5DialogConf.isHasSid === 'yes' ? 'sid' : $t('业务模块')">
+              <bk-form-item :label="createCL5DialogConf.isHasSid === 'yes' ? 'sid' : $t('deploy.templateset.businessModule')">
                 <div style="display: flex;">
                   <bk-input
                     maxlength="60"
-                    :placeholder="createCL5DialogConf.isHasSid === 'yes' ? $t('请输入sid') : $t('请输入业务模块')"
+                    :placeholder="createCL5DialogConf.isHasSid === 'yes' ? $t('deploy.templateset.enterSid') : $t('deploy.templateset._enterBusinessModule')"
                     v-model="createCL5DialogConf.bid4" />
-                  <bcs-popover v-if="createCL5DialogConf.isHasSid === 'no'" :content="$t('Node节点所属的CMDB三级业务模块ID')" placement="right">
+                  <bcs-popover v-if="createCL5DialogConf.isHasSid === 'no'" :content="$t('deploy.templateset.cmdbLevel3BusinessModuleID')" placement="right">
                     <i class="bcs-icon bcs-icon-info-circle" style="margin-left: 5px;"></i>
                   </bcs-popover>
                 </div>
               </bk-form-item>
-              <bk-form-item :label="$t('责任人')">
+              <bk-form-item :label="$t('deploy.templateset.responsiblePerson')">
                 <span>{{userInfo.username}}</span>
               </bk-form-item>
             </bk-form>
@@ -592,10 +592,10 @@
             <div class="bk-dialog-outer" style="line-height: 56px; height: 56px;">
               <div style="float: right;">
                 <bk-button type="primary" :loading="isCreatingCL5" @click="createCl5">
-                  {{$t('确定')}}
+                  {{$t('generic.button.confirm')}}
                 </bk-button>
                 <bk-button type="button" :disabled="isCreatingCL5" @click="hideCreateCL5">
-                  {{$t('取消')}}
+                  {{$t('generic.button.cancel')}}
                 </bk-button>
               </div>
             </div>
@@ -608,10 +608,11 @@
 
 <script>
 import mixin from './mixin';
+
 import { catchErrorHandler, formatDate } from '@/common/util';
-import useFormLabel from '@/composables/use-form-label';
-import Header from '@/components/layout/Header.vue';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
+import Header from '@/components/layout/Header.vue';
+import useFormLabel from '@/composables/use-form-label';
 
 export default {
   components: { Header, ClusterSelectComb },
@@ -652,7 +653,7 @@ export default {
         isShow: false,
       },
       updateServiceSliderConf: {
-        title: this.$t('更新Service'),
+        title: this.$t('deploy.templateset.updateService'),
         isShow: false,
       },
       isLabelsShow: false,
@@ -1286,7 +1287,7 @@ export default {
       if (service.config.spec.type === 'NodePort' && !service.deploy_tag_list.length) {
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('请选择要关联的应用'),
+          message: megPrefix + this.$t('deploy.templateset.selectAssociatedApplication'),
           delay: 3000,
         });
         return false;
@@ -1303,11 +1304,11 @@ export default {
           }
         }
         if (!hasPort) {
-          megPrefix += `${this.$t('端口映射')}：`;
+          megPrefix += `${this.$t('dashboard.network.portmapping')}：`;
           this.$bkMessage({
             theme: 'error',
             delay: 8000,
-            message: megPrefix + this.$t('ClusterIP不为None时，请配置相应的端口映射'),
+            message: megPrefix + this.$t('deploy.templateset.clusterIPPortMapping'),
           });
           return false;
         }
@@ -1316,39 +1317,39 @@ export default {
       for (const item of ports) {
         if (item.name || item.port || item.targetPort) {
           if (item.name && !/^[a-z]{1}[a-z0-9-]{0,29}$/.test(item.name)) {
-            megPrefix += `${this.$t('端口映射')}：`;
+            megPrefix += `${this.$t('dashboard.network.portmapping')}：`;
             this.$bkMessage({
               theme: 'error',
               delay: 8000,
-              message: megPrefix + this.$t('端口名称以小写字母开头，只能包含：小写字母、数字、连字符(-)，长度小于30个字符'),
+              message: megPrefix + this.$t('deploy.templateset.portNameCriteria'),
             });
             return false;
           }
           if (!item.port) {
-            megPrefix += `${this.$t('端口映射')}：`;
+            megPrefix += `${this.$t('dashboard.network.portmapping')}：`;
             this.$bkMessage({
               theme: 'error',
               delay: 5000,
-              message: megPrefix + this.$t('端口不能为空'),
+              message: megPrefix + this.$t('deploy.templateset.portNotEmpty'),
             });
             return false;
           }
           if (!item.protocol) {
-            megPrefix += `${this.$t('端口映射')}：`;
+            megPrefix += `${this.$t('dashboard.network.portmapping')}：`;
             this.$bkMessage({
               theme: 'error',
               delay: 5000,
-              message: megPrefix + this.$t('请选择协议'),
+              message: megPrefix + this.$t('deploy.templateset.selectProtocol'),
             });
             return false;
           }
           if (item.nodePort || item.nodePort === 0) {
             if (item.nodePort < 30000 || item.nodePort > 32767) {
-              megPrefix += `${this.$t('端口映射')}：`;
+              megPrefix += `${this.$t('dashboard.network.portmapping')}：`;
               this.$bkMessage({
                 theme: 'error',
                 delay: 5000,
-                message: megPrefix + this.$t('NodePort的范围为30000-32767'),
+                message: megPrefix + this.$t('deploy.templateset.nodePortRange'),
               });
               return false;
             }
@@ -1417,7 +1418,7 @@ export default {
 
           this.$bkMessage({
             theme: 'success',
-            message: this.$t('操作成功'),
+            message: this.$t('generic.msg.success.ok'),
             hasCloseIcon: true,
             delay: 3000,
           });
@@ -1466,7 +1467,7 @@ export default {
         this.$bkMessage({
           theme: 'error',
           delay: 3000,
-          message: this.$t('请填写业务模块'),
+          message: this.$t('deploy.templateset.enterBusinessModule'),
         });
         return;
       }
@@ -1491,7 +1492,7 @@ export default {
         this.$bkMessage({
           theme: 'success',
           delay: 1000,
-          message: this.$t('新建CL5成功'),
+          message: this.$t('deploy.templateset.newCL5Success'),
         });
         setTimeout(() => {
           this.searchService();

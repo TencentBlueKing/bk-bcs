@@ -9,10 +9,11 @@
 </template>
 <script lang="ts">
 import moment from 'moment';
+import { defineComponent, onBeforeUnmount, onMounted, PropType, ref, toRefs } from 'vue';
 import ECharts from 'vue-echarts/components/ECharts.vue';
+
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
-import { defineComponent, onBeforeUnmount, onMounted, PropType, ref, toRefs } from 'vue';
 import { clusterMetric } from '@/api/modules/monitor';
 import $i18n from '@/i18n/i18n-setup';
 export default defineComponent({
@@ -35,12 +36,13 @@ export default defineComponent({
   setup(props) {
     const { metrics, colors, clusterId } = toRefs(props);
     const metricMap = {
-      cpu_usage: $i18n.t('CPU使用率'),
-      disk_usage: $i18n.t('磁盘使用率'),
-      memory_usage: $i18n.t('内存使用率'),
-      cpu_request_usage: $i18n.t('CPU装箱率'),
-      memory_request_usage: $i18n.t('内存装箱率'),
-      diskio_usage: $i18n.t('磁盘IO'),
+      cpu_usage: $i18n.t('metrics.cpuUsage'),
+      disk_usage: $i18n.t('metrics.diskUsage'),
+      memory_usage: $i18n.t('metrics.memUsage'),
+      cpu_request_usage: $i18n.t('metrics.cpuRequestUsage.text'),
+      memory_request_usage: $i18n.t('metrics.memRequestUsage.text'),
+      diskio_usage: $i18n.t('metrics.diskIOUsage'),
+      pod_usage: $i18n.t('metrics.podUsage'),
     };
     const options = ref<any>({
       tooltip: {

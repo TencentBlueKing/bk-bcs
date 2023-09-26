@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -31,9 +31,10 @@ func (s *Service) CreateHook(ctx context.Context, req *pbcs.CreateHookReq) (*pbc
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateHookResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Create,
-		ResourceID: req.BizId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -66,9 +67,10 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbcs.DeleteHookReq) (*pbc
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteHookResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Delete,
-		ResourceID: req.HookId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -91,28 +93,26 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListHooksResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
 	r := &pbds.ListHooksReq{
-		BizId:  grpcKit.BizID,
-		Name:   req.Name,
-		Tag:    req.Tag,
-		All:    req.All,
-		NotTag: req.NotTag,
+		BizId:     grpcKit.BizID,
+		Name:      req.Name,
+		Tag:       req.Tag,
+		All:       req.All,
+		NotTag:    req.NotTag,
+		SearchKey: req.SearchKey,
 	}
 
 	if !req.All {
-		if req.Start < 0 {
-			return nil, errors.New("start has to be greater than 0")
-		}
-
-		if req.Limit < 0 {
+		if req.Limit == 0 {
 			return nil, errors.New("limit has to be greater than 0")
 		}
-
 		r.Start = req.Start
 		r.Limit = req.Limit
 	}
@@ -123,12 +123,13 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 		return nil, err
 	}
 
-	details := make([]*pbcs.ListHooksResp_ListHooksData, 0, len(rp.Details))
+	details := make([]*pbcs.ListHooksResp_Detail, 0, len(rp.Details))
 	for _, detail := range rp.Details {
-		details = append(details, &pbcs.ListHooksResp_ListHooksData{
-			Hook:          detail.Hook,
-			BoundNum:      detail.BoundNum,
-			ConfirmDelete: detail.ConfirmDelete,
+		details = append(details, &pbcs.ListHooksResp_Detail{
+			Hook:                detail.Hook,
+			BoundNum:            detail.BoundNum,
+			ConfirmDelete:       detail.ConfirmDelete,
+			PublishedRevisionId: detail.PublishedRevisionId,
 		})
 	}
 
@@ -146,8 +147,10 @@ func (s *Service) ListHookTags(ctx context.Context, req *pbcs.ListHookTagsReq) (
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListHookTagsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -171,8 +174,10 @@ func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbcs.GetH
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.GetHookResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
@@ -215,16 +220,19 @@ func (s *Service) ListHookReferences(ctx context.Context,
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListHookReferencesResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
 	r := &pbds.ListHookReferencesReq{
-		BizId:  req.BizId,
-		HookId: req.HookId,
-		Limit:  req.Limit,
-		Start:  req.Start,
+		BizId:     req.BizId,
+		HookId:    req.HookId,
+		Limit:     req.Limit,
+		Start:     req.Start,
+		SearchKey: req.SearchKey,
 	}
 
 	rp, err := s.client.DS.ListHookReferences(grpcKit.RpcCtx(), r)
@@ -261,8 +269,10 @@ func (s *Service) GetReleaseHook(ctx context.Context, req *pbcs.GetReleaseHookRe
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.GetReleaseHookResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Find}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 

@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "bscp.io/pkg/protocol/core/app/app.proto";
+import "bscp.io/pkg/protocol/core/app-template-binding/app_template_binding.proto";
 import "bscp.io/pkg/protocol/core/base/base.proto";
 import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
 import "bscp.io/pkg/protocol/core/commit/commit.proto";
@@ -13,9 +14,12 @@ import "bscp.io/pkg/protocol/core/hook-revision/hook_revision.proto";
 import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
-import "bscp.io/pkg/protocol/core/template-release/template_release.proto";
+import "bscp.io/pkg/protocol/core/template-binding-relation/template_binding_relation.proto";
+import "bscp.io/pkg/protocol/core/template-revision/template_revision.proto";
 import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
+import "bscp.io/pkg/protocol/core/app-template-variable/app_template_variable.proto";
+import "bscp.io/pkg/protocol/core/template-variable/template_variable.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -40,7 +44,9 @@ service Data {
     rpc UpdateConfigItem(UpdateConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
+
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
+    rpc ListReleasedConfigItems(ListReleasedConfigItemsReq) returns (ListReleasedConfigItemsResp) {}
     rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {}
 
     // config hook related interface.
@@ -86,25 +92,90 @@ service Data {
     rpc ListTemplateSpaces(ListTemplateSpacesReq) returns (ListTemplateSpacesResp) {}
     rpc UpdateTemplateSpace(UpdateTemplateSpaceReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplateSpace(DeleteTemplateSpaceReq) returns (pbbase.EmptyResp) {}
-    rpc GetAllBizsOfTemplateSpaces(pbbase.EmptyReq) returns (GetAllBizsOfTemplateSpacesResp) {}
-    rpc CreateDefaultTemplateSpace(CreateDefaultTemplateSpaceReq) returns (CreateResp) {}
+    rpc GetAllBizsOfTmplSpaces(pbbase.EmptyReq) returns (GetAllBizsOfTmplSpacesResp) {}
+    rpc CreateDefaultTmplSpace(CreateDefaultTmplSpaceReq) returns (CreateResp) {}
+    rpc ListTmplSpacesByIDs(ListTmplSpacesByIDsReq) returns (ListTmplSpacesByIDsResp) {}
 
     // template related interface.
     rpc CreateTemplate(CreateTemplateReq) returns (CreateResp) {}
     rpc ListTemplates(ListTemplatesReq) returns (ListTemplatesResp) {}
     rpc UpdateTemplate(UpdateTemplateReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplate(DeleteTemplateReq) returns (pbbase.EmptyResp) {}
+    rpc BatchDeleteTemplate(BatchDeleteTemplateReq) returns (pbbase.EmptyResp) {}
+    rpc AddTmplsToTmplSets(AddTmplsToTmplSetsReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteTmplsFromTmplSets(DeleteTmplsFromTmplSetsReq) returns (pbbase.EmptyResp) {}
+    rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {}
+    rpc ListTemplatesNotBound(ListTemplatesNotBoundReq) returns (ListTemplatesNotBoundResp) {}
+    rpc ListTmplsOfTmplSet(ListTmplsOfTmplSetReq) returns (ListTmplsOfTmplSetResp) {}
 
     // template release related interface.
-    rpc CreateTemplateRelease(CreateTemplateReleaseReq) returns (CreateResp) {}
-    rpc ListTemplateReleases(ListTemplateReleasesReq) returns (ListTemplateReleasesResp) {}
-    rpc DeleteTemplateRelease(DeleteTemplateReleaseReq) returns (pbbase.EmptyResp) {}
+    rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateResp) {}
+    rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {}
+    rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (pbbase.EmptyResp) {}
+    rpc ListTemplateRevisionsByIDs(ListTemplateRevisionsByIDsReq) returns (ListTemplateRevisionsByIDsResp) {}
+    rpc ListTmplRevisionNamesByTmplIDs(ListTmplRevisionNamesByTmplIDsReq) returns (ListTmplRevisionNamesByTmplIDsResp) {}
 
     // template set related interface.
     rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateResp) {}
     rpc ListTemplateSets(ListTemplateSetsReq) returns (ListTemplateSetsResp) {}
     rpc UpdateTemplateSet(UpdateTemplateSetReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplateSet(DeleteTemplateSetReq) returns (pbbase.EmptyResp) {}
+    rpc ListAppTemplateSets(ListAppTemplateSetsReq) returns (ListAppTemplateSetsResp) {}
+    rpc ListTemplateSetsByIDs(ListTemplateSetsByIDsReq) returns (ListTemplateSetsByIDsResp) {}
+    rpc ListTemplateSetBriefInfoByIDs(ListTemplateSetBriefInfoByIDsReq) returns (ListTemplateSetBriefInfoByIDsResp) {}
+    rpc ListTmplSetsOfBiz(ListTmplSetsOfBizReq) returns (ListTmplSetsOfBizResp) {}
+
+    // app template binding related interface.
+    rpc CreateAppTemplateBinding(CreateAppTemplateBindingReq) returns (CreateResp) {}
+    rpc ListAppTemplateBindings(ListAppTemplateBindingsReq) returns (ListAppTemplateBindingsResp) {}
+    rpc UpdateAppTemplateBinding(UpdateAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteAppTemplateBinding(DeleteAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
+    rpc ListAppBoundTmplRevisions(ListAppBoundTmplRevisionsReq) returns (ListAppBoundTmplRevisionsResp) {}
+    rpc ListReleasedAppBoundTmplRevisions(ListReleasedAppBoundTmplRevisionsReq) returns
+        (ListReleasedAppBoundTmplRevisionsResp) {}
+    rpc GetReleasedAppBoundTmplRevision(GetReleasedAppBoundTmplRevisionReq) returns
+        (GetReleasedAppBoundTmplRevisionResp) {}
+    rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {}
+
+    // app template variables related interface.
+    rpc ExtractAppTmplVariables(ExtractAppTmplVariablesReq) returns (ExtractAppTmplVariablesResp) {}
+    rpc GetAppTmplVariableRefs(GetAppTmplVariableRefsReq) returns (GetAppTmplVariableRefsResp) {}
+    rpc GetReleasedAppTmplVariableRefs(GetReleasedAppTmplVariableRefsReq) returns
+        (GetReleasedAppTmplVariableRefsResp) {}
+    rpc UpdateAppTmplVariables(UpdateAppTmplVariablesReq) returns (pbbase.EmptyResp) {}
+    rpc ListAppTmplVariables(ListAppTmplVariablesReq) returns (ListAppTmplVariablesResp) {}
+    rpc ListReleasedAppTmplVariables(ListReleasedAppTmplVariablesReq) returns (ListReleasedAppTmplVariablesResp) {}
+
+    // template binding relation related interface.
+    rpc ListTmplBoundCounts(ListTmplBoundCountsReq) returns (ListTmplBoundCountsResp) {}
+    rpc ListTmplRevisionBoundCounts(ListTmplRevisionBoundCountsReq) returns (ListTmplRevisionBoundCountsResp){}
+    rpc ListTmplSetBoundCounts(ListTmplSetBoundCountsReq) returns (ListTmplSetBoundCountsResp){}
+    rpc ListTmplBoundUnnamedApps(ListTmplBoundUnnamedAppsReq) returns
+        (ListTmplBoundUnnamedAppsResp){}
+    rpc ListTmplBoundNamedApps(ListTmplBoundNamedAppsReq) returns
+        (ListTmplBoundNamedAppsResp) {}
+    rpc ListTmplBoundTmplSets(ListTmplBoundTmplSetsReq) returns
+        (ListTmplBoundTmplSetsResp) {}
+    rpc ListMultiTmplBoundTmplSets(ListMultiTmplBoundTmplSetsReq) returns
+        (ListMultiTmplBoundTmplSetsResp) {}
+    rpc ListTmplRevisionBoundUnnamedApps(ListTmplRevisionBoundUnnamedAppsReq) returns
+        (ListTmplRevisionBoundUnnamedAppsResp){}
+    rpc ListTmplRevisionBoundNamedApps(ListTmplRevisionBoundNamedAppsReq) returns
+        (ListTmplRevisionBoundNamedAppsResp) {}
+    rpc ListTmplSetBoundUnnamedApps(ListTmplSetBoundUnnamedAppsReq) returns
+        (ListTmplSetBoundUnnamedAppsResp){}
+    rpc ListMultiTmplSetBoundUnnamedApps(ListMultiTmplSetBoundUnnamedAppsReq) returns
+        (ListMultiTmplSetBoundUnnamedAppsResp){}
+    rpc ListTmplSetBoundNamedApps(ListTmplSetBoundNamedAppsReq) returns
+        (ListTmplSetBoundNamedAppsResp){}
+    rpc ListLatestTmplBoundUnnamedApps(ListLatestTmplBoundUnnamedAppsReq) returns
+        (ListLatestTmplBoundUnnamedAppsResp){}
+
+    // template variable related interface.
+    rpc CreateTemplateVariable(CreateTemplateVariableReq) returns (CreateResp) {}
+    rpc ListTemplateVariables(ListTemplateVariablesReq) returns (ListTemplateVariablesResp) {}
+    rpc UpdateTemplateVariable(UpdateTemplateVariableReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteTemplateVariable(DeleteTemplateVariableReq) returns (pbbase.EmptyResp) {}
 
     // group related interface.
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
@@ -134,6 +205,7 @@ service Data {
 
     // used iam pull resource callback.
     rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {}
+    rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {}
 
     // Ping verifies if the grpc connection is still alive.
     rpc Ping(PingMsg) returns (PingMsg) {
@@ -287,9 +359,10 @@ message BatchUpsertConfigItemsReq {
         pbci.ConfigItemSpec       config_item_spec       = 2;
         pbcontent.ContentSpec     content_spec           = 3;
     }
-    uint32              biz_id = 1;
-    uint32              app_id = 2;
-    repeated ConfigItem items  = 3;
+    uint32              biz_id      = 1;
+    uint32              app_id      = 2;
+    repeated ConfigItem items       = 3;
+    bool                replace_all = 4;
 }
 
 message UpdateConfigItemReq {
@@ -310,18 +383,35 @@ message GetConfigItemReq {
 }
 
 message ListConfigItemsReq {
-    uint32 biz_id     = 1;
-    uint32 app_id     = 2;
-    uint32 release_id = 3;
-    uint32 start      = 4;
-    uint32 limit      = 5;
-    bool   all        = 6;
-    string searchKey  = 7;
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    string search_fields = 3;
+    string search_value  = 4;
+    uint32 start         = 5;
+    uint32 limit         = 6;
+    bool   all           = 7;
+    bool   with_status   = 8;
 }
 
 message ListConfigItemsResp {
     uint32                   count   = 1;
     repeated pbci.ConfigItem details = 2;
+}
+
+message ListReleasedConfigItemsReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    uint32 release_id    = 3;
+    string search_fields = 4;
+    string search_value  = 5;
+    uint32 start         = 6;
+    uint32 limit         = 7;
+    bool   all           = 8;
+}
+
+message ListReleasedConfigItemsResp {
+    uint32                            count   = 1;
+    repeated pbrci.ReleasedConfigItem details = 2;
 }
 
 message ListConfigItemCountReq {
@@ -357,18 +447,19 @@ message GetLatestCommitReq {
 }
 
 message CreateReleaseReq {
-    pbrelease.ReleaseAttachment attachment = 1;
-    pbrelease.ReleaseSpec       spec       = 2;
+    pbrelease.ReleaseAttachment        attachment = 1;
+    pbrelease.ReleaseSpec              spec       = 2;
+    repeated pbtv.TemplateVariableSpec variables  = 3;
 }
 
 message ListReleasesReq {
-    uint32                 biz_id     = 1;
-    uint32                 app_id     = 2;
-    bool                   deprecated = 3;
-    uint32                 start      = 4;
-    uint32                 limit      = 5;
-    bool                   all        = 6;
-    string                 searchKey  = 7;
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    bool   deprecated = 3;
+    uint32 start      = 4;
+    uint32 limit      = 5;
+    bool   all        = 6;
+    string searchKey  = 7;
 }
 
 message ListReleasesResp {
@@ -385,8 +476,8 @@ message GetReleaseByNameReq {
 message GetReleasedCIReq {
     uint32 biz_id         = 1;
     uint32 app_id         = 2;
-    uint32 config_item_id = 3;
-    uint32 release_id     = 4;
+    uint32 release_id     = 3;
+    uint32 config_item_id = 4;
 }
 
 message CreateHookReq {
@@ -423,23 +514,25 @@ message GetHookInfoSpec {
 }
 
 message ListHooksReq {
-    uint32 biz_id  = 1;
-    string name    = 2;
-    string tag     = 3;
-    bool   all     = 5;
-    bool   not_tag = 6;
-    uint32 start   = 7;
-    uint32 limit   = 8;
+    uint32 biz_id    = 1;
+    string name      = 2;
+    string tag       = 3;
+    bool   all       = 5;
+    bool   not_tag   = 6;
+    uint32 start     = 7;
+    uint32 limit     = 8;
+    string searchKey = 9;
 }
 
 message ListHooksResp {
-    message ListHooksData {
-        pbhook.Hook hook           = 1;
-        uint32      bound_num      = 2;
-        bool        confirm_delete = 3;
+    message Detail {
+        pbhook.Hook hook                  = 1;
+        uint32      bound_num             = 2;
+        bool        confirm_delete        = 3;
+        uint32      published_revision_id = 4;
     }
-    uint32                 count   = 1;
-    repeated ListHooksData details = 2;
+    uint32          count   = 1;
+    repeated Detail details = 2;
 }
 
 message ListHookTagResp {
@@ -447,10 +540,11 @@ message ListHookTagResp {
 }
 
 message ListHookReferencesReq {
-    uint32 biz_id      = 1;
-    uint32 hook_id     = 2;
-    uint32 start       = 3;
-    uint32 limit       = 4;
+    uint32 biz_id    = 1;
+    uint32 hook_id   = 2;
+    uint32 start     = 3;
+    uint32 limit     = 4;
+    string searchKey = 5;
 }
 
 message ListHookReferencesResp {
@@ -524,7 +618,7 @@ message GetByPubStateReq {
 }
 
 message UpdateHookRevisionReq {
-    uint32                     id         = 1;
+    uint32                      id         = 1;
     pbhr.HookRevisionAttachment attachment = 2;
     pbhr.HookRevisionSpec       spec       = 3;
 }
@@ -535,15 +629,18 @@ message ListHookRevisionReferencesReq {
     uint32 revision_id = 3;
     uint32 start       = 4;
     uint32 limit       = 5;
+    string searchKey   = 6;
 }
 
 message ListHookRevisionReferencesResp {
     message Detail {
-        uint32 app_id             = 1;
-        string app_name           = 2;
-        uint32 release_id         = 3;
-        string release_name       = 4;
-        string type               = 5;
+        uint32 revision_id   = 1;
+        string revision_name = 2;
+        uint32 app_id        = 3;
+        string app_name      = 4;
+        uint32 release_id    = 5;
+        string release_name  = 6;
+        string type          = 7;
     }
     uint32          count   = 1;
     repeated Detail details = 2;
@@ -557,13 +654,13 @@ message GetReleaseHookReq {
 
 message GetReleaseHookResp {
     message Hook {
-        uint32 hook_id                 = 1;
-        string hook_name               = 2;
-        uint32 hook_revision_id        = 3;
-        string hook_revision_name      = 4;
-        string type                    = 5;
-        string memo                    = 6;
-        string content                 = 7;
+        uint32 hook_id            = 1;
+        string hook_name          = 2;
+        uint32 hook_revision_id   = 3;
+        string hook_revision_name = 4;
+        string type               = 5;
+        string memo               = 6;
+        string content            = 7;
     }
     Hook pre_hook  = 1;
     Hook post_hook = 2;
@@ -575,9 +672,12 @@ message CreateTemplateSpaceReq {
 }
 
 message ListTemplateSpacesReq {
-    uint32 biz_id = 1;
-    uint32 start  = 2;
-    uint32 limit  = 3;
+    uint32 biz_id        = 1;
+    string search_fields = 2;
+    string search_value  = 3;
+    uint32 start         = 4;
+    uint32 limit         = 5;
+    bool   all           = 6;
 }
 
 message ListTemplateSpacesResp {
@@ -596,25 +696,37 @@ message DeleteTemplateSpaceReq {
     pbts.TemplateSpaceAttachment attachment = 2;
 }
 
-message GetAllBizsOfTemplateSpacesResp{
+message GetAllBizsOfTmplSpacesResp{
     repeated uint32 biz_ids = 1;
 }
 
-message CreateDefaultTemplateSpaceReq{
+message CreateDefaultTmplSpaceReq{
     uint32 biz_id = 1;
 }
 
+message  ListTmplSpacesByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message  ListTmplSpacesByIDsResp {
+    repeated pbts.TemplateSpace details = 1;
+}
+
 message CreateTemplateReq {
-    pbtemplate.TemplateAttachment attachment = 1;
-    pbtemplate.TemplateSpec       spec       = 2;
-    pbtr.TemplateReleaseSpec      tr_spec    = 3;
+    pbtemplate.TemplateAttachment attachment       = 1;
+    pbtemplate.TemplateSpec       spec             = 2;
+    pbtr.TemplateRevisionSpec     tr_spec          = 3;
+    repeated uint32               template_set_ids = 4;
 }
 
 message ListTemplatesReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
-    uint32 start             = 3;
-    uint32 limit             = 4;
+    string search_fields     = 3;
+    string search_value      = 4;
+    uint32 start             = 5;
+    uint32 limit             = 6;
+    bool   all               = 7;
 }
 
 message ListTemplatesResp {
@@ -631,29 +743,109 @@ message UpdateTemplateReq {
 message DeleteTemplateReq {
     uint32                        id         = 1;
     pbtemplate.TemplateAttachment attachment = 2;
+    bool                          force      = 3;
 }
 
-message CreateTemplateReleaseReq {
-    pbtr.TemplateReleaseAttachment attachment = 1;
-    pbtr.TemplateReleaseSpec       spec       = 2;
+message BatchDeleteTemplateReq {
+    repeated uint32               ids        = 1;
+    pbtemplate.TemplateAttachment attachment = 2;
+    bool                          force      = 3;
 }
 
-message ListTemplateReleasesReq {
+message AddTmplsToTmplSetsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_ids      = 3;
+    repeated uint32 template_set_ids  = 4;
+}
+
+message DeleteTmplsFromTmplSetsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_ids      = 3;
+    repeated uint32 template_set_ids  = 4;
+}
+
+message  ListTemplatesByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message  ListTemplatesByIDsResp {
+    repeated pbtemplate.Template details = 1;
+}
+
+message ListTemplatesNotBoundReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    string search_fields     = 3;
+    string search_value      = 4;
+    uint32 start             = 5;
+    uint32 limit             = 6;
+    bool   all               = 7;
+}
+
+message ListTemplatesNotBoundResp {
+    uint32                       count   = 1;
+    repeated pbtemplate.Template details = 2;
+}
+
+message ListTmplsOfTmplSetReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
+}
+
+message ListTmplsOfTmplSetResp {
+    uint32                       count   = 1;
+    repeated pbtemplate.Template details = 2;
+}
+
+message CreateTemplateRevisionReq {
+    pbtr.TemplateRevisionAttachment attachment = 1;
+    pbtr.TemplateRevisionSpec       spec       = 2;
+}
+
+message ListTemplateRevisionsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
 }
 
-message ListTemplateReleasesResp {
-    uint32                        count   = 1;
-    repeated pbtr.TemplateRelease details = 2;
+message ListTemplateRevisionsResp {
+    uint32                         count   = 1;
+    repeated pbtr.TemplateRevision details = 2;
 }
 
-message DeleteTemplateReleaseReq {
-    uint32                         id         = 1;
-    pbtr.TemplateReleaseAttachment attachment = 2;
+message DeleteTemplateRevisionReq {
+    uint32                          id         = 1;
+    pbtr.TemplateRevisionAttachment attachment = 2;
+}
+
+message  ListTemplateRevisionsByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message  ListTemplateRevisionsByIDsResp {
+    repeated pbtr.TemplateRevision details = 1;
+}
+
+message ListTmplRevisionNamesByTmplIDsReq {
+    uint32          biz_id       = 1;
+    repeated uint32 template_ids = 2;
+}
+
+message ListTmplRevisionNamesByTmplIDsResp {
+    repeated pbtr.TemplateRevisionNamesDetail details = 1;
 }
 
 message CreateTemplateSetReq {
@@ -664,8 +856,11 @@ message CreateTemplateSetReq {
 message ListTemplateSetsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
-    uint32 start             = 3;
-    uint32 limit             = 4;
+    string search_fields     = 3;
+    string search_value      = 4;
+    uint32 start             = 5;
+    uint32 limit             = 6;
+    bool   all               = 7;
 }
 
 message ListTemplateSetsResp {
@@ -677,11 +872,391 @@ message UpdateTemplateSetReq {
     uint32                       id         = 1;
     pbtset.TemplateSetAttachment attachment = 2;
     pbtset.TemplateSetSpec       spec       = 3;
+    bool                         force      = 4;
 }
 
 message DeleteTemplateSetReq {
     uint32                       id         = 1;
     pbtset.TemplateSetAttachment attachment = 2;
+    bool                         force      = 3;
+}
+
+message ListAppTemplateSetsReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ListAppTemplateSetsResp {
+    repeated pbtset.TemplateSet details = 1;
+}
+
+message  ListTemplateSetsByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message  ListTemplateSetsByIDsResp {
+    repeated pbtset.TemplateSet details = 1;
+}
+
+message  ListTemplateSetBriefInfoByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message  ListTemplateSetBriefInfoByIDsResp {
+    repeated pbtset.TemplateSetBriefInfo details = 1;
+}
+
+message  ListTmplSetsOfBizReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message  ListTmplSetsOfBizResp {
+    repeated pbtset.TemplateSetOfBizDetail details = 1;
+}
+
+message CreateAppTemplateBindingReq {
+    pbatb.AppTemplateBindingAttachment attachment = 1;
+    pbatb.AppTemplateBindingSpec       spec       = 2;
+}
+
+message ListAppTemplateBindingsReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    uint32 start  = 3;
+    uint32 limit  = 4;
+    bool   all    = 5;
+}
+
+message ListAppTemplateBindingsResp {
+    uint32                            count   = 1;
+    repeated pbatb.AppTemplateBinding details = 2;
+}
+
+message UpdateAppTemplateBindingReq {
+    uint32                             id         = 1;
+    pbatb.AppTemplateBindingAttachment attachment = 2;
+    pbatb.AppTemplateBindingSpec       spec       = 3;
+}
+
+message DeleteAppTemplateBindingReq {
+    uint32                             id         = 1;
+    pbatb.AppTemplateBindingAttachment attachment = 2;
+}
+
+message ListAppBoundTmplRevisionsReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    string search_fields = 3;
+    string search_value  = 4;
+    uint32 start         = 5;
+    uint32 limit         = 6;
+    bool   all           = 7;
+    bool   with_status   = 8;
+}
+
+message ListAppBoundTmplRevisionsResp {
+    uint32                              count   = 1;
+    repeated pbatb.AppBoundTmplRevision details = 2;
+}
+
+message ListReleasedAppBoundTmplRevisionsReq {
+    uint32 biz_id        = 1;
+    uint32 app_id        = 2;
+    uint32 release_id    = 3;
+    string search_fields = 4;
+    string search_value  = 5;
+    uint32 start         = 6;
+    uint32 limit         = 7;
+    bool   all           = 8;
+}
+
+message ListReleasedAppBoundTmplRevisionsResp {
+    uint32                                      count   = 1;
+    repeated pbatb.ReleasedAppBoundTmplRevision details = 2;
+}
+
+message GetReleasedAppBoundTmplRevisionReq {
+    uint32 biz_id               = 1;
+    uint32 app_id               = 2;
+    uint32 release_id           = 3;
+    uint32 template_revision_id = 4;
+}
+
+message GetReleasedAppBoundTmplRevisionResp {
+    pbatb.ReleasedAppBoundTmplRevision detail = 1;
+}
+
+message CheckAppTemplateBindingReq {
+    pbatb.AppTemplateBindingAttachment attachment = 1;
+    pbatb.AppTemplateBindingSpec       spec       = 2;
+}
+
+message CheckAppTemplateBindingResp {
+    repeated pbatb.Conflict details = 1;
+}
+
+message ExtractAppTmplVariablesReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ExtractAppTmplVariablesResp {
+    repeated string details = 1;
+}
+
+message GetAppTmplVariableRefsReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message GetAppTmplVariableRefsResp {
+    repeated pbatv.AppTemplateVariableReference details = 1;
+}
+
+message GetReleasedAppTmplVariableRefsReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message GetReleasedAppTmplVariableRefsResp {
+    repeated pbatv.AppTemplateVariableReference details = 1;
+}
+
+message UpdateAppTmplVariablesReq {
+    pbatv.AppTemplateVariableAttachment attachment = 1;
+    pbatv.AppTemplateVariableSpec       spec       = 2;
+}
+
+message ListAppTmplVariablesReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ListAppTmplVariablesResp {
+    repeated pbtv.TemplateVariableSpec details = 1;
+}
+
+message ListReleasedAppTmplVariablesReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+}
+
+message ListReleasedAppTmplVariablesResp {
+    repeated pbtv.TemplateVariableSpec details = 1;
+}
+
+message ListTmplBoundCountsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_ids      = 3;
+}
+
+message ListTmplBoundCountsResp {
+    repeated pbtbr.TemplateBoundCounts details = 1;
+}
+
+message ListTmplRevisionBoundCountsReq {
+    uint32          biz_id                = 1;
+    uint32          template_space_id     = 2;
+    uint32          template_id           = 3;
+    repeated uint32 template_revision_ids = 4;
+}
+
+message ListTmplRevisionBoundCountsResp {
+    repeated pbtbr.TemplateRevisionBoundCounts details = 1;
+}
+
+message ListTmplSetBoundCountsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_set_ids  = 3;
+}
+
+message ListTmplSetBoundCountsResp {
+    repeated pbtbr.TemplateSetBoundCounts details = 1;
+}
+
+message ListTmplBoundUnnamedAppsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
+}
+
+message ListTmplBoundUnnamedAppsResp {
+    uint32                                       count   = 1;
+    repeated pbtbr.TemplateBoundUnnamedAppDetail details = 2;
+}
+
+message ListTmplBoundNamedAppsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    string search_fields     = 4;
+    string search_value      = 5;
+    uint32 start             = 6;
+    uint32 limit             = 7;
+    bool   all               = 8;
+}
+
+message ListTmplBoundNamedAppsResp {
+    uint32                                     count   = 1;
+    repeated pbtbr.TemplateBoundNamedAppDetail details = 2;
+}
+
+message ListTmplBoundTmplSetsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+    bool   all               = 6;
+}
+
+message ListTmplBoundTmplSetsResp {
+    uint32                                        count   = 1;
+    repeated pbtbr.TemplateBoundTemplateSetDetail details = 2;
+}
+
+message ListMultiTmplBoundTmplSetsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_ids      = 3;
+    uint32          start             = 4;
+    uint32          limit             = 5;
+    bool            all               = 6;
+}
+
+message ListMultiTmplBoundTmplSetsResp {
+    uint32                                             count   = 1;
+    repeated pbtbr.MultiTemplateBoundTemplateSetDetail details = 2;
+}
+
+message ListTmplRevisionBoundUnnamedAppsReq {
+    uint32 biz_id               = 1;
+    uint32 template_space_id    = 2;
+    uint32 template_id          = 3;
+    uint32 template_revision_id = 4;
+    string search_fields        = 5;
+    string search_value         = 6;
+    uint32 start                = 7;
+    uint32 limit                = 8;
+    bool   all                  = 9;
+}
+
+message ListTmplRevisionBoundUnnamedAppsResp {
+    uint32                                               count   = 1;
+    repeated pbtbr.TemplateRevisionBoundUnnamedAppDetail details = 2;
+}
+
+message ListTmplRevisionBoundNamedAppsReq {
+    uint32 biz_id               = 1;
+    uint32 template_space_id    = 2;
+    uint32 template_id          = 3;
+    uint32 template_revision_id = 4;
+    string search_fields        = 5;
+    string search_value         = 6;
+    uint32 start                = 7;
+    uint32 limit                = 8;
+    bool   all                  = 9;
+}
+
+message ListTmplRevisionBoundNamedAppsResp {
+    uint32                                             count   = 1;
+    repeated pbtbr.TemplateRevisionBoundNamedAppDetail details = 2;
+}
+
+message ListTmplSetBoundUnnamedAppsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+    bool   all               = 6;
+}
+
+message ListTmplSetBoundUnnamedAppsResp {
+    uint32                                          count   = 1;
+    repeated pbtbr.TemplateSetBoundUnnamedAppDetail details = 2;
+}
+
+message ListMultiTmplSetBoundUnnamedAppsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_set_ids  = 3;
+    uint32          start             = 4;
+    uint32          limit             = 5;
+    bool            all               = 6;
+}
+
+message ListMultiTmplSetBoundUnnamedAppsResp {
+    uint32                                               count   = 1;
+    repeated pbtbr.MultiTemplateSetBoundUnnamedAppDetail details = 2;
+}
+
+message ListTmplSetBoundNamedAppsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+    bool   all               = 6;
+}
+
+message ListTmplSetBoundNamedAppsResp {
+    uint32                                        count   = 1;
+    repeated pbtbr.TemplateSetBoundNamedAppDetail details = 2;
+}
+
+message ListLatestTmplBoundUnnamedAppsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+    bool   all               = 6;
+}
+
+message ListLatestTmplBoundUnnamedAppsResp {
+    uint32                                             count   = 1;
+    repeated pbtbr.LatestTemplateBoundUnnamedAppDetail details = 2;
+}
+
+message CreateTemplateVariableReq {
+    pbtv.TemplateVariableAttachment attachment = 1;
+    pbtv.TemplateVariableSpec       spec       = 2;
+}
+
+message ListTemplateVariablesReq {
+    uint32 biz_id        = 1;
+    string search_fields = 2;
+    string search_value  = 3;
+    uint32 start         = 4;
+    uint32 limit         = 5;
+    bool   all           = 6;
+}
+
+message ListTemplateVariablesResp {
+    uint32                         count   = 1;
+    repeated pbtv.TemplateVariable details = 2;
+}
+
+message UpdateTemplateVariableReq {
+    uint32                          id         = 1;
+    pbtv.TemplateVariableAttachment attachment = 2;
+    pbtv.TemplateVariableSpec       spec       = 3;
+}
+
+message DeleteTemplateVariableReq {
+    uint32                          id         = 1;
+    pbtv.TemplateVariableAttachment attachment = 2;
 }
 
 message CreateGroupReq {
@@ -690,7 +1265,7 @@ message CreateGroupReq {
 }
 
 message ListAllGroupsReq {
-    uint32                 biz_id = 1;
+    uint32 biz_id = 1;
 }
 
 message ListAllGroupsResp {
@@ -775,12 +1350,13 @@ message PublishReq {
 }
 
 message GenerateReleaseAndPublishReq {
-    uint32          biz_id       = 1;
-    uint32          app_id       = 2;
-    string          release_name = 3;
-    string          release_memo = 4;
-    bool            all          = 5;
-    repeated string groups       = 6;
+    uint32                             biz_id       = 1;
+    uint32                             app_id       = 2;
+    string                             release_name = 3;
+    string                             release_memo = 4;
+    bool                               all          = 5;
+    repeated string                    groups       = 6;
+    repeated pbtv.TemplateVariableSpec variables    = 7;
 }
 
 message PublishResp {
@@ -788,10 +1364,10 @@ message PublishResp {
 }
 
 message ListInstancesReq {
-    string                 resource_type = 1;
-    uint32                 biz_id        = 2;
-    google.protobuf.Struct filter        = 3;
-    pbbase.BasePage        page          = 4;
+    string          resource_type = 1;
+    string          parent_type   = 2;
+    string          parent_id     = 3;
+    pbbase.BasePage page          = 4;
 }
 
 message ListInstancesResp {
@@ -800,8 +1376,24 @@ message ListInstancesResp {
 }
 
 message InstanceResource {
-    uint32 id   = 1;
+    string id   = 1;
     string name = 2;
+}
+
+message FetchInstanceInfoReq {
+    string          resource_type = 1;
+    repeated string ids           = 2;
+}
+
+message FetchInstanceInfoResp {
+    repeated InstanceInfo details = 1;
+}
+
+message InstanceInfo {
+    string          id           = 1;
+    string          display_name = 2;
+    repeated string approver     = 3;
+    repeated string path         = 4;
 }
 
 message PingMsg {

@@ -33,7 +33,7 @@ Usage:
       [ -v -V --version show script version]
       [ -i --install, supprt: ${PROJECT[*]}]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {
@@ -59,22 +59,83 @@ safe_source() {
   return 0
 }
 
-source_files=("${ROOT_DIR}/functions/utils.sh")
-for file in "${source_files[@]}"; do
-  safe_source "$file"
-done
+init_bap_rule() {
+  if [[ -z ${BK_PUBLIC_REPO} ]]; then
+    utils::log "ERROR" "init bcs-apiserver-proxy failed, empty BK_PUBLIC_REPO"
+  else
+    bap_image="${BK_PUBLIC_REPO}/blueking/bcs-apiserver-proxy:${APISERVER_PROXY_VERSION}"
+  fi
+
+  case "${CRI_TYPE,,}" in
+    "docker")
+      if ! command -v docker &>/dev/null; then
+        utils::log "ERROR" "docker client: docker is not found"
+      fi
+      docker run -v "${PROXY_TOOL_PATH}":/tmp --rm --entrypoint /bin/cp "${bap_image}" \
+        -f /data/bcs/bcs-apiserver-proxy/bcs-apiserver-proxy-tools /tmp/ || utils::log "ERROR" "pull ${bap_image} image failed"
+      ;;
+    "containerd")
+      if ! command -v ctr &>/dev/null; then
+        utils::log "ERROR" "containerd client: ctr is not found"
+      fi
+      if ctr -n k8s.io i pull --hosts-dir "/etc/containerd/certs.d" "${bap_image}"; then
+        if ! ctr -n k8s.io run --rm --mount type=bind,src="${PROXY_TOOL_PATH}",dst=/tmp,options=rbind:rw "${bap_image}" \
+          bap-copy."$(date +%s)" /bin/cp -f /data/bcs/bcs-apiserver-proxy/bcs-apiserver-proxy-tools /tmp/; then
+          utils::log "ERROR" "containerd fail to run ${bap_image}"
+        fi
+      else
+        utils::log "ERROR" "pull ${bap_image} image failed"
+      fi
+      ;;
+    *)
+      # ToDo: Unified standard error code
+      export ERR_CODE=1
+      utils::log "FATAL" "unkown CRI_TYPE: $CRI_TYPE"
+      ;;
+  esac
+
+  [[ -z "${VIP}" ]] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
+  "${PROXY_TOOL_PATH}"/bcs-apiserver-proxy-tools -cmd init -vs "${VIP}":"${VS_PORT}" -rs "${LAN_IP}":6443 \
+    -scheduler "${LVS_SCHEDULER}" -toolPath "${PROXY_TOOL_PATH}"/bcs-apiserver-proxy-tools
+  "${ROOT_DIR}"/system/config_bcs_dns -u "${VIP}" k8s-api.bcs.local
+  k8s::restart_kubelet
+}
+
+safe_source "${ROOT_DIR}/functions/utils.sh"
+safe_source "${ROOT_DIR}/functions/k8s.sh"
+
 "${ROOT_DIR}"/system/config_envfile.sh -c init
 "${ROOT_DIR}"/system/config_system.sh -c dns sysctl
 "${ROOT_DIR}"/k8s/install_cri.sh
 "${ROOT_DIR}"/k8s/install_k8s_tools
 "${ROOT_DIR}"/k8s/render_kubeadm
 
-# pull image
-if [[ -n ${BCS_OFFLINE:-} ]]; then
-  # import local image
-  true
-fi
+safe_source "${ROOT_DIR}/env/bcs.env"
+
+case "${K8S_CSI,,}" in
+  "localpv")
+    "${ROOT_DIR}"/system/mount_localpv
+    ;;
+  *)
+    utils::log "WARN" "unkown csi plugin: $K8S_CSI"
+    ;;
+esac
+
 kubeadm --config="${ROOT_DIR}/kubeadm-config" config images pull \
   || utils::log "FATAL" "fail to pull k8s image"
 
-kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11
+if systemctl is-active kubelet.service -q; then
+  utils::log "WARN" "kubelet service is active now, skip kubeadm join"
+else
+  kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
+    || utils::log "FATAL" "${LAN_IP} failed to join cluster: ${K8S_CTRL_IP}"
+fi
+
+if [[ "${ENABLE_APISERVER_HA}" == "true" ]]; then
+  if [[ "${APISERVER_HA_MODE}" == "bcs-apiserver-proxy" ]]; then
+    init_bap_rule
+  else
+    "${ROOT_DIR}"/system/config_bcs_dns -u "${VIP}" k8s-api.bcs.local
+    k8s::restart_kubelet
+  fi
+fi

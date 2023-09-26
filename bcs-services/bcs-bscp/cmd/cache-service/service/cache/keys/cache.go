@@ -1,15 +1,16 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+// Package keys is for the cache keys
 package keys
 
 import (
@@ -72,8 +73,8 @@ func (k keyGenerator) ReleasedGroup(bizID uint32, appID uint32) string {
 func (k keyGenerator) ReleasedGroupTtlSec(withRange bool) int {
 
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.releasedGroupTTLRange[1]-k.releasedGroupTTLRange[0]) + k.releasedGroupTTLRange[0]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.releasedGroupTTLRange[1]-k.releasedGroupTTLRange[0]) + k.releasedGroupTTLRange[0]
 		return seconds
 	}
 
@@ -93,8 +94,8 @@ func (k keyGenerator) CredentialMatchedCI(bizID uint32, credential string) strin
 func (k keyGenerator) CredentialMatchedCITtlSec(withRange bool) int {
 
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.credentialMatchedCITTLRange[1]-
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.credentialMatchedCITTLRange[1]-
 			k.credentialMatchedCITTLRange[0]) + k.credentialMatchedCITTLRange[0]
 		return seconds
 	}
@@ -114,8 +115,8 @@ func (k keyGenerator) Credential(bizID uint32, str string) string {
 // CredentialTtlSec generate the credential's TTL seconds
 func (k keyGenerator) CredentialTtlSec(withRange bool) int {
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.credentialTTLRange[1]-k.credentialTTLRange[0]) + k.credentialTTLRange[0]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.credentialTTLRange[1]-k.credentialTTLRange[0]) + k.credentialTTLRange[0]
 		return seconds
 	}
 	return k.credentialTTLRange[0]
@@ -135,8 +136,8 @@ func (k keyGenerator) ReleasedCI(bizID uint32, releaseID uint32) string {
 func (k keyGenerator) ReleasedCITtlSec(withRange bool) int {
 
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.releasedCITTLRange[1]-k.releasedCITTLRange[0]) + k.releasedCITTLRange[0]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.releasedCITTLRange[1]-k.releasedCITTLRange[0]) + k.releasedCITTLRange[0]
 		return seconds
 	}
 
@@ -156,8 +157,8 @@ func (k keyGenerator) ReleasedHook(bizID uint32, releaseID uint32) string {
 func (k keyGenerator) ReleasedHookTtlSec(withRange bool) int {
 
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.releasedHookTTLRange[1]-k.releasedHookTTLRange[0]) + k.releasedHookTTLRange[0]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.releasedHookTTLRange[1]-k.releasedHookTTLRange[0]) + k.releasedHookTTLRange[0]
 		return seconds
 	}
 
@@ -186,8 +187,8 @@ func (k keyGenerator) AppMeta(bizID uint32, appID uint32) string {
 func (k keyGenerator) AppMetaTtlSec(withRange bool) int {
 
 	if withRange {
-		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.appMetaTTLRange[1]-k.appMetaTTLRange[0]) + k.appMetaTTLRange[0]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		seconds := r.Intn(k.appMetaTTLRange[1]-k.appMetaTTLRange[0]) + k.appMetaTTLRange[0]
 		return seconds
 	}
 
@@ -201,8 +202,8 @@ func (k keyGenerator) NullValue() string {
 
 // NullKeyTtlSec return the null key's ttl seconds
 func (k keyGenerator) NullKeyTtlSec() int {
-	rand.Seed(time.Now().UnixNano())
-	seconds := rand.Intn(k.nullKeyTTLRange[1]-k.nullKeyTTLRange[0]) + k.nullKeyTTLRange[0]
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	seconds := r.Intn(k.nullKeyTTLRange[1]-k.nullKeyTTLRange[0]) + k.nullKeyTTLRange[0]
 	return seconds
 }
 

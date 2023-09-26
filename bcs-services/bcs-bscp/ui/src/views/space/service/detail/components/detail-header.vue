@@ -1,34 +1,105 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { InfoLine } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../store/config'
   import { VERSION_STATUS_MAP } from '../../../../../constants/config'
+  import { IConfigVersion } from '../../../../../../types/config'
+  import { permissionCheck } from '../../../../../api/index'
+  import PublishVersion from './publish-version/index.vue'
+  import CreateVersion from './create-version/index.vue'
+  import ModifyGroupPublish from './modify-group-publish.vue'
 
   const route = useRoute()
   const router = useRouter()
 
-  const { versionData } = storeToRefs(useConfigStore())
+  const configStore = useConfigStore()
+  const { versionData } = storeToRefs(configStore)
+  const permCheckLoading = ref(false)
+  const perms = ref({
+    create: false,
+    publish: false
+  })
 
   const props = defineProps<{
+    bkBizId: string;
+    appId: number;
     versionDetailView: Boolean;
   }>()
 
   const tabs = ref([
     { name: 'config', label: '配置管理', routeName: 'service-config' },
-    { name: 'script', label: '初始化脚本', routeName: 'init-script' },
+    { name: 'script', label: '前/后置脚本', routeName: 'init-script' },
   ])
+
 
   const getDefaultTab = () => {
     const tab = tabs.value.find(item => item.routeName === route.name)
     return tab ? tab.name : 'config'
   }
   const activeTab = ref(getDefaultTab())
+  const publishVersionRef = ref()
 
   watch(() => route.name, () => {
     activeTab.value = getDefaultTab()
   })
+
+  watch(() => props.bkBizId, () => {
+    getVersionPerms()
+  })
+
+  onMounted(() => {
+    getVersionPerms()
+  })
+
+  const getVersionPerms = async () => {
+    permCheckLoading.value = true
+    const [createRes, publishRes] = await Promise.all([
+      permissionCheck({
+        resources: [
+          {
+            biz_id: props.bkBizId,
+            basic: {
+              type: 'app',
+              action: 'generate_release',
+              resource_id: props.appId
+            }
+          }
+        ]
+      }),
+      permissionCheck({
+        resources: [
+          {
+            biz_id: props.bkBizId,
+            basic: {
+              type: 'app',
+              action: 'publish',
+              resource_id: props.appId
+            }
+          }
+        ]
+      })
+    ])
+    perms.value.create = createRes.is_allowed
+    perms.value.publish = publishRes.is_allowed
+    permCheckLoading.value = false
+  }
+
+  // 创建版本成功后，刷新版本列表，若选择同时上线，则打开选择分组面板
+  const handleVersionCreated = (version: IConfigVersion, isPublish: boolean) => {
+    refreshVesionList()
+    if (isPublish && publishVersionRef.value) {
+        versionData.value = version
+        publishVersionRef.value.openSelectGroupPanel()
+      }
+  }
+
+  const refreshVesionList = () => {
+    configStore.$patch((state) => {
+      state.refreshVersionListFlag = true
+    })
+  }
 
   const handleTabChange = (val: string) => {
     const tab = tabs.value.find(item => item.name === val)
@@ -52,11 +123,34 @@
         }"
         class="version-desc" />
     </section>
-    <div v-if="!props.versionDetailView" class="detail-header-tabs">
-      <BkTab type="unborder-card" v-model:active="activeTab" :label-height="41" @change="handleTabChange">
-        <BkTabPanel v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label"></BkTabPanel>
-      </BkTab>
-    </div>
+    <template v-if="!props.versionDetailView">
+      <div class="detail-header-tabs">
+        <BkTab type="unborder-card" v-model:active="activeTab" :label-height="41" @change="handleTabChange">
+          <BkTabPanel v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label"></BkTabPanel>
+        </BkTab>
+      </div>
+      <section class="version-operations">
+        <CreateVersion
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :perm-check-loading="permCheckLoading"
+          :has-perm="perms.create"
+          @confirm="handleVersionCreated" />
+        <PublishVersion
+          ref="publishVersionRef"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :perm-check-loading="permCheckLoading"
+          :has-perm="perms.publish"
+          @confirm="refreshVesionList" />
+        <ModifyGroupPublish
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :perm-check-loading="permCheckLoading"
+          :has-perm="perms.publish"
+          @confirm="refreshVesionList" />
+      </section>
+    </template>
   </div>
 </template>
 <style lang="scss" scoped>
@@ -68,8 +162,6 @@
     height: 41px;
     box-shadow: 0 3px 4px 0 #0000000a;
     z-index: 1;
-
-
     .summary-wrapper {
       display: flex;
       align-items: center;
@@ -122,6 +214,12 @@
       :deep(.bk-tab-content) {
         display: none;
       }
+    }
+    .version-operations {
+      position: absolute;
+      top: 5px;
+      right: 24px;
+      z-index: 10;
     }
   }
 </style>

@@ -18,13 +18,20 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
+	k8scorev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -121,12 +128,12 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 }
 
 func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error {
-	configByte, err := base64.StdEncoding.DecodeString(data.Cluster.KubeConfig)
+	configByte, err := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
 	if err != nil {
 		return fmt.Errorf("failed to decode kubeconfig, %v", err)
 	}
 	typesConfig := &types.Config{}
-	err = json.Unmarshal(configByte, typesConfig)
+	err = json.Unmarshal([]byte(configByte), typesConfig)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal kubeconfig, %v", err)
 	}
@@ -139,7 +146,10 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 }
 
 func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
-	kubeCli, err := clusterops.NewKubeClient(data.Cluster.KubeConfig)
+	config, _ := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
+	kubeRet := base64.StdEncoding.EncodeToString([]byte(config))
+
+	kubeCli, err := clusterops.NewKubeClient(kubeRet)
 	if err != nil {
 		return fmt.Errorf("importClusterInstances NewKubeClient failed: %v", err)
 	}
@@ -149,9 +159,74 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		return fmt.Errorf("list nodes failed, %s", err.Error())
 	}
 
-	err = cloudprovider.ImportClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)
+	// get container runtime info here due to GKE API is not support
+	if len(nodes.Items) > 0 {
+		crv := strings.Split(nodes.Items[0].Status.NodeInfo.ContainerRuntimeVersion, "://")
+		if len(crv) == 2 {
+			data.Cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
+				ContainerRuntime: crv[0],
+				RuntimeVersion:   crv[1],
+			}
+			err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), data.Cluster)
+			if err != nil {
+				blog.Errorf("importClusterInstances update cluster[%s] failed: %v", data.Cluster.ClusterName, err)
+			}
+		}
+	}
+
+	gceCli, err := api.NewComputeServiceClient(data.CmOption)
+	if err != nil {
+		return fmt.Errorf("get gce client failed, %s", err.Error())
+	}
+
+	err = importClusterNodesToCM(context.Background(), gceCli, nodes.Items, data.Cluster.ClusterID)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ImportClusterNodesToCM writes cluster nodes to DB
+func importClusterNodesToCM(ctx context.Context, gceCli *api.ComputeServiceClient, nodes []k8scorev1.Node, clusterID string) error {
+
+	for _, v := range nodes {
+		nodeZone := ""
+		zone, ok := v.Labels[utils.ZoneKubernetesFlag]
+		if ok {
+			nodeZone = zone
+		}
+		zone, ok = v.Labels[utils.ZoneTopologyFlag]
+		if ok && nodeZone == "" {
+			nodeZone = zone
+		}
+
+		var (
+			node = &proto.Node{}
+		)
+
+		ipv4, ipv6 := utils.GetNodeIPAddress(&v)
+		node.ZoneName = nodeZone
+		node.InnerIP = utils.SliceToString(ipv4)
+		node.InnerIPv6 = utils.SliceToString(ipv6)
+		node.ClusterID = clusterID
+		node.Status = common.StatusRunning
+
+		instance, err := gceCli.GetInstance(ctx, nodeZone, v.Name)
+		if err == nil {
+			node = api.InstanceToNode(gceCli, instance)
+		} else {
+			blog.Errorf("ImportClusterNodesToCM failed: %v", err)
+			node.Region = v.Labels[utils.RegionTopologyFlag]
+			node.InstanceType = v.Labels[utils.NodeInstanceTypeFlag]
+			node.NodeName = v.Labels[utils.NodeNameFlag]
+		}
+
+		err = cloudprovider.GetStorageModel().CreateNode(ctx, node)
+		if err != nil {
+			blog.Errorf("ImportClusterNodesToCM CreateNode[%s] failed: %v", v.Name, err)
+			continue
+		}
 	}
 
 	return nil

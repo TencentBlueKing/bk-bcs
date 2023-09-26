@@ -1,67 +1,75 @@
 base_conf:
   app_code: ""
   app_secret: ""
-  time_zone: "Asia/Shanghai"
-  language_code: "zh-hans"
+  bk_paas_host: ""
+  time_zone: Asia/Shanghai
+  language_code: ""
+  managers: []
+  debug: false
   run_env: dev
-
+auth_conf:
+  host: ""
+  is_gateway: false
+  ssm_host: ""
 logging:
   level: info
   file: ""
   stderr: true
-
+bcs_conf:
+  inner_host: ""
+  host: ""
+  token: ""
+  insecure_skip_verify: false
+  jwt_public_key: ""
 redis:
-  host: "127.0.0.1"
+  host: 127.0.0.1
   port: 6379
   password: ""
   db: 0
-
-bklogin_conf:
-  host: ""
-
-auth_conf:
-  host: ""
-
-bcs_cc_conf:
-  host: ""
-  stage: ""
-
-bcs_conf:
-  inner_host: "" # 集群内访问
-  host: ""
-  token: ""
-  jwt_public_key: ""
-  insecure_skip_verify: false
-
-
+  max_pool_size: 100
+  max_conn_timeout: 6
+  idle_timeout: 600
+  read_timeout: 10
+  write_timeout: 10
 webconsole:
-  mode: internal # external
-  admin_cluster_id: "" # external 模式时的管理集群ID
-  guide_doc_link: "" # 使用文档链接
-  kubectld_image: "" # 镜像路径
-  kubectld_tags: "" # 镜像默认tag
+  admin_cluster_id: ""
+  mode: internal
+  guide_doc_links: []
+  kubectld_image: ""
+  kubectld_tags: []
   kubectld_resources:
     limits:
-      cpu: 500M
+      cpu: 500m
       memory: 128Mi
     requests:
       cpu: 200m
       memory: 64Mi
-
 web:
-  route_prefix: ""
-  host: ""
-
+  host: http://127.0.0.1:8083
+  route_prefix: /bcsapi/v4/webconsole
 etcd:
-  endpoints: "127.0.0.1:2379"
+  endpoints: ""
   ca: ""
   cert: ""
   key: ""
-
 tracing:
   enabled: false
   endpoint: ""
   token: ""
-  resource_attrs:
-    k1: ""
-    k2: ""
+  resource_attrs: {}
+audit:
+  enabled: false
+  data_dir: ""
+repository:
+  storage_type: ""
+  bkrepo:
+    endpoint: ""
+    project: ""
+    user_name: ""
+    password: ""
+    repo: ""
+  cos:
+    bucket_name: ""
+    endpoint: ""
+    secret_id: ""
+    secret_key: ""

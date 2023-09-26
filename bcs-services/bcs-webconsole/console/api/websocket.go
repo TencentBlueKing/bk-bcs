@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -47,18 +46,20 @@ type wsQuery struct {
 }
 
 // GetTerminalSize 获取初始宽高
-func (q *wsQuery) GetTerminalSize() *manager.TerminalSize {
+func (q *wsQuery) GetTerminalSize() *types.TerminalSize {
 	if q.Rows > 0 && q.Cols > 0 {
-		return &manager.TerminalSize{
+		return &types.TerminalSize{
 			Rows: q.Rows,
 			Cols: q.Cols,
 		}
 	}
-	return nil
+
+	return types.DefaultTerminalSize()
 }
 
 // BCSWebSocketHandler WebSocket 连接处理函数
-func (s *service) BCSWebSocketHandler(c *gin.Context) {
+// NOCC:golint/fnsize(设计如此:)
+func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 	// 还未建立 WebSocket 连接, 使用 Json 返回
 	if !websocket.IsWebSocketUpgrade(c.Request) {
 		rest.AbortWithBadRequestError(c, errors.New("invalid websocket connection"))
@@ -70,7 +71,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		rest.AbortWithBadRequestError(c, errors.Wrap(err, "upgrade websocket connection"))
 		return
 	}
-	defer ws.Close()
+	defer ws.Close() // nolint
 
 	// 已经建立 WebSocket 连接, 下面所有的错误返回, 需要使用 GracefulCloseWebSocket 返回
 	ctx, stop := context.WithCancel(c.Request.Context())
@@ -92,8 +93,15 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	}
 	// 赋值session id
 	podCtx.SessionId = sessionId
-	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
-	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, query.GetTerminalSize(), query.HideBanner)
+
+	terminalSize := query.GetTerminalSize()
+	consoleMgr, err := manager.NewConsoleManager(ctx, podCtx, terminalSize)
+	if err != nil {
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, i18n.GetMessage(c, "初始化session失败")))
+		return
+	}
+
+	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, terminalSize, query.HideBanner)
 	connected = true
 
 	// kubectl 容器， 需要定时上报心跳
@@ -106,7 +114,9 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	eg.Go(func() error {
 		defer stop()
 
-		// 定时检查任务等
+		// 定时检查任务
+		// 命令行审计
+		// terminal recorder
 		return consoleMgr.Run(c)
 	})
 

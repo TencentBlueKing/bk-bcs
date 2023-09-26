@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package config
@@ -27,7 +26,7 @@ type RedisConf struct {
 }
 
 // Init xxx
-func (c *RedisConf) Init() error {
+func (c *RedisConf) Init() {
 	// only for development
 	c.Host = "127.0.0.1"
 	c.Port = 6379
@@ -39,5 +38,4 @@ func (c *RedisConf) Init() error {
 	c.IdleTimeout = 600
 	c.ReadTimeout = 10
 	c.WriteTimeout = 10
-	return nil
 }

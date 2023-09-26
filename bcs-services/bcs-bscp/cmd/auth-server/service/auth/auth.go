@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 // Package auth NOTES
 package auth
@@ -16,17 +16,12 @@ package auth
 import (
 	"context"
 	"fmt"
-	"os"
-	"strconv"
 	"strings"
 
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
-	bkiamlogger "github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
 	"bscp.io/cmd/auth-server/options"
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
@@ -36,7 +31,6 @@ import (
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/thirdparty/esb/cmdb"
 )
 
 // Auth related operate.
@@ -49,10 +43,12 @@ type Auth struct {
 	disableAuth bool
 	// disableWriteOpt defines which biz's write operation needs to be disabled
 	disableWriteOpt *options.DisableWriteOption
+	// iamSettings defines iam settings
+	iamClient *bkiam.IAM
 }
 
 // NewAuth new auth.
-func NewAuth(auth auth.Authorizer, ds pbds.DataClient, disableAuth bool, disableWriteOpt *options.DisableWriteOption) (
+func NewAuth(auth auth.Authorizer, ds pbds.DataClient, disableAuth bool, iamClient *bkiam.IAM, disableWriteOpt *options.DisableWriteOption) (
 	*Auth, error) {
 
 	if auth == nil {
@@ -71,6 +67,7 @@ func NewAuth(auth auth.Authorizer, ds pbds.DataClient, disableAuth bool, disable
 		auth:            auth,
 		ds:              ds,
 		disableAuth:     disableAuth,
+		iamClient:       iamClient,
 		disableWriteOpt: disableWriteOpt,
 	}
 
@@ -105,7 +102,7 @@ func (a *Auth) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) 
 	resources := pbas.ResourceAttributes(req.Resources)
 	opts, decisions, err := parseAttributesToBatchOptions(kt, req.User.UserInfo(), resources...)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	// all resources are skipped
@@ -174,7 +171,10 @@ func parseAttributesToBatchOptions(kt *kit.Kit, user *meta.UserInfo, resources .
 	authBatchArr := make([]*client.AuthBatch, 0)
 	decisions := make([]*meta.Decision, len(resources))
 	for index, resource := range resources {
-		decisions[index] = &meta.Decision{Authorized: false}
+		decisions[index] = &meta.Decision{
+			Resource:   resource,
+			Authorized: false,
+		}
 
 		// this resource should be skipped, do not need to verify in auth center.
 		if resource.Basic.Action == meta.SkipAction {
@@ -227,73 +227,21 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 
 	permission, err := a.getPermissionToApply(kt, pbas.ResourceAttributes(req.Resources))
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
+
+	resourceAttributes := pbas.ResourceAttributes(req.Resources)
+	application, err := AdaptIAMApplicationOptions(resourceAttributes)
+	if err != nil {
+		return nil, err
+	}
+	url, err := a.iamClient.GetApplyURL(*application, "", kt.User)
+	if err != nil {
+		return nil, errors.Wrap(err, "gen apply url")
+	}
+	resp.ApplyUrl = url
 
 	resp.Permission = pbas.PbIamPermission(permission)
-	return resp, nil
-}
-
-// CheckPermission check permission by attr
-func (a *Auth) CheckPermission(ctx context.Context, biz *cmdb.Biz, iamSettings cc.IAM, req *meta.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	log := &logrus.Logger{
-		Out:          os.Stderr,
-		Formatter:    new(logrus.TextFormatter),
-		Hooks:        make(logrus.LevelHooks),
-		Level:        logrus.DebugLevel,
-		ExitFunc:     os.Exit,
-		ReportCaller: false,
-	}
-
-	bkiamlogger.SetLogger(log)
-
-	actionRequest, err := AdaptIAMResourceOptions(req)
-	if err != nil {
-		return nil, err
-	}
-
-	actionRequest.Subject = bkiam.NewSubject("user", kt.User)
-	// i := bkiam.NewIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.Endpoints[0], "")
-	i := bkiam.NewAPIGatewayIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.APIURL)
-	allowed, err := i.IsAllowed(*actionRequest)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := &pbas.CheckPermissionResp{
-		IsAllowed: false,
-		ApplyUrl:  "",
-		Resources: []*pbas.BasicDetail{},
-	}
-
-	if allowed {
-		resp.IsAllowed = true
-		return resp, nil
-	}
-
-	if req.GenApplyURL {
-		resp.Resources = append(resp.Resources, &pbas.BasicDetail{
-			Type:         string(req.Type),
-			Action:       req.Action.String(),
-			ResourceId:   strconv.FormatInt(int64(req.ResourceID), 10),
-			TypeName:     "业务",
-			ActionName:   "业务访问",
-			ResourceName: biz.BizName,
-		})
-
-		application, err := AdaptIAMApplicationOptions(req)
-		if err != nil {
-			return nil, err
-		}
-		url, err := i.GetApplyURL(*application, "", kt.User)
-		if err != nil {
-			return nil, errors.Wrap(err, "gen apply url")
-		}
-		resp.ApplyUrl = url
-	}
-
 	return resp, nil
 }
 
@@ -436,14 +384,15 @@ func (a *Auth) parseIamPathToAncestors(iamPath []string) ([]*meta.IamResourceIns
 	return resources, nil
 }
 
-// getInstIDNameMap NOTES
-// Note how to get ancestor names? right now it means cc biz name,  which is not in bscp
-// note that app id is generated in the form of {biz_id}-{app_id}
-// and right now pbds.ListInstancesReq requires biz id to be set, how to confirm this?
-// and return should be grouped by type to avoid duplicates
+// Note how to get ancestor names? right now it means cc biz name, which is not in bscp
 // getInstIDNameMap get resource id to name map by resource ids, groups by resource type
 func (a *Auth) getInstIDNameMap(kt *kit.Kit, resTypeIDsMap map[client.TypeID][]string) (map[string]string, error) {
 
 	// Note implement this
 	return make(map[string]string), nil
+}
+
+// GrantResourceCreatorAction grant resource creator action.
+func (a *Auth) GrantResourceCreatorAction(ctx context.Context, opts *client.GrantResourceCreatorActionOption) error {
+	return a.auth.GrantResourceCreatorAction(ctx, opts)
 }

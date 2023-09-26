@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package manager
@@ -16,11 +15,13 @@ package manager
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
 
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
@@ -28,7 +29,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -51,7 +51,7 @@ type RemoteStreamConn struct {
 	once          sync.Once
 	wsConn        *websocket.Conn
 	bindMgr       *ConsoleManager
-	resizeMsgChan chan *TerminalSize
+	resizeMsgChan chan *types.TerminalSize
 	inputMsgChan  <-chan wsMessage
 	outputMsgChan chan []byte
 	hideBanner    bool
@@ -59,26 +59,18 @@ type RemoteStreamConn struct {
 
 // NewRemoteStreamConn :
 func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager,
-	initTerminalSize *TerminalSize, hideBanner bool) *RemoteStreamConn {
+	initTerminalSize *types.TerminalSize, hideBanner bool) *RemoteStreamConn {
 	conn := &RemoteStreamConn{
 		ctx:           ctx,
 		wsConn:        wsConn,
 		bindMgr:       mgr,
-		resizeMsgChan: make(chan *TerminalSize, 1), // 放入初始宽高
+		resizeMsgChan: make(chan *types.TerminalSize, 1), // 放入初始宽高
 		outputMsgChan: make(chan []byte),
 		hideBanner:    hideBanner,
 	}
 
 	// 初始化命令行宽和高
-	if initTerminalSize != nil {
-		conn.resizeMsgChan <- initTerminalSize
-	} else {
-		// 前端没有指定长宽高, 使用默认值
-		conn.resizeMsgChan <- &TerminalSize{
-			Rows: DefaultRows,
-			Cols: DefaultCols,
-		}
-	}
+	conn.resizeMsgChan <- initTerminalSize
 
 	return conn
 }
@@ -103,6 +95,19 @@ func (r *RemoteStreamConn) readInputMsg() <-chan wsMessage {
 	return inputMsgChan
 }
 
+// handleResizeMsg : 处理 Resize 数据流
+func (r *RemoteStreamConn) handleResizeMsg(msg []byte) (*types.TerminalSize, error) {
+	resizeMsg := types.TerminalSize{}
+
+	// 解析Json数据
+	err := json.Unmarshal(msg, &resizeMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resizeMsg, nil
+}
+
 // HandleMsg Msg 处理
 func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	// 只处理文本数据
@@ -119,20 +124,17 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	// 第一个字符串为 channel
 	channel := string(msg[0])
 	if channel == ResizeChannel {
-		resizeMsg, resizeErr := r.bindMgr.HandleResizeMsg(decodeMsg)
+		resizeMsg, resizeErr := r.handleResizeMsg(decodeMsg)
 		if resizeErr != nil {
-			return nil, nil
+			return nil, resizeErr
 		}
 
 		r.resizeMsgChan <- resizeMsg
-		return nil, nil
-	}
 
-	// 打印日志
-	if channel == LogChannel {
-		inputMsg, _ := r.bindMgr.HandleInputMsg(decodeMsg)
-		logger.Infof("UserName=%s  SessionID=%s  Command=%s",
-			r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, string(inputMsg))
+		if err = r.bindMgr.HandleResizeMsg(resizeMsg); err != nil {
+			return nil, err
+		}
+
 		return nil, nil
 	}
 
@@ -140,6 +142,7 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, nil
 	}
+
 	return inputMsg, nil
 }
 
@@ -203,22 +206,27 @@ func (r *RemoteStreamConn) Run(c *gin.Context) error {
 	pingInterval := time.NewTicker(10 * time.Second)
 	defer pingInterval.Stop()
 
-	guideMessages := helloMessage(c, r.bindMgr.PodCtx.Source)
+	guideMessages := helloMessage(c, r.bindMgr.podCtx.Source)
 	notSendMsg := true
 
 	for {
 		select {
 		case <-r.ctx.Done():
-			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.PodCtx.PodName)
+			logger.Infof("close %s RemoteStreamConn done", r.bindMgr.podCtx.PodName)
 			return nil
 		case output, ok := <-r.outputMsgChan:
 			if !ok {
-				logger.Infof("close %s RemoteStreamConn done by chan", r.bindMgr.PodCtx.PodName)
+				logger.Infof("close %s RemoteStreamConn done by chan", r.bindMgr.podCtx.PodName)
 				return nil
 			}
 			// 收到首个字节才发送 hello 信息
 			if notSendMsg && !r.hideBanner {
-				PreparedGuideMessage(r.ctx, r.wsConn, guideMessages)
+				if err := r.bindMgr.HandleBannerMsg([]byte(guideMessages)); err != nil {
+					return err
+				}
+				if err := PreparedGuideMessage(r.ctx, r.wsConn, guideMessages); err != nil {
+					return err
+				}
 				notSendMsg = false
 			}
 
@@ -321,7 +329,6 @@ func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected b
 }
 
 func helloMessage(c *gin.Context, source string) string {
-
 	var guideMsg []string
 	var messages []string
 
@@ -359,7 +366,6 @@ func helloMessage(c *gin.Context, source string) string {
 
 // ZhLength 计算中文字符串长度, 中文为2个长度
 func ZhLength(str string) int {
-
 	var length int
 
 	for _, i := range str {

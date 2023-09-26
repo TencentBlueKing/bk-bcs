@@ -23,6 +23,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
+
 import $router from '@/router';
 
 export default defineComponent({

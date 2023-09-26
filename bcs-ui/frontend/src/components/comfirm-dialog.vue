@@ -36,14 +36,14 @@
         :loading="loading"
         class="mr10 min-w-[88px]"
         @click="handleConfirm">
-        {{ okText || $t('确定') }}
+        {{ okText || $t('generic.button.confirm') }}
       </bcs-button>
-      <bk-button :disabled="loading" class="min-w-[88px]" @click="handleCancel">{{ cancelText || $t('取消') }}</bk-button>
+      <bk-button :disabled="loading" class="min-w-[88px]" @click="handleCancel">{{ cancelText || $t('generic.button.cancel') }}</bk-button>
     </div>
   </bcs-dialog>
 </template>
 <script lang="ts">
-import { computed, defineComponent, toRefs, ref, PropType } from 'vue';
+import { computed, defineComponent, PropType, ref, toRefs } from 'vue';
 
 export default defineComponent({
   name: 'ConfirmDialog',

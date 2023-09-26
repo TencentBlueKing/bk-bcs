@@ -48,7 +48,8 @@ func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 		return cacheResult.(*Project), nil
 	}
 
-	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", config.GetGlobalConfig().BcsAPI.Host, projectIDOrCode)
+	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", config.GetGlobalConfig().BcsAPI.InnerHost,
+		projectIDOrCode)
 	resp, err := GetClient().R().
 		SetContext(ctx).
 		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
@@ -70,7 +71,7 @@ func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 
 // QueryProjects query projects
 func QueryProjects(ctx context.Context, limit, offset int, params map[string]string) (*ProjectData, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects", config.GetGlobalConfig().BcsAPI.Host)
+	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects", config.GetGlobalConfig().BcsAPI.InnerHost)
 
 	if params == nil {
 		params = make(map[string]string)
@@ -97,13 +98,14 @@ func QueryProjects(ctx context.Context, limit, offset int, params map[string]str
 
 // Namespace ns
 type Namespace struct {
-	Name string `json:"name"`
+	Name     string   `json:"name"`
+	Managers []string `json:"managers"`
 }
 
 // GetClusterNamespaces get cluster namespaces
 func GetClusterNamespaces(ctx context.Context, projectID, clusterID string) ([]Namespace, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s/clusters/%s/namespaces",
-		config.GetGlobalConfig().BcsAPI.Host, projectID, clusterID)
+		config.GetGlobalConfig().BcsAPI.InnerHost, projectID, clusterID)
 
 	resp, err := GetClient().R().
 		SetContext(ctx).
@@ -135,11 +137,19 @@ func GetCachedNamespace(ctx context.Context, clusterID, nsID string) (*Namespace
 	}
 
 	// get cluster namespaces
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	cluster, err := GetClusterByClusterID(ctx, clusterID)
 	if err != nil {
 		return nil, err
 	}
-	nss, err := GetClusterNamespaces(ctx, cluster.ProjectID, clusterID)
+	project, err := GetProject(ctx, cluster.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	// 解决共享集群问题
+	nss, err := GetClusterNamespaces(ctx, project.ProjectCode, clusterID)
 	if err != nil {
 		return nil, err
 	}

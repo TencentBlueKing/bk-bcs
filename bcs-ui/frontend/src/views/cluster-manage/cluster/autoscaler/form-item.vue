@@ -23,20 +23,20 @@
               disabled: autoscalerData[item.prop] !== 'UPDATE-FAILURE' || !autoscalerData.errorMessage,
               width: 400
             }">
-            {{scalerStatusMap[autoscalerData[item.prop]] || $t('未知')}}
+            {{scalerStatusMap[autoscalerData[item.prop]] || $t('generic.status.unknown')}}
           </span>
         </StatusIcon>
         <template v-if="autoscalerData[item.prop] === 'UPDATE-FAILURE'">
           <span
             class="ml10"
-            v-bk-tooltips="$t('查看详情')"
+            v-bk-tooltips="$t('cluster.nodeTemplate.sops.status.running.detailBtn')"
             @click="handleGotoHelmRelease">
             <i class="bcs-icon bcs-icon-fenxiang"></i>
           </span>
         </template>
       </template>
       <span v-else-if="typeof autoscalerData[item.prop] === 'boolean'">
-        {{(item.invert ? !autoscalerData[item.prop] : autoscalerData[item.prop]) ? $t('是') : $t('否')}}
+        {{(item.invert ? !autoscalerData[item.prop] : autoscalerData[item.prop]) ? $t('units.boolean.true') : $t('units.boolean.false')}}
       </span>
       <span v-else>
         {{`${autoscalerData[item.prop]} ${item.unit || ''}`}}
@@ -48,9 +48,10 @@
 </template>
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import $i18n from '@/i18n/i18n-setup';
-import StatusIcon from '@/components/status-icon';
+
 import LoadingIcon from '@/components/loading-icon.vue';
+import StatusIcon from '@/components/status-icon';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 
 export default defineComponent({
@@ -69,10 +70,10 @@ export default defineComponent({
   setup() {
     // 获取自动扩缩容配置
     const scalerStatusMap = { // 自动扩缩容状态
-      NORMAL: $i18n.t('正常'),
-      UPDATING: $i18n.t('更新中'),
-      'UPDATE-FAILURE': $i18n.t('更新失败'),
-      STOPPED: $i18n.t('已停用'),
+      NORMAL: $i18n.t('generic.status.ready'),
+      UPDATING: $i18n.t('generic.status.updating'),
+      'UPDATE-FAILURE': $i18n.t('generic.status.updateFailed'),
+      STOPPED: $i18n.t('generic.status.terminated'),
     };
     const scalerColorMap = {
       NORMAL: 'green',

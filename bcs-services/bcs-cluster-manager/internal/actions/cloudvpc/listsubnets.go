@@ -72,7 +72,7 @@ func (la *ListSubnetsAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
-	account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
+	account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID, false)
 	if err != nil {
 		return err
 	}
@@ -97,6 +97,12 @@ func (la *ListSubnetsAction) ListCloudSubnets() error {
 		blog.Errorf("get cloudprovider %s VPCManager for list subnets failed, %s", la.cloud.CloudProvider, err.Error())
 		return err
 	}
+	// create node client with cloudProvider
+	nodeMgr, err := cloudprovider.GetNodeMgr(la.cloud.CloudProvider)
+	if err != nil {
+		return err
+	}
+
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
 		Cloud:     la.cloud,
 		AccountID: la.req.AccountID,
@@ -108,10 +114,23 @@ func (la *ListSubnetsAction) ListCloudSubnets() error {
 	}
 	cmOption.Region = la.req.Region
 
+	// region zone info
+	zoneMap := make(map[string]string, 0)
+	zoneList, err := nodeMgr.GetZoneList(cmOption)
+	if err != nil {
+		return err
+	}
+	for i := range zoneList {
+		zoneMap[zoneList[i].Zone] = zoneList[i].ZoneName
+	}
+
 	// get subnet list
 	subnets, err := vpcMgr.ListSubnets(la.req.VpcID, cmOption)
 	if err != nil {
 		return err
+	}
+	for i := range subnets {
+		subnets[i].ZoneName = zoneMap[subnets[i].Zone]
 	}
 	la.subnets = subnets
 

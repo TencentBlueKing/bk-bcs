@@ -15,21 +15,25 @@ package manager
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
+	"net/http/pprof"
 	"path"
 	"reflect"
 	osruntime "runtime"
+	"strconv"
 	"strings"
 	ossync "sync"
 	"time"
 
-	grpccli "github.com/asim/go-micro/plugins/client/grpc/v4"
-	"github.com/asim/go-micro/plugins/registry/etcd/v4"
-	grpcsvr "github.com/asim/go-micro/plugins/server/grpc/v4"
 	etcdsync "github.com/asim/go-micro/plugins/sync/etcd/v4"
+	grpccli "github.com/go-micro/plugins/v4/client/grpc"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	grpcsvr "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/sync"
@@ -46,8 +50,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/controller"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/tunnel"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
@@ -76,6 +80,7 @@ type Server struct {
 	waitLeaderResign chan struct{}
 	microService     micro.Service
 	httpService      *http.Server
+	metricServer     *http.Server
 	// controller for data sync
 	clusterCtl controller.ClusterControl
 	projectCtl controller.ProjectControl
@@ -83,7 +88,7 @@ type Server struct {
 	gitops proxy.GitOpsProxy
 	// gitops data storage
 	storage store.Store
-	secret  *secret.ServerProxy
+	secret  secretstore.SecretInterface
 
 	jwtClient *jwt.JWTClient
 	iamClient iam.PermClient
@@ -91,7 +96,7 @@ type Server struct {
 
 // Init all subsystems
 func (s *Server) Init() error {
-	// 初始化所有进程
+	s.initMetricService()
 	initializer := []func() error{
 		s.initSecret, s.initIamJWTClient, s.initStorage, s.initController,
 		s.initMicroService, s.initHTTPService, s.initLeaderElection,
@@ -151,11 +156,10 @@ func (s *Server) initStorage() error {
 }
 
 func (s *Server) initSecret() error {
-	opt := &secret.ServerOptions{
+	s.secret = secretstore.NewSecretStore(&secretstore.SecretStoreOptions{
 		Address: s.option.SecretServer.Address,
 		Port:    s.option.SecretServer.Port,
-	}
-	s.secret = secret.NewServerProxy(opt)
+	})
 	return nil
 }
 
@@ -266,6 +270,42 @@ func (s *Server) initHTTPService() error {
 	return nil
 }
 
+func (s *Server) initMetricService() {
+	metricMux := http.NewServeMux()
+	s.initPProf(metricMux)
+	s.initMetric(metricMux)
+	extraServerEndpoint := net.JoinHostPort(s.option.Address, strconv.Itoa(int(s.option.MetricPort)))
+
+	s.metricServer = &http.Server{
+		Addr:    extraServerEndpoint,
+		Handler: metricMux,
+	}
+	go func() {
+		blog.Infof("start extra modules [pprof, metric] server %s", extraServerEndpoint)
+		if err := s.metricServer.ListenAndServe(); err != nil {
+			blog.Errorf("metric server listen failed, err %s", err.Error())
+		}
+	}()
+}
+
+func (s *Server) initPProf(mux *http.ServeMux) {
+	if !s.option.Debug {
+		blog.Infof("pprof is disabled")
+		return
+	}
+	blog.Infof("pprof is enabled")
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+}
+
+func (s *Server) initMetric(mux *http.ServeMux) {
+	blog.Infof("init metric handler")
+	mux.Handle("/metrics", promhttp.Handler())
+}
+
 func (s *Server) startHTTPService() {
 	if s.httpService == nil {
 		blog.Fatalf("lost http server instance")
@@ -323,12 +363,19 @@ func (s *Server) initGrpcGateway(router *mux.Router) error {
 // change to other gitops solution easilly
 func (s *Server) initGitOpsProxy(router *mux.Router) error {
 	opt := &proxy.GitOpsOptions{
-		Service:      s.option.GitOps.Service,
-		PathPrefix:   common.GitOpsProxyURL,
-		JWTDecoder:   s.jwtClient,
-		IAMClient:    s.iamClient,
-		Storage:      s.storage,
-		SecretClient: s.secret,
+		Service:    s.option.GitOps.Service,
+		PathPrefix: common.GitOpsProxyURL,
+		JWTDecoder: s.jwtClient,
+		IAMClient:  s.iamClient,
+		Storage:    s.storage,
+		SecretOption: &proxy.SecretOption{
+			Address: s.option.SecretServer.Address,
+			Port:    s.option.SecretServer.Port,
+		},
+		TraceOption: &proxy.TraceOption{
+			Endpoint: s.option.TraceConfig.Endpoint,
+			Token:    s.option.TraceConfig.Token,
+		},
 	}
 
 	s.gitops = argocd.NewGitOpsProxy(opt)

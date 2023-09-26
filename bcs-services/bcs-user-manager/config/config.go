@@ -17,6 +17,7 @@ package config
 import (
 	"crypto/tls"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
@@ -28,6 +29,9 @@ var userManagerConfig *UserMgrConfig
 
 // GloablIAMClient global iam client
 var GloablIAMClient iam.PermClient
+
+// GlobalCryptor global cryptor
+var GlobalCryptor encryptv2.Cryptor
 
 // SetGlobalConfig global config
 func SetGlobalConfig(config *UserMgrConfig) {
@@ -46,6 +50,19 @@ type CertConfig struct {
 	KeyFile    string
 	CertPasswd string
 	IsSSL      bool
+}
+
+// Encrypt define encrypt config
+type Encrypt struct {
+	Enable    bool          `json:"enable" yaml:"enable"`
+	Algorithm string        `json:"algorithm" yaml:"algorithm"`
+	Secret    EncryptSecret `json:"secret" yaml:"secret"`
+}
+
+// EncryptSecret define encrypt secret
+type EncryptSecret struct {
+	Key    string `json:"key" yaml:"key"`
+	Secret string `json:"secret" yaml:"secret"`
 }
 
 // UserMgrConfig is a configuration of bcs-user-manager
@@ -81,6 +98,9 @@ type UserMgrConfig struct {
 	CommunityEdition bool
 	PassConfig       options.PassCCConfig
 	BcsAPI           *options.BcsAPI
+
+	// Encrypt
+	Encrypt options.Encrypt
 }
 
 var (

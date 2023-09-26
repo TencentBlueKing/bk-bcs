@@ -1117,6 +1117,7 @@ func (sd *ScaleDown) getEmptyNodes(candidates []*apiv1.Node, pods []*apiv1.Pod, 
 	resourcesLimits scaleDownResourcesLimits, temporaryNodesPerNodeGroup map[string]int) []*apiv1.Node {
 
 	emptyNodes := simulator.FindEmptyNodesToRemove(candidates, pods)
+	// 空节点列表排序，避免空节点过多时循环等待
 	sort.SliceStable(emptyNodes, func(i, j int) bool {
 		return emptyNodes[i].Name < emptyNodes[j].Name
 	})

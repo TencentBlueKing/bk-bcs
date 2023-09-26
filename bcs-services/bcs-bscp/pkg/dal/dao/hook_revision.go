@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package dao
 
@@ -45,7 +45,7 @@ type HookRevision interface {
 	// GetByPubState hook revision by State
 	GetByPubState(kit *kit.Kit, opt *types.GetByPubStateOption) (*table.HookRevision, error)
 	// DeleteByHookIDWithTx  delete revision revision with transaction
-	DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *table.HookRevision) error
+	DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, hookID, bizID uint32) error
 	// UpdatePubStateWithTx update hookRevision State instance with transaction.
 	UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *table.HookRevision) error
 	// Update one HookRevision's info.
@@ -178,14 +178,17 @@ func (dao *hookRevisionDao) List(kit *kit.Kit,
 		m.HookID.Eq(opt.HookID)).Order(m.ID.Desc())
 
 	if opt.SearchKey != "" {
-		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.SearchKey)))
+		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
+		q = q.Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
 	}
 
 	if opt.State != "" {
 		q = q.Where(m.State.Eq(opt.State.String()))
 	}
 
-	result := make([]*table.HookRevision, 0)
+	var result []*table.HookRevision
 	var count int64
 	var err error
 
@@ -224,7 +227,10 @@ func (dao *hookRevisionDao) ListWithRefer(kit *kit.Kit, opt *types.ListHookRevis
 		m.HookID.Eq(opt.HookID)).Order(m.ID.Desc())
 
 	if opt.SearchKey != "" {
-		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.SearchKey)))
+		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
+		q = q.Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
 	}
 
 	if opt.State != "" {
@@ -273,14 +279,23 @@ func (dao *hookRevisionDao) ListHookRevisionReferences(kit *kit.Kit, opt *types.
 	var count int64
 	var err error
 
-	count, err = rh.WithContext(kit.Ctx).
-		Select(rh.HookType.As("hook_type"), a.ID.As("app_id"), a.Name.As("app_name"),
+	query := rh.WithContext(kit.Ctx).
+		Select(rh.HookRevisionID.As("revision_id"), rh.HookRevisionName.As("revision_name"),
+			rh.HookType.As("hook_type"), a.ID.As("app_id"), a.Name.As("app_name"),
 			r.ID.As("release_id"), r.Name.As("release_name")).
 		LeftJoin(a, rh.AppID.EqCol(a.ID)).
 		LeftJoin(r, rh.ReleaseID.EqCol(r.ID)).
-		Where(rh.HookID.Eq(opt.HookID), rh.HookRevisionID.Eq(opt.HookRevisionsID), rh.BizID.Eq(opt.BizID)).
-		Order(rh.ID.Desc()).
-		ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
+		Where(rh.HookID.Eq(opt.HookID), rh.HookRevisionID.Eq(opt.HookRevisionsID), rh.BizID.Eq(opt.BizID))
+
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
+		query = query.Where(query.Where(
+			a.Name.Like(searchKey)).Or(r.Name.Like(searchKey)).Or(rh.HookRevisionName.Like(searchKey)))
+	}
+
+	count, err = query.Order(rh.ID.Desc()).ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
 
 	for i := range details {
 		if details[i].ReleaseID == 0 {
@@ -328,29 +343,13 @@ func (dao *hookRevisionDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *tabl
 }
 
 // DeleteByHookIDWithTx  delete revision revision with transaction
-func (dao *hookRevisionDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *table.HookRevision) error {
+func (dao *hookRevisionDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, hookID, bizID uint32) error {
 
-	// 参数校验
-	if err := hr.ValidateDeleteByHookID(); err != nil {
-		return err
-	}
-
-	// 删除操作, 获取当前记录做审计
 	m := tx.HookRevision
 	q := tx.HookRevision.WithContext(kit.Ctx)
 
-	oldOne, err := q.Where(m.HookID.Eq(hr.Attachment.HookID), m.BizID.Eq(hr.Attachment.BizID)).Take()
-	if err != nil {
-		return err
-	}
-	ad := dao.auditDao.DecoratorV2(kit, hr.Attachment.BizID).PrepareDelete(oldOne)
-
-	if _, e := q.Where(m.BizID.Eq(hr.Attachment.BizID), m.HookID.Eq(hr.Attachment.HookID)).Delete(hr); e != nil {
+	if _, e := q.Where(m.BizID.Eq(bizID), m.HookID.Eq(hookID)).Delete(); e != nil {
 		return e
-	}
-
-	if e := ad.Do(tx.Query); e != nil {
-		return err
 	}
 
 	return nil

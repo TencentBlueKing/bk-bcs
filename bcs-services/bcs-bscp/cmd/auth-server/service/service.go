@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 // Package service NOTES
 package service
@@ -17,19 +17,26 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+	bkiamlogger "github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 
 	"bscp.io/cmd/auth-server/options"
 	"bscp.io/cmd/auth-server/service/auth"
 	"bscp.io/cmd/auth-server/service/iam"
 	"bscp.io/cmd/auth-server/service/initial"
+	confsvc "bscp.io/cmd/config-server/service"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/criteria/errf"
@@ -42,6 +49,8 @@ import (
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	pbas "bscp.io/pkg/protocol/auth-server"
+	pbcs "bscp.io/pkg/protocol/config-server"
+	base "bscp.io/pkg/protocol/core/base"
 	basepb "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/rest/view/webannotation"
@@ -129,7 +138,7 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, di
 
 	if !tls.Enable() {
 		// dial without ssl
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		// dial with ssl.
 		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,
@@ -161,7 +170,7 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, di
 		}
 	}
 	cfg := &client.Config{
-		Address:   iamSettings.Endpoints,
+		Address:   []string{iamSettings.APIURL},
 		AppCode:   iamSettings.AppCode,
 		AppSecret: iamSettings.AppSecret,
 		SystemID:  sys.SystemIDBSCP,
@@ -196,11 +205,23 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, di
 		return nil, err
 	}
 
+	log := &logrus.Logger{
+		Out:          os.Stderr,
+		Formatter:    new(logrus.TextFormatter),
+		Hooks:        make(logrus.LevelHooks),
+		Level:        logrus.DebugLevel,
+		ExitFunc:     os.Exit,
+		ReportCaller: false,
+	}
+	bkiamlogger.SetLogger(log)
+	iam := bkiam.NewAPIGatewayIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.APIURL)
+
 	cs := &ClientSet{
-		DS:   ds,
-		sys:  iamSys,
-		auth: authSdk,
-		Esb:  esbCli,
+		DS:        ds,
+		sys:       iamSys,
+		auth:      authSdk,
+		Esb:       esbCli,
+		iamClient: iam,
 	}
 	logs.Infof("initialize the client set success.")
 	return cs, nil
@@ -211,7 +232,8 @@ type ClientSet struct {
 	// data service's sys api
 	DS pbds.DataClient
 	// iam sys related operate.
-	sys *sys.Sys
+	iamClient *bkiam.IAM
+	sys       *sys.Sys
 	// auth related operate.
 	auth pkgauth.Authorizer
 	// Esb Esb client api
@@ -219,7 +241,7 @@ type ClientSet struct {
 }
 
 // PullResource init auth center's auth model.
-func (s *Service) PullResource(ctx context.Context, req *pbas.PullResourceReq) (*pbas.PullResourceResp, error) {
+func (s *Service) PullResource(ctx context.Context, req *pbas.PullResourceReq) (*structpb.Struct, error) {
 	return s.iam.PullResource(ctx, req)
 }
 
@@ -251,15 +273,80 @@ func (s *Service) GetPermissionToApply(ctx context.Context, req *pbas.GetPermiss
 	return s.auth.GetPermissionToApply(ctx, req)
 }
 
+// GetPermissionToApply get iam permission to apply.
+func (s *Service) GrantResourceCreatorAction(ctx context.Context, req *pbas.GrantResourceCreatorActionReq) (*base.EmptyResp, error) {
+
+	err := s.auth.GrantResourceCreatorAction(ctx, pbas.GrantResourceCreatorAction(req))
+	return nil, err
+
+}
+
 // CheckPermission grpc check permission
-func (s *Service) CheckPermission(ctx context.Context, req *pbas.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
-	biz, err := s.client.Esb.Cmdb().GeBusinessbyID(ctx, req.BizId)
+func (s *Service) CheckPermission(ctx context.Context, req *pbas.CheckPermissionReq) (
+	*pbas.CheckPermissionResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	resp := &pbas.CheckPermissionResp{
+		IsAllowed: false,
+		ApplyUrl:  "",
+		Resources: []*pbas.BasicDetail{},
+	}
+
+	userInfo := &meta.UserInfo{UserName: kt.User}
+	abReq := &pbas.AuthorizeBatchReq{
+		User:      pbas.PbUserInfo(userInfo),
+		Resources: req.Resources,
+	}
+
+	abResp, err := s.AuthorizeBatch(kt.RpcCtx(), abReq)
 	if err != nil {
+		logs.Errorf("authorize failed, req: %#v, err: %v, rid: %s", req, err, kt.Rid)
 		return nil, err
 	}
 
-	resp, err := s.auth.CheckPermission(ctx, biz, s.iamSettings, req.ResourceAttribute())
-	return resp, err
+	authorized := true
+	for _, decision := range abResp.Decisions {
+		if !decision.Authorized {
+			authorized = false
+			break
+		}
+	}
+
+	if authorized {
+		resp.IsAllowed = true
+		return resp, nil
+	}
+
+	gpReq := &pbas.GetPermissionToApplyReq{
+		Resources: req.Resources,
+	}
+
+	permResp, err := s.GetPermissionToApply(kt.RpcCtx(), gpReq)
+	if err != nil {
+		logs.Errorf("get permission to apply failed, req: %#v, err: %v, rid: %s", req, err, kt.Rid)
+		return nil, errf.New(errf.DoAuthorizeFailed, "get permission to apply failed")
+	}
+	resp.ApplyUrl = permResp.ApplyUrl
+	for _, action := range permResp.Permission.Actions {
+		for _, resourceType := range action.RelatedResourceTypes {
+			for _, instance := range resourceType.Instances {
+				for _, i := range instance.Instances {
+					if i.Type != resourceType.Type {
+						continue
+					}
+					resp.Resources = append(resp.Resources, &pbas.BasicDetail{
+						Type:         resourceType.Type,
+						TypeName:     resourceType.TypeName,
+						Action:       action.Id,
+						ActionName:   action.Name,
+						ResourceId:   i.Id,
+						ResourceName: i.Id,
+					})
+				}
+			}
+		}
+	}
+	return resp, nil
 }
 
 // initLogicModule init logic module.
@@ -276,7 +363,7 @@ func (s *Service) initLogicModule() error {
 		return err
 	}
 
-	s.auth, err = auth.NewAuth(s.client.auth, s.client.DS, s.disableAuth, s.disableWriteOpt)
+	s.auth, err = auth.NewAuth(s.client.auth, s.client.DS, s.disableAuth, s.client.iamClient, s.disableWriteOpt)
 	if err != nil {
 		return err
 	}
@@ -333,12 +420,12 @@ func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamaut
 	for _, v := range resp.GetItems() {
 		bID, _ := strconv.ParseInt(v.SpaceId, 10, 64)
 		authRes = append(authRes, &meta.ResourceAttribute{
-			Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource, ResourceID: uint32(bID)}, BizID: uint32(bID)},
+			Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource, ResourceID: uint32(bID)}, BizID: uint32(bID)},
 		)
 
 	}
 
-	authResp, _, err := authorizer.Authorize(kt, authRes...)
+	authResp, _, err := authorizer.AuthorizeDecision(kt, authRes...)
 	if err != nil {
 		return nil, err
 	}
@@ -352,6 +439,7 @@ func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamaut
 
 func init() {
 	webannotation.Register(&pbas.ListUserSpaceResp{}, ListUserSpaceAnnotation)
+	webannotation.Register(&pbcs.ListAppsResp{}, confsvc.ListAppsAnnotation)
 }
 
 // ListUserSpace 获取用户信息

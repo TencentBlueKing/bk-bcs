@@ -2,6 +2,7 @@
 
 <script>
 import mixinBaseInstantiation from '../mixins/mixin-base-instantiation';
+
 import Header from '@/components/layout/Header.vue';
 
 export default {
@@ -31,7 +32,7 @@ export default {
         const h = me.$createElement;
         me.$bkInfo({
           title: '',
-          content: h('p', this.$t('确定要取消{tmplAppName}实例化操作？', { tmplAppName: me.tmplAppName })),
+          content: h('p', this.$t('deploy.templateset.confirmTemplate', { tmplAppName: me.tmplAppName })),
           async confirmFn() {
             me.$router.push({
               name: 'daemonset',

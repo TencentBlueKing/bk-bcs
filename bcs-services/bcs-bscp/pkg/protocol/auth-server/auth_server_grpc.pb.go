@@ -7,10 +7,12 @@
 package pbas
 
 import (
+	base "bscp.io/pkg/protocol/core/base"
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,16 +21,17 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Auth_InitAuthCenter_FullMethodName       = "/pbas.Auth/InitAuthCenter"
-	Auth_GetUserInfo_FullMethodName          = "/pbas.Auth/GetUserInfo"
-	Auth_ListUserSpace_FullMethodName        = "/pbas.Auth/ListUserSpace"
-	Auth_QuerySpaceByAppID_FullMethodName    = "/pbas.Auth/QuerySpaceByAppID"
-	Auth_PullResource_FullMethodName         = "/pbas.Auth/PullResource"
-	Auth_CheckPermission_FullMethodName      = "/pbas.Auth/CheckPermission"
-	Auth_AuthorizeBatch_FullMethodName       = "/pbas.Auth/AuthorizeBatch"
-	Auth_GetPermissionToApply_FullMethodName = "/pbas.Auth/GetPermissionToApply"
-	Auth_QuerySpace_FullMethodName           = "/pbas.Auth/QuerySpace"
-	Auth_GetAuthLoginConf_FullMethodName     = "/pbas.Auth/GetAuthLoginConf"
+	Auth_InitAuthCenter_FullMethodName             = "/pbas.Auth/InitAuthCenter"
+	Auth_GetUserInfo_FullMethodName                = "/pbas.Auth/GetUserInfo"
+	Auth_ListUserSpace_FullMethodName              = "/pbas.Auth/ListUserSpace"
+	Auth_QuerySpaceByAppID_FullMethodName          = "/pbas.Auth/QuerySpaceByAppID"
+	Auth_PullResource_FullMethodName               = "/pbas.Auth/PullResource"
+	Auth_CheckPermission_FullMethodName            = "/pbas.Auth/CheckPermission"
+	Auth_AuthorizeBatch_FullMethodName             = "/pbas.Auth/AuthorizeBatch"
+	Auth_GetPermissionToApply_FullMethodName       = "/pbas.Auth/GetPermissionToApply"
+	Auth_QuerySpace_FullMethodName                 = "/pbas.Auth/QuerySpace"
+	Auth_GetAuthLoginConf_FullMethodName           = "/pbas.Auth/GetAuthLoginConf"
+	Auth_GrantResourceCreatorAction_FullMethodName = "/pbas.Auth/GrantResourceCreatorAction"
 )
 
 // AuthClient is the client API for Auth service.
@@ -43,9 +46,9 @@ type AuthClient interface {
 	// 通过 AppID 查询 Space 信息
 	QuerySpaceByAppID(ctx context.Context, in *QuerySpaceByAppIDReq, opts ...grpc.CallOption) (*Space, error)
 	// iam pull resource callback.
-	PullResource(ctx context.Context, in *PullResourceReq, opts ...grpc.CallOption) (*PullResourceResp, error)
+	PullResource(ctx context.Context, in *PullResourceReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	// 权限中心权限检测
-	CheckPermission(ctx context.Context, in *ResourceAttribute, opts ...grpc.CallOption) (*CheckPermissionResp, error)
+	CheckPermission(ctx context.Context, in *CheckPermissionReq, opts ...grpc.CallOption) (*CheckPermissionResp, error)
 	// authorize resource batch.
 	AuthorizeBatch(ctx context.Context, in *AuthorizeBatchReq, opts ...grpc.CallOption) (*AuthorizeBatchResp, error)
 	// get iam permission to apply.
@@ -53,6 +56,7 @@ type AuthClient interface {
 	QuerySpace(ctx context.Context, in *QuerySpaceReq, opts ...grpc.CallOption) (*QuerySpaceResp, error)
 	// auth login conf
 	GetAuthLoginConf(ctx context.Context, in *GetAuthLoginConfReq, opts ...grpc.CallOption) (*GetAuthLoginConfResp, error)
+	GrantResourceCreatorAction(ctx context.Context, in *GrantResourceCreatorActionReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 }
 
 type authClient struct {
@@ -99,8 +103,8 @@ func (c *authClient) QuerySpaceByAppID(ctx context.Context, in *QuerySpaceByAppI
 	return out, nil
 }
 
-func (c *authClient) PullResource(ctx context.Context, in *PullResourceReq, opts ...grpc.CallOption) (*PullResourceResp, error) {
-	out := new(PullResourceResp)
+func (c *authClient) PullResource(ctx context.Context, in *PullResourceReq, opts ...grpc.CallOption) (*structpb.Struct, error) {
+	out := new(structpb.Struct)
 	err := c.cc.Invoke(ctx, Auth_PullResource_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -108,7 +112,7 @@ func (c *authClient) PullResource(ctx context.Context, in *PullResourceReq, opts
 	return out, nil
 }
 
-func (c *authClient) CheckPermission(ctx context.Context, in *ResourceAttribute, opts ...grpc.CallOption) (*CheckPermissionResp, error) {
+func (c *authClient) CheckPermission(ctx context.Context, in *CheckPermissionReq, opts ...grpc.CallOption) (*CheckPermissionResp, error) {
 	out := new(CheckPermissionResp)
 	err := c.cc.Invoke(ctx, Auth_CheckPermission_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -153,6 +157,15 @@ func (c *authClient) GetAuthLoginConf(ctx context.Context, in *GetAuthLoginConfR
 	return out, nil
 }
 
+func (c *authClient) GrantResourceCreatorAction(ctx context.Context, in *GrantResourceCreatorActionReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Auth_GrantResourceCreatorAction_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServer is the server API for Auth service.
 // All implementations should embed UnimplementedAuthServer
 // for forward compatibility
@@ -165,9 +178,9 @@ type AuthServer interface {
 	// 通过 AppID 查询 Space 信息
 	QuerySpaceByAppID(context.Context, *QuerySpaceByAppIDReq) (*Space, error)
 	// iam pull resource callback.
-	PullResource(context.Context, *PullResourceReq) (*PullResourceResp, error)
+	PullResource(context.Context, *PullResourceReq) (*structpb.Struct, error)
 	// 权限中心权限检测
-	CheckPermission(context.Context, *ResourceAttribute) (*CheckPermissionResp, error)
+	CheckPermission(context.Context, *CheckPermissionReq) (*CheckPermissionResp, error)
 	// authorize resource batch.
 	AuthorizeBatch(context.Context, *AuthorizeBatchReq) (*AuthorizeBatchResp, error)
 	// get iam permission to apply.
@@ -175,6 +188,7 @@ type AuthServer interface {
 	QuerySpace(context.Context, *QuerySpaceReq) (*QuerySpaceResp, error)
 	// auth login conf
 	GetAuthLoginConf(context.Context, *GetAuthLoginConfReq) (*GetAuthLoginConfResp, error)
+	GrantResourceCreatorAction(context.Context, *GrantResourceCreatorActionReq) (*base.EmptyResp, error)
 }
 
 // UnimplementedAuthServer should be embedded to have forward compatible implementations.
@@ -193,10 +207,10 @@ func (UnimplementedAuthServer) ListUserSpace(context.Context, *ListUserSpaceReq)
 func (UnimplementedAuthServer) QuerySpaceByAppID(context.Context, *QuerySpaceByAppIDReq) (*Space, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QuerySpaceByAppID not implemented")
 }
-func (UnimplementedAuthServer) PullResource(context.Context, *PullResourceReq) (*PullResourceResp, error) {
+func (UnimplementedAuthServer) PullResource(context.Context, *PullResourceReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PullResource not implemented")
 }
-func (UnimplementedAuthServer) CheckPermission(context.Context, *ResourceAttribute) (*CheckPermissionResp, error) {
+func (UnimplementedAuthServer) CheckPermission(context.Context, *CheckPermissionReq) (*CheckPermissionResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckPermission not implemented")
 }
 func (UnimplementedAuthServer) AuthorizeBatch(context.Context, *AuthorizeBatchReq) (*AuthorizeBatchResp, error) {
@@ -210,6 +224,9 @@ func (UnimplementedAuthServer) QuerySpace(context.Context, *QuerySpaceReq) (*Que
 }
 func (UnimplementedAuthServer) GetAuthLoginConf(context.Context, *GetAuthLoginConfReq) (*GetAuthLoginConfResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAuthLoginConf not implemented")
+}
+func (UnimplementedAuthServer) GrantResourceCreatorAction(context.Context, *GrantResourceCreatorActionReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GrantResourceCreatorAction not implemented")
 }
 
 // UnsafeAuthServer may be embedded to opt out of forward compatibility for this service.
@@ -314,7 +331,7 @@ func _Auth_PullResource_Handler(srv interface{}, ctx context.Context, dec func(i
 }
 
 func _Auth_CheckPermission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ResourceAttribute)
+	in := new(CheckPermissionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -326,7 +343,7 @@ func _Auth_CheckPermission_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: Auth_CheckPermission_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).CheckPermission(ctx, req.(*ResourceAttribute))
+		return srv.(AuthServer).CheckPermission(ctx, req.(*CheckPermissionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -403,6 +420,24 @@ func _Auth_GetAuthLoginConf_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_GrantResourceCreatorAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GrantResourceCreatorActionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).GrantResourceCreatorAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_GrantResourceCreatorAction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).GrantResourceCreatorAction(ctx, req.(*GrantResourceCreatorActionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Auth_ServiceDesc is the grpc.ServiceDesc for Auth service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -449,6 +484,10 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAuthLoginConf",
 			Handler:    _Auth_GetAuthLoginConf_Handler,
+		},
+		{
+			MethodName: "GrantResourceCreatorAction",
+			Handler:    _Auth_GrantResourceCreatorAction_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -86,6 +86,7 @@
         <slot name="preContent" :fullscreen="isOpenFullScreen"></slot>
         <CodeEditor
           :model-value="props.modelValue"
+          :lf-eol="true"
           :editable="props.editable"
           :language="props.language"
           @change="emits('update:modelValue', $event)" />
@@ -113,6 +114,9 @@
     justify-content: space-between;
     padding-right: 14px;
     background: #2e2e2e;
+    .head-title {
+      flex: 1;
+    }
     .action-icon {
       color: #979ba5;
       cursor: pointer;

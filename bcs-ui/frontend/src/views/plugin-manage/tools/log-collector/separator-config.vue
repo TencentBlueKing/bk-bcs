@@ -1,9 +1,9 @@
 <template>
   <div class="border border-[#DCDEE5] border-solid">
     <div class="flex items-center bg-[#fafbfd] h-[42px] px-[20px] config-border-b">
-      <div class="w-[110px] mr-[10px]">{{ $t('第几列') }}</div>
-      <div class="flex-1 mr-[10px]">{{ $t('等于') }}</div>
-      <div class="w-[60px]">{{ $t('增/删') }}</div>
+      <div class="w-[110px] mr-[10px]">{{ $t('logCollector.label.index') }}</div>
+      <div class="flex-1 mr-[10px]">{{ $t('logCollector.label.eq') }}</div>
+      <div class="w-[60px]">{{ $t('logCollector.label.addAndDele') }}</div>
     </div>
     <div class="pb-[14px] px-[20px] bg-[#fff] relative">
       <div v-for="item, index in data" :key="index" class="flex items-center pt-[12px]">
@@ -48,8 +48,8 @@
         ]"
         v-if="data.length > 1">
         <bcs-select :disabled="fromOldRule" :clearable="false" class="w-[80px]" v-model="logicOp">
-          <bcs-option id="and" :name="$t('并')"></bcs-option>
-          <bcs-option id="or" :name="$t('或')"></bcs-option>
+          <bcs-option id="and" :name="$t('logCollector.label.matchContent.separator.conditions.and')"></bcs-option>
+          <bcs-option id="or" :name="$t('logCollector.label.matchContent.separator.conditions.or')"></bcs-option>
         </bcs-select>
       </div>
     </div>
@@ -57,6 +57,7 @@
 </template>
 <script setup lang="ts">
 import { PropType, ref, watch } from 'vue';
+
 import { ISeparatorFilter } from './use-log';
 
 const props = defineProps({

@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"path"
 	"reflect"
+	"strings"
 	"time"
 
 	"bscp.io/pkg/dal/gen"
@@ -24,15 +25,30 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
+	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbrci "bscp.io/pkg/protocol/core/released-ci"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/search"
 	"bscp.io/pkg/types"
 )
 
 // CreateConfigItem create config item.
 func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
+
+	// validates unique key name+path both in table app_template_bindings and config_items
+	// validate in table app_template_bindings
+	if err := s.ValidateAppTemplateBindingUniqueKey(grpcKit, req.ConfigItemAttachment.BizId,
+		req.ConfigItemAttachment.AppId, req.ConfigItemSpec.Name, req.ConfigItemSpec.Path); err != nil {
+		return nil, err
+	}
+	// validate in table config_items
+	if _, err := s.dao.ConfigItem().GetByUniqueKey(grpcKit, req.ConfigItemAttachment.BizId,
+		req.ConfigItemAttachment.AppId, req.ConfigItemSpec.Name, req.ConfigItemSpec.Path); err == nil {
+		return nil, fmt.Errorf("config item's same name %s and path %s already exists",
+			req.ConfigItemSpec.Name, req.ConfigItemSpec.Path)
+	}
 
 	tx := s.dao.GenQuery().Begin()
 	// 1. create config item.
@@ -47,6 +63,13 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 	ciID, err := s.dao.ConfigItem().CreateWithTx(grpcKit, tx, ci)
 	if err != nil {
 		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		tx.Rollback()
+		return nil, err
+	}
+	// validate config items count.
+	if err := s.dao.ConfigItem().ValidateAppCINumber(grpcKit, tx, req.ConfigItemAttachment.BizId,
+		req.ConfigItemAttachment.AppId); err != nil {
+		logs.Errorf("validate config items count failed, err: %v, rid: %s", err, grpcKit.Rid)
 		tx.Rollback()
 		return nil, err
 	}
@@ -138,7 +161,16 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		tx.Rollback()
 		return nil, err
 	}
-	if err := s.doBatchDeleteConfigItems(grpcKit, tx, toDelete, req.BizId, req.AppId); err != nil {
+	if req.ReplaceAll {
+		// if replace all,delete config items not in batch upsert request.
+		if err := s.doBatchDeleteConfigItems(grpcKit, tx, toDelete, req.BizId, req.AppId); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+	// validate config items count.
+	if err := s.dao.ConfigItem().ValidateAppCINumber(grpcKit, tx, req.BizId, req.AppId); err != nil {
+		logs.Errorf("validate config items count failed, err: %v, rid: %s", err, grpcKit.Rid)
 		tx.Rollback()
 		return nil, err
 	}
@@ -261,7 +293,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 func (s *Service) doBatchUpdateConfigItemSpec(kt *kit.Kit, tx *gen.QueryTx,
 	toUpdate []*pbds.BatchUpsertConfigItemsReq_ConfigItem, now time.Time,
 	bizID, appID uint32, ciMap map[string]*table.ConfigItem) error {
-	toCreateConfigItems := []*table.ConfigItem{}
+	configItems := []*table.ConfigItem{}
 	for _, item := range toUpdate {
 		ci := &table.ConfigItem{
 			ID:         ciMap[path.Join(item.ConfigItemSpec.Path, item.ConfigItemSpec.Name)].ID,
@@ -274,9 +306,9 @@ func (s *Service) doBatchUpdateConfigItemSpec(kt *kit.Kit, tx *gen.QueryTx,
 				UpdatedAt: now,
 			},
 		}
-		toCreateConfigItems = append(toCreateConfigItems, ci)
+		configItems = append(configItems, ci)
 	}
-	if err := s.dao.ConfigItem().BatchUpdateWithTx(kt, tx, toCreateConfigItems); err != nil {
+	if err := s.dao.ConfigItem().BatchUpdateWithTx(kt, tx, configItems); err != nil {
 		logs.Errorf("batch update config items failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
@@ -475,65 +507,108 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq)
 // ListConfigItems list config items by query condition.
 func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp,
 	error) {
-
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	if req.ReleaseId == 0 {
-		// search all editing config items
-		details, err := s.dao.ConfigItem().SearchAll(grpcKit, req.SearchKey, req.AppId, req.BizId)
-		if err != nil {
-			logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
+	// validate the page params
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
 
-		fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.AppId, req.BizId, req.SearchKey)
+	// search all editing config items
+	details, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, req.AppId, req.BizId)
+	if err != nil {
+		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	configItems := make([]*pbci.ConfigItem, 0)
+	// if WithStatus is true, the config items includes the deleted ones and file state, else  without these data
+	if req.WithStatus {
+		var fileReleased []*table.ReleasedConfigItem
+		fileReleased, err = s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.BizId, req.AppId)
 		if err != nil {
 			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
-		configItems := pbrci.PbConfigItemState(details, fileReleased)
-		var start, end uint32 = 0, uint32(len(configItems))
-		if !req.All {
-			if req.Start < uint32(len(configItems)) {
-				start = req.Start
-			}
-			if req.Start+req.Limit < uint32(len(configItems)) {
-				end = req.Start + req.Limit
-			} else {
-				end = uint32(len(configItems))
-			}
+		configItems = pbrci.PbConfigItemState(details, fileReleased)
+	} else {
+		for _, ci := range details {
+			configItems = append(configItems, pbci.PbConfigItem(ci, ""))
 		}
-		resp := &pbds.ListConfigItemsResp{
-			Count:   uint32(len(configItems)),
-			Details: configItems[start:end],
-		}
-		return resp, nil
 	}
-	// list released config items
-	query := &types.ListReleasedCIsOption{
-		BizID:     req.BizId,
-		ReleaseID: req.ReleaseId,
-		SearchKey: req.SearchKey,
-		Page: &types.BasePage{
-			Start: req.Start,
-			Limit: uint(req.Limit),
-		},
-	}
-	if req.All {
-		query.Page.Start = 0
-		query.Page.Limit = 0
-	}
-	details, err := s.dao.ReleasedCI().List(grpcKit, query)
-	if err != nil {
-		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+
+	if err = s.setCommitSpecForCIs(grpcKit, configItems); err != nil {
+		logs.Errorf("set commit spec for config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
+
+	// search by logic
+	if req.SearchValue != "" {
+		var searcher search.Searcher
+		searcher, err = search.NewSearcher(req.SearchFields, req.SearchValue, search.ConfigItem)
+		if err != nil {
+			return nil, err
+		}
+		fields := searcher.SearchFields()
+		fieldsMap := make(map[string]bool)
+		for _, f := range fields {
+			fieldsMap[f] = true
+		}
+		cis := make([]*pbci.ConfigItem, 0)
+		for _, ci := range configItems {
+			if (fieldsMap["name"] && strings.Contains(ci.Spec.Name, req.SearchValue)) ||
+				(fieldsMap["path"] && strings.Contains(ci.Spec.Path, req.SearchValue)) ||
+				(fieldsMap["memo"] && strings.Contains(ci.Spec.Memo, req.SearchValue)) ||
+				(fieldsMap["creator"] && strings.Contains(ci.Revision.Creator, req.SearchValue)) ||
+				(fieldsMap["reviser"] && strings.Contains(ci.Revision.Reviser, req.SearchValue)) {
+				cis = append(cis, ci)
+			}
+		}
+		configItems = cis
+	}
+
+	// page by logic
+	var start, end uint32 = 0, uint32(len(configItems))
+	if !req.All {
+		if req.Start < uint32(len(configItems)) {
+			start = req.Start
+		}
+		if req.Start+req.Limit < uint32(len(configItems)) {
+			end = req.Start + req.Limit
+		} else {
+			end = uint32(len(configItems))
+		}
+	}
 	resp := &pbds.ListConfigItemsResp{
-		Count:   details.Count,
-		Details: pbrci.PbConfigItems(details.Details),
+		Count:   uint32(len(configItems)),
+		Details: configItems[start:end],
 	}
 	return resp, nil
+}
 
+// setCommitSpecForCIs set commit spec for config items
+func (s *Service) setCommitSpecForCIs(kt *kit.Kit, cis []*pbci.ConfigItem) error {
+	ids := make([]uint32, len(cis))
+	for i, ci := range cis {
+		ids[i] = ci.Id
+	}
+
+	commits, err := s.dao.Commit().BatchListLatestCommits(kt, kt.BizID, kt.AppID, ids)
+	if err != nil {
+		logs.Errorf("batch list latest commits failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+	commitMap := make(map[uint32]*table.CommitSpec, len(commits))
+	for _, c := range commits {
+		commitMap[c.Attachment.ConfigItemID] = c.Spec
+	}
+
+	for _, ci := range cis {
+		ci.CommitSpec = pbcommit.PbCommitSpec(commitMap[ci.Id])
+	}
+
+	return nil
 }
 
 // ListConfigItemCount list config items count.

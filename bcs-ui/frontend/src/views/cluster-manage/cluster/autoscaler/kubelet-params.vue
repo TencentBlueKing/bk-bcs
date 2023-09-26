@@ -4,7 +4,7 @@
       <div class="flex items-center">
         <bcs-input
           v-model="searchValue"
-          :placeholder="$t('请输入参数名称')"
+          :placeholder="$t('generic.placeholder.params')"
           class="min-w-[278px]"
           right-icon="bk-icon icon-search"
           clearable>
@@ -12,11 +12,11 @@
         <template v-if="!readonly">
           <i
             class="bcs-icon bcs-icon-zhongzhishuju ml15 text-[14px] cursor-pointer hover:text-[#3a84ff]"
-            v-bk-tooltips.top="$t('重置参数')"
+            v-bk-tooltips.top="$t('cluster.nodeTemplate.kubelet.button.resetArgs')"
             @click="handleReset"></i>
           <i
             class="bcs-icon bcs-icon-yulan ml15 text-[14px] cursor-pointer hover:text-[#3a84ff]"
-            v-bk-tooltips.top="$t('预览修改值')"
+            v-bk-tooltips.top="$t('cluster.nodeTemplate.kubelet.button.preview')"
             @click="handlePreview"></i>
         </template>
       </div>
@@ -28,14 +28,14 @@
       @row-mouse-enter="handlekubeletMouseEnter"
       @page-change="pageChange"
       @page-limit-change="pageSizeChange">
-      <bcs-table-column :label="$t('参数名称')" prop="flagName"></bcs-table-column>
+      <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.argsName')" prop="flagName"></bcs-table-column>
       <bcs-table-column
-        :label="$t('参数说明')"
+        :label="$t('cluster.nodeTemplate.kubelet.label.argsDesc')"
         prop="flagDesc"
         show-overflow-tooltip>
       </bcs-table-column>
-      <bcs-table-column :label="$t('默认值')" prop="defaultValue" v-if="!readonly"></bcs-table-column>
-      <bcs-table-column :label="$t('当前值')">
+      <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.defaultValue')" prop="defaultValue" v-if="!readonly"></bcs-table-column>
+      <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.curValue')">
         <template #default="{ row }">
           <div class="kubelet-value">
             <InputType
@@ -49,7 +49,11 @@
               @enter="handleEditBlur"
             ></InputType>
             <template v-else>
-              <span>{{kubeletParams[row.flagName] || '--'}}</span>
+              <span>{{
+                readonly
+                  ? (kubeletParams[row.flagName] || row.defaultValue || '--')
+                  : (kubeletParams[row.flagName] || '--')
+              }}</span>
               <i
                 class="bcs-icon bcs-icon-edit2 ml5"
                 v-show="activeKubeletFlagName === row.flagName"
@@ -71,30 +75,31 @@
       </template>
     </bcs-table>
     <bcs-dialog
-      :title="$t('预览修改值')"
+      :title="$t('cluster.nodeTemplate.kubelet.button.preview')"
       :show-footer="false"
       header-position="left"
       width="640"
       render-directive="if"
       v-model="showPreview">
       <bcs-table :data="kubeletDiffData">
-        <bcs-table-column :label="$t('组件名称')" prop="moduleID"></bcs-table-column>
-        <bcs-table-column :label="$t('组件参数')" prop="flagName"></bcs-table-column>
-        <bcs-table-column :label="$t('修改前值')" prop="origin">
+        <bcs-table-column :label="$t('plugin.tools.toolName')" prop="moduleID"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.flagName')" prop="flagName"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.beforeEdit')" prop="origin">
           <template #default="{ row }">
             {{row.origin || getDefaultValue(row)}}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('当前值')" prop="value"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.curValue')" prop="value"></bcs-table-column>
       </bcs-table>
     </bcs-dialog>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, toRefs, watch, getCurrentInstance } from 'vue';
-import $store from '@/store/index';
+import { computed, defineComponent, getCurrentInstance, onMounted, ref, toRefs, watch } from 'vue';
+
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
+import $store from '@/store/index';
 import InputType from '@/views/cluster-manage/components/input-type.vue';
 
 export default defineComponent({

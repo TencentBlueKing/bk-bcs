@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package cloudcollector collect listener rs health status in every 30 seconds
 package cloudcollector
 
 import (

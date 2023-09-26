@@ -1,37 +1,37 @@
 <template>
-  <BcsContent :title="$t('添加集群')">
+  <BcsContent :title="$t('cluster.button.addCluster')">
     <bcs-tab :label-height="42" :active.sync="activeTabName">
       <!-- 基本信息 -->
       <bcs-tab-panel :name="steps[0].name">
         <template #label>
-          <StepTabLabel :title="$t('基本信息')" :step-num="1" :active="activeTabName === steps[0].name" />
+          <StepTabLabel :title="$t('generic.title.basicInfo1')" :step-num="1" :active="activeTabName === steps[0].name" />
         </template>
         <bk-form :ref="steps[0].formRef" :model="basicInfo" :rules="basicInfoRules">
-          <bk-form-item :label="$t('集群类型')">
+          <bk-form-item :label="$t('cluster.labels.clusterType')">
             <span class="text-[12px]">vCluster</span>
           </bk-form-item>
-          <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
+          <bk-form-item :label="$t('cluster.labels.name')" property="clusterName" error-display-type="normal" required>
             <bk-input
               :maxlength="64"
-              :placeholder="$t('请输入集群名称，不超过64个字符')"
+              :placeholder="$t('cluster.create.validate.name')"
               class="max-w-[600px]"
               v-model.trim="basicInfo.clusterName">
             </bk-input>
           </bk-form-item>
-          <bk-form-item :label="$t('集群环境')" property="environment" error-display-type="normal" required>
+          <bk-form-item :label="$t('cluster.labels.env')" property="environment" error-display-type="normal" required>
             <bk-radio-group v-model="basicInfo.environment">
               <bk-radio value="stag" v-if="runEnv === 'dev'">
                 UAT
               </bk-radio>
               <bk-radio :disabled="runEnv === 'dev'" value="debug">
-                {{ $t('测试环境') }}
+                {{ $t('cluster.env.debug') }}
               </bk-radio>
               <bk-radio :disabled="runEnv === 'dev'" value="prod">
-                {{ $t('正式环境') }}
+                {{ $t('cluster.env.prod') }}
               </bk-radio>
             </bk-radio-group>
           </bk-form-item>
-          <bk-form-item :label="$t('所属区域')" property="region" error-display-type="normal" required>
+          <bk-form-item :label="$t('cluster.create.label.region')" property="region" error-display-type="normal" required>
             <bcs-select
               class="max-w-[600px]"
               v-model="basicInfo.region"
@@ -46,7 +46,7 @@
             </bcs-select>
           </bk-form-item>
           <bk-form-item
-            :label="$t('集群版本')"
+            :label="$t('cluster.create.label.clusterVersion')"
             property="clusterBasicSettings.version"
             error-display-type="normal"
             required>
@@ -65,16 +65,16 @@
           </bk-form-item>
           <!-- 接口拉取 -->
           <bk-form-item
-            :label="$t('Kubernetes提供商')"
+            :label="$t('cluster.create.label.Kubernetes.text')"
             error-display-type="normal"
             property="kubernetes"
             required>
             <bcs-select class="max-w-[600px]" v-model="basicInfo.extraInfo.provider" :clearable="false">
               <bcs-option id="DevCloud" name="DevCloud"></bcs-option>
-              <!-- <bcs-option id="IDC" :name="$t('IDC自研云')"></bcs-option> -->
+              <!-- <bcs-option id="IDC" :name="$t('cluster.create.label.Kubernetes.idc')"></bcs-option> -->
             </bcs-select>
           </bk-form-item>
-          <bk-form-item :label="$t('描述')">
+          <bk-form-item :label="$t('cluster.create.label.desc')">
             <bk-input maxlength="100" class="max-w-[600px]" v-model="basicInfo.description" type="textarea"></bk-input>
           </bk-form-item>
         </bk-form>
@@ -83,30 +83,30 @@
       <bcs-tab-panel :name="steps[1].name" :disabled="steps[1].disabled">
         <template #label>
           <StepTabLabel
-            :title="$t('配额管理')"
+            :title="$t('cluster.detail.title.quota')"
             :step-num="2"
             :active="activeTabName === steps[1].name"
             :disabled="steps[1].disabled" />
         </template>
         <bk-form :ref="steps[1].formRef" :model="quotaInfo" :rules="quotaInfoRules">
-          <bk-form-item :label="$t('配额方案')" error-display-type="normal" property="ns.quota" required>
+          <bk-form-item :label="$t('cluster.create.label.quota')" error-display-type="normal" property="ns.quota" required>
             <ClusterQuota v-model="quota" />
             <p
               class="text-[12px] text-[#ea3636]"
               v-if="quota.cpu < 40 || quota.mem < 40">
-              {{ $t('CPU配额最少40核，内存配额最少40GiB') }}
+              {{ $t('cluster.create.validate.quota') }}
             </p>
           </bk-form-item>
-          <bk-form-item :label="$t('IP资源')" error-display-type="normal" property="networkSettings" required>
+          <bk-form-item :label="$t('cluster.create.label.networkSetting1.text')" error-display-type="normal" property="networkSettings" required>
             <div class="flex items-center bg-[#F5F7FA] p-[16px] text-[12px] max-w-[600px]">
               <div class="flex-1">
-                <div>{{ $t('Pod IP 数量') }}</div>
+                <div>{{ $t('cluster.create.label.networkSetting1.maxNodePodNum') }}</div>
                 <bcs-select class="bg-[#fff]" v-model="quotaInfo.networkSettings.maxNodePodNum">
                   <bcs-option v-for="item in [1024, 512, 256, 128, 64]" :id="item" :name="item" :key="item" />
                 </bcs-select>
               </div>
               <div class="flex-1 ml-[16px]">
-                <div>{{ $t('Service IP 数量') }}</div>
+                <div>{{ $t('cluster.create.label.networkSetting1.maxServiceNum') }}</div>
                 <bcs-select class="bg-[#fff]" v-model="quotaInfo.networkSettings.maxServiceNum">
                   <bcs-option v-for="item in [256, 128, 64]" :id="item" :name="item" :key="item" />
                 </bcs-select>
@@ -117,31 +117,33 @@
       </bcs-tab-panel>
     </bcs-tab>
     <div class="mt-[24px]">
-      <bk-button v-if="activeTabName !== steps[0].name" @click="preStep">{{ $t('上一步') }}</bk-button>
+      <bk-button v-if="activeTabName !== steps[0].name" @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
       <bk-button
         theme="primary"
         class="ml10"
         v-if="activeTabName === steps[steps.length - 1].name"
         @click="createVCluster">
-        {{ $t('创建集群') }}
+        {{ $t('cluster.create.button.createCluster') }}
       </bk-button>
-      <bk-button theme="primary" class="ml10" v-else @click="nextStep">{{ $t('下一步') }}</bk-button>
-      <bk-button class="ml10" @click="handleCancel">{{ $t('取消') }}</bk-button>
+      <bk-button theme="primary" class="ml10" v-else @click="nextStep">{{ $t('generic.button.next') }}</bk-button>
+      <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </div>
   </BcsContent>
 </template>
 <script lang="ts" setup>
-import { ref, onBeforeMount, getCurrentInstance, computed } from 'vue';
-import BcsContent from '@/components/layout/Content.vue';
-import StepTabLabel from './step-tab-label.vue';
-import ClusterQuota from './cluster-quota.vue';
-import $store from '@/store';
-import $router from '@/router';
-import { useVCluster } from '@/views/cluster-manage/cluster/use-cluster';
-import $i18n from '@/i18n/i18n-setup';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import { useProject } from '@/composables/use-app';
 import { uniq } from 'lodash';
+import { computed, getCurrentInstance, onBeforeMount, ref } from 'vue';
+
+import ClusterQuota from './cluster-quota.vue';
+import StepTabLabel from './step-tab-label.vue';
+
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import BcsContent from '@/components/layout/Content.vue';
+import { useProject } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
+import { useVCluster } from '@/views/cluster-manage/cluster/use-cluster';
 
 const steps = ref([
   { name: 'basicInfo', formRef: 'basicInfoRef', disabled: false },
@@ -168,28 +170,28 @@ const basicInfoRules = ref({
   clusterName: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],
   environment: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],
   region: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],
   'clusterBasicSettings.version': [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],
@@ -197,7 +199,7 @@ const basicInfoRules = ref({
   kubernetes: [
     {
       required: true,
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],
@@ -225,7 +227,7 @@ const quotaInfo = ref({
 const quotaInfoRules = ref({
   'ns.quota': [
     {
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
       validator() {
         return Object.keys(quota.value).every(key => quota.value[key]);
@@ -234,7 +236,7 @@ const quotaInfoRules = ref({
   ],
   networkSettings: [
     {
-      message: $i18n.t('必填项'),
+      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
       validator() {
         return quotaInfo.value.networkSettings.maxNodePodNum && quotaInfo.value.networkSettings.maxServiceNum;
@@ -294,7 +296,7 @@ const createVCluster = async () => {
 
   $bkInfo({
     type: 'warning',
-    title: $i18n.t('确认创建集群'),
+    title: $i18n.t('cluster.create.button.confirmCreateCluster.text'),
     clsName: 'custom-info-confirm default-info',
     subTitle: basicInfo.value.clusterName,
     confirmFn: async () => {

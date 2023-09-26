@@ -115,6 +115,21 @@ func (pr PermissionRequest) MakeRequestMultiActionResources(actions []string,
 	return iam.NewMultiActionRequest(pr.SystemID, subject, multiAction, iamNodes)
 }
 
+// MakeReqMultiActionsWithoutRes make request for multi actions and no resource
+func (pr PermissionRequest) MakeReqMultiActionsWithoutRes(actions []string) iam.MultiActionRequest {
+	subject := iam.Subject{
+		Type: "user",
+		ID:   pr.UserName,
+	}
+
+	multiAction := make([]iam.Action, 0)
+	for i := range actions {
+		multiAction = append(multiAction, iam.Action{ID: actions[i]})
+	}
+
+	return iam.NewMultiActionRequest(pr.SystemID, subject, multiAction, nil)
+}
+
 // RelatedResourceNode xxx
 type RelatedResourceNode struct {
 	Type string `json:"type"`

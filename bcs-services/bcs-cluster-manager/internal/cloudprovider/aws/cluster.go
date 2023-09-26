@@ -30,6 +30,11 @@ func init() {
 type Cluster struct {
 }
 
+// CreateCluster create kubenretes cluster according cloudprovider
+func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // CreateVirtualCluster create virtual cluster by cloud provider
 func (c *Cluster) CreateVirtualCluster(cls *proto.Cluster,
 	opt *cloudprovider.CreateVirtualClusterOption) (*proto.Task, error) {
@@ -39,11 +44,6 @@ func (c *Cluster) CreateVirtualCluster(cls *proto.Cluster,
 // DeleteVirtualCluster delete virtual cluster
 func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
 	opt *cloudprovider.DeleteVirtualClusterOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
-}
-
-// CreateCluster create kubenretes cluster according cloudprovider
-func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -154,4 +154,10 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 // ListOsImage list image os
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// CheckClusterEndpointStatus check cluster endpoint status
+func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
+	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
+	return false, cloudprovider.ErrCloudNotImplemented
 }

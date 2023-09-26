@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_endpoints",
-      "alias": "Endpoints Simple Demo",
+      "alias": "Endpoints simple demo",
       "description": "A simple endpoints demo with only basic configuration",
       "manifest": null
     }

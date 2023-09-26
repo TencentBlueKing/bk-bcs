@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package table
 
@@ -53,14 +53,14 @@ type ReleasedConfigItem struct {
 	// CommitSpec is this config item's commit spec when it is released.
 	// which is same with the commits' spec information with the upper
 	// CommitID
-	CommitSpec *CommitSpec `db:"commit_spec" json:"commit_spec" gorm:"embedded"`
+	CommitSpec *ReleasedCommitSpec `db:"commit_spec" json:"commit_spec" gorm:"embedded"`
 
 	// ConfigItemSpec is this config item's spec when it is released, which
 	// means it is same with the config item's spec information when it is
 	// released.
 	ConfigItemSpec *ConfigItemSpec       `db:"config_item_spec" json:"config_item_spec" gorm:"embedded"`
 	Attachment     *ConfigItemAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
-	Revision       *Revision             `db:"revision" json:"revision" gorm:"embedded"`
+	Revision       *CreatedRevision      `db:"revision" json:"revision" gorm:"embedded"`
 }
 
 // TableName is the released app config's database table name.
@@ -116,20 +116,23 @@ func (r *ReleasedConfigItem) Validate() error {
 		return errors.New("invalid release id")
 	}
 
-	if r.CommitID <= 0 {
-		return errors.New("invalid commit id")
-	}
-
-	if r.ConfigItemID <= 0 {
-		return errors.New("invalid config item id")
-	}
-
 	if r.CommitSpec == nil {
 		return errors.New("commit spec is empty")
 	}
 
-	if err := r.CommitSpec.Validate(); err != nil {
-		return err
+	// when config item id = 0 ,it is a rendered template config item
+	// when config item id > 0, it is a normal config item (not rendered from template)
+	if r.ConfigItemID > 0 {
+		if r.CommitID <= 0 {
+			return errors.New("invalid commit id")
+		}
+
+		if err := r.CommitSpec.Validate(); err != nil {
+			return err
+		}
+	} else {
+		// for rendered template config item, need to validate content signature
+		r.CommitSpec.Content.Validate()
 	}
 
 	if r.ConfigItemSpec == nil {
@@ -152,7 +155,7 @@ func (r *ReleasedConfigItem) Validate() error {
 		return errors.New("revision is empty")
 	}
 
-	if err := r.Revision.ValidateCreate(); err != nil {
+	if err := r.Revision.Validate(); err != nil {
 		return err
 	}
 

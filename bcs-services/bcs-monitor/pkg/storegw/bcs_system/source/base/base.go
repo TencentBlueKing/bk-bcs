@@ -18,10 +18,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // NodeInfo 节点信息
@@ -66,6 +67,8 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterPodUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterPodUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterPodTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
@@ -99,13 +102,29 @@ type MetricHandler interface {
 	GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeInfo(ctx context.Context, projectId, clusterId, nodeName string, t time.Time) (*NodeInfo, error)
+	GetNodeCPUTotal(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeCPURequest(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeCPUUsed(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeCPUUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeMemoryTotal(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeMemoryRequest(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeMemoryUsed(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeDiskUsed(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeDiskTotal(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeDiskUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
@@ -151,7 +170,7 @@ type MetricHandler interface {
 
 // GetNodeMatch 按集群node节点正则匹配
 func GetNodeMatch(ctx context.Context, clusterId string) (string, string, error) {
-	nodeList, nodeNameList, err := k8sclient.GetNodeList(ctx, clusterId, true)
+	nodeList, nodeNameList, err := k8sclient.GetNodeList(ctx, clusterId, true, false)
 	if err != nil {
 		return "", "", err
 	}
@@ -204,7 +223,7 @@ func MatrixToSeries(matrix model.Matrix) []*prompb.TimeSeries {
 
 // GetNodeMatchWithScale 处理集群的节点列表，按照给定的粒度划分
 func GetNodeMatchWithScale(ctx context.Context, clusterId string, scale int) ([]*ResultTuple, error) {
-	nodeList, nodeNameList, err := k8sclient.GetNodeList(ctx, clusterId, true)
+	nodeList, nodeNameList, err := k8sclient.GetNodeList(ctx, clusterId, true, true)
 	if err != nil {
 		return nil, err
 	}

@@ -16,6 +16,7 @@ package core
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
@@ -487,6 +488,10 @@ func (b *BufferedAutoscaler) doScaleDown(autoscalingContext *context.Autoscaling
 			if (scaleDownStatus.Result == status.ScaleDownNoNodeDeleted ||
 				scaleDownStatus.Result == status.ScaleDownNoUnneeded) &&
 				b.AutoscalingContext.AutoscalingOptions.MaxBulkSoftTaintCount != 0 {
+				// 按序加污点, 与空节点列表排序逻辑保持一致
+				sort.SliceStable(allNodes, func(i, j int) bool {
+					return allNodes[i].Name < allNodes[j].Name
+				})
 				scaleDown.SoftTaintUnneededNodes(allNodes)
 			}
 
@@ -721,6 +726,10 @@ func findNameFromAllNodes(node *apiv1.Node, allNodes []*apiv1.Node) (string, boo
 			if adr.Type == apiv1.NodeInternalIP && adr.Address == node.Name {
 				return allNodes[i].Name, true
 			}
+		}
+		// 如果获取不到实际节点 InternalIP, 但 nodeName 对得上, 可返回该值
+		if allNodes[i].Name == node.Name {
+			return allNodes[i].Name, true
 		}
 	}
 	return "", false

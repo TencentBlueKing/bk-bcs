@@ -25,24 +25,24 @@
           </div>
         </div>
         <div class="btns">
-          <bk-button theme="primary" @click="handleShowYamlPanel">{{ $t('查看YAML配置') }}</bk-button>
+          <bk-button theme="primary" @click="handleShowYamlPanel">{{ $t('dashboard.workload.button.yaml') }}</bk-button>
           <template v-if="!hiddenOperate">
             <bk-button
               theme="primary"
-              @click="handleUpdateResource">{{$t('更新')}}</bk-button>
+              @click="handleUpdateResource">{{$t('generic.button.update')}}</bk-button>
             <bk-button
               theme="danger"
-              @click="handleDeleteResource">{{$t('删除')}}</bk-button>
+              @click="handleDeleteResource">{{$t('generic.button.delete')}}</bk-button>
           </template>
         </div>
       </div>
       <div class="workload-main-info">
         <div class="info-item">
-          <span class="label">{{ $t('命名空间') }}</span>
+          <span class="label">{{ $t('k8s.namespace') }}</span>
           <span class="value" v-bk-overflow-tips>{{ metadata.namespace }}</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('镜像') }}</span>
+          <span class="label">{{ $t('k8s.image') }}</span>
           <span
             class="value"
             v-bk-overflow-tips="getImagesTips(manifestExt.images)">
@@ -50,7 +50,7 @@
           </span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('节点') }}</span>
+          <span class="label">{{ $t('dashboard.workload.pods.node') }}</span>
           <span class="value" v-bk-overflow-tips>{{ spec.nodeName }}</span>
         </div>
         <div class="info-item">
@@ -58,52 +58,65 @@
           <span class="value" v-bk-overflow-tips>{{ metadata.uid }}</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('创建时间') }}</span>
-          <span class="value">{{ timeZoneTransForm(manifestExt.createTime) }}</span>
+          <span class="label">{{ $t('cluster.labels.createdAt') }}</span>
+          <span class="value">{{ manifestExt.createTime }}</span>
         </div>
         <div class="info-item">
-          <span class="label">{{ $t('存在时间') }}</span>
+          <span class="label">{{ $t('k8s.age') }}</span>
           <span class="value">{{ manifestExt.age }}</span>
         </div>
       </div>
     </div>
     <div class="workload-detail-body">
       <div class="workload-metric">
-        <Metric :title="$t('CPU使用率')" metric="cpu_usage" :params="params" category="pods" colors="#30d878"></Metric>
         <Metric
-          :title="$t('内存使用量')"
+          :title="$t('metrics.cpuUsage')"
+          metric="cpu_usage"
+          :params="params"
+          category="pods"
+          colors="#30d878">
+        </Metric>
+        <Metric
+          :title="$t('metrics.memUsage1')"
           metric="memory_used"
           :params="params"
           unit="byte"
           category="pods"
           colors="#3a84ff"
-          :desc="$t('container_memory_working_set_bytes，limit限制时oom判断依据')">
+          :desc="$t('dashboard.workload.tips.containerMemoryWorkingSetBytesOom')">
         </Metric>
         <Metric
-          :title="$t('网络')"
+          :title="$t('k8s.networking')"
           :metric="['network_receive', 'network_transmit']"
           :params="params"
           category="pods"
           unit="byte"
           :colors="['#853cff', '#30d878']"
-          :suffix="[$t('入流量'), $t('出流量')]">
+          :suffix="[$t('metrics.network.receive'), $t('metrics.network.transmit')]">
         </Metric>
       </div>
       <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
-        <bcs-tab-panel name="container" :label="$t('容器')" v-bkloading="{ isLoading: containerLoading }">
+        <bcs-tab-panel
+          name="container"
+          :label="$t('dashboard.workload.container.title')"
+          v-bkloading="{ isLoading: containerLoading }">
           <bk-table :data="container">
-            <bk-table-column :label="$t('容器名称')" prop="name">
+            <bk-table-column :label="$t('dashboard.workload.container.name')" prop="name">
               <template #default="{ row }">
                 <bk-button class="bcs-button-ellipsis" text @click="gotoContainerDetail(row)">{{ row.name }}</bk-button>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('状态')" width="200" prop="status">
+            <bk-table-column :label="$t('generic.label.status')" width="200" prop="status">
               <template #default="{ row }">
                 <StatusIcon :status="row.status"></StatusIcon>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('镜像')" prop="image"></bk-table-column>
-            <bk-table-column :label="$t('操作')" width="200" :resizable="false" :show-overflow-tooltip="false">
+            <bk-table-column :label="$t('k8s.image')" prop="image"></bk-table-column>
+            <bk-table-column
+              :label="$t('generic.label.action')"
+              width="200"
+              :resizable="false"
+              :show-overflow-tooltip="false">
               <template #default="{ row }">
                 <bk-button text @click="handleShowTerminal(row)">WebConsole</bk-button>
                 <bk-popover
@@ -112,18 +125,21 @@
                   :arrow="false"
                   trigger="click"
                   v-if="row.containerID">
-                  <bk-button style="cursor: default;" text class="ml10">{{ $t('日志检索') }}</bk-button>
+                  <bk-button
+                    style="cursor: default;"
+                    text
+                    class="ml10">{{ $t('dashboard.workload.pods.log') }}</bk-button>
                   <div slot="content">
                     <ul>
                       <a
                         :href="logLinks[row.containerID] && logLinks[row.containerID].std_log_url"
                         target="_blank" class="dropdown-item">
-                        {{ $t('标准输出检索') }}
+                        {{ $t('dashboard.workload.pods.stdoutLog') }}
                       </a>
                       <a
                         :href="logLinks[row.containerID] && logLinks[row.containerID].file_log_url"
                         target="_blank" class="dropdown-item">
-                        {{ $t('文件日志检索') }}
+                        {{ $t('dashboard.workload.pods.filelog') }}
                       </a>
                     </ul>
                   </div>
@@ -132,7 +148,7 @@
             </bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="event" :label="$t('事件')">
+        <bcs-tab-panel name="event" :label="$t('generic.label.event')">
           <EventQueryTableVue
             class="min-h-[360px]"
             hide-cluster-and-namespace
@@ -142,36 +158,41 @@
             :name="name">
           </EventQueryTableVue>
         </bcs-tab-panel>
-        <bcs-tab-panel name="conditions" :label="$t('状态（Conditions）')">
+        <bcs-tab-panel name="conditions" :label="$t('k8s.conditions')">
           <bk-table :data="conditions">
-            <bk-table-column :label="$t('类别')" prop="type"></bk-table-column>
-            <bk-table-column :label="$t('状态')" prop="status">
+            <bk-table-column :label="$t('generic.label.type')" prop="type"></bk-table-column>
+            <bk-table-column :label="$t('generic.label.status')" prop="status">
               <template #default="{ row }">
                 <StatusIcon :status="row.status"></StatusIcon>
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('最后迁移时间')" prop="lastTransitionTime">
+            <bk-table-column :label="$t('k8s.lastTransitionTime')" prop="lastTransitionTime">
               <template #default="{ row }">
                 {{ formatTime(row.lastTransitionTime, 'yyyy-MM-dd hh:mm:ss') }}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('原因')">
+            <bk-table-column :label="$t('dashboard.workload.label.reason')">
               <template #default="{ row }">
                 {{ row.reason || '--' }}
               </template>
             </bk-table-column>
-            <bk-table-column :label="$t('消息')">
+            <bk-table-column :label="$t('generic.label.message')">
               <template #default="{ row }">
                 {{ row.message || '--' }}
               </template>
             </bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="storage" :label="$t('存储')" v-bkloading="{ isLoading: storageLoading }">
+        <bcs-tab-panel name="storage" :label="$t('generic.label.storage')" v-bkloading="{ isLoading: storageLoading }">
           <div class="storage storage-pvcs">
             <div class="title">PersistentVolumeClaims</div>
             <bk-table :data="storageTableData.pvcs">
-              <bk-table-column :label="$t('名称')" prop="metadata.name" sortable :resizable="false"></bk-table-column>
+              <bk-table-column
+                :label="$t('generic.label.name')"
+                prop="metadata.name"
+                sortable
+                :resizable="false">
+              </bk-table-column>
               <bk-table-column label="Status">
                 <template #default="{ row }">
                   <span>{{ row.status.phase || '--' }}</span>
@@ -187,7 +208,7 @@
                   <span>{{ row.status.capacity ? row.status.capacity.storage : '--' }}</span>
                 </template>
               </bk-table-column>
-              <bk-table-column label="Access Modes">
+              <bk-table-column label="Access modes">
                 <template #default="{ row }">
                   <span>{{ handleGetExtData(row.metadata.uid, 'pvcs','accessModes').join(', ') }}</span>
                 </template>
@@ -214,7 +235,12 @@
           <div class="storage storage-config">
             <div class="title">ConfigMaps</div>
             <bk-table :data="storageTableData.configmaps">
-              <bk-table-column :label="$t('名称')" prop="metadata.name" sortable :resizable="false"></bk-table-column>
+              <bk-table-column
+                :label="$t('generic.label.name')"
+                prop="metadata.name"
+                sortable
+                :resizable="false">
+              </bk-table-column>
               <bk-table-column label="Data">
                 <template #default="{ row }">
                   <span>{{ handleGetExtData(row.metadata.uid, 'configmaps','data').join(', ') || '--' }}</span>
@@ -232,7 +258,12 @@
           <div class="storage storage-secrets">
             <div class="title">Secrets</div>
             <bk-table :data="storageTableData.secrets">
-              <bk-table-column :label="$t('名称')" prop="metadata.name" sortable :resizable="false"></bk-table-column>
+              <bk-table-column
+                :label="$t('generic.label.name')"
+                prop="metadata.name"
+                sortable
+                :resizable="false">
+              </bk-table-column>
               <bk-table-column label="Type">
                 <template #default="{ row }">
                   <span>{{ row.type || '--' }}</span>
@@ -253,13 +284,13 @@
             </bk-table>
           </div>
         </bcs-tab-panel>
-        <bcs-tab-panel name="label" :label="$t('标签')">
+        <bcs-tab-panel name="label" :label="$t('k8s.label')">
           <bk-table :data="labels">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="annotations" :label="$t('注解')">
+        <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')">
           <bk-table :data="annotations">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
@@ -287,18 +318,20 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 import { bkOverflowTips } from 'bk-magic-vue';
-import StatusIcon from '@/components/status-icon';
-import Metric from '@/components/metric.vue';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+
 import useDetail from './use-detail';
-import { formatTime, timeZoneTransForm } from '@/common/util';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import fullScreen from '@/directives/full-screen';
-import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
-import $store from '@/store';
-import { useConfig, useProject } from '@/composables/use-app';
+
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
+import { formatTime, timeZoneTransForm } from '@/common/util';
+import Metric from '@/components/metric.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import StatusIcon from '@/components/status-icon';
+import { useConfig, useProject } from '@/composables/use-app';
+import fullScreen from '@/directives/full-screen';
+import $store from '@/store';
+import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;

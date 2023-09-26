@@ -1,6 +1,6 @@
 /*
- * Tencent is pleased to support the open source community by making 蓝鲸 available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -48,10 +48,14 @@ const (
 	TemplateSpace ResourceType = "template_space"
 	// Template resource's bscp auth resource type
 	Template ResourceType = "template"
-	// TemplateRelease resource's bscp auth resource type
-	TemplateRelease ResourceType = "template_release"
+	// TemplateRevision resource's bscp auth resource type
+	TemplateRevision ResourceType = "template_revision"
 	// TemplateSet resource's bscp auth resource type
 	TemplateSet ResourceType = "template_set"
+	// AppTemplateBinding resource's bscp auth resource type
+	AppTemplateBinding ResourceType = "app_template_binding"
+	// TemplateVariable resource's bscp auth resource type
+	TemplateVariable ResourceType = "template_variable"
 	// Group resource's bscp auth resource type
 	Group ResourceType = "group"
 	// PSH resource's bscp auth resource type

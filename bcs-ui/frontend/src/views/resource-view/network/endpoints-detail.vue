@@ -2,11 +2,11 @@
   <div class="detail p30">
     <!-- 基础信息 -->
     <div class="detail-title">
-      {{ $t('基础信息') }}
+      {{ $t('generic.title.basicInfo') }}
     </div>
     <div class="detail-content basic-info">
       <div class="basic-info-item">
-        <label>{{ $t('命名空间') }}</label>
+        <label>{{ $t('k8s.namespace') }}</label>
         <span>{{ data.metadata.namespace }}</span>
       </div>
       <div class="basic-info-item">
@@ -14,17 +14,17 @@
         <span class="bcs-ellipsis">{{ data.metadata.uid }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('创建时间') }}</label>
+        <label>{{ $t('cluster.labels.createdAt') }}</label>
         <span>{{ extData.createTime }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('存在时间') }}</label>
+        <label>{{ $t('k8s.age') }}</label>
         <span>{{ extData.age }}</span>
       </div>
     </div>
     <!-- 配置、标签、注解 -->
     <bcs-tab class="mt20" type="card" :label-height="42">
-      <bcs-tab-panel name="config" :label="$t('配置')">
+      <bcs-tab-panel name="config" :label="$t('dashboard.network.config')">
         <bcs-collapse v-model="activeCollapseName">
           <bcs-collapse-item
             v-for="(item, index) in (data.subsets || [])"
@@ -66,7 +66,7 @@
                   <bk-table-column label="Status">
                     <template #default="{ row }">
                       <StatusIcon :status="String(row.status === 'normal')">
-                        {{row.status === 'normal' ? $t('正常') : $t('异常')}}
+                        {{row.status === 'normal' ? $t('generic.status.ready') : $t('generic.status.error')}}
                       </StatusIcon>
                     </template>
                   </bk-table-column>
@@ -87,19 +87,19 @@
           </bcs-collapse-item>
         </bcs-collapse>
       </bcs-tab-panel>
-      <bcs-tab-panel name="label" :label="$t('标签')">
+      <bcs-tab-panel name="label" :label="$t('k8s.label')">
         <bk-table :data="handleTransformObjToArr(data.metadata.labels)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="annotations" :label="$t('注解')">
+      <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')">
         <bk-table :data="handleTransformObjToArr(data.metadata.annotations)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="event" :label="$t('事件')">
+      <bcs-tab-panel name="event" :label="$t('generic.label.event')">
         <EventQueryTableVue
           hide-cluster-and-namespace
           :kinds="data.kind"
@@ -111,6 +111,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref, toRefs, watch } from 'vue';
+
 import StatusIcon from '@/components/status-icon';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 

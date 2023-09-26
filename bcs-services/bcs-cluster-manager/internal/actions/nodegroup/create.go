@@ -121,9 +121,13 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 	}
 
 	// base64 encode secret file
-	if group.LaunchTemplate != nil && group.LaunchTemplate.KeyPair != nil &&
-		len(group.LaunchTemplate.KeyPair.KeySecret) > 0 {
-		group.LaunchTemplate.KeyPair.KeySecret = utils.Base64Encode(group.LaunchTemplate.KeyPair.KeySecret)
+	if group.LaunchTemplate != nil && group.LaunchTemplate.KeyPair != nil {
+		if len(group.LaunchTemplate.KeyPair.KeySecret) > 0 {
+			group.LaunchTemplate.KeyPair.KeySecret = utils.Base64Encode(group.LaunchTemplate.KeyPair.KeySecret)
+		}
+		if len(group.LaunchTemplate.KeyPair.KeyPublic) > 0 {
+			group.LaunchTemplate.KeyPair.KeyPublic = utils.Base64Encode(group.LaunchTemplate.KeyPair.KeyPublic)
+		}
 	}
 
 	// base64 encode script file
@@ -133,6 +137,7 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		group.NodeTemplate.ScaleInPreScript = utils.Base64Encode(group.NodeTemplate.ScaleInPreScript)
 		group.NodeTemplate.ScaleInPostScript = utils.Base64Encode(group.NodeTemplate.ScaleInPostScript)
 	}
+
 	return group
 }
 
@@ -164,12 +169,14 @@ func (ca *CreateAction) validate() error {
 		return fmt.Errorf("nodeTemplate is empty")
 	}
 	// not external nodeGroup check launchTemplate
-	if ca.req.NodeGroupType != common.External.String() {
-		err := validateLaunchTemplate(ca.req.LaunchTemplate)
-		if err != nil {
-			return err
+	/*
+		if ca.req.NodeGroupType != common.External.String() {
+			err := validateLaunchTemplate(ca.req.LaunchTemplate)
+			if err != nil {
+				return err
+			}
 		}
-	}
+	*/
 
 	// cloud special validate info
 	cloudValidate, err := cloudprovider.GetCloudValidateMgr(ca.cloud.CloudProvider)

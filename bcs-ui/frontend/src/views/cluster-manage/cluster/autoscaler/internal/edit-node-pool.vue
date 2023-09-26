@@ -5,7 +5,7 @@
     </template>
     <div v-bkloading="{ isLoading }">
       <bcs-tab class="node-pool-tab mb-[42px]">
-        <bcs-tab-panel :label="$t('节点配置')" name="config">
+        <bcs-tab-panel :label="$t('cluster.ca.nodePool.title.nodeConfig')" name="config">
           <NodeConfig
             :default-values="detailData"
             :schema="schema"
@@ -15,7 +15,7 @@
             v-if="!isLoading">
           </NodeConfig>
         </bcs-tab-panel>
-        <bcs-tab-panel :label="$t('初始化配置')" name="basic">
+        <bcs-tab-panel :label="$t('cluster.ca.nodePool.title.initConfig')" name="basic">
           <NodePoolInfo
             :default-values="detailData"
             :schema="schema"
@@ -33,22 +33,24 @@
         theme="primary"
         class="min-w-[88px]"
         :loading="saveLoading"
-        @click="handleEditNodePool">{{$t('保存')}}</bcs-button>
-      <bcs-button @click="handleCancel">{{$t('取消')}}</bcs-button>
+        @click="handleEditNodePool">{{$t('generic.button.save')}}</bcs-button>
+      <bcs-button @click="handleCancel">{{$t('generic.button.cancel')}}</bcs-button>
     </div>
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, toRefs } from 'vue';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+
+import NodeConfig from './node-config.vue';
+import NodePoolInfo from './node-pool-info.vue';
+
+import { mergeDeep } from '@/common/util';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router/index';
+import $store from '@/store/index';
+import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
 import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
-import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
-import $i18n from '@/i18n/i18n-setup';
-import NodePoolInfo from './node-pool-info.vue';
-import NodeConfig from './node-config.vue';
-import $store from '@/store/index';
-import $router from '@/router/index';
-import { mergeDeep } from '@/common/util';
 
 export default defineComponent({
   components: {
@@ -104,7 +106,7 @@ export default defineComponent({
         },
       },
       {
-        title: $i18n.t('编辑节点规格'),
+        title: $i18n.t('cluster.ca.nodePool.action.edit'),
         link: null,
       },
     ]);

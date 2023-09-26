@@ -38,6 +38,7 @@ type PermClient interface {
 	IsAllowedWithoutResource(actionID string, request PermissionRequest, cache bool) (bool, error)
 	IsAllowedWithResource(actionID string, request PermissionRequest, nodes []ResourceNode, cache bool) (bool, error)
 	BatchResourceIsAllowed(actionID string, request PermissionRequest, nodes [][]ResourceNode) (map[string]bool, error)
+	MultiActionsAllowedWithoutResource(actions []string, request PermissionRequest) (map[string]bool, error)
 	ResourceMultiActionsAllowed(actions []string, request PermissionRequest, nodes []ResourceNode) (map[string]bool, error)
 	BatchResourceMultiActionsAllowed(actions []string, request PermissionRequest,
 		nodes [][]ResourceNode) (map[string]map[string]bool, error)
@@ -268,6 +269,17 @@ func (ic *iamClient) BatchResourceIsAllowed(actionID string, request PermissionR
 	return ic.cli.BatchIsAllowed(req, resourceList)
 }
 
+// MultiActionsAllowedWithoutResource for multiActions without resource
+func (ic *iamClient) MultiActionsAllowedWithoutResource(actions []string, request PermissionRequest) (
+	map[string]bool, error) {
+	if ic == nil {
+		return nil, ErrServerNotInit
+	}
+
+	req := request.MakeReqMultiActionsWithoutRes(actions)
+	return ic.cli.ResourceMultiActionsAllowed(req)
+}
+
 // ResourceMultiActionsAllowed for multiActions signalResource
 func (ic *iamClient) ResourceMultiActionsAllowed(actions []string, request PermissionRequest,
 	nodes []ResourceNode) (map[string]bool, error) {
@@ -333,7 +345,7 @@ func (ic *iamClient) GetApplyURL(request ApplicationRequest, relatedResources []
 	url, err := ic.cli.GetApplyURL(application, user.BkToken, user.BkUserName)
 	if err != nil {
 		klog.Errorf("iam generate apply url failed: %s", err)
-		return IamAppURL, nil
+		return IamAppURL, err
 	}
 
 	return url, nil

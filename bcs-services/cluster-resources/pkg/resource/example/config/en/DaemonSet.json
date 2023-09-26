@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_daemonset",
-      "alias": "DaemonSet Simple Demo",
+      "alias": "DaemonSet simple demo",
       "description": "A simple daemonset demo with only basic configuration",
       "manifest": null
     }

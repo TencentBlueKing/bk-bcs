@@ -4,8 +4,9 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import MarkdownIt from 'markdown-it';
+import { defineComponent, onMounted, ref, toRefs, watch } from 'vue';
+
 import hljs from './md-highlight.js';
 
 export default defineComponent({

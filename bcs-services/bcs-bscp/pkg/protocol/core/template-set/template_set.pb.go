@@ -229,6 +229,204 @@ func (x *TemplateSetAttachment) GetTemplateSpaceId() uint32 {
 	return 0
 }
 
+// TemplateSetOfBizDetail is template set of biz detail
+type TemplateSetOfBizDetail struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TemplateSpaceId   uint32                                     `protobuf:"varint,1,opt,name=template_space_id,json=templateSpaceId,proto3" json:"template_space_id,omitempty"`
+	TemplateSpaceName string                                     `protobuf:"bytes,2,opt,name=template_space_name,json=templateSpaceName,proto3" json:"template_space_name,omitempty"`
+	TemplateSets      []*TemplateSetOfBizDetail_TemplateSetOfBiz `protobuf:"bytes,3,rep,name=template_sets,json=templateSets,proto3" json:"template_sets,omitempty"`
+}
+
+func (x *TemplateSetOfBizDetail) Reset() {
+	*x = TemplateSetOfBizDetail{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_template_set_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TemplateSetOfBizDetail) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TemplateSetOfBizDetail) ProtoMessage() {}
+
+func (x *TemplateSetOfBizDetail) ProtoReflect() protoreflect.Message {
+	mi := &file_template_set_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TemplateSetOfBizDetail.ProtoReflect.Descriptor instead.
+func (*TemplateSetOfBizDetail) Descriptor() ([]byte, []int) {
+	return file_template_set_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *TemplateSetOfBizDetail) GetTemplateSpaceId() uint32 {
+	if x != nil {
+		return x.TemplateSpaceId
+	}
+	return 0
+}
+
+func (x *TemplateSetOfBizDetail) GetTemplateSpaceName() string {
+	if x != nil {
+		return x.TemplateSpaceName
+	}
+	return ""
+}
+
+func (x *TemplateSetOfBizDetail) GetTemplateSets() []*TemplateSetOfBizDetail_TemplateSetOfBiz {
+	if x != nil {
+		return x.TemplateSets
+	}
+	return nil
+}
+
+type TemplateSetBriefInfo struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TemplateSpaceId   uint32 `protobuf:"varint,1,opt,name=template_space_id,json=templateSpaceId,proto3" json:"template_space_id,omitempty"`
+	TemplateSpaceName string `protobuf:"bytes,2,opt,name=template_space_name,json=templateSpaceName,proto3" json:"template_space_name,omitempty"`
+	TemplateSetId     uint32 `protobuf:"varint,3,opt,name=template_set_id,json=templateSetId,proto3" json:"template_set_id,omitempty"`
+	TemplateSetName   string `protobuf:"bytes,4,opt,name=template_set_name,json=templateSetName,proto3" json:"template_set_name,omitempty"`
+}
+
+func (x *TemplateSetBriefInfo) Reset() {
+	*x = TemplateSetBriefInfo{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_template_set_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TemplateSetBriefInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TemplateSetBriefInfo) ProtoMessage() {}
+
+func (x *TemplateSetBriefInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_template_set_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TemplateSetBriefInfo.ProtoReflect.Descriptor instead.
+func (*TemplateSetBriefInfo) Descriptor() ([]byte, []int) {
+	return file_template_set_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *TemplateSetBriefInfo) GetTemplateSpaceId() uint32 {
+	if x != nil {
+		return x.TemplateSpaceId
+	}
+	return 0
+}
+
+func (x *TemplateSetBriefInfo) GetTemplateSpaceName() string {
+	if x != nil {
+		return x.TemplateSpaceName
+	}
+	return ""
+}
+
+func (x *TemplateSetBriefInfo) GetTemplateSetId() uint32 {
+	if x != nil {
+		return x.TemplateSetId
+	}
+	return 0
+}
+
+func (x *TemplateSetBriefInfo) GetTemplateSetName() string {
+	if x != nil {
+		return x.TemplateSetName
+	}
+	return ""
+}
+
+type TemplateSetOfBizDetail_TemplateSetOfBiz struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TemplateSetId   uint32   `protobuf:"varint,1,opt,name=template_set_id,json=templateSetId,proto3" json:"template_set_id,omitempty"`
+	TemplateSetName string   `protobuf:"bytes,2,opt,name=template_set_name,json=templateSetName,proto3" json:"template_set_name,omitempty"`
+	TemplateIds     []uint32 `protobuf:"varint,3,rep,packed,name=template_ids,json=templateIds,proto3" json:"template_ids,omitempty"`
+}
+
+func (x *TemplateSetOfBizDetail_TemplateSetOfBiz) Reset() {
+	*x = TemplateSetOfBizDetail_TemplateSetOfBiz{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_template_set_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TemplateSetOfBizDetail_TemplateSetOfBiz) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TemplateSetOfBizDetail_TemplateSetOfBiz) ProtoMessage() {}
+
+func (x *TemplateSetOfBizDetail_TemplateSetOfBiz) ProtoReflect() protoreflect.Message {
+	mi := &file_template_set_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TemplateSetOfBizDetail_TemplateSetOfBiz.ProtoReflect.Descriptor instead.
+func (*TemplateSetOfBizDetail_TemplateSetOfBiz) Descriptor() ([]byte, []int) {
+	return file_template_set_proto_rawDescGZIP(), []int{3, 0}
+}
+
+func (x *TemplateSetOfBizDetail_TemplateSetOfBiz) GetTemplateSetId() uint32 {
+	if x != nil {
+		return x.TemplateSetId
+	}
+	return 0
+}
+
+func (x *TemplateSetOfBizDetail_TemplateSetOfBiz) GetTemplateSetName() string {
+	if x != nil {
+		return x.TemplateSetName
+	}
+	return ""
+}
+
+func (x *TemplateSetOfBizDetail_TemplateSetOfBiz) GetTemplateIds() []uint32 {
+	if x != nil {
+		return x.TemplateIds
+	}
+	return nil
+}
+
 var File_template_set_proto protoreflect.FileDescriptor
 
 var file_template_set_proto_rawDesc = []byte{
@@ -263,10 +461,44 @@ var file_template_set_proto_rawDesc = []byte{
 	0x52, 0x05, 0x62, 0x69, 0x7a, 0x49, 0x64, 0x12, 0x2a, 0x0a, 0x11, 0x74, 0x65, 0x6d, 0x70, 0x6c,
 	0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x0d, 0x52, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63,
-	0x65, 0x49, 0x64, 0x42, 0x2f, 0x5a, 0x2d, 0x62, 0x73, 0x63, 0x70, 0x2e, 0x69, 0x6f, 0x2f, 0x70,
-	0x6b, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2f, 0x63, 0x6f, 0x72, 0x65,
-	0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x2d, 0x73, 0x65, 0x74, 0x3b, 0x70, 0x62,
-	0x74, 0x73, 0x65, 0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x49, 0x64, 0x22, 0xd6, 0x02, 0x0a, 0x16, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65,
+	0x53, 0x65, 0x74, 0x4f, 0x66, 0x42, 0x69, 0x7a, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x12, 0x2a,
+	0x0a, 0x11, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65,
+	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c,
+	0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x13, 0x74, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x6e, 0x61, 0x6d,
+	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x54, 0x0a, 0x0d, 0x74, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x2f, 0x2e, 0x70, 0x62, 0x74, 0x73, 0x65, 0x74, 0x2e, 0x54, 0x65, 0x6d, 0x70, 0x6c,
+	0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x4f, 0x66, 0x42, 0x69, 0x7a, 0x44, 0x65, 0x74, 0x61, 0x69,
+	0x6c, 0x2e, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x4f, 0x66, 0x42,
+	0x69, 0x7a, 0x52, 0x0c, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x73,
+	0x1a, 0x89, 0x01, 0x0a, 0x10, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74,
+	0x4f, 0x66, 0x42, 0x69, 0x7a, 0x12, 0x26, 0x0a, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0d,
+	0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x49, 0x64, 0x12, 0x2a, 0x0a,
+	0x11, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x6e, 0x61,
+	0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x53, 0x65, 0x74, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x74, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0d, 0x52,
+	0x0b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x49, 0x64, 0x73, 0x22, 0xc6, 0x01, 0x0a,
+	0x14, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x42, 0x72, 0x69, 0x65,
+	0x66, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x2a, 0x0a, 0x11, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d,
+	0x52, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x49,
+	0x64, 0x12, 0x2e, 0x0a, 0x13, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70,
+	0x61, 0x63, 0x65, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11,
+	0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x4e, 0x61, 0x6d,
+	0x65, 0x12, 0x26, 0x0a, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65,
+	0x74, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0d, 0x74, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x49, 0x64, 0x12, 0x2a, 0x0a, 0x11, 0x74, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65,
+	0x74, 0x4e, 0x61, 0x6d, 0x65, 0x42, 0x2f, 0x5a, 0x2d, 0x62, 0x73, 0x63, 0x70, 0x2e, 0x69, 0x6f,
+	0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2f, 0x63, 0x6f,
+	0x72, 0x65, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x2d, 0x73, 0x65, 0x74, 0x3b,
+	0x70, 0x62, 0x74, 0x73, 0x65, 0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -281,22 +513,26 @@ func file_template_set_proto_rawDescGZIP() []byte {
 	return file_template_set_proto_rawDescData
 }
 
-var file_template_set_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_template_set_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_template_set_proto_goTypes = []interface{}{
-	(*TemplateSet)(nil),           // 0: pbtset.TemplateSet
-	(*TemplateSetSpec)(nil),       // 1: pbtset.TemplateSetSpec
-	(*TemplateSetAttachment)(nil), // 2: pbtset.TemplateSetAttachment
-	(*base.Revision)(nil),         // 3: pbbase.Revision
+	(*TemplateSet)(nil),                             // 0: pbtset.TemplateSet
+	(*TemplateSetSpec)(nil),                         // 1: pbtset.TemplateSetSpec
+	(*TemplateSetAttachment)(nil),                   // 2: pbtset.TemplateSetAttachment
+	(*TemplateSetOfBizDetail)(nil),                  // 3: pbtset.TemplateSetOfBizDetail
+	(*TemplateSetBriefInfo)(nil),                    // 4: pbtset.TemplateSetBriefInfo
+	(*TemplateSetOfBizDetail_TemplateSetOfBiz)(nil), // 5: pbtset.TemplateSetOfBizDetail.TemplateSetOfBiz
+	(*base.Revision)(nil),                           // 6: pbbase.Revision
 }
 var file_template_set_proto_depIdxs = []int32{
 	1, // 0: pbtset.TemplateSet.spec:type_name -> pbtset.TemplateSetSpec
 	2, // 1: pbtset.TemplateSet.attachment:type_name -> pbtset.TemplateSetAttachment
-	3, // 2: pbtset.TemplateSet.revision:type_name -> pbbase.Revision
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	6, // 2: pbtset.TemplateSet.revision:type_name -> pbbase.Revision
+	5, // 3: pbtset.TemplateSetOfBizDetail.template_sets:type_name -> pbtset.TemplateSetOfBizDetail.TemplateSetOfBiz
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_template_set_proto_init() }
@@ -341,6 +577,42 @@ func file_template_set_proto_init() {
 				return nil
 			}
 		}
+		file_template_set_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TemplateSetOfBizDetail); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_template_set_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TemplateSetBriefInfo); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_template_set_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TemplateSetOfBizDetail_TemplateSetOfBiz); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -348,7 +620,7 @@ func file_template_set_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_template_set_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

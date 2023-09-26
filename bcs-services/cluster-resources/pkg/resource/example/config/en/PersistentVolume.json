@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_persistent_volume",
-      "alias": "PersistentVolume Simple Demo",
+      "alias": "PersistentVolume simple demo",
       "description": "A simple persistentVolume demo with only basic configuration",
       "manifest": null
     }

@@ -6,7 +6,7 @@
     :searchable="searchable"
     :disabled="disabled"
     :loading="namespaceLoading || loading"
-    :placeholder="$t('请选择命名空间')"
+    :placeholder="$t('dashboard.ns.validate.emptyNs')"
     @change="handleNamespaceChange">
     <bcs-option
       v-for="option in nsList"
@@ -17,9 +17,10 @@
   </bcs-select>
 </template>
 <script lang="ts">
-import { defineComponent, watch, toRefs, computed } from 'vue';
-import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
+import { computed, defineComponent, toRefs, watch } from 'vue';
+
 import $store from '@/store';
+import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 export default defineComponent({
   name: 'NamespaceSelect',
@@ -84,7 +85,7 @@ export default defineComponent({
       if (!clusterId.value) return;
       await getNamespaceData({
         clusterId: clusterId.value,
-      });
+      }, required.value);
       if (!namespaceList.value.find(item => item.name === value.value)) {
         handleNamespaceChange(required.value ? namespaceList.value[0]?.name : '');
       } else {

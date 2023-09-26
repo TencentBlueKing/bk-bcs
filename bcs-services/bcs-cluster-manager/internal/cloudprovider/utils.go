@@ -39,7 +39,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
-	k8scorev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -73,6 +76,8 @@ const (
 	DeleteNamespaceAction = "deleteNamespace"
 	// SetNodeLabelsAction 节点设置labels任务
 	SetNodeLabelsAction = "nodeSetLabels"
+	// SetNodeTaintsAction 节点设置labels任务
+	SetNodeTaintsAction = "nodeSetTaints"
 	// SetNodeAnnotationsAction 节点设置Annotations任务
 	SetNodeAnnotationsAction = "nodeSetAnnotations"
 	// CheckKubeAgentStatusAction 检测agent组件状态
@@ -83,6 +88,10 @@ const (
 	DeleteResourceQuotaAction = "deleteResourceQuota"
 	// ResourcePoolLabelAction 设置资源池标签
 	ResourcePoolLabelAction = "resourcePoolLabel"
+	// CheckClusterCleanNodesAction 检测集群销毁节点状态
+	CheckClusterCleanNodesAction = "checkClusterCleanNodes"
+	// LadderResourcePoolLabelAction 标签设置
+	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
 )
 
 var (
@@ -127,7 +136,8 @@ func GetCredential(data *CredentialData) (*CommonOption, error) {
 	// if credential not exist account, get from common cloud
 	if data.AccountID != "" {
 		// try to get credential in cluster
-		account, err := GetStorageModel().GetCloudAccount(context.Background(), data.Cloud.CloudID, data.AccountID)
+		account, err := GetStorageModel().GetCloudAccount(context.Background(),
+			data.Cloud.CloudID, data.AccountID, false)
 		if err != nil {
 			return nil, fmt.Errorf("GetCloudAccount failed: %v", err)
 		}
@@ -311,6 +321,7 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 		return fmt.Errorf("importClusterCredential parse kubeConfig failed: %v", "[server|caCertData|token] null")
 	}
 
+	// need to handle crypt
 	now := time.Now().Format(time.RFC3339)
 	err := GetStorageModel().PutClusterCredential(context.Background(), &proto.ClusterCredential{
 		ServerKey:     clusterID,
@@ -350,7 +361,8 @@ func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, er
 	)
 	for _, node := range nodes {
 		if node.Status == common.StatusRunning || node.Status == common.StatusInitialization ||
-			node.Status == common.StatusAddNodesFailed {
+			node.Status == common.StatusAddNodesFailed || node.Status == common.StatusResourceApplyFailed ||
+			node.Status == common.StatusDeleting {
 			goodNodes = append(goodNodes, node)
 		}
 	}
@@ -544,6 +556,26 @@ func GetInstanceIPsByID(ctx context.Context, nodeIDs []string) []string {
 	return nodeIPs
 }
 
+// GetInstanceIPsByName get InstanceIP by NodeName
+func GetInstanceIPsByName(ctx context.Context, clusterID string, nodeNames []string) []string {
+	var (
+		taskID  = GetTaskIDFromContext(ctx)
+		nodeIPs = make([]string, 0)
+	)
+
+	for _, name := range nodeNames {
+		node, err := GetStorageModel().GetNodeByName(context.Background(), clusterID, name)
+		if err != nil {
+			blog.Errorf("GetInstanceIPsByName[%s] nodeName[%s] failed: %v", taskID, name, err)
+			continue
+		}
+
+		nodeIPs = append(nodeIPs, node.InnerIP)
+	}
+
+	return nodeIPs
+}
+
 // GetNodesByInstanceIDs get nodes by instanceIDs
 func GetNodesByInstanceIDs(instanceIDs []string) []*proto.Node {
 	nodes := make([]*proto.Node, 0)
@@ -668,7 +700,7 @@ func WithStepSkipFailed(skip bool) StepOption {
 
 // InitTaskStep init task step
 func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
-	defaultOptions := &StepOptions{Retry: 0}
+	defaultOptions := &StepOptions{Retry: 0, SkipFailed: false}
 	for _, opt := range opts {
 		opt(defaultOptions)
 	}
@@ -679,7 +711,7 @@ func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
 		System:       "api",
 		Params:       make(map[string]string),
 		Retry:        0,
-		SkipOnFailed: false,
+		SkipOnFailed: defaultOptions.SkipFailed,
 		Start:        nowStr,
 		Status:       TaskStatusNotStarted,
 		TaskMethod:   stepInfo.StepMethod,
@@ -810,7 +842,7 @@ func GetModuleName(bkBizID, bkModuleID int) string {
 	if cli == nil {
 		return ""
 	}
-	list, err := cli.ListTopology(bkBizID, false)
+	list, err := cli.ListTopology(bkBizID, false, true)
 	if err != nil {
 		blog.Errorf("list topology failed, err %s", err.Error())
 		return ""
@@ -959,26 +991,6 @@ func UpdateAutoScalingOptionModuleInfo(clusterID string) error {
 	return nil
 }
 
-// ImportClusterNodesToCM writes cluster nodes to DB
-func ImportClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error {
-	for i := range nodes {
-		ipv4, ipv6 := utils.GetNodeIPAddress(&nodes[i])
-		node := &proto.Node{
-			InnerIP:   utils.SliceToString(ipv4),
-			InnerIPv6: utils.SliceToString(ipv6),
-			Status:    common.StatusRunning,
-			NodeName:  nodes[i].Name,
-			ClusterID: clusterID,
-		}
-		err := GetStorageModel().CreateNode(ctx, node)
-		if err != nil {
-			blog.Errorf("ImportClusterNodesToCM CreateNode[%s] failed: %v", nodes[i].Name, err)
-		}
-	}
-
-	return nil
-}
-
 // IsInDependentCluster check independent cluster
 func IsInDependentCluster(cluster *proto.Cluster) bool {
 	return cluster.ManageType == common.ClusterManageTypeIndependent
@@ -989,14 +1001,128 @@ func IsManagedCluster(cluster *proto.Cluster) bool {
 	return cluster.ManageType == common.ClusterManageTypeManaged
 }
 
-// CheckManagedClusterExistNode if exist nodes
-func CheckManagedClusterExistNode(cluster *proto.Cluster) bool {
-	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": cluster.ClusterID})
-	nodes, err := GetStorageModel().ListNode(context.Background(), clusterCond, &storeopt.ListOption{})
+// GetCRDByKubeConfig get crd by kubeConfig
+func GetCRDByKubeConfig(kubeConfig string) (*v1.CustomResourceDefinitionList, error) {
+	_, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
+		FileName:    "",
+		YamlContent: kubeConfig,
+	})
+
 	if err != nil {
-		blog.Errorf("CheckManagedClusterNodeNum %s Nodes failed, %s", cluster.ClusterID, err.Error())
-		return true
+		return nil, fmt.Errorf("checkKubeConfig get kubeConfig from YAML body failed: %v", err)
 	}
 
-	return len(nodes) > 0
+	// 解析 kubeConfig 字符串
+	cfg, err := clientcmd.NewClientConfigFromBytes([]byte(kubeConfig))
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取 Kubernetes 配置
+	config, err := cfg.ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// 使用 Kubernetes 配置创建一个 Kubernetes 客户端
+	cli, err := clientset.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取 CRD
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	defer cancel()
+
+	return cli.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
+}
+
+// UpdateVirtualNodeStatus update virtual nodes status
+func UpdateVirtualNodeStatus(clusterId, nodeGroupId, taskID string) error {
+	if clusterId == "" || nodeGroupId == "" || taskID == "" {
+		blog.Infof("UpdateVirtualNodeStatus[%s] validate data", taskID)
+		return nil
+	}
+
+	condM := make(operator.M)
+	condM["nodegroupid"] = nodeGroupId
+	condM["clusterid"] = clusterId
+	condM["taskid"] = taskID
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+
+	nodes, err := GetStorageModel().ListNode(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("UpdateVirtualNodeStatus[%s] NodeGroup %s all Nodes failed, %s",
+			taskID, nodeGroupId, err.Error())
+		return err
+	}
+
+	blog.Infof("UpdateVirtualNodeStatus[%s] ListNodes[%+v] success", taskID, nodes)
+	for i := range nodes {
+		blog.Infof("UpdateVirtualNodeStatus[%s] node status", nodes[i].NodeID)
+		nodes[i].Status = common.StatusResourceApplyFailed
+		GetStorageModel().UpdateNode(context.Background(), nodes[i])
+	}
+
+	return nil
+}
+
+// DeleteVirtualNodes delete virtual nodes
+func DeleteVirtualNodes(clusterId, nodeGroupId, taskID string) error {
+	if clusterId == "" || nodeGroupId == "" || taskID == "" {
+		blog.Infof("DeleteVirtualNodes[%s] validate data", taskID)
+		return nil
+	}
+
+	condM := make(operator.M)
+	condM["nodegroupid"] = nodeGroupId
+	condM["clusterid"] = clusterId
+	condM["taskid"] = taskID
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+
+	nodes, err := GetStorageModel().ListNode(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("ListNodesInClusterNodePool[%s] NodeGroup %s all Nodes failed, %s",
+			taskID, nodeGroupId, err.Error())
+		return err
+	}
+
+	blog.Infof("DeleteVirtualNodes[%s] ListNodes[%+v] success", taskID, nodes)
+	for i := range nodes {
+		blog.Infof("DeleteVirtualNodes[%s] node[%s] status", taskID, nodes[i].NodeID)
+
+		if !strings.HasPrefix(nodes[i].GetNodeID(), "bcs") {
+			continue
+		}
+		GetStorageModel().DeleteNode(context.Background(), nodes[i].GetNodeID())
+	}
+
+	return nil
+}
+
+// GetAnnotationsByNg get annotations by nodeGroup
+func GetAnnotationsByNg(group *proto.NodeGroup) map[string]string {
+	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Annotations) == 0 {
+		return nil
+	}
+
+	return group.GetNodeTemplate().GetAnnotations()
+}
+
+// GetLabelsByNg get labels by nodeGroup
+func GetLabelsByNg(group *proto.NodeGroup) map[string]string {
+	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Labels) == 0 {
+		return nil
+	}
+
+	return group.GetNodeTemplate().GetLabels()
+}
+
+// GetTaintsByNg get taints by nodeGroup
+func GetTaintsByNg(group *proto.NodeGroup) []*proto.Taint {
+	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Taints) == 0 {
+		return nil
+	}
+
+	return group.GetNodeTemplate().GetTaints()
 }

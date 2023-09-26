@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_cronjob",
-      "alias": "CronJob Simple Demo",
+      "alias": "CronJob simple demo",
       "description": "A simple cronjob demo with only basic configuration",
       "manifest": null
     }

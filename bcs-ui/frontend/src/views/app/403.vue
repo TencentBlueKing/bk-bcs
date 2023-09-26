@@ -1,18 +1,18 @@
 <template>
   <bk-exception :type="type">
-    <span>{{$t('该操作需要以下权限')}}</span>
+    <span>{{$t('iam.title.perms')}}</span>
     <bk-table :data="tableData" class="mt25" v-bkloading="{ isLoading }">
-      <bk-table-column :label="$t('系统')" prop="system" min-width="150">
-        {{ $t('容器管理平台') }}
+      <bk-table-column :label="$t('iam.label.system')" prop="system" min-width="150">
+        {{ $t('bcs.name') }}
       </bk-table-column>
-      <bk-table-column :label="$t('需要申请的权限')" prop="auth" min-width="220">
+      <bk-table-column :label="$t('iam.label.action')" prop="auth" min-width="220">
         <template #default="{ row }">
           {{ actionsMap[row.action_id] || '--' }}
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('关联的资源实例')" prop="resource" min-width="220">
-        <template #default="{ row }">
-          {{ row.resource_name || '--' }}
+      <bk-table-column :label="$t('iam.label.resource')" prop="resource" min-width="220">
+        <template #default>
+          {{ projectCode }}
         </template>
       </bk-table-column>
     </bk-table>
@@ -21,13 +21,25 @@
       class="mt25"
       :disabled="!href"
       @click="handleGotoIAM"
-    >{{$t('去申请')}}</bk-button>
+    >{{$t('iam.button.apply')}}</bk-button>
   </bk-exception>
 </template>
 <script lang="ts">
-import { PropType, defineComponent, onBeforeMount, ref } from 'vue';
-import { userPermsByAction } from '@/api/base';
+import { defineComponent, onBeforeMount, PropType, ref } from 'vue';
+
+import useProjects from '../project-manage/project/use-project';
+
+import $bkMessage from '@/common/bkmagic';
+import $router from '@/router';
 import actionsMap from '@/views/app/actions-map';
+
+interface IPerms {
+  action_list: Array<{
+    action_id: string
+    resource_type: string
+  }>
+  apply_url: string
+}
 
 export default defineComponent({
   name: 'AuthForbidden',
@@ -36,35 +48,21 @@ export default defineComponent({
       type: String,
       default: '403',
     },
-    actionId: {
-      type: String,
-      default: '',
-    },
-    resourceName: {
-      type: String,
-      default: '',
-    },
-    permCtx: {
-      type: [Object, String],
-      default: () => ({}),
-    },
-    // 接口返回的权限数据
     perms: {
-      type: Object as PropType<{
-        action_list: Array<{
-          action_id: string
-          resource_type: string
-        }>
-        apply_url: string
-      }>,
-      default: () => null,
+      type: Object as PropType<IPerms>,
     },
     fromRoute: {
       type: String,
       default: '',
     },
+    projectCode: {
+      type: String,
+      required: true,
+    },
   },
   setup(props) {
+    const { fetchProjectInfo } = useProjects();
+
     const tableData = ref<any[]>([]);
     const href = ref('');
     const isLoading = ref(false);
@@ -78,40 +76,40 @@ export default defineComponent({
       tableData.value = data;
     };
 
-    const handleGetPermsData = async () => {
-      if (!props.actionId) return;
+    const handleGetProjectPerms = async () => {
+      if (props.perms) {
+        handleSetPermsData(props.perms.apply_url, props.perms.action_list);
+        return;
+      };
+
       isLoading.value = true;
-      const data = await userPermsByAction({
-        $actionId: [props.actionId],
-        perm_ctx: typeof props.permCtx === 'string'
-          ? JSON.parse(props.permCtx)
-          : props.permCtx,
-      }).catch(() => ({}));
+      const { code, web_annotations, message } = await fetchProjectInfo({
+        $projectId: props.projectCode,
+      });
       isLoading.value = false;
-      if (data?.perms?.[props.actionId] && props.fromRoute) {
-        // 有权限跳回原来界面
-        window.location.href = props.fromRoute;
+
+      if (code === 0) {  // 有权限
+        const { href } = $router.resolve({
+          name: 'clusterMain',
+          params: {
+            projectCode: props.projectCode,
+          },
+        });
+        window.location.href = href;
+      } else if (code === 40403) { // 无权限
+        const perms: IPerms = web_annotations?.perms;
+        handleSetPermsData(perms.apply_url, perms.action_list);
       } else {
-        // 无权限
-        handleSetPermsData(data?.perms?.apply_url, [{
-          resource_name: props.resourceName,
-          action_id: props.actionId,
-        }]);
+        $bkMessage({
+          theme: 'error',
+          message,
+        });
       }
     };
 
     onBeforeMount(async () => {
-      if (props.perms) {
-        // 已经返回权限信息
-        const { apply_url, action_list } = props.perms;
-        handleSetPermsData(apply_url, action_list.map(item => ({
-          ...item,
-          resource_name: props.resourceName,
-        })));
-      } else {
-        // 查询权限信息
-        handleGetPermsData();
-      }
+      // 查询权限信息
+      handleGetProjectPerms();
     });
     return {
       handleGotoIAM,

@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package table
 
@@ -26,7 +26,7 @@ type TemplateSpace struct {
 	Revision   *Revision                `json:"revision" gorm:"embedded"`
 }
 
-// TableName is the TemplateSpace's database table name.
+// TableName is the template space's database table name.
 func (t *TemplateSpace) TableName() string {
 	return "template_spaces"
 }
@@ -46,7 +46,7 @@ func (t *TemplateSpace) ResType() string {
 	return "template_space"
 }
 
-// ValidateCreate validate TemplateSpace is valid or not when create it.
+// ValidateCreate validate template space is valid or not when create it.
 func (t *TemplateSpace) ValidateCreate() error {
 	if t.ID > 0 {
 		return errors.New("id should not be set")
@@ -79,7 +79,7 @@ func (t *TemplateSpace) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate validate TemplateSpace is valid or not when update it.
+// ValidateUpdate validate template space is valid or not when update it.
 func (t *TemplateSpace) ValidateUpdate() error {
 
 	if t.ID <= 0 {
@@ -111,10 +111,10 @@ func (t *TemplateSpace) ValidateUpdate() error {
 	return nil
 }
 
-// ValidateDelete validate the TemplateSpace's info when delete it.
+// ValidateDelete validate the template space's info when delete it.
 func (t *TemplateSpace) ValidateDelete() error {
 	if t.ID <= 0 {
-		return errors.New("TemplateSpace id should be set")
+		return errors.New("template space id should be set")
 	}
 
 	if t.Attachment == nil {
@@ -128,16 +128,13 @@ func (t *TemplateSpace) ValidateDelete() error {
 	return nil
 }
 
-// TemplateSpaceSpec defines all the specifics for TemplateSpace set by user.
+// TemplateSpaceSpec defines all the specifics for template space set by user.
 type TemplateSpaceSpec struct {
 	Name string `json:"name" gorm:"column:name"`
 	Memo string `json:"memo" gorm:"column:memo"`
 }
 
-// TemplateSpaceType is the type of TemplateSpace
-type TemplateSpaceType string
-
-// ValidateCreate validate TemplateSpace spec when it is created.
+// ValidateCreate validate template space spec when it is created.
 func (t *TemplateSpaceSpec) ValidateCreate() error {
 	if err := validator.ValidateName(t.Name); err != nil {
 		return err
@@ -146,7 +143,7 @@ func (t *TemplateSpaceSpec) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate validate TemplateSpace spec when it is updated.
+// ValidateUpdate validate template space spec when it is updated.
 func (t *TemplateSpaceSpec) ValidateUpdate() error {
 	if err := validator.ValidateMemo(t.Memo, false); err != nil {
 		return err
@@ -155,12 +152,12 @@ func (t *TemplateSpaceSpec) ValidateUpdate() error {
 	return nil
 }
 
-// TemplateSpaceAttachment defines the TemplateSpace attachments.
+// TemplateSpaceAttachment defines the template space attachments.
 type TemplateSpaceAttachment struct {
 	BizID uint32 `json:"biz_id" gorm:"column:biz_id"`
 }
 
-// Validate whether TemplateSpace attachment is valid or not.
+// Validate whether template space attachment is valid or not.
 func (t *TemplateSpaceAttachment) Validate() error {
 	if t.BizID <= 0 {
 		return errors.New("invalid attachment biz id")

@@ -1,13 +1,13 @@
 <template>
   <div>
-    <bk-form-item :label="$t('资源')" class="mb-[15px]">
+    <bk-form-item :label="$t('cluster.create.label.hostResource')" class="mb-[15px]">
       <bk-radio-group :disabled="disabled" v-model="type">
         <!-- todo 暂时不支持申请节点资源模式 -->
         <bk-radio disabled value="newNodes">
-          <span v-bk-tooltips="$t('功能正在开发中')">{{ $t('申请节点资源') }}</span>
+          <span v-bk-tooltips="$t('generic.msg.info.development')">{{ $t('cluster.create.label.applyResource') }}</span>
         </bk-radio>
         <bk-radio :disabled="disabled" value="existNodes">
-          {{ $t('使用已有服务器') }}
+          {{ $t('cluster.create.label.useExitHost') }}
         </bk-radio>
       </bk-radio-group>
     </bk-form-item>
@@ -23,22 +23,22 @@
           :disabled="disabled"
           icon="plus"
           @click="showIpSelector = true">
-          {{ $t('添加服务器') }}
+          {{ $t('cluster.create.button.addHost') }}
         </bk-button>
         <bk-table :data="ipList" class="mt-[16px]" v-bkloading="{ isLoading }">
-          <bk-table-column type="index" :label="$t('序列')" width="60"></bk-table-column>
-          <bk-table-column :label="$t('实例ID')">
+          <bk-table-column type="index" :label="$t('cluster.create.label.index')" width="60"></bk-table-column>
+          <bk-table-column :label="$t('cluster.create.label.instanceID')">
             <template #default="{ row }">
               {{ row.nodeID || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('内网IP')" prop="bk_host_innerip"></bk-table-column>
-          <bk-table-column :label="$t('地域')">
+          <bk-table-column :label="$t('generic.ipSelector.label.innerIp')" prop="bk_host_innerip"></bk-table-column>
+          <bk-table-column :label="$t('cluster.labels.region')">
             <template #default="{ row }">
               {{ getRegionName(row.region) || '--' }}
               <span
                 class="text-[#ea3636] text-[16px]"
-                v-bk-tooltips="$t('节点地域需要与集群地域保持一致，节点地域：{region1}，集群地域：{region2}', {
+                v-bk-tooltips="$t('cluster.create.validate.regionDiff', {
                   region1: getRegionName(row.region) || '--',
                   region2: getRegionName(region) || '--'
                 })"
@@ -52,7 +52,7 @@
               {{ row.vpc || '--' }}
               <span
                 class="text-[#ea3636] text-[16px]"
-                v-bk-tooltips="$t('节点VPC需要与集群VPC保存一致，节点VPC：{vpc1}，集群VPC：{vpc2}', {
+                v-bk-tooltips="$t('cluster.create.validate.vpcDiff', {
                   vpc1: row.vpc || '--',
                   vpc2: vpc.vpcID || '--'
                 })"
@@ -61,16 +61,16 @@
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('可用区')">
+          <bk-table-column :label="$t('cluster.ca.nodePool.create.az.title')">
             <template #default="{ row }">
               {{ row.zoneName || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('机房')" prop="idc_name"></bk-table-column>
-          <bk-table-column :label="$t('机型')" prop="svr_device_class"></bk-table-column>
-          <bk-table-column :label="$t('操作')" width="100">
+          <bk-table-column :label="$t('generic.ipSelector.label.idc')" prop="idc_name"></bk-table-column>
+          <bk-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="svr_device_class"></bk-table-column>
+          <bk-table-column :label="$t('generic.label.action')" width="100">
             <template #default="{ row }">
-              <bk-button text :disabled="disabled" @click="handleDeleteIp(row)">{{ $t('移除') }}</bk-button>
+              <bk-button text :disabled="disabled" @click="handleDeleteIp(row)">{{ $t('cluster.create.button.remove') }}</bk-button>
             </template>
           </bk-table-column>
         </bk-table>
@@ -87,7 +87,8 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, PropType } from 'vue';
+import { defineComponent, PropType, ref } from 'vue';
+
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 
 export default defineComponent({

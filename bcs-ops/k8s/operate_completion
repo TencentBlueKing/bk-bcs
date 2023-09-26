@@ -34,7 +34,7 @@ Usage:
       [ ${PROJECTS[*]} ]
       [ clean ]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {
@@ -46,7 +46,11 @@ check_completion() {
     utils::log "INFO" "installing bash-completion"
     if [[ -n ${BCS_OFFLINE:-} ]]; then
       # ToDo helm image offline install
-      true
+      rpm_path="$(find "${ROOT_DIR}/version-${VERSION}/rpm/" -iname "bash-completion-*.rpm" -type f | head -1)"
+      if [[ -z $rpm_path ]]; then
+        utils::log "FATAL" "can't find bash-completion rpm in ${ROOT_DIR}/version-${VERSION}/rpm/"
+      fi
+      rpm -ivh "$rpm_path"
     else
       yum install -y bash-completion \
         || utils::log "FATAL" "fail to install bash-completion"
@@ -164,7 +168,7 @@ main() {
         project="$1"
         utils::check_op "${op_type}" "${project}"
         "${op_type}_${project}"
-		utils::log "OK" "command complete ${project}"
+        utils::log "OK" "command complete ${project}"
         break
         ;;
     esac

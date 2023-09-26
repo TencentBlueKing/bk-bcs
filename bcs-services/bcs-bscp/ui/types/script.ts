@@ -108,3 +108,10 @@ export interface IScriptCitedItem {
   config_release_id: number;
   pub_state: string;
 }
+
+// 脚本加工后的列表项
+export interface IScriptMapItem {
+  id: number;
+  name: string;
+  content: string;
+}

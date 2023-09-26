@@ -39,6 +39,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/tke"
 )
 
+var storeClient ClusterManagerModel
+
 // ClusterManagerModel database operation for
 type ClusterManagerModel interface {
 	CreateCluster(ctx context.Context, cluster *types.Cluster) error
@@ -51,12 +53,15 @@ type ClusterManagerModel interface {
 	UpdateNode(ctx context.Context, node *types.Node) error
 	DeleteNode(ctx context.Context, nodeID string) error
 	DeleteClusterNode(ctx context.Context, clusterID, nodeID string) error
+	DeleteClusterNodeByName(ctx context.Context, clusterID, nodeName string) error
 	DeleteNodesByIPs(ctx context.Context, ips []string) error
+	DeleteClusterNodesByIPs(ctx context.Context, clusterID string, ips []string) error
 	DeleteNodesByNodeIDs(ctx context.Context, nodeIDs []string) error
 	DeleteNodeByIP(ctx context.Context, ip string) error
 	DeleteClusterNodeByIP(ctx context.Context, clusterID, ip string) error
 	DeleteNodesByClusterID(ctx context.Context, clusterID string) error
 	GetNode(ctx context.Context, nodeID string) (*types.Node, error)
+	GetNodeByName(ctx context.Context, clusterID, name string) (*types.Node, error)
 	GetNodeByIP(ctx context.Context, ip string) (*types.Node, error)
 	GetClusterNode(ctx context.Context, clusterID, nodeID string) (*types.Node, error)
 	GetClusterNodeByIP(ctx context.Context, clusterID, ip string) (*types.Node, error)
@@ -112,10 +117,10 @@ type ClusterManagerModel interface {
 
 	//cloud account info storage manager
 	CreateCloudAccount(ctx context.Context, account *types.CloudAccount) error
-	UpdateCloudAccount(ctx context.Context, account *types.CloudAccount) error
+	UpdateCloudAccount(ctx context.Context, account *types.CloudAccount, skipEncrypt bool) error
 	DeleteCloudAccount(ctx context.Context, cloudID string, accountID string) error
 	ListCloudAccount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudAccount, error)
-	GetCloudAccount(ctx context.Context, cloudID, accountID string) (*types.CloudAccount, error)
+	GetCloudAccount(ctx context.Context, cloudID, accountID string, skipDecrypt bool) (*types.CloudAccount, error)
 
 	//cloud nodeTemplate info storage management
 	CreateNodeTemplate(ctx context.Context, template *types.NodeTemplate) error
@@ -147,7 +152,8 @@ type ClusterManagerModel interface {
 	DeleteOperationLogByResourceType(ctx context.Context, resType string) error
 	ListOperationLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.OperationLog, error)
 	CountOperationLog(ctx context.Context, cond *operator.Condition) (int64, error)
-	ListAggreOperationLog(ctx context.Context, conds []bson.E, opt *options.ListOption) ([]types.TaskOperationLog, error)
+	ListAggreOperationLog(ctx context.Context, condSrc, condDst []bson.E,
+		opt *options.ListOption) ([]types.TaskOperationLog, error)
 
 	//project information storage management
 	CreateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
@@ -186,7 +192,7 @@ type ModelSet struct {
 
 // NewModelSet create model set
 func NewModelSet(db drivers.DB) ClusterManagerModel {
-	return &ModelSet{
+	storeClient = &ModelSet{
 		ModelCluster:           cluster.New(db),
 		ModelNode:              node.New(db),
 		ModelClusterCredential: clustercredential.New(db),
@@ -204,4 +210,11 @@ func NewModelSet(db drivers.DB) ClusterManagerModel {
 		ModelNodeTemplate:      nodetemplate.New(db),
 		ModelCloudModuleFlag:   moduleflag.New(db),
 	}
+
+	return storeClient
+}
+
+// GetStoreModel get store client
+func GetStoreModel() ClusterManagerModel {
+	return storeClient
 }

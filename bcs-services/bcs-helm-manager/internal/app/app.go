@@ -14,15 +14,14 @@
 package app
 
 import (
-	// pprof
-	_ "net/http/pprof"
-
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
+
+	// pprof
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"path"
@@ -32,6 +31,17 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/gorilla/mux"
 	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microCfg "github.com/micro/go-micro/v2/config"
@@ -46,18 +56,9 @@ import (
 	gCred "google.golang.org/grpc/credentials"
 	"gopkg.in/yaml.v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/storage"
@@ -71,6 +72,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/envx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/grpcGateway"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -107,21 +109,26 @@ type HelmManager struct {
 	addons         release.AddonsSlice
 	releaseHandler release.Handler
 
+	// encrypt
+	cryptor encryptv2.Cryptor
+
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
 	stopCh        chan struct{}
-	CredConf      microCfg.Config
+	credConf      microCfg.Config
+	addonsConf    microCfg.Config
 }
 
 // NewHelmManager create a new helm manager
-func NewHelmManager(opt *options.HelmManagerOptions, credConf microCfg.Config) *HelmManager {
+func NewHelmManager(opt *options.HelmManagerOptions, credConf, addonsConf microCfg.Config) *HelmManager {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &HelmManager{
 		opt:           opt,
 		ctx:           ctx,
 		ctxCancelFunc: cancel,
 		stopCh:        make(chan struct{}),
-		CredConf:      credConf,
+		credConf:      credConf,
+		addonsConf:    addonsConf,
 	}
 }
 
@@ -130,6 +137,7 @@ func (hm *HelmManager) Init() error {
 	hm.getServerAddress()
 	for _, f := range []func() error{
 		hm.initTLSConfig,
+		hm.initCryptor,
 		hm.initModel,
 		hm.initAddons,
 		hm.initPlatform,
@@ -161,6 +169,9 @@ func (hm *HelmManager) Run() error {
 
 	eg.Go(func() error {
 		return hm.watch()
+	})
+	eg.Go(func() error {
+		return hm.addonsWatch()
 	})
 	eg.Go(func() error {
 		// run the service
@@ -230,7 +241,7 @@ func (hm *HelmManager) initModel() error {
 		return err
 	}
 	blog.Info("init mongo db successfully")
-	hm.model = store.New(mongoDB)
+	hm.model = store.New(mongoDB, hm.cryptor)
 	blog.Info("init store successfully")
 	return nil
 }
@@ -242,7 +253,7 @@ func (hm *HelmManager) initAddons() error {
 	}
 
 	// Load the YAML file
-	configData, err := ioutil.ReadFile(hm.opt.Release.AddonsConfigFile)
+	configData, err := os.ReadFile(hm.opt.Release.AddonsConfigFile)
 	if err != nil {
 		blog.Errorf("init addons read file failed, err %s", err.Error())
 		return err
@@ -381,6 +392,9 @@ func (hm *HelmManager) initMicro() error {
 			return nil
 		}),
 		microSvc.AfterStop(func() error {
+			// close audit client
+			component.GetAuditClient().Close()
+			// stop all operation
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			hm.httpServer.Shutdown(ctx)
@@ -390,10 +404,10 @@ func (hm *HelmManager) initMicro() error {
 		}),
 		microSvc.WrapHandler(
 			wrapper.RequestLogWarpper,
-			wrapper.ResponseWrapper,
 			authWrapper.AuthenticationFunc,
 			wrapper.ParseProjectIDWrapper,
 			authWrapper.AuthorizationFunc,
+			wrapper.ResponseWrapper,
 		),
 	)
 	svc.Init()
@@ -406,7 +420,7 @@ func (hm *HelmManager) initMicro() error {
 	}
 	// register cluster addons handler
 	if err := helmmanager.RegisterClusterAddonsHandler(
-		svc.Server(), handler.NewAddonsHandler(hm.model, hm.opt, hm.platform, hm.addons,
+		svc.Server(), handler.NewAddonsHandler(hm.model, hm.opt, hm.platform, &hm.addons,
 			hm.releaseHandler)); err != nil {
 		blog.Errorf("register addons handler to micro failed: %s", err.Error())
 		return nil
@@ -475,8 +489,8 @@ func (hm *HelmManager) initHTTPService() error {
 	if len(hm.opt.IPv6Address) > 0 {
 		addresses = append(addresses, hm.opt.IPv6Address)
 	}
-	hm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.HTTPPort)), "", mux)
-
+	hm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.HTTPPort)), "",
+		grpcGateway.GRPCHandlerFunc(grpc.NewServer(), mux))
 	go func() {
 		var err error
 		blog.Infof("start http gateway server on address %+v", addresses)
@@ -586,8 +600,41 @@ func (hm *HelmManager) initIAMClient() error {
 	return nil
 }
 
+func (hm *HelmManager) initCryptor() error {
+	if !hm.opt.Encrypt.Enable {
+		return nil
+	}
+	conf := &encryptv2.Config{
+		Enabled:   hm.opt.Encrypt.Enable,
+		Algorithm: encryptv2.Algorithm(hm.opt.Encrypt.Algorithm),
+	}
+	switch conf.Algorithm {
+	case encryptv2.Sm4:
+		conf.Sm4 = &encryptv2.Sm4Conf{
+			Key: hm.opt.Encrypt.Secret.Key,
+			Iv:  hm.opt.Encrypt.Secret.Secret,
+		}
+	case encryptv2.AesGcm:
+		conf.AesGcm = &encryptv2.AesGcmConf{
+			Key:   hm.opt.Encrypt.Secret.Key,
+			Nonce: hm.opt.Encrypt.Secret.Secret,
+		}
+	case encryptv2.Normal:
+		conf.Normal = &encryptv2.NormalConf{
+			PriKey: static.EncryptionKey,
+		}
+	}
+	cryptor, err := encryptv2.NewCrypto(conf)
+	if err != nil {
+		return fmt.Errorf("init cryptor failed, %s", err.Error())
+	}
+	hm.cryptor = cryptor
+	blog.Info("init cryptor successfully")
+	return nil
+}
+
 func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
-	fs, err := ioutil.ReadDir(dir)
+	fs, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -598,7 +645,7 @@ func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
 			continue
 		}
 
-		data, err := ioutil.ReadFile(filepath.Join(dir, f.Name()))
+		data, err := os.ReadFile(filepath.Join(dir, f.Name()))
 		if err != nil {
 			return nil, err
 		}
@@ -646,7 +693,7 @@ func (hm *HelmManager) InitComponentConfig() error {
 // 监听配置文件
 func (hm *HelmManager) watch() error {
 	var eg errgroup.Group
-	w, err := hm.CredConf.Watch("credentials")
+	w, err := hm.credConf.Watch("credentials")
 	if err != nil {
 		return err
 	}
@@ -671,6 +718,39 @@ func (hm *HelmManager) watch() error {
 			}
 			options.GlobalOptions.Credentials = cred
 			blog.Infof("reload credential conf from %s", string(value.Bytes()))
+		}
+	})
+	return nil
+}
+
+// addonsWatch 监听addons配置文件
+func (hm *HelmManager) addonsWatch() error {
+	var eg errgroup.Group
+	w, err := hm.addonsConf.Watch("addons")
+	if err != nil {
+		return err
+	}
+
+	eg.Go(func() error {
+		for {
+			value, err := w.Next()
+			if err != nil {
+				if err.Error() == source.ErrWatcherStopped.Error() {
+					return nil
+				}
+				return err
+			}
+			// watch 会传入 null 空值
+			if string(value.Bytes()) == "null" {
+				continue
+			}
+			addonsContent := []*release.Addons{}
+			err = value.Scan(&addonsContent)
+			if err != nil {
+				blog.Errorf("reload addons error, %s", err)
+			}
+			hm.addons.Addons = addonsContent
+			blog.Infof("reload addons conf from %s", string(value.Bytes()))
 		}
 	})
 	return nil

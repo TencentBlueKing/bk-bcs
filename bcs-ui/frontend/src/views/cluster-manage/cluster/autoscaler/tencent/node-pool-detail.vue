@@ -6,20 +6,20 @@
     </template>
     <div class="node-pool-detail" v-bkloading="{ isLoading: loading }">
       <div class="mb15 panel-header">
-        <span class="title">{{$t('基础信息')}}</span>
-        <bk-button theme="primary" @click="handleEditPool">{{ $t('编辑') }}</bk-button>
+        <span class="title">{{$t('generic.title.basicInfo')}}</span>
+        <bk-button theme="primary" @click="handleEditPool">{{ $t('generic.button.edit') }}</bk-button>
       </div>
       <template v-if="nodePoolData">
         <bk-form class="content-wrapper">
-          <bk-form-item :label="$t('节点规格名称')">
+          <bk-form-item :label="$t('cluster.ca.nodePool.label.name')">
             {{`${nodePoolData.nodeGroupID} (${nodePoolData.name}) `}}
           </bk-form-item>
-          <bk-form-item :label="$t('节点规格状态')">
+          <bk-form-item :label="$t('cluster.ca.nodePool.label.status')">
             <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(nodePoolData.status)">
               {{ statusTextMap[nodePoolData.status] }}
             </LoadingIcon>
             <StatusIcon status="unknown" v-else-if="!nodePoolData.enableAutoscale && nodePoolData.status === 'RUNNING'">
-              {{$t('已关闭')}}
+              {{$t('cluster.ca.status.off')}}
             </StatusIcon>
             <StatusIcon
               :status="nodePoolData.status"
@@ -28,86 +28,86 @@
               {{ statusTextMap[nodePoolData.status] }}
             </StatusIcon>
           </bk-form-item>
-          <bk-form-item :label="$t('节点配额')">
+          <bk-form-item :label="$t('cluster.ca.nodePool.label.nodeQuota')">
             {{ nodePoolData.autoScaling.maxSize }}
           </bk-form-item>
           <bk-form-item
-            :label="$t('是否启用节点规格')"
-            :desc="$t('节点规格启用后Autoscaler组件将会根据扩容算法使用该节点规格资源，开启Autoscaler组件后必须要开启至少一个节点规格')">
-            {{nodePoolData.enableAutoscale ? $t('是') : $t('否')}}
+            :label="$t('cluster.ca.nodePool.create.enableAutoscale.title')"
+            :desc="$t('cluster.ca.nodePool.create.enableAutoscale.tips')">
+            {{nodePoolData.enableAutoscale ? $t('units.boolean.true') : $t('units.boolean.false')}}
           </bk-form-item>
-          <bk-form-item :label="$t('标签')">
+          <bk-form-item :label="$t('k8s.label')">
             <bk-button
               text
               size="small"
               style="padding: 0;"
               v-if="labels.length"
-              @click="showLabels = true">{{$t('查看')}}</bk-button>
+              @click="showLabels = true">{{$t('generic.button.view')}}</bk-button>
             <span v-else>--</span>
           </bk-form-item>
-          <bk-form-item :label="$t('污点')">
+          <bk-form-item :label="$t('k8s.taint')">
             <bk-button
               text
               size="small"
               style="padding: 0;"
               v-if="taints.length"
-              @click="showTaints = true">{{$t('查看')}}</bk-button>
+              @click="showTaints = true">{{$t('generic.button.view')}}</bk-button>
             <span v-else>--</span>
           </bk-form-item>
-          <bk-form-item :label="$t('注解')">
+          <bk-form-item :label="$t('k8s.annotation')">
             <bk-button
               text
               size="small"
               style="padding: 0;"
               v-if="annotations.length"
-              @click="showAnnotations = true">{{$t('查看')}}</bk-button>
+              @click="showAnnotations = true">{{$t('generic.button.view')}}</bk-button>
             <span v-else>--</span>
           </bk-form-item>
           <bk-form-item
-            :label="$t('扩缩容模式')"
-            :desc="$t('释放模式：缩容时自动释放Cluster AutoScaler判断的空余节点， 扩容时自动创建新的CVM节点加入到伸缩组<br/>关机模式：扩容时优先对已关机的节点执行开机操作，节点数依旧不满足要求时再创建新的CVM节点')">
+            :label="$t('cluster.ca.nodePool.create.scalingMode.title')"
+            :desc="$t('cluster.ca.nodePool.create.scalingMode.desc')">
             {{scalingModeMap[nodePoolData.autoScaling.scalingMode]}}
           </bk-form-item>
           <bk-form-item
-            :label="$t('实例创建策略')"
-            :desc="$t('首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点规格指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效')">
+            :label="$t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.title')"
+            :desc="$t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.desc')">
             {{multiZoneSubnetPolicyMap[nodePoolData.autoScaling.multiZoneSubnetPolicy]}}
           </bk-form-item>
           <bk-form-item
-            :label="$t('重试策略')"
-            :desc="$t('快速重试 ：立即重试，在较短时间内快速重试，连续失败超过一定次数（5次）后不再重试，<br/>间隔递增重试 ：间隔递增重试，随着连续失败次数的增加，重试间隔逐渐增大，重试间隔从秒级到1天不等，<br/>不重试：不进行重试，直到再次收到用户调用或者告警信息后才会重试')">
+            :label="$t('cluster.ca.nodePool.create.retryPolicy.title')"
+            :desc="$t('cluster.ca.nodePool.create.retryPolicy.desc')">
             {{retryPolicyMap[nodePoolData.autoScaling.retryPolicy]}}
           </bk-form-item>
           <bk-form-item
-            :label="$t('云区域')"
-            :desc="$t('Cluster Autoscaler组件在扩容节点时会使用节点管理API自动安装gse_agent，以保证监控、日志、标准运维的正常使用，这里的云区域是指节点管理安装gse_agent时指定的云区域，默认为“直连区域”')">
-            <LoadingIcon v-if="cloudAreaLoading">{{ $t('加载中') }}...</LoadingIcon>
+            :label="$t('cluster.ca.nodePool.create.cloudArea.title')"
+            :desc="$t('cluster.ca.nodePool.create.cloudArea.desc')">
+            <LoadingIcon v-if="cloudAreaLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
             <span v-else>{{ cloudAreaName || '--' }}</span>
           </bk-form-item>
-          <bk-form-item :label="$t('镜像提供方')">
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.imageProvider.title')">
             {{ imageProvider || '--'}}
           </bk-form-item>
-          <bk-form-item :label="$t('操作系统')">
+          <bk-form-item :label="$t('cluster.ca.nodePool.label.system')">
             {{clusterOS || '--'}}
           </bk-form-item>
-          <bk-form-item :label="$t('运行时组件')">
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')">
             {{`${clusterData.clusterAdvanceSettings
               ? `${clusterData.clusterAdvanceSettings.containerRuntime} ${clusterData.clusterAdvanceSettings.runtimeVersion}`
               : '--'}`
             }}
           </bk-form-item>
-          <bk-form-item :label="$t('容器目录')">
+          <bk-form-item :label="$t('dashboard.workload.container.dataDir')">
             {{nodePoolData.nodeTemplate.dockerGraphPath || '--'}}
           </bk-form-item>
-          <bk-form-item :label="$t('可用区')" :desc="$t('一般无需指定可用区，当已有的资源（存储或者网络等）偏好甚至依赖特定可用区时，可以指定可用区范围')">
-            <LoadingIcon v-if="zoneLoading">{{ $t('加载中') }}...</LoadingIcon>
-            <span v-else>{{ zoneNames.join(',') || $t('任一可用区') }}</span>
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.az.title')" :desc="$t('cluster.ca.nodePool.create.az.desc')">
+            <LoadingIcon v-if="zoneLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
+            <span v-else>{{ zoneNames.join(',') || $t('cluster.ca.nodePool.create.az.random') }}</span>
           </bk-form-item>
-          <bk-form-item :label="$t('机型')">
+          <bk-form-item :label="$t('generic.ipSelector.label.serverModel')">
             {{nodePoolData.launchTemplate.instanceType}}
           </bk-form-item>
           <bk-form-item label="CPU">
-            {{`${nodePoolData.launchTemplate.CPU}${$t('核')}`}}
+            {{`${nodePoolData.launchTemplate.CPU}${$t('units.suffix.cores')}`}}
           </bk-form-item>
           <bk-form-item label="内存">
             {{nodePoolData.launchTemplate.Mem}}G
@@ -115,41 +115,41 @@
           <bk-form-item label="系统盘">
             {{systemDisk || '--'}}
           </bk-form-item>
-          <bk-form-item label="数据盘">
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')">
             <bk-button
               text
               size="small"
               style="padding: 0;"
-              @click="showDataDisks = true">{{$t('查看')}}</bk-button>
+              @click="showDataDisks = true">{{$t('generic.button.view')}}</bk-button>
           </bk-form-item>
           <bk-form-item
-            :label="$t('支持子网')"
-            :desc="$t('内部上云环境根据集群所在VPC由产品自动分配可用子网，尽可能的把集群内的节点分配在不同的可用区，避免集群节点集中在同一可用区')">
-            {{nodePoolData.autoScaling.subnetIDs.join(', ') || $t('系统自动分配')}}
+            :label="$t('cluster.ca.nodePool.create.subnet.title')"
+            :desc="$t('cluster.ca.nodePool.create.subnet.desc')">
+            {{nodePoolData.autoScaling.subnetIDs.join(', ') || $t('cluster.ca.nodePool.create.subnet.placeholder')}}
           </bk-form-item>
-          <bk-form-item :label="$t('安全组')">
-            <LoadingIcon v-if="securityGroupLoading">{{ $t('加载中') }}...</LoadingIcon>
+          <bk-form-item :label="$t('cluster.ca.nodePool.create.securityGroup')">
+            <LoadingIcon v-if="securityGroupLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
             <span v-else>{{ securityGroupNames.join(',') || '--'}}</span>
           </bk-form-item>
         </bk-form>
         <div class="mt20 mb10 panel-header">
-          <span class="title">{{$t('Kubelet组件参数')}}</span>
+          <span class="title">{{$t('cluster.nodeTemplate.kubelet.title.argsConfig')}}</span>
         </div>
         <kubeletParams readonly v-model="nodePoolData.nodeTemplate.extraArgs.kubelet" />
         <bcs-tab class="mt20">
-          <bcs-tab-panel :label="$t('扩容前置初始化')" name="scaleOutPreAction">
+          <bcs-tab-panel :label="$t('cluster.ca.nodePool.create.scaleInitConfig.preStartUserScript')" name="scaleOutPreAction">
             <UserAction
               :script="nodePoolData.nodeTemplate.preStartUserScript"
               key="scaleOutPreAction" />
           </bcs-tab-panel>
-          <bcs-tab-panel :label="$t('扩容后置初始化')" name="scaleOutPostAction">
+          <bcs-tab-panel :label="$t('cluster.ca.nodePool.create.scaleInitConfig.userScript')" name="scaleOutPostAction">
             <UserAction
               :script="nodePoolData.nodeTemplate.userScript"
               :addons="nodePoolData.nodeTemplate.scaleOutExtraAddons"
               actions-key="postActions"
               key="scaleOutPostAction" />
           </bcs-tab-panel>
-          <bcs-tab-panel :label="$t('节点回收前清理配置')" name="scaleInPreAction">
+          <bcs-tab-panel :label="$t('cluster.ca.nodePool.create.scaleInitConfig.scaleInPreScript')" name="scaleInPreAction">
             <UserAction
               :script="nodePoolData.nodeTemplate.scaleInPreScript"
               :addons="nodePoolData.nodeTemplate.scaleInExtraAddons"
@@ -164,7 +164,7 @@
       theme="primary"
       v-model="showLabels"
       :show-footer="false"
-      :title="$t('标签')"
+      :title="$t('k8s.label')"
       header-position="left"
       width="600">
       <bcs-table
@@ -173,8 +173,8 @@
         :header-border="false"
         :header-cell-style="{ background: '#fff' }"
       >
-        <bcs-table-column :label="$t('键')" prop="key"></bcs-table-column>
-        <bcs-table-column :label="$t('值')" prop="value"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.key')" prop="key"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.value')" prop="value"></bcs-table-column>
       </bcs-table>
     </bcs-dialog>
     <!-- 污点 -->
@@ -182,7 +182,7 @@
       theme="primary"
       v-model="showTaints"
       :show-footer="false"
-      :title="$t('污点')"
+      :title="$t('k8s.taint')"
       header-position="left"
       width="600">
       <bcs-table
@@ -191,8 +191,8 @@
         :header-border="false"
         :header-cell-style="{ background: '#fff' }"
       >
-        <bcs-table-column :label="$t('键')" prop="key"></bcs-table-column>
-        <bcs-table-column :label="$t('值')" prop="value"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.key')" prop="key"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.value')" prop="value"></bcs-table-column>
         <bcs-table-column label="Effect" prop="effect"></bcs-table-column>
       </bcs-table>
     </bcs-dialog>
@@ -201,7 +201,7 @@
       theme="primary"
       v-model="showAnnotations"
       :show-footer="false"
-      :title="$t('注解')"
+      :title="$t('k8s.annotation')"
       header-position="left"
       width="600">
       <bcs-table
@@ -210,8 +210,8 @@
         :header-border="false"
         :header-cell-style="{ background: '#fff' }"
       >
-        <bcs-table-column :label="$t('键')" prop="key"></bcs-table-column>
-        <bcs-table-column :label="$t('值')" prop="value"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.key')" prop="key"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.value')" prop="value"></bcs-table-column>
       </bcs-table>
     </bcs-dialog>
     <!-- 数据盘 -->
@@ -219,7 +219,7 @@
       theme="primary"
       v-model="showDataDisks"
       :show-footer="false"
-      :title="$t('数据盘')"
+      :title="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')"
       header-position="left"
       width="600">
       <bcs-table
@@ -228,38 +228,40 @@
         :header-border="false"
         :header-cell-style="{ background: '#fff' }"
       >
-        <bcs-table-column :label="$t('类型')" prop="diskType">
+        <bcs-table-column :label="$t('generic.label.kind')" prop="diskType">
           <template #default="{ row }">
             {{ diskTypeMap[row.diskType] }}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('大小')" prop="diskSize">
+        <bcs-table-column :label="$t('generic.label.size')" prop="diskSize">
           <template #default="{ row }">
             {{ `${row.diskSize} GiB` }}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('文件系统')" prop="fileSystem"></bcs-table-column>
-        <bcs-table-column :label="$t('挂载点')" prop="mountTarget"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.fileSystem')" prop="fileSystem"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.mountTarget')" prop="mountTarget"></bcs-table-column>
       </bcs-table>
     </bcs-dialog>
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted } from 'vue';
-import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
-import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
-import { useClusterList, useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
-import $i18n from '@/i18n/i18n-setup';
-import $store from '@/store/index';
-import $router from '@/router';
-import StatusIcon from '@/components/status-icon';
-import LoadingIcon from '@/components/loading-icon.vue';
-import useInterval from '@/composables/use-interval';
+import { computed, defineComponent, onMounted, ref } from 'vue';
+
 import kubeletParams from '../kubelet-params.vue';
 import UserAction from '../user-action.vue';
-import useChainingRef from '@/composables/use-chaining';
-import { cloudsZones } from '@/api/modules/cluster-manager';
+
 import { nodemanCloudList } from '@/api/base';
+import { cloudsZones } from '@/api/modules/cluster-manager';
+import LoadingIcon from '@/components/loading-icon.vue';
+import StatusIcon from '@/components/status-icon';
+import useChainingRef from '@/composables/use-chaining';
+import useInterval from '@/composables/use-interval';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store/index';
+import { useClusterInfo, useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
+import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
+import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 
 export default defineComponent({
   components: {
@@ -298,13 +300,13 @@ export default defineComponent({
     const showAnnotations = ref(false);
     const loading = ref(false);
     const statusTextMap = { // 节点规格状态
-      RUNNING: $i18n.t('正常'),
-      CREATING: $i18n.t('创建中'),
-      DELETING: $i18n.t('删除中'),
-      UPDATING: $i18n.t('更新中'),
-      DELETED: $i18n.t('已删除'),
-      'CREATE-FAILURE': $i18n.t('创建失败'),
-      'UPDATE-FAILURE': $i18n.t('更新失败'),
+      RUNNING: $i18n.t('generic.status.ready'),
+      CREATING: $i18n.t('generic.status.creating'),
+      DELETING: $i18n.t('generic.status.deleting'),
+      UPDATING: $i18n.t('generic.status.updating'),
+      DELETED: $i18n.t('generic.status.deleted'),
+      'CREATE-FAILURE': $i18n.t('generic.status.createFailed'),
+      'UPDATE-FAILURE': $i18n.t('generic.status.updateFailed'),
     };
     const statusColorMap = {
       RUNNING: 'green',
@@ -313,22 +315,22 @@ export default defineComponent({
       'UPDATE-FAILURE': 'red',
     };
     const scalingModeMap = {
-      CLASSIC_SCALING: $i18n.t('释放模式'),
-      WAKE_UP_STOPPED_SCALING: $i18n.t('关机模式'),
+      CLASSIC_SCALING: $i18n.t('cluster.ca.nodePool.create.scalingMode.classic_scaling'),
+      WAKE_UP_STOPPED_SCALING: $i18n.t('cluster.ca.nodePool.create.scalingMode.wake_up_stopped_scaling'),
     };
     const multiZoneSubnetPolicyMap = {
-      EQUALITY: $i18n.t('多可用区（子网）打散'),
-      PRIORITY: $i18n.t('首先可用区（子网）优先'),
+      EQUALITY: $i18n.t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.equality'),
+      PRIORITY: $i18n.t('cluster.ca.nodePool.create.multiZoneSubnetPolicy.priority'),
     };
     const retryPolicyMap = {
-      IMMEDIATE_RETRY: $i18n.t('快速重试'),
-      INCREMENTAL_INTERVALS: $i18n.t('间隔递增重试'),
-      NO_RETRY: $i18n.t('不重试'),
+      IMMEDIATE_RETRY: $i18n.t('cluster.ca.nodePool.create.retryPolicy.immediate_retry'),
+      INCREMENTAL_INTERVALS: $i18n.t('cluster.ca.nodePool.create.retryPolicy.incremental_intervals'),
+      NO_RETRY: $i18n.t('cluster.ca.nodePool.create.retryPolicy.no_retry'),
     };
     const diskTypeMap = {
-      CLOUD_PREMIUM: $i18n.t('高性能云硬盘'),
-      CLOUD_SSD: $i18n.t('SSD云硬盘'),
-      CLOUD_HSSD: $i18n.t('增强型SSD云硬盘'),
+      CLOUD_PREMIUM: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.premium'),
+      CLOUD_SSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
+      CLOUD_HSSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
     };
     const navList = computed(() => [
       {
@@ -347,7 +349,7 @@ export default defineComponent({
         },
       },
       {
-        title: $i18n.t('查看节点规格详情'),
+        title: $i18n.t('cluster.ca.nodePool.label.detail'),
         link: null,
       },
     ]);
@@ -395,8 +397,8 @@ export default defineComponent({
     const { clusterOS, clusterData, getClusterDetail } = useClusterInfo();
     const imageProvider = computed(() => {
       const imageProviderMap = {
-        PUBLIC_IMAGE: $i18n.t('公共镜像'),
-        PRIVATE_IMAGE: $i18n.t('自定义镜像'),
+        PUBLIC_IMAGE: $i18n.t('deploy.image.publicImage'),
+        PRIVATE_IMAGE: $i18n.t('cluster.ca.nodePool.create.imageProvider.private_image'),
       };
       return imageProviderMap[clusterData.value.extraInfo?.IMAGE_PROVIDER];
     });

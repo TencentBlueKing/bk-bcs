@@ -16,6 +16,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
@@ -24,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 var (
@@ -75,4 +77,10 @@ func getJWTOpt() (*jwt.JWTOptions, error) {
 		jwtOpt.SignKey = key
 	}
 	return jwtOpt, nil
+}
+
+// GetUserFromCtx 通过 ctx 获取当前用户
+func GetUserFromCtx(ctx context.Context) string {
+	authUser, _ := middleauth.GetUserFromContext(ctx)
+	return authUser.GetUsername()
 }

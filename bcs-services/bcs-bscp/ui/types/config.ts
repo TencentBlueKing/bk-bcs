@@ -36,6 +36,14 @@ export interface IConfigItem {
       user_group: string;
     }
   };
+  commit_spec: {
+    content: {
+      byte_size: string;
+      origin_byte_size: string;
+      origin_signature: string;
+      signature: string;
+    }
+  },
   attachment: {
     biz_id: number;
     app_id: number;
@@ -53,9 +61,22 @@ export interface IConfigItem {
 export interface IConfigDetail {
   config_item: IConfigItem;
   content: {
-      signature: string;
-      byte_size: string;
+    signature: string;
+    byte_size: string;
   }
+}
+
+// 配置项编辑表单参数
+export interface IConfigEditParams {
+  id?: number;
+  name: string;
+  memo: string;
+  file_type: string;
+  path?: string;
+  file_mode?: string;
+  user?: string;
+  user_group?: string;
+  privilege?: string;
 }
 
 // 文件配置概览内容
@@ -67,21 +88,13 @@ export interface IFileConfigContentSummary {
   update_at?: string;
 }
 
-// 配置对比差异详情
-export interface IConfigDiffDetail {
-  id: number;
-  name: string;
-  type: string;
-  current: string;
-  base: string;
-}
-
 // 配置项列表查询接口请求参数
 export interface IConfigListQueryParams {
   searchKey?: string;
   release_id?: number;
   start?: number;
-  limit?: number
+  limit?: number;
+  all?: boolean;
 }
 
 // 版本列表查询接口请求参数
@@ -106,4 +119,53 @@ export interface IReleasedGroup {
     labels_and: IGroupRuleItem[]
   };
   uid: string;
+}
+
+// 模板套餐与服务的绑定数据
+export interface ITemplateBoundByAppData {
+  template_set_id: number;
+  template_revisions: {
+    template_id: number;
+    template_revision_id: number;
+    is_latest: boolean;
+  }[]
+}
+
+// 服务绑定下的模板配置项按照套餐分组数据
+export interface IBoundTemplateGroup {
+  template_space_id: number;
+  template_space_name: string;
+  template_set_id: number;
+  template_set_name: string;
+  template_revisions: IBoundTemplateDetail[];
+}
+
+// 服务绑定下的模板配置详情数据
+export interface IBoundTemplateDetail {
+  template_id: number;
+  name: string;
+  path: string;
+  template_revision_id: number;
+  is_latest: true;
+  template_revision_name: string;
+  template_revision_memo: string;
+  file_type: string;
+  file_mode: string;
+  file_state: string;
+  user: string;
+  user_group: string;
+  privilege: string;
+  origin_signature: string;
+  signature: string;
+  origin_byte_size: string;
+  byte_size: string;
+  creator: string;
+  create_at: string;
+}
+
+// 配置项对比选中项
+export interface IConfigDiffSelected {
+  pkgId: number; // 套餐ID
+  id: number; // 非模板或模板配置项 ID
+  version: number; // 版本ID
 }

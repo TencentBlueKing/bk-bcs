@@ -18,17 +18,18 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
-	"google.golang.org/grpc/encoding/proto"
+	grpcproto "google.golang.org/grpc/encoding/proto"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
@@ -43,9 +44,21 @@ type GitOpsOptions struct {
 	// JWTClient for authentication
 	JWTDecoder *jwt.JWTClient
 	// IAMClient is basic client
-	IAMClient iam.PermClient
-	// Secret client
-	SecretClient *secret.ServerProxy
+	IAMClient    iam.PermClient
+	SecretOption *SecretOption
+	TraceOption  *TraceOption
+}
+
+// TraceOption defines the config of bkmonitor APM
+type TraceOption struct {
+	Endpoint string
+	Token    string
+}
+
+// SecretOption defines the config of secret
+type SecretOption struct {
+	Address string
+	Port    string
 }
 
 // Validate options
@@ -139,9 +152,41 @@ func JSONResponse(w http.ResponseWriter, obj interface{}) {
 	fmt.Fprintln(w, string(content))
 }
 
+// DirectlyResponse 对象本身就是个字符串，直接写入返回
 func DirectlyResponse(w http.ResponseWriter, obj interface{}) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, obj)
+}
+
+var (
+	httpStatusCode = map[int]codes.Code{
+		http.StatusOK:                  codes.OK,
+		http.StatusBadRequest:          codes.InvalidArgument,
+		http.StatusNotFound:            codes.NotFound,
+		http.StatusUnauthorized:        codes.Unauthenticated,
+		http.StatusInternalServerError: codes.Internal,
+		http.StatusServiceUnavailable:  codes.Unavailable,
+	}
+)
+
+func returnGrpcCode(statusCode int) codes.Code {
+	v, ok := httpStatusCode[statusCode]
+	if !ok {
+		return codes.Unknown
+	}
+	return v
+}
+
+// GRPCErrorResponse 返回 gRPC 错误给客户端
+func GRPCErrorResponse(w http.ResponseWriter, statusCode int, err error) {
+	grpcCode := returnGrpcCode(statusCode)
+	w.Header().Set("Content-Type", "application/grpc+proto")
+	w.Header().Set("grpc-status", strconv.Itoa(int(grpcCode)))
+	w.Header().Set("grpc-message", err.Error())
+	w.WriteHeader(http.StatusOK)
+
+	// Write the error message as the response body
+	_, _ = w.Write(nil)
 }
 
 var (
@@ -162,7 +207,7 @@ func GRPCResponse(w http.ResponseWriter, obj interface{}) {
 	w.Header().Set("Content-Type", "application/grpc+proto")
 	w.Header().Set("grpc-status", "0")
 	w.WriteHeader(http.StatusOK)
-	bs, err := encoding.GetCodec(proto.Name).Marshal(obj)
+	bs, err := encoding.GetCodec(grpcproto.Name).Marshal(obj)
 	if err != nil {
 		blog.Errorf("grpc proto encoding marshal failed: %s", err.Error())
 		_, _ = w.Write([]byte{})

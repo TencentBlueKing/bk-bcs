@@ -16,15 +16,23 @@ export interface IPagination {
   count: number;
 }
 
-// 权限查询参数
-export interface IPermissionQuery {
+export interface ICommonQuery {
+  start: number;
+  limit?: number;
+  all?: boolean;
+  search_key?: string;
+  search_fields?: string;
+  search_value?: string;
+}
+
+// 权限查询参数单个资源条目
+export interface IPermissionQueryResourceItem {
   biz_id: number|string;
   basic: {
     type: string;
     action: string;
-    resource_id: number|string;
+    resource_id?: number|string;
   };
-  gen_apply_url: boolean;
 }
 
 // 权限申请资源信息

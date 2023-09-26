@@ -15,17 +15,18 @@ package main
 import (
 	"flag"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commonConf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	microCfg "github.com/micro/go-micro/v2/config"
 	microYaml "github.com/micro/go-micro/v2/config/encoder/yaml"
 	"github.com/micro/go-micro/v2/config/reader"
 	microJson "github.com/micro/go-micro/v2/config/reader/json"
 	"github.com/micro/go-micro/v2/config/source/env"
 	microFile "github.com/micro/go-micro/v2/config/source/file"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commonConf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 )
 
 var (
@@ -76,6 +77,16 @@ func main() {
 	if err = config.Scan(opt); err != nil {
 		blog.Fatalf("scan config failed, %s", err.Error())
 	}
+
+	// addons 动态配置
+	addonsConf, _ := microCfg.NewConfig()
+	if len(opt.Release.AddonsConfigFile) > 0 {
+		addonsConf, err = makeMicroCredConf(opt.Release.AddonsConfigFile)
+		if err != nil {
+			blog.Fatalf("load addons from file failed, err %s", err.Error())
+		}
+	}
+
 	// 初始化 I18N 相关配置
 	if err = i18n.InitMsgMap(); err != nil {
 		blog.Fatalf("init i18n message map failed %s", err.Error())
@@ -95,7 +106,7 @@ func main() {
 
 	blog.Info(string(config.Bytes()))
 	options.GlobalOptions = opt
-	helmManager := app.NewHelmManager(opt, credConf)
+	helmManager := app.NewHelmManager(opt, credConf, addonsConf)
 	if err := helmManager.Init(); err != nil {
 		blog.Fatalf("init helm manager failed, %s", err.Error())
 	}

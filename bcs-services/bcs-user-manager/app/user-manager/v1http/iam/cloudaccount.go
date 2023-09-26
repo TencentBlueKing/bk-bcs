@@ -14,7 +14,6 @@
 package iam
 
 import (
-	"context"
 	"strings"
 
 	"github.com/TencentBlueKing/iam-go-sdk/resource"
@@ -27,7 +26,7 @@ type CloudAccountProvider struct {
 }
 
 func init() {
-	dispatcher.RegisterProvider("cloud_account", CloudAccountProvider{})
+	dispatcher.RegisterProvider(CloudAccount, CloudAccountProvider{})
 }
 
 // ListAttr implements the list_attr
@@ -55,7 +54,7 @@ func (p CloudAccountProvider) ListInstance(req resource.Request) resource.Respon
 			Message: "parent id is empty",
 		}
 	}
-	result, err := component.ListCloudAccount(context.Background(), filter.Parent.ID, nil)
+	result, err := component.ListCloudAccount(req.Context, filter.Parent.ID, nil)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,
@@ -84,7 +83,7 @@ func (p CloudAccountProvider) FetchInstanceInfo(req resource.Request) resource.R
 		}
 	}
 
-	result, err := component.ListCloudAccount(context.Background(), "", filter.IDs)
+	result, err := component.ListCloudAccount(req.Context, "", filter.IDs)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,
@@ -119,7 +118,7 @@ func (p CloudAccountProvider) SearchInstance(req resource.Request) resource.Resp
 			Message: "parent id is empty",
 		}
 	}
-	result, err := component.ListCloudAccount(context.Background(), filter.Parent.ID, nil)
+	result, err := component.ListCloudAccount(req.Context, filter.Parent.ID, nil)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,

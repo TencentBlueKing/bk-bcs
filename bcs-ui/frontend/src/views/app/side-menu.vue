@@ -35,12 +35,14 @@
   </bcs-navigation-menu>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch, computed, toRef, reactive } from 'vue';
-import $router from '@/router';
-import $store from '@/store';
-import { useProject } from '@/composables/use-app';
+import { computed, defineComponent, reactive, ref, toRef, watch } from 'vue';
+
 import { IMenu } from './menus';
 import useMenu from './use-menu';
+
+import { useProject } from '@/composables/use-app';
+import $router from '@/router';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'SideMenu',

@@ -32,4 +32,6 @@ const (
 	NoIAMPerm = 40300
 	// ComponentErr 依赖组件异常
 	ComponentErr = 6
+	// DuplicationNameErr 名称重复
+	DuplicationNameErr = 7
 )

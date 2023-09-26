@@ -23,6 +23,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+
+	"google.golang.org/api/container/v1"
 )
 
 // updateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
@@ -33,9 +35,7 @@ func updateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *cmproto.NodeG
 	}
 
 	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
-	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
-		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
-	}
+	group.Region = newGroup.Region
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
 	if err != nil {
 		return err
@@ -48,11 +48,37 @@ func checkOperationStatus(computeCli *api.ComputeServiceClient, url, taskID stri
 	return loop.LoopDoFunc(context.Background(), func() error {
 		o, err := api.GetOperation(computeCli, url)
 		if err != nil {
+			blog.Warnf("Error[%s] while getting operation %s on %s: %v", taskID, o.Name, o.TargetLink, err)
+			return nil
+		}
+		blog.Infof("Operation[%s] [%s] %s status: %s", taskID, url, o.Name, o.Status)
+		if o.Status == "DONE" {
+			if o.Error != nil {
+				errBytes, err := o.Error.MarshalJSON()
+				if err != nil {
+					errBytes = []byte(fmt.Sprintf("operation failed, but error couldn't be recovered: %v", err))
+				}
+				return fmt.Errorf("error while getting operation %s on %s: %s", o.Name, o.TargetLink, errBytes)
+			}
+			return loop.EndLoop
+		}
+		blog.Infof("taskID[%s] operation %s still running", taskID, o.SelfLink)
+
+		return nil
+	}, loop.LoopInterval(d))
+}
+
+func checkGKEOperationStatus(containerCli *api.ContainerServiceClient, operation *container.Operation,
+	taskID string, d time.Duration) error {
+	return loop.LoopDoFunc(context.Background(), func() error {
+
+		o, err := containerCli.GetGKEOperation(context.Background(), operation.Name)
+		if err != nil {
 			return err
 		}
 		if o.Status == "DONE" {
 			if o.Error != nil {
-				return fmt.Errorf("%d, %s, %s", o.HttpErrorStatusCode, o.HttpErrorMessage, o.Error.Errors[0].Message)
+				return fmt.Errorf("%d, %v", o.Error.Code, o.Error.Details)
 			}
 			return loop.EndLoop
 		}

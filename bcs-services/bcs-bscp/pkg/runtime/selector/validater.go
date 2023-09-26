@@ -1,20 +1,21 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package selector
 
 import (
 	"errors"
 	"fmt"
+	"regexp"
 
 	"bscp.io/pkg/runtime/jsoni"
 )
@@ -65,6 +66,20 @@ func validatEelement(e *element) error {
 		}
 		if len(value) == 0 {
 			return fmt.Errorf("selector label value %v is empty", e.Value)
+		}
+		return nil
+	}
+
+	if operator == &RegexOperator || operator == &NotRegexOperator {
+		value, ok := e.Value.(string)
+		if !ok {
+			return fmt.Errorf("selector label value %s must be string", e.Value)
+		}
+		if len(value) == 0 {
+			return fmt.Errorf("selector label value %v is empty", e.Value)
+		}
+		if _, err := regexp.Compile(value); err != nil {
+			return fmt.Errorf("selector label value %v is invalid regex: %v", value, err)
 		}
 		return nil
 	}

@@ -11,6 +11,7 @@
  *
  */
 
+// Package nodecache cache node info
 package nodecache
 
 import (

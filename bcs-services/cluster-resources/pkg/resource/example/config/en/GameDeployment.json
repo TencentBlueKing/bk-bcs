@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_gamedeployment",
-      "alias": "GameDeployment Simple Demo",
+      "alias": "GameDeployment simple demo",
       "description": "A simple GameDeployment demo with only basic configuration",
       "manifest": null
     }

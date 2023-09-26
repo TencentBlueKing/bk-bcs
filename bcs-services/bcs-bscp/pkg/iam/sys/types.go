@@ -1,6 +1,6 @@
 /*
- * Tencent is pleased to support the open source community by making 蓝鲸 available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -36,8 +36,9 @@ var SystemIDNameMap = map[string]string{
 
 // TypeID resource type to register iam.
 const (
-	Business    client.TypeID = "biz"
-	Application client.TypeID = "app"
+	Business      client.TypeID = "biz"
+	Application   client.TypeID = "app"
+	AppCredential client.TypeID = "app_credential"
 )
 
 // ActionID action id to register iam.
@@ -53,10 +54,10 @@ const (
 	AppEdit client.ActionID = "app_edit"
 	// AppDelete app delete.
 	AppDelete client.ActionID = "app_delete"
-	// ConfigItemPacking config item packing.
-	ConfigItemPacking client.ActionID = "config_item_packing"
-	// ConfigItemPublish config item publish.
-	ConfigItemPublish client.ActionID = "config_item_publish"
+	// ReleaseGenerate generate release.
+	ReleaseGenerate client.ActionID = "release_generate"
+	// ReleasePublish release publish.
+	ReleasePublish client.ActionID = "release_publish"
 	// ConfigItemFinishPublish config item finish publish.
 	ConfigItemFinishPublish client.ActionID = "config_item_finish_publish"
 
@@ -88,6 +89,11 @@ const (
 	Unsupported client.ActionID = "unsupported"
 	// Skip is an action that no need to auth
 	Skip client.ActionID = "skip"
+
+	// CredentialView 服务密钥查看
+	CredentialView client.ActionID = "app_credential_view"
+	// CredentialManage 服务密钥管理
+	CredentialManage client.ActionID = "app_credential_manage"
 )
 
 // ActionIDNameMap is action id type map.
@@ -98,8 +104,8 @@ var ActionIDNameMap = map[client.ActionID]string{
 	AppView:                 "服务查看",
 	AppEdit:                 "服务编辑",
 	AppDelete:               "服务删除",
-	ConfigItemPacking:       "生成版本",
-	ConfigItemPublish:       "上线版本",
+	ReleaseGenerate:         "生成版本",
+	ReleasePublish:          "上线版本",
 	ConfigItemFinishPublish: "配置项结束发布",
 
 	StrategySetCreate: "策略集创建",
@@ -115,6 +121,9 @@ var ActionIDNameMap = map[client.ActionID]string{
 	GroupDelete: "分组删除",
 
 	TaskHistoryView: "任务历史",
+
+	CredentialView:   "服务秘钥查看",
+	CredentialManage: "服务秘钥管理",
 }
 
 // InstanceSelectionID selection id to register iam.
@@ -129,6 +138,7 @@ const (
 	Delete client.ActionType = "delete"
 	View   client.ActionType = "view"
 	Edit   client.ActionType = "edit"
+	Manage client.ActionType = "manage"
 	List   client.ActionType = "list"
 )
 
@@ -138,5 +148,6 @@ var ActionTypeIDNameMap = map[client.ActionType]string{
 	Edit:   "编辑",
 	Delete: "删除",
 	View:   "查询",
+	Manage: "管理",
 	List:   "列表查询",
 }

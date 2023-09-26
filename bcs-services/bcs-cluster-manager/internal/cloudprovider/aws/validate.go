@@ -164,3 +164,8 @@ func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, op
 func (c *CloudValidate) DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest, opt *cloudprovider.CommonOption) error {
 	return nil
 }
+
+// CreateCloudAccountValidate create cloud account validate
+func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
+	return nil
+}

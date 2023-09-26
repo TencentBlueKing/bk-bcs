@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package dao
 
@@ -86,33 +86,43 @@ func (dao *hookDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) (
 func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOption) (
 	[]*types.ListHooksWithReferDetail, int64, error) {
 
-	m := dao.genQ.Hook
+	h := dao.genQ.Hook
+	hr := dao.genQ.HookRevision
 	rh := dao.genQ.ReleasedHook
-	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID)).Order(m.ID.Desc())
+	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(opt.BizID)).Order(h.ID.Desc())
 
 	if opt.Name != "" {
-		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.Name)))
+		q = q.Where(h.Name.Like(fmt.Sprintf("%%%s%%", opt.Name)))
 	}
 	if opt.Tag != "" {
-		q = q.Where(m.Tag.Eq(opt.Tag))
+		q = q.Where(h.Tag.Eq(opt.Tag))
 	} else {
 		if opt.NotTag {
-			q = q.Where(m.Tag.Eq(""))
+			q = q.Where(h.Tag.Eq(""))
 		}
+	}
+
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
+		q = q.Where(q.Where(h.Name.Like(searchKey)).Or(h.Memo.Like(searchKey)).Or(h.Creator.Like(searchKey)).
+			Or(h.Reviser.Like(searchKey)))
 	}
 
 	details := make([]*types.ListHooksWithReferDetail, 0)
 
-	q = q.Select(m.ALL, rh.ID.Count().As("refer_count"), rh.ReleaseID.Min().Eq(0).As("refer_editing_release")).
-		LeftJoin(rh, m.ID.EqCol(rh.HookID)).
-		Group(m.ID)
+	q = q.Select(h.ALL, rh.ID.Count().As("refer_count"), rh.ReleaseID.Min().Eq(0).As("refer_editing_release"),
+		hr.ID.Max().As("published_revision_id")).
+		LeftJoin(rh, h.ID.EqCol(rh.HookID)).
+		LeftJoin(hr, h.ID.EqCol(hr.HookID), hr.State.Eq(table.HookRevisionStatusDeployed.String())).
+		Group(h.ID)
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
 		if err := q.Scan(&details); err != nil {
 			return nil, 0, err
 		}
 		return details, int64(len(details)), nil
-
 	}
 
 	count, err := q.ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
@@ -135,14 +145,21 @@ func (dao *hookDao) ListHookReferences(kit *kit.Kit, opt *types.ListHookReferenc
 	var count int64
 	var err error
 
-	count, err = rh.WithContext(kit.Ctx).
+	query := rh.WithContext(kit.Ctx).
 		Select(rh.ID.As("hook_revision_id"), rh.HookRevisionName.As("hook_revision_name"), rh.HookType.As("hook_type"),
 			a.ID.As("app_id"), a.Name.As("app_name"), r.ID.As("release_id"), r.Name.As("release_name")).
 		LeftJoin(a, rh.AppID.EqCol(a.ID)).
 		LeftJoin(r, rh.ReleaseID.EqCol(r.ID)).
-		Where(rh.HookID.Eq(opt.HookID), rh.BizID.Eq(opt.BizID)).
-		Order(rh.ID.Desc()).
-		ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
+		Where(rh.HookID.Eq(opt.HookID), rh.BizID.Eq(opt.BizID))
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
+		query = query.Where(query.Where(
+			a.Name.Like(searchKey)).Or(r.Name.Like(searchKey)).Or(rh.HookRevisionName.Like(searchKey)))
+	}
+
+	count, err = query.Order(rh.ID.Desc()).ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
 
 	for i := range details {
 		if details[i].ReleaseID == 0 {

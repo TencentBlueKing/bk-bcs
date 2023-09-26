@@ -240,6 +240,15 @@ type GetNodesOption struct {
 	CommonOption
 }
 
+// ClusterGroupOption cluster/group option
+type ClusterGroupOption struct {
+	CommonOption
+	// Cluster xxx
+	Cluster *proto.Cluster
+	// Group xxx
+	Group *proto.NodeGroup
+}
+
 // GetClusterOption get cluster option
 type GetClusterOption struct {
 	CommonOption
@@ -433,6 +442,7 @@ type UpdateDesiredNodeOption struct {
 	// AsOption for moduleInfo
 	AsOption *proto.ClusterAutoScalingOption
 	Operator string
+	Manual   bool
 }
 
 // SwitchNodeGroupAutoScalingOption switch nodegroup auto scaling
@@ -462,6 +472,11 @@ type DeleteScalingOption struct {
 
 // UpdateScalingOption create NodeGroup option
 type UpdateScalingOption struct {
+	CommonOption
+}
+
+// CheckEndpointStatusOption check cluster endpoint status option
+type CheckEndpointStatusOption struct {
 	CommonOption
 }
 

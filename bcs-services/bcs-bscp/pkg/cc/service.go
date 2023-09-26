@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package cc
 
@@ -52,6 +52,8 @@ const (
 	FeedServerName Name = "feed-server"
 	// AuthServerName is the auth server's service name
 	AuthServerName Name = "auth-server"
+	// VaultServerName is the vault server's service name
+	VaultServerName Name = "vault-server"
 	// UIName is the ui service name
 	UIName Name = "ui"
 )
@@ -272,6 +274,7 @@ type DataServiceSetting struct {
 	Credential Credential `yaml:"credential"`
 	Sharding   Sharding   `yaml:"sharding"`
 	Esb        Esb        `yaml:"esb"`
+	Repo       Repository `yaml:"repository"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -290,6 +293,7 @@ func (s *DataServiceSetting) trySetDefault() {
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
 	s.Sharding.trySetDefault()
+	s.Repo.trySetDefault()
 }
 
 // Validate DataServiceSetting option.
@@ -308,6 +312,10 @@ func (s DataServiceSetting) Validate() error {
 	}
 
 	if err := s.Esb.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Repo.validate(); err != nil {
 		return err
 	}
 
@@ -370,6 +378,51 @@ func (s FeedServerSetting) Validate() error {
 	}
 
 	if err := s.MRLimiter.validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// VaultServerSetting defines cache service used setting options.
+type VaultServerSetting struct {
+	Network    Network    `yaml:"network"`
+	Service    Service    `yaml:"service"`
+	Log        LogOption  `yaml:"log"`
+	Credential Credential `yaml:"credential"`
+	Sharding   Sharding   `yaml:"sharding"`
+}
+
+// trySetFlagBindIP try set flag bind ip.
+func (s *VaultServerSetting) trySetFlagBindIP(ip net.IP) error {
+	return s.Network.trySetFlagBindIP(ip)
+}
+
+// trySetFlagPort set http and grpc port
+func (s *VaultServerSetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
+// trySetDefault set the CacheServiceSetting default value if user not configured.
+func (s *VaultServerSetting) trySetDefault() {
+	s.Network.trySetDefault()
+	s.Service.trySetDefault()
+	s.Log.trySetDefault()
+	s.Sharding.trySetDefault()
+}
+
+// Validate CacheServiceSetting option.
+func (s VaultServerSetting) Validate() error {
+
+	if err := s.Network.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Service.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Sharding.validate(); err != nil {
 		return err
 	}
 

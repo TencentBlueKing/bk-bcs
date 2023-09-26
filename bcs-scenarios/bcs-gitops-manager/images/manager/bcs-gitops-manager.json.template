@@ -50,5 +50,9 @@
     "gateway": "${bcsIAMGateWayHost}",
     "iamhost": "${bcsIAMHost}",
     "bkiam": "${bcsIAMbkiHost}"
+  },
+  "traceConfig": {
+     "endpoint": "${bcsTraceEndpoint}",
+     "token": "${bcsTraceToken}"
   }
 }

@@ -1,11 +1,12 @@
 /* eslint-disable camelcase */
-import { ref, computed } from 'vue';
 import yamljs from 'js-yaml';
-import $store from '@/store';
-import $router from '@/router';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import { computed, ref } from 'vue';
+
 import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store';
 
 export interface IWorkloadDetail {
   manifest: any;
@@ -158,7 +159,7 @@ export default function useDetail(options: IDetailOptions) {
     $bkInfo({
       type: 'warning',
       clsName: 'custom-info-confirm',
-      title: $i18n.t('确认删除当前资源'),
+      title: $i18n.t('dashboard.title.confirmDelete'),
       subTitle: `${kind} ${name}`,
       defaultInfo: true,
       confirmFn: async () => {
@@ -182,7 +183,7 @@ export default function useDetail(options: IDetailOptions) {
         }
         result && $bkMessage({
           theme: 'success',
-          message: $i18n.t('删除成功'),
+          message: $i18n.t('generic.msg.success.delete'),
         });
         $router.back();
       },

@@ -3,13 +3,13 @@
   <Header :style="{ marginBottom: (isNewTemplate) ? '0px' : '55px' }">
     <i class="bcs-icon bcs-icon-arrows-left" @click="beforeLeave"></i>
     <div class="biz-templateset-title">
-      <span>{{$t('返回模板集')}}</span>
+      <span>{{$t('deploy.templateset.returnToTemplateSet')}}</span>
     </div>
     <div class="biz-templateset-title">
       <span v-show="!isEditName">{{curTemplate.name}}</span>
       <input
         type="text"
-        :placeholder="$t('30个以内的字符，Enter保存')"
+        :placeholder="$t('deploy.templateset.enterMaxLength30')"
         maxlength="30"
         class="bk-form-input"
         v-model="editTemplate.name"
@@ -24,7 +24,7 @@
       <span v-show="!isEditDesc">{{curTemplate.desc}}</span>
       <input
         type="text"
-        :placeholder="$t('50个以内的字符，Enter保存')"
+        :placeholder="$t('deploy.templateset.enterMaxLength50')"
         maxlength="50"
         class="bk-form-input"
         v-model="editTemplate.desc"
@@ -46,15 +46,15 @@
                 <div class="lock-wrapper warning">
                   <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                   <strong class="desc">
-                    {{$t('您已经对此模板集加锁，只有解锁后，其他用户才可操作此模板集。')}}
+                    {{$t('deploy.templateset.templateSetLocked')}}
                     <span v-if="lateShowVersionName">
-                      （{{$t('当前版本号')}}：{{lateShowVersionName}}
+                      （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
                       <bcs-popover
                         :delay="300"
                         :content="displayVersionNotes || '--'"
                         style="padding-left: 6px;"
                         placement="bottom">
-                        <span style="color: #3a84ff;">{{$t('版本说明')}}</span>
+                        <span style="color: #3a84ff;">{{$t('deploy.templateset.versionDescription')}}</span>
                       </bcs-popover>）
                     </span>
                   </strong>
@@ -73,19 +73,19 @@
                 <div class="lock-wrapper warning">
                   <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                   <strong class="desc">
-                    {{$t('{locker}正在操作，您如需编辑请联系{locker}解锁。', templateLockStatus)}}
+                    {{$t('deploy.templateset.msg.multiOperator', templateLockStatus)}}
                     <span v-if="lateShowVersionName">
-                      （{{$t('当前版本号')}}：{{lateShowVersionName}}
+                      （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
                       <bcs-popover
                         :delay="300"
                         :content="displayVersionNotes || '--'"
                         style="padding-left: 6px;"
                         placement="bottom">
-                        <span style="color: #3a84ff;">{{$t('版本说明')}}</span>
+                        <span style="color: #3a84ff;">{{$t('deploy.templateset.versionDescription')}}</span>
                       </bcs-popover>）</span>
                   </strong>
                   <div class="action">
-                    <a href="javascript: void(0);" class="bk-text-button" @click="reloadTemplateset">{{$t('点击刷新')}}</a>
+                    <a href="javascript: void(0);" class="bk-text-button" @click="reloadTemplateset">{{$t('deploy.templateset.clickRefresh')}}</a>
                   </div>
                 </div>
               </div>
@@ -96,15 +96,15 @@
               <div class="lock-wrapper">
                 <i class="bcs-icon bcs-icon-info-circle-shape"></i>
                 <strong class="desc">
-                  {{$t('为避免多成员同时编辑，引起内容或版本冲突，建议在编辑时，开启保护功能。')}}
+                  {{$t('deploy.templateset.protectionWhileEditing')}}
                   <span v-if="lateShowVersionName">
-                    （{{$t('当前版本号')}}：{{lateShowVersionName}}
+                    （{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}
                     <bcs-popover
                       :delay="300"
                       :content="displayVersionNotes || '--'"
                       style="padding-left: 6px;"
                       placement="bottom">
-                      <span style="color: #3a84ff;">{{$t('版本说明')}}</span>
+                      <span style="color: #3a84ff;">{{$t('deploy.templateset.versionDescription')}}</span>
                     </bcs-popover>）</span>
                 </strong>
                 <div class="action">
@@ -122,8 +122,8 @@
         <!-- 如果模板集没有加锁或者当前用户是加锁者才可以操作 -->
         <template>
           <template v-if="templateLockStatus.isLocked && !templateLockStatus.isCurLocker">
-            <bk-button disabled>{{$t('保存草稿')}}</bk-button>
-            <bk-button type="primary" style="width: 70px;" disabled>{{$t('保存')}}</bk-button>
+            <bk-button disabled>{{$t('deploy.templateset.saveDraft')}}</bk-button>
+            <bk-button type="primary" style="width: 70px;" disabled>{{$t('generic.button.save')}}</bk-button>
           </template>
           <template v-else>
             <span
@@ -136,8 +136,8 @@
                   template_id: isNewTemplate ? undefined : Number(curTemplateId)
                 }
               }">
-              <bk-button @click.stop.prevent="saveTemplateDraft">{{$t('保存草稿')}}</bk-button>
-              <bk-button type="primary" :loading="isDataSaveing" :disabled="!isTemplateCanSave" style="width: 70px;" @click.stop.prevent="saveTemplateData">{{$t('保存')}}</bk-button>
+              <bk-button @click.stop.prevent="saveTemplateDraft">{{$t('deploy.templateset.saveDraft')}}</bk-button>
+              <bk-button type="primary" :loading="isDataSaveing" :disabled="!isTemplateCanSave" style="width: 70px;" @click.stop.prevent="saveTemplateData">{{$t('generic.button.save')}}</bk-button>
             </span>
           </template>
         </template>
@@ -157,14 +157,14 @@
             }"
             class="ml5"
             @click.stop.prevent="createInstance">
-            {{$t('实例化')}}
+            {{$t('deploy.templateset.tempalte')}}
           </bk-button>
         </template>
 
         <template>
           <bk-button
             v-authority="{
-              clickable: isNewTemplate ? true : getAuthority('templateset_view', Number(curTemplateId)),
+              clickable: isNewTemplate || isFromNewTemplate ? true : getAuthority('templateset_view', Number(curTemplateId)),
               actionId: 'templateset_view',
               resourceName: curTemplate.name,
               disablePerms: true,
@@ -174,7 +174,7 @@
               }
             }"
             @click.stop.prevent="showVersionPanel"
-          >{{$t('版本列表')}}</bk-button>
+          >{{$t('deploy.templateset.versionList')}}</bk-button>
         </template>
       </div>
     </template>
@@ -189,31 +189,31 @@
       @cancel="hideVersionBox">
       <template slot="content">
         <div class="version-box">
-          <p class="title">{{$t('保存修改到')}}：</p>
+          <p class="title">{{$t('deploy.templateset.saveChangesTo')}}：</p>
           <ul :class="['version-list', { 'is-en': isEn }]">
             <template v-if="!isNewVersion">
               <li class="item mb10">
                 <label class="bk-form-radio label-item">
                   <input type="radio" name="save-version-way" :class="{ 'is-checked': saveVersionWay === 'cur' }" value="cur" v-model="saveVersionWay">
-                  <i class="bk-radio-text" style="display: inline-block; min-width: 70px;">{{$t('当前版本号')}}：{{lateShowVersionName}}</i>
+                  <i class="bk-radio-text" style="display: inline-block; min-width: 70px;">{{$t('deploy.templateset.currentVersionNumber')}}：{{lateShowVersionName}}</i>
                 </label>
               </li>
 
               <li class="item mb10">
                 <label class="bk-form-radio label-item" style="margin-right: 0;">
                   <input type="radio" name="save-version-way" :class="{ 'is-checked': saveVersionWay === 'new' }" value="new" v-model="saveVersionWay">
-                  <i class="bk-radio-text" style="display: inline-block; min-width: 70px;">{{$t('新版本')}}：</i>
-                  <bkbcs-input :placeholder="$t('请输入版本号')" @focus="saveVersionWay = 'new'" style="width: 176px; flex: 1;" v-model="versionKeyword" />
+                  <i class="bk-radio-text" style="display: inline-block; min-width: 70px;">{{$t('deploy.templateset.newVersion')}}：</i>
+                  <bkbcs-input :placeholder="$t('deploy.templateset.enterVersionNumber')" @focus="saveVersionWay = 'new'" style="width: 176px; flex: 1;" v-model="versionKeyword" />
                 </label>
               </li>
 
               <li class="item" v-if="withoutCurVersionList.length">
                 <label class="bk-form-radio label-item" style="margin-right: 0;">
                   <input type="radio" name="save-version-way" :class="{ 'is-checked': saveVersionWay === 'old' }" value="old" v-model="saveVersionWay">
-                  <i class="bk-radio-text" style="display: inline-block; min-width: 70px; letter-spacing: 0;">{{$t('其它版本')}}：</i>
+                  <i class="bk-radio-text" style="display: inline-block; min-width: 70px; letter-spacing: 0;">{{$t('deploy.templateset.otherVersions')}}：</i>
                   <bk-selector
                     style="width: 176px;"
-                    :placeholder="$t('请选择版本号')"
+                    :placeholder="$t('deploy.templateset.selectVersionNumber')"
                     :setting-key="'show_version_id'"
                     :selected.sync="selectedVersion"
                     :list="withoutCurVersionList"
@@ -225,15 +225,15 @@
             <template v-else>
               <li class="item">
                 <label class="bk-form-radio label-item" style="margin-right: 0;">
-                  <i class="bk-radio-text" style="display: inline-block; width: 70px; letter-spacing: 0;">{{$t('新版本')}}：</i>
-                  <bkbcs-input :placeholder="$t('请输入版本号')" @focus="saveVersionWay = 'new'" style="width: 203px; flex: 1;" v-model="versionKeyword" />
+                  <i class="bk-radio-text" style="display: inline-block; width: 70px; letter-spacing: 0;">{{$t('deploy.templateset.newVersion')}}：</i>
+                  <bkbcs-input :placeholder="$t('deploy.templateset.enterVersionNumber')" @focus="saveVersionWay = 'new'" style="width: 203px; flex: 1;" v-model="versionKeyword" />
                 </label>
               </li>
             </template>
             <li class="item">
               <label :class="['notes', 'label-item', { 'new-item': isNewVersion }]" style="margin-right: 0;">
-                <i :class="['notes-text', { 'is-en-text': isEn, 'is-new': isNewVersion }]" :style="{ 'letter-spacing': 0, 'padding-left': isNewVersion ? 0 : '26px' }">{{$t('版本说明')}}：</i>
-                <bk-input type="textarea" class="notes-input" :style="{ width: isNewVersion ? '203px' : '176px' }" :placeholder="$t('请输入版本说明')" v-model="curVersionNotes" />
+                <i :class="['notes-text', { 'is-en-text': isEn, 'is-new': isNewVersion }]" :style="{ 'letter-spacing': 0, 'padding-left': isNewVersion ? 0 : '26px' }">{{$t('deploy.templateset.versionDescription')}}：</i>
+                <bk-input type="textarea" class="notes-input" :style="{ width: isNewVersion ? '203px' : '176px' }" :placeholder="$t('deploy.templateset.enterVersionDescription')" v-model="curVersionNotes" />
               </label>
             </li>
           </ul>
@@ -242,22 +242,22 @@
       <div slot="footer">
         <template v-if="!canVersionSave">
           <bk-button type="primary" disabled>
-            {{$t('确定')}}
+            {{$t('generic.button.confirm')}}
           </bk-button>
         </template>
         <template v-else>
           <bk-button type="primary" :loading="isCreating" @click="saveVersion">
-            {{$t('确定')}}
+            {{$t('generic.button.confirm')}}
           </bk-button>
         </template>
         <bk-button type="button" :disabled="isCreating" @click="hideVersionBox">
-          {{$t('取消')}}
+          {{$t('generic.button.cancel')}}
         </bk-button>
       </div>
     </bk-dialog>
 
     <svg style="display: none;">
-      <title>{{$t('模板集默认图标')}}</title>
+      <title>{{$t('deploy.templateset.icon')}}</title>
       <symbol id="biz-set-icon" viewBox="0 0 32 32">
         <path d="M6 3v3h-3v23h23v-3h3v-23h-23zM24 24v3h-19v-19h19v16zM27 24h-1v-18h-18v-1h19v19z"></path>
         <path d="M13.688 18.313h-6v6h6v-6z"></path>
@@ -278,15 +278,15 @@
         <div class="biz-danger-tip">
           <div class="tip-header">
             <svg class="biz-set-icon"><use xlink:href="#biz-set-icon"></use></svg>
-            <p class="title">{{$t('此操作存在风险')}}</p>
+            <p class="title">{{$t('deploy.templateset.operationRisk')}}</p>
           </div>
           <div class="tip-content">
-            <strong>{{$t('此操作存在风险，请知悉')}}</strong>
-            <p class="tip">{{$t('k8s内部使用 spec.selector.matchLabels 关联资源, 直接修改 matchLabel 会导致产生某些“孤儿”资源 （例如修改没有Deployment管理的 ReplicaSet）')}}</p>
+            <strong>{{$t('deploy.templateset.operationRiskAware')}}</strong>
+            <p class="tip">{{$t('deploy.templateset.tip3')}}</p>
           </div>
           <div class="tip-footer">
-            <bk-button class="bk-button bk-primary mr10">{{$t('确定')}}</bk-button>
-            <bk-button>{{$t('取消')}}</bk-button>
+            <bk-button class="bk-button bk-primary mr10">{{$t('generic.button.confirm')}}</bk-button>
+            <bk-button>{{$t('generic.button.cancel')}}</bk-button>
           </div>
         </div>
       </template>
@@ -301,11 +301,11 @@
         <bk-table
           :data="versionList"
           :size="'medium'">
-          <bk-table-column :label="$t('版本号')" :show-overflow-tooltip="false" min-width="200">
+          <bk-table-column :label="$t('deploy.templateset.versionNumber')" :show-overflow-tooltip="false" min-width="200">
             <template slot-scope="props">
               <p>
                 <span>{{props.row.name}}</span>
-                <span v-if="props.row.show_version_id === curShowVersionId">{{$t('(当前)')}}</span>
+                <span v-if="props.row.show_version_id === curShowVersionId">{{$t('deploy.templateset.current')}}</span>
               </p>
 
               <bcs-popover
@@ -313,36 +313,36 @@
                 :delay="300"
                 :content="props.row.comment"
                 placement="right">
-                <span style="color: #3a84ff; font-size: 12px;">{{$t('版本说明')}}</span>
+                <span style="color: #3a84ff; font-size: 12px;">{{$t('deploy.templateset.versionDescription')}}</span>
               </bcs-popover>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('更新时间')" :show-overflow-tooltip="true" min-width="150">
+          <bk-table-column :label="$t('cluster.labels.updatedAt')" :show-overflow-tooltip="true" min-width="150">
             <template slot-scope="props">
               {{props.row.updated}}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('最后更新人')" :show-overflow-tooltip="true" min-width="150">
+          <bk-table-column :label="$t('deploy.templateset.lastUpdatedBy')" :show-overflow-tooltip="true" min-width="150">
             <template slot-scope="props">
               {{props.row.updator}}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('操作')" :show-overflow-tooltip="true" min-width="200">
+          <bk-table-column :label="$t('generic.label.action')" :show-overflow-tooltip="true" min-width="200">
             <template slot-scope="props">
-              <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="getTemplateByVersion(props.row.show_version_id)">{{$t('加载')}}</a>
+              <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="getTemplateByVersion(props.row.show_version_id)">{{$t('deploy.templateset.load')}}</a>
               <template v-if="props.row.show_version_id === -1">
-                <a href="javascript:void(0);" class="bk-text-button is-disabled" v-bk-tooltips="$t('草稿不支持转换YAML')">{{$t('转换到YAML')}}</a>
+                <a href="javascript:void(0);" class="bk-text-button is-disabled" v-bk-tooltips="$t('deploy.templateset.draftNotSupportYAML')">{{$t('deploy.templateset.convertToYAML')}}</a>
               </template>
               <template v-else>
-                <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="handleExportToYaml(props.row)">{{$t('转换到YAML')}}</a>
+                <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="handleExportToYaml(props.row)">{{$t('deploy.templateset.convertToYAML')}}</a>
               </template>
               <!-- 只有一个版本时不能删除 -->
               <template v-if="versionList.length <= 1">
                 <bcs-popover :delay="300" placement="right">
-                  <a href="javascript:void(0);" class="bk-text-button is-disabled ml5" disabled>{{$t('删除')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button is-disabled ml5" disabled>{{$t('generic.button.delete')}}</a>
                   <template slot="content">
                     <p class="biz-permission-tip">
-                      {{$t('必须保留至少一个版本')}}
+                      {{$t('deploy.templateset.retainAtLeastOneVersion')}}
                     </p>
                   </template>
                 </bcs-popover>
@@ -352,22 +352,22 @@
                 <template>
                   <!-- 已经加锁，且是当前加锁人 -->
                   <template v-if="templateLockStatus.isLocked && templateLockStatus.isCurLocker">
-                    <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeVersion(props.row)">{{$t('删除')}}</a>
+                    <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeVersion(props.row)">{{$t('generic.button.delete')}}</a>
                   </template>
                   <!-- 已经加锁，但不是当前加锁人 -->
                   <template v-else-if="templateLockStatus.isLocked && !templateLockStatus.isCurLocker">
                     <bcs-popover :delay="300" placement="right">
-                      <a href="javascript:void(0);" class="bk-text-button is-disabled ml5" disabled>{{$t('删除')}}</a>
+                      <a href="javascript:void(0);" class="bk-text-button is-disabled ml5" disabled>{{$t('generic.button.delete')}}</a>
                       <template slot="content">
                         <p class="biz-permission-tip">
-                          {{$t('{locker}正在操作，您如需编辑请联系{locker}解锁！', templateLockStatus)}}
+                          {{$t('deploy.templateset.msg.multiOperator', templateLockStatus)}}
                         </p>
                       </template>
                     </bcs-popover>
                   </template>
                   <!-- 没有加锁 -->
                   <template v-else>
-                    <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeVersion(props.row)">{{$t('删除')}}</a>
+                    <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeVersion(props.row)">{{$t('generic.button.delete')}}</a>
                   </template>
                 </template>
               </template>
@@ -388,10 +388,11 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable max-len */
 /* eslint-disable no-useless-escape */
-import yamljs from 'js-yaml';
 import base64 from 'base-64';
-import { isObject } from '@/common/util';
+import yamljs from 'js-yaml';
 import shlex from 'shlex';
+
+import { isObject } from '@/common/util';
 import Header from '@/components/layout/Header.vue';
 
 export default {
@@ -416,7 +417,7 @@ export default {
       exceptionCode: null,
       versionSidePanel: {
         isShow: false,
-        title: this.$t('版本列表'),
+        title: this.$t('deploy.templateset.versionList'),
       },
       versionDialogConf: {
         isShow: false,
@@ -735,12 +736,12 @@ export default {
       });
       if (isEdited || this.$store.state.k8sTemplate.canTemplateBindVersion) {
         this.$bkInfo({
-          title: this.$t('确认离开'),
+          title: this.$t('deploy.templateset.confirmExit'),
           content: this.$createElement('p', {
             style: {
               textAlign: 'left',
             },
-          }, this.$t('模板编辑的内容未保存，确认要离开？')),
+          }, this.$t('deploy.templateset.unsavedTemplateWarning')),
           confirmFn() {
             self.goTemplatePage();
           },
@@ -765,8 +766,8 @@ export default {
     removeVersion(data) {
       const self = this;
       this.$bkInfo({
-        title: this.$t('确认删除'),
-        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('删除版本')}：“${data.name}”`),
+        title: this.$t('generic.title.confirmDelete'),
+        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('deploy.helm.deleteVersion')}：“${data.name}”`),
         confirmFn() {
           const { projectId } = self;
           const templateId = self.curTemplateId;
@@ -774,7 +775,7 @@ export default {
           self.$store.dispatch('k8sTemplate/removeVersion', { projectId, templateId, versionId }).then((res) => {
             self.$bkMessage({
               theme: 'success',
-              message: self.$t('操作成功'),
+              message: self.$t('generic.msg.success.ok'),
             });
 
             self.getVersionList().then((versionList) => {
@@ -818,13 +819,13 @@ export default {
       const { projectId } = this;
       const templateId = this.curTemplateId;
       this.$bkInfo({
-        title: this.$t('确认删除'),
-        content: this.$t('确定要删除此模板集？'),
+        title: this.$t('generic.title.confirmDelete'),
+        content: this.$t('deploy.templateset._confirmDeleteTemplateSet'),
         confirmFn() {
           self.$store.dispatch('k8sTemplate/removeTemplate', { templateId, projectId }).then((res) => {
             this.$bkMessage({
               theme: 'success',
-              message: this.$t('删除成功'),
+              message: this.$t('generic.msg.success.delete'),
             });
             self.goTemplatePage();
           }, (res) => {
@@ -890,7 +891,7 @@ export default {
         await this.$store.dispatch('k8sTemplate/lockTemplateset', { projectId, templateId });
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('加锁成功'),
+          message: this.$t('deploy.templateset.lockSuccess'),
         });
         this.reloadTemplateLockStatus();
       } catch (res) {
@@ -913,7 +914,7 @@ export default {
       if (!this.templateLockStatus.isCurLocker) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('{locker}正在操作，您如需编辑请联系{locker}解锁！', this.templateLockStatus),
+          message: this.$t('deploy.templateset.msg.multiOperator', this.templateLockStatus),
         });
         return false;
       }
@@ -922,7 +923,7 @@ export default {
         await this.$store.dispatch('k8sTemplate/unlockTemplateset', { projectId, templateId });
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('解锁成功'),
+          message: this.$t('deploy.templateset.unlockSuccess'),
         });
         this.reloadTemplateLockStatus();
       } catch (res) {
@@ -1026,7 +1027,7 @@ export default {
         this.$store.dispatch('k8sTemplate/updateTemplateDraft', { projectId, templateId, data }).then((res) => {
           this.$bkMessage({
             theme: 'success',
-            message: this.$t('保存成功'),
+            message: this.$t('generic.msg.success.save'),
           });
           // 新创建则跳转
           if (this.isNewTemplate) {
@@ -1213,7 +1214,7 @@ export default {
         msg = `The conversion YAML function will copy the template set version [${name}] into a new YAML template set, and the platform will complete the conversion of the template configuration. If you have any questions during use, please contact BCS`;
       }
       me.$bkInfo({
-        title: me.$t('注意'),
+        title: me.$t('projects.operateAudit.note'),
         content: msg,
         confirmFn() {
           me.exportYamlTemplate(versionId, realVersionId);
@@ -1543,7 +1544,7 @@ export default {
           if (event) {
             this.$bkMessage({
               theme: 'success',
-              message: this.$t('模板集基础信息保存成功'),
+              message: this.$t('deploy.templateset.templateSetInfoSaved'),
             });
           }
         } catch (res) {
@@ -1603,8 +1604,8 @@ export default {
         if (!this.curTemplate.name) {
           const templateParams = {
             id: 0,
-            name: this.$t('模板集_') + (+new Date()),
-            desc: this.$t('模板集描述'),
+            name: this.$t('deploy.templateset.templateSetPrefix') + (+new Date()),
+            desc: this.$t('deploy.templateset.templateSetDescription'),
             is_locked: false,
             locker: '',
           };
@@ -1628,23 +1629,23 @@ export default {
             if (!data.code || data.code === 400 || data.code === 404) {
               this.exceptionCode = {
                 code: '404',
-                msg: this.$t('当前访问的模板集不存在'),
+                msg: this.$t('deploy.templateset.templateSetNotFound'),
               };
             } else if (data.code === 403) {
               this.exceptionCode = {
                 code: '403',
-                msg: this.$t('Sorry，您的权限不足'),
+                msg: this.$t('generic.msg.warning.403'),
               };
             } else {
               this.exceptionCode = {
                 code: '403',
-                msg: this.$t('异常'),
+                msg: this.$t('generic.status.error'),
               };
             }
           } else {
             this.exceptionCode = {
               code: '403',
-              msg: this.$t('异常'),
+              msg: this.$t('generic.status.error'),
             };
           }
           this.$emit('exception', this.exceptionCode);
@@ -1733,31 +1734,31 @@ export default {
       const envKeyReg = /^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$/;
       const varReg = /\{\{([^\{\}]+)?\}\}/g;
       const ipReg = /^((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}$/;
-      let megPrefix = `"${appName}"${this.$t('中')}`;
+      let megPrefix = `"${appName}"${this.$t('deploy.templateset.in')}`;
 
       if (appName === '') {
-        megPrefix += `${this.$t('名称')}：`;
+        megPrefix += `${this.$t('generic.label.name')}：`;
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('请输入应用名称'),
+          message: megPrefix + this.$t('deploy.templateset.validate.name'),
         });
         return false;
       }
       if (!nameReg1.test(appName)) {
-        megPrefix += `${this.$t('名称')}：`;
+        megPrefix += `${this.$t('generic.label.name')}：`;
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('应用名称错误，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)'),
+          message: megPrefix + this.$t('deploy.templateset.applicationNameError'),
           delay: 8000,
         });
         return false;
       }
 
       if (instance === '') {
-        megPrefix += `${this.$t('实例数量')}：`;
+        megPrefix += `${this.$t('dashboard.workload.label.scaleNum')}：`;
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('请输入实例数量'),
+          message: megPrefix + this.$t('deploy.templateset.enterInstanceQuantity'),
         });
         return false;
       }
@@ -1768,11 +1769,11 @@ export default {
         for (const label of cacheLabels) {
           // const key11 = label.key.replace(varReg, 'key')
           if (label.key && !labelKeyReg.test(label.key.replace(varReg, 'key'))) {
-            megPrefix += `${this.$t('标签')}：`;
+            megPrefix += `${this.$t('k8s.label')}：`;
             this.$bkMessage({
               theme: 'error',
               delay: 8000,
-              message: megPrefix + this.$t('key值只能包含数字、字母、中划线(-)、下划线(_)、点(.)、斜杆(/)，开头结尾必须是数字或字母'),
+              message: megPrefix + this.$t('deploy.templateset.startEndAlphaNumeric'),
             });
             return false;
           }
@@ -1782,10 +1783,10 @@ export default {
 
       // 除去job，其它要至少一个选择器
       if (!selector.length && type !== 'job') {
-        megPrefix += `${this.$t('标签')}：`;
+        megPrefix += `${this.$t('k8s.label')}：`;
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('必须添加一个选择器'),
+          message: megPrefix + this.$t('deploy.templateset.mustAddSelector'),
         });
         return false;
       }
@@ -1795,11 +1796,11 @@ export default {
         const cacheLabels = application.config.webCache.remarkListCache;
         for (const label of cacheLabels) {
           if (label.key && !labelKeyReg.test(label.key.replace(varReg, 'key'))) {
-            megPrefix += `${this.$t('注解')}：`;
+            megPrefix += `${this.$t('k8s.annotation')}：`;
             this.$bkMessage({
               theme: 'error',
               delay: 8000,
-              message: megPrefix + this.$t('key值只能包含数字、字母、中划线(-)、下划线(_)、点(.)、斜杆(/)，开头结尾必须是数字或字母'),
+              message: megPrefix + this.$t('deploy.templateset.startEndAlphaNumeric'),
             });
             return false;
           }
@@ -1821,43 +1822,43 @@ export default {
         for (const item of application.config.spec.volumeClaimTemplates) {
           if (item.metadata.name || item.spec.storageClassName || item.spec.accessModes.length) {
             if (!item.metadata.name) {
-              megPrefix += `${this.$t('卷模板')}：`;
+              megPrefix += `${this.$t('deploy.templateset.volumeTemplate')}：`;
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('请输入挂载名'),
+                message: megPrefix + this.$t('deploy.templateset.enterMountName'),
               });
               return false;
             }
             if (!/^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$/.test(item.metadata.name)) {
-              megPrefix += `${this.$t('卷模板')}：`;
+              megPrefix += `${this.$t('deploy.templateset.volumeTemplate')}：`;
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('挂载名只能含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母'),
+                message: megPrefix + this.$t('deploy.templateset.startEndAlphaNumericMountName'),
                 delay: 8000,
               });
               return false;
             }
             if (!item.spec.storageClassName) {
-              megPrefix += `${this.$t('卷模板')}：`;
+              megPrefix += `${this.$t('deploy.templateset.volumeTemplate')}：`;
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('请选择StorageClassName'),
+                message: megPrefix + this.$t('deploy.templateset.pleaseSelectStorageClassName'),
               });
               return false;
             }
             if (!item.spec.resources.requests.storage) {
-              megPrefix += `${this.$t('卷模板')}：`;
+              megPrefix += `${this.$t('deploy.templateset.volumeTemplate')}：`;
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('请设置大小'),
+                message: megPrefix + this.$t('deploy.templateset.setSize'),
               });
               return false;
             }
             if (!item.spec.accessModes.length) {
-              megPrefix += `${this.$t('卷模板')}：`;
+              megPrefix += `${this.$t('deploy.templateset.volumeTemplate')}：`;
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('请选择访问模式'),
+                message: megPrefix + this.$t('deploy.templateset.selectAccessMode'),
               });
               return false;
             }
@@ -1873,28 +1874,28 @@ export default {
           }
           if (volume.name || volume.source) {
             if (!volume.name) {
-              megPrefix += `${this.$t('卷')}：`;
+              megPrefix += `${this.$t('deploy.templateset.volume')}：`;
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('挂载名不能为空'),
+                message: megPrefix + this.$t('deploy.templateset.mountNameNotEmpty'),
                 delay: 8000,
               });
               return false;
             }
             if (!volume.source) {
-              megPrefix += `${this.$t('卷')}：`;
+              megPrefix += `${this.$t('deploy.templateset.volume')}：`;
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('挂载源不能为空'),
+                message: megPrefix + this.$t('deploy.templateset.mountSourceNotEmpty'),
                 delay: 8000,
               });
               return false;
             }
             if (volume.name && !volumeNameReg.test(volume.name.replace(varReg, 'name'))) {
-              megPrefix += `${this.$t('卷')}：`;
+              megPrefix += `${this.$t('deploy.templateset.volume')}：`;
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('挂载名只能包含：字母、数字、连字符(-)，首字母必须是字母，长度小于253个字符'),
+                message: megPrefix + this.$t('deploy.templateset.mountNameCriteria'),
                 delay: 8000,
               });
               return false;
@@ -1915,7 +1916,7 @@ export default {
               megPrefix += 'hostAliases：';
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('IP不能为空'),
+                message: megPrefix + this.$t('deploy.templateset.ipNotEmpty'),
                 delay: 8000,
               });
               return false;
@@ -1924,7 +1925,7 @@ export default {
               megPrefix += 'hostAliases：';
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('请输入合法IP地址'),
+                message: megPrefix + this.$t('deploy.templateset.enterValidIPAddress'),
                 delay: 8000,
               });
               return false;
@@ -1933,7 +1934,7 @@ export default {
               megPrefix += 'hostAliases：';
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('HostNames不能为空'),
+                message: megPrefix + this.$t('deploy.templateset.hostNamesNotEmpty'),
                 delay: 8000,
               });
               return false;
@@ -1950,19 +1951,19 @@ export default {
           const yamlCode = application.config.webCache.affinityYamlCache;
           const json = yamljs.load(yamlCode);
           if (!json || Object.prototype.toString.call(json) === '[object String]') {
-            megPrefix += `${this.$t('调度约束')}：`;
+            megPrefix += `${this.$t('deploy.templateset.schedulingConstraints')}：`;
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('亲和性约束格式不正确'),
+              message: megPrefix + this.$t('deploy.templateset.affinityConstraintInvalidFormat'),
               delay: 5000,
             });
             return false;
           }
         } catch (err) {
-          megPrefix += `${this.$t('调度约束')}：`;
+          megPrefix += `${this.$t('deploy.templateset.schedulingConstraints')}：`;
           this.$bkMessage({
             theme: 'error',
-            message: megPrefix + this.$t('亲和性约束格式不正确'),
+            message: megPrefix + this.$t('deploy.templateset.affinityConstraintInvalidFormat'),
             delay: 5000,
           });
           return false;
@@ -1972,19 +1973,19 @@ export default {
       for (const container of containers) {
         // 检查container name
         if (!container.name) {
-          megPrefix += `${this.$t('容器名称')}：`;
+          megPrefix += `${this.$t('dashboard.workload.container.name')}：`;
           this.$bkMessage({
             theme: 'error',
-            message: megPrefix + this.$t('名称不能为空'),
+            message: megPrefix + this.$t('deploy.templateset.nameNotEmpty'),
           });
           return false;
         }
 
         if (!nameReg1.test(container.name)) {
-          megPrefix += `${this.$t('容器名称')}：`;
+          megPrefix += `${this.$t('dashboard.workload.container.name')}：`;
           this.$bkMessage({
             theme: 'error',
-            message: megPrefix + this.$t('名称错误，只能包含：小写字母、数字、连字符(-)，首字母必须是字母，长度小于64个字符'),
+            message: megPrefix + this.$t('deploy.templateset.nameError'),
             delay: 8000,
           });
           return false;
@@ -1998,7 +1999,7 @@ export default {
           this.$bkMessage({
             theme: 'error',
             delay: 5000,
-            message: megPrefix + this.$t('容器 {name} 的镜像及版本配置：请设置所属的镜像及版本', container),
+            message: megPrefix + this.$t('deploy.templateset.configImageAndVersion', container),
           });
           return false;
         }
@@ -2011,14 +2012,14 @@ export default {
               this.$bkMessage({
                 theme: 'error',
                 delay: 5000,
-                message: megPrefix + this.$t('容器 {name} 的端口映射配置：名称不能为空', container),
+                message: megPrefix + this.$t('deploy.templateset.portMappingNameNotEmpty', container),
               });
               return false;
             }
             if (!portNameReg.test(item.name.replace(varReg, 'name'))) {
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('容器 {name} 的端口映射配置：名称错误，以小写字母开头，只能包含：小写字母、数字、连字符(-)，长度小于256个字符', container),
+                message: megPrefix + this.$t('deploy.templateset.portMappingNameError', container),
                 delay: 8000,
               });
               return false;
@@ -2026,7 +2027,7 @@ export default {
             if (portNameCache[item.name]) {
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('容器 {name} 的端口映射配置：端口名称不可重复', container),
+                message: megPrefix + this.$t('deploy.templateset.portMappingNameNotDuplicate', container),
                 delay: 8000,
               });
               return false;
@@ -2038,7 +2039,7 @@ export default {
               this.$bkMessage({
                 theme: 'error',
                 delay: 5000,
-                message: megPrefix + this.$t('容器 {name} 的端口映射配置：容器端口不能为空', container),
+                message: megPrefix + this.$t('deploy.templateset.containerPortNotEmpty', container),
               });
               return false;
             }
@@ -2046,7 +2047,7 @@ export default {
               this.$bkMessage({
                 theme: 'error',
                 delay: 5000,
-                message: megPrefix + this.$t('容器 {name} 的端口映射配置：容器端口范围为1-65535', container),
+                message: megPrefix + this.$t('deploy.templateset.containerPortRange', container),
               });
               return false;
             }
@@ -2058,7 +2059,7 @@ export default {
           this.$bkMessage({
             theme: 'error',
             delay: 5000,
-            message: megPrefix + this.$t('容器 {name} 的命令：启动命令不能含有中文字符', container),
+            message: megPrefix + this.$t('deploy.templateset.commandNoChinese', container),
           });
           return false;
         }
@@ -2067,7 +2068,7 @@ export default {
           this.$bkMessage({
             theme: 'error',
             delay: 5000,
-            message: megPrefix + this.$t('容器 {name} 的命令：命令参数不能含有中文字符', container),
+            message: megPrefix + this.$t('deploy.templateset.commandParamsNoChinese', container),
           });
           return false;
         }
@@ -2080,14 +2081,14 @@ export default {
                 this.$bkMessage({
                   theme: 'error',
                   delay: 5000,
-                  message: megPrefix + this.$t('容器 ${name} 的挂载卷配置：挂载名不能为空', container),
+                  message: megPrefix + this.$t('deploy.templateset.mountVolumeConfigNotEmpty', container),
                 });
                 return false;
               }
               if (!item.mountPath) {
                 this.$bkMessage({
                   theme: 'error',
-                  message: megPrefix + this.$t('容器 {name} 的挂载卷配置：容器目录不能为空', container),
+                  message: megPrefix + this.$t('deploy.templateset.containerDirectoryNotEmpty', container),
                   delay: 5000,
                 });
                 return false;
@@ -2123,7 +2124,7 @@ export default {
               if (!env.key) {
                 this.$bkMessage({
                   theme: 'error',
-                  message: megPrefix + this.$t('容器 {name} 的环境变量配置：键不能为空', container),
+                  message: megPrefix + this.$t('deploy.templateset.envVarKeyNotEmpty', container),
                   delay: 5000,
                 });
                 return false;
@@ -2131,7 +2132,7 @@ export default {
               if (!envKeyReg.test(env.key.replace(varReg, 'key'))) {
                 this.$bkMessage({
                   theme: 'error',
-                  message: megPrefix + this.$t('容器 {name} 的环境变量配置：键只能含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母', container),
+                  message: megPrefix + this.$t('deploy.templateset.startEndAlphaNumericEnvVar', container),
                   delay: 8000,
                 });
                 return false;
@@ -2143,7 +2144,7 @@ export default {
             if (env.type !== 'custom' && !env.value) {
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('容器 {name} 的环境变量配置：值不能为空', container),
+                message: megPrefix + this.$t('deploy.templateset.valueNotEmpty', container),
                 delay: 5000,
               });
               return false;
@@ -2156,7 +2157,7 @@ export default {
         if (resources.limits.cpu && resources.requests.cpu && !varReg.test(resources.limits.cpu) && !varReg.test(resources.requests.cpu) && (resources.requests.cpu > resources.limits.cpu)) {
           this.$bkMessage({
             theme: 'error',
-            message: megPrefix + this.$t('容器 {name} 的资源限制配置：CPU限制中最小值必须小于等于最大值', container),
+            message: megPrefix + this.$t('deploy.templateset.cpuLimitMinLessThanOrEqualMax', container),
             delay: 7000,
           });
           return false;
@@ -2164,7 +2165,7 @@ export default {
         if (resources.limits.memory && resources.requests.memory && !varReg.test(resources.limits.memory) && !varReg.test(resources.requests.memory) && (resources.requests.memory > resources.limits.memory)) {
           this.$bkMessage({
             theme: 'error',
-            message: megPrefix + this.$t('容器 {name} 的资源限制配置：内存限制中最小值必须小于等于最大值', container),
+            message: megPrefix + this.$t('deploy.templateset.memoryLimitMinLessThanOrEqualMax', container),
             delay: 7000,
           });
           return false;
@@ -2177,7 +2178,7 @@ export default {
               this.$bkMessage({
                 theme: 'error',
                 delay: 5000,
-                message: megPrefix + this.$t('容器 {name} 的非标准日志采集配置：日志绝对路径不正确', container),
+                message: megPrefix + this.$t('deploy.templateset.nonStandardLogInvalidPath', container),
               });
               return false;
             }
@@ -2189,7 +2190,7 @@ export default {
           this.$bkMessage({
             theme: 'error',
             delay: 5000,
-            message: megPrefix + this.$t('容器 {name} 的生命周期：停止前执行不能含有中文字符', container),
+            message: megPrefix + this.$t('deploy.templateset.preStopNoChinese', container),
           });
           return false;
         }
@@ -2198,16 +2199,16 @@ export default {
           this.$bkMessage({
             theme: 'error',
             delay: 5000,
-            message: megPrefix + this.$t('容器 {name} 的生命周期：启动后执行不能含有中文字符', container),
+            message: megPrefix + this.$t('deploy.templateset.postStartNoChinese', container),
           });
           return false;
         }
       }
       if (!hasContainer) {
-        megPrefix += this.$t('容器');
+        megPrefix += this.$t('dashboard.workload.container.title');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('必须添加至少一个Container类型的容器'),
+          message: megPrefix + this.$t('deploy.templateset.mustAddAtLeastOneContainer'),
           delay: 5000,
         });
         return false;
@@ -2763,7 +2764,7 @@ export default {
       if (!this.versionKeyword) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入版本号'),
+          message: this.$t('deploy.templateset.enterVersionNumber'),
         });
         return false;
       }
@@ -2771,7 +2772,7 @@ export default {
       if (!nameReg.test(this.versionKeyword)) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请填写1至45个字符（由字母、数字、下划线以及 - 或 . 组成）'),
+          message: this.$t('deploy.templateset.compositionAlphaNumSymbols'),
         });
         return false;
       }
@@ -2780,7 +2781,7 @@ export default {
         if (item.name === this.versionKeyword) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('版本{versionKeyword}已经存在', { versionKeyword: this.versionKeyword }),
+            message: this.$t('deploy.templateset.ersionExists', { versionKeyword: this.versionKeyword }),
           });
           return false;
         }
@@ -2822,7 +2823,7 @@ export default {
       await this.$store.dispatch('k8sTemplate/saveVersion', { projectId, templateId, params }).then((res) => {
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('保存成功'),
+          message: this.$t('generic.msg.success.save'),
           delay: 3000,
         });
         this.$store.commit('k8sTemplate/updateBindVersion', false);
@@ -3189,21 +3190,21 @@ export default {
       const labelKeyReg = /^([A-Za-z0-9][-A-Za-z0-9_./]*)?[A-Za-z0-9]$/;
       const varReg = /\{\{([^\{\}]+)?\}\}/g;
       const pathReg = /\/((?!\.)[\w\d\-./~]+)*/;
-      let megPrefix = `"${ingressName}"${this.$t('中')}`;
+      let megPrefix = `"${ingressName}"${this.$t('deploy.templateset.in')}`;
 
       if (ingressName === '') {
-        megPrefix += this.$t('名称：');
+        megPrefix += this.$t('deploy.templateset.nameLabel');
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入名称'),
+          message: this.$t('deploy.templateset.validate.name1'),
         });
         return false;
       }
       if (!nameReg.test(ingressName)) {
-        megPrefix += this.$t('名称：');
+        megPrefix += this.$t('deploy.templateset.nameLabel');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('名称错误，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)'),
+          message: megPrefix + this.$t('deploy.templateset._nameError'),
           delay: 8000,
         });
         return false;
@@ -3214,11 +3215,11 @@ export default {
         const cacheLabels = ingress.config.webCache.labelListCache;
         for (const label of cacheLabels) {
           if (label.key && !labelKeyReg.test(label.key.replace(varReg, 'key'))) {
-            megPrefix += `${this.$t('标签')}：`;
+            megPrefix += `${this.$t('k8s.label')}：`;
             this.$bkMessage({
               theme: 'error',
               delay: 8000,
-              message: megPrefix + this.$t('key值只能包含数字、字母、中划线(-)、下划线(_)、点(.)、斜杆(/)，开头结尾必须是数字或字母'),
+              message: megPrefix + this.$t('deploy.templateset.startEndAlphaNumeric'),
             });
             return false;
           }
@@ -3230,11 +3231,11 @@ export default {
         const cacheLabels = ingress.config.webCache.remarkListCache;
         for (const label of cacheLabels) {
           if (label.key && !labelKeyReg.test(label.key.replace(varReg, 'key'))) {
-            megPrefix += `${this.$t('注解')}：`;
+            megPrefix += `${this.$t('k8s.annotation')}：`;
             this.$bkMessage({
               theme: 'error',
               delay: 8000,
-              message: megPrefix + this.$t('key值只能包含数字、字母、中划线(-)、下划线(_)、点(.)、斜杆(/)，开头结尾必须是数字或字母'),
+              message: megPrefix + this.$t('deploy.templateset.startEndAlphaNumeric'),
             });
             return false;
           }
@@ -3244,19 +3245,19 @@ export default {
       for (const rule of ingress.config.spec.rules) {
         // 检查rule
         if (!rule.host) {
-          megPrefix += `${this.$t('规则')}：`;
+          megPrefix += `${this.$t('generic.label.rule')}：`;
           this.$bkMessage({
             theme: 'error',
-            message: megPrefix + this.$t('主机名不能为空'),
+            message: megPrefix + this.$t('deploy.templateset.hostnameNotEmpty'),
           });
           return false;
         }
 
         // if (!nameReg.test(rule.host)) {
-        //     megPrefix += this.$t('{host}的规则主机名：', { host: rule.host })
+        //     megPrefix += this.$t('deploy.templateset._ruleHostname', { host: rule.host })
         //     this.$bkMessage({
         //         theme: 'error',
-        //         message: megPrefix + this.$t('名称错误，只能包含：小写字母、数字、连字符(-)，首字母必须是字母，长度小于30个字符'),
+        //         message: megPrefix + this.$t('deploy.templateset.nameErrorWithLength'),
         //         delay: 8000
         //     })
         //     return false
@@ -3266,30 +3267,30 @@ export default {
 
         for (const path of paths) {
           if (path.path && !pathReg.test(path.path)) {
-            megPrefix += this.$t('{host}的路径组：', { host: rule.host });
+            megPrefix += this.$t('deploy.templateset._pathGroup', { host: rule.host });
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('路径不正确'),
+              message: megPrefix + this.$t('deploy.templateset.pathIncorrect'),
               delay: 8000,
             });
             return false;
           }
 
           if (path.backend.serviceName && !path.backend.servicePort) {
-            megPrefix += this.$t('{host}的路径组：', { host: rule.host });
+            megPrefix += this.$t('deploy.templateset._pathGroup', { host: rule.host });
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('请关联服务端口'),
+              message: megPrefix + this.$t('deploy.templateset.associateServicePort'),
               delay: 8000,
             });
             return false;
           }
 
           if (path.backend.serviceName && !this.linkServices.includes(path.backend.serviceName)) {
-            megPrefix += this.$t('{host}的路径组：', { host: rule.host });
+            megPrefix += this.$t('deploy.templateset._pathGroup', { host: rule.host });
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('关联的Service【{serviceName}】不存在，请重新绑定', {
+              message: megPrefix + this.$t('deploy.templateset.associatedServiceNotExist', {
                 serviceName: path.backend.serviceName,
               }),
               delay: 8000,
@@ -3318,62 +3319,62 @@ export default {
     async checkHPAData(HPA) {
       const HPAName = HPA.config.metadata.name;
       const nameReg = /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/;
-      let megPrefix = `"${HPAName}"${this.$t('中')}`;
+      let megPrefix = `"${HPAName}"${this.$t('deploy.templateset.in')}`;
 
       if (HPAName === '') {
-        megPrefix += this.$t('名称：');
+        megPrefix += this.$t('deploy.templateset.nameLabel');
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入名称'),
+          message: this.$t('deploy.templateset.validate.name1'),
         });
         return false;
       }
 
       if (!nameReg.test(HPAName)) {
-        megPrefix += this.$t('名称：');
+        megPrefix += this.$t('deploy.templateset.nameLabel');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('名称错误，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)'),
+          message: megPrefix + this.$t('deploy.templateset._nameError'),
           delay: 5000,
         });
         return false;
       }
 
       if (!HPA.config.spec.scaleTargetRef.name) {
-        megPrefix += this.$t('关联应用：');
+        megPrefix += this.$t('deploy.templateset.associatedApplication');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('请先关联应用'),
+          message: megPrefix + this.$t('deploy.templateset.associateApplicationFirst'),
           delay: 5000,
         });
         return false;
       }
 
       if (HPA.config.spec.minReplicas === '') {
-        megPrefix += this.$t('实例数范围：');
+        megPrefix += this.$t('deploy.templateset._instanceRange');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('最小实例数不能为空'),
+          message: megPrefix + this.$t('deploy.templateset.minInstanceNotEmpty'),
           delay: 5000,
         });
         return false;
       }
 
       if (HPA.config.spec.maxReplicas === '') {
-        megPrefix += this.$t('实例数范围：');
+        megPrefix += this.$t('deploy.templateset._instanceRange');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('最大实例数不能为空'),
+          message: megPrefix + this.$t('deploy.templateset.maxInstanceNotEmpty'),
           delay: 5000,
         });
         return false;
       }
 
       if (HPA.config.spec.maxReplicas < HPA.config.spec.minReplicas) {
-        megPrefix += this.$t('实例数范围：');
+        megPrefix += this.$t('deploy.templateset._instanceRange');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('最大实例数不能小于最小实例数'),
+          message: megPrefix + this.$t('deploy.templateset.maxInstanceNotLessThanMin'),
           delay: 5000,
         });
         return false;
@@ -3382,20 +3383,20 @@ export default {
       if (HPA.config.spec.metrics.length) {
         for (const metric of HPA.config.spec.metrics) {
           if (!metric.type) {
-            megPrefix += this.$t('扩缩容触发条件：');
+            megPrefix += this.$t('deploy.templateset._scalingTriggerCondition');
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('请选择资源类型'),
+              message: megPrefix + this.$t('deploy.templateset.selectResourceType'),
               delay: 5000,
             });
             return false;
           }
 
           if (metric.type === 'Resource' && !metric.resource.target.averageUtilization) {
-            megPrefix += this.$t('扩缩容触发条件：');
+            megPrefix += this.$t('deploy.templateset._scalingTriggerCondition');
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('资源目标不能为空'),
+              message: megPrefix + this.$t('deploy.templateset.resourceTargetNotEmpty'),
               delay: 5000,
             });
             return false;
@@ -3481,31 +3482,31 @@ export default {
       const serviceIPReg = /^((25[0-5]|2[0-4]\d|[01]?\d\d?)($|(?!\.$)\.)){4}$/;
       const varReg = /\{\{([^\{\}]+)?\}\}/g;
 
-      let megPrefix = `"${serviceName}"${this.$t('中')}`;
+      let megPrefix = `"${serviceName}"${this.$t('deploy.templateset.in')}`;
 
       if (serviceName === '') {
-        megPrefix += this.$t('名称：');
+        megPrefix += this.$t('deploy.templateset.nameLabel');
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入名称'),
+          message: this.$t('deploy.templateset.validate.name1'),
         });
         return false;
       }
       if (!serviceNameReg.test(serviceName.replace(varReg, 'service'))) {
-        megPrefix += this.$t('名称：');
+        megPrefix += this.$t('deploy.templateset.nameLabel');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('名称错误，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)'),
+          message: megPrefix + this.$t('deploy.templateset._nameError'),
           delay: 8000,
         });
         return false;
       }
 
       if (!service.deploy_tag_list.length) {
-        megPrefix += this.$t('关联应用：');
+        megPrefix += this.$t('deploy.templateset.associatedApplication');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('请选择要关联的应用'),
+          message: megPrefix + this.$t('deploy.templateset.selectAssociatedApplication'),
           delay: 3000,
         });
         return false;
@@ -3515,7 +3516,7 @@ export default {
       if (statefulsetList.length >= 2) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('不可同时绑定多个StatefulSet'),
+          message: this.$t('deploy.templateset.multipleStatefulSetsError'),
           hasCloseIcon: true,
           delay: '3000',
         });
@@ -3523,10 +3524,10 @@ export default {
       }
 
       if (!service.config.webCache.link_labels.length) {
-        megPrefix += this.$t('关联标签：');
+        megPrefix += this.$t('deploy.templateset.associatedLabel');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('请选择要关联的标签'),
+          message: megPrefix + this.$t('deploy.templateset.selectAssociatedLabel'),
           delay: 3000,
         });
         return false;
@@ -3537,7 +3538,7 @@ export default {
         megPrefix += 'IP：';
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('请输入正确IP地址或“None”值'),
+          message: megPrefix + this.$t('deploy.templateset.enterCorrectIpOrNone'),
           delay: 3000,
         });
         return false;
@@ -3556,19 +3557,19 @@ export default {
         if (!hasPort) {
           // 如果已经关联应用
           if (service.deploy_tag_list.length) {
-            megPrefix += this.$t('端口映射：');
+            megPrefix += this.$t('dashboard.network.portmapping');
             this.$bkMessage({
               theme: 'error',
               delay: 8000,
-              message: megPrefix + this.$t('已关联应用，请填写端口映射信息或将ClusterIP设置为None！'),
+              message: megPrefix + this.$t('deploy.templateset.associatedApplicationFillPort'),
             });
             return false;
           }
-          megPrefix += this.$t('端口映射：');
+          megPrefix += this.$t('dashboard.network.portmapping');
           this.$bkMessage({
             theme: 'error',
             delay: 8000,
-            message: megPrefix + this.$t('ClusterIP为None时，端口映射可以不填；否则请先关联应用后，再填写端口映射！'),
+            message: megPrefix + this.$t('deploy.templateset.clusterIPNoneOrAssociateApplication'),
           });
           return false;
         }
@@ -3576,39 +3577,39 @@ export default {
       for (const item of ports) {
         if (item.name || item.port || item.targetPort) {
           if (item.name && !/^[a-z]{1}[a-z0-9-]{0,29}$/.test(item.name.replace(varReg, 'name'))) {
-            megPrefix += this.$t('端口映射：');
+            megPrefix += this.$t('dashboard.network.portmapping');
             this.$bkMessage({
               theme: 'error',
               delay: 8000,
-              message: megPrefix + this.$t('端口名称以小写字母开头，只能包含：小写字母、数字、连字符(-)，长度小于30个字符'),
+              message: megPrefix + this.$t('deploy.templateset.portNameCriteria'),
             });
             return false;
           }
           if (!item.port) {
-            megPrefix += this.$t('端口映射：');
+            megPrefix += this.$t('dashboard.network.portmapping');
             this.$bkMessage({
               theme: 'error',
               delay: 5000,
-              message: megPrefix + this.$t('端口不能为空'),
+              message: megPrefix + this.$t('deploy.templateset.portNotEmpty'),
             });
             return false;
           }
           if (!item.protocol) {
-            megPrefix += this.$t('端口映射：');
+            megPrefix += this.$t('dashboard.network.portmapping');
             this.$bkMessage({
               theme: 'error',
               delay: 5000,
-              message: megPrefix + this.$t('请选择协议'),
+              message: megPrefix + this.$t('deploy.templateset.selectProtocol'),
             });
             return false;
           }
           if (item.nodePort || item.nodePort === 0) {
             if (!varReg.test(item.nodePort) && (item.nodePort < 30000 || item.nodePort > 32767)) {
-              megPrefix += this.$t('端口映射：');
+              megPrefix += this.$t('dashboard.network.portmapping');
               this.$bkMessage({
                 theme: 'error',
                 delay: 5000,
-                message: megPrefix + this.$t('NodePort的范围为30000-32767'),
+                message: megPrefix + this.$t('deploy.templateset.nodePortRange'),
               });
               return false;
             }
@@ -3873,21 +3874,21 @@ export default {
       const nameReg1 = /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/;
       const nameReg2 = /^[a-zA-Z{]{1}[a-zA-Z0-9-_.{}]{0,254}$/;
       const keys = configmap.configmapKeyList;
-      let megPrefix = `"${configmapName}"${this.$t('中')}`;
+      let megPrefix = `"${configmapName}"${this.$t('deploy.templateset.in')}`;
 
       if (configmapName === '') {
-        megPrefix += this.$t('名称：');
+        megPrefix += this.$t('deploy.templateset.nameLabel');
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入名称'),
+          message: this.$t('deploy.templateset.validate.name1'),
         });
         return false;
       }
       if (!nameReg1.test(configmapName)) {
-        megPrefix += this.$t('名称：');
+        megPrefix += this.$t('deploy.templateset.nameLabel');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('名称错误，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)'),
+          message: megPrefix + this.$t('deploy.templateset._nameError'),
           delay: 8000,
         });
         return false;
@@ -3895,20 +3896,20 @@ export default {
       if (keys && keys.length) {
         for (const item of keys) {
           if (!nameReg2.test(item.key)) {
-            megPrefix += this.$t('键：');
+            megPrefix += this.$t('deploy.templateset.keyLabel');
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('键名错误，只能包含：字母、数字、连字符(-)、点(.)、下划线(_)，首字母必须是字母，长度小于30个字符'),
+              message: megPrefix + this.$t('deploy.templateset.msg.labelKey'),
               delay: 8000,
             });
             return false;
           }
         }
       } else {
-        megPrefix += this.$t('键：');
+        megPrefix += this.$t('deploy.templateset.keyLabel');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('请先添加键'),
+          message: megPrefix + this.$t('deploy.templateset.addKeyFirst'),
         });
         return false;
       }
@@ -4010,21 +4011,21 @@ export default {
       const nameReg1 = /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/;
       const nameReg2 = /^[a-zA-Z0-9-_.{}]{0,255}$/;
       const keys = secret.secretKeyList;
-      let megPrefix = `"${secretName}"${this.$t('中')}`;
+      let megPrefix = `"${secretName}"${this.$t('deploy.templateset.in')}`;
 
       if (secretName === '') {
-        megPrefix += this.$t('名称：');
+        megPrefix += this.$t('deploy.templateset.nameLabel');
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入名称'),
+          message: this.$t('deploy.templateset.validate.name1'),
         });
         return false;
       }
       if (!nameReg1.test(secretName)) {
-        megPrefix += this.$t('名称：');
+        megPrefix += this.$t('deploy.templateset.nameLabel');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('名称错误，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)'),
+          message: megPrefix + this.$t('deploy.templateset._nameError'),
           delay: 8000,
         });
         return false;
@@ -4033,20 +4034,20 @@ export default {
       if (keys && keys.length) {
         for (const item of keys) {
           if (!nameReg2.test(item.key)) {
-            megPrefix += this.$t('键：');
+            megPrefix += this.$t('deploy.templateset.keyLabel');
             this.$bkMessage({
               theme: 'error',
-              message: megPrefix + this.$t('键名错误，只能包含：字母、数字、连字符(-)、点(.)、下划线(_)，长度小于30个字符'),
+              message: megPrefix + this.$t('deploy.templateset.domainRegex'),
               delay: 8000,
             });
             return false;
           }
         }
       } else {
-        megPrefix += this.$t('键：');
+        megPrefix += this.$t('deploy.templateset.keyLabel');
         this.$bkMessage({
           theme: 'error',
-          message: megPrefix + this.$t('请先添加键'),
+          message: megPrefix + this.$t('deploy.templateset.addKeyFirst'),
         });
         return false;
       }

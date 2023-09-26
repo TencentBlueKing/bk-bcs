@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package main xxx
 package main
 
 import (
@@ -19,8 +20,11 @@ import (
 	"syscall"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 )
 
 func main() {
@@ -31,11 +35,24 @@ func main() {
 	mgr := app.NewWebConsoleManager(ctx, nil)
 	if err := mgr.Init(); err != nil {
 		logger.Errorf("init webconsole error: %s", err)
-		os.Exit(1)
+		os.Exit(1) // nolint
+	}
+
+	// 初始化 Tracer
+	shutdown, err := tracing.InitTracing(config.G.Tracing)
+	if err != nil {
+		klog.Info(err.Error())
+	}
+	if shutdown != nil {
+		defer func() {
+			if err := shutdown(context.Background()); err != nil {
+				klog.Infof("failed to shutdown TracerProvider: %s", err.Error())
+			}
+		}()
 	}
 
 	if err := mgr.Run(); err != nil {
 		logger.Errorf("run webconsole error: %s", err)
-		os.Exit(1)
+		os.Exit(1) // nolint
 	}
 }

@@ -15,7 +15,11 @@
 // Package ctxkey xxx
 package ctxkey
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
+import (
+	"context"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
+)
 
 const (
 	// RequestIDKey xxx
@@ -28,4 +32,14 @@ const (
 	ClusterKey = types.ContextKey("cluster")
 	// LangKey 语言版本
 	LangKey = types.ContextKey("lang")
+	// UserAgentHeaderKey is the header name of User-Agent.
+	UserAgentHeaderKey = "Grpcgateway-User-Agent"
+	// ForwardedForHeaderKey is the header name of X-Forwarded-For.
+	ForwardedForHeaderKey = "X-Forwarded-For"
 )
+
+// GetUsernameFromCtx 通过 ctx 获取 username
+func GetUsernameFromCtx(ctx context.Context) string {
+	id, _ := ctx.Value(UsernameKey).(string)
+	return id
+}

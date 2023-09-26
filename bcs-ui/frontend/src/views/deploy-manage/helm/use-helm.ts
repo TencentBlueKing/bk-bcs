@@ -1,26 +1,28 @@
+import Vue, { ref } from 'vue';
+
 import {
-  reposList,
-  createRepo,
-  repoCharts,
-  deleteRepoChart,
-  repoChartVersions,
-  repoChartVersionDetail,
-  deleteRepoChartVersion,
-  releaseDetail,
-  deleteRelease,
-  releaseChart,
-  updateRelease,
-  releaseHistory,
-  previewRelease,
-  rollbackRelease,
-  releaseStatus,
-  releasesList,
-  downloadChartUrl,
   chartDetail,
   chartReleases,
+  createRepo,
+  deleteRelease,
+  deleteRepoChart,
+  deleteRepoChartVersion,
+  downloadChartUrl,
+  previewRelease,
+  releaseChart,
+  releaseDetail,
+  releaseHistory,
+  releasesList,
+  releasesManifest,
+  releaseStatus,
+  repoCharts,
+  repoChartVersionDetail,
+  repoChartVersions,
+  reposList,
+  rollbackRelease,
+  updateRelease,
 } from '@/api/modules/helm';
 import { parseUrl } from '@/api/request';
-import Vue, { ref } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
 
 const { $bkMessage } = Vue.prototype;
@@ -53,7 +55,7 @@ export default function useHelm() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('创建成功'),
+      message: $i18n.t('generic.msg.success.create'),
     });
     return result;
   };
@@ -74,7 +76,7 @@ export default function useHelm() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('删除成功'),
+      message: $i18n.t('generic.msg.success.delete'),
     });
     return result;
   };
@@ -102,7 +104,7 @@ export default function useHelm() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('删除成功'),
+      message: $i18n.t('generic.msg.success.delete'),
     });
     return result;
   };
@@ -124,7 +126,7 @@ export default function useHelm() {
 
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('删除任务提交成功'),
+      message: $i18n.t('deploy.helm.deleteTaskSubmit'),
     });
     return result;
   };
@@ -134,7 +136,7 @@ export default function useHelm() {
 
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('部署任务提交成功'),
+      message: $i18n.t('deploy.helm.installTaskSubmit'),
     });
     return result;
   };
@@ -144,7 +146,7 @@ export default function useHelm() {
 
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('更新任务提交成功'),
+      message: $i18n.t('deploy.helm.upgradeTaskSubmit'),
     });
     return result;
   };
@@ -177,7 +179,7 @@ export default function useHelm() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('回滚任务提交成功'),
+      message: $i18n.t('deploy.helm.rollbackTaskSubmit'),
     });
     return result;
   };
@@ -226,6 +228,16 @@ export default function useHelm() {
     return data;
   };
 
+  const handleGetManifest = async (params: {
+    $clusterId: string
+    $releaseName: string
+    $revision: number
+    $namespaceId: string
+  }) => {
+    const data = await releasesManifest(params).catch(() => ({}));
+    return data;
+  };
+
   return {
     loading,
     repos,
@@ -248,5 +260,6 @@ export default function useHelm() {
     handleDownloadChart,
     handleGetChartDetail,
     handleGetChartReleases,
+    handleGetManifest,
   };
 }

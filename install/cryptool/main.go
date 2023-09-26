@@ -17,33 +17,71 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2"
 )
 
 func main() {
-	if len(os.Args) != 3 {
+	if len(os.Args) != 6 {
 		fmt.Printf("command line arguments lost!\n")
 		fmt.Printf("try:\n")
-		fmt.Printf("    cryptool decrypt [string]\n")
-		fmt.Printf("    cryptool encrypt [string]\n")
+		fmt.Printf("normal Algorithm\n")
+		fmt.Printf("    cryptools normal compileKey priKey decrypt [string]\n")
+		fmt.Printf("    cryptools normal compileKey priKey encrypt [string]\n")
+		fmt.Printf("SM4 Algorithm\n")
+		fmt.Printf("    cryptools SM4 key iv decrypt [string]\n")
+		fmt.Printf("    cryptools SM4 key iv encrypt [string]\n")
+		fmt.Printf("AES-GCM Algorithm\n")
+		fmt.Printf("    cryptools AES-GCM key nonce decrypt [string]\n")
+		fmt.Printf("    cryptools normal key nonce encrypt [string]\n")
 		return
 	}
+
 	switch os.Args[1] {
-	case "encrypt":
-		out, err := encrypt.DesEncryptToBase([]byte(os.Args[2]))
+	case encryptv2.Normal.String(), encryptv2.Sm4.String(), encryptv2.AesGcm.String():
+		key1 := os.Args[2]
+		key2 := os.Args[3]
+
+		cryptor, err := encryptv2.NewCrypto(&encryptv2.Config{
+			Enabled:   true,
+			Algorithm: encryptv2.Algorithm(os.Args[1]),
+			Sm4: &encryptv2.Sm4Conf{
+				Key: key1,
+				Iv:  key2,
+			},
+			AesGcm: &encryptv2.AesGcmConf{
+				Key:   key1,
+				Nonce: key2,
+			},
+			Normal: &encryptv2.NormalConf{
+				CompileKey: key1,
+				PriKey:     key2,
+			},
+		})
 		if err != nil {
-			fmt.Printf("encrypt from original failed: %s\n", err.Error())
+			fmt.Printf("[normal|SM4|AES-GCM] cryptor init failed: %s\n", err.Error())
 			return
 		}
-		fmt.Printf("Encrypt text: %s\n", string(out))
-	case "decrypt":
-		out, err := encrypt.DesDecryptFromBase([]byte(os.Args[2]))
-		if err != nil {
-			fmt.Printf("Decrypt from Base failed: %s\n", err.Error())
-			return
+		switch os.Args[4] {
+		case "encrypt":
+			out, err := cryptor.Encrypt(os.Args[5])
+			if err != nil {
+				fmt.Printf("%s encrypt from original failed: %s\n", os.Args[1], err.Error())
+				return
+			}
+			fmt.Printf("%s Encrypt text: %s\n", os.Args[1], string(out))
+		case "decrypt":
+			out, err := cryptor.Decrypt(os.Args[5])
+			if err != nil {
+				fmt.Printf("%s Decrypt from Base failed: %s\n", os.Args[1], err.Error())
+				return
+			}
+			fmt.Printf("%s Original text: %s\n", os.Args[1], string(out))
+		default:
+			fmt.Printf("Unknown action...\n")
 		}
-		fmt.Printf("Original text: %s\n", string(out))
 	default:
-		fmt.Printf("Unknown action...\n")
+		fmt.Printf("Unknown Algorithm, please [normal|SM4|AES-GCM]...\n")
 	}
+
+	return
 }

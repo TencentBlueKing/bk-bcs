@@ -5,7 +5,7 @@
       <!--CPU使用率-->
       <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
         <div class="flex justify-between">
-          <span class="text-[14px] font-bold">{{ $t('CPU使用率') }}</span>
+          <span class="text-[14px] font-bold">{{ $t('metrics.cpuUsage') }}</span>
           <div>
             <div class="flex justify-end">
               <span class="text-[32px]">
@@ -14,9 +14,9 @@
               <sup class="text-[20px]">%</sup>
             </div>
             <div class="font-bold text-[#3ede78] text-[14px]">
-              {{ parseFloat(overviewData.cpu_usage.used || 0).toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage.used || '0').toFixed(2) }}
               of
-              {{ parseFloat(overviewData.cpu_usage.total || 0).toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage.total || '0').toFixed(2) }}
             </div>
           </div>
         </div>
@@ -30,7 +30,7 @@
       <!-- 内存使用率 -->
       <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
         <div class="flex justify-between">
-          <span class="text-[14px] font-bold">{{ $t('内存使用率') }}</span>
+          <span class="text-[14px] font-bold">{{ $t('metrics.memUsage') }}</span>
           <div>
             <div class="flex justify-end">
               <span class="text-[32px]">
@@ -55,7 +55,7 @@
       <!-- 磁盘容量(虚拟集群不展示磁盘信息) -->
       <div class="flex-1 p-[20px] h-[360px]" v-if="curCluster.clusterType !== 'virtual'">
         <div class="flex justify-between">
-          <span class="text-[14px] font-bold">{{ $t('磁盘容量') }}</span>
+          <span class="text-[14px] font-bold">{{ $t('metrics.diskUsage') }}</span>
           <div>
             <div class="flex justify-end">
               <span class="text-[32px]">
@@ -78,24 +78,24 @@
         />
       </div>
     </div>
-    <div class="flex overflow-hidden">
+    <div class="flex overflow-hidden border-solid border-0 border-b border-[#dfe0e5]">
       <!--CPU装箱率-->
       <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">
-            {{ $t('CPU装箱率') }}
+            {{ $t('metrics.cpuRequestUsage.text') }}
             <bk-popover theme="light">
               <span class="text-[#C4C6CC] relative top-[-1px]">
                 <i class="bcs-icon bcs-icon-info-circle-shape"></i>
               </span>
               <template #content>
                 <i18n
-                  path="集群CPU装箱率 = 集群所有Pod CPU Request之和 / 集群所有节点CPU总核数（不包含Master节点），集群CPU装箱率越接近集群CPU使用率，集群CPU资源利用率越高 {0}">
+                  path="metrics.cpuRequestUsage.clusterDesc">
                   <bk-link
                     theme="primary"
                     target="_blank"
                     href="https://kubernetes.io/zh-cn/docs/concepts/configuration/manage-resources-containers/">
-                    <span class="text-[12px]"> {{ $t('了解更多') }}</span>
+                    <span class="text-[12px]"> {{ $t('generic.button.learnMore') }}</span>
                   </bk-link>
                 </i18n>
               </template>
@@ -109,9 +109,9 @@
               <sup class="text-[20px]">%</sup>
             </div>
             <div class="font-bold text-[#3ede78] text-[14px]">
-              {{ parseFloat(overviewData.cpu_usage.request || 0).toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage.request || '0').toFixed(2) }}
               of
-              {{ parseFloat(overviewData.cpu_usage.total || 0).toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage.total || '0').toFixed(2) }}
             </div>
           </div>
         </div>
@@ -126,19 +126,19 @@
       <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">
-            {{ $t('内存装箱率') }}
+            {{ $t('metrics.memRequestUsage.text') }}
             <bk-popover theme="light">
               <span class="text-[#C4C6CC] relative top-[-1px]">
                 <i class="bcs-icon bcs-icon-info-circle-shape"></i>
               </span>
               <template #content>
                 <i18n
-                  path="集群内存装箱率 = 集群所有Pod 内存 Request之和 / 集群所有节点内存总大小（不包含Master节点），集群内存装箱率越接近集群内存使用率，集群内存资源利用率越高 {0}">
+                  path="metrics.memRequestUsage.clusterDesc">
                   <bk-link
                     theme="primary"
                     target="_blank"
                     href="https://kubernetes.io/zh-cn/docs/concepts/configuration/manage-resources-containers/">
-                    <span class="text-[12px]"> {{ $t('了解更多') }}</span>
+                    <span class="text-[12px]"> {{ $t('generic.button.learnMore') }}</span>
                   </bk-link>
                 </i18n>
               </template>
@@ -173,7 +173,7 @@
       <!-- 磁盘IO(虚拟集群不展示磁盘信息) -->
       <div class="flex-1 p-[20px] h-[360px]" v-if="curCluster.clusterType !== 'virtual'">
         <div class="flex justify-between">
-          <span class="text-[14px] font-bold">{{ $t('磁盘IO') }}</span>
+          <span class="text-[14px] font-bold">{{ $t('metrics.diskIOUsage') }}</span>
           <div>
             <div class="flex justify-end">
               <span class="text-[32px]">
@@ -197,14 +197,60 @@
         />
       </div>
     </div>
+    <div class="flex overflow-hidden" v-if="curCluster.clusterType !== 'virtual'">
+      <!--POD使用率-->
+      <div class="flex-1 p-[20px] h-[360px] border-solid border-0 border-r border-[#dfe0e5]">
+        <div class="flex justify-between">
+          <span class="text-[14px] font-bold">
+            {{ $t('metrics.podUsage') }}
+          </span>
+          <div>
+            <div class="flex justify-end">
+              <span class="text-[32px]">
+                {{ conversionPercentUsed(overviewData.pod_usage.used, overviewData.pod_usage.total) }}
+              </span>
+              <sup class="text-[20px]">%</sup>
+            </div>
+            <div class="font-bold text-[#3ede78] text-[14px]">
+              {{ overviewData.pod_usage.used || '--' }}
+              of
+              {{ overviewData.pod_usage.total || '--' }}
+            </div>
+          </div>
+        </div>
+        <ClusterOverviewChart
+          :cluster-id="clusterId"
+          class="!h-[250px]"
+          :color="['#3ede78']"
+          :metrics="['pod_usage']"
+        />
+      </div>
+      <div class="flex-1 p-[20px]"></div>
+      <div class="flex-1 p-[20px]"></div>
+    </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, toRefs, computed } from 'vue';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+
 import ClusterOverviewChart from './cluster-overview-chart.vue';
-import $store from '@/store/index';
-import { useCluster, useProject } from '@/composables/use-app';
+
 import { formatBytes } from '@/common/util';
+import { useCluster, useProject } from '@/composables/use-app';
+import $store from '@/store/index';
+
+interface IUsageData {
+  request?: string
+  total?: string
+  used?: string
+}
+
+interface IByteData {
+  request_bytes?: string
+  total_bytes?: string
+  used_bytes?: string
+}
+
 export default defineComponent({
   name: 'ClusterOverview',
   components: { ClusterOverviewChart },
@@ -221,15 +267,17 @@ export default defineComponent({
     const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value) || {});
     const { projectCode } = useProject();
     const overviewData = ref<{
-      cpu_usage: any
-      disk_usage: any
-      memory_usage: any
-      diskio_usage: any
+      cpu_usage: IUsageData
+      disk_usage: IByteData
+      memory_usage: IByteData
+      diskio_usage: IUsageData
+      pod_usage: IUsageData
     }>({
       cpu_usage: {},
       disk_usage: {},
       memory_usage: {},
       diskio_usage: {},
+      pod_usage: {},
     });
     const getClusterOverview = async () => {
       overviewData.value = await $store.dispatch('metric/clusterOverview', {

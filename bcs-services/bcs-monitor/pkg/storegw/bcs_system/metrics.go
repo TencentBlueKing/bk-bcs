@@ -18,8 +18,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 	"github.com/prometheus/prometheus/prompb"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 )
 
 // metricsParams
@@ -56,6 +57,11 @@ var metricsMaps = map[string]metricsFn{
 	// GetClusterCPUUsed
 	"bcs:cluster:cpu:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterCPUUsed(mp.ctx, mp.projectID, mp.clusterID,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	// GetClusterPodUsage
+	"bcs:cluster:pod:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetClusterPodUsage(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	// GetClusterPodTotal
@@ -149,9 +155,39 @@ var metricsMaps = map[string]metricsFn{
 		return mp.client.GetNodeCPUUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetNodeCPUTotal
+	"bcs:node:cpu:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetNodeCPUTotal(mp.ctx, mp.projectID, mp.clusterID, mp.node,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	// GetNodeCPURequest
+	"bcs:node:cpu:request": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetNodeCPURequest(mp.ctx, mp.projectID, mp.clusterID, mp.node,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	// GetNodeCPUUsed
+	"bcs:node:cpu:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetNodeCPUUsed(mp.ctx, mp.projectID, mp.clusterID, mp.node,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
 	// GetNodeCPURequestUsage
 	"bcs:node:cpu_request:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetNodeCPURequestUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	// GetNodeMemoryTotal
+	"bcs:node:memory:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetNodeMemoryTotal(mp.ctx, mp.projectID, mp.clusterID, mp.node,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	// GetNodeMemoryRequest
+	"bcs:node:memory:request": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetNodeMemoryRequest(mp.ctx, mp.projectID, mp.clusterID, mp.node,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	// GetNodeMemoryUsed
+	"bcs:node:memory:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetNodeMemoryUsed(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	// GetNodeMemoryUsage
@@ -166,6 +202,14 @@ var metricsMaps = map[string]metricsFn{
 	},
 	"bcs:node:disk:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetNodeDiskUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	"bcs:node:disk:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetNodeDiskUsed(mp.ctx, mp.projectID, mp.clusterID, mp.node,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	"bcs:node:disk:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetNodeDiskTotal(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:diskio:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {

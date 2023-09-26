@@ -1,28 +1,28 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="p-[24px] node-config-wrapper" ref="nodeConfigRef">
-    <FormGroup :title="$t('新建节点规格')" :allow-toggle="false" class="mb-[16px]">
+    <FormGroup :title="$t('cluster.ca.button.createNodePool')" :allow-toggle="false" class="mb-[16px]">
       <bk-form :model="nodePoolConfig" :rules="basicFormRules" ref="basicFormRef">
-        <bk-form-item class="max-w-[674px]" :label="$t('节点规格名称')" property="name" required>
+        <bk-form-item class="max-w-[674px]" :label="$t('cluster.ca.nodePool.label.name')" property="name" required>
           <bk-input v-model="nodePoolConfig.name"></bk-input>
-          <p class="text-[#979BA5]">{{ $t('名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符(-)及小数点') }}</p>
+          <p class="text-[#979BA5] leading-4 mt-[4px]">{{ $t('cluster.ca.nodePool.validate.name') }}</p>
         </bk-form-item>
       </bk-form>
     </FormGroup>
-    <FormGroup :title="$t('节点配置')" :allow-toggle="false">
+    <FormGroup :title="$t('cluster.ca.nodePool.title.nodeConfig')" :allow-toggle="false">
       <bk-form class="node-config" :model="nodePoolConfig" :rules="nodePoolConfigRules" ref="formRef">
-        <bk-form-item :label="$t('镜像提供方')" :desc="$t('镜像提供方与操作系统使用TKE集群设置，暂不支持修改')">
+        <bk-form-item :label="$t('cluster.ca.nodePool.create.imageProvider.title')" :desc="$t('cluster.ca.nodePool.create.imageProvider.desc')">
           <bk-radio-group :value="extraInfo.IMAGE_PROVIDER">
-            <bk-radio value="PUBLIC_IMAGE" disabled>{{$t('公共镜像')}}</bk-radio>
-            <bk-radio value="PRIVATE_IMAGE" disabled>{{$t('自定义镜像')}}</bk-radio>
+            <bk-radio value="PUBLIC_IMAGE" disabled>{{$t('deploy.image.publicImage')}}</bk-radio>
+            <bk-radio value="PRIVATE_IMAGE" disabled>{{$t('cluster.ca.nodePool.create.imageProvider.private_image')}}</bk-radio>
           </bk-radio-group>
         </bk-form-item>
-        <bk-form-item :label="$t('操作系统')">
+        <bk-form-item :label="$t('cluster.ca.nodePool.label.system')">
           <bcs-input disabled :value="clusterOS"></bcs-input>
         </bk-form-item>
         <bk-form-item
-          :label="$t('可用区')"
-          :desc="$t('一般无需指定可用区，当已有的资源（存储或者网络等）偏好甚至依赖特定可用区时，可以指定可用区范围')"
+          :label="$t('cluster.ca.nodePool.create.az.title')"
+          :desc="$t('cluster.ca.nodePool.create.az.desc')"
           property="nodePoolConfig.autoScaling.zones">
           <div class="flex items-center h-[32px]">
             <bk-radio-group
@@ -30,10 +30,10 @@
               class="w-[auto]"
               @change="handleZoneChange">
               <bk-radio :value="false" :disabled="isEdit">
-                <TextTips :text="$t('任一可用区')" />
+                <TextTips :text="$t('cluster.ca.nodePool.create.az.random')" />
               </bk-radio>
               <bk-radio :value="true" :disabled="isEdit">
-                <TextTips :text="$t('指定可用区')" />
+                <TextTips :text="$t('cluster.ca.nodePool.create.az.selected')" />
               </bk-radio>
             </bk-radio-group>
             <bcs-select
@@ -45,6 +45,7 @@
               :loading="zoneListLoading"
               :disabled="isEdit"
               :clearable="false"
+              selected-style="checkbox"
               @change="handleSetDefaultInstance">
               <bcs-option
                 v-for="zone in zoneList"
@@ -54,7 +55,9 @@
             </bcs-select>
           </div>
         </bk-form-item>
-        <bk-form-item :label="$t('机型配置')">
+        <bk-form-item
+          :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.title')"
+          :desc="isEdit ? $t('cluster.ca.nodePool.create.instanceTypeConfig.desc') : ''">
           <div class="mb15" style="display: flex;">
             <div class="prefix-select">
               <span :class="['prefix', { disabled: isEdit }]">CPU</span>
@@ -65,7 +68,7 @@
                 :disabled="isEdit"
                 :placeholder="' '"
                 class="bg-[#fff]">
-                <bcs-option id="" :name="$t('全部')"></bcs-option>
+                <bcs-option id="" :name="$t('generic.label.total')"></bcs-option>
                 <bcs-option
                   v-for="cpuItem in cpuList"
                   :key="cpuItem"
@@ -73,10 +76,10 @@
                   :name="cpuItem">
                 </bcs-option>
               </bcs-select>
-              <span :class="['company', { disabled: isEdit }]">{{$t('核')}}</span>
+              <span :class="['company', { disabled: isEdit }]">{{$t('units.suffix.cores')}}</span>
             </div>
             <div class="prefix-select ml30">
-              <span :class="['prefix', { disabled: isEdit }]">{{$t('内存')}}</span>
+              <span :class="['prefix', { disabled: isEdit }]">{{$t('generic.label.mem')}}</span>
               <bcs-select
                 v-model="Mem"
                 searchable
@@ -84,7 +87,7 @@
                 :disabled="isEdit"
                 :placeholder="' '"
                 class="bg-[#fff]">
-                <bcs-option id="" :name="$t('全部')"></bcs-option>
+                <bcs-option id="" :name="$t('generic.label.total')"></bcs-option>
                 <bcs-option
                   v-for="memItem in memList"
                   :key="memItem"
@@ -103,9 +106,9 @@
             @page-change="pageChange"
             @page-limit-change="pageSizeChange"
             @row-click="handleCheckInstanceType">
-            <bcs-table-column :label="$t('机型')" prop="typeName" show-overflow-tooltip>
+            <bcs-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="typeName" show-overflow-tooltip>
               <template #default="{ row }">
-                <span v-bk-tooltips="{ disabled: row.status !== 'SOLD_OUT', content: $t('售罄') }">
+                <span v-bk-tooltips="{ disabled: row.status !== 'SOLD_OUT', content: $t('cluster.ca.nodePool.create.instanceTypeConfig.status.soldOut') }">
                   <bcs-radio
                     :value="nodePoolConfig.launchTemplate.instanceType === row.nodeType"
                     :disabled="row.status === 'SOLD_OUT' || isEdit">
@@ -114,22 +117,22 @@
                 </span>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('规格')" min-width="160" show-overflow-tooltip prop="nodeType"></bcs-table-column>
+            <bcs-table-column :label="$t('generic.label.specifications')" min-width="160" show-overflow-tooltip prop="nodeType"></bcs-table-column>
             <bcs-table-column label="CPU" prop="cpu" width="80" align="right">
               <template #default="{ row }">
-                <span>{{ `${row.cpu}${$t('核')}` }}</span>
+                <span>{{ `${row.cpu}${$t('units.suffix.cores')}` }}</span>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('内存')" prop="memory" width="80" align="right">
+            <bcs-table-column :label="$t('generic.label.mem')" prop="memory" width="80" align="right">
               <template #default="{ row }">
                 <span>{{ row.memory }}G</span>
               </template>
             </bcs-table-column>
           </bcs-table>
-          <p class="text-[12px] text-[#ea3636]" v-if="!nodePoolConfig.launchTemplate.instanceType">{{ $t('必填项') }}</p>
+          <p class="text-[12px] text-[#ea3636]" v-if="!nodePoolConfig.launchTemplate.instanceType">{{ $t('generic.validate.required') }}</p>
           <div class="mt25" style="display:flex;align-items:center;">
             <div class="prefix-select">
-              <span :class="['prefix', { disabled: isEdit }]">{{$t('系统盘')}}</span>
+              <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')}}</span>
               <bcs-select
                 v-model="nodePoolConfig.launchTemplate.systemDisk.diskType"
                 :disabled="isEdit"
@@ -158,13 +161,13 @@
               disabled
               :value="true"
               @change="handleShowDataDisksChange">
-              {{$t('购买数据盘')}}
+              {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.purchaseDataDisk')}}
             </bk-checkbox>
           </div>
           <div class="panel" v-for="(disk, index) in nodePoolConfig.nodeTemplate.dataDisks" :key="index">
             <div class="panel-item">
               <div class="prefix-select">
-                <span :class="['prefix', { disabled: isEdit }]">{{$t('数据盘')}}</span>
+                <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')}}</span>
                 <bcs-select
                   :disabled="isEdit"
                   v-model="disk.diskType"
@@ -188,12 +191,12 @@
               </bk-input>
               <span :class="['company', { disabled: isEdit }]">GB</span>
             </div>
-            <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('范围: 50~16380, 步长: 10')}}</p>
+            <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.dataDisks')}}</p>
             <div class="panel-item mt10">
               <bk-checkbox
                 :disabled="(isEdit || index === 0)"
                 v-model="disk.autoFormatAndMount">
-                {{$t('格式化并挂载于')}}
+                {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.mountPath')}}
               </bk-checkbox>
               <template v-if="disk.autoFormatAndMount">
                 <bcs-select
@@ -211,7 +214,7 @@
                 <bcs-input class="ml10" :disabled="(isEdit || index === 0)" v-model="disk.mountTarget"></bcs-input>
               </template>
             </div>
-            <p class="error-tips" v-if="showRepeatMountTarget(index)">{{$t('目录不能重复')}}</p>
+            <p class="error-tips" v-if="showRepeatMountTarget(index)">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.repeatPath')}}</p>
             <span :class="['panel-delete', { disabled: isEdit || index === 0 }]" @click="handleDeleteDiskData(index)">
               <i class="bk-icon icon-close3-shape"></i>
             </span>
@@ -219,30 +222,30 @@
           <div
             :class="['add-panel-btn', { disabled: isEdit || nodePoolConfig.nodeTemplate.dataDisks.length > 4 }]"
             v-bk-tooltips="{
-              content: $t('最多4个数据盘'),
+              content: $t('cluster.ca.nodePool.create.instanceTypeConfig.validate.maxDataDisks'),
               disabled: nodePoolConfig.nodeTemplate.dataDisks.length <= 4
             }"
             @click="handleAddDiskData">
             <i class="bk-icon left-icon icon-plus"></i>
-            <span>{{$t('添加数据盘')}}</span>
+            <span>{{$t('cluster.ca.nodePool.create.instanceTypeConfig.button.addDataDisks')}}</span>
           </div>
-          <span class="inline-flex mt15" v-bk-tooltips="$t('内部上云环境禁用公网IP，如需提供公网服务请使用腾讯云负载均衡（CLB）')">
+          <span class="inline-flex mt15" v-bk-tooltips="$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.tips')">
             <bk-checkbox
               disabled
               v-model="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
-              {{$t('分配免费公网IP')}}
+              {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
             </bk-checkbox>
           </span>
           <div class="panel" v-if="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
             <div class="panel-item">
-              <label class="label">{{$t('计费方式')}}</label>
+              <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.text')}}</label>
               <bk-radio-group v-model="nodePoolConfig.launchTemplate.internetAccess.internetChargeType">
-                <bk-radio :disabled="isEdit" value="TRAFFIC_POSTPAID_BY_HOUR">{{$t('按使用流量计费')}}</bk-radio>
-                <bk-radio :disabled="isEdit" value="BANDWIDTH_PREPAID">{{$t('按带宽计费')}}</bk-radio>
+                <bk-radio :disabled="isEdit" value="TRAFFIC_POSTPAID_BY_HOUR">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.traffic_postpaid_by_hour')}}</bk-radio>
+                <bk-radio :disabled="isEdit" value="BANDWIDTH_PREPAID">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.chargeMode.bandwidth_prepaid')}}</bk-radio>
               </bk-radio-group>
             </div>
             <div class="panel-item mt10">
-              <label class="label">{{$t('购买宽带')}}</label>
+              <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.maxBandWidth')}}</label>
               <bk-input
                 class="max-width-150"
                 type="number"
@@ -254,27 +257,27 @@
           </div>
         </bk-form-item>
         <bk-form-item
-          :label="$t('设置root密码')"
+          :label="$t('cluster.ca.nodePool.create.password.set')"
           property="nodePoolConfig.launchTemplate.initLoginPassword"
           error-display-type="normal">
           <bcs-input
             type="password"
             disabled
-            :placeholder="$t('内部上云环境root密码由铁将军统一生成，无需填写')"
+            :placeholder="$t('cluster.ca.nodePool.create.password.placeholder')"
             v-model="nodePoolConfig.launchTemplate.initLoginPassword"></bcs-input>
         </bk-form-item>
         <bk-form-item
-          :label="$t('确认root密码')"
+          :label="$t('cluster.ca.nodePool.create.password.confirm')"
           property="confirmPassword"
           error-display-type="normal">
           <bcs-input
             type="password"
-            :placeholder="$t('内部上云环境root密码由铁将军统一生成，无需填写')"
+            :placeholder="$t('cluster.ca.nodePool.create.password.placeholder')"
             disabled
             v-model="confirmPassword"></bcs-input>
         </bk-form-item>
         <bk-form-item
-          :label="$t('安全组')"
+          :label="$t('cluster.ca.nodePool.create.securityGroup')"
           property="nodePoolConfig.launchTemplate.securityGroupIDs"
           error-display-type="normal"
           required>
@@ -284,6 +287,7 @@
             multiple
             searchable
             class="bg-[#fff]"
+            selected-style="checkbox"
             disabled>
             <bcs-option
               v-for="securityGroup in securityGroupsList"
@@ -294,45 +298,46 @@
           </bcs-select>
         </bk-form-item>
         <bk-form-item
-          :label="$t('支持子网')"
-          :desc="$t('内部上云环境根据集群所在VPC由产品自动分配可用子网，尽可能的把集群内的节点分配在不同的可用区，避免集群节点集中在同一可用区')">
+          :label="$t('cluster.ca.nodePool.create.subnet.title')"
+          :desc="$t('cluster.ca.nodePool.create.subnet.desc')">
           <bcs-input
-            :placeholder="$t('系统自动分配')"
+            :placeholder="$t('cluster.ca.nodePool.create.subnet.placeholder')"
             disabled></bcs-input>
         </bk-form-item>
-        <bk-form-item :label="$t('容器目录')" :desc="$t('容器目录使用TKE集群配置，暂不支持修改')">
+        <bk-form-item :label="$t('dashboard.workload.container.dataDir')" :desc="$t('cluster.ca.nodePool.create.dockerGraphPath.desc')">
           <bcs-input disabled v-model="nodePoolConfig.nodeTemplate.dockerGraphPath"></bcs-input>
         </bk-form-item>
-        <bk-form-item :label="$t('运行时组件')" :desc="$t('运行时组件使用TKE集群配置，暂不支持修改')">
+        <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')" :desc="$t('cluster.ca.nodePool.create.containerRuntime.desc')">
           <bk-radio-group v-model="clusterAdvanceSettings.containerRuntime">
             <bk-radio value="docker" disabled>docker</bk-radio>
             <bk-radio value="containerd" disabled>containerd</bk-radio>
           </bk-radio-group>
         </bk-form-item>
-        <bk-form-item :label="$t('运行时版本')" :desc="$t('运行时版本使用TKE集群配置，暂不支持修改')">
+        <bk-form-item :label="$t('cluster.ca.nodePool.create.runtimeVersion.title')" :desc="$t('cluster.ca.nodePool.create.runtimeVersion.desc')">
           <bcs-input disabled v-model="clusterAdvanceSettings.runtimeVersion"></bcs-input>
         </bk-form-item>
         <div class="bcs-fixed-footer" v-if="!isEdit">
-          <bcs-button theme="primary" @click="handleNext">{{$t('下一步')}}</bcs-button>
-          <bcs-button class="ml10" @click="handleCancel">{{$t('取消')}}</bcs-button>
+          <bcs-button theme="primary" @click="handleNext">{{$t('generic.button.next')}}</bcs-button>
+          <bcs-button class="ml10" @click="handleCancel">{{$t('generic.button.cancel')}}</bcs-button>
         </div>
       </bk-form>
     </FormGroup>
   </div>
 </template>
 <script lang="ts">
+import { sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
-import $router from '@/router';
-import $i18n from '@/i18n/i18n-setup';
-import $store from '@/store/index';
-import usePage from '@/composables/use-page';
-import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
-import { useProject } from '@/composables/use-app';
-import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
-import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+
 import { cloudsZones } from '@/api/modules/cluster-manager';
 import TextTips from '@/components/layout/TextTips.vue';
-import { sortBy } from 'lodash';
+import { useProject } from '@/composables/use-app';
+import usePage from '@/composables/use-page';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import $store from '@/store/index';
+import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 
 export default defineComponent({
   components: { FormGroup, TextTips },
@@ -368,15 +373,15 @@ export default defineComponent({
     const diskEnum = ref([
       {
         id: 'CLOUD_PREMIUM',
-        name: $i18n.t('高性能云硬盘'),
+        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.premium'),
       },
       {
         id: 'CLOUD_SSD',
-        name: $i18n.t('SSD云硬盘'),
+        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
       },
       {
         id: 'CLOUD_HSSD',
-        name: $i18n.t('增强型SSD云硬盘'),
+        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
       },
     ]);
     const confirmPassword = ref(''); // 确认密码
@@ -428,14 +433,14 @@ export default defineComponent({
       // 安全组校验
       'nodePoolConfig.launchTemplate.securityGroupIDs': [
         {
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
           validator: () => !!nodePoolConfig.value.launchTemplate.securityGroupIDs.length,
         },
       ],
       'nodePoolConfig.autoScaling.zones': [
         {
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
           validator: () => !isSpecifiedZoneList.value || !!nodePoolConfig.value.autoScaling?.zones?.length,
         },
@@ -445,11 +450,11 @@ export default defineComponent({
       name: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
         {
-          message: $i18n.t('名称2 ~ 255个字符之间，仅支持中文、英文、数字、下划线，分隔符(-)及小数点'),
+          message: $i18n.t('cluster.ca.nodePool.create.validate.name'),
           trigger: 'blur',
           validator: (v: string) => /^[\u4E00-\u9FA5A-Za-z0-9._-]+$/.test(v) && v.length <= 255 && v.length >= 2,
         },
@@ -669,7 +674,7 @@ export default defineComponent({
       return nodePoolConfig.value;
     };
     const validate = async () => {
-      const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);;
+      const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);
       if (!basicFormValidate && nodeConfigRef.value) {
         nodeConfigRef.value.scrollTop = 0;
         return false;

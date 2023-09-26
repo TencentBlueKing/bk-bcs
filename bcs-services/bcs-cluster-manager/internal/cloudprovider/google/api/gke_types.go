@@ -46,6 +46,8 @@ type NodePool struct {
 	Config *NodeConfig `json:"config,omitempty"`
 	// InitialNodeCount the initial node count for the pool
 	InitialNodeCount int64 `json:"initialNodeCount,omitempty"`
+	// Locations the list of Google Compute Engine zones
+	Locations []string `json:"locations,omitempty"`
 	// Management NodeManagement configuration for this NodePool
 	Management *NodeManagement `json:"management,omitempty"`
 	// MaxPodsConstraint the constraint on the maximum number of pods that

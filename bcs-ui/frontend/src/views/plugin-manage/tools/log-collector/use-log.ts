@@ -1,19 +1,20 @@
+import { ref } from 'vue';
+
+import { dashbordList } from '@/api/modules/cluster-resource';
 import {
   addonsDetail,
   updateOns as aliasUpdateOns,
 } from '@/api/modules/helm';
 import {
-  logCollectorRules as aliasLogCollectorRules,
-  retryLogCollectorRule as aliasRetryLogCollectorRule,
-  enableLogCollector as aliasEnableLogCollector,
-  disableLogCollector as aliasDisableLogCollector,
-  deleteLogCollectorRule as aliasDeleteLogCollectorRule,
-  logCollectorDetail as aliasLogCollectorDetail,
   createLogCollectorRule as aliasCreateLogCollectorRule,
+  deleteLogCollectorRule as aliasDeleteLogCollectorRule,
+  disableLogCollector as aliasDisableLogCollector,
+  enableLogCollector as aliasEnableLogCollector,
+  logCollectorDetail as aliasLogCollectorDetail,
+  logCollectorRules as aliasLogCollectorRules,
   modifyLogCollectorRule as aliasModifyLogCollectorRule,
+  retryLogCollectorRule as aliasRetryLogCollectorRule,
 } from '@/api/modules/monitor';
-import { dashbordList } from '@/api/modules/cluster-resource';
-import { ref } from 'vue';
 
 interface IAddOnsParams {
   $clusterId: string
@@ -69,7 +70,7 @@ export interface IRuleData {
   rule: {
     add_pod_label: boolean
     extra_labels: {key: string, value: string}[]
-    data_info: {
+    data_info?: {
       file_bkdata_data_id: number
       std_bkdata_data_id: number
     }

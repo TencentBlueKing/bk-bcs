@@ -68,6 +68,7 @@ type ChartHandler interface {
 	ListVersion(ctx context.Context, option ListOption) (*ListChartVersionData, error)
 	Detail(ctx context.Context, version string) (*ChartDetail, error)
 	Download(ctx context.Context, version string) ([]byte, error)
+	Upload(ctx context.Context, option UploadOption) error
 	Delete(ctx context.Context) error
 	DeleteVersion(ctx context.Context, version string) error
 }
@@ -320,4 +321,13 @@ type ListOption struct {
 	PackageName string
 	Page        int64
 	Size        int64
+}
+
+// UploadOption 定义了上传 Chart 的参数
+type UploadOption struct {
+	ProjectCode string
+	RepoName    string
+	Version     string
+	Force       bool
+	ChartPath   string
 }

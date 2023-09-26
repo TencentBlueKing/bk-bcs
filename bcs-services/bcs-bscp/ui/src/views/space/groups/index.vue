@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted, nextTick } from 'vue'
+  import { ref, watch, onMounted, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Plus, Search, DownShape } from 'bkui-vue/lib/icon'
   import { InfoBox } from 'bkui-vue/lib'
@@ -10,7 +10,7 @@
   import EditGroup from './edit-group.vue'
   import RuleTag from './components/rule-tag.vue'
   import ServicesToPublished from './services-to-published.vue'
-  
+
   const { spaceId } = storeToRefs(useGlobalStore())
 
   const listLoading = ref(false)
@@ -37,6 +37,12 @@
     }
   })
   const isPublishedSliderShow = ref(false)
+
+  watch(() => spaceId.value, async() => {
+    pagination.value.current = 1
+    await loadGroupList()
+    refreshTableData()
+  })
 
   onMounted(async() => {
     await loadGroupList()
@@ -146,10 +152,9 @@
   }
 
   // 删除分组
-  const handleDeleteGroup = (group: IGroupItem) => { 
+  const handleDeleteGroup = (group: IGroupItem) => {
     InfoBox({
       title: `确认是否删除分组【${group.name}?】`,
-      infoType: "danger",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
@@ -181,6 +186,17 @@
     pagination.value.limit = val
     refreshTableData()
   }
+
+  // hover提示文字
+  const handleTooltip = (flag:boolean,info:string) => {
+    if(flag){
+      return {
+        content:`分组已上线,不能${info}`,
+        placement: 'top',
+      }
+    }
+    return {disabled:true}
+   }
 
 </script>
 <template>
@@ -263,8 +279,18 @@
             <bk-table-column label="操作" :width="120">
               <template #default="{ row }">
                 <div v-if="!row.IS_CATEORY_ROW" class="action-btns">
-                  <bk-button text theme="primary" :disabled="row.released_apps_num > 0" @click="openEditGroupDialog(row)">编辑分组</bk-button>
-                  <bk-button text theme="primary" :disabled="row.released_apps_num > 0" @click="handleDeleteGroup(row)">删除</bk-button>
+                  <bk-button
+                  text
+                  theme="primary"
+                  :disabled="row.released_apps_num > 0"
+                  @click="openEditGroupDialog(row)"
+                  v-bk-tooltips="handleTooltip(row.released_apps_num,'编辑')">编辑分组</bk-button>
+                  <bk-button
+                  text
+                  theme="primary"
+                  :disabled="row.released_apps_num > 0"
+                  @click="handleDeleteGroup(row)"
+                  v-bk-tooltips="handleTooltip(row.released_apps_num,'删除')">删除</bk-button>
                 </div>
               </template>
             </bk-table-column>

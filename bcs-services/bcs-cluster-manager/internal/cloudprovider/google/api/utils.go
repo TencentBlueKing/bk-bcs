@@ -18,12 +18,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
@@ -37,18 +39,16 @@ import (
 
 const (
 	gceURLPrefix = "https://www.googleapis.com/compute/v1/"
+
+	BCSNodeGroupTaintKey    = "bcs-cluster-manager"
+	BCSNodeGroupTaintValue  = "noSchedule"
+	BCSNodeGroupTaintEffect = "NO_EXECUTE"
 )
 
-const (
-	UpdatePolicyProactive = "PROACTIVE"
-	// UpdatePolicyOpportunistic update is opportunistic
-	UpdatePolicyOpportunistic = "OPPORTUNISTIC"
-	UpdatePolicyActionNone    = "None"
-	// UpdatePolicyActionRefresh update action refresh
-	UpdatePolicyActionRefresh = "REFRESH"
-	UpdatePolicyActionRestart = "RESTART"
-	UpdatePolicyActionReplace = "REPLACE"
-)
+// GenerateInstanceUrl generates url for instance.
+func GenerateInstanceUrl(zone, name string) string {
+	return fmt.Sprintf("/zones/%s/instances/%s", zone, name)
+}
 
 // GCPClientSet google cloud platform client set
 type GCPClientSet struct {
@@ -79,24 +79,34 @@ func GetTokenSource(ctx context.Context, credential string) (oauth2.TokenSource,
 }
 
 // GetClusterKubeConfig get cloud cluster's kube config
-func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, clusterName string) (string, error) {
+func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region,
+	clusterType string, clusterName string) (string, error) {
 	client, err := GetContainerServiceClient(ctx, saSecret)
 	if err != nil {
 		return "", err
 	}
 
 	// Get the kube cluster in given project.
-	parent := "projects/" + gkeProjectID + "/locations/" + region + "/clusters/" + clusterName
-	gkeCluster, err := client.Projects.Locations.Clusters.Get(parent).Do()
+	var (
+		gkeCluster *container.Cluster
+	)
+	switch clusterType {
+	case common.Regions:
+		parent := "projects/" + gkeProjectID + "/locations/" + region + "/clusters/" + clusterName
+		gkeCluster, err = client.Projects.Locations.Clusters.Get(parent).Do()
+	case common.Zones:
+		gkeCluster, err = client.Projects.Zones.Clusters.Get(gkeProjectID, region, clusterName).Do()
+	default:
+		return "", fmt.Errorf("unsupported gke cluster type[%s]", region)
+	}
 	if err != nil {
 		return "", fmt.Errorf("GetClusterKubeConfig list clusters failed, project=%s: %v", gkeProjectID, err)
 	}
 
 	name := fmt.Sprintf("%s_%s_%s", gkeProjectID, gkeCluster.Location, gkeCluster.Name)
-
 	cert, err := base64.StdEncoding.DecodeString(gkeCluster.MasterAuth.ClusterCaCertificate)
 	if err != nil {
-		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %v", name, err)
+		return "", fmt.Errorf("GetClusterKubeConfig certificate failed, cluster=%s: %v", name, err)
 	}
 
 	restConfig := &rest.Config{
@@ -156,7 +166,21 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, c
 	if err != nil {
 		return "", fmt.Errorf("GetClusterKubeConfig marsh kubeconfig failed, %v", err)
 	}
-	return base64.StdEncoding.EncodeToString(configByte), nil
+
+	return encrypt.Encrypt(nil, string(configByte))
+}
+
+func taintTransEffect(ori string) string {
+	switch ori {
+	case "NoSchedule":
+		return "NO_SCHEDULE"
+	case "PreferNoSchedule":
+		return "PREFER_NO_SCHEDULE"
+	case "NoExecute":
+		return "NO_EXECUTE"
+	}
+
+	return ori
 }
 
 // MapTaints map cmproto.Taint to Taint
@@ -166,9 +190,16 @@ func MapTaints(cmt []*cmproto.Taint) []*Taint {
 		t = append(t, &Taint{
 			Key:    v.Key,
 			Value:  v.Value,
-			Effect: v.Effect,
+			Effect: taintTransEffect(v.Effect),
 		})
 	}
+
+	// attention: gke not support addNodes to set unScheduled nodes, thus realize this feature by taint
+	t = append(t, &Taint{
+		Key:    BCSNodeGroupTaintKey,
+		Value:  BCSNodeGroupTaintValue,
+		Effect: BCSNodeGroupTaintEffect})
+
 	return t
 }
 
@@ -180,6 +211,7 @@ func genCreateNodePoolRequest(req *CreateNodePoolRequest) *container.CreateNodeP
 		NodePool: &container.NodePool{
 			Name:             req.NodePool.Name,
 			InitialNodeCount: req.NodePool.InitialNodeCount,
+			Locations:        req.NodePool.Locations,
 			MaxPodsConstraint: &container.MaxPodsConstraint{
 				MaxPodsPerNode: req.NodePool.MaxPodsConstraint.MaxPodsPerNode,
 			},
@@ -240,7 +272,7 @@ func GetInstanceGroupManager(computeCli *ComputeServiceClient, url string) (*com
 	}
 	var igm *compute.InstanceGroupManager
 	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
-		igm, err = computeCli.GetInstanceGroupManager(context.Background(), igmInfo[2], igmInfo[(len(igmInfo)-1)])
+		igm, err = computeCli.GetInstanceGroupManager(context.Background(), igmInfo[3], igmInfo[(len(igmInfo)-1)])
 		if err != nil {
 			blog.Errorf("GetInstanceGroupManager failed: %v", err)
 			return nil, err
@@ -258,10 +290,11 @@ func PatchInstanceGroupManager(computeCli *ComputeServiceClient, url string, igm
 		blog.Errorf("PatchInstanceGroupManager failed: %v", err)
 		return nil, err
 	}
+
 	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
-		o, err := computeCli.PatchInstanceGroupManager(context.Background(), igmInfo[2], igmInfo[(len(igmInfo)-1)], igm)
+		o, err := computeCli.PatchInstanceGroupManager(context.Background(), igmInfo[3], igmInfo[(len(igmInfo)-1)], igm)
 		if err != nil {
-			blog.Errorf("PatchInstanceGroupManager failed, operation: %s, err: %v", o.SelfLink, err)
+			blog.Errorf("PatchInstanceGroupManager failed, err: %v", err)
 			return nil, err
 		}
 		return o, nil
@@ -278,16 +311,35 @@ func ResizeInstanceGroupManager(computeCli *ComputeServiceClient, url string, si
 	}
 	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
 		var o *compute.Operation
-		o, err = computeCli.ResizeInstanceGroupManager(context.Background(), igmInfo[2],
-			igmInfo[(len(igmInfo)-1)], size)
+		o, err = computeCli.ResizeInstanceGroupManager(context.Background(), igmInfo[3], igmInfo[(len(igmInfo)-1)], size)
 		if err != nil {
-			blog.Errorf("ResizeInstanceGroupManager failed, operation: %s, err: %v", o.SelfLink, err)
+			blog.Errorf("ResizeInstanceGroupManager failed, err: %v", err)
 			return nil, err
 		}
 		return o, nil
 	}
 
 	return nil, fmt.Errorf("ResizeInstanceGroupManager failed, incorrect InstanceGroupManager url: %s", url)
+}
+
+// CreateInstanceForGroupManager create zonal/regional instances
+func CreateInstanceForGroupManager(computeCli *ComputeServiceClient, url string, names []string) (*compute.Operation, error) {
+	igmInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("CreateInstanceForGroupManager failed: %v", err)
+		return nil, err
+	}
+	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
+		var o *compute.Operation
+		o, err = computeCli.CreateMigInstances(context.Background(), igmInfo[3], igmInfo[(len(igmInfo)-1)], names)
+		if err != nil {
+			blog.Errorf("CreateInstanceForGroupManager failed, err: %v", err)
+			return nil, err
+		}
+		return o, nil
+	}
+
+	return nil, fmt.Errorf("CreateInstanceForGroupManager failed, incorrect InstanceGroupManager url: %s", url)
 }
 
 // GetInstanceTemplate get zonal/regional InstanceTemplate
@@ -318,9 +370,9 @@ func GetOperation(computeCli *ComputeServiceClient, url string) (*compute.Operat
 	}
 	var o *compute.Operation
 	if utils.StringInSlice("operations", opInfo) && len(opInfo) >= 5 {
-		o, err = computeCli.GetOperation(context.Background(), opInfo[2], opInfo[(len(opInfo)-1)])
+		o, err = computeCli.GetOperation(context.Background(), opInfo[3], opInfo[(len(opInfo)-1)])
 		if err != nil {
-			blog.Errorf("GetOperation failed, operation: %s, err: %v", o, err)
+			blog.Errorf("GetOperation[%s] status failed, err: %v", url, err)
 			return nil, err
 		}
 		return o, nil
@@ -339,8 +391,7 @@ func ListInstanceGroupsInstances(computeCli *ComputeServiceClient, url string) (
 	var instances []*compute.InstanceWithNamedPorts
 	if (utils.StringInSlice("instanceGroups", igInfo) || utils.StringInSlice("instanceGroupManagers", igInfo)) &&
 		len(igInfo) >= 6 {
-		instances, err = computeCli.ListInstanceGroupsInstances(context.Background(), igInfo[2],
-			igInfo[(len(igInfo)-1)])
+		instances, err = computeCli.ListInstanceGroupsInstances(context.Background(), igInfo[3], igInfo[(len(igInfo)-1)])
 		if err != nil {
 			blog.Errorf("ListInstanceGroupsInstances failed: %v", err)
 			return nil, err
@@ -351,13 +402,10 @@ func ListInstanceGroupsInstances(computeCli *ComputeServiceClient, url string) (
 }
 
 // GenerateUpdatePolicy generate update policy
-func GenerateUpdatePolicy(group *cmproto.NodeGroup) *compute.InstanceGroupManagerUpdatePolicy {
+func GenerateUpdatePolicy() *compute.InstanceGroupManagerUpdatePolicy {
 	p := &compute.InstanceGroupManagerUpdatePolicy{
 		Type:          UpdatePolicyOpportunistic,
 		MinimalAction: UpdatePolicyActionRefresh,
-	}
-	if group.AutoScaling == nil {
-		return p
 	}
 
 	return p

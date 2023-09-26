@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package migrations
 
@@ -26,13 +26,13 @@ func init() {
 		Version: "20230526152150",
 		Name:    "20230526152150_add_hook",
 		Mode:    migrator.GormMode,
-		Up:      mig20230526152150GormUp,
-		Down:    mig20230526152150GormDown,
+		Up:      mig20230526152150Up,
+		Down:    mig20230526152150Down,
 	})
 }
 
-// mig20230526152150GormUp for up migration
-func mig20230526152150GormUp(tx *gorm.DB) error {
+// mig20230526152150Up for up migration
+func mig20230526152150Up(tx *gorm.DB) error {
 
 	// Hook 脚本
 	type Hook struct {
@@ -117,66 +117,8 @@ func mig20230526152150GormUp(tx *gorm.DB) error {
 	return nil
 }
 
-// mig20230526152150GormDown for down migration
-func mig20230526152150GormDown(tx *gorm.DB) error {
-
-	// Hook 脚本
-	type Hook struct {
-		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
-
-		// Spec is specifics of the resource defined with user
-		Name string `gorm:"type:varchar(64) not null;uniqueIndex:idx_bizID_name,priority:2"`
-		Meme string `gorm:"type:varchar(64) not null"`
-		Type string `gorm:"type:varchar(64) not null"`
-		Tag  string `gorm:"type:varchar(64) not null"`
-
-		// Attachment is attachment info of the resource
-		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_name,priority:1"`
-
-		// Revision is revision info of the resource
-		Creator   string    `gorm:"type:varchar(64) not null"`
-		Reviser   string    `gorm:"type:varchar(64) not null"`
-		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
-		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
-	}
-
-	// HookRevision 脚本版本
-	type HookRevision struct {
-		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
-
-		// Spec is specifics of the resource defined with user
-		Name    string `gorm:"type:varchar(64) not null;uniqueIndex:idx_bizID_revisionName,priority:2"`
-		Meme    string `gorm:"type:varchar(64) not null"`
-		State   string `gorm:"type:varchar(64) not null"`
-		Content string `gorm:"type:longtext"`
-
-		// Attachment is attachment info of the resource
-		BizID  uint `gorm:"type:bigint(1) unsigned not null"`
-		HookID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_revisionName,priority:1"`
-
-		// Revision is revision info of the resource
-		Creator   string    `gorm:"type:varchar(64) not null"`
-		Reviser   string    `gorm:"type:varchar(64) not null"`
-		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
-		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
-	}
-
-	// ReleasedHook : 已随配置项版本发布的配置脚本
-	type ReleasedHook struct {
-		ID               uint      `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
-		APPID            uint      `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_appID_releaseID_hookType,priority:1"`
-		ReleaseID        uint      `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_appID_releaseID_hookType,priority:2"`
-		HookID           uint      `gorm:"type:bigint(1) unsigned not null"`
-		HookRevisionID   uint      `gorm:"type:bigint(1) unsigned not null"`
-		HookName         string    `gorm:"type:varchar(64) not null"`
-		HookRevisionName string    `gorm:"type:varchar(64) not null"`
-		Content          string    `gorm:"type:longtext"`
-		ScriptType       string    `gorm:"type:varchar(64) not null"`
-		HookType         string    `gorm:"type:varchar(64) not null;uniqueIndex:idx_appID_releaseID_hookType,priority:3"`
-		BizID            uint      `gorm:"type:bigint(1) unsigned not null"`
-		Reviser          string    `gorm:"type:varchar(64) not null"`
-		UpdatedAt        time.Time `gorm:"type:datetime(6) not null"`
-	}
+// mig20230526152150Down for down migration
+func mig20230526152150Down(tx *gorm.DB) error {
 
 	// IDGenerators : ID生成器
 	type IDGenerators struct {

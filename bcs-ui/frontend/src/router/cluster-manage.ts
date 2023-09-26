@@ -1,4 +1,7 @@
 import { RouteConfig } from 'vue-router';
+
+import { ICluster } from '@/composables/use-app';
+import $store from '@/store';
 // 集群首页
 const Cluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/index.vue');
 // 创建集群
@@ -11,6 +14,7 @@ const CreateVCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cl
 const CreateCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-cluster.vue');
 // import模式
 const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/import-cluster.vue');
+const ImportGoogleCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/google-cloud.vue');
 // 集群详情
 const ClusterDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-detail.vue');
 const ClusterNodeOverview = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/node-overview.vue');
@@ -27,8 +31,10 @@ const InternalNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/
 const InternalEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/edit-node-pool.vue');
 const PodDetail = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/detail/index.vue');
 
-// 云凭证
-const tencentCloud = () => import(/* webpackChunkName: 'project' */'@/views/cluster-manage/cloudtoken/tencentCloud.vue');
+// google ca
+const GoogleNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/google/node-pool.vue');
+const GoogleNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/google/node-pool-detail.vue');
+const GoogleEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/google/edit-node-pool.vue');
 
 // 集群管理
 export default [
@@ -44,7 +50,7 @@ export default [
     component: ClusterCreate,
     meta: {
       menuId: 'CLUSTER',
-      title: window.i18n.t('添加集群'),
+      title: window.i18n.t('cluster.button.addCluster'),
     },
   },
   // 创建集群
@@ -62,7 +68,7 @@ export default [
     component: CreateCluster,
     meta: {
       menuId: 'CLUSTER',
-      title: window.i18n.t('添加集群'),
+      title: window.i18n.t('cluster.button.addCluster'),
     },
   },
   // 创建VCluster集群
@@ -83,7 +89,18 @@ export default [
     props: true,
     meta: {
       menuId: 'CLUSTER',
-      title: window.i18n.t('导入集群'),
+      title: window.i18n.t('cluster.create.title.import'),
+    },
+  },
+  // 导入集群 - 谷歌云
+  {
+    path: 'clusters/import/google-cloud',
+    name: 'importGoogleCluster',
+    component: ImportGoogleCluster,
+    props: true,
+    meta: {
+      menuId: 'CLUSTER',
+      title: window.i18n.t('cluster.create.title.import'),
     },
   },
   // 集群详情
@@ -160,7 +177,7 @@ export default [
     name: 'nodeMain',
     component: Node,
     meta: {
-      title: window.i18n.t('节点列表'),
+      title: window.i18n.t('nav.nodeList'),
       hideBack: true,
     },
   },
@@ -177,7 +194,7 @@ export default [
     name: 'addNodeTemplate',
     component: EditNodeTemplate,
     meta: {
-      title: window.i18n.t('新建节点模板'),
+      title: window.i18n.t('cluster.nodeTemplate.title.create'),
       menuId: 'NODETEMPLATE',
     },
   },
@@ -187,7 +204,7 @@ export default [
     props: true,
     component: EditNodeTemplate,
     meta: {
-      title: window.i18n.t('编辑节点模板'),
+      title: window.i18n.t('cluster.nodeTemplate.title.update'),
       menuId: 'NODETEMPLATE',
     },
   },
@@ -197,7 +214,7 @@ export default [
     props: true,
     component: AddClusterNode,
     meta: {
-      title: window.i18n.t('添加节点'),
+      title: window.i18n.t('cluster.nodeList.create.text'),
       menuId: 'CLUSTER',
     },
   },
@@ -218,6 +235,23 @@ export default [
     meta: {
       menuId: 'CLUSTER',
     },
+    beforeEnter(to, from, next) {
+      const clusterList = $store.state.cluster.clusterList as ICluster[];
+      const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
+      if (cluster?.provider === 'gcpCloud') {
+        next({
+          name: 'googleNodePool',
+          params: {
+            ...to.params,
+          },
+          query: {
+            ...to.query,
+          },
+        });
+      } else {
+        next();
+      }
+    },
   },
   {
     path: 'cluster/:clusterId/nodepools/:nodeGroupID',
@@ -226,6 +260,23 @@ export default [
     component: window.REGION === 'ieod' ? InternalEditNodePool : EditNodePool,
     meta: {
       menuId: 'CLUSTER',
+    },
+    beforeEnter(to, from, next) {
+      const clusterList = $store.state.cluster.clusterList as ICluster[];
+      const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
+      if (cluster?.provider === 'gcpCloud') {
+        next({
+          name: 'googleEditNodePool',
+          params: {
+            ...to.params,
+          },
+          query: {
+            ...to.query,
+          },
+        });
+      } else {
+        next();
+      }
     },
   },
   {
@@ -236,14 +287,50 @@ export default [
     meta: {
       menuId: 'CLUSTER',
     },
+    beforeEnter(to, from, next) {
+      const clusterList = $store.state.cluster.clusterList as ICluster[];
+      const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
+      if (cluster?.provider === 'gcpCloud') {
+        next({
+          name: 'googleNodePoolDetail',
+          params: {
+            ...to.params,
+          },
+          query: {
+            ...to.query,
+          },
+        });
+      } else {
+        next();
+      }
+    },
+  },
+  // google ca
+  {
+    path: 'cluster/:clusterId/google/nodepools',
+    name: 'googleNodePool',
+    props: true,
+    component: GoogleNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+    },
   },
   {
-    path: 'cluster/tencent-cloud',
-    name: 'tencentCloud',
-    component: tencentCloud,
+    path: 'cluster/:clusterId/google/nodepools/:nodeGroupID',
+    name: 'googleEditNodePool',
+    props: true,
+    component: GoogleEditNodePool,
     meta: {
-      title: 'Tencent Cloud',
-      hideBack: true,
+      menuId: 'CLUSTER',
+    },
+  },
+  {
+    path: 'cluster/:clusterId/google/nodepools/:nodeGroupID/detail',
+    name: 'googleNodePoolDetail',
+    props: true,
+    component: GoogleNodePoolDetail,
+    meta: {
+      menuId: 'CLUSTER',
     },
   },
 ] as RouteConfig[];

@@ -95,6 +95,8 @@ func (c commit) TableName() string { return c.commitDo.TableName() }
 
 func (c commit) Alias() string { return c.commitDo.Alias() }
 
+func (c commit) Columns(cols ...field.Expr) gen.Columns { return c.commitDo.Columns(cols...) }
+
 func (c *commit) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := c.fieldMap[fieldName]
 	if !ok || _f == nil {
@@ -233,10 +235,6 @@ func (c commitDo) Select(conds ...field.Expr) ICommitDo {
 
 func (c commitDo) Where(conds ...gen.Condition) ICommitDo {
 	return c.withDO(c.DO.Where(conds...))
-}
-
-func (c commitDo) Exists(subquery interface{ UnderlyingDB() *gorm.DB }) ICommitDo {
-	return c.Where(field.CompareSubQuery(field.ExistsOp, nil, subquery.UnderlyingDB()))
 }
 
 func (c commitDo) Order(conds ...field.Expr) ICommitDo {

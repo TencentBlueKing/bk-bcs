@@ -47,6 +47,6 @@ const uiRequest = createRequest({
   domain: window.BCS_API_HOST,
   prefix: '/bcsapi/v4/ui',
 });
-export const releaseNode = uiRequest('get', '/release_note');
+export const releaseNote = uiRequest('get', '/release_note');
 export const switchLanguage = uiRequest('put', '/switch_language');
 export const featureFlags = uiRequest('get', '/feature_flags');

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package config xxx
@@ -34,6 +33,8 @@ type Configurations struct {
 	Web         *WebConf                 `yaml:"web"`
 	Etcd        *EtcdConf                `yaml:"etcd"`
 	Tracing     *TracingConf             `yaml:"tracing"`
+	Audit       *AuditConf               `yaml:"audit"`
+	Repository  *RepositoryConf          `yaml:"repository"`
 }
 
 // newConfigurations 新增配置
@@ -41,7 +42,10 @@ func newConfigurations() (*Configurations, error) {
 	c := &Configurations{}
 
 	c.Base = &BaseConf{}
-	c.Base.Init()
+	err := c.Base.Init()
+	if err != nil {
+		return c, err
+	}
 
 	// Auth Config
 	c.Auth = &AuthConf{}
@@ -59,7 +63,10 @@ func newConfigurations() (*Configurations, error) {
 	c.Redis.Init()
 
 	c.WebConsole = &WebConsoleConf{}
-	c.WebConsole.Init()
+	err = c.WebConsole.Init()
+	if err != nil {
+		return c, err
+	}
 
 	c.Etcd = &EtcdConf{}
 	c.Etcd.Init()
@@ -67,6 +74,10 @@ func newConfigurations() (*Configurations, error) {
 	// Tracing Config
 	c.Tracing = &TracingConf{}
 	c.Tracing.Init()
+
+	c.Audit = &AuditConf{}
+	// repository conf
+	c.Repository = &RepositoryConf{}
 
 	c.Credentials = map[string][]*Credential{}
 
@@ -190,8 +201,13 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if err := c.init(); err != nil {
 		return err
 	}
+	if c.Audit.DataDir == "" {
+		c.Audit.DataDir = c.Audit.defaultPath()
+	}
 
-	c.Logging.InitBlog()
+	if err := c.Logging.InitBlog(); err != nil {
+		return err
+	}
 	c.Base.InitManagers()
 	c.BCS.initInnerHost()
 

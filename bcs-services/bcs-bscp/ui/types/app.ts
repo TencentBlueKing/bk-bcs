@@ -3,6 +3,7 @@ export interface IAppListQuery {
   name?: string;
   start?: number;
   limit?: number;
+  all?: boolean;
 }
 
 export interface IAppItem {
@@ -31,18 +32,8 @@ export interface IAppItem {
   config?: {
     count: number;
     update_at: string;
+  },
+  permissions: {
+    [key: string]: string;
   }
-}
-
-export interface IAppEditParams {
-  id?: number;
-  biz_id?: number|string;
-  app_id?: number;
-  name: string;
-  file_type: string;
-  path?: string;
-  file_mode?: string;
-  user?: string;
-  user_group?: string;
-  privilege?: string;
 }

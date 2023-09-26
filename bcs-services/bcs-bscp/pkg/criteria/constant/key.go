@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package constant
 
@@ -34,6 +34,7 @@ const (
 	SpaceIDKey     = "X-Bkapi-Space-Id"
 	SpaceTypeIDKey = "X-Bkapi-Space-Type-Id"
 	BizIDKey       = "X-Bkapi-Biz-Id"
+	AppIDKey       = "X-Bkapi-App-Id"
 
 	// LanguageKey the language key word.
 	LanguageKey = "HTTP_BLUEKING_LANGUAGE"
@@ -52,6 +53,30 @@ const (
 
 	// ContentIDHeaderKey is common content sha256 id.
 	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"
+	// AppIDHeaderKey is app id.
+	AppIDHeaderKey = "X-Bscp-App-Id"
+	// TmplSpaceIDHeaderKey is template space id.
+	TmplSpaceIDHeaderKey = "X-Bscp-Template-Space-Id"
+
+	// TemplateVariablePrefix is the prefix for template variable name
+	TemplateVariablePrefix = "bk_bscp_"
+
+	// MaxRenderBytes is the max bytes to render for template config which is 2MB
+	MaxRenderBytes = 2 * 1024 * 1024
+)
+
+// default resource
+const (
+	// DefaultTmplSpaceName is default template space name
+	DefaultTmplSpaceName = "default_space"
+	// DefaultTmplSpaceCNName is default template space chinese name
+	DefaultTmplSpaceCNName = "默认空间"
+	// DefaultTmplSpaceMemo is default template space memo
+	DefaultTmplSpaceMemo = "this is default space"
+	// DefaultTmplSetName is default template set name
+	DefaultTmplSetName = "默认套餐"
+	// DefaultTmplSetMemo is default template set memo
+	DefaultTmplSetMemo = "当前空间下的所有模版"
 )
 
 // Note:
@@ -69,9 +94,12 @@ const (
 )
 
 const (
+	// AuthLoginProviderKey is auth login provider
 	AuthLoginProviderKey = "auth-login-provider"
-	AuthLoginUID         = "auth-login-uid"
-	AuthLoginToken       = "auth-login-token" // nolint
+	// AuthLoginUID is auth login uid
+	AuthLoginUID = "auth-login-uid"
+	// AuthLoginToken is auth login token
+	AuthLoginToken = "auth-login-token" // nolint
 )
 
 var (
@@ -80,4 +108,16 @@ var (
 		RidKey,
 		RidKeyGeneric,
 	}
+)
+
+// 文件状态，未命名版本服务配置项相比上一个版本的变化
+const (
+	// FileStateAdd 增加
+	FileStateAdd = "ADD"
+	// FileStateDelete 删除
+	FileStateDelete = "DELETE"
+	// FileStateRevise 修改
+	FileStateRevise = "REVISE"
+	// FileStateUnchange 不变
+	FileStateUnchange = "UNCHANGE"
 )

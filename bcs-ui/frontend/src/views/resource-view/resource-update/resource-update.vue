@@ -2,13 +2,13 @@
   <div class="biz-content resource-content">
     <bcs-popconfirm
       class="switch-button-pop"
-      :title="$t('确认切换为表单模式？')"
-      :content="$t('切换为表单模式将不会保留 YAML 模式下的修改内容！')"
+      :title="$t('dashboard.workload.editor.formMode.confirm')"
+      :content="$t('dashboard.workload.editor.formMode.warnning')"
       width="280"
       trigger="click"
       v-if="formUpdate"
       @confirm="handleChangeMode">
-      <FixedButton position="unset" :title="$t('切换为表单模式')" />
+      <FixedButton position="unset" :title="$t('deploy.variable.toForm')" />
     </bcs-popconfirm>
     <Header :title="title" />
     <div :class="['resource-update', { 'full-screen': fullScreen }]">
@@ -19,15 +19,15 @@
             <span class="tools">
               <span
                 v-if="isEdit"
-                v-bk-tooltips.top="$t('重置')" @click="handleReset"><i class="bcs-icon bcs-icon-reset"></i></span>
-              <span class="upload" v-bk-tooltips.top="$t('上传（仅支持YAML格式）')">
+                v-bk-tooltips.top="$t('dashboard.workload.editor.reset')" @click="handleReset"><i class="bcs-icon bcs-icon-reset"></i></span>
+              <span class="upload" v-bk-tooltips.top="$t('dashboard.workload.editor.uploadYAML')">
                 <input type="file" ref="fileRef" tabindex="-1" accept=".yaml,.yml" @change="handleFileChange">
                 <i class="bcs-icon bcs-icon-upload"></i>
               </span>
-              <span :class="{ active: showExample }" v-bk-tooltips.top="$t('示例')" @click="handleToggleExample">
+              <span :class="{ active: showExample }" v-bk-tooltips.top="$t('dashboard.workload.editor.example')" @click="handleToggleExample">
                 <i class="bcs-icon bcs-icon-code-example"></i>
               </span>
-              <span v-bk-tooltips.top="fullScreen ? $t('缩小') : $t('放大')" @click="handleFullScreen">
+              <span v-bk-tooltips.top="fullScreen ? $t('dashboard.workload.editor.zoomOut') : $t('dashboard.workload.editor.zoomIn')" @click="handleFullScreen">
                 <i :class="['bcs-icon', fullScreen ? 'bcs-icon-zoom-out' : 'bcs-icon-enlarge']"></i>
               </span>
             </span>
@@ -67,7 +67,7 @@
                 <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
                 <span
                   :class="['desc-icon',{ active: showDesc }]"
-                  v-bk-tooltips.top="$t('提示')"
+                  v-bk-tooltips.top="$t('generic.msg.info.tips')"
                   @click.stop="showDesc = !showDesc">
                   <i class="bcs-icon bcs-icon-prompt"></i>
                 </span>
@@ -80,12 +80,12 @@
             </bk-dropdown-menu>
             <span v-else><!-- 空元素为了flex布局 --></span>
             <span class="tools">
-              <span v-bk-tooltips.top="$t('复制代码')" @click="handleCopy"><i class="bcs-icon bcs-icon-copy"></i></span>
+              <span v-bk-tooltips.top="$t('dashboard.workload.editor.copy')" @click="handleCopy"><i class="bcs-icon bcs-icon-copy"></i></span>
               <span
-                v-bk-tooltips.top="$t('帮助')"
+                v-bk-tooltips.top="$t('blueking.help')"
                 @click="handleHelp"><i :class="['bcs-icon bcs-icon-help-2', { active: showHelp }]"></i></span>
               <span
-                v-bk-tooltips.top="$t('关闭')"
+                v-bk-tooltips.top="$t('generic.button.close')"
                 @click="showExample = false"><i class="bcs-icon bcs-icon-close-5"></i></span>
             </span>
           </div>
@@ -149,7 +149,7 @@
       </div>
     </div>
     <div class="resource-btn-group">
-      <div v-bk-tooltips.top="{ disabled: !disabledResourceUpdate, content: $t('内容未变更或格式错误') }">
+      <div v-bk-tooltips.top="{ disabled: !disabledResourceUpdate, content: $t('dashboard.workload.editor.tips.contentUnchangedOrInvalidFormat') }">
         <bk-button
           theme="primary"
           class="main-btn"
@@ -165,25 +165,27 @@
         :disabled="!showDiff && disabledResourceUpdate"
         @click="toggleDiffEditor"
       >
-        {{ showDiff ? $t('继续编辑') : $t('显示差异') }}
+        {{ showDiff ? $t('dashboard.workload.editor.continueEditing') : $t('dashboard.workload.editor.showDifference') }}
       </bk-button>
-      <bk-button class="ml10" @click="handleCancel">{{ $t('取消') }}</bk-button>
+      <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </div>
   </div>
 </template>
 <script lang="ts">
 /* eslint-disable no-unused-expressions */
-import { defineComponent, computed, toRefs, ref, onMounted, watch, onBeforeUnmount } from 'vue';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import { copyText } from '@/common/util';
 import yamljs from 'js-yaml';
+import { computed, defineComponent, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue';
+
 import EditorStatus from './editor-status.vue';
-import BcsMd from '@/components/bcs-md/index.vue';
 import FixedButton from './fixed-button.vue';
-import Header from '@/components/layout/Header.vue';
-import $i18n from '@/i18n/i18n-setup';
+
 import $bkMessage from '@/common/bkmagic';
+import { copyText } from '@/common/util';
+import BcsMd from '@/components/bcs-md/index.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import Header from '@/components/layout/Header.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
 
@@ -284,7 +286,7 @@ export default defineComponent({
     const isEdit = computed(() =>  // 编辑态
       !!name.value);
     const title = computed(() => { // 导航title
-      const prefix = isEdit.value ? $i18n.t('更新') : $i18n.t('创建');
+      const prefix = isEdit.value ? $i18n.t('generic.button.update') : $i18n.t('generic.button.create');
       return `${prefix} ${kind.value}`;
     });
 
@@ -304,7 +306,7 @@ export default defineComponent({
     });
     const webAnnotations = ref<any>({});
     const subTitle = computed(() =>  // 代码编辑器title
-      detail.value?.metadata?.name || $i18n.t('资源定义'));
+      detail.value?.metadata?.name || $i18n.t('dashboard.workload.editor.title.cr'));
     watch(fullScreen, (value) => {
       // 退出全屏后隐藏侧栏帮助文档（防止位置错乱）
       if (!value) {
@@ -393,8 +395,8 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认重置当前编辑状态'),
-        subTitle: $i18n.t('重置后，你修改的内容将丢失'),
+        title: $i18n.t('dashboard.workload.editor.msg.confirmResetEditStatus'),
+        subTitle: $i18n.t('dashboard.workload.editor.dialog.resetContentLoss'),
         defaultInfo: true,
         confirmFn: () => {
           handleResetEditorErr();
@@ -427,7 +429,7 @@ export default defineComponent({
       fullScreen.value = !fullScreen.value;
       fullScreen.value && $bkMessage({
         theme: 'primary',
-        message: $i18n.t('按Esc即可退出全屏模式'),
+        message: $i18n.t('generic.button.fullScreen.msg'),
       });
     };
     const handleExitFullScreen = (event: KeyboardEvent) => { // esc退出全屏
@@ -495,7 +497,7 @@ export default defineComponent({
       copyText(yamljs.dump(activeExample.value?.manifest));
       $bkMessage({
         theme: 'success',
-        message: $i18n.t('复制示例成功'),
+        message: $i18n.t('dashboard.workload.editor.msg.copyExampleSuccess'),
       });
     };
     const handleHelp = () => {
@@ -523,9 +525,9 @@ export default defineComponent({
 
     // 4.====创建、更新、取消、显示差异====
     const btnText = computed(() => {
-      if (!isEdit.value) return $i18n.t('创建');
+      if (!isEdit.value) return $i18n.t('generic.button.create');
 
-      return showDiff.value ? $i18n.t('更新') : $i18n.t('下一步');
+      return showDiff.value ? $i18n.t('generic.button.update') : $i18n.t('generic.button.next');
     });
     const toggleDiffEditor = () => { // 显示diff
       showDiff.value = !showDiff.value;
@@ -564,7 +566,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('创建成功'),
+          message: $i18n.t('generic.msg.success.create'),
         });
         $store.commit('updateCurNamespace', detail.value.metadata?.namespace);
         $router.back();
@@ -579,8 +581,8 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认资源更新'),
-        subTitle: $i18n.t('将执行 Replace 操作，若多人同时编辑可能存在冲突'),
+        title: $i18n.t('dashboard.workload.editor.dialog.confirmResourceUpdate'),
+        subTitle: $i18n.t('dashboard.workload.editor.msg.replaceConflictWarning'),
         defaultInfo: true,
         confirmFn: async () => {
           let result = false;
@@ -617,7 +619,7 @@ export default defineComponent({
           if (result) {
             $bkMessage({
               theme: 'success',
-              message: $i18n.t('更新成功'),
+              message: $i18n.t('generic.msg.success.update'),
             });
             // 跳转回列表页
             $router.push({ name: $store.state.curSideMenu?.route });
@@ -638,8 +640,8 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认退出当前编辑状态'),
-        subTitle: $i18n.t('退出后，你修改的内容将丢失'),
+        title: $i18n.t('generic.msg.info.exitEdit.text'),
+        subTitle: $i18n.t('generic.msg.info.exitEdit.subTitle'),
         defaultInfo: true,
         confirmFn: () => {
           // 跳转回列表页

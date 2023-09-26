@@ -154,7 +154,7 @@ func local_request_Auth_PullResource_0(ctx context.Context, marshaler runtime.Ma
 }
 
 func request_Auth_CheckPermission_0(ctx context.Context, marshaler runtime.Marshaler, client AuthClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ResourceAttribute
+	var protoReq CheckPermissionReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -171,7 +171,7 @@ func request_Auth_CheckPermission_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 func local_request_Auth_CheckPermission_0(ctx context.Context, marshaler runtime.Marshaler, server AuthServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ResourceAttribute
+	var protoReq CheckPermissionReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)

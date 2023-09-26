@@ -1,7 +1,7 @@
 <template>
   <div class="project-manage" v-bkloading="{ isLoading }">
     <div class="title mb20">
-      {{$t('项目管理')}}
+      {{$t('nav.project')}}
     </div>
     <div class="operate mb15">
       <bk-button
@@ -10,11 +10,11 @@
           actionId: 'project_create',
           permCtx: {}
         }"
-        @click="handleCreateProject">{{$t('创建项目')}}</bk-button>
+        @click="handleCreateProject">{{$t('projects.project.create')}}</bk-button>
       <bk-input
         class="search-input"
         clearable
-        :placeholder="$t('输入项目名称搜索')"
+        :placeholder="$t('projects.project.search')"
         :right-icon="'bk-icon icon-search'"
         v-model="keyword">
       </bk-input>
@@ -25,7 +25,7 @@
       size="medium"
       @page-change="handlePageChange"
       @page-limit-change="handleLimitChange">
-      <bk-table-column :label="$t('项目名称')" prop="project_name">
+      <bk-table-column :label="$t('projects.project.name')" prop="project_name">
         <template #default="{ row }">
           <div class="row-name">
             <span class="row-name-left">{{row.project_name[0]}}</span>
@@ -51,14 +51,14 @@
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('项目英文名')" prop="projectCode"></bk-table-column>
-      <bk-table-column :label="$t('项目说明')" prop="description">
+      <bk-table-column :label="$t('projects.project.engName')" prop="projectCode"></bk-table-column>
+      <bk-table-column :label="$t('projects.project.intro')" prop="description">
         <template #default="{ row }">
           {{ row.description || '--' }}
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('创建者')" prop="creator"></bk-table-column>
-      <bk-table-column :label="$t('操作')" width="120">
+      <bk-table-column :label="$t('generic.label.createdBy1')" prop="creator"></bk-table-column>
+      <bk-table-column :label="$t('generic.label.action')" width="120">
         <template #default="{ row }">
           <bk-button
             class="mr10"
@@ -74,8 +74,8 @@
                 project_id: row.project_id
               }
             }"
-            @click="handleEditProject(row)">{{$t('编辑项目')}}</bk-button>
-          <!-- <bk-button theme="primary" text>{{$t('申请监控中心')}}</bk-button> -->
+            @click="handleEditProject(row)">{{$t('projects.project.edit')}}</bk-button>
+          <!-- <bk-button theme="primary" text>{{$t('projects.project.bkMonitor')}}</bk-button> -->
         </template>
       </bk-table-column>
     </bk-table>
@@ -86,9 +86,11 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, onMounted, watch } from 'vue';
+import { defineComponent, onMounted, ref, watch } from 'vue';
+
 import ProjectCreate from './project-create.vue';
 import useProjects from './use-project';
+
 import useDebouncedRef from '@/composables/use-debounce';
 import $router from '@/router';
 

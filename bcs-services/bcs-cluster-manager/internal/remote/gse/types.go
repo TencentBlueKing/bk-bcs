@@ -20,12 +20,24 @@ const (
 	DefaultBKSupplierAccount = "0"
 	// DefaultBKCloudID is default bk_cloud_id
 	DefaultBKCloudID = 0
+
+	// DefaultBkCloudName is default bk_cloud_name
+	DefaultBkCloudName = "default area"
+
+	limit = 200
 )
 
-// Host host info
+// HostAgentStatus host agent status
+type HostAgentStatus struct {
+	Host
+	Alive int
+}
+
+// Host info
 type Host struct {
 	IP        string `json:"ip"`
 	BKCloudID int    `json:"bk_cloud_id"` // 云区域ID
+	AgentID   string `json:"agentID,omitempty"`
 }
 
 // BKAgent agent info

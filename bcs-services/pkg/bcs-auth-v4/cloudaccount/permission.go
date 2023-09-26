@@ -21,7 +21,6 @@ import (
 	blog "k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
 )
@@ -74,10 +73,6 @@ func (bcp *BCSCloudAccountPerm) CanCreateCloudAccount(user string, projectID str
 		Operation: CanCreateCloudAccountOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-	}
-	defer audit.AddEvent(AccountCreate.String(), string(project.SysProject), projectID, user, allow, instanceData)
 	if err != nil {
 		return false, "", err
 	}
@@ -143,11 +138,6 @@ func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user string, projectID str
 		Operation: CanManageCloudAccountOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"AccountID": accountID,
-	}
-	defer audit.AddEvent(AccountManage.String(), string(SysCloudAccount), accountID, user, allow, instanceData)
 	if err != nil {
 		return false, "", err
 	}
@@ -213,11 +203,6 @@ func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user string, projectID string
 		Operation: CanUseCloudAccountOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"AccountID": accountID,
-	}
-	defer audit.AddEvent(AccountUse.String(), string(SysCloudAccount), accountID, user, allow, instanceData)
 	if err != nil {
 		return false, "", err
 	}

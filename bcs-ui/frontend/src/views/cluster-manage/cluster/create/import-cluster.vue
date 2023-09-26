@@ -6,31 +6,31 @@
       :rules="formRules"
       class="import-form"
       ref="importFormRef">
-      <BkFormItem :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
+      <BkFormItem :label="$t('cluster.labels.name')" property="clusterName" error-display-type="normal" required>
         <bk-input :maxlength="64" v-model="importClusterInfo.clusterName"></bk-input>
       </BkFormItem>
-      <!-- <BkFormItem :label="$t('导入方式')">
+      <!-- <BkFormItem :label="$t('cluster.create.label.importType')">
         <bk-radio-group class="btn-group" v-model="importClusterInfo.importType">
-          <bk-radio class="btn-group-first" value="kubeconfig">{{$t('kubeconfig')}}</bk-radio>
-          <bk-radio value="provider">{{$t('云服务商')}}</bk-radio>
+          <bk-radio class="btn-group-first" value="kubeconfig">kubeconfig</bk-radio>
+          <bk-radio value="provider">{{$t('cluster.create.label.provider')}}</bk-radio>
         </bk-radio-group>
       </BkFormItem> -->
-      <BkFormItem :label="$t('集群环境')" required v-if="$INTERNAL">
+      <BkFormItem :label="$t('cluster.labels.env')" required v-if="$INTERNAL">
         <bk-radio-group class="btn-group" v-model="importClusterInfo.environment">
           <bk-radio class="btn-group-first" value="debug">
-            {{ $t('测试环境') }}
+            {{ $t('cluster.env.debug') }}
           </bk-radio>
           <bk-radio value="prod">
-            {{ $t('正式环境') }}
+            {{ $t('cluster.env.prod') }}
           </bk-radio>
         </bk-radio-group>
       </BkFormItem>
-      <BkFormItem :label="$t('集群描述')">
+      <BkFormItem :label="$t('cluster.create.label.desc1')">
         <bk-input v-model="importClusterInfo.description" type="textarea"></bk-input>
       </BkFormItem>
       <template v-if="importClusterInfo.importType === 'provider'">
         <BkFormItem
-          :label="$t('云服务商')"
+          :label="$t('cluster.create.label.provider')"
           property="provider"
           error-display-type="normal"
           required>
@@ -47,7 +47,11 @@
             </bcs-option>
           </bcs-select>
         </BkFormItem>
-        <BkFormItem :label="$t('云凭证')" property="accountID" error-display-type="normal" required>
+        <BkFormItem
+          :label="$t('cluster.create.label.cloudToken')"
+          property="accountID"
+          error-display-type="normal"
+          required>
           <div style="display: flex;">
             <bcs-select
               :loading="accountsLoading"
@@ -66,7 +70,6 @@
                   actionId: 'cloud_account_use',
                   resourceName: item.account.accountName,
                   disablePerms: true,
-                  newPerms: true,
                   permCtx: {
                     project_id: item.account.projectID,
                     account_id: item.account.accountID,
@@ -77,19 +80,19 @@
               <template slot="extension">
                 <div class="extension-item" style="cursor: pointer" @click="handleGotoCloudToken">
                   <i class="bk-icon icon-plus-circle"></i>
-                  <span>{{ $t('新增凭证') }}</span>
+                  <span>{{ $t('cluster.create.button.createCloudToken') }}</span>
                 </div>
               </template>
             </bcs-select>
             <span
               class="refresh ml10"
-              v-bk-tooltips="$t('刷新列表')"
+              v-bk-tooltips="$t('generic.button.refresh')"
               @click="handleGetCloudAccounts">
               <i class="bcs-icon bcs-icon-reset"></i>
             </span>
           </div>
         </BkFormItem>
-        <BkFormItem :label="$t('所属区域')" property="region" error-display-type="normal" required>
+        <BkFormItem :label="$t('cluster.create.label.region')" property="region" error-display-type="normal" required>
           <bcs-select
             :loading="regionLoading"
             class="w640"
@@ -104,7 +107,11 @@
             </bcs-option>
           </bcs-select>
         </BkFormItem>
-        <BkFormItem :label="$t('TKE集群ID')" property="cloudID" error-display-type="normal" required>
+        <BkFormItem
+          :label="$t('cluster.labels.cloudClusterID')"
+          property="cloudID"
+          error-display-type="normal"
+          required>
           <bcs-select
             class="w640" searchable
             :clearable="false"
@@ -120,7 +127,7 @@
         </BkFormItem>
       </template>
       <BkFormItem
-        :label="$t('集群kubeconfig')"
+        :label="$t('cluster.create.label.kubeConfig')"
         property="yaml"
         error-display-type="normal"
         required
@@ -131,7 +138,7 @@
             accept="*"
             type="file"
             @change="handleFileChange">
-          {{$t('文件导入')}}
+          {{$t('cluster.create.button.fileImport')}}
         </bk-button>
         <CodeEditor
           class="cube-config"
@@ -147,12 +154,12 @@
         <bk-button
           theme="primary"
           :loading="testLoading"
-          @click="handleTest">{{$t('kubeconfig可用性测试')}}</bk-button>
+          @click="handleTest">{{$t('cluster.create.button.textKubeConfig')}}</bk-button>
       </BkFormItem>
       <BkFormItem class="mt32">
         <span
           v-bk-tooltips="{
-            content: $t('请先测试kubeconfig可用性'),
+            content: $t('cluster.create.validate.emptyKubeConfig'),
             disabled: isTestSuccess || importClusterInfo.importType === 'provider'
           }">
           <bk-button
@@ -161,26 +168,27 @@
             :loading="loading"
             :disabled="!isTestSuccess && importClusterInfo.importType === 'kubeconfig'"
             @click="handleImport"
-          >{{$t('导入')}}</bk-button>
+          >{{$t('generic.button.import')}}</bk-button>
         </span>
         <bk-button
           class="btn ml5"
           @click="handleCancel"
-        >{{$t('取消')}}</bk-button>
+        >{{$t('generic.button.cancel')}}</bk-button>
       </BkFormItem>
     </BkForm>
   </section>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch } from 'vue';
-import useFormLabel from '@/composables/use-form-label';
 import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+
+import $bkMessage from '@/common/bkmagic';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import useFormLabel from '@/composables/use-form-label';
+import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import $i18n from '@/i18n/i18n-setup';
-import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'ImportCluster',
@@ -215,42 +223,42 @@ export default defineComponent({
       provider: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       yaml: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       clusterName: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       region: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       accountID: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
       cloudID: [
         {
           required: true,
-          message: $i18n.t('必填项'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
       ],
@@ -367,7 +375,7 @@ export default defineComponent({
         isTestSuccess.value = true;
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('测试成功'),
+          message: $i18n.t('generic.msg.success.test'),
         });
       }
       testLoading.value = false;
@@ -407,9 +415,9 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('导入成功'),
+          message: $i18n.t('generic.msg.success.import'),
         });
-        $router.push({ name: 'home' });
+        $router.push({ name: 'clusterMain' });
       }
     };
     const handleGotoCloudToken = () => {

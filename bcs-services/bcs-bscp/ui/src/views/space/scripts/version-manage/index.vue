@@ -195,6 +195,11 @@
       scriptDetail.value.not_release_id = data.id
       unPublishVersion.value = await getScriptVersionDetail(spaceId.value, scriptId.value, scriptDetail.value.not_release_id)
       createBtnDisabled.value = false
+    } else {
+      // 如果是编辑旧版本，则直接修改版本数据
+      const {memo,content} = data
+      unPublishVersion.value!.spec.memo = memo
+      unPublishVersion.value!.spec.content = content
     }
   }
 
@@ -275,7 +280,7 @@
                     @click="handleCreateVersionClick(data.hook_revision.spec.content)">
                     复制并新建
                   </bk-button>
-                  <bk-button v-if="data.hook_revision.spec.state === 'not_deployed'" text theme="primary" @click="handleDelClick(data)">删除</bk-button>
+                  <bk-button v-if="data.hook_revision.spec.state === 'not_deployed'" text theme="primary" :disabled="pagination.count <= 1" @click="handleDelClick(data)">删除</bk-button>
               </div>
               </template>
             </VersionListFullTable>

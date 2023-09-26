@@ -7,7 +7,7 @@
     :disabled="disabled"
     :popover-min-width="320"
     :remote-method="remoteMethod"
-    :search-placeholder="$t('输入集群名或ID搜索')"
+    :search-placeholder="$t('cluster.placeholder.searchCluster')"
     :size="size"
     @change="handleClusterChange">
     <bcs-option-group
@@ -39,7 +39,8 @@
   </bcs-select>
 </template>
 <script lang="ts">
-import {  defineComponent, watch, toRefs, PropType } from 'vue';
+import {  defineComponent, PropType, toRefs, watch } from 'vue';
+
 import CollapseTitle from './collapse-title.vue';
 import useClusterSelector, { ClusterType } from './use-cluster-selector';
 

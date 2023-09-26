@@ -1,0 +1,25 @@
+.bk-table {
+  .bk-table-head table th {
+    background: #fafbfd;
+  }
+  .bk-table-footer .bk-pagination {
+    padding: 0 16px;
+    height: 100%;
+    background: #ffffff;
+  }
+}
+
+.bk-button-with-no-perm {
+  background-color: #fafafa !important;
+  border-color: #e6e6e6 !important;
+  color: #cccccc !important;
+  cursor: pointer !important;
+}
+
+.bk-text-with-no-perm {
+  color: #dcdee5 !important;
+}
+
+.bk-switcher-with-no-perm {
+  opacity: 0.3;
+}

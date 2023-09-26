@@ -17,7 +17,6 @@ import (
 	blog "k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
 )
@@ -70,10 +69,6 @@ func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool
 		Operation: CanCreateClusterOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-	}
-	defer audit.AddEvent(ClusterCreate.String(), string(project.SysProject), projectID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -140,11 +135,6 @@ func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clust
 		Operation: CanManageClusterOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-	}
-	defer audit.AddEvent(ClusterView.String(), string(SysCluster), clusterID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -208,11 +198,6 @@ func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clust
 		Operation: CanDeleteClusterOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-	}
-	defer audit.AddEvent(ClusterDelete.String(), string(SysCluster), clusterID, user, allow, instanceData)
 
 	if err != nil {
 		return false, "", nil, err
@@ -276,11 +261,6 @@ func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, cluster
 		Operation: CanViewClusterOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-	}
-	defer audit.AddEvent(ClusterView.String(), string(SysCluster), clusterID, user, allow, instanceData)
 
 	if err != nil {
 		return false, "", nil, err
@@ -399,11 +379,6 @@ func (bcp *BCSClusterPerm) CanCreateClusterScopedResource(user, projectID, clust
 		Operation: CanCreateClusterScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-	}
-	defer audit.AddEvent(ClusterScopedCreate.String(), string(SysCluster), clusterID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -474,11 +449,6 @@ func (bcp *BCSClusterPerm) CanViewClusterScopedResource(user, projectID, cluster
 		Operation: CanViewClusterScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-	}
-	defer audit.AddEvent(ClusterScopedView.String(), string(SysCluster), clusterID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -549,11 +519,6 @@ func (bcp *BCSClusterPerm) CanUpdateClusterScopedResource(user, projectID, clust
 		Operation: CanUpdateClusterScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-	}
-	defer audit.AddEvent(ClusterScopedUpdate.String(), string(SysCluster), clusterID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -624,11 +589,6 @@ func (bcp *BCSClusterPerm) CanDeleteClusterScopedResource(user, projectID, clust
 		Operation: CanDeleteClusterScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
-	instanceData := map[string]interface{}{
-		"ProjectID": projectID,
-		"ClusterID": clusterID,
-	}
-	defer audit.AddEvent(ClusterScopedDelete.String(), string(SysCluster), clusterID, user, allow, instanceData)
 	if err != nil {
 		return false, "", nil, err
 	}

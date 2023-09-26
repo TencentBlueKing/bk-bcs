@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package dao
 
@@ -16,17 +16,21 @@ import (
 	"encoding/base64"
 	"errors"
 
+	"gorm.io/gorm"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"gorm.io/gorm"
 )
 
 // ReleasedHook supplies all the group related operations.
 type ReleasedHook interface {
 	// UpsertWithTx upserts the released hook with transaction.
 	UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, rh *table.ReleasedHook) error
+	// UpdateHookRevisionByReleaseIDWithTx updates the hook's revision info by release id with transaction.
+	UpdateHookRevisionByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+		bizID, releaseID, hookID uint32, hookRevision *table.HookRevision) error
 	// Get gets the released hook.
 	Get(kit *kit.Kit, bizID, appID, releaseID uint32, tp table.HookType) (*table.ReleasedHook, error)
 	// GetByReleaseID gets the pre hook and post hook by release id.
@@ -148,6 +152,30 @@ func (dao *releasedHookDao) UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, rh *tabl
 		rh.ID = id
 		return m.WithContext(kit.Ctx).Create(rh)
 	}
+	return err
+}
+
+// UpdateHookRevisionByReleaseIDWithTx updates the hook's revision info by release id with transaction.
+func (dao *releasedHookDao) UpdateHookRevisionByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	bizID, releaseID, hookID uint32, hookRevision *table.HookRevision) error {
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	if hookID == 0 {
+		return errf.New(errf.InvalidParameter, "hookID is 0")
+	}
+	if hookRevision == nil {
+		return errf.New(errf.InvalidParameter, "hookRevision is nil")
+	}
+	m := tx.ReleasedHook
+	_, err := m.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.ReleaseID.Eq(releaseID), m.HookID.Eq(hookID)).
+		Updates(table.ReleasedHook{
+			HookRevisionID:   hookRevision.ID,
+			HookRevisionName: hookRevision.Spec.Name,
+			Content:          base64.StdEncoding.EncodeToString([]byte(hookRevision.Spec.Content)),
+			Reviser:          hookRevision.Revision.Reviser,
+		})
 	return err
 }
 

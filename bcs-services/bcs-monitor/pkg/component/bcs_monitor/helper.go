@@ -15,8 +15,9 @@ package bcsmonitor
 import (
 	"net/http"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/prometheus/common/model"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
 func getQueryURL() (string, http.Header) {

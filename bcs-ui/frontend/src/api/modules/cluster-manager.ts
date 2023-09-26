@@ -41,12 +41,17 @@ export const nodeAvailable = request('post', '/node/available');
 export const cloudAccounts = request('get', '/clouds/$cloudId/accounts');
 export const createCloudAccounts = request('post', '/clouds/$cloudId/accounts');
 export const deleteCloudAccounts = request('delete', '/clouds/$cloudId/accounts/$accountID');
+export const updateCloudAccounts = request('put', '/clouds/$cloudId/accounts/$accountID');
+export const validateCloudAccounts = request('post', '/clouds/$cloudId/accounts/available');
+export const clusterConnect = request('get', '/clouds/$cloudId/clusters/$clusterID/connect');
 export const cloudRegionByAccount = request('get', '/clouds/$cloudId/regions');
 export const cloudClusterList = request('get', '/clouds/$cloudId/clusters');
 export const taskRetry = request('put', '/task/$taskId/retry');
 export const cloudDetail = request('get', '/cloud/$cloudId');
 export const cloudNodes = request('get', '/clouds/$cloudId/instances');
 export const cloudKeyPairs = request('get', '/clouds/$cloudId/keypairs');
+export const cloudAccountType = request('get', '/clouds/$cloudId/accounttype');
+export const cloudBwps = request('get', '/clouds/$cloudId/bwps');
 
 // node 操作
 export const getK8sNodes = request('get', '/cluster/$clusterId/node');
@@ -59,9 +64,6 @@ export const setNodeTaints = request('put', '/node/taints');
 // 集群管理
 export const masterList = request('get', '/cluster/$clusterId/master');
 
-// auth
-export const newUserPermsByAction = request('post', '/perms/actions/$actionId');
-
 // CA
 export const clusterAutoScalingLogsV2 = request('get', '/operationlogs');
 export const cloudsZones = request('get', '/clouds/$cloudId/zones');
@@ -70,3 +72,9 @@ export const cloudsZones = request('get', '/clouds/$cloudId/zones');
 export const sharedclusters = request('get', '/sharedclusters');
 export const deleteVCluster = request('delete', '/vcluster/$clusterId');
 export const createVCluster = request('post', '/vcluster');
+
+// nodegroup
+export const nodeGroups = request('get', '/clusters/$clusterId/nodegroups');
+export const desirednode = request('post', '/nodegroup/$id/desirednode');
+
+export const batchDeleteNodes = request('delete', '/clusters/$clusterId/nodes/-/batch');

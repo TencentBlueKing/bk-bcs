@@ -17,6 +17,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -82,7 +83,7 @@ func (la *ListNodeTypeAction) getRelativeData() error {
 	la.cloud = cloud
 
 	if la.req.AccountID != "" {
-		account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
+		account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID, false)
 		if err != nil {
 			return err
 		}
@@ -132,6 +133,11 @@ func (la *ListNodeTypeAction) listCloudInstancetypes() error {
 	if err != nil {
 		return err
 	}
+	if len(insTypes) != 0 {
+		for i := range insTypes {
+			insTypes[i].TypeName = translate(la.ctx, insTypes[i].NodeFamily, insTypes[i].TypeName)
+		}
+	}
 	la.nodeTypeList = insTypes
 
 	return nil
@@ -160,4 +166,39 @@ func (la *ListNodeTypeAction) Handle(ctx context.Context,
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
+}
+
+func translate(ctx context.Context, nodeFamily, TypeName string) string {
+	switch nodeFamily {
+	case "S1", "S2", "S3", "S4", "S5", "S6", "SA1", "SA2", "SA3", "SR1", "BMSA2", "BMS5", "BMS4":
+		return i18n.Tf(ctx, "{{.Standard}}", nodeFamily)
+	case "S5se":
+		return i18n.Tf(ctx, "{{.StandardStorage}}", nodeFamily)
+	case "S2ne", "SN3ne":
+		return i18n.Tf(ctx, "{{.StandardNetwork}}", nodeFamily)
+	case "M1", "M2", "M3", "M4", "M5", "M6", "MA2", "MA3", "M6mp", "M6p":
+		return i18n.Tf(ctx, "{{.MemoryOptimized}}", nodeFamily)
+	case "M6ce":
+		return i18n.Tf(ctx, "{{.SEMemoryOptimized}}", nodeFamily)
+	case "I3", "IT3", "IT5", "BMI5", "BMIA2":
+		return i18n.Tf(ctx, "{{.HighIO}}", nodeFamily)
+	case "D2", "D3", "D1", "BMDA2":
+		return i18n.Tf(ctx, "{{.BigData}}", nodeFamily)
+	case "BMGNV4", "BMG5t", "HCCPNV4h", "HCCG5v", "BMG5v":
+		return i18n.Tf(ctx, "{{.GType}}", nodeFamily)
+	case "C2", "C3", "C4", "C5", "C6":
+		return i18n.Tf(ctx, "{{.ComputeOptimized}}", nodeFamily)
+	case "CN3":
+		return i18n.Tf(ctx, "{{.ComputeNetwork}}", nodeFamily)
+	case "GN6S", "GN7", "GN8", "GN10X", "GT4", "PNV4", "GN10Xp":
+		return i18n.Tf(ctx, "{{.GComputeOptimized}}", nodeFamily)
+	case "GN7vi":
+		return i18n.Tf(ctx, "{{.GVideoEnhanced}}", nodeFamily)
+	case "GI3X":
+		return i18n.Tf(ctx, "{{.GReasoning}}", nodeFamily)
+	case "GNV4":
+		return i18n.Tf(ctx, "{{.GRendering}}", nodeFamily)
+	default:
+		return TypeName
+	}
 }

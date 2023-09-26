@@ -90,14 +90,8 @@ proxy: tidy
 .PHONY: webhook
 webhook: tidy
 	mkdir -p ${OUTPUT}/bcs-gitops-webhook
-	cp -r images/proxy/* ${OUTPUT}/bcs-gitops-webhook/
+	cp -r images/webhook/* ${OUTPUT}/bcs-gitops-webhook/
 	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-webhook/bcs-gitops-webhook cmd/webhook/main.go
-
-.PHONY: vaultplugin
-vaultplugin: tidy
-	mkdir -p ${OUTPUT}/bcs-gitops-vaultplugin-server
-	cp -r images/vaultplugin-server/* ${OUTPUT}/bcs-gitops-vaultplugin-server/
-	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-vaultplugin-server/bcs-gitops-vaultplugin-server cmd/vaultplugin-server/main.go
 
 .PHONY: docker
 docker: manager proxy

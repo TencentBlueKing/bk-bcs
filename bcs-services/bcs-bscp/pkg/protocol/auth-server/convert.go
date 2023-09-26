@@ -1,18 +1,19 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package pbas
 
 import (
+	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
 )
 
@@ -45,9 +46,8 @@ func (m *ResourceAttribute) ResourceAttribute() *meta.ResourceAttribute {
 	}
 
 	return &meta.ResourceAttribute{
-		Basic:       m.Basic.Basic(),
-		BizID:       m.BizId,
-		GenApplyURL: m.GenApplyUrl,
+		Basic: m.Basic.Basic(),
+		BizID: m.BizId,
 	}
 }
 
@@ -94,12 +94,8 @@ func PbResourceAttributes(resourceAttributes []*meta.ResourceAttribute) []*Resou
 }
 
 // Basic convert pb Basic to meta type Basic
-func (m *Basic) Basic() *meta.Basic {
-	if m == nil {
-		return nil
-	}
-
-	return &meta.Basic{
+func (m *Basic) Basic() meta.Basic {
+	return meta.Basic{
 		Type:       meta.ResourceType(m.Type),
 		Action:     meta.Action(m.Action),
 		ResourceID: m.ResourceId,
@@ -107,16 +103,33 @@ func (m *Basic) Basic() *meta.Basic {
 }
 
 // PbBasic convert meta Basic to pb Basic
-func PbBasic(m *meta.Basic) *Basic {
-	if m == nil {
-		return nil
-	}
-
+func PbBasic(m meta.Basic) *Basic {
 	return &Basic{
 		Type:       string(m.Type),
 		Action:     string(m.Action),
 		ResourceId: m.ResourceID,
 	}
+}
+
+// BasicDetails convert pb BasicDetail array to pb BasicDetail array
+func BasicDetails(perm *IamPermission) []meta.BasicDetail {
+	result := make([]meta.BasicDetail, 0)
+
+	for _, action := range perm.Actions {
+		for _, resourceType := range action.RelatedResourceTypes {
+			for _, instance := range resourceType.Instances {
+				for _, i := range instance.Instances {
+					result = append(result, meta.BasicDetail{
+						TypeName:     resourceType.TypeName,
+						ActionName:   action.Name,
+						ResourceName: i.Id,
+					})
+				}
+			}
+		}
+	}
+
+	return result
 }
 
 // Decision convert pb Decision to meta type Decision
@@ -126,6 +139,7 @@ func (m *Decision) Decision() *meta.Decision {
 	}
 
 	return &meta.Decision{
+		Resource:   m.Resource.ResourceAttribute(),
 		Authorized: m.Authorized,
 	}
 }
@@ -152,6 +166,7 @@ func PbDecision(m *meta.Decision) *Decision {
 	}
 
 	return &Decision{
+		Resource:   PbResourceAttribute(m.Resource),
 		Authorized: m.Authorized,
 	}
 }
@@ -329,4 +344,76 @@ func PbIamResourceAttributeValues(values []*meta.IamResourceAttributeValue) []*I
 	}
 
 	return result
+}
+
+// GrantResourceCreatorAction convert pb GrantResourceCreatorActionReq to client GrantResourceCreatorActionOption
+func GrantResourceCreatorAction(req *GrantResourceCreatorActionReq) *client.GrantResourceCreatorActionOption {
+	return &client.GrantResourceCreatorActionOption{
+		System:    req.System,
+		Type:      client.TypeID(req.Type),
+		ID:        req.Id,
+		Name:      req.Name,
+		Creator:   req.Creator,
+		Ancestors: GrantResourceCreatorActionAncetors(req.Ancestors),
+	}
+}
+
+// GrantResourceCreatorActionAncetors convert pb GrantResourceCreatorActionReq_Ancestor array to client GrantResourceCreatorActionAncestor array
+func GrantResourceCreatorActionAncetors(ancetors []*GrantResourceCreatorActionReq_Ancestor) []client.GrantResourceCreatorActionAncestor {
+	result := make([]client.GrantResourceCreatorActionAncestor, len(ancetors))
+
+	if len(ancetors) == 0 {
+		return result
+	}
+
+	for index, ancetor := range ancetors {
+		result[index] = GrantResourceCreatorActionAncetor(ancetor)
+	}
+
+	return result
+}
+
+// GrantResourceCreatorActionAncetor convert pb GrantResourceCreatorActionReq_Ancestor to client GrantResourceCreatorActionAncestor
+func GrantResourceCreatorActionAncetor(ancetor *GrantResourceCreatorActionReq_Ancestor) client.GrantResourceCreatorActionAncestor {
+	return client.GrantResourceCreatorActionAncestor{
+		System: ancetor.System,
+		Type:   client.TypeID(ancetor.Type),
+		ID:     ancetor.Id,
+	}
+}
+
+// PbGrantResourceCreatorActionAncestor convert client GrantResourceCreatorActionAncestor to pb GrantResourceCreatorActionReq_Ancestor
+func PbGrantResourceCreatorActionAncestor(ancetor client.GrantResourceCreatorActionAncestor) *GrantResourceCreatorActionReq_Ancestor {
+	return &GrantResourceCreatorActionReq_Ancestor{
+		System: ancetor.System,
+		Type:   string(ancetor.Type),
+		Id:     ancetor.ID,
+	}
+}
+
+// PbGrantResourceCreatorActionAncestors convert client GrantResourceCreatorActionAncestor array to pb GrantResourceCreatorActionReq_Ancestor array
+func PbGrantResourceCreatorActionAncestors(ancetors []client.GrantResourceCreatorActionAncestor) []*GrantResourceCreatorActionReq_Ancestor {
+	result := make([]*GrantResourceCreatorActionReq_Ancestor, len(ancetors))
+
+	if len(ancetors) == 0 {
+		return result
+	}
+
+	for index, ancetor := range ancetors {
+		result[index] = PbGrantResourceCreatorActionAncestor(ancetor)
+	}
+
+	return result
+}
+
+// PbGrantResourceCreatorActionOption convert client GrantResourceCreatorActionOption to pb GrantResourceCreatorActionReq
+func PbGrantResourceCreatorActionOption(option *client.GrantResourceCreatorActionOption) *GrantResourceCreatorActionReq {
+	return &GrantResourceCreatorActionReq{
+		System:    option.System,
+		Type:      string(option.Type),
+		Id:        option.ID,
+		Name:      option.Name,
+		Creator:   option.Creator,
+		Ancestors: PbGrantResourceCreatorActionAncestors(option.Ancestors),
+	}
 }

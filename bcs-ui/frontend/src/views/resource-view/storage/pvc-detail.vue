@@ -2,11 +2,11 @@
   <div class="detail p30">
     <!-- 基础信息 -->
     <div class="detail-title">
-      {{ $t('基础信息') }}
+      {{ $t('generic.title.basicInfo') }}
     </div>
     <div class="detail-content basic-info">
       <div class="basic-info-item">
-        <label>{{ $t('命名空间') }}</label>
+        <label>{{ $t('k8s.namespace') }}</label>
         <span>{{ data.metadata.namespace }}</span>
       </div>
       <div class="basic-info-item">
@@ -14,11 +14,11 @@
         <span class="bcs-ellipsis">{{ data.metadata.uid }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('创建时间') }}</label>
+        <label>{{ $t('cluster.labels.createdAt') }}</label>
         <span>{{ extData.createTime }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('存在时间') }}</label>
+        <label>{{ $t('k8s.age') }}</label>
         <span>{{ extData.age }}</span>
       </div>
       <div class="basic-info-item">
@@ -38,25 +38,25 @@
         </template>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('被挂载') }}</label>
+        <label>{{ $t('dashboard.storage.usedBy') }}</label>
         <span>{{ mountInfo.join(',') || '--' }}</span>
       </div>
     </div>
     <!-- 标签、注解 -->
     <bcs-tab class="mt20" type="card" :label-height="42">
-      <bcs-tab-panel name="label" :label="$t('标签')">
+      <bcs-tab-panel name="label" :label="$t('k8s.label')">
         <bk-table :data="handleTransformObjToArr(data.metadata.labels)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="annotations" :label="$t('注解')">
+      <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')">
         <bk-table :data="handleTransformObjToArr(data.metadata.annotations)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
-      <bcs-tab-panel name="event" :label="$t('事件')">
+      <bcs-tab-panel name="event" :label="$t('generic.label.event')">
         <EventQueryTableVue
           hide-cluster-and-namespace
           :kinds="data.kind"
@@ -68,6 +68,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue';
+
 import $store from '@/store';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 

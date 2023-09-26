@@ -8,23 +8,27 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package web
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
+
+	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
+	"github.com/gin-gonic/gin"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/repository"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-	"github.com/gin-gonic/gin"
 )
 
 type service struct {
@@ -38,7 +42,7 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 // RegisterRoute xxx
 func (s service) RegisterRoute(router gin.IRoutes) {
-	web := router.Use(route.WebAuthRequired())
+	web := router.Use(route.WebAuthRequired(), gintrace.Middleware(tracing.ServiceName))
 
 	// 跳转 URL
 	web.GET("/user/perm_request/", metrics.RequestCollect("UserPermRequestRedirect"), route.APIAuthRequired(),
@@ -49,11 +53,92 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web.GET("/projects/:projectId/mgr/", metrics.RequestCollect("MgrPage"), s.MgrPageHandler)
 	web.GET("/portal/container/", metrics.RequestCollect("ContainerGatePage"), s.ContainerGatePageHandler)
 	web.GET("/portal/cluster/", metrics.RequestCollect("ClusterGatePage"), s.ClusterGatePageHandler)
-
+	web.GET("/replay/files", metrics.RequestCollect("ReplayFilesPage"),
+		route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFoldersPageHandler)
+	web.GET("/replay/files/:folder", metrics.RequestCollect("ReplayFilesPage"),
+		route.APIAuthRequired(), route.ManagersRequired(), s.ReplayFilesPageHandler)
+	web.GET("/replay/:folderName/:fileName", metrics.RequestCollect("ReplayDetailPage"),
+		route.APIAuthRequired(), route.ManagersRequired(), s.ReplayDetailPageHandler)
+	web.GET("/play", s.PlayHandler)
 	// 公共接口, 如 metrics, healthy, ready, pprof 等
 	web.GET("/-/healthy", s.HealthyHandler)
 	web.GET("/-/ready", s.ReadyHandler)
 	web.GET("/metrics", metrics.PromMetricHandler())
+}
+
+// ReplayFilesPageHandler 回放文件
+func (s *service) ReplayFilesPageHandler(c *gin.Context) {
+	folderName := c.Param("folder")
+	storage, err := repository.NewProvider(config.G.Repository.StorageType)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
+		return
+	}
+	fileNames, err := storage.ListFile(c, folderName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("List storage files err: %v\n", err))
+		return
+	}
+	data := gin.H{
+		"folder_name":     folderName,
+		"file_names":      fileNames,
+		"SITE_STATIC_URL": s.opts.RoutePrefix,
+	}
+	c.HTML(http.StatusOK, "replay.html", data)
+}
+
+// ReplayFoldersPageHandler 回放文件目录
+func (s *service) ReplayFoldersPageHandler(c *gin.Context) {
+	storage, err := repository.NewProvider(config.G.Repository.StorageType)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
+		return
+	}
+	folderNames, err := storage.ListFolders(c, "")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("List storage folder err: %v\n", err))
+		return
+	}
+	data := gin.H{
+		"folder_names":    folderNames,
+		"SITE_STATIC_URL": s.opts.RoutePrefix,
+	}
+	c.HTML(http.StatusOK, "replay.html", data)
+}
+
+// ReplayDetailPageHandler 回放终端记录文件
+func (s service) ReplayDetailPageHandler(c *gin.Context) {
+	folder := c.Param("folderName")
+	file := c.Param("fileName")
+
+	data := fmt.Sprintf("%s%s/play?folderName=%s&fileName=%s", config.G.Web.Host, s.opts.RoutePrefix, folder, file)
+
+	res := gin.H{
+		"data":            data,
+		"SITE_STATIC_URL": s.opts.RoutePrefix,
+	}
+	c.HTML(http.StatusOK, "asciinema.html", res)
+}
+
+func (s *service) PlayHandler(c *gin.Context) {
+	folder := c.Query("folderName")
+	file := c.Query("fileName")
+	filePath := path.Join(folder, file)
+	storage, err := repository.NewProvider(config.G.Repository.StorageType)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
+		return
+	}
+	resp, err := storage.DownloadFile(c, filePath)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("Download storage file err: %v\n", err))
+		return
+	}
+
+	defer resp.Close()
+	c.Writer.Header().Set("Content-Type", "application/x-asciicast")
+	c.Writer.Header().Set("Cache-Control", "max-age=0, private, must-revalidate")
+	io.Copy(c.Writer, resp)
 }
 
 // IndexPageHandler index 页面
@@ -61,7 +146,7 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
 	consoleQuery := new(podmanager.ConsoleQuery)
-	c.BindQuery(consoleQuery)
+	_ = c.BindQuery(consoleQuery)
 
 	// 权限申请Url
 	promRequestQuery := url.Values{}

@@ -15,6 +15,7 @@ package bklog
 
 import (
 	"encoding/json"
+	"time"
 )
 
 const (
@@ -137,14 +138,20 @@ type ListBCSCollectorRespData struct {
 	RuleID                int               `json:"rule_id"`
 	CollectorConfigName   string            `json:"collector_config_name"`
 	CollectorConfigNameEN string            `json:"collector_config_name_en"`
+	Description           string            `json:"description"`
 	BCSClusterID          string            `json:"bcs_cluster_id"`
 	FileIndexSetID        int               `json:"file_index_set_id"`
 	STDIndexSetID         int               `json:"std_index_set_id"`
 	RuleFileIndexSetID    int               `json:"rule_file_index_set_id"`
 	RuleSTDIndexSetID     int               `json:"rule_std_index_set_id"`
+	Creator               string            `json:"created_by"`
+	Updator               string            `json:"updated_by"`
+	CreatedAt             time.Time         `json:"created_at"`
+	UpdatedAt             time.Time         `json:"updated_at"`
 	AddPodLabel           bool              `json:"add_pod_label"`
 	ExtraLabels           []Label           `json:"extra_labels"`
 	ContainerConfig       []ContainerConfig `json:"container_config"`
+	FromBKLog             bool              `json:"from_bklog"`
 }
 
 // ToLogRule trans resp to log rule

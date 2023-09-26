@@ -1,12 +1,12 @@
 import { createRequest } from '../request';
 
-const request = createRequest({
-  domain: window.DEVOPS_BCS_API_URL,
-  prefix: '',
+const iamRequest = createRequest({
+  domain: window.BCS_API_HOST,
+  prefix: '/bcsapi/v4/usermanager/v1/iam',
 });
 // auth
-export const userPerms = request('post', '/api/iam/user_perms/');
-export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/');
+export const userPerms = iamRequest('post', '/user_perms');
+export const userPermsByAction = iamRequest('post', '/user_perms/actions/$actionId');
 
 const request2 = createRequest({
   domain: window.DEVOPS_BCS_API_URL,

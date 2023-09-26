@@ -43,6 +43,7 @@ var NoAuthMethod = []string{
 
 	// kubeConfig
 	"ClusterManager.CheckCloudKubeConfig",
+	"ClusterManager.CheckCloudKubeConfigConnect",
 
 	// task resource
 	"ClusterManager.RetryTask",
@@ -93,38 +94,51 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetInnerTemplateValues",
 	"ClusterManager.DebugBkSopsTask",
 	"ClusterManager.Health",
+
+	"ClusterManager.GetBatchCustomSetting",
+	"ClusterManager.GetBizTopologyHost",
+	"ClusterManager.GetTopologyNodes",
+	"ClusterManager.GetScopeHostCheck",
+	"ClusterManager.GetCloudAccountType",
+	"ClusterManager.GetCloudBandwidthPackages",
+	"ClusterManager.GetTopologyHostIdsNodes",
+	"ClusterManager.GetHostsDetails",
+	"ClusterManager.VerifyCloudAccount",
 }
 
 // ActionPermissions action 对应权限中心的权限
 var ActionPermissions = map[string]string{
 	// cluster
-	"ClusterManager.CreateCluster":          cluster.CanCreateClusterOperation,
-	"ClusterManager.RetryCreateClusterTask": cluster.CanCreateClusterOperation,
-	"ClusterManager.ImportCluster":          cluster.CanCreateClusterOperation,
-	"ClusterManager.UpdateCluster":          cluster.CanManageClusterOperation,
-	"ClusterManager.DeleteCluster":          cluster.CanDeleteClusterOperation,
-	"ClusterManager.GetCluster":             cluster.CanViewClusterOperation,
-	"ClusterManager.ListProjectCluster":     project.CanViewProjectOperation,
-	"ClusterManager.ListCluster":            project.CanViewProjectOperation,
-	"ClusterManager.ListCommonCluster":      "",
-	"ClusterManager.CreateVirtualCluster":   cluster.CanCreateClusterOperation,
-	"ClusterManager.DeleteVirtualCluster":   cluster.CanDeleteClusterOperation,
+	"ClusterManager.CreateCluster":             cluster.CanCreateClusterOperation,
+	"ClusterManager.RetryCreateClusterTask":    cluster.CanCreateClusterOperation,
+	"ClusterManager.ImportCluster":             cluster.CanCreateClusterOperation,
+	"ClusterManager.UpdateCluster":             cluster.CanManageClusterOperation,
+	"ClusterManager.DeleteCluster":             cluster.CanDeleteClusterOperation,
+	"ClusterManager.GetCluster":                cluster.CanViewClusterOperation,
+	"ClusterManager.ListProjectCluster":        project.CanViewProjectOperation,
+	"ClusterManager.ListCluster":               project.CanViewProjectOperation,
+	"ClusterManager.ListCommonCluster":         "",
+	"ClusterManager.CreateVirtualCluster":      cluster.CanCreateClusterOperation,
+	"ClusterManager.DeleteVirtualCluster":      cluster.CanDeleteClusterOperation,
+	"ClusterManager.UpdateVirtualClusterQuota": cluster.CanManageClusterOperation,
 
 	// node
-	"ClusterManager.AddNodesToCluster":      cluster.CanManageClusterOperation,
-	"ClusterManager.DeleteNodesFromCluster": cluster.CanManageClusterOperation,
-	"ClusterManager.ListNodesInCluster":     cluster.CanViewClusterOperation,
-	"ClusterManager.ListMastersInCluster":   cluster.CanViewClusterOperation,
-	"ClusterManager.GetNode":                cluster.CanViewClusterOperation,
-	"ClusterManager.GetNodeInfo":            cluster.CanViewClusterOperation,
-	"ClusterManager.RecordNodeInfo":         "",
-	"ClusterManager.CheckNodeInCluster":     "",
-	"ClusterManager.UpdateNode":             cluster.CanManageClusterOperation,
-	"ClusterManager.CordonNode":             cluster.CanManageClusterOperation,
-	"ClusterManager.UnCordonNode":           cluster.CanManageClusterOperation,
-	"ClusterManager.DrainNode":              cluster.CanManageClusterOperation,
-	"ClusterManager.UpdateNodeLabels":       cluster.CanManageClusterOperation,
-	"ClusterManager.UpdateNodeTaints":       cluster.CanManageClusterOperation,
+	"ClusterManager.AddNodesToCluster":           cluster.CanManageClusterOperation,
+	"ClusterManager.DeleteNodesFromCluster":      cluster.CanManageClusterOperation,
+	"ClusterManager.BatchDeleteNodesFromCluster": cluster.CanManageClusterOperation,
+	"ClusterManager.ListNodesInCluster":          cluster.CanViewClusterOperation,
+	"ClusterManager.ListMastersInCluster":        cluster.CanViewClusterOperation,
+	"ClusterManager.GetNode":                     cluster.CanViewClusterOperation,
+	"ClusterManager.GetNodeInfo":                 cluster.CanViewClusterOperation,
+	"ClusterManager.RecordNodeInfo":              "",
+	"ClusterManager.CheckNodeInCluster":          "",
+	"ClusterManager.UpdateNode":                  cluster.CanManageClusterOperation,
+	"ClusterManager.CordonNode":                  cluster.CanManageClusterOperation,
+	"ClusterManager.UnCordonNode":                cluster.CanManageClusterOperation,
+	"ClusterManager.DrainNode":                   cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateNodeLabels":            cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateNodeTaints":            cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateNodeAnnotations":       cluster.CanManageClusterOperation,
 
 	// federation cluster
 	"ClusterManager.InitFederationCluster": "",
@@ -172,7 +186,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetVPCCidr":     "",
 
 	// kubeconfig
-	"ClusterManager.CheckCloudKubeConfig": "",
+	"ClusterManager.CheckCloudKubeConfig":        "",
+	"ClusterManager.CheckCloudKubeConfigConnect": "",
 
 	// task
 	"ClusterManager.CreateTask": cluster.CanManageClusterOperation,
@@ -197,10 +212,12 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetNodeTemplate":    project.CanViewProjectOperation,
 
 	// cloud account
-	"ClusterManager.CreateCloudAccount": cloudaccount.CanCreateCloudAccountOperation,
-	"ClusterManager.UpdateCloudAccount": cloudaccount.CanManageCloudAccountOperation,
-	"ClusterManager.DeleteCloudAccount": cloudaccount.CanManageCloudAccountOperation,
-	"ClusterManager.ListCloudAccount":   cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.CreateCloudAccount":  cloudaccount.CanCreateCloudAccountOperation,
+	"ClusterManager.UpdateCloudAccount":  cloudaccount.CanManageCloudAccountOperation,
+	"ClusterManager.DeleteCloudAccount":  cloudaccount.CanManageCloudAccountOperation,
+	"ClusterManager.ListCloudAccount":    cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.MigrateCloudAccount": "",
+	"ClusterManager.VerifyCloudAccount":  "",
 
 	// cloud component paras
 	"ClusterManager.CreateCloudModuleFlag": "",

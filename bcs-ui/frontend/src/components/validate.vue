@@ -14,6 +14,7 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, ref, toRefs, watch } from 'vue';
+
 import $i18n from '@/i18n/i18n-setup';
 
 export interface IValidate {
@@ -72,7 +73,7 @@ export default defineComponent({
       curErrMsg.value = '';
       if (required.value && !value.value && event === 'blur') {
         // 必填项校验
-        curErrMsg.value = $i18n.t('必填项');
+        curErrMsg.value = $i18n.t('generic.validate.required');
         return false;
       };
       if (!rules.value.length || !value.value) return true;

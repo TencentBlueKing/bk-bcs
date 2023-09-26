@@ -15,6 +15,7 @@ package qcloud
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"sync"
 
@@ -269,17 +270,71 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 	return updateClusterInfo(cloudID, opt)
 }
 
-func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	cli, err := api.NewTkeClient(&opt.CommonOption)
+func getCloudCluster(cloudID string, opt *cloudprovider.CommonOption) (*tke.Cluster, error) {
+	cli, err := api.NewTkeClient(opt)
 	if err != nil {
-		blog.Errorf("%s updateClusterInfo NewTkeClient failed: %v", cloudName, err)
+		blog.Errorf("%s getCloudCluster NewTkeClient failed: %v", cloudName, err)
 		return nil, err
 	}
 	cls, err := cli.GetTKECluster(cloudID)
 	if err != nil {
-		blog.Errorf("%s updateClusterInfo GetTKECluster failed: %v", cloudName, err)
+		blog.Errorf("%s getCloudCluster GetTKECluster failed: %v", cloudName, err)
 		return nil, err
 	}
+
+	return cls, err
+}
+
+// checkIfWhiteImageOsNames check cluster osName if it is white image osName
+func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
+	if opt == nil || opt.Cluster == nil || opt.Group == nil {
+		blog.Errorf("checkIfWhiteImageOsNames failed: %v", "option empty")
+		return false
+	}
+
+	if opt.Cluster.SystemID == "" {
+		blog.Errorf("checkIfWhiteImageOsNames[%s] failed: systemID empty", opt.Cluster.ClusterID)
+		return false
+	}
+
+	cls, err := getCloudCluster(opt.Cluster.SystemID, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("%s checkIfWhiteImageOsNames[%s] getCloudCluster failed: %v",
+			cloudName, opt.Cluster.ClusterID, err)
+		return false
+	}
+
+	osName := ""
+	if opt.Group.NodeTemplate != nil && opt.Group.NodeTemplate.NodeOS != "" {
+		osName = opt.Group.NodeTemplate.NodeOS
+		blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
+		return utils.StringInSlice(osName, utils.WhiteImageOsName)
+	}
+
+	if cls.ImageId != nil && *cls.ImageId != "" {
+		nodeMgr := &api.NodeManager{}
+		image, errGet := nodeMgr.GetImageInfoByImageID(*cls.ImageId, &opt.CommonOption)
+		if errGet != nil {
+			blog.Errorf("%s checkIfWhiteImageOsNames GetImageInfoByImageID failed: %v", cloudName, errGet)
+			osName = *cls.ClusterOs
+		} else {
+			osName = *image.OsName
+		}
+	} else {
+		osName = *cls.ClusterOs
+	}
+
+	blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
+	return utils.StringInSlice(osName, utils.WhiteImageOsName)
+}
+
+func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
+	cls, err := getCloudCluster(cloudID, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("%s updateClusterInfo getCloudCluster failed: %v", cloudName, err)
+		return nil, err
+	}
+
 	if opt.Cluster.ClusterAdvanceSettings != nil {
 		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = *cls.ContainerRuntime
 		opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = *cls.RuntimeVersion
@@ -328,10 +383,10 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 		return nil, err
 	}
 
-	return transTKEClusterToCloudCluster(tkeClusters), nil
+	return transTKEClusterToCloudCluster(opt.Region, tkeClusters), nil
 }
 
-func transTKEClusterToCloudCluster(clusters []*tke.Cluster) []*proto.CloudClusterInfo {
+func transTKEClusterToCloudCluster(region string, clusters []*tke.Cluster) []*proto.CloudClusterInfo {
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
 	for _, cls := range clusters {
 		cloudClusterList = append(cloudClusterList, &proto.CloudClusterInfo{
@@ -342,6 +397,7 @@ func transTKEClusterToCloudCluster(clusters []*tke.Cluster) []*proto.CloudCluste
 			ClusterOS:          *cls.ClusterOs,
 			ClusterType:        *cls.ClusterType,
 			ClusterStatus:      *cls.ClusterStatus,
+			Location:           region,
 		})
 	}
 
@@ -543,6 +599,48 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 	}
 
 	return cli.DescribeOsImages(provider, opt)
+}
+
+// CheckClusterEndpointStatus check cluster endpoint status
+func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
+	opt *cloudprovider.CheckEndpointStatusOption) (bool, error) {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return false, fmt.Errorf("qcloud CheckClusterEndpointStatus lost authoration")
+	}
+
+	client, err := api.NewTkeClient(&opt.CommonOption)
+	if err != nil {
+		return false, err
+	}
+
+	status, err := client.GetClusterEndpointStatus(clusterID, isExtranet)
+	if err != nil {
+		return false, err
+	}
+
+	blog.Infof("cluster endpoint status: %s", status)
+
+	if !status.Created() {
+		return false, fmt.Errorf("cluster endpoint status is not created")
+	}
+
+	kubeConfig, err := client.GetTKEClusterKubeConfig(clusterID, isExtranet)
+	if err != nil {
+		return false, err
+	}
+
+	data, err := base64.StdEncoding.DecodeString(kubeConfig)
+	if err != nil {
+		return false, fmt.Errorf("decode kube config failed: %v", err)
+	}
+
+	_, err = cloudprovider.GetCRDByKubeConfig(string(data))
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func getClusterCidrAvailableIPNum(cls *proto.Cluster) (uint32, error) {

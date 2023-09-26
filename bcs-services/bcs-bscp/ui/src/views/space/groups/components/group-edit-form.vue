@@ -31,7 +31,7 @@
   const rules = {
     name: [
       {
-        validator: (value: string) => value.length < 128,
+        validator: (value: string) => value.length <= 128,
         message: '最大长度128个字符'
       },
       {
@@ -59,7 +59,6 @@
 
   watch(() => props.group, (val) => {
     formData.value = cloneDeep(val)
-    getServiceList()
   })
 
   onMounted(() => {
@@ -84,6 +83,17 @@
     }
   }
 
+  // 获取操作符对应操作值的数据类型
+  const getOpValType = (op: string) => {
+    if (['in', 'nin'].includes(op)) {
+      return 'array'
+    } else if (['gt', 'ge', 'lt', 'le'].includes(op)) {
+      return 'number'
+    } else {
+      return 'string'
+    }
+  }
+
   // 增加规则
   const handleAddRule = (index: number) => {
     const rule = getDefaultRuleConfig()
@@ -96,25 +106,38 @@
     change()
   }
 
+  // 操作符修改后，string和number类型之间操作值可直接转换时自动转换，不能转换则设置为默认空值
   const handleLogicChange = (index: number, val: EGroupRuleType) => {
-    validateRules()
     const rule = formData.value.rules[index]
-    if (['in', 'nin'].includes(val) && !['in', 'nin'].includes(rule.op)) {
-      rule.value = []
-    } else if (!['in', 'nin'].includes(val) && ['in', 'nin'].includes(rule.op)) {
-      rule.value = ''
+    const newValType = getOpValType(val)
+    const oldValType = getOpValType(rule.op)
+    if (newValType !== oldValType) {
+      if (newValType === 'array' && ['string', 'number'].includes(oldValType)) {
+        rule.value = []
+      } else if (newValType === 'string' && oldValType === 'number') {
+          rule.value = String(rule.value)
+      } else if (newValType === 'number' && oldValType === 'string' && /\d+/.test(<string>rule.value)) {
+          rule.value = Number(rule.value)
+      } else {
+        rule.value = ''
+      }
     }
     rule.op = val
+    ruleChange()
+  }
+
+  const ruleChange = () => {
+    validateRules()
+    change()
   }
 
   const change = () => {
-    validateRules()
     emits('change', formData.value)
   }
 
   const validate = () => {
     const isRulesValid = validateRules()
-    
+
     return formRef.value.validate().then(() => {
       return isRulesValid
     })
@@ -158,10 +181,10 @@
         <bk-option v-for="service in serviceList" :key="service.id" :label="service.spec.name" :value="service.id"></bk-option>
       </bk-select>
     </bk-form-item>
-    <bk-form-item class="radio-group-form" label="分组规则" required property="rules"> 
+    <bk-form-item class="radio-group-form" label="分组规则" required property="rules">
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
-        <bk-input v-model="rule.key" style="width: 176px;" placeholder="" @change="change"></bk-input>
-        <bk-select :model-value="rule.op" style="width: 82px;" :clearable="false" @change="handleLogicChange(index, $event)">
+        <bk-input v-model="rule.key" style="width: 176px;" placeholder="" @change="ruleChange"></bk-input>
+        <bk-select :model-value="rule.op" style="width: 120px;" :clearable="false" @change="handleLogicChange(index, $event)">
           <bk-option v-for="op in GROUP_RULE_OPS" :key="op.id" :value="op.id" :label="op.name"></bk-option>
         </bk-select>
         <div class="value-input">
@@ -174,14 +197,14 @@
             :show-clear-only-hover="true"
             :allow-auto-match="true"
             :list="[]"
-            @change="change">
+            @change="ruleChange">
           </bk-tag-input>
           <bk-input
             v-else
             v-model="rule.value"
             placeholder=""
             :type="['gt', 'ge', 'lt', 'le'].includes(rule.op) ? 'number' : 'text'"
-            @change="change">
+            @change="ruleChange">
           </bk-input>
         </div>
         <div class="action-btns">
@@ -230,7 +253,7 @@
       cursor: pointer;
     }
     .value-input {
-      width: 270px;
+      width: 250px;
     }
   }
   .action-btns {

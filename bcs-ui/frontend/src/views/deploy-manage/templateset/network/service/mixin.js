@@ -23,9 +23,9 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
+import { catchErrorHandler } from '@/common/util';
 import bkKeyer from '@/components/keyer';
 import mixinBase from '@/mixins/network/mixin-base';
-import { catchErrorHandler } from '@/common/util';
 
 export default {
   components: {
@@ -197,12 +197,12 @@ export default {
       const self = this;
 
       this.$bkInfo({
-        title: this.$t('确认删除'),
+        title: this.$t('generic.title.confirmDelete'),
         clsName: 'biz-remove-dialog max-size',
         content: this.$createElement('p', {
           class: 'biz-confirm-desc',
         }, [
-          `${this.$t('确定要删除Service【')}`,
+          `${this.$t('deploy.templateset.confirmDeleteServiceWithName')}`,
           this.$createElement('strong', service.cluster_id),
           ' / ',
           this.$createElement('strong', service.namespace),
@@ -236,7 +236,7 @@ export default {
 
         this.$bkMessage({
           theme: 'success',
-          message: this.$t('删除成功'),
+          message: this.$t('generic.msg.success.delete'),
         });
         this.initPageConf();
         this.getServiceList();

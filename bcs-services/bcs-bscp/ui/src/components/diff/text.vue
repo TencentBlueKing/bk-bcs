@@ -6,6 +6,8 @@
   import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
   import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
   import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
+  import { IVariableEditParams } from '../../../types/variable';
+  import useDiffEditorVariableReplace from '../../utils/hooks/use-diff-editor-variable-replace';
 
   self.MonacoEnvironment = {
     getWorker(_, label) {
@@ -28,26 +30,41 @@
   const props = withDefaults(defineProps<{
     base: string;
     baseLanguage?: string;
+    baseVariables?: IVariableEditParams[];
     current: string;
     currentLanguage?: string;
+    currentVariables?: IVariableEditParams[];
   }>(), {
     baseLanguage: '',
-    currentLanguage: ''
+    currentVariables: () => [],
+    currentLanguage: '',
+    baseVariables: () => []
   })
 
   const textDiffRef = ref()
   let diffEditor: monaco.editor.IStandaloneDiffEditor
+  let diffEditorHoverProvider: monaco.IDisposable
 
   watch(() => [props.base, props.current], () => {
-    createDiffEditor()
+    updateModel()
+    replaceDiffVariables()
   })
 
   watch(() => [props.baseLanguage, props.currentLanguage], () => {
-    createDiffEditor()
+    updateModel()
+    replaceDiffVariables()
   })
 
   onMounted(() => {
     createDiffEditor()
+    replaceDiffVariables()
+  })
+
+  onBeforeUnmount(() => {
+    diffEditor.dispose()
+    if (diffEditorHoverProvider) {
+      diffEditorHoverProvider.dispose()
+    }
   })
 
   const createDiffEditor = () => {
@@ -56,7 +73,7 @@
     }
     const originalModel = monaco.editor.createModel(props.base, props.baseLanguage)
     const modifiedModel = monaco.editor.createModel(props.current, props.currentLanguage)
-    diffEditor = monaco.editor.createDiffEditor(textDiffRef.value as HTMLElement, { 
+    diffEditor = monaco.editor.createDiffEditor(textDiffRef.value, {
       theme: 'vs-dark',
       automaticLayout: true,
       readOnly: true
@@ -67,9 +84,20 @@
     })
   }
 
-  onBeforeUnmount(() => {
-    diffEditor.dispose()
-  })
+  const updateModel = () => {
+    const originalModel = monaco.editor.createModel(props.base, props.baseLanguage)
+    const modifiedModel = monaco.editor.createModel(props.current, props.currentLanguage)
+    diffEditor.setModel({
+      original: originalModel,
+      modified: modifiedModel
+    })
+  }
+
+  const replaceDiffVariables = () => {
+    if ((props.currentVariables && props.currentVariables.length > 0) || (props.currentVariables && props.currentVariables.length > 0)) {
+      diffEditorHoverProvider = useDiffEditorVariableReplace(diffEditor, props.currentVariables, props.baseVariables)
+    }
+  }
 
 </script>
 <template>
@@ -78,9 +106,13 @@
 <style lang="scss" scoped>
   .text-diff-wrapper {
     height: 100%;
-  }
-  .bk-code-diff {
-    height: 100%;
+    :deep(.monaco-editor) {
+      .template-variable-item {
+        color: #1768ef;
+        border: 1px solid #1768ef;
+        cursor: pointer;
+      }
+    }
   }
   :deep(.d2h-file-wrapper) {
     border: none;

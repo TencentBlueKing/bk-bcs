@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package types
 
@@ -114,6 +114,8 @@ type BasePage struct {
 	// Order is the direction when do sort operation.
 	// it works only when the Sort is set.
 	Order Order `json:"order"`
+	// All defines whether query all the resources at once.
+	All bool `json:"all"`
 }
 
 // Offset 偏移量
@@ -175,16 +177,13 @@ func (bp BasePage) Validate(opt ...*PageOption) (err error) {
 		}
 	}
 
-	if enableUnlimited {
-		// allow the unlimited query, then valid this.
-		if bp.Start < 0 || bp.Limit < 0 {
-			return errors.New("page.start >= 0, page.limit value should >= 0")
-		}
-	} else {
+	// only validate when not query all the resources
+	if !enableUnlimited && !bp.All {
+		// not allow the unlimited query, then valid this.
 		// if the user is not allowed to query with unlimited limit, then
 		// 1. limit should >=1
 		// 2. validate whether the limit is larger than the max limit value
-		if bp.Limit <= 0 {
+		if bp.Limit == 0 {
 			return errors.New("page.limit value should >= 1")
 		}
 

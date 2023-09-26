@@ -14,6 +14,7 @@
 package usermanager
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -49,6 +50,7 @@ func SetupStore(conf *config.UserMgrConfig) error {
 		&models.BcsOperationLog{},
 		&models.BcsTokenNotify{},
 		&models.BcsTempToken{},
+		&models.Activity{},
 	)
 
 	// remove user name Constraints, because we will soft delete token on db when user destroy there token,
@@ -67,7 +69,7 @@ func SetupStore(conf *config.UserMgrConfig) error {
 
 // createBootstrapUsers create the bootstrap users, the bootstrap users can be defined in config files
 func createBootstrapUsers(users []options.BootStrapUser) error {
-	tokenStore := sqlstore.NewTokenStore(sqlstore.GCoreDB)
+	tokenStore := sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor)
 	for _, u := range users {
 		var userType uint
 		var subType jwt.UserType
@@ -142,7 +144,7 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 		if err != nil {
 			return fmt.Errorf("error creating jwt for user [%s]: %s", user.Name, err.Error())
 		}
-		_, err = cache.RDB.SetNX(constant.TokenKeyPrefix+user.UserToken, jwtString, user.ExpiresAt.Sub(time.Now()))
+		_, err = cache.RDB.SetNX(context.TODO(), constant.TokenKeyPrefix+user.UserToken, jwtString, user.ExpiresAt.Sub(time.Now()))
 		if err != nil {
 			return fmt.Errorf("error storing user [%s] jwt: %s", user.Name, err.Error())
 		}
@@ -152,7 +154,8 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 
 // syncTokenToRedis will fetch user token from bcs_tokens, and store it to redis
 func syncTokenToRedis() {
-	tokens := sqlstore.GetAllNotExpiredTokens()
+	tokenStore := sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor)
+	tokens := tokenStore.GetAllNotExpiredTokens()
 	blog.Infof("sync token to redis, total %d", len(tokens))
 	done := 0
 	needLess := 0
@@ -174,7 +177,7 @@ func syncTokenToRedis() {
 			blog.Errorf("error creating jwt for user [%s]: %s", v.Name, err.Error())
 			continue
 		}
-		set, err := cache.RDB.SetNX(constant.TokenKeyPrefix+v.UserToken, jwtString, time.Until(v.ExpiresAt))
+		set, err := cache.RDB.SetNX(context.TODO(), constant.TokenKeyPrefix+v.UserToken, jwtString, time.Until(v.ExpiresAt))
 		if err != nil {
 			blog.Errorf("error storing user [%s] jwt: %s", v.Name, err.Error())
 		}

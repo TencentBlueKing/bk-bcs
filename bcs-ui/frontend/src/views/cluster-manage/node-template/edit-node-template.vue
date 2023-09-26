@@ -9,20 +9,20 @@
       :min="3"
       disabled>
       <template #aside>
-        <ActionDoc class="node-template-aside" :title="$t('Worker节点初始化配置说明')" />
+        <ActionDoc class="node-template-aside" :title="$t('cluster.nodeTemplate.title.initConfig')" />
       </template>
       <template #main>
         <bk-form :model="formData" :rules="rules" ref="formRef">
-          <FormGroup :title="$t('基本信息')" :allow-toggle="false">
+          <FormGroup :title="$t('generic.title.basicInfo1')" :allow-toggle="false">
             <bk-form-item
-              :label="$t('模板名称')"
+              :label="$t('cluster.nodeTemplate.label.templateName')"
               required
               property="name"
               error-display-type="normal">
               <bk-input class="mw524" :disabled="isEdit" v-model="formData.name"></bk-input>
             </bk-form-item>
             <bk-form-item
-              :label="$t('描述')"
+              :label="$t('cluster.create.label.desc')"
               property="desc"
               error-display-type="normal">
               <bk-input
@@ -34,8 +34,8 @@
               ></bk-input>
             </bk-form-item>
           </FormGroup>
-          <FormGroup class="mt15" :title="$t('标签 & 污点')" :allow-toggle="false">
-            <bk-form-item :label="$t('标签')" property="labels" error-display-type="normal">
+          <FormGroup class="mt15" :title="$t('cluster.nodeTemplate.title.labelsAndTaints')" :allow-toggle="false">
+            <bk-form-item :label="$t('k8s.label')" property="labels" error-display-type="normal">
               <KeyValue
                 class="max-w-[420px]"
                 :disable-delete-item="false"
@@ -44,12 +44,12 @@
               </KeyValue>
             </bk-form-item>
             <bk-form-item
-              :label="$t('污点')"
+              :label="$t('k8s.taint')"
               property="taints"
               error-display-type="normal">
               <span class="add-btn" v-if="!formData.taints.length" @click="handleAddTaints">
                 <i class="bk-icon icon-plus-circle-shape mr5"></i>
-                {{$t('添加')}}
+                {{$t('generic.button.add')}}
               </span>
               <Taints
                 style="max-width: 600px;"
@@ -59,7 +59,7 @@
                 @delete="handleValidateForm"
               />
             </bk-form-item>
-            <bk-form-item :label="$t('注解')" property="annotations" error-display-type="normal">
+            <bk-form-item :label="$t('k8s.annotation')" property="annotations" error-display-type="normal">
               <KeyValue
                 class="max-w-[420px]"
                 :disable-delete-item="false"
@@ -68,24 +68,24 @@
               </KeyValue>
             </bk-form-item>
           </FormGroup>
-          <FormGroup class="mt15" :title="$t('Kubelet组件参数配置')" :allow-toggle="false">
+          <FormGroup class="mt15" :title="$t('cluster.nodeTemplate.kubelet.title.argsConfig1')" :allow-toggle="false">
             <div style="padding: 0 24px">
               <div class="bcs-flex-between kubelet mb15">
                 <span class="left"></span>
                 <div class="right">
                   <bcs-input
                     v-model="searchValue"
-                    :placeholder="$t('请输入参数名称')"
+                    :placeholder="$t('generic.placeholder.params')"
                     right-icon="bk-icon icon-search"
                     clearable>
                   </bcs-input>
                   <i
                     class="bcs-icon bcs-icon-zhongzhishuju ml15"
-                    v-bk-tooltips.top="$t('重置参数')"
+                    v-bk-tooltips.top="$t('cluster.nodeTemplate.kubelet.button.resetArgs')"
                     @click="handleReset"></i>
                   <i
                     class="bcs-icon bcs-icon-yulan ml15"
-                    v-bk-tooltips.top="$t('预览修改值')"
+                    v-bk-tooltips.top="$t('cluster.nodeTemplate.kubelet.button.preview')"
                     @click="handlePreview"></i>
                 </div>
               </div>
@@ -96,14 +96,14 @@
                 @row-mouse-enter="handlekubeletMouseEnter"
                 @page-change="pageChange"
                 @page-limit-change="pageSizeChange">
-                <bcs-table-column :label="$t('参数名称')" prop="flagName"></bcs-table-column>
+                <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.argsName')" prop="flagName"></bcs-table-column>
                 <bcs-table-column
-                  :label="$t('参数说明')"
+                  :label="$t('cluster.nodeTemplate.kubelet.label.argsDesc')"
                   prop="flagDesc"
                   show-overflow-tooltip>
                 </bcs-table-column>
-                <bcs-table-column :label="$t('默认值')" prop="defaultValue"></bcs-table-column>
-                <bcs-table-column :label="$t('当前值')">
+                <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.defaultValue')" prop="defaultValue"></bcs-table-column>
+                <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.curValue')">
                   <template #default="{ row }">
                     <div class="kubelet-value">
                       <InputType
@@ -140,8 +140,8 @@
               </bcs-table>
             </div>
           </FormGroup>
-          <FormGroup class="mt15" :title="$t('Worker节点初始化配置')" :allow-toggle="false">
-            <bk-form-item :label="$t('前置初始化')" :desc="$t('暂时只支持bash脚本')">
+          <FormGroup class="mt15" :title="$t('cluster.nodeTemplate.title.initConfig')" :allow-toggle="false">
+            <bk-form-item :label="$t('cluster.nodeTemplate.label.preInstall.title')" :desc="$t('cluster.nodeTemplate.label.preInstall.desc')">
               <bcs-input
                 type="textarea"
                 class="mt10 mw524"
@@ -150,10 +150,10 @@
                 v-model="formData.preStartUserScript"></bcs-input>
             </bk-form-item>
             <bk-form-item
-              :label="$t('后置初始化')" :desc="$t('简单脚本执行只支持bash脚本，复杂场景请使用标准运维流程执行')">
+              :label="$t('cluster.nodeTemplate.label.postInstall.title')" :desc="$t('cluster.nodeTemplate.label.postInstall.desc')">
               <bcs-select class="mw524" :clearable="false" v-model="postActionType">
-                <bcs-option id="simple" :name="$t('简单脚本执行')"></bcs-option>
-                <bcs-option id="complex" :name="$t('标准运维流程执行')"></bcs-option>
+                <bcs-option id="simple" :name="$t('cluster.nodeTemplate.label.postInstall.type.scripts')"></bcs-option>
+                <bcs-option id="complex" :name="$t('cluster.nodeTemplate.label.postInstall.type.sops')"></bcs-option>
               </bcs-select>
               <bcs-input
                 type="textarea"
@@ -164,7 +164,7 @@
                 v-if="postActionType === 'simple'">
               </bcs-input>
             </bk-form-item>
-            <bk-form-item :label="$t('标准运维流程')" v-if="postActionType === 'complex'">
+            <bk-form-item :label="$t('cluster.nodeTemplate.sops.label.sops')" v-if="postActionType === 'complex'">
               <div class="sops-wrapper">
                 <bcs-select
                   :loading="bkSopsLoading"
@@ -183,21 +183,21 @@
                 <span
                   class="ml10"
                   v-if="templateUrl"
-                  v-bk-tooltips.top="$t('前往标准运维')"
+                  v-bk-tooltips.top="$t('cluster.nodeTemplate.sops.tips.gotoSops')"
                   @click="handleGotoSops">
                   <i class="bcs-icon bcs-icon-fenxiang"></i>
                 </span>
                 <span
                   class="ml10"
-                  v-bk-tooltips.top="$t('刷新列表')"
+                  v-bk-tooltips.top="$t('generic.button.refresh')"
                   @click="handleRefreshList">
                   <i class="bcs-icon bcs-icon-reset"></i>
                 </span>
               </div>
               <div class="bk-sops-params mw524" v-bkloading="{ isLoading: sopsParamsLoading }">
                 <div class="title">
-                  <span v-bk-tooltips.top="{ content: $t('目前仅支持输入框类型参数') }" class="name">
-                    {{$t('任务参数')}}
+                  <span v-bk-tooltips.top="{ content: $t('cluster.nodeTemplate.sops.title.taskArgs.tips') }" class="name">
+                    {{$t('cluster.nodeTemplate.sops.title.taskArgs.text')}}
                   </span>
                 </div>
                 <div class="content">
@@ -213,21 +213,21 @@
                     </div>
                     <bcs-input
                       behavior="simplicity"
-                      :placeholder="$t('参数值留空代表使用标准运维流程参数默认值')"
+                      :placeholder="$t('cluster.nodeTemplate.sops.placeholder.input')"
                       v-model="sopsParams[item.key]">
                     </bcs-input>
                   </div>
                   <span
                     v-bk-tooltips="{
                       disabled: !isSopsParamsExitVar,
-                      content: $t('调试时请勿使用内置变量')
+                      content: $t('cluster.nodeTemplate.sops.button.debug.tips')
                     }">
                     <bcs-button
                       theme="primary"
                       outline
                       :disabled="isSopsParamsExitVar"
                       @click="handleDebug">
-                      {{$t('调试')}}
+                      {{$t('cluster.nodeTemplate.sops.button.debug.text')}}
                     </bcs-button>
                   </span>
                 </div>
@@ -236,20 +236,20 @@
           </FormGroup>
         </bk-form>
         <bcs-dialog
-          :title="$t('预览修改值')"
+          :title="$t('cluster.nodeTemplate.kubelet.button.preview')"
           :show-footer="false"
           header-position="left"
           width="640"
           v-model="showPreview">
           <bcs-table :data="kubeletDiffData" :key="JSON.stringify(kubeletDiffData)">
-            <bcs-table-column :label="$t('组件名称')" prop="moduleID"></bcs-table-column>
-            <bcs-table-column :label="$t('组件参数')" prop="flagName"></bcs-table-column>
-            <bcs-table-column :label="$t('修改前值')" prop="origin">
+            <bcs-table-column :label="$t('plugin.tools.toolName')" prop="moduleID"></bcs-table-column>
+            <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.flagName')" prop="flagName"></bcs-table-column>
+            <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.beforeEdit')" prop="origin">
               <template #default="{ row }">
                 {{row.origin || '--'}}
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('修改后值')" prop="value"></bcs-table-column>
+            <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.afterEdit')" prop="value"></bcs-table-column>
           </bcs-table>
         </bcs-dialog>
         <!-- 任务调试状态 -->
@@ -270,14 +270,14 @@
                 mode: 'spin'
               }"></div>
             <template v-if="['INITIALIZING', 'RUNNING'].includes(taskData.status)">
-              <div class="title mt15">{{$t('调试正在进行中')}}...</div>
+              <div class="title mt15">{{$t('cluster.nodeTemplate.sops.status.running.text')}}...</div>
               <div class="operator mt15">
                 <bcs-button
                   text
                   size="small"
                   :disabled="!taskUrl"
                   @click="handleGotoTaskDetail">
-                  {{$t('查看详情')}}
+                  {{$t('cluster.nodeTemplate.sops.status.running.detailBtn')}}
                 </bcs-button>
               </div>
             </template>
@@ -285,36 +285,36 @@
               <div class="bcs-flex-center">
                 <span class="status-icon success"><i class="bcs-icon bcs-icon-check-1"></i></span>
               </div>
-              <div class="title mt20">{{$t('调试成功')}}</div>
+              <div class="title mt20">{{$t('cluster.nodeTemplate.sops.status.success')}}</div>
               <div class="operator mt20">
                 <bcs-button
                   class="mw88"
                   theme="primary"
                   :disabled="!taskUrl"
                   @click="handleGotoTaskDetail"
-                >{{$t('查看详情')}}</bcs-button>
+                >{{$t('cluster.nodeTemplate.sops.status.running.detailBtn')}}</bcs-button>
                 <bcs-button
                   class="ml5"
                   style="min-width: 88px;"
-                  @click="showDebugStatus = false">{{$t('完成')}}</bcs-button>
+                  @click="showDebugStatus = false">{{$t('generic.status.done')}}</bcs-button>
               </div>
             </template>
             <template v-else-if="taskData.status === 'FAILURE'">
               <div class="bcs-flex-center">
                 <span class="status-icon failure"><i class="bcs-icon bcs-icon-close"></i></span>
               </div>
-              <div class="title mt20">{{$t('调试失败')}}</div>
+              <div class="title mt20">{{$t('cluster.nodeTemplate.sops.status.failed.text')}}</div>
               <div class="operator mt20">
                 <bcs-button
                   class="mw88"
                   theme="primary"
                   :disabled="!taskUrl"
                   @click="handleGotoTaskDetail"
-                >{{$t('查看详情')}}</bcs-button>
+                >{{$t('cluster.nodeTemplate.sops.status.running.detailBtn')}}</bcs-button>
                 <bcs-button
                   class="mw88 ml5"
                   theme="primary"
-                  @click="handleDebug">{{$t('再次调试')}}</bcs-button>
+                  @click="handleDebug">{{$t('cluster.nodeTemplate.sops.button.retry')}}</bcs-button>
               </div>
             </template>
           </div>
@@ -323,26 +323,28 @@
     </bcs-resize-layout>
     <div class="bcs-fixed-footer">
       <bcs-button class="mw88" theme="primary" :loading="btnLoading" @click="handleCreateOrUpdate">
-        {{isEdit ? $t('保存') : $t('创建')}}
+        {{isEdit ? $t('generic.button.save') : $t('generic.button.create')}}
       </bcs-button>
-      <bcs-button class="mw88 ml10" @click="handleCancel">{{$t('取消')}}</bcs-button>
+      <bcs-button class="mw88 ml10" @click="handleCancel">{{$t('generic.button.cancel')}}</bcs-button>
     </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch, getCurrentInstance } from 'vue';
-import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
-import KeyValue from '@/views/cluster-manage/components/key-value.vue';
-import Taints from '@/views/cluster-manage/components/new-taints.vue';
-import $store from '@/store/index';
+import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } from 'vue';
+
+import ActionDoc from '../components/action-doc.vue';
+
+import $bkMessage from '@/common/bkmagic';
+import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
-import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
-import useInterval from '@/composables/use-interval';
+import $router from '@/router';
+import $store from '@/store/index';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 import InputType from '@/views/cluster-manage/components/input-type.vue';
-import ActionDoc from '../components/action-doc.vue';
-import $bkMessage from '@/common/bkmagic';
+import KeyValue from '@/views/cluster-manage/components/key-value.vue';
+import Taints from '@/views/cluster-manage/components/new-taints.vue';
 
 export default defineComponent({
   components: { FormGroup, KeyValue, Taints, InputType, ActionDoc },
@@ -383,18 +385,18 @@ export default defineComponent({
     const rules = ref({
       name: [{
         required: true,
-        message: $i18n.t('必填项'),
+        message: $i18n.t('generic.validate.required'),
         trigger: 'blur',
       }],
       labels: [
         {
-          message: $i18n.t('标签值不能为空'),
+          message: $i18n.t('generic.validate.labelValueEmpty'),
           trigger: 'custom',
           // eslint-disable-next-line max-len
           validator: () => Object.keys(formData.value.labels).every(key => !!formData.value.labels[key]),
         },
         {
-          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          message: $i18n.t('generic.validate.labelKey'),
           trigger: 'custom',
           validator: () => {
             const keys = Object.keys(formData.value.labels);
@@ -406,11 +408,11 @@ export default defineComponent({
       taints: [
         {
           validator: () => formData.value.taints.every((item: any) => item.key && item.value && item.effect),
-          message: $i18n.t('污点键、值和effect不能为空'),
+          message: $i18n.t('cluster.nodeTemplate.validate.keyValue'),
           trigger: 'custom',
         },
         {
-          message: $i18n.t('重复键'),
+          message: $i18n.t('generic.validate.repeatKey'),
           trigger: 'custom',
           validator: () => {
             const data = (formData.value.taints as any[]).reduce((pre, item) => {
@@ -424,7 +426,7 @@ export default defineComponent({
           },
         },
         {
-          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          message: $i18n.t('generic.validate.labelKey'),
           trigger: 'custom',
           validator: () => (formData.value.taints as any[])
             .every(item => /^[A-Za-z0-9._/-]+$/.test(item.key) && /^[A-Za-z0-9._/-]+$/.test(item.value)),
@@ -432,13 +434,13 @@ export default defineComponent({
       ],
       annotations: [
         {
-          message: $i18n.t('注解值不能为空'),
+          message: $i18n.t('generic.validate.annotationValueEmpty'),
           trigger: 'custom',
           // eslint-disable-next-line max-len
           validator: () => Object.keys(formData.value.annotations.values).every(key => !!formData.value.annotations.values[key]),
         },
         {
-          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          message: $i18n.t('generic.validate.labelKey'),
           trigger: 'custom',
           validator: () => {
             const keys = Object.keys(formData.value.annotations.values);
@@ -682,7 +684,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: isEdit.value ? $i18n.t('编辑成功') : $i18n.t('创建成功'),
+          message: isEdit.value ? $i18n.t('generic.msg.success.edit') : $i18n.t('generic.msg.success.create'),
         });
         $router.push({ name: 'nodeTemplate' });
       }

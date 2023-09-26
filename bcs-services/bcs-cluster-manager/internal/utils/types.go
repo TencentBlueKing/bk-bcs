@@ -65,6 +65,20 @@ const (
 	DrainDelayKey = "node.bkbcs.tencent.com/drain-delay"
 	// DeviceLabelFlag for device labels flag
 	DeviceLabelFlag = "bkbcs.tencent.com"
+
+	// RegionKubernetesFlag region
+	RegionKubernetesFlag = "failure-domain.beta.kubernetes.io/region"
+	// ZoneKubernetesFlag zone
+	ZoneKubernetesFlag = "failure-domain.beta.kubernetes.io/zone"
+	// RegionTopologyFlag region
+	RegionTopologyFlag = "topology.kubernetes.io/region"
+	// ZoneTopologyFlag zone
+	ZoneTopologyFlag = "topology.kubernetes.io/zone"
+
+	// NodeInstanceTypeFlag instance type
+	NodeInstanceTypeFlag = "node.kubernetes.io/instance-type"
+	// NodeNameFlag nodeName
+	NodeNameFlag = "kubernetes.io/hostname"
 )
 
 const (
@@ -84,4 +98,12 @@ const (
 	BkSystem = "bk-system"
 	// BCSSystem namespace
 	BCSSystem = "bcs-system"
+)
+
+// cloud account type
+const (
+	// STANDARD 标准用户
+	STANDARD = "STANDARD"
+	// LEGACY 传统用户
+	LEGACY = "LEGACY"
 )

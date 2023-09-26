@@ -121,3 +121,93 @@ func (cm *ClusterManager) ListCCTopology(ctx context.Context,
 	blog.V(3).Infof("reqID: %s, action: ListCCTopology, req %v", reqID, req)
 	return nil
 }
+
+// GetBatchCustomSetting implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetBatchCustomSetting(ctx context.Context,
+	req *cmproto.GetBatchCustomSettingRequest, resp *cmproto.GetBatchCustomSettingResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetCustomSettingAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetBatchCustomSetting", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetBatchCustomSetting, req %v", reqID, req)
+	return nil
+}
+
+// GetBizTopologyHost implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetBizTopologyHost(ctx context.Context,
+	req *cmproto.GetBizTopologyHostRequest, resp *cmproto.GetBizTopologyHostResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetBizInstanceTopoAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetBizTopologyHost", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetBizTopologyHost, req %v", reqID, req)
+	return nil
+}
+
+// GetTopologyNodes implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetTopologyNodes(ctx context.Context,
+	req *cmproto.GetTopologyNodesRequest, resp *cmproto.GetTopologyNodesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetTopoNodesAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetTopologyNodes", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetTopologyNodes, req %v", reqID, req)
+	return nil
+}
+
+// GetTopologyHostIdsNodes implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetTopologyHostIdsNodes(ctx context.Context,
+	req *cmproto.GetTopologyHostIdsNodesRequest, resp *cmproto.GetTopologyHostIdsNodesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetTopologyHostIdsNodesAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetTopologyHostIdsNodes", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetTopologyHostIdsNodes, req %v", reqID, req)
+	return nil
+}
+
+// GetHostsDetails implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetHostsDetails(ctx context.Context,
+	req *cmproto.GetHostsDetailsRequest, resp *cmproto.GetHostsDetailsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetHostsDetailsAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetHostsDetailsAction", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetHostsDetailsAction, req %v", reqID, req)
+	return nil
+}
+
+// GetScopeHostCheck implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetScopeHostCheck(ctx context.Context,
+	req *cmproto.GetScopeHostCheckRequest, resp *cmproto.GetScopeHostCheckResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetScopeHostCheckAction()
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetScopeHostCheck", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetScopeHostCheck, req %v", reqID, req)
+	return nil
+}

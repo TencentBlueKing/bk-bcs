@@ -22,6 +22,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 
 	"google.golang.org/api/container/v1"
 )
@@ -63,32 +64,36 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	}
 	cls.SystemID = cluster.Name
 
-	cls.VpcID = cluster.NetworkConfig.Network
+	cls.VpcID = cluster.Network
 	// 记录gke集群发布类型
 	if cluster.ReleaseChannel != nil {
 		if cls.ExtraInfo == nil {
 			cls.ExtraInfo = make(map[string]string, 0)
 		}
-		cls.ExtraInfo["releaseChannel"] = cluster.ReleaseChannel.Channel
-	}
-	// 区分gke集群是zone级别还是region级别
-	if len(strings.Split(cluster.Location, "-")) == 2 {
-		cls.ExtraInfo["locationType"] = "regions"
-	} else if len(strings.Split(cluster.Location, "-")) == 3 {
-		cls.ExtraInfo["locationType"] = "zones"
+		cls.ExtraInfo[api.GKEClusterReleaseChannel] = cluster.ReleaseChannel.Channel
 	}
 
+	// gke集群 region级别 zone级别
+	clusterType := common.Regions
+	if len(strings.Split(opt.Common.Region, "-")) == 3 {
+		clusterType = common.Zones
+	}
+	cls.ExtraInfo[api.GKEClusterLocationType] = clusterType
+	cls.ExtraInfo[api.GKEClusterLocations] = strings.Join(cluster.Locations, ",")
+
 	kubeConfig, err := api.GetClusterKubeConfig(context.Background(), opt.Common.Account.ServiceAccountSecret,
-		opt.Common.Account.GkeProjectID, cls.Region, cls.SystemID)
+		opt.Common.Account.GkeProjectID, cls.Region, clusterType, cls.SystemID)
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo GetClusterKubeConfig failed: %v", err)
 	}
 	cls.KubeConfig = kubeConfig
+
 	// cluster cloud basic setting
 	clusterBasicSettingByGKE(cls, cluster)
-
 	// cluster cloud network setting
 	clusterNetworkSettingByGKE(cls, cluster)
+	// cluster cloud advanced setting
+	clusterAdvanceSettingByGKE(cls, cluster)
 
 	return nil
 }
@@ -123,5 +128,11 @@ func clusterNetworkSettingByGKE(cls *cmproto.Cluster, cluster *container.Cluster
 	}
 	if cluster.DefaultMaxPodsConstraint != nil {
 		cls.NetworkSettings.MaxNodePodNum = uint32(cluster.DefaultMaxPodsConstraint.MaxPodsPerNode)
+	}
+}
+
+func clusterAdvanceSettingByGKE(cls *cmproto.Cluster, cluster *container.Cluster) {
+	cls.ClusterAdvanceSettings = &cmproto.ClusterAdvanceSetting{
+		IPVS: true,
 	}
 }

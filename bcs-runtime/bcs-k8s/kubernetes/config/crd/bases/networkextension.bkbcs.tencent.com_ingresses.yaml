@@ -13,6 +13,8 @@ spec:
     kind: Ingress
     listKind: IngressList
     plural: ingresses
+    shortNames:
+    - bcsingress
     singular: ingress
   scope: Namespaced
   versions:

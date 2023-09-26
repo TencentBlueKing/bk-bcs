@@ -15,14 +15,14 @@
           <div class="biz-tab-content" v-bkloading="{ isLoading: isTabChanging }">
             <bk-alert type="info" class="mb20">
               <div slot="title">
-                {{$t('Deployment是k8s中标准的无状态服务，集成了上线部署、滚动升级、创建副本、回滚等功能')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sDeployment" target="_blank">{{$t('详情查看文档')}}</a>
+                {{$t('deploy.templateset.deploymentDescription')}}，
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sDeployment" target="_blank">{{$t('plugin.tools.docs')}}</a>
               </div>
             </bk-alert>
             <template v-if="!deployments.length">
               <div class="biz-guide-box mt0">
                 <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalApplication">
-                  <span style="margin-left: 0;">{{$t('添加Deployment')}}</span>
+                  <span style="margin-left: 0;">{{$t('deploy.templateset.addDeployment')}}</span>
                 </bk-button>
               </div>
             </template>
@@ -32,7 +32,7 @@
                 <div class="biz-list-operation">
                   <div class="item" v-for="(application, index) in deployments" :key="application.id">
                     <bk-button :class="['bk-button', { 'bk-primary': curApplication.id === application.id }]" @click.stop="setCurApplication(application, index)">
-                      {{(application && application.config.metadata.name) || $t('未命名')}}
+                      {{(application && application.config.metadata.name) || $t('deploy.templateset.unnamed')}}
                       <span class="biz-update-dot" v-show="application.isEdited"></span>
                     </bk-button>
                     <span class="bcs-icon bcs-icon-close" @click.stop="removeApplication(application, index)"></span>
@@ -40,7 +40,7 @@
 
                   <bcs-popover
                     ref="applicationTooltip"
-                    :content="$t('添加Deployment')"
+                    :content="$t('deploy.templateset.addDeployment')"
                     placement="top">
                     <bk-button class="bk-button bk-default is-outline is-icon" @click.stop="addLocalApplication">
                       <i class="bcs-icon bcs-icon-plus"></i>
@@ -52,7 +52,7 @@
               <div class="biz-configuration-content" style="position: relative;">
                 <!-- part1 start -->
                 <div class="bk-form biz-configuration-form">
-                  <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('导入YAML')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button from-json-btn" @click.stop.prevent="showJsonPanel">{{$t('deploy.templateset.importYAML')}}</a>
 
                   <bk-sideslider
                     :is-show.sync="toJsonDialogConf.isShow"
@@ -63,8 +63,8 @@
                     @hidden="closeToJson">
                     <div slot="content" style="position: relative;">
                       <div class="biz-log-box" :style="{ height: `${winHeight - 60}px` }" v-bkloading="{ isLoading: toJsonDialogConf.loading }">
-                        <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('导入')}}</bk-button>
-                        <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('取消')}}</bk-button>
+                        <bk-button class="bk-button bk-primary save-json-btn" @click.stop.prevent="saveApplicationJson">{{$t('generic.button.import')}}</bk-button>
+                        <bk-button class="bk-button bk-default hide-json-btn" @click.stop.prevent="hideApplicationJson">{{$t('generic.button.cancel')}}</bk-button>
                         <ace
                           :value="editorConfig.value"
                           :width="editorConfig.width"
@@ -82,20 +82,20 @@
                     <div class="bk-form-item">
                       <div class="bk-form-content" style="margin-left: 0;">
                         <div class="bk-form-inline-item is-required">
-                          <label class="bk-label" style="width: 140px;">{{$t('应用名称')}}：</label>
+                          <label class="bk-label" style="width: 140px;">{{$t('plugin.tools.appName')}}：</label>
                           <div class="bk-form-content" style="margin-left: 140px;">
                             <div class="bk-form-input-group">
-                              <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('applicationName') }]" :placeholder="$t('请输入64个字符以内')" style="width: 310px;" v-model="curApplication.config.metadata.name" maxlength="64" name="applicationName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
+                              <input type="text" :class="['bk-form-input',{ 'is-danger': errors.has('applicationName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit64')" style="width: 310px;" v-model="curApplication.config.metadata.name" maxlength="64" name="applicationName" v-validate="{ required: true, regex: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/ }">
                             </div>
                           </div>
                         </div>
                         <div class="bk-form-inline-item is-required">
-                          <label class="bk-label" style="width: 140px;">{{$t('实例数量')}}：</label>
+                          <label class="bk-label" style="width: 140px;">{{$t('dashboard.workload.label.scaleNum')}}：</label>
                           <div class="bk-form-content" style="margin-left: 140px;">
                             <div class="bk-form-input-group">
                               <bkbcs-input
                                 type="number"
-                                :placeholder="$t('请输入')"
+                                :placeholder="$t('generic.placeholder.input')"
                                 style="width: 310px;"
                                 :min="0"
                                 :value.sync="curApplication.config.spec.replicas"
@@ -106,32 +106,32 @@
                           </div>
                         </div>
                         <div class="bk-form-tip is-danger" style="margin-left: 140px;" v-if="errors.has('applicationName')">
-                          <p class="bk-tip-text">{{$t('名称必填，以小写字母或数字开头和结尾，只能包含：小写字母、数字、连字符(-)、点(.)')}}</p>
+                          <p class="bk-tip-text">{{$t('deploy.templateset.nameIsRequired')}}</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <div class="bk-form-item">
-                    <label class="bk-label" style="width: 140px;">{{$t('重要级别')}}：</label>
+                    <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.importanceLevel')}}：</label>
                     <div class="bk-form-content" style="margin-left: 140px;">
                       <bk-radio-group v-model="curApplication.config.monitorLevel">
-                        <bk-radio class="mr20" :value="'important'">{{$t('重要')}}</bk-radio>
-                        <bk-radio class="mr20" :value="'general'">{{$t('一般')}}</bk-radio>
-                        <bk-radio :value="'unimportant'">{{$t('不重要')}}</bk-radio>
+                        <bk-radio class="mr20" :value="'important'">{{$t('deploy.templateset.important')}}</bk-radio>
+                        <bk-radio class="mr20" :value="'general'">{{$t('deploy.templateset.general')}}</bk-radio>
+                        <bk-radio :value="'unimportant'">{{$t('deploy.templateset.notImportant')}}</bk-radio>
                       </bk-radio-group>
                     </div>
                   </div>
 
                   <div class="bk-form-item">
-                    <label class="bk-label" style="width: 140px;">{{$t('描述')}}：</label>
+                    <label class="bk-label" style="width: 140px;">{{$t('cluster.create.label.desc')}}：</label>
                     <div class="bk-form-content" style="margin-left: 140px;">
-                      <textarea class="bk-form-textarea" :placeholder="$t('请输入256个字符以内')" v-model="curApplication.desc" maxlength="256"></textarea>
+                      <textarea class="bk-form-textarea" :placeholder="$t('deploy.templateset.enterCharacterLimit256')" v-model="curApplication.desc" maxlength="256"></textarea>
                     </div>
                   </div>
 
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 140px;">{{$t('标签')}}：</label>
+                    <label class="bk-label" style="width: 140px;">{{$t('k8s.label')}}：</label>
                     <div class="bk-form-content" style="margin-left: 140px;">
                       <bk-module-keyer
                         ref="labelKeyer"
@@ -139,11 +139,11 @@
                         :var-list="varList"
                         :is-link-to-selector="true"
                         :is-tip-change="isSelectorChange"
-                        :tip="$t('k8S使用选择器(spec.selector.matchLabels)关联资源，实例化后选择器的值不可变')"
+                        :tip="$t('deploy.templateset.tips2')"
                         :can-disabled="true"
                         @change="updateApplicationLabel">
                         <slot>
-                          <p class="biz-tip" style="line-height: 1;">{{$t('小提示：K8S使用选择器（spec.selector.matchLabels）关联资源，必填，且实例化后选择器的值不可变')}}</p>
+                          <p class="biz-tip" style="line-height: 1;">{{$t('deploy.templateset.tips1')}}</p>
                         </slot>
                       </bk-module-keyer>
                     </div>
@@ -152,27 +152,27 @@
                   <div class="bk-form-item">
                     <div class="bk-form-content" style="margin-left: 140px;">
                       <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isMorePanelShow }]" @click.stop.prevent="toggleMore">
-                        {{$t('更多设置')}}
+                        {{$t('deploy.templateset.moreSettings')}}
                         <i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
                       </button>
 
                       <button :class="['bk-text-button f12 mb10 pl0', { 'rotate': isPodPanelShow }]" @click.stop.prevent="togglePod">
-                        {{$t('Pod模板设置')}}
+                        {{$t('deploy.templateset.podTemplateSettings')}}
                         <i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
                       </button>
                     </div>
                     <bk-tab :type="'fill'" :active-name="'tab1'" :size="'small'" v-show="isMorePanelShow" style="margin-left: 140px;">
-                      <bk-tab-panel name="tab1" :title="$t('更新策略')">
+                      <bk-tab-panel name="tab1" :title="$t('deploy.templateset.updateStrategy')">
                         <div class="bk-form m20">
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 155px;">{{$t('类型')}}：</label>
+                            <label class="bk-label" style="width: 155px;">{{$t('generic.label.kind')}}：</label>
                             <div class="bk-form-content" style="margin-left: 155px;">
                               <bk-radio-group v-model="curApplication.config.spec.strategy.type">
                                 <bk-radio :value="'RollingUpdate'">
-                                  {{$t('滚动升级')}}
+                                  {{$t('k8s.updateStrategy.rollingUpdate')}}
                                 </bk-radio>
                                 <bk-radio :value="'Recreate'">
-                                  {{$t('重新创建')}}
+                                  {{$t('k8s.updateStrategy.reCreate')}}
                                 </bk-radio>
                               </bk-radio-group>
                             </div>
@@ -183,7 +183,7 @@
                             <div class="bk-form-content" style="margin-left: 155px;">
                               <bkbcs-input
                                 type="number"
-                                :placeholder="$t('请输入')"
+                                :placeholder="$t('generic.placeholder.input')"
                                 style="width: 250px;"
                                 :min="0"
                                 :is-decimals="true"
@@ -193,7 +193,7 @@
                                 :debounce-timer="0"
                               >
                               </bkbcs-input>
-                              <p class="biz-tip mt5">{{$t('更新过程中能够进入不可用状态的 Pod 的最大个数')}}</p>
+                              <p class="biz-tip mt5">{{$t('deploy.templateset.maxUnavailablePods')}}</p>
                             </div>
                           </div>
 
@@ -202,7 +202,7 @@
                             <div class="bk-form-content" style="margin-left: 155px;">
                               <bkbcs-input
                                 type="number"
-                                :placeholder="$t('请输入')"
+                                :placeholder="$t('generic.placeholder.input')"
                                 style="width: 250px;"
                                 :min="0"
                                 :is-decimals="true"
@@ -212,7 +212,7 @@
                                 :debounce-timer="0"
                               >
                               </bkbcs-input>
-                              <p class="biz-tip mt5">{{$t('更新过程中能够额外创建的 Pod 的最大个数')}}</p>
+                              <p class="biz-tip mt5">{{$t('deploy.templateset.maxAdditionalPods')}}</p>
                             </div>
                           </div>
 
@@ -222,7 +222,7 @@
                               <div class="bk-form-input-group">
                                 <bkbcs-input
                                   type="number"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   style="width: 215px;"
                                   :min="0"
                                   :value.sync="curApplication.config.spec.minReadySeconds"
@@ -231,23 +231,23 @@
                                 >
                                 </bkbcs-input>
                                 <span class="input-group-addon">
-                                  {{$t('秒')}}
+                                  {{$t('units.suffix.seconds')}}
                                 </span>
                               </div>
                             </div>
                           </div>
                         </div>
                       </bk-tab-panel>
-                      <!-- <bk-tab-panel name="tab2" :title="$t('Metric信息')">
+                      <!-- <bk-tab-panel name="tab2" :title="$t('deploy.templateset.metricInfo')">
                                                 <div class="bk-form m20">
                                                     <div class="bk-form-item">
                                                         <div class="bk-form-content" style="margin-left: 0;">
                                                             <bk-checkbox style="margin-left: 15px;"
                                                                 name="mdtric-policy"
                                                                 v-model="curApplication.config.webCache.isMetric">
-                                                                {{$t('启用Metric数据采集')}}
+                                                                {{$t('deploy.templateset.enableMetricDataCollection')}}
                                                             </bk-checkbox>
-                                                            <router-link class="bk-text-button ml10" style="vertical-align: middle;" :to="{ name: 'metricManage', params: { projectCode, projectId } }">{{$t('管理Metric')}}</router-link>
+                                                            <router-link class="bk-text-button ml10" style="vertical-align: middle;" :to="{ name: 'metricManage', params: { projectCode, projectId } }">{{$t('deploy.templateset.manageMetric')}}</router-link>
                                                         </div>
                                                     </div>
                                                     <transition name="fade">
@@ -255,7 +255,7 @@
                                                             <div class="bk-form-content" style="margin-left: 15px;">
                                                                 <div class="bk-dropdown-box" style="width: 310px; display: block;">
                                                                     <bk-selector
-                                                                        :placeholder="$t('Metric数列（多选）')"
+                                                                        :placeholder="$t('deploy.templateset.metricListMultiSelect')"
                                                                         field-type="metric"
                                                                         :setting-key="'id'"
                                                                         :display-key="'name'"
@@ -285,7 +285,7 @@
                                 <td>
                                   <bkbcs-input
                                     type="text"
-                                    :placeholder="$t('请输入')"
+                                    :placeholder="$t('generic.placeholder.input')"
                                     :value.sync="hostAlias.ip"
                                     :list="varList">
                                   </bkbcs-input>
@@ -293,7 +293,7 @@
                                 <td>
                                   <bkbcs-input
                                     type="text"
-                                    :placeholder="$t('请输入，多个HostName以英文分号(;)分隔')"
+                                    :placeholder="$t('deploy.templateset.enterHostnamesSemicolon')"
                                     :value.sync="hostAlias.hostnames"
                                     :list="varList">
                                   </bkbcs-input>
@@ -314,7 +314,7 @@
                           <div class="tc p40" v-else>
                             <bk-button type="primary" @click="addHostAlias">
                               <i class="bcs-icon bcs-icon-plus f12" style="top: -2px;"></i>
-                              {{$t('添加 HostAlias')}}
+                              {{$t('deploy.templateset.addHostAlias')}}
                             </bk-button>
                           </div>
                         </div>
@@ -322,15 +322,15 @@
                     </bk-tab>
 
                     <bk-tab :type="'fill'" :active-name="'tab2'" :size="'small'" v-show="isPodPanelShow" style="margin-left: 140px;">
-                      <bk-tab-panel name="tab2" :title="$t('注解')">
+                      <bk-tab-panel name="tab2" :title="$t('k8s.annotation')">
                         <div class="bk-form m20">
                           <bk-keyer :key-list.sync="curRemarkList" :var-list="varList" ref="remarkKeyer" @change="updateApplicationRemark"></bk-keyer>
                         </div>
                       </bk-tab-panel>
-                      <bk-tab-panel name="tab3" :title="$t('Restart策略')">
+                      <bk-tab-panel name="tab3" :title="$t('deploy.templateset.restartStrategy')">
                         <div class="bk-form m20">
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('重启策略')}}：</label>
+                            <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.restartPolicy')}}：</label>
                             <div class="bk-form-content" style="margin-left: 140px;">
                               <bk-radio-group v-model="curApplication.config.spec.template.spec.restartPolicy">
                                 <bk-radio :value="policy" v-for="(policy, index) in restartPolicy" :key="index">
@@ -341,15 +341,15 @@
                           </div>
                         </div>
                       </bk-tab-panel>
-                      <bk-tab-panel name="tab4" :title="$t('Kill策略')">
+                      <bk-tab-panel name="tab4" :title="$t('deploy.templateset.killPolicy')">
                         <div class="bk-form m20">
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('宽期限')}}：</label>
+                            <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.terminationGracePeriod')}}：</label>
                             <div class="bk-form-content" style="margin-left: 140px;">
                               <div class="bk-form-input-group">
                                 <bkbcs-input
                                   type="number"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   style="width: 80px;"
                                   :min="0"
                                   :value.sync="curApplication.config.spec.template.spec.terminationGracePeriodSeconds"
@@ -357,7 +357,7 @@
                                 >
                                 </bkbcs-input>
                                 <span class="input-group-addon">
-                                  {{$t('秒')}}
+                                  {{$t('units.suffix.seconds')}}
                                 </span>
                               </div>
                             </div>
@@ -365,7 +365,7 @@
                         </div>
                       </bk-tab-panel>
 
-                      <bk-tab-panel name="tab5" :title="$t('调度约束')">
+                      <bk-tab-panel name="tab5" :title="$t('deploy.templateset.schedulingConstraints')">
                         <div class="bk-form m20">
                           <p class="title mb5">NodeSelector</p>
                           <bk-keyer
@@ -374,8 +374,8 @@
                             @change="updateNodeSelectorList">
                           </bk-keyer>
                           <div class="mb5 mt10">
-                            <span class="title">{{$t('亲和性约束')}}</span>
-                            <bk-checkbox class="ml10" name="image-get" v-model="curApplication.config.webCache.isUserConstraint">{{$t('启用')}}</bk-checkbox>
+                            <span class="title">{{$t('deploy.templateset.affinityConstraints')}}</span>
+                            <bk-checkbox class="ml10" name="image-get" v-model="curApplication.config.webCache.isUserConstraint">{{$t('logCollector.action.enable')}}</bk-checkbox>
                           </div>
 
                           <div style="height: 300px;" v-if="curApplication.config.webCache.isUserConstraint">
@@ -395,14 +395,14 @@
                         </div>
                       </bk-tab-panel>
 
-                      <bk-tab-panel name="tab6" :title="$t('网络')">
+                      <bk-tab-panel name="tab6" :title="$t('k8s.networking')">
                         <div class="bk-form m20">
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('网络策略')}}：</label>
+                            <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.networkPolicy')}}：</label>
                             <div class="bk-form-content" style="margin-left: 140px;">
                               <bk-selector
                                 style="width: 300px;"
-                                :placeholder="$t('请选择')"
+                                :placeholder="$t('generic.placeholder.select')"
                                 :setting-key="'id'"
                                 :display-key="'name'"
                                 :selected.sync="curApplication.config.spec.template.spec.hostNetwork"
@@ -412,11 +412,11 @@
                             </div>
                           </div>
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('DNS策略')}}：</label>
+                            <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.dnsPolicy')}}：</label>
                             <div class="bk-form-content" style="margin-left: 140px;">
                               <bk-selector
                                 style="width: 300px;"
-                                :placeholder="$t('请选择')"
+                                :placeholder="$t('generic.placeholder.select')"
                                 :setting-key="'id'"
                                 :display-key="'name'"
                                 :selected.sync="curApplication.config.spec.template.spec.dnsPolicy"
@@ -427,14 +427,14 @@
                         </div>
                       </bk-tab-panel>
 
-                      <bk-tab-panel name="ta7" :title="$t('卷')">
+                      <bk-tab-panel name="ta7" :title="$t('deploy.templateset.volume')">
                         <div class="bk-form m20">
                           <table class="biz-simple-table" v-if="curApplication.config.webCache.volumes.length">
                             <thead>
                               <tr>
-                                <th style="width: 200px;">{{$t('类型')}}</th>
-                                <th style="width: 220px;">{{$t('挂载名')}}</th>
-                                <th>{{$t('挂载源')}}</th>
+                                <th style="width: 200px;">{{$t('generic.label.kind')}}</th>
+                                <th style="width: 220px;">{{$t('deploy.templateset.mountName')}}</th>
+                                <th>{{$t('deploy.templateset.mountSource')}}</th>
                                 <th style="width: 100px;"></th>
                               </tr>
                             </thead>
@@ -442,7 +442,7 @@
                               <tr v-for="(volume, index) in curApplication.config.webCache.volumes" :key="index">
                                 <td>
                                   <bk-selector
-                                    :placeholder="$t('类型')"
+                                    :placeholder="$t('generic.label.kind')"
                                     :setting-key="'id'"
                                     :selected.sync="volume.type"
                                     :list="volumeTypeList"
@@ -452,7 +452,7 @@
                                 <td>
                                   <bkbcs-input
                                     type="text"
-                                    :placeholder="$t('请输入')"
+                                    :placeholder="$t('generic.placeholder.input')"
                                     :value.sync="volume.name"
                                     :list="varList">
                                   </bkbcs-input>
@@ -489,7 +489,7 @@
                                     </bk-selector>
                                   </template>
                                   <template v-else-if="volume.type === 'hostPath'">
-                                    <bkbcs-input v-model="volume.source" :placeholder="$t('请输入')" />
+                                    <bkbcs-input v-model="volume.source" :placeholder="$t('generic.placeholder.input')" />
                                   </template>
                                   <template v-else-if="volume.type === 'configMap'">
                                     <bk-selector
@@ -529,22 +529,22 @@
                           <div class="tc p40" v-else>
                             <bk-button type="primary" @click="addVolumn">
                               <i class="bcs-icon bcs-icon-plus f12" style="top: -2px;"></i>
-                              {{$t('添加卷')}}
+                              {{$t('deploy.templateset.addVolume')}}
                             </bk-button>
                           </div>
                         </div>
                       </bk-tab-panel>
-                      <bk-tab-panel name="tab8" :title="$t('日志采集')">
+                      <bk-tab-panel name="tab8" :title="$t('logCollector.text')">
                         <div class="bk-form p20">
                           <div class="biz-expand-panel">
                             <div class="panel">
                               <div class="header">
-                                <span class="topic">{{$t('标准日志')}}</span>
+                                <span class="topic">{{$t('plugin.tools.standardLog')}}</span>
                               </div>
                               <div class="bk-form-item content">
                                 <ul>
                                   <li>
-                                    <bk-checkbox name="type" :value="true" :disabled="true">{{$t('标准输出：包含容器Stdout日志')}}</bk-checkbox>
+                                    <bk-checkbox name="type" :value="true" :disabled="true">{{$t('deploy.templateset.standardOutput')}}</bk-checkbox>
                                   </li>
                                 </ul>
                               </div>
@@ -552,8 +552,8 @@
                             <div class="panel mt0">
                               <div class="header" style="border-top: 1px solid #dfe0e5;">
                                 <div class="topic">
-                                  {{$t('附加日志标签')}}
-                                  <bcs-popover :content="$t('附加的日志标签会以KV的形式追加到采集日志中')" placement="top">
+                                  {{$t('logCollector.label.extraLabels')}}
+                                  <bcs-popover :content="$t('deploy.templateset.additionalLogTags')" placement="top">
                                     <span class="bk-badge">
                                       <i class="bcs-icon bcs-icon-question-circle"></i>
                                     </span>
@@ -571,7 +571,7 @@
                           </div>
                         </div>
                       </bk-tab-panel>
-                      <bk-tab-panel name="tab9" :title="$t('镜像凭证')">
+                      <bk-tab-panel name="tab9" :title="$t('deploy.templateset.imageCredential')">
                         <div class="bk-form m20">
                           <bk-keyer
                             :data-key="'name'"
@@ -579,12 +579,12 @@
                             :var-list="varList"
                             :key-input-width="170"
                             :value-input-width="450"
-                            :tip="$t('提示：实际对应配置的imagePullSecrets字段')"
+                            :tip="$t('deploy.templateset.imagePullSecretsNote')"
                             @change="updateApplicationImageSecrets">
                           </bk-keyer>
                         </div>
                       </bk-tab-panel>
-                      <bk-tab-panel name="tab10" :title="$t('服务帐户')">
+                      <bk-tab-panel name="tab10" :title="$t('deploy.templateset.serviceAccount')">
                         <div class="bk-form m20">
                           <div class="biz-equal-inputer">
                             <div class="inputer-content">
@@ -598,11 +598,11 @@
                               <bkbcs-input
                                 type="text"
                                 style="width: 450px;"
-                                :placeholder="$t('值')"
+                                :placeholder="$t('generic.label.value')"
                                 :value.sync="curApplication.config.spec.template.spec.serviceAccountName">
                               </bkbcs-input>
                             </div>
-                            <p class="biz-tip mt5">{{$t('提示：创建 Pod 时，如果没有指定服务账户，Pod 会被指定成对应命名空间中的 default 服务账户')}}</p>
+                            <p class="biz-tip mt5">{{$t('deploy.templateset.createPodServiceAccountReminder')}}</p>
                           </div>
                         </div>
                       </bk-tab-panel>
@@ -616,11 +616,11 @@
                   <div class="bk-button-group">
                     <div class="item" v-for="(container, index) in curApplication.config.spec.template.spec.allContainers" :key="index">
                       <bk-button :class="['bk-button bk-default is-outline', { 'is-selected': curContainerIndex === index }]" @click.stop="setCurContainer(container, index)">
-                        {{container.name || $t('未命名')}}
+                        {{container.name || $t('deploy.templateset.unnamed')}}
                       </bk-button>
                       <span class="bcs-icon bcs-icon-close-circle" @click.stop="removeContainer(index)" v-if="curApplication.config.spec.template.spec.allContainers.length > 1"></span>
                     </div>
-                    <bcs-popover ref="containerTooltip" :content="$t('添加Container')" placement="top">
+                    <bcs-popover ref="containerTooltip" :content="$t('deploy.templateset.addContainer')" placement="top">
                       <bk-button type="button" class="bk-button bk-default is-outline is-icon" @click.stop.prevent="addLocalContainer">
                         <i class="bcs-icon bcs-icon-plus"></i>
                       </bk-button>
@@ -630,28 +630,28 @@
 
                 <div class="bk-form biz-configuration-form pb15">
                   <div class="biz-span">
-                    <span class="title">{{$t('基础信息')}}</span>
+                    <span class="title">{{$t('generic.title.basicInfo')}}</span>
                   </div>
                   <div class="bk-form-item is-required">
                     <div class="bk-form-content" style="margin-left: 0">
                       <div class="bk-form-inline-item is-required">
-                        <label class="bk-label" style="width: 140px;">{{$t('容器名称')}}：</label>
+                        <label class="bk-label" style="width: 140px;">{{$t('dashboard.workload.container.name')}}：</label>
                         <div class="bk-form-content" style="margin-left: 140px;">
-                          <input type="text" :class="['bk-form-input', { 'is-danger': errors.has('containerName') }]" :placeholder="$t('请输入64个字符以内')" style="width: 310px;" v-model="curContainer.name" maxlength="64" name="containerName" v-validate="{ required: true, regex: /^[a-z]{1}[a-z0-9-]{0,63}$/ }">
+                          <input type="text" :class="['bk-form-input', { 'is-danger': errors.has('containerName') }]" :placeholder="$t('deploy.templateset.enterCharacterLimit64')" style="width: 310px;" v-model="curContainer.name" maxlength="64" name="containerName" v-validate="{ required: true, regex: /^[a-z]{1}[a-z0-9-]{0,63}$/ }">
                         </div>
                       </div>
 
                       <div class="bk-form-inline-item">
-                        <label class="bk-label" style="width: 140px;">{{$t('类型')}}：</label>
+                        <label class="bk-label" style="width: 140px;">{{$t('generic.label.kind')}}：</label>
                         <div class="bk-form-content" style="margin-left: 140px;">
                           <bk-radio-group v-model="curContainer.webCache.containerType">
                             <bk-radio :value="'container'">
                               Container
-                              <i class="bcs-icon bcs-icon-question-circle ml5" v-bk-tooltips="$t('应用Container')"></i>
+                              <i class="bcs-icon bcs-icon-question-circle ml5" v-bk-tooltips="$t('deploy.templateset.appContainer')"></i>
                             </bk-radio>
                             <bk-radio :value="'initContainer'">
                               InitContainer
-                              <i class="bcs-icon bcs-icon-question-circle ml5" v-bk-tooltips="$t('用于在启动应用Container之前，启动一个或多个“初始化”容器，完成应用Container所需的预置条件')"></i>
+                              <i class="bcs-icon bcs-icon-question-circle ml5" v-bk-tooltips="$t('deploy.templateset.preAppContainer')"></i>
                             </bk-radio>
                           </bk-radio-group>
                         </div>
@@ -659,13 +659,13 @@
                     </div>
                   </div>
                   <div class="bk-form-item">
-                    <label class="bk-label" style="width: 140px;">{{$t('描述')}}：</label>
+                    <label class="bk-label" style="width: 140px;">{{$t('cluster.create.label.desc')}}：</label>
                     <div class="bk-form-content" style="margin-left: 140px;">
-                      <textarea name="" id="" cols="30" rows="10" class="bk-form-textarea" :placeholder="$t('请输入256个字符以内')" v-model="curContainer.webCache.desc" maxlength="256"></textarea>
+                      <textarea name="" id="" cols="30" rows="10" class="bk-form-textarea" :placeholder="$t('deploy.templateset.enterCharacterLimit256')" v-model="curContainer.webCache.desc" maxlength="256"></textarea>
                     </div>
                   </div>
                   <div class="bk-form-item is-required">
-                    <label class="bk-label" style="width: 140px;">{{$t('镜像及版本')}}：</label>
+                    <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.imageAndVersion')}}：</label>
                     <div class="bk-form-content" style="margin-left: 140px;">
                       <!-- <div class="mb10">
                         <span @click="handleChangeImageMode">
@@ -675,21 +675,21 @@
                             :key="curContainer.name">
                           </bk-switcher>
                         </span>
-                        <span class="vm">{{$t('使用自定义镜像')}}</span>
-                        <span class="biz-tip vm">({{$t('启用后允许直接填写镜像信息')}})</span>
+                        <span class="vm">{{$t('deploy.templateset.useCustomImage')}}</span>
+                        <span class="biz-tip vm">({{$t('deploy.templateset.enableDirectImageInput')}})</span>
                       </div> -->
                       <template>
                         <bkbcs-input
                           type="text"
                           style="width: 325px;"
-                          :placeholder="$t('镜像')"
+                          :placeholder="$t('k8s.image')"
                           :value.sync="curContainer.webCache.imageName"
                           @change="handleImageCustom">
                         </bkbcs-input>
                         <bkbcs-input
                           type="text"
                           style="width: 250px;"
-                          :placeholder="$t('版本号')"
+                          :placeholder="$t('deploy.templateset.versionNumber')"
                           class="ml5"
                           :value.sync="curContainer.imageVersion"
                           @change="handleImageCustom">
@@ -701,17 +701,17 @@
                         :true-value="'Always'"
                         :false-value="'IfNotPresent'"
                         v-model="curContainer.imagePullPolicy">
-                        {{$t('总是在创建之前拉取镜像')}}
+                        {{$t('deploy.templateset.alwaysPullImageBeforeCreating')}}
                       </bk-checkbox>
 
-                      <!-- <p class="biz-tip mt5" v-if="!isLoadingImageList && !imageList.length">{{$t('提示：项目镜像不存在，')}}
-                        <router-link class="bk-text-button" :to="{ name: 'projectImage', params: { projectCode, projectId } }">{{$t('去创建')}}</router-link>
+                      <!-- <p class="biz-tip mt5" v-if="!isLoadingImageList && !imageList.length">{{$t('deploy.templateset.imageNotFoundError')}}
+                        <router-link class="bk-text-button" :to="{ name: 'projectImage', params: { projectCode, projectId } }">{{$t('deploy.templateset.goCreate')}}</router-link>
                       </p> -->
                     </div>
                   </div>
 
                   <div class="biz-span">
-                    <span class="title">{{$t('端口映射')}}</span>
+                    <span class="title">{{$t('dashboard.network.portmapping')}}</span>
                   </div>
 
                   <div class="bk-form-item">
@@ -719,9 +719,9 @@
                       <table class="biz-simple-table">
                         <thead>
                           <tr>
-                            <th style="width: 330px;">{{$t('名称')}}</th>
+                            <th style="width: 330px;">{{$t('generic.label.name')}}</th>
                             <th style="width: 135px;">协议</th>
-                            <th style="width: 135px;">{{$t('容器端口')}}</th>
+                            <th style="width: 135px;">{{$t('deploy.templateset.containerPort')}}</th>
                             <th></th>
                           </tr>
                         </thead>
@@ -730,7 +730,7 @@
                             <td>
                               <bkbcs-input
                                 type="text"
-                                :placeholder="$t('名称')"
+                                :placeholder="$t('generic.label.name')"
                                 style="width: 325px;"
                                 maxlength="255"
                                 :value.sync="port.name"
@@ -740,13 +740,13 @@
                             </td>
                             <td>
                               <bk-selector
-                                :placeholder="$t('协议')"
+                                :placeholder="$t('deploy.templateset.protocol')"
                                 :setting-key="'id'"
                                 :selected.sync="port.protocol"
                                 :list="protocolList">
                               </bk-selector>
                               <!-- <bk-selector
-                                                                placeholder="协议"
+                                                                placeholder="deploy.templateset.protocol"
                                                                 v-model="port.protocol">
                                                                 <bk-option v-for="option in protocolList"
                                                                     :key="option.id"
@@ -778,28 +778,28 @@
                           </tr>
                         </tbody>
                       </table>
-                      <p class="biz-tip">{{$t('提示：容器端口是容器内部的Port。在配置Service的端口映射时，通过 目标端口 进行关联，从而暴露服务')}}</p>
+                      <p class="biz-tip">{{$t('deploy.templateset.exposeServiceTargetPort')}}</p>
                     </div>
                   </div>
 
                   <div class="biz-span">
                     <div class="title">
                       <button :class="['bk-text-button', { 'rotate': isPartBShow }]" @click.stop.prevent="togglePartB">
-                        {{$t('更多设置')}}<i class="bcs-icon bcs-icon-angle-double-down f12 ml5 mb10 fb"></i>
+                        {{$t('deploy.templateset.moreSettings')}}<i class="bcs-icon bcs-icon-angle-double-down f12 ml5 mb10 fb"></i>
                       </button>
                     </div>
                   </div>
 
                   <div style="margin-left: 140px;" v-show="isPartBShow">
                     <bk-tab :type="'fill'" :active-name="'tab1'" :size="'small'" :key="curContainer.webCache.containerType">
-                      <bk-tab-panel name="tab1" :title="$t('命令')">
+                      <bk-tab-panel name="tab1" :title="$t('dashboard.workload.container.command')">
                         <div class="bk-form m20">
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 130px;">{{$t('启动命令')}}：</label>
+                            <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.startupCommand')}}：</label>
                             <div class="bk-form-content" style="margin-left: 130px;">
                               <bkbcs-input
                                 type="text"
-                                :placeholder="$t('例如/bin/bash')"
+                                :placeholder="$t('deploy.templateset.exampleBash')"
                                 :value.sync="curContainer.command"
                                 :list="varList"
                               >
@@ -807,11 +807,11 @@
                             </div>
                           </div>
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 130px;">{{$t('命令参数')}}：</label>
+                            <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.commandParams')}}：</label>
                             <div class="bk-form-content" style="margin-left: 130px;">
                               <bkbcs-input
                                 type="text"
-                                :placeholder="$t('命令参数提示语')"
+                                :placeholder="$t('generic.placeholder.command')"
                                 :value.sync="curContainer.args"
                                 :list="varList"
                               >
@@ -819,11 +819,11 @@
                             </div>
                           </div>
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 130px;">{{$t('工作目录')}}：</label>
+                            <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.workingDirectory')}}：</label>
                             <div class="bk-form-content" style="margin-left: 130px;">
                               <bkbcs-input
                                 type="text"
-                                :placeholder="$t('例如{path}', { path: '/mywork' })"
+                                :placeholder="$t('deploy.templateset.examplePathParam', { path: '/mywork' })"
                                 :value.sync="curContainer.workingDir"
                                 :list="varList"
                               >
@@ -833,18 +833,18 @@
                         </div>
                       </bk-tab-panel>
 
-                      <bk-tab-panel name="tab2" :title="$t('挂载卷')">
+                      <bk-tab-panel name="tab2" :title="$t('k8s.volume')">
                         <div class="bk-form m20">
                           <template v-if="curMountVolumes.length">
                             <template v-if="curContainer.volumeMounts.length">
                               <p class="biz-tip mb10">
-                                {{$t('挂载卷提示语')}}</p>
+                                {{$t('deploy.templateset.msg.mountVolumes')}}</p>
                               <table class="biz-simple-table">
                                 <thead>
                                   <tr>
-                                    <th style="width: 200px;">{{$t('卷')}}</th>
-                                    <th style="width: 300px;">{{$t('容器目录')}}</th>
-                                    <th style="width: 200px;">{{$t('子目录')}}</th>
+                                    <th style="width: 200px;">{{$t('deploy.templateset.volume')}}</th>
+                                    <th style="width: 300px;">{{$t('dashboard.workload.container.dataDir')}}</th>
+                                    <th style="width: 200px;">{{$t('deploy.templateset.subDirectory')}}</th>
                                     <th style="width: 80px;"></th>
                                     <th style="min-width: 75px;"></th>
                                   </tr>
@@ -853,7 +853,7 @@
                                   <tr v-for="(volumeItem, index) in curContainer.volumeMounts" :key="index">
                                     <td>
                                       <bk-selector
-                                        :placeholder="$t('请选择')"
+                                        :placeholder="$t('generic.placeholder.select')"
                                         :setting-key="'name'"
                                         :display-key="'name'"
                                         :allow-clear="true"
@@ -882,7 +882,7 @@
                                     </td>
                                     <td>
                                       <div class="biz-input-wrapper">
-                                        <bk-checkbox v-model="volumeItem.readOnly">{{$t('只读')}}</bk-checkbox>
+                                        <bk-checkbox v-model="volumeItem.readOnly">{{$t('deploy.templateset.readOnly')}}</bk-checkbox>
                                       </div>
                                     </td>
                                     <td class="action-box">
@@ -900,24 +900,24 @@
                             <div class="tc p40" v-else>
                               <bk-button type="primary" @click="addMountVolumn">
                                 <i class="bcs-icon bcs-icon-plus f12" style="top: -2px;"></i>
-                                {{$t('添加挂载卷')}}
+                                {{$t('deploy.templateset.addMountVolume')}}
                               </bk-button>
                             </div>
                           </template>
                           <div v-else class="tc p30">
-                            {{$t('挂载卷提示语')}}
+                            {{$t('deploy.templateset.msg.mountVolumes')}}
                           </div>
                         </div>
                       </bk-tab-panel>
 
-                      <bk-tab-panel name="tab3" :title="$t('环境变量')">
+                      <bk-tab-panel name="tab3" :title="$t('dashboard.workload.container.env')">
                         <div class="bk-form m20">
                           <table class="biz-simple-table" style="width: 690px;">
                             <thead>
                               <tr>
-                                <th style="width: 160px;">{{$t('类型')}}</th>
-                                <th style="width: 220px;">{{$t('变量键')}}</th>
-                                <th style="width: 220px;">{{$t('变量值')}}</th>
+                                <th style="width: 160px;">{{$t('generic.label.kind')}}</th>
+                                <th style="width: 220px;">{{$t('deploy.templateset.variableKey')}}</th>
+                                <th style="width: 220px;">{{$t('deploy.templateset.variableValue')}}</th>
                                 <th></th>
                               </tr>
                             </thead>
@@ -925,7 +925,7 @@
                               <tr v-for="(env, index) in curContainer.webCache.env_list" :key="index">
                                 <td>
                                   <bk-selector
-                                    :placeholder="$t('类型')"
+                                    :placeholder="$t('generic.label.kind')"
                                     :setting-key="'id'"
                                     :selected.sync="env.type"
                                     :list="mountTypeList">
@@ -934,7 +934,7 @@
                                 <td v-if="['valueFrom', 'custom', 'configmapKey', 'secretKey'].includes(env.type)">
                                   <bkbcs-input
                                     type="text"
-                                    :placeholder="$t('请输入')"
+                                    :placeholder="$t('generic.placeholder.input')"
                                     :value.sync="env.key"
                                     :list="varList">
                                   </bkbcs-input>
@@ -943,7 +943,7 @@
                                   <template v-if="['valueFrom', 'custom'].includes(env.type)">
                                     <bkbcs-input
                                       type="text"
-                                      :placeholder="$t('例如{path}', { path: '/metadata/name' })"
+                                      :placeholder="$t('deploy.templateset.examplePathParam', { path: '/metadata/name' })"
                                       :value.sync="env.value"
                                       :list="varList"
                                     >
@@ -951,7 +951,7 @@
                                   </template>
                                   <template v-else-if="['configmapKey'].includes(env.type)">
                                     <bk-selector
-                                      :placeholder="$t('请选择')"
+                                      :placeholder="$t('generic.placeholder.select')"
                                       :setting-key="'id'"
                                       :selected.sync="env.value"
                                       :list="configmapKeyList"
@@ -960,7 +960,7 @@
                                   </template>
                                   <template v-else-if="['secretKey'].includes(env.type)">
                                     <bk-selector
-                                      :placeholder="$t('请选择')"
+                                      :placeholder="$t('generic.placeholder.select')"
                                       :setting-key="'id'"
                                       :selected.sync="env.value"
                                       :list="secretKeyList"
@@ -969,7 +969,7 @@
                                   </template>
                                   <template v-else-if="['configmapFile'].includes(env.type)">
                                     <bk-selector
-                                      :placeholder="$t('ConfigMap列表')"
+                                      :placeholder="$t('deploy.templateset.configMapList')"
                                       :setting-key="'name'"
                                       :selected.sync="env.value"
                                       :list="volumeConfigmapList">
@@ -977,7 +977,7 @@
                                   </template>
                                   <template v-else-if="['secretFile'].includes(env.type)">
                                     <bk-selector
-                                      :placeholder="$t('Secret列表')"
+                                      :placeholder="$t('deploy.templateset.secretList')"
                                       :setting-key="'name'"
                                       :selected.sync="env.value"
                                       :list="volumeSecretList">
@@ -1000,12 +1000,12 @@
                         </div>
                       </bk-tab-panel>
 
-                      <bk-tab-panel name="tab4" :title="$t('资源限制')">
+                      <bk-tab-panel name="tab4" :title="$t('dashboard.workload.container.limits')">
                         <div class="bk-form m20">
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('特权')}}：</label>
+                            <label class="bk-label" style="width: 140px;">{{$t('deploy.templateset.privileged')}}：</label>
                             <div class="bk-form-content" style="margin-left: 140px;">
-                              <bk-checkbox v-model="curContainer.securityContext.privileged">{{$t('可完全访问母机资源')}}</bk-checkbox>
+                              <bk-checkbox v-model="curContainer.securityContext.privileged">{{$t('deploy.templateset.fullAccessHostResources')}}</bk-checkbox>
                             </div>
                           </div>
                           <div class="bk-form-item">
@@ -1020,7 +1020,7 @@
                                   style="width: 100px;"
                                   :min="0"
                                   :max="curContainer.resources.limits.cpu ? curContainer.resources.limits.cpu : Number.MAX_VALUE"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   :value.sync="curContainer.resources.requests.cpu"
                                   :list="varList"
                                 >
@@ -1029,7 +1029,7 @@
                                   m
                                 </span>
                               </div>
-                              <bcs-popover :content="$t('设置CPU requests，1000m CPU=1核 CPU')" placement="top">
+                              <bcs-popover :content="$t('deploy.templateset.cpuRequests')" placement="top">
                                 <span class="bk-badge">
                                   <i class="bcs-icon bcs-icon-question-circle"></i>
                                 </span>
@@ -1043,7 +1043,7 @@
                                   type="number"
                                   style="width: 100px;"
                                   :min="0"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   :value.sync="curContainer.resources.limits.cpu"
                                   :list="varList">
                                 </bkbcs-input>
@@ -1051,7 +1051,7 @@
                                   m
                                 </span>
                               </div>
-                              <bcs-popover :content="$t('设置CPU limits，1000m CPU=1核 CPU')" placement="top">
+                              <bcs-popover :content="$t('deploy.templateset.cpuLimits')" placement="top">
                                 <span class="bk-badge">
                                   <i class="bcs-icon bcs-icon-question-circle"></i>
                                 </span>
@@ -1059,7 +1059,7 @@
                             </div>
                           </div>
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 140px;">{{$t('内存')}}：</label>
+                            <label class="bk-label" style="width: 140px;">{{$t('generic.label.mem')}}：</label>
                             <div class="bk-form-content" style="margin-left: 140px;">
                               <div class="bk-form-input-group mr5">
                                 <span class="input-group-addon is-left">
@@ -1070,7 +1070,7 @@
                                   style="width: 100px;"
                                   :min="0"
                                   :max="curContainer.resources.limits.memory ? curContainer.resources.limits.memory : Number.MAX_VALUE"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   :value.sync="curContainer.resources.requests.memory"
                                   :list="varList"
                                 >
@@ -1079,7 +1079,7 @@
                                   Mi
                                 </span>
                               </div>
-                              <bcs-popover :content="$t('设置内存requests')" placement="top">
+                              <bcs-popover :content="$t('deploy.templateset.memoryRequests')" placement="top">
                                 <span class="bk-badge">
                                   <i class="bcs-icon bcs-icon-question-circle"></i>
                                 </span>
@@ -1093,7 +1093,7 @@
                                   type="number"
                                   style="width: 100px;"
                                   :min="0"
-                                  :placeholder="$t('请输入')"
+                                  :placeholder="$t('generic.placeholder.input')"
                                   :value.sync="curContainer.resources.limits.memory"
                                   :list="varList">
                                 </bkbcs-input>
@@ -1101,7 +1101,7 @@
                                   Mi
                                 </span>
                               </div>
-                              <bcs-popover :content="$t('设置内存limits')" placement="top">
+                              <bcs-popover :content="$t('deploy.templateset.memoryLimits')" placement="top">
                                 <span class="bk-badge">
                                   <i class="bcs-icon bcs-icon-question-circle"></i>
                                 </span>
@@ -1111,16 +1111,16 @@
                         </div>
                       </bk-tab-panel>
 
-                      <bk-tab-panel name="tab5" :title="$t('健康检查')" v-if="curContainer.webCache.containerType === 'container'">
+                      <bk-tab-panel name="tab5" :title="$t('deploy.templateset.healthCheck')" v-if="curContainer.webCache.containerType === 'container'">
                         <div class="bk-form m20">
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 120px;">{{$t('类型')}}：</label>
+                            <label class="bk-label" style="width: 120px;">{{$t('generic.label.kind')}}：</label>
                             <div class="bk-form-content" style="margin-left: 120px">
                               <div class="bk-dropdown-box" style="width: 250px;">
                                 <bcs-select
                                   v-model="curContainer.webCache.livenessProbeType"
                                   :clearable="false"
-                                  :placeholder="$t('请选择')"
+                                  :placeholder="$t('generic.placeholder.select')"
                                   @change="handleLivenessTypeChange">
                                   <bk-option
                                     v-for="option in healthCheckTypes"
@@ -1134,12 +1134,12 @@
                           </div>
 
                           <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && curContainer.webCache.livenessProbeType !== 'EXEC'">
-                            <label class="bk-label" style="width: 120px;">{{$t('端口名称')}}：</label>
+                            <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.portName')}}：</label>
                             <div class="bk-form-content" style="margin-left: 120px;">
                               <div class="bk-dropdown-box" style="width: 250px;">
                                 <bcs-select
                                   :value="livenessProbePortName"
-                                  :placeholder="$t('请选择')"
+                                  :placeholder="$t('generic.placeholder.select')"
                                   @selected="livenessProbePortNameSelect"
                                   @clear="livenessProbePortNameClear">
                                   <bk-option
@@ -1153,22 +1153,22 @@
                               <bcs-popover placement="right">
                                 <i class="bcs-icon bcs-icon-question-circle ml5" style="vertical-align: middle; cursor: pointer;"></i>
                                 <div slot="content">
-                                  {{$t('引用端口映射中的端口设置')}}
+                                  {{$t('deploy.templateset.associatePortMappingSettings')}}
                                 </div>
                               </bcs-popover>
-                              <p class="biz-guard-tip bk-default mt5" v-if="!portList.length">{{$t('请先配置完整的端口映射')}}</p>
+                              <p class="biz-guard-tip bk-default mt5" v-if="!portList.length">{{$t('deploy.templateset.completePortMapping')}}</p>
                             </div>
                           </div>
 
                           <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && (curContainer.webCache.livenessProbeType === 'HTTP')">
                             <div class="bk-form-content" style="margin-left: 0">
                               <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('请求路径')}}：</label>
+                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.requestPath')}}：</label>
                                 <div class="bk-form-content" style="margin-left: 120px;">
                                   <bkbcs-input
                                     type="text"
                                     style="width: 521px;"
-                                    :placeholder="$t('例如{path}', { path: '/healthcheck' })"
+                                    :placeholder="$t('deploy.templateset.examplePathParam', { path: '/healthcheck' })"
                                     :value.sync="curContainer.livenessProbe.httpGet.path"
                                     :list="varList">
                                   </bkbcs-input>
@@ -1180,12 +1180,12 @@
                           <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && curContainer.webCache.livenessProbeType === 'EXEC'">
                             <div class="bk-form-content" style="margin-left: 0">
                               <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('检查命令')}}：</label>
+                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.checkCommand')}}：</label>
                                 <div class="bk-form-content" style="margin-left: 120px;">
                                   <bkbcs-input
                                     type="text"
                                     style="width: 521px;"
-                                    :placeholder="$t('例如/tmp/check.sh，多个命令用空格分隔')"
+                                    :placeholder="$t('deploy.templateset.exampleCheckCommandWithSpace')"
                                     :value.sync="curContainer.livenessProbe.exec.command"
                                     :list="varList">
                                   </bkbcs-input>
@@ -1197,7 +1197,7 @@
                           <div class="bk-form-item" v-show="curContainer.webCache.livenessProbeType && curContainer.webCache.livenessProbeType === 'HTTP'">
                             <div class="bk-form-content" style="margin-left: 0">
                               <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('设置Header')}}：</label>
+                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.setHeader')}}：</label>
                                 <div class="bk-form-content" style="margin-left: 120px;">
                                   <bk-keyer
                                     ref="livenessProbeHeaderKeyer"
@@ -1212,65 +1212,65 @@
 
                           <template>
                             <bk-button :class="['bk-text-button mt10 f12 mb10', { 'rotate': isPartCShow }]" style="margin-left: 114px;" @click.stop.prevent="togglePartC">
-                              {{$t('高级设置')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
+                              {{$t('deploy.templateset.advancedSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
                             </bk-button>
                             <div v-show="isPartCShow">
                               <div class="bk-form-item">
                                 <div class="bk-form-content" style="margin-left: 0">
                                   <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 120px;">{{$t('初始化超时')}}：</label>
+                                    <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.initialTimeout')}}：</label>
                                     <div class="bk-form-content" style="margin-left: 120px;">
                                       <div class="bk-form-input-group">
                                         <bkbcs-input
                                           type="number"
                                           style="width: 70px;"
-                                          :placeholder="$t('请输入')"
+                                          :placeholder="$t('generic.placeholder.input')"
                                           :min="1"
                                           :value.sync="curContainer.livenessProbe.initialDelaySeconds"
                                           :list="varList"
                                         >
                                         </bkbcs-input>
                                         <span class="input-group-addon">
-                                          {{$t('秒')}}
+                                          {{$t('units.suffix.seconds')}}
                                         </span>
                                       </div>
                                     </div>
                                   </div>
 
                                   <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('检查间隔')}}：</label>
+                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkInterval')}}：</label>
                                     <div class="bk-form-content" style="margin-left: 130px;">
                                       <div class="bk-form-input-group">
                                         <bkbcs-input
                                           type="number"
                                           style="width: 70px;"
-                                          :placeholder="$t('请输入')"
+                                          :placeholder="$t('generic.placeholder.input')"
                                           :min="1"
                                           :value.sync="curContainer.livenessProbe.periodSeconds"
                                           :list="varList"
                                         >
                                         </bkbcs-input>
                                         <span class="input-group-addon">
-                                          {{$t('秒')}}
+                                          {{$t('units.suffix.seconds')}}
                                         </span>
                                       </div>
                                     </div>
                                   </div>
                                   <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('检查超时')}}：</label>
+                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkTimeout')}}：</label>
                                     <div class="bk-form-content" style="margin-left: 130px;">
                                       <div class="bk-form-input-group">
                                         <bkbcs-input
                                           type="number"
                                           style="width: 70px;"
-                                          :placeholder="$t('请输入')"
+                                          :placeholder="$t('generic.placeholder.input')"
                                           :min="1"
                                           :value.sync="curContainer.livenessProbe.timeoutSeconds"
                                           :list="varList"
                                         >
                                         </bkbcs-input>
                                         <span class="input-group-addon">
-                                          {{$t('秒')}}
+                                          {{$t('units.suffix.seconds')}}
                                         </span>
                                       </div>
                                     </div>
@@ -1281,40 +1281,40 @@
                               <div class="bk-form-item">
                                 <div class="bk-form-content" style="margin-left: 0">
                                   <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 120px;">{{$t('不健康阈值')}}：</label>
+                                    <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.unhealthyThreshold')}}：</label>
                                     <div class="bk-form-content" style="margin-left: 120px;">
                                       <div class="bk-form-input-group">
                                         <bkbcs-input
                                           type="number"
                                           style="width: 70px;"
                                           :min="1"
-                                          :placeholder="$t('请输入')"
+                                          :placeholder="$t('generic.placeholder.input')"
                                           :value.sync="curContainer.livenessProbe.failureThreshold"
                                           :list="varList"
                                         >
                                         </bkbcs-input>
                                         <span class="input-group-addon">
-                                          {{$t('次失败')}}
+                                          {{$t('deploy.templateset.failureTimes')}}
                                         </span>
                                       </div>
                                     </div>
                                   </div>
 
                                   <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('健康阈值')}}：</label>
+                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.healthyThreshold')}}：</label>
                                     <div class="bk-form-content" style="margin-left: 130px;">
                                       <div class="bk-form-input-group">
                                         <bkbcs-input
                                           type="number"
                                           style="width: 70px;"
                                           :min="1"
-                                          :placeholder="$t('请输入')"
+                                          :placeholder="$t('generic.placeholder.input')"
                                           :value.sync="curContainer.livenessProbe.successThreshold"
                                           :list="varList"
                                         >
                                         </bkbcs-input>
                                         <span class="input-group-addon">
-                                          {{$t('次成功')}}
+                                          {{$t('deploy.templateset.successTimes')}}
                                         </span>
                                       </div>
                                     </div>
@@ -1327,16 +1327,16 @@
                         </div>
                       </bk-tab-panel>
 
-                      <bk-tab-panel name="tab5-1" :title="$t('就绪检查')" v-if="curContainer.webCache.containerType === 'container'">
+                      <bk-tab-panel name="tab5-1" :title="$t('deploy.templateset.readinessCheck')" v-if="curContainer.webCache.containerType === 'container'">
                         <div class="bk-form m20">
                           <div class="bk-form-item">
-                            <label class="bk-label" style="width: 120px;">{{$t('类型')}}：</label>
+                            <label class="bk-label" style="width: 120px;">{{$t('generic.label.kind')}}：</label>
                             <div class="bk-form-content" style="margin-left: 120px">
                               <div class="bk-dropdown-box" style="width: 250px;">
                                 <bcs-select
                                   v-model="curContainer.webCache.readinessProbeType"
                                   :clearable="false"
-                                  :placeholder="$t('请选择')"
+                                  :placeholder="$t('generic.placeholder.select')"
                                   @change="handleReadinessTypeChange">
                                   <bk-option
                                     v-for="option in healthCheckTypes"
@@ -1350,12 +1350,12 @@
                           </div>
 
                           <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && curContainer.webCache.readinessProbeType !== 'EXEC'">
-                            <label class="bk-label" style="width: 120px;">{{$t('端口名称')}}：</label>
+                            <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.portName')}}：</label>
                             <div class="bk-form-content" style="margin-left: 120px;">
                               <div class="bk-dropdown-box" style="width: 250px;">
                                 <bcs-select
                                   :value="readinessProbePortName"
-                                  :placeholder="$t('请选择')"
+                                  :placeholder="$t('generic.placeholder.select')"
                                   @selected="readinessProbePortNameSelect"
                                   @clear="readinessProbePortNameClear">
                                   <bk-option
@@ -1369,22 +1369,22 @@
                               <bcs-popover placement="right">
                                 <i class="bcs-icon bcs-icon-question-circle ml5" style="vertical-align: middle; cursor: pointer;"></i>
                                 <div slot="content">
-                                  {{$t('引用端口映射中的端口设置')}}
+                                  {{$t('deploy.templateset.associatePortMappingSettings')}}
                                 </div>
                               </bcs-popover>
-                              <p class="biz-guard-tip bk-default mt5" v-if="!portList.length">{{$t('请先配置完整的端口映射')}}</p>
+                              <p class="biz-guard-tip bk-default mt5" v-if="!portList.length">{{$t('deploy.templateset.completePortMapping')}}</p>
                             </div>
                           </div>
 
                           <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && (curContainer.webCache.readinessProbeType === 'HTTP')">
                             <div class="bk-form-content" style="margin-left: 0">
                               <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('请求路径')}}：</label>
+                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.requestPath')}}：</label>
                                 <div class="bk-form-content" style="margin-left: 120px;">
                                   <bkbcs-input
                                     type="text"
                                     style="width: 521px;"
-                                    :placeholder="$t('例如{path}', { path: '/healthcheck' })"
+                                    :placeholder="$t('deploy.templateset.examplePathParam', { path: '/healthcheck' })"
                                     :value.sync="curContainer.readinessProbe.httpGet.path"
                                     :list="varList">
                                   </bkbcs-input>
@@ -1396,12 +1396,12 @@
                           <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && curContainer.webCache.readinessProbeType === 'EXEC'">
                             <div class="bk-form-content" style="margin-left: 0">
                               <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('检查命令')}}：</label>
+                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.checkCommand')}}：</label>
                                 <div class="bk-form-content" style="margin-left: 120px;">
                                   <bkbcs-input
                                     type="text"
                                     style="width: 521px;"
-                                    :placeholder="$t('例如{path}', { path: '/tmp/check.sh' })"
+                                    :placeholder="$t('deploy.templateset.examplePathParam', { path: '/tmp/check.sh' })"
                                     :value.sync="curContainer.readinessProbe.exec.command"
                                     :list="varList">
                                   </bkbcs-input>
@@ -1413,7 +1413,7 @@
                           <div class="bk-form-item" v-show="curContainer.webCache.readinessProbeType && curContainer.webCache.readinessProbeType === 'HTTP'">
                             <div class="bk-form-content" style="margin-left: 0">
                               <div class="bk-form-inline-item">
-                                <label class="bk-label" style="width: 120px;">{{$t('设置Header')}}：</label>
+                                <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.setHeader')}}：</label>
                                 <div class="bk-form-content" style="margin-left: 120px;">
                                   <bk-keyer ref="readinessProbeHeaderKeyer" :var-list="varList" :key-list.sync="readinessProbeHeaders" @change="updateReadinessHeader"></bk-keyer>
                                 </div>
@@ -1423,65 +1423,65 @@
 
                           <template>
                             <bk-button :class="['bk-text-button mt10 f12 mb10', { 'rotate': isPartCShow }]" style="margin-left: 114px;" @click.stop.prevent="togglePartC">
-                              {{$t('高级设置')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
+                              {{$t('deploy.templateset.advancedSettings')}}<i class="bcs-icon bcs-icon-angle-double-down ml5"></i>
                             </bk-button>
                             <div v-show="isPartCShow">
                               <div class="bk-form-item">
                                 <div class="bk-form-content" style="margin-left: 0">
                                   <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 120px;">{{$t('初始化超时')}}：</label>
+                                    <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.initialTimeout')}}：</label>
                                     <div class="bk-form-content" style="margin-left: 120px;">
                                       <div class="bk-form-input-group">
                                         <bkbcs-input
                                           type="number"
                                           style="width: 70px;"
-                                          :placeholder="$t('请输入')"
+                                          :placeholder="$t('generic.placeholder.input')"
                                           :min="1"
                                           :value.sync="curContainer.readinessProbe.initialDelaySeconds"
                                           :list="varList"
                                         >
                                         </bkbcs-input>
                                         <span class="input-group-addon">
-                                          {{$t('秒')}}
+                                          {{$t('units.suffix.seconds')}}
                                         </span>
                                       </div>
                                     </div>
                                   </div>
 
                                   <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('检查间隔')}}：</label>
+                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkInterval')}}：</label>
                                     <div class="bk-form-content" style="margin-left: 130px;">
                                       <div class="bk-form-input-group">
                                         <bkbcs-input
                                           type="number"
                                           style="width: 70px;"
-                                          :placeholder="$t('请输入')"
+                                          :placeholder="$t('generic.placeholder.input')"
                                           :min="1"
                                           :value.sync="curContainer.readinessProbe.periodSeconds"
                                           :list="varList"
                                         >
                                         </bkbcs-input>
                                         <span class="input-group-addon">
-                                          {{$t('秒')}}
+                                          {{$t('units.suffix.seconds')}}
                                         </span>
                                       </div>
                                     </div>
                                   </div>
                                   <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('检查超时')}}：</label>
+                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.checkTimeout')}}：</label>
                                     <div class="bk-form-content" style="margin-left: 130px;">
                                       <div class="bk-form-input-group">
                                         <bkbcs-input
                                           type="number"
                                           style="width: 70px;"
-                                          :placeholder="$t('请输入')"
+                                          :placeholder="$t('generic.placeholder.input')"
                                           :min="1"
                                           :value.sync="curContainer.readinessProbe.timeoutSeconds"
                                           :list="varList"
                                         >
                                         </bkbcs-input>
                                         <span class="input-group-addon">
-                                          {{$t('秒')}}
+                                          {{$t('units.suffix.seconds')}}
                                         </span>
                                       </div>
                                     </div>
@@ -1492,40 +1492,40 @@
                               <div class="bk-form-item">
                                 <div class="bk-form-content" style="margin-left: 0">
                                   <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 120px;">{{$t('不健康阈值')}}：</label>
+                                    <label class="bk-label" style="width: 120px;">{{$t('deploy.templateset.unhealthyThreshold')}}：</label>
                                     <div class="bk-form-content" style="margin-left: 120px;">
                                       <div class="bk-form-input-group">
                                         <bkbcs-input
                                           type="number"
                                           style="width: 70px;"
-                                          :placeholder="$t('请输入')"
+                                          :placeholder="$t('generic.placeholder.input')"
                                           :min="1"
                                           :value.sync="curContainer.readinessProbe.failureThreshold"
                                           :list="varList"
                                         >
                                         </bkbcs-input>
                                         <span class="input-group-addon">
-                                          {{$t('次失败')}}
+                                          {{$t('deploy.templateset.failureTimes')}}
                                         </span>
                                       </div>
                                     </div>
                                   </div>
 
                                   <div class="bk-form-inline-item">
-                                    <label class="bk-label" style="width: 130px;">{{$t('健康阈值')}}：</label>
+                                    <label class="bk-label" style="width: 130px;">{{$t('deploy.templateset.healthyThreshold')}}：</label>
                                     <div class="bk-form-content" style="margin-left: 130px;">
                                       <div class="bk-form-input-group">
                                         <bkbcs-input
                                           type="number"
                                           style="width: 70px;"
-                                          :placeholder="$t('请输入')"
+                                          :placeholder="$t('generic.placeholder.input')"
                                           :min="1"
                                           :value.sync="curContainer.readinessProbe.successThreshold"
                                           :list="varList"
                                         >
                                         </bkbcs-input>
                                         <span class="input-group-addon">
-                                          {{$t('次成功')}}
+                                          {{$t('deploy.templateset.successTimes')}}
                                         </span>
                                       </div>
                                     </div>
@@ -1539,7 +1539,7 @@
                         </div>
                       </bk-tab-panel>
 
-                      <bk-tab-panel name="tab6" :title="$t('非标准日志采集')">
+                      <bk-tab-panel name="tab6" :title="$t('deploy.templateset.nonStandardLogCollection')">
                         <div class="bk-form m20">
                           <div class="bk-form-item">
                             <div class="bk-form-content" style="margin-left: 20px">
@@ -1549,7 +1549,7 @@
                                     <bkbcs-input
                                       type="text"
                                       style="width: 360px;"
-                                      :placeholder="$t('请输入容器中自定义采集的日志绝对路径')"
+                                      :placeholder="$t('deploy.templateset.enterCustomLogPath')"
                                       :value.sync="logItem.value"
                                       :list="varList"
                                     >
@@ -1569,27 +1569,27 @@
                         </div>
                       </bk-tab-panel>
 
-                      <bk-tab-panel name="tab7" :title="$t('生命周期')" v-if="curContainer.webCache.containerType === 'container'">
+                      <bk-tab-panel name="tab7" :title="$t('deploy.templateset.lifecycle')" v-if="curContainer.webCache.containerType === 'container'">
                         <div class="bk-form m20">
                           <div class="bk-form-item">
                             <div class="bk-form-content" style="margin-left: 20px">
                               <div class="bk-form-item">
-                                <label class="bk-label" style="width: 108px;">{{$t('停止前执行')}}：</label>
+                                <label class="bk-label" style="width: 108px;">{{$t('deploy.templateset.preStop')}}：</label>
                                 <div class="bk-form-content" style="margin-left: 108px;">
                                   <bkbcs-input
                                     type="text"
-                                    :placeholder="$t('命令参数提示语')"
+                                    :placeholder="$t('generic.placeholder.command')"
                                     :value.sync="curContainer.lifecycle.preStop.exec.command"
                                     :list="varList">
                                   </bkbcs-input>
                                 </div>
                               </div>
                               <div class="bk-form-item">
-                                <label class="bk-label" style="width: 108px;">{{$t('启动后执行')}}：</label>
+                                <label class="bk-label" style="width: 108px;">{{$t('deploy.templateset.postStart')}}：</label>
                                 <div class="bk-form-content" style="margin-left: 108px;">
                                   <bkbcs-input
                                     type="text"
-                                    :placeholder="$t('命令参数提示语')"
+                                    :placeholder="$t('generic.placeholder.command')"
                                     :value.sync="curContainer.lifecycle.postStart.exec.command"
                                     :list="varList">
                                   </bkbcs-input>
@@ -1618,18 +1618,20 @@
 /* eslint-disable no-multi-assign */
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-this-alias */
-import bkKeyer from '@/components/keyer';
-import bkModuleKeyer from '@/components/module-keyer';
-import ace from '@/components/ace-editor';
+import yamljs from 'js-yaml';
+import _ from 'lodash';
+
 import header from './header.vue';
 import tabs from './tabs.vue';
-import _ from 'lodash';
-import yamljs from 'js-yaml';
-import mixinBase from '@/mixins/configuration/mixin-base';
-import k8sBase from '@/mixins/configuration/k8s-base';
-import applicationParams from '@/json/k8s-deployment.json';
-import containerParams from '@/json/k8s-container.json';
+
 import { clearObjValue } from '@/common/util';
+import ace from '@/components/ace-editor';
+import bkKeyer from '@/components/keyer';
+import bkModuleKeyer from '@/components/module-keyer';
+import containerParams from '@/json/k8s-container.json';
+import applicationParams from '@/json/k8s-deployment.json';
+import k8sBase from '@/mixins/configuration/k8s-base';
+import mixinBase from '@/mixins/configuration/mixin-base';
 
 export default {
   name: 'K8SDeployment',
@@ -1718,7 +1720,7 @@ export default {
         },
         {
           id: 'CUSTOM',
-          name: this.$t('自定义'),
+          name: this.$t('generic.label.custom'),
         },
       ],
       constraintNameList: [
@@ -1770,7 +1772,7 @@ export default {
       mountTypeList: [
         {
           id: 'custom',
-          name: this.$t('自定义'),
+          name: this.$t('generic.label.custom'),
         },
         {
           id: 'valueFrom',
@@ -1778,19 +1780,19 @@ export default {
         },
         {
           id: 'configmapKey',
-          name: this.$t('ConfigMap单键'),
+          name: this.$t('deploy.templateset.configMapSingleKey'),
         },
         {
           id: 'configmapFile',
-          name: this.$t('ConfigMap文件'),
+          name: this.$t('deploy.templateset.configMapFile'),
         },
         {
           id: 'secretKey',
-          name: this.$t('Secret单键'),
+          name: this.$t('deploy.templateset.secretSingleKey'),
         },
         {
           id: 'secretFile',
-          name: this.$t('Secret文件'),
+          name: this.$t('deploy.templateset.secretFile'),
         },
       ],
       volumeTypeList: [
@@ -2227,7 +2229,7 @@ export default {
       //                 const message = res.message || res.data.data || ''
       //                 const msg = message.split(',')[0]
       //                 if (msg) {
-      //                     item.isLink = msg + this.$t('，不能修改协议')
+      //                     item.isLink = msg + this.$t('deploy.templateset.cannotModifyProtocol')
       //                 } else {
       //                     item.isLink = ''
       //                 }
@@ -2434,7 +2436,7 @@ export default {
         if (!appParamKeys.includes(key)) {
           this.$bkMessage({
             theme: 'error',
-            message: `${key}${this.$t('为无效字段')}`,
+            message: `${key}${this.$t('deploy.templateset.invalidField')}`,
           });
           const match = editor.find(`${key}`);
           if (match) {
@@ -2866,7 +2868,7 @@ export default {
       if (!yaml) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入YAML'),
+          message: this.$t('deploy.templateset.enterYAML'),
         });
         return false;
       }
@@ -2876,7 +2878,7 @@ export default {
       } catch (err) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入合法的YAML'),
+          message: this.$t('deploy.templateset.enterValidYAML'),
         });
         return false;
       }
@@ -3597,8 +3599,8 @@ export default {
       const version = this.curVersion;
       const { id } = application;
       this.$bkInfo({
-        title: this.$t('确认删除'),
-        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('删除Deployment')}：${application.config.metadata.name || this.$t('未命名')}`),
+        title: this.$t('generic.title.confirmDelete'),
+        content: this.$createElement('p', { style: { 'text-align': 'left' } }, `${this.$t('deploy.templateset.deleteDeployment')}：${application.config.metadata.name || this.$t('deploy.templateset.unnamed')}`),
         confirmFn() {
           if (id.indexOf && id.indexOf('local_') > -1) {
             self.removeLocalApplication(application, index);
@@ -3679,7 +3681,7 @@ export default {
         if (matchItem) {
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('请先删除{name}中挂载卷已经关联项', { name: container.name || this.$('容器') }),
+            message: this.$t('deploy.templateset.deleteMountVolumeWarning', { name: container.name || this.$('容器') }),
           });
           return false;
         }
@@ -4026,7 +4028,7 @@ export default {
         const msg = message.split(',')[0];
         this.$bkMessage({
           theme: 'error',
-          message: msg + this.$t('，不能修改协议'),
+          message: msg + this.$t('deploy.templateset.cannotModifyProtocol'),
         });
       });
     },
@@ -4135,7 +4137,7 @@ export default {
             this.curApplicationLinkLabels.push({
               key: keys[0],
               value: keys[1],
-              linkMessage: this.$t('标签 ({key}) 已经被Service ({service}) 关联，使用该标签的应用会被关联的Service导流', {
+              linkMessage: this.$t('deploy.templateset.labelServiceWarning', {
                 key,
                 service: data[key].join('；'),
               }),
@@ -4168,12 +4170,12 @@ export default {
       }
       if (isEdited) {
         self.$bkInfo({
-          title: self.$t('确认离开'),
+          title: self.$t('deploy.templateset.confirmExit'),
           content: self.$createElement('p', {
             style: {
               textAlign: 'left',
             },
-          }, self.$t('模板编辑的内容未保存，确认要离开？')),
+          }, self.$t('deploy.templateset.unsavedTemplateWarning')),
           confirmFn() {
             self.$router.push({
               name: 'crdcontroller',

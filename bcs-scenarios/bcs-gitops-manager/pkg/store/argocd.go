@@ -18,9 +18,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	api "github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
@@ -29,29 +33,54 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/watch"
+
+	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
+	clusterpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
+	projectpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/project"
+	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/argoconn"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 type argo struct {
-	option      *Options
-	basicOpt    *api.ClientOptions
-	basicClient api.Client
-	token       string
+	option *Options
+	token  string
+
+	basicOpt      *api.ClientOptions
+	conn          *grpc.ClientConn
+	connCloser    io.Closer
+	appClient     applicationpkg.ApplicationServiceClient
+	appsetClient  appsetpkg.ApplicationSetServiceClient
+	repoClient    repositorypkg.RepositoryServiceClient
+	projectClient projectpkg.ProjectServiceClient
+	clusterClient clusterpkg.ClusterServiceClient
+
+	cacheSynced      atomic.Bool
+	cacheApplication *sync.Map
 }
 
 // Init control interface
 func (cd *argo) Init() error {
 	initializer := []func() error{
-		cd.initToken, cd.initBasicClient,
+		cd.initToken, cd.initBasicClient, cd.initCache,
 	}
 	for _, init := range initializer {
 		if err := init(); err != nil {
 			return err
 		}
 	}
-
+	if err := cd.handleApplicationWatch(); err != nil {
+		return errors.Wrapf(err, "handle application watch failed")
+	}
 	return nil
 }
 
@@ -59,22 +88,18 @@ func (cd *argo) Init() error {
 func (cd *argo) Stop() {
 }
 
-// GetOptions ...
+// GetOptions return the options of gitops
 func (cd *argo) GetOptions() *Options {
 	return cd.option
 }
 
 // CreateProject interface
 func (cd *argo) CreateProject(ctx context.Context, pro *v1alpha1.AppProject) error {
-	// NOTE: create new single connection per request
-	// ! please make more attention to performance issue
-	connection, client, err := cd.basicClient.NewProjectClient()
+	_, err := cd.projectClient.Create(ctx, &project.ProjectCreateRequest{Project: pro})
 	if err != nil {
-		return errors.Wrapf(err, "argocd init project client failed")
-	}
-	defer connection.Close() // nolint
-	_, err = client.Create(ctx, &project.ProjectCreateRequest{Project: pro})
-	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("CreateProject").Inc()
+		}
 		return errors.Wrapf(err, "argocd create project '%s' failed", pro.GetName())
 	}
 	return nil
@@ -82,13 +107,11 @@ func (cd *argo) CreateProject(ctx context.Context, pro *v1alpha1.AppProject) err
 
 // UpdateProject interface
 func (cd *argo) UpdateProject(ctx context.Context, pro *v1alpha1.AppProject) error {
-	connection, client, err := cd.basicClient.NewProjectClient()
+	_, err := cd.projectClient.Update(ctx, &project.ProjectUpdateRequest{Project: pro})
 	if err != nil {
-		return errors.Wrapf(err, "argocd init project client failed")
-	}
-	defer connection.Close() // nolint
-	_, err = client.Update(ctx, &project.ProjectUpdateRequest{Project: pro})
-	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("UpdateProject").Inc()
+		}
 		return errors.Wrapf(err, "argocd update project '%s' failed", pro.GetName())
 	}
 	return nil
@@ -96,16 +119,13 @@ func (cd *argo) UpdateProject(ctx context.Context, pro *v1alpha1.AppProject) err
 
 // GetProject interface
 func (cd *argo) GetProject(ctx context.Context, name string) (*v1alpha1.AppProject, error) {
-	connection, client, err := cd.basicClient.NewProjectClient()
+	pro, err := cd.projectClient.Get(ctx, &project.ProjectQuery{Name: name})
 	if err != nil {
-		return nil, errors.Wrapf(err, "argocd init project client failed")
-	}
-	defer connection.Close() // nolint
-	pro, err := client.Get(ctx, &project.ProjectQuery{Name: name})
-	if err != nil {
-		// filter error that NotFound
-		if strings.Contains(err.Error(), "code = NotFound") {
+		if utils.IsArgoResourceNotFound(err) {
 			return nil, nil
+		}
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("GetProject").Inc()
 		}
 		return nil, errors.Wrapf(err, "argocd get project '%s' failed", name)
 	}
@@ -114,13 +134,11 @@ func (cd *argo) GetProject(ctx context.Context, name string) (*v1alpha1.AppProje
 
 // ListProjects interface
 func (cd *argo) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, error) {
-	connection, client, err := cd.basicClient.NewProjectClient()
+	pro, err := cd.projectClient.List(ctx, &project.ProjectQuery{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "argocd init project client failed")
-	}
-	defer connection.Close() // nolint
-	pro, err := client.List(ctx, &project.ProjectQuery{})
-	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListProjects").Inc()
+		}
 		return nil, errors.Wrapf(err, "argocd list alll projects failed")
 	}
 	return pro, nil
@@ -128,15 +146,11 @@ func (cd *argo) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, err
 
 // CreateCluster interface
 func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error {
-	// NOTE: create new single connection per request
-	// ! please make more attention to performance issue
-	connection, client, err := cd.basicClient.NewClusterClient()
+	_, err := cd.clusterClient.Create(ctx, &cluster.ClusterCreateRequest{Cluster: cls})
 	if err != nil {
-		return errors.Wrapf(err, "argocd init cluster client failed")
-	}
-	defer connection.Close() // nolint
-	_, err = client.Create(ctx, &cluster.ClusterCreateRequest{Cluster: cls})
-	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("CreateCluster").Inc()
+		}
 		return errors.Wrapf(err, "argocd create cluster '%s' failed", cls.Name)
 	}
 	return nil
@@ -144,72 +158,64 @@ func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error 
 
 // DeleteCluster delete cluster by clusterID
 func (cd *argo) DeleteCluster(ctx context.Context, name string) error {
-	connection, client, err := cd.basicClient.NewClusterClient()
-	if err != nil {
-		return errors.Wrapf(err, "argocd init cluster client failed")
-	}
-	defer connection.Close() // nolint
-	if _, err = client.Delete(ctx, &cluster.ClusterQuery{Name: name}); err != nil {
+	if _, err := cd.clusterClient.Delete(ctx, &cluster.ClusterQuery{Name: name}); err != nil {
 		// argocd return 403(PermissionDenied) when cluster do not exist
 		// !make sure that gitops-manager has admin access
 		if strings.Contains(err.Error(), "code = PermissionDenied") {
 			blog.Warnf("argocd delete cluster %s warning: %s", name, err.Error())
 			return nil
 		}
-		return errors.Wrapf(err, "delete cluster failed")
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("DeleteCluster").Inc()
+		}
+		return errors.Wrapf(err, "argocd delete cluster failed")
 	}
 	return nil
 }
 
 // GetCluster interface
-func (cd *argo) GetCluster(ctx context.Context, name string) (*v1alpha1.Cluster, error) {
-	// create new single connection per request
-	// ! please make more attention to performance issue
-	connection, client, err := cd.basicClient.NewClusterClient()
-	if err != nil {
-		return nil, errors.Wrapf(err, "argocd init cluster client failed")
-	}
-	defer connection.Close() // nolint
-	cls, err := client.Get(ctx, &cluster.ClusterQuery{Name: name})
+func (cd *argo) GetCluster(ctx context.Context, query *cluster.ClusterQuery) (*v1alpha1.Cluster, error) {
+	cls, err := cd.clusterClient.Get(ctx, query)
 	if err != nil {
 		// argocd return 403(PermissionDenied) when cluster do not exist
 		// !make sure that gitops-manager has admin access
 		if strings.Contains(err.Error(), "code = PermissionDenied") {
-			blog.Warnf("argocd get cluster %s warning, No Cluster Found if admin access, %s", name, err.Error())
+			blog.Warnf("argocd get cluster '%v' warning, No Cluster Found if admin access, %s",
+				*query, err.Error())
 			return nil, nil
 		}
-		return nil, errors.Wrapf(err, "argocd get cluster '%s' failed", name)
+		if utils.IsArgoResourceNotFound(err) {
+			return nil, nil
+		}
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("GetCluster").Inc()
+		}
+		return nil, errors.Wrapf(err, "argocd get cluster '%v' failed", *query)
 	}
 	return cls, nil
 }
 
 // UpdateCluster will update the annotation field
 func (cd *argo) UpdateCluster(ctx context.Context, argoCluster *v1alpha1.Cluster) error {
-	connection, client, err := cd.basicClient.NewClusterClient()
-	if err != nil {
-		return errors.Wrapf(err, "argocd init cluster client failed")
-	}
-	defer connection.Close() // nolint
-
-	// UpdateFields: github.com/argoproj/argo-cd/server/cluster/cluster.go:#235
-	if _, err := client.Update(ctx, &cluster.ClusterUpdateRequest{
+	if _, err := cd.clusterClient.Update(ctx, &cluster.ClusterUpdateRequest{
 		Cluster:       argoCluster,
 		UpdatedFields: []string{"annotations"},
 	}); err != nil {
-		return errors.Wrapf(err, "update cluster '%s' failed", argoCluster.Name)
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("UpdateCluster").Inc()
+		}
+		return errors.Wrapf(err, "argocd update cluster '%s' failed", argoCluster.Name)
 	}
 	return nil
 }
 
 // ListCluster interface
 func (cd *argo) ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error) {
-	connection, client, err := cd.basicClient.NewClusterClient()
+	cls, err := cd.clusterClient.List(ctx, &cluster.ClusterQuery{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "argocd init cluster client failed")
-	}
-	defer connection.Close() // nolint
-	cls, err := client.List(ctx, &cluster.ClusterQuery{})
-	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListCluster").Inc()
+		}
 		return nil, errors.Wrapf(err, "argocd list all clusters failed")
 	}
 	return cls, nil
@@ -217,20 +223,18 @@ func (cd *argo) ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error) 
 
 // ListClustersByProject will list clusters by project id
 func (cd *argo) ListClustersByProject(ctx context.Context, project string) (*v1alpha1.ClusterList, error) {
-	connection, client, err := cd.basicClient.NewClusterClient()
+	cls, err := cd.clusterClient.List(ctx, &cluster.ClusterQuery{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "argocd init cluster client failed")
-	}
-	defer connection.Close() // nolint
-	cls, err := client.List(ctx, &cluster.ClusterQuery{})
-	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListClustersByProject").Inc()
+		}
 		return nil, errors.Wrapf(err, "argocd list all clusters failed")
 	}
 
 	clusters := make([]v1alpha1.Cluster, 0, len(cls.Items))
 	for _, item := range cls.Items {
 		projectID, ok := item.Annotations[common.ProjectIDKey]
-		if !ok || (projectID == "" && item.Name != common.InClusterName) {
+		if item.Name != common.InClusterName && (!ok || projectID == "") {
 			blog.Errorf("cluster '%s' not have project id annotation", item.Name)
 			continue
 		}
@@ -263,18 +267,14 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 	if err != nil {
 		return nil, errors.Wrapf(err, "get repository failed with decode repo '%s'", repo)
 	}
-	// create new single connection per request
-	// ! please make more attention to performance issue
-	connection, client, err := cd.basicClient.NewRepoClient()
+	repos, err := cd.repoClient.Get(ctx, &repository.RepoQuery{Repo: repo})
 	if err != nil {
-		return nil, errors.Wrapf(err, "argocd init repo client failed")
-	}
-	defer connection.Close() // nolint
-	repos, err := client.Get(ctx, &repository.RepoQuery{Repo: repo})
-	if err != nil {
-		if strings.Contains(err.Error(), "code = NotFound") {
+		if utils.IsArgoResourceNotFound(err) {
 			blog.Warnf("argocd get Repository %s warning, %s", repo, err.Error())
 			return nil, nil
+		}
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("GetRepository").Inc()
 		}
 		return nil, errors.Wrapf(err, "argocd get repo '%s' failed", repo)
 	}
@@ -283,13 +283,11 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 
 // ListRepository interface
 func (cd *argo) ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, error) {
-	connection, client, err := cd.basicClient.NewRepoClient()
+	repos, err := cd.repoClient.List(ctx, &repository.RepoQuery{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "argocd init repo client failed")
-	}
-	defer connection.Close() // nolint
-	repos, err := client.List(ctx, &repository.RepoQuery{})
-	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListRepository").Inc()
+		}
 		return nil, errors.Wrapf(err, "argocd list repos failed")
 	}
 	return repos, nil
@@ -297,18 +295,14 @@ func (cd *argo) ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, e
 
 // GetApplication will return application by name
 func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error) {
-	// create new single connection per request
-	// ! please make more attention to performance issue
-	connection, client, err := cd.basicClient.NewApplicationClient()
+	app, err := cd.appClient.Get(ctx, &appclient.ApplicationQuery{Name: &name})
 	if err != nil {
-		return nil, errors.Wrapf(err, "argocd init application client failed")
-	}
-	defer connection.Close() // nolint
-	app, err := client.Get(ctx, &appclient.ApplicationQuery{Name: &name})
-	if err != nil {
-		if strings.Contains(err.Error(), "code = NotFound") {
-			blog.Warnf("argocd get application %s warning, %s", name, err.Error())
+		if utils.IsArgoResourceNotFound(err) {
+			blog.Warnf("argocd get application %s not found: %s", name, err.Error())
 			return nil, nil
+		}
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("GetApplication").Inc()
 		}
 		return nil, errors.Wrapf(err, "argocd get application '%s' failed", name)
 	}
@@ -316,17 +310,55 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 }
 
 // ListApplications interface
-func (cd *argo) ListApplications(ctx context.Context, option *ListAppOptions) (*v1alpha1.ApplicationList, error) {
-	connection, client, err := cd.basicClient.NewApplicationClient()
-	if err != nil {
-		return nil, errors.Wrapf(err, "argocd init application client failed")
+func (cd *argo) ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (
+	*v1alpha1.ApplicationList, error) {
+	if !cd.cacheSynced.Load() {
+		apps, err := cd.appClient.List(ctx, query)
+		if err != nil {
+			if !utils.IsContextCanceled(err) {
+				metric.ManagerArgoOperateFailed.WithLabelValues("ListApplications").Inc()
+			}
+			return nil, errors.Wrapf(err, "argocd list application for project '%v' failed", query.Projects)
+		}
+		return apps, nil
 	}
-	defer connection.Close() // nolint
-	apps, err := client.List(ctx, &appclient.ApplicationQuery{Projects: []string{option.Project}})
-	if err != nil {
-		return nil, errors.Wrapf(err, "argocd list application for project '%s' failed", option.Project)
+	var (
+		selector labels.Selector
+		err      error
+	)
+	if query.Selector != nil && *query.Selector != "" {
+		selector, err = labels.Parse(*query.Selector)
+		if err != nil {
+			return nil, errors.Wrapf(err, "argocd list application for project '%v' failed", query.Projects)
+		}
 	}
-	return apps, nil
+	result := &v1alpha1.ApplicationList{
+		Items: make([]v1alpha1.Application, 0),
+	}
+	for i := range query.Projects {
+		projName := query.Projects[i]
+		projApps, ok := cd.cacheApplication.Load(projName)
+		if !ok {
+			continue
+		}
+		for _, v := range projApps.(map[string]*v1alpha1.Application) {
+			if query.Name != nil && (*query.Name != "" && *query.Name != v.Name) {
+				continue
+			}
+			if query.Repo != nil && (*query.Repo != "" && *query.Repo != v.Spec.Source.RepoURL) {
+				continue
+			}
+			if query.AppNamespace != nil && (*query.AppNamespace != "" && *query.AppNamespace !=
+				v.Spec.Destination.Namespace) {
+				continue
+			}
+			if query.Selector != nil && (*query.Selector != "" && !selector.Matches(labels.Set(v.Labels))) {
+				continue
+			}
+			result.Items = append(result.Items, *v)
+		}
+	}
+	return result, nil
 }
 
 // GetToken authentication token
@@ -337,14 +369,9 @@ func (cd *argo) GetToken(ctx context.Context) string {
 // DeleteApplicationResource will delete all resources for application
 func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application) error {
 	server := application.Spec.Destination.Server
-	closer, appClient, err := cd.basicClient.NewApplicationClient()
-	if err != nil {
-		return errors.Wrapf(err, "argocd init application client failed")
-	}
-	defer closer.Close() // nolint
 	errs := make([]string, 0)
 	for _, resource := range application.Status.Resources {
-		_, err = appClient.DeleteResource(ctx, &appclient.ApplicationResourceDeleteRequest{
+		_, err := cd.appClient.DeleteResource(ctx, &appclient.ApplicationResourceDeleteRequest{
 			Name:         &application.Name,
 			Kind:         &resource.Kind,
 			Namespace:    &resource.Namespace,
@@ -353,11 +380,21 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 			ResourceName: &resource.Name,
 		})
 		if err != nil {
-			errs = append(errs, fmt.Sprintf("delete resource '%s/%s/%s' failed for cluster '%s': %s",
-				resource.Group, resource.Kind, resource.Name, server, err.Error()))
+			if utils.IsArgoResourceNotFound(err) {
+				blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
+					"got 'Not Found': %s",
+					utils.RequestID(ctx), resource.Group, resource.Kind, resource.Name,
+					server, application.Name, err.Error())
+			} else {
+				if !utils.IsContextCanceled(err) {
+					metric.ManagerArgoOperateFailed.WithLabelValues("DeleteApplicationResource").Inc()
+				}
+				errs = append(errs, fmt.Sprintf("argocd delete resource '%s/%s/%s' failed for cluster '%s': %s",
+					resource.Group, resource.Kind, resource.Name, server, err.Error()))
+			}
 		} else {
-			blog.Infof("delete resource '%s/%s/%s' for cluster '%s' with application '%s' success",
-				resource.Group, resource.Kind, resource.Name, server, application.Name)
+			blog.Infof("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' success",
+				utils.RequestID(ctx), resource.Group, resource.Kind, resource.Name, server, application.Name)
 		}
 	}
 	if len(errs) != 0 {
@@ -365,6 +402,36 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 			application.Name, strings.Join(errs, ","))
 	}
 	return nil
+}
+
+// GetApplicationSet query the ApplicationSet by name
+func (cd *argo) GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error) {
+	appset, err := cd.appsetClient.Get(ctx, &appsetpkg.ApplicationSetGetQuery{
+		Name: name,
+	})
+	if err != nil {
+		if utils.IsArgoResourceNotFound(err) {
+			return nil, nil
+		}
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("GetApplicationSet").Inc()
+		}
+		return nil, errors.Wrapf(err, "argocd get applicationset '%s' failed", name)
+	}
+	return appset, nil
+}
+
+// ListApplicationSets list applicationsets by projects
+func (cd *argo) ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
+	*v1alpha1.ApplicationSetList, error) {
+	appsets, err := cd.appsetClient.List(ctx, query)
+	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListApplicationSets").Inc()
+		}
+		return nil, errors.Wrapf(err, "argocd list applicationsets by project '%v' failed", *query)
+	}
+	return appsets, nil
 }
 
 func (cd *argo) initToken() error {
@@ -392,37 +459,164 @@ func (cd *argo) initToken() error {
 		bytes.NewBuffer(reqBytes),
 	)
 	if err != nil {
-		blog.Errorf("argocd proxy request session failure: %s", err.Error())
-		return fmt.Errorf("argocd login session fatal")
+		return errors.Wrapf(err, "argocd login session fatal")
 	}
 	defer response.Body.Close() // nolint
 	result := make(map[string]string)
 	if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
-		blog.Errorf("argocd store decode session response failure, %s", err.Error())
-		return fmt.Errorf("decode gitops session result fatal")
+		return errors.Wrapf(err, "decode gitops session result fatal")
 	}
 	t, ok := result["token"]
 	if !ok {
-		blog.Errorf("argocd store found no token in session response")
 		return fmt.Errorf("found no login token in response")
 	}
-	blog.Infof("argocd store token session init OK, %s", t)
+	blog.Infof("[store] argocd token session init OK, %s", t)
 	cd.token = t
 	return nil
 }
 
+// initBasicClient 会创建与 argocd server 的链接，并维护链接的状态. 当检测到状态不正常时，将链接
+// 重置并进行重连
 func (cd *argo) initBasicClient() error {
 	var err error
 	// init basic client
 	cd.basicOpt = &api.ClientOptions{
 		ServerAddr: cd.option.Service,
-		Insecure:   true,
 		AuthToken:  cd.token,
 	}
-	cd.basicClient, err = api.NewClient(cd.basicOpt)
-	if err != nil {
-		blog.Errorf("argocd init client failure, %s", err.Error())
-		return fmt.Errorf("argocd connection init failure")
+	if err = cd.connect(); err != nil {
+		return errors.Wrapf(err, "argocd connect grpc failed")
 	}
+	go func() {
+		for {
+			// 当链接发生故障，则进行重连; 重连成功，则持续检查状态; 重连失败则间隔重连
+			if cd.conn == nil {
+				metric.ManagerArgoConnectionNum.WithLabelValues().Inc()
+				if err = cd.connect(); err != nil {
+					blog.Errorf("[store] argocd grpc connection connect failed: %s", err.Error())
+					time.Sleep(5 * time.Second)
+					continue
+				}
+				blog.Infof("[store] argocd grpc connection re-connect success")
+			}
+			checkTicker := time.NewTicker(3 * time.Second)
+			for range checkTicker.C {
+				// 检测 GRPC 连接状态是否断开
+				state := cd.conn.GetState()
+				if state != connectivity.TransientFailure && state != connectivity.Shutdown {
+					metric.ManagerArgoConnectionStatus.WithLabelValues().Set(0)
+					continue
+				}
+				metric.ManagerArgoConnectionStatus.WithLabelValues().Set(1)
+				blog.Errorf("[store] argocd grpc connection disconnect: %s", state.String())
+				// 发生链接断开问题，则重置链接
+				if cd.connCloser != nil {
+					cd.connCloser.Close() // nolint
+				}
+				cd.conn = nil
+				checkTicker.Stop()
+				break
+			}
+		}
+	}()
+	return nil
+}
+
+// connect 创建到 argocd server 的 gRPC 链接，并根据链接创建对应的操作 Client
+func (cd *argo) connect() error {
+	var err error
+	cd.conn, cd.connCloser, err = argoconn.NewConn(cd.basicOpt)
+	if err != nil {
+		return errors.Wrapf(err, "create connection to argocd failed")
+	}
+	blog.Infof("[store] create connection success")
+	cd.appClient = applicationpkg.NewApplicationServiceClient(cd.conn)
+	cd.repoClient = repositorypkg.NewRepositoryServiceClient(cd.conn)
+	cd.projectClient = projectpkg.NewProjectServiceClient(cd.conn)
+	cd.clusterClient = clusterpkg.NewClusterServiceClient(cd.conn)
+	cd.appsetClient = appsetpkg.NewApplicationSetServiceClient(cd.conn)
+	return nil
+}
+
+// initCache 初始化缓存, 当前缓存为: ApplicationCache
+func (cd *argo) initCache() error {
+	list, err := cd.appClient.List(context.Background(), &applicationpkg.ApplicationQuery{})
+	if err != nil {
+		return errors.Wrapf(err, "list applications failed when init watch")
+	}
+	for i := range list.Items {
+		app := list.Items[i]
+		projectApps, ok := cd.cacheApplication.Load(app.Spec.Project)
+		if !ok {
+			cd.cacheApplication.Store(app.Spec.Project, map[string]*v1alpha1.Application{
+				app.Name: &app,
+			})
+		} else {
+			projectApps.(map[string]*v1alpha1.Application)[app.Name] = &app
+		}
+	}
+	blog.Infof("[store] init cache success.")
+	cd.cacheSynced.Store(true)
+	return nil
+}
+
+// handleApplicationWatch 监听 Application 的事件，并刷新缓存中的数据
+func (cd *argo) handleApplicationWatch() error {
+	watchClient, err := cd.appClient.Watch(context.Background(), &applicationpkg.ApplicationQuery{})
+	if err != nil {
+		return errors.Wrapf(err, "init application watch failed")
+	}
+	go func() {
+		blog.Infof("[store] application watch started")
+		for {
+			// 如果 watchClient 是空的，我们需要去重连
+			if watchClient == nil {
+				cd.cacheSynced.Store(false)
+				watchClient, err = cd.appClient.Watch(context.Background(), &applicationpkg.ApplicationQuery{})
+				if err != nil {
+					blog.Error("[store] application watch client recreated failed")
+					// 重连如果失败，在 10s 后继续重连
+					time.Sleep(10 * time.Second)
+					continue
+				}
+				blog.Infof("[store] application watch client re-created")
+				// 当重连成功之后，刷新所有缓存，并重新开始监听事件
+				if err = cd.initCache(); err != nil {
+					blog.Errorf("[store] cache synced failed: %s", err.Error())
+				} else {
+					blog.Infof("[store] cache synced success")
+				}
+			}
+			var event *v1alpha1.ApplicationWatchEvent
+			if event, err = watchClient.Recv(); err != nil {
+				blog.Errorf("[store] application watch received error: %s", err.Error())
+				// 如果 watchClient 接收到错误，直接设置为空进行重连逻辑
+				watchClient = nil
+				continue
+			}
+
+			if event.Type != watch.Modified {
+				blog.Infof("[store] application watch received: %s/%s", string(event.Type), event.Application.Name)
+			}
+			application := event.Application
+			projName := application.Spec.Project
+			switch event.Type {
+			case watch.Added, watch.Modified:
+				projectApps, ok := cd.cacheApplication.Load(projName)
+				if !ok {
+					cd.cacheApplication.Store(projName, map[string]*v1alpha1.Application{
+						application.Name: &application,
+					})
+				} else {
+					projectApps.(map[string]*v1alpha1.Application)[application.Name] = &application
+				}
+			case watch.Deleted:
+				projectApps, ok := cd.cacheApplication.Load(projName)
+				if ok {
+					delete(projectApps.(map[string]*v1alpha1.Application), application.Name)
+				}
+			}
+		}
+	}()
 	return nil
 }

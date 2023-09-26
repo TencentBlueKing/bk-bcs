@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package cc
 
@@ -21,11 +21,11 @@ import (
 	"strings"
 	"time"
 
+	etcd3 "go.etcd.io/etcd/client/v3"
+
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/version"
-
-	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
 const (
@@ -206,9 +206,10 @@ func (rs RedisCluster) validate() error {
 
 // IAM defines all the iam related runtime.
 type IAM struct {
-	// Endpoints is a seed list of host:port addresses of iam nodes.
-	Endpoints []string `yaml:"endpoints"`
-	APIURL    string   `yaml:"api_url"`
+	// IAM api url.
+	APIURL string `yaml:"api_url"`
+	// Host is the host of current system, in the other word bk-bscp.
+	Host string `yaml:"host"`
 	// AppCode blueking belong to bscp's appcode.
 	AppCode string `yaml:"appCode"`
 	// AppSecret blueking belong to bscp app's secret.
@@ -218,8 +219,12 @@ type IAM struct {
 
 // validate iam runtime.
 func (s IAM) validate() error {
-	if len(s.Endpoints) == 0 {
-		return errors.New("iam endpoints is not set")
+	if len(s.APIURL) == 0 {
+		return errors.New("iam api url is not set")
+	}
+
+	if len(s.Host) == 0 {
+		return errors.New("iam host is not set")
 	}
 
 	if len(s.AppCode) == 0 {

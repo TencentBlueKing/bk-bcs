@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
@@ -40,7 +41,7 @@ type ListTemplateListAction struct {
 	templateList []*cmproto.TemplateInfo
 }
 
-// NewListAction create list action for business templateList
+// NewListTemplateListAction create list action for business templateList
 func NewListTemplateListAction() *ListTemplateListAction {
 	return &ListTemplateListAction{}
 }
@@ -142,6 +143,7 @@ func (la *GetTemplateInfoAction) getBusinessTemplateInfoValues() error {
 	var (
 		err            error
 		constantValues []common.ConstantValue
+		project        *common.ProjectInfo
 	)
 	err = retry.Do(func() error {
 		path := &common.TemplateDetailPathPara{
@@ -165,9 +167,21 @@ func (la *GetTemplateInfoAction) getBusinessTemplateInfoValues() error {
 		return err
 	}
 
+	// get bksops project info by bizID
+	err = retry.Do(func() error {
+		project, err = common.GetBKOpsClient().GetUserProjectDetailInfo(la.req.BusinessID)
+		if err != nil {
+			return err
+		}
+		return nil
+	}, retry.Attempts(3))
+	if err != nil {
+		blog.Errorf("getBusinessTemplateInfoValues failed: %v", err)
+	}
+
 	if la.templateInfo == nil {
 		la.templateInfo = &cmproto.TemplateDetailInfo{
-			TemplateUrl: getSopsTemplateUrl(la.req.BusinessID, la.req.TemplateID),
+			TemplateUrl: getSopsTemplateUrl(project, la.req.TemplateID),
 			Values:      make([]*cmproto.ConstantValue, 0),
 		}
 	}
@@ -272,7 +286,7 @@ func (la *GetTemplateValuesAction) getInnerTemplateValues() error {
 	for i := range template.InnerTemplateVarsList {
 		la.templateValues = append(la.templateValues, &cmproto.TemplateValue{
 			Name:  template.InnerTemplateVarsList[i].VarName,
-			Desc:  template.InnerTemplateVarsList[i].Desc,
+			Desc:  i18n.T(la.ctx, strings.Replace(template.InnerTemplateVarsList[i].ReferMethod, " ", "", -1)),
 			Refer: template.InnerTemplateVarsList[i].ReferMethod,
 			Trans: template.InnerTemplateVarsList[i].TransMethod,
 			Value: func() string {
@@ -317,13 +331,13 @@ func (la *GetTemplateValuesAction) Handle(
 	return
 }
 
-func getSopsTemplateUrl(bizID, moduleID string) string {
+func getSopsTemplateUrl(project *common.ProjectInfo, moduleID string) string {
 	switch {
 	case options.GetEditionInfo().IsInnerEdition(), options.GetEditionInfo().IsCommunicationEdition():
-		if options.GetGlobalCMOptions().BKOps.TemplateURL == "" {
+		if options.GetGlobalCMOptions().BKOps.TemplateURL == "" || project == nil || project.ProjectId <= 0 {
 			break
 		}
-		return fmt.Sprintf(options.GetGlobalCMOptions().BKOps.TemplateURL, bizID, moduleID)
+		return fmt.Sprintf(options.GetGlobalCMOptions().BKOps.TemplateURL, project.ProjectId, moduleID)
 	}
 
 	return options.GetGlobalCMOptions().BKOps.FrontURL

@@ -22,13 +22,20 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
-
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/asaskevich/govalidator"
+	"github.com/emicklei/go-restful"
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
 	"gopkg.in/go-playground/validator.v9"
+	en_translations "gopkg.in/go-playground/validator.v9/translations/en"
 )
 
 // Validate local implementation
 var Validate = validator.New()
+var trans ut.Translator
 
 func init() {
 	// Use json tag name instead of the real struct field name
@@ -43,6 +50,14 @@ func init() {
 	})
 
 	_ = Validate.RegisterValidation("apiserver_addresses", ValidateAPIServerAddresses)
+	en := en.New()
+	uni := ut.New(en, en)
+
+	// this is usually know or extracted from http 'Accept-Language' header
+	// also see uni.FindTranslator(...)
+	trans, _ = uni.GetTranslator("en")
+
+	en_translations.RegisterDefaultTranslations(Validate, trans)
 }
 
 // ValidateAPIServerAddresses validates if given string is a valid apiserver addresses list.
@@ -104,4 +119,43 @@ func StringInSlice(s string, l []string) bool {
 		}
 	}
 	return false
+}
+
+// GetProjectFromAttribute get project from attribute
+func GetProjectFromAttribute(request *restful.Request) *component.Project {
+	project := request.Attribute(constant.ProjectAttr)
+	if p, ok := project.(*component.Project); ok {
+		return p
+	}
+	return nil
+}
+
+// GetUserFromAttribute get user from attribute
+func GetUserFromAttribute(request *restful.Request) *models.BcsUser {
+	user := request.Attribute(constant.CurrentUserAttr)
+	if p, ok := user.(*models.BcsUser); ok {
+		return p
+	}
+	return nil
+}
+
+// ParamsErrorData is the error data for params error
+type ParamsErrorData struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
+}
+
+// ParseValidationError parse validation error
+func ParseValidationError(errList error) []ParamsErrorData {
+	results := make([]ParamsErrorData, 0)
+	switch errs := errList.(type) {
+	case validator.ValidationErrors:
+		for _, err := range errs {
+			results = append(results, ParamsErrorData{
+				Field:   err.Field(),
+				Message: err.Translate(trans),
+			})
+		}
+	}
+	return results
 }

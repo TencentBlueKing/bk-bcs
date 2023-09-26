@@ -75,3 +75,10 @@ const (
 	// ProbeTypeExec 命令执行探针
 	ProbeTypeExec = "exec"
 )
+
+const (
+	// Containers 日志Containers 类型
+	Containers = "Containers"
+	// InitContainers 日志Containers 类型
+	InitContainers = "InitContainers"
+)

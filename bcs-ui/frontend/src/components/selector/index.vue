@@ -130,7 +130,7 @@
           </template>
           <li class="bk-selector-list-item" v-if="!isLoading && localList.length === 0">
             <div class="text no-search-result">
-              {{ list.length ? (searchEmptyText || $t('无匹配数据')) : (emptyText || $t('暂无数据'))}}
+              {{ list.length ? (searchEmptyText || $t('generic.msg.empty.noMatchData')) : (emptyText || $t('generic.msg.empty.noData'))}}
             </div>
           </li>
         </ul>
@@ -140,19 +140,19 @@
         <template v-if="fieldType === 'cluster'">
           <div class="bk-selector-create-item" @click.stop.prevent="goClusterList">
             <i class="bcs-icon bcs-icon-apps"></i>
-            <i class="text">{{$t('集群列表')}}</i>
+            <i class="text">{{$t('generic.label.clusterList')}}</i>
           </div>
         </template>
         <template v-if="fieldType === 'namespace'">
           <div class="bk-selector-create-item" @click.stop.prevent="goNamespaceList">
             <i class="bcs-icon bcs-icon-apps"></i>
-            <i class="text">{{$t('命名空间列表')}}</i>
+            <i class="text">{{$t('generic.label.nsList')}}</i>
           </div>
         </template>
         <template v-if="fieldType === 'metric'">
           <div class="bk-selector-create-item" @click.stop.prevent="goMetricList">
             <i class="bcs-icon bcs-icon-apps"></i>
-            <i class="text">{{$t('新建Metric')}}</i>
+            <i class="text">{{$t('plugin.metric.action.create')}}</i>
           </div>
         </template>
       </div>
@@ -188,12 +188,11 @@
             :placeholder="placeholder"
             :displayKey="displayKey"
             :has-create-item="hasCreateItem"
-            :create-text="createText"
             :ext-cls="extCls"></bk-dropdown>
     */
 
-import clickoutside from '@/directives/clickoutside';
 import { getActualTop } from '@/common/util';
+import clickoutside from '@/directives/clickoutside';
 
 export default {
   name: 'BkSelector',
@@ -216,10 +215,6 @@ export default {
       type: Boolean,
       default: false,
     },
-    createText: {
-      type: String,
-      default: window.i18n.t('新增数据源'),
-    },
     tools: {
       type: [Object, Boolean],
       default: false,
@@ -240,7 +235,7 @@ export default {
     },
     placeholder: {
       type: [String, Boolean],
-      default: window.i18n.t('请选择'),
+      default: window.i18n.t('generic.placeholder.select'),
     },
     // 是否联动
     isLink: {

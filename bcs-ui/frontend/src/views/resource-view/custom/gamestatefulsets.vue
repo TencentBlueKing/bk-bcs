@@ -25,22 +25,22 @@
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('名称')" prop="metadata.name" sortable>
+        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable>
           <template #default="{ row }">
             <bk-button class="bcs-button-ellipsis" text @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" min-width="100" sortable>
+        <bk-table-column :label="$t('k8s.namespace')" prop="metadata.namespace" min-width="100" sortable>
           <template #default="{ row }">
             {{ row.metadata.namespace || '--' }}
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('升级策略')" width="150" :resizable="false">
+        <bk-table-column :label="$t('k8s.updateStrategy.text')" width="150" :resizable="false">
           <template slot-scope="{ row }">
             <span v-if="row.spec.updateStrategy">
-              {{ updateStrategyMap[row.spec.updateStrategy.type] || $t('滚动升级') }}
+              {{ updateStrategyMap[row.spec.updateStrategy.type] || $t('k8s.updateStrategy.rollingUpdate') }}
             </span>
-            <span v-else>{{ $t('滚动升级') }}</span>
+            <span v-else>{{ $t('k8s.updateStrategy.rollingUpdate') }}</span>
           </template>
         </bk-table-column>
         <bk-table-column
@@ -62,25 +62,25 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('编辑模式')" width="100">
+        <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
           <template slot-scope="{ row }">
             <span>
               {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
-                ? $t('表单') : 'YAML'}}
+                ? $t('generic.label.editMode.form') : 'YAML'}}
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('操作')" :resizable="false" width="220">
+        <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="220">
           <template #default="{ row }">
             <bk-button
               text
-              @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
+              @click="handleUpdateResource(row)">{{ $t('generic.button.update') }}</bk-button>
             <bk-button
               class="ml10" text
-              @click="handleEnlargeCapacity(row)">{{ $t('扩缩容') }}</bk-button>
+              @click="handleEnlargeCapacity(row)">{{ $t('deploy.templateset.scale') }}</bk-button>
             <bk-button
               class="ml10" text
-              @click="gotoDetail(row)">{{ $t('重新调度') }}</bk-button>
+              @click="gotoDetail(row)">{{ $t('dashboard.workload.pods.delete') }}</bk-button>
             <bk-button
               class="ml10" text
               v-authority="{
@@ -90,7 +90,7 @@
                   ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.tip : '',
                 disablePerms: true
               }"
-              @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
+              @click="handleDeleteResource(row)">{{ $t('generic.button.delete') }}</bk-button>
           </template>
         </bk-table-column>
         <template #empty>
@@ -102,6 +102,7 @@
 </template>
 <script>
 import { defineComponent } from 'vue';
+
 import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({

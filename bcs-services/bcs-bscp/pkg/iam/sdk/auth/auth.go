@@ -1,6 +1,6 @@
 /*
- * Tencent is pleased to support the open source community by making 蓝鲸 available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -37,6 +37,9 @@ type Authorizer interface {
 	// the returned list may be huge, we do not do result paging
 	ListAuthorizedInstances(ctx context.Context, opts *client.AuthOptions, resourceType client.TypeID) (
 		*client.AuthorizeList, error)
+
+	// GrantResourceCreatorAction grant a user's resource creator action.
+	GrantResourceCreatorAction(ctx context.Context, opts *client.GrantResourceCreatorActionOption) error
 }
 
 // ResourceFetcher defines all the supported operations for iam to fetch resources from bscp

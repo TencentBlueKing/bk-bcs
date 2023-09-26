@@ -1,6 +1,6 @@
 /*
- * Tencent is pleased to support the open source community by making 蓝鲸 available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -22,7 +22,7 @@ func (a Action) String() string {
 }
 
 const (
-	// FindBusinessResource
+	// FindBusinessResource means the operation to find business
 	FindBusinessResource Action = "find_business_resource"
 	// Create operation's bscp auth action type
 	Create Action = "create"
@@ -30,12 +30,18 @@ const (
 	Update Action = "update"
 	// Delete operation's bscp auth action type
 	Delete Action = "delete"
+	// View operation's bscp auth action type
+	View Action = "view"
+	// Manage operation's bscp auth action type
+	Manage Action = "manage"
 	// Find operation's bscp auth action type
 	Find Action = "find"
 	// Publish operation's bscp auth action type
 	Publish Action = "publish"
 	// FinishPublish operation's bscp auth action type
 	FinishPublish Action = "finish_publish"
+	// GenerateRelease operation's bscp auth action type
+	GenerateRelease Action = "generate_release"
 	// Upload operation's bscp auth action type
 	Upload Action = "upload"
 	// Download operation's bscp auth action type

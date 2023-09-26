@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package service
 
@@ -16,7 +16,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -64,7 +63,7 @@ func (s *Service) queryMetadataInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	bytes, err := ioutil.ReadAll(file)
+	bytes, err := io.ReadAll(file)
 	if len(bytes) == 0 || err != nil {
 		resp.WriteResp(w, make(map[string]interface{}, 0))
 		return
@@ -154,7 +153,7 @@ func (s *Service) uploadNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		resp.Err(w, fmt.Errorf("read body failed, err: %v", err))
 		return
@@ -325,7 +324,7 @@ func (s *Service) downloadAll(w http.ResponseWriter, path string) error {
 	}
 	defer file.Close()
 
-	bytes, err := ioutil.ReadAll(file)
+	bytes, err := io.ReadAll(file)
 	if err != nil {
 		return fmt.Errorf("read node failed, err: %v", err)
 	}
@@ -341,7 +340,7 @@ func (s *Service) recordNodeDetail(path, sign, metadata string) error {
 	}
 	defer readFile.Close()
 
-	bytes, err := ioutil.ReadAll(readFile)
+	bytes, err := io.ReadAll(readFile)
 	if err != nil {
 		return fmt.Errorf("read node detail failed, err: %v", err)
 	}

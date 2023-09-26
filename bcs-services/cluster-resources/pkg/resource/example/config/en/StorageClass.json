@@ -5,7 +5,7 @@
   "items": [
     {
       "name": "simple_storage_class",
-      "alias": "StorageClass Simple Demo",
+      "alias": "StorageClass simple demo",
       "description": "A simple storageClass demo with only basic configuration",
       "manifest": null
     }

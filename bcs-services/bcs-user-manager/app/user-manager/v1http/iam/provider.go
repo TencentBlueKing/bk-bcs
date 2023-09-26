@@ -15,6 +15,7 @@ package iam
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/TencentBlueKing/iam-go-sdk/resource"
 	"github.com/emicklei/go-restful"
@@ -92,4 +93,8 @@ func convertFilter(data map[string]interface{}) Filter {
 		return filter
 	}
 	return filter
+}
+
+func combineNameID(name, id string) string {
+	return fmt.Sprintf("%s(%s)", name, id)
 }

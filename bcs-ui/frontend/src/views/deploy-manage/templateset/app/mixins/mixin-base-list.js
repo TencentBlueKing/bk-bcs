@@ -30,10 +30,10 @@
 import moment from 'moment';
 
 import { catchErrorHandler } from '@/common/util';
-import bkSearcher from '@/views/deploy-manage/templateset/components/bk-searcher';
 import ace from '@/components/ace-editor';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
+import bkSearcher from '@/views/deploy-manage/templateset/components/bk-searcher';
 
 export default {
   components: {
@@ -47,8 +47,8 @@ export default {
       bkSearcherFixedSearchParams: [
         // {
         //     id: 'cluster_type',
-        //     text: this.$t('集群类型'),
-        //     list: [{ id: 1, text: this.$t('正式集群') }, { id: 2, text: this.$t('测试集群'), isSelected: true }]
+        //     text: this.$t('cluster.labels.clusterType'),
+        //     list: [{ id: 1, text: this.$t('deploy.templateset.prodCluster') }, { id: 2, text: this.$t('deploy.templateset.testCluster'), isSelected: true }]
         // }
       ],
       bkSearcherMask: false,
@@ -88,7 +88,7 @@ export default {
         content: '',
         // diff, edit
         showType: 'edit',
-        toggleStr: this.$t('查看对比'),
+        toggleStr: this.$t('deploy.templateset.viewComparison'),
       },
       updateInNotPlatformDialogConf: {
         isShow: false,
@@ -319,23 +319,23 @@ export default {
       this.bkSearcherFilterList.splice(0, this.bkSearcherFilterList.length, ...[
         {
           id: 'ns_id',
-          text: this.$t('命名空间名称'),
+          text: this.$t('deploy.templateset.namespaceName'),
         },
         {
           id: 'app_id',
-          text: this.$t('应用名称'),
+          text: this.$t('plugin.tools.appName'),
         },
         {
           id: 'app_status',
-          text: this.$t('状态'),
+          text: this.$t('generic.label.status'),
           list: [
             {
               id: 1,
-              text: this.$t('正常'),
+              text: this.$t('generic.status.ready'),
             },
             {
               id: 2,
-              text: this.$t('异常'),
+              text: this.$t('generic.status.error'),
             },
           ],
         },
@@ -345,15 +345,15 @@ export default {
       this.bkSearcherFilterList.splice(0, this.bkSearcherFilterList.length, ...[
         {
           id: 'muster_id',
-          text: this.$t('模板集名称'),
+          text: this.$t('deploy.templateset.templateSetName'),
         },
         {
           id: 'app_id',
-          text: this.$t('应用名称'),
+          text: this.$t('plugin.tools.appName'),
         },
         {
           id: 'ns_id',
-          text: this.$t('命名空间名称'),
+          text: this.$t('deploy.templateset.namespaceName'),
         },
       ]);
     }
@@ -403,23 +403,23 @@ export default {
         this.bkSearcherFilterList.splice(0, this.bkSearcherFilterList.length, ...[
           {
             id: 'ns_id',
-            text: this.$t('命名空间名称'),
+            text: this.$t('deploy.templateset.namespaceName'),
           },
           {
             id: 'app_id',
-            text: this.$t('应用名称'),
+            text: this.$t('plugin.tools.appName'),
           },
           {
             id: 'app_status',
-            text: this.$t('状态'),
+            text: this.$t('generic.label.status'),
             list: [
               {
                 id: 1,
-                text: this.$t('正常'),
+                text: this.$t('generic.status.ready'),
               },
               {
                 id: 2,
-                text: this.$t('异常'),
+                text: this.$t('generic.status.error'),
               },
             ],
           },
@@ -429,15 +429,15 @@ export default {
         this.bkSearcherFilterList.splice(0, this.bkSearcherFilterList.length, ...[
           {
             id: 'muster_id',
-            text: this.$t('模板集名称'),
+            text: this.$t('deploy.templateset.templateSetName'),
           },
           {
             id: 'app_id',
-            text: this.$t('应用名称'),
+            text: this.$t('plugin.tools.appName'),
           },
           {
             id: 'ns_id',
-            text: this.$t('命名空间名称'),
+            text: this.$t('deploy.templateset.namespaceName'),
           },
         ]);
       }
@@ -490,9 +490,9 @@ export default {
       if (this.bkSearcherFixedSearchParams.length === 0) {
         // p.push({
         //     id: 'cluster_type',
-        //     text: this.$t('集群类型'),
-        //     list: [{ id: 1, text: this.$t('正式集群'), isSelected: true }],
-        //     value: { id: 1, isSelected: true, text: this.$t('正式集群') }
+        //     text: this.$t('cluster.labels.clusterType'),
+        //     list: [{ id: 1, text: this.$t('deploy.templateset.prodCluster'), isSelected: true }],
+        //     value: { id: 1, isSelected: true, text: this.$t('deploy.templateset.prodCluster') }
         // })
       }
       const searchParamsList = [];
@@ -602,23 +602,23 @@ export default {
         this.bkSearcherFilterList.splice(0, this.bkSearcherFilterList.length, ...[
           {
             id: 'ns_id',
-            text: this.$t('命名空间名称'),
+            text: this.$t('deploy.templateset.namespaceName'),
           },
           {
             id: 'app_id',
-            text: this.$t('应用名称'),
+            text: this.$t('plugin.tools.appName'),
           },
           {
             id: 'app_status',
-            text: this.$t('状态'),
+            text: this.$t('generic.label.status'),
             list: [
               {
                 id: 1,
-                text: this.$t('正常'),
+                text: this.$t('generic.status.ready'),
               },
               {
                 id: 2,
-                text: this.$t('异常'),
+                text: this.$t('generic.status.error'),
               },
             ],
           },
@@ -628,15 +628,15 @@ export default {
         this.bkSearcherFilterList.splice(0, this.bkSearcherFilterList.length, ...[
           {
             id: 'muster_id',
-            text: this.$t('模板集名称'),
+            text: this.$t('deploy.templateset.templateSetName'),
           },
           {
             id: 'app_id',
-            text: this.$t('应用名称'),
+            text: this.$t('plugin.tools.appName'),
           },
           {
             id: 'ns_id',
-            text: this.$t('命名空间名称'),
+            text: this.$t('deploy.templateset.namespaceName'),
           },
         ]);
       }
@@ -1181,7 +1181,7 @@ export default {
       if (!this.curInstance.from_platform && this.curInstance.id === 0) {
         this.updateInNotPlatformDialogConf.isShow = true;
         this.updateInNotPlatformDialogConf.loading = true;
-        this.updateInNotPlatformDialogConf.title = this.$t('{instanceName}升级', {
+        this.updateInNotPlatformDialogConf.title = this.$t('deploy.templateset.instanceUpgrade', {
           instanceName: instance.name,
         });
 
@@ -1242,7 +1242,7 @@ export default {
       } else {
         this.updateDialogConf.isShow = true;
         this.updateDialogConf.loading = true;
-        this.updateDialogConf.title = this.$t('{instanceName}升级', {
+        this.updateDialogConf.title = this.$t('deploy.templateset.instanceUpgrade', {
           instanceName: instance.name,
         });
         this.updateDialogConf.oldVer = this.curInstance.version;
@@ -1267,7 +1267,7 @@ export default {
       const me = this;
 
       me.$bkInfo({
-        title: this.$t('确认操作'),
+        title: this.$t('deploy.templateset.confirmOperation'),
         clsName: 'biz-confirm-dialog',
         confirmLoading: true,
         content: me.$createElement('p', {
@@ -1276,7 +1276,7 @@ export default {
             fontSize: '14px',
             marginLeft: '-7px',
           },
-        }, this.$t('确定更新【{instanceName}】？', { instanceName: me.curInstance.name })),
+        }, this.$t('deploy.templateset.confirmInstanceUpdate', { instanceName: me.curInstance.name })),
         async confirmFn() {
           const params = {
             projectId: me.projectId,
@@ -1438,7 +1438,7 @@ export default {
       });
 
       me.$bkInfo({
-        title: this.$t('确认操作'),
+        title: this.$t('deploy.templateset.confirmOperation'),
         clsName: 'biz-confirm-dialog',
         confirmLoading: true,
         content: me.$createElement('p', {
@@ -1447,7 +1447,7 @@ export default {
             fontSize: '14px',
             marginLeft: '-7px',
           },
-        }, this.$t('确定更新【{instanceName}】？', { instanceName: me.curInstance.name })),
+        }, this.$t('deploy.templateset.confirmInstanceUpdate', { instanceName: me.curInstance.name })),
         async confirmFn() {
           const params = {
             projectId: me.projectId,
@@ -1617,7 +1617,7 @@ export default {
         this.rollbackPreviousDialogConf.isShow = true;
 
         setTimeout(() => {
-          this.rollbackPreviousDialogConf.title = this.$t('{instanceName}回滚上一版本', {
+          this.rollbackPreviousDialogConf.title = this.$t('deploy.templateset.rollbackPreviousVersion', {
             instanceName: instance.name,
           });
 
@@ -1671,7 +1671,7 @@ export default {
       const me = this;
 
       me.$bkInfo({
-        title: me.$t('确认操作'),
+        title: me.$t('deploy.templateset.confirmOperation'),
         clsName: 'biz-confirm-dialog',
         confirmLoading: true,
         content: me.$createElement('p', {
@@ -1681,7 +1681,7 @@ export default {
             marginLeft: '-7px',
             width: '300px',
           },
-        }, this.$t('确定回滚上一版本【{instanceName}】？', { instanceName: me.curInstance.name })),
+        }, this.$t('deploy.templateset.confirmRollbackPreviousVersion', { instanceName: me.curInstance.name })),
         async confirmFn() {
           const params = {
             projectId: me.projectId,
@@ -1728,7 +1728,7 @@ export default {
       if (!this.curInstance.from_platform && this.curInstance.id === 0) {
         this.rollingUpdateInNotPlatformDialogConf.isShow = true;
         this.rollingUpdateInNotPlatformDialogConf.loading = true;
-        this.rollingUpdateInNotPlatformDialogConf.title = this.$t('{instanceName}滚动升级', {
+        this.rollingUpdateInNotPlatformDialogConf.title = this.$t('deploy.templateset.instanceRollingUpgrade', {
           instanceName: instance.name,
         });
 
@@ -1790,7 +1790,7 @@ export default {
       } else {
         this.rollingUpdateDialogConf.isShow = true;
         this.rollingUpdateDialogConf.loading = true;
-        this.rollingUpdateDialogConf.title = this.$t('{instanceName}滚动升级', {
+        this.rollingUpdateDialogConf.title = this.$t('deploy.templateset.instanceRollingUpgrade', {
           instanceName: instance.name,
         });
         this.rollingUpdateDialogConf.oldVer = this.curInstance.version;
@@ -1817,17 +1817,17 @@ export default {
           this.bkMessageInstance = this.$bkMessage({
             theme: 'primary',
             delay: 2000,
-            message: this.$t('当前内容一致，没有差异'),
+            message: this.$t('deploy.templateset.contentNoDifference'),
           });
         } else {
           this.rollingUpdateInNotPlatformDialogConf.showType = 'diff';
-          this.rollingUpdateInNotPlatformDialogConf.toggleStr = this.$t('开始编辑');
+          this.rollingUpdateInNotPlatformDialogConf.toggleStr = this.$t('deploy.templateset.startEditing');
         }
       } else {
         this.rollingUpdateInNotPlatformDialogConf.showType = 'edit';
         this.editorConfig.value = this.editorValue;
         setTimeout(() => {
-          this.rollingUpdateInNotPlatformDialogConf.toggleStr = this.$t('查看对比');
+          this.rollingUpdateInNotPlatformDialogConf.toggleStr = this.$t('deploy.templateset.viewComparison');
 
           this.compareEditorConfig.editor.gotoLine(0, 0, true);
 
@@ -1866,7 +1866,7 @@ export default {
         this.editorConfig.value = '';
         this.editorValue = '';
         this.rollingUpdateInNotPlatformDialogConf.showType = 'edit';
-        this.rollingUpdateInNotPlatformDialogConf.toggleStr = this.$t('查看对比');
+        this.rollingUpdateInNotPlatformDialogConf.toggleStr = this.$t('deploy.templateset.viewComparison');
 
         this.cancelLoop = false;
         if (this.viewMode === 'namespace') {
@@ -1885,7 +1885,7 @@ export default {
       const me = this;
 
       me.$bkInfo({
-        title: this.$t('确认操作'),
+        title: this.$t('deploy.templateset.confirmOperation'),
         clsName: 'biz-confirm-dialog',
         confirmLoading: true,
         content: me.$createElement('p', {
@@ -1894,7 +1894,7 @@ export default {
             fontSize: '14px',
             marginLeft: '-7px',
           },
-        }, this.$t('确定滚动升级【{instanceName}】？', { instanceName: me.curInstance.name })),
+        }, this.$t('deploy.templateset.confirmRollingUpgrade', { instanceName: me.curInstance.name })),
         async confirmFn() {
           const params = {
             projectId: me.projectId,
@@ -2025,8 +2025,8 @@ export default {
          */
     getDiffChangeCount(count) {
       if (count === 0) {
-        this.rollingUpdateDialogConf && (this.rollingUpdateDialogConf.noDiffMsg = this.$t('更新版本与当前版本无差异'));
-        this.updateDialogConf && (this.updateDialogConf.noDiffMsg = this.$t('更新版本与当前版本无差异'));
+        this.rollingUpdateDialogConf && (this.rollingUpdateDialogConf.noDiffMsg = this.$t('deploy.templateset.noDifferenceInUpdatedVersion'));
+        this.updateDialogConf && (this.updateDialogConf.noDiffMsg = this.$t('deploy.templateset.noDifferenceInUpdatedVersion'));
         const diffWrapper = document.querySelector('.diff-wrapper');
         if (diffWrapper) {
           this.$nextTick(() => {
@@ -2172,7 +2172,7 @@ export default {
         me.bkMessageInstance && me.bkMessageInstance.close();
         me.bkMessageInstance = me.$bkMessage({
           theme: 'error',
-          message: this.$t('请填写实例数'),
+          message: this.$t('deploy.templateset.enterInstanceNumber'),
         });
         return;
       }
@@ -2183,7 +2183,7 @@ export default {
       });
 
       me.$bkInfo({
-        title: me.$t('确认操作'),
+        title: me.$t('deploy.templateset.confirmOperation'),
         clsName: 'biz-confirm-dialog',
         confirmLoading: true,
         content: me.$createElement('p', {
@@ -2192,7 +2192,7 @@ export default {
             fontSize: '14px',
             marginLeft: '-7px',
           },
-        }, this.$t('确定滚动升级【{instanceName}】？', { instanceName: me.curInstance.name })),
+        }, this.$t('deploy.templateset.confirmRollingUpgrade', { instanceName: me.curInstance.name })),
         async confirmFn() {
           const params = {
             projectId: me.projectId,
@@ -2250,7 +2250,7 @@ export default {
 
       const me = this;
       me.$bkInfo({
-        title: me.$t('确认操作'),
+        title: me.$t('deploy.templateset.confirmOperation'),
         clsName: 'biz-confirm-dialog',
         content: me.$createElement('p', {
           style: {
@@ -2258,7 +2258,7 @@ export default {
             fontSize: '14px',
             marginLeft: '-7px',
           },
-        }, this.$t('确定暂停滚动升级【{instanceName}】？', { instanceName: me.curInstance.name })),
+        }, this.$t('deploy.templateset.confirmPauseRollingUpgrade', { instanceName: me.curInstance.name })),
         async confirmFn() {
           const params = {
             projectId: me.projectId,
@@ -2333,7 +2333,7 @@ export default {
 
       const me = this;
       me.$bkInfo({
-        title: me.$t('确认操作'),
+        title: me.$t('deploy.templateset.confirmOperation'),
         clsName: 'biz-confirm-dialog',
         content: me.$createElement('p', {
           style: {
@@ -2341,7 +2341,7 @@ export default {
             fontSize: '14px',
             marginLeft: '-7px',
           },
-        }, this.$t('确定取消滚动升级【{instanceName}】？', { instanceName: me.curInstance.name })),
+        }, this.$t('deploy.templateset.confirmCancelRollingUpgrade', { instanceName: me.curInstance.name })),
         async confirmFn() {
           const params = {
             projectId: me.projectId,
@@ -2416,7 +2416,7 @@ export default {
 
       const me = this;
       me.$bkInfo({
-        title: me.$t('确认操作'),
+        title: me.$t('deploy.templateset.confirmOperation'),
         clsName: 'biz-confirm-dialog',
         content: me.$createElement('p', {
           style: {
@@ -2424,7 +2424,7 @@ export default {
             fontSize: '14px',
             marginLeft: '-7px',
           },
-        }, this.$t('确定恢复滚动升级【{instanceName}】？', { instanceName: me.curInstance.name })),
+        }, this.$t('deploy.templateset.confirmResumeRollingUpgrade', { instanceName: me.curInstance.name })),
         async confirmFn() {
           const params = {
             projectId: me.projectId,
@@ -2492,7 +2492,7 @@ export default {
       this.curInstance.instanceIndex = instanceIndex;
 
       this.instanceNumDialogConf.isShow = true;
-      this.instanceNumDialogConf.title = this.$t('{instanceName}扩缩容', {
+      this.instanceNumDialogConf.title = this.$t('deploy.templateset.instanceScaling', {
         instanceName: instance.name,
       });
 
@@ -2533,7 +2533,7 @@ export default {
       if (originalNum === instanceNum) {
         me.bkMessageInstance = me.$bkMessage({
           theme: 'primary',
-          message: me.$t('实例数量没有变化'),
+          message: me.$t('deploy.templateset.noInstanceQtyChange'),
           delay: 1500,
         });
         return;
@@ -2553,7 +2553,7 @@ export default {
         }
       }
       me.$bkInfo({
-        title: me.$t('确认操作'),
+        title: me.$t('deploy.templateset.confirmOperation'),
         confirmLoading: true,
         clsName: 'biz-confirm-dialog',
         content: me.$createElement('p', {
@@ -2612,7 +2612,7 @@ export default {
       this.curInstance.instanceIndex = instanceIndex;
 
       this.reBuildDialogConf.isShow = true;
-      this.reBuildDialogConf.title = this.$t('确定重建【{instanceName}】？', { instanceName: instance.name });
+      this.reBuildDialogConf.title = this.$t('deploy.templateset.confirmRebuildInstance', { instanceName: instance.name });
 
       try {
         if (!this.curInstance.from_platform && this.curInstance.id === 0) {
@@ -2750,8 +2750,8 @@ export default {
       this.curInstance.instanceIndex = instanceIndex;
 
       this.deleteDialogConf.isShow = true;
-      this.deleteDialogConf.title = this.$t('确认删除');
-      this.deleteDialogConf.content = this.$t('确定要删除【{instanceName}】？', { instanceName: instance.name });
+      this.deleteDialogConf.title = this.$t('generic.title.confirmDelete');
+      this.deleteDialogConf.content = this.$t('deploy.templateset._confirmDeleteInstance', { instanceName: instance.name });
 
       if (this.viewMode === 'namespace') {
         this.cancelLoopAppList();
@@ -2823,8 +2823,8 @@ export default {
       this.curInstance.instanceIndex = instanceIndex;
 
       this.forceDeleteDialogConf.isShow = true;
-      this.forceDeleteDialogConf.title = this.$t('确认删除');
-      this.forceDeleteDialogConf.content = this.$t('确定要强制删除【{instanceName}】？', {
+      this.forceDeleteDialogConf.title = this.$t('generic.title.confirmDelete');
+      this.forceDeleteDialogConf.content = this.$t('deploy.templateset.confirmForceDeleteInstance', {
         instanceName: instance.name,
       });
 
@@ -2905,7 +2905,7 @@ export default {
 
       const me = this;
       me.$bkInfo({
-        title: this.$t('确认操作'),
+        title: this.$t('deploy.templateset.confirmOperation'),
         clsName: 'biz-confirm-dialog',
         confirmLoading: true,
         content: me.$createElement('p', {
@@ -2914,7 +2914,7 @@ export default {
             fontSize: '14px',
             marginLeft: '-7px',
           },
-        }, this.$t('确定重新创建【{instanceName}】？', {
+        }, this.$t('deploy.templateset.confirmRecreateCommand', {
           instanceName: me.curInstance.name,
         })),
         async confirmFn() {
@@ -3045,7 +3045,7 @@ export default {
       if (!tpl.prepareDeleteInstances || !tpl.prepareDeleteInstances.length) {
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('还未选择{tmplAppName}下的实例', { tmplAppName: tpl.tmpl_app_name }),
+          message: this.$t('deploy.templateset.noSelectedInstances', { tmplAppName: tpl.tmpl_app_name }),
         });
         return;
       }
@@ -3068,9 +3068,9 @@ export default {
 
       const me = this;
       me.$bkInfo({
-        title: this.$t('确认删除'),
+        title: this.$t('generic.title.confirmDelete'),
         confirmLoading: true,
-        content: this.$t('已选择 {len} 个实例，确定全部删除？', {
+        content: this.$t('deploy.templateset.selectedInstancesToDelete', {
           len: tpl.prepareDeleteInstances.length,
         }),
         width: 360,
@@ -3092,7 +3092,7 @@ export default {
             tpl.prepareDeleteInstances.splice(0, tpl.prepareDeleteInstances.length, ...[]);
             me.$bkMessage({
               theme: 'success',
-              message: me.$t('删除任务已经下发成功，请注意状态变化'),
+              message: me.$t('deploy.templateset.deleteTaskIssued'),
             });
           } catch (e) {
             me.bkMessageInstance = me.$bkMessage({
@@ -3202,7 +3202,7 @@ export default {
       if (!namespace.prepareDeleteInstances || !namespace.prepareDeleteInstances.length) {
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('还未选择{namespaceName}下的应用', { namespaceName: namespace.name }),
+          message: this.$t('deploy.templateset.noSelectedApplications', { namespaceName: namespace.name }),
         });
         return;
       }
@@ -3210,9 +3210,9 @@ export default {
 
       const me = this;
       me.$bkInfo({
-        title: this.$t('确认删除'),
+        title: this.$t('generic.title.confirmDelete'),
         confirmLoading: true,
-        content: this.$t('已选择 {len} 个实例，确定全部删除？', {
+        content: this.$t('deploy.templateset.selectedInstancesToDelete', {
           len: namespace.prepareDeleteInstances.length,
         }),
         width: 360,
@@ -3246,7 +3246,7 @@ export default {
             namespace.prepareDeleteInstances.splice(0, namespace.prepareDeleteInstances.length, ...[]);
             me.$bkMessage({
               theme: 'success',
-              message: me.$t('删除任务已经下发成功，请注意状态变化'),
+              message: me.$t('deploy.templateset.deleteTaskIssued'),
             });
           } catch (e) {
             me.bkMessageInstance = me.$bkMessage({
@@ -3377,7 +3377,7 @@ export default {
       if (!checkedInstances || !checkedInstances.length) {
         this.bkMessageInstance = this.$bkMessage({
           theme: 'error',
-          message: this.$t('还未选择{tmplAppName}下的实例', { tmplAppName: tpl.tmpl_app_name }),
+          message: this.$t('deploy.templateset.noSelectedInstances', { tmplAppName: tpl.tmpl_app_name }),
         });
         return;
       }
@@ -3453,7 +3453,7 @@ export default {
 
         this.bkMessageInstance = this.$bkMessage({
           theme: 'success',
-          message: this.$t('任务下发成功'),
+          message: this.$t('generic.msg.success.deliveryTask'),
         });
       } catch (e) {
         console.log(e);

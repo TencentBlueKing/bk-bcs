@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/parnurzeal/gorequest"
+	"github.com/patrickmn/go-cache"
 )
 
 // CmdbInterface for cloud Tags
@@ -82,6 +83,9 @@ func NewCmdbClient(options Options) (*Client, error) {
 		bkUserName:  options.BKUserName,
 		server:      options.Server,
 		serverDebug: options.Debug,
+		// Create a cache with a default expiration time of 10 minutes, and which
+		// purges expired items every 1 hour
+		cache: cache.New(10*time.Minute, 60*time.Minute),
 	}
 
 	if !options.Enable {
@@ -127,6 +131,7 @@ type Client struct {
 	server      string
 	serverDebug bool
 	userAuth    string
+	cache       *cache.Cache
 }
 
 func (c *Client) generateGateWayAuth() (string, error) {
@@ -148,10 +153,75 @@ func (c *Client) generateGateWayAuth() (string, error) {
 	return string(userAuth), nil
 }
 
-// FetchAllHostsByBizID get allHosts by bizID
-func (c *Client) FetchAllHostsByBizID(bizID int) ([]HostData, error) {
+// FetchAllHostTopoRelationsByBizID fetch biz topo
+func (c *Client) FetchAllHostTopoRelationsByBizID(bizID int) ([]HostTopoRelation, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
+	}
+
+	hostTopo, ok := GetBizHostTopoData(c.cache, bizID)
+	if ok {
+		blog.Infof("FetchAllHostTopoRelationsByBizID hit cache by bizID[%s]", bizID)
+		return hostTopo, nil
+	}
+	blog.V(3).Infof("FetchAllHostTopoRelationsByBizID miss cache by bizID[%v]", bizID)
+
+	// get all hostTopo counts
+	counts, _, err := c.FindHostTopoRelation(bizID, Page{
+		Start: 0,
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+	blog.Infof("FetchAllHostTopoRelationsByBizID count %d by bizID %d", counts, bizID)
+	pages := splitCountToPage(counts, MaxLimits)
+	var (
+		hostTopoList = make([]HostTopoRelation, 0)
+		hostLock     = &sync.RWMutex{}
+	)
+
+	con := utils.NewRoutinePool(20)
+	defer con.Close()
+
+	for i := range pages {
+		con.Add(1)
+		go func(page Page) {
+			defer con.Done()
+			_, hostTopos, err := c.FindHostTopoRelation(bizID, page)
+			if err != nil {
+				blog.Errorf("cmdb client FindHostTopoRelation %v failed, %s", bizID, err.Error())
+				return
+			}
+			hostLock.Lock()
+			hostTopoList = append(hostTopoList, hostTopos...)
+			hostLock.Unlock()
+		}(pages[i])
+	}
+	con.Wait()
+
+	blog.Infof("FetchAllHostsByBizID successful %v", bizID)
+
+	err = SetBizHostTopoData(c.cache, bizID, hostTopoList)
+	if err != nil {
+		blog.Errorf("FetchAllHostTopoRelationsByBizID[%v] SetBizHostTopoData failed: %v", bizID, err)
+	}
+	return hostTopoList, nil
+}
+
+// FetchAllHostsByBizID get allHosts by bizID
+func (c *Client) FetchAllHostsByBizID(bizID int, cache bool) ([]HostData, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	if cache {
+		hostData, ok := GetBizHostData(c.cache, bizID)
+		if ok {
+			blog.Infof("FetchAllHostsByBizID hit cache by bizID[%s]", bizID)
+			return hostData, nil
+		}
+		blog.V(3).Infof("FetchAllHostsByBizID miss cache by bizID[%v]", bizID)
 	}
 
 	// get all host counts
@@ -192,6 +262,11 @@ func (c *Client) FetchAllHostsByBizID(bizID int) ([]HostData, error) {
 	blog.Infof("FetchAllHostsByBizID successful %v", bizID)
 	if len(hostList) == 0 {
 		return nil, fmt.Errorf("FetchAllHostsByBizID[%d] failed: imageIDList empty", bizID)
+	}
+
+	err = SetBizHostData(c.cache, bizID, hostList)
+	if err != nil {
+		blog.Errorf("FetchAllHostsByBizID[%v] SetBizHostData failed: %v", bizID, err)
 	}
 
 	return hostList, nil
@@ -239,7 +314,7 @@ func (c *Client) QueryHostInfoWithoutBiz(ips []string, page Page) ([]HostDetailD
 
 // QueryAllHostInfoWithoutBiz get all host info by ips
 func (c *Client) QueryAllHostInfoWithoutBiz(ips []string) ([]HostDetailData, error) {
-	chunk := chunkSlice(ips, MaxLimits)
+	chunk := utils.SplitStringsChunks(ips, MaxLimits)
 	list := make([]HostDetailData, 0)
 	for _, v := range chunk {
 		data, err := c.QueryHostInfoWithoutBiz(v, Page{Start: 0, Limit: MaxLimits})
@@ -249,6 +324,104 @@ func (c *Client) QueryAllHostInfoWithoutBiz(ips []string) ([]HostDetailData, err
 		list = append(list, data...)
 	}
 	return list, nil
+}
+
+// FindHostTopoRelation find host topo
+func (c *Client) FindHostTopoRelation(bizID int, page Page) (int, []HostTopoRelation, error) {
+	if c == nil {
+		return 0, nil, ErrServerNotInit
+	}
+
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/find_host_topo_relation/", c.server)
+		request = &HostTopoRelationReq{
+			Page:    page,
+			BkBizID: bizID,
+		}
+		respData = &HostTopoRelationResp{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api FindHostTopoRelation failed: %v", errs[0])
+		return 0, nil, errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api FindHostTopoRelation failed: %v", respData.Message)
+		return 0, nil, fmt.Errorf(respData.Message)
+	}
+	// successfully request
+	blog.Infof("call api FindHostTopoRelation with url(%s) successfully", reqURL)
+
+	if len(respData.Data.Data) > 0 {
+		return respData.Data.Count, respData.Data.Data, nil
+	}
+
+	return 0, nil, fmt.Errorf("call api FindHostTopoRelation failed")
+}
+
+// SearchCloudAreaByCloudID search cloudArea info by cloudID
+func (c *Client) SearchCloudAreaByCloudID(cloudID int) (*SearchCloudAreaInfo, error) {
+	cloudData, ok := GetCloudData(c.cache, cloudID)
+	if ok {
+		blog.Infof("SearchCloudAreaByCloudID hit cache by cloudID[%d]", cloudID)
+		return cloudData, nil
+	}
+	blog.V(3).Infof("SearchCloudAreaByCloudID miss cache by cloudID[%v]", cloudID)
+
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_cloud_area/", c.server)
+		request = &SearchCloudAreaRequest{
+			Page: Page{
+				Start: 0,
+				Limit: MaxLimits,
+			},
+			Condition: BuildCloudAreaCondition(cloudID),
+		}
+		respData = &SearchCloudAreaResp{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api SearchCloudAreaByCloudID failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api SearchCloudAreaByCloudID failed: %v", respData.Message)
+		return nil, fmt.Errorf(respData.Message)
+	}
+
+	// successfully request
+	blog.Infof("call api SearchCloudAreaByCloudID with url(%s) successfully", reqURL)
+
+	if len(respData.Data.Info) <= 0 {
+		return nil, fmt.Errorf("SearchCloudAreaByCloudID not exist %v", cloudID)
+	}
+
+	err := SetCloudData(c.cache, cloudID, respData.Data.Info[0])
+	if err != nil {
+		blog.Errorf("SearchCloudAreaByCloudID[%v] SetCloudData failed: %v", cloudID, err)
+	}
+
+	return respData.Data.Info[0], nil
 }
 
 // QueryHostByBizID query host by bizID
@@ -262,7 +435,7 @@ func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
 		request = &ListBizHostRequest{
 			Page:    page,
 			BKBizID: bizID,
-			Fields:  []string{fieldHostIP, fieldHostID, fieldOperator, fieldBakOperator},
+			Fields:  fieldHostIPSelectorInfo,
 		}
 		respData = &ListBizHostsResponse{}
 	)
@@ -745,7 +918,16 @@ func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
 }
 
 // ListTopology list topology
-func (c *Client) ListTopology(bizID int, filterInter bool) (*SearchBizInstTopoData, error) {
+func (c *Client) ListTopology(bizID int, filterInter bool, cache bool) (*SearchBizInstTopoData, error) {
+	if cache {
+		bizTopo, ok := GetBizTopoData(c.cache, bizID)
+		if ok {
+			blog.Infof("ListTopology hit cache by bizID[%s]", bizID)
+			return bizTopo, nil
+		}
+		blog.V(3).Infof("ListTopology miss cache by bizID[%v]", bizID)
+	}
+
 	internalModules, err := c.GetBizInternalModule(bizID)
 	if err != nil {
 		return nil, err
@@ -789,6 +971,14 @@ func (c *Client) ListTopology(bizID int, filterInter bool) (*SearchBizInstTopoDa
 
 	childs = append(childs, topo.Child...)
 	topo.Child = childs
+
+	if cache {
+		err = SetBizTopoData(c.cache, bizID, topo)
+		if err != nil {
+			blog.Errorf("ListTopology[%v] SetBizTopoData failed: %v", bizID, err)
+		}
+	}
+
 	return topo, nil
 }
 

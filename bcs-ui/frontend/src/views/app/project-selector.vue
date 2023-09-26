@@ -36,8 +36,9 @@
           class="flex items-center"
           v-bk-tooltips="{
             content: option.businessID
-              ? `${$t('项目名称')}: ${option.name}<br/>${$t('业务ID')}: ${option.businessID}`
-              : `${$t('项目名称')}: ${option.name}<br/>${$t('未启用容器服务')}`,
+              ? `${$t('projects.project.name')}:
+              ${option.name}<br/>${$t('projects.project.businessID')}: ${option.businessID}`
+              : `${$t('projects.project.name')}: ${option.name}<br/>${$t('bcs.registry.toEnable')}`,
             placement: 'left',
             boundary: 'window',
             delay: [300, 0]
@@ -46,7 +47,7 @@
           <span class="text-[#C4C6CC]" v-if="option.businessID">
             {{`(${option.businessID})`}}
           </span>
-          <bcs-tag size="small" v-else>{{ $t('未启用') }}</bcs-tag>
+          <bcs-tag size="small" v-else>{{ $t('generic.status.notEnable') }}</bcs-tag>
         </span>
       </bcs-option>
       <template #extension>
@@ -55,14 +56,14 @@
             class="text-center flex-1 cursor-pointer"
             @click="handleGotoProjectManage">
             <i class="bcs-icon bcs-icon-apps mr5"></i>
-            {{$t('项目管理')}}
+            {{$t('nav.project')}}
           </div>
           <bcs-divider direction="vertical"></bcs-divider>
           <div
             class="text-center flex-1 cursor-pointer"
             @click="handleGotoIAM">
             <i class="bcs-icon bcs-icon-apps mr5"></i>
-            {{$t('申请权限')}}
+            {{$t('iam.button.apply2')}}
           </div>
         </div>
       </template>
@@ -71,13 +72,15 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, onBeforeMount, computed, watch, onMounted } from 'vue';
-import ProjectCreate from '@/views/project-manage/project/project-create.vue';
-import $router from '@/router';
-import $store from '@/store';
+import { computed, defineComponent, onBeforeMount, onMounted, ref, watch } from 'vue';
+
 import useProjects, { IProjectPerm } from '../project-manage/project/use-project';
+
 import { IProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
+import $router from '@/router';
+import $store from '@/store';
+import ProjectCreate from '@/views/project-manage/project/project-create.vue';
 
 export default defineComponent({
   name: 'ProjectSelector',
@@ -93,7 +96,7 @@ export default defineComponent({
 
     const projectList = ref<IProject[]>([]);
     const perms = ref<Record<string, IProjectPerm>>({});
-    const projectName = computed(() => $store.state.curProject?.name);
+    const projectName = computed(() => $store.state.curProject?.name || $router.currentRoute?.params?.projectCode);
     const projectCodeMap = computed(() => projectList.value.reduce((pre, item) => {
       pre[item.projectCode] = item;
       return pre;

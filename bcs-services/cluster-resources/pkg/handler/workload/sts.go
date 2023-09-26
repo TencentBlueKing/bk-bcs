@@ -22,7 +22,9 @@ import (
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
+	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -104,4 +106,36 @@ func (h *Handler) DeleteSTS(
 	return resAction.NewResMgr(req.ClusterID, "", resCsts.STS).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
+}
+
+// RestartSTS 重新调度 StatefulSet
+func (h *Handler) RestartSTS(
+	ctx context.Context, req *clusterRes.ResRestartReq, resp *clusterRes.CommonResp,
+) (err error) {
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.STS).Restart(
+		ctx, req.Namespace, req.Name, metav1.PatchOptions{FieldManager: "kubectl-rollout"},
+	)
+	return err
+}
+
+// GetSTSHistoryRevision 获取StatefulSet history revision
+func (h *Handler) GetSTSHistoryRevision(ctx context.Context, req *clusterRes.GetDeployHistoryRevisionReq,
+	resp *clusterRes.CommonResp) error {
+
+	// 根据deployment name namespace筛选
+	ret, err := cli.NewRSCliByClusterID(ctx, req.ClusterID).GetResHistoryRevision(
+		ctx, req.Name, req.Namespace, resCsts.STS, resCsts.STSChangeCause)
+
+	if err != nil {
+		return err
+	}
+	resp.Data, err = pbstruct.Map2pbStruct(ret)
+	return err
+}
+
+// RolloutSTSRevision 回滚StatefulSet history revision
+func (h *Handler) RolloutSTSRevision(ctx context.Context, req *clusterRes.RolloutDeployRevisionReq,
+	_ *clusterRes.CommonResp) error {
+	return cli.NewRSCliByClusterID(ctx, req.ClusterID).RolloutResRevision(
+		ctx, req.Namespace, req.Revision, req.Name, resCsts.STS)
 }

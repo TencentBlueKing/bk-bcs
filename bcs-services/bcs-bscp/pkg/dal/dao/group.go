@@ -1,14 +1,14 @@
 /*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package dao
 
@@ -19,7 +19,6 @@ import (
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
 	"bscp.io/pkg/types"
 )
 
@@ -102,21 +101,16 @@ func (dao *groupDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Group)
 	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
 
-	updateTx := func(tx *gen.Query) error {
-		q := tx.Group.WithContext(kit.Ctx)
-		if err = q.Save(g); err != nil {
-			return err
-		}
-
-		if err = ad.Do(tx); err != nil {
-			return fmt.Errorf("audit update group failed, err: %v", err)
-		}
-		return nil
+	_, err = m.WithContext(kit.Ctx).
+		Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).
+		Select(m.Name, m.Public, m.Selector, m.UID, m.Reviser).
+		Updates(g)
+	if err != nil {
+		return err
 	}
 
-	if err = dao.genQ.Transaction(updateTx); err != nil {
-		logs.Errorf("update group: %d failed, err: %v, rid: %v", g.ID, err, kit.Rid)
-		return err
+	if err = ad.Do(tx.Query); err != nil {
+		return fmt.Errorf("audit update group failed, err: %v", err)
 	}
 	return nil
 }
@@ -199,8 +193,8 @@ func (dao *groupDao) ListAppGroups(kit *kit.Kit, bizID, appID uint32) ([]*table.
 
 	subQuery := gabQ.Select(gabM.GroupID).Where(gabM.BizID.Eq(bizID), gabM.AppID.Eq(appID))
 	return groupQ.
-		Where(groupM.BizID.Eq(bizID)).
-		Where(groupQ.Columns(groupM.ID).In(subQuery)).Or(groupM.Public.Is(true)).
+		Where(groupM.BizID.Eq(bizID)).Where(
+		groupQ.Where(groupQ.Columns(groupM.ID).In(subQuery)).Or(groupM.Public.Is(true))).
 		Find()
 }
 

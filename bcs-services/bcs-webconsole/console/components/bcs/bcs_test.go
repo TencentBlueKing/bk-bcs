@@ -8,22 +8,21 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bcs
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
 
 func initConf() {
@@ -38,7 +37,7 @@ func initConf() {
 	}
 
 	// 初始化BCS配置
-	bcsConfContentYaml, err := ioutil.ReadFile("./etc/config_dev.yaml")
+	bcsConfContentYaml, err := os.ReadFile("./etc/config_dev.yaml")
 	if err != nil {
 		panic(err)
 	}
