@@ -21,6 +21,8 @@ import (
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,17 +39,25 @@ type NodeCache struct {
 	k8sClient         client.Client
 	nodeClient        cloudnode.NodeClient
 
+	nodeExternalWorkerEnable  bool
+	nodeExternalIPConfigmap   string
+	nodeExternalIPConfigmapNs string
+
 	sync.Mutex
 }
 
 // NewNodeCache return new NodeCache
-func NewNodeCache(k8sClient client.Client, nodeClient cloudnode.NodeClient) *NodeCache {
+func NewNodeCache(k8sClient client.Client, nodeClient cloudnode.NodeClient, nodeExternalWorkerEnable bool,
+	nodeExternalIPConfigmap, nodeExternalIPConfigmapNs string) *NodeCache {
 	cache := &NodeCache{
-		nodeInfoMapByName: &sync.Map{},
-		nodeInfoMapByIP:   &sync.Map{},
-		isInit:            false,
-		k8sClient:         k8sClient,
-		nodeClient:        nodeClient,
+		nodeInfoMapByName:         &sync.Map{},
+		nodeInfoMapByIP:           &sync.Map{},
+		nodeExternalWorkerEnable:  nodeExternalWorkerEnable,
+		nodeExternalIPConfigmap:   nodeExternalIPConfigmap,
+		nodeExternalIPConfigmapNs: nodeExternalIPConfigmapNs,
+		isInit:                    false,
+		k8sClient:                 k8sClient,
+		nodeClient:                nodeClient,
 	}
 	go func() {
 		timeTicker := time.NewTicker(time.Second * 5)
@@ -58,6 +68,7 @@ func NewNodeCache(k8sClient client.Client, nodeClient cloudnode.NodeClient) *Nod
 					blog.V(4).Infof("node cache info: %v %v", key, value)
 					return true
 				})
+				cache.loadNodeInfoFromConfigmap()
 			}
 		}
 	}()
@@ -72,7 +83,9 @@ func (n *NodeCache) SetNodeIps(node corev1.Node, nodeIPs []string) {
 		err = errors.Wrapf(err, "init node cache failed")
 		blog.Errorf("%s", err.Error())
 	}
-
+	if len(nodeIPs) == 0 {
+		return
+	}
 	n.nodeInfoMapByName.Store(node.GetName(), nodeIPs)
 	n.nodeInfoMapByIP.Store(getNodeInternalIP(node), nodeIPs)
 }
@@ -161,6 +174,45 @@ func (n *NodeCache) checkInit() error {
 		}
 	}
 	return nil
+}
+
+func (n *NodeCache) loadNodeInfoFromConfigmap() {
+	cm := &corev1.ConfigMap{}
+	if err := n.k8sClient.Get(context.Background(), k8stypes.NamespacedName{
+		Namespace: n.nodeExternalIPConfigmapNs,
+		Name:      n.nodeExternalIPConfigmap,
+	}, cm); err != nil {
+		if k8serrors.IsNotFound(err) {
+			blog.V(4).Infof("not found external ip configmap[%s/%s]", n.nodeExternalIPConfigmapNs,
+				n.nodeExternalIPConfigmap)
+			return
+		}
+
+		blog.Errorf("get configmap '%s/%s' failed, err: %s", n.nodeExternalIPConfigmapNs,
+			n.nodeExternalIPConfigmap, err.Error())
+		return
+	}
+
+	for nodeName, externalIP := range cm.Data {
+		node := &corev1.Node{}
+		if err := n.k8sClient.Get(context.Background(), k8stypes.NamespacedName{Name: nodeName},
+			node); err != nil {
+			blog.Errorf("get node '%s' failed, err: %s", err.Error())
+			continue
+		}
+
+		externalIPList, err := n.nodeClient.GetNodeExternalIpList(node)
+		if err != nil {
+			blog.Errorf("GetNodeExternalIpList '%s' failed, err: %s", nodeName, err.Error())
+			// 仅当获取节点公网IP失败时， 使用探测到的公网IP
+			n.SetNodeIps(*node, []string{externalIP})
+			continue
+		}
+		if len(externalIPList) == 0 {
+			// 仅当获取节点公网IP失败时， 使用探测到的公网IP
+			n.SetNodeIps(*node, []string{externalIP})
+		}
+	}
 }
 
 func getNodeInternalIP(node corev1.Node) string {
