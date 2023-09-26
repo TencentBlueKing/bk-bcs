@@ -13,6 +13,7 @@
   import PackageEdit from './package-edit.vue';
   import PackageClone from './package-clone.vue';
   import PackageDelete from './package-delete.vue';
+  import TableEmpty from '../../../../../components/table/table-empty.vue';
 
   const router = useRouter()
   const { spaceId } = storeToRefs(useGlobalStore())
@@ -29,6 +30,7 @@
   const packages = ref<ITemplatePackageItem[]>([]) // 全部套餐列表
   const menuList = ref<IPackageMenuItem[]>([]) // 展示到菜单栏的套餐列表，处理搜索场景
   const searchStr = ref('')
+  const isSearchEmpty = ref(false)
   const isCreatePackageDialogShow = ref(false)
   const editingPkgData = ref<{ open: boolean; data: ITemplatePackageItem|undefined }>({
     open: false,
@@ -137,6 +139,7 @@
 
   const handleSearch = () => {
     let result: ITemplatePackageItem[] = []
+    searchStr.value ? isSearchEmpty.value = true : isSearchEmpty.value = false
     if (searchStr.value) {
       result = packages.value.filter(item => {
         return item.spec.name.toLowerCase().includes(searchStr.value.toLowerCase())
@@ -204,6 +207,10 @@
     router.push({ name: 'templates-list', params: { templateSpaceId: currentTemplateSpace.value, packageId: id } })
   }
 
+  const clearSearch = () => {
+    searchStr.value = ''
+    handleSearch()
+  }
 </script>
 <template>
   <div class="package-list-comp">
@@ -227,8 +234,7 @@
         @delete="handlePkgAction" />
     </div>
     <div v-else class="exception-notice">
-      <bk-exception v-if="!searchStr" type="search-empty" scene="part">暂无套餐</bk-exception>
-      <bk-exception v-else type="empty" scene="part">搜索结果为空</bk-exception>
+      <TableEmpty :isSearchEmpty="isSearchEmpty" @clear="clearSearch"></TableEmpty>
     </div>
     <div class="other-package-list">
       <PackageItem :pkg="MenuItemOfallConfigList" :current-pkg="currentPkg" @select="handleSelect">
