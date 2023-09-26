@@ -75,8 +75,8 @@ func (dao *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, erro
 		return dao.publish(kit, tx, opt, groups)
 	}()
 	if err != nil {
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("rollback publish transaction failed, err: %v, rid: %s", err, kit.Rid)
+		if e := tx.Rollback(); e != nil {
+			logs.Errorf("rollback publish transaction failed, err: %v, rid: %s", e, kit.Rid)
 			return 0, err
 		}
 		return 0, err
