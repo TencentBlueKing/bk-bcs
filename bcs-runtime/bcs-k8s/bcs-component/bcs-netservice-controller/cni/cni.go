@@ -32,6 +32,7 @@ import (
 	cnitypes "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/cni/types"
 )
 
+// NetConf cni config
 type NetConf struct {
 	types.NetConf
 

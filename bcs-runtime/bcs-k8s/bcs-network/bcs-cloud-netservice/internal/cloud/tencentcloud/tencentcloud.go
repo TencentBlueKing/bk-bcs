@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package tencentcloud is is implementation for tencentcloud cloud
 package tencentcloud
 
 import (

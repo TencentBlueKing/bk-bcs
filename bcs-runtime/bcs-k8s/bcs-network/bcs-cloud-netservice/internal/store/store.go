@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package store is storage for cloud netservice
 package store
 
 import (

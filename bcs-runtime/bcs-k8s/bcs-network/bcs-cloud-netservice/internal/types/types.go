@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package types is types for cloud netservice
 package types
 
 import (
