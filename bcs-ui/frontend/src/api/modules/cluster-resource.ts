@@ -33,3 +33,7 @@ export const batchReschedulePod = request('put', '/namespaces/$namespace/workloa
 export const pvcMountInfo = request('get', '/namespaces/$namespace/storages/persistent_volume_claims/$pvcID/mount_info');
 export const getNetworksEndpointsFlag = request('get', '/namespaces/$namespaces/networks/endpoints/$name/status');
 export const getReplicasets = request('get', '/namespaces/$namespaceId/workloads/replicasets');// 获取deployment下rs资源
+export const restartWorkloads = request('put', '/namespaces/$namespaceId/workloads/$category/$name/restart');// 滚动重启
+export const workloadHistory = request('get', '/namespaces/$namespaceId/workloads/$category/$name/history');// 工作负载历史
+export const rollbackWorkload = request('put', '/namespaces/$namespaceId/workloads/$category/$name/rollout/$revision');// 回滚
+export const revisionDetail = request('get', '/namespaces/$namespaceId/workloads/$category/$name/revisions/$revision');// 版本详情

@@ -5,11 +5,13 @@ import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import usePage from '../../../composables/use-page';
 import { useSelectItemsNamespace } from '../namespace/use-namespace';
+import Rollback from '../workload/rollback.vue';
 
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
 import useTableData from './use-table-data';
 
 import './base-layout.css';
+import { restartWorkloads } from '@/api/modules/cluster-resource';
 import $bkMessage from '@/common/bkmagic';
 import { CUR_SELECT_CRD } from '@/common/constant';
 import { padIPv6 } from '@/common/util';
@@ -158,6 +160,7 @@ export default defineComponent({
       creating: $i18n.t('generic.status.creating'),
       updating: $i18n.t('generic.status.updating'),
       deleting: $i18n.t('generic.status.deleting'),
+      restarting: $i18n.t('generic.status.restarting'),
     };
     const statusFilters = computed(() => Object.keys(statusMap).map(key => ({
       text: statusMap[key],
@@ -499,6 +502,67 @@ export default defineComponent({
       });
     };
 
+    // 更新记录
+    const handleGotoUpdateRecord = (row) => {
+      const { name, namespace } = row.metadata || {};
+      $router.push({
+        name: 'workloadRecord',
+        params: {
+          name,
+          namespace,
+          category: category.value,
+          clusterId: clusterId.value,
+        },
+        query: {
+          kind: type.value === 'crd' ? kind.value : row.kind,
+        },
+      });
+    };
+    // 回滚
+    const showRollbackSideslider = ref(false);
+    const curRow = ref({
+      metadata: {
+        name: '',
+        namespace: '',
+      },
+    });
+    const handleRollback = (row) => {
+      curRow.value = row;
+      showRollbackSideslider.value = true;
+    };
+    const handleRollbackSidesilderHide = () => {
+      showRollbackSideslider.value = false;
+    };
+
+    // 滚动重启
+    const handleRestart = (row, actionName: string) => {
+      const { name, namespace } = row.metadata || {};
+      $bkInfo({
+        type: 'warning',
+        clsName: 'custom-info-confirm',
+        title: $i18n.t('dashboard.title.confirmSchedule', { action: actionName ||  $i18n.t('dashboard.workload.button.restart') }),
+        subTitle: `${row.kind} ${name}`,
+        defaultInfo: true,
+        confirmFn: async () => {
+          const result = await restartWorkloads({
+            $namespaceId: namespace,
+            $type: type.value,
+            $category: category.value,
+            $clusterId: clusterId.value,
+            $name: name,
+          }).then(() => true)
+            .catch(() => false);
+          if (result) {
+            $bkMessage({
+              theme: 'success',
+              message: $i18n.t('generic.msg.success.restart'),
+            });
+            handleGetTableData();
+          }
+        },
+      });
+    };
+
     onMounted(async () => {
       isLoading.value = true;
       const list: Promise<any>[] = [];
@@ -572,6 +636,13 @@ export default defineComponent({
       statusFilters,
       statusFilterMethod,
       handleClearSearchData,
+      handleGotoUpdateRecord,
+      handleRestart,
+      showRollbackSideslider,
+      curRow,
+      clusterId,
+      handleRollback,
+      handleRollbackSidesilderHide,
     };
   },
   render() {
@@ -719,6 +790,9 @@ export default defineComponent({
                 statusFilterMethod: this.statusFilterMethod,
                 nameValue: this.nameValue,
                 handleClearSearchData: this.handleClearSearchData,
+                handleGotoUpdateRecord: this.handleGotoUpdateRecord,
+                handleRestart: this.handleRestart,
+                handleRollback: this.handleRollback,
               })
           }
         </div>
@@ -782,6 +856,16 @@ export default defineComponent({
             <bk-input v-model={this.replicas} type="number" class="ml10" style="flex: 1;" min={0}></bk-input>
           </span>
         </bcs-dialog>
+        <Rollback
+          name={this.curRow.metadata.name}
+          namespace={this.curRow.metadata.namespace}
+          category={this.category}
+          cluster-id={this.clusterId}
+          revision={''}
+          value={this.showRollbackSideslider}
+          rollback={true}
+          on-hidden={this.handleRollbackSidesilderHide}
+          on-rollback-success={this.handleRollbackSidesilderHide}/>
       </div>
     );
   },

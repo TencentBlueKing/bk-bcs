@@ -9,6 +9,8 @@
   }
 
   .bcs-icon-more-btn {
+    position: relative;
+    top: 1px;
     font-size: 18px;
     font-weight: bold;
     width: 24px;
