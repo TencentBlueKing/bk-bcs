@@ -21,7 +21,6 @@ import (
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -195,7 +194,7 @@ func (dao *appTemplateBindingDao) Delete(kit *kit.Kit, g *table.AppTemplateBindi
 	// 多个使用事务处理
 	deleteTx := func(tx *gen.Query) error {
 		q = tx.AppTemplateBinding.WithContext(kit.Ctx)
-		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
+		if _, err = q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
 			return err
 		}
 
@@ -221,23 +220,6 @@ func (dao *appTemplateBindingDao) validateAttachmentExist(kit *kit.Kit, am *tabl
 			return fmt.Errorf("template attached app %d is not exist", am.AppID)
 		}
 		return fmt.Errorf("get template attached app failed, err: %v", err)
-	}
-
-	return nil
-}
-
-// validateTemplateSetsExist validate if all app template bindings resource exists before operating app template binding
-func (dao *appTemplateBindingDao) validateTemplateSetsExist(kit *kit.Kit, templateSetIDs []uint32) error {
-	m := dao.genQ.TemplateSet
-	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
-	var existIDs []uint32
-	if err := q.Where(m.ID.In(templateSetIDs...)).Pluck(m.ID, &existIDs); err != nil {
-		return fmt.Errorf("validate template sets exist failed, err: %v", err)
-	}
-
-	diffIDs := tools.SliceDiff(templateSetIDs, existIDs)
-	if len(diffIDs) > 0 {
-		return fmt.Errorf("template set id in %v is not exist", diffIDs)
 	}
 
 	return nil

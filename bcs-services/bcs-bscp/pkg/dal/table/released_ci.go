@@ -83,6 +83,7 @@ func (r *ReleasedConfigItem) ResType() string {
 	return "released_config_item"
 }
 
+// RciList is released config items
 type RciList []*ReleasedConfigItem
 
 // AppID AuditRes interface
@@ -132,7 +133,9 @@ func (r *ReleasedConfigItem) Validate() error {
 		}
 	} else {
 		// for rendered template config item, need to validate content signature
-		r.CommitSpec.Content.Validate()
+		if err := r.CommitSpec.Content.Validate(); err != nil {
+			return err
+		}
 	}
 
 	if r.ConfigItemSpec == nil {

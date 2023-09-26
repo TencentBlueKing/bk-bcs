@@ -56,17 +56,17 @@ type ConfigItem struct {
 }
 
 // AppID AuditRes interface
-func (s *ConfigItem) AppID() uint32 {
+func (c *ConfigItem) AppID() uint32 {
 	return 0
 }
 
 // ResID AuditRes interface
-func (s *ConfigItem) ResID() uint32 {
-	return s.ID
+func (c *ConfigItem) ResID() uint32 {
+	return c.ID
 }
 
 // ResType AuditRes interface
-func (s *ConfigItem) ResType() string {
+func (c *ConfigItem) ResType() string {
 	return "config_item"
 }
 

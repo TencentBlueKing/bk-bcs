@@ -35,7 +35,8 @@ type Template interface {
 	// Update one template's info.
 	Update(kit *kit.Kit, template *table.Template) error
 	// List templates with options.
-	List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) ([]*table.Template, int64, error)
+	List(kit *kit.Kit, bizID, templateSpaceID uint32, s search.Searcher, opt *types.BasePage) ([]*table.Template, int64,
+		error)
 	// Delete one template instance.
 	Delete(kit *kit.Kit, template *table.Template) error
 	// DeleteWithTx delete one template instance with transaction.

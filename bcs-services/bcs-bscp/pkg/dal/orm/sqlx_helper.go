@@ -10,6 +10,9 @@
  * limitations under the License.
  */
 
+// Package orm NOTES
+//
+//nolint:all // This legacy package is complex and not be used now, so don't lint it
 package orm
 
 import (
