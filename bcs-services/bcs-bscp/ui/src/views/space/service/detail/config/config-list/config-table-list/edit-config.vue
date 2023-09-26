@@ -3,7 +3,7 @@
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue';
   import ConfigForm from './config-form.vue'
-  import { getConfigItemDetail, getReleasedConfigItemDetail, updateConfigContent, getConfigContent, updateServiceConfigItem } from '../../../../../../../api/config'
+  import { getConfigItemDetail, getReleasedConfigItemDetail, updateConfigContent, downloadConfigContent, updateServiceConfigItem } from '../../../../../../../api/config'
   import { getConfigEditParams } from '../../../../../../../utils/config'
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config'
   import { useConfigStore } from '../../../../../../../store/config'
@@ -61,7 +61,7 @@
       if (file_type === 'binary') {
         content.value = { name, signature, size: byte_size }
       } else {
-        const configContent = await getConfigContent(props.bkBizId, props.appId, signature)
+        const configContent = await downloadConfigContent(props.bkBizId, props.appId, signature)
         content.value = String(configContent)
       }
     } catch (e) {
@@ -136,7 +136,7 @@
             :content="content"
             :editable="true"
             :bk-biz-id="props.bkBizId"
-            :app-id="props.appId"
+            :id="props.appId"
             @change="handleChange" />
         </bk-loading>
         <section class="action-btns">

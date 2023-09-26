@@ -11,8 +11,8 @@ export const CONFIG_STATUS_MAP = {
   },
   'DELETE': {
     text: '删除',
-    color: '#feebea',
-    bgColor: '#ea3536'
+    color: '#ea3536',
+    bgColor: '#feebea'
   },
   'REVISE': {
     text: '修改',

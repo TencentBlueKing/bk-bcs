@@ -7,6 +7,7 @@
   import { useTemplateStore } from '../../../../../../../store/template'
   import { IPackagesCitedByApps } from '../../../../../../../../types/template'
   import { getPackagesByTemplateIds, getUnNamedVersionAppsBoundByPackages, moveOutTemplateFromPackage } from '../../../../../../../api/template'
+import List from '../../../../version-manage/version-detail/list.vue';
 
   interface ICitedItem {
     id: number;
@@ -72,6 +73,8 @@
 
     if (typeof props.currentPkg === 'number') {
       selectedPkgs.value = [props.currentPkg]
+    } else if (props.currentPkg === 'all' && citedList.value.length === 1) {
+      selectedPkgs.value = [citedList.value[0].id]
     }
 
     loading.value = false
