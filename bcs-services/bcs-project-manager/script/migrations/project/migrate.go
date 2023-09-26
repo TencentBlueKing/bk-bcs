@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -17,6 +15,7 @@
 允许重复执行
 */
 
+// Package main project
 package main
 
 import (
@@ -98,11 +97,7 @@ func main() {
 		return
 	}
 
-	ccProjects, err := fetchBCSCCData()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+	ccProjects := fetchBCSCCData()
 	var totalCount, insertCount, updateCount int
 	fmt.Printf("total projects length in cc: %d\n", len(ccProjects))
 	projects, _, err := model.ListProjects(context.Background(), operator.EmptyCondition, &page.Pagination{All: true})
@@ -201,11 +196,11 @@ func initDB() error {
 
 // fetchBCSCCData xxx
 // bcs cc 中查询数据
-func fetchBCSCCData() ([]BCSCCProjectData, error) {
+func fetchBCSCCData() []BCSCCProjectData {
 	// 读取数据
 	var p []BCSCCProjectData
 	ccdb.Table(mysqlTableName).Select("*").Scan(&p)
-	return p, nil
+	return p
 }
 
 // upsertInitProject 初始化集群配置，项目ID / Code 固定
