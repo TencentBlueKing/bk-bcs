@@ -85,7 +85,7 @@
           新服务中使用
         </div>
       </template>
-      <bk-option v-for="app in unBoundApps" :key="app.id" :id="app.id">
+      <bk-option v-for="app in unBoundApps" :key="app.id" :id="app.id" :label="app.spec.name">
         <div class="app-option" @click.stop>
           <div class="name-text">{{ app.spec.name }}</div>
           <LinkToApp class="link-icon" :id="(app.id as number)" @custom-click="goToConfigPageImport(app.id as number)" />

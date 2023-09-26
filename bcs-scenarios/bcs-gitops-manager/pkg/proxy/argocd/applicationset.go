@@ -23,6 +23,7 @@ import (
 	"strconv"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
@@ -53,11 +54,11 @@ func (plugin *ApplicationSetPlugin) CreateOrUpdate(ctx context.Context, r *http.
 	if err != nil {
 		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "read body failed"))
 	}
-	appset := &applicationset.ApplicationSetCreateRequest{}
+	appset := &v1alpha1.ApplicationSet{}
 	if err = json.Unmarshal(body, appset); err != nil {
 		return mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "unmarshal body failed"))
 	}
-	statusCode, err := plugin.middleware.CheckCreateApplicationSet(ctx, appset.Applicationset)
+	statusCode, err := plugin.middleware.CheckCreateApplicationSet(ctx, appset)
 	if err != nil {
 		return mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check create applicationset failed"))
 	}

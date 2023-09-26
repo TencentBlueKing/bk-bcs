@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package repository xxx
 package repository
 
 import (
@@ -35,11 +35,11 @@ type cosStorage struct {
 func (c *cosStorage) UploadFile(ctx context.Context, localFile, filePath string) error {
 	f, err := os.Open(localFile)
 	if err != nil {
-		return fmt.Errorf("Open local file %s failed: %v\n", localFile, err)
+		return fmt.Errorf("open local file %s failed: %v", localFile, err)
 	}
 	_, err = c.client.Object.Put(ctx, filePath, f, nil)
 	if err != nil {
-		return fmt.Errorf("Upload file failed: %v\n", err)
+		return fmt.Errorf("upload file failed: %v", err)
 	}
 
 	return nil
@@ -49,7 +49,7 @@ func (c *cosStorage) UploadFile(ctx context.Context, localFile, filePath string)
 func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]string, error) {
 	var marker string
 	folderName = strings.Trim(folderName, "/")
-	folderName = folderName + "/"
+	folderName += "/"
 	opt := &cos.BucketGetOptions{
 		Prefix:    folderName, // 表示要查询的文件夹
 		Delimiter: "/",        // 表示分隔符,设置为/表示列出当前目录下的 object, 设置为空表示列出所有的 object(包括子目录文件)
@@ -62,9 +62,9 @@ func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]string,
 		opt.Marker = marker
 		v, _, err := c.client.Bucket.Get(ctx, opt)
 		if err != nil {
-			return files, fmt.Errorf("List file failed: %v\n", err)
+			return files, fmt.Errorf("list file failed: %v", err)
 		}
-		if len(v.Contents) <= 0 {
+		if len(v.Contents) == 0 {
 			return files, fmt.Errorf("folder %s is not exit", folderName)
 		}
 		for _, content := range v.Contents {
@@ -81,7 +81,7 @@ func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]string,
 func (c *cosStorage) ListFolders(ctx context.Context, folderName string) ([]string, error) {
 	var marker string
 	folderName = strings.Trim(folderName, "/")
-	folderName = folderName + "/"
+	folderName += "/"
 	opt := &cos.BucketGetOptions{
 		Prefix:    folderName, // 表示要查询的文件夹
 		Delimiter: "/",        // 表示分隔符,设置为/表示列出当前目录下的 object, 设置为空表示列出所有的 object(包括子目录文件)
@@ -94,12 +94,13 @@ func (c *cosStorage) ListFolders(ctx context.Context, folderName string) ([]stri
 		opt.Marker = marker
 		v, _, err := c.client.Bucket.Get(ctx, opt)
 		if err != nil {
-			return folders, fmt.Errorf("List file failed: %v\n", err)
+			return folders, fmt.Errorf("list file failed: %v", err)
 		}
-		if len(v.Contents) <= 0 {
+		if len(v.Contents) == 0 {
 			return folders, fmt.Errorf("folder %s is not exit", folderName)
 		}
 		// common prefix 表示表示被 delimiter 截断的路径, 如 delimter 设置为/, common prefix 则表示所有子目录的路径
+		// nolint
 		for _, commonPrefixe := range v.CommonPrefixes {
 			folders = append(folders, commonPrefixe)
 		}

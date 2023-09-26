@@ -300,12 +300,12 @@
         <bk-input v-model="localVal.user_group" :disabled="!editable" @change="change"></bk-input>
       </bk-form-item>
     </div>
-    <bk-form-item v-if="localVal.file_type === 'binary'" label="配置内容">
+    <bk-form-item v-if="localVal.file_type === 'binary'" label="配置内容"  :required="true">
       <bk-upload
         class="config-uploader"
         url=""
         theme="button"
-        tip="支持扩展名：.bin，文件大小100M以内"
+        tip="文件大小100M以内"
         :size="100"
         :disabled="!editable"
         :multiple="false"
@@ -321,7 +321,7 @@
         </template>
       </bk-upload>
     </bk-form-item>
-    <bk-form-item v-else label="配置内容" :required="true">
+    <bk-form-item v-else label="配置内容">
       <ConfigContentEditor
         :content="stringContent"
         :editable="editable"

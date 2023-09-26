@@ -7860,6 +7860,10 @@ spec:
                       type: string
                   type: object
                 type: array
+              currentRevision:
+                description: currentRevision, if not empty, indicates the version
+                  of the GameDeployment used to generate Pods in partition
+                type: string
               currentStepHash:
                 type: string
               currentStepIndex:

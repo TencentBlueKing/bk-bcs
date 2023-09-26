@@ -23,6 +23,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbatb "bscp.io/pkg/protocol/core/app-template-binding"
+	pbtset "bscp.io/pkg/protocol/core/template-set"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/tools"
 )
@@ -228,33 +229,11 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		return nil, err
 	}
 
-	// list the all the template set and template relation for the app so that to get all the template set group
-	// including empty template set group
-	atbReq := &pbds.ListAppTemplateBindingsReq{
-		BizId: req.BizId,
-		AppId: req.AppId,
-		All:   true,
-	}
-
-	atbRsp, err := s.client.DS.ListAppTemplateBindings(grpcKit.RpcCtx(), atbReq)
+	tmplSetInfo, err := s.getAllAppTmplSets(grpcKit, req.BizId, req.AppId)
 	if err != nil {
-		logs.Errorf("list app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("get all app template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
-	if len(atbRsp.Details) == 0 {
-		return &pbcs.ListAppBoundTmplRevisionsResp{
-			Details: []*pbatb.AppBoundTmplRevisionGroupBySet{},
-		}, nil
-	}
-	tmplSetIDs := make([]uint32, 0)
-	for _, b := range atbRsp.Details[0].Spec.Bindings {
-		tmplSetIDs = append(tmplSetIDs, b.TemplateSetId)
-	}
-
-	var tsbRsp *pbds.ListTemplateSetBriefInfoByIDsResp
-	tsbRsp, err = s.client.DS.ListTemplateSetBriefInfoByIDs(grpcKit.RpcCtx(), &pbds.ListTemplateSetBriefInfoByIDsReq{
-		Ids: tmplSetIDs,
-	})
 
 	r := &pbds.ListAppBoundTmplRevisionsReq{
 		BizId:        req.BizId,
@@ -268,7 +247,7 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 	var rp *pbds.ListAppBoundTmplRevisionsResp
 	rp, err = s.client.DS.ListAppBoundTmplRevisions(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -279,15 +258,15 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 	}
 
 	details := make([]*pbatb.AppBoundTmplRevisionGroupBySet, 0)
-	for _, tsb := range tsbRsp.Details {
+	for _, tmplSet := range tmplSetInfo {
 		group := &pbatb.AppBoundTmplRevisionGroupBySet{
-			TemplateSpaceId:   tsb.TemplateSpaceId,
-			TemplateSpaceName: tsb.TemplateSpaceName,
-			TemplateSetId:     tsb.TemplateSetId,
-			TemplateSetName:   tsb.TemplateSetName,
+			TemplateSpaceId:   tmplSet.TemplateSpaceId,
+			TemplateSpaceName: tmplSet.TemplateSpaceName,
+			TemplateSetId:     tmplSet.TemplateSetId,
+			TemplateSetName:   tmplSet.TemplateSetName,
 		}
 
-		revisions := tmplSetMap[tsb.TemplateSetId]
+		revisions := tmplSetMap[tmplSet.TemplateSetId]
 		for _, r := range revisions {
 			group.TemplateRevisions = append(group.TemplateRevisions,
 				&pbatb.AppBoundTmplRevisionGroupBySetTemplateRevisionDetail{
@@ -320,6 +299,39 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbcs.ListA
 		Details: details,
 	}
 	return resp, nil
+}
+
+// getAllAppTmplSets get all the template sets for the app, including empty template set which has not templates
+func (s *Service) getAllAppTmplSets(grpcKit *kit.Kit, bizID, appID uint32) ([]*pbtset.TemplateSetBriefInfo, error) {
+	atbReq := &pbds.ListAppTemplateBindingsReq{
+		BizId: bizID,
+		AppId: appID,
+		All:   true,
+	}
+
+	atbRsp, err := s.client.DS.ListAppTemplateBindings(grpcKit.RpcCtx(), atbReq)
+	if err != nil {
+		logs.Errorf("list app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	if len(atbRsp.Details) == 0 {
+		return []*pbtset.TemplateSetBriefInfo{}, nil
+	}
+	tmplSetIDs := make([]uint32, 0)
+	for _, b := range atbRsp.Details[0].Spec.Bindings {
+		tmplSetIDs = append(tmplSetIDs, b.TemplateSetId)
+	}
+
+	var tsbRsp *pbds.ListTemplateSetBriefInfoByIDsResp
+	tsbRsp, err = s.client.DS.ListTemplateSetBriefInfoByIDs(grpcKit.RpcCtx(), &pbds.ListTemplateSetBriefInfoByIDsReq{
+		Ids: tmplSetIDs,
+	})
+	if err != nil {
+		logs.Errorf("list template set brief info by ids failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return tsbRsp.Details, nil
 }
 
 // sortFileStateInGroup sort as add > revise > unchange > delete
@@ -381,7 +393,7 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 
 	rp, err := s.client.DS.ListReleasedAppBoundTmplRevisions(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list released app template bindings failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list released app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -427,6 +439,42 @@ func (s *Service) ListReleasedAppBoundTmplRevisions(ctx context.Context,
 
 	resp := &pbcs.ListReleasedAppBoundTmplRevisionsResp{
 		Details: details,
+	}
+	return resp, nil
+}
+
+// GetReleasedAppBoundTmplRevision get released app bound template revision
+func (s *Service) GetReleasedAppBoundTmplRevision(ctx context.Context,
+	req *pbcs.GetReleasedAppBoundTmplRevisionReq) (*pbcs.GetReleasedAppBoundTmplRevisionResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	if req.ReleaseId <= 0 {
+		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
+	}
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.View, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetReleasedAppBoundTmplRevisionReq{
+		BizId:              req.BizId,
+		AppId:              req.AppId,
+		ReleaseId:          req.ReleaseId,
+		TemplateRevisionId: req.TemplateRevisionId,
+	}
+
+	rp, err := s.client.DS.GetReleasedAppBoundTmplRevision(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("get released app template revision failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.GetReleasedAppBoundTmplRevisionResp{
+		Detail: rp.Detail,
 	}
 	return resp, nil
 }

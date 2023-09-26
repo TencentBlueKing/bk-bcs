@@ -3,7 +3,7 @@
   import { storeToRefs } from 'pinia'
   import ConfigForm from './config-form.vue'
   import { getConfigItemDetail, getReleasedConfigItemDetail, getConfigContent } from '../../../../../../../api/config'
-  import { getTemplateVersionsDetailByIds, downloadTemplateContent } from '../../../../../../../api/template'
+  import { getTemplateVersionsDetailByIds, getTemplateVersionDetail, downloadTemplateContent } from '../../../../../../../api/template'
   import { getConfigEditParams } from '../../../../../../../utils/config'
   import { IVariableEditParams } from '../../../../../../../../types/variable';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config'
@@ -34,6 +34,7 @@
     (val) => {
       if (val) {
         getDetailData()
+        variables.value = []
       }
     }
   )
@@ -86,18 +87,40 @@
   const getTemplateDetail = async() => {
     try {
       detailLoading.value = true
-      const res = await getTemplateVersionsDetailByIds(props.bkBizId, [props.id])
-      if (res.details.length === 1) {
-        const { attachment, spec } = res.details[0]
-        const { name, path, revision_memo, file_type, permission } = spec
-        const { signature, byte_size } = spec.content_spec
-        configForm.value = { id: props.id, name: name, memo: revision_memo, file_type, path, ...permission }
-        if (file_type === 'binary') {
-          content.value = { name: name, signature, size: String(byte_size) }
-        } else {
-          const configContent = await downloadTemplateContent(props.bkBizId, attachment.template_space_id, signature)
-          content.value = String(configContent)
-        }
+      let detail
+      let name
+      let revision_memo, file_type, path, template_space_id, byte_size, signature, permission
+      if (versionData.value.id) {
+        const res = await getTemplateVersionDetail(props.bkBizId, props.appId, versionData.value.id, props.id)
+        detail = res.detail
+        name = detail.name
+        path = detail.path
+        revision_memo = detail.template_revision_name
+        file_type = detail.file_type
+        permission = { privilege: detail.privilege, user: detail.user, user_group: detail.user_group }
+        signature = detail.origin_signature
+        byte_size = detail.origin_byte_size
+        template_space_id = detail.template_space_id
+      } else {
+        const res = await getTemplateVersionsDetailByIds(props.bkBizId, [props.id])
+        detail = res.details[0]
+        const { attachment, spec } = detail
+        name = spec.name
+        path = spec.path
+        revision_memo = spec.revision_name
+        file_type = spec.file_type
+        permission = spec.permission
+        signature = spec.content_spec.signature
+        byte_size = spec.content_spec.byte_size
+        template_space_id = attachment.template_space_id
+      }
+
+      configForm.value = { id: props.id, name, memo: revision_memo, file_type, path, ...permission }
+      if (file_type === 'binary') {
+        content.value = { name, signature, size: String(byte_size) }
+      } else {
+        const configContent = await downloadTemplateContent(props.bkBizId, template_space_id, signature)
+        content.value = String(configContent)
       }
     } catch (e) {
       console.error(e)

@@ -76,6 +76,8 @@ const (
 	DeleteNamespaceAction = "deleteNamespace"
 	// SetNodeLabelsAction 节点设置labels任务
 	SetNodeLabelsAction = "nodeSetLabels"
+	// SetNodeTaintsAction 节点设置labels任务
+	SetNodeTaintsAction = "nodeSetTaints"
 	// SetNodeAnnotationsAction 节点设置Annotations任务
 	SetNodeAnnotationsAction = "nodeSetAnnotations"
 	// CheckKubeAgentStatusAction 检测agent组件状态
@@ -86,6 +88,8 @@ const (
 	DeleteResourceQuotaAction = "deleteResourceQuota"
 	// ResourcePoolLabelAction 设置资源池标签
 	ResourcePoolLabelAction = "resourcePoolLabel"
+	// CheckClusterCleanNodesAction 检测集群销毁节点状态
+	CheckClusterCleanNodesAction = "checkClusterCleanNodes"
 	// LadderResourcePoolLabelAction 标签设置
 	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
 )
@@ -543,6 +547,26 @@ func GetInstanceIPsByID(ctx context.Context, nodeIDs []string) []string {
 		node, err := GetStorageModel().GetNode(context.Background(), id)
 		if err != nil {
 			blog.Errorf("GetInstanceIPsByID[%s] nodeID[%s] failed: %v", taskID, id, err)
+			continue
+		}
+
+		nodeIPs = append(nodeIPs, node.InnerIP)
+	}
+
+	return nodeIPs
+}
+
+// GetInstanceIPsByName get InstanceIP by NodeName
+func GetInstanceIPsByName(ctx context.Context, clusterID string, nodeNames []string) []string {
+	var (
+		taskID  = GetTaskIDFromContext(ctx)
+		nodeIPs = make([]string, 0)
+	)
+
+	for _, name := range nodeNames {
+		node, err := GetStorageModel().GetNodeByName(context.Background(), clusterID, name)
+		if err != nil {
+			blog.Errorf("GetInstanceIPsByName[%s] nodeName[%s] failed: %v", taskID, name, err)
 			continue
 		}
 
@@ -1074,4 +1098,31 @@ func DeleteVirtualNodes(clusterId, nodeGroupId, taskID string) error {
 	}
 
 	return nil
+}
+
+// GetAnnotationsByNg get annotations by nodeGroup
+func GetAnnotationsByNg(group *proto.NodeGroup) map[string]string {
+	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Annotations) == 0 {
+		return nil
+	}
+
+	return group.GetNodeTemplate().GetAnnotations()
+}
+
+// GetLabelsByNg get labels by nodeGroup
+func GetLabelsByNg(group *proto.NodeGroup) map[string]string {
+	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Labels) == 0 {
+		return nil
+	}
+
+	return group.GetNodeTemplate().GetLabels()
+}
+
+// GetTaintsByNg get taints by nodeGroup
+func GetTaintsByNg(group *proto.NodeGroup) []*proto.Taint {
+	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Taints) == 0 {
+		return nil
+	}
+
+	return group.GetNodeTemplate().GetTaints()
 }

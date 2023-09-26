@@ -352,6 +352,18 @@ export const getTemplateVersionsDetailByIds = (biz_id: string, ids: number[]) =>
 }
 
 /**
+ *
+ * @param biz_id 业务ID
+ * @param app_id 应用ID
+ * @param release_id 应用版本ID
+ * @param template_revision_id 模板版本ID
+ * @returns
+ */
+export const getTemplateVersionDetail = (biz_id: string, app_id: number, release_id: number, template_revision_id: number) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/releases/${release_id}/template_revisions/${template_revision_id}`).then(res => res.data)
+}
+
+/**
  * 删除模板版本
  * @param biz_id 业务ID
  * @param template_space_id 空间ID

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package web
@@ -40,7 +39,8 @@ func (s *service) UserPermRequestRedirect(c *gin.Context) {
 		return
 	}
 
-	redirectUrl, err := iam.MakeResourceApplyUrl(c.Request.Context(), project.ProjectId, clusterId, route.GetNamespace(c), "")
+	redirectUrl, err := iam.MakeResourceApplyUrl(c.Request.Context(),
+		project.ProjectId, clusterId, route.GetNamespace(c), "")
 	if err != nil {
 		api.APIError(c, i18n.GetMessage(c, err.Error()))
 		return

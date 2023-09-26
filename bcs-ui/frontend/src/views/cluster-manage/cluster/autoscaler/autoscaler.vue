@@ -908,6 +908,8 @@ export default defineComponent({
           clusterId: props.clusterId,
           nodeGroupID: row.nodeGroupID,
         },
+      }).catch((err) => {
+        console.warn(err);
       });
     };
     // 至少保证一个节点规格处于开启状态
@@ -1359,6 +1361,8 @@ export default defineComponent({
         params: {
           clusterId: props.clusterId,
         },
+      }).catch((err) => {
+        console.warn(err);
       });
     };
     // 编辑节点规格
@@ -1369,6 +1373,8 @@ export default defineComponent({
           clusterId: props.clusterId,
           nodeGroupID: row.nodeGroupID,
         },
+      }).catch((err) => {
+        console.warn(err);
       });
     };
     // 集群详情

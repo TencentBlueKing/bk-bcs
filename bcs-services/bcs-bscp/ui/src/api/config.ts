@@ -279,8 +279,8 @@ export const getBoundTemplates = (bizId: string, appId: number, query: ICommonQu
  * @param releaseId
  * @returns
  */
-export const getBoundTemplatesByAppVersion = (bizId: string, appId: number, releaseId: number) => {
-  return http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/template_revisions`, { params: { start: 0, all: true } }).then(res =>  res.data)
+export const getBoundTemplatesByAppVersion = (bizId: string, appId: number, releaseId: number, params: ICommonQuery) => {
+  return http.get(`/config/biz/${bizId}/apps/${appId}/releases/${releaseId}/template_revisions`, { params }).then(res =>  res.data)
 }
 
 /**

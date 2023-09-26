@@ -128,7 +128,7 @@
       if (isUnNamedVersion.value) {
         res = await getBoundTemplates(props.bkBizId, props.appId, params)
       } else {
-        res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id)
+        res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id, params)
       }
       templateGroupList.value = res.details
     } catch (e) {

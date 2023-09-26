@@ -27,7 +27,7 @@
   const pagination = ref({
     current: 1,
     count: 0,
-    limit: 10,
+    limit: 10
   })
 
   watch(() => spaceId.value, () => {
@@ -306,15 +306,16 @@
           </bk-input>
         </div>
       </div>
-      <bk-loading style="min-height: 300px;" :loading="listLoading">
+      <bk-loading style="min-height: 100px;" :loading="listLoading">
         <bk-table
           class="credential-table"
           :data="credentialList"
           :border="['outer']"
           :row-class="getRowCls"
+          :remote-pagination="true"
           :pagination="pagination"
           @page-limit-change="handlePageLimitChange"
-          @page-change="refreshListWithLoading">
+          @page-value-change="refreshListWithLoading">
           <bk-table-column label="密钥" width="340">
             <template #default="{ row }">
               <div v-if="row.spec" class="credential-text">

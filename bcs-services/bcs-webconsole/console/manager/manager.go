@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package manager xxx
@@ -35,7 +34,7 @@ import (
 )
 
 // ManagerFunc 自定义 Manager 函数
-type ManagerFunc func(podCtx *types.PodContext) error
+type ManagerFunc func(podCtx *types.PodContext) error // nolint
 
 // ConsoleManager websocket 流式处理器
 type ConsoleManager struct {
@@ -51,7 +50,8 @@ type ConsoleManager struct {
 }
 
 // NewConsoleManager :
-func NewConsoleManager(ctx context.Context, podCtx *types.PodContext, terminalSize *types.TerminalSize) (*ConsoleManager, error) {
+func NewConsoleManager(ctx context.Context, podCtx *types.PodContext,
+	terminalSize *types.TerminalSize) (*ConsoleManager, error) {
 	now := time.Now()
 	mgr := &ConsoleManager{
 		ctx:            ctx,
@@ -65,7 +65,7 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext, terminalSi
 
 	// key from env
 	if len(key) > 0 {
-		mgr.keyDec = byte(key[0])
+		mgr.keyDec = key[0]
 	}
 
 	// 初始化 terminal record
@@ -168,7 +168,7 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 
 			// 未开启或文件初始化失败都不记录
 			if c.recorder != nil && c.recorder.Writer != nil {
-				c.recorder.Writer.WriteBuff.Flush()
+				c.recorder.Writer.WriteBuff.Flush() // nolint
 			}
 		}
 	}
@@ -182,7 +182,7 @@ func (c *ConsoleManager) auditCmd(outputMsg []byte) {
 		}
 	}()
 
-	//输入输出映射,用于查找历史命令
+	// 输入输出映射,用于查找历史命令
 	out, ss, err := ansi.Decode(outputMsg)
 	if err != nil {
 		logger.Error("decode output error: %s", err)
@@ -191,11 +191,11 @@ func (c *ConsoleManager) auditCmd(outputMsg []byte) {
 
 	//TODO:历史命令问题,可能解析问题导致
 	if strings.ReplaceAll(string(ss.Code), "\b", "") == "" {
-		rex := regexp.MustCompile("\\x1b\\[\\d+P")
+		rex := regexp.MustCompile("\\x1b\\[\\d+P") // nolint
 		l := rex.Split(string(out), -1)
 		ss.Code = ansi.Name(l[len(l)-1])
 	}
-	//时序性问题不可避免
+	// 时序性问题不可避免
 	c.cmdParser.CmdResult[c.cmdParser.Cmd] = ss
 
 	if c.cmdParser.Cmd != nil && c.cmdParser.Cmd.Code == "\r" {

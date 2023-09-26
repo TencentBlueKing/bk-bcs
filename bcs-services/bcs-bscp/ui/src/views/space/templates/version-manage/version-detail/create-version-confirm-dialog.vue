@@ -107,6 +107,7 @@
 <style lang="scss">
   .create-version-confirm-dialog.bk-modal-wrapper.bk-dialog-wrapper {
     .bk-modal-footer {
+      position: static;
       padding: 32px 0 48px;
       background: #ffffff;
       border-top: none;
