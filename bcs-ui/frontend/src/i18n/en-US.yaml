@@ -50,6 +50,7 @@ bcs:
         desc: Please check permissions on the BK IAM
       docs:
         desc: 'For more information, please refer to the product documentation.'
+      viewAndApplyOperation: View and Apply for Operations Roles
     label:
       projectKind:
         text: Orchestration Engine
@@ -435,6 +436,7 @@ generic:
     name: >-
       Only letters, numbers and characters (-) are supported and start with a
       letter
+    notRootName: The username cannot be root.
   title:
     curVersion: Current
     basicInfo: Basic Information
@@ -1092,8 +1094,8 @@ cluster:
             premium: High -performance cloud hard disk
             ssd: SSD cloud hard disk
             hssd: Enhanced SSD cloud hard disk
-            balanced: ''
-            standard: ''
+            balanced: Balanced Disk
+            standard: Standard Disk
           disk:
             system: System disk
             data: Data disk
@@ -3022,6 +3024,7 @@ googleCloud:
         increase the cluster quota, which is 200,000 Pods and 400,000
         containers. Each node pool supports up to 1,000 nodes, and each node
         supports up to 256 Pods.
+    loginUser: Login user
   tips:
     onlySupportJsonFile: >-
       Only the json file generated when a service account is created is
@@ -3102,3 +3105,19 @@ updateRecord:
     subTitle: 'Target version: {0}'
   placeholder:
     search: Search images/updater
+googleCA:
+  tips:
+    system: >-
+      Because the operating system “Container-Optimized OS (cos_containerd)
+      including Containerd (default)” has many restrictions, BlueKing components
+      depend on these restricted features, currently only the operating system
+      “Ubuntu including Containerd (ubuntu_containerd)” is supported.
+    zone: 'Currently, only a single availability zone is supported.'
+    dataDisk: >-
+      After purchasing a data disk and adding nodes, you need to manually format
+      and mount the disk.
+    securityGroup: >-
+      Node pool uses VPC firewall rules to control the incoming/outgoing traffic
+      of node instances, please go to the {0} page to set up.
+  button:
+    vpcRule: VPC Rule

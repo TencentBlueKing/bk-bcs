@@ -43,7 +43,7 @@ bcs:
       business:
         text: 关联CMDB业务
         placeholder: 请选择关联业务
-        emptyMsg: 启用容器服务需要CMDB业务的业务运维角色 {0}
+        emptyMsg: '启用容器服务需要CMDB业务的业务运维角色 {0}'
 blueking:
   onCall: 联系BK助手
   support: 技术支持
