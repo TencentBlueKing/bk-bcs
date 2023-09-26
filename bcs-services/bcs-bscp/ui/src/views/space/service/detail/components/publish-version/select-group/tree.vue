@@ -245,6 +245,7 @@
         :data="treeData"
         :expand-all="false"
         :show-node-type-icon="false"
+        empty-text="搜索结果为空"
         :search="searchOption">
         <template #node="node">
           <div class="node-item-wrapper">
