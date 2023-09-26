@@ -196,7 +196,7 @@ func (t Name) Name() string {
 }
 
 // Validate whether the table name is valid or not.
-func (n Name) Validate() error {
+func (t Name) Validate() error {
 	return nil
 }
 
@@ -239,8 +239,6 @@ const (
 	ResourceLockTable Name = "resource_locks"
 	// CredentialTable is credential table's name
 	CredentialTable Name = "credentials"
-	// CredentialScopeTable is credential_scope table's name
-	CredentialScopeTable Name = "credential_scopes"
 )
 
 // RevisionColumns defines all the Revision table's columns.

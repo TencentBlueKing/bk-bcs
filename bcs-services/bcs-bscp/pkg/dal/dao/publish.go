@@ -75,10 +75,13 @@ func (dao *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, erro
 		return dao.publish(kit, tx, opt, groups)
 	}()
 	if err != nil {
-		tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("rollback publish transaction failed, err: %v, rid: %s", err, kit.Rid)
+			return 0, err
+		}
 		return 0, err
 	}
-	if err := tx.Commit(); err != nil {
+	if err = tx.Commit(); err != nil {
 		logs.Errorf("commit publish transaction failed, err: %v, rid: %s", err, kit.Rid)
 		return 0, err
 	}
@@ -250,47 +253,47 @@ func (dao *pubDao) upsertReleasedGroups(kit *kit.Kit, tx *gen.Query, opt *types.
 			return err
 		}
 		return nil
-	} else {
-		groups := stg.Spec.Scope.Groups
-		if opt.Default {
-			groups = append(groups, defaultGroup)
-		}
-		for _, group := range groups {
-			rg := &table.ReleasedGroup{
-				GroupID:    group.ID,
-				AppID:      opt.AppID,
-				ReleaseID:  opt.ReleaseID,
-				StrategyID: stg.ID,
-				Mode:       group.Spec.Mode,
-				Selector:   group.Spec.Selector,
-				UID:        group.Spec.UID,
-				Edited:     false,
-				BizID:      opt.BizID,
-				Reviser:    kit.User,
-			}
-
-			m := tx.ReleasedGroup
-			q := tx.ReleasedGroup.WithContext(kit.Ctx)
-
-			result, err := q.Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.GroupID.Eq(group.ID)).
-				Omit(m.ID).Updates(rg)
-			if err != nil {
-				return err
-			}
-			if result.RowsAffected == 1 {
-				continue
-			}
-
-			id, err := dao.idGen.One(kit, table.ReleasedGroupTable)
-			if err != nil {
-				return err
-			}
-			rg.ID = id
-
-			if err := q.Create(rg); err != nil {
-				return err
-			}
-		}
-		return nil
 	}
+
+	groups := stg.Spec.Scope.Groups
+	if opt.Default {
+		groups = append(groups, defaultGroup)
+	}
+	for _, group := range groups {
+		rg := &table.ReleasedGroup{
+			GroupID:    group.ID,
+			AppID:      opt.AppID,
+			ReleaseID:  opt.ReleaseID,
+			StrategyID: stg.ID,
+			Mode:       group.Spec.Mode,
+			Selector:   group.Spec.Selector,
+			UID:        group.Spec.UID,
+			Edited:     false,
+			BizID:      opt.BizID,
+			Reviser:    kit.User,
+		}
+
+		m := tx.ReleasedGroup
+		q := tx.ReleasedGroup.WithContext(kit.Ctx)
+
+		result, err := q.Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID), m.GroupID.Eq(group.ID)).
+			Omit(m.ID).Updates(rg)
+		if err != nil {
+			return err
+		}
+		if result.RowsAffected == 1 {
+			continue
+		}
+
+		id, err := dao.idGen.One(kit, table.ReleasedGroupTable)
+		if err != nil {
+			return err
+		}
+		rg.ID = id
+
+		if err := q.Create(rg); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -67,11 +67,11 @@ type eventDao struct {
 
 // Eventf initialize an event decorator instance to fire the event and
 // update the event's state.
-func (ed *eventDao) Eventf(kit *kit.Kit) *EDecorator {
+func (dao *eventDao) Eventf(kit *kit.Kit) *EDecorator {
 	return &EDecorator{
 		kit:   kit,
-		idGen: ed.idGen,
-		genQ:  ed.genQ,
+		idGen: dao.idGen,
+		genQ:  dao.genQ,
 	}
 }
 
@@ -212,8 +212,6 @@ func (ef *EDecorator) Finalizer(txnError error) {
 		logs.ErrorDepthf(1, "update event final state to %d failed, id list: %s, err: %v, rid: %s", state, ef.idList,
 			err, ef.kit.Rid)
 	}
-
-	return
 }
 
 // List events with options.
@@ -282,7 +280,8 @@ func (dao *eventDao) LatestCursor(kit *kit.Kit) (uint32, error) {
 	q := dao.genQ.Event.WithContext(kit.Ctx)
 
 	var cursor uint32
-	if err := q.Select(m.ResourceID).Where(m.Resource.Eq(string(table.CursorReminder))).Limit(1).Scan(&cursor); err != nil {
+	if err := q.Select(m.ResourceID).Where(m.Resource.Eq(string(table.CursorReminder))).Limit(1).
+		Scan(&cursor); err != nil {
 		return 0, err
 	}
 

@@ -107,6 +107,7 @@ var ReleaseSpecColumnDescriptor = mergeColumnDescriptors("",
 	},
 	mergeColumnDescriptors("hook", HookColumnDescriptor))
 
+// HookColumnDescriptor is hook column descriptor
 var HookColumnDescriptor = ColumnDescriptors{
 	{Column: "pre_hook_id", NamedC: "pre_hook_id", Type: enumor.Numeric},
 	{Column: "pre_hook_revision_id", NamedC: "pre_hook_revision_id", Type: enumor.Numeric},

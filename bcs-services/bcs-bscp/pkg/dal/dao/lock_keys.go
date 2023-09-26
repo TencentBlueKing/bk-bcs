@@ -10,6 +10,9 @@
  * limitations under the License.
  */
 
+// Package dao NOTES
+//
+//nolint:unused
 package dao
 
 import (
