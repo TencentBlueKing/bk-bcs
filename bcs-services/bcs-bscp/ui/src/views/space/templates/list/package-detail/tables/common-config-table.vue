@@ -13,6 +13,7 @@
   import MoveOutFromPkgsDialog from '../operations/move-out-from-pkg/move-out-from-pkgs-dialog.vue'
   import PkgsTag from '../../components/packages-tag.vue'
   import AppsBoundByTemplate from '../apps-bound-by-template.vue';
+  import TableEmpty from '../../../../../../components/table/table-empty.vue';
 
   const router = useRouter()
 
@@ -53,6 +54,7 @@
     }
   })
   const crtConfig = ref<ITemplateConfigItem[]>([])
+  const isSearchEmpty = ref(false)
 
   watch(() => props.currentPkg, () => {
     searchStr.value = ''
@@ -106,6 +108,7 @@
   }
 
   const refreshList = (current: number = 1) => {
+    searchStr.value ? isSearchEmpty.value = true : isSearchEmpty.value = false
     pagination.value.current = current
     loadConfigList()
   }
@@ -206,6 +209,10 @@
     refreshListAfterDeleted
   })
 
+  const clearSearchStr = () => {
+    searchStr.value = ''
+    refreshList()
+  }
 </script>
 <template>
   <div class="package-config-table">
@@ -228,7 +235,7 @@
       </bk-input>
     </div>
     <bk-loading style="min-height: 200px;" :loading="listLoading">
-      <bk-table empty-text="暂无配置项" :border="['outer']" :data="list" @selection-change="handleSelectionChange">
+      <bk-table  :border="['outer']" :data="list" @selection-change="handleSelectionChange">
         <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column>
         <bk-table-column label="配置项名称">
           <template #default="{ row }">
@@ -301,6 +308,9 @@
             </div>
           </template>
         </bk-table-column>
+        <template #empty>
+          <TableEmpty :isSearchEmpty="isSearchEmpty" @clear="clearSearchStr"></TableEmpty>
+        </template>
       </bk-table>
     </bk-loading>
     <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" @added="handleAdded" />
