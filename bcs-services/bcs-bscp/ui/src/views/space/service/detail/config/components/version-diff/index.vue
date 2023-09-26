@@ -99,7 +99,7 @@
             :selected-config="props.selectedConfig"
             @selected="handleSelectDiffItem" />
           <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
-            <diff :diff="diffDetailData" :loading="false">
+            <diff :diff="diffDetailData" :id="appId" :loading="false">
               <template #leftHead>
                   <slot name="baseHead">
                     <div class="diff-panel-head">

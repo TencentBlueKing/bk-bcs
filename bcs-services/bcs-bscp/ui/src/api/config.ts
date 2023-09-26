@@ -109,34 +109,35 @@ export const getReleasedConfigItemDetail = (biz_id: string, app_id: number, rele
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param data 配置内容
- * @param SHA256Str 文件内容的SHA256值
+ * @param signature 文件内容的SHA256值
  * @returns
  */
-export const updateConfigContent = (bizId: string, appId: number, data: string|File, SHA256Str: string) => {
-  return http.put(`/api/create/content/upload/biz_id/${bizId}/app_id/${appId}`, data, {
+export const updateConfigContent = (bizId: string, appId: number, data: string|File, signature: string) => {
+  return http.put(`/biz/${bizId}/content/upload`, data, {
     headers: {
+      'X-Bscp-App-Id': appId,
+      'X-Bkapi-File-Content-Id': signature,
       'X-Bkapi-File-Content-Overwrite': 'false',
-      'Content-Type': 'text/plain',
-      'X-Bkapi-File-Content-Id': SHA256Str
-    }
-  })
+      'Content-Type': 'text/plain'
+    }}).then(res => res.data)
 }
+
 /**
- * 获取配置项内容
+ * 下载配置项内容
  * @param bizId 业务ID
- * @param appId 应用ID
- * @param SHA256Str 文件内容的SHA256值
+ * @param appId 模板空间ID
+ * @param signature sha256签名
  * @returns
  */
-export const getConfigContent = (bizId: string, appId: number, SHA256Str: string) => {
-  console.log(SHA256Str)
-  return http.get<string, string>(`/api/get/content/download/biz_id/${bizId}/app_id/${appId}`, {
+export const downloadConfigContent = (bizId: string, appId: number, signature: string) => {
+  return http.get<string, string>(`/biz/${bizId}/content/download`, {
     headers: {
-      'X-Bkapi-File-Content-Id': SHA256Str
+      'X-Bscp-Template-Space-Id': appId,
+      'X-Bkapi-File-Content-Id': signature,
     },
     transitional: {
       forcedJSONParsing: false
-    },
+    }
   }).then(res => res)
 }
 

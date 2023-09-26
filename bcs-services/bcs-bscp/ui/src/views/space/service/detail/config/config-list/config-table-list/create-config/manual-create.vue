@@ -92,7 +92,7 @@
       :content="content"
       :editable="true"
       :bk-biz-id="props.bkBizId"
-      :app-id="props.appId"
+      :id="props.appId"
       @change="handleFormChange"/>
     <section class="action-btns">
       <bk-button theme="primary" :loading="pending" :disabled="fileUploading" @click="handleSubmit">保存</bk-button>
