@@ -1,17 +1,16 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package cmd xxx
 package cmd
 
 import (
@@ -25,6 +24,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -38,12 +43,6 @@ import (
 	"google.golang.org/grpc"
 	grpcCred "google.golang.org/grpc/credentials"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	i18n2 "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
@@ -274,11 +273,11 @@ func (p *ProjectService) initMicro() error {
 	// server listen ip
 	ipv4 := p.opt.Server.Address
 	ipv6 := p.opt.Server.Ipv6Address
-	port := strconv.Itoa(int(p.opt.Server.Port))
+	port := strconv.Itoa(p.opt.Server.Port)
 
 	// service inject metadata to discovery center
 	metadata := make(map[string]string)
-	metadata[constant.MicroMetaKeyHTTPPort] = strconv.Itoa(int(p.opt.Server.HTTPPort))
+	metadata[constant.MicroMetaKeyHTTPPort] = strconv.Itoa(p.opt.Server.HTTPPort)
 
 	// 适配单栈环境（ipv6注册地址不能是本地回环地址）
 	if v := net.ParseIP(ipv6); v != nil && !v.IsLoopback() {
@@ -414,7 +413,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	if err := proto.RegisterBCSProjectGwFromEndpoint(
 		context.TODO(),
 		gwMux,
-		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(int(p.opt.Server.Port))),
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(p.opt.Server.Port)),
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register project endpoints to http gateway failed, err %s", err.Error())
@@ -424,7 +423,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	if err := proto.RegisterBusinessGwFromEndpoint(
 		context.TODO(),
 		gwMux,
-		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(int(p.opt.Server.Port))),
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(p.opt.Server.Port)),
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register business endpoints to http gateway failed, err %s", err.Error())
@@ -434,7 +433,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	if err := proto.RegisterNamespaceGwFromEndpoint(
 		context.TODO(),
 		gwMux,
-		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(int(p.opt.Server.Port))),
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(p.opt.Server.Port)),
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register namespace endpoints to gateway failed, err %s", err.Error())
@@ -444,7 +443,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	if err := proto.RegisterVariableGwFromEndpoint(
 		context.TODO(),
 		gwMux,
-		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(int(p.opt.Server.Port))),
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(p.opt.Server.Port)),
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register variable endpoints to gateway failed, err %s", err.Error())
@@ -454,7 +453,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	if err := proto.RegisterHealthzGwFromEndpoint(
 		context.TODO(),
 		gwMux,
-		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(int(p.opt.Server.Port))),
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(p.opt.Server.Port)),
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register healthz endpoints to gateway failed, err %s", err.Error())
@@ -491,7 +490,7 @@ func (p *ProjectService) initHttpService() error {
 	if len(p.opt.Server.Ipv6Address) > 0 {
 		addresses = append(addresses, p.opt.Server.Ipv6Address)
 	}
-	p.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(p.opt.Server.HTTPPort)), "", mux)
+	p.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(p.opt.Server.HTTPPort), "", mux)
 	go func() {
 		var err error
 		logging.Info("start http server on address %+s", addresses)

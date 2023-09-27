@@ -1,17 +1,16 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package clustermanager xxx
 package clustermanager
 
 import (
@@ -22,17 +21,17 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	grpc "google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/metadata"
 )
 
 var (
@@ -41,7 +40,7 @@ var (
 
 	// ClusterStatusRunning cluster status running
 	ClusterStatusRunning = "RUNNING"
-
+	// CacheKeyClusterPrefix cluster Prefix
 	CacheKeyClusterPrefix = "CLUSTER_%s"
 )
 
@@ -134,6 +133,8 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
+		// NOCC: gosec/crypto(设计如此:)
+		// nolint
 		selected := rand.Intn(1024) % len(config.Hosts)
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
@@ -151,6 +152,7 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	}
 
 	// init cluster manager client
+	// nolint
 	return NewClusterManagerClient(conn), func() { conn.Close() }
 }
 
@@ -179,7 +181,7 @@ func GetCluster(clusterID string) (*Cluster, error) {
 		logging.Error("get cluster from cluster manager failed, msg: %s", resp.GetMessage())
 		return nil, errors.New(resp.GetMessage())
 	}
-	c.Add(fmt.Sprintf(CacheKeyClusterPrefix, clusterID), resp.GetData(), time.Hour)
+	_ = c.Add(fmt.Sprintf(CacheKeyClusterPrefix, clusterID), resp.GetData(), time.Hour)
 	return resp.GetData(), nil
 }
 

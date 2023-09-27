@@ -1,17 +1,16 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package variabledefinition xxx
 package variabledefinition
 
 import (
@@ -34,21 +33,35 @@ import (
 
 const (
 	// table name
-	tableName           = "variable_definition"
-	FieldKeyID          = "_id"
-	FieldKeyKey         = "key"
-	FieldKeyDefault     = "default"
-	FieldKeyName        = "name"
+	tableName = "variable_definition"
+	// FieldKeyID id
+	FieldKeyID = "_id"
+	// FieldKeyKey key
+	FieldKeyKey = "key"
+	// FieldKeyDefault default
+	FieldKeyDefault = "default"
+	// FieldKeyName name
+	FieldKeyName = "name"
+	// FieldKeyDescription description
 	FieldKeyDescription = "description"
+	// FieldKeyProjectCode projectCode
 	FieldKeyProjectCode = "projectCode"
-	FieldKeyScope       = "scope"
-	FieldKeyCategory    = "category"
-	FieldKeyCreateTime  = "createTime"
-	FieldKeyUpdateTime  = "updateTime"
-	FieldKeyCreator     = "creator"
-	FieldKeyUpdater     = "updater"
-	FieldKeyIsDeleted   = "isDeleted"
-	FieldKeyDeleteTime  = "deleteTime"
+	// FieldKeyScope scope
+	FieldKeyScope = "scope"
+	// FieldKeyCategory category
+	FieldKeyCategory = "category"
+	// FieldKeyCreateTime createTime
+	FieldKeyCreateTime = "createTime"
+	// FieldKeyUpdateTime updateTime
+	FieldKeyUpdateTime = "updateTime"
+	// FieldKeyCreator creator
+	FieldKeyCreator = "creator"
+	// FieldKeyUpdater updater
+	FieldKeyUpdater = "updater"
+	// FieldKeyIsDeleted isDeleted
+	FieldKeyIsDeleted = "isDeleted"
+	// FieldKeyDeleteTime deleteTime
+	FieldKeyDeleteTime = "deleteTime"
 )
 
 var (
@@ -66,10 +79,15 @@ var (
 )
 
 var (
-	VariableCategorySys    = "sys"
+	// VariableCategorySys sys
+	VariableCategorySys = "sys"
+	// VariableCategoryCustom custom
 	VariableCategoryCustom = "custom"
-	VariableScopeGlobal    = "global"
-	VariableScopeCluster   = "cluster"
+	// VariableScopeGlobal global scope
+	VariableScopeGlobal = "global"
+	// VariableScopeCluster cluster scope
+	VariableScopeCluster = "cluster"
+	// VariableScopeNamespace namespace scope
 	VariableScopeNamespace = "namespace"
 )
 
