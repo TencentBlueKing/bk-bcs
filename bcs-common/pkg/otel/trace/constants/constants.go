@@ -8,19 +8,30 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package constants xxx
 package constants
 
 import "go.opentelemetry.io/otel/attribute"
 
+type contextKey string
+
+func (c contextKey) String() string {
+	return string(c)
+}
+
 const (
 	// RequestIDKey xxx
-	RequestIDKey       = "requestID"
-	Traceparent        = "Traceparent"
-	TracerKey          = "otel-go-contrib-tracer"
-	TracerName         = "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	RequestIDKey = contextKey("requestID")
+	// Traceparent 上游TraceID
+	Traceparent = "Traceparent"
+	// TracerKey xxx
+	TracerKey = "otel-go-contrib-tracer"
+	// TracerName xxx
+	TracerName = "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	// RequestIDHeaderKey xxx
 	RequestIDHeaderKey = "X-Request-Id"
-	GRPCStatusCodeKey  = attribute.Key("rpc.grpc.status_code")
+	// GRPCStatusCodeKey grpc响应码
+	GRPCStatusCodeKey = attribute.Key("rpc.grpc.status_code")
 )

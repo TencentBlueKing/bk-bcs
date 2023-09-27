@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bcsapiv4
@@ -75,7 +74,7 @@ func NewMesosDriverClient(conf *MesosDriverClientConfig) (*MesosDriverClient, er
 	// if https
 	if m.conf.ClientCert != nil && m.conf.ClientCert.IsSSL {
 		blog.Infof("NetworkDetection http client cert ssl")
-		m.cli.SetTlsVerity(m.conf.ClientCert.CAFile, m.conf.ClientCert.CertFile, m.conf.ClientCert.KeyFile,
+		_ = m.cli.SetTlsVerity(m.conf.ClientCert.CAFile, m.conf.ClientCert.CertFile, m.conf.ClientCert.KeyFile,
 			m.conf.ClientCert.CertPasswd)
 	}
 	m.cli.SetHeader("Content-Type", "application/json")
@@ -87,7 +86,7 @@ func NewMesosDriverClient(conf *MesosDriverClientConfig) (*MesosDriverClient, er
 // get module address
 // clusterid, example BCS-MESOS-10001
 // return first parameter: module address, example 127.0.0.1:8090
-func (m *MesosDriverClient) getModuleAddr(clusterid string) (string, error) {
+func (m *MesosDriverClient) getModuleAddr() (string, error) {
 	serv, err := m.moduleDiscovery.GetRandModuleServer(commtypes.BCS_MODULE_MESOSAPISERVER)
 	if err != nil {
 		blog.Errorf("discovery zk %s module %s error %s",
@@ -156,7 +155,7 @@ func (m *MesosDriverClient) CeateDeployment(clusterid string, deploy []byte) err
 // FetchDeployment fetch application
 func (m *MesosDriverClient) FetchDeployment(deploy *types.DeployDetection) (interface{}, error) {
 	by, err := m.requestMesosApiserver(deploy.Clusterid, http.MethodGet,
-		fmt.Sprintf("/namespaces/bcs-system/applications"), nil)
+		"/namespaces/bcs-system/applications", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +192,7 @@ func (m *MesosDriverClient) FetchPods(clusterid, ns, name string) ([]byte, error
 // if error==nil, []byte is response body information
 func (m *MesosDriverClient) requestMesosApiserver(clusterid, method, url string, payload []byte) ([]byte, error) {
 	// get mesos api address
-	addr, err := m.getModuleAddr(clusterid)
+	addr, err := m.getModuleAddr()
 	if err != nil {
 		return nil, fmt.Errorf("get cluster %s mesosapi failed: %s", clusterid, err.Error())
 	}

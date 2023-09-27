@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package audit
@@ -47,7 +46,7 @@ var defaultTransport http.RoundTripper = &http.Transport{
 	TLSHandshakeTimeout:   10 * time.Second,
 	ExpectContinueTimeout: 1 * time.Second,
 	// NOCC:gas/tls(设计如此)
-	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
 }
 
 // GetClient : 新建Client, 设置公共参数，每次新建，cookies不复用

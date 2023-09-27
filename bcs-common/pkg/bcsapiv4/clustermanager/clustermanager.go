@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package clustermanager xxx
 package clustermanager
 
 import (
@@ -39,7 +39,7 @@ func XRequestID() context.Context {
 
 // NewClusterManager create ClusterManager SDK implementation
 func NewClusterManager(config *bcsapi.Config) (ClusterManagerClient, func()) {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano())) // nolint
 	if len(config.Hosts) == 0 {
 		// ! pay more attention for nil return
 		return nil, nil
@@ -62,7 +62,7 @@ func NewClusterManager(config *bcsapi.Config) (ClusterManagerClient, func()) {
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithInsecure()) // nolint
 		auth.Insecure = true
 	}
 	opts = append(opts, grpc.WithPerRPCCredentials(auth))
@@ -74,7 +74,7 @@ func NewClusterManager(config *bcsapi.Config) (ClusterManagerClient, func()) {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		selected := rand.Intn(1024) % len(config.Hosts)
+		selected := r.Intn(1024) % len(config.Hosts) // nolint
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
@@ -90,5 +90,5 @@ func NewClusterManager(config *bcsapi.Config) (ClusterManagerClient, func()) {
 		return nil, nil
 	}
 	// init cluster manager client
-	return NewClusterManagerClient(conn), func() { conn.Close() }
+	return NewClusterManagerClient(conn), func() { _ = conn.Close() }
 }

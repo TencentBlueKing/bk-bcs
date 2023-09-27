@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package gin xxx
 package gin
 
 import (
@@ -36,7 +36,7 @@ import (
 // Middleware returns middleware that will trace incoming requests.
 // The service parameter should describe the name of the (virtual)
 // server handling the request.
-func Middleware(server string, opts ...Option) gin.HandlerFunc {
+func Middleware(server string, opts ...Option) gin.HandlerFunc { // nolint
 	cfg := option{}
 	for _, opt := range opts {
 		opt.apply(&cfg)
@@ -87,6 +87,7 @@ func Middleware(server string, opts ...Option) gin.HandlerFunc {
 			// 没有则从request id截取生成
 			requestID := c.Request.Header.Get(constants.RequestIDHeaderKey)
 			// 使用requestID当作TraceID
+
 			savedCtx = context.WithValue(savedCtx, constants.RequestIDKey, requestID)
 			savedCtx = utils.ContextWithRequestID(savedCtx, requestID)
 		}
@@ -117,7 +118,7 @@ func Middleware(server string, opts ...Option) gin.HandlerFunc {
 		}
 		span.SetAttributes(attribute.Key("query").String(query))
 
-		//记录body
+		// 记录body
 		body := string(getRequestBody(c.Request))
 		if len(body) > 1024 {
 			body = fmt.Sprintf("%s...(Total %s)", body[:1024], humanize.Bytes(uint64(len(body))))
@@ -139,7 +140,7 @@ func Middleware(server string, opts ...Option) gin.HandlerFunc {
 			respBody = fmt.Sprintf("%s...(Total %s)", writer.b.String()[:1024], humanize.Bytes(uint64(len(writer.b.String()))))
 		}
 		span.SetAttributes(attribute.Key("rsp").String(respBody))
-		elapsedTime := time.Now().Sub(startTime)
+		elapsedTime := time.Since(startTime)
 		span.SetAttributes(attribute.Key("elapsed_ime").String(elapsedTime.String()))
 
 		status := c.Writer.Status()
@@ -151,6 +152,7 @@ func Middleware(server string, opts ...Option) gin.HandlerFunc {
 			span.SetAttributes(attribute.String("gin.errors", c.Errors.String()))
 		}
 	}
+
 }
 
 // 获取请求体
@@ -168,8 +170,8 @@ type responseWriter struct {
 }
 
 func (w responseWriter) Write(b []byte) (int, error) {
-	//向一个bytes.buffer中写一份数据来为获取body使用
+	// 向一个bytes.buffer中写一份数据来为获取body使用
 	w.b.Write(b)
-	//完成gin.Context.Writer.Write()原有功能
+	// 完成gin.Context.Writer.Write()原有功能
 	return w.ResponseWriter.Write(b)
 }

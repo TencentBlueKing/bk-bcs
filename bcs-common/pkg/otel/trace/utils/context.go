@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -26,7 +25,7 @@ import (
 
 // ContextWithRequestID returns a copy of parent with requestID set as the current Span.
 func ContextWithRequestID(parent context.Context, requestID string) context.Context {
-	requestID = strings.Replace(requestID, "-", "", -1)
+	requestID = strings.ReplaceAll(requestID, "-", "")
 	tid, _ := trace.TraceIDFromHex(requestID)
 	sid, _ := trace.SpanIDFromHex(requestID)
 	sc := trace.NewSpanContext(trace.SpanContextConfig{
