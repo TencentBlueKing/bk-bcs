@@ -328,7 +328,8 @@ func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
 }
 
 // ListTmplBoundNamedApps list template bound named app details.
-// nolint:funlen
+//
+//nolint:funlen
 func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
 	req *pbds.ListTmplBoundNamedAppsReq) (*pbds.ListTmplBoundNamedAppsResp, error) {
 

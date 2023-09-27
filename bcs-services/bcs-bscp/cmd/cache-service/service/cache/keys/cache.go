@@ -43,7 +43,7 @@ const (
 	releasedConfigItem  namespace = "released-ci"
 	releasedHook        namespace = "released-hook"
 	releasedGroup       namespace = "released-group"
-	credentialMatchedCI namespace = "credential-matched-ci" // nolint:gosec
+	credentialMatchedCI namespace = "credential-matched-ci" //nolint:gosec
 	credential          namespace = "credential"
 	appMeta             namespace = "app-meta"
 	appID               namespace = "app-id"

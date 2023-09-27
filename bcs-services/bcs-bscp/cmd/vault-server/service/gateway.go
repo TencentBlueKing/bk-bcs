@@ -33,7 +33,7 @@ type gateway struct {
 }
 
 // newGateway create new auth server's grpc-gateway.
-func newGateway(st serviced.State) (*gateway, error) { // nolint:unparam
+func newGateway(st serviced.State) (*gateway, error) { //nolint:unparam
 	g := &gateway{state: st}
 
 	return g, nil

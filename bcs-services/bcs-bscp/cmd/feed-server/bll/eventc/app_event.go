@@ -92,7 +92,7 @@ func (ae *appEvent) Stop() {
 }
 
 // doFirstMatch do the first release match when the sidecar is added to this app at first.
-func (ae *appEvent) doFirstMatch(kt *kit.Kit, subSpec *SubscribeSpec) (uint32, uint32, error) { // nolint:unparam
+func (ae *appEvent) doFirstMatch(kt *kit.Kit, subSpec *SubscribeSpec) (uint32, uint32, error) { //nolint:unparam
 
 	cursor := ae.cursor.ID()
 

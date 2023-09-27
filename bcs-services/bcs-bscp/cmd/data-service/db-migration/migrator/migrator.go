@@ -374,7 +374,7 @@ func getAllSQLFiles(dir string) error {
 	for _, e := range entries {
 		file := filepath.Join(dir, e.Name())
 		if e.IsDir() {
-			getAllSQLFiles(file) // nolint: errcheck
+			getAllSQLFiles(file) //nolint: errcheck
 		} else if filepath.Ext(file) == ".sql" {
 			allSQLFiles = append(allSQLFiles, file)
 		}

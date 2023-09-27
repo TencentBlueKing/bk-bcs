@@ -129,7 +129,8 @@ func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbds.Delete
 }
 
 // ListAppBoundTmplRevisions list app bound template revisions.
-// nolint:funlen,gocyclo
+//
+//nolint:funlen,gocyclo
 func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
 	req *pbds.ListAppBoundTmplRevisionsReq) (*pbds.ListAppBoundTmplRevisionsResp, error) {
 
@@ -337,7 +338,7 @@ func (s *Service) setFileState(kt *kit.Kit, unreleased []*pbatb.AppBoundTmplRevi
 		for _, d := range deleted {
 			d.FileState = constant.FileStateDelete
 		}
-		// nolint:gocritic
+		//nolint:gocritic
 		result = append(unreleased, deleted...)
 
 	}
@@ -991,7 +992,7 @@ func (s *Service) getDuplicatedCIs(kt *kit.Kit, tmplRevisions []*table.TemplateR
 		return nil, nil, err
 	}
 
-	// nolint:gocritic
+	//nolint:gocritic
 	allKeys := append(existKeys, addKeys...)
 	uKeys = findRepeatedElements(allKeys)
 	for _, k := range uKeys {

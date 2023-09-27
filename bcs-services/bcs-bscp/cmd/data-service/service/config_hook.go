@@ -25,7 +25,8 @@ import (
 )
 
 // UpdateConfigHook update ConfigHook.
-// nolint:funlen
+//
+//nolint:funlen
 func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHookReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)

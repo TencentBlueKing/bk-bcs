@@ -32,7 +32,7 @@ func init() {
 }
 
 // mig20230625152115Up for up migration
-func mig20230625152115Up(tx *gorm.DB) error { // nolint:funlen
+func mig20230625152115Up(tx *gorm.DB) error { //nolint:funlen
 	// AppTemplateBindings : 记录未命名版本服务版本与模版套餐及模版版本的绑定情况
 	type AppTemplateBindings struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`

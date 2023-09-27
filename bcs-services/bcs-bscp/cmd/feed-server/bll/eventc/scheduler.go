@@ -90,7 +90,7 @@ type Scheduler struct {
 	appPool *appPool
 	ob      observer.Interface
 	lc      *lcache.Cache
-	// nolint: unused
+	//nolint: unused
 	csm          *consumer
 	retry        *retryList
 	handler      *Handler

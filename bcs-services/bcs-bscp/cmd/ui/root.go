@@ -94,7 +94,7 @@ func RunCmd() error {
 	svr, err := service.NewWebServer(ctx, httpAddress, tools.GetListenAddr(addrIPv6, port))
 	if err != nil {
 		klog.Errorf("init web server err: %s, exited", err)
-		os.Exit(1) // nolint:gocritic
+		os.Exit(1) //nolint:gocritic
 	}
 
 	klog.InfoS("listening for requests and metrics", "address", httpAddress)

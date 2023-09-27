@@ -34,7 +34,7 @@ func TestKvEncryptRsa(t *testing.T) {
 	var err error
 	b, storage := createBackendWithStorage(t)
 
-	kvPath := "apps/1/kvs/1" // nolint:goconst
+	kvPath := "apps/1/kvs/1" //nolint:goconst
 	pkiPath := "apps/1/pkis/1"
 	kvEncrypt := "apps/1/kvs/1/encrypt"
 

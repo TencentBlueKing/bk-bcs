@@ -37,17 +37,17 @@ type moduleType string
 
 const (
 	// auth module.
-	// nolint: unused
+	//nolint: unused
 	authModule moduleType = "auth"
 	// initial bscp auth model in iam module.
-	// nolint: unused
+	//nolint: unused
 	initialModule moduleType = "init"
 	// iam callback module.
-	// nolint: unused
+	//nolint: unused
 	iamModule moduleType = "iam"
-	// nolint: unused
+	//nolint: unused
 	userModule moduleType = "user"
-	// nolint: unused
+	//nolint: unused
 	spaceModule moduleType = "space"
 )
 
