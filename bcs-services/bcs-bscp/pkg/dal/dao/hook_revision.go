@@ -222,15 +222,16 @@ func (dao *hookRevisionDao) ListWithRefer(kit *kit.Kit, opt *types.ListHookRevis
 
 	m := dao.genQ.HookRevision
 	rh := dao.genQ.ReleasedHook
-	q := dao.genQ.HookRevision.WithContext(kit.Ctx).Where(
-		m.BizID.Eq(opt.BizID),
-		m.HookID.Eq(opt.HookID)).Order(m.ID.Desc())
+	q := dao.genQ.HookRevision.WithContext(kit.Ctx)
 
 	if opt.SearchKey != "" {
 		searchKey := "%" + opt.SearchKey + "%"
 		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
 		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
-		q = q.Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
+		q = q.Where(m.BizID.Eq(opt.BizID), m.HookID.Eq(opt.HookID)).
+			Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
+	} else {
+		q = q.Where(m.BizID.Eq(opt.BizID), m.HookID.Eq(opt.HookID))
 	}
 
 	if opt.State != "" {
@@ -243,6 +244,7 @@ func (dao *hookRevisionDao) ListWithRefer(kit *kit.Kit, opt *types.ListHookRevis
 
 	q = q.Select(m.ALL, rh.ID.Count().As("refer_count"), rh.ReleaseID.Min().Eq(0).As("refer_editing_release")).
 		LeftJoin(rh, m.ID.EqCol(rh.HookRevisionID)).
+		Order(m.ID.Desc()).
 		Group(m.ID)
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
