@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main client main
 package main
 
 import (
@@ -18,14 +18,14 @@ import (
 	"encoding/json"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanager"
-
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/service"
 	"github.com/micro/go-micro/v2/service/grpc"
 	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanager"
 )
 
 func main() {
@@ -43,7 +43,10 @@ func main() {
 	svc := grpc.NewService(
 		service.Registry(etcd.NewRegistry(regOption)),
 	)
-	svc.Client().Init()
+	err = svc.Client().Init()
+	if err != nil {
+		klog.Errorf("client init failed: %s", err.Error())
+	}
 	svc.Init()
 	cli := meshmanager.NewMeshManagerService("meshmanager.bkbcs.tencent.com", svc.Client())
 	req := &meshmanager.ListMeshClusterReq{}
