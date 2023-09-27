@@ -38,7 +38,7 @@
 
   const configStore = useConfigStore()
   const serviceStore = useServiceStore()
-  const { versionData } = storeToRefs(configStore)
+  const { versionData, allConfigCount } = storeToRefs(configStore)
   const { checkPermBeforeOperate } = serviceStore
   const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
 
@@ -438,7 +438,7 @@
                     </tbody>
                   </table>
                 </div>
-                <TableEmpty v-if="configStore.allConfigCount === 0" :isSearchEmpty="isSearchEmpty" @clear="emits('clearStr')"></TableEmpty>
+                <TableEmpty v-if="allConfigCount === 0" :isSearchEmpty="isSearchEmpty" @clear="emits('clearStr')"></TableEmpty>
               </td>
             </tr>
           </template>
