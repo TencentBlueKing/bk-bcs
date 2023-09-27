@@ -73,7 +73,7 @@ func PbCredential(s *table.Credential) *CredentialList {
 }
 
 // PbCredentialSpec convert table CredentialSpec to pb CredentialSpec
-func PbCredentialSpec(spec *table.CredentialSpec) *CredentialSpec { // nolint:revive
+func PbCredentialSpec(spec *table.CredentialSpec) *CredentialSpec { //nolint:revive
 	if spec == nil {
 		return nil
 	}
@@ -88,7 +88,7 @@ func PbCredentialSpec(spec *table.CredentialSpec) *CredentialSpec { // nolint:re
 }
 
 // PbCredentialAttachment convert table CredentialAttachment to pb CredentialAttachment
-func PbCredentialAttachment(at *table.CredentialAttachment) *CredentialAttachment { // nolint:revive
+func PbCredentialAttachment(at *table.CredentialAttachment) *CredentialAttachment { //nolint:revive
 	if at == nil {
 		return nil
 	}

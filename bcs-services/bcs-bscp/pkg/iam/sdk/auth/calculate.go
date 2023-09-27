@@ -62,7 +62,7 @@ func (a *Authorize) calculatePolicy(ctx context.Context, resources []client.Reso
 }
 
 // calculateAnyPolicy returns true when having policy of any resource of the action
-func (a *Authorize) calculateAnyPolicy(ctx context.Context, resources []client.Resource, // nolint:unparam
+func (a *Authorize) calculateAnyPolicy(ctx context.Context, resources []client.Resource, //nolint:unparam
 	p *operator.Policy) bool {
 
 	if p == nil || p.Operator == "" {
@@ -284,7 +284,7 @@ func (a *Authorize) authElement(ctx context.Context, policy *operator.Policy, rs
 		}
 
 		// record these attribute for later calculate.
-		allAttrPolicies = append(allAttrPolicies, policy) // nolint
+		allAttrPolicies = append(allAttrPolicies, policy) //nolint
 
 		// initialize and validate the resource, can not be empty and should be all the same.
 		if len(resource) != 0 && resource != fv.Field.Resource {

@@ -34,7 +34,7 @@ func (m *AppSpec) AppSpec() *table.AppSpec {
 }
 
 // PbAppSpec convert table AppSpec to pb AppSpec
-func PbAppSpec(spec *table.AppSpec) *AppSpec { // nolint:revive
+func PbAppSpec(spec *table.AppSpec) *AppSpec { //nolint:revive
 	if spec == nil {
 		return nil
 	}

@@ -110,7 +110,7 @@ func (t *curlLogTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	return resp, err
 }
 
-func (t *curlLogTransport) transport(req *http.Request) http.RoundTripper { // nolint:unparam
+func (t *curlLogTransport) transport(req *http.Request) http.RoundTripper { //nolint:unparam
 	if t.Transport != nil {
 		return t.Transport
 	}

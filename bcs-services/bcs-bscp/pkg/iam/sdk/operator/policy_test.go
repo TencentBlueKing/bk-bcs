@@ -119,7 +119,7 @@ func TestPolicy_UnmarshalJSON(t *testing.T) {
 		t.Fatal("parse content.FieldValue failed")
 	}
 
-	if eqPolicy.Field.Resource != "host" || // nolint:goconst
+	if eqPolicy.Field.Resource != "host" || //nolint:goconst
 		eqPolicy.Field.Attribute != "os" ||
 		eqPolicy.Value != "linux" {
 		t.Fatal("parse eq policy failed")

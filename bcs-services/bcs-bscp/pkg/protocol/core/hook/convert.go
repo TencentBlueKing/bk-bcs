@@ -54,7 +54,7 @@ func (m *HookSpec) HookSpec() (*table.HookSpec, error) {
 }
 
 // PbHookSpec convert table HookSpec to pb HookSpec
-func PbHookSpec(spec *table.HookSpec) *HookSpec { // nolint:revive
+func PbHookSpec(spec *table.HookSpec) *HookSpec { //nolint:revive
 	if spec == nil {
 		return nil
 	}
@@ -79,7 +79,7 @@ func (m *HookAttachment) HookAttachment() *table.HookAttachment {
 }
 
 // PbHookAttachment convert table HookAttachment to pb HookAttachment
-func PbHookAttachment(at *table.HookAttachment) *HookAttachment { // nolint:revive
+func PbHookAttachment(at *table.HookAttachment) *HookAttachment { //nolint:revive
 	if at == nil {
 		return nil
 	}

@@ -27,7 +27,7 @@ import (
 
 // isNumericOrTime test if a value is a standard time
 // format string or a numeric value.
-func isNumericOrTime(v interface{}) (bool, bool) { // nolint:unparam
+func isNumericOrTime(v interface{}) (bool, bool) { //nolint:unparam
 	valOf := reflect.ValueOf(v)
 	if valOf.Type().Kind() == reflect.String {
 		// test if this value is a standard time string

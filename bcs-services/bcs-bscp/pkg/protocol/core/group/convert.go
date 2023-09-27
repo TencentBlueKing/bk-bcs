@@ -64,7 +64,7 @@ func (m *GroupSpec) GroupSpec() (*table.GroupSpec, error) {
 }
 
 // PbGroupSpec convert table GroupSpec to pb GroupSpec
-func PbGroupSpec(spec *table.GroupSpec) (*GroupSpec, error) { // nolint:revive
+func PbGroupSpec(spec *table.GroupSpec) (*GroupSpec, error) { //nolint:revive
 	if spec == nil {
 		return nil, nil
 	}
@@ -99,7 +99,7 @@ func (m *GroupAttachment) GroupAttachment() *table.GroupAttachment {
 }
 
 // PbGroupAttachment convert table GroupAttachment to pb GroupAttachment
-func PbGroupAttachment(at *table.GroupAttachment) *GroupAttachment { // nolint:revive
+func PbGroupAttachment(at *table.GroupAttachment) *GroupAttachment { //nolint:revive
 	if at == nil {
 		return nil
 	}

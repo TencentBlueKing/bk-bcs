@@ -11,7 +11,8 @@
  */
 
 // Package selector provides instance selector related structs and functions.
-// nolint:goconst
+//
+//nolint:goconst
 package selector
 
 import (

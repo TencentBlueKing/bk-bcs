@@ -19,10 +19,11 @@ import (
 )
 
 // restMetric is used to collect restfull metrics.
-// nolint:unused
+//
+//nolint:unused
 var restMetric *metric
 
-func initMetric() { // nolint:unused
+func initMetric() { //nolint:unused
 
 	m := new(metric)
 	labels := prometheus.Labels{}
@@ -50,7 +51,7 @@ func initMetric() { // nolint:unused
 	restMetric = m
 }
 
-type metric struct { // nolint:unused
+type metric struct { //nolint:unused
 	// lagMS record the cost time of request the restful API.
 	lagMS *prometheus.HistogramVec
 

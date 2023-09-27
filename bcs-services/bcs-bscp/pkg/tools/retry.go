@@ -79,7 +79,7 @@ func (r *RetryPolicy) Sleep() {
 	}
 
 	// no matter retry how many times, sleep a const time and with an extra rand time.
-	rd := rand.New(rand.NewSource(time.Now().UnixNano())) // nolint:gosec
+	rd := rand.New(rand.NewSource(time.Now().UnixNano())) //nolint:gosec
 	randTime := rd.Intn(int(r.rangeMillSeconds[1])-int(r.rangeMillSeconds[0])) + int(r.rangeMillSeconds[0])
 	duration := r.rangeMillSeconds[0] + uint(randTime)
 	time.Sleep(time.Duration(duration) * time.Millisecond)

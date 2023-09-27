@@ -308,7 +308,7 @@ func (r *Request) tryThrottle(url string) {
 
 // Do http request do.
 //
-// nolint:funlen
+//nolint:funlen
 func (r *Request) Do() *Result {
 	result := new(Result)
 

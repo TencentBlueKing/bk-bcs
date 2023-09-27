@@ -181,7 +181,7 @@ func GetClient() *resty.Client {
 				OnAfterResponse(restyAfterResponseHook).
 				OnError(restyErrHook).
 				// NOCC:gas/tls(设计如此)
-				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}). // nolint:gosec
+				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}). //nolint:gosec
 				SetHeader("User-Agent", userAgent)
 		})
 	}

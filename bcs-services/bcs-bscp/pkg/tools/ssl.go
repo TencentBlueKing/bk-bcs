@@ -56,7 +56,7 @@ func ClientTLSConfVerify(skipVerify bool, caFile, certFile, keyFile, passwd stri
 	}
 
 	conf := &tls.Config{
-		InsecureSkipVerify: skipVerify, // nolint
+		InsecureSkipVerify: skipVerify, //nolint
 		RootCAs:            caPool,
 		Certificates:       []tls.Certificate{*cert},
 	}
@@ -112,7 +112,7 @@ func loadCertificates(certFile, keyFile, passwd string) (*tls.Certificate, error
 			return nil, fmt.Errorf("decode private key failed")
 		}
 
-		priDecrPem, decErr := x509.DecryptPEMBlock(priPem, []byte(passwd)) // nolint:staticcheck
+		priDecrPem, decErr := x509.DecryptPEMBlock(priPem, []byte(passwd)) //nolint:staticcheck
 		if decErr != nil {
 			return nil, decErr
 		}

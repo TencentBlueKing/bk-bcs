@@ -20,7 +20,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httputil"
-	_ "net/http/pprof" // nolint
+	_ "net/http/pprof" //nolint
 	"net/url"
 	"strings"
 

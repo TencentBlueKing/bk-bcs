@@ -33,7 +33,8 @@ func (m *ReleaseSpec) ReleaseSpec() *table.ReleaseSpec {
 }
 
 // PbReleaseSpec convert table ReleaseSpec to pb ReleaseSpec
-// nolint:revive
+//
+//nolint:revive
 func PbReleaseSpec(spec *table.ReleaseSpec) *ReleaseSpec {
 	if spec == nil {
 		return nil
@@ -60,7 +61,7 @@ func (m *ReleaseAttachment) ReleaseAttachment() *table.ReleaseAttachment {
 }
 
 // PbReleaseAttachment convert table ReleaseAttachment to pb ReleaseAttachment
-func PbReleaseAttachment(at *table.ReleaseAttachment) *ReleaseAttachment { // nolint:revive
+func PbReleaseAttachment(at *table.ReleaseAttachment) *ReleaseAttachment { //nolint:revive
 	if at == nil {
 		return nil
 	}

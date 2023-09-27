@@ -38,7 +38,7 @@ var SystemIDNameMap = map[string]string{
 const (
 	Business      client.TypeID = "biz"
 	Application   client.TypeID = "app"
-	AppCredential client.TypeID = "app_credential" // nolint:gosec
+	AppCredential client.TypeID = "app_credential" //nolint:gosec
 )
 
 // ActionID action id to register iam.
@@ -91,9 +91,9 @@ const (
 	Skip client.ActionID = "skip"
 
 	// CredentialView 服务密钥查看
-	CredentialView client.ActionID = "app_credential_view" // nolint:gosec
+	CredentialView client.ActionID = "app_credential_view" //nolint:gosec
 	// CredentialManage 服务密钥管理
-	CredentialManage client.ActionID = "app_credential_manage" // nolint:gosec
+	CredentialManage client.ActionID = "app_credential_manage" //nolint:gosec
 )
 
 // ActionIDNameMap is action id type map.

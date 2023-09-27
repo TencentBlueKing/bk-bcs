@@ -200,7 +200,8 @@ func genCredentialActions() []client.ResourceAction {
 }
 
 // genGroupActions 应用分组
-// nolint:unused
+//
+//nolint:unused
 func genGroupActions() []client.ResourceAction {
 	actions := make([]client.ResourceAction, 0)
 

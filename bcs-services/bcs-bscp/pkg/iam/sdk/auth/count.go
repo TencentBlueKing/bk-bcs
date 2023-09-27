@@ -114,7 +114,7 @@ func (a *Authorize) countIamIDKey(op operator.OpType, fv *operator.FieldValue) (
 
 // preAnalyzeContent NOTES
 // get isAny flag and the content if illegal or not.
-func preAnalyzeContent(op operator.OpType, content *operator.Content) error { // nolint:unparam
+func preAnalyzeContent(op operator.OpType, content *operator.Content) error { //nolint:unparam
 
 	fieldMap := make(map[string]struct{})
 

@@ -45,7 +45,7 @@ func (m *TemplateSpec) TemplateSpec() *table.TemplateSpec {
 }
 
 // PbTemplateSpec convert table TemplateSpec to pb TemplateSpec
-func PbTemplateSpec(spec *table.TemplateSpec) *TemplateSpec { // nolint:revive
+func PbTemplateSpec(spec *table.TemplateSpec) *TemplateSpec { //nolint:revive
 	if spec == nil {
 		return nil
 	}
@@ -70,7 +70,7 @@ func (m *TemplateAttachment) TemplateAttachment() *table.TemplateAttachment {
 }
 
 // PbTemplateAttachment convert table TemplateAttachment to pb TemplateAttachment
-func PbTemplateAttachment(at *table.TemplateAttachment) *TemplateAttachment { // nolint:revive
+func PbTemplateAttachment(at *table.TemplateAttachment) *TemplateAttachment { //nolint:revive
 	if at == nil {
 		return nil
 	}

@@ -183,7 +183,7 @@ type searcher struct {
 	fields          []string
 	value           string
 	tableName       TableName
-	supportedFields []string // nolint:unused
+	supportedFields []string //nolint:unused
 }
 
 // NewSearcher new a Searcher

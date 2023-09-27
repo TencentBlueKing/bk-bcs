@@ -67,5 +67,5 @@ const (
 	// Credential resource's bscp auth resource type
 	Credential ResourceType = "credential"
 	// CredentialScope resource's bscp auth resource type
-	CredentialScope ResourceType = "credential_scope" // nolint:gosec
+	CredentialScope ResourceType = "credential_scope" //nolint:gosec
 )

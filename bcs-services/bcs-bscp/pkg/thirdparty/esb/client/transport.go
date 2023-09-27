@@ -49,7 +49,7 @@ func (t *esbAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	return resp, err
 }
 
-func (t *esbAuthTransport) transport(req *http.Request) http.RoundTripper { // nolint:unparam
+func (t *esbAuthTransport) transport(req *http.Request) http.RoundTripper { //nolint:unparam
 	if t.Transport != nil {
 		return t.Transport
 	}
