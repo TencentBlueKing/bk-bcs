@@ -293,6 +293,7 @@
                 <bk-popover
                   theme="light template-config-actions-popover"
                   placement="bottom-end"
+                  :popoverDelay="0"
                   :arrow="false">
                   <div class="more-actions">
                     <Ellipsis class="ellipsis-icon" />
