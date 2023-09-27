@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package client NOTES
 package client
 
 import (

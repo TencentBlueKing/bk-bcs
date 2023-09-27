@@ -225,7 +225,7 @@ func (s *Service) checkConfigItems(kt *kit.Kit, req *pbds.BatchUpsertConfigItems
 			toDelete = append(toDelete, ci.ID)
 		}
 	}
-	return // nolint
+	return //nolint
 }
 
 func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
@@ -450,7 +450,7 @@ func (s *Service) compareConfigItem(kt *kit.Kit, new *pbds.BatchUpsertConfigItem
 	if new.ContentSpec.Signature != commit.Spec.Content.Signature {
 		contentDiff = true
 	}
-	return // nolint
+	return //nolint
 }
 
 // UpdateConfigItem update config item.

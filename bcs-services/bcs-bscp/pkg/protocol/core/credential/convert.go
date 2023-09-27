@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbcredential provides credential core protocol struct and convert functions.
 package pbcredential
 
 import (
@@ -72,7 +73,7 @@ func PbCredential(s *table.Credential) *CredentialList {
 }
 
 // PbCredentialSpec convert table CredentialSpec to pb CredentialSpec
-func PbCredentialSpec(spec *table.CredentialSpec) *CredentialSpec {
+func PbCredentialSpec(spec *table.CredentialSpec) *CredentialSpec { //nolint:revive
 	if spec == nil {
 		return nil
 	}
@@ -87,7 +88,7 @@ func PbCredentialSpec(spec *table.CredentialSpec) *CredentialSpec {
 }
 
 // PbCredentialAttachment convert table CredentialAttachment to pb CredentialAttachment
-func PbCredentialAttachment(at *table.CredentialAttachment) *CredentialAttachment {
+func PbCredentialAttachment(at *table.CredentialAttachment) *CredentialAttachment { //nolint:revive
 	if at == nil {
 		return nil
 	}

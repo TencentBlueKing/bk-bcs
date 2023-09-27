@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbci provides config_item core protocol struct and convert functions.
 package pbci
 
 import (

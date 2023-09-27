@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbrci provides released config_item core protocol struct and convert functions.
 package pbrci
 
 import (

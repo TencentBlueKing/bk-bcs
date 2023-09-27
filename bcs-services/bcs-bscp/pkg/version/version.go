@@ -61,13 +61,13 @@ var (
 	GoVersion = runtime.Version()
 
 	// Row print version info by row.
-	Row VersionFormat = "row"
+	Row Format = "row"
 	// JSON print version info by json.
-	JSON VersionFormat = "json"
+	JSON Format = "json"
 )
 
-// VersionFormat defines the format to print version.
-type VersionFormat string
+// Format defines the format to print version.
+type Format string
 
 // Debug show the version if enable debug.
 func Debug() bool {
@@ -75,17 +75,19 @@ func Debug() bool {
 }
 
 // ShowVersion shows the version info.
-func ShowVersion(prefix string, format VersionFormat) {
+func ShowVersion(prefix string, format Format) {
 	fmt.Println(FormatVersion(prefix, format))
 }
 
 // FormatVersion returns service's version.
-func FormatVersion(prefix string, format VersionFormat) string {
+func FormatVersion(prefix string, format Format) string {
 	if prefix != "" {
-		prefix = prefix + " "
+		prefix += " "
 	}
-	rawFormat := fmt.Sprintf("%sVersion  : %s\nBuildTime: %s\nGitHash  : %s\nGoVersion: %s", prefix, VERSION, BUILDTIME, GITHASH, GoVersion)
-	jsonFormat := fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s", "GoVersion": "%s"}`, prefix, VERSION, BUILDTIME, GITHASH, GoVersion)
+	rawFormat := fmt.Sprintf("%sVersion  : %s\nBuildTime: %s\nGitHash  : %s\nGoVersion: %s",
+		prefix, VERSION, BUILDTIME, GITHASH, GoVersion)
+	jsonFormat := fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s", "GoVersion": "%s"}`,
+		prefix, VERSION, BUILDTIME, GITHASH, GoVersion)
 
 	switch format {
 	case Row:

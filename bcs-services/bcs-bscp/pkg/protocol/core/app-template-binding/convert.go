@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbatb provides app template binding core protocol struct and convert functions.
 package pbatb
 
 import (

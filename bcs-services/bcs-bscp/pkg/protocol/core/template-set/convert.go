@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbtset provides template set core protocol struct and convert functions.
 package pbtset
 
 import (

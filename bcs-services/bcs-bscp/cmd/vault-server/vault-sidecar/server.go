@@ -145,12 +145,12 @@ func runServerCmd() error {
 
 // HealthyHandler Healthz 接口
 func HealthzHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK")) // nolint
+	w.Write([]byte("OK")) //nolint
 }
 
 // HealthyHandler 健康检查
 func HealthyHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK")) // nolint
+	w.Write([]byte("OK")) //nolint
 }
 
 func checkVaultStatus() error {
@@ -189,7 +189,7 @@ func ReadyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("OK")) // nolint
+	w.Write([]byte("OK")) //nolint
 }
 
 // tryUnseal auto unseal by keys
@@ -258,7 +258,7 @@ func getPlugins(conf vaultConf) (map[string]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer f.Close() // nolint
+		defer f.Close() //nolint
 
 		h := sha256.New()
 		if _, err := io.Copy(h, f); err != nil {

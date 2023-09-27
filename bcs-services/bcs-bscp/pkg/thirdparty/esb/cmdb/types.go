@@ -77,8 +77,7 @@ type AtomRule struct {
 	Value    interface{} `json:"value"`
 }
 
-// https://github.com/TencentBlueKing/bk-cmdb/tree/master/src/common/querybuilder 规范文档
-// Operator NOTES
+// Operator https://github.com/TencentBlueKing/bk-cmdb/tree/master/src/common/querybuilder 规范文档
 type Operator string
 
 var (

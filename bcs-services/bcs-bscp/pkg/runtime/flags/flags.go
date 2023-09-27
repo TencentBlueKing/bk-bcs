@@ -24,7 +24,7 @@ import (
 // wordSepNormalizeFunc changes all flags that contain "_" separators
 func wordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
 	if strings.Contains(name, "_") {
-		return pflag.NormalizedName(strings.Replace(name, "_", "-", -1))
+		return pflag.NormalizedName(strings.ReplaceAll(name, "_", "-"))
 	}
 	return pflag.NormalizedName(name)
 }
@@ -34,7 +34,8 @@ func SysFlags(fs *pflag.FlagSet) *cc.SysOption {
 	opt := new(cc.SysOption)
 	fs.SetNormalizeFunc(wordSepNormalizeFunc)
 
-	fs.StringArrayVarP(&opt.ConfigFiles, "config-file", "c", []string{}, "the absolute path of the configuration file (repeatable)")
+	fs.StringArrayVarP(&opt.ConfigFiles, "config-file", "c", []string{},
+		"the absolute path of the configuration file (repeatable)")
 	fs.IPVarP(&opt.BindIP, "bind-ip", "b", []byte{}, "which IP the server is listen to")
 	fs.BoolVarP(&opt.Versioned, "version", "v", false, "show version")
 

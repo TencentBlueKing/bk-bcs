@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bkcmdb provides bkcmdb client.
 package bkcmdb
 
 import (

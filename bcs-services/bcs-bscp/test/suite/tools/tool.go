@@ -38,7 +38,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	outFile, err := os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE, 0644) // nolint
+	outFile, err := os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE, 0644) //nolint
 	if err != nil {
 		log.Fatalf("open file failed, err: %v\n", err)
 	}

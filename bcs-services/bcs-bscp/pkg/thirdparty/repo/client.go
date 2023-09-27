@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package repo provides bkrepo client.
 package repo
 
 import (

@@ -46,7 +46,7 @@ const (
 	// Credential 凭据资源
 	Credential AuditResourceType = "credential"
 	// CredentialScope 凭据规则资源
-	CredentialScope AuditResourceType = "credential_scope"
+	CredentialScope AuditResourceType = "credential_scope" //nolint:gosec
 )
 
 // AuditResourceTypeEnums resource type map.

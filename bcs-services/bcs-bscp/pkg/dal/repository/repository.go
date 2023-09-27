@@ -136,20 +136,20 @@ func (u *uriDecoratorInter) Root() string {
 
 // RepoName ..
 func (u *uriDecoratorInter) RepoName() string {
-	name, _ := repo.GenRepoName(u.bizID) // nolint
+	name, _ := repo.GenRepoName(u.bizID) //nolint
 	return name
 }
 
 // Path ..
 func (u *uriDecoratorInter) Path(sign string) string {
-	p, _ := repo.GenS3NodeFullPath(u.bizID, sign) // nolint
+	p, _ := repo.GenS3NodeFullPath(u.bizID, sign) //nolint
 	return p
 
 }
 
 // RelativePath ..
 func (u *uriDecoratorInter) RelativePath(sign string) string {
-	p, _ := repo.GenNodeFullPath(sign) // nolint
+	p, _ := repo.GenNodeFullPath(sign) //nolint
 	return p
 }
 

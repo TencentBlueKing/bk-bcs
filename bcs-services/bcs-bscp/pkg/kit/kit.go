@@ -33,7 +33,7 @@ func New() *Kit {
 	rid := uuid.UUID()
 	return &Kit{
 		Rid: rid,
-		Ctx: context.WithValue(context.TODO(), constant.RidKey, rid),
+		Ctx: context.WithValue(context.TODO(), constant.RidKey, rid), //nolint
 	}
 }
 
@@ -101,7 +101,7 @@ func FromGrpcContext(ctx context.Context) *Kit {
 		}
 	}
 
-	kit.Ctx = context.WithValue(kit.Ctx, constant.RidKey, rid)
+	kit.Ctx = context.WithValue(kit.Ctx, constant.RidKey, rid) //nolint
 
 	// Note: need to add supplier id and authorization field.
 	return kit
@@ -165,7 +165,7 @@ func (c *Kit) GetKitForRepoCfg() *Kit {
 
 // ContextWithRid NOTES
 func (c *Kit) ContextWithRid() context.Context {
-	return context.WithValue(c.Ctx, constant.RidKey, c.Rid)
+	return context.WithValue(c.Ctx, constant.RidKey, c.Rid) //nolint
 }
 
 // RPCMetaData rpc 头部元数据
@@ -191,7 +191,7 @@ func (c *Kit) RpcCtx() context.Context {
 
 // CtxWithTimeoutMS create a new context with basic info and timout configuration.
 func (c *Kit) CtxWithTimeoutMS(timeoutMS int) context.CancelFunc {
-	ctx := context.WithValue(context.TODO(), constant.RidKey, c.Rid)
+	ctx := context.WithValue(context.TODO(), constant.RidKey, c.Rid) //nolint
 	var cancel context.CancelFunc
 	c.Ctx, cancel = context.WithTimeout(ctx, time.Duration(timeoutMS)*time.Millisecond)
 	return cancel
@@ -255,7 +255,7 @@ func (c *Kit) Vas() *Vas {
 
 // WithKit 封装 kit 到当前的 context
 func WithKit(ctx context.Context, kit *Kit) context.Context {
-	return context.WithValue(ctx, constant.KitKey, kit)
+	return context.WithValue(ctx, constant.KitKey, kit) //nolint
 }
 
 // MustGetKit 从 context 获取 kit, 注意: 如果没有, 会panic, 一般在中间件中使用

@@ -21,8 +21,8 @@ import (
 func TestResourceLock_Acquire(t *testing.T) {
 	lo := New(Option{QPS: 2, Burst: 2})
 	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 
 		state := lo.Acquire("tom")
@@ -42,8 +42,8 @@ func TestResourceLock_Acquire(t *testing.T) {
 		t.Errorf("test tom re-acquire, should not run here without release operation")
 	}()
 
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 
 		state := lo.Acquire("jerry")
@@ -65,8 +65,8 @@ func TestResourceLock_Acquire(t *testing.T) {
 		t.Logf("jerry re-acquire lock success")
 	}()
 
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 
 		state := lo.Acquire("sam")
