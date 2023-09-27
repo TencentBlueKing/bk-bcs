@@ -24,7 +24,7 @@
 <template>
   <bk-button class="reset-default-value-btn" text theme="primary" @click="triggerReset">
     恢复默认值
-    <Help class="help-icon" />
+    <Help class="help-icon" v-bk-tooltips="{content: '服务变量值默认继承上个版本', placement: 'top'}"/>
   </bk-button>
 </template>
 <style lang="scss" scoped>
