@@ -188,7 +188,7 @@
         <div class="space-option-item">
           <div class="name-text">{{ item.spec.name === 'default_space' ? '默认空间' : item.spec.name }}</div>
           <div class="actions">
-            <i v-if="item.id !== 1" class="bk-bscp-icon icon-edit-small" @click.stop="handleEditOpen(item)"></i>
+            <i v-if="item.spec.name !== 'default_space'" class="bk-bscp-icon icon-edit-small" @click.stop="handleEditOpen(item)"></i>
             <!-- <Del v-if="templateSpaceDetail.name !== 'default_space'" class="delete-icon" @click.stop="handleDelete(item)" /> -->
           </div>
         </div>
