@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package iam
@@ -503,7 +502,11 @@ func TestIamClient_GetApplyURL(t *testing.T) {
 	})
 	actionApplication2.RelatedResources = append(actionApplication2.RelatedResources, resource2)
 
-	url, err := cli.GetApplyURL(req, []ApplicationAction{actionApplication1, actionApplication2}, BkUser{BkUserName: "bk_iam"})
+	url, err := cli.GetApplyURL(req, []ApplicationAction{
+		actionApplication1,
+		actionApplication2},
+		BkUser{BkUserName: "bk_iam"},
+	)
 	if err != nil {
 		t.Fatalf("GetApplyURL withResource failed: %v", err)
 	}

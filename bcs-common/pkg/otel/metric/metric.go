@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package metric xxx
@@ -32,10 +31,10 @@ const (
 
 var (
 	// errSwitchStatus switch type error
-	errSwitchStatus error = errors.New("error switch status, please input: [on or off]")
+	errSwitchStatus = errors.New("error switch status, please input: [on or off]")
 
 	// errMetricType metric type error
-	errMetricType error = errors.New("error metric type, please input: [prometheus]")
+	errMetricType = errors.New("error metric type, please input: [prometheus]")
 
 	// errProcessorWithMemory processor with memory error
 	errProcessorWithMemory = errors.New("error value of ProcessorWithMemory, please input: [true or false]")
@@ -54,7 +53,7 @@ type Options struct {
 	ProcessorWithMemory prometheus.MemoryOption `json:"processorWithMemory" value:"false" usage:"processor memory policy"`
 
 	// ControllerOption is the interface type slice that applies the value to a configuration option.
-	ControllerOption []controller.Option `json:"controllerOption" value:"" usage:"applies the value to a configuration option"`
+	ControllerOption []controller.Option `json:"controllerOption" value:"" usage:"applies the value to a configuration option"` // nolint
 }
 
 // Option for init Options
@@ -67,7 +66,6 @@ func InitMeterProvider(op ...Option) (metric.MeterProvider, *prom.Exporter, erro
 		MetricType:          defaultMetricType,
 		ProcessorWithMemory: true,
 	}
-
 	for _, o := range op {
 		o(defaultOptions)
 	}
@@ -120,7 +118,7 @@ func validateMetricType(mt string) error {
 }
 
 func validateProcessorWithMemory(p prometheus.MemoryOption) error {
-	if p == false || p == true {
+	if !p {
 		return nil
 	}
 	return errProcessorWithMemory

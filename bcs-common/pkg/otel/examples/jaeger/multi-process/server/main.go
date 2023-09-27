@@ -8,21 +8,22 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
-
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
@@ -47,25 +48,26 @@ func main() {
 	op = append(op, trace.ResourceAttrs(opts.ResourceAttrs))
 	op = append(op, trace.ExporterURL(opts.ExporterURL))
 
-	tp, err := trace.InitTracerProvider("http-server", op...)
-	otel.SetTextMapPropagator(propagation.TraceContext{})
+	err := initTracingProvider("http-server", op...)
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// Cleanly shutdown and flush telemetry when the application exits.
-	defer func(ctx context.Context) {
-		// Do not make the application hang when it is shutdown.
-		ctx, cancel = context.WithTimeout(ctx, time.Second*5)
-		defer cancel()
-		if err := tp.Shutdown(ctx); err != nil {
-			log.Fatal(err)
-		}
-	}(ctx)
-
 	wrappedHandler := otelhttp.NewHandler(http.HandlerFunc(welcomePage), "/")
 	http.Handle("/", wrappedHandler)
 	log.Fatal(http.ListenAndServe("localhost:9090", nil))
+}
+
+func initTracingProvider(serviceName string, opt ...trace.Option) error {
+	ctx := context.Background()
+
+	tp, err := trace.InitTracerProvider(serviceName, opt...)
+	otel.SetTextMapPropagator(propagation.TraceContext{})
+	if err != nil {
+		return fmt.Errorf("failed to initialize an OTLP tracer provider: %s", err.Error())
+	}
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	return tp.Shutdown(ctx)
 }

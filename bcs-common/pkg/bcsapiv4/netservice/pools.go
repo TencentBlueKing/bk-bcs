@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package netservice
@@ -212,10 +211,7 @@ type NetResponse struct {
 
 // IsSucc check NetResponse is success when request
 func (nr *NetResponse) IsSucc() bool {
-	if nr.Code == 0 {
-		return true
-	}
-	return false
+	return nr.Code == 0
 }
 
 // ResourceRequest for host available ip qeury

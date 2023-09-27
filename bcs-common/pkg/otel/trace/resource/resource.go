@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package resource xxx
@@ -27,10 +26,8 @@ func New(serviceName string, attrs ...attribute.KeyValue) *resource.Resource {
 		resource.NewWithAttributes(semconv.SchemaURL,
 			semconv.ServiceNameKey.String(serviceName)),
 	)
-	if attrs != nil {
-		for _, a := range attrs {
-			r, _ = resource.Merge(r, resource.NewSchemaless(a))
-		}
+	for _, a := range attrs {
+		r, _ = resource.Merge(r, resource.NewSchemaless(a))
 	}
 	return r
 }

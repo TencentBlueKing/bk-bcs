@@ -8,13 +8,11 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package jwt
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -85,7 +83,7 @@ func newErrPubKeyClient() (*JWTClient, error) {
 	path, _ := os.Getwd()
 	privateKeyPath := path + "/jwt_file/app.rsa"
 	// read
-	privateKeyByte, _ := ioutil.ReadFile(privateKeyPath)
+	privateKeyByte, _ := os.ReadFile(privateKeyPath)
 
 	// error public key
 	publicKeyStr := `
