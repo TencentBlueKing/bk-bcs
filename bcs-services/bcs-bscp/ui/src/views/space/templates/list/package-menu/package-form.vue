@@ -43,6 +43,7 @@
 
   watch(() => props.data, (val) => {
     localVal.value = cloneDeep(val)
+    localVal.value.name = ''
   }, {
     immediate: true
   })
