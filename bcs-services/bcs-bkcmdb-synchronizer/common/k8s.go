@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -87,7 +86,7 @@ func (kp *K8SPod) SetCreationTimestamp(t time.Time) {
 }
 
 func convertK8STime(k8sTime string) string {
-	output := strings.Replace(k8sTime, "T", " ", -1)
+	output := strings.ReplaceAll(k8sTime, "T", " ")
 	output = output[0:19]
 	return output
 }
@@ -125,7 +124,7 @@ func ConvertK8SPod(cluster string, kPod *K8SPod) (*Pod, error) {
 	}
 
 	newPod.PodIP = kPod.Status.PodIP
-	newPod.PodStatus = string(kPod.Status.Phase)
+	newPod.PodStatus = kPod.Status.Phase
 
 	if kPod.Spec.HostNetwork {
 		newPod.PodNetworkMode = K8SNetworkModeHost
