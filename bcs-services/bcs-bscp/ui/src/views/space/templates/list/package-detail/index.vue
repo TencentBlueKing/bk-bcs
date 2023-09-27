@@ -53,7 +53,7 @@
       <div class="header-wrapper">
         <div v-if="headerInfo.isPublic" class="tag">公开</div>
         <h4 class="package-name">{{ headerInfo.name }}</h4>
-        <p class="package-desc" :title="headerInfo.memo">{{ headerInfo.memo }}</p>
+        <p class="package-desc" :title="headerInfo.memo" v-if="headerInfo.name !== '默认套餐'">{{ headerInfo.memo }}</p>
       </div>
       <div class="table-list-wrapper">
         <component v-if="tableComp" :is="tableComp" />
