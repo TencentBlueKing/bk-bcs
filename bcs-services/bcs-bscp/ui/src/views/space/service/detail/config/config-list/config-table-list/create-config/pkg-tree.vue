@@ -3,7 +3,7 @@
   import { ITemplateBoundByAppData } from '../../../../../../../../../types/config';
   import { IAllPkgsGroupBySpaceInBiz, IPkgTreeItem } from '../../../../../../../../../types/template';
   import SearchInput from '../../../../../../../../components/search-input.vue';
-
+  import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
   interface ISpaceTreeItem extends IPkgTreeItem {
     children: IPkgTreeItem[];
   }
@@ -18,7 +18,7 @@
   const emits = defineEmits(['change'])
 
   const searchStr = ref('')
-
+  const isSearchEmpty = ref(false)
   const pkgTreeData = computed(() => {
     let list: IAllPkgsGroupBySpaceInBiz[] = []
     if (searchStr.value) {
@@ -68,7 +68,9 @@
     })
   })
 
-  const handleSearch = () => {}
+  const handleSearch = () => {
+    searchStr.value ? isSearchEmpty.value = true : isSearchEmpty.value = false
+  }
 
   const handleNodeCheckChange = (node: ISpaceTreeItem, val: boolean) => {
     const list = props.value.slice()
@@ -121,16 +123,20 @@
     return isPkgImported(id) || props.value.some(pkg => pkg.template_set_id === id)
   }
 
+  const clearSearchStr = () => {
+    isSearchEmpty.value = false
+    searchStr.value = ''
+  }
 </script>
 <template>
   <h4 class="title">从配置模板导入</h4>
   <SearchInput v-model="searchStr" placeholder="搜索模板套餐" @search="handleSearch" />
   <div class="packages-tree">
     <bk-tree
+      v-if="pkgTreeData.length"
       ref="treeRef"
       label="name"
       node-key="nodeId"
-      :empty-text="searchStr === '' ? '暂无搜索结果' : '暂无数据'"
       :expand-all="searchStr !== ''"
       :data="pkgTreeData"
       :show-node-type-icon="false">
@@ -147,6 +153,7 @@
         </div>
       </template>
     </bk-tree>
+    <TableEmpty v-else :isSearchEmpty="isSearchEmpty" @clear="clearSearchStr"></TableEmpty>
   </div>
 </template>
 <style lang="scss" scoped>

@@ -136,7 +136,7 @@
         </tr>
         <tr v-if="props.list.length === 0">
           <td :colspan="cols.length">
-            <bk-exception class="empty-tips" type="empty" scene="part">暂无变量数据</bk-exception>
+            <bk-exception class="empty-tips" type="empty" scene="part">暂无数据</bk-exception>
           </td>
         </tr>
       </tbody>
