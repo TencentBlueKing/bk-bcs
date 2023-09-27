@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package util
@@ -71,10 +70,11 @@ func GetIPv6Address(ip string) string {
 //
 // ....
 //
-// - name: localIpv6
-//   valueFrom
+//   - name: localIpv6
+//     valueFrom
 //     fieldRef
-//       fieldPath: status.podIPs
+//     fieldPath: status.podIPs
+//
 // ....
 //
 // 则，在容器中，通过该环境变量“localIpv6”，获取到的值是"localIpv6=10.9.8.113,fd00:3:2:55",可以注意到这个值是IPv4地址在前面，

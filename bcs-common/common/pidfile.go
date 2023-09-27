@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
@@ -16,7 +15,6 @@ package common
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -30,7 +28,7 @@ var pidfile string
 func SavePid(processConfig conf.ProcessConfig) error {
 	pidPath := filepath.Join(processConfig.PidDir, filepath.Base(os.Args[0])+".pid")
 	if fi, err := os.Stat(pidPath); err == nil && !fi.IsDir() {
-		os.Remove(pidPath)
+		_ = os.Remove(pidPath)
 	} else if !os.IsNotExist(err) {
 		return err
 	}
@@ -62,7 +60,9 @@ func WritePid() error {
 	if err != nil {
 		return fmt.Errorf("error opening pidfile %s: %s", pidfile, err)
 	}
-	defer file.Close() // in case we fail before the explicit close
+	defer func(file *AtomicFile) {
+		_ = file.Close()
+	}(file) // in case we fail before the explicit close
 
 	_, err = fmt.Fprintf(file, "%d", os.Getpid())
 	if err != nil {
@@ -84,7 +84,7 @@ func ReadPid() (int, error) {
 		return 0, fmt.Errorf("pidfile is empty")
 	}
 
-	d, err := ioutil.ReadFile(pidfile)
+	d, err := os.ReadFile(pidfile)
 	if err != nil {
 		return 0, err
 	}

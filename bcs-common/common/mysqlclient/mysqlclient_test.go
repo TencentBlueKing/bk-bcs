@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package mysqlclient
@@ -53,6 +52,6 @@ func TestDataValue(t *testing.T) {
 	list[4] = "service"
 	list[5] = "2016-11-16 16:39:47"
 	list[6] = "2016-11-16 16:39:47"
-	res, _ := mySql.Insert("INSERT INTO `configcenter_ied`.`cc_InstanceInclude` (`ID`, `ApplicationID`, `InstanceName`, `InstanceType`, `ConfigName`, `ConfigType`, `CreateTime`, `LastTime`) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)", list)
+	res, _ := mySql.Insert("INSERT INTO `configcenter_ied`.`cc_InstanceInclude` (`ID`, `ApplicationID`, `InstanceName`, `InstanceType`, `ConfigName`, `ConfigType`, `CreateTime`, `LastTime`) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)", list) // nolint
 	fmt.Println(res)
 }

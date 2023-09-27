@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package zkclient xxx
@@ -66,7 +65,7 @@ type ZkLock struct {
 // NewZkLock xxx
 func NewZkLock(host []string) *ZkLock {
 	zlock := ZkLock{
-		zkHost: host[:],
+		zkHost: host[:], // nolint
 		zkConn: nil,
 		zkLock: nil,
 		zkAcl:  zk.DigestACL(zk.PermAll, AUTH_USER, AUTH_PWD),
@@ -157,7 +156,7 @@ func NewZkClientWithoutLogger(host []string) *ZkClient {
 
 func newZkclient(host []string, logger zk.Logger) *ZkClient {
 	c := ZkClient{
-		ZkHost: host[:],
+		ZkHost: host[:], // nolint
 		ZkConn: nil,
 		zkAcl:  zk.DigestACL(zk.PermAll, AUTH_USER, AUTH_PWD),
 		logger: logger,
@@ -390,7 +389,7 @@ func (z *ZkClient) CreateNode(path string, data []byte) error {
 // CheckNode xxx
 func (z *ZkClient) CheckNode(path string, data []byte) error {
 	exist, _ := z.Exist(path)
-	if exist == false {
+	if !exist {
 		err := z.Create(path, data)
 		if err != nil {
 			return err
@@ -426,7 +425,7 @@ func (z *ZkClient) GetAll2Json(path string) (string, error) {
 		return "", err
 	}
 
-	if len(childs) <= 0 {
+	if len(childs) == 0 {
 		var ctx string
 		ctx, err = z.Get(path)
 		if err != nil {

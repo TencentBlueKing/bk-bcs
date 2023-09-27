@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package ipv6server
@@ -55,7 +54,7 @@ const (
 	IPv6LoopBack = "::1"
 )
 
-//  tt 全局测试 *testing.T 便于输出测试结果
+// tt 全局测试 *testing.T 便于输出测试结果
 var tt *testing.T
 
 // address 监听地址
@@ -252,7 +251,7 @@ func httpsRequest(url string) error {
 		MaxIdleConns: 10,
 		TLSClientConfig: &tls.Config{
 			MaxVersion:         tls.VersionTLS13,
-			InsecureSkipVerify: true, // 不校验服务端证书，直接信任
+			InsecureSkipVerify: true, // nolint 不校验服务端证书，直接信任
 		},
 	}
 
@@ -311,10 +310,8 @@ func TestListenAndServe(t *testing.T) {
 
 	t.Log("listen", strings.Join(address, ":"+PORT+","), ", start server...")
 
-	select {
-	case err := <-errors:
-		t.Error(err)
-	}
+	err := <-errors
+	t.Error(err)
 }
 
 // TestAccessListenAndServe 访问 TestListenAndServe
@@ -387,10 +384,8 @@ func TestIPv6Server_Serve(t *testing.T) {
 	}
 
 	t.Log("listen", strings.Join(address, ":"+PORT+","), ", start server...")
-	select {
-	case err := <-errors:
-		t.Error(err)
-	}
+	err := <-errors
+	t.Error(err)
 }
 
 func TestIPv6Server_ServeTLS(t *testing.T) {
@@ -431,10 +426,8 @@ func TestIPv6Server_ServeTLS(t *testing.T) {
 	}
 
 	t.Log("listen", strings.Join(address, ":"+PORT+","), ", start server...")
-	select {
-	case err := <-errors:
-		t.Error(err)
-	}
+	err := <-errors
+	t.Error(err)
 }
 
 func TestIPv6Server_ListenAndServeTLS(t *testing.T) {

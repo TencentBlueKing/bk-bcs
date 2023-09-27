@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package websocketDialer
@@ -29,7 +28,7 @@ import (
 
 var (
 	// Token token for bcs tunnel
-	Token = "BCS-API-Tunnel-Token" // NOCC:gas/crypto(设计如此)
+	Token = "BCS-API-Tunnel-Token" // nolint NOCC:gas/crypto(设计如此)
 	// ID tunnel id
 	ID = "BCS-API-Tunnel-ID"
 )
@@ -102,7 +101,7 @@ func (p *peer) start(ctx context.Context, s *Server) {
 		dialer.TLSClientConfig = p.cliTLS
 	} else {
 		dialer.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true, // NOCC:gas/tls(设计如此)
+			InsecureSkipVerify: true, // nolint NOCC:gas/tls(设计如此)
 		}
 	}
 
@@ -143,7 +142,7 @@ outer:
 			blog.Errorf("Failed to serve peer connection %s: %s", p.id, err.Error())
 		}
 
-		ws.Close()
+		_ = ws.Close()
 		time.Sleep(5 * time.Second)
 	}
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package tcpclient xxx
@@ -17,12 +16,13 @@ package tcpclient
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/protocol"
 	"io"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/protocol"
 )
 
 // tcpClient tcp 客户端
@@ -55,10 +55,10 @@ func (cli *tcpClient) heartBeat(ctx context.Context) {
 		case <-time.After(10 * time.Second): // 15 秒发送一次心跳包
 			fmt.Printf("\nsend heart beat\n")
 			// 心跳超时检测，超时一分钟
-			if time.Now().Sub(cli.lastTime) > time.Minute {
+			if time.Since(cli.lastTime) > time.Minute {
 				blog.Error("heart beat timeout, will close the connection")
 				cli.connLock.Lock()
-				cli.conn.Close()
+				_ = cli.conn.Close()
 				cli.conn = nil
 				cli.connLock.Unlock()
 				return
@@ -76,7 +76,7 @@ func (cli *tcpClient) heartBeat(ctx context.Context) {
 			if nil != packageErr {
 				blog.Errorf("package data failed, error information is %s", packageErr.Error())
 				cli.connLock.Lock()
-				cli.conn.Close()
+				_ = cli.conn.Close()
 				cli.conn = nil
 				cli.connLock.Unlock()
 
@@ -90,7 +90,7 @@ func (cli *tcpClient) heartBeat(ctx context.Context) {
 				blog.Error("fail to send data to server[%s], error %s", fmt.Sprintf("%s:%d", cli.serverIP, cli.serverPort),
 					sendErr.Error())
 
-				cli.conn.Close()
+				_ = cli.conn.Close()
 				cli.conn = nil
 				cli.connLock.Unlock()
 				return
@@ -101,10 +101,8 @@ func (cli *tcpClient) heartBeat(ctx context.Context) {
 }
 
 // Write 实现HandlerIf 接口，接收网络发送来的数据
-func (cli *tcpClient) Write(head *protocol.MsgHead, data []byte) (int, error) {
-
-	switch head.Type {
-	case protocol.HeartBeatDetect:
+func (cli *tcpClient) Write(head *protocol.MsgHead, _ []byte) (int, error) {
+	if head.Type == protocol.HeartBeatDetect {
 		cli.lastTime = time.Now()
 		blog.Debug("read heart package")
 	}
@@ -127,7 +125,7 @@ func (cli *tcpClient) handleRead() {
 			cli.connLock.Lock()
 			if nil != cli.conn {
 
-				cli.conn.Close()
+				_ = cli.conn.Close()
 				cli.conn = nil
 			}
 			cli.connLock.Unlock()
@@ -138,7 +136,7 @@ func (cli *tcpClient) handleRead() {
 		if nil == copyErr {
 			blog.Warnf("finish read, close the connection[%s]", cli.conn.RemoteAddr().String())
 			cli.connLock.Lock()
-			cli.conn.Close()
+			_ = cli.conn.Close()
 			cli.conn = nil
 			cli.connLock.Unlock()
 			return
@@ -146,10 +144,10 @@ func (cli *tcpClient) handleRead() {
 
 		blog.Fatalf("should not reach here, close connection[%s]", cli.conn.RemoteAddr().String())
 		cli.connLock.Lock()
-		cli.conn.Close()
+		_ = cli.conn.Close()
 		cli.conn = nil
 		cli.connLock.Unlock()
-		return
+		return // nolint
 
 	}
 }
@@ -213,7 +211,7 @@ func (cli *tcpClient) Send(extID int, data []byte) (int, error) {
 	if sendErr != nil {
 
 		blog.Error(" error %s", sendErr.Error())
-		cli.conn.Close()
+		_ = cli.conn.Close()
 		cli.conn = nil
 
 		return 0, sendErr
@@ -231,7 +229,10 @@ func (cli *tcpClient) DisConnect() error {
 	}
 
 	cli.cancel()
-	cli.conn.Close()
+	err := cli.conn.Close()
+	if err != nil {
+		return err
+	}
 	cli.conn = nil
 	return nil
 }

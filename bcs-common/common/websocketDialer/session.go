@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package websocketDialer
@@ -170,7 +169,7 @@ func (s *Session) serveMessage(reader io.Reader) error {
 	if conn == nil {
 		if message.messageType == Data {
 			err := fmt.Errorf("connection not found %s/%d/%d", s.clientKey, s.sessionKey, message.connID)
-			newErrorMessage(message.connID, err).WriteTo(s.conn)
+			_, _ = newErrorMessage(message.connID, err).WriteTo(s.conn)
 		}
 		return nil
 	}
@@ -207,7 +206,7 @@ func (s *Session) addRemoteClient(address string) error {
 		keys = map[int]bool{}
 		s.remoteClientKeys[clientKey] = keys
 	}
-	keys[int(sessionKey)] = true
+	keys[sessionKey] = true
 
 	if PrintTunnelData {
 		blog.Debug(fmt.Sprintf("ADD REMOTE CLIENT %s, SESSION %d", address, s.sessionKey))
@@ -223,7 +222,7 @@ func (s *Session) removeRemoteClient(address string) error {
 	}
 
 	keys := s.remoteClientKeys[clientKey]
-	delete(keys, int(sessionKey))
+	delete(keys, sessionKey)
 	if len(keys) == 0 {
 		delete(s.remoteClientKeys, clientKey)
 	}
@@ -307,7 +306,7 @@ func (s *Session) sessionAdded(clientKey string, sessionKey int64) {
 	client := fmt.Sprintf("%s/%d", clientKey, sessionKey)
 	_, err := s.writeMessage(newAddClient(client))
 	if err != nil {
-		s.conn.conn.Close()
+		_ = s.conn.conn.Close()
 	}
 }
 
@@ -315,6 +314,6 @@ func (s *Session) sessionRemoved(clientKey string, sessionKey int64) {
 	client := fmt.Sprintf("%s/%d", clientKey, sessionKey)
 	_, err := s.writeMessage(newRemoveClient(client))
 	if err != nil {
-		s.conn.conn.Close()
+		_ = s.conn.conn.Close()
 	}
 }
