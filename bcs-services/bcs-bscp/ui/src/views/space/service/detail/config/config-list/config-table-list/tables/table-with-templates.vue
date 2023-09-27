@@ -208,7 +208,7 @@
       const group: IConfigsGroupData = {
         id: template_set_id,
         name: `${template_space_name === 'default_space' ? '默认空间' : template_space_name} - ${template_set_name}`,
-        expand: false,
+        expand: true,
         configs: []
       }
       template_revisions.forEach(tpl => {
@@ -438,7 +438,7 @@
                     </tbody>
                   </table>
                 </div>
-                <TableEmpty v-if="group.configs.length === 0" :isSearchEmpty="isSearchEmpty" @clear="emits('clearStr')"></TableEmpty>
+                <TableEmpty v-if="configStore.allConfigCount === 0" :isSearchEmpty="isSearchEmpty" @clear="emits('clearStr')"></TableEmpty>
               </td>
             </tr>
           </template>
