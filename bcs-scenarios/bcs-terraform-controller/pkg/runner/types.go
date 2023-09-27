@@ -14,13 +14,28 @@
 package runner
 
 import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	tfv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller/api/v1"
+)
+
+const (
+	// InitAction init
+	InitAction = "init"
+	// PlanAction plan
+	PlanAction = "plan"
+	// ApplyAction apply
+	ApplyAction = "apply"
+	// DestroyAction destroy
+	DestroyAction = "destroy"
 )
 
 // InitRequest terraform init request
 type InitRequest struct {
 	TfInstance string `protobuf:"bytes,1,opt,name=tfInstance,proto3" json:"tfInstance,omitempty"`
 	Upgrade    bool   `protobuf:"varint,2,opt,name=upgrade,proto3" json:"upgrade,omitempty"`
+	ForceCopy  bool   `protobuf:"varint,3,opt,name=forceCopy,proto3" json:"forceCopy,omitempty"`
 }
 
 // InitReply terraform init reply
@@ -34,8 +49,8 @@ type NewTerraformRequest struct {
 	WorkingDir string `protobuf:"bytes,1,opt,name=workingDir,proto3" json:"workingDir,omitempty"`
 	ExecPath   string `protobuf:"bytes,2,opt,name=execPath,proto3" json:"execPath,omitempty"`
 	// Terraform  []byte `protobuf:"bytes,3,opt,name=terraform,proto3" json:"terraform,omitempty"`
-	Terraform  tfv1.Terraform `protobuf:"bytes,3,opt,name=terraform,proto3" json:"terraform,omitempty"`
-	InstanceID string         `protobuf:"bytes,4,opt,name=instanceID,proto3" json:"instanceID,omitempty"`
+	Terraform  *tfv1.Terraform `protobuf:"bytes,3,opt,name=terraform,proto3" json:"terraform,omitempty"`
+	InstanceID string          `protobuf:"bytes,4,opt,name=instanceID,proto3" json:"instanceID,omitempty"`
 }
 
 // NewTerraformReply new terraform reply
@@ -85,4 +100,13 @@ type DestroyRequest struct {
 type DestroyReply struct {
 	Message             string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 	StateLockIdentifier string `protobuf:"bytes,2,opt,name=stateLockIdentifier,proto3" json:"stateLockIdentifier,omitempty"`
+}
+
+// localPrintfer 本地化的输出对象
+// 由于底层tf命令执行的原因，这里处理上要包一层
+type localPrintfer struct{}
+
+// Printf 对应 tfexec.printfer 接口
+func (l *localPrintfer) Printf(format string, v ...interface{}) {
+	blog.Info(fmt.Sprintf(format, v...))
 }

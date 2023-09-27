@@ -22,8 +22,14 @@ import (
 )
 
 var (
+	// Kind Terraform
+	Kind = "Terraform"
+
+	// Group terraformextesions.bkbcs.tencent.com
+	Group = "terraformextesions.bkbcs.tencent.com"
+
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "terraformextesions.bkbcs.tencent.com", Version: "v1"}
+	GroupVersion = schema.GroupVersion{Group: Group, Version: "v1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}

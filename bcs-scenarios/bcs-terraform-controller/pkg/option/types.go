@@ -11,4 +11,12 @@
  *
  */
 
-package utils
+package option
+
+const (
+	// TerraformBinPath  terraform 命令存放目录
+	TerraformBinPath = "/usr/local/bin/terraform"
+
+	// RepositoryStorePath 代码存储路径
+	RepositoryStorePath = "/data/bcs/terraform/repository"
+)
