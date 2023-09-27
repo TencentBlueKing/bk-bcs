@@ -1,15 +1,16 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package main xxx
 package main
 
 import (
@@ -28,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/paascc"
 	cmdb "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/cmdbv3"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/controller"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/discovery"
@@ -51,7 +53,7 @@ func main() {
 	isValid, msg := ops.Validate()
 	if !isValid {
 		fmt.Printf("validate options failed, msg %s\n", msg)
-		os.Exit(-1)
+		os.Exit(-1) // nolint
 	}
 
 	blog.InitLogs(ops.LogConfig)
@@ -59,15 +61,10 @@ func main() {
 	var err error
 	var tlsConfig *tls.Config
 	if len(ops.StorageCa) != 0 || len(ops.StorageCert) != 0 || len(ops.StorageKey) != 0 {
-		tlsConfig, err = ssl.ClientTslConfVerity(
-			ops.StorageCa,
-			ops.StorageCert,
-			ops.StorageKey,
-			static.ClientCertPwd,
-		)
+		tlsConfig, err = ssl.ClientTslConfVerity(ops.StorageCa, ops.StorageCert, ops.StorageKey, static.ClientCertPwd)
 		if err != nil {
 			blog.Errorf("load storage client tls config failed, err %s", err.Error())
-			os.Exit(-1)
+			os.Exit(-1) // nolint
 		}
 	}
 
@@ -92,9 +89,9 @@ func main() {
 	}
 
 	blog.Infof("create discovery")
-	zkAddr := strings.Replace(ops.ZkAddr, ";", ",", -1)
+	zkAddr := strings.ReplaceAll(ops.ZkAddr, ";", ",")
 	disc := discovery.New(zkAddr, "", serverInfo)
-	go disc.Run()
+	go disc.Run() // nolint
 
 	zkAddrs := strings.Split(zkAddr, ",")
 	zkcli := zkclient.NewZkClient(zkAddrs)
@@ -107,13 +104,7 @@ func main() {
 	paasccClient := paascc.NewClientInterface(ops.PaasAddr, ops.PaasAppCode, ops.PaasAppSecret, nil)
 	blog.Infof("create task manager")
 	manager, err := taskmanager.NewManager(
-		ops.PaasEnv,
-		ops.PaasClusterEnv,
-		int(ops.ClusterPullInterval),
-		disc,
-		zkcli,
-		paasccClient,
-	)
+		ops.PaasEnv, ops.PaasClusterEnv, int(ops.ClusterPullInterval), disc, zkcli, paasccClient)
 	if err != nil {
 		blog.Infof("failed to create task manager, err %s", err.Error())
 	}
@@ -129,15 +120,7 @@ func main() {
 		"BK_User":                   []string{ops.CmdbUser},
 	})
 	blog.Infof("create controller")
-	controller := controller.NewController(
-		ops,
-		serverInfo,
-		disc,
-		storageClient,
-		cmdbClient,
-		informer,
-		manager,
-	)
+	controller := controller.NewController(ops, serverInfo, disc, storageClient, cmdbClient, informer, manager)
 
 	blog.Infof("start controller")
 	ctx := context.Background()

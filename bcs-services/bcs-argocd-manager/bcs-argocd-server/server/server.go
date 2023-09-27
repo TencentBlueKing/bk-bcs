@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -27,6 +27,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	gClient "github.com/asim/go-micro/plugins/client/grpc/v4"
+	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
+	gServer "github.com/asim/go-micro/plugins/server/grpc/v4"
+	"github.com/gorilla/mux"
+	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"go-micro.dev/v4"
+	microRgt "go-micro.dev/v4/registry"
+	"google.golang.org/grpc"
+	gCred "google.golang.org/grpc/credentials"
+	"k8s.io/client-go/tools/clientcmd"
+
 	tunnelSDK "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/sdk"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/common"
 	discovery "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-server/internal/dicsovery"
@@ -38,17 +49,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/instance"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/sdk/project"
-
-	gClient "github.com/asim/go-micro/plugins/client/grpc/v4"
-	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
-	gServer "github.com/asim/go-micro/plugins/server/grpc/v4"
-	"github.com/gorilla/mux"
-	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"go-micro.dev/v4"
-	microRgt "go-micro.dev/v4/registry"
-	"google.golang.org/grpc"
-	gCred "google.golang.org/grpc/credentials"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // ArgocdServer is the main server struct
@@ -303,18 +303,26 @@ func (as *ArgocdServer) initHTTPGateway(router *mux.Router) error {
 	if as.tlsConfig != nil && as.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(gCred.NewTLS(as.clientTLSConfig)))
 	} else {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure()) // nolint
 	}
 	err := project.RegisterProjectGwFromEndpoint(
 		context.TODO(),
 		rmMux,
 		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
 		grpcDialOpts)
+	if err != nil {
+		blog.Errorf("register http gateway failed, err %s", err.Error())
+		return fmt.Errorf("register http gateway failed, err %s", err.Error())
+	}
 	err = instance.RegisterInstanceGwFromEndpoint(
 		context.TODO(),
 		rmMux,
 		as.opt.Address+":"+strconv.Itoa(int(as.opt.Port)),
 		grpcDialOpts)
+	if err != nil {
+		blog.Errorf("register http gateway failed, err %s", err.Error())
+		return fmt.Errorf("register http gateway failed, err %s", err.Error())
+	}
 	err = plugin.RegisterPluginGwFromEndpoint(
 		context.TODO(),
 		rmMux,

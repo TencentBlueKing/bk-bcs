@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package rbac
@@ -16,12 +15,14 @@ package rbac
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/gorilla/websocket"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 )
 
 const (
@@ -108,7 +109,7 @@ CONNECTION:
 		_, message, err := conn.ReadMessage()
 		if err != nil {
 			blog.Errorf("error when reading message from websocet: %s", err.Error())
-			conn.Close()
+			_ = conn.Close()
 			goto CONNECTION
 		}
 

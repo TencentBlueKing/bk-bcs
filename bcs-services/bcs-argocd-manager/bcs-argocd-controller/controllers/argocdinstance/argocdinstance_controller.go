@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package argocdinstance xxx
 package argocdinstance
 
 import (
@@ -18,15 +19,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
-	clientset "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned"
-	tkexscheme "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/scheme"
-	informers "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/informers/externalversions/tkex/v1alpha1"
-	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/listers/tkex/v1alpha1"
-
 	"github.com/ghodss/yaml"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -46,6 +38,15 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/apis/tkex/v1alpha1"
+	clientset "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned"
+	tkexscheme "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned/scheme"
+	informers "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/informers/externalversions/tkex/v1alpha1"
+	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/listers/tkex/v1alpha1"
 )
 
 const controllerAgentName = "bcs-argocd-controller"
@@ -228,7 +229,7 @@ func (c *InstanceController) syncHandler(key string) error {
 
 	// sync argocd instance to desired state
 	// 1. sync namespace
-	if err := c.syncNamespace(instance.GetName(), instance); err != nil {
+	if err = c.syncNamespace(instance.GetName(), instance); err != nil {
 		return err
 	}
 
@@ -260,10 +261,11 @@ func (c *InstanceController) syncHandler(key string) error {
 	return nil
 }
 
-func (c *InstanceController) syncInstanceDelete(namespace, name string, config *action.Configuration) error {
+func (c *InstanceController) syncInstanceDelete(namespace, name string, config *action.Configuration) error { // nolint
 	// check helm release exists
 	actionStatus := action.NewStatus(config)
 	_, err := actionStatus.Run(name)
+	// not exists, do nothing
 	if err == nil {
 		// exists, uninstall it
 		actionDelete := action.NewUninstall(config)
@@ -271,12 +273,11 @@ func (c *InstanceController) syncInstanceDelete(namespace, name string, config *
 			utilruntime.HandleError(runErr)
 			return runErr
 		}
-	} else if err == driver.ErrReleaseNotFound {
-		// not exists, do nothing
-	} else {
+	} else if err != driver.ErrReleaseNotFound {
 		utilruntime.HandleError(err)
 		return err
 	}
+
 	// check and delete ns
 	ns, err := c.kubeclientset.CoreV1().Namespaces().Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {

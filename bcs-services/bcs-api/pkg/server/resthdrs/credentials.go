@@ -8,27 +8,26 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package resthdrs
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/emicklei/go-restful"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/proxier"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke"
-	"github.com/emicklei/go-restful"
-	"time"
 )
 
 // UpdateCredentialsForm xxx
@@ -43,11 +42,11 @@ type UpdateCredentialsForm struct {
 // a credentials updating.
 func UpdateCredentials(request *restful.Request, response *restful.Response) {
 	form := UpdateCredentialsForm{}
-	request.ReadEntity(&form)
+	_ = request.ReadEntity(&form)
 
 	err := validate.Struct(&form)
 	if err != nil {
-		response.WriteEntity(FormatValidationError(err))
+		_ = response.WriteEntity(FormatValidationError(err))
 		return
 	}
 
@@ -83,7 +82,7 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 		WriteClientError(response, "CANNOT_UPDATE_CREDENTIALS", message)
 		return
 	}
-	response.WriteEntity(types.EmptyResponse{})
+	_ = response.WriteEntity(types.EmptyResponse{})
 }
 
 // GetCredentials lists the credentials for current user
@@ -101,7 +100,7 @@ func GetCredentials(request *restful.Request, response *restful.Response) {
 		WriteClientError(response, "CREDENTIALS_NOT_FOUND", message)
 		return
 	}
-	response.WriteEntity(credentials)
+	_ = response.WriteEntity(credentials)
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -148,7 +147,7 @@ func GetClientCredentials(request *restful.Request, response *restful.Response) 
 		UserToken:         userToken.Value,
 		CaCertData:        credentials.CaCertData,
 	}
-	response.WriteEntity(clientCredential)
+	_ = response.WriteEntity(clientCredential)
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -189,7 +188,7 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 		WriteClientError(response, "CANNOT_SYNC_TKE_CREDENTIALS", message)
 		return
 	}
-	response.WriteEntity(types.EmptyResponse{})
+	_ = response.WriteEntity(types.EmptyResponse{})
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())

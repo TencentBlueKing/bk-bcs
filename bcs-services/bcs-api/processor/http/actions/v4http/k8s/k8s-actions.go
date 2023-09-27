@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package k8s xxx
 package k8s
 
 import (
@@ -24,12 +24,12 @@ import (
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	restful "github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/regdiscv"
-
-	restful "github.com/emicklei/go-restful"
 )
 
 const (
@@ -50,7 +50,7 @@ func init() {
 		Handler: handlerPatchActions})
 }
 
-func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
+func request2k8sapi(req *restful.Request, uri, method string) (string, error) { // nolint
 	start := time.Now()
 
 	data, err := ioutil.ReadAll(req.Request.Body)
@@ -67,7 +67,8 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 		metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
 		blog.Error("handler url %s read header BCS-ClusterID is empty", uri)
-		err1 := bhttp.InternalError(common.BcsErrCommHttpParametersFailed, "http header BCS-ClusterID can't be empty")
+		err1 := bhttp.InternalError(common.BcsErrCommHttpParametersFailed,
+			"http header BCS-ClusterID can't be empty")
 		return err1.Error(), nil
 	}
 
@@ -90,19 +91,20 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 	if found {
 		url = fmt.Sprintf("%s/k8sdriver/v4/%s", serverAddr, uri)
 		if strings.HasPrefix(serverAddr, "https") {
-			cliTls, err := rd.GetClientTls()
-			if err != nil {
-				blog.Errorf("get client tls error %s", err.Error())
+			cliTls, tlsErr := rd.GetClientTls()
+			if tlsErr != nil {
+				blog.Errorf("get client tls error %s", tlsErr.Error())
 			}
 			tp.TLSClientConfig = cliTls
 		}
 		httpcli.SetTransPort(tp)
 	} else {
-		serv, err := rd.GetModuleServers(fmt.Sprintf("%s/%s", types.BCS_MODULE_K8SAPISERVER, cluster))
-		if err != nil {
+		serv, moduleErr := rd.GetModuleServers(fmt.Sprintf("%s/%s", types.BCS_MODULE_K8SAPISERVER, cluster))
+		if moduleErr != nil {
 			metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
 			metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
-			blog.Error("get cluster %s servers %s error %s", cluster, types.BCS_MODULE_K8SAPISERVER, err.Error())
+			blog.Error("get cluster %s servers %s error %s", cluster, types.BCS_MODULE_K8SAPISERVER,
+				moduleErr.Error())
 			err1 := bhttp.InternalError(common.BcsErrApiGetK8sApiFail, fmt.Sprintf("k8s cluster %s not found", cluster))
 			return err1.Error(), nil
 		}
@@ -129,9 +131,9 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 		blog.V(3).Infof("do request to url(%s), method(%s)", url, method)
 
 		if strings.ToLower(ser.Scheme) == "https" {
-			cliTls, err := rd.GetClientTls()
-			if err != nil {
-				blog.Errorf("get client tls error %s", err.Error())
+			cliTls, tlsErr := rd.GetClientTls()
+			if tlsErr != nil {
+				blog.Errorf("get client tls error %s", tlsErr.Error())
 			}
 			httpcli.SetTlsVerityConfig(cliTls)
 		}
@@ -162,7 +164,7 @@ func handlerPostActions(req *restful.Request, resp *restful.Response) {
 	}
 
 	data, _ := request2k8sapi(req, url, "POST")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 func handlerGetActions(req *restful.Request, resp *restful.Response) {
@@ -174,7 +176,7 @@ func handlerGetActions(req *restful.Request, resp *restful.Response) {
 	}
 
 	data, _ := request2k8sapi(req, url, "GET")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 func handlerDeleteActions(req *restful.Request, resp *restful.Response) {
@@ -186,7 +188,7 @@ func handlerDeleteActions(req *restful.Request, resp *restful.Response) {
 	}
 
 	data, _ := request2k8sapi(req, url, "DELETE")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 func handlerPutActions(req *restful.Request, resp *restful.Response) {
@@ -198,7 +200,7 @@ func handlerPutActions(req *restful.Request, resp *restful.Response) {
 	}
 
 	data, _ := request2k8sapi(req, url, "PUT")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }
 
 func handlerPatchActions(req *restful.Request, resp *restful.Response) {
@@ -210,5 +212,5 @@ func handlerPatchActions(req *restful.Request, resp *restful.Response) {
 	}
 
 	data, _ := request2k8sapi(req, url, "PATCH")
-	resp.Write([]byte(data))
+	_, _ = resp.Write([]byte(data))
 }

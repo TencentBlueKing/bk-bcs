@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package consumer xxx
@@ -60,7 +59,7 @@ func (c *Consumers) Run() {
 				}
 			}()
 
-			consumer.Consume(ctx, c.que)
+			_ = consumer.Consume(ctx, c.que)
 		}(c.ctx, c.consumers[idx])
 	}
 }
@@ -69,7 +68,7 @@ func (c *Consumers) Run() {
 func (c *Consumers) Stop() {
 	blog.Info("recv term signal")
 	for idx := range c.consumers {
-		c.consumers[idx].Stop()
+		_ = c.consumers[idx].Stop()
 	}
 	c.cancel()
 	c.que.Stop()

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package resthdrs
@@ -17,18 +16,19 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/dchest/uniuri"
+	"github.com/emicklei/go-restful"
+	"github.com/iancoleman/strcase"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
-	"github.com/dchest/uniuri"
-	"github.com/emicklei/go-restful"
-	"github.com/iancoleman/strcase"
-	"time"
 )
 
 func initCluster(cluster *m.Cluster) error {
@@ -73,7 +73,7 @@ func createClusterWithExternalInfo(cluster *m.Cluster, externalClusterInfo *m.BC
 		WriteServerError(response, "CANNOT_CREATE_EXTERNAL_CLUSTER_INFO", message)
 		return
 	}
-	response.WriteEntity(*sqlstore.GetCluster(cluster.ID))
+	_ = response.WriteEntity(*sqlstore.GetCluster(cluster.ID))
 
 }
 
@@ -87,11 +87,11 @@ type CreatePlainClusterForm struct {
 // CreatePlainCluster creates a "plain" cluster for current user
 func CreatePlainCluster(request *restful.Request, response *restful.Response) {
 	form := CreatePlainClusterForm{}
-	request.ReadEntity(&form)
+	_ = request.ReadEntity(&form)
 
 	err := validate.Struct(&form)
 	if err != nil {
-		response.WriteEntity(FormatValidationError(err))
+		_ = response.WriteEntity(FormatValidationError(err))
 		return
 	}
 
@@ -117,7 +117,7 @@ func CreatePlainCluster(request *restful.Request, response *restful.Response) {
 			blog.Errorf("error save userCluster permission: %s", err.Error())
 		}
 	}
-	response.WriteEntity(*cluster)
+	_ = response.WriteEntity(*cluster)
 }
 
 // BCSCluster
@@ -136,15 +136,15 @@ func CreateBCSCluster(request *restful.Request, response *restful.Response) {
 
 	start := time.Now()
 
-	blog.Debug(fmt.Sprintf("CreateBCSCluster begin"))
+	blog.Debug("CreateBCSCluster begin")
 	form := CreateBCSClusterForm{}
-	request.ReadEntity(&form)
+	_ = request.ReadEntity(&form)
 
 	err := validate.Struct(&form)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		blog.Debug(fmt.Sprintf("CreateBCSCluster form validate failed, %s", err))
-		response.WriteEntity(FormatValidationError(err))
+		_ = response.WriteEntity(FormatValidationError(err))
 		return
 	}
 
@@ -174,7 +174,7 @@ func CreateBCSCluster(request *restful.Request, response *restful.Response) {
 	}
 
 	var clusterType uint
-	if form.ClusterType == "" || form.ClusterType == "k8s" {
+	if form.ClusterType == "" || form.ClusterType == "k8s" { // nolint
 		clusterType = utils.BcsK8sCluster
 	} else if form.ClusterType == "mesos" {
 		clusterType = utils.BcsMesosCluster

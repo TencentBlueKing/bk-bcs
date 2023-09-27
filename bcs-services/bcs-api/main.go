@@ -8,27 +8,29 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main
 package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"runtime"
+	"strings"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog/glog"
 	common_metric "github.com/Tencent/bk-bcs/bcs-common/common/metric"
 	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/regdiscv"
-	"log"
-	"os"
-	"runtime"
-	"strings"
 )
 
 // GlogWriter serves as a bridge between the standard log package and the glog package.
@@ -54,7 +56,8 @@ func main() {
 	}
 
 	blog.InitLogs(op.LogConfig)
-	// to adapt to tencent tgw，give a temporary method to skip tls handshake error log. see https://github.com/Tencent/bk-bcs/issues/32
+	// to adapt to tencent tgw，give a temporary method to skip tls handshake error log.
+	// see https://github.com/Tencent/bk-bcs/issues/32
 	log.SetOutput(GlogWriter{})
 	defer blog.CloseLogs()
 
@@ -73,7 +76,7 @@ func run(op *options.ServerOption) {
 	conf := parseConfig(op)
 
 	// run register and discover
-	regdiscv.RunRDiscover(conf.RegDiscvSrv, conf)
+	_ = regdiscv.RunRDiscover(conf.RegDiscvSrv, conf)
 
 	proc := processor.NewProcessor(conf)
 	// start processor, and http & websokect service
@@ -89,8 +92,6 @@ func run(op *options.ServerOption) {
 	}
 
 	metric.RunMetric(conf, nil)
-
-	return
 }
 
 func parseConfig(op *options.ServerOption) *config.ApiServConfig {
@@ -153,7 +154,7 @@ func parseConfig(op *options.ServerOption) *config.ApiServConfig {
 	return apiServConfig
 }
 
-func runMetric(conf *config.ApiServConfig, err error) {
+func runMetric(conf *config.ApiServConfig, err error) { // nolint
 
 	blog.Infof("run metric: port(%d)", conf.MetricPort)
 
