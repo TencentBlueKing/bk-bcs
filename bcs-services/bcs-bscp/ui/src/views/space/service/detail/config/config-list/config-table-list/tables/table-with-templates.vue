@@ -15,6 +15,7 @@
   import ViewConfig from '../view-config.vue'
   import VersionDiff from '../../../components/version-diff/index.vue'
   import ReplaceTemplateVersion from '../replace-template-version.vue';
+  import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 
   interface IConfigsGroupData {
     id: number;
@@ -47,6 +48,8 @@
     searchStr: string;
   }>()
 
+  const emits = defineEmits(['clearStr'])
+
   const loading = ref(false)
   const commonConfigListLoading = ref(false)
   const bindingId = ref(0)
@@ -59,6 +62,7 @@
   const editPanelShow = ref(false)
   const activeConfig = ref(0)
   const isDiffPanelShow = ref(false)
+  const isSearchEmpty = ref(false)
   const viewConfigSliderData = ref({
     open: false,
     data: { id: 0, type: '' }
@@ -89,6 +93,7 @@
   })
 
   watch(() => props.searchStr, () => {
+    props.searchStr ? isSearchEmpty.value = true : isSearchEmpty.value = false
     getAllConfigList()
   })
 
@@ -433,7 +438,7 @@
                     </tbody>
                   </table>
                 </div>
-                <bk-exception v-if="group.configs.length === 0" class="exception-tips" scene="part" type="empty">暂无配置项</bk-exception>
+                <TableEmpty v-if="group.configs.length === 0" :isSearchEmpty="isSearchEmpty" @clear="emits('clearStr')"></TableEmpty>
               </td>
             </tr>
           </template>
