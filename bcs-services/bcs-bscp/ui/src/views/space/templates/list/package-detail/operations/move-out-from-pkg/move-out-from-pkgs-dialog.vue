@@ -114,7 +114,7 @@ import List from '../../../../version-manage/version-detail/list.vue';
       close()
       Message({
         theme: 'success',
-        message: '添加配置项成功'
+        message: '移出套餐成功'
       })
     } catch (e) {
       console.log(e)
