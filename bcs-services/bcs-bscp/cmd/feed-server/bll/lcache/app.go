@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package lcache provides a cache library for storing and retrieving data.
 package lcache
 
 import (

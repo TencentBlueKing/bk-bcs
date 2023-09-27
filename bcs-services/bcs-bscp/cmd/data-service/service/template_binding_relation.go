@@ -218,6 +218,7 @@ func (s *Service) ListTmplSetBoundCounts(ctx context.Context, req *pbds.ListTmpl
 }
 
 // ListTmplBoundUnnamedApps list template bound unnamed app details.
+// nolint: funlen
 func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
 	req *pbds.ListTmplBoundUnnamedAppsReq) (
 	*pbds.ListTmplBoundUnnamedAppsResp, error) {
@@ -327,9 +328,10 @@ func (s *Service) ListTmplBoundUnnamedApps(ctx context.Context,
 }
 
 // ListTmplBoundNamedApps list template bound named app details.
+// nolint:funlen
 func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
-	req *pbds.ListTmplBoundNamedAppsReq) (
-	*pbds.ListTmplBoundNamedAppsResp, error) {
+	req *pbds.ListTmplBoundNamedAppsReq) (*pbds.ListTmplBoundNamedAppsResp, error) {
+
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
@@ -371,7 +373,6 @@ func (s *Service) ListTmplBoundNamedApps(ctx context.Context,
 	for _, a := range apps {
 		appMap[a.ID] = a
 	}
-	appIDs = tools.RemoveDuplicates(appIDs)
 	releaseIDs = tools.RemoveDuplicates(releaseIDs)
 
 	releases, err := s.dao.Release().ListAllByIDs(kt, releaseIDs, req.BizId)
@@ -515,6 +516,7 @@ func (s *Service) ListTmplBoundTmplSets(ctx context.Context,
 }
 
 // ListMultiTmplBoundTmplSets list template bound template set details.
+// nolint: funlen
 func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context,
 	req *pbds.ListMultiTmplBoundTmplSetsReq) (
 	*pbds.ListMultiTmplBoundTmplSetsResp, error) {
@@ -710,6 +712,7 @@ func (s *Service) ListTmplRevisionBoundUnnamedApps(ctx context.Context,
 }
 
 // ListTmplRevisionBoundNamedApps list template revision bound named app details.
+// nolint: funlen
 func (s *Service) ListTmplRevisionBoundNamedApps(ctx context.Context,
 	req *pbds.ListTmplRevisionBoundNamedAppsReq) (
 	*pbds.ListTmplRevisionBoundNamedAppsResp, error) {
@@ -879,8 +882,10 @@ func (s *Service) ListTmplSetBoundUnnamedApps(ctx context.Context,
 }
 
 // ListMultiTmplSetBoundUnnamedApps list template set bound unnamed app details.
+// nolint: funlen
 func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context,
 	req *pbds.ListMultiTmplSetBoundUnnamedAppsReq) (
+
 	*pbds.ListMultiTmplSetBoundUnnamedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -1081,6 +1086,7 @@ func (s *Service) ListTmplSetBoundNamedApps(ctx context.Context,
 }
 
 // ListLatestTmplBoundUnnamedApps list the latest template bound unnamed app details.
+// nolint: funlen
 func (s *Service) ListLatestTmplBoundUnnamedApps(ctx context.Context,
 	req *pbds.ListLatestTmplBoundUnnamedAppsReq) (
 	*pbds.ListLatestTmplBoundUnnamedAppsResp, error) {

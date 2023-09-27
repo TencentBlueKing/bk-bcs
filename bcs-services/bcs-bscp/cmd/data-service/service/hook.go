@@ -59,7 +59,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 	id, err := s.dao.Hook().CreateWithTx(kt, tx, hook)
 	if err != nil {
 		logs.Errorf("create hook failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		_ = tx.Rollback()
 		return nil, err
 	}
 
@@ -80,13 +80,13 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 	_, err = s.dao.HookRevision().CreateWithTx(kt, tx, revision)
 	if err != nil {
 		logs.Errorf("create hook revision failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		_ = tx.Rollback()
 		return nil, err
 	}
 
-	if err := tx.Commit(); err != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	resp := &pbds.CreateResp{Id: id}
@@ -154,25 +154,25 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 	count, err := s.dao.ReleasedHook().CountByHookIDAndReleaseID(kt, req.BizId, req.HookId, 0)
 	if err != nil {
 		logs.Errorf("count hook bound editing releases failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		_ = tx.Rollback()
 		return nil, err
 	}
 	if count > 0 && !req.Force {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return nil, fmt.Errorf("hook was bound to %d editing releases, "+
 			"set force=true to delete hook with references, rid: %s", count, kt.Rid)
 	}
 	// 2. delete released hook that release_id = 0
-	if err := s.dao.ReleasedHook().DeleteByHookIDAndReleaseIDWithTx(kt, tx, req.BizId, req.HookId, 0); err != nil {
-		logs.Errorf("delete released hook failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	if e := s.dao.ReleasedHook().DeleteByHookIDAndReleaseIDWithTx(kt, tx, req.BizId, req.HookId, 0); e != nil {
+		logs.Errorf("delete released hook failed, err: %v, rid: %s", e, kt.Rid)
+		_ = tx.Rollback()
+		return nil, e
 	}
 	// 3. delete all hook revisions by hook id
-	if err := s.dao.HookRevision().DeleteByHookIDWithTx(kt, tx, req.HookId, req.BizId); err != nil {
-		logs.Errorf("delete hook revision failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	if e := s.dao.HookRevision().DeleteByHookIDWithTx(kt, tx, req.HookId, req.BizId); e != nil {
+		logs.Errorf("delete hook revision failed, err: %v, rid: %s", e, kt.Rid)
+		_ = tx.Rollback()
+		return nil, e
 	}
 	// 4. delete hook
 	hook := &table.Hook{
@@ -181,15 +181,15 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 			BizID: req.BizId,
 		},
 	}
-	if err := s.dao.Hook().DeleteWithTx(kt, tx, hook); err != nil {
-		logs.Errorf("delete hook failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	if e := s.dao.Hook().DeleteWithTx(kt, tx, hook); e != nil {
+		logs.Errorf("delete hook failed, err: %v, rid: %s", e, kt.Rid)
+		_ = tx.Rollback()
+		return nil, e
 	}
 
-	if err := tx.Commit(); err != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 	return new(pbbase.EmptyResp), nil
 }

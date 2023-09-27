@@ -21,6 +21,7 @@ import (
 	"bscp.io/pkg/serviced"
 )
 
+// nolint: unused
 var stm *stream
 var once = sync.Once{}
 

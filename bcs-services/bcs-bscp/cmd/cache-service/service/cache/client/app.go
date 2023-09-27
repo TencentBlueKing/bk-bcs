@@ -137,7 +137,9 @@ func (c *client) getAppIDFromCache(kt *kit.Kit, bizID uint32, appName string) (u
 	}
 
 	var id uint32
-	jsoni.UnmarshalFromString(val, &id)
+	if e := jsoni.UnmarshalFromString(val, &id); e != nil {
+		return 0, false, e
+	}
 
 	return id, true, nil
 }

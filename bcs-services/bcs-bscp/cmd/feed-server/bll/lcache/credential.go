@@ -56,7 +56,8 @@ type Credential struct {
 }
 
 // CanMatchCI the credential's local cache.
-func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credential string, ci *pbci.ConfigItemSpec) (bool, error) {
+func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credential string,
+	ci *pbci.ConfigItemSpec) (bool, error) {
 
 	if bizID == 0 {
 		return false, fmt.Errorf("invalid biz id")
@@ -116,7 +117,7 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 	return false, nil
 }
 
-func (s *Credential) getCredentialFromCache(kt *kit.Kit, bizID uint32, credential string) (
+func (s *Credential) getCredentialFromCache(_ *kit.Kit, bizID uint32, credential string) (
 	c types.CredentialCache, hit bool, err error) {
 
 	c = types.CredentialCache{}

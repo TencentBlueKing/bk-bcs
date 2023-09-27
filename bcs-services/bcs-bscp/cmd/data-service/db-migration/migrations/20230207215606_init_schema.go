@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package migrations init schema
 package migrations
 
 import (

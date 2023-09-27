@@ -71,7 +71,9 @@ var (
 func RunCmd() error {
 	// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu
 	// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value for runtime.GOMAXPROCS.
-	if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) { klog.Infof(template, args) })); err != nil {
+	if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) {
+		klog.Infof(template, args)
+	})); err != nil {
 		klog.InfoS("Failed to set GOMAXPROCS automatically", "err", err)
 	}
 
@@ -92,12 +94,14 @@ func RunCmd() error {
 	svr, err := service.NewWebServer(ctx, httpAddress, tools.GetListenAddr(addrIPv6, port))
 	if err != nil {
 		klog.Errorf("init web server err: %s, exited", err)
-		os.Exit(1)
+		os.Exit(1) // nolint:gocritic
 	}
 
 	klog.InfoS("listening for requests and metrics", "address", httpAddress)
 
-	g.Add(svr.Run, func(err error) { svr.Close() })
+	g.Add(svr.Run, func(err error) {
+		_ = svr.Close()
+	})
 
 	return g.Run()
 }

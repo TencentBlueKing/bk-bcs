@@ -25,6 +25,7 @@ import (
 )
 
 // UpdateConfigHook update ConfigHook.
+// nolint:funlen
 func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHookReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
@@ -54,7 +55,7 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		h, err := s.dao.Hook().GetByID(kt, req.BizId, req.PreHookId)
 		if err != nil {
 			logs.Errorf("get pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			_ = tx.Rollback()
 			return nil, err
 		}
 		hr, err := s.dao.HookRevision().GetByPubState(kt, opt)
@@ -71,13 +72,13 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		preHook.Reviser = kt.User
 		if err = s.dao.ReleasedHook().UpsertWithTx(kt, tx, preHook); err != nil {
 			logs.Errorf("upsert pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			_ = tx.Rollback()
 			return nil, err
 		}
 	} else {
 		if err := s.dao.ReleasedHook().DeleteByUniqueKeyWithTx(kt, tx, preHook); err != nil {
 			logs.Errorf("delete pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			_ = tx.Rollback()
 			return nil, err
 		}
 	}
@@ -91,13 +92,13 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		h, err := s.dao.Hook().GetByID(kt, req.BizId, req.PostHookId)
 		if err != nil {
 			logs.Errorf("get pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			_ = tx.Rollback()
 			return nil, err
 		}
 		hr, err := s.dao.HookRevision().GetByPubState(kt, opt)
 		if err != nil {
 			logs.Errorf("no released releases of the post-hook, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			_ = tx.Rollback()
 			return nil, errors.New("no released releases of the post-hook")
 		}
 		postHook.HookID = h.ID
@@ -109,19 +110,19 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		postHook.Reviser = kt.User
 		if err = s.dao.ReleasedHook().UpsertWithTx(kt, tx, postHook); err != nil {
 			logs.Errorf("upsert post-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			_ = tx.Rollback()
 			return nil, err
 		}
 	} else {
 		if err := s.dao.ReleasedHook().DeleteByUniqueKeyWithTx(kt, tx, postHook); err != nil {
 			logs.Errorf("delete post-hook failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			_ = tx.Rollback()
 			return nil, err
 		}
 	}
 	if err := tx.Commit(); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		_ = tx.Rollback()
 		return nil, err
 	}
 

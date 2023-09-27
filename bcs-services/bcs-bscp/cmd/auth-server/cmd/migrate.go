@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package cmd provides operations for upgrading the permission model.
 package cmd
 
 import (
@@ -96,7 +97,8 @@ func NewIamSys() (*sys.Sys, error) {
 func init() {
 
 	// Add "--debug" flag to all migrate sub commands
-	migrateCmd.PersistentFlags().BoolP("debug", "d", false, "whether to debug output the execution process,, default is false")
+	migrateCmd.PersistentFlags().BoolP("debug", "d", false,
+		"whether to debug output the execution process,, default is false")
 
 	migrateCmd.AddCommand(migrateInitCmd)
 

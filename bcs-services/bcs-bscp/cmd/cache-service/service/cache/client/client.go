@@ -57,7 +57,7 @@ func New(op dao.Set, bds bedis.Client) (Interface, error) {
 // client do all the read cache related operations.
 type client struct {
 	op  dao.Set
-	db  pbds.DataClient
+	db  pbds.DataClient // nolint:unused
 	bds bedis.Client
 	// rLock is the resource's lock
 	rLock lock.Interface

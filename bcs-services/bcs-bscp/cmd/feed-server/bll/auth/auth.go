@@ -28,7 +28,7 @@ func New(cache *lcache.Cache) *AuthService {
 }
 
 // AuthService defines auth related operations.
-type AuthService struct {
+type AuthService struct { //nolint:revive
 	cache *lcache.Cache
 }
 
@@ -38,6 +38,7 @@ func (as *AuthService) Authorize(kt *kit.Kit, res *meta.ResourceAttribute) (bool
 }
 
 // CanMatchCI if credential can match the config item.
-func (as *AuthService) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credential string, ci *pbci.ConfigItemSpec) (bool, error) {
+func (as *AuthService) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credential string,
+	ci *pbci.ConfigItemSpec) (bool, error) {
 	return as.cache.Credential.CanMatchCI(kt, bizID, app, credential, ci)
 }

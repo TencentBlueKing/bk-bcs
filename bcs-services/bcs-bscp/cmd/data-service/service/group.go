@@ -62,7 +62,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 	id, err := s.dao.Group().CreateWithTx(kt, tx, group)
 	if err != nil {
 		logs.Errorf("create group failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		_ = tx.Rollback()
 		return nil, err
 	}
 	if len(req.Spec.BindApps) != 0 {
@@ -74,15 +74,15 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 				BizID:   req.Attachment.BizId,
 			}
 		}
-		if err := s.dao.GroupAppBind().BatchCreateWithTx(kt, tx, groupApps); err != nil {
-			logs.Errorf("create group app failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
-			return nil, err
+		if e := s.dao.GroupAppBind().BatchCreateWithTx(kt, tx, groupApps); e != nil {
+			logs.Errorf("create group app failed, err: %v, rid: %s", e, kt.Rid)
+			_ = tx.Rollback()
+			return nil, e
 		}
 	}
-	if err := tx.Commit(); err != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	resp := &pbds.CreateResp{Id: id}
@@ -235,6 +235,7 @@ func (s *Service) GetGroupByName(ctx context.Context, req *pbds.GetGroupByNameRe
 }
 
 // UpdateGroup update group.
+// nolint: funlen
 func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -253,7 +254,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		return nil, errf.New(errf.InvalidParameter, "group must not bind apps when public is set to true")
 	}
 
-	new := &table.Group{
+	n := &table.Group{
 		ID:         req.Id,
 		Spec:       spec,
 		Attachment: req.Attachment.GroupAttachment(),
@@ -267,15 +268,15 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		return nil, err
 	}
 
-	if !new.Spec.Public {
+	if !n.Spec.Public {
 		// check if the reduced app was already released.
-		apps, err := s.queryReducedApps(kt, old, req)
-		if err != nil {
-			return nil, err
+		apps, e := s.queryReducedApps(kt, old, req)
+		if e != nil {
+			return nil, e
 		}
-		published, err := s.dao.ReleasedGroup().ListAllByGroupID(kt, req.Id, req.Attachment.BizId)
-		if err != nil {
-			return nil, err
+		published, e := s.dao.ReleasedGroup().ListAllByGroupID(kt, req.Id, req.Attachment.BizId)
+		if e != nil {
+			return nil, e
 		}
 
 		for _, app := range apps {
@@ -289,19 +290,19 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 	}
 
 	tx := s.dao.GenQuery().Begin()
-	if err := s.dao.Group().UpdateWithTx(kt, tx, new); err != nil {
-		logs.Errorf("update group failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	if e := s.dao.Group().UpdateWithTx(kt, tx, n); e != nil {
+		logs.Errorf("update group failed, err: %v, rid: %s", e, kt.Rid)
+		_ = tx.Rollback()
+		return nil, e
 	}
 
-	if err := s.dao.GroupAppBind().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); err != nil {
-		logs.Errorf("delete group app failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	if e := s.dao.GroupAppBind().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); e != nil {
+		logs.Errorf("delete group app failed, err: %v, rid: %s", e, kt.Rid)
+		_ = tx.Rollback()
+		return nil, e
 	}
 
-	if !new.Spec.Public {
+	if !n.Spec.Public {
 		groupApps := make([]*table.GroupAppBind, len(req.Spec.BindApps))
 		for idx, app := range req.Spec.BindApps {
 			groupApps[idx] = &table.GroupAppBind{
@@ -310,34 +311,34 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 				BizID:   req.Attachment.BizId,
 			}
 		}
-		if err := s.dao.GroupAppBind().BatchCreateWithTx(kt, tx, groupApps); err != nil {
-			logs.Errorf("create group app failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
-			return nil, err
+		if e := s.dao.GroupAppBind().BatchCreateWithTx(kt, tx, groupApps); e != nil {
+			logs.Errorf("create group app failed, err: %v, rid: %s", e, kt.Rid)
+			_ = tx.Rollback()
+			return nil, e
 		}
 	}
 
 	var edited = false
-	if old.Spec.UID != new.Spec.UID {
+	if old.Spec.UID != n.Spec.UID {
 		edited = true
 	}
 
-	if !edited && !reflect.DeepEqual(old.Spec.Selector, new.Spec.Selector) {
+	if !edited && !reflect.DeepEqual(old.Spec.Selector, n.Spec.Selector) {
 		edited = true
 	}
 
 	if edited {
-		if err := s.dao.ReleasedGroup().UpdateEditedStatusWithTx(kt, tx,
-			edited, req.Id, req.Attachment.BizId); err != nil {
-			logs.Errorf("update group current release failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
-			return nil, err
+		if e := s.dao.ReleasedGroup().UpdateEditedStatusWithTx(kt, tx,
+			edited, req.Id, req.Attachment.BizId); e != nil {
+			logs.Errorf("update group current release failed, err: %v, rid: %s", e, kt.Rid)
+			_ = tx.Rollback()
+			return nil, e
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	return &pbbase.EmptyResp{}, nil
@@ -366,21 +367,21 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbds.DeleteGroupReq) (*p
 			fmt.Sprintf("group has already published in apps [%s]", tools.JoinUint32(publishedApps, ",")))
 	}
 	tx := s.dao.GenQuery().Begin()
-	if err := s.dao.Group().DeleteWithTx(kt, tx, group); err != nil {
-		logs.Errorf("delete group failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+	if e := s.dao.Group().DeleteWithTx(kt, tx, group); e != nil {
+		logs.Errorf("delete group failed, err: %v, rid: %s", e, kt.Rid)
+		_ = tx.Rollback()
 		return nil, err
 	}
 
-	if err := s.dao.GroupAppBind().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); err != nil {
-		logs.Errorf("delete group app failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	if e := s.dao.GroupAppBind().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); e != nil {
+		logs.Errorf("delete group app failed, err: %v, rid: %s", e, kt.Rid)
+		_ = tx.Rollback()
+		return nil, e
 	}
 
-	if err := tx.Commit(); err != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	return new(pbbase.EmptyResp), nil

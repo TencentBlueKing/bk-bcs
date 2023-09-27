@@ -66,7 +66,6 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 func (s *Service) ListHookRevisions(ctx context.Context, req *pbcs.ListHookRevisionsReq) (
 	*pbcs.ListHookRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListHookRevisionsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -107,7 +106,7 @@ func (s *Service) ListHookRevisions(ctx context.Context, req *pbcs.ListHookRevis
 		})
 	}
 
-	resp = &pbcs.ListHookRevisionsResp{
+	resp := &pbcs.ListHookRevisionsResp{
 		Count:   rp.Count,
 		Details: details,
 	}
@@ -145,7 +144,8 @@ func (s *Service) DeleteHookRevision(ctx context.Context,
 }
 
 // PublishHookRevision publish a revision
-func (s *Service) PublishHookRevision(ctx context.Context, req *pbcs.PublishHookRevisionReq) (*pbcs.PublishHookRevisionResp, error) {
+func (s *Service) PublishHookRevision(ctx context.Context, req *pbcs.
+	PublishHookRevisionReq) (*pbcs.PublishHookRevisionResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.PublishHookRevisionResp)

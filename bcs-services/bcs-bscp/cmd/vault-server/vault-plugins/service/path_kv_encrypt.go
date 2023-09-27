@@ -65,7 +65,8 @@ func (b *backend) pathKvEncrypt() *framework.Path {
 	}
 }
 
-func (b *backend) pathEncryptExistenceCheck(ctx context.Context, req *logical.Request, d *framework.FieldData) (bool, error) {
+func (b *backend) pathEncryptExistenceCheck(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (bool, error) {
 
 	appID := d.Get("app_id").(string)
 	name := d.Get("name").(string)
@@ -89,7 +90,8 @@ func (b *backend) pathEncryptExistenceCheck(ctx context.Context, req *logical.Re
 
 }
 
-func (b *backend) pathEncryptWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathEncryptWrite(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
 	if err := b.ValidateAppID(appID); err != nil {

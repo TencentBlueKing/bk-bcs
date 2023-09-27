@@ -102,15 +102,13 @@ func (as *apiServer) listenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			logs.Infof("start shutdown api server http server gracefully...")
+		<-notifier.Signal
+		logs.Infof("start shutdown api server http server gracefully...")
 
-			as.serve.Close()
-			notifier.Done()
+		_ = as.serve.Close()
+		notifier.Done()
 
-			logs.Infof("shutdown api server http server success...")
-		}
+		logs.Infof("shutdown api server http server success...")
 	}()
 
 	if network.TLS.Enable() {

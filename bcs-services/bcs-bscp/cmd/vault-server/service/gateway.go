@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package service provides the functionality for the service layer
 package service
 
 import (
@@ -32,7 +33,7 @@ type gateway struct {
 }
 
 // newGateway create new auth server's grpc-gateway.
-func newGateway(st serviced.State) (*gateway, error) {
+func newGateway(st serviced.State) (*gateway, error) { // nolint:unparam
 	g := &gateway{state: st}
 
 	return g, nil

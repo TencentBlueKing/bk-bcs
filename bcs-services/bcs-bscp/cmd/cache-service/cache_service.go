@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// The main package is the entry point for the Cache Service, providing caching functionality.
 package main
 
 import (

@@ -23,7 +23,8 @@ import (
 )
 
 // UpdateConfigHook update a ConfigHook
-func (s *Service) UpdateConfigHook(ctx context.Context, req *pbcs.UpdateConfigHookReq) (*pbcs.UpdateConfigHookResp, error) {
+func (s *Service) UpdateConfigHook(ctx context.Context,
+	req *pbcs.UpdateConfigHookReq) (*pbcs.UpdateConfigHookResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateConfigHookResp)

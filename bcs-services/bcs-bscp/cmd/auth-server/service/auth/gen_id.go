@@ -26,6 +26,7 @@ import (
 )
 
 // bizIDAssembleSymbol used to assemble biz_id and resource id's symbol, used in app id generation.
+// nolint: unused
 const bizIDAssembleSymbol = "-"
 
 var (
@@ -304,6 +305,7 @@ func genCredResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resou
 }
 
 // genCommitResource generate commit related iam resource.
+// nolint: unused
 func genCommitResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -335,6 +337,7 @@ func genCommitResource(a *meta.ResourceAttribute) (client.ActionID, []client.Res
 }
 
 // genConfigItemResource generate config item related iam resource.
+// nolint: unused
 func genConfigItemResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -372,6 +375,7 @@ func genConfigItemResource(a *meta.ResourceAttribute) (client.ActionID, []client
 }
 
 // genContentResource generate content related iam resource.
+// nolint: unused
 func genContentResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -409,6 +413,7 @@ func genContentResource(a *meta.ResourceAttribute) (client.ActionID, []client.Re
 }
 
 // genCRInstanceResource generate current released instance related iam resource.
+// nolint: unused
 func genCRInstanceResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -443,6 +448,7 @@ func genCRInstanceResource(a *meta.ResourceAttribute) (client.ActionID, []client
 }
 
 // genReleaseRes generate release related iam resource.
+// nolint: unused
 func genReleaseRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -474,6 +480,7 @@ func genReleaseRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resourc
 }
 
 // genReleasedCIRes generate released config item related iam resource.
+// nolint: unused
 func genReleasedCIRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -491,6 +498,7 @@ func genReleasedCIRes(a *meta.ResourceAttribute) (client.ActionID, []client.Reso
 }
 
 // genStrategyRes generate strategy related iam resource.
+// nolint: unused
 func genStrategyRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -534,6 +542,7 @@ func genStrategyRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resour
 }
 
 // genStrategySetRes generate strategy set related iam resource.
+// nolint: unused
 func genStrategySetRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -571,6 +580,7 @@ func genStrategySetRes(a *meta.ResourceAttribute) (client.ActionID, []client.Res
 }
 
 // genPSHRes generate published strategy history related iam resource.
+// nolint: unused
 func genPSHRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -588,6 +598,7 @@ func genPSHRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, e
 }
 
 // genRepoRes generate repo related iam resource.
+// nolint: unused
 func genRepoRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -605,6 +616,7 @@ func genRepoRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, 
 }
 
 // genSidecarRes generate sidecar related iam resource.
+// nolint: unused
 func genSidecarRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,
@@ -622,6 +634,7 @@ func genSidecarRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resourc
 }
 
 // genCredentialRes generate application credential related iam resource.
+// nolint: unused
 func genCredentialRes(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
 		System: sys.SystemIDCMDB,

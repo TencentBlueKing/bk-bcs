@@ -14,10 +14,10 @@
 package keys
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"strconv"
-	"time"
 )
 
 var oneHourSeconds = 60 * 60
@@ -43,7 +43,7 @@ const (
 	releasedConfigItem  namespace = "released-ci"
 	releasedHook        namespace = "released-hook"
 	releasedGroup       namespace = "released-group"
-	credentialMatchedCI namespace = "credential-matched-ci"
+	credentialMatchedCI namespace = "credential-matched-ci" // nolint:gosec
 	credential          namespace = "credential"
 	appMeta             namespace = "app-meta"
 	appID               namespace = "app-id"
@@ -73,8 +73,9 @@ func (k keyGenerator) ReleasedGroup(bizID uint32, appID uint32) string {
 func (k keyGenerator) ReleasedGroupTtlSec(withRange bool) int {
 
 	if withRange {
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		seconds := r.Intn(k.releasedGroupTTLRange[1]-k.releasedGroupTTLRange[0]) + k.releasedGroupTTLRange[0]
+		max := big.NewInt(int64(k.releasedCITTLRange[1] - k.releasedCITTLRange[0]))
+		randomInt, _ := rand.Int(rand.Reader, max)
+		seconds := int(randomInt.Int64()) + k.releasedCITTLRange[0]
 		return seconds
 	}
 
@@ -94,9 +95,9 @@ func (k keyGenerator) CredentialMatchedCI(bizID uint32, credential string) strin
 func (k keyGenerator) CredentialMatchedCITtlSec(withRange bool) int {
 
 	if withRange {
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		seconds := r.Intn(k.credentialMatchedCITTLRange[1]-
-			k.credentialMatchedCITTLRange[0]) + k.credentialMatchedCITTLRange[0]
+		max := big.NewInt(int64(k.releasedCITTLRange[1] - k.releasedCITTLRange[0]))
+		randomInt, _ := rand.Int(rand.Reader, max)
+		seconds := int(randomInt.Int64()) + k.releasedCITTLRange[0]
 		return seconds
 	}
 
@@ -115,8 +116,9 @@ func (k keyGenerator) Credential(bizID uint32, str string) string {
 // CredentialTtlSec generate the credential's TTL seconds
 func (k keyGenerator) CredentialTtlSec(withRange bool) int {
 	if withRange {
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		seconds := r.Intn(k.credentialTTLRange[1]-k.credentialTTLRange[0]) + k.credentialTTLRange[0]
+		max := big.NewInt(int64(k.releasedCITTLRange[1] - k.releasedCITTLRange[0]))
+		randomInt, _ := rand.Int(rand.Reader, max)
+		seconds := int(randomInt.Int64()) + k.releasedCITTLRange[0]
 		return seconds
 	}
 	return k.credentialTTLRange[0]
@@ -136,8 +138,9 @@ func (k keyGenerator) ReleasedCI(bizID uint32, releaseID uint32) string {
 func (k keyGenerator) ReleasedCITtlSec(withRange bool) int {
 
 	if withRange {
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		seconds := r.Intn(k.releasedCITTLRange[1]-k.releasedCITTLRange[0]) + k.releasedCITTLRange[0]
+		max := big.NewInt(int64(k.releasedCITTLRange[1] - k.releasedCITTLRange[0]))
+		randomInt, _ := rand.Int(rand.Reader, max)
+		seconds := int(randomInt.Int64()) + k.releasedCITTLRange[0]
 		return seconds
 	}
 
@@ -157,8 +160,9 @@ func (k keyGenerator) ReleasedHook(bizID uint32, releaseID uint32) string {
 func (k keyGenerator) ReleasedHookTtlSec(withRange bool) int {
 
 	if withRange {
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		seconds := r.Intn(k.releasedHookTTLRange[1]-k.releasedHookTTLRange[0]) + k.releasedHookTTLRange[0]
+		max := big.NewInt(int64(k.releasedCITTLRange[1] - k.releasedCITTLRange[0]))
+		randomInt, _ := rand.Int(rand.Reader, max)
+		seconds := int(randomInt.Int64()) + k.releasedCITTLRange[0]
 		return seconds
 	}
 
@@ -187,8 +191,9 @@ func (k keyGenerator) AppMeta(bizID uint32, appID uint32) string {
 func (k keyGenerator) AppMetaTtlSec(withRange bool) int {
 
 	if withRange {
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		seconds := r.Intn(k.appMetaTTLRange[1]-k.appMetaTTLRange[0]) + k.appMetaTTLRange[0]
+		max := big.NewInt(int64(k.releasedCITTLRange[1] - k.releasedCITTLRange[0]))
+		randomInt, _ := rand.Int(rand.Reader, max)
+		seconds := int(randomInt.Int64()) + k.releasedCITTLRange[0]
 		return seconds
 	}
 
@@ -202,8 +207,9 @@ func (k keyGenerator) NullValue() string {
 
 // NullKeyTtlSec return the null key's ttl seconds
 func (k keyGenerator) NullKeyTtlSec() int {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	seconds := r.Intn(k.nullKeyTTLRange[1]-k.nullKeyTTLRange[0]) + k.nullKeyTTLRange[0]
+	max := big.NewInt(int64(k.releasedCITTLRange[1] - k.releasedCITTLRange[0]))
+	randomInt, _ := rand.Int(rand.Reader, max)
+	seconds := int(randomInt.Int64()) + k.releasedCITTLRange[0]
 	return seconds
 }
 

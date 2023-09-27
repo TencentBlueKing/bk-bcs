@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package service encapsulates Vault secret plugins and provides key-value storage and PKI storage functionality.
 package service
 
 import (
@@ -20,7 +21,8 @@ import (
 )
 
 const backendHelp = `
-bcs-bscp-vault-plugin provides secure kv storage, key storage; Support multiple encryption algorithms for secure credential acquisition
+bcs-bscp-vault-plugin provides secure kv storage, key storage;
+Support multiple encryption algorithms for secure credential acquisition
 `
 
 // Factory factory for backend

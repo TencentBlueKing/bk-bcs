@@ -37,7 +37,6 @@ import (
 // CreateApp create app with options
 func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.CreateAppResp, error) {
 	kt := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateAppResp)
 
 	if err := req.Validate(); err != nil {
 		return nil, err
@@ -83,7 +82,7 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 		logs.Errorf("grant app creator action failed, err: %v, rid: %s", err, kt.Rid)
 	}
 
-	resp = &pbcs.CreateAppResp{Id: rp.Id}
+	resp := &pbcs.CreateAppResp{Id: rp.Id}
 	return resp, nil
 }
 
@@ -271,7 +270,8 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 }
 
 // ListAppsBySpaceRest list apps with rest filter
-func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsBySpaceRestReq) (*pbcs.ListAppsResp, error) {
+func (s *Service) ListAppsBySpaceRest(ctx context.Context,
+	req *pbcs.ListAppsBySpaceRestReq) (*pbcs.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -341,7 +341,9 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsByS
 }
 
 // ListAppsAnnotation list apps permission annotations
-func ListAppsAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamauth.Authorizer, msg proto.Message) (*webannotation.Annotation, error) {
+func ListAppsAnnotation(ctx context.Context, kt *kit.Kit,
+	authorizer iamauth.Authorizer, msg proto.Message) (*webannotation.Annotation, error) {
+
 	resp, ok := msg.(*pbcs.ListAppsResp)
 	if !ok {
 		return nil, nil

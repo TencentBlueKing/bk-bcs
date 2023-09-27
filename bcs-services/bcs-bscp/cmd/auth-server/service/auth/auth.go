@@ -48,8 +48,8 @@ type Auth struct {
 }
 
 // NewAuth new auth.
-func NewAuth(auth auth.Authorizer, ds pbds.DataClient, disableAuth bool, iamClient *bkiam.IAM, disableWriteOpt *options.DisableWriteOption) (
-	*Auth, error) {
+func NewAuth(auth auth.Authorizer, ds pbds.DataClient, disableAuth bool, iamClient *bkiam.IAM,
+	disableWriteOpt *options.DisableWriteOption) (*Auth, error) {
 
 	if auth == nil {
 		return nil, errf.New(errf.InvalidParameter, "auth is nil")

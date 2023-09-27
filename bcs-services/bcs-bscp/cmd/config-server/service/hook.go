@@ -214,7 +214,6 @@ func (s *Service) ListHookReferences(ctx context.Context,
 	req *pbcs.ListHookReferencesReq) (*pbcs.ListHookReferencesResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListHookReferencesResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -250,7 +249,7 @@ func (s *Service) ListHookReferences(ctx context.Context,
 			Type:             detail.Type,
 		})
 	}
-	resp = &pbcs.ListHookReferencesResp{
+	resp := &pbcs.ListHookReferencesResp{
 		Count:   rp.Count,
 		Details: details,
 	}

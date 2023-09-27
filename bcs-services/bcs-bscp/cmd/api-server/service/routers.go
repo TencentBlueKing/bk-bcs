@@ -24,6 +24,7 @@ import (
 )
 
 // routers return router config handler
+// nolint: funlen
 func (p *proxy) routers() http.Handler {
 	r := chi.NewRouter()
 	r.Use(handler.RequestID)
@@ -92,19 +93,22 @@ func (p *proxy) routers() http.Handler {
 	// repo 上传 API, 此处因兼容老版本而保留，后续统一使用新接口
 	r.Route("/api/v1/api/create/content/upload", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Put("/biz_id/{biz_id}/app_id/{app_id}", p.repo.UploadFile)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Put("/biz_id/{biz_id}/app_id/{app_id}",
+			p.repo.UploadFile)
 	})
 
 	// repo 下载 API, 此处因兼容老版本而保留，后续统一使用新接口
 	r.Route("/api/v1/api/get/content/download", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repo.DownloadFile)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}",
+			p.repo.DownloadFile)
 	})
 
 	// repo 获取二进制元数据 API, 此处因兼容老版本而保留，后续统一使用新接口
 	r.Route("/api/v1/api/get/content/metadata", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repo.FileMetadata)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}",
+			p.repo.FileMetadata)
 	})
 
 	// 新的内容上传、下载相关接口，后续统一使用这组新接口
