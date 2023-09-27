@@ -191,7 +191,12 @@
           </div>
         </template>
         <bk-option v-for="item in optionList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
-          <div v-cursor="{ active: !item.permission }" :class="['biz-option-item', { 'no-perm': !item.permission }]">
+          <div
+          v-cursor="{ active: !item.permission }"
+          :class="['biz-option-item', { 'no-perm': !item.permission }]"
+          v-bk-tooltips="{
+            content: `项目名称: ${item.space_name}\n业务ID: ${item.space_id}`,
+            placement: 'left'}">
             <div class="name-wrapper">
               <span class="text">{{ item.space_name }}</span>
               <span class="id">({{ item.space_id }})</span>
