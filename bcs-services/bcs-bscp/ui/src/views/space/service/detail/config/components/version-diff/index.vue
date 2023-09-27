@@ -81,7 +81,7 @@
     versionList.value = []
     emits('update:show', false)
   }
-
+  
 </script>
 <template>
   <bk-sideslider
@@ -109,6 +109,7 @@
                         style="width: 320px;"
                         :loading="versionListLoading"
                         :clearable="false"
+                        no-data-text="暂无数据"
                         @change="handleSelectVersion">
                         <bk-option
                           v-for="version in versionList"

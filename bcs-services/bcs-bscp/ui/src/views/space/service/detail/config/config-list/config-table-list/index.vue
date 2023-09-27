@@ -25,6 +25,10 @@
     tableRef.value.refresh()
   }
 
+  const clearStr = () => {
+    searchStr.value = ''
+  }
+
   defineExpose({
     refreshConfigList
   })
@@ -61,7 +65,7 @@
         :width="280"/>
     </div>
     <section class="config-list-table">
-      <TableWithTemplates v-if="useTemplate" ref="tableRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" :search-str="searchStr" />
+      <TableWithTemplates v-if="useTemplate" ref="tableRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" :search-str="searchStr" @clearStr="clearStr"/>
       <TableWithPagination v-else ref="tableRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" :search-str="searchStr" />
     </section>
   </section>
