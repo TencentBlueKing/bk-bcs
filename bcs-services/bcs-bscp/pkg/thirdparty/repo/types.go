@@ -53,8 +53,6 @@ const (
 
 // error code.
 const (
-	// errCodeProjectAlreadyExist repo project already exist.
-	errCodeProjectAlreadyExist = 251005
 	// errCodeRepoAlreadyExist repo repository already exist.
 	errCodeRepoAlreadyExist = 251007
 	// ErrCodeNodeAlreadyExist repo node already exist.
@@ -93,7 +91,7 @@ func (s *repoDiscovery) GetServers() ([]string, error) {
 	}
 
 	if s.index < num-1 {
-		s.index = s.index + 1
+		s.index++
 		return append(s.servers[s.index-1:], s.servers[:s.index-1]...), nil
 	}
 
@@ -137,7 +135,7 @@ type UploadResp struct {
 	Data    *UploadData `json:"data"`
 }
 
-// UploadResp upload data
+// UploadData upload data
 type UploadData struct {
 	Size   int64  `json:"size"` // bkrepo always return 0
 	Sha256 string `json:"sha256"`

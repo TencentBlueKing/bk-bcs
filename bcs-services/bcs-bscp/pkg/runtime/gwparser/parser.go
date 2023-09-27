@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package gwparser NOTES
 package gwparser
 
 import (

@@ -10,6 +10,8 @@
  * limitations under the License.
  */
 
+// Package selector provides instance selector related structs and functions.
+// nolint:goconst
 package selector
 
 import (

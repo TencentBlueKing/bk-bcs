@@ -94,9 +94,9 @@ func (r *etcdResolver) watcher() {
 			r.setAddress(string(kv.Key), string(kv.Value))
 		}
 
-		r.cc.UpdateState(resolver.State{
-			Addresses: r.getAddresses(),
-		})
+		if err = r.cc.UpdateState(resolver.State{Addresses: r.getAddresses()}); err != nil {
+			logs.Errorf("client conn update state failed, addr: %v, err: %v", r.addresses, err)
+		}
 	}
 	logs.V(3).Infof("watcher addresses:%#v", r.addresses)
 

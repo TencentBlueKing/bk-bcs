@@ -10,10 +10,11 @@
  * limitations under the License.
  */
 
+// Package pbcontent provides content core protocol struct and convert functions.
 package pbcontent
 
 import (
-	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/jsonpb" // nolint:staticcheck
 
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
@@ -33,7 +34,7 @@ func (m *ContentSpec) ContentSpec() *table.ContentSpec {
 }
 
 // PbContentSpec convert table ContentSpec to pb ContentSpec
-func PbContentSpec(spec *table.ContentSpec) *ContentSpec {
+func PbContentSpec(spec *table.ContentSpec) *ContentSpec { // nolint:revive
 	if spec == nil {
 		return nil
 	}
@@ -86,7 +87,7 @@ func (m *ContentAttachment) ContentAttachment() *table.ContentAttachment {
 }
 
 // PbContentAttachment convert table ContentAttachment to pb ContentAttachment
-func PbContentAttachment(at *table.ContentAttachment) *ContentAttachment {
+func PbContentAttachment(at *table.ContentAttachment) *ContentAttachment { // nolint:revive
 	if at == nil {
 		return nil
 	}

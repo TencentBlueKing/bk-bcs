@@ -117,7 +117,7 @@ func (c *cmdb) GeBusinessbyID(ctx context.Context, bizID uint32) (*Biz, error) {
 		return nil, fmt.Errorf("biz %d not found", bizID)
 	}
 
-	c.cache.Set(bizID, &resp.Info[0])
+	c.cache.Set(bizID, &resp.Info[0]) // nolint:errcheck
 
 	return &resp.Info[0], nil
 }

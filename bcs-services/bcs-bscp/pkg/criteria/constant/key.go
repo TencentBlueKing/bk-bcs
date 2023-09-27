@@ -43,7 +43,7 @@ const (
 	BKGWJWTTokenKey = "X-Bkapi-JWT" // nolint
 
 	// BKTokenForTest is a token for test
-	BKTokenForTest = "bk-token-for-test"
+	BKTokenForTest = "bk-token-for-test" // nolint:gosec
 
 	// BKUserForTestPrefix is a user prefix for test
 	BKUserForTestPrefix = "bk-user-for-test-"

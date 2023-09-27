@@ -58,7 +58,8 @@ func TestPolicy_MarshalJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	shouldBe := "{\"op\":\"AND\",\"content\":[{\"op\":\"eq\",\"field\":\"host.os\",\"value\":\"linux\"},{\"op\":\"OR\",\"content\":[{\"op\":\"neq\",\"field\":\"host.os\",\"value\":\"windows\"}]}]}"
+	shouldBe := "{\"op\":\"AND\",\"content\":[{\"op\":\"eq\",\"field\":\"host.os\",\"value\":\"linux\"}," +
+		"{\"op\":\"OR\",\"content\":[{\"op\":\"neq\",\"field\":\"host.os\",\"value\":\"windows\"}]}]}"
 
 	if string(js) != shouldBe {
 		t.Fatal("invalid unmarshal")
@@ -118,7 +119,7 @@ func TestPolicy_UnmarshalJSON(t *testing.T) {
 		t.Fatal("parse content.FieldValue failed")
 	}
 
-	if eqPolicy.Field.Resource != "host" ||
+	if eqPolicy.Field.Resource != "host" || // nolint:goconst
 		eqPolicy.Field.Attribute != "os" ||
 		eqPolicy.Value != "linux" {
 		t.Fatal("parse eq policy failed")

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package search provides custom search functions.
 package search
 
 import (
@@ -182,7 +183,7 @@ type searcher struct {
 	fields          []string
 	value           string
 	tableName       TableName
-	supportedFields []string
+	supportedFields []string // nolint:unused
 }
 
 // NewSearcher new a Searcher

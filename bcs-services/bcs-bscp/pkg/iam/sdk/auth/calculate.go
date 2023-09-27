@@ -62,14 +62,14 @@ func (a *Authorize) calculatePolicy(ctx context.Context, resources []client.Reso
 }
 
 // calculateAnyPolicy returns true when having policy of any resource of the action
-func (a *Authorize) calculateAnyPolicy(ctx context.Context, resources []client.Resource, p *operator.Policy) (
-	bool, error) {
+func (a *Authorize) calculateAnyPolicy(ctx context.Context, resources []client.Resource, // nolint:unparam
+	p *operator.Policy) bool {
 
 	if p == nil || p.Operator == "" {
-		return false, nil
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
 // authFieldValue is to calculate authorize status for attribute.

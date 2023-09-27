@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package components provides bk component clients.
 package components
 
 import (
@@ -39,7 +40,7 @@ const (
 	BKAPIRequestIDHeader = "X-Bkapi-Request-Id"
 	userAgent            = "bcs-bscp/v1.0"
 	requestIDCtxKey      = ctxKey(1)
-	// RequestIDHeaderKey
+	// RequestIDHeaderKey 请求ID的Header Key
 	RequestIDHeaderKey = "X-Request-Id"
 )
 
@@ -180,7 +181,7 @@ func GetClient() *resty.Client {
 				OnAfterResponse(restyAfterResponseHook).
 				OnError(restyErrHook).
 				// NOCC:gas/tls(设计如此)
-				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
+				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}). // nolint:gosec
 				SetHeader("User-Agent", userAgent)
 		})
 	}

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package rest provides http rest client.
 package rest
 
 import (
@@ -67,7 +68,7 @@ func NewClient(c *client.Capability, baseURL string) ClientInterface {
 		}, []string{"handler", "status_code", "dimension"})
 
 		if err := c.MetricOpts.Register.Register(client.requestDuration); err != nil {
-			if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+			if are, ok := err.(prometheus.AlreadyRegisteredError); ok { // nolint:revive
 				client.requestDuration = are.ExistingCollector.(*prometheus.HistogramVec)
 			} else {
 				panic(err)

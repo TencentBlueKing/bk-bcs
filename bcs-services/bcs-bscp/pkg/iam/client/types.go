@@ -73,7 +73,7 @@ func (s *iamDiscovery) GetServers() ([]string, error) {
 	}
 
 	if s.index < num-1 {
-		s.index = s.index + 1
+		s.index++
 		return append(s.servers[s.index-1:], s.servers[:s.index-1]...), nil
 	}
 
@@ -207,11 +207,11 @@ type SelectionMode string
 
 const (
 	// modeInstance 仅可选择实例, 默认值
-	modeInstance SelectionMode = "instance"
+	modeInstance SelectionMode = "instance" // nolint:unused
 	// modeAttribute 仅可配置属性, 此时instance_selections配置不生效
-	modeAttribute SelectionMode = "attribute"
+	modeAttribute SelectionMode = "attribute" // nolint:unused
 	// modeAll 可以同时选择实例和配置属性
-	modeAll SelectionMode = "all"
+	modeAll SelectionMode = "all" // nolint:unused
 )
 
 // RelateResourceType the order of operating objects, resource type list and list must be
@@ -417,8 +417,7 @@ type GetPolicyByExtResResp struct {
 
 // GetPolicyByExtResResult  get a user's policy by external resource result.
 type GetPolicyByExtResResult struct {
-	Expression   *operator.Policy `json:"expression"`
-	a            Resource
+	Expression   *operator.Policy      `json:"expression"`
 	ExtResources []ExtResourceInstance `json:"ext_resources"`
 }
 
@@ -545,12 +544,14 @@ type ListWithAttributes struct {
 	Type         TypeID             `json:"type"`
 }
 
+// GrantResourceCreatorActionAncestor defines resource creator action ancestor.
 type GrantResourceCreatorActionAncestor struct {
 	System string `json:"system"`
 	Type   TypeID `json:"type"`
 	ID     string `json:"id"`
 }
 
+// GrantResourceCreatorActionOption defines options to grant resource creator action.
 type GrantResourceCreatorActionOption struct {
 	System    string                               `json:"system"`
 	Type      TypeID                               `json:"type"`

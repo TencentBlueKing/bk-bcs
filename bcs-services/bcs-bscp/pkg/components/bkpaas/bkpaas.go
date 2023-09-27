@@ -60,13 +60,13 @@ func buildAbsoluteUri(webHost string, r *http.Request) string {
 }
 
 // buildLoginURL 返回前端的URL
-func buildLoginURL(r *http.Request, loginhost string) string {
+func buildLoginURL(r *http.Request, loginhost string) string { // nolint:unparam
 	u := fmt.Sprintf("%s/login/?c_url=", loginhost)
 	return u
 }
 
 // buildLoginPlainURL 返回前端的URL
-func buildLoginPlainURL(r *http.Request, loginhost string) string {
+func buildLoginPlainURL(r *http.Request, loginhost string) string { // nolint:unparam
 	u := fmt.Sprintf("%s/login/plain/?c_url=", loginhost)
 	return u
 }

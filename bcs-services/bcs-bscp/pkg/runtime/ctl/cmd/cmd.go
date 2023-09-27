@@ -39,8 +39,6 @@ type Command struct {
 
 	// commands is the mapping of child commands' name and command, **reserved for later use**.
 	commands map[string]*Command
-	// parent is the parent command of this command, **reserved for later use**.
-	parent *Command
 }
 
 // Validate Command

@@ -159,7 +159,7 @@ func CORS(next http.Handler) http.Handler {
 // RequestIdGenerator request_id
 func RequestIdGenerator() string {
 	uid := uuid.New().String()
-	requestId := strings.Replace(uid, "-", "", -1)
+	requestId := strings.ReplaceAll(uid, "-", "")
 	return requestId
 }
 

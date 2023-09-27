@@ -37,144 +37,8 @@ func GenerateStaticActions() []client.ResourceAction {
 	resourceActionList = append(resourceActionList, genBusinessActions()...)
 	resourceActionList = append(resourceActionList, genApplicationActions()...)
 	resourceActionList = append(resourceActionList, genCredentialActions()...)
-	//resourceActionList = append(resourceActionList, genGroupActions()...)
-	//resourceActionList = append(resourceActionList, genStrategySetActions()...)
-	//resourceActionList = append(resourceActionList, genStrategyActions()...)
-	//resourceActionList = append(resourceActionList, genHistoryActions()...)
 
 	return resourceActionList
-}
-
-func genHistoryActions() []client.ResourceAction {
-	actions := make([]client.ResourceAction, 0)
-
-	actions = append(actions, client.ResourceAction{
-		ID:                   TaskHistoryView,
-		Name:                 ActionIDNameMap[TaskHistoryView],
-		NameEn:               "Task History",
-		Type:                 View,
-		RelatedResourceTypes: businessResource,
-		RelatedActions:       nil,
-		Version:              1,
-	})
-
-	return actions
-}
-
-func genStrategyActions() []client.ResourceAction {
-	actions := make([]client.ResourceAction, 0)
-
-	actions = append(actions, client.ResourceAction{
-		ID:     StrategyCreate,
-		Name:   ActionIDNameMap[StrategyCreate],
-		NameEn: "Create Strategy",
-		Type:   Create,
-		RelatedResourceTypes: []client.RelateResourceType{{
-			SystemID:    SystemIDBSCP,
-			ID:          Application,
-			NameAlias:   "",
-			NameAliasEn: "",
-			Scope:       nil,
-			InstanceSelections: []client.RelatedInstanceSelection{{
-				SystemID: SystemIDBSCP,
-				ID:       ApplicationSelection,
-			}},
-		}},
-		RelatedActions: []client.ActionID{BusinessViewResource},
-		Version:        1,
-	})
-
-	relatedResource := []client.RelateResourceType{{
-		SystemID:    SystemIDBSCP,
-		ID:          Application,
-		NameAlias:   "",
-		NameAliasEn: "",
-		Scope:       nil,
-		InstanceSelections: []client.RelatedInstanceSelection{{
-			SystemID: SystemIDBSCP,
-			ID:       ApplicationSelection,
-		}},
-	}}
-
-	actions = append(actions, client.ResourceAction{
-		ID:                   StrategyEdit,
-		Name:                 ActionIDNameMap[StrategyEdit],
-		NameEn:               "Edit Strategy",
-		Type:                 Edit,
-		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
-		Version:              1,
-	})
-
-	actions = append(actions, client.ResourceAction{
-		ID:                   StrategyDelete,
-		Name:                 ActionIDNameMap[StrategyDelete],
-		NameEn:               "Delete Strategy",
-		Type:                 Delete,
-		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
-		Version:              1,
-	})
-
-	return actions
-}
-
-func genStrategySetActions() []client.ResourceAction {
-	actions := make([]client.ResourceAction, 0)
-
-	actions = append(actions, client.ResourceAction{
-		ID:     StrategySetCreate,
-		Name:   ActionIDNameMap[StrategySetCreate],
-		NameEn: "Create Strategy Set",
-		Type:   Create,
-		RelatedResourceTypes: []client.RelateResourceType{{
-			SystemID:    SystemIDBSCP,
-			ID:          Application,
-			NameAlias:   "",
-			NameAliasEn: "",
-			Scope:       nil,
-			InstanceSelections: []client.RelatedInstanceSelection{{
-				SystemID: SystemIDBSCP,
-				ID:       ApplicationSelection,
-			}},
-		}},
-		RelatedActions: []client.ActionID{BusinessViewResource},
-		Version:        1,
-	})
-
-	relatedResource := []client.RelateResourceType{{
-		SystemID:    SystemIDBSCP,
-		ID:          Application,
-		NameAlias:   "",
-		NameAliasEn: "",
-		Scope:       nil,
-		InstanceSelections: []client.RelatedInstanceSelection{{
-			SystemID: SystemIDBSCP,
-			ID:       ApplicationSelection,
-		}},
-	}}
-
-	actions = append(actions, client.ResourceAction{
-		ID:                   StrategySetEdit,
-		Name:                 ActionIDNameMap[StrategySetEdit],
-		NameEn:               "Edit Strategy Set",
-		Type:                 Edit,
-		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
-		Version:              1,
-	})
-
-	actions = append(actions, client.ResourceAction{
-		ID:                   StrategySetDelete,
-		Name:                 ActionIDNameMap[StrategySetDelete],
-		NameEn:               "Delete Strategy Set",
-		Type:                 Delete,
-		RelatedResourceTypes: relatedResource,
-		RelatedActions:       nil,
-		Version:              1,
-	})
-
-	return actions
 }
 
 func genApplicationActions() []client.ResourceAction {
@@ -336,6 +200,7 @@ func genCredentialActions() []client.ResourceAction {
 }
 
 // genGroupActions 应用分组
+// nolint:unused
 func genGroupActions() []client.ResourceAction {
 	actions := make([]client.ResourceAction, 0)
 

@@ -35,7 +35,7 @@ func (s *esbDiscovery) GetServers() ([]string, error) {
 	}
 
 	if s.index < num-1 {
-		s.index = s.index + 1
+		s.index++
 		return append(s.servers[s.index-1:], s.servers[:s.index-1]...), nil
 	}
 

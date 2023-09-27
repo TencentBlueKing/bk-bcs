@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package metrics provides common metrics function.
 package metrics
 
 import (

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbtr provides template revision core protocol struct and convert functions.
 package pbtr
 
 import (

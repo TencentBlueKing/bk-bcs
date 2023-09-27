@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bcs provides bcs api client.
 package bcs
 
 import (

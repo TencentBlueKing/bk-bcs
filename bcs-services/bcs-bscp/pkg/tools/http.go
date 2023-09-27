@@ -83,7 +83,8 @@ func reqToCurl(r *http.Request) string {
 
 // respToCurl 返回日志
 func respToCurl(resp *http.Response, st time.Time) string {
-	respMsg := fmt.Sprintf("[%s] size=%s duration=%s", resp.Status, humanize.Bytes(uint64(resp.ContentLength)), time.Since(st))
+	respMsg := fmt.Sprintf("[%s] size=%s duration=%s",
+		resp.Status, humanize.Bytes(uint64(resp.ContentLength)), time.Since(st))
 	return respMsg
 }
 
@@ -109,7 +110,7 @@ func (t *curlLogTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	return resp, err
 }
 
-func (t *curlLogTransport) transport(req *http.Request) http.RoundTripper {
+func (t *curlLogTransport) transport(req *http.Request) http.RoundTripper { // nolint:unparam
 	if t.Transport != nil {
 		return t.Transport
 	}

@@ -38,7 +38,7 @@ func TestCredentialScopeValidation(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		cs := CredentialScope(tc.scope)
+		cs := Scope(tc.scope)
 		err := cs.Validate()
 		if tc.expectErr {
 			assert.Error(t, err, fmt.Sprintf("scope: %s", tc.scope))
@@ -63,7 +63,7 @@ func TestCredentialScopeMatchApp(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		cs := CredentialScope(tc.scope)
+		cs := Scope(tc.scope)
 		match, err := cs.MatchApp(tc.appName)
 		if err != nil {
 			t.Error(err)
@@ -91,7 +91,7 @@ func TestCredentialScopeMatchConfigItem(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		cs := CredentialScope(tc.scope)
+		cs := Scope(tc.scope)
 		match, err := cs.MatchConfigItem(tc.path, tc.name)
 		if err != nil {
 			t.Error(err)

@@ -19,9 +19,15 @@ import (
 
 // TestAesDeEncrytion aes DeEncrytion test
 func TestAesEnDecrytion(t *testing.T) {
-	//需要16的倍数
-	priKey := randStr(32)
-	oriStr := randStr(32)
+	// 需要16的倍数
+	priKey, err := randStr(32)
+	if err != nil {
+		t.Errorf("randStr err: %s\n", err.Error())
+	}
+	oriStr, err := randStr(32)
+	if err != nil {
+		t.Errorf("randStr err: %s\n", err.Error())
+	}
 	fmt.Println("original: ", oriStr)
 	encrypted, err := AesEncrypt([]byte(oriStr), []byte(priKey))
 	if err != nil {
@@ -40,9 +46,15 @@ func TestAesEnDecrytion(t *testing.T) {
 }
 
 func TestEnDecryptCredential(t *testing.T) {
-	priKey := randStr(32)
+	priKey, err := randStr(32)
+	if err != nil {
+		t.Errorf("randStr err: %s\n", err.Error())
+	}
+	oriStr, err := randStr(32)
+	if err != nil {
+		t.Errorf("randStr err: %s\n", err.Error())
+	}
 	algo := "aes"
-	oriStr := randStr(32)
 	fmt.Println("original: ", oriStr)
 	encrypted, err := EncryptCredential(oriStr, priKey, algo)
 	if err != nil {
