@@ -122,6 +122,7 @@ func main() {
 	httpserver := &http.Server{Addr: fmt.Sprintf("%s:%d", conf.Address, conf.Port-1), Handler: grpcmux}
 	// http backgroup listen
 	go func() {
+		var err error
 		if conf.IsSsl {
 			httpserver.TLSConfig = conf.TLSConf
 			err = httpserver.ListenAndServeTLS("", "")
