@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -19,8 +19,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage"
+	bcsstorage "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage"
 )
 
 const (
@@ -41,7 +42,7 @@ func NewApp(op *options.StorageOptions) *App {
 
 // Run the bcs-storage
 func (app *App) Run() error {
-	//init cert
+	// init cert
 	initCert(app.op)
 
 	// init tracing

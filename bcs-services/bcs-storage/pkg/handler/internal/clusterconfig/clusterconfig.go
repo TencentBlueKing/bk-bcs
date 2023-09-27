@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package clusterconfig xxx
 package clusterconfig
 
 import (
@@ -23,12 +23,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	storage "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/proto"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/clusterconfig"
-	"github.com/pkg/errors"
 )
 
 type general struct {
@@ -109,7 +110,7 @@ func (g *general) getMultiClsCondition() *operator.Condition {
 func (g *general) putStableVersion() (err error) {
 	g.preService()
 	if err = clusterconfig.SaveStableVersion(g.ctx, g.service, g.version); err != nil {
-		return errors.Wrapf(err, "Failed to set stable version of %s.", g.service)
+		return errors.Wrapf(err, "Failed to set stable version of %s", g.service)
 	}
 	return nil
 }

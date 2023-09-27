@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package events xxx
 package events
 
 import (
@@ -19,25 +19,25 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/pkg/errors"
-	"go.mongodb.org/mongo-driver/bson"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/pkg/errors"
+	"go.mongodb.org/mongo-driver/bson"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
 	dbutils "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 )
 
 // 业务方法
 
 // CreateHashIndex 创建hash index
 func CreateHashIndex(ctx context.Context, resourceType, indexName string) error {
-	//hasIndex, err := dbutils.HasIndex(ctx, dbConfig, resourceType, indexName)
+	// hasIndex, err := dbutils.HasIndex(ctx, dbConfig, resourceType, indexName)
 	hasIndex, err := dbutils.HasIndex(&dbutils.DBOperate{
 		Context:      ctx,
 		DBConfig:     dbConfig,
@@ -121,7 +121,9 @@ func UpdateDynamicEvent(ctx context.Context, resourceType string, dynamicData op
 	if _, ok := dynamicData[dataTag].(map[string]interface{}); !ok {
 		return nil
 	}
+	// nolint
 	dynamicData[namespaceTag] = dynamicData[dataTag].(map[string]interface{})["metadata"].(map[string]interface{})["namespace"].(string)
+	// nolint
 	dynamicData[resourceNameTag] = dynamicData[dataTag].(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string)
 	dynamicData[resourceTypeTag] = eventResource
 
@@ -175,7 +177,8 @@ func AddEvent(ctx context.Context, resourceType string, data operator.M, opt *li
 }
 
 // GetEventList 获取 event list
-func GetEventList(ctx context.Context, clusterIDs []string, opt *lib.StoreGetOption) (mList []operator.M, count int64, err error) {
+func GetEventList(ctx context.Context, clusterIDs []string, opt *lib.StoreGetOption) (
+	mList []operator.M, count int64, err error) {
 	var o *dbutils.DBOperate
 	for _, clusterID := range clusterIDs {
 		// 查询或创建index
@@ -190,16 +193,17 @@ func GetEventList(ctx context.Context, clusterIDs []string, opt *lib.StoreGetOpt
 			DBConfig:     dbConfig,
 			ResourceType: TablePrefix + clusterID,
 		}
+		// nolint
 		eList, err := dbutils.GetData(o)
 		if err != nil {
-			return nil, 0, errors.Wrapf(err, "get event list failed.")
+			return nil, 0, errors.Wrapf(err, "get event list failed")
 		}
 
 		// 统计resourceType表
 		o.SoftDeletion = true
 		c, err := dbutils.Count(o)
 		if err != nil {
-			return nil, 0, errors.Wrapf(err, "count event list failed.")
+			return nil, 0, errors.Wrapf(err, "count event list failed")
 		}
 
 		count += c
@@ -259,7 +263,7 @@ func queryOrCreateIndex(ctx context.Context, clusterID string) error {
 			IndexName:    idxName + "_idx",
 		})
 		if err != nil {
-			return errors.Wrapf(err, "failed to get index for  clusterID(%s) with  %s.", clusterID, idxName)
+			return errors.Wrapf(err, "failed to get index for  clusterID(%s) with  %s", clusterID, idxName)
 		}
 		if hasIndex {
 			continue
@@ -279,7 +283,7 @@ func queryOrCreateIndex(ctx context.Context, clusterID string) error {
 			ResourceType: TablePrefix + clusterID,
 		}
 		if err = dbutils.CreateIndex(o); err != nil {
-			return errors.Wrapf(err, "failed to create index for clusterID(%s) with %s.", clusterID, idxName)
+			return errors.Wrapf(err, "failed to create index for clusterID(%s) with %s", clusterID, idxName)
 		}
 	}
 	return nil

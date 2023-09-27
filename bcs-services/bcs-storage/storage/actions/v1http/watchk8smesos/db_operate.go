@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package watchk8smesos xxx
 package watchk8smesos
 
 import (
@@ -41,7 +41,8 @@ func RemoveDta(ctx context.Context, newObj *types.RawObject, opt *store.DeleteOp
 }
 
 // GetData 查询数据
-func GetData(ctx context.Context, objectType types.ObjectType, key types.ObjectKey, opt *store.GetOptions) (*types.RawObject, error) {
+func GetData(ctx context.Context, objectType types.ObjectType, key types.ObjectKey, opt *store.GetOptions) (
+	*types.RawObject, error) {
 	// 创建连接
 	db := apiserver.GetAPIResource().GetStoreClient(dbConfig)
 

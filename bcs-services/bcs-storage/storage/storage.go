@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bcsstorage
@@ -30,6 +29,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
 	trestful "github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/restful"
+	"github.com/emicklei/go-restful"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	mserver "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/server"
@@ -37,10 +41,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/middle"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/emicklei/go-restful"
-	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // StorageServer is a data struct of bcs storage server
@@ -91,9 +91,7 @@ func (s *StorageServer) Init() (err error) {
 	}
 
 	// v1 http server 注册
-	if err = s.registerV1HttpServerToRegistry(); err != nil {
-		return errors.Wrapf(err, "http v1 initialization failed")
-	}
+	s.registerV1HttpServerToRegistry()
 
 	// 初始化go-micro
 	if err = s.microServer.Init(s.conf); err != nil {
@@ -104,7 +102,7 @@ func (s *StorageServer) Init() (err error) {
 }
 
 // registerV1HttpServerToRegistry 注册v1 http server到Registry
-func (s *StorageServer) registerV1HttpServerToRegistry() error {
+func (s *StorageServer) registerV1HttpServerToRegistry() {
 	// RDiscover
 	if s.conf.Etcd.Feature {
 		// 创建metadata
@@ -132,7 +130,6 @@ func (s *StorageServer) registerV1HttpServerToRegistry() error {
 		s.etcdRegistry = registryv4.NewEtcdRegistry(eoption)
 	}
 
-	return nil
 }
 
 func (s *StorageServer) initFilterFunctions() []restful.FilterFunction {
@@ -213,7 +210,9 @@ func (s *StorageServer) initHTTPServer() error {
 	filterFunctions := s.initFilterFunctions()
 
 	// Api v1
-	s.httpServer.RegisterWebServer(actions.PathV1, filterFunctions, a.ActionsV1)
+	if err := s.httpServer.RegisterWebServer(actions.PathV1, filterFunctions, a.ActionsV1); err != nil {
+		return err
+	}
 
 	if a.Conf.DebugMode {
 		s.initDebug()
@@ -230,7 +229,7 @@ func (s *StorageServer) initDebug() {
 		httpserver.NewAction("GET", "/debug/pprof/symbol", nil, getRouteFunc(pprof.Symbol)),
 		httpserver.NewAction("GET", "/debug/pprof/trace", nil, getRouteFunc(pprof.Trace)),
 	}
-	s.httpServer.RegisterWebServer("", nil, action)
+	_ = s.httpServer.RegisterWebServer("", nil, action)
 }
 
 // Start to run storage server
@@ -240,7 +239,7 @@ func (s *StorageServer) Start() error {
 	defer func() {
 		// 注销服务
 		if s.conf.Etcd.Feature {
-			s.etcdRegistry.Deregister()
+			_ = s.etcdRegistry.Deregister()
 		}
 		// 关闭资源
 		s.close()
@@ -256,7 +255,7 @@ func (s *StorageServer) Start() error {
 		blog.Info("run v1 http server")
 		s.httpServer.SetAddressIPv6(s.conf.IPv6Address) // 把ipv6地址，加入到httpServer中
 		err := s.httpServer.ListenAndServe()
-		chErr <- errors.Wrapf(err, "http listen and service failed.")
+		chErr <- errors.Wrapf(err, "http listen and service failed")
 	}()
 
 	runPrometheusMetrics(s.conf)
@@ -267,14 +266,12 @@ func (s *StorageServer) Start() error {
 	// register and discover
 	if s.conf.Etcd.Feature {
 		if err := s.etcdRegistry.Register(); err != nil {
-			chErr <- errors.Wrapf(err, "storage etcd registry failed.")
+			chErr <- errors.Wrapf(err, "storage etcd registry failed")
 		}
 	}
 
-	select {
-	case err := <-chErr:
-		return errors.Wrapf(err, "exit!")
-	}
+	err := <-chErr
+	return errors.Wrapf(err, "exit")
 }
 
 // close 关闭bcs-storage
@@ -282,7 +279,7 @@ func (s *StorageServer) close() {
 	// 关闭 micro server
 	s.cancelFunc()
 	// 关闭 http server
-	s.httpServer.Close()
+	_ = s.httpServer.Close()
 }
 
 // runPrometheusMetrics starting prometheus metrics handler
@@ -292,6 +289,7 @@ func runPrometheusMetrics(op *options.StorageOptions) {
 	ips := []string{op.Address, op.IPv6Address}
 	ipv6Server := ipv6server.NewIPv6Server(ips, strconv.Itoa(int(op.MetricPort)), "", nil)
 	// 启动server，同时监听v4、v6地址
+	// nolint
 	go ipv6Server.ListenAndServe()
 }
 

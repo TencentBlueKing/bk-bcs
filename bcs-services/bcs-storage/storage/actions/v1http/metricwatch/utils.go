@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package metricwatch
@@ -18,8 +17,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 )
 
 func watch(req *restful.Request, resp *restful.Response) {
@@ -43,7 +43,7 @@ func watch(req *restful.Request, resp *restful.Response) {
 	}
 
 	if err != nil {
-		resp.Write(lib.EventWatchBreakBytes)
+		_, _ = resp.Write(lib.EventWatchBreakBytes)
 		return
 	}
 
