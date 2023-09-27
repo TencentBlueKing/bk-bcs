@@ -28,7 +28,7 @@
         title: `确认是否删除服务 ${props.service.spec.name}?`,
         headerAlign: "center" as const,
         footerAlign: "center" as const,
-        extCls: 'delete-service-infobox',
+        extCls: 'center-top-infobox',
         onConfirm: async () => {
           await deleteApp(<number>props.service.id, props.service.biz_id);
           emits('update')
@@ -241,7 +241,5 @@
 </style>
 
 <style lang="scss">
-  .delete-service-infobox {
-      top: 35% !important;
-  }
+
 </style>

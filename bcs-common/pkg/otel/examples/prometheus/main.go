@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/metric"
+	"go.opentelemetry.io/otel/exporters/prometheus"
 
 	"go.opentelemetry.io/otel/attribute"
 	otelmetric "go.opentelemetry.io/otel/metric"
@@ -32,24 +33,7 @@ var (
 )
 
 func main() {
-	opts := &metric.Options{
-		MetricSwitchStatus:  "on",
-		MetricType:          "prometheus",
-		ProcessorWithMemory: true,
-	}
-
-	op := []metric.Option{}
-	if opts.MetricSwitchStatus != "" {
-		op = append(op, metric.SwitchStatus(opts.MetricSwitchStatus))
-	}
-	if opts.MetricType != "" {
-		op = append(op, metric.TypeMetric(opts.MetricType))
-	}
-	if !opts.ProcessorWithMemory {
-		op = append(op, metric.ProcessorWithMemory(opts.ProcessorWithMemory))
-	}
-
-	mp, exp, err := metric.InitMeterProvider(op...)
+	mp, exp, err := initMeterProvider()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -128,4 +112,29 @@ func main() {
 	fmt.Println("Example finished updating, please visit :30080/metrics")
 
 	select {}
+}
+
+func initMeterProvider() (mp otelmetric.MeterProvider, exp *prometheus.Exporter, err error) {
+	opts := &metric.Options{
+		MetricSwitchStatus:  "on",
+		MetricType:          "prometheus",
+		ProcessorWithMemory: true,
+	}
+
+	op := []metric.Option{}
+	if opts.MetricSwitchStatus != "" {
+		op = append(op, metric.SwitchStatus(opts.MetricSwitchStatus))
+	}
+	if opts.MetricType != "" {
+		op = append(op, metric.TypeMetric(opts.MetricType))
+	}
+	if !opts.ProcessorWithMemory {
+		op = append(op, metric.ProcessorWithMemory(opts.ProcessorWithMemory))
+	}
+
+	mp, exp, err = metric.InitMeterProvider(op...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return
 }

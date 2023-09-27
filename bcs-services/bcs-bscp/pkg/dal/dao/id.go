@@ -90,7 +90,7 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 	// generate the id list that can be used.
 	scope := genObj.MaxID - uint32(step)
 	list := make([]uint32, step)
-	for id := 1; id <= int(step); id++ {
+	for id := 1; id <= step; id++ {
 		list[id-1] = scope + uint32(id)
 	}
 	return list, nil

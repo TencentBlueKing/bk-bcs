@@ -81,7 +81,7 @@
     versionList.value = []
     emits('update:show', false)
   }
-
+  
 </script>
 <template>
   <bk-sideslider
@@ -99,7 +99,7 @@
             :selected-config="props.selectedConfig"
             @selected="handleSelectDiffItem" />
           <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
-            <diff :diff="diffDetailData" :loading="false">
+            <diff :diff="diffDetailData" :id="appId" :loading="false">
               <template #leftHead>
                   <slot name="baseHead">
                     <div class="diff-panel-head">
@@ -109,6 +109,7 @@
                         style="width: 320px;"
                         :loading="versionListLoading"
                         :clearable="false"
+                        no-data-text="暂无数据"
                         @change="handleSelectVersion">
                         <bk-option
                           v-for="version in versionList"

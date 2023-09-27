@@ -8,22 +8,18 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/metric"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -31,6 +27,10 @@ import (
 	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
 	oteltrace "go.opentelemetry.io/otel/trace"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 )
 
 const (
@@ -39,7 +39,6 @@ const (
 )
 
 func main() {
-
 	metricOpts := &metric.Options{
 		MetricSwitchStatus:  "on",
 		MetricType:          "prometheus",
@@ -129,7 +128,7 @@ func do(ctx context.Context, tracer oteltrace.Tracer, commonLabels []attribute.K
 		ctx, span = tracer.Start(ctx, "Execute Request")
 		log.Printf("traceID:%v, spanID:%v",
 			span.SpanContext().TraceID().String(), span.SpanContext().SpanID().String())
-		commonLabels2 := append(commonLabels,
+		commonLabels2 := append(commonLabels, // nolint
 			attribute.String("traceID", span.SpanContext().TraceID().String()))
 		makeRequest(ctx)
 		span.End()
@@ -168,7 +167,7 @@ func makeRequest(ctx context.Context) {
 	}
 
 	// Get the response body
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("read from resp.Body failed, err:%v\n", err)
 		return

@@ -50,8 +50,8 @@ var (
 		ReadBufferSize:      defaultReadBufferSize,
 	}
 
-	// notImplementedErr
-	notImplementedErr = errors.New("notImplemented")
+	// errNotImplemented is err of not implemented
+	errNotImplemented = errors.New("notImplemented")
 )
 
 // ObjectMetadata 文件元数据

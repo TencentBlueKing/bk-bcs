@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package repository is interface and its implementation for different repositories
 package repository
 
 import (
@@ -46,11 +47,11 @@ type bkrepoAuthTransport struct {
 // RoundTrip Transport
 func (t *bkrepoAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.SetBasicAuth(t.Username, t.Password)
-	resp, err := t.transport(req).RoundTrip(req)
+	resp, err := t.transport().RoundTrip(req)
 	return resp, err
 }
 
-func (t *bkrepoAuthTransport) transport(req *http.Request) http.RoundTripper {
+func (t *bkrepoAuthTransport) transport() http.RoundTripper {
 	if t.Transport != nil {
 		return t.Transport
 	}

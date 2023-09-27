@@ -40,17 +40,17 @@ type Content struct {
 }
 
 // AppID AuditRes interface
-func (s *Content) AppID() uint32 {
+func (c *Content) AppID() uint32 {
 	return 0
 }
 
 // ResID AuditRes interface
-func (s *Content) ResID() uint32 {
-	return s.ID
+func (c *Content) ResID() uint32 {
+	return c.ID
 }
 
 // ResType AuditRes interface
-func (s *Content) ResType() string {
+func (c *Content) ResType() string {
 	return "content"
 }
 

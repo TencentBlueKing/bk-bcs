@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -24,11 +24,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/tunnel"
-
 	"github.com/gorilla/mux"
 	"k8s.io/apimachinery/pkg/util/proxy"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/tunnel"
 )
 
 // NewWsTunnelDispatcher return a new WsTunnelDispatcher
@@ -72,7 +72,6 @@ func (w *WsTunnelDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Request
 
 	handlerServer := stripLeaveSlash(w.ExtractPathPrefix(req), handler)
 	handlerServer.ServeHTTP(rw, req)
-	return
 }
 
 // ExtractPathPrefix extracts the path prefix which needs to be stripped when the request is forwarded to the reverse
@@ -102,7 +101,7 @@ func (w *WsTunnelDispatcher) LookupWsHandler(clusterID string) (*proxy.UpgradeAw
 
 	serverAddress := clusterInfo.ServerAddress
 	if !strings.HasSuffix(serverAddress, "/") {
-		serverAddress = serverAddress + "/"
+		serverAddress += "/"
 	}
 	u, err := url.Parse(serverAddress)
 	if err != nil {
@@ -156,7 +155,7 @@ func (w *WsTunnelDispatcher) getTransport(clusterID string) (http.RoundTripper, 
 	return transport, nil
 }
 
-func (w *WsTunnelDispatcher) getClientKey(clusterID string) string {
+func (w *WsTunnelDispatcher) getClientKey(clusterID string) string { // nolint
 	return clusterID
 }
 

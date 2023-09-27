@@ -152,11 +152,10 @@
   const handleSearch = () => {
     if(!searchInfo.value) {
       searchGroupList.value = groupList.value
-      refreshTableData()
-      return
-    }else {
+    } else {
+      const lowercaseSearchStr = searchInfo.value.toLowerCase().replace(/\s/g,'')
       // 分组名称过滤出来的数据
-      const groupNameList = groupList.value.filter( item => item.name === searchInfo.value )
+      const groupNameList = groupList.value.filter( item => item.name.includes(lowercaseSearchStr))
       // 分组规则过滤出来的数据
       const groupRuleList = groupList.value.filter( item => {
         const ruleList:string[] = []
@@ -168,7 +167,7 @@
         const op = GROUP_RULE_OPS.find(item => item.id === labels.op)?.name
         ruleList.push(`${labels.key}${op}${labels.value}`)
       })
-       return ruleList.includes(searchInfo.value.replace(/\s/g,''))
+       return ruleList.includes(lowercaseSearchStr)
     })
      searchGroupList.value = [...groupNameList,...groupRuleList]
    }

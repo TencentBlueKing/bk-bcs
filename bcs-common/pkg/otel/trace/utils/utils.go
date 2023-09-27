@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package utils xxx
@@ -124,5 +123,5 @@ func WithSampler(s sdktrace.Sampler) sdktrace.TracerProviderOption {
 // If this option is not used, the TracerProvider will use the default
 // SpanLimits.
 func WithSpanLimits(sl sdktrace.SpanLimits) sdktrace.TracerProviderOption {
-	return sdktrace.WithSpanLimits(sl)
+	return sdktrace.WithRawSpanLimits(sl)
 }

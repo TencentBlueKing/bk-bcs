@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package audit
@@ -65,7 +64,7 @@ func GetEnvWithDefault(key, defaultValue string) string {
 func GenerateEventID(appCode, factor string) string {
 	currentTime := time.Now().Format("20060102150405")
 	// NOCC:gas/crypto(设计如此)
-	hash := fmt.Sprintf("%x", md5.Sum([]byte(factor)))
+	hash := fmt.Sprintf("%x", md5.Sum([]byte(factor))) // nolint
 	result := fmt.Sprintf("%s-%s-%s", appCode, currentTime, hash[8:24])
 	return result
 }

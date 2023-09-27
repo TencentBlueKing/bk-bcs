@@ -70,7 +70,7 @@ func (dao *hookRevisionDao) Create(kit *kit.Kit, hr *table.HookRevision) (uint32
 	hr.Spec.Content = base64.StdEncoding.EncodeToString([]byte(hr.Spec.Content))
 
 	// generate a HookRevision id and update to HookRevision.
-	id, err := dao.idGen.One(kit, table.Name(hr.TableName()))
+	id, err := dao.idGen.One(kit, hr.TableName())
 	if err != nil {
 		return 0, err
 	}
@@ -109,7 +109,7 @@ func (dao *hookRevisionDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *tabl
 	hr.Spec.Content = base64.StdEncoding.EncodeToString([]byte(hr.Spec.Content))
 
 	// generate a HookRevision id and update to HookRevision.
-	id, err := dao.idGen.One(kit, table.Name(hr.TableName()))
+	id, err := dao.idGen.One(kit, hr.TableName())
 	if err != nil {
 		return 0, err
 	}
@@ -246,7 +246,7 @@ func (dao *hookRevisionDao) ListWithRefer(kit *kit.Kit, opt *types.ListHookRevis
 		Group(m.ID)
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
-		if err := q.Scan(&details); err != nil {
+		if err = q.Scan(&details); err != nil {
 			return nil, 0, err
 		}
 		count = int64(len(details))

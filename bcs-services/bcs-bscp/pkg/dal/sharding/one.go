@@ -13,10 +13,11 @@
 package sharding
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -128,8 +129,14 @@ func (o *One) AutoTxn(kit *kit.Kit, run TxnFunc) error {
 	// if the operation need to retry, retry for at most 3 times, each wait for 50~500ms
 	for retryCount := 1; retryCount <= 3; retryCount++ {
 		logs.Warnf("retry transaction, retry count: %d, rid: %s", retryCount, kit.Rid)
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		time.Sleep(time.Millisecond * time.Duration(r.Intn(450)+50))
+
+		max := big.NewInt(450)
+		var randomNumber *big.Int
+		randomNumber, err = rand.Int(rand.Reader, max)
+		if err != nil {
+			return err
+		}
+		time.Sleep(time.Millisecond * time.Duration(randomNumber.Int64()+50))
 
 		retry, err = o.autoTxn(kit, run)
 		if err != nil {

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bkiam
@@ -16,17 +15,17 @@ package bkiam
 import (
 	"fmt"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
+	"github.com/samuel/go-zookeeper/zk"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
-
-	"github.com/samuel/go-zookeeper/zk"
-	"strings"
 )
 
 const (
@@ -39,7 +38,7 @@ const (
 )
 
 var (
-	tokenKeyAlreadyExists = fmt.Errorf("token key already exists")
+	tokenKeyAlreadyExists = fmt.Errorf("token key already exists") // nolint
 )
 
 // NewTokenCache xxx
@@ -118,7 +117,7 @@ func (tc *TokenCache) start() {
 	ticker := time.NewTicker(time.Duration(tc.conf.BKIamAuth.AuthTokenSyncTime) * time.Second)
 	defer ticker.Stop()
 
-	for {
+	for { // nolint
 		select {
 		case <-ticker.C:
 			go tc.syncFrom()
@@ -273,7 +272,7 @@ func (tc *TokenCache) occupyKey(token *auth.Token) (bool, error) {
 	return false, err
 }
 
-func (tc *TokenCache) releaseKey(token *auth.Token) error {
+func (tc *TokenCache) releaseKey(token *auth.Token) error { // nolint
 	err := tc.zk.Del(tc.getKeyPath(token.Token), -1)
 	if err == zk.ErrNoNode {
 		err = nil

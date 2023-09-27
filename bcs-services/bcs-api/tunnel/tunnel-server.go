@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tunnel
@@ -22,18 +21,19 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 )
 
 const (
 	// Module xxx
-	Module = "BCS-API-Tunnel-Module"
+	Module = "BCS-API-Tunnel-Module" // nolint
 	// RegisterToken xxx
 	RegisterToken = "BCS-API-Tunnel-Token" // nolint
 	// Params xxx
-	Params = "BCS-API-Tunnel-Params"
+	Params = "BCS-API-Tunnel-Params" // nolint
 	// Cluster xxx
-	Cluster = "BCS-API-Tunnel-ClusterId"
+	Cluster = "BCS-API-Tunnel-ClusterId" // nolint
 
 	// KubeAgentModule xxx
 	KubeAgentModule = "kube-agent"
@@ -46,7 +46,7 @@ const (
 var (
 	// DefaultTunnelServer xxx
 	DefaultTunnelServer *websocketDialer.Server
-	errFailedAuth       = errors.New("failed authentication")
+	errFailedAuth       = errors.New("failed authentication") // nolint
 )
 
 // RegisterCluster xxx

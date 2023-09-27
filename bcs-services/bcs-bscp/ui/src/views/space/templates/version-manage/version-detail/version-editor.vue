@@ -268,7 +268,7 @@
               <div class="file-wrapper">
                 <Done class="done-icon"/>
                 <TextFill class="file-icon" />
-                <div v-bk-ellipsis class="name" @click="handleDownloadFile">{{ file.name }}</div>
+                <div class="name" @click="handleDownloadFile">{{ file.name }}</div>
                 ({{ file.size }})
               </div>
             </template>

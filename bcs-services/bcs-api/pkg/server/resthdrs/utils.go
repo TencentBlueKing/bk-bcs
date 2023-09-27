@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package resthdrs
@@ -18,12 +17,12 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/asaskevich/govalidator"
 	"gopkg.in/go-playground/validator.v9"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
 )
 
 var validate = validator.New()
@@ -52,7 +51,7 @@ func init() {
 		return name
 	})
 
-	validate.RegisterValidation("apiserver_addresses", ValidateAPIServerAddresses)
+	_ = validate.RegisterValidation("apiserver_addresses", ValidateAPIServerAddresses)
 }
 
 // ValidateAPIServerAddresses validates if given string is a valid apiserver addresses list.

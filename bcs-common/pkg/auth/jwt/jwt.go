@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package jwt xxx
@@ -17,7 +16,7 @@ package jwt
 import (
 	"crypto/rsa"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -95,11 +94,11 @@ type UserClaimsInfo struct {
 	ClientSecret string `json:"client_secret"`
 	// https://tools.ietf.org/html/rfc7519#section-4.1
 	// aud: 接收jwt一方; exp: jwt过期时间; jti: jwt唯一身份认证; IssuedAt: 签发时间; Issuer: jwt签发者
-	*jwt.StandardClaims
+	*jwt.StandardClaims // nolint
 }
 
 // JWTOptions jwt auth keyInfo
-type JWTOptions struct {
+type JWTOptions struct { // nolint
 	VerifyKey     *rsa.PublicKey
 	VerifyKeyFile string
 	SignKey       *rsa.PrivateKey
@@ -119,7 +118,7 @@ func (opts JWTOptions) validate() error {
 }
 
 // JWTClient client
-type JWTClient struct {
+type JWTClient struct { // nolint
 	Options   JWTOptions
 	verifyKey *rsa.PublicKey
 	signKey   *rsa.PrivateKey
@@ -137,7 +136,7 @@ func NewJWTClient(opt JWTOptions) (*JWTClient, error) {
 	if opt.VerifyKey != nil {
 		jwtCli.verifyKey = opt.VerifyKey
 	} else {
-		verifyBytes, err := ioutil.ReadFile(opt.VerifyKeyFile)
+		verifyBytes, err := os.ReadFile(opt.VerifyKeyFile)
 		if err != nil {
 			return nil, err
 		}
@@ -151,7 +150,7 @@ func NewJWTClient(opt JWTOptions) (*JWTClient, error) {
 	if opt.SignKey != nil {
 		jwtCli.signKey = opt.SignKey
 	} else if opt.SignKeyFile != "" {
-		signBytes, err := ioutil.ReadFile(opt.SignKeyFile)
+		signBytes, err := os.ReadFile(opt.SignKeyFile)
 		if err != nil {
 			return nil, err
 		}
@@ -205,7 +204,7 @@ func (jc *JWTClient) JWTSign(user *UserInfo) (string, error) {
 		UserName:     user.UserName,
 		ClientID:     user.ClientName,
 		ClientSecret: user.ClientSecret,
-		StandardClaims: &jwt.StandardClaims{
+		StandardClaims: &jwt.StandardClaims{ // nolint
 			ExpiresAt: func() int64 {
 				if user.ExpiredTime == 0 {
 					return 0

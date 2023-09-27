@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -28,8 +28,10 @@ import (
 )
 
 var (
-	i18nPattern      = regexp.MustCompile(`i18n\.(T|Tf|Translate|TranslateFormat)\(.*?, "(.*?)"`) // matches i18n.T 、 i18n.Tf 、Translate 、TranslateFormat
-	varPattern       = regexp.MustCompile(`{{\.(.*?)}}`)                                          // variable matching rules
+	// matches i18n.T 、 i18n.Tf 、Translate 、TranslateFormat
+	i18nPattern = regexp.MustCompile(`i18n\.(T|Tf|Translate|TranslateFormat)\(.*?, "(.*?)"`)
+	// variable matching rules
+	varPattern       = regexp.MustCompile(`{{\.(.*?)}}`)
 	symbolsToCheck   = []string{"#", "@", "{"}
 	varNames         = make(map[string]bool)
 	separator        = string(filepath.Separator)
@@ -126,20 +128,16 @@ func parseTemplate(path string) error {
 					continue
 				}
 				matches := i18nPattern.FindAllStringSubmatch(line, -1)
-				if matches != nil {
-					for _, match := range matches {
-						i18nKey := match[2]
-						varMatches := varPattern.FindAllStringSubmatch(i18nKey, -1)
-						if varMatches != nil {
-							for _, varMatch := range varMatches {
-								varName := varMatch[1]
-								varNames[varName] = true
-							}
-						} else {
-							if !containsSymbols(i18nKey, symbolsToCheck) {
-								varNames[i18nKey] = true
-							}
+				for _, match := range matches {
+					i18nKey := match[2]
+					varMatches := varPattern.FindAllStringSubmatch(i18nKey, -1)
+					if varMatches != nil {
+						for _, varMatch := range varMatches {
+							varName := varMatch[1]
+							varNames[varName] = true
 						}
+					} else if !containsSymbols(i18nKey, symbolsToCheck) {
+						varNames[i18nKey] = true
 					}
 				}
 			}
@@ -203,7 +201,7 @@ func updateYamlFile(paths, varNames []string) error {
 				key = append(key, varName)
 			}
 		}
-		if len(key) <= 0 {
+		if len(key) == 0 {
 			fmt.Printf("no data update %s\n", item)
 			continue
 		}

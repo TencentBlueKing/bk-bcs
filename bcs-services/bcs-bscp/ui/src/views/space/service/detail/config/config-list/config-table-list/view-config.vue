@@ -2,7 +2,7 @@
   import { ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import ConfigForm from './config-form.vue'
-  import { getConfigItemDetail, getReleasedConfigItemDetail, getConfigContent } from '../../../../../../../api/config'
+  import { getConfigItemDetail, getReleasedConfigItemDetail, downloadConfigContent } from '../../../../../../../api/config'
   import { getTemplateVersionsDetailByIds, getTemplateVersionDetail, downloadTemplateContent } from '../../../../../../../api/template'
   import { getConfigEditParams } from '../../../../../../../utils/config'
   import { IVariableEditParams } from '../../../../../../../../types/variable';
@@ -28,6 +28,7 @@
   const content = ref<string|IFileConfigContentSummary>('')
   const variables = ref<IVariableEditParams[]>([])
   const variablesLoading = ref(false)
+  const tplSpaceId = ref(0)
 
   watch(
     () => props.show,
@@ -73,7 +74,7 @@
       if (file_type === 'binary') {
         content.value = { name, signature, size: byte_size }
       } else {
-        const configContent = await getConfigContent(props.bkBizId, props.appId, signature)
+        const configContent = await downloadConfigContent(props.bkBizId, props.appId, signature)
         content.value = String(configContent)
       }
     } catch (e) {
@@ -116,6 +117,7 @@
       }
 
       configForm.value = { id: props.id, name, memo: revision_memo, file_type, path, ...permission }
+      tplSpaceId.value = template_space_id
       if (file_type === 'binary') {
         content.value = { name, signature, size: String(byte_size) }
       } else {
@@ -155,7 +157,8 @@
             :content="content"
             :variables="variables"
             :bk-biz-id="props.bkBizId"
-            :app-id="props.appId"/>
+            :is-tpl="props.type === 'template'"
+            :id="props.type === 'template' ? tplSpaceId : props.appId"/>
         </bk-loading>
         <section class="action-btns">
           <bk-button @click="close">关闭</bk-button>

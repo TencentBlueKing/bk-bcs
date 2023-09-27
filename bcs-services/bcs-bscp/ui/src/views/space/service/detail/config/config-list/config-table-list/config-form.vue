@@ -6,7 +6,8 @@
   import BkMessage from 'bkui-vue/lib/message'
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config'
   import { IVariableEditParams } from '../../../../../../../../types/variable';
-  import { updateConfigContent, getConfigContent } from '../../../../../../../api/config'
+  import { updateConfigContent, downloadConfigContent } from '../../../../../../../api/config'
+  import { downloadTemplateContent, updateTemplateContent } from '../../../../../../../api/template'
   import { stringLengthInBytes } from '../../../../../../../utils/index'
   import { transFileToObject, fileDownload } from '../../../../../../../utils/file'
   import { CONFIG_FILE_TYPE } from '../../../../../../../constants/config'
@@ -30,8 +31,9 @@
     content: string|IFileConfigContentSummary;
     variables?: IVariableEditParams[];
     bkBizId: string;
-    appId: number;
+    id: number; // 服务ID或者模板空间ID
     fileUploading?: boolean;
+    isTpl?: boolean; // 是否未模板配置项，非模板配置项和模板配置项的上传、下载接口参数有差异
   }>(), {
     editable: true
   })
@@ -163,7 +165,11 @@
   // 上传配置内容
   const uploadContent =  async () => {
     const signature = await getSignature()
-    return updateConfigContent(props.bkBizId, props.appId, <File>fileContent.value, <string>signature)
+    if (props.isTpl) {
+      return updateTemplateContent(props.bkBizId, props.id, <File>fileContent.value, <string>signature)
+      } else {
+      return updateConfigContent(props.bkBizId, props.id, <File>fileContent.value, <string>signature)
+    }
   }
 
   // 生成文件或文本的sha256
@@ -188,7 +194,8 @@
   // 下载已上传文件
   const handleDownloadFile = async () => {
     const { signature, name } = <IFileConfigContentSummary>fileContent.value
-    const res = await getConfigContent(props.bkBizId, props.appId, signature)
+    const getContent = props.isTpl ? downloadTemplateContent : downloadConfigContent
+    const res = await getContent(props.bkBizId, props.id, signature)
     fileDownload(res, `${name}.bin`)
   }
 
