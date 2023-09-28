@@ -529,6 +529,18 @@ const (
 	Brk EventType = -1
 )
 
+// nolint
+var (
+	eventTypeNames = map[EventType]string{
+		Nop:  "EventNop",
+		Add:  "EventAdd",
+		Del:  "EventDelete",
+		Chg:  "EventChange",
+		SChg: "EventSelfChange",
+		Brk:  "EventWatchBreak",
+	}
+)
+
 var (
 	// EventWatchBreak watch break event
 	EventWatchBreak = &Event{Type: Brk, Value: nil}

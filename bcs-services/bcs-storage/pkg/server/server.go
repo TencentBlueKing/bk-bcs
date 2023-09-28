@@ -35,7 +35,6 @@ import (
 	"go-micro.dev/v4/registry"
 	"google.golang.org/grpc"
 	grpccred "google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
@@ -78,7 +77,8 @@ func (m *MicroServer) initHTTPServer() error {
 	gMux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}))
 
 	if m.clientTLSConfig == nil || m.serverTLSConfig == nil {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		// nolint
+		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(m.clientTLSConfig)))
 	}

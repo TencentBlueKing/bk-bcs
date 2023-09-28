@@ -59,13 +59,17 @@ func (eb *EventBus) createListener(topic string) (chan *drivers.WatchEvent, erro
 		return nil, fmt.Errorf("start listener of topic %s failed, err %s", topic, err.Error())
 	}
 	go func() {
-		for event := range listenerCh {
-			eb.dispatch(topic, event)
-			if event.Type == drivers.EventError || event.Type == drivers.EventClose {
-				eb.sublock.Lock()
-				delete(eb.topicListeners, topic)
-				eb.sublock.Unlock()
-				return
+		// nolint
+		for {
+			select {
+			case event := <-listenerCh:
+				eb.dispatch(topic, event)
+				if event.Type == drivers.EventError || event.Type == drivers.EventClose {
+					eb.sublock.Lock()
+					delete(eb.topicListeners, topic)
+					eb.sublock.Unlock()
+					return
+				}
 			}
 		}
 	}()
