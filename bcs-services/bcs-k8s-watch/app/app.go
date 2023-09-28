@@ -4,11 +4,10 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package app xxx
@@ -23,26 +22,26 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output"
-
 	global "github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/k8s/resources"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output"
 )
 
 var globalStopChan = make(chan struct{})
 
 func signalListen() {
 	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM) // nolint
 	for {
 		sig := <-ch
-		fmt.Printf(fmt.Sprintf("get sig=%v\n", sig))
+		fmt.Printf(fmt.Sprintf("get sig=%v\n", sig)) // nolint
 
 		switch sig {
 		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM:
@@ -117,11 +116,11 @@ func Run(watchConfig *options.WatchConfig) error {
 
 	glog.Info("I'm leader.")
 	stopChan := make(chan struct{})
-	go RunAsLeader(stopChan, watchConfig, watchConfig.Default.ClusterID)
+	go RunAsLeader(stopChan, watchConfig, watchConfig.Default.ClusterID) // nolint
 	go signalListen()
 
 	// Stop RunAsLeader by forward the stop event
-	select {
+	select { // nolint
 	// Closed by global signal handler
 	case <-globalStopChan:
 		close(stopChan)
@@ -130,7 +129,7 @@ func Run(watchConfig *options.WatchConfig) error {
 }
 
 // RunAsLeader do the leader stuff
-func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterID string) error {
+func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterID string) error { // nolint
 	bcsTLSConfig := config.BCS.TLS
 
 	glog.Info("getting storage service now...")
@@ -198,15 +197,15 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	glog.Info("starting writer now...")
 	// NOCC:vetshadow/shadow(设计如此:这里err可以被覆盖)
-	if err := writer.Run(stopChan); err != nil {
+	if err = writer.Run(stopChan); err != nil {
 		panic(err)
 	}
 	glog.Info("start writer success")
 
 	// create watcher manager.
 	glog.Info("creating watcher manager now...")
-	watcherMgr, err := k8s.NewWatcherManager(clusterID, &config.WatchResource, filterConfig, writer, &config.K8s, storageService,
-		netservice, stopChan)
+	watcherMgr, err := k8s.NewWatcherManager(clusterID, &config.WatchResource, filterConfig, writer, &config.K8s,
+		storageService, netservice, stopChan)
 	if err != nil {
 		panic(err)
 	}
@@ -223,7 +222,10 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	if !config.WatchResource.DisableNetservice {
 		// stop service discovery.
-		netserviceZKRD.Stop()
+		err = netserviceZKRD.Stop()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
