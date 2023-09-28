@@ -8,22 +8,24 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package ipv6server xxx
 package ipv6server
 
 import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"net"
+	"net/http"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	"net"
-	"net/http"
 )
 
+// ErrListenNull xxx
 var ErrListenNull = errors.New(
 	"in the ListenAndServe method of IPv6Server, the Listen() method returns []net.Listener cannot be empty",
 )
@@ -247,7 +249,9 @@ func (s *IPv6Server) ListenAndServeTLS(certFile, keyFile string) error {
 	defer close(errs)
 	for _, v := range listeners {
 		go func(listen net.Listener) {
-			defer listen.Close()
+			defer func(listen net.Listener) {
+				_ = listen.Close()
+			}(listen)
 			errs <- s.Server.ServeTLS(listen, certFile, keyFile)
 		}(v)
 	}

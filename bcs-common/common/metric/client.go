@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package metric
@@ -24,11 +23,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func newMetricHandler(conf Config, healthFunc HealthFunc, metrics ...*MetricContructor) error {
@@ -42,7 +43,7 @@ func newMetricHandler(conf Config, healthFunc HealthFunc, metrics ...*MetricCont
 		return fmt.Errorf("register user defined metrics failed. err: %v", err)
 	}
 	if !conf.DisableGolangMetric {
-		if err := registry.Register(prometheus.NewGoCollector()); err != nil {
+		if err := registry.Register(collectors.NewGoCollector()); err != nil {
 			return fmt.Errorf("register golang metrics failed. err: %v", err)
 		}
 	}
@@ -124,7 +125,7 @@ func listenAndServe(c Config, mux http.Handler) error {
 	if err != nil {
 		return err
 	}
-	tlsconfig.BuildNameToCertificate()
+	tlsconfig.BuildNameToCertificate() // nolint
 
 	blog.Info("start metric secure serve on %s", addr)
 

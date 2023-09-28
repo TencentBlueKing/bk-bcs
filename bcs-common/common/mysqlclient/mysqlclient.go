@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package mysqlclient xxx
@@ -76,7 +75,7 @@ func (m *MySql) Open(host, usr, pwd, database string, port, maxOpenConns, maxIdl
 // Close xxx
 func (m *MySql) Close() {
 	if m.db != nil {
-		m.db.Close()
+		_ = m.db.Close()
 	}
 }
 
@@ -87,7 +86,9 @@ func (m *MySql) Query(sql string) (map[string]map[string]string, error) {
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	cols, _ := rows.Columns()
 	valCols := make([][]byte, len(cols))
@@ -123,7 +124,9 @@ func (m *MySql) Insert(sql string, data []interface{}) (int64, error) {
 		return 0, err
 	}
 
-	defer stmt.Close()
+	defer func() {
+		_ = stmt.Close()
+	}()
 
 	res, err := stmt.Exec(data...)
 	if err != nil {
@@ -143,7 +146,9 @@ func (m *MySql) Update(sql string, data []interface{}) (int64, error) {
 		return 0, err
 	}
 
-	defer stmt.Close()
+	defer func() {
+		_ = stmt.Close()
+	}()
 
 	res, err := stmt.Exec(data...)
 	if err != nil {
@@ -164,7 +169,9 @@ func (m *MySql) Remove(sql string, data []interface{}) (int64, error) {
 		return 0, err
 	}
 
-	defer stmt.Close()
+	defer func() {
+		_ = stmt.Close()
+	}()
 
 	res, err := stmt.Exec(data...)
 	if err != nil {

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package client xxx
@@ -18,9 +17,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"net"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 type dataHead struct {
@@ -107,7 +107,7 @@ func (gsec *client) send(dataid uint32, data []byte) error {
 	if _, err = gsec.conn.Write(packageData); err != nil {
 
 		blog.Error("SEND DATA TO DATA PIPE FAILED: %v", err)
-		gsec.conn.Close()
+		_ = gsec.conn.Close()
 		gsec.conn = nil
 		return err
 	}
@@ -116,7 +116,7 @@ func (gsec *client) send(dataid uint32, data []byte) error {
 }
 
 // close close gse data pipe
-func (gsec *client) close() error {
+func (gsec *client) close() error { // nolint
 
 	gsec.sigstop <- true
 
@@ -125,8 +125,7 @@ func (gsec *client) close() error {
 
 // Close xxx
 func (gsec *client) Close() {
-
-	gsec.close()
+	_ = gsec.close()
 }
 
 // Input message input
@@ -155,8 +154,7 @@ func New(endpoint string) (AsyncProducer, error) {
 	go func() {
 
 		defer func() {
-
-			cli.conn.Close()
+			_ = cli.conn.Close()
 			cli.conn = nil
 		}()
 
