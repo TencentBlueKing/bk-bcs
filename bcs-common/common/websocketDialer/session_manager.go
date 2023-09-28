@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package websocketDialer
@@ -20,8 +19,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer/metrics"
 	"github.com/gorilla/websocket"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer/metrics"
 )
 
 type sessionListener interface {
@@ -103,7 +103,7 @@ func (sm *sessionManager) getDialer(clientKey string, deadline time.Duration) (D
 }
 
 func (sm *sessionManager) add(clientKey string, conn *websocket.Conn, peer bool) *Session {
-	sessionKey := rand.Int63()
+	sessionKey := rand.Int63() // nolint
 	session := newSession(sessionKey, clientKey, conn)
 
 	sm.Lock()

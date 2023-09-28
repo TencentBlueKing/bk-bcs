@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package websocketDialer
@@ -46,7 +45,7 @@ var (
 )
 
 func init() {
-	r := rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
+	r := rand.New(rand.NewSource(int64(time.Now().Nanosecond()))) // nolint
 	idCounter = r.Int63()
 }
 

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Go support for leveled logs, analogous to https://code.google.com/p/google-glog/
@@ -697,29 +696,29 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 	}
 	data := buf.Bytes()
 	if l.toStderr {
-		os.Stderr.Write(data)
+		_, _ = os.Stderr.Write(data)
 	} else {
 		if alsoToStderr || l.alsoToStderr || s >= l.stderrThreshold.get() {
-			os.Stderr.Write(data)
+			_, _ = os.Stderr.Write(data)
 		}
 		if l.file[s] == nil {
 			if err := l.createFiles(s); err != nil {
-				os.Stderr.Write(data) // Make sure the message appears somewhere.
+				_, _ = os.Stderr.Write(data) // Make sure the message appears somewhere.
 				l.exit(err)
 			}
 		}
 		switch s {
 		case fatalLog:
-			l.file[fatalLog].Write(data)
+			_, _ = l.file[fatalLog].Write(data)
 			fallthrough
 		case errorLog:
-			l.file[errorLog].Write(data)
+			_, _ = l.file[errorLog].Write(data)
 			fallthrough
 		case warningLog:
-			l.file[warningLog].Write(data)
+			_, _ = l.file[warningLog].Write(data)
 			fallthrough
 		case infoLog:
-			l.file[infoLog].Write(data)
+			_, _ = l.file[infoLog].Write(data)
 		}
 	}
 	if s == fatalLog {
@@ -734,14 +733,14 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 		// If -logtostderr has been specified, the loop below will do that anyway
 		// as the first stack in the full dump.
 		if !l.toStderr {
-			os.Stderr.Write(stacks(false))
+			_, _ = os.Stderr.Write(stacks(false))
 		}
 		// Write the stack trace for all goroutines to the files.
 		trace := stacks(true)
 		logExitFunc = func(error) {} // If we get a write error, we'll still exit below.
 		for log := fatalLog; log >= infoLog; log-- {
 			if f := l.file[log]; f != nil { // Can be nil if -logtostderr is set.
-				f.Write(trace)
+				_, _ = f.Write(trace)
 			}
 		}
 		l.mu.Unlock()
@@ -769,7 +768,7 @@ func timeoutFlush(timeout time.Duration) {
 	select {
 	case <-done:
 	case <-time.After(timeout):
-		fmt.Fprintln(os.Stderr, "glog: Flush took longer than", timeout)
+		_, _ = fmt.Fprintln(os.Stderr, "glog: Flush took longer than", timeout)
 	}
 }
 
@@ -815,7 +814,7 @@ func (l *loggingT) exit(err error) {
 		return
 	}
 
-	fmt.Fprintf(os.Stderr, "log: exiting because of error: %v\n", err)
+	_, _ = fmt.Fprintf(os.Stderr, "log: exiting because of error: %v\n", err)
 	l.flushAll()
 	os.Exit(2)
 }
@@ -860,8 +859,8 @@ func (sb *syncBuffer) Write(p []byte) (n int, err error) {
 // rotateFile closes the syncBuffer's file and starts a new one.
 func (sb *syncBuffer) rotateFile(now time.Time) error {
 	if sb.file != nil {
-		sb.Flush()
-		sb.file.Close()
+		_ = sb.Flush()
+		_ = sb.file.Close()
 	}
 	var err error
 	sb.file, _, err = create(severityName[sb.sev], now)
@@ -874,11 +873,11 @@ func (sb *syncBuffer) rotateFile(now time.Time) error {
 
 	// Write header.
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "Log file created at: %s\n", now.Format("2006/01/02 15:04:05"))
-	fmt.Fprintf(&buf, "Running on machine: %s\n", host)
-	fmt.Fprintf(&buf, "Binary: Built with %s %s for %s/%s\n", runtime.Compiler, runtime.Version(), runtime.GOOS,
+	_, _ = fmt.Fprintf(&buf, "Log file created at: %s\n", now.Format("2006/01/02 15:04:05"))
+	_, _ = fmt.Fprintf(&buf, "Running on machine: %s\n", host)
+	_, _ = fmt.Fprintf(&buf, "Binary: Built with %s %s for %s/%s\n", runtime.Compiler, runtime.Version(), runtime.GOOS,
 		runtime.GOARCH)
-	fmt.Fprintf(&buf, "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg\n")
+	_, _ = fmt.Fprintf(&buf, "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg\n")
 	n, err := sb.file.Write(buf.Bytes())
 	sb.nbytes += uint64(n)
 	return err
@@ -933,8 +932,8 @@ func (l *loggingT) flushAll() {
 	for s := fatalLog; s >= infoLog; s-- {
 		file := l.file[s]
 		if file != nil {
-			file.Flush() // ignore error
-			file.Sync()  // ignore error
+			_ = file.Flush() // ignore error
+			_ = file.Sync()  // ignore error
 		}
 	}
 }
@@ -997,9 +996,7 @@ func (l *loggingT) setV(pc uintptr) Level {
 	fn := runtime.FuncForPC(pc)
 	file, _ := fn.FileLine(pc)
 	// The file is something like /a/b/c/d.go. We want just the d.
-	if strings.HasSuffix(file, ".go") {
-		file = file[:len(file)-3]
-	}
+	file = strings.TrimSuffix(file, ".go")
 	if slash := strings.LastIndex(file, "/"); slash >= 0 {
 		file = file[slash+1:]
 	}

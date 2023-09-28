@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package ssl xxx
@@ -36,7 +35,7 @@ func ClientTslConfVerityServer(caFile string) (*tls.Config, error) {
 		return nil, err
 	}
 
-	conf := &tls.Config{
+	conf := &tls.Config{ // nolint
 		RootCAs: caPool,
 	}
 
@@ -81,7 +80,7 @@ func ServerTslConfVerity(certFile, keyFile, passwd string) (*tls.Config, error) 
 		return nil, err
 	}
 
-	conf := &tls.Config{
+	conf := &tls.Config{ // nolint
 		Certificates: []tls.Certificate{*cert},
 	}
 
@@ -100,7 +99,7 @@ func ServerTslConfVerityClient(caFile, certFile, keyFile, passwd string) (*tls.C
 		return nil, err
 	}
 
-	conf := &tls.Config{
+	conf := &tls.Config{ // nolint
 		ClientCAs:    caPool,
 		Certificates: []tls.Certificate{*cert},
 		ClientAuth:   tls.RequireAndVerifyClientCert,
@@ -116,7 +115,7 @@ func loadCa(caFile string) (*x509.CertPool, error) {
 	}
 
 	caPool := x509.NewCertPool()
-	if ok := caPool.AppendCertsFromPEM(ca); ok != true {
+	if ok := caPool.AppendCertsFromPEM(ca); !ok {
 		return nil, fmt.Errorf("append ca cert failed")
 	}
 
@@ -137,7 +136,7 @@ func loadCertificates(certFile, keyFile, passwd string) (*tls.Certificate, error
 		}
 
 		var priDecrPem []byte
-		priDecrPem, err = x509.DecryptPEMBlock(priPem, []byte(passwd))
+		priDecrPem, err = x509.DecryptPEMBlock(priPem, []byte(passwd)) // nolint
 		if err != nil {
 			return nil, err
 		}
