@@ -54,16 +54,16 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 
 		if err = s.dao.ReleasedHook().UpsertWithTx(kt, tx, hook); err != nil {
 			logs.Errorf("upsert pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
 			return nil, err
 		}
 	} else {
 		if err := s.dao.ReleasedHook().DeleteByUniqueKeyWithTx(kt, tx, preHook); err != nil {
 			logs.Errorf("delete pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
 			return nil, err
 		}
@@ -73,32 +73,32 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		hook, err := s.getReleasedHook(kt, postHook)
 		if err != nil {
 			logs.Errorf("get pre-hook failed, err: %v, rid: %s", err, kt.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
 			return nil, err
 		}
 
 		if err = s.dao.ReleasedHook().UpsertWithTx(kt, tx, hook); err != nil {
 			logs.Errorf("upsert post-hook failed, err: %v, rid: %s", err, kt.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
 			return nil, err
 		}
 	} else {
 		if err := s.dao.ReleasedHook().DeleteByUniqueKeyWithTx(kt, tx, postHook); err != nil {
 			logs.Errorf("delete post-hook failed, err: %v, rid: %s", err, kt.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
 			return nil, err
 		}
 	}
 	if err := tx.Commit(); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
 	}

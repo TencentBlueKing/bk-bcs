@@ -66,8 +66,8 @@ func (s *Service) CreateTemplateRevision(ctx context.Context,
 	id, err := s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision)
 	if err != nil {
 		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
 	}
@@ -83,8 +83,8 @@ func (s *Service) CreateTemplateRevision(ctx context.Context,
 		for _, atb := range atbs {
 			if e := s.CascadeUpdateATB(kt, tx, atb); e != nil {
 				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", e, kt.Rid)
-				if err = tx.Rollback(); err != nil {
-					logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+				if rErr := tx.Rollback(); rErr != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 				}
 				return nil, e
 			}

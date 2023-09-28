@@ -73,14 +73,18 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context,
 		}
 		if err := s.dao.CredentialScope().UpdateWithTx(kt, tx, credentialScope); err != nil {
 			logs.Errorf("update credential scope failed, err: %v, rid: %s", err, kt.Rid)
-			_ = tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
 			return nil, err
 		}
 	}
 	for _, deleted := range req.Deleted {
 		if err := s.dao.CredentialScope().DeleteWithTx(kt, tx, req.BizId, deleted); err != nil {
 			logs.Errorf("delete credential scope failed, err: %v, rid: %s", err, kt.Rid)
-			_ = tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
 			return nil, err
 		}
 	}
@@ -102,14 +106,18 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context,
 		}
 		if _, err := s.dao.CredentialScope().CreateWithTx(kt, tx, credentialScope); err != nil {
 			logs.Errorf("create credential scope failed, err: %v, rid: %s", err, kt.Rid)
-			_ = tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
 			return nil, err
 		}
 	}
 
 	if err := s.dao.Credential().UpdateRevisionWithTx(kt, tx, req.BizId, req.CredentialId); err != nil {
 		logs.Errorf("update credential revision failed, err: %v, rid: %s", err, kt.Rid)
-		_ = tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
 		return nil, err
 	}
 	if err := tx.Commit(); err != nil {

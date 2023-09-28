@@ -62,8 +62,8 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 	id, err := s.dao.Group().CreateWithTx(kt, tx, group)
 	if err != nil {
 		logs.Errorf("create group failed, err: %v, rid: %s", err, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
 	}
@@ -78,8 +78,8 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 		}
 		if e := s.dao.GroupAppBind().BatchCreateWithTx(kt, tx, groupApps); e != nil {
 			logs.Errorf("create group app failed, err: %v, rid: %s", e, kt.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
 			return nil, e
 		}
@@ -296,16 +296,16 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 	tx := s.dao.GenQuery().Begin()
 	if e := s.dao.Group().UpdateWithTx(kt, tx, n); e != nil {
 		logs.Errorf("update group failed, err: %v, rid: %s", e, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, e
 	}
 
 	if e := s.dao.GroupAppBind().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); e != nil {
 		logs.Errorf("delete group app failed, err: %v, rid: %s", e, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, e
 	}
@@ -321,8 +321,8 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		}
 		if e := s.dao.GroupAppBind().BatchCreateWithTx(kt, tx, groupApps); e != nil {
 			logs.Errorf("create group app failed, err: %v, rid: %s", e, kt.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
 			return nil, e
 		}
@@ -341,8 +341,8 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		if e := s.dao.ReleasedGroup().UpdateEditedStatusWithTx(kt, tx,
 			edited, req.Id, req.Attachment.BizId); e != nil {
 			logs.Errorf("update group current release failed, err: %v, rid: %s", e, kt.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
 			return nil, e
 		}
@@ -381,16 +381,16 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbds.DeleteGroupReq) (*p
 	tx := s.dao.GenQuery().Begin()
 	if e := s.dao.Group().DeleteWithTx(kt, tx, group); e != nil {
 		logs.Errorf("delete group failed, err: %v, rid: %s", e, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, e
 	}
 
 	if e := s.dao.GroupAppBind().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); e != nil {
 		logs.Errorf("delete group app failed, err: %v, rid: %s", e, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, e
 	}

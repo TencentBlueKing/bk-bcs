@@ -123,24 +123,24 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	releaseID, err := s.dao.Release().CreateWithTx(grpcKit, tx, release)
 	if err != nil {
 		logs.Errorf("create release failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		return nil, err
 	}
 	// step6: create released hook.
 	if err = s.createReleasedHook(grpcKit, tx, req.BizId, req.AppId, releaseID); err != nil {
 		logs.Errorf("create released hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		return nil, err
 	}
 
 	// step7: do template and non-template config item related operations for create release.
 	if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cfgItems); err != nil {
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -166,8 +166,8 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	pshID, err := s.dao.Publish().PublishWithTx(kt, tx, opt)
 	if err != nil {
 		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		return nil, err
 	}

@@ -73,10 +73,10 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 	}
 	id, err := s.dao.Release().CreateWithTx(grpcKit, tx, release)
 	if err != nil {
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
-		}
 		logs.Errorf("create release failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
 		return nil, err
 	}
 
@@ -87,15 +87,15 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		pre.ReleaseID = release.ID
 		if _, e := s.dao.ReleasedHook().CreateWithTx(grpcKit, tx, pre); e != nil {
 			logs.Errorf("create released pre-hook failed, err: %v, rid: %s", e, grpcKit.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 			}
 			return nil, e
 		}
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		logs.Errorf("query released pre-hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		return nil, err
 	}
@@ -105,23 +105,23 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		post.ReleaseID = release.ID
 		if _, e := s.dao.ReleasedHook().CreateWithTx(grpcKit, tx, post); e != nil {
 			logs.Errorf("create released post-hook failed, err: %v, rid: %s", e, grpcKit.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 			}
 			return nil, e
 		}
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		logs.Errorf("query released post-hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		return nil, err
 	}
 
 	// 3: do template and non-template config item related operations for create release.
 	if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cis); err != nil {
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
 		logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -249,8 +249,8 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 	}
 
 	if err = s.createReleasedRenderedCIs(kt, tx, releaseID, cis, ciByteSizeMap, ciSignatureMap); err != nil {
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		logs.Errorf("create released config items failed, err: %v, rid: %s", err, kt.Rid)
 		return err

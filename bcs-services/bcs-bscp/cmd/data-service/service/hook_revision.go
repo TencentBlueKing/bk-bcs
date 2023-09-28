@@ -137,14 +137,14 @@ func (s *Service) DeleteHookRevision(ctx context.Context,
 	count, err := s.dao.ReleasedHook().CountByHookRevisionIDAndReleaseID(kt, req.BizId, req.HookId, req.RevisionId, 0)
 	if err != nil {
 		logs.Errorf("count hook revision bound editing releases failed, err: %v, rid: %s", err, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
 	}
 	if count > 0 && !req.Force {
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, fmt.Errorf("hook revision was bound to %d editing releases, "+
 			"set force=true to delete hook revision with references, rid: %s", count, kt.Rid)
@@ -154,8 +154,8 @@ func (s *Service) DeleteHookRevision(ctx context.Context,
 	if e := s.dao.ReleasedHook().DeleteByHookRevisionIDAndReleaseIDWithTx(kt, tx,
 		req.BizId, req.HookId, req.RevisionId, 0); e != nil {
 		logs.Errorf("delete released hook failed, err: %v, rid: %s", e, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, e
 	}
@@ -170,8 +170,8 @@ func (s *Service) DeleteHookRevision(ctx context.Context,
 
 	if e := s.dao.HookRevision().DeleteWithTx(kt, tx, HookRevision); e != nil {
 		logs.Errorf("delete HookRevision failed, err: %v, rid: %s", e, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, e
 	}
@@ -202,8 +202,8 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 		old.Spec.State = table.HookRevisionStatusShutdown
 		if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, old); e != nil {
 			logs.Errorf("update HookRevision State failed, err: %v, rid: %s", err, kt.Rid)
-			if err = tx.Rollback(); err != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
 			return nil, e
 		}
@@ -213,8 +213,8 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 	hr, err := s.dao.HookRevision().Get(kt, req.BizId, req.HookId, req.Id)
 	if err != nil {
 		logs.Errorf("get HookRevision failed, err: %v, rid: %s", err, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
 	}
@@ -222,8 +222,8 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 	hr.Spec.State = table.HookRevisionStatusDeployed
 	if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, hr); e != nil {
 		logs.Errorf("update HookRevision State failed, err: %v, rid: %s", e, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, err
 	}
@@ -232,8 +232,8 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 	if e := s.dao.ReleasedHook().UpdateHookRevisionByReleaseIDWithTx(kt, tx,
 		req.BizId, 0, req.HookId, hr); e != nil {
 		logs.Errorf("update released hook failed, err: %v, rid: %s", e, kt.Rid)
-		if err = tx.Rollback(); err != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, e
 	}
