@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package netservice xxx
 package netservice
 
 import (
@@ -24,6 +24,8 @@ import (
 )
 
 // IPLean lease ip address from net
+// NOCC:golint/funlen(设计如此:)
+// nolint
 func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 	// check host info
 	started := time.Now()
@@ -62,6 +64,7 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 		reportMetrics("ipLean", stateLogicFailure, started)
 		return nil, fmt.Errorf("create locker %s err, %s", lockpath, lErr.Error())
 	}
+	// nolint
 	defer poolLocker.Unlock()
 	if err := poolLocker.Lock(); err != nil {
 		blog.Errorf("try to lock pool %s/%s err, %s", host.Cluster, host.Pool, err.Error())
@@ -166,7 +169,7 @@ func (srv *NetService) IPRelease(release *types.IPRelease) error {
 		return fmt.Errorf("verify ip resource for container %s in host %s err, %s", release.Container, release.Host,
 			err.Error())
 	}
-	json.Unmarshal(data, ipInst)
+	_ = json.Unmarshal(data, ipInst)
 	// check active path
 	ippath := filepath.Join(defaultPoolInfoPath, ipInst.Cluster, ipInst.Pool, "active", ipInst.IPAddr)
 	if exist, _ := srv.store.Exist(ippath); !exist {

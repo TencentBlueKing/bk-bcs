@@ -8,19 +8,19 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	restful "github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 )
 
 // RegisterIPInstanceHandler create pool handler,
@@ -52,7 +52,7 @@ func (inst *IPInstanceHandler) Update(request *restful.Request, response *restfu
 	if err := request.ReadEntity(netReq); err != nil {
 		response.AddHeader("Content-Type", "text/plain")
 		blog.Errorf("IPInstance [Update] json decode Err: %s", err.Error())
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
+		_ = response.WriteErrorString(http.StatusBadRequest, err.Error())
 		reportMetrics("updateAvailableIP", "4xx", started)
 		return
 	}
@@ -61,7 +61,7 @@ func (inst *IPInstanceHandler) Update(request *restful.Request, response *restfu
 		netRes.Code = 2
 		netRes.Message = err.Error()
 		blog.Errorf("IPInstance Update %s", err.Error())
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("updateAvailableIP", "5xx", started)
 		return
 	}
@@ -81,7 +81,7 @@ func (inst *IPInstanceHandler) TransferIPAttr(request *restful.Request, response
 	if err := request.ReadEntity(tranInput); err != nil {
 		response.AddHeader("Content-Type", "text/plain")
 		blog.Errorf("TransferIPAttr [Update] json decode Err: %s", err.Error())
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
+		_ = response.WriteErrorString(http.StatusBadRequest, err.Error())
 		reportMetrics("transferIPAttr", "4xx", started)
 		return
 	}
@@ -91,14 +91,14 @@ func (inst *IPInstanceHandler) TransferIPAttr(request *restful.Request, response
 		tranOutput.Message =
 			"invalid param,please check net and cluster and iplist can not be empty,src and dest must be available/reserved"
 		blog.Errorf("invalid param:%v", tranInput)
-		response.WriteEntity(tranOutput)
+		_ = response.WriteEntity(tranOutput)
 		reportMetrics("transferIPAttr", "4xx", started)
 	}
 	if failedCode, err := inst.netSvr.TransferIPAttribute(tranInput); err != nil {
 		tranOutput.Code = failedCode
 		tranOutput.Message = err.Error()
 		blog.Errorf("TransferIPAttribute failed:%s", err.Error())
-		response.WriteEntity(tranOutput)
+		_ = response.WriteEntity(tranOutput)
 		reportMetrics("transferIPAttr", "5xx", started)
 		return
 	}
