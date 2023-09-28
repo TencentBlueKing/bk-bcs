@@ -146,7 +146,10 @@ func InitCache() {
 		Mutex.Unlock()
 
 		// wait to get roles
-		<-ticker.C
+		// nolint
+		select {
+		case <-ticker.C:
+		}
 	}
 }
 

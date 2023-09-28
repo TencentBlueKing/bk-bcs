@@ -64,9 +64,12 @@ func RetryWithTimeout(fn func() error, opts ...RetryOption) error {
 				err = fn()
 			}()
 
-			<-ctx.Done()
-			if err = ctx.Err(); errors.Is(err, context.DeadlineExceeded) {
-				return ErrContextTimeout
+			// nolint
+			select {
+			case <-ctx.Done():
+				if err = ctx.Err(); errors.Is(err, context.DeadlineExceeded) {
+					return ErrContextTimeout
+				}
 			}
 			return err
 		},

@@ -49,14 +49,14 @@ func Test_GetRandomServiceInstance(t *testing.T) {
 		t.Fatalf("start service discovery failed: %v", err)
 	}
 
+	// nolint
 	go func() {
 		for {
 			<-time.After(3 * time.Second)
 
 			node, err := sd.GetRandomServiceInstance()
 			if err != nil {
-				t.Errorf("GetRandomServiceInstance failed: %v", err)
-				return
+				t.Fatalf("GetRandomServiceInstance failed: %v", err)
 			}
 			fmt.Printf("node %+v\n", node)
 		}
