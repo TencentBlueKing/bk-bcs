@@ -17,11 +17,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -31,9 +31,9 @@ var (
 	flagNamespace    string
 	flagAllNamespace bool
 	flagCluster      string
-	flagChart        string
-	flagSize         = uint32(20)
-	flagPage         = uint32(1)
+	flagChart        string       // nolint
+	flagSize         = uint32(20) // nolint
+	flagPage         = uint32(1)  // nolint
 
 	outputTypeJSON = "json"
 	outputTypeWide = "wide"
@@ -277,7 +277,7 @@ func init() {
 func initGetRepoCMD() {
 	getRepositoryCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project code")
-	getRepositoryCMD.MarkPersistentFlagRequired("project")
+	_ = getRepositoryCMD.MarkPersistentFlagRequired("project")
 	getCMD.AddCommand(getRepositoryCMD)
 }
 
@@ -286,7 +286,7 @@ func initGetChartCMD() {
 		&flagProject, "project", "p", "", "project code")
 	getChartCMD.PersistentFlags().StringVarP(
 		&flagRepository, "repo", "r", "", "repo name")
-	getChartCMD.MarkPersistentFlagRequired("project")
+	_ = getChartCMD.MarkPersistentFlagRequired("project")
 	getCMD.AddCommand(getChartCMD)
 }
 
@@ -295,7 +295,7 @@ func initGetChartVersionCMD() {
 		&flagProject, "project", "p", "", "project code")
 	getChartVersionCMD.PersistentFlags().StringVarP(
 		&flagRepository, "repo", "r", "", "repo name")
-	getChartVersionCMD.MarkPersistentFlagRequired("project")
+	_ = getChartVersionCMD.MarkPersistentFlagRequired("project")
 	getCMD.AddCommand(getChartVersionCMD)
 }
 
@@ -309,6 +309,6 @@ func inintGetReleaseCMD() {
 		&flagNamespace, "namespace", "n", "", "release namespace")
 	getReleaseDetailCMD.PersistentFlags().BoolVarP(
 		&flagAllNamespace, "all-namespace", "A", false, "list all namespace")
-	getReleaseDetailCMD.MarkPersistentFlagRequired("project")
-	getReleaseDetailCMD.MarkPersistentFlagRequired("cluster")
+	_ = getReleaseDetailCMD.MarkPersistentFlagRequired("project")
+	_ = getReleaseDetailCMD.MarkPersistentFlagRequired("cluster")
 }

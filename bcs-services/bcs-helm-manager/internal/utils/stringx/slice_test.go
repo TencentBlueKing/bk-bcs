@@ -20,7 +20,7 @@ import (
 
 func TestRemoveDuplicateValues(t *testing.T) {
 	// 零元素
-	strSlice := make([]string, 1, 1)
+	strSlice := make([]string, 1)
 	assert.Equal(t, RemoveDuplicateValues(strSlice), strSlice)
 
 	// 单个元素

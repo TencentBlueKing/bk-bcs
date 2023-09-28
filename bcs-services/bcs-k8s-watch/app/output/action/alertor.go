@@ -4,26 +4,26 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package action xxx
 package action
 
 import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 )
 
@@ -35,7 +35,7 @@ type Alertor struct {
 }
 
 // NewAlertor create a new Alertor
-func NewAlertor(clusterID, moduleIP string, zkHosts string, tls options.TLS) (*Alertor, error) {
+func NewAlertor(clusterID, moduleIP string, zkHosts string, tls options.TLS) (*Alertor, error) { // nolint
 	var alertor = &Alertor{
 		ClusterID: clusterID,
 		Module:    "k8s-watch",
@@ -49,7 +49,6 @@ func NewAlertor(clusterID, moduleIP string, zkHosts string, tls options.TLS) (*A
 	tlsCfg.CertFile = tls.CertFile
 	tlsCfg.KeyFile = tls.KeyFile
 
-	err = nil
 	if err = api.NewBcsHealth(zkHosts, tlsCfg); err != nil {
 		glog.Errorf("NewBcsHealth failed:%s", err.Error())
 		err = fmt.Errorf("NewBcsHealth failed:%s", err.Error())

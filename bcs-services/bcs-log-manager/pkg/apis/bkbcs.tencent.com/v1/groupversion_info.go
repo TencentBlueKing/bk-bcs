@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package v1 contains API Schema definitions for the bkbcs.tencent.com v1 API group
@@ -22,7 +21,7 @@ import (
 )
 
 var (
-	// GroupVersion is group version used to register these objects
+	// SchemeGroupVersion is group version used to register these objects
 	SchemeGroupVersion = schema.GroupVersion{Group: "bkbcs.tencent.com", Version: "v1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
@@ -32,6 +31,7 @@ var (
 	AddToScheme = SchemeBuilder.AddToScheme
 )
 
+// Resource xxx
 func Resource(resource string) schema.GroupResource {
 	return schema.GroupResource{
 		Group:    "bkbcs.tencent.com",

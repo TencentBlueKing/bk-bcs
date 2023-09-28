@@ -10,11 +10,14 @@
  * limitations under the License.
  */
 
+// Package main xxx
 package main
 
 import (
 	"flag"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commonConf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	microCfg "github.com/micro/go-micro/v2/config"
 	microYaml "github.com/micro/go-micro/v2/config/encoder/yaml"
 	"github.com/micro/go-micro/v2/config/reader"
@@ -22,8 +25,6 @@ import (
 	"github.com/micro/go-micro/v2/config/source/env"
 	microFile "github.com/micro/go-micro/v2/config/source/file"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commonConf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"

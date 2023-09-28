@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package operation xxx
 package operation
 
 import (
@@ -21,6 +22,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/metrics"
 )
@@ -50,7 +52,7 @@ const (
 // GlobalOperator global operator
 var GlobalOperator = &operator{
 	operationCount: common.GetInt32P(0),
-	terminate:      make(chan struct{}, 0),
+	terminate:      make(chan struct{}),
 	pause:          common.GetUint32P(0),
 	once:           sync.Once{},
 }

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package clustermanager xxx
 package clustermanager
 
 import (

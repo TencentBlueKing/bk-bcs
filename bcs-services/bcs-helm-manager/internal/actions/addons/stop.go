@@ -113,7 +113,7 @@ func (s *StopAddonsAction) Handle(ctx context.Context,
 	return nil
 }
 
-func (s *StopAddonsAction) saveDB(ctx context.Context, ns, chartName string) error {
+func (s *StopAddonsAction) saveDB(ctx context.Context, ns, chartName string) error { // nolint
 	old, err := s.model.GetRelease(ctx, s.req.GetClusterID(), ns, s.req.GetName())
 	if err != nil {
 		return err

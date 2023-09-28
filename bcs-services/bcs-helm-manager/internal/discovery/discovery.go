@@ -172,7 +172,7 @@ func (md *ModuleDiscovery) GetRandServiceInst() (*registry.Node, error) {
 		return nil, fmt.Errorf("found no available node for service: %s", md.module)
 	}
 	// NOCC:gas/crypto(设计如此)
-	return allNodes[rand.Int()%nodeLen], nil
+	return allNodes[rand.Int()%nodeLen], nil // nolint
 }
 
 // GetService get service from remote

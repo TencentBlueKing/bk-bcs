@@ -17,6 +17,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
@@ -26,7 +27,7 @@ import (
 )
 
 const (
-	defaultSize = 1000
+	defaultSize = 1000 // nolint
 )
 
 // NewListRepositoryAction return a new ListRepositoryAction instance

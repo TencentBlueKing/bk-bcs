@@ -4,26 +4,26 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package resources xxx
 package resources
 
 import (
 	"fmt"
 	"net/url"
 
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 )
 
@@ -90,12 +90,13 @@ const (
 	KubefedSchedulingV1Alpha1GroupVersion = "scheduling.kubefed.io/v1alpha1"
 )
 
-// resource list to watch
+// K8sWatcherConfigList resource list to watch
 // map[Kind]ResourceObjType
 var K8sWatcherConfigList map[string]ResourceObjType
 
-// map[GroupVersion]client
-var K8sClientList, CrdClientList map[string]*dynamic.Interface
+// K8sClientList map[string]*dynamic.Interface,
+// CrdClientList map[string]*dynamic.Interface
+var K8sClientList, CrdClientList map[string]*dynamic.Interface // nolint
 
 // ResourceObjType used for build target watchers.
 type ResourceObjType struct {
@@ -146,7 +147,8 @@ func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.Filter
 	return nil
 }
 
-func initK8sClientList(dynamicClient *dynamic.Interface, filterConfig *options.FilterConfig) (map[string]*dynamic.Interface, error) {
+func initK8sClientList(
+	dynamicClient *dynamic.Interface, filterConfig *options.FilterConfig) (map[string]*dynamic.Interface, error) { //nolint
 	k8sClientList := map[string]*dynamic.Interface{}
 	for _, gv := range filterConfig.K8sGroupVersionWhiteList {
 		glog.Infof("add client into k8sClientList for %s", gv)
@@ -155,7 +157,8 @@ func initK8sClientList(dynamicClient *dynamic.Interface, filterConfig *options.F
 	return k8sClientList, nil
 }
 
-func initCrdClientList(dynamicClient *dynamic.Interface, filterConfig *options.FilterConfig) (map[string]*dynamic.Interface, error) {
+func initCrdClientList(
+	dynamicClient *dynamic.Interface, filterConfig *options.FilterConfig) (map[string]*dynamic.Interface, error) { //nolint
 	crdClientList := map[string]*dynamic.Interface{}
 	for _, gv := range filterConfig.CrdGroupVersionWhiteList {
 		glog.Infof("add client into crdClientList for %s", gv)
@@ -166,7 +169,7 @@ func initCrdClientList(dynamicClient *dynamic.Interface, filterConfig *options.F
 
 // initK8sWatcherConfigList init k8s resource
 func initK8sWatcherConfigList(apiResourceLists []options.ApiResourceList, filter *ResourceFilter,
-	onlyWatchNamespacedResource bool) (map[string]ResourceObjType, error) {
+	onlyWatchNamespacedResource bool) (map[string]ResourceObjType, error) { // nolint
 
 	k8sWatcherConfigList := make(map[string]ResourceObjType)
 	for _, apiResourceList := range apiResourceLists {
@@ -244,7 +247,7 @@ func GetRestConfig(k8sConfig *options.K8sConfig) (*rest.Config, error) {
 	if k8sConfig.Master != "" {
 		glog.Info("k8sConfig.Master is set: %s", k8sConfig.Master)
 		// NOCC:vetshadow/shadow(设计如此:这里err可以被覆盖)
-		u, err := url.Parse(k8sConfig.Master)
+		u, err := url.Parse(k8sConfig.Master) // nolint
 		if err != nil {
 			return nil, err
 		}

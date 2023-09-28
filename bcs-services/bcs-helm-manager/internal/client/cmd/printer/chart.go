@@ -10,14 +10,15 @@
  * limitations under the License.
  */
 
+// Package printer xxx
 package printer
 
 import (
 	"os"
 
-	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
 	"github.com/olekukonko/tablewriter"
+
+	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 // PrintChartInTable print chart data in table format

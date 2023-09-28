@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bkdataapi
@@ -17,13 +16,13 @@ import (
 	"fmt"
 	"testing"
 
+	moc_bkdata "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata/mock"
 	"github.com/golang/mock/gomock"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
-	moc_bkdata "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata/mock"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/apis/bkbcs.tencent.com/v1"
 	apiextensionclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/mock/apiextension/clientset"
 	apiextensionclientsetv1beta1 "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/mock/apiextension/clientset/v1beta1"
@@ -36,7 +35,7 @@ import (
 )
 
 // TestObtainDataid test obtain dataid method
-func TestObtainDataid(t *testing.T) {
+func TestObtainDataid(t *testing.T) { // nolint
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	// bkdataapiclient
@@ -84,37 +83,42 @@ func TestObtainDataid(t *testing.T) {
 
 	// apiextension clientset initialization
 	// already exist
-	mockApiextensionClientsetV1beta1I.EXPECT().Create(gomock.Any()).Return(nil, apierrors.NewAlreadyExists(schema.GroupResource{}, ""))
+	mockApiextensionClientsetV1beta1I.EXPECT().Create(gomock.Any()).Return(nil,
+		apierrors.NewAlreadyExists(schema.GroupResource{}, ""))
 	// error
 	mockApiextensionClientsetV1beta1I.EXPECT().Create(gomock.Any()).Return(nil, fmt.Errorf("error test"))
 	// normal
 	mockApiextensionClientsetV1beta1I.EXPECT().Create(gomock.Any()).Return(nil, nil)
-	mockApiextensionClientsetV1beta1.EXPECT().CustomResourceDefinitions().Return(mockApiextensionClientsetV1beta1I).Times(3)
+	mockApiextensionClientsetV1beta1.EXPECT().CustomResourceDefinitions().Return(mockApiextensionClientsetV1beta1I).Times(3) // nolint
 	mockApiextensionClientset.EXPECT().ApiextensionsV1beta1().Return(mockApiextensionClientsetV1beta1).Times(3)
 
 	// bkdataapiconfig clientset initialization
 	var cnt = 0
-	mockBkdataclientsetBV1I.EXPECT().Update(gomock.Any()).DoAndReturn(func(conf *bcsv1.BKDataApiConfig) (*bcsv1.BKDataApiConfig, error) {
-		switch cnt {
-		// obtain 失败
-		case 0:
-			if conf.Spec.Response.Result {
-				t.Errorf("BKDataController.v3_access_deploy_plan_post return status(%v), expect status(false)1", conf.Spec.Response.Result)
+	mockBkdataclientsetBV1I.EXPECT().Update(gomock.Any()).DoAndReturn(
+		func(conf *bcsv1.BKDataApiConfig) (*bcsv1.BKDataApiConfig, error) {
+			switch cnt {
+			// obtain 失败
+			case 0:
+				if conf.Spec.Response.Result {
+					t.Errorf("BKDataController.v3_access_deploy_plan_post return status(%v), expect status(false)1",
+						conf.Spec.Response.Result)
+				}
+			// obtain 成功
+			case 1:
+				if !conf.Spec.Response.Result {
+					t.Errorf("BKDataController.v3_access_deploy_plan_post return status(%v), expect status(true)2",
+						conf.Spec.Response.Result)
+				}
+			// api名称指定错误
+			case 2:
+				if conf.Spec.Response.Result {
+					t.Errorf("BKDataController.v3_access_deploy_plan_post return status(%v), expect status(false)3",
+						conf.Spec.Response.Result)
+				}
 			}
-		// obtain 成功
-		case 1:
-			if !conf.Spec.Response.Result {
-				t.Errorf("BKDataController.v3_access_deploy_plan_post return status(%v), expect status(true)2", conf.Spec.Response.Result)
-			}
-		// api名称指定错误
-		case 2:
-			if conf.Spec.Response.Result {
-				t.Errorf("BKDataController.v3_access_deploy_plan_post return status(%v), expect status(false)3", conf.Spec.Response.Result)
-			}
-		}
-		cnt++
-		return nil, nil
-	}).Times(3)
+			cnt++
+			return nil, nil
+		}).Times(3)
 	mockBkdataclientsetBV1.EXPECT().BKDataApiConfigs(gomock.Any()).Return(mockBkdataclientsetBV1I).Times(3)
 	mockBkDataAPIConfigClientset.EXPECT().BkbcsV1().Return(mockBkdataclientsetBV1).Times(3)
 
@@ -156,7 +160,7 @@ func TestObtainDataid(t *testing.T) {
 }
 
 // TestSetCleanStrategy test create data clean stategy method
-func TestSetCleanStrategy(t *testing.T) {
+func TestSetCleanStrategy(t *testing.T) { // nolint
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	// bkdataapiclient
@@ -204,37 +208,42 @@ func TestSetCleanStrategy(t *testing.T) {
 
 	// apiextension clientset initialization
 	// already exist
-	mockApiextensionClientsetV1beta1I.EXPECT().Create(gomock.Any()).Return(nil, apierrors.NewAlreadyExists(schema.GroupResource{}, ""))
+	mockApiextensionClientsetV1beta1I.EXPECT().Create(gomock.Any()).Return(nil,
+		apierrors.NewAlreadyExists(schema.GroupResource{}, ""))
 	// error
 	mockApiextensionClientsetV1beta1I.EXPECT().Create(gomock.Any()).Return(nil, fmt.Errorf("error test"))
 	// normal
 	mockApiextensionClientsetV1beta1I.EXPECT().Create(gomock.Any()).Return(nil, nil)
-	mockApiextensionClientsetV1beta1.EXPECT().CustomResourceDefinitions().Return(mockApiextensionClientsetV1beta1I).Times(3)
+	mockApiextensionClientsetV1beta1.EXPECT().CustomResourceDefinitions().Return(mockApiextensionClientsetV1beta1I).Times(3) // nolint
 	mockApiextensionClientset.EXPECT().ApiextensionsV1beta1().Return(mockApiextensionClientsetV1beta1).Times(3)
 
 	// bkdataapiconfig clientset initialization
 	var cnt = 0
-	mockBkdataclientsetBV1I.EXPECT().Update(gomock.Any()).DoAndReturn(func(conf *bcsv1.BKDataApiConfig) (*bcsv1.BKDataApiConfig, error) {
-		switch cnt {
-		// set 失败
-		case 0:
-			if conf.Spec.Response.Result {
-				t.Errorf("BKDataController.v3_databus_cleans_post return status(%v), expect status(false)1", conf.Spec.Response.Result)
+	mockBkdataclientsetBV1I.EXPECT().Update(gomock.Any()).DoAndReturn(
+		func(conf *bcsv1.BKDataApiConfig) (*bcsv1.BKDataApiConfig, error) {
+			switch cnt {
+			// set 失败
+			case 0:
+				if conf.Spec.Response.Result {
+					t.Errorf("BKDataController.v3_databus_cleans_post return status(%v), expect status(false)1",
+						conf.Spec.Response.Result)
+				}
+			// set 成功
+			case 1:
+				if !conf.Spec.Response.Result {
+					t.Errorf("BKDataController.v3_databus_cleans_post return status(%v), expect status(true)2",
+						conf.Spec.Response.Result)
+				}
+			// api名称指定错误
+			case 2:
+				if conf.Spec.Response.Result {
+					t.Errorf("BKDataController.v3_databus_cleans_post return status(%v), expect status(false)3",
+						conf.Spec.Response.Result)
+				}
 			}
-		// set 成功
-		case 1:
-			if !conf.Spec.Response.Result {
-				t.Errorf("BKDataController.v3_databus_cleans_post return status(%v), expect status(true)2", conf.Spec.Response.Result)
-			}
-		// api名称指定错误
-		case 2:
-			if conf.Spec.Response.Result {
-				t.Errorf("BKDataController.v3_databus_cleans_post return status(%v), expect status(false)3", conf.Spec.Response.Result)
-			}
-		}
-		cnt++
-		return nil, nil
-	}).Times(3)
+			cnt++
+			return nil, nil
+		}).Times(3)
 	mockBkdataclientsetBV1.EXPECT().BKDataApiConfigs(gomock.Any()).Return(mockBkdataclientsetBV1I).Times(3)
 	mockBkDataAPIConfigClientset.EXPECT().BkbcsV1().Return(mockBkdataclientsetBV1).Times(3)
 
