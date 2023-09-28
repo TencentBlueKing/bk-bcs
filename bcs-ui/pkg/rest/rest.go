@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package rest xxx
 package rest
 
 import (
@@ -18,9 +18,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/go-chi/render"
 
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 )
 

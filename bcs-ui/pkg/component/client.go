@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package component xxx
 package component
 
 import (
@@ -146,7 +146,7 @@ func GetClient() *resty.Client {
 				SetPreRequestHook(restyBeforeRequestHook).
 				OnError(restyErrHook).
 				// NOCC:gas/tls(设计如此)
-				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
+				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}). // nolint
 				SetHeader("User-Agent", userAgent)
 		})
 	}

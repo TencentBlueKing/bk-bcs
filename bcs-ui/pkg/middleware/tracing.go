@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package middleware
@@ -21,13 +20,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 	"github.com/dustin/go-humanize"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.opentelemetry.io/otel/attribute"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	oteltrace "go.opentelemetry.io/otel/trace"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/tracing"
 )
@@ -83,7 +82,7 @@ func Tracing(next http.Handler) http.Handler {
 		}
 		span.SetAttributes(attribute.Key("query").String(query))
 
-		//记录body
+		// 记录body
 		body := string(getRequestBody(r))
 		if len(body) > 1024 {
 			body = fmt.Sprintf("%s...(Total %s)", body[:1024], humanize.Bytes(uint64(len(body))))

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package discovery xxx
@@ -54,9 +53,9 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertise
 	)
 
 	if advertiseAddr != "" {
-		svr.Init(server.Advertise(advertiseAddr))
+		_ = svr.Init(server.Advertise(advertiseAddr))
 	} else {
-		svr.Init(server.Advertise(bindaddr))
+		_ = svr.Init(server.Advertise(bindaddr))
 	}
 
 	service := micro.NewService(
@@ -110,7 +109,7 @@ func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
 		if err != nil {
 			return nil, err
 		}
-		etcdRegistry.Init(registry.TLSConfig(tlsConfig))
+		_ = etcdRegistry.Init(registry.TLSConfig(tlsConfig))
 	}
 
 	return etcdRegistry, nil
