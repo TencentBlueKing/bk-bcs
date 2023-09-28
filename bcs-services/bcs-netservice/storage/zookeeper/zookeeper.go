@@ -244,23 +244,29 @@ func (zks *zkStorage) RegisterAndWatch(path string, data []byte) error {
 	go func() {
 		tick := time.NewTicker(20 * time.Second)
 		defer tick.Stop()
-		for started := range tick.C {
-			isExisted, err := zks.zkClient.Exists(newPath)
-			if err != nil {
-				reportMetrics("exist", statusFailure, started)
-				blog.Warnf("zkClient.exists failed, wait next tick, err %s", err.Error())
-			} else {
-				reportMetrics("exist", statusFailure, started)
-			}
-			if !isExisted {
-				blog.Warnf("server node(%s) does not exist, try to create new server node", path)
-				newPath, err = zks.zkClient.CreateEphAndSeqEx(path, data)
+		// nolint
+		for {
+			select {
+			case <-tick.C:
+				started := time.Now()
+				isExisted, err := zks.zkClient.Exists(newPath)
 				if err != nil {
-					blog.Warnf("failed to create node(%s), wait next tick", path)
-					reportMetrics("createEphAndSeq", statusFailure, started)
+					reportMetrics("exist", statusFailure, started)
+					blog.Warnf("zkClient.exists failed, wait next tick, err %s", err.Error())
 				} else {
-					blog.Warnf("create server node(%s) successfully", newPath)
-					reportMetrics("createEphAndSeq", statusSuccess, started)
+					reportMetrics("exist", statusFailure, started)
+				}
+				if !isExisted {
+					started = time.Now()
+					blog.Warnf("server node(%s) does not exist, try to create new server node", path)
+					newPath, err = zks.zkClient.CreateEphAndSeqEx(path, data)
+					if err != nil {
+						blog.Warnf("failed to create node(%s), wait next tick", path)
+						reportMetrics("createEphAndSeq", statusFailure, started)
+					} else {
+						blog.Warnf("create server node(%s) successfully", newPath)
+						reportMetrics("createEphAndSeq", statusSuccess, started)
+					}
 				}
 			}
 		}
