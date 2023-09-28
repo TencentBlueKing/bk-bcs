@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package usermanager
@@ -122,7 +121,7 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 	// first authenticate the request, only admin user be allowed
 	auth := utils.Authenticate(req.Request)
 	if !auth {
-		resp.WriteHeaderAndEntity(http.StatusUnauthorized, bcshttp.APIRespone{
+		_ = resp.WriteHeaderAndEntity(http.StatusUnauthorized, bcshttp.APIRespone{
 			Result:  false,
 			Code:    common.BcsErrApiUnauthorized,
 			Message: "must provide admin token to request with websocket",

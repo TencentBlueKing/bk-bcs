@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package v1http xxx
 package v1http
 
 import (
@@ -44,7 +44,7 @@ func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient)
 	initTkeRouters(ws)
 	initPermissionRouters(ws, service)
 	initTokenRouters(ws)
-	initExtraTokenRouters(ws, service)
+	initExtraTokenRouters(ws)
 	initIAMProviderRouters(ws)
 	initUserPermsRouters(ws)
 }
@@ -101,7 +101,7 @@ func initTokenRouters(ws *restful.WebService) {
 }
 
 // initExtraTokenRouters init bcs extra token for third-party system
-func initExtraTokenRouters(ws *restful.WebService, service *permission.PermVerifyClient) {
+func initExtraTokenRouters(ws *restful.WebService) {
 	tokenHandler := token.NewExtraTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor),
 		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient, cmdb.CMDBClient)
 	ws.Route(ws.GET("/v1/tokens/extra/getClusterUserToken").To(tokenHandler.GetTokenByUserAndClusterID))

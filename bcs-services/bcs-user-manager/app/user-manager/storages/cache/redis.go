@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package cache xxx
 package cache
 
 import (
@@ -64,7 +65,8 @@ func (r *redisCache) SetNX(ctx context.Context, key string, value interface{}, e
 }
 
 // SetEX implements Cache.SetEX
-func (r *redisCache) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) (string, error) {
+func (r *redisCache) SetEX(ctx context.Context, key string, value interface{}, expiration time.Duration) (
+	string, error) {
 	return r.client.SetEX(ctx, key, value, expiration).Result()
 }
 

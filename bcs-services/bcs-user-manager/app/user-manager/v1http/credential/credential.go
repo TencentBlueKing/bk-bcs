@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package credential xxx
@@ -20,10 +19,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
-	"github.com/emicklei/go-restful"
 )
 
 // UpdateCredentialsForm update form for credential
@@ -35,6 +35,7 @@ type UpdateCredentialsForm struct {
 }
 
 // CredentialResp response
+// nolint
 type CredentialResp struct {
 	ServerAddresses string `json:"server_addresses"`
 	CaCertData      string `json:"ca_cert_data"`
@@ -85,7 +86,7 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 		return
 	}
 	data := utils.CreateResponseData(nil, "success", nil)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("UpdateCredentials", request.Request.Method, metrics.SucStatus, start)
 }
@@ -105,7 +106,7 @@ func GetCredentials(request *restful.Request, response *restful.Response) {
 	}
 
 	data := utils.CreateResponseData(nil, "success", credential)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("GetCredentials", request.Request.Method, metrics.SucStatus, start)
 }
@@ -127,7 +128,7 @@ func ListCredentials(request *restful.Request, response *restful.Response) {
 
 	blog.Infof("client %s list all cluster credentials, num: %d", request.Request.RemoteAddr, len(credentials))
 	data := utils.CreateResponseData(nil, "success", credentials)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("ListCredentials", request.Request.Method, metrics.SucStatus, start)
 }

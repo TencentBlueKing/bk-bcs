@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -29,14 +29,20 @@ type Options struct {
 }
 
 // LockOptions options for lock
+// NOCC:golint/revive(设计如此:)
+// nolint
 type LockOptions struct {
 	TTL time.Duration
 }
 
 // LockOption option function for lock
+// NOCC:golint/revive(设计如此:)
+// nolint
 type LockOption func(o *LockOptions)
 
 // LockTTL sets the lock ttl
+// NOCC:golint/revive(设计如此:)
+// nolint
 func LockTTL(t time.Duration) LockOption {
 	return func(o *LockOptions) {
 		o.TTL = t

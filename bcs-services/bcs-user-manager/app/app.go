@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package app xxx
@@ -47,6 +46,7 @@ func Run(op *options.UserManagerOptions) {
 	component.CacheClusterList()
 
 	if conf.ClientCert.IsSSL {
+		// nolint
 		cliTLS, err := ssl.ClientTslConfVerity(conf.ClientCert.CAFile, conf.ClientCert.CertFile, conf.ClientCert.KeyFile,
 			conf.ClientCert.CertPasswd)
 		if err != nil {
@@ -66,7 +66,7 @@ func Run(op *options.UserManagerOptions) {
 	}
 
 	// init cmdb client
-	if err := cmdb.InitCMDBClient(op); err != nil {
+	if err = cmdb.InitCMDBClient(op); err != nil {
 		blog.Errorf("init cmdb client error: %s", err.Error())
 		os.Exit(1)
 	}
