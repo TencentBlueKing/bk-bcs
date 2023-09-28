@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -17,10 +16,10 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/pkg/errors"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -32,7 +31,7 @@ import (
 // ImportClusterNodesTask call aksInterface or kubeConfig import cluster nodes
 func ImportClusterNodesTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -81,7 +80,10 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	}
 
 	// update cluster masterNodes info
-	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	if err != nil {
+		return err
+	}
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -94,7 +96,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 // RegisterClusterKubeConfigTask register cluster kubeConfig connection
 func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -153,10 +155,10 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 	// save cluster kubeConfig
 	kubeConfig := string(credentials[0].Value)
 	data.Cluster.KubeConfig = kubeConfig
-	cloudprovider.UpdateCluster(data.Cluster)
+	_ = cloudprovider.UpdateCluster(data.Cluster)
 
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
-		YamlContent: string(kubeConfig),
+		YamlContent: kubeConfig,
 	})
 	if err != nil {
 		return err
@@ -235,7 +237,7 @@ func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
 		return errors.Wrapf(err, "call ListVirtualNetwork failed")
 	}
 
-	//blog.Infof("importVpcID list:%s", toPrettyJsonString(list))
+	// blog.Infof("importVpcID list:%s", toPrettyJsonString(list))
 	if len(list) > 0 {
 		cluster.VpcID = *list[0].Name
 	}

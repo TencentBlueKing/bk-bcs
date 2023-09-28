@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package options
@@ -32,27 +31,15 @@ func (b BCSEdition) String() string {
 
 // IsInnerEdition innerVersion
 func (b BCSEdition) IsInnerEdition() bool {
-	if b == InnerEdition {
-		return true
-	}
-
-	return false
+	return b == InnerEdition
 }
 
 // IsCommunicationEdition communityVersion
 func (b BCSEdition) IsCommunicationEdition() bool {
-	if b == CommunicationEdition {
-		return true
-	}
-
-	return false
+	return b == CommunicationEdition
 }
 
 // IsEnterpriseEdition enterpriseVersion
 func (b BCSEdition) IsEnterpriseEdition() bool {
-	if b == EnterpriseEdition {
-		return true
-	}
-
-	return false
+	return b == EnterpriseEdition
 }

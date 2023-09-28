@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package perm xxx
 package perm
 
 import (
@@ -19,13 +19,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	structpb "github.com/golang/protobuf/ptypes/struct"
+	spb "google.golang.org/protobuf/types/known/structpb"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-
-	structpb "github.com/golang/protobuf/ptypes/struct"
-	spb "google.golang.org/protobuf/types/known/structpb"
 )
 
 // CheckUserPermAction action for user perm
@@ -119,6 +119,4 @@ func (check *CheckUserPermAction) Handle(
 		check.setResp(common.BcsErrClusterManagerGetPermErr, false, "")
 		return
 	}
-
-	return
 }

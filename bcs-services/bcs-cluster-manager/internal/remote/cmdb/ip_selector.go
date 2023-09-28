@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -68,7 +69,8 @@ func (ipSelector *ipSelectorClient) GetBizModuleTopoData(bizID int) (*BizInstanc
 	return GetBizModuleTopoData(ipSelector.cmdb, bizID)
 }
 
-func (ipSelector *ipSelectorClient) GetBizTopoHostData(bizID int, module []HostModuleInfo, filter HostFilter) ([]HostDetailInfo, error) {
+func (ipSelector *ipSelectorClient) GetBizTopoHostData(
+	bizID int, module []HostModuleInfo, filter HostFilter) ([]HostDetailInfo, error) {
 	if len(module) == 0 {
 		return nil, nil
 	}
@@ -247,6 +249,7 @@ func GetHostAgentStatus(gseCli gse.Interface, hosts []HostDetailInfo) map[string
 	return hostAgentStatus
 }
 
+// HostTopoInHostModule host module
 func HostTopoInHostModule(topo HostTopoRelation, info []HostModuleInfo) bool {
 	moduleMap := make(map[int64]struct{}, 0)
 	for i := range info {
@@ -268,11 +271,7 @@ func HostTopoInHostModule(topo HostTopoRelation, info []HostModuleInfo) bool {
 	}
 	// moduleID
 	_, ok = moduleMap[int64(topo.BkModuleID)]
-	if ok {
-		return true
-	}
-
-	return false
+	return ok
 }
 
 // Object "biz" "set" "module"
@@ -348,6 +347,7 @@ func GetBizModuleTopoData(cli *Client, bizID int) (*BizInstanceTopoData, error) 
 	return topo, nil
 }
 
+// GetSetModuleChild module child
 func GetSetModuleChild(cli *Client, bizID int, childs []SearchBizInstTopoData) []BizInstanceTopoData {
 	var (
 		modules    = make([]BizInstanceTopoData, 0)
@@ -361,16 +361,16 @@ func GetSetModuleChild(cli *Client, bizID int, childs []SearchBizInstTopoData) [
 		go func(data SearchBizInstTopoData) {
 			defer pool.Done()
 			module := BizInstanceTopoData{
-				BKInstID:   c.BKInstID,
-				BKInstName: c.BKInstName,
-				BKObjID:    c.BKObjID,
-				BKObjName:  c.BKObjName,
+				BKInstID:   data.BKInstID,
+				BKInstName: data.BKInstName,
+				BKObjID:    data.BKObjID,
+				BKObjName:  data.BKObjName,
 				Expanded:   false,
 				Child:      make([]BizInstanceTopoData, 0),
 			}
 			cnt, err := GetHostCountByObject(cli, bizID, Object{
-				ObjectName: c.BKObjID,
-				ObjectID:   c.BKInstID,
+				ObjectName: data.BKObjID,
+				ObjectID:   data.BKInstID,
 			})
 			if err != nil {
 				blog.Errorf("GetSetModuleChild GetHostCountByObject failed: %v", err)
@@ -418,9 +418,12 @@ func GetHostCountByObject(cli *Client, bizID int, object Object) (int, error) {
 type CustomSettingModule string
 
 var (
+	// IpSelectorHostList xxx
 	IpSelectorHostList CustomSettingModule = "ip_selector_host_list"
-	hostListColumn                         = []string{"ip", "ipv6", "coludArea", "alive", "hostName", "osName", "osType", "hostId"}
-	hostListColumnSort                     = []string{"ip", "ipv6", "coludArea", "alive", "hostName", "osName", "osType", "hostId"}
+	hostListColumn                         = []string{"ip", "ipv6", "coludArea", "alive", "hostName", "osName",
+		"osType", "hostId"}
+	hostListColumnSort = []string{"ip", "ipv6", "coludArea", "alive", "hostName", "osName",
+		"osType", "hostId"}
 )
 
 // String xxx
@@ -491,7 +494,7 @@ func (hs HostDetailInfoList) Less(i, j int) bool {
 		return hs[i].Ipv6 < hs[j].Ipv6
 	}
 
-	return hs[i].HostId < hs[i].HostId
+	return hs[i].HostId < hs[j].HostId
 }
 func (hs HostDetailInfoList) Swap(i, j int) { hs[i], hs[j] = hs[j], hs[i] }
 

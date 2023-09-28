@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
@@ -19,9 +18,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
@@ -214,7 +213,8 @@ func ExecuteScriptByJob(ctx context.Context, stepName, bizID, content string, ip
 	blog.Infof("task[%s] ExecuteScriptByJob[%v] ExecuteScript successful", taskID, jobID)
 
 	// update job taskUrl to task
-	cloudprovider.SetTaskStepParas(taskID, stepName, cloudprovider.BkSopsTaskUrlKey.String(), job.GetJobTaskLink(jobID))
+	_ = cloudprovider.SetTaskStepParas(taskID, stepName, cloudprovider.BkSopsTaskUrlKey.String(),
+		job.GetJobTaskLink(jobID))
 
 	// check status
 	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)

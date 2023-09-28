@@ -8,16 +8,15 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bkmonitor
 
 import (
+	"testing"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
-
-	"testing"
 )
 
 func getClient() *Client {
@@ -35,7 +34,7 @@ func getClient() *Client {
 	return cli
 }
 
-func getPermServer() *auth.ClientAuth {
+func getPermServer() *auth.ClientAuth { // nolint
 	cli := auth.NewAccessClient(auth.Options{
 		Server: "xxx",
 		Debug:  true,

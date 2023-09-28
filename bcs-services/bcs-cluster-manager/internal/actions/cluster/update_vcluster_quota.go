@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cluster
@@ -17,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -93,7 +93,7 @@ func (ca *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmpr
 		return
 	}
 
-	//update quota
+	// update quota
 	err = ca.k8sOp.UpdateResourceQuota(ctx, ca.cluster.SystemID, clusterops.ResourceQuotaInfo{
 		Name:        nsInfo.Name,
 		CpuRequests: ca.req.Quota.CpuRequests,
@@ -119,5 +119,4 @@ func (ca *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmpr
 	}
 
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package account
@@ -18,6 +17,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -84,7 +84,8 @@ func (da *DeleteAction) Handle(
 	_, err := da.model.GetCloudAccount(da.ctx, da.req.CloudID, da.req.AccountID, false)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		blog.Errorf("Get CloudAccount %s:%s in pre-delete checking failed, err %s", da.req.CloudID, da.req.AccountID, err.Error())
+		blog.Errorf("Get CloudAccount %s:%s in pre-delete checking failed, err %s", da.req.CloudID,
+			da.req.AccountID, err.Error())
 		return
 	}
 
@@ -94,5 +95,4 @@ func (da *DeleteAction) Handle(
 	}
 
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

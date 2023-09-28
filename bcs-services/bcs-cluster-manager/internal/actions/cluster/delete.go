@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
@@ -215,7 +216,7 @@ func (da *DeleteAction) cleanLocalInformation(connect bool) error {
 }
 
 func (da *DeleteAction) deleteRelativeResource() error {
-	//clean cluster autoscaling option, No relative entity in cloud infrastructure
+	// clean cluster autoscaling option, No relative entity in cloud infrastructure
 	if da.scalingOption != nil {
 		if err := da.model.DeleteAutoScalingOption(da.ctx, da.scalingOption.ClusterID); err != nil {
 			blog.Errorf("clean Cluster AutoScalingOption %s storage information failed, %s",
@@ -237,7 +238,7 @@ func (da *DeleteAction) deleteRelativeResource() error {
 	for _, group := range da.nodeGroups {
 		group.Status = common.StatusDeleting
 		if err := da.model.UpdateNodeGroup(da.ctx, &group); err != nil {
-			blog.Errorf("setting Cluster %s relative NodeGroup %s to status DELETEING failed, %s",
+			blog.Errorf("setting Cluster %s relative NodeGroup %s to status DELETING failed, %s",
 				da.req.ClusterID, group.NodeGroupID, err.Error())
 			return err
 		}
@@ -265,7 +266,7 @@ func (da *DeleteAction) setResp(code uint32, msg string) {
 	da.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (da *DeleteAction) releaseClusterCIDR(cls *cmproto.Cluster) error {
+func (da *DeleteAction) releaseClusterCIDR(cls *cmproto.Cluster) error { // nolint
 	if len(cls.NetworkSettings.GetClusterIPv4CIDR()) > 0 {
 		cidr, err := da.model.GetTkeCidr(da.ctx, cls.VpcID, cls.NetworkSettings.ClusterIPv4CIDR)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
@@ -343,7 +344,7 @@ func (da *DeleteAction) getCloudInfo(ctx context.Context) error {
 }
 
 // Handle delete cluster request
-func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterReq, resp *cmproto.DeleteClusterResp) {
+func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterReq, resp *cmproto.DeleteClusterResp) { // nolint
 	if req == nil || resp == nil {
 		blog.Errorf("delete cluster failed, req or resp is empty")
 		return
@@ -399,7 +400,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	// if delete importer cluster need to delete cluster extra data, thus set IsForced = true
 	connect := utils.CheckClusterConnection(da.kube, da.req.ClusterID)
 	if req.OnlyDeleteInfo || da.isImporterCluster() || !connect {
-		//clean all relative resource then delete cluster finally
+		// clean all relative resource then delete cluster finally
 		if err := da.cleanLocalInformation(connect); err != nil {
 			blog.Errorf("only delete Cluster %s local information err, %s", req.ClusterID, err.Error())
 			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -464,7 +465,6 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	da.resp.Data = da.cluster
 	da.resp.Task = da.tasks
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (da *DeleteAction) isImporterCluster() bool {
@@ -851,7 +851,6 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 
 	da.resp.Data = da.task
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (da *DeleteNodesAction) cloudCheckValidate() error {
@@ -895,12 +894,13 @@ func (da *DeleteNodesAction) deleteExternalNodesFromCluster() error {
 		)
 		return err
 	}
-	task, err := nodeGroupMgr.DeleteExternalNodeFromCluster(da.nodeGroup, da.nodes, &cloudprovider.DeleteExternalNodesOption{
-		CommonOption: *cmOption,
-		Operator:     da.req.Operator,
-		Cloud:        groupCloud,
-		Cluster:      da.cluster,
-	})
+	task, err := nodeGroupMgr.DeleteExternalNodeFromCluster(da.nodeGroup, da.nodes,
+		&cloudprovider.DeleteExternalNodesOption{
+			CommonOption: *cmOption,
+			Operator:     da.req.Operator,
+			Cloud:        groupCloud,
+			Cluster:      da.cluster,
+		})
 	if err != nil {
 		blog.Errorf("cloudprovider %s deleteExternalNodes %v to Cluster %s failed, %s",
 			groupCloud.CloudProvider, da.req.Nodes, da.req.ClusterID, err.Error(),

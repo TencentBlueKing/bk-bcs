@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package tasks xxx
 package tasks
 
 import (
@@ -21,6 +21,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	qapi "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
@@ -28,12 +30,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/avast/retry-go"
 )
 
 // ApplyExternalNodeMachinesTask from resource-manager service
-func ApplyExternalNodeMachinesTask(taskID string, stepName string) error {
+func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step
@@ -70,8 +70,8 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error {
 		NodeGroupID: nodeGroupID,
 	})
 	if err != nil {
-		blog.Errorf("ApplyExternalNodeMachinesTask[%s] GetClusterDependBasicInfo for NodeGroup %s to clean Node in task %s "+
-			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
+		blog.Errorf("ApplyExternalNodeMachinesTask[%s] GetClusterDependBasicInfo for NodeGroup %s to clean "+
+			"Node in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -112,7 +112,7 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error {
 		blog.Errorf("ApplyExternalNodeMachinesTask[%s] recordClusterExternalNodeToDB for NodeGroup %s step %s failed, %s",
 			taskID, nodeGroupID, stepName, err.Error())
 		retErr := fmt.Errorf("ApplyExternalNodeMachinesTask failed, %s", err.Error())
-		destroyIDCDeviceList(ctx, dependInfo, recordInstanceList.DeviceIDList, operator)
+		_, _ = destroyIDCDeviceList(ctx, dependInfo, recordInstanceList.DeviceIDList, operator)
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -164,11 +164,13 @@ func applyInstanceFromResourcePool(ctx context.Context, info *cloudprovider.Clou
 }
 
 // consumeDevicesFromResourcePool apply cvm instances to generate orderID form resource pool
-func consumeDevicesFromResourcePool(ctx context.Context, group *proto.NodeGroup, nodeNum int, operator string) (string, error) {
+func consumeDevicesFromResourcePool(
+	ctx context.Context, group *proto.NodeGroup, nodeNum int, operator string) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	ctx = utils.WithTraceIDForContext(ctx, taskID)
-	resp, err := tresource.GetResourceManagerClient().ApplyInstances(ctx, nodeNum, buildApplyIDCNodesRequest(group, operator))
+	resp, err := tresource.GetResourceManagerClient().ApplyInstances(ctx, nodeNum,
+		buildApplyIDCNodesRequest(group, operator))
 	if err != nil {
 		blog.Errorf("consumeDevicesFromResourcePool[%s] ApplyInstances failed: %v", taskID, err)
 		return "", err
@@ -218,7 +220,8 @@ type RecordInstanceToDBOption struct {
 }
 
 // 录入第三方节点
-func recordClusterExternalNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, opt *RecordInstanceToDBOption) error {
+func recordClusterExternalNodeToDB(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, opt *RecordInstanceToDBOption) error {
 	var (
 		cvmCli = qapi.NodeManager{}
 		nodes  = make([]*proto.Node, 0)
@@ -264,7 +267,8 @@ func recordClusterExternalNodeToDB(ctx context.Context, info *cloudprovider.Clou
 }
 
 // 销毁归还机器
-func destroyIDCDeviceList(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, deviceList []string, operator string) (string, error) {
+func destroyIDCDeviceList(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, deviceList []string,
+	operator string) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	if info == nil || info.NodeGroup == nil || info.Cluster == nil || len(deviceList) == 0 {
 		return "", fmt.Errorf("destroyIDCDeviceList[%s] lost validate info", taskID)
@@ -287,7 +291,7 @@ func destroyIDCDeviceList(ctx context.Context, info *cloudprovider.CloudDependBa
 }
 
 // GetExternalNodeScriptTask get cluster external node script
-func GetExternalNodeScriptTask(taskID string, stepName string) error {
+func GetExternalNodeScriptTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step

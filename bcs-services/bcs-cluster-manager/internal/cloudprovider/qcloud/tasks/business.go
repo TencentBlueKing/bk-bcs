@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -22,6 +21,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+	qcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
@@ -29,9 +31,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	qcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-
-	"github.com/avast/retry-go"
 )
 
 const (
@@ -49,13 +48,15 @@ var (
 // 集群下架节点
 
 // RemoveExternalNodesFromCluster remove external nodes from cluster
-func RemoveExternalNodesFromCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIPs []string) error {
+func RemoveExternalNodesFromCluster(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIPs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	// filter exist external nodes
 	clusterNodes, err := FilterClusterExternalNodesByIPs(ctx, info, nodeIPs)
 	if err != nil {
-		blog.Errorf("RemoveExternalNodesFromCluster[%s] FilterClusterExternalInstanceFromNodesIPs err: %v", taskID, err)
+		blog.Errorf("RemoveExternalNodesFromCluster[%s] FilterClusterExternalInstanceFromNodesIPs err: %v",
+			taskID, err)
 		return err
 	}
 	if len(clusterNodes.ExistInClusterIPs) == 0 {
@@ -76,7 +77,8 @@ func RemoveExternalNodesFromCluster(ctx context.Context, info *cloudprovider.Clo
 }
 
 // RemoveNodesFromCluster remove nodes from cluster
-func RemoveNodesFromCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs []string) ([]string, error) {
+func RemoveNodesFromCluster(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs []string) ([]string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	// filter exist instanceIDs
@@ -109,7 +111,8 @@ func RemoveNodesFromCluster(ctx context.Context, info *cloudprovider.CloudDepend
 }
 
 // DeleteClusterExternalNodes delete TKE cluster external nodes
-func DeleteClusterExternalNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNames []string) error {
+func DeleteClusterExternalNodes(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNames []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -138,7 +141,8 @@ func DeleteClusterExternalNodes(ctx context.Context, info *cloudprovider.CloudDe
 }
 
 // DeleteClusterInstance delete TKE cluster Instances
-func DeleteClusterInstance(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, deleteNodeIDs []string) ([]string, error) {
+func DeleteClusterInstance(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, deleteNodeIDs []string) ([]string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -173,7 +177,8 @@ func DeleteClusterInstance(ctx context.Context, info *cloudprovider.CloudDependB
 }
 
 // FilterClusterInstanceFromNodesIDs nodeIDs existInCluster or notExistInCluster
-func FilterClusterInstanceFromNodesIDs(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs []string) ([]string, []string, error) {
+func FilterClusterInstanceFromNodesIDs(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs []string) ([]string, []string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	ctx = utils.WithTraceIDForContext(ctx, taskID)
 
@@ -222,7 +227,8 @@ type ClusterExternalNodes struct {
 }
 
 // FilterClusterExternalNodesByIPs nodeIPs existInCluster or notExistInCluster
-func FilterClusterExternalNodesByIPs(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIPs []string) (*ClusterExternalNodes, error) {
+func FilterClusterExternalNodesByIPs(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIPs []string) (*ClusterExternalNodes, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -251,7 +257,8 @@ func FilterClusterExternalNodesByIPs(ctx context.Context, info *cloudprovider.Cl
 		return nil
 	}, retry.Attempts(3))
 	if err != nil {
-		blog.Errorf("FilterClusterExternalInstanceFromNodesIPs[%s]: DescribeExternalNode for cluster[%s] failed, %s",
+		blog.Errorf("FilterClusterExternalInstanceFromNodesIPs[%s]: "+
+			"DescribeExternalNode for cluster[%s] failed, %s",
 			taskID, info.Cluster.ClusterID, err.Error())
 		return nil, err
 	}
@@ -260,8 +267,9 @@ func FilterClusterExternalNodesByIPs(ctx context.Context, info *cloudprovider.Cl
 		clusterIPToName[clusterExternalInstances[i].IP] = clusterExternalInstances[i].Name
 	}
 
-	clusterExternalNodes.ExistInClusterIPs, clusterExternalNodes.NotExistInClusterIPs = utils.SplitExistString(clusterExternalInstanceIPs, nodeIPs)
-	blog.Infof("FilterClusterExternalInstanceFromNodesIPs[%s]: DescribeExternalNode existedInstance[%v] notExistedInstance[%v]",
+	clusterExternalNodes.ExistInClusterIPs, clusterExternalNodes.NotExistInClusterIPs = utils.SplitExistString(clusterExternalInstanceIPs, nodeIPs) // nolint
+	blog.Infof("FilterClusterExternalInstanceFromNodesIPs[%s]: "+
+		"DescribeExternalNode existedInstance[%v] notExistedInstance[%v]",
 		taskID, clusterExternalNodes.ExistInClusterIPs, clusterExternalNodes.NotExistInClusterIPs)
 
 	for _, ip := range clusterExternalNodes.ExistInClusterIPs {
@@ -490,7 +498,7 @@ func generateInstanceAdvanceInfoFromNg(cluster *proto.Cluster, group *proto.Node
 }
 
 // nodeGroupID for nodePool label
-func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.NodeTemplate, labels map[string]string,
+func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.NodeTemplate, labels map[string]string, // nolint
 	nodeGroupID string, vars template.RenderVars, options *NodeAdvancedOptions) *api.InstanceAdvancedSettings {
 	var (
 		mountTarget     = nodeTemplate.GetMountTarget()
@@ -607,7 +615,8 @@ type AddExistedInstanceResult struct {
 
 // AddNodesToCluster add nodes to cluster
 func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, options *NodeAdvancedOptions,
-	nodeIDs []string, passwd string, isNodeGroup bool, idToIP map[string]string, operator string) (*AddExistedInstanceResult, error) {
+	nodeIDs []string, passwd string, isNodeGroup bool, idToIP map[string]string,
+	operator string) (*AddExistedInstanceResult, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	tkeCli, err := api.NewTkeClient(info.CmOption)
@@ -666,7 +675,8 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 }
 
 // CheckClusterInstanceStatus 检测集群节点状态
-func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, instanceIDs []string) ([]string, []string, error) {
+func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
+	instanceIDs []string) ([]string, []string, error) {
 	var (
 		addSuccessNodes = make([]string, 0)
 		addFailureNodes = make([]string, 0)

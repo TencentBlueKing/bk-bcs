@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -21,6 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -79,7 +79,7 @@ func AddNodesShieldAlarmTask(taskID string, stepName string) error {
 }
 
 // AddNodesToClusterTask add node to cluster
-func AddNodesToClusterTask(taskID string, stepName string) error {
+func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step
@@ -113,7 +113,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error {
 	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
 	idList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIDsKey.String(), ",")
 	if len(idList) != len(ipList) {
-		blog.Errorf("AddNodesToClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal", taskID, taskID, stepName,
+		blog.Errorf("AddNodesToClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to "+
+			"InnerIP %d, fatal", taskID, taskID, stepName, // nolint
 			len(idList), len(ipList))
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("NodeID & InnerIP params err"))
 		return fmt.Errorf("task %s parameter err", taskID)
@@ -154,8 +155,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error {
 	successNodes = append(successNodes, existedInstance...)
 
 	if len(notExistedInstance) > 0 {
-		result, err := AddNodesToCluster(ctx, dependInfo, &NodeAdvancedOptions{NodeScheduler: schedule}, notExistedInstance,
-			initPasswd, false, idToIPMap, operator)
+		result, err := AddNodesToCluster(ctx, dependInfo, &NodeAdvancedOptions{NodeScheduler: schedule}, // nolint
+			notExistedInstance, initPasswd, false, idToIPMap, operator)
 		if err != nil {
 			blog.Errorf("AddNodesToClusterTask[%s] AddNodesToCluster failed: %v", taskID, err)
 			retErr := fmt.Errorf("AddNodesToCluster err, %s", err.Error())
@@ -254,14 +255,13 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	if len(addFailureNodes) > 0 {
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(addFailureNodes, ",")
 	}
-	if len(addSuccessNodes) > 0 {
-		state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(addSuccessNodes, ",")
-	} else {
+	if len(addSuccessNodes) == 0 {
 		blog.Errorf("CheckAddNodesStatusTask[%s] AddSuccessNodes empty", taskID)
 		retErr := fmt.Errorf("上架节点超时/失败, 请联系管理员")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(addSuccessNodes, ",")
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -273,7 +273,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 }
 
 // UpdateNodeDBInfoTask update node DB info
-func UpdateNodeDBInfoTask(taskID string, stepName string) error {
+func UpdateNodeDBInfoTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step
@@ -302,7 +302,8 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error {
 	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
 	idList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIDsKey.String(), ",")
 	if len(idList) != len(ipList) {
-		blog.Errorf("UpdateNodeDBInfoTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to InnerIP %d, fatal", taskID, taskID, stepName,
+		blog.Errorf("UpdateNodeDBInfoTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to "+
+			"InnerIP %d, fatal", taskID, taskID, stepName,
 			len(idList), len(ipList))
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("NodeID & InnerIP params err"))
 		return fmt.Errorf("task %s parameter err", taskID)
@@ -321,12 +322,12 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error {
 		failedInstances = append(failedInstances, failedNodes...)
 	}
 
-	instanceIPs := make([]string, 0)
-	for _, instanceID := range successInstances {
-		if ip, ok := nodeIDToIPMap[instanceID]; ok {
-			instanceIPs = append(instanceIPs, ip)
-		}
-	}
+	// instanceIPs := make([]string, 0)
+	// for _, instanceID := range successInstances {
+	//	if ip, ok := nodeIDToIPMap[instanceID]; ok {
+	//		instanceIPs = append(instanceIPs, ip)
+	//	}
+	// }
 
 	// update nodes status in DB
 	for i := range successInstances {

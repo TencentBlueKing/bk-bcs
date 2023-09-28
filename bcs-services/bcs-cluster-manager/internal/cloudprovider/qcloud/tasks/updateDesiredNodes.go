@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -21,15 +20,15 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
-
-	"github.com/avast/retry-go"
-	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
-	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 // ApplyInstanceMachinesTask update desired nodes task
@@ -126,7 +125,8 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 }
 
 // applyInstanceMachines apply machines from asg
-func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum uint64) (*as.Activity, error) {
+func applyInstanceMachines(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum uint64) (*as.Activity, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	var (
@@ -148,7 +148,8 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		activityID, err = asCli.ScaleOutInstances(asgID, nodeNum)
 		if err != nil {
 			if strings.Contains(err.Error(), as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY) {
-				blog.Infof("applyInstanceMachines[%s] ScaleOutInstances: %v", taskID, as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY)
+				blog.Infof("applyInstanceMachines[%s] ScaleOutInstances: %v", taskID,
+					as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY)
 				return nil
 			}
 			blog.Errorf("applyInstanceMachines[%s] ScaleOutInstances failed: %v", taskID, err)
@@ -179,7 +180,8 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed, cause: %v, message: %v",
 				taskID, activityID, *activity.Cause, *activity.StatusMessage)
 		case api.CancelledActivity.String():
-			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed: %v", taskID, activityID, api.CancelledActivity.String())
+			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed: %v", taskID, activityID,
+				api.CancelledActivity.String())
 		default:
 			blog.Infof("taskID[%s] DescribeAutoScalingActivities[%s] still creating, status[%s]",
 				taskID, activityID, *activity.StatusCode)
@@ -249,7 +251,8 @@ func recordClusterInstanceToDB(ctx context.Context, activity *as.Activity, state
 }
 
 // transInstancesToNode record success nodes to cm DB
-func transInstancesToNode(ctx context.Context, successInstanceID []string, info *cloudprovider.CloudDependBasicInfo) ([]string, error) {
+func transInstancesToNode(
+	ctx context.Context, successInstanceID []string, info *cloudprovider.CloudDependBasicInfo) ([]string, error) {
 	var (
 		cvmCli  = api.NodeManager{}
 		nodes   = make([]*proto.Node, 0)
@@ -339,8 +342,9 @@ func getAsgIDByNodePool(ctx context.Context, info *cloudprovider.CloudDependBasi
 	return *pool.AutoscalingGroupId, nil
 }
 
-// CheckClusterNodesStatusTask check update desired nodes status task. nodes already add to cluster, thus not rollback desiredNum and only record status
-func CheckClusterNodesStatusTask(taskID string, stepName string) error {
+// CheckClusterNodesStatusTask check update desired nodes status task. nodes already add to cluster,
+// thus not rollback desiredNum and only record status
+func CheckClusterNodesStatusTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step
@@ -436,7 +440,8 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-func returnInstancesAndCleanNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, instanceIDs []string) error {
+func returnInstancesAndCleanNodes(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, instanceIDs []string) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	if len(instanceIDs) == 0 {
@@ -446,9 +451,11 @@ func returnInstancesAndCleanNodes(ctx context.Context, info *cloudprovider.Cloud
 
 	// delete db data record
 	for _, instanceID := range instanceIDs {
-		err := cloudprovider.GetStorageModel().DeleteClusterNode(context.Background(), info.Cluster.ClusterID, instanceID)
+		err := cloudprovider.GetStorageModel().DeleteClusterNode(context.Background(), info.Cluster.ClusterID,
+			instanceID)
 		if err != nil {
-			blog.Errorf("returnInstancesAndCleanNodes[%s] DeleteClusterNode[%s] failed: %v", taskID, instanceID, err)
+			blog.Errorf("returnInstancesAndCleanNodes[%s] DeleteClusterNode[%s] failed: %v", taskID,
+				instanceID, err)
 		} else {
 			blog.Infof("returnInstancesAndCleanNodes[%s] DeleteClusterNode success[%+v]", taskID, instanceID)
 		}
@@ -468,7 +475,8 @@ func returnInstancesAndCleanNodes(ctx context.Context, info *cloudprovider.Cloud
 	if err != nil {
 		blog.Errorf("returnInstancesAndCleanNodes[%s] UpdateNodeGroupDesiredSize failed: %v", taskID, err)
 	} else {
-		blog.Infof("returnInstancesAndCleanNodes[%s] UpdateNodeGroupDesiredSize success[%v]", taskID, len(instanceIDs))
+		blog.Infof("returnInstancesAndCleanNodes[%s] UpdateNodeGroupDesiredSize success[%v]", taskID,
+			len(instanceIDs))
 	}
 
 	return nil

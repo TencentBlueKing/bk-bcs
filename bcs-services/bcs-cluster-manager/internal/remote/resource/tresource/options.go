@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package tresource xxx
 package tresource
 
 import (
@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -56,12 +55,12 @@ type Config struct {
 
 // NewResourceManager create ResourceManager SDK implementation
 func NewResourceManager(config *Config) (ResourceManagerClient, func()) {
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) // nolint
 	if len(config.Hosts) == 0 {
 		//! pay more attention for nil return
 		return nil, nil
 	}
-	//create grpc connection
+	// create grpc connection
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
@@ -81,7 +80,7 @@ func NewResourceManager(config *Config) (ResourceManagerClient, func()) {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		selected := rand.Intn(1024) % len(config.Hosts)
+		selected := rand.Intn(1024) % len(config.Hosts) // nolint
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
@@ -97,8 +96,8 @@ func NewResourceManager(config *Config) (ResourceManagerClient, func()) {
 		return nil, nil
 	}
 
-	//init cluster manager client
-	return NewResourceManagerClient(conn), func() { conn.Close() }
+	// init cluster manager client
+	return NewResourceManagerClient(conn), func() { conn.Close() } // nolint
 }
 
 // OrderState xxx

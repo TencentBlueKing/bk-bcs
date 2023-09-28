@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package qcloud
@@ -20,6 +19,7 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
@@ -33,7 +33,7 @@ var validateMgr sync.Once
 
 func init() {
 	validateMgr.Do(func() {
-		//init Cluster
+		// init Cluster
 		cloudprovider.InitCloudValidateManager("qcloud", &CloudValidate{})
 	})
 }
@@ -255,7 +255,8 @@ func (c *CloudValidate) ListInstancesValidate(req *proto.ListCloudInstancesReque
 }
 
 // ListInstanceTypeValidate xxx
-func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
+func (c *CloudValidate) ListInstanceTypeValidate(
+	req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
 	// call qcloud interface to check account
 	if c == nil || req == nil {
 		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)

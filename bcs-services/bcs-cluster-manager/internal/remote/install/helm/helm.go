@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package helm
@@ -20,11 +19,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
+	"github.com/avast/retry-go"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/avast/retry-go"
 )
 
 var (
@@ -33,7 +32,7 @@ var (
 )
 
 // HelmInstaller is the helm installer
-type HelmInstaller struct {
+type HelmInstaller struct { // nolint
 	projectID        string
 	clusterID        string
 	releaseNamespace string
@@ -49,7 +48,7 @@ type HelmInstaller struct {
 }
 
 // HelmOptions xxx
-type HelmOptions struct {
+type HelmOptions struct { // nolint
 	ProjectID   string
 	ClusterID   string
 	Namespace   string
@@ -312,7 +311,7 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
 		// get app
-		resp, err := h.client.GetReleaseDetailV1(ctx, &helmmanager.GetReleaseDetailV1Req{
+		resp, err := h.client.GetReleaseDetailV1(ctx, &helmmanager.GetReleaseDetailV1Req{ // nolint
 			ProjectCode: &h.projectID,
 			ClusterID:   &clusterID,
 			Namespace:   &h.releaseNamespace,
@@ -341,7 +340,8 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 			default:
 			}
 
-			blog.Warnf("[HelmInstaller] GetReleaseDetail[%v] is on transitioning, waiting, %s", pre, utils.ToJSONString(resp.Data))
+			blog.Warnf("[HelmInstaller] GetReleaseDetail[%v] is on transitioning, waiting, %s", pre,
+				utils.ToJSONString(resp.Data))
 			return nil
 		}
 
@@ -356,7 +356,8 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 		default:
 		}
 
-		blog.Warnf("[HelmInstaller] GetReleaseDetail[%v] is on transitioning, waiting, %s", pre, utils.ToJSONString(resp.Data))
+		blog.Warnf("[HelmInstaller] GetReleaseDetail[%v] is on transitioning, waiting, %s", pre,
+			utils.ToJSONString(resp.Data))
 		return nil
 	}, loop.LoopInterval(10*time.Second))
 	if err != nil {
@@ -373,5 +374,4 @@ func (h *HelmInstaller) Close() {
 	if h.close != nil {
 		h.close()
 	}
-	return
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package clusterops
@@ -195,7 +194,8 @@ func getClusterNodesMapInfo(nodes []*v1.Node) (map[string]*v1.Node, map[string]*
 }
 
 // ListClusterNodesByIPsOrNames query cluster nodes by nodeNames or nodeIPs
-func (ko *K8SOperator) ListClusterNodesByIPsOrNames(ctx context.Context, nodeOption ListNodeOption) ([]*v1.Node, error) {
+func (ko *K8SOperator) ListClusterNodesByIPsOrNames(
+	ctx context.Context, nodeOption ListNodeOption) ([]*v1.Node, error) {
 	if ko == nil {
 		return nil, ErrServerNotInit
 	}

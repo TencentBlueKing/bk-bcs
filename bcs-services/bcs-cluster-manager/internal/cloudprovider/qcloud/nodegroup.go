@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package qcloud
@@ -21,6 +20,11 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -30,18 +34,13 @@ import (
 	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	intercommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/avast/retry-go"
-	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 var groupMgr sync.Once
 
 func init() {
 	groupMgr.Do(func() {
-		//init Node
+		// init Node
 		cloudprovider.InitNodeGroupManager(cloudName, &NodeGroup{})
 	})
 }
@@ -178,7 +177,8 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 }
 
 // updateExternalNodePool update external nodePool
-func (ng *NodeGroup) updateExternalNodePool(systemID string, group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
+func (ng *NodeGroup) updateExternalNodePool(
+	systemID string, group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
 	tkeCli, err := api.NewTkeClient(opt)
 	if err != nil {
 		blog.Errorf("updateExternalNodePool NewTkeClient failed, err: %s", err.Error())
@@ -221,7 +221,8 @@ func (ng *NodeGroup) updateExternalNodePool(systemID string, group *proto.NodeGr
 }
 
 // updateNormalNodePool update normal nodePool
-func (ng *NodeGroup) updateNormalNodePool(systemID string, group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
+func (ng *NodeGroup) updateNormalNodePool(
+	systemID string, group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: group.ClusterID,
 		CloudID:   group.Provider,
@@ -301,7 +302,8 @@ func (ng *NodeGroup) updateImageInfo(group *proto.NodeGroup) error {
 }
 
 // generateModifyClusterNodePoolInput modify nodePool info
-func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string) *tke.ModifyClusterNodePoolRequest {
+func (ng *NodeGroup) generateModifyClusterNodePoolInput(
+	group *proto.NodeGroup, clusterID string) *tke.ModifyClusterNodePoolRequest {
 	// modify nodegroup
 	req := tke.NewModifyClusterNodePoolRequest()
 	req.ClusterId = &clusterID
@@ -346,7 +348,7 @@ func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, 
 }
 
 // 根据需要修改 asg
-func (ng *NodeGroup) generateModifyAutoScalingGroupInput(group *proto.NodeGroup) *as.ModifyAutoScalingGroupRequest {
+func (ng *NodeGroup) generateModifyAutoScalingGroupInput(group *proto.NodeGroup) *as.ModifyAutoScalingGroupRequest { // nolint
 	req := as.NewModifyAutoScalingGroupRequest()
 	if group.AutoScaling == nil {
 		return nil
@@ -365,7 +367,7 @@ func (ng *NodeGroup) generateModifyAutoScalingGroupInput(group *proto.NodeGroup)
 }
 
 // generateUpgradeLaunchConfInput upgrade launch config
-func (ng *NodeGroup) generateUpgradeLaunchConfInput(
+func (ng *NodeGroup) generateUpgradeLaunchConfInput( // nolint
 	group *proto.NodeGroup) *as.UpgradeLaunchConfigurationRequest {
 	req := as.NewUpgradeLaunchConfigurationRequest()
 	if group.LaunchTemplate == nil || group.LaunchTemplate.InternetAccess == nil {
@@ -414,12 +416,13 @@ func (ng *NodeGroup) generateUpgradeLaunchConfInput(
 		DiskType: common.StringPtr(group.LaunchTemplate.SystemDisk.GetDiskType()),
 		DiskSize: common.Uint64Ptr(uint64(diskSize)),
 	}
-	//req.UserData = common.StringPtr(group.LaunchTemplate.UserData)
+	// req.UserData = common.StringPtr(group.LaunchTemplate.UserData)
 	return req
 }
 
 // GetNodesInGroupV2 get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroupV2(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
+func (ng *NodeGroup) GetNodesInGroupV2(
+	group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
 	if group.ClusterID == "" || group.NodeGroupID == "" {
 		blog.Errorf("nodegroup id or cluster id is empty")
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
@@ -543,7 +546,7 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 		groupNodes = append(groupNodes, nodes[i])
 	}
 
-	return nodes, nil
+	return groupNodes, nil
 }
 
 // MoveNodesToGroup add cluster nodes to NodeGroup
@@ -631,7 +634,8 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 
 	// check incoming nodes
 	inComingNodes, err := cloudprovider.GetNodesNumWhenApplyInstanceTask(opt.Cluster.ClusterID, group.NodeGroupID,
-		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode), cloudprovider.TaskStatusRunning,
+		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode),
+		cloudprovider.TaskStatusRunning,
 		[]string{cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyInstanceMachinesTask),
 			cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyExternalNodeMachinesTask)})
 	if err != nil {
@@ -653,9 +657,10 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 		blog.Infof("NodeGroup %s current capable nodes %d larger than desired %d nodes, nothing to do",
 			group.NodeGroupID, current, desired)
 		return &cloudprovider.ScalingResponse{
-			ScalingUp:    0,
-			CapableNodes: nodeNames,
-		}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes", group.NodeGroupID, current, desired)
+				ScalingUp:    0,
+				CapableNodes: nodeNames,
+			}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes",
+				group.NodeGroupID, current, desired)
 	}
 
 	// current scale nodeNum

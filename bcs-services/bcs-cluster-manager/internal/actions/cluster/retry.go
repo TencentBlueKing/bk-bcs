@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cluster
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -57,7 +57,8 @@ func (ra *RetryCreateAction) validate(cluster *cmproto.Cluster) error {
 }
 
 // Handle retry create cluster request
-func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreateClusterReq, resp *cmproto.RetryCreateClusterResp) {
+func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreateClusterReq, // nolint
+	resp *cmproto.RetryCreateClusterResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("retry createCluster failed, req or resp is empty")
 		return
@@ -103,7 +104,7 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 	// step2: call cloud provider cluster_manager feature to create cluster task
 	if err = ra.model.UpdateCluster(ctx, cls); err != nil {
 		blog.Errorf("update Cluster %s information to store failed, %s", cls.ClusterID, err.Error())
-		//other db operation error
+		// other db operation error
 		ra.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
@@ -165,5 +166,4 @@ func (ra *RetryCreateAction) Handle(ctx context.Context, req *cmproto.RetryCreat
 	ra.resp.Data = cls
 	ra.resp.Task = task
 	ra.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

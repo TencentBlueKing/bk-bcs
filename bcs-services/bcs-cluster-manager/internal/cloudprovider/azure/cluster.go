@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package azure
@@ -20,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
@@ -123,17 +123,20 @@ func (c *Cluster) GetNodesInCluster(cls *proto.Cluster, opt *cloudprovider.GetNo
 }
 
 // AddNodesToCluster add new node to cluster according cloudprovider
-func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+func (c *Cluster) AddNodesToCluster(
+	cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
-func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+func (c *Cluster) DeleteNodesFromCluster(
+	cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
-func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
+func (c *Cluster) CheckClusterCidrAvailable(
+	cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
 	return false, cloudprovider.ErrCloudNotImplemented
 }
 

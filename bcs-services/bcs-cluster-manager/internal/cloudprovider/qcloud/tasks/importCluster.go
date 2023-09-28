@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -20,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
@@ -70,7 +70,10 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		return retErr
 	}
 	// update cluster masterNodes info
-	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	if err != nil {
+		return err
+	}
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -264,7 +267,10 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 	if syncCluster {
 		// save cluster kubeConfig
 		data.Cluster.KubeConfig, _ = encrypt.Encrypt(nil, string(kubeRet))
-		cloudprovider.UpdateCluster(data.Cluster)
+		err = cloudprovider.UpdateCluster(data.Cluster)
+		if err != nil {
+			return err
+		}
 	}
 
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
