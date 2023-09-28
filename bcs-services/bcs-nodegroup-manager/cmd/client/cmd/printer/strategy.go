@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -15,11 +15,12 @@ package printer
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tidwall/pretty"
 	"os"
 
-	nodegroupmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/proto"
 	"github.com/olekukonko/tablewriter"
+	"github.com/tidwall/pretty"
+
+	nodegroupmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/proto"
 )
 
 // PrintStrategyInTable print strategy in table by default
@@ -31,6 +32,8 @@ func PrintStrategyInTable(wide bool, strategies []*nodegroupmanager.NodeGroupStr
 	table.SetHeader(func() []string {
 		r := []string{"NAME", "RESOURCE_POOL", "LABELS"}
 		if wide {
+			// no-op append call, 源码如此(append是否缺少参数,wide是否有意义)
+			// nolint
 			r = append(r)
 		}
 		return r
@@ -42,6 +45,8 @@ func PrintStrategyInTable(wide bool, strategies []*nodegroupmanager.NodeGroupStr
 				strategy.Name, strategy.ResourcePool, string(label),
 			}
 			if wide {
+				// no-op append call, 源码如此(append是否缺少参数,wide是否有意义)
+				// nolint
 				r = append(r)
 			}
 			return r
