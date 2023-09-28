@@ -8,23 +8,23 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package cmd ...
 package cmd
 
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
-func newListCmd() *cobra.Command {
+func newListCmd() *cobra.Command { // nolint
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "list infos from bcs-cluster-manager",
@@ -34,7 +34,7 @@ func newListCmd() *cobra.Command {
 	return listCmd
 }
 
-func listClusterCmd() *cobra.Command {
+func listClusterCmd() *cobra.Command { // nolint
 	request := new(clustermanager.ListClusterReq)
 	subCmd := &cobra.Command{
 		Use:     "cluster",
@@ -54,7 +54,7 @@ func listClusterCmd() *cobra.Command {
 				klog.Fatalf("list projects failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatal("list projects response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("list projects response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintClustersListInTable(flagOutput, resp)
 		},

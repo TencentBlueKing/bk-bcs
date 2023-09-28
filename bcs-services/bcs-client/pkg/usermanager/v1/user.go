@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v1
@@ -18,10 +17,11 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
 )
 
 // UserManager xxx

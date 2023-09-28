@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package passcc xxx
 package passcc
 
 import (
@@ -22,12 +22,12 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/parnurzeal/gorequest"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 	iutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/parnurzeal/gorequest"
 )
 
 var (
@@ -181,7 +181,8 @@ func (cc *ClientConfig) DeletePassCCCluster(projectID, clusterID string) error {
 }
 
 // GetProjectSharedNamespaces get namespaces in pass-cc
-func (cc *ClientConfig) GetProjectSharedNamespaces(projectID, clusterID string, auth *auth.ClientAuth) ([]ProjectNamespace, error) {
+func (cc *ClientConfig) GetProjectSharedNamespaces(
+	projectID, clusterID string, auth *auth.ClientAuth) ([]ProjectNamespace, error) {
 	if cc == nil {
 		return nil, errServerNotInit
 	}

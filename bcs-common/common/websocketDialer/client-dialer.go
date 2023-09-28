@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package websocketDialer xxx
 package websocketDialer
 
 import (
@@ -21,7 +21,9 @@ import (
 )
 
 func clientDial(dialer Dialer, conn *connection, message *message) {
-	defer conn.Close()
+	defer func(conn *connection) {
+		_ = conn.Close()
+	}(conn)
 
 	var (
 		netConn net.Conn
@@ -38,7 +40,9 @@ func clientDial(dialer Dialer, conn *connection, message *message) {
 		conn.tunnelClose(err)
 		return
 	}
-	defer netConn.Close()
+	defer func(netConn net.Conn) {
+		_ = netConn.Close()
+	}(netConn)
 
 	pipe(conn, netConn)
 }
@@ -52,14 +56,14 @@ func pipe(client *connection, server net.Conn) {
 			err = io.EOF
 		}
 		client.doTunnelClose(err)
-		server.Close()
+		_ = server.Close()
 		return err
 	}
 
 	go func() {
 		defer wg.Done()
 		_, err := io.Copy(server, client)
-		close(err)
+		_ = close(err)
 	}()
 
 	_, err := io.Copy(client, server)

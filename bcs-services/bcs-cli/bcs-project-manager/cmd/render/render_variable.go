@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package render
@@ -51,9 +50,10 @@ func renderVariable() *cobra.Command {
 				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
 				return
 			}
-			resp, err := pkg.NewClientWithConfiguration(context.Background()).RenderVariables(request, projectCode, clusterID, namespace)
+			resp, err := pkg.NewClientWithConfiguration(context.Background()).RenderVariables(
+				request, projectCode, clusterID, namespace)
 			if err != nil {
-				klog.Infoln("render variable's value failed: %v", err)
+				klog.Infof("render variable's value failed: %v", err)
 				return
 			}
 			printer.PrintInJSON(resp)

@@ -4,29 +4,28 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package bcs
 
 import (
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"net/http"
 	"net/http/pprof"
 	"strconv"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	watchoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
-
 	"github.com/emicklei/go-restful"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	watchoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 )
 
 var (
@@ -126,7 +125,7 @@ func newHTTPServerWrap(config *watchoptions.WatchConfig, opts ...Option) *HTTPSe
 	}
 
 	// register debug pprof & health api
-	serverWrap.registerInitAction()
+	_ = serverWrap.registerInitAction()
 
 	return serverWrap
 }
@@ -154,14 +153,14 @@ func (s *HTTPServerWrap) registerInitAction() error {
 	healthAction := []*httpserver.Action{
 		httpserver.NewAction("GET", "/healthz", nil, func(req *restful.Request, resp *restful.Response) {
 			resp.WriteHeader(http.StatusOK)
-			resp.Write([]byte("ok"))
+			_, _ = resp.Write([]byte("ok"))
 		}),
 	}
 
 	actions = append(actions, healthAction...)
 
 	if len(actions) > 0 {
-		s.server.RegisterWebServer("", nil, actions)
+		_ = s.server.RegisterWebServer("", nil, actions)
 	}
 
 	return nil
@@ -173,7 +172,7 @@ func (s *HTTPServerWrap) RegisterWebServer(rootPath string, actions []*httpserve
 		return ErrHTTPServerNotInit
 	}
 
-	s.server.RegisterWebServer(rootPath, nil, actions)
+	_ = s.server.RegisterWebServer(rootPath, nil, actions)
 	return nil
 }
 
@@ -220,7 +219,7 @@ func getRouteFunc(f http.HandlerFunc) restful.RouteFunction {
 	}
 }
 
-func getRouteHandlerFunc(f http.Handler) restful.RouteFunction {
+func getRouteHandlerFunc(f http.Handler) restful.RouteFunction { //nolint
 	return func(req *restful.Request, resp *restful.Response) {
 		f.ServeHTTP(resp, req.Request)
 	}
@@ -230,5 +229,5 @@ func getRouteHandlerFunc(f http.Handler) restful.RouteFunction {
 func RunPrometheusMetricsServer(config *watchoptions.WatchConfig) {
 	http.Handle("/metrics", promhttp.Handler())
 	addr := config.Address + ":" + strconv.Itoa(int(config.MetricPort))
-	go http.ListenAndServe(addr, nil)
+	go http.ListenAndServe(addr, nil) // nolint
 }

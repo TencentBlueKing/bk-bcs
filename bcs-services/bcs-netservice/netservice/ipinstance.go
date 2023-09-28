@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package netservice
@@ -16,10 +15,11 @@ package netservice
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"path/filepath"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 )
 
 // UpdateAvailableIPInstance update ip instance info.
@@ -77,6 +77,7 @@ func (srv *NetService) TransferIPAttribute(tranInput *types.TranIPAttrInput) (in
 		reportMetrics("transferIPAttribute", stateLogicFailure, started)
 		return types.ALL_IP_FAILED, fmt.Errorf("create locker %s err, %s", lockpath, lErr.Error())
 	}
+	// nolint
 	defer poolLocker.Unlock()
 	if err := poolLocker.Lock(); err != nil {
 		blog.Errorf("try to lock pool %s/%s err, %s", tranInput.Cluster, tranInput.Net, err.Error())

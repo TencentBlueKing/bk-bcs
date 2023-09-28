@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package netservice
@@ -59,6 +58,8 @@ func stringInSlice(str string, strs []string) bool {
 }
 
 // AddPool construct pool info
+// NOCC: golint/funlen(设计如此:)
+// nolint
 func (srv *NetService) AddPool(pool *types.NetPool) error {
 	started := time.Now()
 	// check & construct data
@@ -235,6 +236,7 @@ func (srv *NetService) DeletePool(netKey string) error {
 		reportMetrics("deletePool", stateLogicFailure, started)
 		return fmt.Errorf("create pool %s lock err, %v", lockPath, err)
 	}
+	// nolint
 	defer distLocker.Unlock()
 	if err := distLocker.Lock(); err != nil {
 		blog.Errorf("try to lock pool %s error, %v", netKey, err)
@@ -296,6 +298,8 @@ func (srv *NetService) DeletePool(netKey string) error {
 
 // UpdatePool update Pool info will update by netservice key. It will update poll
 // info to store
+// NOCC:golint/funlen(设计如此:)
+// nolint
 func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 	started := time.Now()
 	// check & construct data
@@ -320,6 +324,7 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 		reportMetrics("updatePool", stateLogicFailure, started)
 		return fmt.Errorf("create pool %s lock err, %v", lockPath, lockErr)
 	}
+	// nolint
 	defer distLocker.Unlock()
 	if err := distLocker.Lock(); err != nil {
 		blog.Errorf("try to lock pool %s error, %v", netKey, err)
@@ -336,11 +341,7 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 	}
 	// filter duplicated ips, pool is left data for add,
 	// oldPool is full data for update
-	if err := srv.filterDuplicateIP(pool, oldPool); err != nil {
-		blog.Errorf("filtDuplicateIP failed: %v", err)
-		reportMetrics("updatePool", stateLogicFailure, started)
-		return fmt.Errorf("filter info for %s failed, %v", netKey, err)
-	}
+	srv.filterDuplicateIP(pool, oldPool)
 	if len(pool.Available) == 0 && len(pool.Reserved) == 0 {
 		blog.Warnf("No IP address can be update for pool %s, skip update work flow", netKey)
 		reportMetrics("updatePool", stateSuccess, started)
@@ -438,7 +439,7 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 }
 
 // filterDuplicateIP will filter the duplicate ip from store
-func (srv *NetService) filterDuplicateIP(update *types.NetPool, old *types.NetPool) error {
+func (srv *NetService) filterDuplicateIP(update *types.NetPool, old *types.NetPool) {
 	existIPs := make(map[string]bool)
 	for _, a := range old.Active {
 		existIPs[a] = true
@@ -486,7 +487,6 @@ func (srv *NetService) filterDuplicateIP(update *types.NetPool, old *types.NetPo
 		availableList = append(availableList, ip)
 	}
 	update.Available = availableList
-	return nil
 }
 
 // ListPool will list all the pools from store. It will return the netpools, and it

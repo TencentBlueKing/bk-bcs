@@ -1,15 +1,16 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package bcsmonitor xxx
 package bcsmonitor
 
 import (
@@ -35,7 +36,7 @@ type ClientInterface interface {
 }
 
 // BcsMonitorClient is the client for bcs monitor request
-type BcsMonitorClient struct {
+type BcsMonitorClient struct { // nolint
 	opts             BcsMonitorClientOpt
 	defaultHeader    http.Header
 	completeEndpoint string
@@ -43,7 +44,7 @@ type BcsMonitorClient struct {
 }
 
 // BcsMonitorClientOpt is the opts
-type BcsMonitorClientOpt struct {
+type BcsMonitorClientOpt struct { //nolint
 	Schema   string
 	Endpoint string
 	UserName string // basic auth username
@@ -105,7 +106,7 @@ func (c *BcsMonitorClient) SetCompleteEndpoint() {
 func (c *BcsMonitorClient) LabelValues(labelName string, selectors []string,
 	startTime, endTime time.Time) (*LabelResponse, error) {
 	var queryString string
-	if selectors != nil && len(selectors) != 0 {
+	if len(selectors) != 0 {
 		queryString = c.setSelectors(queryString, selectors)
 	}
 	if !startTime.IsZero() {
@@ -135,7 +136,7 @@ func (c *BcsMonitorClient) LabelValues(labelName string, selectors []string,
 // selectors, startTime, endTime optional
 func (c *BcsMonitorClient) Labels(selectors []string, startTime, endTime time.Time) (*LabelResponse, error) {
 	var queryString string
-	if selectors != nil && len(selectors) != 0 {
+	if len(selectors) != 0 {
 		queryString = c.setSelectors(queryString, selectors)
 	}
 	if !startTime.IsZero() {

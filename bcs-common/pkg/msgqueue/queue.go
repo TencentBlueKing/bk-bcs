@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package msgqueue
@@ -17,12 +16,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/micro/go-micro/v2/broker"
 	"github.com/micro/go-plugins/broker/rabbitmq/v2"
 	"github.com/micro/go-plugins/broker/stan/v2"
 	natstan "github.com/nats-io/stan.go"
 	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // MessageQueue is an interface used for asynchronous messaging.
@@ -181,7 +181,7 @@ func (mq *MsgQueue) String() (string, error) {
 // Stop the message queue
 func (mq *MsgQueue) Stop() {
 	mq.cancel()
-	mq.broker.Disconnect()
+	_ = mq.broker.Disconnect()
 }
 
 func (mq *MsgQueue) getSubOptions(queueName string) ([]broker.SubscribeOption, error) {

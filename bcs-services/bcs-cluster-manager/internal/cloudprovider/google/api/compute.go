@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -20,12 +19,12 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-
 	"golang.org/x/oauth2"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
 const (
@@ -187,7 +186,7 @@ func (c *ComputeServiceClient) GetInstanceGroupManager(ctx context.Context, loca
 		igm, err = c.computeServiceClient.RegionInstanceGroupManagers.Get(c.gkeProjectID, location, name).Context(ctx).Do()
 	default:
 		return nil, fmt.Errorf("gce client GetZoneInstanceGroupManager[%s] failed:"+
-			" location type is neither zones nor regions", name)
+			" location type is neither zones nor regions", name) // nolint
 	}
 	if err != nil {
 		return nil, fmt.Errorf("gce client GetZoneInstanceGroupManager[%s] failed: %v", name, err)
@@ -317,13 +316,15 @@ func (c *ComputeServiceClient) GetMigInstances(ctx context.Context, location, na
 	// region type && zone type cluster
 	switch c.getLocationType(location) {
 	case locationTypeZones:
-		resp, errLocal := c.computeServiceClient.InstanceGroupManagers.ListManagedInstances(c.gkeProjectID, location, name).Context(ctx).Do()
+		resp, errLocal := c.computeServiceClient.InstanceGroupManagers.ListManagedInstances(
+			c.gkeProjectID, location, name).Context(ctx).Do()
 		if errLocal != nil {
 			return nil, errLocal
 		}
 		managedInstances = resp.ManagedInstances
 	case locationTypeRegions:
-		resp, errLocal := c.computeServiceClient.RegionInstanceGroupManagers.ListManagedInstances(c.gkeProjectID, location, name).Context(ctx).Do()
+		resp, errLocal := c.computeServiceClient.RegionInstanceGroupManagers.ListManagedInstances(
+			c.gkeProjectID, location, name).Context(ctx).Do()
 		if errLocal != nil {
 			return nil, errLocal
 		}
@@ -604,7 +605,8 @@ func (c *ComputeServiceClient) DeleteMigInstances(ctx context.Context, location,
 }
 
 // ListMachineTypes lists machine types
-func (c *ComputeServiceClient) ListMachineTypes(ctx context.Context, location, filter string) (*compute.MachineTypeList, error) {
+func (c *ComputeServiceClient) ListMachineTypes(
+	ctx context.Context, location, filter string) (*compute.MachineTypeList, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client ListMachineTypes failed: gkeProjectId is required")
 	}

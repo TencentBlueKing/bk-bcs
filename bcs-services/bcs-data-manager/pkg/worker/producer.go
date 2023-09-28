@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -27,14 +27,13 @@ import (
 	"github.com/robfig/cron/v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/datajob"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/kafka"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/datajob"
 )
 
 // Producer produce data job
@@ -48,7 +47,7 @@ type Producer struct {
 	cancel          context.CancelFunc
 	resourceGetter  common.GetterInterface
 	concurrency     int
-	bcsMonitorCli   bcsmonitor.ClientInterface
+	bcsMonitorCli   bcsmonitor.ClientInterface // nolint
 	needSendKafka   bool
 	kafkaConn       kafka.KafkaInterface
 }
@@ -211,7 +210,7 @@ func (p *Producer) ProjectProducer(dimension string) {
 		blog.Errorf("get cm conn error:%v", err)
 		return
 	}
-	defer cmConn.Close()
+	defer cmConn.Close() // nolint
 	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
 	projectList, err := p.resourceGetter.GetProjectIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
 	if err != nil || projectList == nil {
@@ -235,7 +234,7 @@ func (p *Producer) ProjectProducer(dimension string) {
 		}
 	}
 	blog.Infof("[producer] send project job success, count: %d, jobTime:%v, startTime:%v, currentTime:%v, cost:%v",
-		len(projectList), jobTime, startTime, time.Now(), time.Now().Sub(startTime))
+		len(projectList), jobTime, startTime, time.Now(), time.Since(startTime))
 }
 
 // ClusterProducer is the function to produce cluster data job and send to message queue
@@ -252,7 +251,7 @@ func (p *Producer) ClusterProducer(dimension string) {
 		blog.Errorf("get cm conn error:%v", err)
 		return
 	}
-	defer cmConn.Close()
+	defer cmConn.Close() // nolint
 	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
 	clusterList, err := p.resourceGetter.GetClusterIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
 	if err != nil || clusterList == nil {
@@ -279,7 +278,7 @@ func (p *Producer) ClusterProducer(dimension string) {
 		}
 	}
 	blog.Infof("[producer] send cluster job success, count: %d, jobTime:%v, startTime:%v, currentTime:%v, cost:%v",
-		len(clusterList), jobTime, startTime, time.Now(), time.Now().Sub(startTime))
+		len(clusterList), jobTime, startTime, time.Now(), time.Since(startTime))
 }
 
 // NamespaceProducer is the function to produce namespace data job and send to message queue
@@ -295,7 +294,7 @@ func (p *Producer) NamespaceProducer(dimension string) {
 		blog.Errorf("get cm conn error:%v", err)
 		return
 	}
-	defer cmConn.Close()
+	defer cmConn.Close() // nolint
 	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
 	namespaceList, err := p.resourceGetter.GetNamespaceList(cliWithHeader.Ctx, cliWithHeader.Cli,
 		p.k8sStorageCli, p.mesosStorageCli)
@@ -324,12 +323,13 @@ func (p *Producer) NamespaceProducer(dimension string) {
 		}
 	}
 	blog.Infof("[producer] send all namespace job, count:%d, jobTime:%v, startTime:%v, "+
-		"currentTime:%v, cost:%v", len(namespaceList), jobTime, startTime, time.Now(), time.Now().Sub(startTime))
+		"currentTime:%v, cost:%v", len(namespaceList), jobTime, startTime, time.Now(), time.Now().Sub(startTime)) // nolint
 }
 
 // WorkloadProducer is a function that produces workload data jobs and sends them to the message queue.
 // It takes in the dimension parameter.
-// It retrieves the list of clusters from the Cluster Manager and creates a channel to count the number of workloads sent to the Kafka topic.
+// It retrieves the list of clusters from the Cluster Manager and
+// creates a channel to count the number of workloads sent to the Kafka topic.
 // It creates a pool of goroutines to retrieve the workload data for each cluster in parallel.
 // It logs the number of workloads sent to the Kafka topic and the time it took to send them.
 func (p *Producer) WorkloadProducer(dimension string) {
@@ -345,7 +345,7 @@ func (p *Producer) WorkloadProducer(dimension string) {
 		blog.Errorf("get cm conn error:%v", err)
 		return
 	}
-	defer cmConn.Close()
+	defer cmConn.Close() // nolint
 	// Create a gRPC client with header and retrieve the list of clusters.
 	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
 	clusterList, err := p.resourceGetter.GetClusterIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
@@ -357,7 +357,7 @@ func (p *Producer) WorkloadProducer(dimension string) {
 	countCh := make(chan int, 200)
 	go func() {
 		for count := range countCh {
-			totalWorkload = totalWorkload + count
+			totalWorkload += count
 		}
 	}()
 
@@ -386,7 +386,7 @@ func (p *Producer) WorkloadProducer(dimension string) {
 	close(countCh)
 	// Log the number of workloads sent to the Kafka topic and the time it took to send them.
 	blog.Infof("[producer] send all workload job, count:%d, jobTime:%v, startTime:%v, "+
-		"currentTime:%v, cost:%v", totalWorkload, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
+		"currentTime:%v, cost:%v", totalWorkload, jobTime, startTime, time.Now(), time.Since(startTime))
 }
 
 // getSingleClusterWorkloadList get single cluster workload list
@@ -399,7 +399,7 @@ func (p *Producer) getSingleClusterWorkloadList(jobTime time.Time, dimension str
 	}()
 	switch clusterMeta.ClusterType {
 	case types.Kubernetes:
-		namespaceList, err := p.resourceGetter.GetNamespaceListByCluster(p.ctx, clusterMeta, p.k8sStorageCli,
+		namespaceList, err := p.resourceGetter.GetNamespaceListByCluster(p.ctx, clusterMeta, p.k8sStorageCli, // nolint
 			p.mesosStorageCli)
 		if err != nil {
 			blog.Errorf("get workload list error: %v", err)
@@ -453,7 +453,7 @@ func (p *Producer) PodAutoscalerProducer(dimension string) {
 		blog.Errorf("get cm conn error:%v", err)
 		return
 	}
-	defer cmConn.Close()
+	defer cmConn.Close() // nolint
 	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
 	clusterList, err := p.resourceGetter.GetClusterIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
 	if err != nil || clusterList == nil {
@@ -464,7 +464,7 @@ func (p *Producer) PodAutoscalerProducer(dimension string) {
 	countCh := make(chan int, 200)
 	go func() {
 		for count := range countCh {
-			totalPodAutoscaler = totalPodAutoscaler + count
+			totalPodAutoscaler += count
 		}
 	}()
 
@@ -491,7 +491,7 @@ func (p *Producer) PodAutoscalerProducer(dimension string) {
 	time.Sleep(100 * time.Microsecond)
 	close(countCh)
 	blog.Infof("[producer] send all podAutoscaler job, count:%d, jobTime:%v, startTime:%v, "+
-		"currentTime:%v, cost:%v", totalPodAutoscaler, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
+		"currentTime:%v, cost:%v", totalPodAutoscaler, jobTime, startTime, time.Now(), time.Since(startTime))
 }
 
 // getSingleClusterAutoscalerList get cluster pod autoscaler data list

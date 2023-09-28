@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package moduleflag
@@ -17,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -67,12 +67,15 @@ func (da *DeleteAction) deleteCloudModuleFlag() error {
 		// try to get original cloud module flag for return
 		_, err := da.model.GetCloudModuleFlag(da.ctx, da.req.CloudID, da.req.Version, da.req.ModuleID, name)
 		if err != nil {
-			blog.Errorf("Get CloudModuleFlag %s:%s in pre-delete checking failed, err %s", da.req.CloudID, da.req.ModuleID, err.Error())
+			blog.Errorf("Get CloudModuleFlag %s:%s in pre-delete checking failed, err %s",
+				da.req.CloudID, da.req.ModuleID, err.Error())
 			return err
 		}
 
-		if err = da.model.DeleteCloudModuleFlag(da.ctx, da.req.CloudID, da.req.Version, da.req.ModuleID, name); err != nil {
-			blog.Errorf("delete CloudModuleFlag %s:%s failed, err %s", da.req.CloudID, da.req.ModuleID, err.Error())
+		if err = da.model.DeleteCloudModuleFlag(da.ctx, da.req.CloudID, da.req.Version,
+			da.req.ModuleID, name); err != nil {
+			blog.Errorf("delete CloudModuleFlag %s:%s failed, err %s", da.req.CloudID, da.req.ModuleID,
+				err.Error())
 			return err
 		}
 	}
@@ -102,5 +105,4 @@ func (da *DeleteAction) Handle(
 	}
 
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

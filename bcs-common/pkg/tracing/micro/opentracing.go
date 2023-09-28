@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package micro xxx
 package micro
 
 import (
@@ -22,8 +22,7 @@ import (
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/server"
-
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	opentracinglog "github.com/opentracing/opentracing-go/log"
 )
@@ -65,7 +64,7 @@ func StartSpanFromContext(ctx context.Context, tracer opentracing.Tracer, name s
 	}
 
 	for k, v := range nmd {
-		md.Set(strings.Title(k), v)
+		md.Set(strings.Title(k), v) // nolint
 	}
 
 	ctx = opentracing.ContextWithSpan(ctx, sp)

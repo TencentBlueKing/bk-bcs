@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package grpc xxx
 package grpc
 
 import (
@@ -19,7 +19,7 @@ import (
 	"runtime"
 	"sync/atomic"
 
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/grpc"
@@ -31,10 +31,10 @@ import (
 //
 // For example:
 //
-//     conn, err := grpc.Dial(
-//         address,
-//         ...,  // (existing DialOptions)
-//         grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(tracer)))
+//	conn, err := grpc.Dial(
+//	    address,
+//	    ...,  // (existing DialOptions)
+//	    grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(tracer)))
 //
 // All gRPC client spans will inject the OpenTracing SpanContext into the gRPC
 // metadata; they will also look in the context.Context for an active
@@ -97,10 +97,10 @@ func OpenTracingClientInterceptor(tracer opentracing.Tracer, optFuncs ...Option)
 //
 // For example:
 //
-//     conn, err := grpc.Dial(
-//         address,
-//         ...,  // (existing DialOptions)
-//         grpc.WithStreamInterceptor(otgrpc.OpenTracingStreamClientInterceptor(tracer)))
+//	conn, err := grpc.Dial(
+//	    address,
+//	    ...,  // (existing DialOptions)
+//	    grpc.WithStreamInterceptor(otgrpc.OpenTracingStreamClientInterceptor(tracer)))
 //
 // All gRPC client spans will inject the OpenTracing SpanContext into the gRPC
 // metadata; they will also look in the context.Context for an active

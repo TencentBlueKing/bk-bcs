@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
@@ -29,7 +29,7 @@ import (
 // DeleteAKSClusterTask delete cluster task
 func DeleteAKSClusterTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -103,7 +103,7 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	// delete node && nodeGroup && cluster
 	// get relative nodes by clusterID
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err

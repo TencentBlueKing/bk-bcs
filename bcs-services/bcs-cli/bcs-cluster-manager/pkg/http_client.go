@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pkg
@@ -55,7 +54,7 @@ func (c *HttpClient) do(method, url string, data, result interface{}) (err error
 	if data != nil {
 		byt, err = json.Marshal(data)
 		if err != nil {
-			return
+			return err
 		}
 	}
 
@@ -78,7 +77,7 @@ func (c *HttpClient) do(method, url string, data, result interface{}) (err error
 
 	resp, err := c.Do(req)
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -86,17 +85,17 @@ func (c *HttpClient) do(method, url string, data, result interface{}) (err error
 	}
 
 	if result == nil {
-		return
+		return err
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return
+		return err
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		return
+		return err
 	}
 
 	return json.Unmarshal(body, result)
@@ -108,7 +107,7 @@ func NewHttpClientWithConfiguration(ctx context.Context) *HttpClient {
 		&http.Client{
 			Transport: &http.Transport{
 				// NOCC:gas/tls(client工具)
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
 			},
 		},
 	}

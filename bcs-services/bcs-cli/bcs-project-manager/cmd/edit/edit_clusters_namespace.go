@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package edit
@@ -22,6 +21,7 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,7 +33,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/pkg"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 var (
@@ -47,7 +46,7 @@ var (
 		kubectl-bcs-project-manager edit namespace --cluster-id=clusterID --name=name`))
 )
 
-func editClustersNamespace() *cobra.Command {
+func editClustersNamespace() *cobra.Command { // nolint
 	cmd := &cobra.Command{
 		Use:                   "namespace --cluster-id=clusterID",
 		DisableFlagsInUseLine: true,
@@ -58,7 +57,8 @@ func editClustersNamespace() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			projectCode := viper.GetString("bcs.project_code")
 			if len(projectCode) == 0 {
-				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				klog.Infoln("Project code (English abbreviation), global unique, " +
+					"the length cannot exceed 64 characters")
 				return
 			}
 			client := pkg.NewClientWithConfiguration(context.Background())
@@ -68,7 +68,7 @@ func editClustersNamespace() *cobra.Command {
 				ClusterID:   clusterID,
 			})
 			if err != nil {
-				klog.Infoln("list variable definitions failed: %v", err)
+				klog.Infof("list variable definitions failed: %v", err)
 				return
 			}
 
@@ -82,29 +82,30 @@ func editClustersNamespace() *cobra.Command {
 			// 原内容
 			marshal, err := json.Marshal(data)
 			if err != nil {
-				klog.Infoln("[namespace] deserialize failed: %v", err)
+				klog.Infof("[namespace] deserialize failed: %v", err)
 				return
 			}
 			// 把json转成yaml
 			original, err := yaml.JSONToYAML(marshal)
 			if err != nil {
-				klog.Infoln("json to yaml failed: %v", err)
+				klog.Infof("json to yaml failed: %v", err)
 				return
 			}
 			edit := editor.NewDefaultEditor([]string{})
 			// 编辑后的
-			edited, path, err := edit.LaunchTempFile(fmt.Sprintf("%s-edit-", filepath.Base(os.Args[0])), ".yaml", bytes.NewBufferString(string(original)))
+			edited, path, err := edit.LaunchTempFile(fmt.Sprintf("%s-edit-", filepath.Base(os.Args[0])),
+				".yaml", bytes.NewBufferString(string(original)))
 			if err != nil {
-				klog.Infoln("unexpected error: %v", err)
+				klog.Infof("unexpected error: %v", err)
 				return
 			}
-			if _, err := os.Stat(path); err != nil {
-				klog.Infoln("no temp file: %s", path)
+			if _, err = os.Stat(path); err != nil {
+				klog.Infof("no temp file: %s", path)
 				return
 			}
 			// 对比原内容是否更改
 			if bytes.Equal(cmdutil.StripComments(original), cmdutil.StripComments(edited)) {
-				klog.Infoln("Edit cancelled, no valid changes were saved.")
+				klog.Infoln("Edit canceled, no valid changes were saved.")
 				return
 			}
 
@@ -126,7 +127,7 @@ func editClustersNamespace() *cobra.Command {
 
 			resp, err := client.UpdateNamespace(updateData, projectCode, clusterID, name)
 			if err != nil {
-				klog.Infoln("update project failed: %v", err)
+				klog.Infof("update project failed: %v", err)
 				return
 			}
 			printer.PrintInJSON(resp)
@@ -136,12 +137,14 @@ func editClustersNamespace() *cobra.Command {
 	cmd.Flags().StringVarP(&clusterID, "cluster-id", "", "",
 		"cluster ID, required")
 	cmd.Flags().StringVarP(&name, "name", "", "",
-		"Namespace name, length cannot exceed 63 characters, can only contain lowercase letters, numbers, and '-', must start with a letter and cannot end with '-'")
+		"Namespace name, length cannot exceed 63 characters, can only contain lowercase letters, numbers, "+
+			"and '-', must start with a letter and cannot end with '-'")
 
 	return cmd
 }
 
-func editData(projectCode string, namespaceData *bcsproject.ListNamespacesResponse) (*pkg.UpdateNamespaceRequest, error) {
+func editData(projectCode string, namespaceData *bcsproject.ListNamespacesResponse) (
+	*pkg.UpdateNamespaceRequest, error) {
 	// 从列表通过名称查找需要编辑的命名空间
 	namespaceList := make(map[string]*bcsproject.NamespaceData, 0)
 	for _, item := range namespaceData.Data {

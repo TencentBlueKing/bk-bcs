@@ -8,19 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package api xxx
 package api
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	restful "github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 )
 
 // RegisterAllocator ip resource allocation
@@ -52,7 +53,7 @@ func (allo *Allocator) Add(request *restful.Request, response *restful.Response)
 	if err := request.ReadEntity(netReq); err != nil {
 		blog.Errorf("Allocator decode json request falied, %s", err.Error())
 		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
+		_ = response.WriteErrorString(http.StatusBadRequest, err.Error())
 		reportMetrics("iplease", "4xx", started)
 		return
 	}
@@ -63,7 +64,7 @@ func (allo *Allocator) Add(request *restful.Request, response *restful.Response)
 		blog.Errorf("Allocator Lost IPLease data in request")
 		netRes.Code = 1
 		netRes.Message = "lost ip lease data in restful request"
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("iplease", "4xx", started)
 		return
 	}
@@ -72,7 +73,7 @@ func (allo *Allocator) Add(request *restful.Request, response *restful.Response)
 		blog.Errorf("Allocator lost Host/Container info in IPLease")
 		netRes.Code = 1
 		netRes.Message = "Host or Container info lost in IPLease"
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("iplease", "4xx", started)
 		return
 	}
@@ -84,7 +85,7 @@ func (allo *Allocator) Add(request *restful.Request, response *restful.Response)
 			err)
 		netRes.Code = 2
 		netRes.Message = err.Error()
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("iplease", "5xx", started)
 		return
 	}
@@ -93,7 +94,7 @@ func (allo *Allocator) Add(request *restful.Request, response *restful.Response)
 	netRes.Info = append(netRes.Info, info)
 	netRes.Code = 0
 	netRes.Message = SUCCESS
-	response.WriteEntity(netRes)
+	_ = response.WriteEntity(netRes)
 	reportMetrics("iplease", "2xx", started)
 }
 
@@ -104,7 +105,7 @@ func (allo *Allocator) Delete(request *restful.Request, response *restful.Respon
 	if err := request.ReadEntity(netReq); err != nil {
 		blog.Errorf("Allocator #DELETE# release ip address failed: %s", err.Error())
 		response.AddHeader("Content-Type", "text/plain")
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
+		_ = response.WriteErrorString(http.StatusBadRequest, err.Error())
 		reportMetrics("ipRelease", "4xx", started)
 		return
 	}
@@ -116,7 +117,7 @@ func (allo *Allocator) Delete(request *restful.Request, response *restful.Respon
 		blog.Errorf("Allocator Release ip info failed, type or iprelease data lost")
 		netRes.Code = 1
 		netRes.Message = "request type or ip release data lost"
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("ipRelease", "4xx", started)
 		return
 	}
@@ -124,7 +125,7 @@ func (allo *Allocator) Delete(request *restful.Request, response *restful.Respon
 		blog.Errorf("Allocator lost host/container info, release ip address failed")
 		netRes.Code = 2
 		netRes.Message = "host/container info lost, release ip address failed"
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("ipRelease", "4xx", started)
 		return
 	}
@@ -132,7 +133,7 @@ func (allo *Allocator) Delete(request *restful.Request, response *restful.Respon
 		blog.Errorf("Allocator release container %s ip failed, %s", netReq.Release.Container, err.Error())
 		netRes.Code = 2
 		netRes.Message = err.Error()
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("ipRelease", "5xx", started)
 		return
 	}
@@ -140,7 +141,7 @@ func (allo *Allocator) Delete(request *restful.Request, response *restful.Respon
 	netRes.Message = SUCCESS
 	netRes.Release = netReq.Release
 	netRes.Data = netReq.Release
-	response.WriteEntity(netRes)
+	_ = response.WriteEntity(netRes)
 	reportMetrics("ipRelease", "2xx", started)
 }
 
@@ -148,7 +149,7 @@ func (allo *Allocator) Delete(request *restful.Request, response *restful.Respon
 func (allo *Allocator) Update(request *restful.Request, response *restful.Response) {
 	blog.Warn("#######Allocator [Update] Not implemented#######")
 	response.AddHeader("Content-Type", "text/plain")
-	response.WriteErrorString(http.StatusForbidden, "Not implemented")
+	_ = response.WriteErrorString(http.StatusForbidden, "Not implemented")
 }
 
 // List list all ip address under active
@@ -156,7 +157,7 @@ func (allo *Allocator) List(request *restful.Request, response *restful.Response
 	// list all active ip address
 	blog.Warn("#######Allocator [GET] Not implemented#######")
 	response.AddHeader("Content-Type", "text/plain")
-	response.WriteErrorString(http.StatusForbidden, "Not implemented")
+	_ = response.WriteErrorString(http.StatusForbidden, "Not implemented")
 }
 
 // HostVIPRelease release all the vip in the host
@@ -170,12 +171,12 @@ func (allo *Allocator) HostVIPRelease(request *restful.Request, response *restfu
 		blog.Errorf("Allocator release host %s vip failed, %s", hostIP, err.Error())
 		netRes.Code = 2
 		netRes.Message = err.Error()
-		response.WriteEntity(netRes)
+		_ = response.WriteEntity(netRes)
 		reportMetrics("hostRelease", "5xx", started)
 		return
 	}
 	netRes.Code = 0
 	netRes.Message = SUCCESS
-	response.WriteEntity(netRes)
+	_ = response.WriteEntity(netRes)
 	reportMetrics("hostRelease", "2xx", started)
 }

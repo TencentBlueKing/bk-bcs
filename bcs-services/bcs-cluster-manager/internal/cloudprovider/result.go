@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cloudprovider
@@ -18,9 +17,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
@@ -190,7 +189,8 @@ func (sjr *SyncJobResult) updateNodeGroupDesiredNum() error {
 
 	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
 	if err != nil {
-		return fmt.Errorf("task[%s] updateNodeGroupDesiredNum get NodeGroup[%s] failed %s", sjr.TaskID, nodeGroupID, err.Error())
+		return fmt.Errorf("task[%s] updateNodeGroupDesiredNum get NodeGroup[%s] failed %s", sjr.TaskID,
+			nodeGroupID, err.Error())
 	}
 
 	blog.Infof("task[%s] update nodeGroup current[%d] clean[%d]", sjr.TaskID,

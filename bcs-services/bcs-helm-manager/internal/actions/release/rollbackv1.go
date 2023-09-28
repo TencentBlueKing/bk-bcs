@@ -116,16 +116,15 @@ func (r *RollbackReleaseV1Action) saveDB() error {
 	create := false
 	_, err := r.model.GetRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(), r.req.GetName())
 	if err != nil {
-		if errors.Is(err, drivers.ErrTableRecordNotFound) {
-			create = true
-		} else {
+		if !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			return err
 		}
+		create = true
 	}
 
 	username := auth.GetUserFromCtx(r.ctx)
 	if create {
-		if err := r.model.CreateRelease(r.ctx, &entity.Release{
+		if err = r.model.CreateRelease(r.ctx, &entity.Release{
 			Name:        r.req.GetName(),
 			ProjectCode: contextx.GetProjectCodeFromCtx(r.ctx),
 			Namespace:   r.req.GetNamespace(),
@@ -141,9 +140,9 @@ func (r *RollbackReleaseV1Action) saveDB() error {
 			entity.FieldKeyStatus:   helmrelease.StatusPendingRollback.String(),
 			entity.FieldKeyMessage:  "",
 		}
-		if err := r.model.UpdateRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(),
+		if err = r.model.UpdateRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(),
 			r.req.GetName(), rl); err != nil {
-
+			return err
 		}
 	}
 	return nil

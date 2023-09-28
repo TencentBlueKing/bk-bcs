@@ -22,17 +22,17 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/emicklei/go-restful"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/mock/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/mock/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/mock/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
-
-	"github.com/emicklei/go-restful"
 )
 
 type testToken struct {
@@ -76,6 +76,8 @@ func newTestToken(form CreateTokenForm) (*testToken, error) {
 	}, nil
 }
 
+// NOCC:golint/fnsize(设计如此)
+// nolint
 func TestCreateToken(t *testing.T) {
 	t.Run("invalid form", func(t *testing.T) {
 		form := CreateTokenForm{Username: "test", Expiration: 0}
@@ -382,6 +384,8 @@ func TestUpdateToken(t *testing.T) {
 	})
 }
 
+// NOCC:golint/fnsize(设计如此)
+// nolint
 func TestCreateTempToken(t *testing.T) {
 	t.Run("invalid form", func(t *testing.T) {
 		form := CreateTokenForm{Username: "test", Expiration: 0}

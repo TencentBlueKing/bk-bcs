@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/options"
 )
@@ -52,7 +53,7 @@ func main() {
 func notifySignal(cancel context.CancelFunc, stopCh chan struct{}) {
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1)
-	for {
+	for { // nolint
 		select {
 		case sig, ok := <-c:
 			if !ok {
@@ -61,8 +62,8 @@ func notifySignal(cancel context.CancelFunc, stopCh chan struct{}) {
 				os.Exit(255)
 			}
 			blog.Errorf("Received signal: %+v", sig)
-			terminateProcess(cancel, stopCh)
-			switch sig {
+			terminateProcess(cancel, stopCh) // nolint
+			switch sig {                     // nolint
 			case syscall.SIGUSR1:
 				os.Exit(255)
 			default:

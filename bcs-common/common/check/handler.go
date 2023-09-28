@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package check
@@ -62,8 +61,10 @@ func StartHealthCheck() {
 	}
 	isStarted = true
 
-	stableTime := *flag.Int("stableTime", 5,
+	var stableTime int
+	flag.IntVar(&stableTime, "stableTime", 5,
 		"if there are not problems occur in stableTime seconds, means start successful. default 5 seconds.")
+
 	watcher = healthWatcher{err: make(chan error, 1), stableTime: time.Duration(stableTime) * time.Second}
 	watcher.run()
 }

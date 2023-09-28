@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package mesoswebconsole
@@ -27,10 +26,11 @@ import (
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/gorilla/websocket"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-	"github.com/gorilla/websocket"
 )
 
 // WebconsoleProxy proxy for web console
@@ -97,7 +97,6 @@ func (w *WebconsoleProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	httpProxy := NewHTTPReverseProxy(w.clientTLSConfig, backendURL, clusterDialer)
 	httpProxy.ServeHTTP(rw, req)
 	metrics.ReportAPIRequestMetric("mesos_webconsole", req.Method, metrics.LibCallStatusOK, start)
-	return
 }
 
 // lookup websocket dialer in cache

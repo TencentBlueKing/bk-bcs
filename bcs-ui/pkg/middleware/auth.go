@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package middleware xxx
 package middleware
 
 import (
@@ -58,15 +58,15 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 		// 如果有 clusterID 参数，先校验 cluster_view 权限
 		clusterID := r.URL.Query().Get("clusterID")
 		if clusterID != "" {
-			_, err := bcs.GetCluster(ctx, clusterID)
+			_, err = bcs.GetCluster(ctx, clusterID)
 			if err != nil {
 				rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, err.Error())
 				return
 			}
-			client, err := iam.GetClusterPermClient()
-			allow, url, actionList, err := client.CanViewCluster(claims.UserName, project.ProjectID, clusterID)
-			if err != nil {
-				rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, err.Error())
+			client, _ := iam.GetClusterPermClient()
+			allow, url, actionList, clusterErr := client.CanViewCluster(claims.UserName, project.ProjectID, clusterID)
+			if clusterErr != nil {
+				rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, clusterErr.Error())
 				return
 			}
 			if !allow {
@@ -103,7 +103,7 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 	})
 }
 
-func decodeBCSJwtFromContext(ctx context.Context, r *http.Request) (*auth.UserClaimsInfo, error) {
+func decodeBCSJwtFromContext(_ context.Context, r *http.Request) (*auth.UserClaimsInfo, error) {
 	tokenString := r.Header.Get("Authorization")
 	if len(tokenString) == 0 || !strings.HasPrefix(tokenString, "Bearer ") {
 		return nil, errors.New("auth token not found")

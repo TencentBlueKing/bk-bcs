@@ -4,12 +4,23 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */ /*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package tkehandler xxx
 package tkehandler
 
 import (
@@ -22,6 +33,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/emicklei/go-restful"
+	"gopkg.in/go-playground/validator.v9"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
@@ -29,9 +43,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/emicklei/go-restful"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // Validate local implementation
@@ -138,7 +149,7 @@ func (h *Handler) AddTkeCidr(request *restful.Request, response *restful.Respons
 		err = h.model.CreateTkeCidr(request.Request.Context(), &types.TkeCidr{
 			VPC:        form.Vpc,
 			CIDR:       tkeCidr.Cidr,
-			IPNumber:   uint32(tkeCidr.IPNumber),
+			IPNumber:   tkeCidr.IPNumber,
 			Status:     tkeCidr.Status,
 			Cluster:    "",
 			CreateTime: now.Format(time.RFC3339),
@@ -156,7 +167,7 @@ func (h *Handler) AddTkeCidr(request *restful.Request, response *restful.Respons
 	}
 
 	data := CreateResponeData(nil, "success", nil)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 	metrics.ReportAPIRequestMetric("AddTkeCidr", "http", strconv.Itoa(code), start)
 }
 
@@ -206,8 +217,8 @@ func (h *Handler) ApplyTkeCidr(request *restful.Request, response *restful.Respo
 		return
 	}
 
-	h.locker.Lock(form.Vpc, []lock.LockOption{lock.LockTTL(5 * time.Second)}...)
-	defer h.locker.Unlock(form.Vpc)
+	_ = h.locker.Lock(form.Vpc, []lock.LockOption{lock.LockTTL(5 * time.Second)}...)
+	defer h.locker.Unlock(form.Vpc) // nolint
 
 	// apply a available cidr
 	tkeCidr, err := h.getOneTkeCidr(request.Request.Context(), form.Vpc, form.IPNumber, common.TkeCidrStatusAvailable)
@@ -243,7 +254,7 @@ func (h *Handler) ApplyTkeCidr(request *restful.Request, response *restful.Respo
 		Status:   common.TkeCidrStatusUsed,
 	}
 	data := CreateResponeData(nil, "success", cidr)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 	metrics.ReportAPIRequestMetric("ApplyTkeCidr", "http", strconv.Itoa(code), start)
 }
 
@@ -270,8 +281,8 @@ func (h *Handler) ReleaseTkeCidr(request *restful.Request, response *restful.Res
 	}
 
 	// check if cidr is valid
-	h.locker.Lock(form.Vpc, []lock.LockOption{lock.LockTTL(5 * time.Second)}...)
-	defer h.locker.Unlock(form.Vpc)
+	_ = h.locker.Lock(form.Vpc, []lock.LockOption{lock.LockTTL(5 * time.Second)}...)
+	defer h.locker.Unlock(form.Vpc) // nolint
 	tkeCidr, err := h.model.GetTkeCidr(request.Request.Context(), form.Vpc, form.Cidr)
 	if err != nil {
 		code = httpCodeClientError
@@ -309,7 +320,7 @@ func (h *Handler) ReleaseTkeCidr(request *restful.Request, response *restful.Res
 	blog.Infof("release a cidr successfully, cidr: %s, ipNumber: %d, vpc: %s, cluster: %s",
 		tkeCidr.CIDR, tkeCidr.IPNumber, form.Vpc, cluster)
 	data := CreateResponeData(nil, "success", nil)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 	metrics.ReportAPIRequestMetric("ReleaseTkeCidr", "http", strconv.Itoa(code), start)
 }
 
@@ -343,6 +354,6 @@ func (h *Handler) ListTkeCidrCount(request *restful.Request, response *restful.R
 	}
 	blog.Infof("%+v", retTkeCidrCountList)
 	// For forward compatibility, do not use code or message
-	response.WriteEntity(retTkeCidrCountList)
+	_ = response.WriteEntity(retTkeCidrCountList)
 	metrics.ReportAPIRequestMetric("ListTkeCidrCount", "http", strconv.Itoa(code), start)
 }

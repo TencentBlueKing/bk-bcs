@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
-	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/jsonpb" // nolint
 	"google.golang.org/protobuf/runtime/protoiface"
 	"k8s.io/klog"
 
@@ -57,7 +57,7 @@ type Client struct {
 	cli  *httpclient.HttpClient
 }
 
-func (c *Client) get(ctx context.Context, uri string, header http.Header, data []byte) (
+func (c *Client) get(ctx context.Context, uri string, header http.Header, data []byte) ( // nolint
 	*httpclient.HttpRespone, error) {
 	return c.request(ctx, "GET", uri, header, data)
 }
@@ -72,7 +72,7 @@ func (c *Client) put(ctx context.Context, uri string, header http.Header, data [
 	return c.request(ctx, "PUT", uri, header, data)
 }
 
-func (c *Client) delete(ctx context.Context, uri string, header http.Header, data []byte) (
+func (c *Client) delete(ctx context.Context, uri string, header http.Header, data []byte) ( // nolint
 	*httpclient.HttpRespone, error) {
 	return c.request(ctx, "DELETE", uri, header, data)
 }

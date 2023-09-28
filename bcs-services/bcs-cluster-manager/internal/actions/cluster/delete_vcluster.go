@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cluster
@@ -22,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -78,7 +78,7 @@ func (da *DeleteVirtualAction) getClusterInfo() error {
 		return fmt.Errorf("vcluster[%s] namespace empty", cluster.ClusterID)
 	}
 	nsInfo := &cmproto.NamespaceInfo{}
-	json.Unmarshal([]byte(namespaceStr), nsInfo)
+	json.Unmarshal([]byte(namespaceStr), nsInfo) // nolint
 
 	da.namespace = nsInfo
 	coption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
@@ -204,7 +204,6 @@ func (da *DeleteVirtualAction) Handle(ctx context.Context,
 	da.resp.Data = da.cluster
 	da.resp.Task = da.task
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (da *DeleteVirtualAction) createDeleteClusterTask(req *cmproto.DeleteVirtualClusterReq) error {

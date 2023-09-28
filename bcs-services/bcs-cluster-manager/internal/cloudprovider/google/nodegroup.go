@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package google
@@ -20,12 +19,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"google.golang.org/api/compute/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-
-	"google.golang.org/api/compute/v1"
 )
 
 var groupMgr sync.Once
@@ -95,7 +94,7 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup,
 	// 所以先不支持labels和taints的更新
 
 	// update instanceGroupManager
-	if _, err := api.PatchInstanceGroupManager(computeCli, group.AutoScaling.AutoScalingID,
+	if _, err = api.PatchInstanceGroupManager(computeCli, group.AutoScaling.AutoScalingID,
 		ng.generatePatchInstanceGroupManager(group)); err != nil {
 		return nil, fmt.Errorf("update node pool failed, err: %s", err.Error())
 	}
@@ -117,7 +116,7 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup,
 	return task, nil
 }
 
-func (ng *NodeGroup) generatePatchInstanceGroupManager(group *proto.NodeGroup) *compute.InstanceGroupManager {
+func (ng *NodeGroup) generatePatchInstanceGroupManager(group *proto.NodeGroup) *compute.InstanceGroupManager { // nolint
 	igm := &compute.InstanceGroupManager{
 		UpdatePolicy: api.GenerateUpdatePolicy(),
 	}

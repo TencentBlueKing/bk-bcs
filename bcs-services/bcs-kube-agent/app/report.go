@@ -4,11 +4,10 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package app
@@ -28,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-
 	jsoniter "github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
 	"github.com/spf13/viper"
@@ -57,7 +55,7 @@ type ClusterInfoParams struct {
 	ClusterDomain string `json:"clusterDomain"`
 }
 
-func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
+func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) { // nolint
 	periodSync := viper.GetInt("agent.periodSync")
 	clusterID := viper.GetString("cluster.id")
 	monitorTicker := time.NewTicker(time.Duration(periodSync) * time.Second)
@@ -94,7 +92,7 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 		insecureSkipVerify := viper.GetBool("agent.insecureSkipVerify")
 		if insecureSkipVerify {
 			// NOCC:gas/tls(设计如此:此处需要跳过验证)
-			request = gorequest.New().TLSClientConfig(&tls.Config{InsecureSkipVerify: insecureSkipVerify})
+			request = gorequest.New().TLSClientConfig(&tls.Config{InsecureSkipVerify: insecureSkipVerify}) // nolint
 		} else {
 			var tlsConfig *tls.Config
 			caCrtFile := os.Getenv("CLIENT_CA")
@@ -147,7 +145,7 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 			reportBcsKubeAgentAPIMetrics(handler, method, fmt.Sprintf("%d", codeName), start)
 		}
 
-		select {
+		select { // nolint
 		case <-monitorTicker.C:
 		}
 	}
@@ -267,12 +265,12 @@ func pingEndpoint(host string) error {
 func dialTLS(host string) error {
 	conf := &tls.Config{
 		// NOCC:gas/tls(设计如此:此处需要跳过验证)
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, // nolint
 	}
 	conn, err := tls.Dial("tcp", host, conf)
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer conn.Close() // nolint
 	return nil
 }

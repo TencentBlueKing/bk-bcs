@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package web
@@ -57,7 +56,7 @@ func (s *WebServer) CookieSwitchLanguage(w http.ResponseWriter, r *http.Request)
 	}
 
 	// set secure if bcs api is https schema
-	if strings.HasPrefix("https://", config.G.BCS.Host) {
+	if strings.HasPrefix("https://", config.G.BCS.Host) { // nolint
 		cookie.Secure = true
 		cookie.SameSite = http.SameSiteNoneMode
 	}

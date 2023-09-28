@@ -16,10 +16,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/spf13/cobra"
 )
 
 var upgradeCMD = &cobra.Command{
@@ -81,7 +81,7 @@ func init() {
 		&flagValueFile, "file", "f", nil, "value file for installation, -f values.yaml")
 	upgradeCMD.PersistentFlags().StringSliceVarP(
 		&flagArgs, "args", "", nil, "--args=--wait=true --args=--timeout=600s")
-	upgradeCMD.MarkPersistentFlagRequired("project")
-	upgradeCMD.MarkPersistentFlagRequired("cluster")
-	upgradeCMD.MarkPersistentFlagRequired("namespace")
+	_ = upgradeCMD.MarkPersistentFlagRequired("project")
+	_ = upgradeCMD.MarkPersistentFlagRequired("cluster")
+	_ = upgradeCMD.MarkPersistentFlagRequired("namespace")
 }

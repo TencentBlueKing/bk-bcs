@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -103,7 +102,7 @@ func (c CIDR) MaskSize() (ones, bits int) {
 func (c CIDR) Mask() string {
 	// NOCC:gas/error(设计如此)
 	mask, _ := hex.DecodeString(c.ipnet.Mask.String())
-	return net.IP([]byte(mask)).String()
+	return net.IP(mask).String()
 }
 
 // Gateway address

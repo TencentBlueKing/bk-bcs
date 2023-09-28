@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -29,7 +28,7 @@ var (
 	ConnectPort = 36000
 )
 
-// market images
+// ImageOsList market images
 // ImageOsList image list
 var ImageOsList = []*proto.OsImage{
 	{

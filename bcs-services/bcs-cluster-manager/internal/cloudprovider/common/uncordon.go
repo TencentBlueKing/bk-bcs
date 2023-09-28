@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
@@ -20,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -67,7 +67,7 @@ type scheduleNodesData struct {
 	cordon    bool
 }
 
-func updateNodesScheduleStatus(ctx context.Context, data scheduleNodesData) error {
+func updateNodesScheduleStatus(ctx context.Context, data scheduleNodesData) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
@@ -142,7 +142,7 @@ func UnCordonNodesTask(taskID string, stepName string) error {
 	})
 
 	blog.Infof("UnCordonNodesTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
-	//update step
+	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
 		return err
@@ -189,7 +189,7 @@ func CordonNodesTask(taskID string, stepName string) error {
 	})
 
 	blog.Infof("CordonNodesTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
-	//update step
+	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
 		return err

@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package nodegroup xxx
 package nodegroup
 
 import (
@@ -20,9 +21,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -64,7 +65,7 @@ func (ua *EnableNodeGroupAutoScaleAction) validate() error {
 }
 
 func (ua *EnableNodeGroupAutoScaleAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -256,7 +257,6 @@ func (ua *EnableNodeGroupAutoScaleAction) Handle(
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // DisableNodeGroupAutoScaleAction set nodegroup autoscaling disable
@@ -291,7 +291,7 @@ func (ua *DisableNodeGroupAutoScaleAction) validate() error {
 }
 
 func (ua *DisableNodeGroupAutoScaleAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -353,7 +353,8 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 	}
 
 	// cloud provider nodeGroup
-	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, false, &cloudprovider.SwitchNodeGroupAutoScalingOption{CommonOption: *cmOption})
+	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, false,
+		&cloudprovider.SwitchNodeGroupAutoScalingOption{CommonOption: *cmOption})
 	if err != nil {
 		blog.Errorf("disable nodegroup auto scale in cloudprovider %s/%s for group %s failed, %s",
 			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.group.NodeGroupID, err.Error())
@@ -432,5 +433,4 @@ func (ua *DisableNodeGroupAutoScaleAction) Handle(
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

@@ -4,13 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package output xxx
 package output
 
 import (
@@ -18,10 +18,10 @@ import (
 	"strings"
 	"time"
 
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output/action"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/pkg/metrics"
 )
@@ -125,7 +125,7 @@ func (h *Handler) handle() {
 				if strings.HasPrefix(h.dataType, "Event") {
 					return
 				}
-				requeueMs := rand.Int31n(defaultMaxRetryMillisecond)
+				requeueMs := rand.Int31n(defaultMaxRetryMillisecond) // nolint
 				glog.Errorf("requeue %s/%s/%s/%s after %d ms",
 					data.Name, data.Namespace, data.Kind, data.Action, requeueMs)
 				data.RequeueQ.AddAfter(types.NamespacedName{

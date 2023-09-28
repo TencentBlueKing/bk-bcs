@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package ladder
@@ -167,7 +166,7 @@ func (ud *UpdateDesiredNodesTaskOption) BuildApplyInstanceStep(task *proto.Task)
 func (ud *UpdateDesiredNodesTaskOption) BuildAddNodesToClusterStep(task *proto.Task) {
 	newStepInfo := addNodesToClusterStep
 	if ud.NodeGroup != nil && ud.NodeGroup.NodeTemplate != nil && len(ud.NodeGroup.NodeTemplate.PreStartUserScript) > 0 {
-		newStepInfo.StepName = newStepInfo.StepName + fmt.Sprintf("(包含前置初始化)")
+		newStepInfo.StepName += "(包含前置初始化)"
 	}
 
 	addNodesStep := cloudprovider.InitTaskStep(newStepInfo)

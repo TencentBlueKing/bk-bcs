@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -48,7 +49,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 }
 
 func (ca *CreateAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	cluster, err := ca.model.GetCluster(ca.ctx, ca.req.ClusterID)
 	if err != nil {
 		blog.Errorf("can not get relative Cluster %s when create NodeGroup", ca.req.ClusterID)
@@ -342,10 +343,9 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		return
 	}
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
-func validateLaunchTemplate(launch *cmproto.LaunchConfiguration) error {
+func validateLaunchTemplate(launch *cmproto.LaunchConfiguration) error { // nolint
 	if launch == nil {
 		return fmt.Errorf("nodeGroup launchTemplate is null")
 	}
@@ -357,7 +357,7 @@ func validateLaunchTemplate(launch *cmproto.LaunchConfiguration) error {
 	return nil
 }
 
-func validateDiskSize(disks ...*cmproto.DataDisk) error {
+func validateDiskSize(disks ...*cmproto.DataDisk) error { // nolint
 	for _, v := range disks {
 		if v == nil {
 			continue
@@ -371,7 +371,7 @@ func validateDiskSize(disks ...*cmproto.DataDisk) error {
 	return nil
 }
 
-func validateInternet(internet *cmproto.InternetAccessible) error {
+func validateInternet(internet *cmproto.InternetAccessible) error { // nolint
 	if internet == nil {
 		return nil
 	}

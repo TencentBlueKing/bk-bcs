@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -17,16 +16,16 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
 	"github.com/micro/go-micro/v2/server/grpc"
 	microSvc "github.com/micro/go-micro/v2/service"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 const (
@@ -42,7 +41,7 @@ var (
 // MaxMsgSize of the max msg size
 func MaxMsgSize(s int) microSvc.Option {
 	return func(o *microSvc.Options) {
-		o.Server.Init(grpc.MaxMsgSize(s))
+		_ = o.Server.Init(grpc.MaxMsgSize(s))
 	}
 }
 

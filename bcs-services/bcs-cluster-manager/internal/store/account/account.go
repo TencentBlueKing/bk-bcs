@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package account xxx
 package account
 
 import (
@@ -21,18 +21,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
-
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
 	tableName = "cloudaccount"
+	// CloudKey xxx
 	//! we don't setting bson tag in proto file,
 	//! all struct key in mongo is lowcase in default
-	CloudKey                      = "cloudid"
+	CloudKey = "cloudid"
+	// AccountIDKey xxx
 	AccountIDKey                  = "accountid"
 	defaultCloudAccountListLength = 4000
 )

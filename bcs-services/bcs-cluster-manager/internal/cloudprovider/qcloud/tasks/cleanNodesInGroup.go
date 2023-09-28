@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -20,12 +19,12 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/avast/retry-go"
 )
 
 // CleanNodeGroupNodesTask clean node group nodes task
@@ -132,7 +131,7 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 
 	blog.Infof("removeAsgInstances[%s] validateInstances[%v]", taskID, validateInstances)
 	err = retry.Do(func() error {
-		activityID, err := asCli.RemoveInstances(asgID, validateInstances)
+		activityID, err := asCli.RemoveInstances(asgID, validateInstances) // nolint
 		if err != nil {
 			blog.Errorf("removeAsgInstances[%s] RemoveInstances failed: %v", taskID, err)
 			return err
@@ -195,9 +194,10 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 	defer cancel()
 
 	err = loop.LoopDoFunc(timeContext, func() error {
-		exist, notExist, err := FilterClusterInstanceFromNodesIDs(timeContext, dependInfo, nodeIDs)
+		exist, notExist, err := FilterClusterInstanceFromNodesIDs(timeContext, dependInfo, nodeIDs) // nolint
 		if err != nil {
-			blog.Errorf("CheckClusterCleanNodsTask[%s] FilterClusterInstanceFromNodesIDs failed: %v", taskID, err)
+			blog.Errorf("CheckClusterCleanNodsTask[%s] FilterClusterInstanceFromNodesIDs failed: %v",
+				taskID, err)
 			return nil
 		}
 
@@ -230,7 +230,7 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 // CheckCleanNodeGroupNodesStatusTask check clean node group nodes status task
 func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -250,7 +250,8 @@ func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 		NodeGroupID: nodeGroupID,
 	})
 	if err != nil {
-		blog.Errorf("CheckCleanNodeGroupNodesStatusTask[%s]: GetClusterDependBasicInfo for nodegroup %s in task %s step %s failed, %s",
+		blog.Errorf("CheckCleanNodeGroupNodesStatusTask[%s]: GetClusterDependBasicInfo for nodegroup %s in "+
+			"task %s step %s failed, %s", // nolint
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/cluster information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -260,7 +261,8 @@ func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 	// get qcloud client
 	cli, err := api.NewTkeClient(dependInfo.CmOption)
 	if err != nil {
-		blog.Errorf("CheckCleanNodeGroupNodesStatusTask[%s]: get tke client for nodegroup[%s] in task %s step %s failed, %s",
+		blog.Errorf("CheckCleanNodeGroupNodesStatusTask[%s]: get tke client for nodegroup[%s] in "+
+			"task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -273,9 +275,11 @@ func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 
 	// wait all nodes to be ready
 	err = loop.LoopDoFunc(ctx, func() error {
-		np, errPool := cli.DescribeClusterNodePoolDetail(dependInfo.Cluster.SystemID, dependInfo.NodeGroup.CloudNodeGroupID)
+		np, errPool := cli.DescribeClusterNodePoolDetail(dependInfo.Cluster.SystemID,
+			dependInfo.NodeGroup.CloudNodeGroupID)
 		if errPool != nil {
-			blog.Errorf("taskID[%s] CheckCleanNodeGroupNodesStatusTask[%s/%s] failed: %v", taskID, dependInfo.NodeGroup.ClusterID,
+			blog.Errorf("taskID[%s] CheckCleanNodeGroupNodesStatusTask[%s/%s] failed: %v", taskID,
+				dependInfo.NodeGroup.ClusterID,
 				dependInfo.NodeGroup.CloudNodeGroupID, errPool)
 			return nil
 		}
@@ -303,7 +307,7 @@ func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 // UpdateCleanNodeGroupNodesDBInfoTask update clean node group nodes db info task
 func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -323,7 +327,8 @@ func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 		NodeGroupID: nodeGroupID,
 	})
 	if err != nil {
-		blog.Errorf("CheckCleanNodeGroupNodesStatusTask[%s]: GetClusterDependBasicInfo for nodegroup %s in task %s step %s failed, %s",
+		blog.Errorf("CheckCleanNodeGroupNodesStatusTask[%s]: GetClusterDependBasicInfo for nodegroup %s in "+
+			"task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/cluster information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -333,7 +338,8 @@ func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 	// get qcloud client
 	cli, err := api.NewTkeClient(dependInfo.CmOption)
 	if err != nil {
-		blog.Errorf("UpdateCleanNodeGroupNodesDBInfoTask[%s]: get tke client for nodegroup[%s] in task %s step %s failed, %s",
+		blog.Errorf("UpdateCleanNodeGroupNodesDBInfoTask[%s]: get tke client for nodegroup[%s] in "+
+			"task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud tke client err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -342,7 +348,8 @@ func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 
 	np, err := cli.DescribeClusterNodePoolDetail(dependInfo.Cluster.SystemID, dependInfo.NodeGroup.CloudNodeGroupID)
 	if err != nil {
-		blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v", taskID, dependInfo.NodeGroup.ClusterID,
+		blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v", taskID,
+			dependInfo.NodeGroup.ClusterID,
 			dependInfo.NodeGroup.CloudNodeGroupID, err)
 		retErr := fmt.Errorf("DescribeClusterNodePoolDetail err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -361,7 +368,8 @@ func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("UpdateCleanNodeGroupNodesDBInfoTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("UpdateCleanNodeGroupNodesDBInfoTask[%s] task %s %s update to storage fatal", taskID,
+			taskID, stepName)
 		return err
 	}
 

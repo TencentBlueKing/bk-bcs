@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package printer
@@ -16,19 +15,17 @@ package printer
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 	"github.com/andreazorzetto/yh/highlight"
 	"github.com/ghodss/yaml"
 	"github.com/olekukonko/tablewriter"
 	"github.com/tidwall/pretty"
 	"k8s.io/klog/v2"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 // PrintProjectsListInTable prints the response that list projects
@@ -64,7 +61,7 @@ func PrintProjectsListInTable(flagOutput string, resp *bcsproject.ListProjectsRe
 	// 添加页脚
 	tw.SetFooter([]string{"", "", "", "", "", "", "Total", strconv.Itoa(int(resp.Data.Total))})
 	// 合并相同值的列
-	//tw.SetAutoMergeCells(true)
+	// tw.SetAutoMergeCells(true)
 	for _, item := range resp.Data.Results {
 		tw.Append(func() []string {
 			return []string{
@@ -107,13 +104,14 @@ func PrintProjectVariablesListInTable(flagOutput string, resp *bcsproject.ListVa
 	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
-			"ID", "KEY", "NAME", "DEFAULT", "DEFAULT_VALUE", "SCOPE", "SCOPE_NAME", "CATEGORY", "CATEGORY_NAME", "CREATOR", "UPDATER", "CREATE", "UPDATE",
+			"ID", "KEY", "NAME", "DEFAULT", "DEFAULT_VALUE", "SCOPE", "SCOPE_NAME", "CATEGORY", "CATEGORY_NAME",
+			"CREATOR", "UPDATER", "CREATE", "UPDATE",
 		}
 	}())
 	// 添加页脚
 	tw.SetFooter([]string{"", "", "", "", "", "", "", "", "", "", "", "Total", strconv.Itoa(int(resp.Data.Total))})
 	// 合并相同值的列
-	//tw.SetAutoMergeCells(true)
+	// tw.SetAutoMergeCells(true)
 	for _, item := range resp.Data.Results {
 		tw.Append(func() []string {
 			return []string{
@@ -166,7 +164,7 @@ func PrintClusterNamespaceInTable(flagOutput string, resp *bcsproject.ListNamesp
 	}())
 
 	// 合并相同值的列
-	//tw.SetAutoMergeCells(true)
+	// tw.SetAutoMergeCells(true)
 	for _, item := range resp.Data {
 		tw.Append(func() []string {
 			return []string{
@@ -213,7 +211,7 @@ func PrinListAuthorizedProjectsInTable(flagOutput string, resp *bcsproject.ListA
 	// 添加页脚
 	tw.SetFooter([]string{"", "", "", "", "", "", "Total", strconv.Itoa(int(resp.Data.Total))})
 	// 合并相同值的列
-	//tw.SetAutoMergeCells(true)
+	// tw.SetAutoMergeCells(true)
 	for _, item := range resp.Data.Results {
 		tw.Append(func() []string {
 			return []string{
@@ -243,8 +241,7 @@ func PrintInJSON(response interface{}) {
 
 // PrintInYaml Print yaml
 func PrintInYaml(response string) {
-	var r io.Reader
-	r = strings.NewReader(response)
+	var r = strings.NewReader(response)
 	h, err := highlight.Highlight(r)
 	if err != nil {
 		log.Fatalln(err)

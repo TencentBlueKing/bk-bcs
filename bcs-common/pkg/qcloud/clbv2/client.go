@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package qcloud
@@ -16,13 +15,14 @@ package qcloud
 import (
 	"bytes"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strings"
 
 	"github.com/google/go-querystring/query"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // Client basic signature https client
@@ -41,11 +41,12 @@ func NewClient(url, secretKey string) *Client {
 
 // GetRequest create get request to qcloud api service
 // return:
+//
 //	[]byte: http response body
 //	error: err info if do
 func (q *Client) GetRequest(obj interface{}) ([]byte, error) {
 	// signature with all detail request data
-	signature, err := Signature(q.SecretKey, "GET", strings.Replace(q.URL, "https://", "", -1), obj)
+	signature, err := Signature(q.SecretKey, "GET", strings.ReplaceAll(q.URL, "https://", ""), obj)
 	if err != nil {
 		blog.Errorf("Qcloud signature failed, %s", err)
 		return nil, err
@@ -75,11 +76,12 @@ func (q *Client) GetRequest(obj interface{}) ([]byte, error) {
 
 // PostRequest create get request to vpc service
 // return:
+//
 //	[]byte: http response body
 //	error: err info if do
 func (q *Client) PostRequest(obj interface{}) ([]byte, error) {
 	// signature with all detail request data
-	signature, err := Signature(q.SecretKey, "POST", strings.Replace(q.URL, "https://", "", -1), obj)
+	signature, err := Signature(q.SecretKey, "POST", strings.ReplaceAll(q.URL, "https://", ""), obj)
 	if err != nil {
 		blog.Errorf("Qcloud signature failed, %s", err)
 		return nil, err

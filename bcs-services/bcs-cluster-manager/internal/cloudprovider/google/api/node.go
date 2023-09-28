@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -22,12 +21,12 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"google.golang.org/api/compute/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"google.golang.org/api/compute/v1"
 )
 
 const (
@@ -133,7 +132,7 @@ func convertToInstanceType(mt []*compute.MachineType, family string) []*proto.In
 
 	for _, m := range mt {
 		nameList := strings.Split(m.Name, "-")
-		memGb := math.Ceil(float64(m.MemoryMb / 1024))
+		memGb := math.Ceil(float64(m.MemoryMb / 1024)) // nolint
 
 		insType := &proto.InstanceType{}
 		insType.Status = common.InstanceSell

@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -44,7 +45,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 
 func (ua *UpdateAction) updateTask(tsk *cmproto.Task) error {
 	timeStr := time.Now().Format(time.RFC3339)
-	//update field if required
+	// update field if required
 	tsk.LastUpdate = timeStr
 	tsk.Updater = ua.req.Updater
 	if len(ua.req.Status) != 0 {
@@ -94,7 +95,7 @@ func (ua *UpdateAction) Handle(
 		return
 	}
 
-	//get old Task information, update fields if required
+	// get old Task information, update fields if required
 	destTsk, err := ua.model.GetTask(ua.ctx, req.TaskID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -107,7 +108,6 @@ func (ua *UpdateAction) Handle(
 	}
 	ua.resp.Data = destTsk
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // RetryAction update action for cluster task retry
@@ -257,5 +257,4 @@ func (ua *RetryAction) Handle(
 	_ = ua.updateTaskDataStatus()
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

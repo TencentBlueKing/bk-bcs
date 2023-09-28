@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package cloudprovider xxx
 package cloudprovider
 
 import (
@@ -99,8 +99,8 @@ func (sn StepName) String() string {
 }
 
 var (
-	// cluster manager task
 	// CreateClusterTask xx
+	// cluster manager task
 	CreateClusterTask TaskName = "创建集群"
 	// CreateVirtualClusterTask xx
 	CreateVirtualClusterTask TaskName = "创建虚拟集群"
@@ -119,8 +119,8 @@ var (
 	// RemoveExternalNodesFromClusterTask xx
 	RemoveExternalNodesFromClusterTask TaskName = "集群下架第三方节点"
 
+	// CreateNodeGroupTask task
 	// nodeGroup manager task
-	// CreateNodeGroup task
 	CreateNodeGroupTask TaskName = "创建节点规格"
 	// UpdateDesiredNodesTask task
 	UpdateDesiredNodesTask TaskName = "扩容节点规格"
@@ -208,8 +208,8 @@ var (
 	// KeepInstanceKey xxx
 	KeepInstanceKey ParamKey = "keepInstance"
 
-	// Task Common Instance
 	// NodeIPsKey xxx
+	// Task Common Instance
 	NodeIPsKey ParamKey = "nodeIPs"
 	// OriginNodeIPsKey xxx
 	OriginNodeIPsKey ParamKey = "originNodeIPs"
@@ -242,16 +242,16 @@ var (
 	// DynamicClusterKubeConfigKey xxx
 	DynamicClusterKubeConfigKey ParamKey = "KubeConfig"
 
-	// CVM Instance
 	// SuccessNodeIDsKey xxx
+	// CVM Instance
 	SuccessNodeIDsKey ParamKey = "successNodeIDs"
 	// FailedNodeIDsKey xxx
 	FailedNodeIDsKey ParamKey = "failedNodeIDs"
 	// TimeoutNodeIDsKey xxx
 	TimeoutNodeIDsKey ParamKey = "timeoutNodeIDs"
 
-	// cloud cluster success & failed Instance
 	// SuccessAddClusterNodeIDsKey xxx
+	// cloud cluster success & failed Instance
 	SuccessAddClusterNodeIDsKey ParamKey = "successAddClusterNodeIDs"
 	// SuccessClusterNodeIDsKey xxx
 	SuccessClusterNodeIDsKey ParamKey = "successClusterNodeIDs"
@@ -268,7 +268,7 @@ var (
 	// CloudSystemID xxx
 	CloudSystemID ParamKey = "systemID"
 
-	// bk-sops depend Key
+	// BkSopsUrlKey bk-sops depend Key
 	// BkSopsUrlKey url
 	BkSopsUrlKey ParamKey = "url"
 	// BkSopsBizIDKey bizID
@@ -294,7 +294,7 @@ var (
 	// SubnetIDKey key
 	SubnetIDKey ParamKey = "subnetID"
 
-	// vcluster depend key
+	// VclusterSrcClusterIDKey vcluster depend key
 	// SrcClusterIDKey xxx
 	VclusterSrcClusterIDKey ParamKey = "vclusterSrcClusterID"
 	// VclusterEtcdServersKey xxx

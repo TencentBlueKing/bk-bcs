@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -22,8 +22,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
-
 	errs "github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -31,6 +29,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 )
 
 const (
@@ -265,7 +265,7 @@ func CreateSecretForServiceAccount(ctx context.Context, clientSet kubernetes.Int
 		select {
 		case <-ctx.Done():
 			return nil, fmt.Errorf("get secret token timeout: %v", ctx.Err())
-		case <-time.Tick(2 * time.Second):
+		case <-time.Tick(2 * time.Second): // nolint
 			if len(secret.Data[v1.ServiceAccountTokenKey]) > 0 {
 				return secret, nil
 			}

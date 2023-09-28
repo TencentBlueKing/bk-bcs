@@ -30,7 +30,7 @@ import (
 // ReleaseUninstallAction release uninstall action
 type ReleaseUninstallAction struct {
 	model          store.HelmManagerModel
-	platform       repo.Platform
+	platform       repo.Platform // nolint
 	releaseHandler release.Handler
 
 	clusterID string

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -16,10 +15,10 @@ package api
 import (
 	"context"
 
-	"github.com/pkg/errors"
-
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
@@ -119,7 +118,7 @@ func (aks *AksServiceImpl) UpdateSet(ctx context.Context, info *cloudprovider.Cl
 		return nil, errors.Wrapf(err, "call GetSetWithName failed")
 	}
 	if err = aks.NodeGroupToSet(info.NodeGroup, set); err != nil {
-		return nil, errors.Wrapf(err, "call NodeGroupToSet failed.")
+		return nil, errors.Wrapf(err, "call NodeGroupToSet failed")
 	}
 	return aks.UpdateSetWithName(ctx, set, asg.AutoScalingName, asg.AutoScalingID)
 }

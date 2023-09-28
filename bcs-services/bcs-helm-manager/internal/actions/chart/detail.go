@@ -219,7 +219,7 @@ func (g *GetChartDetailV1Action) setResp(err common.HelmManagerError, message st
 }
 
 func getValuesFiles(files map[string]*repo.FileContent, chartName string) []string {
-	valuesFile := make([]string, 0, 0)
+	valuesFile := make([]string, 0)
 	defaultValuesFile := fmt.Sprintf("%s/%s", chartName, "values.yaml")
 	hasDefaultValuesFile := false
 	for _, item := range files {
@@ -232,7 +232,7 @@ func getValuesFiles(files map[string]*repo.FileContent, chartName string) []stri
 		}
 	}
 
-	sort.Sort(sort.StringSlice(valuesFile))
+	sort.Strings(valuesFile)
 	if hasDefaultValuesFile {
 		valuesFile = append([]string{defaultValuesFile}, valuesFile...)
 	}

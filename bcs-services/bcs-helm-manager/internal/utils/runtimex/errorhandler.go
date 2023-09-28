@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package runtimex xxx
 package runtimex
 
 import (
@@ -17,10 +18,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 )
 
 // ErrResp error response
@@ -43,7 +45,7 @@ func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runti
 	w.WriteHeader(runtime.HTTPStatusFromCode(codes.OK))
 	jErr := json.NewEncoder(w).Encode(ErrResp{
 		Code:      defaultCode,
-		Message:   grpc.ErrorDesc(err),
+		Message:   grpc.ErrorDesc(err), // nolint
 		RequestID: contextx.GetRequestIDFromCtx(ctx),
 	})
 

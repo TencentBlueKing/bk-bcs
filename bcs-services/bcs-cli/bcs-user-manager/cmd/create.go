@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cmd
@@ -140,7 +139,8 @@ func createClusterCmd() *cobra.Command {
 		Aliases: []string{"c"},
 		Short:   "create cluster",
 		Long:    "create cluster from user manager",
-		Example: "kubectl-bcs-user-manager create cluster --cluster-body '{\"cluster_id\":\"\",\"cluster_type\":\"\", \"tke_cluster_id\":\"\",\"tke_cluster_region\":\"\"}' ",
+		Example: "kubectl-bcs-user-manager create cluster --cluster-body '{\"cluster_id\":\"\"," +
+			"\"cluster_type\":\"\", \"tke_cluster_id\":\"\",\"tke_cluster_region\":\"\"}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -181,7 +181,8 @@ func createRegisterTokenCmd() *cobra.Command {
 				klog.Fatalf("register specified cluster token failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("register specified cluster token response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("register specified cluster token response code not 0 but %d: %s",
+					resp.Code, resp.Message)
 			}
 			printer.PrintCreateRegisterTokenCmdResult(flagOutput, resp)
 		},
@@ -200,7 +201,8 @@ func createTokenCmd() *cobra.Command {
 		Aliases: []string{"t"},
 		Short:   "create token",
 		Long:    "create token from user manager",
-		Example: "kubectl-bcs-user-manager create token --token_form '{\"usertype\":1,\"username\":\"\", \"expiration\":-1}' ",
+		Example: "kubectl-bcs-user-manager create token " +
+			"--token_form '{\"usertype\":1,\"username\":\"\", \"expiration\":-1}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -230,7 +232,8 @@ func createTempTokenCmd() *cobra.Command {
 		Aliases: []string{"temp-token"},
 		Short:   "create temp token",
 		Long:    "create temp token from user manager",
-		Example: "kubectl-bcs-user-manager create temp-token --token_form '{\"usertype\":,\"username\":\"\", \"expiration\":}' ",
+		Example: "kubectl-bcs-user-manager create temp-token " +
+			"--token_form '{\"usertype\":,\"username\":\"\", \"expiration\":}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -260,7 +263,8 @@ func createClientTokenCmd() *cobra.Command {
 		Aliases: []string{"client-token"},
 		Short:   "create client token",
 		Long:    "create client token from user manager",
-		Example: "kubectl-bcs-user-manager create client-token --token_form '{\"clientName\":\"\",\"clientSecret\":\"\", \"expiration\":}'",
+		Example: "kubectl-bcs-user-manager create client-token --token_form '{\"clientName\":\"\"," +
+			"\"clientSecret\":\"\", \"expiration\":}'",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())

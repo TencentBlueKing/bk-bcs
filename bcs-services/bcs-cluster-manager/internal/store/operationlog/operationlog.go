@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package operationlog xxx
 package operationlog
 
 import (
@@ -21,13 +21,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
 
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/task"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
-
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -176,7 +175,8 @@ func (m *ModelOperationLog) CountOperationLog(ctx context.Context, cond *operato
 }
 
 // ListAggreOperationLog aggre logs
-func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, condSrc, condDst []bson.E, opt *options.ListOption) (
+func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, condSrc, condDst []bson.E,
+	opt *options.ListOption) (
 	[]types.TaskOperationLog, error) {
 
 	retTaskOpLogs := make([]types.TaskOperationLog, 0)

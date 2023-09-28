@@ -23,6 +23,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	cmdb "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/cmdbv3"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
@@ -30,7 +32,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
-	"github.com/emicklei/go-restful"
 )
 
 // ExtraTokenHandler handles extra token for third-party system
@@ -103,6 +104,7 @@ func (t *ExtraTokenHandler) GetTokenByUserAndClusterID(request *restful.Request,
 	}
 	// check user is maintainer
 	intBizID, _ := strconv.Atoi(businessID)
+	// nolint
 	bizResult, err := t.cmdbClient.ESBSearchBusiness("", map[string]interface{}{
 		"bk_biz_id": intBizID,
 	})

@@ -19,8 +19,8 @@ import (
 
 // SplitString 分割字符串, 允许半角逗号、分号及空格
 func SplitString(str string) []string {
-	str = strings.Replace(str, ";", ",", -1)
-	str = strings.Replace(str, " ", ",", -1)
+	str = strings.ReplaceAll(str, ";", ",")
+	str = strings.ReplaceAll(str, " ", ",")
 	return strings.Split(str, ",")
 }
 

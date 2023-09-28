@@ -15,6 +15,7 @@ package jwt
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 

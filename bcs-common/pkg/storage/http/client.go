@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package http xxx
 package http
 
 import (
@@ -20,18 +20,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	syshttp "net/http"
 	"strings"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
-
-	"golang.org/x/net/context"
 )
 
 const (
@@ -100,7 +100,7 @@ type Client struct {
 // param obj: object for creation
 // param ttl: second for time-to-live, not used
 // return out: exist object data
-func (s *Client) Create(cxt context.Context, key string, obj meta.Object, ttl int) (meta.Object, error) {
+func (s *Client) Create(_ context.Context, key string, obj meta.Object, _ int) (meta.Object, error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("http client lost object key")
 	}
@@ -134,13 +134,15 @@ func (s *Client) Create(cxt context.Context, key string, obj meta.Object, ttl in
 			obj.GetName(), err)
 		return nil, err
 	}
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(response.Body)
 	if response.StatusCode != syshttp.StatusOK {
 		blog.V(3).Infof("http storage %s with %s failed, http response code: %d, status: %s", method, fullPath,
 			response.StatusCode, response.Status)
 		return nil, fmt.Errorf("response: %d, message: %s", response.StatusCode, response.Status)
 	}
-	rawData, err := ioutil.ReadAll(response.Body)
+	rawData, err := io.ReadAll(response.Body)
 	if err != nil {
 		blog.V(3).Infof("http storage client read %s %s response body failed, %s. Operation status unknown.", method,
 			fullPath, err)
@@ -179,7 +181,7 @@ func (s *Client) Create(cxt context.Context, key string, obj meta.Object, ttl in
 // * if key likes apis/v1/dns/cluster/$clustername/namespace/bmsf-system, delete all data under namespace
 // * if key likes apis/v1/dns/cluster/$clustername/namespace/bmsf-system/data, delete detail data
 // in this version, no delete objects reply
-func (s *Client) Delete(ctx context.Context, key string) (obj meta.Object, err error) {
+func (s *Client) Delete(_ context.Context, key string) (obj meta.Object, err error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("empty key")
 	}
@@ -198,13 +200,15 @@ func (s *Client) Delete(ctx context.Context, key string) (obj meta.Object, err e
 		blog.V(3).Infof("http storage client DELETE request to %s failed, %s", fullPath, err)
 		return nil, err
 	}
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(response.Body)
 	if response.StatusCode < syshttp.StatusOK || response.StatusCode >= syshttp.StatusMultipleChoices {
 		blog.V(3).Infof("http storage client delete to %s failed, code: %d, message: %s", fullPath, response.StatusCode,
 			response.Status)
 		return nil, fmt.Errorf("delete response failed, code: %d, status: %s", response.StatusCode, response.Status)
 	}
-	rawByets, err := ioutil.ReadAll(response.Body)
+	rawByets, err := io.ReadAll(response.Body)
 	if err != nil {
 		blog.V(3).Infof("http storage delete %s http status success, but read response body failed, %s", fullPath, err)
 		return nil, err
@@ -234,7 +238,7 @@ func (s *Client) Delete(ctx context.Context, key string) (obj meta.Object, err e
 // return:
 //
 //	watch: watch implementation for changing event, need to Stop manually
-func (s *Client) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
+func (s *Client) Watch(_ context.Context, key, _ string, selector storage.Selector) (watch.Interface, error) {
 	if len(key) == 0 || strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key formate")
 	}
@@ -278,7 +282,7 @@ func (s *Client) WatchList(ctx context.Context, key, version string, selector st
 // get exactly data object from http event storage. so key must be resource fullpath
 // param cxt: not used
 // param version: reserved for future
-func (s *Client) Get(cxt context.Context, key, version string, ignoreNotFound bool) (meta.Object, error) {
+func (s *Client) Get(_ context.Context, key, _ string, ignoreNotFound bool) (meta.Object, error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("lost object key")
 	}
@@ -303,12 +307,14 @@ func (s *Client) Get(cxt context.Context, key, version string, ignoreNotFound bo
 		blog.V(3).Infof("http storage Do %s request failed, %s", fullPath, err)
 		return nil, err
 	}
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(response.Body)
 	if response.StatusCode < syshttp.StatusOK || response.StatusCode >= syshttp.StatusMultipleChoices {
 		blog.V(3).Infof("http storage get %s failed, code: %d, message: %s", fullPath, response.StatusCode, response.Status)
 		return nil, fmt.Errorf("remote err, code: %d, status: %s", response.StatusCode, response.Status)
 	}
-	rawData, err := ioutil.ReadAll(response.Body)
+	rawData, err := io.ReadAll(response.Body)
 	if err != nil {
 		blog.V(3).Infof("http storage get %s http status success, but read response body failed, %s", fullPath, err)
 		return nil, err
@@ -341,7 +347,7 @@ func (s *Client) Get(cxt context.Context, key, version string, ignoreNotFound bo
 
 // List implements storage interface
 // list namespace-based data or all data
-func (s *Client) List(cxt context.Context, key string, selector storage.Selector) ([]meta.Object, error) {
+func (s *Client) List(_ context.Context, key string, selector storage.Selector) ([]meta.Object, error) {
 	if len(key) == 0 || strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key format")
 	}
@@ -363,8 +369,10 @@ func (s *Client) List(cxt context.Context, key string, selector storage.Selector
 		blog.V(3).Infof("http storage get %s failed, %s", fullPath, err)
 		return nil, err
 	}
-	defer response.Body.Close()
-	rawData, err := ioutil.ReadAll(response.Body)
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(response.Body)
+	rawData, err := io.ReadAll(response.Body)
 	if err != nil {
 		blog.V(3).Infof("http storage read %s failed, %s", fullPath, err)
 		return nil, err
@@ -424,7 +432,7 @@ type Watch struct {
 
 // Stop watch channel
 func (e *Watch) Stop() {
-	e.response.Body.Close()
+	_ = e.response.Body.Close()
 	e.isStop = true
 }
 

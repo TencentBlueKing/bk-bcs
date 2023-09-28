@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -26,6 +27,7 @@ const (
 )
 
 const (
+	// BkBcsClusterManager xxx
 	BkBcsClusterManager = "bkbcs_clustermanager"
 )
 
@@ -86,7 +88,8 @@ var (
 		Namespace: BkBcsClusterManager,
 		Name:      "task_request_latency_time",
 		Help:      "task latency statistic for running task",
-		Buckets:   []float64{10.0, 25.0, 50.0, 100.0, 125.0, 150.0, 175.0, 200.0, 250.0, 300.0, 350.0, 400.0, 500.0, 600.0, 700.0, 800.0},
+		Buckets: []float64{10.0, 25.0, 50.0, 100.0, 125.0, 150.0, 175.0, 200.0, 250.0, 300.0,
+			350.0, 400.0, 500.0, 600.0, 700.0, 800.0},
 	}, []string{"task_type", "status", "child_task"})
 )
 

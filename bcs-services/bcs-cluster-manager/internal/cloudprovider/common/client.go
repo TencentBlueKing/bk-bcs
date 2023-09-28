@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
@@ -88,9 +87,9 @@ type Client struct {
 
 // DependURLs depend bkops urls
 type DependURLs struct {
-	createTaskURL string
-	startTaskURL  string
-	getTaskStatus string
+	createTaskURL string // nolint
+	startTaskURL  string // nolint
+	getTaskStatus string // nolint
 }
 
 func (c *Client) generateGateWayAuth(user string) (string, error) {
@@ -152,7 +151,7 @@ func (c *Client) CreateBkOpsTask(url string, paras *CreateTaskPathParas,
 		blog.Errorf("call api CreateBkOpsTask failed: %v", respData.Message)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api CreateBkOpsTask with url(%s) successfully", reqURL)
 	return respData, nil
 }
@@ -194,7 +193,7 @@ func (c *Client) StartBkOpsTask(url string, paras *TaskPathParas,
 		return nil, fmt.Errorf(respData.Message)
 	}
 
-	//successfully request
+	// successfully request
 	blog.Infof("call api StartBkOpsTask with url(%s) successfully", reqURL)
 	return respData, nil
 }
@@ -236,7 +235,7 @@ func (c *Client) GetTaskStatus(url string, paras *TaskPathParas,
 		return nil, fmt.Errorf(respData.Message)
 	}
 
-	//successfully request
+	// successfully request
 	blog.Infof("call api GetTaskStatus with url(%s) successfully", reqURL)
 	return respData, nil
 }

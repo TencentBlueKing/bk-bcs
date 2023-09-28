@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -18,11 +18,10 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mongodb.org/mongo-driver/bson"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
@@ -72,6 +71,7 @@ func (m *ModelStrategy) ListNodeGroupStrategies(opt *storage.ListOptions) ([]*st
 		isDeletedKey: opt.ReturnSoftDeletedItems,
 	}))
 	if !opt.DoPagination && opt.Limit == 0 {
+		// nolint
 		count, err := m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).Count(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("get strategy count err:%v", err)
@@ -110,6 +110,7 @@ func (m *ModelStrategy) ListNodeGroupStrategiesByType(strategyType string,
 		isDeletedKey:    opt.ReturnSoftDeletedItems,
 	}))
 	if !opt.DoPagination && opt.Limit == 0 {
+		// nolint
 		count, err := m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).Count(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("get strategy count err:%v", err)
@@ -205,7 +206,7 @@ func (m *ModelStrategy) UpdateNodeGroupStrategy(strategy *storage.NodeGroupMgrSt
 		isDeletedKey: false,
 	})
 	retStrategy := &storage.NodeGroupMgrStrategy{}
-	if err := m.DB.Table(m.TableName).Find(cond).One(ctx, retStrategy); err != nil {
+	if err = m.DB.Table(m.TableName).Find(cond).One(ctx, retStrategy); err != nil {
 		// 如果找不到且opt.CreateIfNotExist，创建新的
 		if errors.Is(err, drivers.ErrTableRecordNotFound) && opt.CreateIfNotExist {
 			_, err = m.DB.Table(m.TableName).Insert(ctx, []interface{}{strategy})

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package operationlog xxxx
 package operationlog
 
 import (
@@ -20,11 +20,11 @@ import (
 	"strings"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -265,7 +265,8 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 }
 
 // Handle handles list operation logs
-func (ua *ListOperationLogsAction) Handle(ctx context.Context, req *cmproto.ListOperationLogsRequest, resp *cmproto.ListOperationLogsResponse) {
+func (ua *ListOperationLogsAction) Handle(
+	ctx context.Context, req *cmproto.ListOperationLogsRequest, resp *cmproto.ListOperationLogsResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("list operation logs failed, req or resp is empty")
 		return
@@ -291,7 +292,6 @@ func (ua *ListOperationLogsAction) Handle(ctx context.Context, req *cmproto.List
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // 处理任务名称

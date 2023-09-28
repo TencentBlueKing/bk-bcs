@@ -98,7 +98,7 @@ func (d *DownloadChartAction) downloadChart() error {
 
 	d.resp.ContentType = "application/octet-stream"
 	d.resp.Data = content
-	grpc.SendHeader(d.ctx, metadata.New(map[string]string{
+	grpc.SendHeader(d.ctx, metadata.New(map[string]string{ // nolint
 		"Content-Disposition": fmt.Sprintf("attachment; filename=%s-%s.tgz", chartName, version),
 	}))
 	blog.Infof("download chart successfully, "+

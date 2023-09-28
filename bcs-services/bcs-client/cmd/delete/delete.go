@@ -8,16 +8,15 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package delete xxx
 package delete
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-
 	"github.com/urfave/cli"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 )
 
 // NewDeleteCommand delete sub command

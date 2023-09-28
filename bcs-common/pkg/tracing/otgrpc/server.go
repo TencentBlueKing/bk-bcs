@@ -8,42 +8,42 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package grpc
 
 import (
 	"context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	opentracing "github.com/opentracing/opentracing-go"
+	opentrace "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/log"
+	tracinglog "github.com/opentracing/opentracing-go/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 var (
 	// gRPCComponentTag component tag: grpc
-	gRPCComponentTag = opentracing.Tag{string(ext.Component), "gRPC"}
+	gRPCComponentTag = opentrace.Tag{string(ext.Component), "gRPC"}
 )
 
 // OpenTracingServerInterceptor returns a grpc.UnaryServerInterceptor suitable for use in a grpc.NewServer call.
 //
 // For example:
 //
-//     s := grpc.NewServer(
-//         ...,  // (existing ServerOptions)
-//         grpc.UnaryInterceptor(otgrpc.OpenTracingServerInterceptor(tracer)))
+//	s := grpc.NewServer(
+//	    ...,  // (existing ServerOptions)
+//	    grpc.UnaryInterceptor(otgrpc.OpenTracingServerInterceptor(tracer)))
 //
 // All gRPC server spans will look for an OpenTracing SpanContext in the gRPC
 // metadata; if found, the server span will act as the ChildOf that RPC SpanContext.
 //
 // Root or not, the server Span will be embedded in the context.Context for the
 // application-specific gRPC handler(s) to access.
-func OpenTracingServerInterceptor(tracer opentracing.Tracer, optFuncs ...Option) grpc.UnaryServerInterceptor {
+func OpenTracingServerInterceptor(tracer opentrace.Tracer, optFuncs ...Option) grpc.UnaryServerInterceptor {
 	otgrpcOpts := newOptions()
 	otgrpcOpts.apply(optFuncs...)
 	return func(
@@ -53,7 +53,7 @@ func OpenTracingServerInterceptor(tracer opentracing.Tracer, optFuncs ...Option)
 		handler grpc.UnaryHandler,
 	) (resp interface{}, err error) {
 		spanContext, err := extractSpanContext(ctx, tracer)
-		if err != nil && err != opentracing.ErrSpanContextNotFound {
+		if err != nil && err != opentrace.ErrSpanContextNotFound {
 			blog.V(4).Infof("grpc server OpenTracingServerInterceptor get rootSpan failed: %v", err)
 		}
 
@@ -71,19 +71,19 @@ func OpenTracingServerInterceptor(tracer opentracing.Tracer, optFuncs ...Option)
 		defer serverSpan.Finish()
 
 		// delivery serverSpan by context
-		ctx = opentracing.ContextWithSpan(ctx, serverSpan)
+		ctx = opentrace.ContextWithSpan(ctx, serverSpan)
 		if otgrpcOpts.logPayloads {
-			serverSpan.LogFields(log.Object("gRPC request", req))
+			serverSpan.LogFields(tracinglog.Object("gRPC request", req))
 		}
 		resp, err = handler(ctx, req)
 		if err == nil {
 			if otgrpcOpts.logPayloads {
-				serverSpan.LogFields(log.Object("gRPC response", resp))
+				serverSpan.LogFields(tracinglog.Object("gRPC response", resp))
 			}
 			SetSpanTags(serverSpan, err, false)
 		} else {
 			SetSpanTags(serverSpan, err, false)
-			serverSpan.LogFields(log.String("event", "error"), log.String("message", err.Error()))
+			serverSpan.LogFields(tracinglog.String("event", "error"), tracinglog.String("message", err.Error()))
 		}
 		if otgrpcOpts.decorator != nil {
 			otgrpcOpts.decorator(ctx, serverSpan, info.FullMethod, req, resp, err)
@@ -98,21 +98,21 @@ func OpenTracingServerInterceptor(tracer opentracing.Tracer, optFuncs ...Option)
 //
 // For example:
 //
-//     s := grpc.NewServer(
-//         ...,  // (existing ServerOptions)
-//         grpc.StreamInterceptor(otgrpc.OpenTracingStreamServerInterceptor(tracer)))
+//	s := grpc.NewServer(
+//	    ...,  // (existing ServerOptions)
+//	    grpc.StreamInterceptor(otgrpc.OpenTracingStreamServerInterceptor(tracer)))
 //
 // All gRPC server spans will look for an OpenTracing SpanContext in the gRPC
 // metadata; if found, the server span will act as the ChildOf that RPC SpanContext.
 //
 // Root or not, the server Span will be embedded in the context.Context for the
 // application-specific gRPC handler(s) to access.
-func OpenTracingStreamServerInterceptor(tracer opentracing.Tracer, optFuncs ...Option) grpc.StreamServerInterceptor {
+func OpenTracingStreamServerInterceptor(tracer opentrace.Tracer, optFuncs ...Option) grpc.StreamServerInterceptor {
 	otgrpcOpts := newOptions()
 	otgrpcOpts.apply(optFuncs...)
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		spanContext, err := extractSpanContext(ss.Context(), tracer)
-		if err != nil && err != opentracing.ErrSpanContextNotFound {
+		if err != nil && err != opentrace.ErrSpanContextNotFound {
 			blog.V(4).Infof("grpc server OpenTracingStreamServerInterceptor get rootSpan failed: %v", err)
 		}
 
@@ -132,13 +132,13 @@ func OpenTracingStreamServerInterceptor(tracer opentracing.Tracer, optFuncs ...O
 		// delivery serverSpan by context
 		ss = &openTracingServerStream{
 			ServerStream: ss,
-			ctx:          opentracing.ContextWithSpan(ss.Context(), serverSpan),
+			ctx:          opentrace.ContextWithSpan(ss.Context(), serverSpan),
 		}
 		err = handler(srv, ss)
 		SetSpanTags(serverSpan, err, false)
 
 		if err != nil {
-			serverSpan.LogFields(log.String("event", "error"), log.String("message", err.Error()))
+			serverSpan.LogFields(tracinglog.String("event", "error"), tracinglog.String("message", err.Error()))
 		}
 
 		if otgrpcOpts.decorator != nil {
@@ -158,12 +158,12 @@ func (ss *openTracingServerStream) Context() context.Context {
 	return ss.ctx
 }
 
-func extractSpanContext(ctx context.Context, tracer opentracing.Tracer) (opentracing.SpanContext, error) {
+func extractSpanContext(ctx context.Context, tracer opentrace.Tracer) (opentrace.SpanContext, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		md = metadata.New(nil)
 	}
-	return tracer.Extract(opentracing.HTTPHeaders, metadataReaderWriter{md})
+	return tracer.Extract(opentrace.HTTPHeaders, metadataReaderWriter{md})
 }
 
 // metadataReaderWriter satisfies both the opentracing.TextMapReader and

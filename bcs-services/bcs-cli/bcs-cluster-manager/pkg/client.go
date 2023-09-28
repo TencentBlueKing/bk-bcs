@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package pkg xxx
 package pkg
 
 import (
@@ -18,11 +18,9 @@ import (
 	"crypto/tls"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -48,7 +46,8 @@ func NewClientWithConfiguration(ctx context.Context) (clustermanager.ClusterMana
 }
 
 // NewBcsClusterCli create client for bcs-Cluster
-func NewBcsClusterCli(ctx context.Context, config *Config) (clustermanager.ClusterManagerClient, context.Context, error) {
+func NewBcsClusterCli(ctx context.Context, config *Config) (
+	clustermanager.ClusterManagerClient, context.Context, error) {
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -24,11 +23,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/avast/retry-go"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
@@ -364,7 +363,7 @@ func transInstancesToNode(rootCtx context.Context, info *cloudprovider.CloudDepe
 
 // vmToNode vm to node
 func vmToNode(client api.AksService, info *cloudprovider.CloudDependBasicInfo,
-	vmList []*armcompute.VirtualMachineScaleSetVM, interfaceList []*armnetwork.Interface) ([]*proto.Node, error) {
+	vmList []*armcompute.VirtualMachineScaleSetVM, interfaceList []*armnetwork.Interface) ([]*proto.Node, error) { // nolint
 	var (
 		node    *proto.Node
 		cluster = info.Cluster

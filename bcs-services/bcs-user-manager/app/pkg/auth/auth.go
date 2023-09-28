@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package auth xxx
@@ -21,8 +20,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/parnurzeal/gorequest"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 // Auth interface for accessToken

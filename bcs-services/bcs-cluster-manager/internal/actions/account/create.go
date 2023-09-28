@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package account xxx
 package account
 
 import (
@@ -22,14 +22,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
-	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // CreateAction action for create cloud account
@@ -120,7 +121,6 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	}
 
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (ca *CreateAction) validate() error {

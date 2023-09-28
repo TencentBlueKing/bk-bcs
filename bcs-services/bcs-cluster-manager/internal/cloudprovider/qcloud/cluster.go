@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package qcloud
@@ -20,6 +19,9 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
@@ -27,16 +29,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/avast/retry-go"
-	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 var clsMgr sync.Once
 
 func init() {
 	clsMgr.Do(func() {
-		//init Node
+		// init Node
 		cloudprovider.InitClusterManager("qcloud", &Cluster{})
 	})
 }
@@ -565,7 +564,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 		return err
 	}
 	err = retry.Do(func() error {
-		err := cli.EnableExternalNodeSupport(cls.SystemID, api.EnableExternalNodeConfig{
+		err := cli.EnableExternalNodeSupport(cls.SystemID, api.EnableExternalNodeConfig{ // nolint
 			NetworkType: opt.EnablePara.NetworkType,
 			ClusterCIDR: opt.EnablePara.ClusterCIDR,
 			SubnetId:    opt.EnablePara.SubnetId,

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package metric
@@ -70,7 +69,7 @@ func (fs FloatOrString) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshalJSON
 func (fs *FloatOrString) UnmarshalJSON(b []byte) error {
-	f, err := strconv.ParseFloat(string(b), 10)
+	f, err := strconv.ParseFloat(string(b), 64)
 	if nil == err {
 		fs.Type = Float
 		fs.Float = f

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package alarm xxx
 package alarm
 
 import (
@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	storage "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/proto"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"

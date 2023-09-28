@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cmdb
@@ -23,15 +22,15 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	"github.com/parnurzeal/gorequest"
 	"github.com/patrickmn/go-cache"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // CmdbInterface for cloud Tags
-type CmdbInterface interface {
+type CmdbInterface interface { // nolint
 	// GetCloudTags get cloud tags by BizInfo
 	GetCloudTags(bizInfo BizInfo, operator string) (map[string]string, error)
 	// GetBusinessMaintainer get biz maintainer
@@ -188,7 +187,7 @@ func (c *Client) FetchAllHostTopoRelationsByBizID(bizID int) ([]HostTopoRelation
 		con.Add(1)
 		go func(page Page) {
 			defer con.Done()
-			_, hostTopos, err := c.FindHostTopoRelation(bizID, page)
+			_, hostTopos, err := c.FindHostTopoRelation(bizID, page) // nolint
 			if err != nil {
 				blog.Errorf("cmdb client FindHostTopoRelation %v failed, %s", bizID, err.Error())
 				return
@@ -247,7 +246,7 @@ func (c *Client) FetchAllHostsByBizID(bizID int, cache bool) ([]HostData, error)
 		con.Add(1)
 		go func(page Page) {
 			defer con.Done()
-			_, hosts, err := c.QueryHostByBizID(bizID, page)
+			_, hosts, err := c.QueryHostByBizID(bizID, page) // nolint
 			if err != nil {
 				blog.Errorf("cmdb client QueryHostByBizID %v failed, %s", bizID, err.Error())
 				return
@@ -306,7 +305,7 @@ func (c *Client) QueryHostInfoWithoutBiz(ips []string, page Page) ([]HostDetailD
 		blog.Errorf("call api QueryHostInfoWithoutBiz failed: %v", respData.Message)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api QueryHostInfoWithoutBiz with url(%s) successfully", reqURL)
 
 	return respData.Data.Info, nil
@@ -412,7 +411,7 @@ func (c *Client) SearchCloudAreaByCloudID(cloudID int) (*SearchCloudAreaInfo, er
 	// successfully request
 	blog.Infof("call api SearchCloudAreaByCloudID with url(%s) successfully", reqURL)
 
-	if len(respData.Data.Info) <= 0 {
+	if len(respData.Data.Info) == 0 {
 		return nil, fmt.Errorf("SearchCloudAreaByCloudID not exist %v", cloudID)
 	}
 
@@ -458,7 +457,7 @@ func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
 		blog.Errorf("call api QueryHostNumByBizID failed: %v", respData.Message)
 		return 0, nil, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api QueryHostNumByBizID with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Info) > 0 {
@@ -500,7 +499,7 @@ func (c *Client) FindHostBizRelations(hostID []int) ([]HostBizRelations, error) 
 		blog.Errorf("call api FindHostBizRelations failed: %v", respData.Message)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api FindHostBizRelations with url(%s) successfully", reqURL)
 
 	return respData.Data, nil
@@ -539,7 +538,7 @@ func (c *Client) TransHostToRecycleModule(bizID int, hostID []int) error {
 		blog.Errorf("call api TransHostToRecycleModule failed: %v", respData.Message)
 		return fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api TransHostToRecycleModule with url(%s) successfully", reqURL)
 
 	return nil
@@ -651,7 +650,7 @@ func (c *Client) GetBusinessMaintainer(bizID int) (*BusinessData, error) {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Info) > 0 {
@@ -696,7 +695,7 @@ func (c *Client) GetBS2IDByBizID(bizID int64) (int, error) {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
 		return 0, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Info) > 0 {
@@ -742,7 +741,7 @@ func (c *Client) GetBizInfo(bizID int64) (*Business, error) {
 		blog.Errorf("call api GetBizInfo failed: %v", respData.Message)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api GetBizInfo with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Data) > 0 {

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package middle xxx
 package middle
 
 import (
@@ -19,14 +19,16 @@ import (
 	"strconv"
 	"time"
 
+	gorestful "github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
-
-	gorestful "github.com/emicklei/go-restful"
 )
 
 const (
-	dynamicK8sPath   = actions.PathV1 + "/k8s/dynamic"
+	// nolint
+	dynamicK8sPath = actions.PathV1 + "/k8s/dynamic"
+	// nolint
 	dynamicMesosPath = actions.PathV1 + "/mesos/dynamic"
 
 	clusterIDTag    = "clusterId"

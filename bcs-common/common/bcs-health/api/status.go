@@ -8,13 +8,13 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -22,7 +22,6 @@ import (
 	"sync"
 	"time"
 
-	"errors"
 	regd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bresp "github.com/Tencent/bk-bcs/bcs-common/common/http"
@@ -77,7 +76,7 @@ func (s *Status) run() {
 				blog.Errorf("get bcs-health addr failed. but will continue watch. err: %v", svr.Err)
 				continue
 			}
-			if len(svr.Server) <= 0 {
+			if len(svr.Server) == 0 {
 				s.resetServers()
 				blog.Warnf("get 0 bcs-health addr from zk, reset health servers.")
 				continue

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -61,7 +60,7 @@ func (rc *ResourceCache) needRenew() bool {
 		rc.data = nil
 		return true
 	}
-	if time.Now().Sub(*rc.lasteUpdateTime) >= rc.timeout {
+	if time.Since(*rc.lasteUpdateTime) >= rc.timeout {
 		rc.data = nil
 		return true
 	}

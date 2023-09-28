@@ -8,19 +8,17 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package types xxx
 package types
 
 import (
 	"time"
 
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	mesos_master "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
-
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	// "fmt"
 )
 
 // executor or task default resources limits
@@ -193,7 +191,7 @@ func (version *Version) AllCpus() float64 {
 	var allCpus float64
 	allCpus = 0
 	for _, container := range version.Container {
-		allCpus = allCpus + container.DataClass.Resources.Cpus
+		allCpus += container.DataClass.Resources.Cpus
 	}
 	return allCpus + float64(CPUS_PER_EXECUTOR)
 }
@@ -203,7 +201,7 @@ func (version *Version) AllMems() float64 {
 	var allMem float64
 	allMem = 0
 	for _, container := range version.Container {
-		allMem = allMem + container.DataClass.Resources.Mem
+		allMem += container.DataClass.Resources.Mem
 	}
 	return allMem + float64(MEM_PER_EXECUTOR)
 }
@@ -213,7 +211,7 @@ func (version *Version) AllDisk() float64 {
 	var allDisk float64
 	allDisk = 0
 	for _, container := range version.Container {
-		allDisk = allDisk + container.DataClass.Resources.Disk
+		allDisk += container.DataClass.Resources.Disk
 	}
 	return allDisk + float64(DISK_PER_EXECUTOR)
 }

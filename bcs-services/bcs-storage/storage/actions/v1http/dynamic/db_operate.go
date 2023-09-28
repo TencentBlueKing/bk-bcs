@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package dynamic xxx
 package dynamic
 
 import (
@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	dbutils "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 )
@@ -115,7 +116,8 @@ func DeleteIndex(ctx context.Context, resourceType string, indexName string) err
 // 业务方法
 
 // GetDataWithPageInfo 分页查询
-func GetDataWithPageInfo(ctx context.Context, resourceType string, opt *lib.StoreGetOption) (data []operator.M, extra operator.M, err error) {
+func GetDataWithPageInfo(ctx context.Context, resourceType string, opt *lib.StoreGetOption) (
+	data []operator.M, extra operator.M, err error) {
 	if resourceType == eventResourceType {
 		resourceType = eventDBConfig
 	}

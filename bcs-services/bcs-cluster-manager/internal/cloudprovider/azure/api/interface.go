@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -142,7 +141,7 @@ type ClusterService interface {
 		[]*armcontainerservice.CredentialResult, error)
 }
 
-// AgentPoolService	代理节点池 - Agent Pool
+// AgentPoolService ...	Agent Pool Service 代理节点池
 // NOCC:golint/interfacecomment(检查工具规则误报)
 type AgentPoolService interface {
 	// CreatePool 创建节点池.

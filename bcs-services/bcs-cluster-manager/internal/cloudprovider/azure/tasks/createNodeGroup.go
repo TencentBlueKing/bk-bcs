@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -21,9 +20,9 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
@@ -365,7 +364,7 @@ func checkNodeGroup(rootCtx context.Context, info *cloudprovider.CloudDependBasi
 		}
 	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
-		return errors.Wrapf(err, "checkNodeGroup[%s] poll GetPoolAndReturn failed.", taskID)
+		return errors.Wrapf(err, "checkNodeGroup[%s] poll GetPoolAndReturn failed", taskID)
 	}
 
 	return cloudDataToNodeGroup(rootCtx, pool, client, info)

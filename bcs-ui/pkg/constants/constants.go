@@ -8,14 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package constants xxx
 package constants
+
+type contextKey string
+
+func (c contextKey) String() string {
+	return string(c)
+}
 
 const (
 	// RequestIDKey xxx
-	RequestIDKey = "requestID"
+	RequestIDKey = contextKey("requestID")
 	// ServerName server name
 	ServerName = "bcs-ui"
 	// TracerName tracer name

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package thirdparty xxx
 package thirdparty
 
 import (
@@ -115,5 +115,4 @@ func (la *ListCCTopologyAction) Handle(ctx context.Context, req *cmproto.ListCCT
 
 	blog.Infof("list cc topology successfully")
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

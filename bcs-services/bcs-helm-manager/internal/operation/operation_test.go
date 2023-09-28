@@ -66,7 +66,7 @@ func (r *mockAction) Execute(ctx context.Context) error {
 		return fmt.Errorf("execute error")
 	}
 	if r.executeTimeout {
-		for {
+		for { // nolint
 			select {
 			case <-ctx.Done():
 				return ctx.Err()

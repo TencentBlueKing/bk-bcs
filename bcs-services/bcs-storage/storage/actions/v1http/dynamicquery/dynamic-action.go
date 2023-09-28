@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package dynamicquery
@@ -17,10 +16,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
-	"github.com/emicklei/go-restful"
 )
 
 const (
@@ -34,12 +34,11 @@ const (
 	usedTag          = "used"
 	timeLayout       = "2006-01-02 15:04:05"
 	timestampsLayout = "timestamps"
+	// NestedTimeLayout time format
 	NestedTimeLayout = "2006-01-02T15:04:05-0700"
 	updateTimeTag    = "updateTime"
 	createTimeTag    = "createTime"
 )
-
-var needTimeFormatList = [...]string{updateTimeTag, createTimeTag}
 
 // Use Mongodb for storage.
 const dbConfig = "mongodb/dynamic"
@@ -469,6 +468,8 @@ func GetIPPoolStaticDetail(req *restful.Request, resp *restful.Response) {
 	}
 }
 
+// NOCC: golint/funlen(设计如此:)
+// nolint
 func init() {
 	// GET
 	actions.RegisterV1Action(actions.Action{

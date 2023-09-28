@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -134,7 +134,7 @@ func buildNormalCondition(key string, valueList []string) *operator.Condition {
 // GetCustomCondition get custom condition from req url and parameter
 func GetCustomCondition(req *restful.Request) *operator.Condition {
 	if req.Request.Form == nil {
-		req.Request.ParseMultipartForm(defaultMaxMemory)
+		_ = req.Request.ParseMultipartForm(defaultMaxMemory)
 	}
 	if req.Request.Form == nil || len(req.Request.Form) == 0 {
 		return nil
@@ -142,6 +142,7 @@ func GetCustomCondition(req *restful.Request) *operator.Condition {
 	return GetCustomConditionFromBody(req.Request.Form)
 }
 
+// GetCustomConditionFromBody get custom condition from req body
 func GetCustomConditionFromBody(body map[string][]string) *operator.Condition {
 	conds := make([]*operator.Condition, 0)
 	// empty Condition
@@ -152,6 +153,7 @@ func GetCustomConditionFromBody(body map[string][]string) *operator.Condition {
 		case labelSelectorTag:
 			conds = append(conds, buildSelectorCondition(labelSelectorPrefix, valueList))
 		case extraTag, fieldTag, limitTag, offsetTag:
+			// nolint
 			break
 		// updateTimeBefore=
 		case updateTimeQueryTag:
@@ -161,12 +163,12 @@ func GetCustomConditionFromBody(body map[string][]string) *operator.Condition {
 				var innerErr error
 				t, innerErr = time.Parse("2006-01-02T15:04:05.000Z", valueList[0])
 				if innerErr != nil {
-					blog.Errorf(
-						"Unrecognized update time (%s) format, neither timestamp in seconds format nor time expression like 2006-01-02T15:04:05.000Z", valueList[0])
+					// nolint
+					blog.Errorf("Unrecognized update time (%s) format, neither timestamp in seconds format nor time expression like 2006-01-02T15:04:05.000Z", valueList[0])
 					break
 				}
 			} else {
-				t = time.Unix(int64(ts), 0)
+				t = time.Unix(ts, 0)
 			}
 			conds = append(conds, operator.NewLeafCondition(operator.Lt, operator.M{updateTimeTag: t}))
 		// col1=val1,val2
@@ -192,5 +194,4 @@ func FormatTime(data []operator.M, needTimeFormatList []string) {
 			data[i][t] = tmp.Time()
 		}
 	}
-	return
 }

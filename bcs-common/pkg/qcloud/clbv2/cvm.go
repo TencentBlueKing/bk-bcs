@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package qcloud
@@ -35,7 +34,7 @@ func (fs CVMFilters) EncodeValues(key string, urlv *url.Values) error {
 		name := fmt.Sprintf("%s.Name", subKey)
 		urlv.Set(name, v.Name)
 		value := fmt.Sprintf("%s.Values", subKey)
-		v.Values.EncodeValues(value, urlv)
+		_ = v.Values.EncodeValues(value, urlv)
 	}
 	return nil
 }
@@ -141,7 +140,7 @@ type FilterIPValueFieldList []FilterIPValueField
 // EncodeValues encode filter ip field info into url format
 func (ipList FilterIPValueFieldList) EncodeValues(key string, urlv *url.Values) error {
 	for i, v := range ipList {
-		urlv.Set(fmt.Sprintf("Filters.0.Values.%d", i), fmt.Sprintf("%s", v.IP))
+		urlv.Set(fmt.Sprintf("Filters.0.Values.%d", i), v.IP)
 	}
 	return nil
 }

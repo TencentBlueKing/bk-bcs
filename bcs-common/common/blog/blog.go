@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package blog xxx
@@ -53,13 +52,11 @@ func InitLogs(logConfig conf.LogConfig) {
 		log.SetFlags(0)
 		// The default glog flush interval is 30 seconds, which is frighteningly long.
 		go func() {
-			d := time.Duration(5 * time.Second)
+			d := time.Duration(5 * time.Second) // nolint
 			tick := time.Tick(d)
-			for {
-				select {
-				case <-tick:
-					glog.Flush()
-				}
+
+			for range tick {
+				glog.Flush()
 			}
 		}()
 	})
@@ -122,13 +119,16 @@ type WrapFunc func(string, ...interface{}) string
 
 // Wrapper use WrapFunc to handle the log message before send it to glog.
 // Can be use as:
-//      var handler blog.WrapFunc = func(format string, args ...interface{}) string {
-//          src := fmt.Sprintf(format, args...)
-//          dst := regexp.MustCompile("boy").ReplaceAllString(src, "man")
-//      }
-//      blog.Wrapper(handler).V(2).Info("hello boy")
+//
+//	var handler blog.WrapFunc = func(format string, args ...interface{}) string {
+//	    src := fmt.Sprintf(format, args...)
+//	    dst := regexp.MustCompile("boy").ReplaceAllString(src, "man")
+//	}
+//	blog.Wrapper(handler).V(2).Info("hello boy")
+//
 // And it will flush as:
-//      I0104 09:44:27.796409   16233 blog.go:21] hello man
+//
+//	I0104 09:44:27.796409   16233 blog.go:21] hello man
 type Wrapper struct {
 	Handler WrapFunc
 	verbose glog.Verbose
