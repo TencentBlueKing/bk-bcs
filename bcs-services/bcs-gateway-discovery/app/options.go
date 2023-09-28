@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package app
@@ -35,9 +34,9 @@ func NewServerOptions() *ServerOptions {
 // EtcdRegistry config item for etcd discovery
 type EtcdRegistry struct {
 	Feature     bool   `json:"etcd_feature" value:"false" usage:"switch that turn on etcd registry feature"`
-	GrpcModules string `json:"etcd_grpc_modules" value:"MeshManager,LogManager" usage:"modules that support grpc interface"`
-	HTTPModules string `json:"etcd_http_modules" value:"MeshManager,LogManager" usage:"modules that support http interface"`
-	Address     string `json:"etcd_address" value:"127.0.0.1:2379" usage:"etcd registry feature, multiple ip addresses splited by comma"`
+	GrpcModules string `json:"etcd_grpc_modules" value:"MeshManager,LogManager" usage:"modules that support grpc interface"`              // nolint
+	HTTPModules string `json:"etcd_http_modules" value:"MeshManager,LogManager" usage:"modules that support http interface"`              // nolint
+	Address     string `json:"etcd_address" value:"127.0.0.1:2379" usage:"etcd registry feature, multiple ip addresses splited by comma"` // nolint
 	CA          string `json:"etcd_ca" value:"" usage:"etcd registry CA"`
 	Cert        string `json:"etcd_cert" value:"" usage:"etcd registry tls cert file"`
 	Key         string `json:"etcd_key" value:"" usage:"etcd registry tls key file"`
@@ -60,15 +59,15 @@ type ServerOptions struct {
 	conf.CertConfig
 	conf.LogConfig
 	conf.ProcessConfig
-	IPv6Mode bool `json:"ipv6_mode" value:"false" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed." mapstructure:"ipv6_mode"`
+	IPv6Mode bool `json:"ipv6_mode" value:"false" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed." mapstructure:"ipv6_mode"` // nolint
 	// gateway admin api info
-	AdminAPI              string `json:"admin_api" value:"127.0.0.1:8001" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed. custom cert/key comes from client_cert_file/client_key_file" mapstructure:"admin_api" `
+	AdminAPI              string `json:"admin_api" value:"127.0.0.1:8001" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed. custom cert/key comes from client_cert_file/client_key_file" mapstructure:"admin_api" ` // nolint
 	AdminToken            string `json:"amdin_token" value:"" usage:"api-gateway admin api token"`
 	AdminType             string `json:"admin_type" value:"apisix" usage:"select apisix or kong as gateway"`
-	Modules               string `json:"modules" value:"storage,mesosdriver,detection,usermanager,kubeagent" usage:"new standard moduels that discovery serve for" mapstructure:"modules"`
-	AuthToken             string `json:"auth_token" usage:"token for request bcs-user-manager" mapstructure:"auth_token" `
-	GatewayMetricsEnabled bool   `json:"gateway_metrics_enabled" value:"true" usage:"gateway(apisix) routes metrics plugins option"`
-	AccessLogFile         string `json:"access_log_file" value:"/usr/local/apisix/logs/access.log" usage:"access log file for apisix file-logger"`
+	Modules               string `json:"modules" value:"storage,mesosdriver,detection,usermanager,kubeagent" usage:"new standard moduels that discovery serve for" mapstructure:"modules"` // nolint
+	AuthToken             string `json:"auth_token" usage:"token for request bcs-user-manager" mapstructure:"auth_token" `                                                                 // nolint
+	GatewayMetricsEnabled bool   `json:"gateway_metrics_enabled" value:"true" usage:"gateway(apisix) routes metrics plugins option"`                                                       // nolint
+	AccessLogFile         string `json:"access_log_file" value:"/usr/local/apisix/logs/access.log" usage:"access log file for apisix file-logger"`                                         // nolint
 
 	Etcd  EtcdRegistry `json:"etcdRegistry"`
 	Redis Redis        `json:"redis"`

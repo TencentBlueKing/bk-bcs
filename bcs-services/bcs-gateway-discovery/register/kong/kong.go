@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package kong xxx
@@ -21,10 +20,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/kevholditch/gokong"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
-
-	"github.com/kevholditch/gokong"
 )
 
 const (
@@ -67,7 +66,7 @@ type kRegister struct {
 // we authenticate in stage of route, then post to service when authentication success.
 // in stage of service, we clean original Authorization information and switch to inner
 // authentication token for different bkbcs modules
-func (r *kRegister) CreateService(svc *register.Service) error {
+func (r *kRegister) CreateService(svc *register.Service) error { // nolint
 	var (
 		err        error
 		startedAll = time.Now()
@@ -392,7 +391,7 @@ func (r *kRegister) DeleteTargetByService(svc *register.Service) error {
 	return fmt.Errorf("not implemented")
 }
 
-func (r *kRegister) deletePlugins(resource string, plugins []*gokong.Plugin) error {
+func (r *kRegister) deletePlugins(resource string, plugins []*gokong.Plugin) error { // nolint
 	for _, plugin := range plugins {
 		if err := r.kClient.Plugins().DeleteById(plugin.Id); err != nil {
 			blog.Errorf("kong register delete resource %s plugin %s[%s] failed, %s", resource, plugin.Name, plugin.Id,
@@ -570,7 +569,7 @@ func reportKongAPIMetrics(handler, method, status string, started time.Time) {
 	utils.ReportBcsGatewayAPIMetrics(metricData)
 }
 
-func reportRegisterKongMetrics(handler string, err error, started time.Time) {
+func reportRegisterKongMetrics(handler string, err error, started time.Time) { // nolint
 	metricData := utils.APIMetricsMeta{
 		System:  kongAdmin,
 		Handler: handler,

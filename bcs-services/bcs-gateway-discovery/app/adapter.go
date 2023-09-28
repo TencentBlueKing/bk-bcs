@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -21,9 +21,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
-
 	"github.com/micro/go-micro/v2/registry"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 )
 
 var metricModeule = "metric"
@@ -53,9 +53,9 @@ var defaultHTTPModules = map[string]string{
 
 var defaultDomain = ".bkbcs.tencent.com"
 var defaultClusterIDKey = "BCS-ClusterID"
-var defaultMediaTypeKey = "Content-Type"
-var defaultAcceptKey = "Accept"
-var defaultMediaType = "application/json"
+var defaultMediaTypeKey = "Content-Type"  // nolint
+var defaultAcceptKey = "Accept"           // nolint
+var defaultMediaType = "application/json" // nolint
 var defaultClusterName = "bkbcs-cluster"
 var defaultServiceTag = "bkbcs-service"
 var defaultPluginName = "bkbcs-auth"
@@ -78,8 +78,8 @@ func NewAdapter(option *ServerOptions) *Adapter {
 		microHandlers: make(map[string]MicroHandler),
 	}
 	// init all service data
-	adp.initDefaultModules()
-	adp.initCompatibleMicroModules()
+	_ = adp.initDefaultModules()
+	_ = adp.initCompatibleMicroModules()
 	return adp
 }
 
@@ -263,7 +263,7 @@ func (adp *Adapter) microNotStandarModule(module string, svc *registry.Service) 
 }
 
 // initDefaultModules init original proxy rule, it's better compatible with originals
-func (adp *Adapter) initDefaultModules() error {
+func (adp *Adapter) initDefaultModules() error { // nolint
 	adp.handlers[modules.BCSModuleStorage] = adp.constructStorage
 	blog.Infof("gateway-discovery init module %s proxy rules", modules.BCSModuleStorage)
 	adp.handlers[modules.BCSModuleMesosdriver] = adp.constructMesosDriver
@@ -279,7 +279,7 @@ func (adp *Adapter) initDefaultModules() error {
 
 // initCompatibleMicroModules xxx
 // initDefaultModules init original proxy rule, it's better compatible with originals
-func (adp *Adapter) initCompatibleMicroModules() error {
+func (adp *Adapter) initCompatibleMicroModules() error { // nolint
 	adp.microHandlers[modules.BCSModuleStorage] = adp.microStorage
 	blog.Infof("gateway-discovery init compatible module %s proxy rules", modules.BCSModuleStorage)
 	adp.microHandlers[modules.BCSModuleMesosdriver] = adp.microMesosDriver
@@ -304,12 +304,12 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 	}
 	resources := strings.Split(module, "/")
 	if len(resources) != 2 {
-		blog.Errorf("contruct MesosDriver server info for %s failed, module name is invalid", module)
+		blog.Errorf("construct MesosDriver server info for %s failed, module name is invalid", module)
 		return nil, fmt.Errorf("module information is invalid")
 	}
 	bkbcsID := strings.Split(resources[1], "-")
 	if len(bkbcsID) != 3 {
-		blog.Errorf("contruct MesosDriver Server Info failed, ClusterID is invalid in Module name [%s]", module)
+		blog.Errorf("construct MesosDriver Server Info failed, ClusterID is invalid in Module name [%s]", module)
 		return nil, fmt.Errorf("mesosdriver clusterID is invalid")
 	}
 	name := modules.BCSModuleMesosdriver + "-" + bkbcsID[2]
@@ -428,12 +428,12 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 	}
 	resources := strings.Split(module, "/")
 	if len(resources) != 2 {
-		blog.Errorf("contruct Kube-apiserver info for %s failed, module name is invalid", module)
+		blog.Errorf("construct Kube-apiserver info for %s failed, module name is invalid", module)
 		return nil, fmt.Errorf("module information is invalid")
 	}
 	bkbcsID := strings.Split(resources[1], "-")
 	if len(bkbcsID) != 3 {
-		blog.Errorf("contruct Kube-apiServer Info failed, ClusterID is invalid in Module name [%s]", module)
+		blog.Errorf("construct Kube-apiServer Info failed, ClusterID is invalid in Module name [%s]", module)
 		return nil, fmt.Errorf("kubeagent clusterID is invalid")
 	}
 	name := modules.BCSModuleKubeagent + "-" + bkbcsID[2]
@@ -535,7 +535,7 @@ func (adp *Adapter) constructUserMgr(module string, svcs []*types.ServerInfo) (*
 // constructClusterMgr convert bcs-cluster-manager service information
 // to custom service definition. this is compatible with original bcs-api proxy.
 // and further more, api-gateway defines new standard proxy rule for it
-func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.ServerInfo) (*register.Service, error) {
+func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.ServerInfo) (*register.Service, error) { // nolint
 	if len(svcs) == 0 {
 		// if all service instances down, just keep it what it used to be
 		// and wait until remote storage node re-registe
@@ -820,7 +820,7 @@ func (adp *Adapter) microMetricService(module string, svc *registry.Service) (*r
 // microNetworkDetection convert bcs-network-detection service information
 // to custom service definition. this is compatible with original bcs-api proxy.
 // and further more, api-gateway defines new standard proxy rule for it
-func (adp *Adapter) microNetworkDetection(module string, svc *registry.Service) (*register.Service, error) {
+func (adp *Adapter) microNetworkDetection(module string, svc *registry.Service) (*register.Service, error) { // nolint
 	labels := make(map[string]string)
 	labels["module"] = modules.BCSModuleNetworkdetection
 	labels["service"] = defaultServiceTag

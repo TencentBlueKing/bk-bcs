@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package retry
@@ -17,12 +16,13 @@ import (
 	"context"
 	"fmt"
 
-	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/util/i18n"
 	"k8s.io/kubectl/pkg/util/templates"
+
+	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 )
 
 var (
@@ -39,7 +39,7 @@ func newRetryCreateClusterTaskCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&clusterID, "clusterID", "c", "", "cluster ID (required)")
-	cmd.MarkFlagRequired("clusterID")
+	_ = cmd.MarkFlagRequired("clusterID")
 
 	return cmd
 }

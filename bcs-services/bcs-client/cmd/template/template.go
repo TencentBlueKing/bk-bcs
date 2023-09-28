@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package template xxx
@@ -18,10 +17,9 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/urfave/cli"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-
-	"github.com/urfave/cli"
 )
 
 // NewTemplateCommand will create template command. It will handle the json
@@ -77,7 +75,7 @@ const (
 	secretTemplate        = "{\"apiVersion\":\"v4\",\"kind\":\"secret\",\"metadata\":{\"name\":\"secret-test\",\"namespace\":\"defaultGroup\",\"labels\":{}},\"type\":\"\",\"datas\":{\"secret-subkey\":{\"path\":\"ECRET_ENV_TEST\",\"content\":\"Y29uZmlnIGNvbnRleHQ=\"}}}"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     //nolint
 	serviceTemplate       = "{\"apiVersion\":\"v4\",\"kind\":\"service\",\"metadata\":{\"name\":\"service-test\",\"namespace\":\"defaultGroup\",\"labels\":{\"BCSGROUP\":\"external\"}},\"spec\":{\"selector\":{\"podname\":\"app-test\"},\"ports\":[{\"name\":\"test-port\",\"protocol\":\"tcp\",\"servicePort\":8889}]}}"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       //nolint
 	deploymentTemplate    = "{\"apiVersion\":\"v4\",\"kind\":\"deployment\",\"metadata\":{\"labels\":{\"podname\":\"deployment-test\"},\"name\":\"deployment-test\",\"namespace\":\"defaultGroup\"},\"restartPolicy\":{\"policy\":\"Always\",\"interval\":5,\"backoff\":10},\"constraint\":{\"IntersectionItem\":[]},\"spec\":{\"instance\":2,\"selector\":{\"podname\":\"app-test\"},\"template\":{\"metadata\":{\"labels\":{},\"name\":\"deployment-test\",\"namespace\":\"defaultGroup\"},\"spec\":{\"containers\":[{\"command\":\"/test/start.sh\",\"args\":[\"8899\"],\"parameters\":[],\"type\":\"MESOS\",\"env\":[],\"image\":\"docker_image:latest\",\"imagePullPolicy\":\"Always\",\"privileged\":false,\"ports\":[{\"containerPort\":8899,\"name\":\"test-port\",\"protocol\":\"HTTP\"}],\"healthChecks\":[],\"resources\":{\"limits\":{\"cpu\":\"0.1\",\"memory\":\"50\"}},\"volumes\":[],\"secrets\":[],\"configmaps\":[]}],\"networkMode\":\"BRIDGE\",\"networkType\":\"BRIDGE\"}},\"strategy\":{\"type\":\"RollingUpdate\",\"rollingupdate\":{\"maxUnavilable\":1,\"maxSurge\":1,\"upgradeDuration\":60,\"autoUpgrade\":false,\"rollingOrder\":\"CreateFirst\",\"pause\":false}}}}" //nolint
-	agentSettingsTemplate = "[{\"innerIP\":\"127.0.0.1\",\"disabled\":true,\"strings\":{\"attr1\":{\"value\":\"hahaha\"}},\"scalars\":{\"foo\":{\"value\":0.01}}}]"
+	agentSettingsTemplate = "[{\"innerIP\":\"127.0.0.1\",\"disabled\":true,\"strings\":{\"attr1\":{\"value\":\"hahaha\"}},\"scalars\":{\"foo\":{\"value\":0.01}}}]"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               //nolint
 )
 
 func getTemplate(template string) error {

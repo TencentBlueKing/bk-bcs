@@ -8,33 +8,31 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package exec xxx
 package exec
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
-	// "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-	"github.com/docker/docker/pkg/signal"
-	"github.com/sirupsen/logrus"
+	"context"
+	// v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	"fmt"
 	"io"
 	"os"
 	gosignal "os/signal"
 	"runtime"
 	"time"
 
-	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/exec/streams"
-	// v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
-	"fmt"
-	// "github.com/docker/docker/api/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/docker/docker/pkg/signal"
 	"github.com/moby/term"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/exec/streams"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 )
 
 // Streams is an interface which exposes the standard input and output streams
@@ -44,7 +42,7 @@ type Streams interface {
 	Err() io.Writer
 }
 
-type execOptions struct {
+type execOptions struct { // nolint
 	tty         bool
 	interactive bool
 	clusterId   string
@@ -53,7 +51,7 @@ type execOptions struct {
 }
 
 // ExecCli xxx
-type ExecCli struct {
+type ExecCli struct { // nolint
 	scheduler v4.Scheduler
 	ClusterId string
 	ExecId    string
@@ -112,7 +110,7 @@ func NewExecCommand() cli.Command {
 	}
 }
 
-func exec(c *utils.ClientContext) error {
+func exec(c *utils.ClientContext) error { // nolint
 	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionNamespace); err != nil {
 		return err
 	}
@@ -223,7 +221,7 @@ func MonitorTtySize(ctx context.Context, cli ExecCli, isExec bool) error {
 				h, w := cli.Out().GetTtySize()
 
 				if prevW != w || prevH != h {
-					resizeTty(ctx, cli, isExec)
+					_ = resizeTty(ctx, cli, isExec)
 				}
 				prevH = h
 				prevW = w
@@ -234,7 +232,7 @@ func MonitorTtySize(ctx context.Context, cli ExecCli, isExec bool) error {
 		gosignal.Notify(sigchan, signal.SIGWINCH)
 		go func() {
 			for range sigchan {
-				resizeTty(ctx, cli, isExec)
+				_ = resizeTty(ctx, cli, isExec)
 			}
 		}()
 	}
@@ -271,7 +269,7 @@ func resizeTty(ctx context.Context, cli ExecCli, isExec bool) error {
 }
 
 // resizeTtyTo resizes tty to specific height and width
-func resizeTtyTo(ctx context.Context, cli ExecCli, height, width uint, isExec bool) error {
+func resizeTtyTo(ctx context.Context, cli ExecCli, height, width uint, isExec bool) error { // nolint
 	if height == 0 && width == 0 {
 		return nil
 	}

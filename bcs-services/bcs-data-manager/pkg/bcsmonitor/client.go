@@ -1,15 +1,16 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package bcsmonitor xxx
 package bcsmonitor
 
 import (
@@ -19,12 +20,11 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/requester"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // ClientInterface the interface of bcs monitor client
@@ -42,7 +42,7 @@ type ClientInterface interface {
 }
 
 // BcsMonitorClient is the client for bcs monitor request
-type BcsMonitorClient struct {
+type BcsMonitorClient struct { // nolint
 	opts                 BcsMonitorClientOpt
 	defaultHeader        http.Header
 	requestClient        requester.Requester
@@ -50,7 +50,7 @@ type BcsMonitorClient struct {
 }
 
 // BcsMonitorClientOpt is the opts
-type BcsMonitorClientOpt struct {
+type BcsMonitorClientOpt struct { // nolint
 	Endpoint  string
 	AppCode   string
 	AppSecret string
@@ -390,7 +390,7 @@ func (c *BcsMonitorClient) GetBKMonitorGrayClusterList() (map[string]bool, error
 func (c *BcsMonitorClient) CheckIfBKMonitor(clusterID string) (bool, error) {
 	if clusterMap, ok := c.grayClusterListCache.Get("grayClusterMap"); ok {
 		grayClusterMap := clusterMap.(map[string]bool)
-		if grayClusterMap[clusterID] == true {
+		if grayClusterMap[clusterID] {
 			return true, nil
 		}
 		return false, nil
@@ -399,7 +399,7 @@ func (c *BcsMonitorClient) CheckIfBKMonitor(clusterID string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("get bcs gray cluster list from bcs storegw err:%s", err.Error())
 	}
-	if grayClusterMap[clusterID] == true {
+	if grayClusterMap[clusterID] {
 		return true, nil
 	}
 	return false, nil

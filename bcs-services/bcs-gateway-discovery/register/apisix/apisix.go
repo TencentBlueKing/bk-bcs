@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package apisix xxx
@@ -21,6 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/apisix/admin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
@@ -109,16 +109,16 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 	if failed {
 		// clean relative dirty data
 		for _, route := range routes {
-			if err := r.apisixClient.DeleteRoute(route.ID); err != nil {
+			if err := r.apisixClient.DeleteRoute(route.ID); err != nil { // nolint
 				blog.Errorf("apisix clean service %s dirty route failed, %s", svc.Name, err.Error())
 			}
 		}
 		// create service failed, ready to clean dirty upstream data
-		if err := r.apisixClient.DeleteService(service.ID); err != nil {
+		if err := r.apisixClient.DeleteService(service.ID); err != nil { // nolint
 			blog.Errorf("apisix register clean dirty service %s data failed, %s", service.ID, err.Error())
 		}
 		// create service failed, ready to clean dirty upstream data
-		if err := r.apisixClient.DeleteUpstream(upstream.ID); err != nil {
+		if err := r.apisixClient.DeleteUpstream(upstream.ID); err != nil { // nolint
 			blog.Errorf("apisix register clean service %s dirty Upstream data failed, %s", service.ID, err.Error())
 		}
 		return err
@@ -127,7 +127,7 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 }
 
 // UpdateService update specified Service, if service does not exist, create it
-func (r *apiRegister) UpdateService(svc *register.Service) error {
+func (r *apiRegister) UpdateService(svc *register.Service) error { // nolint
 	var (
 		started = time.Now()
 		err     error
@@ -143,7 +143,7 @@ func (r *apiRegister) UpdateService(svc *register.Service) error {
 	upstream := apisixUpstreamConversion(svc)
 	if r.upstreamCache.GetData() == nil {
 		remoteUpstreams := make(map[string]*admin.Upstream)
-		upstreams, err := r.apisixClient.ListUpstream()
+		upstreams, err := r.apisixClient.ListUpstream() // nolint
 		if err != nil {
 			blog.Errorf("apisix register list Upstream failed, %s", err.Error())
 			return err
@@ -166,7 +166,8 @@ func (r *apiRegister) UpdateService(svc *register.Service) error {
 	} else {
 		if !upstream.NodesEuqal(existedUpstream) {
 			blog.V(3).Infof("upstream (%s) nodes not equal. remote: (%s) , local: (%s)", upstream.ID,
-				string(utils.IgnoreErr(existedUpstream.Nodes.MarshalJSON()).([]byte)), string(utils.IgnoreErr(upstream.Nodes.MarshalJSON()).([]byte)))
+				string(utils.IgnoreErr(existedUpstream.Nodes.MarshalJSON()).([]byte)),
+				string(utils.IgnoreErr(upstream.Nodes.MarshalJSON()).([]byte)))
 			err = r.apisixClient.UpdateUpstream(upstream)
 		} else {
 			blog.V(3).Infof("upstream (%s) nodes equal, skipped update", upstream.ID)
@@ -181,7 +182,7 @@ func (r *apiRegister) UpdateService(svc *register.Service) error {
 	service := apisixServiceConversion(svc)
 	if r.serviceCache.GetData() == nil {
 		remoteServices := make(map[string]*admin.Service)
-		services, err := r.apisixClient.ListService()
+		services, err := r.apisixClient.ListService() // nolint
 		if err != nil {
 			blog.Errorf("apisix register list Service failed, %s", err.Error())
 			return err
@@ -204,7 +205,8 @@ func (r *apiRegister) UpdateService(svc *register.Service) error {
 	} else {
 		if !service.DeepEqual(existedService) {
 			blog.V(3).Infof("service (%s) not equal. remote: (%s) , local: (%s)", svc.Name,
-				string(utils.IgnoreErr(json.Marshal(existedService)).([]byte)), string(utils.IgnoreErr(json.Marshal(service)).([]byte)))
+				string(utils.IgnoreErr(json.Marshal(existedService)).([]byte)),
+				string(utils.IgnoreErr(json.Marshal(service)).([]byte)))
 			err = r.apisixClient.UpdateService(service)
 		} else {
 			blog.V(3).Infof("service (%s) equal, skipped update", svc.Name)
@@ -219,7 +221,7 @@ func (r *apiRegister) UpdateService(svc *register.Service) error {
 	var localRoutes []*admin.Route
 	if r.routesCache.GetData() == nil {
 		remoteRoutes := make(map[string]*admin.Route)
-		routes, err := r.apisixClient.ListRoute()
+		routes, err := r.apisixClient.ListRoute() // nolint
 		if err != nil {
 			blog.Errorf("apisix register list Service failed, %s", err.Error())
 			return err
@@ -238,7 +240,8 @@ func (r *apiRegister) UpdateService(svc *register.Service) error {
 		} else {
 			if !route.DeepEqual(remoteRoutes[route.ID]) {
 				blog.V(3).Infof("route (%s) not equal. remote: (%s) , local: (%s)", route.Name,
-					string(utils.IgnoreErr(json.Marshal(remoteRoutes[route.ID])).([]byte)), string(utils.IgnoreErr(json.Marshal(route)).([]byte)))
+					string(utils.IgnoreErr(json.Marshal(remoteRoutes[route.ID])).([]byte)),
+					string(utils.IgnoreErr(json.Marshal(route)).([]byte)))
 				err = r.apisixClient.UpdateRoute(route)
 			} else {
 				blog.V(3).Infof("route (%s) equal, skipped update", route.Name)
@@ -248,7 +251,7 @@ func (r *apiRegister) UpdateService(svc *register.Service) error {
 			blog.Errorf("apisix register create/update service %s route failed, %s. route details: %+v",
 				svc.Name, err.Error(), route)
 		}
-		localRoutes = append(localRoutes, route)
+		localRoutes = append(localRoutes, route) // nolint
 	}
 	return nil
 }
@@ -440,7 +443,7 @@ func simpleInnerServiceConversion(svc *admin.Service) *register.Service {
 }
 
 // innerServiceConvert convert apisix service/route/upstream to inner service definition
-func innerServiceConvert(svc *admin.Service, route *admin.Route, upstream *admin.Upstream) *register.Service {
+func innerServiceConvert(svc *admin.Service, route *admin.Route, upstream *admin.Upstream) *register.Service { // nolint
 	innerService := &register.Service{
 		Name:      svc.ID,
 		Protocol:  upstream.Scheme,
@@ -597,7 +600,7 @@ func apisixBKBCSAuthConversion(option *register.BCSAuthOption) (string, map[stri
 	return option.Name, auth
 }
 
-func reportRegisterAPISixMetrics(handler string, err error, started time.Time) {
+func reportRegisterAPISixMetrics(handler string, err error, started time.Time) { // nolint
 	metricData := utils.APIMetricsMeta{
 		System:  admin.ApisixAdmin,
 		Handler: handler,

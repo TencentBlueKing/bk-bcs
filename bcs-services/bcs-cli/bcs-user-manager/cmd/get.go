@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cmd
@@ -265,8 +264,9 @@ func getTokenByUserAndClusterIDCmd() *cobra.Command {
 		Use:     "extra-token",
 		Aliases: []string{"et"},
 		Short:   "get token from user manager",
-		Example: "kubectl-bcs-user-manager get extra-token -u [user_name] --cluster_id [cluster_id] --business_id [business_id]",
-		Long:    "",
+		Example: "kubectl-bcs-user-manager get extra-token -u [user_name] --cluster_id [cluster_id] " +
+			"--business_id [business_id]",
+		Long: "",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())

@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -15,11 +15,12 @@ package cmd
 import (
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-data-manager/cmd/printer"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-data-manager/cmd/printer"
 )
 
-func TestClusterPrint(t *testing.T) {
+func TestClusterPrint(t *testing.T) { // nolint
 	metrics := make([]*bcsdatamanager.ClusterMetrics, 0)
 	metrics1 := &bcsdatamanager.ClusterMetrics{
 		Time:               "2022-03-10",
@@ -37,20 +38,20 @@ func TestClusterPrint(t *testing.T) {
 			Value:      12,
 			Period:     "2022-03-10 20:00:00, 2022-03-10 22:00:00",
 		},
-		NodeQuantile:         nil,
-		MinUsageNode:         "2.2.2.2",
-		TotalCPU:             "60",
-		TotalMemory:          "120",
-		TotalLoadCPU:         "30",
-		TotalLoadMemory:      "50",
-		AvgLoadCPU:           "0",
-		AvgLoadMemory:        "0",
-		CPUUsage:             "0.6",
-		MemoryUsage:          "0.42",
-		WorkloadCount:        "60",
-		InstanceCount:        "120",
-		MinInstance:          nil,
-		MaxInstanceTime:      nil,
+		NodeQuantile:    nil,
+		MinUsageNode:    "2.2.2.2",
+		TotalCPU:        "60",
+		TotalMemory:     "120",
+		TotalLoadCPU:    "30",
+		TotalLoadMemory: "50",
+		AvgLoadCPU:      "0",
+		AvgLoadMemory:   "0",
+		CPUUsage:        "0.6",
+		MemoryUsage:     "0.42",
+		WorkloadCount:   "60",
+		InstanceCount:   "120",
+		MinInstance:     nil,
+		//MaxInstanceTime:      nil,
 		CpuRequest:           "50",
 		MemoryRequest:        "100",
 		XXX_NoUnkeyedLiteral: struct{}{},
@@ -73,20 +74,20 @@ func TestClusterPrint(t *testing.T) {
 			Value:      12,
 			Period:     "2022-03-10 20:00:00, 2022-03-10 22:00:00",
 		},
-		NodeQuantile:         nil,
-		MinUsageNode:         "2.2.2.2",
-		TotalCPU:             "60",
-		TotalMemory:          "120",
-		TotalLoadCPU:         "30",
-		TotalLoadMemory:      "50",
-		AvgLoadCPU:           "0",
-		AvgLoadMemory:        "0",
-		CPUUsage:             "0.6",
-		MemoryUsage:          "0.42",
-		WorkloadCount:        "60",
-		InstanceCount:        "120",
-		MinInstance:          nil,
-		MaxInstanceTime:      nil,
+		NodeQuantile:    nil,
+		MinUsageNode:    "2.2.2.2",
+		TotalCPU:        "60",
+		TotalMemory:     "120",
+		TotalLoadCPU:    "30",
+		TotalLoadMemory: "50",
+		AvgLoadCPU:      "0",
+		AvgLoadMemory:   "0",
+		CPUUsage:        "0.6",
+		MemoryUsage:     "0.42",
+		WorkloadCount:   "60",
+		InstanceCount:   "120",
+		MinInstance:     nil,
+		//MaxInstanceTime:      nil,
 		CpuRequest:           "50",
 		MemoryRequest:        "100",
 		XXX_NoUnkeyedLiteral: struct{}{},

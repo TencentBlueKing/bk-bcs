@@ -8,17 +8,18 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package streams xxx
 package streams
 
 import (
 	"errors"
-	"github.com/moby/term"
 	"io"
 	"os"
 	"runtime"
+
+	"github.com/moby/term"
 )
 
 // In is an input stream used by the DockerCli to read user input
