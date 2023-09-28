@@ -139,11 +139,11 @@ metadata:
 	path2, _ := goyaml.PathString("$.metadata.namespace")
 	labelpath, _ := goyaml.PathString(fmt.Sprintf("$.metadata.labels.'%s'", "c.a"))
 	var name string
-	path.Read(strings.NewReader(y), &name)
+	path.Read(strings.NewReader(y), &name) // nolint
 	f, _ := parser.ParseBytes([]byte(y), 0)
-	path.ReplaceWithReader(f, strings.NewReader("test"))
-	path2.ReplaceWithReader(f, strings.NewReader("test-ns"))
-	labelpath.ReplaceWithReader(f, strings.NewReader(name))
+	path.ReplaceWithReader(f, strings.NewReader("test"))     // nolint
+	path2.ReplaceWithReader(f, strings.NewReader("test-ns")) // nolint
+	labelpath.ReplaceWithReader(f, strings.NewReader(name))  // nolint
 	fmt.Println(name)
 	fmt.Println(f.String())
 }
@@ -168,14 +168,14 @@ data:
 	kindpath, _ := goyaml.PathString("$.kind")
 	var name string
 	var kind string
-	path.Read(bytes.NewReader(out), &name)
-	kindpath.Read(bytes.NewReader(out), &kind)
+	path.Read(bytes.NewReader(out), &name)     // nolint
+	kindpath.Read(bytes.NewReader(out), &kind) // nolint
 	fmt.Println(kind)
 	f, err := parser.ParseBytes(out, 0)
 	if err != nil {
 		log.Fatal(err)
 	}
-	path.ReplaceWithReader(f, strings.NewReader("test"))
+	path.ReplaceWithReader(f, strings.NewReader("test")) // nolint
 	fmt.Println(name)
 	fmt.Println(f.String())
 }

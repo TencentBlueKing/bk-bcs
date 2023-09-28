@@ -25,17 +25,17 @@ import (
 
 const (
 	// urlReleaseList
-	urlReleaseList = "/release/%s"
+	urlReleaseList = "/release/%s" // nolint
 	// urlReleaseListV1
 	urlReleaseListV1 = "/projects/%s/clusters/%s/releases"
 	// urlReleaseInstall
-	urlReleaseInstall = "/release/%s/%s/%s/install"
+	urlReleaseInstall = "/release/%s/%s/%s/install" // nolint
 	// urlReleaseUninstall
-	urlReleaseUninstall = "/release/%s/%s/%s/uninstall"
+	urlReleaseUninstall = "/release/%s/%s/%s/uninstall" // nolint
 	// urlReleaseUpgrade
-	urlReleaseUpgrade = "/release/%s/%s/%s/upgrade"
+	urlReleaseUpgrade = "/release/%s/%s/%s/upgrade" // nolint
 	// urlReleaseRollback
-	urlReleaseRollback = "/release/%s/%s/%s/rollback"
+	urlReleaseRollback = "/release/%s/%s/%s/rollback" // nolint
 	// urlReleaseDetailV1Get
 	urlReleaseDetailV1Get = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
 	// urlReleaseDetailV1Install

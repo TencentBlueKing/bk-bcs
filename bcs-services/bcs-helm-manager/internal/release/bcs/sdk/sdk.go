@@ -204,7 +204,7 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 	chartF, err := getChartFile(config.Chart)
 	if err != nil {
 		blog.Errorf("sdk client install and load chart files failed, %s, "+
-			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name) // nolint
 		return nil, err
 	}
 
@@ -295,8 +295,7 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 		if e, ok := err.(*driver.StorageDriverError); ok && upgrader.Install &&
 			errors.Is(e.Unwrap(), driver.ErrNoDeployedReleases) {
 			blog.Infof("%s of namespace %s, installing it now.", e.Error(), config.Namespace)
-			result := &release.HelmInstallResult{}
-			result, err = c.Install(context.Background(), config.ToInstallConfig())
+			result, err := c.Install(context.Background(), config.ToInstallConfig()) // nolint
 			if err != nil {
 				return result.ToUpgradeResult(), err
 			}

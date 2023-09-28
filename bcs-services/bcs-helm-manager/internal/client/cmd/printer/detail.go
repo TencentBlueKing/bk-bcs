@@ -15,13 +15,13 @@ package printer
 import (
 	"os"
 
-	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
 	"github.com/olekukonko/tablewriter"
+
+	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 // PrintChartDetailInTable print chart detail data in table format
-func PrintChartDetailInTable(wide bool, chartDetail *helmmanager.ChartDetail) {
+func PrintChartDetailInTable(wide bool, chartDetail *helmmanager.ChartDetail) { // nolint
 	if chartDetail == nil {
 		return
 	}
@@ -29,9 +29,6 @@ func PrintChartDetailInTable(wide bool, chartDetail *helmmanager.ChartDetail) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
 		r := []string{"PATH", "NAME", "IS_VALUES", "IS_README"}
-		if wide {
-			// nothing to do
-		}
 		return r
 	}())
 	table.SetAutoWrapText(false)
@@ -65,10 +62,6 @@ func PrintChartDetailInTable(wide bool, chartDetail *helmmanager.ChartDetail) {
 					}
 					return ""
 				}(),
-			}
-
-			if wide {
-				// nothing to do
 			}
 
 			return r

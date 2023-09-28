@@ -1,11 +1,9 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
+ * http://opensource.org/licenses/MIT
  * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
@@ -104,10 +102,10 @@ func getRequestID(ctx context.Context) string {
 }
 
 // actionDesc 操作描述
-type actionDesc string
+type actionDesc string // nolint
 
 // String string
-func (a actionDesc) String() string {
+func (a actionDesc) String() string { // nolint
 	return string(a)
 }
 
@@ -158,63 +156,63 @@ func getResourceID(req server.Request) resource {
 }
 
 var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.Resource, audit.Action){
-	"HelmManager.DeleteChart": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"HelmManager.DeleteChart": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) { // nolint
 		res := getResourceID(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeChart, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "delete_chart", ActivityType: audit.ActivityTypeDelete}
 	},
-	"HelmManager.DeleteChartVersion": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"HelmManager.DeleteChartVersion": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) { // nolint
 		res := getResourceID(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeChart, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "delete_chart_version", ActivityType: audit.ActivityTypeDelete}
 	},
-	"HelmManager.InstallReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"HelmManager.InstallReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) { // nolint
 		res := getResourceID(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "install_release", ActivityType: audit.ActivityTypeCreate}
 	},
-	"HelmManager.UninstallReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"HelmManager.UninstallReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) { // nolint
 		res := getResourceID(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "uninstall_release", ActivityType: audit.ActivityTypeDelete}
 	},
-	"HelmManager.UpgradeReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"HelmManager.UpgradeReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) { // nolint
 		res := getResourceID(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "upgrade_release", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"HelmManager.RollbackReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"HelmManager.RollbackReleaseV1": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) { // nolint
 		res := getResourceID(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeHelm, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "rollback_release", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"HelmManager.InstallAddons": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"HelmManager.InstallAddons": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) { // nolint
 		res := getResourceID(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeAddons, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "install_addons", ActivityType: audit.ActivityTypeCreate}
 	},
-	"HelmManager.UpgradeAddons": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"HelmManager.UpgradeAddons": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) { // nolint
 		res := getResourceID(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeAddons, ResourceID: res.Name, ResourceName: res.Name,
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "upgrade_addons", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"HelmManager.UninstallAddons": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) {
+	"HelmManager.UninstallAddons": func(req server.Request, rsp interface{}) (audit.Resource, audit.Action) { // nolint
 		res := getResourceID(req)
 		return audit.Resource{
 			ResourceType: audit.ResourceTypeAddons, ResourceID: res.Name, ResourceName: res.Name,
@@ -271,6 +269,6 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	if result.ResultCode != int(common.ErrHelmManagerSuccess) {
 		result.Status = audit.ActivityStatusFailed
 	}
-	component.GetAuditClient().R().
+	_ = component.GetAuditClient().R().
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 }

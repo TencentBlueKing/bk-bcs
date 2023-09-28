@@ -166,8 +166,8 @@ func (l *ListReleaseV1Action) mergeReleases(clusterReleases,
 		release = filterIndex(int((l.req.GetPage()-1)*l.req.GetSize()), int(l.req.GetSize()), release)
 	}
 	return &helmmanager.ReleaseListData{
-		Page:  common.GetUint32P(uint32(l.req.GetPage())),
-		Size:  common.GetUint32P(uint32(l.req.GetSize())),
+		Page:  common.GetUint32P(l.req.GetPage()),
+		Size:  common.GetUint32P(l.req.GetSize()),
 		Total: common.GetUint32P(uint32(total)),
 		Data:  release,
 	}

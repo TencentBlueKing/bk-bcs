@@ -20,11 +20,11 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
 	"github.com/chartmuseum/helm-push/pkg/helm"
 	"helm.sh/helm/v3/pkg/registry"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 )
 
@@ -292,7 +292,7 @@ func (ch *chartHandler) downloadHelmChartVersionOrigin(ctx context.Context, vers
 	resp, err := ch.get(ctx, ch.getDownloadHelmChartVersionURI(version), nil, nil)
 	if err != nil {
 		blog.Errorf("download helm chart version origin from bk-repo get failed, %s, "+
-			"with projectID %s, repoName %s, chartName %s, version %s",
+			"with projectID %s, repoName %s, chartName %s, version %s", // nolint
 			err.Error(), ch.projectID, ch.repository, ch.chartName, version)
 		return nil, err
 	}
@@ -366,7 +366,7 @@ func (ch *chartHandler) getDownloadHelmChartVersionURI(version string) string {
 }
 
 // getDownloadOCIChartVersionURI
-func (ch *chartHandler) getDownloadOCIChartVersionURI(version string) string {
+func (ch *chartHandler) getDownloadOCIChartVersionURI(version string) string { // nolint
 	u, _ := url.ParseRequestURI(fmt.Sprintf("%s/%s/%s?", chartVersionDownloadHelmURI, ch.projectID, ch.repository))
 	q := u.Query()
 	q.Add("packageKey", fmt.Sprintf("oci://%s", ch.chartName))

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package chart xxx
 package chart
 
 import (
@@ -153,7 +154,7 @@ func (d *DeleteChartVersionAction) deleteChartVersion() error {
 	repository, err := d.model.GetRepository(d.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf("delete chart version failed, %s, "+
-			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",
+			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s", // nolint
 			err.Error(), projectCode, repoName, chartName, version, username)
 		d.setResp(common.ErrHelmManagerListActionFailed, err.Error())
 		return nil

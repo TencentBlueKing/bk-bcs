@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package component xxxx
 package component
 
 import (

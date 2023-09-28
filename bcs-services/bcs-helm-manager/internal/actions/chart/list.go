@@ -117,7 +117,7 @@ func (l *ListChartActionV1) list() error {
 	return nil
 }
 
-func (l *ListChartActionV1) getCondition() *operator.Condition {
+func (l *ListChartActionV1) getCondition() *operator.Condition { // nolint
 	cond := make(operator.M)
 	if l.req.ProjectCode != nil {
 		cond.Update(entity.FieldKeyProjectID, contextx.GetProjectCodeFromCtx(l.ctx))

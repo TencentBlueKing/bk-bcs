@@ -18,8 +18,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
@@ -27,6 +25,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 )
 
 var (
@@ -185,7 +186,7 @@ func getPermResources(projectID, clusterID string, namespaceCreated, clusterScop
 	return resources
 }
 
-func getRelatedActionIDs(projectID, clusterID string, namespaceCreated, clusterScope bool,
+func getRelatedActionIDs(projectID, clusterID string, namespaceCreated, clusterScope bool, // nolint
 	namespaces []string) []string {
 	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String()}
 	if clusterScope {
