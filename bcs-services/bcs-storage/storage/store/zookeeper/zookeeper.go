@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/types"
 )
@@ -66,7 +67,7 @@ func (s *Store) getObjectPath(env, objectType, clusterID, namespace, name string
 	if len(env) != 0 {
 		path = filepath.Join(s.basePath, env)
 	}
-	return filepath.Join(path, clusterID, string(objectType), namespace+"."+name)
+	return filepath.Join(path, clusterID, objectType, namespace+"."+name)
 }
 
 // Get implement Store
@@ -141,7 +142,7 @@ func (s *Store) Create(ctx context.Context, obj *types.RawObject, opt *store.Cre
 		}
 		return fmt.Errorf("path %s to create already exists", path)
 	}
-	s.zk.CreateDeepNode(path, data)
+	err = s.zk.CreateDeepNode(path, data)
 	if err != nil {
 		blog.Errorf("create path %s failed, err %s", path, err.Error())
 		return fmt.Errorf("create path %s failed, err %s", path, err.Error())

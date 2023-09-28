@@ -1,15 +1,16 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package clean xxx
 package clean
 
 import (
@@ -72,7 +73,8 @@ func (dbc *DBCleaner) WithMaxDuration(maxDuration time.Duration, maxRandomDurati
 		maxRandomDuration = util.HashString2Time(dbc.tableName, maxRandomDuration)
 	}
 	dbc.sleepDuration = maxRandomDuration
-	blog.Infof("[todelete] set maxRandomDuration to %s for db [%s] table [%s]", maxRandomDuration.String(), dbc.db.DataBase(), dbc.tableName)
+	blog.Infof("[todelete] set maxRandomDuration to %s for db [%s] table [%s]",
+		maxRandomDuration.String(), dbc.db.DataBase(), dbc.tableName)
 }
 
 func (dbc *DBCleaner) doNumClean() error {
@@ -99,8 +101,11 @@ func (dbc *DBCleaner) doNumClean() error {
 				return fmt.Errorf("data %+v does not have time tag %s", toDelete, dbc.timeTagName)
 			}
 			blog.Infof("timeTag %s type: %s", dbc.timeTagName, reflect.TypeOf(timeObj))
+			// nolint
 			timeEdge := time.Time{}
 
+			// NOCC:revive/early-return(设计如此:)
+			// nolint
 			if timeObjDT, asok := timeObj.(primitive.DateTime); asok {
 				timeEdge = timeObjDT.Time()
 			} else {

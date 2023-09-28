@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package server xxx
 package server
 
 import (
@@ -26,10 +26,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler"
-	pb "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/proto"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	grpcsvr "github.com/go-micro/plugins/v4/server/grpc"
@@ -39,6 +35,11 @@ import (
 	"go-micro.dev/v4/registry"
 	"google.golang.org/grpc"
 	grpccred "google.golang.org/grpc/credentials"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler"
+	pb "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/proto"
 )
 
 // MicroServer v2 server
@@ -76,6 +77,7 @@ func (m *MicroServer) initHTTPServer() error {
 	gMux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}))
 
 	if m.clientTLSConfig == nil || m.serverTLSConfig == nil {
+		// nolint
 		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(m.clientTLSConfig)))
@@ -116,10 +118,10 @@ func (m *MicroServer) initGrpcServer() (err error) {
 	// 创建双栈监听
 	dualStackListener := listener.NewDualStackListener()
 	if err = dualStackListener.AddListener(ipv4, port); err != nil { // 添加IPv4地址监听
-		return errors.Wrapf(err, "add IPv4 address failed.")
+		return errors.Wrapf(err, "add IPv4 address failed")
 	}
 	if err = dualStackListener.AddListener(ipv6, port); err != nil { // 添加IPv6地址监听
-		return errors.Wrapf(err, "add IPv6 address failed.")
+		return errors.Wrapf(err, "add IPv6 address failed")
 	}
 
 	// 创建go-micro服务
@@ -159,7 +161,7 @@ func (m *MicroServer) runHttpServer() (err error) {
 	} else {
 		err = m.httpServer.ListenAndServe()
 	}
-	return errors.Wrapf(err, "run http server failed.")
+	return errors.Wrapf(err, "run http server failed")
 }
 
 // runHttpServer 运行grpcServer
@@ -172,10 +174,10 @@ func (m *MicroServer) runGrpcSever() error {
 func (m *MicroServer) Init(op *options.StorageOptions) (err error) {
 	m.op = op
 	if err = m.initGrpcServer(); err != nil {
-		return errors.Wrapf(err, "init grpc server failed.")
+		return errors.Wrapf(err, "init grpc server failed")
 	}
 	if err = m.initHTTPServer(); err != nil {
-		return errors.Wrapf(err, "init http server failed.")
+		return errors.Wrapf(err, "init http server failed")
 	}
 	return nil
 }

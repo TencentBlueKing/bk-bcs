@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package dynamicquery
@@ -24,9 +23,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
-	"github.com/emicklei/go-restful"
 )
 
 var (
@@ -62,8 +62,8 @@ type DynamicParams struct {
 	table     string
 	selector  []string
 	condition *operator.Condition
-	features  operator.M
-	data      operator.M
+	features  operator.M // nolint
+	data      operator.M // nolint
 	body      operator.M
 }
 
@@ -106,6 +106,7 @@ func NewDynamic(ctx context.Context, filter qFilter, data operator.M, name strin
 
 // reset clean the condition, data etc. so that the DynamicParams can be ready for
 // next op.
+// nolint
 func (rd *DynamicParams) reset() {
 	rd.condition = nil
 	rd.selector = nil
@@ -201,7 +202,7 @@ func (rd *DynamicParams) getExtra() operator.M {
 	}
 
 	var extra operator.M
-	lib.NewExtra(raw).Unmarshal(&extra)
+	_ = lib.NewExtra(raw).Unmarshal(&extra)
 	return extra
 }
 
@@ -257,8 +258,8 @@ func (rd *DynamicParams) get(condition *operator.Condition) (mList []operator.M,
 		Limit:  rd.getLimit(),
 		Cond:   condition,
 	}
-	//blog.Infof("opt: %v", util.PrettyStruct(opt))
-	//blog.Infof("filter: %v", util.PrettyStruct(rd.filter))
+	// blog.Infof("opt: %v", util.PrettyStruct(opt))
+	// blog.Infof("filter: %v", util.PrettyStruct(rd.filter))
 
 	if mList, err = GetData(rd.ctx, rd.getTable(), opt); err != nil {
 		blog.Errorf("Failed to query. err: %v", err)

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package clusterconfig
@@ -19,6 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	dbutils "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
@@ -40,7 +40,7 @@ func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) 
 
 // PutData 插入数据
 func PutData(ctx context.Context, resourceType string, data operator.M, opt *lib.StorePutOption) error {
-	//return dbutils.PutData(ctx, dbConfig, resourceType, data, opt)
+	// return dbutils.PutData(ctx, dbConfig, resourceType, data, opt)
 	return dbutils.PutData(&dbutils.DBOperate{
 		PutOpt:       opt,
 		Context:      ctx,
@@ -55,7 +55,8 @@ func PutData(ctx context.Context, resourceType string, data operator.M, opt *lib
 */
 
 // GenerateData 生成数据
-func GenerateData(ctx context.Context, opt *lib.StoreGetOption, clsConfig []operator.M, service string) (config *types.DeployConfig, err error) {
+func GenerateData(ctx context.Context, opt *lib.StoreGetOption, clsConfig []operator.M, service string) (
+	config *types.DeployConfig, err error) {
 	var stableVersion string
 	var svcConfigSet *types.ConfigSet
 	var clsConfigSet []types.ClusterSet
@@ -87,7 +88,7 @@ func GetStableSvcVersion(ctx context.Context, opt *lib.StoreGetOption) (string, 
 	if err != nil {
 		return "", err
 	}
-	vs, _ := mList[0][dataTag]
+	vs := mList[0][dataTag]
 	s, ok := vs.(string)
 	if !ok {
 		err = storageErr.StableVersionInvalid
@@ -118,7 +119,7 @@ func GetTemplate(ctx context.Context, cond *operator.Condition) (string, error) 
 		blog.Errorf("%s", err.Error())
 		return "", err
 	}
-	vs, _ := mList[0][dataTag]
+	vs := mList[0][dataTag]
 	s, ok := vs.(string)
 	if !ok {
 		err := storageErr.ConfigTemplateInvalid

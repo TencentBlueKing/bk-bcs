@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package dynamicquery xxx
 package dynamicquery
 
 import (
@@ -19,11 +19,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"google.golang.org/protobuf/types/known/structpb"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	storage "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/proto"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamicquery"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // 方法名称
@@ -79,7 +80,8 @@ func HandlerIPPoolStaticRequest(ctx context.Context, req *storage.IPPoolStaticRe
 }
 
 // HandlerIPPoolStaticDetailRequest 获取IPPoolStaticDetail
-func HandlerIPPoolStaticDetailRequest(ctx context.Context, req *storage.IPPoolStaticDetailRequest) ([]operator.M, error) {
+func HandlerIPPoolStaticDetailRequest(ctx context.Context, req *storage.IPPoolStaticDetailRequest) (
+	[]operator.M, error) {
 	raw := util.RequestToMap(IPPoolStaticDetailTags, req)
 	query := dynamicquery.NewDynamic(ctx, IPPoolStaticDetailFilter, raw, constants.IPPoolStaticDetail, req.Field,
 		int(req.Offset), int(req.Limit))

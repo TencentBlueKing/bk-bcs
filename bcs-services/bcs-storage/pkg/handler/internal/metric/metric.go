@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package metric xxx
 package metric
 
 import (
@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	storage "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/proto"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/util"
@@ -49,7 +50,7 @@ func (g *general) getExtra() operator.M {
 		return extra
 	}
 
-	lib.NewExtra(g.extra).Unmarshal(&extra)
+	_ = lib.NewExtra(g.extra).Unmarshal(&extra)
 	return extra
 }
 

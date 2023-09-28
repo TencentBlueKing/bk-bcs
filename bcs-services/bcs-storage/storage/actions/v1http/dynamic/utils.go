@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package dynamic
@@ -20,16 +19,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emicklei/go-restful"
-	"go-micro.dev/v4/broker"
-	"go.mongodb.org/mongo-driver/bson"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/emicklei/go-restful"
+	"go-micro.dev/v4/broker"
+	"go.mongodb.org/mongo-driver/bson"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
@@ -61,10 +60,6 @@ const (
 
 	eventResourceType = "Event"
 
-	databaseFieldNameForDeletionFlag    = "_isBcsObjectDeleted"
-	getDatabaseFieldNameForDeletionFlag = "getDeletionFlag"
-
-	labelSelectorTag    = "labelSelector"
 	labelSelectorPrefix = "data.metadata.labels."
 )
 
@@ -74,8 +69,6 @@ var csFeatTags = []string{clusterIDTag, resourceTypeTag, resourceNameTag}
 var nsListFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag}
 var csListFeatTags = []string{clusterIDTag, resourceTypeTag}
 var customResourceFeatTags = []string{}
-var customResourceIndexFeatTags = []string{resourceTypeTag, indexNameTag}
-var indexKeys = []string{resourceNameTag, namespaceTag}
 
 // Use Mongodb for storage.
 const dbConfig = "mongodb/dynamic"
@@ -101,7 +94,7 @@ func getExtra(req *restful.Request) operator.M {
 		return nil
 	}
 	extra := make(operator.M)
-	lib.NewExtra(raw).Unmarshal(&extra)
+	_ = lib.NewExtra(raw).Unmarshal(&extra)
 	return extra
 }
 
@@ -220,7 +213,8 @@ func getResources(req *restful.Request, resourceFeatList []string) ([]operator.M
 	return mList, err
 }
 
-func getResourcesWithPageInfo(req *restful.Request, resourceFeatList []string) (data []operator.M, extra operator.M, err error) {
+func getResourcesWithPageInfo(req *restful.Request, resourceFeatList []string) (
+	data []operator.M, extra operator.M, err error) {
 	opt, err := getStoreOption(req, resourceFeatList)
 	if err != nil {
 		return nil, nil, err
@@ -517,7 +511,8 @@ func getMultiClusterConditions(req *storagetypes.MulticlusterListReqParams) (*op
 	return cond, nil
 }
 
-func getClusteredNamespacesCondition(clusteredNamespaces []*storagetypes.ClusteredNamespace) (*operator.Condition, error) {
+func getClusteredNamespacesCondition(clusteredNamespaces []*storagetypes.ClusteredNamespace) (
+	*operator.Condition, error) {
 	if len(clusteredNamespaces) == 0 {
 		return nil, fmt.Errorf("could not find clusters and namespaces")
 	}
@@ -592,6 +587,8 @@ func publishDynamicResourceToQueue(data operator.M, featTags []string, event msg
 		return nil
 	}
 
+	// NOCC:revive/early-return(设计如此:)
+	// nolint
 	if v, ok := data[dataTag]; ok {
 		codec.EncJson(v, &message.Body)
 	} else {

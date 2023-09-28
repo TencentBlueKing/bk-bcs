@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -19,16 +19,16 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/bson"
 	mopt "go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
 	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/watchbus"
 )
@@ -129,6 +129,7 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	projection := fieldsToProjection(opt.Fields)
 	mList := make([]operator.M, 0)
 
+	// nolint
 	findCond := opt.Cond
 	getDeletionFlag := false
 
@@ -155,7 +156,7 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	}
 	if opt.Limit != 0 {
 		finder = finder.WithLimit(opt.Limit)
-	} else {
+	} else { // nolint
 		if !opt.IsAllDocuments {
 			finder = finder.WithLimit(storeActionDefaultLimit)
 		}
@@ -174,9 +175,7 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 		tmpM := dollarRecover(m)
 		// remove delete flag in returned result
 		if a.doSoftDelete && !getDeletionFlag {
-			if _, found := tmpM[databaseFieldNameForDeletionFlag]; found {
-				delete(tmpM, databaseFieldNameForDeletionFlag)
-			}
+			delete(tmpM, databaseFieldNameForDeletionFlag)
 		}
 		retList = append(retList, tmpM)
 	}
@@ -303,7 +302,7 @@ func (a *Store) Count(ctx context.Context, resourceType string, opt *StoreGetOpt
 	}
 	if opt.Limit != 0 {
 		finder = finder.WithLimit(opt.Limit)
-	} else {
+	} else { // nolint
 		if !opt.IsAllDocuments {
 			finder = finder.WithLimit(storeActionDefaultLimit)
 		}
@@ -417,6 +416,7 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 		return nil
 	}
 
+	// nolint
 	countCond := opt.Cond
 	if a.doSoftDelete {
 		// search for data which is not marked deleted
@@ -529,6 +529,7 @@ const (
 	Brk EventType = -1
 )
 
+// nolint
 var (
 	eventTypeNames = map[EventType]string{
 		Nop:  "EventNop",
@@ -576,6 +577,8 @@ func watchMatch(data, cond operator.M) bool {
 }
 
 // Watch watch some resource type
+// NOCC: golint/funlen(设计如此:)
+// nolint
 func (a *Store) Watch(ctx context.Context, resourceType string, opt *StoreWatchOption) (chan *Event, error) {
 	const (
 		OperationName   = "storage-Watch"
