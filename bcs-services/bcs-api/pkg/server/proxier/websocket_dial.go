@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package proxier
@@ -21,11 +20,12 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/proxy"
+	"k8s.io/client-go/transport"
+
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/tunnel"
-	"k8s.io/apimachinery/pkg/util/proxy"
-	"k8s.io/client-go/transport"
 )
 
 // WsTunnel xxx
@@ -37,8 +37,8 @@ type WsTunnel struct {
 }
 
 // lookupWsHandler will lookup websocket dialer in cache
-func (f *ReverseProxyDispatcher) lookupWsHandler(clusterId string, req *http.Request) (*proxy.UpgradeAwareHandler, bool,
-	error) {
+func (f *ReverseProxyDispatcher) lookupWsHandler(clusterId string, req *http.Request) ( // nolint
+	*proxy.UpgradeAwareHandler, bool, error) {
 	credentials := sqlstore.GetWsCredentials(clusterId)
 	if credentials == nil {
 		return nil, false, nil
@@ -46,7 +46,7 @@ func (f *ReverseProxyDispatcher) lookupWsHandler(clusterId string, req *http.Req
 
 	serverAddress := credentials.ServerAddress
 	if !strings.HasSuffix(serverAddress, "/") {
-		serverAddress = serverAddress + "/"
+		serverAddress += "/"
 	}
 	u, err := url.Parse(serverAddress)
 	if err != nil {
@@ -89,12 +89,12 @@ func (f *ReverseProxyDispatcher) getTransport(clusterId string, credentials *m.W
 			certs := x509.NewCertPool()
 			caCrt := []byte(credentials.CaCertData)
 			certs.AppendCertsFromPEM(caCrt)
-			tp.TLSClientConfig = &tls.Config{
+			tp.TLSClientConfig = &tls.Config{ // nolint
 				RootCAs: certs,
 			}
 		}
 		cd := tunnelServer.Dialer(clusterId, 15*time.Second)
-		tp.Dial = cd
+		tp.Dial = cd // nolint
 
 		if f.wsTunnelStore[clusterId] != nil {
 			f.wsTunnelStore[clusterId].httpTransport.CloseIdleConnections()

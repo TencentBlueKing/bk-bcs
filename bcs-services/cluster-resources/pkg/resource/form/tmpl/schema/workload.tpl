@@ -161,7 +161,6 @@ replicas:
           else:
             state:
               visible: false
-              value: ""
         - target: "{{`{{`}} $widgetNode?.getSibling('muaUnit')?.id {{`}}`}}"
           if: "{{`{{`}} $self.value === 'RollingUpdate' {{`}}`}}"
           then:

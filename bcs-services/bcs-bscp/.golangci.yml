@@ -2,6 +2,8 @@
 
 run:
   timeout: 10m
+  skip-dirs:
+    - pkg/logs/glog
 
 issues:
   # 显示所有 issue

@@ -10,12 +10,13 @@
  * limitations under the License.
  */
 
+// Package pbevent provides event core protocol struct and convert functions.
 package pbevent
 
 import "bscp.io/pkg/dal/table"
 
 // PbEventSpec convert event spec to pb event spec
-func PbEventSpec(spec *table.EventSpec) *EventSpec {
+func PbEventSpec(spec *table.EventSpec) *EventSpec { //nolint:revive
 	if spec == nil {
 		return nil
 	}
@@ -29,7 +30,7 @@ func PbEventSpec(spec *table.EventSpec) *EventSpec {
 }
 
 // PbEventAttachment convert event attachment to pb event attachment
-func PbEventAttachment(attach *table.EventAttachment) *EventAttachment {
+func PbEventAttachment(attach *table.EventAttachment) *EventAttachment { //nolint:revive
 	if attach == nil {
 		return nil
 	}

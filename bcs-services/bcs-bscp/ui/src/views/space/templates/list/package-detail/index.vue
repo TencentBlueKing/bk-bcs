@@ -33,17 +33,19 @@
     let name = ''
     let memo = ''
     let isPublic = false
+    let primary_name = ''
     if (isPackage.value) {
       const pkgDetail = packageList.value.find(item => item.id === currentPkg.value)
       if (pkgDetail) {
         name = pkgDetail.spec.name
         memo = pkgDetail.spec.memo
         isPublic = pkgDetail.spec.public
+        primary_name = pkgDetail.spec.name
       }
     } else {
       name = PACKAGE_MENU_OTHER_TYPE_MAP[currentPkg.value as keyof typeof PACKAGE_MENU_OTHER_TYPE_MAP]
     }
-    return { name, memo, isPublic }
+    return { name, memo, isPublic, primary_name }
   })
 
 </script>
@@ -53,7 +55,7 @@
       <div class="header-wrapper">
         <div v-if="headerInfo.isPublic" class="tag">公开</div>
         <h4 class="package-name">{{ headerInfo.name }}</h4>
-        <p class="package-desc" :title="headerInfo.memo">{{ headerInfo.memo }}</p>
+        <p class="package-desc" :title="headerInfo.memo" v-if="headerInfo.primary_name !== '默认套餐'">{{ headerInfo.memo }}</p>
       </div>
       <div class="table-list-wrapper">
         <component v-if="tableComp" :is="tableComp" />

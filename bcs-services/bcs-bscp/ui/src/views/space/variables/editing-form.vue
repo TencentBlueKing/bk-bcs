@@ -103,7 +103,7 @@
     width: 100px;
     border-right: 1px solid #c4c6cc;
     :deep(.bk-input) {
-      height: 30px;
+      height: 28px;
       border: none;
       .bk-input--text {
         background: #f5f7fa;

@@ -124,7 +124,8 @@ func checkAuditorDB(auditorDB *gorm.DB) error {
 func MustShardingAuditor(adminDB *gorm.DB) *gorm.DB {
 	auditorDB, err := InitAuditorSharding(adminDB)
 	if err != nil {
-		klog.InfoS("init auditor sharding failed, fallback to admin db", "dbname", adminDB.Migrator().CurrentDatabase(), "err", err)
+		klog.InfoS("init auditor sharding failed, fallback to admin db", "dbname", adminDB.Migrator().CurrentDatabase(),
+			"err", err)
 		return adminDB
 	}
 

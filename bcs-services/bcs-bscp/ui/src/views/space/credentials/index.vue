@@ -295,7 +295,7 @@
           <bk-input
             v-model="searchStr"
             class="search-group-input"
-            placeholder="状态/说明/更新人/更新时间"
+            placeholder="说明/更新人"
             :clearable="true"
             @enter="refreshListWithLoading()"
             @clear="refreshListWithLoading"

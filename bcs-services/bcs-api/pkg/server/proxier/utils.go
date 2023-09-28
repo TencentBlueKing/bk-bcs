@@ -8,19 +8,17 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package proxier
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/url"
 	"strings"
 
 	restclient "k8s.io/client-go/rest"
-
-	"fmt"
 
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 )
@@ -32,7 +30,7 @@ const (
 // ExtractIpAddress xxx
 func ExtractIpAddress(serverAddress string) (*url.URL, error) {
 	if !strings.HasSuffix(serverAddress, "/") {
-		serverAddress = serverAddress + "/"
+		serverAddress += "/"
 	}
 	ipAddress, err := url.Parse(serverAddress)
 	if err != nil {
@@ -77,6 +75,6 @@ func dialTls(host string) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer conn.Close() // nolint
 	return nil
 }

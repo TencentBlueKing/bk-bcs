@@ -31,7 +31,7 @@ func SHA256(data string) string {
 // ByteSHA256 returns a sha256 string of the data byte.
 func ByteSHA256(data []byte) string {
 	hash := sha256.New()
-	hash.Write(data) // nolint
+	hash.Write(data) //nolint
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 

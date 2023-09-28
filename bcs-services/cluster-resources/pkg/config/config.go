@@ -253,8 +253,7 @@ type ClientConf struct {
 
 // SwaggerConf Swagger 配置
 type SwaggerConf struct {
-	Enabled bool   `yaml:"enabled" usage:"是否启用 swagger 服务"`
-	Dir     string `yaml:"dir" usage:"swagger.json 存放目录"`
+	Enabled bool `yaml:"enabled" usage:"是否启用 swagger 服务"`
 }
 
 // LogConf 日志配置

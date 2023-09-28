@@ -8,17 +8,18 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package sqlstore
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
-	"github.com/dchest/uniuri"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/dchest/uniuri"
+
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 )
 
 const (

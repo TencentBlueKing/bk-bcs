@@ -11,6 +11,7 @@
  *
  */
 
+// Package filterclb filters invalid cloud loadbalance
 package filterclb
 
 import (

@@ -10,6 +10,7 @@
   import VariableCreate from './variable-create.vue';
   import VariableEdit from './variable-edit.vue';
   import SearchInput from '../../../components/search-input.vue'
+  import TableEmpty from '../../../components/table/table-empty.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 
@@ -32,7 +33,7 @@
       memo: ''
     }
   })
-
+  const isSearchEmpty = ref(false)
   watch(() => spaceId.value, () => {
     refreshList()
   })
@@ -86,8 +87,14 @@
   }
 
   const refreshList = (current: number = 1) => {
+    searchStr.value ? isSearchEmpty.value = true : isSearchEmpty.value = false
     pagination.value.current = current
     getVariables()
+  }
+
+  const clearSearchStr = () => {
+    searchStr.value = ''
+    refreshList()
   }
 </script>
 <template>
@@ -101,7 +108,6 @@
     </div>
     <div class="variable-table">
       <bk-table
-        empty-text="暂无变量"
         :border="['outer']"
         :data="list"
         :remote-pagination="true"
@@ -128,6 +134,9 @@
             </div>
           </template>
         </bk-table-column>
+        <template #empty>
+          <TableEmpty :isSearchEmpty="isSearchEmpty" @clear="clearSearchStr"></TableEmpty>
+        </template>
       </bk-table>
     </div>
     <VariableCreate v-model:show="isCreateSliderShow" @created="refreshList" />

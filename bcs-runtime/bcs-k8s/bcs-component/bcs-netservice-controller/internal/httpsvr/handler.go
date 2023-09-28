@@ -10,6 +10,8 @@
  * limitations under the License.
  */
 
+// Package httpsvr is http server package
+// NOCC:tosa/comment_ratio(设计如此)
 package httpsvr
 
 import (
@@ -140,10 +142,10 @@ func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restfu
 
 	// match IP by claim or podName and podNamespace
 	if claimName != "" {
-		ipClaim, err := c.getClaim(netIPReq.PodNamespace, claimName)
-		if err != nil {
+		ipClaim, gerr := c.getClaim(netIPReq.PodNamespace, claimName)
+		if gerr != nil {
 			message := fmt.Sprintf("get BCSNetIPClaim %s/%s failed, err %s",
-				netIPReq.PodNamespace, claimName, err.Error())
+				netIPReq.PodNamespace, claimName, gerr.Error())
 			blog.Errorf(message)
 			response.WriteEntity(responseData(2, message, false, requestID, nil))
 			return
@@ -168,9 +170,9 @@ func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restfu
 		}
 		if ipClaim.Status.Phase == constant.BCSNetIPClaimPendingStatus {
 			// allocate ip for pending ip claim
-			targetIP, bcspool, err := c.allocateNewIPForClaim(netIPReq, availableIP, ipClaim)
-			if err != nil {
-				response.WriteEntity(responseData(2, err.Error(), false, requestID, nil))
+			targetIP, bcspool, aerr := c.allocateNewIPForClaim(netIPReq, availableIP, ipClaim)
+			if aerr != nil {
+				response.WriteEntity(responseData(2, aerr.Error(), false, requestID, nil))
 				return
 			}
 			data := getAllocateResponseData(netIPReq, targetIP, bcspool)
@@ -178,9 +180,9 @@ func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restfu
 			return
 		} else if ipClaim.Status.Phase == constant.BCSNetIPClaimBoundedStatus {
 			// get ip from ip claim
-			bcsNetIP, bcsNetPool, err := c.allocateIPByClaim(netIPReq, ipClaim)
-			if err != nil {
-				response.WriteEntity(responseData(2, err.Error(), false, requestID, nil))
+			bcsNetIP, bcsNetPool, aerr := c.allocateIPByClaim(netIPReq, ipClaim)
+			if aerr != nil {
+				response.WriteEntity(responseData(2, aerr.Error(), false, requestID, nil))
 				return
 			}
 			data := getAllocateResponseData(netIPReq, bcsNetIP, bcsNetPool)
@@ -204,8 +206,8 @@ func (c *HttpServerClient) AllocateIP(request *restful.Request, response *restfu
 		return
 	}
 	targetIP := availableIP[0]
-	if err := c.updateIPStatus(targetIP, netIPReq, "", "", false); err != nil {
-		response.WriteEntity(responseData(2, err.Error(), false, requestID, nil))
+	if uerr := c.updateIPStatus(targetIP, netIPReq, "", "", false); uerr != nil {
+		response.WriteEntity(responseData(2, uerr.Error(), false, requestID, nil))
 		return
 	}
 	message := fmt.Sprintf("allocate IP [%s] for Host %s success", targetIP.Name, netIPReq.Host)

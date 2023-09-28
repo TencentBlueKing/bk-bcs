@@ -27,6 +27,7 @@
         v-if="typeof props.pkg.id === 'number'"
         theme="light template-package-actions-popover"
         placement="bottom-end"
+        :popoverDelay="0"
         :arrow="false">
         <Ellipsis class="action-more-icon" @click.stop />
         <template #content>

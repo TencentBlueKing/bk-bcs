@@ -8,22 +8,21 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package resthdrs
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
-
-	"github.com/emicklei/go-restful"
-	"time"
 )
 
 // ListRegisterTokens xxx
@@ -41,7 +40,7 @@ func ListRegisterTokens(request *restful.Request, response *restful.Response) {
 		WriteClientError(response, "RTOKEN_NOT_FOUND", message)
 		return
 	}
-	response.WriteEntity([]*m.RegisterToken{token})
+	_ = response.WriteEntity([]*m.RegisterToken{token})
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -63,7 +62,7 @@ func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 		WriteServerError(response, "CANNOT_CREATE_RTOKEN", message)
 		return
 	}
-	response.WriteEntity([]*m.RegisterToken{
+	_ = response.WriteEntity([]*m.RegisterToken{
 		sqlstore.GetRegisterToken(clusterId),
 	})
 

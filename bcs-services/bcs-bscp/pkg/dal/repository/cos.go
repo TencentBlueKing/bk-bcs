@@ -165,7 +165,8 @@ func (c *cosClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (s
 
 	// cos sdk 已经包含根目录, 需要去重
 	node = strings.TrimLeft(node, "/")
-	u, err := c.innerClient.Object.GetPresignedURL(kt.Ctx, http.MethodGet, node, c.conf.AccessKeyID, c.conf.SecretAccessKey, time.Hour, opt)
+	u, err := c.innerClient.Object.GetPresignedURL(kt.Ctx, http.MethodGet, node, c.conf.AccessKeyID,
+		c.conf.SecretAccessKey, time.Hour, opt)
 	if err != nil {
 		return "", err
 	}
@@ -175,12 +176,12 @@ func (c *cosClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (s
 
 // AsyncDownload cos
 func (c *cosClient) AsyncDownload(kt *kit.Kit, sign string) (string, error) {
-	return "", notImplementedErr
+	return "", errNotImplemented
 }
 
 // AsyncDownloadStatus cos
 func (c *cosClient) AsyncDownloadStatus(kt *kit.Kit, sign string, taskID string) (bool, error) {
-	return false, notImplementedErr
+	return false, errNotImplemented
 }
 
 // newCosProvider new cos provider

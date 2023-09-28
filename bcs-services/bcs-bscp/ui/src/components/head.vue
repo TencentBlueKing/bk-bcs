@@ -100,23 +100,26 @@
       click () {
         // @ts-ignore
         window.open(BSCP_CONFIG.help)
-        isShowDropdown.value = !isShowDropdown.value
       },
     },
     {
       title: '版本日志',
       click () {
         isShowVersionLog.value = true
-        isShowDropdown.value = !isShowDropdown.value
       },
     },
     {
       title: '功能特性',
       click () {
         isShowFeatures.value = true
-        isShowDropdown.value = !isShowDropdown.value
       },
     },
+    {
+      title: '问题反馈',
+      click () {
+        window.open('https://bk.tencent.com/s-mart/community/question')
+      }
+    }
   ]
 
   const isShowDropdown = ref(false)
@@ -188,7 +191,12 @@
           </div>
         </template>
         <bk-option v-for="item in optionList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
-          <div v-cursor="{ active: !item.permission }" :class="['biz-option-item', { 'no-perm': !item.permission }]">
+          <div
+          v-cursor="{ active: !item.permission }"
+          :class="['biz-option-item', { 'no-perm': !item.permission }]"
+          v-bk-tooltips="{
+            content: `项目名称: ${item.space_name}\n业务ID: ${item.space_id}`,
+            placement: 'left'}">
             <div class="name-wrapper">
               <span class="text">{{ item.space_name }}</span>
               <span class="id">({{ item.space_id }})</span>
@@ -198,11 +206,11 @@
         </bk-option>
       </bk-select>
       <bk-dropdown
-        trigger="click"
+        trigger="hover"
         ext-cls="dropdown"
         :is-show="isShowDropdown"
-        @hide="isShowDropdown = !isShowDropdown">
-        <bk-button text @click="isShowDropdown = !isShowDropdown"
+        @hide="isShowDropdown = false">
+        <bk-button text
           :class="['dropdown-trigger', isShowDropdown ? 'active' : '']">
           <help-fill width="16" height="16" :fill="isShowDropdown ? '#fff' : '#96a2b9'" />
         </bk-button>

@@ -29,9 +29,12 @@ import (
 )
 
 const (
-	RedisStandaloneMode = "standalone" // 单节点redis
-	RedisSentinelMode   = "sentinel"   // 哨兵模式redis，哨兵实例
-	RedisClusterMode    = "cluster"    // 集群模式redis
+	// RedisStandaloneMode 单节点 redis
+	RedisStandaloneMode = "standalone"
+	// RedisSentinelMode 哨兵模式 redis，哨兵实例
+	RedisSentinelMode = "sentinel"
+	// RedisClusterMode 集群模式 redis
+	RedisClusterMode = "cluster"
 )
 
 // Service defines Setting related runtime.
@@ -294,7 +297,7 @@ func (s Repository) OneEndpoint() (string, error) {
 
 	var addr string
 	if repoPollingAddrIndex < num-1 {
-		repoPollingAddrIndex = repoPollingAddrIndex + 1
+		repoPollingAddrIndex++
 		addr = s.BkRepo.Endpoints[repoPollingAddrIndex]
 	} else {
 		repoPollingAddrIndex = 0

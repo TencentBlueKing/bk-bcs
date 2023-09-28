@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
@@ -19,7 +18,9 @@ import (
 )
 
 func TestVersionAPIError(t *testing.T) {
-	responseRaw := []byte("{\"Response\":{\"Error\":{\"Code\":\"InternalError\",\"Message\":\"An internal error has occurred. Retry your request, but if the problem persists, contact us with details by posting a message on the Tencent cloud forums.\"},\"RequestId\":\"request-id-mock\"}}")
+	responseRaw := []byte("{\"Response\":{\"Error\":{\"Code\":\"InternalError\",\"Message\":\"An internal error " +
+		"has occurred. Retry your request, but if the problem persists, contact us with details by posting a message " +
+		"on the Tencent cloud forums.\"},\"RequestId\":\"request-id-mock\"}}")
 
 	versionErrorResponse := VersionAPIError{}
 

@@ -75,7 +75,7 @@ type Service struct {
 	initial *initial.Initial
 	// auth logic module.
 	auth     *auth.Auth
-	spaceMgr *space.SpaceMgr
+	spaceMgr *space.Manager
 }
 
 // NewService create a service instance.

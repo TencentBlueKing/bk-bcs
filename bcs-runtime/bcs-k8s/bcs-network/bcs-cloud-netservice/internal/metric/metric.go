@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package metric is metric collector
 package metric
 
 import (

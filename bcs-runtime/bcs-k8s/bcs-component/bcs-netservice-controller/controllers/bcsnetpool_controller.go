@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package controllers for bcsipclaim and bcsnetpool
 package controllers
 
 import (
@@ -316,16 +317,16 @@ func (r *BCSNetPoolReconciler) createBCSNetIP(ctx context.Context, netPool *nets
 					Gateway: netPool.Spec.Gateway,
 				},
 			}
-			if err := r.Create(ctx, newNetIP); err != nil {
-				blog.Errorf("create BCSNetIP %s failed, err %s", ip, err.Error())
-				return err
+			if cerr := r.Create(ctx, newNetIP); cerr != nil {
+				blog.Errorf("create BCSNetIP %s failed, err %s", ip, cerr.Error())
+				return cerr
 			}
 			blog.Infof("BCSNetIP %s created successfully", ip)
 
 			newNetIP.Status.Phase = constant.BCSNetIPAvailableStatus
-			if err := r.Status().Update(ctx, newNetIP); err != nil {
-				blog.Errorf("update BCSNetIP %s status failed, err %s", ip, err.Error())
-				return err
+			if uerr := r.Status().Update(ctx, newNetIP); uerr != nil {
+				blog.Errorf("update BCSNetIP %s status failed, err %s", ip, uerr.Error())
+				return uerr
 			}
 			blog.Infof("BCSNetIP %s status update successfully", ip)
 			return nil

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package credential provides credential scope related operations.
 package credential
 
 import (
@@ -21,10 +22,11 @@ import (
 	"bscp.io/pkg/tools"
 )
 
-type CredentialScope string
+// Scope defines the credential scope expression.
+type Scope string
 
 // Validate validate a credential scope is valid or not.
-func (cs CredentialScope) Validate() error {
+func (cs Scope) Validate() error {
 	strs := strings.Split(string(cs), "/")
 	if len(strs) < 2 {
 		return fmt.Errorf("invalid credential scope %s", string(cs))
@@ -38,7 +40,7 @@ func (cs CredentialScope) Validate() error {
 }
 
 // MatchApp checks if the credential scope matches the app name.
-func (cs CredentialScope) MatchApp(name string) (bool, error) {
+func (cs Scope) MatchApp(name string) (bool, error) {
 	if err := cs.Validate(); err != nil {
 		return false, err
 	}
@@ -48,7 +50,7 @@ func (cs CredentialScope) MatchApp(name string) (bool, error) {
 }
 
 // MatchConfigItem checks if the credential scope matches the config item.
-func (cs CredentialScope) MatchConfigItem(path, name string) (bool, error) {
+func (cs Scope) MatchConfigItem(path, name string) (bool, error) {
 	if err := cs.Validate(); err != nil {
 		return false, err
 	}

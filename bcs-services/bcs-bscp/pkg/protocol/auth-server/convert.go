@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbas provides auth server core protocol struct and convert functions.
 package pbas
 
 import (
@@ -358,7 +359,10 @@ func GrantResourceCreatorAction(req *GrantResourceCreatorActionReq) *client.Gran
 	}
 }
 
-// GrantResourceCreatorActionAncetors convert pb GrantResourceCreatorActionReq_Ancestor array to client GrantResourceCreatorActionAncestor array
+// GrantResourceCreatorActionAncetors convert pb GrantResourceCreatorActionReq_Ancestor array
+// to client GrantResourceCreatorActionAncestor array
+//
+//nolint:lll
 func GrantResourceCreatorActionAncetors(ancetors []*GrantResourceCreatorActionReq_Ancestor) []client.GrantResourceCreatorActionAncestor {
 	result := make([]client.GrantResourceCreatorActionAncestor, len(ancetors))
 
@@ -373,7 +377,10 @@ func GrantResourceCreatorActionAncetors(ancetors []*GrantResourceCreatorActionRe
 	return result
 }
 
-// GrantResourceCreatorActionAncetor convert pb GrantResourceCreatorActionReq_Ancestor to client GrantResourceCreatorActionAncestor
+// GrantResourceCreatorActionAncetor convert pb GrantResourceCreatorActionReq_Ancestor
+// to client GrantResourceCreatorActionAncestor
+//
+//nolint:lll
 func GrantResourceCreatorActionAncetor(ancetor *GrantResourceCreatorActionReq_Ancestor) client.GrantResourceCreatorActionAncestor {
 	return client.GrantResourceCreatorActionAncestor{
 		System: ancetor.System,
@@ -382,7 +389,10 @@ func GrantResourceCreatorActionAncetor(ancetor *GrantResourceCreatorActionReq_An
 	}
 }
 
-// PbGrantResourceCreatorActionAncestor convert client GrantResourceCreatorActionAncestor to pb GrantResourceCreatorActionReq_Ancestor
+// PbGrantResourceCreatorActionAncestor convert client GrantResourceCreatorActionAncestor
+// to pb GrantResourceCreatorActionReq_Ancestor
+//
+//nolint:lll
 func PbGrantResourceCreatorActionAncestor(ancetor client.GrantResourceCreatorActionAncestor) *GrantResourceCreatorActionReq_Ancestor {
 	return &GrantResourceCreatorActionReq_Ancestor{
 		System: ancetor.System,
@@ -391,7 +401,10 @@ func PbGrantResourceCreatorActionAncestor(ancetor client.GrantResourceCreatorAct
 	}
 }
 
-// PbGrantResourceCreatorActionAncestors convert client GrantResourceCreatorActionAncestor array to pb GrantResourceCreatorActionReq_Ancestor array
+// PbGrantResourceCreatorActionAncestors convert client GrantResourceCreatorActionAncestor array
+// to pb GrantResourceCreatorActionReq_Ancestor array
+//
+//nolint:lll
 func PbGrantResourceCreatorActionAncestors(ancetors []client.GrantResourceCreatorActionAncestor) []*GrantResourceCreatorActionReq_Ancestor {
 	result := make([]*GrantResourceCreatorActionReq_Ancestor, len(ancetors))
 
@@ -406,7 +419,10 @@ func PbGrantResourceCreatorActionAncestors(ancetors []client.GrantResourceCreato
 	return result
 }
 
-// PbGrantResourceCreatorActionOption convert client GrantResourceCreatorActionOption to pb GrantResourceCreatorActionReq
+// PbGrantResourceCreatorActionOption convert client GrantResourceCreatorActionOption
+// to pb GrantResourceCreatorActionReq
+//
+//nolint:lll
 func PbGrantResourceCreatorActionOption(option *client.GrantResourceCreatorActionOption) *GrantResourceCreatorActionReq {
 	return &GrantResourceCreatorActionReq{
 		System:    option.System,

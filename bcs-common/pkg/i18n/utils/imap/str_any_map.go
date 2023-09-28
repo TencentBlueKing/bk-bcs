@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package imap xxx
 package imap
 
 import "github.com/Tencent/bk-bcs/bcs-common/pkg/i18n/utils/rwmutex"
@@ -123,19 +123,19 @@ func (m *StrAnyMap) doSetWithLockCheck(key string, value interface{}) interface{
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
 func (m *StrAnyMap) GetOrSetFuncLock(key string, f func() interface{}) interface{} {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, f)
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetOrSet returns the value by key,
 // or sets value with given `value` if it does not exist and then returns this value.
 func (m *StrAnyMap) GetOrSet(key string, value interface{}) interface{} {
-	if v, ok := m.Search(key); !ok {
+	v, ok := m.Search(key)
+	if !ok {
 		return m.doSetWithLockCheck(key, value)
-	} else {
-		return v
 	}
+	return v
 }

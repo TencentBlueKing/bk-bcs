@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package regdiscv xxx
@@ -29,9 +28,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
-
 	"golang.org/x/net/context"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 )
 
 var rd *RDiscover
@@ -113,7 +112,7 @@ func (r *RDiscover) GetModuleServers(moduleName string) (interface{}, error) {
 
 	// rand
 	rand.Seed(int64(time.Now().Nanosecond()))
-	serv := servs[rand.Intn(len(servs))]
+	serv := servs[rand.Intn(len(servs))] // nolint
 	return serv, nil
 }
 
@@ -204,12 +203,11 @@ func (r *RDiscover) discoverServices(k string) {
 }
 
 // stop the rdiscover
-func (r *RDiscover) stop() error {
+func (r *RDiscover) stop() error { // nolint
 	r.cancel()
 
-	r.rd.Stop()
-
-	return nil
+	err := r.rd.Stop()
+	return err
 }
 
 func (r *RDiscover) registerAPI() error {
@@ -238,7 +236,7 @@ func (r *RDiscover) registerAPI() error {
 	return r.rd.RegisterAndWatchService(apiPath, data)
 }
 
-func (r *RDiscover) discoverStorageServ(servInfos []string) error {
+func (r *RDiscover) discoverStorageServ(servInfos []string) {
 	blog.Info("discover storage(%v)", servInfos)
 
 	storages := make([]interface{}, 0)
@@ -255,11 +253,9 @@ func (r *RDiscover) discoverStorageServ(servInfos []string) error {
 	r.Lock()
 	r.servers[types.BCS_MODULE_STORAGE] = storages
 	r.Unlock()
-
-	return nil
 }
 
-func (r *RDiscover) discoverDetectionServ(servInfos []string) error {
+func (r *RDiscover) discoverDetectionServ(servInfos []string) {
 	blog.Info("discover network detection(%v)", servInfos)
 
 	detections := make([]interface{}, 0)
@@ -276,11 +272,9 @@ func (r *RDiscover) discoverDetectionServ(servInfos []string) error {
 	r.Lock()
 	r.servers[types.BCS_MODULE_NETWORKDETECTION] = detections
 	r.Unlock()
-
-	return nil
 }
 
-func (r *RDiscover) discoverNetserviceServ(servInfos []string) error {
+func (r *RDiscover) discoverNetserviceServ(servInfos []string) {
 	blog.Info("discover netservice(%v)", servInfos)
 
 	netservices := make([]interface{}, 0)
@@ -297,11 +291,9 @@ func (r *RDiscover) discoverNetserviceServ(servInfos []string) error {
 	r.Lock()
 	r.servers[types.BCS_MODULE_NETSERVICE] = netservices
 	r.Unlock()
-
-	return nil
 }
 
-func (r *RDiscover) discoverClusterkeeper(servInfos []string) error {
+func (r *RDiscover) discoverClusterkeeper(servInfos []string) {
 	blog.Info("discover clusterkeeper(%v)", servInfos)
 
 	clusters := make([]interface{}, 0)
@@ -318,11 +310,9 @@ func (r *RDiscover) discoverClusterkeeper(servInfos []string) error {
 	r.Lock()
 	r.servers[types.BCS_MODULE_CLUSTERKEEPER] = clusters
 	r.Unlock()
-
-	return nil
 }
 
-func (r *RDiscover) discoverMesosApiserver(nodes []string) error {
+func (r *RDiscover) discoverMesosApiserver(nodes []string) {
 
 	for _, node := range nodes {
 		_, ok := r.mesosapiClustersNodes[node]
@@ -336,8 +326,6 @@ func (r *RDiscover) discoverMesosApiserver(nodes []string) error {
 
 		go r.discoverClusterMesosApiserver(key)
 	}
-
-	return nil
 }
 
 func (r *RDiscover) discoverClusterMesosApiserver(key string) {
@@ -382,7 +370,7 @@ func (r *RDiscover) discoverClusterMesosApiserver(key string) {
 	}
 }
 
-func (r *RDiscover) discoverK8sApiserver(nodes []string) error {
+func (r *RDiscover) discoverK8sApiserver(nodes []string) {
 
 	for _, node := range nodes {
 		_, ok := r.k8sapiClustersNodes[node]
@@ -396,8 +384,6 @@ func (r *RDiscover) discoverK8sApiserver(nodes []string) error {
 
 		go r.discoverClusterK8sApiserver(key)
 	}
-
-	return nil
 }
 
 func (r *RDiscover) discoverClusterK8sApiserver(key string) {
@@ -442,7 +428,7 @@ func (r *RDiscover) discoverClusterK8sApiserver(key string) {
 	}
 }
 
-func (r *RDiscover) discoverMetricServer(servInfos []string) error {
+func (r *RDiscover) discoverMetricServer(servInfos []string) {
 	blog.Info("discover metricservice(%v)", servInfos)
 
 	clusters := make([]interface{}, 0)
@@ -459,6 +445,4 @@ func (r *RDiscover) discoverMetricServer(servInfos []string) error {
 	r.Lock()
 	r.servers[types.BCS_MODULE_METRICSERVICE] = clusters
 	r.Unlock()
-
-	return nil
 }

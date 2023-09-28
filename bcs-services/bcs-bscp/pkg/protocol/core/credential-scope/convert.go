@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbcrs provides credential scope core protocol struct and convert functions.
 package pbcrs
 
 import (

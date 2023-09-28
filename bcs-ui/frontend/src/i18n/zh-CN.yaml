@@ -43,7 +43,7 @@ bcs:
       business:
         text: 关联CMDB业务
         placeholder: 请选择关联业务
-        emptyMsg: 启用容器服务需要CMDB业务的业务运维角色 {0}
+        emptyMsg: '启用容器服务需要CMDB业务的业务运维角色 {0}'
 blueking:
   onCall: 联系BK助手
   support: 技术支持
@@ -235,6 +235,7 @@ generic:
       save1: 数据保存成功
       copyIP: '成功复制 {num} 个IP'
       edit: 编辑成功
+      restart: 重启成功
     empty:
       noData: 暂无数据
       noData1: 无数据
@@ -393,6 +394,7 @@ generic:
     taskTimeout: 执行超时
     taskKill: 强制终止
     taskNotEnable: 未启动
+    restarting: 重启中
   validate:
     name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
@@ -2137,6 +2139,7 @@ dashboard:
   title:
     confirmDelete: 确认删除当前资源
     overview: 总览
+    confirmSchedule: '确认{action}当前资源下所有Pod'
   placeholder:
     selectCRD: 选择CRD
     search1: 搜索名称
@@ -2205,6 +2208,8 @@ dashboard:
       scaleNum: 实例数量
     button:
       yaml: 查看YAML配置
+      restart: 滚动重启
+      onDelete: 手动重启
     container:
       title: 容器
       name: 容器名称
@@ -2220,12 +2225,12 @@ dashboard:
       node: 节点
       podManagementPolicy: Pod管理策略
       multiDelete: 批量重新调度
-      delete: 重新调度
+      delete: 删除
       log: 日志检索
       stdoutLog: 标准输出检索
       filelog: 文件日志检索
       search: 请入名称、镜像、IP、Node搜索
-      confirm: 确认重新调度以下Pod
+      confirm: 确认删除以下Pod
     editor:
       yamlMode:
         confirm: 确认切换为 YAML 模式？
@@ -2506,3 +2511,25 @@ publicCloud:
       Azure Kubernetes Service (AKS)
       内置代码到云端管道以及护栏，能够帮助开发人员以最快速的方式开始开发和部署云原生应用。在本地、边缘和多云 Kubernetes
       集群试试统一的管理和治理。提供与 Azure 安全、身份、成本管理和迁移服务的互操作性。
+updateRecord:
+  placeholder:
+    search: 搜索 镜像/更新人
+  confirmRollout:
+    title: 确定回滚到此版本？
+    subTitle: '目标版本：{0}'
+  label:
+    revision: 版本号
+    images: 镜像
+    updater: 更新人
+    createTime: 创建时间
+    operator: 操作
+    versionDetail: 版本详情
+    versionDiff: 版本对比
+    rollbackVersion: 版本回滚
+    onlineVersion: 线上
+  button:
+    diff: 对比
+    diff2: 前往对比
+    rollout: 回滚
+    close: 关闭
+    rolloutThisVersion: 回滚到此版本

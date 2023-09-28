@@ -89,41 +89,41 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 	ab.toAudit.Action = enumor.Create
 	ab.prev = cur
 
-	switch cur.(type) {
+	switch val := cur.(type) {
 	case *table.ConfigItem:
-		configItem := cur.(*table.ConfigItem)
+		configItem := val
 		ab.toAudit.AppID = configItem.Attachment.AppID
 		ab.toAudit.ResourceID = configItem.ID
 
 	case *table.Content:
-		content := cur.(*table.Content)
+		content := val
 		ab.toAudit.AppID = content.Attachment.AppID
 		ab.toAudit.ResourceID = content.ID
 
 	case *table.Commit:
-		commit := cur.(*table.Commit)
+		commit := val
 		ab.toAudit.AppID = commit.Attachment.AppID
 		ab.toAudit.ResourceID = commit.ID
 
 	case *table.Release:
-		release := cur.(*table.Release)
+		release := val
 		ab.toAudit.AppID = release.Attachment.AppID
 		ab.toAudit.ResourceID = release.ID
 
 	case *table.Hook:
-		sset := cur.(*table.Hook)
+		sset := val
 		ab.toAudit.ResourceID = sset.ID
 
 	case *table.TemplateSpace:
-		sset := cur.(*table.TemplateSpace)
+		sset := val
 		ab.toAudit.ResourceID = sset.ID
 
 	case *table.Group:
-		sset := cur.(*table.Group)
+		sset := val
 		ab.toAudit.ResourceID = sset.ID
 
 	case []*table.ReleasedConfigItem:
-		items := cur.([]*table.ReleasedConfigItem)
+		items := val
 		ab.toAudit.AppID = items[0].Attachment.AppID
 		ab.toAudit.ResourceID = items[0].ReleaseID
 
@@ -158,9 +158,9 @@ func (ab *AuditBuilder) AuditPublish(cur interface{}, opt *AuditOption) error {
 	ab.toAudit.Action = enumor.Publish
 	ab.prev = cur
 
-	switch cur.(type) {
+	switch val := cur.(type) {
 	case *table.Strategy:
-		strategy := cur.(*table.Strategy)
+		strategy := val
 		ab.toAudit.AppID = strategy.Attachment.AppID
 		ab.toAudit.ResourceID = strategy.ID
 
@@ -195,16 +195,16 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 
 	ab.toAudit.Action = enumor.Update
 
-	switch updatedTo.(type) {
+	switch val := updatedTo.(type) {
 	case *table.ConfigItem:
-		ci := updatedTo.(*table.ConfigItem)
+		ci := val
 		if err := ab.decorateConfigItemUpdate(ci); err != nil {
 			ab.hitErr = err
 			return ab
 		}
 
 	case *table.Group:
-		group := updatedTo.(*table.Group)
+		group := val
 		if err := ab.decorateGroupUpdate(group); err != nil {
 			ab.hitErr = err
 			return ab
@@ -336,8 +336,9 @@ func (ab *AuditBuilder) Do(opt *AuditOption) error {
 
 func (ab *AuditBuilder) getConfigItem(configItemID uint32) (*table.ConfigItem, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", table.ConfigItemTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(configItemID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ",
+		table.ConfigItemTable.Name(), " WHERE id = ", strconv.Itoa(int(configItemID)), " AND biz_id = ",
+		strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
 	one := new(table.ConfigItem)

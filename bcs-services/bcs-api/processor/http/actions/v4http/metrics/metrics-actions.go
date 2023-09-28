@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -19,19 +19,19 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/regdiscv"
-
 	"github.com/emicklei/go-restful"
 	"github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
-	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/regdiscv"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -53,7 +53,7 @@ func handlerActions(req *restful.Request, resp *restful.Response) {
 		metric.RequestErrorCount.WithLabelValues("metrics", req.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("metrics", req.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Error("get metric server failed! err: %s", err.Error())
-		resp.WriteHeaderAndEntity(
+		_ = resp.WriteHeaderAndEntity(
 			http.StatusBadRequest,
 			APIResponse{
 				Result:  false,
@@ -67,7 +67,7 @@ func handlerActions(req *restful.Request, resp *restful.Response) {
 	metric.RequestCount.WithLabelValues("metrics", req.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("metrics", req.Request.Method).Observe(time.Since(start).Seconds())
 
-	resp.Write(data)
+	_, _ = resp.Write(data)
 }
 
 func request2metrics(req *restful.Request, uri string) (respBody []byte, err error) {
@@ -108,9 +108,9 @@ func request2metrics(req *restful.Request, uri string) (respBody []byte, err err
 	// Use client certs if given
 	goReq := gorequest.New()
 	if strings.ToLower(ser.Scheme) == "https" {
-		cliTls, err := rd.GetClientTls()
-		if err != nil {
-			blog.Errorf("get client tls error %s", err.Error())
+		cliTls, tlsErr := rd.GetClientTls()
+		if tlsErr != nil {
+			blog.Errorf("get client tls error %s", tlsErr.Error())
 		} else {
 			goReq = goReq.TLSClientConfig(cliTls)
 		}

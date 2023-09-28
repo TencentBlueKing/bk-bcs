@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package errf provides bscp common error.
 package errf
 
 // NOTE: 错误码规则

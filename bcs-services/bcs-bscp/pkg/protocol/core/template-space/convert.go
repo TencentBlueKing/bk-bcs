@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbts provides template space core protocol struct and convert functions.
 package pbts
 
 import (

@@ -28,6 +28,7 @@
         title: `确认是否删除服务 ${props.service.spec.name}?`,
         headerAlign: "center" as const,
         footerAlign: "center" as const,
+        extCls: 'center-top-infobox',
         onConfirm: async () => {
           await deleteApp(<number>props.service.id, props.service.biz_id);
           emits('update')
@@ -236,4 +237,9 @@
       }
     }
   }
+
+</style>
+
+<style lang="scss">
+
 </style>

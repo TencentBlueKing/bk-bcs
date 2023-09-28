@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package aws is implementation for aws cloud
 package aws
 
 import (

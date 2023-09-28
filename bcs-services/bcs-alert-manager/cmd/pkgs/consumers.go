@@ -8,16 +8,16 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pkgs
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/cmd/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/consumer"
 )
@@ -50,10 +50,10 @@ func GetFactoryConsumers(options *config.AlertManagerOptions) []consumer.Consume
 }
 
 func handlerFactory(resourceKind string, options *config.AlertManagerOptions) consumer.Consumer {
-	switch resourceKind {
-	case msgqueue.EventSubscribeType:
+	if resourceKind == msgqueue.EventSubscribeType {
 		return GetEventSyncHandler(options)
 	}
+
 	return nil
 }
 

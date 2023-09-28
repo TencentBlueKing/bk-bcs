@@ -59,7 +59,7 @@ func (dao *hookDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) (
 		return 0, err
 	}
 
-	//generate a hook id and update to hook.
+	// generate a hook id and update to hook.
 	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
 		return 0, err
@@ -96,10 +96,8 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 	}
 	if opt.Tag != "" {
 		q = q.Where(h.Tag.Eq(opt.Tag))
-	} else {
-		if opt.NotTag {
-			q = q.Where(h.Tag.Eq(""))
-		}
+	} else if opt.NotTag {
+		q = q.Where(h.Tag.Eq(""))
 	}
 
 	if opt.SearchKey != "" {

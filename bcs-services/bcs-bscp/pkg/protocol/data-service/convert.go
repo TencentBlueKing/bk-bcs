@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbds provides data service core protocol struct and convert functions.
 package pbds
 
 import "bscp.io/pkg/types"

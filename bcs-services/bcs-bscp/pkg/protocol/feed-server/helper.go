@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbfs provides feed server core protocol struct and convert functions.
 package pbfs
 
 import (

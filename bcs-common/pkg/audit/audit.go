@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package audit
@@ -240,7 +239,7 @@ type ActionResult struct {
 }
 
 // AuditData is the data to be recorded.
-type AuditData struct {
+type AuditData struct { // nolint
 	EventContent  string
 	ActionID      string
 	RequestID     string

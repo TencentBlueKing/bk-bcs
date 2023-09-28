@@ -109,8 +109,9 @@
         :config="configForm"
         :content="content"
         :editable="true"
+        :is-tpl="true"
         :bk-biz-id="spaceId"
-        :app-id="currentTemplateSpace"
+        :id="currentTemplateSpace"
         @change="handleFormChange"/>
     </div>
     <div class="action-btns">

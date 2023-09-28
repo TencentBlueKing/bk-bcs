@@ -61,8 +61,8 @@ func (dao *commitDao) Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
 		return 0, err
 	}
 
-	// generate an commit id and update to commit.
-	id, err := dao.idGen.One(kit, table.Name(commit.TableName()))
+	// generate a commit id and update to commit.
+	id, err := dao.idGen.One(kit, commit.TableName())
 	if err != nil {
 		return 0, err
 	}

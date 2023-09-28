@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package bcsapiv4 xxx
 package bcsapiv4
 
 import (
@@ -114,16 +114,16 @@ type Client struct {
 }
 
 // UserManager client interface
-//func (c *Client) UserManager() UserManager {
+// func (c *Client) UserManager() UserManager {
 //	return NewUserManager(c.config)
-//}
+// }
 
 // MesosDriver client interface
 // func (c *Client) MesosDriver() MesosDriver {
 // 	return &MesosDriverClient{}
 // }
 
-//// Storage client interface
-//func (c *Client) Storage() Storage {
+// Storage client interface
+// func (c *Client) Storage() Storage {
 //	return NewStorage(c.config)
-//}
+// }

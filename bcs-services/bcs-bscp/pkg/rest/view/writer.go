@@ -28,10 +28,10 @@ import (
 )
 
 const (
-	// BK_CODE_KEY 蓝鲸规范返回的 code key
+	// BK_APIv1_CODE_KEY 蓝鲸规范返回的 code key
 	BK_APIv1_CODE_KEY = "code"
 
-	// BK_CODE_OK_VALUE 蓝鲸规范返回正常请求的 code value
+	// BK_APIv1_CODE_OK_VALUE 蓝鲸规范返回正常请求的 code value
 	BK_APIv1_CODE_OK_VALUE = 0
 )
 
@@ -68,7 +68,9 @@ func (w *GenericResponseWriter) Write(data []byte) (int, error) {
 		return w.ResponseWriter.Write(data)
 	}
 
-	w.beforeWriteHook(w.ctx, w.msg)
+	if err := w.beforeWriteHook(w.ctx, w.msg); err != nil {
+		return 0, err
+	}
 
 	if w.msg != nil {
 		w, ok := w.msg.(modifier.RespModifier)

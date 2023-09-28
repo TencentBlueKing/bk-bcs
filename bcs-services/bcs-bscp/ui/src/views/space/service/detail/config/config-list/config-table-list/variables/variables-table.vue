@@ -129,14 +129,22 @@
                 </bk-select>
                 <bk-input v-else-if="col.prop === 'default_val'" v-model="variable.default_val" @change="deleteCellError(variable.name, col.prop)" />
                 <bk-input v-else-if="col.prop === 'memo'" v-model="variable.memo" @change="change" />
-                <div v-else v-overflow-title class="cell">{{ getCellVal(variable, col.prop) }}</div>
+                <div v-else class="cell">
+                  <bk-overflow-title type="tips">
+                    {{ getCellVal(variable, col.prop) }}
+                  </bk-overflow-title>
+                </div>
             </template>
-            <div v-else v-overflow-title class="cell">{{ getCellVal(variable, col.prop) }}</div>
+            <div v-else class="cell">
+              <bk-overflow-title type="tips">
+                    {{ getCellVal(variable, col.prop) }}
+              </bk-overflow-title>
+            </div>
           </td>
         </tr>
         <tr v-if="props.list.length === 0">
           <td :colspan="cols.length">
-            <bk-exception class="empty-tips" type="empty" scene="part">暂无变量数据</bk-exception>
+            <bk-exception class="empty-tips" type="empty" scene="part">暂无数据</bk-exception>
           </td>
         </tr>
       </tbody>

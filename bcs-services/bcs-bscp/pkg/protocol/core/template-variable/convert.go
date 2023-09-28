@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbtv provides template variable core protocol struct and convert functions.
 package pbtv
 
 import (

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbtemplate provides template core protocol struct and convert functions.
 package pbtemplate
 
 import (
@@ -44,7 +45,7 @@ func (m *TemplateSpec) TemplateSpec() *table.TemplateSpec {
 }
 
 // PbTemplateSpec convert table TemplateSpec to pb TemplateSpec
-func PbTemplateSpec(spec *table.TemplateSpec) *TemplateSpec {
+func PbTemplateSpec(spec *table.TemplateSpec) *TemplateSpec { //nolint:revive
 	if spec == nil {
 		return nil
 	}
@@ -69,7 +70,7 @@ func (m *TemplateAttachment) TemplateAttachment() *table.TemplateAttachment {
 }
 
 // PbTemplateAttachment convert table TemplateAttachment to pb TemplateAttachment
-func PbTemplateAttachment(at *table.TemplateAttachment) *TemplateAttachment {
+func PbTemplateAttachment(at *table.TemplateAttachment) *TemplateAttachment { //nolint:revive
 	if at == nil {
 		return nil
 	}

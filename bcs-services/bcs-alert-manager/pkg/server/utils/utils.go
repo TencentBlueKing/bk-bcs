@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package utils xxx
@@ -24,7 +23,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog/glog"
-
 	"github.com/google/uuid"
 	grpcmeta "google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -77,7 +75,7 @@ type Trace interface {
 type trace struct {
 	startTime   time.Time
 	traceID     string
-	clientIP    string
+	clientIP    string // nolint
 	handlerName string
 }
 
@@ -122,7 +120,7 @@ func (t *trace) traceBody() string {
 	return buffer.String()
 }
 
-func (t *trace) duration() time.Duration {
+func (t *trace) duration() time.Duration { // nolint
 	if t == nil {
 		return 0
 	}

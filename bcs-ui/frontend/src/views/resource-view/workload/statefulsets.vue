@@ -1,9 +1,12 @@
 <template>
   <BaseLayout title="StatefulSets" kind="StatefulSet" category="statefulsets" type="workloads">
     <template
-      #default="{ curPageData, pageConf, statusMap, updateStrategyMap, handlePageChange, handlePageSizeChange,
-                  handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource,
-                  handleEnlargeCapacity,nameValue, handleClearSearchData }">
+      #default="{
+        curPageData, pageConf, statusMap, updateStrategyMap, handlePageChange, handlePageSizeChange,
+        handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource,
+        handleEnlargeCapacity,nameValue, handleClearSearchData, handleRestart, handleGotoUpdateRecord,
+        handleRollback
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -18,7 +21,8 @@
         <bk-table-column :label="$t('k8s.namespace')" prop="metadata.namespace" sortable></bk-table-column>
         <bk-table-column :label="$t('k8s.updateStrategy.text')" min-width="100">
           <template slot-scope="{ row }">
-            {{ updateStrategyMap[$chainable(row.spec, 'updateStrategy.type')] || $t('k8s.updateStrategy.rollingUpdate') }}
+            {{ updateStrategyMap[$chainable(row.spec, 'updateStrategy.type')]
+              || $t('k8s.updateStrategy.rollingUpdate') }}
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('k8s.statefulset.podManagementPolicy')">
@@ -69,11 +73,42 @@
               class="ml10" text
               @click="handleEnlargeCapacity(row)">{{ $t('deploy.templateset.scale') }}</bk-button>
             <bk-button
-              class="ml10" text
-              @click="gotoDetail(row)">{{ $t('dashboard.workload.pods.delete') }}</bk-button>
+              class="ml10"
+              text
+              v-if="$chainable(row.spec, 'updateStrategy.type') === 'OnDelete'"
+              @click="gotoDetail(row)">
+              {{ $t('dashboard.workload.button.onDelete') }}
+            </bk-button>
             <bk-button
-              class="ml10" text
-              @click="handleDeleteResource(row)">{{ $t('generic.button.delete') }}</bk-button>
+              class="ml10"
+              text
+              v-else
+              @click="handleRestart(row)">
+              {{ $t('dashboard.workload.button.restart') }}
+            </bk-button>
+            <bk-popover
+              placement="bottom"
+              theme="light dropdown"
+              :arrow="false"
+              trigger="click"
+              class="ml-[10px]">
+              <span :class="['bcs-icon-more-btn', { disabled: false }]">
+                <i class="bcs-icon bcs-icon-more"></i>
+              </span>
+              <template #content>
+                <ul class="bcs-dropdown-list">
+                  <li class="bcs-dropdown-item" @click="handleGotoUpdateRecord(row)">
+                    {{$t('deploy.helm.history')}}
+                  </li>
+                  <li class="bcs-dropdown-item" @click="handleRollback(row)">
+                    {{$t('deploy.helm.rollback')}}
+                  </li>
+                  <li class="bcs-dropdown-item" @click="handleDeleteResource(row)">
+                    {{$t('generic.button.delete')}}
+                  </li>
+                </ul>
+              </template>
+            </bk-popover>
           </template>
         </bk-table-column>
         <template #empty>

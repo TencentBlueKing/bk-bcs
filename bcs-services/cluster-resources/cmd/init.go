@@ -339,7 +339,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		log.Info(crSvc.ctx, "swagger doc is enabled")
 		// 加载 swagger.json
 		// 配置 swagger-ui 服务
-		originMux.HandleFunc("/swagger/", handlerSwagger)
+		originMux.HandleFunc("/clusterresources/swagger/", handlerSwagger)
 	}
 
 	httpPort := strconv.Itoa(crSvc.conf.Server.HTTPPort)
@@ -382,7 +382,7 @@ func handlerSwagger(w http.ResponseWriter, r *http.Request) {
 		w.Write(file)
 		return
 	}
-	httpSwagger.Handler(httpSwagger.URL("/swagger/cluster-resources.swagger.json")).ServeHTTP(w, r)
+	httpSwagger.Handler(httpSwagger.URL("cluster-resources.swagger.json")).ServeHTTP(w, r)
 }
 
 func (crSvc *clusterResourcesService) run(httpAddr string, dualStackListener net.Listener) {

@@ -101,16 +101,17 @@ func TestRedisCacheClient(t *testing.T) {
 	srV1Key := genCacheKey(testClusterID, "v1")
 	srNetV1Key := genCacheKey(testClusterID, "networking.k8s.io/v1")
 	sgKey := genCacheKey(testClusterID, "")
-	assert.False(t, rcc.rdsCache.Exists(srV1Key))
-	assert.False(t, rcc.rdsCache.Exists(srNetV1Key))
-	assert.False(t, rcc.rdsCache.Exists(sgKey))
+	ctx := context.TODO()
+	assert.False(t, rcc.rdsCache.Exists(ctx, srV1Key))
+	assert.False(t, rcc.rdsCache.Exists(ctx, srNetV1Key))
+	assert.False(t, rcc.rdsCache.Exists(ctx, sgKey))
 
 	// 第一次取，会写 Redis 缓存
 	getResByDiscovery(t, rcc)
 
-	assert.True(t, rcc.rdsCache.Exists(srV1Key))
-	assert.True(t, rcc.rdsCache.Exists(srNetV1Key))
-	assert.True(t, rcc.rdsCache.Exists(sgKey))
+	assert.True(t, rcc.rdsCache.Exists(ctx, srV1Key))
+	assert.True(t, rcc.rdsCache.Exists(ctx, srNetV1Key))
+	assert.True(t, rcc.rdsCache.Exists(ctx, sgKey))
 
 	// 强制缓存失效
 	assert.True(t, rcc.Fresh())

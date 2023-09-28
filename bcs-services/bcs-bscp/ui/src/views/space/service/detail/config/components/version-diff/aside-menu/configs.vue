@@ -8,7 +8,7 @@
   import { IConfigItem, IBoundTemplateGroup, IConfigDiffSelected } from '../../../../../../../../../types/config'
   import { IFileConfigContentSummary } from '../../../../../../../../../types/config';
   import { IVariableEditParams } from '../../../../../../../../../types/variable'
-  import { getConfigList, getReleasedConfigList, getConfigContent, getBoundTemplates, getBoundTemplatesByAppVersion } from '../../../../../../../../api/config'
+  import { getConfigList, getReleasedConfigList, downloadConfigContent, getBoundTemplates, getBoundTemplatesByAppVersion } from '../../../../../../../../api/config'
   import { getReleasedAppVariables } from '../../../../../../../../api/variable'
   import { byteUnitConverse } from '../../../../../../../../utils'
   import SearchInput from '../../../../../../../../components/search-input.vue'
@@ -187,7 +187,7 @@
       if (unNamedVersion) {
         res = await getBoundTemplates(bkBizId.value, <number>appData.value.id, params)
       } else {
-        res = await getBoundTemplatesByAppVersion(bkBizId.value, <number>appData.value.id, id)
+        res = await getBoundTemplatesByAppVersion(bkBizId.value, <number>appData.value.id, id, params)
       }
       return res.details.map((groupItem: IBoundTemplateGroup) => {
         const { template_space_id, template_space_name, template_set_id, template_set_name } = groupItem
@@ -410,7 +410,7 @@
         size: byteUnitConverse(Number(byte_size))
       }
     }
-    const configContent = await getConfigContent(bkBizId.value, <number>appData.value.id, signature)
+    const configContent = await downloadConfigContent(bkBizId.value, <number>appData.value.id, signature)
     return String(configContent)
   }
 

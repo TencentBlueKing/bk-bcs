@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -21,6 +19,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/parnurzeal/gorequest"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
@@ -28,8 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-
-	"github.com/parnurzeal/gorequest"
 )
 
 var (
@@ -132,7 +130,7 @@ func GetBusinessByID(bizID string, useCache bool) (BusinessData, error) {
 	if data.Count == 0 {
 		return BusinessData{}, fmt.Errorf("business %s not exists", bizID)
 	}
-	c.Add(fmt.Sprintf(CacheKeyBusinessPrefix, bizID), data.Info[0], time.Hour)
+	_ = c.Add(fmt.Sprintf(CacheKeyBusinessPrefix, bizID), data.Info[0], time.Hour)
 	return data.Info[0], nil
 }
 
@@ -286,7 +284,7 @@ func BatchSearchBusinessByBizIDs(bizIDs []string) (map[string]BusinessData, erro
 		}
 		for _, biz := range resp.Data.Info {
 			result[strconv.Itoa(int(biz.BKBizID))] = biz
-			c.Add(fmt.Sprintf(CacheKeyBusinessPrefix, strconv.Itoa(int(biz.BKBizID))), biz, time.Hour)
+			_ = c.Add(fmt.Sprintf(CacheKeyBusinessPrefix, strconv.Itoa(int(biz.BKBizID))), biz, time.Hour)
 		}
 	}
 	return result, nil

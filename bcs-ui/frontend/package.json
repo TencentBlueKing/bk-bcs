@@ -10,7 +10,7 @@
     "lint": "eslint --fix --ext .js,.vue,.ts,.tsx src"
   },
   "dependencies": {
-    "@blueking/bkui-form": "0.0.28",
+    "@blueking/bkui-form": "0.0.39",
     "axios": "~0.19.0",
     "base-64": "^0.1.0",
     "bk-magic-vue": "2.5.8-beta.7",

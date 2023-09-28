@@ -31,48 +31,24 @@ func genBizCommonActions() []client.CommonAction {
 			Name:        "业务查看",
 			EnglishName: "business view",
 			Actions: []client.ActionWithID{
-				{
-					BusinessViewResource,
-				},
-				{
-					AppView,
-				},
-				{
-					CredentialView,
-				},
+				{ID: BusinessViewResource},
+				{ID: AppView},
+				{ID: CredentialView},
 			},
 		},
 		{
 			Name:        "业务运维",
 			EnglishName: "business ops",
 			Actions: []client.ActionWithID{
-				{
-					BusinessViewResource,
-				},
-				{
-					AppCreate,
-				},
-				{
-					AppView,
-				},
-				{
-					AppEdit,
-				},
-				{
-					AppDelete,
-				},
-				{
-					ReleaseGenerate,
-				},
-				{
-					ReleasePublish,
-				},
-				{
-					CredentialView,
-				},
-				{
-					CredentialManage,
-				},
+				{ID: BusinessViewResource},
+				{ID: AppCreate},
+				{ID: AppView},
+				{ID: AppEdit},
+				{ID: AppDelete},
+				{ID: ReleaseGenerate},
+				{ID: ReleasePublish},
+				{ID: CredentialView},
+				{ID: CredentialManage},
 			},
 		},
 	}

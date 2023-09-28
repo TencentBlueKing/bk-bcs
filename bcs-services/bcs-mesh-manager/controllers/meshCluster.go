@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package controllers xxx
 package controllers
 
 import (
@@ -25,10 +25,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/kubehelm"
-	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/types"
-
 	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/ghodss/yaml"
 	kubeclient "github.com/kubernetes-client/go/kubernetes/client"
@@ -42,6 +38,10 @@ import (
 	"k8s.io/klog"
 	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/types"
 )
 
 const (
@@ -159,12 +159,14 @@ func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster,
 	}
 	// kubernetes api client for create IstioOperator Object
 	cfg := kubeclient.NewConfiguration()
+	defaultCfg := cfg
 	cfg.HTTPClient = &http.Client{
 		Transport: transport,
 	}
 	cfg.BasePath = m.kubeAddr
 	cfg.DefaultHeader["authorization"] = fmt.Sprintf("Bearer %s", m.kubeToken)
-	by, _ := json.Marshal(cfg)
+	// marshal config exclude HTTPClient
+	by, _ := json.Marshal(defaultCfg) // nolint
 	m.kubeAPIClient = kubeclient.NewAPIClient(cfg)
 	klog.Infof("build kubeapiclient for config %s success", string(by))
 	klog.Infof("New MeshClusterManager(%s) success", meshCluster.GetUUID())
@@ -181,8 +183,10 @@ func (m *MeshClusterManager) stop() {
 // if uninstall istio done, then return true
 // else return false
 func (m *MeshClusterManager) uninstallIstio() bool {
-	m.Lock()
-	m.Unlock()
+	// empty critical section 原代码如此,暂时保留
+	// nolint
+	//m.Lock()
+	//m.Unlock()
 	if !m.stopped {
 		m.stop()
 	}
@@ -256,8 +260,10 @@ func (m *MeshClusterManager) clearIstioOperatorResources() bool {
 }
 
 func (m *MeshClusterManager) installIstio() bool {
-	m.Lock()
-	m.Unlock()
+	// empty critical section 原代码如此,暂时保留
+	// nolint
+	//m.Lock()
+	//m.Unlock()
 	// create IstioOperator Crds
 	err := m.createIstioOperatorCrds()
 	if err != nil {
@@ -401,7 +407,6 @@ func (m *MeshClusterManager) applyIstioConfiguration() error {
 func (m *MeshClusterManager) getComponentStatus(status *meshv1.ComponentState) (changed bool) {
 	oldStatus := status.Status
 	defer func() {
-		changed = false
 		if oldStatus != status.Status {
 			klog.Infof("Cluster(%s) istio component(%s) status changed, from(%s)->to(%s)", m.meshCluster.Spec.ClusterID,
 				status.Name, oldStatus, status.Status)
@@ -416,10 +421,10 @@ func (m *MeshClusterManager) getComponentStatus(status *meshv1.ComponentState) (
 		if errors.IsNotFound(err) {
 			klog.Infof("Mesh Component(%s:%s) is NotFound", status.Namespace, status.Name)
 			status.Status = meshv1.InstallStatusNONE
-			return
+			return changed
 		}
 		klog.Errorf("Mesh Component(%s:%s) Get Deployment failed: %s", status.Namespace, status.Name, err.Error())
-		return
+		return changed
 	}
 	klog.Infof("Cluster(%s) Istio Component(%s:%s) status(%s)", m.meshCluster.Spec.ClusterID,
 		status.Namespace, status.Name, deployment.Status.String())
@@ -429,21 +434,21 @@ func (m *MeshClusterManager) getComponentStatus(status *meshv1.ComponentState) (
 		klog.Infof("Mesh Component(%s:%s) Spec.Replicas(%d) Status.Replicas(%d)", status.Namespace, status.Name,
 			*deployment.Spec.Replicas, deployment.Status.Replicas)
 		status.Status = meshv1.InstallStatusDEPLOY
-		return
+		return changed
 	}
 	// deployment is updating pods now
 	if deployment.Status.Replicas > deployment.Status.UpdatedReplicas {
 		klog.Infof("Mesh Component(%s:%s) Status.Replicas(%d) Status.UpdatedReplicas(%d)", status.Namespace, status.Name,
 			deployment.Status.Replicas, deployment.Status.UpdatedReplicas)
 		status.Status = meshv1.InstallStatusUPDATE
-		return
+		return changed
 	}
 	// deployment is starting pods now
 	if deployment.Status.Replicas > deployment.Status.AvailableReplicas {
 		klog.Infof("Mesh Component(%s:%s) Status.Replicas(%d) Status.AvailableReplicas(%d)", status.Namespace, status.Name,
 			deployment.Status.Replicas, deployment.Status.AvailableReplicas)
 		status.Status = meshv1.InstallStatusSTARTING
-		return
+		return changed
 	}
 
 	// deployment is ready now
@@ -451,14 +456,14 @@ func (m *MeshClusterManager) getComponentStatus(status *meshv1.ComponentState) (
 		klog.Infof("Mesh Component(%s:%s) Status.Replicas(%d) Status.AvailableReplicas(%d)", status.Namespace, status.Name,
 			deployment.Status.Replicas, deployment.Status.AvailableReplicas)
 		status.Status = meshv1.InstallStatusRUNNING
-		return
+		return changed
 	}
 	// deployment have failed pods now
 	if deployment.Status.UnavailableReplicas > 0 {
 		klog.Infof("Mesh Component(%s:%s) Status.Replicas(%d) Status.UnavailableReplicas(%d)", status.Namespace, status.Name,
 			deployment.Status.Replicas, deployment.Status.AvailableReplicas)
 		status.Status = meshv1.InstallStatusFAILED
-		return
+		return changed
 	}
 
 	return changed

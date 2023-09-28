@@ -285,7 +285,7 @@ func (m *moduleSpec) String() string {
 		if i > 0 {
 			b.WriteRune(',')
 		}
-		fmt.Fprintf(&b, "%s=%d", f.pattern, f.level) // nolint
+		fmt.Fprintf(&b, "%s=%d", f.pattern, f.level) //nolint
 	}
 	return b.String()
 }
@@ -422,8 +422,8 @@ func init() {
 	logging.stderrThreshold = errorLog
 	logging.toStderr = false
 	logging.alsoToStderr = false
-	logging.vmodule.Set("")       // nolint
-	logging.traceLocation.Set("") // nolint
+	logging.vmodule.Set("")       //nolint
+	logging.traceLocation.Set("") //nolint
 
 	logging.setVState(0, nil, false)
 	go logging.flushDaemon()

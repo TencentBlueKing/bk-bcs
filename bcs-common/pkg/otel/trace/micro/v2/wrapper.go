@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package micro xxx
 package micro
 
 import (
@@ -59,7 +59,7 @@ func NewTracingWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		err = fn(ctx, req, rsp)
 
 		rspData, _ := json.Marshal(rsp)
-		elapsedTime := time.Now().Sub(startTime)
+		elapsedTime := time.Since(startTime)
 
 		reqBody := string(reqData)
 		if len(reqBody) > 1024 {

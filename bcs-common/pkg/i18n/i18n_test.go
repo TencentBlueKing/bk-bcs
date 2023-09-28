@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package i18n
@@ -54,7 +53,8 @@ func Test_TranslateFormat(t *testing.T) {
 	assert.Equal(t, i18n.Tf(context.Background(), "{{.hello}}{{.world}} %d", 2023), "{{.hello}}{{.world}} 2023")
 
 	i18n.SetLanguage("zh")
-	assert.Equal(t, i18n.Tf(context.Background(), "{{.OrderPay}}", 1691552860, 60.3), "您已成功完成订单号 1691552860 支付，支付金额￥60.30。")
+	assert.Equal(t, i18n.Tf(context.Background(), "{{.OrderPay}}", 1691552860, 60.3),
+		"您已成功完成订单号 1691552860 支付，支付金额￥60.30。")
 
 	i18n.SetLanguage("en")
 	assert.Equal(t, i18n.Tf(context.Background(), "{{.hello}} {{.world}} %d", 2023), "hello world 2023")

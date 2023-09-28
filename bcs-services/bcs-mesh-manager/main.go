@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main 主函数
 package main
 
 import (
@@ -27,13 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/controllers"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/handler"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanagerv1"
-
 	grpcruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
@@ -47,12 +40,17 @@ import (
 	"k8s.io/klog"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	// +kubebuilder:scaffold:imports
+
+	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/controllers"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanagerv1"
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme = runtime.NewScheme()
 )
 
 func init() {
@@ -62,6 +60,8 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
+// NOCC: golangci-lint/funlen(设计如此)
+// nolint
 func main() {
 	conf := config.ParseConfig()
 	by, _ := json.Marshal(conf)
@@ -160,7 +160,7 @@ func main() {
 		service.RegisterInterval(time.Second*30),
 		service.RegisterTTL(time.Second*40),
 	)
-	// Initialise service
+	// Initialize service
 	grpcSvc.Init()
 	// Register Handler, if we need more options control
 	// try formation like: handler.BcsDataManager(CustomOption)
@@ -184,6 +184,6 @@ func signalWatch(stop context.CancelFunc, manager chan struct{}, htpSvr *http.Se
 	fmt.Printf("bcs-gateway-discovery catch exit signal, exit in 3 seconds...\n")
 	close(manager)
 	stop()
-	htpSvr.Shutdown(context.Background())
+	_ = htpSvr.Shutdown(context.Background())
 	time.Sleep(time.Second * 3)
 }

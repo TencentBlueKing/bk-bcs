@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package trace xxx
 package trace
 
 import (
@@ -18,7 +18,7 @@ import (
 )
 
 // TraceType tracing type
-type TraceType string
+type TraceType string //nolint
 
 const (
 	// Jaeger show jaeger system
@@ -39,7 +39,7 @@ func TracerSwitch(s string) Option {
 // TracerType sets a factory tracing type
 func TracerType(t string) Option {
 	return func(o *Options) {
-		o.TracingType = string(t)
+		o.TracingType = t
 	}
 }
 

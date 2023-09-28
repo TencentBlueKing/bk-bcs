@@ -15,6 +15,7 @@
 package redis
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -35,16 +36,16 @@ func TestCacheSetExistsGet(t *testing.T) {
 	key := cache.NewStringKey("testKey1")
 
 	// set
-	err := c.Set(key, 1, 0)
+	err := c.Set(context.TODO(), key, 1, 0)
 	assert.NoError(t, err)
 
 	// exists
-	exists := c.Exists(key)
+	exists := c.Exists(context.TODO(), key)
 	assert.True(t, exists)
 
 	// get
 	var a int
-	err = c.Get(key, &a)
+	err = c.Get(context.TODO(), key, &a)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, a)
 }
@@ -55,21 +56,21 @@ func TestDelete(t *testing.T) {
 	key := cache.NewStringKey("testKey2")
 
 	// delete
-	err := c.Delete(key)
+	err := c.Delete(context.TODO(), key)
 	assert.NoError(t, err)
 
 	// set
-	err = c.Set(key, 1, 0)
+	err = c.Set(context.TODO(), key, 1, 0)
 	assert.NoError(t, err)
 
-	exists := c.Exists(key)
+	exists := c.Exists(context.TODO(), key)
 	assert.True(t, exists)
 
 	// delete again
-	err = c.Delete(key)
+	err = c.Delete(context.TODO(), key)
 	assert.NoError(t, err)
 
-	exists = c.Exists(key)
+	exists = c.Exists(context.TODO(), key)
 	assert.False(t, exists)
 }
 
@@ -79,16 +80,16 @@ func TestDeleteByPrefix(t *testing.T) {
 	key := cache.NewStringKey("testKey3")
 
 	// set
-	err := c.Set(key, 1, 0)
+	err := c.Set(context.TODO(), key, 1, 0)
 	assert.NoError(t, err)
 
-	exists := c.Exists(key)
+	exists := c.Exists(context.TODO(), key)
 	assert.True(t, exists)
 
 	// delete by prefix
-	err = c.DeleteByPrefix("test")
+	err = c.DeleteByPrefix(context.TODO(), "test")
 	assert.NoError(t, err)
 
-	exists = c.Exists(key)
+	exists = c.Exists(context.TODO(), key)
 	assert.False(t, exists)
 }

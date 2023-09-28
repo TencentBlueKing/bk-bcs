@@ -47,7 +47,8 @@ type TemplateBindingRelation interface {
 	// ListTmplRevisionBoundUnnamedApps list bound unnamed app details of the target template release.
 	ListTmplRevisionBoundUnnamedApps(kit *kit.Kit, bizID, templateRevisionID uint32) ([]uint32, error)
 	// ListTmplRevisionBoundNamedApps list bound named app details of the target template release.
-	ListTmplRevisionBoundNamedApps(kit *kit.Kit, bizID, templateRevisionID uint32) ([]*types.TmplRevisionBoundNamedAppDetail, error)
+	ListTmplRevisionBoundNamedApps(kit *kit.Kit, bizID, templateRevisionID uint32) (
+		[]*types.TmplRevisionBoundNamedAppDetail, error)
 	// ListTmplSetBoundUnnamedApps list bound unnamed app details of the target template set.
 	ListTmplSetBoundUnnamedApps(kit *kit.Kit, bizID, templateSetID uint32) ([]uint32, error)
 	// ListTmplSetBoundNamedApps list bound named app details of the target template set.
@@ -59,7 +60,8 @@ type TemplateBindingRelation interface {
 	// ListTemplatesBoundATBs list bound app template bindings of the target templates.
 	ListTemplatesBoundATBs(kit *kit.Kit, bizID uint32, templateIDs []uint32) ([]*table.AppTemplateBinding, error)
 	// ListTemplateSetInvisibleATBs list invisible atbs of the target template set when update its app visible scope.
-	ListTemplateSetInvisibleATBs(kit *kit.Kit, bizID, templateSetID uint32, boundApps []uint32) ([]*table.AppTemplateBinding, error)
+	ListTemplateSetInvisibleATBs(kit *kit.Kit, bizID, templateSetID uint32, boundApps []uint32) (
+		[]*table.AppTemplateBinding, error)
 }
 
 var _ TemplateBindingRelation = new(templateBindingRelationDao)
