@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -19,13 +19,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/requester"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/requester"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 )
 
 func newMonitor() bcsmonitor.ClientInterface {
@@ -219,7 +218,8 @@ func Test_GetWorkloadMemoryMetrics(t *testing.T) {
 	fmt.Println(getter.GetWorkloadMemoryMetrics(opts, clients))
 	fmt.Println(getter.GetInstanceCount(opts, clients))
 	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.WorkloadName)
-	test, err := monitorCli.QueryByPost(fmt.Sprintf("sum(container_spec_memory_limit_bytes{%s})by(pod_name)", podCondition), opts.CurrentTime)
+	test, err := monitorCli.QueryByPost(fmt.Sprintf("sum(container_spec_memory_limit_bytes{%s})by(pod_name)",
+		podCondition), opts.CurrentTime)
 	fmt.Println(err)
 	fmt.Println(test)
 }
@@ -234,10 +234,15 @@ func TestPodName(t *testing.T) {
 }
 
 func TestHPA(t *testing.T) {
-	// query := "kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaledUpGroup|ScaleDown\"}"
-	// query := "min_over_time(sum(kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"}))"
-	query := "kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", involved_object_kind=\"GeneralPodAutoscaler\",involved_object_name=\"gpa-test\",namespace=\"default\",source=\"/pod-autoscaler\",reason=\"SuccessfulRescale\"}"
-	// query := "sum(kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"})"
+	// query := "kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",
+	// reason=~\"ScaledUpGroup|ScaleDown\"}"
+	// query := "min_over_time(sum(kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\",
+	// source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"}))"
+	query := "kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", " +
+		"involved_object_kind=\"GeneralPodAutoscaler\",involved_object_name=\"gpa-test\",namespace=\"default\"," +
+		"source=\"/pod-autoscaler\",reason=\"SuccessfulRescale\"}"
+	// query := "sum(kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\",
+	// source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"})"
 	monitorCli := newMonitor()
 	start := time.Now().Add(-1 * time.Hour)
 	end := time.Now()

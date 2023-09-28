@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v4
@@ -62,7 +61,10 @@ func (bs *bcsScheduler) UpdateCustomResourceDefinition(clusterID, name string, d
 		return err
 	}
 	udpateObject := &v1beta1.CustomResourceDefinition{}
-	json.Unmarshal(data, udpateObject)
+	err = json.Unmarshal(data, udpateObject)
+	if err != nil {
+		return err
+	}
 	udpateObject.ResourceVersion = crd.ResourceVersion
 	updateData, _ := json.Marshal(udpateObject)
 	// update work flow
@@ -112,10 +114,13 @@ func (bs *bcsScheduler) ListCustomResourceDefinition(clusterID string) (*v1beta1
 	replyKind, _ := jsonObj.Get("kind").String()
 	if replyKind == StatusKind {
 		msg, _ := jsonObj.Get("message").String()
-		return nil, fmt.Errorf("%s", msg)
+		return nil, fmt.Errorf("%s", msg) // nolint
 	}
 	crd := &v1beta1.CustomResourceDefinitionList{}
-	json.Unmarshal(resp.Reply, crd)
+	err = json.Unmarshal(resp.Reply, crd)
+	if err != nil {
+		return nil, err
+	}
 	return crd, nil
 }
 
@@ -145,10 +150,13 @@ func (bs *bcsScheduler) GetCustomResourceDefinition(clusterID string, name strin
 	replyKind, _ := jsonObj.Get("kind").String()
 	if replyKind == StatusKind {
 		msg, _ := jsonObj.Get("message").String()
-		return nil, fmt.Errorf("%s", msg)
+		return nil, fmt.Errorf("%s", msg) // nolint
 	}
 	crd := &v1beta1.CustomResourceDefinition{}
-	json.Unmarshal(resp.Reply, crd)
+	err = json.Unmarshal(resp.Reply, crd)
+	if err != nil {
+		return nil, err
+	}
 	// clean info
 	crd.SelfLink = ""
 	// crd.ResourceVersion = ""

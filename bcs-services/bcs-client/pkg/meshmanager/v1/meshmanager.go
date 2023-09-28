@@ -8,23 +8,23 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package v1 xxx
 package v1
 
 import (
 	"context"
 	"regexp"
 
-	clientmeshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/meshmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanager"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+
+	clientmeshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/meshmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
 )
 
 type meshManager struct {
@@ -66,7 +66,7 @@ func (m *meshManager) dialGrpc() error {
 }
 
 func (m *meshManager) closeGrpc() {
-	m.conn.Close()
+	_ = m.conn.Close()
 	m.conn = nil
 	m.meshManagerClient = nil
 }

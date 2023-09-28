@@ -8,16 +8,15 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package list xxx
 package list
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-
 	"github.com/urfave/cli"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 )
 
 // NewListCommand sub list command
@@ -27,8 +26,9 @@ func NewListCommand() cli.Command {
 		Usage: "list brief information of application, taskgroup, agent, cluster, customresource, meshcluster and etc.",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "type, t",
-				Usage: "List type, ns/application(app)/process/taskgroup/service/configmap/secret/deployment/endpoint/agent/customresourcedefintion(crd)/meshcluster/logcollectiontask",
+				Name: "type, t",
+				Usage: "List type, ns/application(app)/process/taskgroup/service/configmap/secret/deployment/" +
+					"endpoint/agent/customresourcedefintion(crd)/meshcluster/logcollectiontask",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pkg
@@ -54,7 +53,8 @@ type GetTokenByUserAndClusterIDResponse struct {
 }
 
 // GetTokenByUserAndClusterID request get token by user and cluster id from bcs-user-manager
-func (c *UserManagerClient) GetTokenByUserAndClusterID(request GetTokenByUserAndClusterIDRequest) (*GetTokenByUserAndClusterIDResponse, error) {
+func (c *UserManagerClient) GetTokenByUserAndClusterID(request GetTokenByUserAndClusterIDRequest) (
+	*GetTokenByUserAndClusterIDResponse, error) {
 
 	queryParams, err := query.Values(request)
 	if err != nil {

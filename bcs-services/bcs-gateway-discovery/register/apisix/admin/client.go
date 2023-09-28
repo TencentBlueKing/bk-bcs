@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package admin
@@ -21,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 )
 
@@ -98,7 +98,7 @@ func (c *client) GetUpstream(id string) (*Upstream, error) {
 
 	// decode the upstream from the response data
 	upstream := new(Upstream)
-	if err := json.Unmarshal(response.Data.Value, upstream); err != nil {
+	if err = json.Unmarshal(response.Data.Value, upstream); err != nil {
 		return nil, fmt.Errorf("upstream decode err: %s", err.Error())
 	}
 
@@ -212,13 +212,13 @@ func (c *client) ListUpstream() ([]*Upstream, error) {
 	}
 	// Unmarshal response.Data.Nodes to slice
 	var dataNodes []*Node
-	if err := json.Unmarshal(response.Data.Nodes, &dataNodes); err != nil {
+	if err = json.Unmarshal(response.Data.Nodes, &dataNodes); err != nil {
 		return nil, fmt.Errorf("Nodes data is not slice")
 	}
 	var ups []*Upstream
 	for _, node := range dataNodes {
 		upstream := new(Upstream)
-		if err := json.Unmarshal(node.Value, upstream); err != nil {
+		if err = json.Unmarshal(node.Value, upstream); err != nil {
 			return nil, fmt.Errorf("upstream decode err: %s", err.Error())
 		}
 		if len(upstream.ID) == 0 {

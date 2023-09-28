@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -20,17 +20,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 	"github.com/patrickmn/go-cache"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
 // GetterInterface interface of getter
@@ -99,7 +99,7 @@ func (g *ResourceGetter) GetProjectIDList(ctx context.Context,
 		blog.Errorf("get pm conn error:%v", err)
 		return nil, err
 	}
-	defer pmConn.Close()
+	defer pmConn.Close() // nolint
 	pmCli := g.projectManager.NewGrpcClientWithHeader(ctx, pmConn)
 	for _, cluster := range clusterList {
 		// if needFilter, just handle particular cluster list
@@ -143,7 +143,7 @@ func (g *ResourceGetter) GetProjectInfo(ctx context.Context, projectId, projectC
 			blog.Errorf("get pm conn error:%v", err)
 			return nil, err
 		}
-		defer pmConn.Close()
+		defer pmConn.Close() // nolint
 		pmCli = g.projectManager.NewGrpcClientWithHeader(ctx, pmConn)
 	}
 	if projectId == "" && projectCode == "" {
@@ -206,7 +206,7 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
 		blog.Errorf("get pm conn error:%v", err)
 		return nil, err
 	}
-	defer pmConn.Close()
+	defer pmConn.Close() // nolint
 	pmCli := g.projectManager.NewGrpcClientWithHeader(ctx, pmConn)
 	for _, cluster := range uniqueClusterList {
 		if (!g.needFilter || g.clusterIDs[cluster.ClusterID]) && cluster.Status != "DELETED" {
@@ -444,7 +444,7 @@ func (g *ResourceGetter) GetK8sNamespaceList(ctx context.Context, clusterMeta *t
 		blog.Errorf("get pm conn error:%v", err)
 		return namespaceList
 	}
-	defer pmConn.Close()
+	defer pmConn.Close() // nolint
 	pmCli := g.projectManager.NewGrpcClientWithHeader(ctx, pmConn)
 	for _, namespace := range namespaces {
 		if clusterLabel != nil && clusterLabel["isShared"] == "true" {

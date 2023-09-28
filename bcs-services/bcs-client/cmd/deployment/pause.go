@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package deployment
@@ -16,10 +15,10 @@ package deployment
 import (
 	"fmt"
 
+	"github.com/urfave/cli"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-
-	"github.com/urfave/cli"
 )
 
 // NewPauseCommand create deployment pause command

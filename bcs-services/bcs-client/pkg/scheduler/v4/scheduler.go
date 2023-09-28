@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package v4
@@ -19,10 +18,10 @@ import (
 
 	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	schetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
-
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
 // Scheduler mesos scheduler interface for bcs-api
@@ -122,14 +121,14 @@ const (
 	bcsSchedulerSetAgentSettingURI          = "%s/bcsapi/v4/scheduler/mesos/agentsettings"
 	bcsSchedulerEnableAgentURI              = "%s/bcsapi/v4/scheduler/mesos/agentsettings/enable?ips=%s"
 	bcsSchedulerDisableAgentURI             = "%s/bcsapi/v4/scheduler/mesos/agentsettings/disable?ips=%s"
-	bcsSchedulerRescheduleURI               = "%s/bcsapi/v4/scheduler/mesos/namespaces/%s/applications/%s/taskgroups/%s/rescheduler"
+	bcsSchedulerRescheduleURI               = "%s/bcsapi/v4/scheduler/mesos/namespaces/%s/applications/%s/taskgroups/%s/rescheduler" // nolint
 	bcsSchedulerOfferURI                    = "%s/bcsapi/v4/scheduler/mesos/cluster/current/offers"
 	bcsSchedulerAppDefinitionURI            = "%s/bcsapi/v4/scheduler/mesos/definition/application/%s/%s"
 	bcsSchedulerDeployDefinitionURI         = "%s/bcsapi/v4/scheduler/mesos/definition/deployment/%s/%s"
 	bcsSchedulerCustomResourceURL           = "%s/bcsapi/v4/scheduler/mesos/customresources"
 	bcsScheudlerCustomResourceDefinitionURL = "%s/bcsapi/v4/scheduler/mesos/customresourcedefinitions"
 	bcsSchedulerCreateExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/create_exec?host_ip=%s"
-	bcsSchedulerStartExecUri                = "%s/bcsapi/v4/scheduler/mesos/webconsole/start_exec?host_ip=%s&container_id=%s&exec_id=%s"
+	bcsSchedulerStartExecUri                = "%s/bcsapi/v4/scheduler/mesos/webconsole/start_exec?host_ip=%s&container_id=%s&exec_id=%s" // nolint
 	bcsSchedulerResizeExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/resize_exec?host_ip=%s"
 	bcsSchedulerTransactionListUri          = "%s/bcsapi/v4/scheduler/mesos/transactions/%s?objKind=%s&objName=%s"
 	bcsSchedulerTransactionDeleteUri        = "%s/bcsapi/v4/scheduler/mesos/transactions/%s/%s"

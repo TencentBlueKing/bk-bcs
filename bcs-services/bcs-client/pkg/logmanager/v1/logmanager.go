@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package v1 xxx
 package v1
 
 import (
@@ -18,14 +18,14 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 )
 
 // LogManagerInterface defines the grpc client interfaces of LogManager

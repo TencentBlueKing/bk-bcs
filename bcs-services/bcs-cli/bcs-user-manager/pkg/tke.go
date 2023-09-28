@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pkg
@@ -22,11 +21,11 @@ import (
 )
 
 const (
-	addTkeCidrUrl                = "/v1/tke/cidr/add_cidr"
-	applyTkeCidrUrl              = "/v1/tke/cidr/apply_cidr"
-	releaseTkeCidrUrl            = "/v1/tke/cidr/release_cidr"
-	listTkeCidrUrl               = "/v1/tke/cidr/list_count"
-	syncTkeClusterCredentialsUrl = "/v1/tke/%s/sync_credentials"
+	addTkeCidrUrl                = "/v1/tke/cidr/add_cidr"       // nolint
+	applyTkeCidrUrl              = "/v1/tke/cidr/apply_cidr"     // nolint
+	releaseTkeCidrUrl            = "/v1/tke/cidr/release_cidr"   // nolint
+	listTkeCidrUrl               = "/v1/tke/cidr/list_count"     // nolint
+	syncTkeClusterCredentialsUrl = "/v1/tke/%s/sync_credentials" // nolint
 )
 
 // TkeCidr xxx
@@ -58,7 +57,7 @@ func (c *UserManagerClient) AddTkeCidr(reqBody string) (*AddTkeCidrResponse, err
 	}
 	bs, err := c.do(addTkeCidrUrl, http.MethodPost, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "add tke cidr with '%s' failed", reqForm)
+		return nil, errors.Wrapf(err, "add tke cidr with '%v' failed", reqForm)
 	}
 	resp := new(AddTkeCidrResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {

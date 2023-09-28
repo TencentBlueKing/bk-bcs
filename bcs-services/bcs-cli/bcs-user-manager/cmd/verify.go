@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cmd
@@ -42,7 +41,8 @@ func verifyPermissionCmd() *cobra.Command {
 		Aliases: []string{"permission", "ps"},
 		Short:   "verify permission",
 		Long:    "verify permission from user manager",
-		Example: "kubectl-bcs-user-manager verify permission --form '{\"user_token\":\"\",\"resource_type\":\"\",\"resource\":\"\",\"action\":\"\"}' ",
+		Example: "kubectl-bcs-user-manager verify permission --form '{\"user_token\":\"\",\"resource_type\":\"\"," +
+			"\"resource\":\"\",\"action\":\"\"}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -71,8 +71,10 @@ func verifyPermissionV2Cmd() *cobra.Command {
 		Aliases: []string{"permissionv2", "psv2"},
 		Short:   "verify permission v2",
 		Long:    "verify permission v2 from user manager",
-		Example: "kubectl-bcs-user-manager verify permissionv2 --form {\"user_token\":\"\",\"resource_type\":\"\",\"cluster_type\":\"\"," +
-			"\"cluster_type\":\"\",\"project_id\":\"\",\"cluster_id\":\"\",\"request_url\":\"\",\"resource\":\"\",\"action\":\"\"}",
+		Example: "kubectl-bcs-user-manager verify permissionv2 --form {\"user_token\":\"\",\"resource_type\":\"\"," +
+			"\"cluster_type\":\"\"," +
+			"\"cluster_type\":\"\",\"project_id\":\"\",\"cluster_id\":\"\",\"request_url\":\"\",\"resource\":\"\"," +
+			"\"action\":\"\"}",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())

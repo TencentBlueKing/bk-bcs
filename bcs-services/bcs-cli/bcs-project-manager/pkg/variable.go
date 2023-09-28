@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pkg
@@ -18,10 +17,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 	"github.com/google/go-querystring/query"
 	"github.com/pkg/errors"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 const (
@@ -75,7 +73,8 @@ type (
 )
 
 // ListVariableDefinitions Get a list of project variable definitions based on a condition
-func (p *ProjectManagerClient) ListVariableDefinitions(in *ListVariableDefinitionsRequest, projectCode string) (*bcsproject.ListVariableDefinitionsResponse, error) {
+func (p *ProjectManagerClient) ListVariableDefinitions(in *ListVariableDefinitionsRequest, projectCode string) (
+	*bcsproject.ListVariableDefinitionsResponse, error) {
 	v, err := query.Values(in)
 	if err != nil {
 		return nil, fmt.Errorf("slice and Array values default to encoding as multiple URL values failed: %v", err)
@@ -127,7 +126,8 @@ func (p *ProjectManagerClient) UpdateVariable(in *UpdateVariableRequest) (*bcspr
 }
 
 // DeleteVariableDefinitions Delete project variable
-func (p *ProjectManagerClient) DeleteVariableDefinitions(in *DeleteVariableDefinitionsRequest, projectCode string) (*bcsproject.DeleteVariableDefinitionsResponse, error) {
+func (p *ProjectManagerClient) DeleteVariableDefinitions(in *DeleteVariableDefinitionsRequest, projectCode string) (
+	*bcsproject.DeleteVariableDefinitionsResponse, error) {
 	v, err := query.Values(in)
 	if err != nil {
 		return nil, fmt.Errorf("slice and Array values default to encoding as multiple URL values failed: %v", err)
@@ -147,7 +147,8 @@ func (p *ProjectManagerClient) DeleteVariableDefinitions(in *DeleteVariableDefin
 }
 
 // RenderVariables render variable's value under a specific cluster, namespace
-func (p *ProjectManagerClient) RenderVariables(in *RenderVariablesRequest, projectCode, clusterID, namespace string) (*bcsproject.RenderVariablesResponse, error) {
+func (p *ProjectManagerClient) RenderVariables(in *RenderVariablesRequest, projectCode, clusterID, namespace string) (
+	*bcsproject.RenderVariablesResponse, error) {
 	v, err := query.Values(in)
 	if err != nil {
 		return nil, fmt.Errorf("slice and Array values default to encoding as multiple URL values failed: %v", err)

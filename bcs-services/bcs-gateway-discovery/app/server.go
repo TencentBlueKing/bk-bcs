@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package app
@@ -23,14 +22,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	discovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
+
 	modulediscovery "github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/apisix"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/kong"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
-
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
 )
 
 // New create
@@ -187,7 +186,7 @@ func (s *DiscoveryServer) Run() error {
 			return nil
 		case <-tick.C:
 			blog.Infof("gateway-discovery time to verify data synchronization....")
-			s.dataSynchronization()
+			_ = s.dataSynchronization()
 		case evt := <-s.evtCh:
 			if evt == nil {
 				blog.Errorf("module-discovery event channel closed, gateway-discovery error exit")
@@ -199,7 +198,7 @@ func (s *DiscoveryServer) Run() error {
 			if evt.GoMicro {
 				s.handleMicroChange(evt)
 			} else {
-				s.handleModuleChange(evt)
+				_ = s.handleModuleChange(evt)
 			}
 		}
 	}
@@ -233,7 +232,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 	// * module step: check etcd registry feature, if feature is on,
 	// get all module information from etcd discovery
 	if s.option.Etcd.Feature {
-		etcdModules, err := s.formatMultiEtcdService()
+		etcdModules, err := s.formatMultiEtcdService() // nolint
 		if err != nil {
 			blog.Errorf("discovery format etcd service info when in Synchronization, %s", err.Error())
 			return err
@@ -315,7 +314,7 @@ func (s *DiscoveryServer) gatewayServiceSync(event *ModuleEvent) error {
 }
 
 // detailServiceVerification all information including service/plugin/target check
-func (s *DiscoveryServer) detailServiceVerification(newSvc *register.Service, oldSvc *register.Service) {
+func (s *DiscoveryServer) detailServiceVerification(newSvc *register.Service, oldSvc *register.Service) { // nolint
 	// DOTO(DeveloperJim): we need complete verification if plugin & route rules changed frequently, not now
 }
 

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package get
@@ -53,7 +52,7 @@ func listClustersNamespace() *cobra.Command {
 			request.ProjectCode = projectCode
 			resp, err := pkg.NewClientWithConfiguration(context.Background()).ListNamespaces(request)
 			if err != nil {
-				klog.Infoln("list clusters namespaces failed: %v", err)
+				klog.Infof("list clusters namespaces failed: %v", err)
 				return
 			}
 			printer.PrintClusterNamespaceInTable(flagOutput, resp)

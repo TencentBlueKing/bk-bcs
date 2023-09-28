@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cmd
@@ -105,7 +104,8 @@ func updateCredentialsCmd() *cobra.Command {
 		Aliases: []string{"c"},
 		Short:   "update credentials",
 		Long:    "update cluster credentials according cluster ID",
-		Example: "kubectl-bcs-user-manager update credentials --cluster_id [cluster_id] --credentials_form '{\"register_token\":\"\"," +
+		Example: "kubectl-bcs-user-manager update credentials --cluster_id [cluster_id] " +
+			"--credentials_form '{\"register_token\":\"\"," +
 			"\"server_addresses\":\"\",\"cacert_data\":\"\",\"user_token\":\"\"}'",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
