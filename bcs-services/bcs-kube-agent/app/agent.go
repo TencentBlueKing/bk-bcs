@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -27,7 +27,7 @@ import (
 
 const (
 	// NOCC:gas/crypto(工具误报:不包含凭证,只是获取凭证的路径)
-	tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token" // nolint
 )
 
 // Run run agent
@@ -39,8 +39,9 @@ func Run() error {
 	}
 
 	if kubeconfig == "" {
-		// since go-client 9.0.0, the restclient.Config returned by BuildConfigFromFlags doesn't have BearerToken, so manually get the BearerToken
-		token, err := ioutil.ReadFile(tokenFile)
+		// since go-client 9.0.0, the restclient.Config returned by BuildConfigFromFlags doesn't have BearerToken,
+		// so manually get the BearerToken
+		token, err := ioutil.ReadFile(tokenFile) // nolint
 		if err != nil {
 			return fmt.Errorf("error getting the BearerToken: %s", err.Error())
 		}

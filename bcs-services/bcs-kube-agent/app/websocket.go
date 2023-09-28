@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package app
@@ -34,14 +33,14 @@ const (
 	kubernetesServicePort = "KUBERNETES_SERVICE_PORT"
 
 	// Module model field for http header
-	Module = "BCS-API-Tunnel-Module"
+	Module = "BCS-API-Tunnel-Module" // nolint
 	// RegisterToken register token field for http header
 	// NOCC:gas/crypto(工具误报:此处只是token的命名)
-	RegisterToken = "BCS-API-Tunnel-Token"
+	RegisterToken = "BCS-API-Tunnel-Token" // nolint
 	// Params parameters field for http header
-	Params = "BCS-API-Tunnel-Params"
+	Params = "BCS-API-Tunnel-Params" // nolint
 	// Cluster cluster field for http header
-	Cluster = "BCS-API-Tunnel-ClusterId"
+	Cluster = "BCS-API-Tunnel-ClusterId" // nolint
 
 	// ModuleName module name for kube agent
 	ModuleName = "kubeagent"
@@ -105,7 +104,7 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 	insecureSkipVerify := viper.GetBool("agent.insecureSkipVerify")
 	if insecureSkipVerify {
 		// NOCC:gas/tls(设计如此:此处需要跳过验证)
-		tlsConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify}
+		tlsConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify} // nolint
 	} else {
 		caCrtFile := os.Getenv("CLIENT_CA")
 		clientCrtFile := os.Getenv("CLIENT_CERT")
@@ -153,7 +152,7 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 }
 
 func reconnectTimeout() time.Duration {
-	if time.Now().Sub(lastConnectTime) > time.Second*10 {
+	if time.Since(lastConnectTime) > time.Second*10 {
 		reconnectTimes = 0
 	}
 	if reconnectTimes < 5 {
