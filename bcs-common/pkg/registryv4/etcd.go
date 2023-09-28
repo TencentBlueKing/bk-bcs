@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package registryv4
@@ -20,15 +19,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	"github.com/google/uuid"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/util/backoff"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
-//NewEtcdRegistry create etcd registry instance
+// NewEtcdRegistry create etcd registry instance
 func NewEtcdRegistry(option *Options) Registry {
 	//setting default options
 	if option.TTL == time.Duration(0) {
@@ -75,7 +75,7 @@ func NewEtcdRegistry(option *Options) Registry {
 		e.localModules = make(map[string]bool)
 		for _, name := range option.Modules {
 			e.localModules[name] = true
-			e.innerGet(name)
+			_, _ = e.innerGet(name)
 		}
 		//start to watch all event
 		go e.innerWatch(e.ctx)
@@ -96,7 +96,7 @@ type etcdRegister struct {
 	registered   bool
 }
 
-//Register service information to registry
+// Register service information to registry
 // register do not block, if module want to
 // clean registe information, call Deregister
 func (e *etcdRegister) Register() error {
@@ -144,7 +144,7 @@ func (e *etcdRegister) innerRegister() (err error) {
 	return err
 }
 
-//Deregister clean service information from registry
+// Deregister clean service information from registry
 func (e *etcdRegister) Deregister() error {
 	//stop background keepalive goroutine
 	e.stop()
@@ -156,7 +156,7 @@ func (e *etcdRegister) Deregister() error {
 	return nil
 }
 
-//Get get specified service by name
+// Get get specified service by name
 func (e *etcdRegister) Get(name string) (*registry.Service, error) {
 	if len(name) == 0 {
 		return nil, nil

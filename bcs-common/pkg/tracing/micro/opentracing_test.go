@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package micro
@@ -16,20 +15,20 @@ package micro
 import (
 	"context"
 	"fmt"
-	tracinglog "github.com/opentracing/opentracing-go/log"
 	"io"
 	"testing"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/jaeger"
-	proto "github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/micro/proto"
-
-	client "github.com/micro/go-micro/v2/client"
+	"github.com/micro/go-micro/v2/client"
 	"github.com/micro/go-micro/v2/registry/memory"
 	microsvc "github.com/micro/go-micro/v2/service"
 	grpcsvc "github.com/micro/go-micro/v2/service/grpc"
-	"github.com/opentracing/opentracing-go"
+	opentrace "github.com/opentracing/opentracing-go"
+	tracinglog "github.com/opentracing/opentracing-go/log"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/jaeger"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/micro/proto"
 )
 
 func initTracing(t *testing.T, serviceName string) (io.Closer, error) {
@@ -54,7 +53,9 @@ func TestNewHandlerWrapper(t *testing.T) {
 	}
 
 	if closer != nil {
-		defer closer.Close()
+		defer func(closer io.Closer) {
+			_ = closer.Close()
+		}(closer)
 	}
 	runMicroServer()
 }
@@ -68,7 +69,7 @@ func (g *Greeter) Hello(ctx context.Context, req *proto.Request, rsp *proto.Resp
 }
 
 func formatString(ctx context.Context, helloTo string) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "formatString")
+	span, _ := opentrace.StartSpanFromContext(ctx, "formatString")
 	defer span.Finish()
 
 	helloStr := fmt.Sprintf("hello, %s", helloTo)
@@ -98,14 +99,14 @@ func runMicroServer() {
 	service := grpcsvc.NewService(
 		microsvc.Name("greeter"),
 		microsvc.Registry(memory.NewRegistry()),
-		microsvc.WrapHandler(NewHandlerWrapper(opentracing.GlobalTracer())),
-		microsvc.WrapClient(NewClientWrapper(opentracing.GlobalTracer())),
+		microsvc.WrapHandler(NewHandlerWrapper(opentrace.GlobalTracer())),
+		microsvc.WrapClient(NewClientWrapper(opentrace.GlobalTracer())),
 	)
 
 	service.Init()
 
 	// Register handler
-	proto.RegisterGreeterHandler(service.Server(), new(Greeter))
+	_ = proto.RegisterGreeterHandler(service.Server(), new(Greeter))
 
 	go func() {
 		// Run the server

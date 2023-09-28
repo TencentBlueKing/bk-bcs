@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package qcloud xxx
 package qcloud
 
 import (
@@ -601,7 +601,7 @@ type SecurityGroupList []string
 func (sgs SecurityGroupList) EncodeValues(key string, urlv *url.Values) error {
 	for i, v := range sgs {
 		primary := fmt.Sprintf("SecurityGroups.%d", i)
-		urlv.Set(primary, fmt.Sprintf("%s", v))
+		urlv.Set(primary, v)
 	}
 	return nil
 }

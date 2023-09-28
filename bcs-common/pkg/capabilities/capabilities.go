@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package capabilities xxx
 package capabilities
 
 import (
@@ -50,12 +51,11 @@ func GetCapabilities(dc discovery.DiscoveryInterface) (*Capabilities, error) {
 	// See https://github.com/kubernetes/kubernetes/issues/72051#issuecomment-521157642
 	apiVersions, err := GetVersionSet(dc)
 	if err != nil {
-		if discovery.IsGroupDiscoveryFailedError(err) {
-			blog.Infof("WARNING: The Kubernetes server has an orphaned API service. Server reports: %s", err)
-			blog.Infof("WARNING: To fix this, kubectl delete apiservice <service-name>")
-		} else {
+		if !discovery.IsGroupDiscoveryFailedError(err) {
 			return nil, errors.Wrap(err, "could not get apiVersions from Kubernetes")
 		}
+		blog.Infof("WARNING: The Kubernetes server has an orphaned API service. Server reports: %s", err)
+		blog.Infof("WARNING: To fix this, kubectl delete apiservice <service-name>")
 	}
 	return &Capabilities{
 		KubeVersion: KubeVersion{
@@ -93,8 +93,8 @@ func allKnownVersions() VersionSet {
 	// We should register the built in extension APIs as well so CRDs are
 	// supported in the default version set. This has caused problems with `helm
 	// template` in the past, so let's be safe
-	apiextensionsv1beta1.AddToScheme(scheme.Scheme)
-	apiextensionsv1.AddToScheme(scheme.Scheme)
+	_ = apiextensionsv1beta1.AddToScheme(scheme.Scheme)
+	_ = apiextensionsv1.AddToScheme(scheme.Scheme)
 
 	groups := scheme.Scheme.PrioritizedVersionsAllGroups()
 	vs := make(VersionSet, 0, len(groups))

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package etcd xxx
 package etcd
 
 import (
@@ -147,7 +147,7 @@ func (s *Storage) Delete(ctx context.Context, key string) (obj meta.Object, err 
 // * if key is namespace, watch all data under namespace
 // * if key is namespace/name, watch detail data
 // watch is Stopped when any error occure
-func (s *Storage) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
+func (s *Storage) Watch(cxt context.Context, key, _ string, selector storage.Selector) (watch.Interface, error) {
 	fullPath := s.pathPrefix
 	if len(key) != 0 {
 		fullPath = path.Join(s.pathPrefix, key)
@@ -169,7 +169,7 @@ func (s *Storage) WatchList(ctx context.Context, key, version string, selector s
 
 // Get implements storage interface
 // get exactly data object from etcd client. so key must be resource fullpath
-func (s *Storage) Get(cxt context.Context, key, version string, ignoreNotFound bool) (obj meta.Object, err error) {
+func (s *Storage) Get(cxt context.Context, key, _ string, ignoreNotFound bool) (obj meta.Object, err error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("lost object key")
 	}
@@ -237,7 +237,7 @@ func (s *Storage) List(cxt context.Context, key string, selector storage.Selecto
 // Close storage connection, clean resource
 func (s *Storage) Close() {
 	blog.V(3).Infof("etcd storage %s exit.", s.pathPrefix)
-	s.client.Close()
+	_ = s.client.Close()
 }
 
 // newEtcdProxyWatch create etcdproxy watch

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package kubehelm xxx
 package kubehelm
 
 import (
@@ -31,28 +31,30 @@ func NewCmdHelm() KubeHelm {
 }
 
 // InstallChart xxx
-// helm install --name xxxx chart-dir --set k1=v1 --set k2=v2 --kube-apiserver=xxxx --kube-token=xxxxx --kubeconfig kubeconfig
+// nolint helm install --name xxxx chart-dir --set k1=v1 --set k2=v2 --kube-apiserver=xxxx --kube-token=xxxxx --kubeconfig kubeconfig
 func (h *cmdHelm) InstallChart(inf InstallFlags, glf GlobalFlags) error {
 	gPara, err := glf.ParseParameters()
 	if err != nil {
 		return err
 	}
-	defer os.Remove(glf.Kubeconfig)
+	defer func(name string) {
+		_ = os.Remove(name)
+	}(glf.Kubeconfig)
 
 	parameters := inf.ParseParameters() + gPara
 	klog.Infof("helm install%s", parameters)
-	os.Remove("install.sh")
+	_ = os.Remove("install.sh")
 	file, err := os.OpenFile("install.sh", os.O_CREATE|os.O_RDWR, 0755) // NOCC:gas/permission(设计如此)
 	if err != nil {
 		return err
 	}
 	err = file.Truncate(0)
 	if err != nil {
-		file.Close()
+		_ = file.Close()
 		return err
 	}
 	_, err = file.Write([]byte(fmt.Sprintf("helm install%s", parameters)))
-	file.Close()
+	_ = file.Close()
 	if err != nil {
 		return err
 	}

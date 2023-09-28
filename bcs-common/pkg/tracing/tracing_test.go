@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tracing
@@ -19,10 +18,10 @@ import (
 	"io"
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/jaeger"
+	opentrace "github.com/opentracing/opentracing-go"
+	tracinglog "github.com/opentracing/opentracing-go/log"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/jaeger"
 )
 
 func initTracing(t *testing.T, serviceName string) (io.Closer, error) {
@@ -48,37 +47,39 @@ func TestNewInitTracing(t *testing.T) {
 	}
 
 	if closer != nil {
-		defer closer.Close()
+		defer func(closer io.Closer) {
+			_ = closer.Close()
+		}(closer)
 	}
 
 	spanTest()
 }
 
 func spanTest() {
-	span := opentracing.StartSpan("spanTest")
+	span := opentrace.StartSpan("spanTest")
 	span.SetTag("hello", "world")
 	defer span.Finish()
 
-	ctx := opentracing.ContextWithSpan(context.Background(), span)
+	ctx := opentrace.ContextWithSpan(context.Background(), span)
 	formatString(ctx, "evan")
 	printString(ctx, "evan")
 }
 
 func formatString(ctx context.Context, helloTo string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "formatString")
+	span, ctx := opentrace.StartSpanFromContext(ctx, "formatString")
 	defer span.Finish()
 
 	helloStr := fmt.Sprintf("hello, %s", helloTo)
 	span.LogFields(
-		log.String("event", "string-format"),
-		log.String("value", helloStr),
+		tracinglog.String("event", "string-format"),
+		tracinglog.String("value", helloStr),
 	)
 
 	printString(ctx, helloStr)
 }
 
 func printString(ctx context.Context, helloStr string) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "printString")
+	span, _ := opentrace.StartSpanFromContext(ctx, "printString")
 	defer span.Finish()
 
 	println(helloStr)

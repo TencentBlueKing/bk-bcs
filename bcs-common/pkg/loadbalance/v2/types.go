@@ -8,16 +8,17 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package loadbalance xxx
 package loadbalance
 
 import (
 	"encoding/json"
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"sort"
 	"strconv"
+
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 // NewPtrExportService create default ExportService
@@ -132,7 +133,7 @@ func (epl ExportPortList) Swap(i, j int) {
 // DeepCopy copy src to dst by json
 func DeepCopy(src, dst *ExportService) {
 	dataBytes, _ := json.Marshal(src)
-	json.Unmarshal(dataBytes, dst)
+	_ = json.Unmarshal(dataBytes, dst)
 }
 
 // ExportService info to hold export service

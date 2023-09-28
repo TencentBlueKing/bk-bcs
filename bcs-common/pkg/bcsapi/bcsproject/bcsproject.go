@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package bcsproject xxx
 package bcsproject
 
 import (
@@ -36,7 +36,7 @@ type ProjectClient struct {
 
 // NewProjectManagerClient create ProjectManager SDK implementation
 func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano())) // nolint
 	if len(config.Hosts) == 0 {
 		// ! pay more attention for nil return
 		return nil, nil
@@ -59,7 +59,7 @@ func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithInsecure()) // nolint
 		auth.Insecure = true
 	}
 	opts = append(opts, grpc.WithPerRPCCredentials(auth))
@@ -71,7 +71,7 @@ func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		selected := rand.Intn(1024) % len(config.Hosts)
+		selected := r.Intn(1024) % len(config.Hosts) // nolint
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
@@ -93,5 +93,5 @@ func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
 		Namespace: NewNamespaceClient(conn),
 		Variable:  NewVariableClient(conn),
 	}
-	return c, func() { conn.Close() }
+	return c, func() { _ = conn.Close() }
 }

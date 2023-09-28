@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package zookeeper xxx
 package zookeeper
 
 import (
@@ -147,7 +147,7 @@ type NSClient struct {
 // param obj: object for creation
 // param ttl: second for time-to-live, not used
 // return out: exist object data
-func (s *NSClient) Create(cxt context.Context, key string, obj meta.Object, ttl int) (out meta.Object, err error) {
+func (s *NSClient) Create(_ context.Context, key string, obj meta.Object, _ int) (out meta.Object, err error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("zk client lost object key")
 	}
@@ -193,7 +193,7 @@ func (s *NSClient) Create(cxt context.Context, key string, obj meta.Object, ttl 
 // * if key likes apis/v1/dns/namespace/bmsf-system, delete all data under namespace
 // * if key likes apis/v1/dns/namespace/bmsf-system/data, delete detail data
 // in this version, no delete objects reply
-func (s *NSClient) Delete(ctx context.Context, key string) (obj meta.Object, err error) {
+func (s *NSClient) Delete(_ context.Context, key string) (obj meta.Object, err error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error format key, cannot end with /")
 	}
@@ -222,7 +222,7 @@ func (s *NSClient) Delete(ctx context.Context, key string) (obj meta.Object, err
 // return:
 //
 //	watch: watch implementation for changing event, need to Stop manually
-func (s *NSClient) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
+func (s *NSClient) Watch(_ context.Context, key, _ string, selector storage.Selector) (watch.Interface, error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key formate")
 	}
@@ -242,7 +242,9 @@ func (s *NSClient) Watch(cxt context.Context, key, version string, selector stor
 	}
 	nswatch.setLayerConfig(layer)
 	// running watch
-	go nswatch.run()
+	go func() {
+		_ = nswatch.run()
+	}()
 	return nswatch, nil
 }
 
@@ -257,7 +259,7 @@ func (s *NSClient) WatchList(ctx context.Context, key, version string, selector 
 // get exactly data object from http event storage. so key must be resource fullpath
 // param cxt: not used
 // param version: reserved for future
-func (s *NSClient) Get(cxt context.Context, key, version string, ignoreNotFound bool) (meta.Object, error) {
+func (s *NSClient) Get(_ context.Context, key, _ string, ignoreNotFound bool) (meta.Object, error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("lost object key")
 	}
@@ -291,7 +293,7 @@ func (s *NSClient) Get(cxt context.Context, key, version string, ignoreNotFound 
 // * if key is empty, list all data under prefix, data must be target object
 // * if key is not empty, list all data under prefix/key, data must be target object.
 // if one node errors, we consider all errors. List Function only list leaf data nodes
-func (s *NSClient) List(cxt context.Context, key string, selector storage.Selector) ([]meta.Object, error) {
+func (s *NSClient) List(_ context.Context, key string, selector storage.Selector) ([]meta.Object, error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key format")
 	}
