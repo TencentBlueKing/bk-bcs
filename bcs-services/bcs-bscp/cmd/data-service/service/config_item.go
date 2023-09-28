@@ -63,14 +63,18 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 	ciID, err := s.dao.ConfigItem().CreateWithTx(grpcKit, tx, ci)
 	if err != nil {
 		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		}
 		return nil, err
 	}
 	// validate config items count.
 	if e := s.dao.ConfigItem().ValidateAppCINumber(grpcKit, tx, req.ConfigItemAttachment.BizId,
 		req.ConfigItemAttachment.AppId); e != nil {
 		logs.Errorf("validate config items count failed, err: %v, rid: %s", e, grpcKit.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		}
 		return nil, e
 	}
 	// 2. create content.
@@ -88,7 +92,9 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 	contentID, err := s.dao.Content().CreateWithTx(grpcKit, tx, content)
 	if err != nil {
 		logs.Errorf("create content failed, err: %v, rid: %s", err, grpcKit.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		}
 		return nil, err
 	}
 	// 3. create commit.
@@ -109,16 +115,16 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 	_, err = s.dao.Commit().CreateWithTx(grpcKit, tx, commit)
 	if err != nil {
 		logs.Errorf("create commit failed, err: %v, rid: %s", err, grpcKit.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		}
 		return nil, err
 	}
 	if e := tx.Commit(); e != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
 		return nil, e
 	}
-
-	resp := &pbds.CreateResp{Id: ciID}
-	return resp, nil
+	return &pbds.CreateResp{Id: ciID}, nil
 }
 
 // BatchUpsertConfigItems batch upsert config items.
@@ -148,30 +154,40 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 	now := time.Now().UTC()
 	tx := s.dao.GenQuery().Begin()
 	if e := s.doBatchCreateConfigItems(grpcKit, tx, toCreate, now, req.BizId, req.AppId); e != nil {
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		}
 		return nil, e
 	}
 	if e := s.doBatchUpdateConfigItemSpec(grpcKit, tx, toUpdateSpec, now,
 		req.BizId, req.AppId, editingCIMap); e != nil {
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		}
 		return nil, err
 	}
 	if e := s.doBatchUpdateConfigItemContent(grpcKit, tx, toUpdateContent, now,
 		req.BizId, req.AppId, editingCIMap); e != nil {
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		}
 		return nil, err
 	}
 	if req.ReplaceAll {
 		// if replace all,delete config items not in batch upsert request.
 		if e := s.doBatchDeleteConfigItems(grpcKit, tx, toDelete, req.BizId, req.AppId); e != nil {
-			_ = tx.Rollback()
+			if err = tx.Rollback(); err != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+			}
 			return nil, e
 		}
 	}
 	// validate config items count.
 	if e := s.dao.ConfigItem().ValidateAppCINumber(grpcKit, tx, req.BizId, req.AppId); e != nil {
 		logs.Errorf("validate config items count failed, err: %v, rid: %s", e, grpcKit.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, grpcKit.Rid)
+		}
 		return nil, e
 	}
 	if e := tx.Commit(); e != nil {

@@ -30,6 +30,8 @@ import (
 )
 
 // CreateTemplate create template.
+//
+//nolint:funlen
 func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -57,7 +59,9 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 	id, err := s.dao.Template().CreateWithTx(kt, tx, template)
 	if err != nil {
 		logs.Errorf("create template failed, err: %v, rid: %s", err, kt.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		}
 		return nil, err
 	}
 
@@ -77,7 +81,9 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 	}
 	if _, err = s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision); err != nil {
 		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		}
 		return nil, err
 	}
 
@@ -85,7 +91,9 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 	if len(req.TemplateSetIds) > 0 {
 		if err = s.dao.TemplateSet().AddTmplToTmplSetsWithTx(kt, tx, id, req.TemplateSetIds); err != nil {
 			logs.Errorf("add current template to template sets failed, err: %v, rid: %s", err, kt.Rid)
-			_ = tx.Rollback()
+			if err = tx.Rollback(); err != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			}
 			return nil, err
 		}
 
@@ -94,14 +102,18 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			ListTemplateSetsBoundATBs(kt, template.Attachment.BizID, req.TemplateSetIds)
 		if err != nil {
 			logs.Errorf("list template sets bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
-			_ = tx.Rollback()
+			if err = tx.Rollback(); err != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			}
 			return nil, err
 		}
 		if len(atbs) > 0 {
 			for _, atb := range atbs {
 				if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
 					logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
-					_ = tx.Rollback()
+					if err = tx.Rollback(); err != nil {
+						logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+					}
 					return nil, err
 				}
 			}
@@ -112,9 +124,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-
-	resp := &pbds.CreateResp{Id: id}
-	return resp, nil
+	return &pbds.CreateResp{Id: id}, nil
 }
 
 // ListTemplates list templates.
@@ -166,6 +176,8 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbds.UpdateTemplateRe
 }
 
 // DeleteTemplate delete template.
+//
+//nolint:funlen
 func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -209,14 +221,18 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 	}
 	if err = s.dao.Template().DeleteWithTx(kt, tx, template); err != nil {
 		logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		}
 		return nil, err
 	}
 
 	// 2. delete template revisions of current template
 	if err = s.dao.TemplateRevision().DeleteForTmplWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
 		logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		}
 		return nil, err
 	}
 
@@ -224,7 +240,9 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 	if hasTmplSet {
 		if err = s.dao.TemplateSet().DeleteTmplFromAllTmplSetsWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
 			logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
-			_ = tx.Rollback()
+			if err = tx.Rollback(); err != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			}
 			return nil, err
 		}
 	}
@@ -234,20 +252,23 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 		atbs, err := s.dao.TemplateBindingRelation().ListTemplatesBoundATBs(kt, req.Attachment.BizId, []uint32{req.Id})
 		if err != nil {
 			logs.Errorf("list templates bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
-			_ = tx.Rollback()
+			if e := tx.Rollback(); e != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", e, kt.Rid)
+			}
 			return nil, err
 		}
 		if len(atbs) > 0 {
 			for _, atb := range atbs {
 				if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
 					logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
-					_ = tx.Rollback()
+					if err = tx.Rollback(); err != nil {
+						logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+					}
 					return nil, err
 				}
 			}
 		}
 	}
-
 	if err := tx.Commit(); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -307,14 +328,18 @@ func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbds.BatchDelete
 		}
 		if err = s.dao.Template().DeleteWithTx(kt, tx, template); err != nil {
 			logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
-			_ = tx.Rollback()
+			if err = tx.Rollback(); err != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			}
 			return nil, err
 		}
 
 		// 2. delete template revisions of current template
 		if err = s.dao.TemplateRevision().DeleteForTmplWithTx(kt, tx, req.Attachment.BizId, templateID); err != nil {
 			logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
-			_ = tx.Rollback()
+			if err = tx.Rollback(); err != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+			}
 			return nil, err
 		}
 
@@ -322,7 +347,9 @@ func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbds.BatchDelete
 		if hasTmplSets[templateID] {
 			if err = s.dao.TemplateSet().DeleteTmplFromAllTmplSetsWithTx(kt, tx, req.Attachment.BizId, templateID); err != nil {
 				logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
-				_ = tx.Rollback()
+				if err = tx.Rollback(); err != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+				}
 				return nil, err
 			}
 		}
@@ -333,14 +360,18 @@ func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbds.BatchDelete
 				[]uint32{templateID})
 			if e != nil {
 				logs.Errorf("list templates bound app template bindings failed, err: %v, rid: %s", e, kt.Rid)
-				_ = tx.Rollback()
+				if err = tx.Rollback(); err != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+				}
 				return nil, e
 			}
 			if len(atbs) > 0 {
 				for _, atb := range atbs {
 					if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
 						logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
-						_ = tx.Rollback()
+						if e = tx.Rollback(); e != nil {
+							logs.Errorf("transaction rollback failed, err: %v, rid: %s", e, kt.Rid)
+						}
 						return nil, err
 					}
 				}
@@ -374,7 +405,9 @@ func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbds.AddTmplsToTm
 	if err := s.dao.TemplateSet().AddTmplsToTmplSetsWithTx(kt, tx, req.TemplateIds,
 		req.TemplateSetIds); err != nil {
 		logs.Errorf(" add templates to template sets failed, err: %v, rid: %s", err, kt.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		}
 		return nil, err
 	}
 
@@ -383,14 +416,18 @@ func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbds.AddTmplsToTm
 		ListTemplateSetsBoundATBs(kt, req.BizId, req.TemplateSetIds)
 	if err != nil {
 		logs.Errorf("list template sets bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		}
 		return nil, err
 	}
 	if len(atbs) > 0 {
 		for _, atb := range atbs {
 			if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
 				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
-				_ = tx.Rollback()
+				if e := tx.Rollback(); e != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", e, kt.Rid)
+				}
 				return nil, err
 			}
 		}
@@ -422,7 +459,9 @@ func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbds.DeleteT
 	if err := s.dao.TemplateSet().DeleteTmplsFromTmplSetsWithTx(kt, tx, req.TemplateIds,
 		req.TemplateSetIds); err != nil {
 		logs.Errorf(" delete template from template sets failed, err: %v, rid: %s", err, kt.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		}
 		return nil, err
 	}
 
@@ -431,14 +470,18 @@ func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbds.DeleteT
 		ListTemplateSetsBoundATBs(kt, req.BizId, req.TemplateSetIds)
 	if err != nil {
 		logs.Errorf("list template sets bound app template bindings failed, err: %v, rid: %s", err, kt.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		}
 		return nil, err
 	}
 	if len(atbs) > 0 {
 		for _, atb := range atbs {
 			if e := s.CascadeUpdateATB(kt, tx, atb); e != nil {
 				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", e, kt.Rid)
-				_ = tx.Rollback()
+				if err = tx.Rollback(); err != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+				}
 				return nil, e
 			}
 		}

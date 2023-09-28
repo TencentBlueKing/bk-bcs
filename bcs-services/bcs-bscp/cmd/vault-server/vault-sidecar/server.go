@@ -34,8 +34,8 @@ import (
 )
 
 var (
-	port            = 8202
-	bindAddr string = "0.0.0.0"
+	port     = 8202
+	bindAddr = "0.0.0.0"
 	confPath string
 )
 
@@ -83,8 +83,8 @@ func runServerCmd() error {
 		return err
 	}
 	conf := vaultConf{}
-	if err := yaml.Unmarshal(confIn, &conf); err != nil {
-		return err
+	if e := yaml.Unmarshal(confIn, &conf); e != nil {
+		return e
 	}
 
 	plugins, err := getPlugins(conf)
@@ -143,7 +143,7 @@ func runServerCmd() error {
 	return http.ListenAndServe(addr, r)
 }
 
-// HealthyHandler Healthz 接口
+// HealthzHandler Healthz 接口
 func HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK")) //nolint
 }

@@ -27,11 +27,8 @@ Support multiple encryption algorithms for secure credential acquisition
 
 // Factory factory for backend
 func Factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend, error) {
-	b, err := Backend(ctx, conf)
-	if err != nil {
-		return nil, err
-	}
-	if e := b.Setup(ctx, conf); e != nil {
+	b := Backend(ctx, conf)
+	if err := b.Setup(ctx, conf); err != nil {
 		return nil, err
 	}
 	return b, nil
@@ -43,7 +40,7 @@ type backend struct {
 }
 
 // Backend new backend
-func Backend(ctx context.Context, conf *logical.BackendConfig) (*backend, error) {
+func Backend(ctx context.Context, conf *logical.BackendConfig) *backend {
 
 	b := &backend{}
 	b.Backend = &framework.Backend{
@@ -57,5 +54,5 @@ func Backend(ctx context.Context, conf *logical.BackendConfig) (*backend, error)
 		BackendType: logical.TypeLogical,
 	}
 
-	return b, nil
+	return b
 }

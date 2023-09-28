@@ -66,7 +66,9 @@ func (s *Service) CreateTemplateRevision(ctx context.Context,
 	id, err := s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision)
 	if err != nil {
 		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
-		_ = tx.Rollback()
+		if err = tx.Rollback(); err != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+		}
 		return nil, err
 	}
 
@@ -81,7 +83,9 @@ func (s *Service) CreateTemplateRevision(ctx context.Context,
 		for _, atb := range atbs {
 			if e := s.CascadeUpdateATB(kt, tx, atb); e != nil {
 				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", e, kt.Rid)
-				_ = tx.Rollback()
+				if err = tx.Rollback(); err != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", err, kt.Rid)
+				}
 				return nil, e
 			}
 		}
@@ -91,9 +95,7 @@ func (s *Service) CreateTemplateRevision(ctx context.Context,
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
 		return nil, e
 	}
-
-	resp := &pbds.CreateResp{Id: id}
-	return resp, nil
+	return &pbds.CreateResp{Id: id}, nil
 }
 
 // ListTemplateRevisions list template revision.

@@ -352,7 +352,9 @@ func getName(name string) (fileName string, funcName string) {
 func getMigrationSQLs() (map[string]string, error) {
 	migrationSQLs := make(map[string]string)
 	dir := "migrations/sql"
-	_ = getAllSQLFiles(dir)
+	if err := getAllSQLFiles(dir); err != nil {
+		fmt.Printf("get all sql fiiles(%s) err: %s", dir, err)
+	}
 	for _, file := range allSQLFiles {
 		content, err := dbmigration.SQLFiles.ReadFile(file)
 		if err != nil {
@@ -374,7 +376,9 @@ func getAllSQLFiles(dir string) error {
 	for _, e := range entries {
 		file := filepath.Join(dir, e.Name())
 		if e.IsDir() {
-			getAllSQLFiles(file) //nolint: errcheck
+			if err = getAllSQLFiles(file); err != nil {
+				return err
+			}
 		} else if filepath.Ext(file) == ".sql" {
 			allSQLFiles = append(allSQLFiles, file)
 		}
