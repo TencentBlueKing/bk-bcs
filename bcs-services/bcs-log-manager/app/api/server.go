@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -20,6 +19,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
@@ -29,11 +33,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
@@ -51,8 +50,8 @@ type Server struct {
 	grpcEndpoint string
 	httpEndpoint string
 	ctx          context.Context
-	grpcServer   *grpc.Server
-	mux          *http.ServeMux
+	grpcServer   *grpc.Server   // nolint
+	mux          *http.ServeMux // nolint
 	gwmux        *runtime.ServeMux
 	apiImpl      *LogManagerServerImpl
 	microSvr     service.Service
@@ -159,7 +158,10 @@ func (s *Server) startMicroService() error {
 	}
 
 	s.microSvr = microgrpc.NewService()
-	s.microSvr.Server().Init(sevOption)
+	err = s.microSvr.Server().Init(sevOption)
+	if err != nil {
+		return err
+	}
 	s.microSvr.Init()
 	err = proto.RegisterLogManagerHandler(s.microSvr.Server(), s.apiImpl)
 	if err != nil {

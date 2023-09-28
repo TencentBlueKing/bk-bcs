@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package bkdataapi xxx
 package bkdataapi
 
 import (
@@ -19,6 +19,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -27,8 +29,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/apis/bkbcs.tencent.com/v1"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/informers/externalversions"
@@ -189,11 +189,11 @@ func (c *BKDataController) handleAddBKDataAPIConfig(obj interface{}) {
 		// create default data clean strategy
 		strategy := bkdata.NewDefaultCleanStrategy()
 		strategy.RawDataID = int(dataid)
-		strategy.BkBizID = int(bkDataAPIConfig.Spec.AccessDeployPlanConfig.BkBizID)
+		strategy.BkBizID = bkDataAPIConfig.Spec.AccessDeployPlanConfig.BkBizID
 		tableName := fmt.Sprintf("container_log_clean_strategy_%d", dataid)
 		strategy.ResultTableName = tableName
 		strategy.ResultTableNameAlias = tableName
-		client.SetCleanStrategy(strategy)
+		_ = client.SetCleanStrategy(strategy)
 		// response
 		c.respondOK(bkDataAPIConfig, string(jsonstr))
 	case "v3_databus_cleans_post":
