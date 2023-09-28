@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package permission xxx
@@ -34,6 +33,7 @@ import (
 )
 
 // PermissionForm registe form
+// nolint
 type PermissionForm struct {
 	UserName     string `json:"user_name" validate:"required"`
 	ResourceType string `json:"resource_type" validate:"required"`
@@ -146,9 +146,7 @@ func InitCache() {
 		Mutex.Unlock()
 
 		// wait to get roles
-		select {
-		case <-ticker.C:
-		}
+		<-ticker.C
 	}
 }
 
@@ -239,7 +237,7 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 	}
 	// response
 	data := utils.CreateResponseData(nil, "success", nil)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("GrantPermission", request.Request.Method, metrics.SucStatus, start)
 }
@@ -282,7 +280,7 @@ func GetPermission(request *restful.Request, response *restful.Response) {
 		Scan(&permissions)
 
 	data := utils.CreateResponseData(nil, "success", permissions)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("GetPermission", request.Request.Method, metrics.SucStatus, start)
 }
@@ -368,7 +366,7 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 	}
 
 	data := utils.CreateResponseData(nil, "success", nil)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("RevokePermission", request.Request.Method, metrics.SucStatus, start)
 }
@@ -545,20 +543,6 @@ func getUserFromTempToken(s string) (*models.BcsTempToken, bool) {
 	return tempUser, false
 }
 
-// parseAuthToken
-func parseAuthToken(authInfo string) string {
-	token := ""
-	if strings.Contains(authInfo, "Bearer") {
-		token = strings.TrimPrefix(authInfo, "Bearer ")
-	}
-
-	if strings.Contains(authInfo, "Basic") {
-		token = strings.TrimPrefix(authInfo, "Basic ")
-	}
-
-	return token
-}
-
 // verifyPermissionV1
 func verifyPermissionV1(ctx context.Context, user *models.BcsUser, req VerifyPermissionReq) (bool, string) {
 	switch req.ResourceType {
@@ -643,7 +627,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 	if user.IsAdmin() {
 		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
 			Allowed: true,
-			Message: fmt.Sprintf("admin user skip cluster permission check"),
+			Message: "admin user skip cluster permission check",
 		})
 		blog.Log(ctx).Infof("admin user %s access to type: %s, permission: %t", user.Name, req.ResourceType, true)
 		_, _ = response.Write([]byte(data))

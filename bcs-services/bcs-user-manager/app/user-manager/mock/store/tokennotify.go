@@ -13,9 +13,10 @@
 package store
 
 import (
+	"github.com/stretchr/testify/mock"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
-	"github.com/stretchr/testify/mock"
 )
 
 // MockTokenNotifyStore is a mock of TokenNotifyStore

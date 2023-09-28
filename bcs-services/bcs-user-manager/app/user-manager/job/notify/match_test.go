@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package notify
@@ -95,6 +94,7 @@ func TestMatch(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// nolint
 			if gotMatched, gotPhase := match(test.remain, test.expiration); gotMatched != test.matched || gotPhase != test.phase {
 				t.Errorf("match() = (%v, %v), want (%v, %v)", gotMatched, gotPhase, test.matched, test.phase)
 			}

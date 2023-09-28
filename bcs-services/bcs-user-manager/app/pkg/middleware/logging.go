@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package middleware xxx
 package middleware
 
 import (
@@ -29,7 +29,7 @@ import (
 func LoggingFilter(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
 	inBody, err := io.ReadAll(request.Request.Body)
 	if err != nil {
-		response.WriteError(400, err)
+		_ = response.WriteError(400, err)
 		return
 	}
 	blog.Log(request.Request.Context()).Infof("url: %s, method: %s, request: %s", request.Request.URL,

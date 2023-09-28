@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package constant xxx
 package constant
 
 const (
@@ -24,6 +24,7 @@ const (
 	// we can refer to http://coolaf.com/tool/rd when testing
 	DefaultTokenLength = 32
 	// TokenKeyPrefix is the redis key for token
+	// nolint
 	TokenKeyPrefix = "bcs_auth:token:" // NOCC:gas/crypto(误报)
 	// TokenLimits for token
 	TokenLimits = 1

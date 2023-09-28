@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package metrics xxx
@@ -76,6 +75,7 @@ func RunMetric(conf *config.UserMgrConfig) {
 		addresses = append(addresses, conf.IPv6Address)
 	}
 	metricServer := ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(conf.MetricPort)), "", metricMux)
+	// nolint
 	go metricServer.ListenAndServe()
 
 	blog.Infof("run metric ok")

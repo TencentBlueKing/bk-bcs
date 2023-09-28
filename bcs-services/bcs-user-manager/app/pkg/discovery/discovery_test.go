@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package discovery
@@ -36,7 +35,7 @@ func NewRegistry() registry.Registry {
 		registry.Addrs(etcdEndpoints),
 		registry.Secure(false),
 	)
-	etcdRegistry.Init()
+	_ = etcdRegistry.Init()
 
 	return etcdRegistry
 }
@@ -56,7 +55,8 @@ func Test_GetRandomServiceInstance(t *testing.T) {
 
 			node, err := sd.GetRandomServiceInstance()
 			if err != nil {
-				t.Fatalf("GetRandomServiceInstance failed: %v", err)
+				t.Errorf("GetRandomServiceInstance failed: %v", err)
+				return
 			}
 			fmt.Printf("node %+v\n", node)
 		}
@@ -65,6 +65,7 @@ func Test_GetRandomServiceInstance(t *testing.T) {
 	signalChan := make(chan os.Signal, 2)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
+	// nolint
 	select {
 	case <-signalChan:
 		sd.Stop()

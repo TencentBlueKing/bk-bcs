@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package utils xxx
@@ -22,15 +21,16 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/asaskevich/govalidator"
 	"github.com/emicklei/go-restful"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"gopkg.in/go-playground/validator.v9"
 	en_translations "gopkg.in/go-playground/validator.v9/translations/en"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 // Validate local implementation
@@ -57,7 +57,7 @@ func init() {
 	// also see uni.FindTranslator(...)
 	trans, _ = uni.GetTranslator("en")
 
-	en_translations.RegisterDefaultTranslations(Validate, trans)
+	_ = en_translations.RegisterDefaultTranslations(Validate, trans)
 }
 
 // ValidateAPIServerAddresses validates if given string is a valid apiserver addresses list.
@@ -148,6 +148,7 @@ type ParamsErrorData struct {
 // ParseValidationError parse validation error
 func ParseValidationError(errList error) []ParamsErrorData {
 	results := make([]ParamsErrorData, 0)
+	// nolint
 	switch errs := errList.(type) {
 	case validator.ValidationErrors:
 		for _, err := range errs {

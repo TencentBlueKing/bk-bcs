@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package permission
@@ -90,33 +89,6 @@ type VerifyClusterPermissionRequest struct {
 	Action string `json:"action"`
 }
 
-func (vpr *VerifyClusterPermissionRequest) validate() error {
-	if vpr == nil {
-		return errors.New("VerifyPermissionRequest is null")
-	}
-
-	if vpr.UserToken == "" {
-		return errors.New("VerifyPermissionRequest user token is null")
-	}
-
-	switch vpr.Action {
-	case http.MethodPost, http.MethodPut, http.MethodGet, http.MethodDelete, http.MethodPatch:
-	default:
-		return errors.New("VerifyPermissionRequest invalid action")
-	}
-
-	if vpr.ClusterType != K8s && vpr.ClusterType != Mesos {
-		return fmt.Errorf("VerifyPermissionRequest invalid cluster_type[%s]", vpr.ClusterType)
-	}
-
-	// resourceType cluster or register system
-	if vpr.ClusterID == "" {
-		return fmt.Errorf("ClusterResource clusterID is null")
-	}
-
-	return nil
-}
-
 // VerifyServicePermissionRequest service request permission
 type VerifyServicePermissionRequest struct {
 	UserToken string `json:"user_token"`
@@ -127,30 +99,6 @@ type VerifyServicePermissionRequest struct {
 
 	// Action for (POST GET PUT PATCH DELETE)
 	Action string `json:"action"`
-}
-
-func (vpr *VerifyServicePermissionRequest) validate() error {
-	if vpr == nil {
-		return errors.New("VerifyServicePermissionRequest is null")
-	}
-
-	if vpr.UserToken == "" {
-		return errors.New("VerifyServicePermissionRequest user token is null")
-	}
-
-	switch vpr.Action {
-	case http.MethodPost, http.MethodPut, http.MethodGet, http.MethodDelete, http.MethodPatch:
-	default:
-		return errors.New("VerifyServicePermissionRequest invalid action")
-	}
-
-	if vpr.ResourceType == "" || vpr.Resource == "" {
-		return errors.New("VerifyServicePermissionRequest resource_type or resource is null")
-	}
-
-	// valid resource_type and resource for resource_type
-
-	return nil
 }
 
 // VerifyPermissionReq for permission v2 request
