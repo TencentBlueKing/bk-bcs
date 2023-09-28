@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -15,19 +15,19 @@ package nodegroup
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"sort"
-
-	v1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	v1 "k8s.io/api/core/v1"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ListClusterGroupAction action for list online cluster credential
@@ -114,7 +114,6 @@ func (la *ListClusterGroupAction) Handle(
 	la.groupList = append(la.groupList, enableAutoscalerGroup...)
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // ListAction action for list online cluster credential
@@ -168,7 +167,6 @@ func (la *ListAction) Handle(
 		return
 	}
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // ListNodesAction action for list online cluster credential
@@ -200,7 +198,7 @@ func (la *ListNodesAction) listNodesInGroup() error {
 		return err
 	}
 
-	//check if nodes are already in cluster
+	// check if nodes are already in cluster
 	condM := make(operator.M)
 	condM["nodegroupid"] = group.NodeGroupID
 	cond := operator.NewLeafCondition(operator.Eq, condM)
@@ -240,7 +238,6 @@ func (la *ListNodesAction) Handle(
 	}
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // ListNodesV2Action action for list online cluster nodes
@@ -276,7 +273,7 @@ func (la *ListNodesV2Action) getRelativeResource() error {
 		return err
 	}
 	la.group = group
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	cluster, err := la.model.GetCluster(la.ctx, la.group.ClusterID)
 	if err != nil {
 		blog.Errorf("can not get relative Cluster %s when list nodes in group", la.group.ClusterID)
@@ -353,7 +350,6 @@ func (la *ListNodesV2Action) appendNodeInfo() {
 			la.resp.Data[i].Status = actions.TransNodeStatus(la.resp.Data[i].Status, node)
 		}
 	}
-	return
 }
 
 // Handle list cluster credential
@@ -381,5 +377,4 @@ func (la *ListNodesV2Action) Handle(
 	}
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

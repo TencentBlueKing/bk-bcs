@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package user
@@ -22,10 +21,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
-
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/parnurzeal/gorequest"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 )
 
 const (
@@ -34,7 +33,7 @@ const (
 )
 
 // UserManager http API definition
-type UserManager interface {
+type UserManager interface { // nolint
 	// CreateUserToken create user token and return token
 	CreateUserToken(user CreateTokenReq) (string, error)
 	// CreateClientToken create user token and return token
@@ -74,7 +73,7 @@ func GetUserManagerClient() *UserManagerClient {
 }
 
 // UserManagerClient client for usermanager
-type UserManagerClient struct {
+type UserManagerClient struct { // nolint
 	opts      *Options
 	discovery *discovery.ModuleDiscovery
 	ctx       context.Context

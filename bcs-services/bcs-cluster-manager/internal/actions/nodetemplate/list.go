@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package nodetemplate
@@ -17,11 +16,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -69,8 +69,14 @@ func (la *ListAction) listNodeTemplates() error {
 	for i := range templates {
 		templates[i].UpdateTime = utils.TransTimeFormat(templates[i].UpdateTime)
 		templates[i].CreateTime = utils.TransTimeFormat(templates[i].CreateTime)
-		decodeTemplateScript(&templates[i])
-		decodeAction(&templates[i])
+		err = decodeTemplateScript(&templates[i])
+		if err != nil {
+			return err
+		}
+		err = decodeAction(&templates[i])
+		if err != nil {
+			return err
+		}
 
 		la.nodeTemplateList = append(la.nodeTemplateList, &templates[i])
 	}
@@ -104,7 +110,6 @@ func (la *ListAction) Handle(
 		return
 	}
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // GetAction action for getting project nodeTemplate
@@ -165,7 +170,6 @@ func (ga *GetAction) Handle(
 
 	resp.Data = template
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func decodeTemplateScript(template *cmproto.NodeTemplate) error {
@@ -208,7 +212,7 @@ func decodeAction(template *cmproto.NodeTemplate) error {
 
 func decodeTemplateAction(action *cmproto.Action) error {
 	for _, pre := range action.PreActions {
-		if plugin, ok := action.Plugins[pre]; ok {
+		if plugin, ok := action.Plugins[pre]; ok { // nolint
 			actionTransParasToFront(plugin.Params)
 		} else {
 			return fmt.Errorf("PreActions plugins not contain[%s]", pre)
@@ -216,7 +220,7 @@ func decodeTemplateAction(action *cmproto.Action) error {
 	}
 
 	for _, post := range action.PostActions {
-		if plugin, ok := action.Plugins[post]; ok {
+		if plugin, ok := action.Plugins[post]; ok { // nolint
 			actionTransParasToFront(plugin.Params)
 		} else {
 			return fmt.Errorf("PostActions plugins not contain[%s]", post)

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package cidrmanager xxxx
 package cidrmanager
 
 import (
@@ -21,12 +21,12 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var (
@@ -102,12 +102,12 @@ type Config struct {
 
 // NewCidrManager create CidrManager SDK implementation
 func NewCidrManager(config *Config) (CidrManagerClient, func()) {
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) // nolint
 	if len(config.Hosts) == 0 {
 		//! pay more attention for nil return
 		return nil, nil
 	}
-	//create grpc connection
+	// create grpc connection
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
@@ -127,7 +127,7 @@ func NewCidrManager(config *Config) (CidrManagerClient, func()) {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		selected := rand.Intn(1024) % len(config.Hosts)
+		selected := rand.Intn(1024) % len(config.Hosts) // nolint
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
@@ -143,6 +143,6 @@ func NewCidrManager(config *Config) (CidrManagerClient, func()) {
 		return nil, nil
 	}
 
-	//init cidr manager client
-	return NewCidrManagerClient(conn), func() { conn.Close() }
+	// init cidr manager client
+	return NewCidrManagerClient(conn), func() { conn.Close() } // nolint
 }

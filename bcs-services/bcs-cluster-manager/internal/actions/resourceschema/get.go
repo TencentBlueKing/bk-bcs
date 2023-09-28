@@ -8,18 +8,19 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package resourceschema xxx
 package resourceschema
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
@@ -48,7 +49,7 @@ func (ga *GetAction) setResp(code uint32, msg string) {
 
 func (ga *GetAction) getSchema() error {
 	schemaList := []*types.ResourceSchema{}
-	schemaBytes, err := ioutil.ReadFile(ga.schemaPath)
+	schemaBytes, err := os.ReadFile(ga.schemaPath)
 	if err != nil {
 		blog.Errorf("load resource schema from file %s err: %v", ga.schemaPath, err)
 		return fmt.Errorf("load resource schema from file %s err: %v", ga.schemaPath, err)
@@ -103,5 +104,4 @@ func (ga *GetAction) Handle(
 	}
 
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

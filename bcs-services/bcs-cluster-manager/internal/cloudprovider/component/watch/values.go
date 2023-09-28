@@ -8,21 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package watch
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"gopkg.in/yaml.v2"
+
 	cmoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"gopkg.in/yaml.v2"
 )
 
 var (
-	defaultTemplateName = "bcs-k8s-watch"
+	defaultTemplateName = "bcs-k8s-watch" // nolint
 	defaultReplicas     = 1
 
 	defaultCpuMem = CpuMem{

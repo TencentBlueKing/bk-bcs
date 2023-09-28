@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -18,30 +17,33 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/container/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd/api"
+
+	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 const (
 	gceURLPrefix = "https://www.googleapis.com/compute/v1/"
 
-	BCSNodeGroupTaintKey    = "bcs-cluster-manager"
-	BCSNodeGroupTaintValue  = "noSchedule"
+	// BCSNodeGroupTaintKey xxx
+	BCSNodeGroupTaintKey = "bcs-cluster-manager"
+	// BCSNodeGroupTaintValue xxx
+	BCSNodeGroupTaintValue = "noSchedule"
+	// BCSNodeGroupTaintEffect xxx
 	BCSNodeGroupTaintEffect = "NO_EXECUTE"
 )
 
@@ -323,7 +325,8 @@ func ResizeInstanceGroupManager(computeCli *ComputeServiceClient, url string, si
 }
 
 // CreateInstanceForGroupManager create zonal/regional instances
-func CreateInstanceForGroupManager(computeCli *ComputeServiceClient, url string, names []string) (*compute.Operation, error) {
+func CreateInstanceForGroupManager(
+	computeCli *ComputeServiceClient, url string, names []string) (*compute.Operation, error) {
 	igmInfo, err := GetGCEResourceInfo(url)
 	if err != nil {
 		blog.Errorf("CreateInstanceForGroupManager failed: %v", err)

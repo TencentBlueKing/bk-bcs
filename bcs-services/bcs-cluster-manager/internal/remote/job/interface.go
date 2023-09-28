@@ -8,15 +8,15 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package job xxx
 package job
 
 import "context"
 
 // JobInterface job interface method
-type JobInterface interface {
+type JobInterface interface { // nolint
 	// ExecuteScript execute script on the server
 	ExecuteScript(ctx context.Context, paras ExecuteScriptParas) (uint64, error)
 	// GetJobStatus get job status
@@ -48,7 +48,7 @@ type ServerInfo struct {
 }
 
 // JobInfo xxx
-type JobInfo struct {
+type JobInfo struct { // nolint
 	BizID string
 	JobID uint64
 }

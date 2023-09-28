@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -21,15 +20,15 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/container/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/container/v1"
 )
 
 // CreateCloudNodeGroupTask create cloud node group task
@@ -147,7 +146,7 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 }
 
 // CheckCloudNodeGroupStatusTask check cloud node group status task
-func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
+func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -326,7 +325,7 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 	return nil
 }
 
-func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup,
+func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup, // nolint
 	computeCli *api.ComputeServiceClient, taskID string) error {
 	oldItNameInfo := strings.Split(newIt.Name, "-")
 	randStr := utils.RandomHexString(8)

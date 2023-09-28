@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package thirdparty
@@ -20,14 +19,14 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/google/uuid"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/google/uuid"
 )
 
 // DebugBkSopsTaskAction action for debug sops task
@@ -40,7 +39,7 @@ type DebugBkSopsTaskAction struct {
 	task  *cmproto.Task
 }
 
-// NewListAction create list action for business templateList
+// NewDebugBkSopsTaskAction create list action for business templateList
 func NewDebugBkSopsTaskAction(model store.ClusterManagerModel) *DebugBkSopsTaskAction {
 	return &DebugBkSopsTaskAction{
 		model: model,
@@ -85,7 +84,6 @@ func (da *DebugBkSopsTaskAction) Handle(
 		return
 	}
 	da.setResp(icommon.BcsErrClusterManagerSuccess, icommon.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (da *DebugBkSopsTaskAction) createDispatchTask() error {

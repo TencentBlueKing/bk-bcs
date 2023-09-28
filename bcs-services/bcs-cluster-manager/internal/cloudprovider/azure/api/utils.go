@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -20,13 +19,13 @@ import (
 	"strconv"
 	"strings"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
-
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 )
 
 //	nodeGroupToPool agentPool 转换器
@@ -58,9 +57,9 @@ func (c *nodeGroupToPool) convert() {
 	properties.VMSize = to.Ptr(c.group.LaunchTemplate.InstanceType)
 	// 当前节点池为手动扩缩容模式，不可以指定最大、最小节点数!!!
 	//// 设置最大节点数
-	//b.pool.MaxCount = to.Ptr(int32(ng.AutoScaling.MaxSize))
+	// b.pool.MaxCount = to.Ptr(int32(ng.AutoScaling.MaxSize))
 	//// 设置最小节点数
-	//b.pool.MinCount = to.Ptr(int32(ng.AutoScaling.MinSize))
+	// b.pool.MinCount = to.Ptr(int32(ng.AutoScaling.MinSize))
 	// 设置节点池大小
 	properties.Count = to.Ptr(int32(c.group.AutoScaling.DesiredSize))
 	// 设置节点池为用户模式
@@ -116,22 +115,22 @@ func (c *nodeGroupToPool) setScalingMode() {
 // setOSDiskType 设置系统盘类型
 func (c *nodeGroupToPool) setOSDiskType() {
 	//// 默认 使用托管类型(Managed)
-	//c.pool.Properties.OSDiskType = to.Ptr(armcontainerservice.OSDiskTypeManaged)
-	//lc := c.group.LaunchTemplate
-	//if lc.SystemDisk == nil || len(lc.SystemDisk.DiskType) == 0 {
+	// c.pool.Properties.OSDiskType = to.Ptr(armcontainerservice.OSDiskTypeManaged)
+	// lc := c.group.LaunchTemplate
+	// if lc.SystemDisk == nil || len(lc.SystemDisk.DiskType) == 0 {
 	//	return
-	//}
-	//found := false
-	//for _, osDiskType := range armcontainerservice.PossibleOSDiskTypeValues() {
+	// }
+	// found := false
+	// for _, osDiskType := range armcontainerservice.PossibleOSDiskTypeValues() {
 	//	if string(osDiskType) == lc.SystemDisk.DiskType {
 	//		found = true
 	//		break
 	//	}
-	//}
-	//if !found {
+	// }
+	// if !found {
 	//	return
-	//}
-	//c.pool.Properties.OSDiskType = to.Ptr(armcontainerservice.OSDiskType(lc.SystemDisk.DiskType))
+	// }
+	// c.pool.Properties.OSDiskType = to.Ptr(armcontainerservice.OSDiskType(lc.SystemDisk.DiskType))
 }
 
 // setOSDiskSizeGB 设置系统盘大小
@@ -142,16 +141,16 @@ func (c *nodeGroupToPool) setOSDiskSizeGB() {
 	// 16至63核 - 512G
 	// 64+核 - 1024G
 	// Azure节点系统盘 默认为128GB
-	//sysDisk := c.group.LaunchTemplate.SystemDisk
-	//if sysDisk == nil || len(sysDisk.DiskSize) == 0 {
+	// sysDisk := c.group.LaunchTemplate.SystemDisk
+	// if sysDisk == nil || len(sysDisk.DiskSize) == 0 {
 	//	return
-	//}
+	// }
 	//// 自定义节点系统盘 大小
-	//size, err := strconv.ParseInt(sysDisk.DiskSize, 10, 32)
-	//if err != nil {
+	// size, err := strconv.ParseInt(sysDisk.DiskSize, 10, 32)
+	// if err != nil {
 	//	return
-	//}
-	//c.pool.Properties.OSDiskSizeGB = to.Ptr(int32(size))
+	// }
+	// c.pool.Properties.OSDiskSizeGB = to.Ptr(int32(size))
 }
 
 // setOSType  设置系统类型
@@ -165,15 +164,15 @@ func (c *nodeGroupToPool) setOSType() {
 }
 
 // setOrchestratorVersion 设置k8s版本
-func (c *nodeGroupToPool) setOrchestratorVersion() {
+func (c *nodeGroupToPool) setOrchestratorVersion() { // nolint
 	// BCS暂无设置K8S版本需求
-	//runTimeInfo := b.group.NodeTemplate.Runtime
+	// runTimeInfo := b.group.NodeTemplate.Runtime
 	//// 默认为空
-	//b.pool.Properties.OrchestratorVersion = to.Ptr("")
+	// b.pool.Properties.OrchestratorVersion = to.Ptr("")
 	//// 若有运行时，则按Runtime版本
-	//if runTimeInfo != nil {
+	// if runTimeInfo != nil {
 	//	b.pool.Properties.OrchestratorVersion = to.Ptr(runTimeInfo.RuntimeVersion)
-	//}
+	// }
 }
 
 // setMaxPods 设置每一个节点的最大pod数量
@@ -319,7 +318,7 @@ func (c *poolToNodeGroup) convert() {
 	// 设置CloudNodeGroupID
 	c.setCloudNodeGroupID()
 	// 设置NodeGroupID
-	//c.setNodeGroupID()
+	// c.setNodeGroupID()
 
 	// 设置期望节点数量
 	c.setCount()
@@ -344,7 +343,7 @@ func (c *poolToNodeGroup) convert() {
 	// 设置taints
 	c.setTaints()
 	// 设置k8s版本
-	//c.setCurrentOrchestratorVersion()
+	// c.setCurrentOrchestratorVersion()
 }
 
 // setTags 设置tags
@@ -396,12 +395,12 @@ func (c *poolToNodeGroup) setScaleDownMode() {
 
 // setOsDiskType 设置磁盘类型
 func (c *poolToNodeGroup) setOsDiskType() {
-	//lc := c.group.LaunchTemplate
-	//diskType := c.properties.OSDiskType
-	//if lc.SystemDisk == nil {
+	// lc := c.group.LaunchTemplate
+	//  diskType := c.properties.OSDiskType
+	// if lc.SystemDisk == nil {
 	//	lc.SystemDisk = new(proto.DataDisk)
-	//}
-	//lc.SystemDisk.DiskType = string(*diskType)
+	// }
+	// lc.SystemDisk.DiskType = string(*diskType)
 }
 
 // setOsDiskSizeGB 设置磁盘大小
@@ -417,12 +416,12 @@ func (c *poolToNodeGroup) setOsDiskSizeGB() {
 // setNodeImageVersion 设置节点的镜像版本
 func (c *poolToNodeGroup) setNodeImageVersion() {
 	// 需要通过镜像接口拉取
-	//lc := ap.group.LaunchTemplate
-	//imageVersion := ap.properties.NodeImageVersion
-	//if lc.ImageInfo == nil {
+	// lc := ap.group.LaunchTemplate
+	// imageVersion := ap.properties.NodeImageVersion
+	// if lc.ImageInfo == nil {
 	//	lc.ImageInfo = new(proto.ImageInfo)
-	//}
-	//lc.ImageInfo.ImageName = *imageVersion
+	// }
+	// lc.ImageInfo.ImageName = *imageVersion
 }
 
 // setLabels 设置labels
@@ -475,13 +474,13 @@ func (c *poolToNodeGroup) buildTaint(taint *string) (res *proto.Taint) {
 }
 
 // setCurrentOrchestratorVersion 设置k8s版本
-func (c *poolToNodeGroup) setCurrentOrchestratorVersion() {
-	//nt := ap.group.NodeTemplate
-	//version := ap.properties.CurrentOrchestratorVersion
-	//if nt == nil || nt.Runtime == nil {
+func (c *poolToNodeGroup) setCurrentOrchestratorVersion() { // nolint
+	// nt := ap.group.NodeTemplate
+	// version := ap.properties.CurrentOrchestratorVersion
+	// if nt == nil || nt.Runtime == nil {
 	//	return
-	//}
-	//nt.Runtime.RuntimeVersion = *version
+	// }
+	// nt.Runtime.RuntimeVersion = *version
 }
 
 // setStatus 设置状态
@@ -507,11 +506,11 @@ func (c *poolToNodeGroup) setCloudNodeGroupID() {
 }
 
 // setNodeGroupID 设置NodeGroupID
-func (c *poolToNodeGroup) setNodeGroupID() {
-	//if len(*c.pool.Name) == 0 {
+func (c *poolToNodeGroup) setNodeGroupID() { // nolint
+	// if len(*c.pool.Name) == 0 {
 	//	return
-	//}
-	//c.group.NodeGroupID = *c.pool.Name
+	// }
+	// c.group.NodeGroupID = *c.pool.Name
 }
 
 // setCount 设置数量
@@ -578,21 +577,21 @@ func (c *setToNodeGroup) setSubnetIDs() {
 }
 
 // setLaunchConfigureName 设置lc name
-func (c *setToNodeGroup) setLaunchConfigureName() {
-	//lc := c.group.LaunchTemplate
-	//if c.set.Name == nil || lc == nil {
+func (c *setToNodeGroup) setLaunchConfigureName() { // nolint
+	// lc := c.group.LaunchTemplate
+	// if c.set.Name == nil || lc == nil {
 	//	return
-	//}
-	//lc.LaunchConfigureName = *c.set.Name
+	// }
+	// lc.LaunchConfigureName = *c.set.Name
 }
 
 // setLaunchConfigurationID 设置lc ID
-func (c *setToNodeGroup) setLaunchConfigurationID() {
-	//lc := c.group.LaunchTemplate
-	//if c.set.ID == nil || lc == nil {
+func (c *setToNodeGroup) setLaunchConfigurationID() { // nolint
+	// lc := c.group.LaunchTemplate
+	// if c.set.ID == nil || lc == nil {
 	//	return
-	//}
-	//lc.LaunchConfigureName = *c.set.ID
+	// }
+	// lc.LaunchConfigureName = *c.set.ID
 }
 
 // setAutoScalingID 设置asg id
@@ -688,7 +687,7 @@ func (c *setToNodeGroup) setDataDisks() {
 // setUserData 用户数据
 func (c *setToNodeGroup) setUserData() {
 	lc := c.group.LaunchTemplate
-	//VirtualMachineScaleSet.properties.virtualMachineProfile.userData（用户数据）
+	// VirtualMachineScaleSet.properties.virtualMachineProfile.userData（用户数据）
 	userData := c.set.Properties.VirtualMachineProfile.UserData
 	if userData != nil && len(*userData) != 0 {
 		lc.UserData = *userData
@@ -901,12 +900,12 @@ func (c *vmToNode) setPassword() {
 
 	// username 从 vm 对象获取
 	// password 从 nodeGroup.launchTemplate.initLoginPassword 对象获取
-	//if c.vm.Properties.OSProfile.AdminUsername != nil && len(*c.vm.Properties.OSProfile.AdminUsername) != 0 {
+	// if c.vm.Properties.OSProfile.AdminUsername != nil && len(*c.vm.Properties.OSProfile.AdminUsername) != 0 {
 	//	c.node.Username = *c.vm.Properties.OSProfile.AdminUsername
 	//}
-	//if c.vm.Properties.OSProfile.AdminPassword != nil && len(*c.vm.Properties.OSProfile.AdminPassword) != 0 {
+	// if c.vm.Properties.OSProfile.AdminPassword != nil && len(*c.vm.Properties.OSProfile.AdminPassword) != 0 {
 	//	c.node.Passwd = *c.vm.Properties.OSProfile.AdminPassword
-	//}
+	// }
 }
 
 // nodeToVm node 转 vm
@@ -931,7 +930,7 @@ func (c *nodeToVm) convert() {
 }
 
 func (c *nodeToVm) setVmSize() {
-	//VirtualMachineScaleSetVM.properties.hardwareProfile.vmSize (机型)
+	// VirtualMachineScaleSetVM.properties.hardwareProfile.vmSize (机型)
 	if len(c.node.InstanceType) == 0 {
 		return
 	}
@@ -1050,7 +1049,7 @@ func checkDataDiskType(diskType string) bool {
 
 // setUltraSSD 购买超级磁盘需要满足两个条件: 1.开启了可用区，2.设置启用超级磁盘
 func setUltraSSD(set *armcompute.VirtualMachineScaleSet) {
-	if len(set.Zones) <= 0 {
+	if len(set.Zones) == 0 {
 		return
 	}
 	if set.Properties.AdditionalCapabilities == nil {
@@ -1085,7 +1084,7 @@ func ParseSecurityGroupsInVpc(vnet *armnetwork.VirtualNetwork) []string {
 }
 
 // checkInterfaceConfigNameEmpty interfaceConfig name 不为空检查
-func checkInterfaceConfigNameEmpty(vm *armcompute.VirtualMachineScaleSetVM) (string, bool) {
+func checkInterfaceConfigNameEmpty(vm *armcompute.VirtualMachineScaleSetVM) (string, bool) { // nolint
 	if vm == nil || vm.InstanceID == nil {
 		return "", false
 	}
@@ -1203,7 +1202,7 @@ func checkVNetSecurityGroups(vnet *armnetwork.VirtualNetwork) []string {
 		return nil
 	}
 	resp := make([]string, 0)
-	//VirtualNetwork.properties.subnets[n].properties.networkSecurityGroup.id（安全组ID）
+	// VirtualNetwork.properties.subnets[n].properties.networkSecurityGroup.id（安全组ID）
 	for _, subnet := range vnet.Properties.Subnets {
 		if subnet.Properties != nil && subnet.Properties.NetworkSecurityGroup != nil {
 			resp = append(resp, *subnet.Properties.NetworkSecurityGroup.ID)
@@ -1286,7 +1285,9 @@ func handlerIPConfig(config *armnetwork.InterfaceIPConfiguration) (string, bool)
 	if config.Properties == nil || config.Properties.PrivateIPAddress == nil {
 		return "", false
 	}
-	// VNet地址范围支持问题 (https://learn.microsoft.com/zh-cn/azure/virtual-network/virtual-networks-faq#what-address-ranges-can-i-use-in-my-vnets)
+	// VNet地址范围支持问题
+	// (https://learn.microsoft.com/zh-cn/azure/virtual-network
+	// /virtual-networks-faq#what-address-ranges-can-i-use-in-my-vnets)
 	ip := net.ParseIP(*config.Properties.PrivateIPAddress)
 	if !(ip != nil && ip.IsPrivate()) { // 取反
 		return "", false
@@ -1311,7 +1312,8 @@ func vmMatchIP(vm *armcompute.VirtualMachineScaleSetVM, interfaceMap map[string]
 }
 
 // VmMatchInterface vm list 匹配 interface list
-func VmMatchInterface(vmList []*armcompute.VirtualMachineScaleSetVM, interfaceList []*armnetwork.Interface) map[string][]string {
+func VmMatchInterface(
+	vmList []*armcompute.VirtualMachineScaleSetVM, interfaceList []*armnetwork.Interface) map[string][]string {
 	vmIPMap := make(map[string][]string)
 	if len(vmList) == 0 || len(interfaceList) == 0 {
 		return vmIPMap
@@ -1375,8 +1377,8 @@ func SetAgentPoolFromNodeGroup(group *proto.NodeGroup, pool *armcontainerservice
 		pool.Properties.VMSize = to.Ptr(group.LaunchTemplate.InstanceType)
 	}
 	pool.Properties.EnableAutoScaling = to.Ptr(false)
-	//pool.Properties.OSDiskType = original.Properties.OSDiskType
-	//pool.Properties.OSDiskSizeGB = original.Properties.OSDiskSizeGB
+	// pool.Properties.OSDiskType = original.Properties.OSDiskType
+	// pool.Properties.OSDiskSizeGB = original.Properties.OSDiskSizeGB
 }
 
 func checkInstanceType(intce string) bool {

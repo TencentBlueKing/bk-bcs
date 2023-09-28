@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package handler xxx
 package handler
 
 import (
@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/account"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
@@ -96,7 +97,7 @@ func (cm *ClusterManager) ListCloudAccount(ctx context.Context,
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudAccount", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: ListCloudAccount, req %v, resp.Code %d, "+
-		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data)) // nolint
 	blog.V(5).Infof("reqID: %s, action: ListCloudAccount, req %v, resp %v", reqID, req, resp)
 	return nil
 }

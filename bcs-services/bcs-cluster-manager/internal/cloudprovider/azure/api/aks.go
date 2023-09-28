@@ -8,20 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package api xxx
 package api
 
 import (
 	"context"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
+	"github.com/pkg/errors"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
@@ -41,10 +41,10 @@ type AksServiceImpl struct {
 
 // NewAksServiceImplWithCommonOption 从 CommonOption 创建 AksService
 func NewAksServiceImplWithCommonOption(opt *cloudprovider.CommonOption) (AksService, error) {
-	account := opt.Account
-	if opt == nil || account == nil {
+	if opt == nil || opt.Account == nil {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
+	account := opt.Account
 	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 ||
 		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 ||
 		len(account.ResourceGroupName) == 0 {
@@ -164,7 +164,7 @@ func (aks *AksServiceImpl) ListClusterByLocation(ctx context.Context, location s
 			return nil, errors.Wrapf(err, "failed to advance page")
 		}
 		for i, v := range next.Value {
-			if strings.ToLower(*v.Location) == strings.ToLower(location) {
+			if strings.ToLower(*v.Location) == strings.ToLower(location) { // nolint
 				result = append(result, next.Value[i])
 			}
 		}
@@ -187,7 +187,7 @@ func (aks *AksServiceImpl) ListClusterByResourceGroupName(ctx context.Context, l
 			return nil, errors.Wrapf(err, "failed to advance page")
 		}
 		for i, v := range next.Value {
-			if strings.ToLower(*v.Location) == strings.ToLower(location) {
+			if strings.ToLower(*v.Location) == strings.ToLower(location) { // nolint
 				result = append(result, next.Value[i])
 			}
 		}
@@ -239,7 +239,8 @@ func (aks *AksServiceImpl) GetClusterAdminCredentials(ctx context.Context, info 
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetClusterAdminCredentialsWithName(ctx context.Context, resourceGroupName, resourceName string) (
+func (aks *AksServiceImpl) GetClusterAdminCredentialsWithName(
+	ctx context.Context, resourceGroupName, resourceName string) (
 	[]*armcontainerservice.CredentialResult, error) {
 	credentials, err := aks.clustersClient.ListClusterAdminCredentials(ctx, resourceGroupName, resourceName, nil)
 	if err != nil {
@@ -264,7 +265,8 @@ func (aks *AksServiceImpl) GetClusterUserCredentials(ctx context.Context, info *
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetClusterUserCredentialsWithName(ctx context.Context, resourceGroupName, resourceName string) (
+func (aks *AksServiceImpl) GetClusterUserCredentialsWithName(
+	ctx context.Context, resourceGroupName, resourceName string) (
 	[]*armcontainerservice.CredentialResult, error) {
 	credentials, err := aks.clustersClient.ListClusterUserCredentials(ctx, resourceGroupName, resourceName, nil)
 	if err != nil {
@@ -278,7 +280,8 @@ func (aks *AksServiceImpl) GetClusterUserCredentialsWithName(ctx context.Context
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetClusterMonitoringUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
+func (aks *AksServiceImpl) GetClusterMonitoringUserCredentials(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
 	[]*armcontainerservice.CredentialResult, error) {
 	resourceGroupName := info.CmOption.Account.ResourceGroupName
 	return aks.GetClusterMonitorUserCredWithName(ctx, resourceGroupName, info.Cluster.SystemID)
@@ -289,9 +292,11 @@ func (aks *AksServiceImpl) GetClusterMonitoringUserCredentials(ctx context.Conte
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetClusterMonitorUserCredWithName(ctx context.Context, resourceGroupName, resourceName string) (
+func (aks *AksServiceImpl) GetClusterMonitorUserCredWithName(
+	ctx context.Context, resourceGroupName, resourceName string) (
 	[]*armcontainerservice.CredentialResult, error) {
-	credentials, err := aks.clustersClient.ListClusterMonitoringUserCredentials(ctx, resourceGroupName, resourceName, nil)
+	credentials, err := aks.clustersClient.ListClusterMonitoringUserCredentials(ctx, resourceGroupName, resourceName,
+		nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to finish the request")
 	}

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cloudprovider
@@ -319,27 +318,34 @@ type NodeGroupManager interface {
 	// UpdateDesiredNodes update nodegroup desired node
 	UpdateDesiredNodes(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*ScalingResponse, error)
 	// SwitchNodeGroupAutoScaling switch nodegroup auto scale
-	SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
+	SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool,
+		opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
 
 	// CreateAutoScalingOption create cluster autoscaling option, cloudprovider will
 	// deploy cluster-autoscaler in backgroup according cloudprovider implementation
-	CreateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *CreateScalingOption) (*proto.Task, error)
+	CreateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,
+		opt *CreateScalingOption) (*proto.Task, error)
 	// DeleteAutoScalingOption delete cluster autoscaling, cloudprovider will clean
 	// cluster-autoscaler in backgroup according cloudprovider implementation
-	DeleteAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *DeleteScalingOption) (*proto.Task, error)
+	DeleteAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,
+		opt *DeleteScalingOption) (*proto.Task, error)
 	// UpdateAutoScalingOption update cluster autoscaling option, cloudprovider will update
 	// cluster-autoscaler configuration in backgroup according cloudprovider implementation.
 	// Implementation is optional.
-	UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *UpdateScalingOption) (*proto.Task, error)
+	UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,
+		opt *UpdateScalingOption) (*proto.Task, error)
 	// SwitchAutoScalingOptionStatus switch cluster autoscaling option enable auto scaling status
-	SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *CommonOption) (*proto.Task, error)
+	SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterAutoScalingOption,
+		enable bool, opt *CommonOption) (*proto.Task, error)
 
-	//ExternalNode support external node operation
+	// ExternalNode support external node operation
 
 	// AddExternalNodeToCluster add external to cluster
-	AddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node, opt *AddExternalNodesOption) (*proto.Task, error)
+	AddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node,
+		opt *AddExternalNodesOption) (*proto.Task, error)
 	// DeleteExternalNodeFromCluster remove external node from cluster
-	DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteExternalNodesOption) (*proto.Task, error)
+	DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
+		opt *DeleteExternalNodesOption) (*proto.Task, error)
 	// GetExternalNodeScript get external node script from cluster nodeGroup
 	GetExternalNodeScript(group *proto.NodeGroup) (string, error)
 }
@@ -371,20 +377,25 @@ type TaskManager interface {
 	// BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
 	// task to clean all nodes in nodegroup, release all resource in cloudprovider,
 	// finally delete nodes information in local storage.
-	BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteNodeGroupOption) (*proto.Task, error)
+	BuildDeleteNodeGroupTask(
+		group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteNodeGroupOption) (*proto.Task, error)
 	// BuildMoveNodesToGroupTask when move nodes to nodegroup, we need to create background task
 	BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
 	// BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
 	BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
 	// BuildUpdateDesiredNodesTask update nodegroup desired node
-	BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
+	BuildUpdateDesiredNodesTask(
+		desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
 
 	// BuildSwitchNodeGroupAutoScalingTask switch nodegroup autoscaling
-	BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
+	BuildSwitchNodeGroupAutoScalingTask(
+		group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
 	// BuildUpdateAutoScalingOptionTask update cluster autoscaling option
-	BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption, opt *UpdateScalingOption) (*proto.Task, error)
+	BuildUpdateAutoScalingOptionTask(
+		scalingOption *proto.ClusterAutoScalingOption, opt *UpdateScalingOption) (*proto.Task, error)
 	// BuildSwitchAsOptionStatusTask switch cluster autoscaling option enable auto scaling status
-	BuildSwitchAsOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *CommonOption) (*proto.Task, error)
+	BuildSwitchAsOptionStatusTask(
+		scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *CommonOption) (*proto.Task, error)
 	// BuildUpdateNodeGroupTask update nodeGroup data and update autoScalingOption
 	BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *CommonOption) (*proto.Task, error)
 
@@ -403,10 +414,13 @@ type TaskManager interface {
 	// BuildAddNodesToClusterTask add instances to cluster
 	BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node, opt *AddNodesOption) (*proto.Task, error)
 	// BuildRemoveNodesFromClusterTask remove instances from cluster
-	BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node, opt *DeleteNodesOption) (*proto.Task, error)
+	BuildRemoveNodesFromClusterTask(
+		cls *proto.Cluster, nodes []*proto.Node, opt *DeleteNodesOption) (*proto.Task, error)
 
 	// BuildAddExternalNodeToCluster add external to cluster
-	BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node, opt *AddExternalNodesOption) (*proto.Task, error)
+	BuildAddExternalNodeToCluster(
+		group *proto.NodeGroup, nodes []*proto.Node, opt *AddExternalNodesOption) (*proto.Task, error)
 	// BuildDeleteExternalNodeFromCluster remove external node from cluster
-	BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteExternalNodesOption) (*proto.Task, error)
+	BuildDeleteExternalNodeFromCluster(
+		group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteExternalNodesOption) (*proto.Task, error)
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package node
@@ -51,7 +50,7 @@ func (ua *UpdateNodeTaintsAction) validate() error {
 	return nil
 }
 
-func (ua *UpdateNodeTaintsAction) updateNodeTaints() error {
+func (ua *UpdateNodeTaintsAction) updateNodeTaints() error { // nolint
 	successCh := make(chan *cmproto.NodeOperationStatusInfo, len(ua.req.Nodes))
 	failCh := make(chan *cmproto.NodeOperationStatusInfo, len(ua.req.Nodes))
 
@@ -119,5 +118,4 @@ func (ua *UpdateNodeTaintsAction) Handle(ctx context.Context, req *cmproto.Updat
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

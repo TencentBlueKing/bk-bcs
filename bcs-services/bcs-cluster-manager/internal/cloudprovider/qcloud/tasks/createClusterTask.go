@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -23,6 +22,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/ghodss/yaml"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
@@ -34,10 +37,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/ghodss/yaml"
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 )
 
 const (
@@ -514,7 +513,7 @@ type clusterInfo struct {
 }
 
 // createTkeCluster create tke cluster
-func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
 	nodeIPs []string, passwd, operator string) (*clusterInfo, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -719,7 +718,7 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("CreateTkeClusterTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
+			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error()) // nolint
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -1048,14 +1047,13 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error {
 	if len(addFailureNodes) > 0 {
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(addFailureNodes, ",")
 	}
-	if len(addSuccessNodes) > 0 {
-		state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(addSuccessNodes, ",")
-	} else {
+	if len(addSuccessNodes) == 0 {
 		blog.Errorf("CheckCreateClusterNodeStatusTask[%s] nodes init failed", taskID)
 		retErr := fmt.Errorf("节点初始化失败, 请联系管理员")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(addSuccessNodes, ",")
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
@@ -1067,7 +1065,7 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error {
 }
 
 // RegisterManageClusterKubeConfigTask register cluster kubeconfig
-func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
+func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step
@@ -1152,10 +1150,7 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 
 	// import cluster credential
 	err = importClusterCredential(ctx, dependInfo, func() bool {
-		if isExtranet == icommon.True {
-			return true
-		}
-		return false
+		return isExtranet == icommon.True
 	}(), false, token, kube)
 	if err != nil {
 		blog.Errorf("RegisterManageClusterKubeConfigTask[%s] importClusterCredential failed: %s", taskID, err.Error())
@@ -1204,8 +1199,8 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 		return "", fmt.Errorf("region[%s] vpc[%s]无可用匹配子网", info.Cluster.Region, info.Cluster.VpcID)
 	}
 
-	rand.Seed(time.Now().Unix())
-	return availableSubnet[rand.Intn(len(availableSubnet))].SubnetID, nil
+	rand.Seed(time.Now().Unix())                                          // nolint
+	return availableSubnet[rand.Intn(len(availableSubnet))].SubnetID, nil // nolint
 }
 
 // openClusterAdminKubeConfig open account cluster admin perm

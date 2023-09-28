@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package azure
@@ -23,9 +22,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -35,9 +34,9 @@ import (
 
 // errors
 var (
-	nodePoolScaleUpErr = errors.New("the status of the aks node pool is scale up, and currently " +
+	nodePoolScaleUpErr = errors.New("the status of the aks node pool is scale up, and currently " + // nolint
 		"no operations can be performed on it")
-	nodePoolUpdatingErr = errors.New("the aks node pool status is in the process of being updating " +
+	nodePoolUpdatingErr = errors.New("the aks node pool status is in the process of being updating " + // nolint
 		"and no operations can be performed on it right now")
 )
 
@@ -134,7 +133,7 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 
 	// note:Azure不支持更换镜像
 	//// update imageName
-	//if err = ng.updateImageInfo(group); err != nil {
+	// if err = ng.updateImageInfo(group); err != nil {
 	//	return err
 	//}
 
@@ -158,14 +157,14 @@ func (ng *NodeGroup) GetNodesInGroupV2(group *proto.NodeGroup,
 	// new client
 	client, err := api.NewAksServiceImplWithCommonOption(opt)
 	if err != nil {
-		return nil, errors.Wrapf(err, "create aks client failed.")
+		return nil, errors.Wrapf(err, "create aks client failed")
 	}
 	// 获取 vm list
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	vmList, err := client.ListInstanceAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID)
 	if err != nil {
-		return nil, errors.Wrapf(err, "ListNodeWithNodeGroup failed.")
+		return nil, errors.Wrapf(err, "ListNodeWithNodeGroup failed")
 	}
 	// 获取 interface list
 	ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
@@ -245,7 +244,7 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	if group == nil || opt == nil || opt.Cluster == nil || opt.Cloud == nil {
 		return nil, fmt.Errorf("invalid request")
 	}
-	if err = ng.scaleUpPreCheck(opt.Cluster.ClusterID, opt.Cloud.CloudID, group.NodeGroupID); err != nil { //扩容前置检查
+	if err = ng.scaleUpPreCheck(opt.Cluster.ClusterID, opt.Cloud.CloudID, group.NodeGroupID); err != nil { // 扩容前置检查
 		return nil, errors.Wrapf(err, "nodeGroupID: %s unable to sacle up", group.NodeGroupID)
 	}
 
@@ -265,7 +264,7 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 		[]string{cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyInstanceMachinesTask)},
 	)
 	if err != nil {
-		return nil, errors.Wrapf(err, "UpdateDesiredNodes GetNodesNumWhenApplyInstanceTask failed.")
+		return nil, errors.Wrapf(err, "UpdateDesiredNodes GetNodesNumWhenApplyInstanceTask failed")
 	}
 	if inComingNodes > 0 {
 		return nil, errors.Wrapf(nodePoolScaleUpErr, "nodeGroupID: %s is scale up, incoming nodes %d",
@@ -433,7 +432,7 @@ func transAksNodeToNode(node *armcompute.VirtualMachineScaleSetVM, vmIPMap map[s
 			n.Status = common.StatusRunning
 		case api.CreatingState:
 			n.Status = common.StatusInitialization
-		//case "failed":
+		// case "failed":
 		//	n.Status = "FAILED"
 		default:
 			n.Status = *properties.ProvisioningState

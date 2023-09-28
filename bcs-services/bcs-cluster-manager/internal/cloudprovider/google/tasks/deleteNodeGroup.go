@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -20,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 )
@@ -58,7 +58,8 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 
 	containerCli, err := api.NewContainerServiceClient(cmOption)
 	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get gke container client for nodegroup[%s] in task %s step %s failed, %s",
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get gke container client for nodegroup[%s] in "+
+			"task %s step %s failed, %s", // nolint
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud gke client err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -68,24 +69,27 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	if group.CloudNodeGroupID != "" {
 		_, err = containerCli.GetClusterNodePool(context.Background(), cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
-			if strings.Contains(err.Error(), "NotFound") || strings.Contains(err.Error(), "not found") {
-				blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
-					taskID, nodeGroupID, group.CloudNodeGroupID, stepName, stepName)
-				found = false
-			} else {
+			if !(strings.Contains(err.Error(), "NotFound") ||
+				strings.Contains(err.Error(), "not found")) {
 				blog.Errorf(
-					"DeleteCloudNodeGroupTask[%s]: call GetClusterNodePool[%s] api in task %s step %s failed, %s",
+					"DeleteCloudNodeGroupTask[%s]: call GetClusterNodePool[%s] api in "+
+						"task %s step %s failed, %s",
 					taskID, nodeGroupID, taskID, stepName, err.Error())
 				retErr := fmt.Errorf("call GetClusterNodePool[%s] api err, %s", nodeGroupID, err.Error())
 				_ = state.UpdateStepFailure(start, stepName, retErr)
 				return retErr
 			}
+			blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, "+
+				"skip delete",
+				taskID, nodeGroupID, group.CloudNodeGroupID, stepName, stepName)
+			found = false
 		}
 	}
 	if found && group.CloudNodeGroupID != "" {
 		_, err = containerCli.DeleteClusterNodePool(context.Background(), cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
-			blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool[%s] api in task %s step %s failed, %s",
+			blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool[%s] api in "+
+				"task %s step %s failed, %s",
 				taskID, nodeGroupID, taskID, stepName, err.Error())
 			retErr := fmt.Errorf("call DeleteClusterNodePool[%s] api err, %s", nodeGroupID, err.Error())
 			_ = state.UpdateStepFailure(start, stepName, retErr)

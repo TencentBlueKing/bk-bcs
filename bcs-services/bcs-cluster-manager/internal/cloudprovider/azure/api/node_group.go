@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -16,9 +15,9 @@ package api
 import (
 	"context"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"github.com/pkg/errors"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
@@ -141,7 +140,8 @@ func (aks *AksServiceImpl) UpdatePoolAndReturn(ctx context.Context, pool *armcon
 }
 
 // GetPool 获取节点池.
-func (aks *AksServiceImpl) GetPool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*proto.NodeGroup, error) {
+func (aks *AksServiceImpl) GetPool(
+	ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*proto.NodeGroup, error) {
 	return aks.GetPoolWithName(ctx, info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID, info.NodeGroup)
 }
 

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package ladder xxx
 package ladder
 
 import (
@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
@@ -39,11 +40,12 @@ func init() {
 // leaveClusterAndReturnCVM. We need implement all NodeGroup features
 // then offering apis to cluster-autoscaler.
 type NodeGroup struct {
-	//internal authentication information
+	// internal authentication information
 }
 
 // CreateNodeGroup create nodegroup by cloudprovider api, build createNodeGroup task
-func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (*proto.Task, error) {
+func (ng *NodeGroup) CreateNodeGroup(
+	group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (*proto.Task, error) {
 	if opt.OnlyData {
 		return nil, nil
 	}
@@ -67,7 +69,8 @@ func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 
 // DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
 // will be released. Task is backgroup automatic task
-func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node, opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
+func (ng *NodeGroup) DeleteNodeGroup(
+	group *proto.NodeGroup, nodes []*proto.Node, opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
 	// validate request
 	if group == nil {
 		return nil, fmt.Errorf("lost clean nodes or group")
@@ -98,7 +101,8 @@ func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node
 }
 
 // UpdateNodeGroup update specified nodegroup configuration
-func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.UpdateNodeGroupOption) (*proto.Task, error) {
+func (ng *NodeGroup) UpdateNodeGroup(
+	group *proto.NodeGroup, opt *cloudprovider.UpdateNodeGroupOption) (*proto.Task, error) {
 	// nothing need to be updated, yunti not entity nodeGroup
 	if group == nil || opt == nil {
 		return nil, fmt.Errorf("UpdateNodeGroup group or opt is nil")
@@ -148,14 +152,16 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 }
 
 // MoveNodesToGroup add cluster nodes to NodeGroup
-func (ng *NodeGroup) MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
+func (ng *NodeGroup) MoveNodesToGroup(
+	nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
 	// just update cluster-manager nodes belong to NodeGroup in local storage
 	// already done in action part
 	return nil, nil
 }
 
 // RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
-func (ng *NodeGroup) RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.RemoveNodesOption) error {
+func (ng *NodeGroup) RemoveNodesFromGroup(
+	nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.RemoveNodesOption) error {
 	// just remove nodes that belong to NodeGroup to cluster-manager in local storage
 	// but nodes still are under controlled by cluster, so no other operation needed
 	// already done in action part
@@ -205,7 +211,8 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 
 	// check incoming nodes
 	inComingNodes, err := cloudprovider.GetNodesNumWhenApplyInstanceTask(opt.Cluster.ClusterID, group.NodeGroupID,
-		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode), cloudprovider.TaskStatusRunning,
+		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode),
+		cloudprovider.TaskStatusRunning,
 		[]string{cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyInstanceMachinesTask)})
 	if err != nil {
 		blog.Errorf("UpdateDesiredNodes GetNodesNumWhenApplyInstanceTask failed: %v", err)
@@ -226,9 +233,10 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 		blog.Infof("NodeGroup %s current capable nodes %d larger than desired %d nodes, nothing to do",
 			group.NodeGroupID, current, desired)
 		return &cloudprovider.ScalingResponse{
-			ScalingUp:    0,
-			CapableNodes: nodeNames,
-		}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes", group.NodeGroupID, current, desired)
+				ScalingUp:    0,
+				CapableNodes: nodeNames,
+			}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes",
+				group.NodeGroupID, current, desired)
 	}
 
 	// current scale nodeNum
