@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package msgqueue
@@ -17,10 +16,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/micro/go-micro/v2/broker"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/micro/go-micro/v2/broker"
 )
 
 // MockPod data
@@ -107,7 +107,9 @@ func TestMsgQueue_Publish(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer sub.Unsubscribe()
+	defer func(sub UnSub) {
+		_ = sub.Unsubscribe()
+	}(sub)
 
 	select {}
 }
@@ -133,7 +135,9 @@ func TestMsgQueue_Subscribe(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer sub.Unsubscribe()
+	defer func(sub UnSub) {
+		_ = sub.Unsubscribe()
+	}(sub)
 
 	select {}
 }
@@ -148,14 +152,14 @@ func (h *testHandler) Name() string {
 }
 
 // Handle handle data
-func (h *testHandler) Handle(ctx context.Context, data []byte) error {
+func (h *testHandler) Handle(_ context.Context, data []byte) error {
 	var (
 		handlerData = &HandlerData{}
 		pod         = &MockPod{}
 	)
-	json.Unmarshal(data, handlerData)
+	_ = json.Unmarshal(data, handlerData)
 	if len(handlerData.Body) > 0 {
-		json.Unmarshal(handlerData.Body, pod)
+		_ = json.Unmarshal(handlerData.Body, pod)
 	}
 
 	fmt.Println(time.Now().Unix(), " ", handlerData.ResourceType, " ", string(handlerData.Body), " ", pod.Name)
@@ -235,10 +239,10 @@ func pub(queue MessageQueue) {
 	}
 
 	cnt := 0
-	rand.Seed(time.Now().Unix())
+	rand.New(rand.NewSource(time.Now().Unix())) // nolint
 	for range ticker.C {
 		if len(messages) > 0 {
-			msg := messages[rand.Intn(len(messages))]
+			msg := messages[rand.Intn(len(messages))] // nolint
 			fmt.Println(msg)
 			err := queue.Publish(msg)
 			cnt++

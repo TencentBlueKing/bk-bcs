@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package helmmanager xxx
 package helmmanager
 
 import (
@@ -28,7 +28,7 @@ import (
 
 // NewHelmClient create HelmManager SDK implementation
 func NewHelmClient(config *bcsapi.Config) (HelmManagerClient, func()) {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano())) // nolint
 	if len(config.Hosts) == 0 {
 		// ! pay more attention for nil return
 		return nil, nil
@@ -51,7 +51,7 @@ func NewHelmClient(config *bcsapi.Config) (HelmManagerClient, func()) {
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithInsecure()) // nolint
 		auth.Insecure = true
 	}
 	opts = append(opts, grpc.WithPerRPCCredentials(auth))
@@ -63,7 +63,7 @@ func NewHelmClient(config *bcsapi.Config) (HelmManagerClient, func()) {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		selected := rand.Intn(1024) % len(config.Hosts)
+		selected := r.Intn(1024) % len(config.Hosts) // nolint
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
@@ -78,12 +78,12 @@ func NewHelmClient(config *bcsapi.Config) (HelmManagerClient, func()) {
 		blog.Errorf("create no helm manager client after all instance tries")
 		return nil, nil
 	}
-	return NewHelmManagerClient(conn), func() { conn.Close() }
+	return NewHelmManagerClient(conn), func() { _ = conn.Close() }
 }
 
 // NewHelmAddonsClient create HelmManager addons SDK implementation
 func NewHelmAddonsClient(config *bcsapi.Config) (ClusterAddonsClient, func()) {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano())) // nolint
 	if len(config.Hosts) == 0 {
 		// ! pay more attention for nil return
 		return nil, nil
@@ -106,7 +106,7 @@ func NewHelmAddonsClient(config *bcsapi.Config) (ClusterAddonsClient, func()) {
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithInsecure()) // nolint
 		auth.Insecure = true
 	}
 	opts = append(opts, grpc.WithPerRPCCredentials(auth))
@@ -118,7 +118,7 @@ func NewHelmAddonsClient(config *bcsapi.Config) (ClusterAddonsClient, func()) {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		selected := rand.Intn(1024) % len(config.Hosts)
+		selected := r.Intn(1024) % len(config.Hosts) // nolint
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
@@ -133,5 +133,5 @@ func NewHelmAddonsClient(config *bcsapi.Config) (ClusterAddonsClient, func()) {
 		blog.Errorf("create no helm manager client after all instance tries")
 		return nil, nil
 	}
-	return NewClusterAddonsClient(conn), func() { conn.Close() }
+	return NewClusterAddonsClient(conn), func() { _ = conn.Close() }
 }

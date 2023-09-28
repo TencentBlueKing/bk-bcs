@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package jaeger xxx
@@ -21,13 +20,13 @@ import (
 	"net"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	jaegerclient "github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-client-go/rpcmetrics"
 	"github.com/uber/jaeger-lib/metrics"
 	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // jaeger default errInfo
@@ -112,7 +111,8 @@ type JaeOptions struct {
 type SamplerConfig struct {
 	SampleType      string  `json:"sampleType"`
 	SampleParameter float64 `json:"sampleParameter"`
-	// SamplerConfig get SamplingServerURL by env(JAEGER_SAMPLING_ENDPOINT) when set FromEnv, else by SamplingServerURL directly
+	// SamplerConfig get SamplingServerURL by env(JAEGER_SAMPLING_ENDPOINT) when set FromEnv,
+	// else by SamplingServerURL directly
 	FromEnv           bool   `json:"fromEnv"`
 	SamplingServerURL string `json:"samplingServerURL"`
 }
@@ -121,9 +121,9 @@ type SamplerConfig struct {
 func NewJaegerServer(opts ...JaeOption) (*Jaeger, error) {
 	defaultJaeOptions := &JaeOptions{
 		ServiceName:   "",
-		RPCMetrics:    defaultRPCMetrics,
-		ReportMetrics: defaultReportMetrics,
-		ReportLog:     defaultReportLog,
+		RPCMetrics:    defaultRPCMetrics,    // nolint
+		ReportMetrics: defaultReportMetrics, // nolint
+		ReportLog:     defaultReportLog,     // nolint
 		FromEnv:       false,
 		AgentHostPort: defaultAgentHostPort,
 
@@ -138,7 +138,6 @@ func NewJaegerServer(opts ...JaeOption) (*Jaeger, error) {
 	for _, opt := range opts {
 		opt(defaultJaeOptions)
 	}
-
 	err := validateJaeOptions(defaultJaeOptions)
 	if err != nil {
 		blog.Errorf("NewJaegerServer failed: %v", err)

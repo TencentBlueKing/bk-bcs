@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package grpc
@@ -16,7 +15,7 @@ package grpc
 import (
 	"context"
 
-	opentracing "github.com/opentracing/opentracing-go"
+	opentrace "github.com/opentracing/opentracing-go"
 )
 
 // Option instances may be used in OpenTracing(Server|Client)Interceptor
@@ -41,7 +40,7 @@ func LogPayloads() Option {
 // parentSpanCtx may be nil if no parent could be extraction from either the Go
 // context.Context (on the client) or the RPC (on the server).
 type SpanInclusionFunc func(
-	parentSpanCtx opentracing.SpanContext,
+	parentSpanCtx opentrace.SpanContext,
 	method string,
 	req, resp interface{}) bool
 
@@ -57,7 +56,7 @@ func IncludingSpans(inclusionFunc SpanInclusionFunc) Option {
 // and/or server RPCs.
 type SpanDecoratorFunc func(
 	ctx context.Context,
-	span opentracing.Span,
+	span opentrace.Span,
 	method string,
 	req, resp interface{},
 	grpcError error)
