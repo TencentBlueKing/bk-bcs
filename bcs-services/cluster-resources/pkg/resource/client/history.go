@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -21,7 +19,6 @@ import (
 	"io"
 	"text/tabwriter"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -35,10 +32,11 @@ import (
 	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/apps"
-	"k8s.io/kubectl/pkg/describe"
 	deploymentutil "k8s.io/kubectl/pkg/util/deployment"
 	sliceutil "k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/yaml"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 )
 
 const (
@@ -188,13 +186,6 @@ func (h *DeploymentHistoryViewer) GetHistory(namespace, name string) (map[int64]
 	}
 
 	return result, nil
-}
-
-func printTemplate(template *corev1.PodTemplateSpec) (string, error) {
-	buf := bytes.NewBuffer([]byte{})
-	w := describe.NewPrefixWriter(buf)
-	describe.DescribePodTemplate(template, w)
-	return buf.String(), nil
 }
 
 func templateToString(template *corev1.PodTemplateSpec) (string, error) {
@@ -492,6 +483,7 @@ func applyStatefulSetHistory(sts *appsv1.StatefulSet, history *appsv1.Controller
 }
 
 // DOTO: copied here until this becomes a describer
+// nolint
 func tabbedString(f func(io.Writer) error) (string, error) {
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
@@ -503,7 +495,7 @@ func tabbedString(f func(io.Writer) error) (string, error) {
 	}
 
 	out.Flush()
-	str := string(buf.String())
+	str := buf.String()
 	return str, nil
 }
 
