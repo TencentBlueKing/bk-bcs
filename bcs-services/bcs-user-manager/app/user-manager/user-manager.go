@@ -33,8 +33,6 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"go-micro.dev/v4/registry"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
@@ -136,40 +134,6 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 func (u *UserManager) initPermService() error {
 	permService := permission.NewPermVerifyClient(u.config.PermissionSwitch, u.IamPermClient)
 	u.permService = permService
-
-	return nil
-}
-
-func (u *UserManager) initAuthService() error {
-	opts := auth.Options{
-		Server:    u.config.PassConfig.AuthServer,
-		AppCode:   u.config.PassConfig.AppCode,
-		AppSecret: u.config.PassConfig.AppSecret,
-		Enable:    u.config.PassConfig.Enable,
-	}
-
-	err := auth.SetAuthClient(opts)
-	if err != nil {
-		blog.Errorf("initAuthService failed: %v", err)
-		return err
-	}
-
-	return nil
-}
-
-func (u *UserManager) initPassCCService() error {
-	opts := passcc.Options{
-		Server:    u.config.PassConfig.PassServer,
-		AppCode:   u.config.PassConfig.AppCode,
-		AppSecret: u.config.PassConfig.AppSecret,
-		Enable:    u.config.PassConfig.Enable,
-	}
-
-	err := passcc.SetCCClient(opts)
-	if err != nil {
-		blog.Errorf("initPassCCService failed: %v", err)
-		return err
-	}
 
 	return nil
 }
@@ -309,16 +273,6 @@ func (u *UserManager) initUserManagerServer() error {
 	}
 
 	err = u.initEtcdRegistry()
-	if err != nil {
-		return err
-	}
-
-	err = u.initAuthService()
-	if err != nil {
-		return err
-	}
-
-	err = u.initPassCCService()
 	if err != nil {
 		return err
 	}

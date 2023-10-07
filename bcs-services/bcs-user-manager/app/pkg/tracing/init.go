@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	// ServiceName 服务名
+	// ServiceName service name
 	ServiceName = "bcs-user-manager"
 )
 

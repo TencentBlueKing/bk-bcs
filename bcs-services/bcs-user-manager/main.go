@@ -34,6 +34,7 @@ import (
 	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/job/notify"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
@@ -76,6 +77,7 @@ func main() {
 			_ = etcdRegistry.Deregister()
 			time.Sleep(time.Second * 5)
 		}
+		component.GetAuditClient().Close()
 	}()
 
 	// sync expired token and notify
