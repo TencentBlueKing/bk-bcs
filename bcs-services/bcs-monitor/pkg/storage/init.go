@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package storage init
 package storage
 
 // once synchronization
@@ -18,10 +18,10 @@ import (
 	"strings"
 	"sync"
 
-	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
@@ -78,5 +78,4 @@ func InitStorage() {
 		blog.Info("init mongo db successfully")
 		GlobalStorage = New(mongoDB)
 	})
-	return
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package main
@@ -47,8 +46,10 @@ func QueryCmd() *cobra.Command {
 		runCmd(cmd, runQuery)
 	}
 
-	cmd.Flags().StringArrayVar(&storeList, "store", []string{}, "Addresses of statically configured store endpoints")
-	cmd.Flags().StringArrayVar(&strictStoreList, "store-strict", []string{}, "Addresses of statically configured store endpoints always used, even if the health check fails")
+	cmd.Flags().StringArrayVar(&storeList, "store", []string{},
+		"Addresses of statically configured store endpoints")
+	cmd.Flags().StringArrayVar(&strictStoreList, "store-strict", []string{},
+		"Addresses of statically configured store endpoints always used, even if the health check fails")
 	cmd.Flags().StringArrayVar(&httpSDURLs, "store.http-sd-url", []string{},
 		"HTTP-based service discovery provides store endpoints")
 
@@ -60,7 +61,8 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 
 	logger.Infow("listening for requests and metrics", "service", "query", "address", bindAddress)
 	addrIPv6 := utils.GetIPv6AddrFromEnv()
-	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, bindAddress, httpPort, addrIPv6, strictStoreList, storeList, httpSDURLs, g)
+	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, bindAddress, httpPort, addrIPv6,
+		strictStoreList, storeList, httpSDURLs, g)
 	if err != nil {
 		return errors.Wrap(err, "query")
 	}

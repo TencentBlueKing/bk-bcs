@@ -8,14 +8,12 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package testing xxx
 package testing
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -62,7 +60,7 @@ func GetTestConfigFile() string {
 
 func initConf() {
 	// 初始化BCS配置
-	bcsConfContentYaml, err := ioutil.ReadFile(GetTestConfigFile())
+	bcsConfContentYaml, err := os.ReadFile(GetTestConfigFile())
 	if err != nil {
 		panic(err)
 	}

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package main
@@ -67,7 +66,7 @@ type option struct {
 	g      *run.Group
 	reg    *prometheus.Registry
 	tracer opentracing.Tracer
-	logger logger.Logger
+	logger logger.Logger // nolint
 	ctx    context.Context
 	cancel func()
 }
@@ -118,14 +117,16 @@ func main() {
 	}
 
 	if err := Execute(ctx); err != nil {
-		os.Exit(1)
+		stop()
+		os.Exit(1) // nolint
 	}
 
 	if isPrintVersion() {
-		os.Exit(0)
+		stop()
+		os.Exit(0) // nolint
 	}
 
-	//初始化 Tracer
+	// 初始化 Tracer
 	shutdown, errorInitTracing := tracing.InitTracing(config.G.TracingConf)
 	if errorInitTracing != nil {
 		logger.Info(errorInitTracing.Error())
@@ -140,12 +141,15 @@ func main() {
 
 	// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu
 	// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value for runtime.GOMAXPROCS.
-	if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) { logger.Infof(template, args) })); err != nil {
+	if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) {
+		logger.Infof(template, args)
+	})); err != nil {
 		logger.Warnw("Failed to set GOMAXPROCS automatically", "err", err)
 	}
 	if err := g.Run(); err != nil && err != ctx.Err() {
 		// Use %+v for github.com/pkg/errors error to print with stack.
 		logger.Errorw("err", fmt.Sprintf("%+v", errors.Wrap(err, "run command failed")))
+		stop()
 		os.Exit(1)
 	}
 
