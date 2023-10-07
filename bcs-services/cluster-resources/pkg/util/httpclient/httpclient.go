@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package httpclient xxx
 package httpclient
 
 import (
@@ -138,6 +138,7 @@ var defaultTransport http.RoundTripper = &http.Transport{
 	TLSHandshakeTimeout:   10 * time.Second,
 	ExpectContinueTimeout: 1 * time.Second,
 	// NOCC:gas/tls(设计如此)
+	// nolint
 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 }
 
