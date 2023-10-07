@@ -8,15 +8,14 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cluster
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
 )
@@ -28,6 +27,7 @@ type ProjectClusterData struct {
 }
 
 // ClusterInstances build clusterInstances
+// nolint
 type ClusterInstances struct {
 	IsCreateCluster bool
 	Data            []ProjectClusterData
@@ -66,6 +66,7 @@ func (cls ClusterInstances) BuildInstances() [][]iam.Instance {
 }
 
 // ClusterScopedInstances build clusterScopedInstances
+// nolint
 type ClusterScopedInstances struct {
 	Data []ProjectClusterData
 }
@@ -91,6 +92,7 @@ func (cls ClusterScopedInstances) BuildInstances() [][]iam.Instance {
 }
 
 // ClusterApplicationAction struct for clusterApplication
+// nolint
 type ClusterApplicationAction struct {
 	IsCreateCluster bool
 	ActionID        string
@@ -132,6 +134,7 @@ func BuildClusterSameInstanceApplication(isCreate bool, actionIDs []string,
 }
 
 // ClusterScopedApplicationAction struct for clusterApplication
+// nolint
 type ClusterScopedApplicationAction struct {
 	ActionID string
 	Data     []ProjectClusterData
