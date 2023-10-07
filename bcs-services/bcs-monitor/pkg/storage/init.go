@@ -18,10 +18,10 @@ import (
 	"strings"
 	"sync"
 
-	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 

@@ -307,7 +307,7 @@ func validateSelector(selector map[string]string) bool {
 }
 
 // validateSampleLimit 校验参数是否合法
-func validateSampleLimit(samplelimit int) bool {
+func validateSampleLimit(samplelimit int) bool { // nolint
 	if SampleLimitMax >= samplelimit && samplelimit >= SampleLimitMin {
 		return true
 	}
