@@ -163,7 +163,7 @@ func GetClient() *resty.Client {
 			globalClient = resty.New().
 				SetTransport(tracingTransport.NewTracingTransport(defaultTransport)).
 				SetTimeout(timeout).
-				SetDebug(false).   // 更多详情, 可以开启为 true
+				SetDebug(false).   // nolint 更多详情, 可以开启为 true
 				SetCookieJar(nil). // 后台API去掉 cookie 记录
 				SetDebugBodyLimit(1024).
 				OnAfterResponse(restyAfterResponseHook).
