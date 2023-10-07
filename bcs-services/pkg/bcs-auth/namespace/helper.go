@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package namespace
@@ -35,6 +34,7 @@ const (
 )
 
 // NamespaceResourcePath  build IAMPath for namespace resource
+// nolint
 type NamespaceResourcePath struct {
 	ProjectID     string
 	ClusterID     string
@@ -51,6 +51,7 @@ func (rp NamespaceResourcePath) BuildIAMPath() string {
 }
 
 // NamespaceScopedResourcePath  build IAMPath for namespace scoped resource
+// nolint
 type NamespaceScopedResourcePath struct {
 	ProjectID string
 	ClusterID string
@@ -62,6 +63,7 @@ func (rp NamespaceScopedResourcePath) BuildIAMPath() string {
 }
 
 // NamespaceResourceNode build namespace resourceNode
+// nolint
 type NamespaceResourceNode struct {
 	IsClusterPerm bool
 
@@ -102,6 +104,7 @@ func (nrn NamespaceResourceNode) BuildResourceNodes() []iam.ResourceNode {
 }
 
 // NamespaceScopedResourceNode build namespace scoped resourceNode
+// nolint
 type NamespaceScopedResourceNode struct {
 	SystemID  string
 	ProjectID string

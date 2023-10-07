@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package audit xxx
 package audit
 
 import (
@@ -18,9 +18,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/TencentBlueKing/bk-audit-go-sdk/bkaudit"
 	"github.com/google/uuid"
+
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 var auditClient *bkaudit.EventClient
