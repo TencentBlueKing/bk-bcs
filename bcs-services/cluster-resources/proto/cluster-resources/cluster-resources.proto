@@ -202,9 +202,9 @@ service Workload {
 		};
 	}
 
-	rpc GetDeployHistoryRevision(GetDeployHistoryRevisionReq) returns (CommonResp) {
+	rpc GetDeployHistoryRevision(GetResHistoryReq) returns (CommonListResp) {
 		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/history/{name}"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/history"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "获取 Deployment Revision"
@@ -212,9 +212,9 @@ service Workload {
 		};
 	}
 
-	rpc GetDeployRevisionDiff(GetDeployRevisionDetailReq) returns (CommonResp) {
+	rpc GetDeployRevisionDiff(RolloutRevisionReq) returns (CommonResp) {
 		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/revision/diff/{name}"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/revisions/{revision}"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "获取deployment revision差异信息"
@@ -222,9 +222,9 @@ service Workload {
 		};
 	}
 
-	rpc RolloutDeployRevision(RolloutDeployRevisionReq) returns (CommonResp) {
+	rpc RolloutDeployRevision(RolloutRevisionReq) returns (CommonResp) {
 		option (google.api.http) = {
-			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/rollout/{name}"
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/rollout/{revision}"
 			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -296,9 +296,9 @@ service Workload {
 		};
 	}
 
-	rpc GetDSHistoryRevision(GetDeployHistoryRevisionReq) returns (CommonResp) {
+	rpc GetDSHistoryRevision(GetResHistoryReq) returns (CommonListResp) {
 		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/history/{name}"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/history"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "获取 DaemonSet Revision"
@@ -306,9 +306,19 @@ service Workload {
 		};
 	}
 
-	rpc RolloutDSRevision(RolloutDeployRevisionReq) returns (CommonResp) {
+	rpc GetDSRevisionDiff(RolloutRevisionReq) returns (CommonResp) {
 		option (google.api.http) = {
-			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/rollout/{name}"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/revisions/{revision}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 DaemonSet revision差异信息"
+			summary: "GetDSRevisionDiff API"
+		};
+	}
+
+	rpc RolloutDSRevision(RolloutRevisionReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}/rollout/{revision}"
 			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -380,9 +390,9 @@ service Workload {
 		};
 	}
 
-	rpc GetSTSHistoryRevision(GetDeployHistoryRevisionReq) returns (CommonResp) {
+	rpc GetSTSHistoryRevision(GetResHistoryReq) returns (CommonListResp) {
 		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/history/{name}"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/history"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "获取 StatefulSet Revision"
@@ -390,9 +400,19 @@ service Workload {
 		};
 	}
 
-	rpc RolloutSTSRevision(RolloutDeployRevisionReq) returns (CommonResp) {
+	rpc GetSTSRevisionDiff(RolloutRevisionReq) returns (CommonResp) {
 		option (google.api.http) = {
-			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/rollout/{name}"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/revisions/{revision}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 StatefulSet revision差异信息"
+			summary: "GetSTSRevisionDiff API"
+		};
+	}
+
+	rpc RolloutSTSRevision(RolloutRevisionReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/rollout/{revision}"
 			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -1741,7 +1761,7 @@ message ResDeleteReq {
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
 }
 
-message GetDeployHistoryRevisionReq {
+message GetResHistoryReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "ResDeleteReq", description: "删除单个 k8s 资源请求体"}
 	};
@@ -1759,9 +1779,9 @@ message GetDeployHistoryRevisionReq {
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
 }
 
-message GetDeployRevisionDetailReq {
+message RolloutRevisionReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-		json_schema: {title: "ResDeleteReq", description: "删除单个 k8s 资源请求体"}
+		json_schema: {title: "RolloutRevisionReq", description: ""}
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
@@ -1775,30 +1795,9 @@ message GetDeployRevisionDetailReq {
 	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源名称"
 	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
-	string revision = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "deployment revision版本"
-	}, (validate.rules).string = {max_len: 20, pattern: "^[0-9]+$"}];
-}
-
-message RolloutDeployRevisionReq {
-	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-		json_schema: {title: "ResDeleteReq", description: "删除单个 k8s 资源请求体"}
-	};
-	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
-	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "集群 ID"
-	}, (validate.rules).string = {min_len: 13, max_len: 14}];
-	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "命名空间"
-	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
-	string name = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源名称"
-	}, (validate.rules).string = {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}];
-	string revision = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "deployment revision版本"
-	}, (validate.rules).string = {max_len: 20, pattern: "^[0-9]+$"}];
+	int64 revision = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "revision 版本"
+	}, (validate.rules).int64 = {gte: 0}];
 }
 
 message ResBatchRescheduleReq {

@@ -8,14 +8,12 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package podmanager
 
 import (
 	v1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientcmdv1 "k8s.io/client-go/tools/clientcmd/api/v1"
 
@@ -104,7 +102,7 @@ func genConfigMap(name, config, uid string) *v1.ConfigMap {
 }
 
 // genPod 生成 Pod 配置
-func genPod(name, namespace, image, configmapName, serviceAccountName, uid string) *v1.Pod {
+func genPod(name, image, configmapName, serviceAccountName, uid string) *v1.Pod {
 	pod := &v1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -157,46 +155,4 @@ func genPod(name, namespace, image, configmapName, serviceAccountName, uid strin
 	}
 
 	return pod
-}
-
-// genServiceAccount 生成 serviceAccount 配置
-func genServiceAccount(name string) *v1.ServiceAccount {
-	serviceAccount := &v1.ServiceAccount{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "ServiceAccount",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: name,
-		},
-	}
-	return serviceAccount
-}
-
-// genClusterRoleBinding 生成 RoleBind 配置
-func genClusterRoleBinding(name string) *rbacv1.ClusterRoleBinding {
-	clusterRoleBinding := &rbacv1.ClusterRoleBinding{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "rbac.authorization.k8s.io/v1",
-			Kind:       "ClusterRoleBinding",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      name,
-				Namespace: name,
-			},
-		},
-		RoleRef: rbacv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "ClusterRole",
-			Name:     "cluster-admin",
-		},
-	}
-
-	return clusterRoleBinding
 }

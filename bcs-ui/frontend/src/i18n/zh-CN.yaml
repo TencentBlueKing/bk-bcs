@@ -35,6 +35,7 @@ bcs:
         desc: 开启容器服务时，若没有查看业务权限，去“权限中心”申请权限
       docs:
         desc: 如果遇到更多问题，需要了解详细信息，请阅产品文档
+      viewAndApplyOperation: 查看与申请运维角色
     label:
       projectKind:
         text: 业务编排类型
@@ -42,7 +43,7 @@ bcs:
       business:
         text: 关联CMDB业务
         placeholder: 请选择关联业务
-        emptyMsg: 请联系需要关联的CMDB业务的运维
+        emptyMsg: '启用容器服务需要CMDB业务的业务运维角色 {0}'
 blueking:
   onCall: 联系BK助手
   support: 技术支持
@@ -234,6 +235,7 @@ generic:
       save1: 数据保存成功
       copyIP: '成功复制 {num} 个IP'
       edit: 编辑成功
+      restart: 重启成功
     empty:
       noData: 暂无数据
       noData1: 无数据
@@ -392,7 +394,9 @@ generic:
     taskTimeout: 执行超时
     taskKill: 强制终止
     taskNotEnable: 未启动
+    restarting: 重启中
   validate:
+    name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
     required: 必填项
     labelValueEmpty: 标签值不能为空
@@ -402,6 +406,7 @@ generic:
     labelKey1: 仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾
     kindName: 名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     fileName: 文件名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
+    notRootName: 用户名不能为root
   title:
     curVersion: 当前版本
     basicInfo: 基础信息
@@ -561,6 +566,7 @@ cluster:
     clusterType: 集群类型
     cloudClusterID: 云集群ID
     importCategory: 添加方式
+    maxPodNum: Pod IP数量上限
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
@@ -616,7 +622,9 @@ cluster:
           desc: >-
             Kubernetes 集群的 Master 和 Etcd 会由 TKE 团队集中管理和维护，集群管理员不需要关心集群 Master
             的管理和维护。
-          gkeDesc: Kubernetes 集群的 Master 和 Etcd 会由 GKE 团队集中管理和维护，集群管理员不需要关心集群 Master的管理和维护。
+          gkeDesc: >-
+            Kubernetes 集群的 Master 和 Etcd 会由 GKE 团队集中管理和维护，集群管理员不需要关心集群
+            Master的管理和维护。
           clusterLevel:
             text: 集群规格
             desc: >-
@@ -642,7 +650,7 @@ cluster:
           text: IP数量
           desc: 集群内总的全局路由容器网络可用IP数量，IP数量 = 集群内Service数量上限 + 单节点Pod数量上限 * 节点数量
         maxServiceNum:
-          text: 集群内Service数量上限
+          text: Service IP数量上限
           desc: 集群Service可用IP数量上限，分配后将无法调整，请谨慎评估后再填写
         maxNodePodNum:
           text: 单节点Pod数量上限
@@ -888,6 +896,8 @@ cluster:
             premium: 高性能云硬盘
             ssd: SSD云硬盘
             hssd: 增强型SSD云硬盘
+            balanced: 平衡性磁盘
+            standard: 标准磁盘
           disk:
             system: 系统盘
             data: 数据盘
@@ -2129,6 +2139,7 @@ dashboard:
   title:
     confirmDelete: 确认删除当前资源
     overview: 总览
+    confirmSchedule: '确认{action}当前资源下所有Pod'
   placeholder:
     selectCRD: 选择CRD
     search1: 搜索名称
@@ -2197,6 +2208,8 @@ dashboard:
       scaleNum: 实例数量
     button:
       yaml: 查看YAML配置
+      restart: 滚动重启
+      onDelete: 手动重启
     container:
       title: 容器
       name: 容器名称
@@ -2212,12 +2225,12 @@ dashboard:
       node: 节点
       podManagementPolicy: Pod管理策略
       multiDelete: 批量重新调度
-      delete: 重新调度
+      delete: 删除
       log: 日志检索
       stdoutLog: 标准输出检索
       filelog: 文件日志检索
       search: 请入名称、镜像、IP、Node搜索
-      confirm: 确认重新调度以下Pod
+      confirm: 确认删除以下Pod
     editor:
       yamlMode:
         confirm: 确认切换为 YAML 模式？
@@ -2421,6 +2434,7 @@ googleCloud:
   tips:
     onlySupportJsonFile: 仅支持创建服务账号时生成的 json 文件
   label:
+    loginUser: 登录用户
     projectID: Google项目ID
     tokenName: 凭证名称
     desc: 描述
@@ -2431,12 +2445,14 @@ googleCloud:
     createdBy: 创建人
     operate: 操作
     gcpFile: GCP密钥文件
-    zoneCluster: 
+    zoneCluster:
       title: 可用区级
-      desc: 当前集群规格最多管理2000个节点, 20万个Pod, 40万个容器, 每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
-    regionCluster: 
+      desc: '当前集群规格最多管理2000个节点, 20万个Pod, 40万个容器, 每个节点池最多支持1000个节点, 每个节点最多支持256个Pod'
+    regionCluster:
       title: 区域级
-      desc: 当前集群规格最多管理15000个节点, 超过5000个节点需联系GKE服务团队提升集群配额, 20万个Pod, 40万个容器, 每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
+      desc: >-
+        当前集群规格最多管理15000个节点, 超过5000个节点需联系GKE服务团队提升集群配额, 20万个Pod, 40万个容器,
+        每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
 importGoogleCloud:
   title: 导入公有云集群 - 谷歌云
   tips:
@@ -2454,6 +2470,17 @@ importGoogleCloud:
   clusterRegion:
     zones: 可用区级集群
     regions: 区域级集群
+googleCA:
+  tips:
+    zone: 目前只支持单可用区
+    system: >-
+      因为操作系统“包含 Containerd 的 Container-Optimized OS (cos_containerd)
+      （默认）”有诸多限制，蓝鲸组件依赖这些被限制的功能，目前只支持操作系统“包含 Containerd 的 Ubuntu
+      (ubuntu_containerd)”
+    dataDisk: 购买数据盘后添加节点后需要手工格式化与挂载磁盘
+    securityGroup: '节点池使用 VPC 防火墙规则控制节点实例的出/入流量，请前往{0}页面设置'
+  button:
+    vpcRule: VPC 防火墙规则
 regions:
   asia: 亚洲
   australia: 澳洲
@@ -2484,3 +2511,25 @@ publicCloud:
       Azure Kubernetes Service (AKS)
       内置代码到云端管道以及护栏，能够帮助开发人员以最快速的方式开始开发和部署云原生应用。在本地、边缘和多云 Kubernetes
       集群试试统一的管理和治理。提供与 Azure 安全、身份、成本管理和迁移服务的互操作性。
+updateRecord:
+  placeholder:
+    search: 搜索 镜像/更新人
+  confirmRollout:
+    title: 确定回滚到此版本？
+    subTitle: '目标版本：{0}'
+  label:
+    revision: 版本号
+    images: 镜像
+    updater: 更新人
+    createTime: 创建时间
+    operator: 操作
+    versionDetail: 版本详情
+    versionDiff: 版本对比
+    rollbackVersion: 版本回滚
+    onlineVersion: 线上
+  button:
+    diff: 对比
+    diff2: 前往对比
+    rollout: 回滚
+    close: 关闭
+    rolloutThisVersion: 回滚到此版本

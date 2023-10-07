@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package dynamic xxx
@@ -18,6 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 )
 
@@ -29,7 +29,7 @@ func PushCreateResourcesToQueue(data operator.M) {
 
 	// queueFlag true
 	go func(data operator.M, featTags []string) {
-		err := publishDynamicResourceToQueue(data, nsFeatTags, msgqueue.EventTypeUpdate)
+		err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeUpdate)
 		if err != nil {
 			blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putNamespaceResources", err)
 		}
@@ -74,6 +74,8 @@ func PushCreateClusterToQueue(data operator.M) {
 		return
 	}
 	// queueFlag true
+	// 入参nsFeatTags和实参csFeatTags不一样(featTags unused),源码如此,暂时保留
+	// nolint
 	go func(data operator.M, featTags []string) {
 		err := publishDynamicResourceToQueue(data, csFeatTags, msgqueue.EventTypeUpdate)
 		if err != nil {

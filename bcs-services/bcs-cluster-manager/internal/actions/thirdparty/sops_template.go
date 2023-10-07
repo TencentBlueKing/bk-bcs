@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package thirdparty
@@ -21,6 +20,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
+	"github.com/avast/retry-go"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
@@ -28,8 +29,6 @@ import (
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-
-	"github.com/avast/retry-go"
 )
 
 // ListTemplateListAction action for list sops templates
@@ -116,7 +115,6 @@ func (la *ListTemplateListAction) Handle(
 		return
 	}
 	la.setResp(icommon.BcsErrClusterManagerSuccess, icommon.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // GetTemplateInfoAction action for list sops templates
@@ -228,7 +226,6 @@ func (la *GetTemplateInfoAction) Handle(
 		return
 	}
 	la.setResp(icommon.BcsErrClusterManagerSuccess, icommon.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // extract template para value
@@ -286,7 +283,7 @@ func (la *GetTemplateValuesAction) getInnerTemplateValues() error {
 	for i := range template.InnerTemplateVarsList {
 		la.templateValues = append(la.templateValues, &cmproto.TemplateValue{
 			Name:  template.InnerTemplateVarsList[i].VarName,
-			Desc:  i18n.T(la.ctx, strings.Replace(template.InnerTemplateVarsList[i].ReferMethod, " ", "", -1)),
+			Desc:  i18n.T(la.ctx, strings.ReplaceAll(template.InnerTemplateVarsList[i].ReferMethod, " ", "")),
 			Refer: template.InnerTemplateVarsList[i].ReferMethod,
 			Trans: template.InnerTemplateVarsList[i].TransMethod,
 			Value: func() string {
@@ -328,7 +325,6 @@ func (la *GetTemplateValuesAction) Handle(
 	}
 
 	la.setResp(icommon.BcsErrClusterManagerSuccess, icommon.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func getSopsTemplateUrl(project *common.ProjectInfo, moduleID string) string {

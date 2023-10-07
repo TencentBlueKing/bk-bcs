@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pkgs
@@ -22,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/cmd/config"
 )
 
@@ -118,7 +118,8 @@ func initQueueClient(queueConf config.QueueConfig) (msgqueue.MessageQueue, error
 
 // parseQueueArguments xxx
 // https://github.com/streadway/amqp/blob/master/channel.go
-// amqp channel.go: QueueDeclare limit value type: nil, bool, byte, int, int16, int32, int64, float32, float64, string, []byte, Decimal, time.Time
+// amqp channel.go: QueueDeclare limit value type: nil, bool, byte, int, int16, int32, int64,
+// float32, float64, string, []byte, Decimal, time.Time
 func parseQueueArguments(queueArguments map[string]interface{}) map[string]interface{} {
 	arguments := map[string]interface{}{}
 

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cluster
@@ -24,13 +23,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	spb "google.golang.org/protobuf/types/known/structpb"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -169,8 +168,8 @@ func selectVclusterHostCluster(model store.ClusterManagerModel, filter VClusterH
 		return "", fmt.Errorf("region[%s]无可用匹配的共享集群列表,请联系管理员", filter.Region)
 	}
 
-	rand.Seed(time.Now().Unix())
-	return filterHostClusters[rand.Intn(len(filterHostClusters))].ClusterID, nil
+	rand.Seed(time.Now().Unix())                                                 // nolint
+	return filterHostClusters[rand.Intn(len(filterHostClusters))].ClusterID, nil // nolint
 }
 
 // getAllMasterIPs get cluster masterIPs
@@ -535,7 +534,7 @@ func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
 // 1. 集群中不存在的节点，并且在cluster manager中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示cluster manager中数据
 // 2. 集群中存在的节点，则以集群中为准，注意状态的转换
 // 3. 适配双栈, 通过nodeName 作为唯一值, 当前数据库nodeName 可能为空, 因此需要适配转换
-func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []*proto.ClusterNode {
+func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []*proto.ClusterNode { // nolint
 	// cnNodes exist in k8s cluster and get nodeName
 	GetCmNodeNames(cmNodes, k8sNodes)
 
@@ -689,7 +688,8 @@ func asyncDeleteImportedClusterInfo(ctx context.Context, store store.ClusterMana
 			blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] failed: %v",
 				cluster.ClusterID, err)
 		} else {
-			blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] successful", cluster.ClusterID)
+			blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] successful",
+				cluster.ClusterID)
 		}
 	}
 
@@ -718,7 +718,8 @@ func shieldClusterInfo(cluster *proto.Cluster) *proto.Cluster {
 }
 
 // GetClusterStatusNodes get cluster status nodes
-func GetClusterStatusNodes(store store.ClusterManagerModel, cls *proto.Cluster, status []string) ([]*proto.Node, error) {
+func GetClusterStatusNodes(
+	store store.ClusterManagerModel, cls *proto.Cluster, status []string) ([]*proto.Node, error) {
 	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": cls.ClusterID})
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{"status": status})
 	cond := operator.NewBranchCondition(operator.And, clusterCond, statusCond)

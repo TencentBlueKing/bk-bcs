@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package inspect xxx
@@ -17,9 +16,9 @@ package inspect
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-
 	"github.com/urfave/cli"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 )
 
 // NewInspectCommand inspect sub command, get specified resource details
@@ -29,8 +28,9 @@ func NewInspectCommand() cli.Command {
 		Usage: "show detailed information of application, taskgroup, service, configmap, deployment, secret and etc.",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "type, t",
-				Usage: "Inspect type, application(app)/process/taskgroup/service/configmap/secret/deployment(deploy)/endpoint/customresourcedefinition(crd)/meshcluster",
+				Name: "type, t",
+				Usage: "Inspect type, application(app)/process/taskgroup/service/configmap/secret/" +
+					"deployment(deploy)/endpoint/customresourcedefinition(crd)/meshcluster",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",

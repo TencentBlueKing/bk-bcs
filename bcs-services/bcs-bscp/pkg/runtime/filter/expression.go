@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package filter provides expression filter.
 package filter
 
 import (
@@ -129,91 +130,6 @@ func (exp Expression) Validate(opts ...*ExprOption) (hitErr error) {
 	}
 
 	return nil
-}
-
-// SQLWhereExpr convert this expression and crowned rules to the mysql's WHERE
-// expression automatically.
-// the generated SQL Where expression depends on various options:
-//  1. the Expression itself.
-//  2. the crowned rules.
-//  3. the priority fields which is corresponding to the db's indexes order.
-//     the position of Expression's expression and crowned rules' expression is
-//     determined by the first 'field' occurred in the SQLWhereOption.Priority.
-//     For example, if the first hit field in the SQLWhereOption.Priority is found
-//     in the Expression's rule then the Expression's expression is ahead of the
-//     crowned rule's expression in the final generated SQL WHERE expression.
-//
-// Note:
-//  1. if the expression is NULL, then return an empty string "" as the expression
-//     directly without "WHERE" keyword.
-//  2. if the expression is not NULL, then return the expression prefixed with "WHERE"
-//     keyword.
-func (exp *Expression) SQLWhereExpr(opt *SQLWhereOption) (where string, args []interface{}, err error) {
-	defer func() {
-		if err != nil {
-			err = errf.New(errf.InvalidParameter, err.Error())
-		}
-	}()
-
-	if exp == nil {
-		return "", []interface{}{}, errors.New("expression is nil")
-	}
-
-	// validate this expression
-	if err := exp.Validate(); err != nil {
-		return "", []interface{}{}, err
-	}
-
-	if opt == nil {
-		return "", []interface{}{}, errors.New("SQLWhereOption is nil")
-	}
-
-	if err := opt.Validate(); err != nil {
-		return "", []interface{}{}, err
-	}
-
-	if opt.CrownedOption == nil || (opt.CrownedOption != nil && len(opt.CrownedOption.Rules) == 0) {
-		// no crowned option is configured, then generate SQL where expression directly.
-		return doSoloSQLWhereExpr(exp.Op, exp.Rules, opt.Priority)
-	}
-
-	// generate SQL where expression depends on mixed logic operator.
-	switch exp.Op {
-	case And:
-		switch opt.CrownedOption.CrownedOp {
-		case And:
-			// both expression rules and crowned rules need to do logic 'AND', so put them
-			// together and generate SQL expression directly.
-			mergedRules := append(exp.Rules, opt.CrownedOption.Rules...)
-			return doSoloSQLWhereExpr(And, mergedRules, opt.Priority)
-
-		case Or:
-			return doMixedSQLWhereExpr(exp.Op, exp.Rules, opt.CrownedOption.CrownedOp, opt.CrownedOption.Rules,
-				opt.Priority)
-
-		default:
-			return "", []interface{}{}, fmt.Errorf("unsupported crown operator: %s", opt.CrownedOption.CrownedOp)
-		}
-
-	case Or:
-		switch opt.CrownedOption.CrownedOp {
-		case And:
-			return doMixedSQLWhereExpr(exp.Op, exp.Rules, opt.CrownedOption.CrownedOp, opt.CrownedOption.Rules,
-				opt.Priority)
-
-		case Or:
-			// although both expression's op and crowned op is OR, but rules in the crowned rules is still
-			// use AND operator.
-			return doMixedSQLWhereExpr(exp.Op, exp.Rules, opt.CrownedOption.CrownedOp, opt.CrownedOption.Rules,
-				opt.Priority)
-
-		default:
-			return "", []interface{}{}, fmt.Errorf("unsupported crown operator: %s", opt.CrownedOption.CrownedOp)
-		}
-
-	default:
-		return "", []interface{}{}, fmt.Errorf("unsupported expression operator: %s", exp.Op)
-	}
 }
 
 // UnmarshalJSON unmarshal a json raw to this expression

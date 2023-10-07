@@ -133,6 +133,8 @@ service Data {
     rpc ListAppBoundTmplRevisions(ListAppBoundTmplRevisionsReq) returns (ListAppBoundTmplRevisionsResp) {}
     rpc ListReleasedAppBoundTmplRevisions(ListReleasedAppBoundTmplRevisionsReq) returns
         (ListReleasedAppBoundTmplRevisionsResp) {}
+    rpc GetReleasedAppBoundTmplRevision(GetReleasedAppBoundTmplRevisionReq) returns
+        (GetReleasedAppBoundTmplRevisionResp) {}
     rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {}
 
     // app template variables related interface.
@@ -542,7 +544,7 @@ message ListHookReferencesReq {
     uint32 hook_id   = 2;
     uint32 start     = 3;
     uint32 limit     = 4;
-    string SearchKey = 5;
+    string searchKey = 5;
 }
 
 message ListHookReferencesResp {
@@ -627,6 +629,7 @@ message ListHookRevisionReferencesReq {
     uint32 revision_id = 3;
     uint32 start       = 4;
     uint32 limit       = 5;
+    string searchKey   = 6;
 }
 
 message ListHookRevisionReferencesResp {
@@ -971,6 +974,17 @@ message ListReleasedAppBoundTmplRevisionsReq {
 message ListReleasedAppBoundTmplRevisionsResp {
     uint32                                      count   = 1;
     repeated pbatb.ReleasedAppBoundTmplRevision details = 2;
+}
+
+message GetReleasedAppBoundTmplRevisionReq {
+    uint32 biz_id               = 1;
+    uint32 app_id               = 2;
+    uint32 release_id           = 3;
+    uint32 template_revision_id = 4;
+}
+
+message GetReleasedAppBoundTmplRevisionResp {
+    pbatb.ReleasedAppBoundTmplRevision detail = 1;
 }
 
 message CheckAppTemplateBindingReq {

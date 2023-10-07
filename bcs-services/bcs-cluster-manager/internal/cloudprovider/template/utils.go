@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package template
@@ -17,10 +16,11 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
@@ -70,9 +70,9 @@ var (
 
 	// node render info
 	// NOCC:gas/crypto(误报)
-	nodePasswd           = "CM.node.NodePasswd"
-	nodeCPUManagerPolicy = "CM.node.NodeCPUManagerPolicy"
-	nodeIPList           = "CM.node.NodeIPList"
+	nodePasswd           = "CM.node.NodePasswd"           // nolint
+	nodeCPUManagerPolicy = "CM.node.NodeCPUManagerPolicy" // nolint
+	nodeIPList           = "CM.node.NodeIPList"           // nolint
 
 	// nodeGroup render info
 	nodeGroupID = "CM.nodeGroup.NodeGroupID"
@@ -170,7 +170,7 @@ func getEnv(k, v string) string {
 }
 
 func getFileContent(file string) (string, error) {
-	body, err := ioutil.ReadFile(file)
+	body, err := os.ReadFile(file)
 	if err != nil {
 		return "", err
 	}

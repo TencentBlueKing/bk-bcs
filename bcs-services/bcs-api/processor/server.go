@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package processor
@@ -18,6 +17,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/filter"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server"
@@ -71,7 +71,10 @@ func (p *Processor) Start() error {
 		return err
 	}
 
-	p.httpServ.RegisterWebServer("", generalFilter.Filter, actions.GetApiAction())
+	err = p.httpServ.RegisterWebServer("", generalFilter.Filter, actions.GetApiAction())
+	if err != nil {
+		return err
+	}
 	router := p.httpServ.GetRouter()
 	webContainer := p.httpServ.GetWebContainer()
 	router.Handle("/bcsapi/v1/websocket/connect", tunnelServer)

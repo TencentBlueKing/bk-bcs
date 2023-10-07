@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -21,11 +21,11 @@ import (
 	"sync"
 	"time"
 
-	jump "github.com/lithammer/go-jump-consistent-hash"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	cmdb "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/cmdbv3"
+	jump "github.com/lithammer/go-jump-consistent-hash"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/storage"
 )
@@ -131,7 +131,7 @@ func (r *Reconciler) Run(ctx context.Context) {
 		go sender.Run(ctx)
 	}
 
-	go r.fetchModulesLoop(ctx)
+	go r.fetchModulesLoop(ctx) // nolint
 
 	go r.transferLoop(ctx)
 
@@ -139,7 +139,7 @@ func (r *Reconciler) Run(ctx context.Context) {
 
 	go r.fullSyncLoop(ctx)
 
-	select {
+	select { // nolint
 	case <-ctx.Done():
 		blog.Infof("%s context done", r.logPre())
 	}
@@ -183,12 +183,11 @@ func (r *Reconciler) decodeK8SPod(data json.RawMessage) (*common.Pod, error) {
 		r.moduleIDMapLock.Lock()
 		moduleID, ok := r.moduleIDMap[common.BCS_BKCMDB_DEFAULT_SET_NAME+"."+common.BCS_BKCMDB_DEFAULT_MODLUE_NAME]
 		r.moduleIDMapLock.Unlock()
-		if ok {
-			newPod.ModuleID = moduleID
-		} else {
+		if !ok {
 			blog.Warnf("%s no default set and module for bkbcs", r.logPre())
 			return nil, fmt.Errorf("%s no default set and module for bkbcs", r.logPre())
 		}
+		newPod.ModuleID = moduleID
 	}
 
 	return newPod, nil
@@ -226,12 +225,11 @@ func (r *Reconciler) decodeMesosTaskgroup(data json.RawMessage) (*common.Pod, er
 		r.moduleIDMapLock.Lock()
 		moduleID, ok := r.moduleIDMap[common.BCS_BKCMDB_DEFAULT_SET_NAME+"."+common.BCS_BKCMDB_DEFAULT_MODLUE_NAME]
 		r.moduleIDMapLock.Unlock()
-		if ok {
-			newPod.ModuleID = moduleID
-		} else {
+		if !ok {
 			blog.Warnf("%s no default set and module for bkbcs", r.logPre())
 			return nil, fmt.Errorf("%s no default set and module for bkbcs", r.logPre())
 		}
+		newPod.ModuleID = moduleID
 	}
 
 	return newPod, nil
@@ -294,7 +292,7 @@ func (r *Reconciler) fetchModules() error {
 	return nil
 }
 
-func (r *Reconciler) fetchModulesLoop(ctx context.Context) error {
+func (r *Reconciler) fetchModulesLoop(ctx context.Context) error { // nolint
 	ticker := time.NewTicker(FETCH_MODULES_INTERVAL * time.Second)
 
 	for {
@@ -319,14 +317,17 @@ func (r *Reconciler) doCompare() error {
 
 	storagePods := make(map[string]*common.Pod)
 	for _, data := range resourcesData.Data {
-		pod, err := r.decodeStorageResource(data.Data)
-		if err != nil {
-			return err
+		pod, decodeErr := r.decodeStorageResource(data.Data)
+		if decodeErr != nil {
+			return decodeErr
 		}
 		storagePods[pod.PodUUID] = pod
 	}
 
 	cmdbRes, err := r.cmdbClient.ListClusterPods(r.clusterInfo.BizID, r.clusterID)
+	if err != nil {
+		return err
+	}
 	cmdbPods := make(map[string]*common.Pod)
 	for _, data := range cmdbRes.Data.Info {
 		pod, err := r.decodeCmdbPod(data)

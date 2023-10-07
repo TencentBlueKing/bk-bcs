@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbbase provides base core protocol struct and convert functions.
 package pbbase
 
 import (
@@ -30,7 +31,6 @@ func (m *BasePage) BasePage() *types.BasePage {
 	}
 
 	return &types.BasePage{
-		Count: m.Count,
 		Start: m.Start,
 		Limit: uint(m.Limit),
 		Sort:  m.Sort,

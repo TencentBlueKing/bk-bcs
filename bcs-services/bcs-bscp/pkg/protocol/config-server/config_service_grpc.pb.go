@@ -92,6 +92,7 @@ const (
 	Config_ListAppTemplateBindings_FullMethodName           = "/pbcs.Config/ListAppTemplateBindings"
 	Config_ListAppBoundTmplRevisions_FullMethodName         = "/pbcs.Config/ListAppBoundTmplRevisions"
 	Config_ListReleasedAppBoundTmplRevisions_FullMethodName = "/pbcs.Config/ListReleasedAppBoundTmplRevisions"
+	Config_GetReleasedAppBoundTmplRevision_FullMethodName   = "/pbcs.Config/GetReleasedAppBoundTmplRevision"
 	Config_UpdateAppBoundTmplRevisions_FullMethodName       = "/pbcs.Config/UpdateAppBoundTmplRevisions"
 	Config_DeleteAppBoundTmplSets_FullMethodName            = "/pbcs.Config/DeleteAppBoundTmplSets"
 	Config_CheckAppTemplateBinding_FullMethodName           = "/pbcs.Config/CheckAppTemplateBinding"
@@ -217,6 +218,7 @@ type ConfigClient interface {
 	ListAppTemplateBindings(ctx context.Context, in *ListAppTemplateBindingsReq, opts ...grpc.CallOption) (*ListAppTemplateBindingsResp, error)
 	ListAppBoundTmplRevisions(ctx context.Context, in *ListAppBoundTmplRevisionsReq, opts ...grpc.CallOption) (*ListAppBoundTmplRevisionsResp, error)
 	ListReleasedAppBoundTmplRevisions(ctx context.Context, in *ListReleasedAppBoundTmplRevisionsReq, opts ...grpc.CallOption) (*ListReleasedAppBoundTmplRevisionsResp, error)
+	GetReleasedAppBoundTmplRevision(ctx context.Context, in *GetReleasedAppBoundTmplRevisionReq, opts ...grpc.CallOption) (*GetReleasedAppBoundTmplRevisionResp, error)
 	UpdateAppBoundTmplRevisions(ctx context.Context, in *UpdateAppBoundTmplRevisionsReq, opts ...grpc.CallOption) (*UpdateAppBoundTmplRevisionsResp, error)
 	DeleteAppBoundTmplSets(ctx context.Context, in *DeleteAppBoundTmplSetsReq, opts ...grpc.CallOption) (*DeleteAppBoundTmplSetsResp, error)
 	CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error)
@@ -880,6 +882,15 @@ func (c *configClient) ListReleasedAppBoundTmplRevisions(ctx context.Context, in
 	return out, nil
 }
 
+func (c *configClient) GetReleasedAppBoundTmplRevision(ctx context.Context, in *GetReleasedAppBoundTmplRevisionReq, opts ...grpc.CallOption) (*GetReleasedAppBoundTmplRevisionResp, error) {
+	out := new(GetReleasedAppBoundTmplRevisionResp)
+	err := c.cc.Invoke(ctx, Config_GetReleasedAppBoundTmplRevision_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) UpdateAppBoundTmplRevisions(ctx context.Context, in *UpdateAppBoundTmplRevisionsReq, opts ...grpc.CallOption) (*UpdateAppBoundTmplRevisionsResp, error) {
 	out := new(UpdateAppBoundTmplRevisionsResp)
 	err := c.cc.Invoke(ctx, Config_UpdateAppBoundTmplRevisions_FullMethodName, in, out, opts...)
@@ -1331,6 +1342,7 @@ type ConfigServer interface {
 	ListAppTemplateBindings(context.Context, *ListAppTemplateBindingsReq) (*ListAppTemplateBindingsResp, error)
 	ListAppBoundTmplRevisions(context.Context, *ListAppBoundTmplRevisionsReq) (*ListAppBoundTmplRevisionsResp, error)
 	ListReleasedAppBoundTmplRevisions(context.Context, *ListReleasedAppBoundTmplRevisionsReq) (*ListReleasedAppBoundTmplRevisionsResp, error)
+	GetReleasedAppBoundTmplRevision(context.Context, *GetReleasedAppBoundTmplRevisionReq) (*GetReleasedAppBoundTmplRevisionResp, error)
 	UpdateAppBoundTmplRevisions(context.Context, *UpdateAppBoundTmplRevisionsReq) (*UpdateAppBoundTmplRevisionsResp, error)
 	DeleteAppBoundTmplSets(context.Context, *DeleteAppBoundTmplSetsReq) (*DeleteAppBoundTmplSetsResp, error)
 	CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error)
@@ -1581,6 +1593,9 @@ func (UnimplementedConfigServer) ListAppBoundTmplRevisions(context.Context, *Lis
 }
 func (UnimplementedConfigServer) ListReleasedAppBoundTmplRevisions(context.Context, *ListReleasedAppBoundTmplRevisionsReq) (*ListReleasedAppBoundTmplRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedAppBoundTmplRevisions not implemented")
+}
+func (UnimplementedConfigServer) GetReleasedAppBoundTmplRevision(context.Context, *GetReleasedAppBoundTmplRevisionReq) (*GetReleasedAppBoundTmplRevisionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedAppBoundTmplRevision not implemented")
 }
 func (UnimplementedConfigServer) UpdateAppBoundTmplRevisions(context.Context, *UpdateAppBoundTmplRevisionsReq) (*UpdateAppBoundTmplRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppBoundTmplRevisions not implemented")
@@ -2941,6 +2956,24 @@ func _Config_ListReleasedAppBoundTmplRevisions_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GetReleasedAppBoundTmplRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasedAppBoundTmplRevisionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetReleasedAppBoundTmplRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetReleasedAppBoundTmplRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetReleasedAppBoundTmplRevision(ctx, req.(*GetReleasedAppBoundTmplRevisionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_UpdateAppBoundTmplRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateAppBoundTmplRevisionsReq)
 	if err := dec(in); err != nil {
@@ -3957,6 +3990,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListReleasedAppBoundTmplRevisions",
 			Handler:    _Config_ListReleasedAppBoundTmplRevisions_Handler,
+		},
+		{
+			MethodName: "GetReleasedAppBoundTmplRevision",
+			Handler:    _Config_GetReleasedAppBoundTmplRevision_Handler,
 		},
 		{
 			MethodName: "UpdateAppBoundTmplRevisions",

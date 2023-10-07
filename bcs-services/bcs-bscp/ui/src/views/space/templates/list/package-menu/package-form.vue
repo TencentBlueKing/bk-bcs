@@ -49,6 +49,7 @@
 
   onMounted(() => {
     getServiceList()
+    localVal.value.name = ''
   })
 
   const getServiceList = async () => {
@@ -122,7 +123,7 @@
         @change="handleServiceChange">
         <bk-option v-for="service in serviceList" :key="service.id" :label="service.spec.name" :value="service.id"></bk-option>
       </bk-select>
-      <p v-if="localVal.public && deletedApps.length > 0" class="tips">
+      <p v-if="!localVal.public && deletedApps.length > 0" class="tips">
         提醒：修改可见范围后，服务
         <span v-for="item in deletedApps" :key="item.id">【{{ item.spec.name }}】</span>
         将不再引用此套餐

@@ -1327,6 +1327,7 @@ func (sd *ScaleDown) getEmptyNodes(candidates []string, maxEmptyBulkDelete int,
 	resourcesLimits scaleDownResourcesLimits, timestamp time.Time) []*apiv1.Node {
 
 	emptyNodes := simulator.FindEmptyNodesToRemove(sd.context.ClusterSnapshot, candidates, timestamp)
+	// 空节点列表排序，避免空节点过多时循环等待
 	sort.SliceStable(emptyNodes, func(i, j int) bool {
 		return emptyNodes[i] < emptyNodes[j]
 	})

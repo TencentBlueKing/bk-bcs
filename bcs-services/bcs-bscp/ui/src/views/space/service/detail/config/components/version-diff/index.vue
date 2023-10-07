@@ -59,6 +59,7 @@
       versionListLoading.value = true
       const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true })
       versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== props.currentVersion.id)
+      selectedBaseVersion.value = versionList.value[0]?.id || ''
     } catch (e) {
       console.error(e)
     } finally {
@@ -99,7 +100,7 @@
             :selected-config="props.selectedConfig"
             @selected="handleSelectDiffItem" />
           <div :class="['diff-content-area', { light: diffDetailData.contentType === 'file' }]">
-            <diff :diff="diffDetailData" :loading="false">
+            <diff :diff="diffDetailData" :id="appId" :loading="false">
               <template #leftHead>
                   <slot name="baseHead">
                     <div class="diff-panel-head">
@@ -109,6 +110,7 @@
                         style="width: 320px;"
                         :loading="versionListLoading"
                         :clearable="false"
+                        no-data-text="暂无数据"
                         @change="handleSelectVersion">
                         <bk-option
                           v-for="version in versionList"

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package permission
@@ -33,7 +32,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 )
 
 var (
@@ -291,7 +289,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 	case http.MethodGet:
 		actionID = namespace.NameSpaceScopedView.String()
 	default:
-		return false, fmt.Errorf("invlid action[%s]", action)
+		return false, fmt.Errorf("invalid action[%s]", action)
 	}
 
 	// get project id
@@ -345,7 +343,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 		"ClusterID": resource.ClusterID,
 		"Namespace": resource.Namespace,
 	}
-	defer audit.AddEvent(actionID, string(rn1.RType), rn1.RInstance, user, allow, instanceData)
+	defer audit.AddEvent(actionID, rn1.RType, rn1.RInstance, user, allow, instanceData)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check namespaceScoped resource permission failed: %v", err)
@@ -372,6 +370,7 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 	resource ClusterResource) (bool, error) {
 
 	var (
+		// nolint
 		actionID              = ""
 		isClusterResourcePerm = false
 		clusterType           ClusterType
@@ -432,7 +431,7 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 		"ClusterID": resource.ClusterID,
 		"Namespace": resource.Namespace,
 	}
-	defer audit.AddEvent(actionID, string(rn1.RType), rn1.RInstance, user, allow, instanceData)
+	defer audit.AddEvent(actionID, rn1.RType, rn1.RInstance, user, allow, instanceData)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check namespace permission failed: %v", err)
@@ -577,7 +576,7 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Conte
 		"ClusterID": resource.ClusterID,
 		"Namespace": resource.Namespace,
 	}
-	defer audit.AddEvent(actionID, string(rn1.RType), rn1.RInstance, user, allow, instanceData)
+	defer audit.AddEvent(actionID, rn1.RType, rn1.RInstance, user, allow, instanceData)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserClusterScopedPermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check cluster permission failed: %v", err)
@@ -630,51 +629,4 @@ func transToAPIServerURL(url string) string {
 	}
 
 	return ""
-}
-
-// buildK8sOperationLog
-func buildK8sOperationLog(user string, resource ClusterResource, info *parser.RequestInfo, allow bool) error {
-	const (
-		MessageTemplate = "user[%s] perm[%t] verb[%s] APIPrefix[%s] GVK[%s-%s-%s] namespace[%s] resource[%s] subresource[%s]"
-	)
-
-	log := &models.BcsOperationLog{
-		ClusterType: resource.ClusterType.String(),
-		ClusterID:   resource.ClusterID,
-		Path:        resource.URL,
-		Message: fmt.Sprintf(MessageTemplate, user, allow, info.Verb, info.APIPrefix, info.APIGroup, info.APIVersion,
-			info.Resource, info.Namespace, info.Resource, info.Subresource),
-		OpUser:    user,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-	err := sqlstore.CreateOperationLog(log)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// buildAdminOperationLog
-func buildAdminOperationLog(user string, req VerifyPermissionReq) error {
-	const (
-		MessageTemplate = "管理员用户[%s]操作[%s]资源类型[%s]资源[%s]allow[%v]"
-	)
-
-	log := &models.BcsOperationLog{
-		ClusterType: req.ResourceType.String(),
-		ClusterID:   req.Resource,
-		Path:        req.RequestURL,
-		Message:     fmt.Sprintf(MessageTemplate, user, req.Action, req.ResourceType, req.Resource, true),
-		OpUser:      user,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	err := sqlstore.CreateOperationLog(log)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

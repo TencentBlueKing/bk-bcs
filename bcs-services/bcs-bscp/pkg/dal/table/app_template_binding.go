@@ -132,6 +132,8 @@ func (t *AppTemplateBinding) ValidateDelete() error {
 }
 
 // AppTemplateBindingSpec defines all the specifics for AppTemplateBinding set by user.
+//
+//nolint:lll
 type AppTemplateBindingSpec struct {
 	TemplateSpaceIDs    types.Uint32Slice `json:"template_space_ids" gorm:"column:template_space_ids;type:json;default:'[]'"`
 	TemplateSetIDs      types.Uint32Slice `json:"template_set_ids" gorm:"column:template_set_ids;type:json;default:'[]'"`

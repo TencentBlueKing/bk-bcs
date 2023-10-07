@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package tcpserver xxx
@@ -17,11 +16,12 @@ package tcpserver
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/protocol"
 	"io"
 	"net"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/protocol"
 )
 
 // tcpServer 服务对象定义
@@ -60,7 +60,7 @@ func (cli *tcpServer) handleConnection(conn net.Conn) {
 				if !tmpCon.isAlive() {
 					// 心跳超时，需要关闭连接
 					blog.Warn("connection[%s] is not alive", tmpCon.conn.RemoteAddr().String())
-					tmpCon.conn.Close()
+					_ = tmpCon.conn.Close()
 				}
 			}
 		}
@@ -73,19 +73,19 @@ func (cli *tcpServer) handleConnection(conn net.Conn) {
 		if nil != copyErr {
 			blog.Errorf("read error, will close the connection[%s] error information is %s", conn.RemoteAddr().String(),
 				copyErr.Error())
-			conn.Close()
+			_ = conn.Close()
 			return
 		}
 
 		if nil == copyErr {
 			blog.Warnf("finish read, close the connection[%s]", conn.RemoteAddr().String())
-			conn.Close()
+			_ = conn.Close()
 			return
 		}
 
 		blog.Fatalf("should not reach here, close connection[%s]", conn.RemoteAddr().String())
-		conn.Close()
-		return
+		_ = conn.Close()
+		return // nolint
 
 	}
 }
@@ -122,7 +122,10 @@ func (cli *tcpServer) Start() error {
 // Stop 停止服务
 func (cli *tcpServer) Stop() error {
 	if nil != cli.netListener {
-		cli.netListener.Close()
+		err := cli.netListener.Close()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package k8s
@@ -23,10 +22,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-
 	"k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/client-go/transport"
+
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
 // responder implements k8s.io/apimachinery/pkg/util/proxy.ErrorResponder
@@ -49,7 +48,7 @@ func (f *TunnelProxyDispatcher) lookupWsHandler(clusterID string) (*proxy.Upgrad
 
 	serverAddress := credentials.ServerAddress
 	if !strings.HasSuffix(serverAddress, "/") {
-		serverAddress = serverAddress + "/"
+		serverAddress += "/"
 	}
 	u, err := url.Parse(serverAddress)
 	if err != nil {
@@ -93,7 +92,7 @@ func (f *TunnelProxyDispatcher) getTransport(clusterID string, credentials *type
 			certs := x509.NewCertPool()
 			caCrt := []byte(credentials.CaCertData)
 			certs.AppendCertsFromPEM(caCrt)
-			tp.TLSClientConfig = &tls.Config{
+			tp.TLSClientConfig = &tls.Config{ // nolint
 				RootCAs: certs,
 			}
 		}
@@ -101,7 +100,7 @@ func (f *TunnelProxyDispatcher) getTransport(clusterID string, credentials *type
 		blog.Infof("found sesseion for k8s: %s", clusterID)
 		// get dialer from tunnel sessions
 		cd := tunnelServer.Dialer(clusterID, 15*time.Second)
-		tp.Dial = cd
+		tp.Dial = cd // nolint
 
 		if f.wsTunnelStore[clusterID] != nil {
 			f.wsTunnelStore[clusterID].httpTransport.CloseIdleConnections()

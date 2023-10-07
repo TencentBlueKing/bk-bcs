@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cluster
@@ -23,6 +22,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/golang/protobuf/ptypes/wrappers"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -34,9 +36,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/golang/protobuf/ptypes/wrappers"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ImportAction action for import cluster
@@ -106,7 +105,7 @@ func (ia *ImportAction) syncClusterInfoToDB(cls *cmproto.Cluster) error {
 
 	// save kubeConfig
 	if ia.req.CloudMode.KubeConfig != "" {
-		kubeRet, err := encrypt.Encrypt(nil, ia.req.CloudMode.KubeConfig)
+		kubeRet, err := encrypt.Encrypt(nil, ia.req.CloudMode.KubeConfig) // nolint
 		if err != nil {
 			return err
 		}
@@ -184,8 +183,6 @@ func (ia *ImportAction) setResponseData(result bool) {
 		return
 	}
 	ia.resp.Data = data
-
-	return
 }
 
 // Handle create cluster request
@@ -212,8 +209,8 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 		return
 	}
 
-	ia.locker.Lock(createClusterIDLockKey, []lock.LockOption{lock.LockTTL(time.Second * 10)}...)
-	defer ia.locker.Unlock(createClusterIDLockKey)
+	ia.locker.Lock(createClusterIDLockKey, []lock.LockOption{lock.LockTTL(time.Second * 10)}...) // nolint
+	defer ia.locker.Unlock(createClusterIDLockKey)                                               // nolint
 
 	// import validate cluster
 	if err = ia.validate(); err != nil {
@@ -264,7 +261,6 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 	}
 
 	ia.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (ia *ImportAction) importClusterTask(ctx context.Context, cls *cmproto.Cluster) error {
@@ -492,7 +488,6 @@ func (ka *CheckKubeAction) Handle(ctx context.Context, req *cmproto.KubeConfigRe
 	}
 
 	ka.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func checkKubeConfig(kubeConfig string) error {
@@ -605,5 +600,4 @@ func (ka *CheckKubeConnectAction) Handle(ctx context.Context, req *cmproto.KubeC
 	}
 
 	ka.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

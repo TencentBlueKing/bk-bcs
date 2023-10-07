@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -32,11 +30,15 @@ import (
 
 const (
 	// table name
-	tableName           = "project"
-	FieldKeyProjectID   = "projectID"
-	FieldKeyName        = "name"
+	tableName = "project"
+	// FieldKeyProjectID projectID
+	FieldKeyProjectID = "projectID"
+	// FieldKeyName name
+	FieldKeyName = "name"
+	// FieldKeyProjectCode projectCode
 	FieldKeyProjectCode = "projectCode"
-	FieldKeyKind        = "kind"
+	// FieldKeyKind kind
+	FieldKeyKind = "kind"
 )
 
 var (
@@ -165,6 +167,7 @@ func (m *ModelProject) GetProject(ctx context.Context, projectIDOrCode string) (
 }
 
 // ProjectField 项目属性, 包含项目ID、英文缩写、项目名称
+// nolint
 type ProjectField struct {
 	ProjectID   string
 	ProjectCode string
@@ -256,6 +259,7 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 
 // SearchProjects query project sort by ids
 // NOCC:golint/fnsize(设计如此:该方法较长且不可拆分)
+// nolint
 func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchKey, kind string,
 	pagination *page.Pagination) ([]Project, int64, error) {
 	if pagination.Limit == 0 {

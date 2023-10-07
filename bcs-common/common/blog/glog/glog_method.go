@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package glog
@@ -20,7 +19,7 @@ import (
 
 // SetV xxx
 func SetV(level Level) {
-	logging.verbosity.Set(strconv.Itoa(int(level)))
+	_ = logging.verbosity.Set(strconv.Itoa(int(level)))
 }
 
 var once sync.Once
@@ -32,10 +31,10 @@ func InitLogs(toStderr, alsoToStderr bool, verbose int32, stdErrThreshold, vModu
 	once.Do(func() {
 		logging.toStderr = toStderr
 		logging.alsoToStderr = alsoToStderr
-		logging.verbosity.Set(strconv.Itoa(int(verbose)))
-		logging.stderrThreshold.Set(stdErrThreshold)
-		logging.vmodule.Set(vModule)
-		logging.traceLocation.Set(traceLocation)
+		_ = logging.verbosity.Set(strconv.Itoa(int(verbose)))
+		_ = logging.stderrThreshold.Set(stdErrThreshold)
+		_ = logging.vmodule.Set(vModule)
+		_ = logging.traceLocation.Set(traceLocation)
 
 		logMaxNum = maxNum
 		logMaxSize = maxSize * 1024 * 1024

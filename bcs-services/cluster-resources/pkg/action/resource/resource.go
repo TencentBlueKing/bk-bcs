@@ -29,11 +29,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -213,12 +215,17 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 
 // Restart 对某个资源进行调度
 func (m *ResMgr) Restart(
-	ctx context.Context, namespace, name string, opts metav1.PatchOptions,
+	ctx context.Context, namespace, name string, generation int64, opts metav1.PatchOptions,
 ) (*structpb.Struct, error) {
-	patchByte := fmt.Sprintf(`{"spec":{"template":{"metadata":{"annotations":{"kubectl.kubernetes.io/restartedAt":"%s"}}}}}`,
-		metav1.Now().Format(time.RFC3339))
+	username := ctxkey.GetUsernameFromCtx(ctx)
+	patchByte := fmt.Sprintf(
+		`{"metadata":{"annotations":{"%s":"%s"}},"spec":{"template":{"metadata":{"annotations":{"%s":"%s","%s":"%d"}}}}}`,
+		resCsts.UpdaterAnnoKey, username,
+		formatter.WorkloadRestartAnnotationKey, metav1.Now().Format(time.RFC3339),
+		formatter.WorkloadRestartVersionAnnotationKey, generation)
 	return resp.BuildPatchAPIResp(
-		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte), opts,
+		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte),
+		opts,
 	)
 }
 
@@ -232,6 +239,7 @@ func (m *ResMgr) PauseOrResume(
 	}
 	patchByte := fmt.Sprintf(`{"spec":{"paused":%v}}`, paused)
 	return resp.BuildPatchAPIResp(
-		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte), opts,
+		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte),
+		opts,
 	)
 }

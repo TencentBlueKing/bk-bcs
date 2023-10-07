@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package controllers
@@ -28,7 +27,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
-	// +kubebuilder:scaffold:imports
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
@@ -47,7 +45,7 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
-	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{

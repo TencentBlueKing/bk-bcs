@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package registryv4
@@ -21,7 +20,7 @@ import (
 	"go-micro.dev/v4/registry"
 )
 
-//Options registry options
+// Options registry options
 type Options struct {
 	//UUID for registry
 	id string
@@ -44,7 +43,7 @@ type Options struct {
 	Modules    []string
 }
 
-//EventHandler handler for module update notification
+// EventHandler handler for module update notification
 type EventHandler func(name string)
 
 // Registry interface for go-micro etcd discovery

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package common xxx
 package common
 
 import (
@@ -20,7 +20,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -109,6 +109,7 @@ func NewClient(credential CredentialInterface, opts Opts) (*Client, error) {
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
 					// NOCC:gas/tls(设计如此)
+					// nolint
 					InsecureSkipVerify: true,
 				},
 			},
@@ -133,6 +134,7 @@ func (client *Client) initCommonArgs(args *url.Values) {
 	args.Set("Region", client.opts.Region)
 	args.Set("Timestamp", fmt.Sprint(uint(time.Now().Unix())))
 	// NOCC:gas/crypto(设计如此)
+	// nolint
 	args.Set("Nonce", fmt.Sprint(uint(rand.Int())))
 	args.Set("SignatureMethod", client.opts.SignatureMethod)
 }
@@ -213,7 +215,7 @@ func (client *Client) InvokeWithGET(action string, args interface{}, response in
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return makeClientError(err)
 	}

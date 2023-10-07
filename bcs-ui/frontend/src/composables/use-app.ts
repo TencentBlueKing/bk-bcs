@@ -51,6 +51,7 @@ export interface ICluster {
   updateTime: string
   vpcID: string
   networkType: string
+  cloudAccountID: string
 }
 /**
  * 获取项目文档配置信息

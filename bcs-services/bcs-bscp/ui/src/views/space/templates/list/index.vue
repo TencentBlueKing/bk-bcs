@@ -27,19 +27,23 @@ import { onMounted } from 'vue';
   <div class="templates-page">
     <bk-alert class="template-tips" theme="info">
       <div class="tips-wrapper">
-        <div class="message">配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。模板变量使用方法请参考</div>
-        <bk-button text theme="primary">go template</bk-button>
+        <div class="message">配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。</div>
+        <!-- <bk-button text theme="primary">go template</bk-button> -->
       </div>
     </bk-alert>
-    <div class="main-content-container">
-      <div class="side-menu-area">
-        <space-selector></space-selector>
-        <package-menu></package-menu>
-      </div>
-      <div class="package-detail-area">
-        <package-detail></package-detail>
-      </div>
-    </div>
+    <bk-resize-layout class="main-content-container" :min="240" :initial-divide="240" :max="480">
+      <template #aside>
+        <div class="side-menu-area">
+          <space-selector></space-selector>
+          <package-menu></package-menu>
+        </div>
+      </template>
+      <template #main>
+        <div class="package-detail-area">
+          <package-detail></package-detail>
+        </div>
+      </template>
+    </bk-resize-layout>
   </div>
 </template>
 <style lang="scss" scoped>
@@ -67,14 +71,22 @@ import { onMounted } from 'vue';
   }
   .side-menu-area {
     padding: 16px 0;
-    width: 240px;
     height: 100%;
     background: #ffffff;
     border-right: 1px solid #dcdee5;
   }
   .package-detail-area {
-    width: calc(100% - 240px);
     height: 100%;
     background: #f5f7fa;
+  }
+
+</style>
+
+<style>
+  .main-content-container>.bk-resize-layout-aside {
+    height: 100%;
+  }
+  .main-content-container>.bk-resize-layout-main {
+    height: 100%;
   }
 </style>

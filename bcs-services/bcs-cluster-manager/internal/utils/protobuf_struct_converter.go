@@ -8,21 +8,18 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
 
 import (
 	"encoding/json"
-
 	"fmt"
 	"reflect"
 
-	spb "google.golang.org/protobuf/types/known/structpb"
-
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"google.golang.org/protobuf/encoding/protojson"
+	spb "google.golang.org/protobuf/types/known/structpb"
 )
 
 // MapToProtobufStruct converts a map to a protobuf struct.
@@ -210,7 +207,7 @@ func InterfaceToValue(v interface{}) *spb.Value {
 	}
 }
 
-func toValue(v reflect.Value) *spb.Value {
+func toValue(v reflect.Value) *spb.Value { // nolint
 	switch v.Kind() {
 	case reflect.Bool:
 		return &spb.Value{

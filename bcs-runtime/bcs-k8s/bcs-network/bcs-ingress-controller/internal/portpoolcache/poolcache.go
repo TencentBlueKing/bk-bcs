@@ -110,23 +110,24 @@ func (c *Cache) SetPortPoolItemStatus(poolKey string, itemStatus *networkextensi
 }
 
 // AllocatePortBinding allocate port from pool for protocol
-func (c *Cache) AllocatePortBinding(poolKey, protocol string) (
+func (c *Cache) AllocatePortBinding(poolKey, protocol, itemName string) (
 	*networkextensionv1.PortPoolItemStatus, AllocatedPortItem, error) {
 	pool, ok := c.portPoolMap[poolKey]
 	if !ok {
 		return nil, AllocatedPortItem{}, fmt.Errorf("pool %s not found in cache", poolKey)
 	}
-	return pool.AllocatePortBinding(protocol)
+	return pool.AllocatePortBinding(protocol, itemName)
 }
 
-// AllocateAllProtocolPortBinding allocate ports with all protocols
-func (c *Cache) AllocateAllProtocolPortBinding(poolKey string) (
+// AllocateAllProtocolPortBinding allocate ports with all protocols,  if itemName is set,
+// // only allocate port from the specified item
+func (c *Cache) AllocateAllProtocolPortBinding(poolKey, itemName string) (
 	*networkextensionv1.PortPoolItemStatus, map[string]AllocatedPortItem, error) {
 	pool, ok := c.portPoolMap[poolKey]
 	if !ok {
 		return nil, nil, fmt.Errorf("pool %s not found in cache", poolKey)
 	}
-	return pool.AllocateAllProtocolPortBinding()
+	return pool.AllocateAllProtocolPortBinding(itemName)
 }
 
 // ReleasePortBinding release port binding

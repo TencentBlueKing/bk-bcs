@@ -8,19 +8,19 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	restful "github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 )
 
 // RegisterResourceHandler init host url info
@@ -50,7 +50,7 @@ func (resource *ResourceHandler) List(request *restful.Request, response *restfu
 	if err := request.ReadEntity(req); err != nil {
 		response.AddHeader("Content-Type", "text/plain")
 		blog.Errorf("ResourceHandler [List] json decode Err: %s", err.Error())
-		response.WriteErrorString(http.StatusBadRequest, err.Error())
+		_ = response.WriteErrorString(http.StatusBadRequest, err.Error())
 		reportMetrics("hostResource", "4xx", started)
 		return
 	}
@@ -60,7 +60,7 @@ func (resource *ResourceHandler) List(request *restful.Request, response *restfu
 	if !req.IsValid() {
 		res.Code = 1
 		res.Message = "resource request is invalid"
-		response.WriteEntity(res)
+		_ = response.WriteEntity(res)
 		reportMetrics("hostResource", "4xx", started)
 		return
 	}

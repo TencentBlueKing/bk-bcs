@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
@@ -37,9 +36,9 @@ var (
 type Scope string
 
 var (
-	// CmdbBizScope检索的是绑定的CMDB业务ID为bk_biz_id的项目
+	// CmdbBizScope 检索的是绑定的CMDB业务ID为bk_biz_id的项目
 	CmdbBizScope Scope = "cmdb_biz"
-	// ProjectBizScope检索项目ID为bk_biz_id的项目
+	// ProjectBizScope 检索项目ID为bk_biz_id的项目
 	ProjectBizScope Scope = "project"
 )
 
@@ -52,17 +51,17 @@ func (ts TaskState) String() string {
 }
 
 const (
-	// CREATED 未执行
+	// CREATED TaskState 未执行
 	CREATED TaskState = "CREATED"
-	// RUNNING	执行中
+	// RUNNING TaskState 执行中
 	RUNNING TaskState = "RUNNING"
-	// FAILED	失败
+	// FAILED TaskState	失败
 	FAILED TaskState = "FAILED"
-	// SUSPENDED	暂停
+	// SUSPENDED TaskState	暂停
 	SUSPENDED TaskState = "SUSPENDED"
-	// REVOKED	已终止
+	// REVOKED TaskState 已终止
 	REVOKED TaskState = "REVOKED"
-	// FINISHED	已完成
+	// FINISHED TaskState 已完成
 	FINISHED TaskState = "FINISHED"
 )
 

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package client is client for controller
 package client
 
 import (
@@ -40,6 +41,7 @@ func New(address string) (*NetserviceClient, error) {
 	}, nil
 }
 
+// Allocate allocates ip
 func (nc *NetserviceClient) Allocate(req *AllocateReq) (*AllocateResp, error) {
 	url := fmt.Sprintf("%s%s", nc.address, netserviceURL)
 	aresp := &AllocateResp{}
@@ -57,6 +59,7 @@ func (nc *NetserviceClient) Allocate(req *AllocateReq) (*AllocateResp, error) {
 	return aresp, nil
 }
 
+// Release releases ip
 func (nc *NetserviceClient) Release(req *ReleaseReq) (*ReleaseResp, error) {
 	url := fmt.Sprintf("%s%s", nc.address, netserviceURL)
 	rresp := &ReleaseResp{}

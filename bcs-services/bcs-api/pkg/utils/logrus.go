@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -43,7 +42,7 @@ func (hook TraceContext) Levels() []logrus.Level {
 
 // Fire adds filename and lino number info compare to the original log format
 func (hook TraceContext) Fire(entry *logrus.Entry) error {
-	pc := make([]uintptr, 3, 3)
+	pc := make([]uintptr, 3, 3) // nolint
 	cnt := runtime.Callers(6, pc)
 
 	for i := 0; i < cnt; i++ {
@@ -76,9 +75,7 @@ func (hook SimpleContext) Levels() []logrus.Level {
 func (hook SimpleContext) Fire(entry *logrus.Entry) error {
 	traceTypes := []string{"file", "func", "line"}
 	for _, traceType := range traceTypes {
-		if _, ok := entry.Data[traceType]; ok {
-			delete(entry.Data, traceType)
-		}
+		delete(entry.Data, traceType)
 	}
 
 	return nil

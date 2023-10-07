@@ -4,11 +4,10 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package k8s
@@ -24,6 +23,9 @@ import (
 	"sync"
 	"time"
 
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	netservicetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/parnurzeal/gorequest"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,9 +40,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	netservicetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output"
@@ -159,8 +158,8 @@ func NewWatcher(wo *WatcherOptions) (*Watcher, error) {
 		watcher.nameFilters[name] = struct{}{}
 	}
 
-	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s", wo.ResourceType,
-		wo.ResourceName, wo.Namespace, wo.LabelSelector)
+	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s",
+		wo.ResourceType, wo.ResourceName, wo.Namespace, wo.LabelSelector)
 
 	gv, err := schema.ParseGroupVersion(wo.GroupVersion)
 	if err != nil {
@@ -178,7 +177,7 @@ func NewWatcher(wo *WatcherOptions) (*Watcher, error) {
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				options.LabelSelector = watcher.labelSelector
-				timeoutSeconds := int64(5 * time.Minute.Seconds() * (rand.Float64() + 1.0))
+				timeoutSeconds := int64(5 * time.Minute.Seconds() * (rand.Float64() + 1.0)) // nolint
 				options.TimeoutSeconds = &timeoutSeconds
 				return (*wo.DynamicClient).Resource(gvr).Watch(context.TODO(), options)
 			},
@@ -192,7 +191,7 @@ func NewWatcher(wo *WatcherOptions) (*Watcher, error) {
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				options.LabelSelector = watcher.labelSelector
-				timeoutSeconds := int64(5 * time.Minute.Seconds() * (rand.Float64() + 1.0))
+				timeoutSeconds := int64(5 * time.Minute.Seconds() * (rand.Float64() + 1.0)) // nolint
 				options.TimeoutSeconds = &timeoutSeconds
 				return (*wo.DynamicClient).Resource(gvr).Namespace(wo.Namespace).Watch(context.TODO(), options)
 			},
@@ -232,7 +231,7 @@ func (w *Watcher) ListKeys() []string {
 // Run starts the watcher.
 func (w *Watcher) Run(stopCh <-chan struct{}) {
 	// do with handler data
-	//go w.handleQueueData(stopCh)
+	// go w.handleQueueData(stopCh)
 
 	// metrics collect watcher fifo queue length
 	go wait.NonSlidingUntil(func() {
@@ -270,7 +269,8 @@ func (w *Watcher) Run(stopCh <-chan struct{}) {
 func (w *Watcher) distributeDataToHandler(data *action.SyncData) {
 	handlerKey := w.writer.GetHandlerKeyBySyncData(data)
 	if handlerKey == "" {
-		glog.Errorf("get handler key failed, resource: %s, namespace: %s, name: %s", data.Kind, data.Namespace, data.Name)
+		glog.Errorf("get handler key failed, resource: %s, namespace: %s, name: %s", data.Kind,
+			data.Namespace, data.Name)
 		return
 	}
 
@@ -362,12 +362,14 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 	if w.resourceType == "Node" {
 		// convert to corev1 object
 		oldNode, newNode := &v1.Node{}, &v1.Node{}
-		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(oldUnstructuredObj.UnstructuredContent(), oldNode); err != nil {
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
+			oldUnstructuredObj.UnstructuredContent(), oldNode); err != nil {
 			glog.Errorf("Error casting to k8s corev1 object, old obj: %+v", oldObj)
 			return
 		}
 
-		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(newUnstructuredObj.UnstructuredContent(), newNode); err != nil {
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
+			newUnstructuredObj.UnstructuredContent(), newNode); err != nil {
 			glog.Errorf("Error casting to k8s corev1 object, new obj: %+v", newObj)
 			return
 		}
@@ -584,7 +586,7 @@ func (w *NetServiceWatcher) queryIPResource() (*netservicetypes.NetResponse, err
 	if serversCount == 1 {
 		httpClientConfig = targets[0]
 	} else {
-		index := rand.Intn(serversCount)
+		index := rand.Intn(serversCount) // nolint
 		httpClientConfig = targets[index]
 	}
 
@@ -623,7 +625,7 @@ func (w *NetServiceWatcher) queryIPResourceDetail() (*netservicetypes.NetRespons
 	if serversCount == 1 {
 		httpClientConfig = targets[0]
 	} else {
-		index := rand.Intn(serversCount)
+		index := rand.Intn(serversCount) // nolint
 		httpClientConfig = targets[index]
 	}
 
@@ -672,7 +674,7 @@ func (w *NetServiceWatcher) SyncIPResource() {
 		Action: action.SyncDataActionUpdate,
 		Data:   resource.Data,
 	}
-	w.action.Update(metadata)
+	_ = w.action.Update(metadata)
 }
 
 // SyncIPResourceDetail syncs target ip resource detail to storages.
@@ -697,7 +699,7 @@ func (w *NetServiceWatcher) SyncIPResourceDetail() {
 		Action: action.SyncDataActionUpdate,
 		Data:   resource.Data,
 	}
-	w.action.Update(metadata)
+	_ = w.action.Update(metadata)
 }
 
 // Run starts the netservice watcher.

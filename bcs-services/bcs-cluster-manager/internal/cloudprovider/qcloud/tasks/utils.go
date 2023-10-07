@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -20,13 +19,14 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
-func transImageNameToImageID(cmOption *cloudprovider.CommonOption, imageName string) (string, error) {
+func transImageNameToImageID(cmOption *cloudprovider.CommonOption, imageName string) (string, error) { // nolint
 	nodeManager := &api.NodeManager{}
 
 	imageID, err := nodeManager.GetCVMImageIDByImageName(imageName, cmOption)
@@ -60,7 +60,8 @@ type InstanceDisk struct {
 }
 
 // GetNodeInstanceDataDiskInfo get node instance dataDisks
-func GetNodeInstanceDataDiskInfo(instanceIDs []string, opt *cloudprovider.CommonOption) (map[string]InstanceDisk, error) {
+func GetNodeInstanceDataDiskInfo(
+	instanceIDs []string, opt *cloudprovider.CommonOption) (map[string]InstanceDisk, error) {
 	nodeManager := &api.NodeManager{}
 	instanceList, err := nodeManager.ListNodeInstancesByInstanceID(instanceIDs, opt)
 	if err != nil {
@@ -133,7 +134,7 @@ func updateClusterSystemID(clusterID string, systemID string) error {
 }
 
 // updateClusterStatus set cluster status
-func updateClusterStatus(clusterID string, status string) error {
+func updateClusterStatus(clusterID string, status string) error { // nolint
 	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
 	if err != nil {
 		return err
@@ -149,7 +150,7 @@ func updateClusterStatus(clusterID string, status string) error {
 }
 
 // updateNodeStatusByNodeID set node status
-func updateNodeStatusByNodeID(idList []string, status string) error {
+func updateNodeStatusByNodeID(idList []string, status string) error { // nolint
 	if len(idList) == 0 {
 		return nil
 	}

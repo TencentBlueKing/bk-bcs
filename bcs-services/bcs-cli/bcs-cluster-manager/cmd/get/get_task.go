@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package get
@@ -16,13 +15,14 @@ package get
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/util"
-	taskMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/task"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/util/i18n"
 	"k8s.io/kubectl/pkg/util/templates"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/util"
+	taskMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/task"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 )
 
 var (
@@ -39,7 +39,7 @@ func newGetTaskCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&taskID, "taskID", "t", "", `task ID`)
-	cmd.MarkFlagRequired("taskID")
+	_ = cmd.MarkFlagRequired("taskID")
 
 	return cmd
 }

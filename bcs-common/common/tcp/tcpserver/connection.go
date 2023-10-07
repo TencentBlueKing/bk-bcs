@@ -8,16 +8,16 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tcpserver
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/protocol"
 	"net"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/protocol"
 )
 
 // connection 每个链接保持一个connection
@@ -72,7 +72,7 @@ func (cli *connection) Write(head *protocol.MsgHead, data []byte) (int, error) {
 func (cli *connection) isAlive() bool {
 
 	// 心跳超时检测，超时一分钟
-	duration := time.Now().Sub(cli.lastTime)
+	duration := time.Since(cli.lastTime)
 	if duration > 5*time.Minute {
 		blog.Error("heart beat timeout:%d", duration)
 		return false

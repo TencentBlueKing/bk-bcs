@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package options xxx
@@ -20,6 +19,8 @@ import (
 )
 
 // UserManagerOptions cmd option for user-manager
+// NOCC:golint/lll(设计如此:)
+// nolint
 type UserManagerOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -127,6 +128,8 @@ type ESBConfig struct {
 }
 
 // JWTKeyConfig config jwt sign key
+// NOCC:golint/lll(设计如此:)
+// nolint
 type JWTKeyConfig struct {
 	JWTPublicKeyFile  string `json:"jwt_public_key_file" value:"" usage:"JWT public key file" mapstructure:"jwt_public_key_file"`
 	JWTPrivateKeyFile string `json:"jwt_private_key_file" value:"" usage:"JWT private key file" mapstructure:"jwt_private_key_file"`

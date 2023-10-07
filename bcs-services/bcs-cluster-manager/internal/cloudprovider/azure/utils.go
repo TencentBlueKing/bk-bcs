@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package azure
@@ -99,7 +98,7 @@ var (
 		StepMethod: fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName),
 		StepName:   "检测节点状态",
 	}
-	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{
+	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName),
 		StepName:   "更新节点数据",
 	}

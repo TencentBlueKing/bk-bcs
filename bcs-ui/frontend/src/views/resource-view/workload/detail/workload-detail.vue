@@ -141,15 +141,15 @@
       <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
         <bcs-tab-panel name="pod" label="Pods" v-bkloading="{ isLoading: podLoading }">
           <div class="pod-info-header">
-            <bk-button
+            <!-- <bk-button
               v-if="showBatchDispatch"
               :loading="batchBtnLoading"
               :disabled="!selectPods.length"
               @click="handelShowRescheduleDialog">
               {{ $t('dashboard.workload.pods.multiDelete') }}
-            </bk-button>
+            </bk-button> -->
             <!-- 占位 -->
-            <div v-else></div>
+            <div></div>
             <bk-input
               v-model="searchValue"
               :placeholder="$t('dashboard.workload.pods.search')"
@@ -169,13 +169,13 @@
             @select-all="handleSelectAllPod"
             @sort-change="handleSortChange"
           >
-            <bcs-table-column
+            <!-- <bcs-table-column
               v-if="showBatchDispatch"
               type="selection"
               width="60"
               reserve-selection
               :selectable="handlePodSelectable">
-            </bcs-table-column>
+            </bcs-table-column> -->
             <bcs-table-column
               :label="$t('generic.label.name')"
               min-width="130" prop="metadata.name" sortable show-overflow-tooltip fixed="left">

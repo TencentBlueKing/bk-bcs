@@ -6,6 +6,7 @@
   import { useGlobalStore } from '../../../store/global'
   import { getSpaceGroupList, deleteGroup } from '../../../api/group'
   import { IGroupItem, IGroupCategory, IGroupCategoryItem } from '../../../../types/group'
+  import {GROUP_RULE_OPS} from '../../../constants/group'
   import CreateGroup from './create-group.vue'
   import EditGroup from './edit-group.vue'
   import RuleTag from './components/rule-tag.vue'
@@ -15,9 +16,11 @@
 
   const listLoading = ref(false)
   const groupList = ref<IGroupItem[]>([])
+  const searchGroupList = ref<IGroupItem[]>([])
   const categorizedGroupList = ref<IGroupCategory[]>([])
   const tableData = ref<IGroupItem[]|IGroupCategoryItem[]>([])
   const isCategorizedView = ref(false) // 按规则分类查看
+  const searchInfo = ref('')
   const changeViewPending = ref(false)
   const pagination = ref({
     current: 1,
@@ -55,6 +58,7 @@
       listLoading.value = true
       const res = await getSpaceGroupList(spaceId.value)
       groupList.value = res.details
+      searchGroupList.value = res.details
       categorizedGroupList.value = categorizingData(res.details)
       pagination.value.count = res.details.length
       refreshTableData()
@@ -68,6 +72,7 @@
   // 刷新表格数据
   const refreshTableData = () => {
     if (isCategorizedView.value) {
+      categorizedGroupList.value = categorizingData(searchGroupList.value)
       categorizedGroupList.value.forEach(item => {
         item.fold = false
         item.show = true
@@ -75,7 +80,8 @@
       tableData.value = getCategorizedTableData()
     } else {
       const start = pagination.value.limit * (pagination.value.current - 1)
-      tableData.value = groupList.value.slice(start, start + pagination.value.limit)
+      tableData.value = searchGroupList.value.slice(start, start + pagination.value.limit)
+      pagination.value.count = searchGroupList.value.length
     }
   }
 
@@ -143,7 +149,30 @@
 
   // 搜索
   // @todo 规则搜索交互确定
-  const handleSearch = () => {}
+  const handleSearch = () => {
+    if(!searchInfo.value) {
+      searchGroupList.value = groupList.value
+    } else {
+      const lowercaseSearchStr = searchInfo.value.toLowerCase().replace(/\s/g,'')
+      // 分组名称过滤出来的数据
+      const groupNameList = groupList.value.filter( item => item.name.includes(lowercaseSearchStr))
+      // 分组规则过滤出来的数据
+      const groupRuleList = groupList.value.filter( item => {
+        const ruleList:string[] = []
+        item.selector?.labels_and?.forEach( labels => {
+        const op = GROUP_RULE_OPS.find(item => item.id === labels.op)?.name
+        ruleList.push(`${labels.key}${op}${labels.value}`)
+      })
+        item.selector?.labels_or?.forEach( labels => {
+        const op = GROUP_RULE_OPS.find(item => item.id === labels.op)?.name
+        ruleList.push(`${labels.key}${op}${labels.value}`)
+      })
+       return ruleList.includes(lowercaseSearchStr)
+    })
+     searchGroupList.value = [...groupNameList,...groupRuleList]
+   }
+     refreshTableData()
+  }
 
   //关联服务
   const handleOpenPublishedSlider = (group: IGroupItem) => {
@@ -187,6 +216,17 @@
     refreshTableData()
   }
 
+  // hover提示文字
+  const handleTooltip = (flag:boolean,info:string) => {
+    if(flag){
+      return {
+        content:`分组已上线,不能${info}`,
+        placement: 'top',
+      }
+    }
+    return {disabled:true}
+   }
+
 </script>
 <template>
   <section class="groups-management-page">
@@ -203,7 +243,7 @@
           @change="handleChangeView">
           按规则分类查看
         </bk-checkbox>
-        <bk-input class="search-group-input" placeholder="分组名称/分组规则" @enter="handleSearch">
+        <bk-input class="search-group-input" placeholder="分组名称/分组规则" @enter="handleSearch" v-model.trim="searchInfo">
            <template #suffix>
               <Search class="search-input-icon" />
            </template>
@@ -268,8 +308,18 @@
             <bk-table-column label="操作" :width="120">
               <template #default="{ row }">
                 <div v-if="!row.IS_CATEORY_ROW" class="action-btns">
-                  <bk-button text theme="primary" :disabled="row.released_apps_num > 0" @click="openEditGroupDialog(row)">编辑分组</bk-button>
-                  <bk-button text theme="primary" :disabled="row.released_apps_num > 0" @click="handleDeleteGroup(row)">删除</bk-button>
+                  <bk-button
+                  text
+                  theme="primary"
+                  :disabled="row.released_apps_num > 0"
+                  @click="openEditGroupDialog(row)"
+                  v-bk-tooltips="handleTooltip(row.released_apps_num,'编辑')">编辑分组</bk-button>
+                  <bk-button
+                  text
+                  theme="primary"
+                  :disabled="row.released_apps_num > 0"
+                  @click="handleDeleteGroup(row)"
+                  v-bk-tooltips="handleTooltip(row.released_apps_num,'删除')">删除</bk-button>
                 </div>
               </template>
             </bk-table-column>

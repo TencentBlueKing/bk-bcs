@@ -18,7 +18,6 @@ import (
 
 func TestBasePageCount(t *testing.T) {
 	bp := &BasePage{
-		Count: true,
 		Start: 1,
 		Order: "ASC",
 	}
@@ -30,8 +29,7 @@ func TestBasePageCount(t *testing.T) {
 	}
 
 	bp = &BasePage{
-		Count: true,
-		Sort:  "id",
+		Sort: "id",
 	}
 
 	err = bp.Validate()
@@ -41,7 +39,6 @@ func TestBasePageCount(t *testing.T) {
 	}
 
 	bp = &BasePage{
-		Count: true,
 		Order: "ASC",
 	}
 
@@ -52,7 +49,6 @@ func TestBasePageCount(t *testing.T) {
 	}
 
 	bp = &BasePage{
-		Count: true,
 		Limit: 10,
 	}
 
@@ -65,9 +61,7 @@ func TestBasePageCount(t *testing.T) {
 }
 
 func TestBasePageOption(t *testing.T) {
-	bp := BasePage{
-		Count: false,
-	}
+	bp := BasePage{}
 
 	// test limit
 	bp.Limit = 300
@@ -121,116 +115,6 @@ func TestBasePageOption(t *testing.T) {
 	err = bp.Validate(opt)
 	if err != nil {
 		t.Errorf("validate base page limit, test disable user configed sort scenario failed. err: %v", err)
-		return
-	}
-
-}
-
-func TestBasePageSQLExpr(t *testing.T) {
-	bp := BasePage{
-		Count: true,
-		Start: 0,
-		Limit: 0,
-		Sort:  "memo",
-		Order: "",
-	}
-
-	opt := &PageSQLOption{
-		Sort: SortOption{},
-	}
-
-	_, err := bp.SQLExpr(opt)
-	if err == nil {
-		t.Errorf("test generate page SQL expression failed, an count error should occur")
-		return
-	}
-
-	// test query all SQL
-	bp.Count = false
-	expr, err := bp.SQLExpr(opt)
-	if err != nil {
-		t.Errorf("test generate page SQL expression failed, err: %v", err)
-		return
-	}
-
-	if expr != "ORDER BY memo ASC" {
-		t.Errorf("test generate page SQL expression failed, unexpected SQL expr: %s", expr)
-		return
-	}
-
-	// test if not present sort scenario
-	opt.Sort = SortOption{
-		Sort:         "name",
-		IfNotPresent: true,
-	}
-	expr, err = bp.SQLExpr(opt)
-	if err != nil {
-		t.Errorf("test generate page SQL expression with overlapped sort failed, err: %v", err)
-		return
-	}
-
-	if expr != "ORDER BY memo ASC" {
-		t.Errorf("test generate page SQL expression with overlapped sort failed, unexpected SQL expr: %s", expr)
-		return
-	}
-
-	bp.Sort = ""
-	opt.Sort = SortOption{
-		Sort:         "name",
-		IfNotPresent: true,
-	}
-	expr, err = bp.SQLExpr(opt)
-	if err != nil {
-		t.Errorf("test generate page SQL expression with overlapped sort failed, err: %v", err)
-		return
-	}
-
-	if expr != "ORDER BY name ASC" {
-		t.Errorf("test generate page SQL expression with overlapped sort failed, unexpected SQL expr: %s", expr)
-		return
-	}
-
-	// test force overlapped sort scenario
-	bp.Sort = "memo"
-	opt.Sort = SortOption{
-		Sort:         "name",
-		ForceOverlap: true,
-	}
-	expr, err = bp.SQLExpr(opt)
-	if err != nil {
-		t.Errorf("test generate page SQL expression with overlapped sort failed, err: %v", err)
-		return
-	}
-
-	if expr != "ORDER BY name ASC" {
-		t.Errorf("test generate page SQL expression with overlapped sort failed, unexpected SQL expr: %s", expr)
-		return
-	}
-
-	// test query with start and limit
-	bp.Start = 100
-	bp.Limit = 50
-	expr, err = bp.SQLExpr(opt)
-	if err != nil {
-		t.Errorf("test generate page SQL expression with start and limit failed, err: %v", err)
-		return
-	}
-
-	if expr != "ORDER BY name ASC LIMIT 50 OFFSET 100" {
-		t.Errorf("test generate page SQL expression with start and limit failed, unexpected SQL expr: %s", expr)
-		return
-	}
-
-	// test direction
-	bp.Order = "DESC"
-	expr, err = bp.SQLExpr(opt)
-	if err != nil {
-		t.Errorf("test generate page SQL expression with direction failed, err: %v", err)
-		return
-	}
-
-	if expr != "ORDER BY name DESC LIMIT 50 OFFSET 100" {
-		t.Errorf("test generate page SQL expression with direction failed, unexpected SQL expr: %s", expr)
 		return
 	}
 

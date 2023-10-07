@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package models
@@ -19,7 +18,8 @@ import "time"
 type BackendCredentials map[string]interface{}
 
 // User is the internal user model for bke, when bke wants to be "connected" with other user systems like
-// "blueking auth system", the external user credentials should always been transformed into internal bke user(and tokens).
+// "blueking auth system",
+// the external user credentials should always been transformed into internal bke user(and tokens).
 type User struct {
 	ID   uint   `gorm:"primary_key"`
 	Name string `gorm:"unique;not null"`
@@ -53,10 +53,7 @@ type UserToken struct {
 
 // HasExpired mean that is this token has been expired
 func (t *UserToken) HasExpired() bool {
-	if time.Now().After(t.ExpiresAt) {
-		return true
-	}
-	return false
+	return time.Now().After(t.ExpiresAt)
 }
 
 const (

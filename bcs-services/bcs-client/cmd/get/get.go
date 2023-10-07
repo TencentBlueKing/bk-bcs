@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package get xxx
@@ -16,13 +15,14 @@ package get
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
-	userV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
 	"net/http"
 
 	"github.com/urfave/cli"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	userV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
 )
 
 // NewGetCommand xxx

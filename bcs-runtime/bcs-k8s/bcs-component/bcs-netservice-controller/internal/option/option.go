@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package option is controller options
 package option
 
 import (

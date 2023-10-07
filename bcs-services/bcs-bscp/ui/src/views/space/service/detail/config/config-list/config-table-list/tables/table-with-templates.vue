@@ -15,6 +15,7 @@
   import ViewConfig from '../view-config.vue'
   import VersionDiff from '../../../components/version-diff/index.vue'
   import ReplaceTemplateVersion from '../replace-template-version.vue';
+  import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
 
   interface IConfigsGroupData {
     id: number;
@@ -37,7 +38,7 @@
 
   const configStore = useConfigStore()
   const serviceStore = useServiceStore()
-  const { versionData } = storeToRefs(configStore)
+  const { versionData, allConfigCount } = storeToRefs(configStore)
   const { checkPermBeforeOperate } = serviceStore
   const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
 
@@ -46,6 +47,8 @@
     appId: number;
     searchStr: string;
   }>()
+
+  const emits = defineEmits(['clearStr'])
 
   const loading = ref(false)
   const commonConfigListLoading = ref(false)
@@ -59,6 +62,7 @@
   const editPanelShow = ref(false)
   const activeConfig = ref(0)
   const isDiffPanelShow = ref(false)
+  const isSearchEmpty = ref(false)
   const viewConfigSliderData = ref({
     open: false,
     data: { id: 0, type: '' }
@@ -89,6 +93,7 @@
   })
 
   watch(() => props.searchStr, () => {
+    props.searchStr ? isSearchEmpty.value = true : isSearchEmpty.value = false
     getAllConfigList()
   })
 
@@ -124,15 +129,19 @@
         start: 0,
         all: true
       }
-      if (props.searchStr) {
-        params.search_fields = 'revision_name,revision_memo,name,path,creator'
-        params.search_value = props.searchStr
-      }
 
       let res
       if (isUnNamedVersion.value) {
+        if (props.searchStr) {
+          params.search_fields = 'name,path,memo,creator,reviser'
+          params.search_value = props.searchStr
+        }
         res = await getConfigList(props.bkBizId, props.appId, params)
       } else {
+        if (props.searchStr) {
+          params.search_fields = 'name,path,memo,creator'
+          params.search_value = props.searchStr
+        }
         res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params)
       }
       configList.value = res.details
@@ -161,7 +170,7 @@
       if (isUnNamedVersion.value) {
         res = await getBoundTemplates(props.bkBizId, props.appId, params)
       } else {
-        res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id)
+        res = await getBoundTemplatesByAppVersion(props.bkBizId, props.appId, versionData.value.id, params)
       }
       templateGroupList.value = res.details
       templatesCount.value = res.details.reduce((acc: number, crt: IBoundTemplateGroup) => {
@@ -199,7 +208,7 @@
       const group: IConfigsGroupData = {
         id: template_set_id,
         name: `${template_space_name === 'default_space' ? '默认空间' : template_space_name} - ${template_set_name}`,
-        expand: false,
+        expand: true,
         configs: []
       }
       template_revisions.forEach(tpl => {
@@ -317,7 +326,7 @@
       </thead>
       <tbody>
         <template v-for="group in tableGroupsData" :key="group.id">
-          <tr class="config-groups-table-tr group-title-row">
+          <tr class="config-groups-table-tr group-title-row" v-if="group.configs.length > 0">
             <td colspan="8" class="config-groups-table-td">
               <div class="configs-group">
                 <div class="name-wrapper" @click="group.expand = !group.expand">
@@ -388,6 +397,7 @@
                                   text
                                   theme="primary"
                                   :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                                  :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
                                   @click="handleEditOpen(config)">
                                   编辑
                                 </bk-button>
@@ -396,6 +406,7 @@
                                   text
                                   theme="primary"
                                   :class="{'bk-text-with-no-perm': !hasEditServicePerm}"
+                                  :disabled="hasEditServicePerm && config.file_state === 'DELETE'"
                                   @click="handleDel(config)">
                                   删除
                                 </bk-button>
@@ -427,7 +438,7 @@
                     </tbody>
                   </table>
                 </div>
-                <bk-exception v-if="group.configs.length === 0" class="exception-tips" scene="part" type="empty">暂无配置项</bk-exception>
+                <TableEmpty v-if="allConfigCount === 0" :isSearchEmpty="isSearchEmpty" @clear="emits('clearStr')"></TableEmpty>
               </td>
             </tr>
           </template>

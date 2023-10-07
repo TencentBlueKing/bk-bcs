@@ -11,6 +11,7 @@
   import { datetimeFormat } from '../../../../utils/index'
   import CreateScript from './create-script.vue'
   import ScriptCited from './script-cited.vue'
+  import TableEmpty from '../../../../components/table/table-empty.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const {versionListPageShouldOpenEdit } = storeToRefs(useScriptStore())
@@ -31,7 +32,7 @@
     count: 0,
     limit: 10,
   })
-
+  const isSearchEmpty = ref(false)
   watch(() => spaceId.value, () => {
     refreshList()
     getTags()
@@ -125,12 +126,18 @@
   }
 
   const refreshList = () => {
+    searchStr.value ? isSearchEmpty.value = true : isSearchEmpty.value = false
     pagination.value.current = 1
     getScripts()
   }
 
   const handlePageLimitChange = (val: number) => {
     pagination.value.limit = val
+    refreshList()
+  }
+
+  const clearSearchStr = () => {
+    searchStr.value = ''
     refreshList()
   }
 </script>
@@ -176,9 +183,10 @@
         <bk-table
           :border="['outer']"
           :data="scriptsData"
+          :remote-pagination="true"
           :pagination="pagination"
           @page-limit-change="handlePageLimitChange"
-          @page-change="refreshList">
+          @page-value-change="refreshList">
           <bk-table-column label="脚本名称">
             <template #default="{ row }">
               <div v-if="row.hook" class="hook-name" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">{{ row.hook.spec.name }}</div>
@@ -211,6 +219,9 @@
             </div>
           </template>
         </bk-table-column>
+        <template #empty>
+          <TableEmpty :isSearchEmpty="isSearchEmpty" @clear="clearSearchStr"></TableEmpty>
+        </template>
         </bk-table>
       </bk-loading>
     </div>

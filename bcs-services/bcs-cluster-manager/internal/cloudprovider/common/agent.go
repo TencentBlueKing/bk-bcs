@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package common xxx
 package common
 
 import (
@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
@@ -55,7 +56,7 @@ func BuildInstallGseAgentTaskStep(task *proto.Task, cls *proto.Cluster, group *p
 }
 
 // InstallGSEAgentTask install gse agent task
-func InstallGSEAgentTask(taskID string, stepName string) error {
+func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -135,7 +136,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error {
 				if port == "" {
 					return nodeman.DefaultPort
 				}
-				dPort, err := strconv.Atoi(port)
+				dPort, err := strconv.Atoi(port) // nolint
 				if err != nil {
 					return nodeman.DefaultPort
 				}
@@ -170,7 +171,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error {
 	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
-		var err error
+		var err error // nolint
 		detail, err := nodeManClient.JobDetails(job.JobID)
 		if err != nil {
 			blog.Errorf("InstallGSEAgentTask %s failed, get job detail err %s", taskID, err.Error())

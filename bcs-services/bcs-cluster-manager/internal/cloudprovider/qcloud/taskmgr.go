@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package qcloud
@@ -20,6 +19,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
@@ -27,8 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/google/uuid"
 )
 
 var taskMgr sync.Once
@@ -87,18 +86,18 @@ func newtask() *Task {
 	// create nodeGroup task
 	task.works[createCloudNodeGroupStep.StepMethod] = tasks.CreateCloudNodeGroupTask
 	task.works[checkCloudNodeGroupStatusStep.StepMethod] = tasks.CheckCloudNodeGroupStatusTask
-	//task.works[updateCreateNodeGroupDBInfoTask] = tasks.UpdateCreateNodeGroupDBInfoTask
+	// task.works[updateCreateNodeGroupDBInfoTask] = tasks.UpdateCreateNodeGroupDBInfoTask
 
 	// delete nodeGroup task
 	task.works[deleteNodeGroupStep.StepMethod] = tasks.DeleteCloudNodeGroupTask
-	//task.works[updateDeleteNodeGroupDBInfoTask] = tasks.UpdateDeleteNodeGroupDBInfoTask
+	// task.works[updateDeleteNodeGroupDBInfoTask] = tasks.UpdateDeleteNodeGroupDBInfoTask
 
 	// clean node in nodeGroup task
 	task.works[cleanNodeGroupNodesStep.StepMethod] = tasks.CleanNodeGroupNodesTask
 	task.works[checkClusterCleanNodsStep.StepMethod] = tasks.CheckClusterCleanNodsTask
 	task.works[returnIDCNodeToResourcePoolStep.StepMethod] = tasks.ReturnIDCNodeToResourcePoolTask
-	//task.works[checkCleanNodeGroupNodesStatusTask] = tasks.CheckCleanNodeGroupNodesStatusTask
-	//task.works[updateCleanNodeGroupNodesDBInfoTask] = tasks.UpdateCleanNodeGroupNodesDBInfoTask
+	// task.works[checkCleanNodeGroupNodesStatusTask] = tasks.CheckCleanNodeGroupNodesStatusTask
+	// task.works[updateCleanNodeGroupNodesDBInfoTask] = tasks.UpdateCleanNodeGroupNodesDBInfoTask
 
 	// update desired nodes task
 	task.works[applyInstanceMachinesStep.StepMethod] = tasks.ApplyInstanceMachinesTask
@@ -126,7 +125,8 @@ func (t *Task) GetAllTask() map[string]interface{} {
 }
 
 // BuildCreateClusterTask build create cluster task
-func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
+func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) ( // nolint
+	*proto.Task, error) {
 	// create cluster currently only has three steps:
 	// 0. check if need to generate master instance. you need to call cvm api to produce master instance if necessary.
 	//    but we only support add existed instance to cluster as master currently.
@@ -542,7 +542,7 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 }
 
 // BuildAddNodesToClusterTask build addNodes task
-func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node, // nolint
 	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	// addNodesToCluster has three steps:
 	// 1. call qcloud AddExistedInstancesToCluster to add node
@@ -571,7 +571,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		nodeIDs = append(nodeIDs, nodes[i].NodeID)
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -689,7 +689,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 }
 
 // BuildRemoveNodesFromClusterTask build removeNodes task
-func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node, // nolint
 	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	// removeNodesFromCluster has two steps:
 	// 1. call qcloud DeleteTkeClusterInstance to delete node
@@ -714,7 +714,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		nodeIDs = append(nodeIDs, node.NodeID)
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -778,7 +778,8 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	}
 
 	// preAction platform sops task
-	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.DeleteNodesFromCluster != nil {
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.DeleteNodesFromCluster != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.SystemInit,
 			Cluster:  cls,
@@ -867,7 +868,7 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 
 // BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
 // including remove nodes from NodeGroup, clean data in nodes
-func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
+func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, // nolint
 	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
 
 	// clean nodeGroup nodes in cloud only has two steps:
@@ -1101,16 +1102,8 @@ func getTransModuleInfo(asOption *proto.ClusterAutoScalingOption, group *proto.N
 	return asOption.GetModule().GetScaleOutModuleID()
 }
 
-func getAnnotationsByNg(group *proto.NodeGroup) map[string]string {
-	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Annotations) == 0 {
-		return nil
-	}
-
-	return group.GetNodeTemplate().GetAnnotations()
-}
-
 // BuildUpdateDesiredNodesTask build update desired nodes task
-func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
+func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, // nolint
 	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
 	// validate request params
 	if desired == 0 {
@@ -1199,8 +1192,9 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 				InstancePasswd: passwd,
 				NodeIPList:     "",
 				NodeOperator:   opt.Operator,
-				ModuleID:       cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate, true),
-				BusinessID:     cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, true),
+				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate,
+					true),
+				BusinessID: cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, true),
 			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.UpdateDesiredNodes, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask platform BuildBkSopsStepAction failed: %v", err)
@@ -1216,9 +1210,10 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 				NodeIPList:         "",
 				NodeOperator:       opt.Operator,
 				ExternalNodeScript: "",
-				ModuleID:           cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate, false),
-				BusinessID:         cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, true),
-				NodeGroupID:        group.NodeGroupID,
+				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate,
+					false),
+				BusinessID:  cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, true),
+				NodeGroupID: group.NodeGroupID,
 			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.AddExternalNodesToCluster, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask BuildBkSopsStepAction failed: %v", err)
@@ -1258,7 +1253,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	updateDesiredNodesTask.BuildNodeLabelsStep(task)
 
 	// step4: set node annotations
-	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil, getAnnotationsByNg(opt.NodeGroup))
+	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil,
+		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
 
 	// step5: set resourcePool labels
 	common.BuildResourcePoolLabelTaskStep(task, opt.Cluster.ClusterID)
@@ -1421,7 +1417,7 @@ func (t *Task) BuildSwitchAsOptionStatusTask(scalingOption *proto.ClusterAutoSca
 }
 
 // BuildAddExternalNodeToCluster add external to cluster
-func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node,
+func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node, // nolint
 	opt *cloudprovider.AddExternalNodesOption) (*proto.Task, error) {
 	// AddExternalNodeToCluster has three steps:
 	// 1. call qcloud getExternalNodeScript get addNodes script
@@ -1446,7 +1442,7 @@ func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*pr
 		nodeIPs = append(nodeIPs, nodes[i].InnerIP)
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -1487,9 +1483,10 @@ func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*pr
 				NodeIPList:         strings.Join(nodeIPs, ","),
 				NodeOperator:       opt.Operator,
 				ExternalNodeScript: "",
-				ModuleID:           cloudprovider.GetScaleOutModuleID(opt.Cluster, nil, group.NodeTemplate, false),
-				BusinessID:         cloudprovider.GetBusinessID(nil, group.NodeTemplate, true),
-				NodeGroupID:        group.NodeGroupID,
+				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, nil, group.NodeTemplate,
+					false),
+				BusinessID:  cloudprovider.GetBusinessID(nil, group.NodeTemplate, true),
+				NodeGroupID: group.NodeGroupID,
 			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.AddExternalNodesToCluster, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildAddExternalNodeToCluster BuildBkSopsStepAction failed: %v", err)
@@ -1567,7 +1564,7 @@ func (t *Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes 
 		nodeIPs = append(nodeIPs, node.InnerIP)
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -1604,7 +1601,8 @@ func (t *Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes 
 	removeExternalNodesTask.BuildRemoveExternalNodesStep(task)
 
 	// step2: preAction platform sops task
-	if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil && opt.Cloud.NodeGroupManagement.DeleteExternalNodesFromCluster != nil {
+	if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil &&
+		opt.Cloud.NodeGroupManagement.DeleteExternalNodesFromCluster != nil {
 		err := template.BuildSopsFactory{
 			Cluster: opt.Cluster,
 			Extra: template.ExtraInfo{

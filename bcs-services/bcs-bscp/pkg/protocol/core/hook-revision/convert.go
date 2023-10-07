@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package pbhr provides hook revision core protocol struct and convert functions.
 package pbhr
 
 import (

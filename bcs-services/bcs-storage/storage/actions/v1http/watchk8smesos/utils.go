@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package watchk8smesos
@@ -17,10 +16,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/emicklei/go-restful"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/emicklei/go-restful"
+
 	sto "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/types"
 )

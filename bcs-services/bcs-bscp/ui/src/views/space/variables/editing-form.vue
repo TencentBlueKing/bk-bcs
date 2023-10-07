@@ -21,6 +21,11 @@
   const rules = {
     name: [
       {
+        required: true,
+        message: '变量名称不能为空',
+        trigger: 'blur'
+      },
+      {
         validator: (value: string) => value.length <= 128,
         message: '最大长度128个字符'
       },
@@ -98,7 +103,7 @@
     width: 100px;
     border-right: 1px solid #c4c6cc;
     :deep(.bk-input) {
-      height: 30px;
+      height: 28px;
       border: none;
       .bk-input--text {
         background: #f5f7fa;

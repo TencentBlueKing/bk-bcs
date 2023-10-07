@@ -68,7 +68,7 @@
           <template #default="{ row }">
             <div v-if="row.app_id" class="app-info">
               <div v-overflow-title class="name-text">{{ row.app_name }}</div>
-              <LinkToApp class="link-icon" :id="row.app_id" />
+              <LinkToApp class="link-icon" :id="row.app_id" auto-jump/>
             </div>
           </template>
         </bk-table-column>
@@ -107,6 +107,7 @@
 <style lang="scss">
   .create-version-confirm-dialog.bk-modal-wrapper.bk-dialog-wrapper {
     .bk-modal-footer {
+      position: static;
       padding: 32px 0 48px;
       background: #ffffff;
       border-top: none;

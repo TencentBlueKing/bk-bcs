@@ -56,7 +56,7 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context, req *pbds.UpdateCr
 		credentialScope := &table.CredentialScope{
 			ID: updated.Id,
 			Spec: &table.CredentialScopeSpec{
-				CredentialScope: credential.CredentialScope(updated.Scope),
+				CredentialScope: credential.Scope(updated.Scope),
 				ExpiredAt:       time.Now().UTC(),
 			},
 			Attachment: &table.CredentialScopeAttachment{
@@ -84,7 +84,7 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context, req *pbds.UpdateCr
 	for _, created := range req.Created {
 		credentialScope := &table.CredentialScope{
 			Spec: &table.CredentialScopeSpec{
-				CredentialScope: credential.CredentialScope(created),
+				CredentialScope: credential.Scope(created),
 				ExpiredAt:       time.Now().UTC(),
 			},
 			Attachment: &table.CredentialScopeAttachment{

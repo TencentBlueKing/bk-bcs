@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package qcloud
@@ -59,7 +58,7 @@ const (
 	// cleanNodeGroupNodesTaskTemplate bk-sops add task template
 	cleanNodeGroupNodesTaskTemplate = "tke-remove node group nodes: %s/%s"
 	// moveNodesToNodeGroupTaskTemplate bk-sops add task template
-	moveNodesToNodeGroupTaskTemplate = "tke-move nodes to node group: %s/%s"
+	moveNodesToNodeGroupTaskTemplate = "tke-move nodes to node group: %s/%s" // nolint
 	// switchNodeGroupAutoScalingTaskTemplate bk-sops add task template
 	switchNodeGroupAutoScalingTaskTemplate = "tke-switch node group auto scaling: %s/%s"
 	// updateAutoScalingOptionTemplate bk-sops add task template
@@ -79,7 +78,7 @@ var (
 		StepMethod: fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName),
 		StepName:   "注册集群kubeConfig认证",
 	}
-	installGSEAgentStep = cloudprovider.StepInfo{
+	installGSEAgentStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-InstallGSEAgentTask", cloudName),
 		StepName:   "节点安装agent插件",
 	}
@@ -161,7 +160,7 @@ var (
 		StepMethod: fmt.Sprintf("%s-CheckCloudNodeGroupStatusTask", cloudName),
 		StepName:   "检测云节点组状态",
 	}
-	updateCreateNodeGroupDBInfoStep = cloudprovider.StepInfo{
+	updateCreateNodeGroupDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateCreateNodeGroupDBInfoTask", cloudName),
 		StepName:   "更新节点组数据",
 	}
@@ -171,11 +170,11 @@ var (
 		StepMethod: fmt.Sprintf("%s-DeleteNodeGroupTask", cloudName),
 		StepName:   "删除云节点组",
 	}
-	uninstallAutoScalerStep = cloudprovider.StepInfo{
+	uninstallAutoScalerStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UninstallAutoScalerTask", cloudName),
 		StepName:   "卸载节点组自动扩缩容配置",
 	}
-	updateDeleteNodeGroupDBInfoStep = cloudprovider.StepInfo{
+	updateDeleteNodeGroupDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-DeleteNodeGroupTask", cloudName),
 		StepName:   "清理节点组数据",
 	}
@@ -194,11 +193,11 @@ var (
 		StepName:   "下架第三方节点",
 	}
 
-	checkCleanNodeGroupNodesStatusStep = cloudprovider.StepInfo{
+	checkCleanNodeGroupNodesStatusStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-CheckCleanNodeGroupNodesStatusTask", cloudName),
 		StepName:   "检查节点组状态",
 	}
-	updateCleanNodeGroupNodesDBInfoStep = cloudprovider.StepInfo{
+	updateCleanNodeGroupNodesDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateCleanNodeGroupNodesDBInfoTask", cloudName),
 		StepName:   "更新节点组数据",
 	}
@@ -216,17 +215,17 @@ var (
 		StepMethod: fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName),
 		StepName:   "检测节点状态",
 	}
-	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{
+	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName),
 		StepName:   "清理节点数据",
 	}
 
 	// auto scale task
-	deleteAutoScalerStep = cloudprovider.StepInfo{
+	deleteAutoScalerStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-DeleteAutoScalerTask", cloudName),
 		StepName:   "删除CA组件",
 	}
-	updateNodeGroupAutoScalingDBStep = cloudprovider.StepInfo{
+	updateNodeGroupAutoScalingDBStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateNodeGroupAutoScalingDBTask", cloudName),
 		StepName:   "更新CA组件状态",
 	}

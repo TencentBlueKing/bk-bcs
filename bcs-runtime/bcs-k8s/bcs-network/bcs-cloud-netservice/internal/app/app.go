@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package app is application for cloud netservice
 package app
 
 import (

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package main
@@ -80,9 +79,8 @@ func RunSrv() {
 	var g run.Group
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 
-	//初始化 Tracer
+	// 初始化 Tracer
 	shutdown, errorInitTracing := tracing.InitTracing(config.G.Tracing)
 	if errorInitTracing != nil {
 		klog.Info(errorInitTracing.Error())
@@ -108,20 +106,23 @@ func RunSrv() {
 	sd, err := discovery.NewServiceDiscovery(ctx, appName, version.BcsVersion, addr, "", addrIPv6)
 	if err != nil {
 		klog.ErrorS(err, "init micro sd failed, exited")
-		os.Exit(1)
+		stop()
+		os.Exit(1) // nolint
 	}
 
 	svr, err := web.NewWebServer(ctx, addr, addrIPv6)
 	if err != nil {
 		klog.ErrorS(err, "init web svr failed, exited")
+		stop()
 		os.Exit(1)
 	}
 	klog.InfoS("listening for requests and metrics", "address", addr)
 
-	g.Add(svr.Run, func(err error) { svr.Close() })
+	g.Add(svr.Run, func(err error) { _ = svr.Close() })
 	g.Add(sd.Run, func(error) {})
 	if err := g.Run(); err != nil && err != ctx.Err() {
 		klog.ErrorS(err, "run srv failed, exited")
+		stop()
 		os.Exit(1)
 	}
 }

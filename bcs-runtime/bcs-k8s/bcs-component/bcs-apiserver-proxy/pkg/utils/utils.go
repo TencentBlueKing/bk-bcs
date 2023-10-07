@@ -51,12 +51,12 @@ func (ep EndPoint) String() string {
 func SplitServer(server string) (string, uint32) {
 	s, p, err := net.SplitHostPort(server)
 	if err != nil {
-		blog.Errorf("SplitServer error: ", err)
+		blog.Errorf("SplitServer error: %s", err.Error())
 		return "", 0
 	}
 	port, err := strconv.Atoi(p)
 	if err != nil {
-		blog.Errorf("SplitServer error: ", err)
+		blog.Errorf("SplitServer error: %s", err.Error())
 		return "", 0
 	}
 	blog.V(5).Infof("SplitServer debug: IP: %s, Port: %s", s[0], s[1])

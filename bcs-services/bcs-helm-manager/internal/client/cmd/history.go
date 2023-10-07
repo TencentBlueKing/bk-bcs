@@ -16,11 +16,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -67,7 +67,7 @@ func init() {
 		&flagCluster, "cluster", "c", "", "release cluster id")
 	historyCMD.PersistentFlags().StringVarP(
 		&flagNamespace, "namespace", "n", "", "release namespace")
-	historyCMD.MarkPersistentFlagRequired("project")
-	historyCMD.MarkPersistentFlagRequired("cluster")
-	historyCMD.MarkPersistentFlagRequired("namespace")
+	_ = historyCMD.MarkPersistentFlagRequired("project")
+	_ = historyCMD.MarkPersistentFlagRequired("cluster")
+	_ = historyCMD.MarkPersistentFlagRequired("namespace")
 }

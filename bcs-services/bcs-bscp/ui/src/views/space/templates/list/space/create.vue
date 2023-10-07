@@ -74,3 +74,9 @@
     </bk-form>
   </bk-dialog>
 </template>
+
+<style lang="scss" scoped>
+.bk-input {
+  height: 33px;
+}
+</style>

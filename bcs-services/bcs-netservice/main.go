@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/app"
 )
 
@@ -35,6 +36,7 @@ func main() {
 	blog.InitLogs(cfg.LogConfig)
 	defer blog.CloseLogs()
 
+	// nolint
 	bs, _ := json.Marshal(cfg)
 	blog.Infof("%s", string(bs))
 	// running netservice application

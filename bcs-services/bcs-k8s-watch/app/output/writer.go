@@ -4,11 +4,10 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package output
@@ -18,9 +17,9 @@ import (
 	"strconv"
 	"time"
 
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/k8s/resources"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
@@ -33,7 +32,7 @@ const (
 	defaultQueueSizeNormalMetadata = 10 * 1024
 
 	// defaultQueueSizeAlarmMetadata is default queue size of Writer for alarm metadata.
-	defaultQueueSizeAlarmMetadata = 2 * 1024
+	defaultQueueSizeAlarmMetadata = 2 * 1024 // nolint
 
 	// defaultQueueTimeout is default timeout of queue.
 	defaultQueueTimeout = 1 * time.Second
@@ -42,10 +41,10 @@ const (
 	defaultDistributeInterval = 500 * time.Millisecond
 
 	// debugInterval is interval of debug.
-	debugInterval = 10 * time.Second
+	debugInterval = 10 * time.Second // nolint
 
 	// defaultQueueNum is default queue num for Pod kind
-	defaultQueueNum = 10
+	defaultQueueNum = 10 // nolint
 )
 
 const (
@@ -66,7 +65,7 @@ const (
 
 var (
 	// writerResources is resource list could be handled by the writer.
-	writerResources = []string{
+	writerResources = []string{ // nolint
 		"Service",
 		"EndPoints",
 		"Node",
@@ -251,7 +250,7 @@ func (w *Writer) GetHandlerKeyBySyncData(data *action.SyncData) string {
 }
 
 // debug s here.
-func (w *Writer) debug() {
+func (w *Writer) debug() { // nolint
 	for {
 		time.Sleep(debugInterval)
 		glog.Infof("Writer debug: NormalQueueLen[%d] AlarmQueueLen[%d]", len(w.queue))

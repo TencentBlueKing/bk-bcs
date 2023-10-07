@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package app xxx
 package app
 
 import (
@@ -19,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -30,18 +30,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-
-	restful "github.com/emicklei/go-restful"
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
-	microsvc "github.com/micro/go-micro/v2/service"
-	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
-	grpccred "google.golang.org/grpc/credentials"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
@@ -54,6 +42,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	restful "github.com/emicklei/go-restful"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
+	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
+	microsvc "github.com/micro/go-micro/v2/service"
+	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc"
+	grpccred "google.golang.org/grpc/credentials"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	i18n2 "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
@@ -88,7 +89,6 @@ import (
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // ClusterManager cluster manager
@@ -109,7 +109,7 @@ type ClusterManager struct {
 	serverHandler *handler.ClusterManager
 
 	// http mux
-	mux *http.ServeMux
+	mux *http.ServeMux // nolint
 
 	// http server
 	httpServer *ipv6server.IPv6Server
@@ -266,7 +266,7 @@ func (cm *ClusterManager) initModel() error {
 // init task server
 func (cm *ClusterManager) initTaskServer() error {
 	cloudprovider.InitStorageModel(cm.model)
-	//get taskserver and init
+	// get taskserver and init
 	taskMgr := taskserver.GetTaskServer()
 
 	if err := taskMgr.Init(&cm.opt.Broker, cm.mongoOptions); err != nil {
@@ -278,7 +278,7 @@ func (cm *ClusterManager) initTaskServer() error {
 }
 
 // init remote client for cloud dependent data client, client may be disable or empty
-func (cm *ClusterManager) initRemoteClient() error {
+func (cm *ClusterManager) initRemoteClient() error { // nolint
 	// init tags client
 	err := cmdb.SetCmdbClient(cmdb.Options{
 		Enable:     cm.opt.Cmdb.Enable,
@@ -433,7 +433,7 @@ func (cm *ClusterManager) initBKOpsClient() error {
 }
 
 // init helm client
-func (cm *ClusterManager) initHelmClient() error {
+func (cm *ClusterManager) initHelmClient() error { // nolint
 	err := helm.SetHelmManagerClient(&helm.Options{
 		Enable:          cm.opt.Helm.Enable,
 		GateWay:         cm.opt.Helm.GateWay,
@@ -513,7 +513,7 @@ func (cm *ClusterManager) initCloudTemplateConfig() error {
 	blog.Infof("initCloudTemplateConfig %s", cm.opt.CloudTemplatePath)
 
 	cloudList := &options.CloudTemplateList{}
-	cloudBytes, err := ioutil.ReadFile(cm.opt.CloudTemplatePath)
+	cloudBytes, err := os.ReadFile(cm.opt.CloudTemplatePath)
 	if err != nil {
 		blog.Errorf("initCloudTemplateConfig readFile[%s] failed: %v", cm.opt.CloudTemplatePath, err)
 		return err
@@ -904,7 +904,7 @@ func (cm *ClusterManager) initExtraModules() {
 	}()
 }
 
-func (cm *ClusterManager) initMicro() error {
+func (cm *ClusterManager) initMicro() error { // nolint
 	// server listen ip
 	ipv4 := cm.opt.Address
 	ipv6 := cm.opt.Ipv6Address
@@ -941,10 +941,10 @@ func (cm *ClusterManager) initMicro() error {
 		}),
 		microsvc.AfterStart(func() error {
 			if cm.resourceDisc != nil {
-				cm.resourceDisc.Start()
+				cm.resourceDisc.Start() // nolint
 			}
 			if cm.cidrDisc != nil {
-				cm.cidrDisc.Start()
+				cm.cidrDisc.Start() // nolint
 			}
 			return cm.disc.Start()
 		}),
@@ -993,7 +993,7 @@ func (cm *ClusterManager) initMicro() error {
 		return err
 	}
 	// Register handler
-	cmproto.RegisterClusterManagerHandler(grpcServer, cm.serverHandler)
+	cmproto.RegisterClusterManagerHandler(grpcServer, cm.serverHandler) // nolint
 	cm.microService = microService
 	return nil
 }
@@ -1019,8 +1019,8 @@ func (cm *ClusterManager) close() {
 	closeCtx, closeCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer closeCancel()
 	helm.GetHelmManagerClient().Stop()
-	cm.extraServer.Shutdown(closeCtx)
-	cm.httpServer.Shutdown(closeCtx)
+	cm.extraServer.Shutdown(closeCtx) // nolint
+	cm.httpServer.Shutdown(closeCtx)  // nolint
 	cm.daemon.Stop()
 	cm.ctxCancelFunc()
 }

@@ -28,7 +28,7 @@ func MatchConfigItem(scope, path, name string) bool {
 
 // MatchAppConfigItem checks if the scope string matches the app and config item.
 func MatchAppConfigItem(scope, app, path, name string) bool {
-	arr := strings.Split(string(scope), "/")
+	arr := strings.Split(scope, "/")
 	if len(arr) < 2 {
 		return false
 	}

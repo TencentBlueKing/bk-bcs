@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package eventhandler event handler
 package eventhandler
 
 import (
@@ -21,11 +21,11 @@ import (
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/remote/alert"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/remote/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/utils/concurrency"
-
-	v1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -323,11 +323,7 @@ func (eh *SyncEventHandler) HandleQueueEvent(ctx context.Context, data []byte) e
 }
 
 func validateResourceType(resourceType string) bool {
-	if resourceType != ResourceType {
-		return false
-	}
-
-	return true
+	return resourceType == ResourceType
 }
 
 // Consume subscribe Event queue & backgroundSync
@@ -336,7 +332,7 @@ func (eh *SyncEventHandler) Consume(ctx context.Context, sub msgqueue.MessageQue
 		msgqueue.EventSubscribeType)
 
 	eh.unSub = func() {
-		unSub.Unsubscribe()
+		_ = unSub.Unsubscribe()
 	}
 	glog.Infof("SyncEventHandler backgroundBatchSync switch: %v", eh.isBatchAggregation)
 

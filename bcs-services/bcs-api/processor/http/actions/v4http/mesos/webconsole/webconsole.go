@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package webconsole xxx
@@ -24,13 +23,14 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/gorilla/websocket"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
-	"github.com/gorilla/websocket"
 )
 
 // WebconsoleProxy xxx
-type WebconsoleProxy struct {
+type WebconsoleProxy struct { // nolint
 
 	// Backend returns the backend URL which the proxy uses to reverse proxy
 	Backend func(*http.Request) (*url.URL, error)
@@ -87,5 +87,4 @@ func (w *WebconsoleProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	httpProxy.ServeHTTP(rw, req)
 	metric.RequestCount.WithLabelValues("mesos_webconsole", req.Method).Inc()
 	metric.RequestLatency.WithLabelValues("mesos_webconsole", req.Method).Observe(time.Since(start).Seconds())
-	return
 }

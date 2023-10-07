@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package tracing xxx
@@ -18,19 +17,19 @@ import (
 	"errors"
 	"io"
 
+	opentrace "github.com/opentracing/opentracing-go"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/jaeger"
-
-	"github.com/opentracing/opentracing-go"
 )
 
 var (
 	// errSwitchType switch type error
-	errSwitchType error = errors.New("error switch type, please input: [on or off]")
+	errSwitchType = errors.New("error switch type, please input: [on or off]")
 	// errTracingType tracing type error
-	errTracingType error = errors.New("error tracing type, please input: [zipkin or jaeger]")
+	errTracingType = errors.New("error tracing type, please input: [zipkin or jaeger]")
 	// errServiceName for service name is null
-	errServiceName error = errors.New("error service name is null")
+	errServiceName = errors.New("error service name is null")
 )
 
 const (
@@ -90,7 +89,7 @@ func NewInitTracing(serviceName string, opts ...Option) (InitTracing, error) {
 	}
 
 	if defaultOptions.TracingSwitch == "off" {
-		return &nullTracer{tracer: opentracing.NoopTracer{}}, nil
+		return &nullTracer{tracer: opentrace.NoopTracer{}}, nil
 	}
 
 	if defaultOptions.TracingType == string(Jaeger) {
@@ -130,19 +129,19 @@ func NewInitTracing(serviceName string, opts ...Option) (InitTracing, error) {
 	}
 
 	// zipkin init
-	if defaultOptions.TracingType == string(Zipkin) {
+	if defaultOptions.TracingType == string(Zipkin) { // nolint
 	}
 
-	return &nullTracer{tracer: opentracing.NoopTracer{}}, nil
+	return &nullTracer{tracer: opentrace.NoopTracer{}}, nil
 }
 
 type nullTracer struct {
-	tracer opentracing.NoopTracer
+	tracer opentrace.NoopTracer
 }
 
 // Init init nullTracer
 func (nt nullTracer) Init() (io.Closer, error) {
-	opentracing.SetGlobalTracer(nt.tracer)
+	opentrace.SetGlobalTracer(nt.tracer)
 	return &nullCloser{}, nil
 }
 

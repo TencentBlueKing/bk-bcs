@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package rdiscover xxx
@@ -23,9 +22,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
-
 	"golang.org/x/net/context"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 )
 
 // RegDiscover register and discover
@@ -73,6 +72,8 @@ func (r *RegDiscover) Start() error {
 
 	// here: discover other bcs services
 
+	// NOCC:golint/gosimple(设计如此:)
+	// nolint
 	for {
 		select {
 		case <-r.rootCtx.Done():
@@ -86,9 +87,7 @@ func (r *RegDiscover) Start() error {
 func (r *RegDiscover) Stop() error {
 	r.cancel()
 
-	r.rd.Stop()
-
-	return nil
+	return r.rd.Stop()
 }
 
 func (r *RegDiscover) registerStorage() error {

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package websocketDialer
@@ -38,7 +37,7 @@ func newWSConn(conn *websocket.Conn) *wsConn {
 func (w *wsConn) WriteMessage(messageType int, data []byte) error {
 	w.Lock()
 	defer w.Unlock()
-	w.conn.SetWriteDeadline(time.Now().Add(PingWaitDuration))
+	_ = w.conn.SetWriteDeadline(time.Now().Add(PingWaitDuration))
 	return w.conn.WriteMessage(messageType, data)
 }
 
@@ -48,10 +47,10 @@ func (w *wsConn) NextReader() (int, io.Reader, error) {
 }
 
 func (w *wsConn) setupDeadline() {
-	w.conn.SetReadDeadline(time.Now().Add(PingWaitDuration))
+	_ = w.conn.SetReadDeadline(time.Now().Add(PingWaitDuration))
 	w.conn.SetPingHandler(func(string) error {
 		w.Lock()
-		w.conn.WriteControl(websocket.PongMessage, []byte(""), time.Now().Add(time.Second))
+		_ = w.conn.WriteControl(websocket.PongMessage, []byte(""), time.Now().Add(time.Second))
 		w.Unlock()
 		return w.conn.SetReadDeadline(time.Now().Add(PingWaitDuration))
 	})

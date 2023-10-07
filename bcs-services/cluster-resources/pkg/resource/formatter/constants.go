@@ -69,6 +69,16 @@ const (
 	// WorkloadStatusUpdating 更新中
 	WorkloadStatusUpdating = "updating"
 
+	// WorkloadStatusRestarting 重启中
+	WorkloadStatusRestarting = "restarting"
+
 	// WorkloadStatusDeleting 删除中
 	WorkloadStatusDeleting = "deleting"
+)
+
+const (
+	// WorkloadRestartAnnotationKey 重启标识
+	WorkloadRestartAnnotationKey = "kubectl.kubernetes.io/restartedAt"
+	// WorkloadRestartVersionAnnotationKey 重启版本标识
+	WorkloadRestartVersionAnnotationKey = "kubectl.kubernetes.io/restartedVersion"
 )

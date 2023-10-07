@@ -418,6 +418,12 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions"
         };
     }
+    rpc GetReleasedAppBoundTmplRevision(GetReleasedAppBoundTmplRevisionReq) returns
+        (GetReleasedAppBoundTmplRevisionResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}/template_revisions/{template_revision_id}"
+        };
+    }
     rpc UpdateAppBoundTmplRevisions(UpdateAppBoundTmplRevisionsReq) returns (UpdateAppBoundTmplRevisionsResp) {
         option (google.api.http) = {
             put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}/template_revisions"
@@ -1094,6 +1100,7 @@ message ListHookRevisionReferencesReq {
     uint32 revision_id = 3;
     uint32 start       = 4;
     uint32 limit       = 5;
+    string searchKey   = 6;
 }
 
 message ListHookRevisionReferencesResp {
@@ -1115,7 +1122,7 @@ message ListHookReferencesReq {
     uint32 hook_id   = 2;
     uint32 start     = 3;
     uint32 limit     = 4;
-    string SearchKey = 5;
+    string searchKey = 5;
 }
 
 message ListHookReferencesResp {
@@ -1537,6 +1544,17 @@ message ListReleasedAppBoundTmplRevisionsReq {
 
 message ListReleasedAppBoundTmplRevisionsResp {
     repeated pbatb.ReleasedAppBoundTmplRevisionGroupBySet details = 1;
+}
+
+message GetReleasedAppBoundTmplRevisionReq {
+    uint32 biz_id               = 1;
+    uint32 app_id               = 2;
+    uint32 release_id           = 3;
+    uint32 template_revision_id = 4;
+}
+
+message GetReleasedAppBoundTmplRevisionResp {
+    pbatb.ReleasedAppBoundTmplRevision detail = 1;
 }
 
 message UpdateAppBoundTmplRevisionsReq {

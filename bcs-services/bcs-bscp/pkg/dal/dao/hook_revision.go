@@ -70,7 +70,7 @@ func (dao *hookRevisionDao) Create(kit *kit.Kit, hr *table.HookRevision) (uint32
 	hr.Spec.Content = base64.StdEncoding.EncodeToString([]byte(hr.Spec.Content))
 
 	// generate a HookRevision id and update to HookRevision.
-	id, err := dao.idGen.One(kit, table.Name(hr.TableName()))
+	id, err := dao.idGen.One(kit, hr.TableName())
 	if err != nil {
 		return 0, err
 	}
@@ -109,7 +109,7 @@ func (dao *hookRevisionDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, hr *tabl
 	hr.Spec.Content = base64.StdEncoding.EncodeToString([]byte(hr.Spec.Content))
 
 	// generate a HookRevision id and update to HookRevision.
-	id, err := dao.idGen.One(kit, table.Name(hr.TableName()))
+	id, err := dao.idGen.One(kit, hr.TableName())
 	if err != nil {
 		return 0, err
 	}
@@ -178,7 +178,10 @@ func (dao *hookRevisionDao) List(kit *kit.Kit,
 		m.HookID.Eq(opt.HookID)).Order(m.ID.Desc())
 
 	if opt.SearchKey != "" {
-		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.SearchKey)))
+		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
+		q = q.Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
 	}
 
 	if opt.State != "" {
@@ -219,12 +222,16 @@ func (dao *hookRevisionDao) ListWithRefer(kit *kit.Kit, opt *types.ListHookRevis
 
 	m := dao.genQ.HookRevision
 	rh := dao.genQ.ReleasedHook
-	q := dao.genQ.HookRevision.WithContext(kit.Ctx).Where(
-		m.BizID.Eq(opt.BizID),
-		m.HookID.Eq(opt.HookID)).Order(m.ID.Desc())
+	q := dao.genQ.HookRevision.WithContext(kit.Ctx)
 
 	if opt.SearchKey != "" {
-		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.SearchKey)))
+		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
+		q = q.Where(m.BizID.Eq(opt.BizID), m.HookID.Eq(opt.HookID)).
+			Where(q.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Reviser.Like(searchKey)))
+	} else {
+		q = q.Where(m.BizID.Eq(opt.BizID), m.HookID.Eq(opt.HookID))
 	}
 
 	if opt.State != "" {
@@ -237,10 +244,11 @@ func (dao *hookRevisionDao) ListWithRefer(kit *kit.Kit, opt *types.ListHookRevis
 
 	q = q.Select(m.ALL, rh.ID.Count().As("refer_count"), rh.ReleaseID.Min().Eq(0).As("refer_editing_release")).
 		LeftJoin(rh, m.ID.EqCol(rh.HookRevisionID)).
+		Order(m.ID.Desc()).
 		Group(m.ID)
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
-		if err := q.Scan(&details); err != nil {
+		if err = q.Scan(&details); err != nil {
 			return nil, 0, err
 		}
 		count = int64(len(details))
@@ -273,15 +281,23 @@ func (dao *hookRevisionDao) ListHookRevisionReferences(kit *kit.Kit, opt *types.
 	var count int64
 	var err error
 
-	count, err = rh.WithContext(kit.Ctx).
+	query := rh.WithContext(kit.Ctx).
 		Select(rh.HookRevisionID.As("revision_id"), rh.HookRevisionName.As("revision_name"),
 			rh.HookType.As("hook_type"), a.ID.As("app_id"), a.Name.As("app_name"),
 			r.ID.As("release_id"), r.Name.As("release_name")).
 		LeftJoin(a, rh.AppID.EqCol(a.ID)).
 		LeftJoin(r, rh.ReleaseID.EqCol(r.ID)).
-		Where(rh.HookID.Eq(opt.HookID), rh.HookRevisionID.Eq(opt.HookRevisionsID), rh.BizID.Eq(opt.BizID)).
-		Order(rh.ID.Desc()).
-		ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
+		Where(rh.HookID.Eq(opt.HookID), rh.HookRevisionID.Eq(opt.HookRevisionsID), rh.BizID.Eq(opt.BizID))
+
+	if opt.SearchKey != "" {
+		searchKey := "%" + opt.SearchKey + "%"
+		// Where 内嵌表示括号, 例如: q.Where(q.Where(a).Or(b)) => (a or b)
+		// 参考: https://gorm.io/zh_CN/gen/query.html#Group-%E6%9D%A1%E4%BB%B6
+		query = query.Where(query.Where(
+			a.Name.Like(searchKey)).Or(r.Name.Like(searchKey)).Or(rh.HookRevisionName.Like(searchKey)))
+	}
+
+	count, err = query.Order(rh.ID.Desc()).ScanByPage(&details, opt.Page.Offset(), opt.Page.LimitInt())
 
 	for i := range details {
 		if details[i].ReleaseID == 0 {

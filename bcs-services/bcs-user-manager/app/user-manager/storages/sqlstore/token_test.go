@@ -19,11 +19,12 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 type Suite struct {
@@ -67,9 +68,11 @@ func (s *Suite) TestGetTokenByCondition() {
 		UpdatedAt: time.Now(),
 		ExpiresAt: time.Now().Add(time.Hour),
 	}
+	// nolint
 	sqlGet := `SELECT * FROM "bcs_users"  WHERE "bcs_users"."deleted_at" IS NULL AND (("bcs_users"."name" = $1)) ORDER BY "bcs_users"."id" ASC LIMIT 1`
 	s.mock.ExpectQuery(regexp.QuoteMeta(sqlGet)).
-		WithArgs(token.Name).WillReturnRows(sqlmock.NewRows([]string{"id", "name", "user_token", "created_at", "updated_at", "expires_at", "deleted_at"}).
+		WithArgs(token.Name).WillReturnRows(sqlmock.NewRows(
+		[]string{"id", "name", "user_token", "created_at", "updated_at", "expires_at", "deleted_at"}).
 		AddRow(token1.ID, token1.Name, token1.UserToken, token1.CreatedAt, token1.UpdatedAt, token1.ExpiresAt, nil))
 	tokenInDB := tokenStore.GetTokenByCondition(token)
 	require.NotNil(s.T(), tokenInDB)

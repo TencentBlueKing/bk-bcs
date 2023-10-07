@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package token
@@ -19,10 +18,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
-	"github.com/emicklei/go-restful"
 )
 
 // CreateRegisterToken http handler for register specified cluster token
@@ -51,7 +51,7 @@ func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 	}
 
 	data := utils.CreateResponseData(nil, "success", sqlstore.GetRegisterToken(clusterID))
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("CreateRegisterToken", request.Request.Method, metrics.SucStatus, start)
 }
@@ -70,7 +70,7 @@ func GetRegisterToken(request *restful.Request, response *restful.Response) {
 		return
 	}
 	data := utils.CreateResponseData(nil, "success", token)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("GetRegisterToken", request.Request.Method, metrics.ErrStatus, start)
 }

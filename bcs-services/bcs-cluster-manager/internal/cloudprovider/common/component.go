@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
@@ -21,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component/autoscaler"
@@ -287,7 +287,10 @@ func buildVClusterInfoByVCluster(cls *proto.Cluster, hostCls *proto.Cluster) (*V
 		return nil, fmt.Errorf("vcluster[%s] namespace empty", cls.ClusterID)
 	}
 	nsInfo := &proto.NamespaceInfo{}
-	json.Unmarshal([]byte(namespaceStr), nsInfo)
+	err := json.Unmarshal([]byte(namespaceStr), nsInfo)
+	if err != nil {
+		return nil, err
+	}
 	vclusterData.Namespace = nsInfo.Name
 
 	// hostCluster serviceCIDR

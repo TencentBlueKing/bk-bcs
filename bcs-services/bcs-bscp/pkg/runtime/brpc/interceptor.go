@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package brpc NOTES
 package brpc
 
 import (
@@ -39,14 +40,16 @@ func RecoveryHandlerFuncContext(ctx context.Context, p interface{}) (err error) 
 
 // LogUnaryServerInterceptor 添加请求日志
 func LogUnaryServerInterceptor() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (
+		resp interface{}, err error) {
 		st := time.Now()
 		kt := kit.FromGrpcContext(ctx)
 		service := path.Dir(info.FullMethod)[1:]
 		method := path.Base(info.FullMethod)
 
 		defer func() {
-			klog.InfoS("grpc", "rid", kt.Rid, "system", "grpc", "span.kind", "grpc.service", "service", service, "method", method, "grpc.duration", time.Since(st), "error", err)
+			klog.InfoS("grpc", "rid", kt.Rid, "system", "grpc", "span.kind", "grpc.service", "service", service,
+				"method", method, "grpc.duration", time.Since(st), "error", err)
 		}()
 
 		resp, err = handler(ctx, req)

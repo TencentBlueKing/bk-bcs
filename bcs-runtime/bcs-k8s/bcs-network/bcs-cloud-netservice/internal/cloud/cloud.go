@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package cloud is interface for cloud
 package cloud
 
 import (

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package handler
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/cloudvpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
@@ -172,4 +172,3 @@ func (cm *ClusterManager) GetCloudBandwidthPackages(ctx context.Context,
 	blog.V(5).Infof("reqID: %s, action: GetCloudBandwidthPackages, req %v, resp %v", reqID, req, resp)
 	return nil
 }
-

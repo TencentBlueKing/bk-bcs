@@ -97,7 +97,7 @@
     :width="1200"
     @closed="handleClose">
     <div class="diff-content-area">
-      <diff :diff="configDiffData" :loading="false">
+      <diff :diff="configDiffData" :isTpl="true" :id="props.templateSpaceId" :loading="false">
         <template #leftHead>
             <slot name="baseHead">
               <div class="diff-panel-head">

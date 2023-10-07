@@ -134,7 +134,8 @@ type authorizer struct {
 }
 
 // AuthorizeDecision if user has permission to the resources, returns auth status per resource and for all.
-func (a authorizer) AuthorizeDecision(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error) {
+func (a authorizer) AuthorizeDecision(kt *kit.Kit, resources ...*meta.ResourceAttribute) (
+	[]*meta.Decision, bool, error) {
 	userInfo := &meta.UserInfo{UserName: kt.User}
 
 	req := &pbas.AuthorizeBatchReq{

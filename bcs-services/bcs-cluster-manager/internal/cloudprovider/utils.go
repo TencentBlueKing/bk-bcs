@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cloudprovider
@@ -25,6 +24,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/clientcmd"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -38,11 +42,6 @@ import (
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -76,6 +75,8 @@ const (
 	DeleteNamespaceAction = "deleteNamespace"
 	// SetNodeLabelsAction 节点设置labels任务
 	SetNodeLabelsAction = "nodeSetLabels"
+	// SetNodeTaintsAction 节点设置labels任务
+	SetNodeTaintsAction = "nodeSetTaints"
 	// SetNodeAnnotationsAction 节点设置Annotations任务
 	SetNodeAnnotationsAction = "nodeSetAnnotations"
 	// CheckKubeAgentStatusAction 检测agent组件状态
@@ -86,6 +87,8 @@ const (
 	DeleteResourceQuotaAction = "deleteResourceQuota"
 	// ResourcePoolLabelAction 设置资源池标签
 	ResourcePoolLabelAction = "resourcePoolLabel"
+	// CheckClusterCleanNodesAction 检测集群销毁节点状态
+	CheckClusterCleanNodesAction = "checkClusterCleanNodes"
 	// LadderResourcePoolLabelAction 标签设置
 	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
 )
@@ -108,7 +111,7 @@ func GetTaskIDFromContext(ctx context.Context) string {
 // WithTaskIDForContext will return a new context wrapped taskID flag around the original ctx
 func WithTaskIDForContext(ctx context.Context, taskID string) context.Context {
 	// NOCC:golint/type(设计如此)
-	return context.WithValue(ctx, TaskID, taskID)
+	return context.WithValue(ctx, TaskID, taskID) // nolint
 }
 
 // CredentialData dependency data
@@ -119,8 +122,10 @@ type CredentialData struct {
 	AccountID string
 }
 
-// GetCredential get specified credential information according Cloud configuration, if Cloud conf is nil, try Cluster Account.
-// @return CommonOption: option can be nil if no credential conf in cloud or cluster account or when cloudprovider don't support authentication
+// GetCredential get specified credential information according Cloud configuration,
+// if Cloud conf is nil, try Cluster Account.
+// @return CommonOption: option can be nil if no credential conf in cloud or cluster account or
+// when cloudprovider don't support authentication
 // GetCredential get cloud credential by cloud or cluster
 func GetCredential(data *CredentialData) (*CommonOption, error) {
 	if data.Cloud == nil && data.AccountID == "" {
@@ -406,14 +411,14 @@ func UpdateNodeGroupDesiredSize(groupID string, nodeNum int, scaleOut bool) erro
 
 	if scaleOut {
 		if group.AutoScaling.DesiredSize >= uint32(nodeNum) {
-			group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize - uint32(nodeNum)
+			group.AutoScaling.DesiredSize -= uint32(nodeNum)
 		} else {
 			group.AutoScaling.DesiredSize = 0
 			blog.Warnf("updateNodeGroupDesiredSize abnormal, desiredSize[%v] scaleNodesNum[%v]",
 				group.AutoScaling.DesiredSize, nodeNum)
 		}
 	} else {
-		group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize + uint32(nodeNum)
+		group.AutoScaling.DesiredSize += uint32(nodeNum)
 	}
 
 	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
@@ -451,7 +456,10 @@ func SaveNodeInfoToDB(ctx context.Context, node *proto.Node, isIP bool) error {
 			taskID, node.ClusterID, node.NodeGroupID, inDb, inCluster)
 
 		if inDb && !inCluster {
-			GetStorageModel().DeleteNodeByIP(context.Background(), node.InnerIP)
+			err = GetStorageModel().DeleteNodeByIP(context.Background(), node.InnerIP)
+			if err != nil {
+				return err
+			}
 		}
 
 		err = GetStorageModel().CreateNode(context.Background(), node)
@@ -552,6 +560,26 @@ func GetInstanceIPsByID(ctx context.Context, nodeIDs []string) []string {
 	return nodeIPs
 }
 
+// GetInstanceIPsByName get InstanceIP by NodeName
+func GetInstanceIPsByName(ctx context.Context, clusterID string, nodeNames []string) []string {
+	var (
+		taskID  = GetTaskIDFromContext(ctx)
+		nodeIPs = make([]string, 0)
+	)
+
+	for _, name := range nodeNames {
+		node, err := GetStorageModel().GetNodeByName(context.Background(), clusterID, name)
+		if err != nil {
+			blog.Errorf("GetInstanceIPsByName[%s] nodeName[%s] failed: %v", taskID, name, err)
+			continue
+		}
+
+		nodeIPs = append(nodeIPs, node.InnerIP)
+	}
+
+	return nodeIPs
+}
+
 // GetNodesByInstanceIDs get nodes by instanceIDs
 func GetNodesByInstanceIDs(instanceIDs []string) []*proto.Node {
 	nodes := make([]*proto.Node, 0)
@@ -613,7 +641,8 @@ func UpdateNodeListStatus(isInstanceIP bool, instances []string, status string) 
 	return nil
 }
 
-// UpdateNodeStatus update node status; isInstanceIP true, instance is InstanceIP; isInstanceIP true, instance is InstanceID
+// UpdateNodeStatus update node status; isInstanceIP true, instance is InstanceIP; isInstanceIP true,
+// instance is InstanceID
 func UpdateNodeStatus(isInstanceIP bool, instance, status string) error {
 	var (
 		node *proto.Node
@@ -1037,7 +1066,10 @@ func UpdateVirtualNodeStatus(clusterId, nodeGroupId, taskID string) error {
 	for i := range nodes {
 		blog.Infof("UpdateVirtualNodeStatus[%s] node status", nodes[i].NodeID)
 		nodes[i].Status = common.StatusResourceApplyFailed
-		GetStorageModel().UpdateNode(context.Background(), nodes[i])
+		err = GetStorageModel().UpdateNode(context.Background(), nodes[i])
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1070,8 +1102,38 @@ func DeleteVirtualNodes(clusterId, nodeGroupId, taskID string) error {
 		if !strings.HasPrefix(nodes[i].GetNodeID(), "bcs") {
 			continue
 		}
-		GetStorageModel().DeleteNode(context.Background(), nodes[i].GetNodeID())
+		err = GetStorageModel().DeleteNode(context.Background(), nodes[i].GetNodeID())
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+// GetAnnotationsByNg get annotations by nodeGroup
+func GetAnnotationsByNg(group *proto.NodeGroup) map[string]string {
+	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Annotations) == 0 {
+		return nil
+	}
+
+	return group.GetNodeTemplate().GetAnnotations()
+}
+
+// GetLabelsByNg get labels by nodeGroup
+func GetLabelsByNg(group *proto.NodeGroup) map[string]string {
+	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Labels) == 0 {
+		return nil
+	}
+
+	return group.GetNodeTemplate().GetLabels()
+}
+
+// GetTaintsByNg get taints by nodeGroup
+func GetTaintsByNg(group *proto.NodeGroup) []*proto.Taint {
+	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Taints) == 0 {
+		return nil
+	}
+
+	return group.GetNodeTemplate().GetTaints()
 }

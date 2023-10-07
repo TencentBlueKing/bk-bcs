@@ -7,6 +7,7 @@
   const props = defineProps<{
     panelName?: String;
     diff: IDiffDetail;
+    id: number; // 服务ID或模板空间ID
     loading: boolean
   }>()
 </script>
@@ -28,7 +29,8 @@
                 <File
                     v-if="props.diff.contentType === 'file'"
                     :current="(props.diff.current.content as IFileConfigContentSummary)"
-                    :base="(props.diff.base.content as IFileConfigContentSummary)" />
+                    :base="(props.diff.base.content as IFileConfigContentSummary)"
+                    :id="props.id" />
                 <Text
                     v-else-if="props.diff.contentType === 'text'"
                     :language="props.diff.current.language"

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package k8s
@@ -17,13 +16,13 @@ import (
 	"context"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/flowcontrol"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned"
@@ -57,7 +56,7 @@ type LogManager struct {
 	clientRWMutex            sync.RWMutex
 	logClients               map[string]*LogClient
 	dataidChMap              map[string]chan string
-	currCollectionConfigInd  int
+	currCollectionConfigInd  int // nolint
 	bkDataAPIConfigClientset *internalclientset.Clientset
 	bkDataAPIConfigInformer  cache.SharedIndexInformer
 	stopCh                   chan struct{}

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package resourceratio filters invalid resource ratio
 package resourceratio
 
 import (

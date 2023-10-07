@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package node xxx
 package node
 
 import (
@@ -20,12 +20,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
 
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
-
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -35,6 +34,7 @@ const (
 	nodeIPKeyName         = "innerip"
 	nodeClusterIDKey      = "clusterid"
 	nodeTableName         = "node"
+	nodeNameKey           = "nodename"
 	defaultNodeListLength = 5000
 )
 
@@ -151,6 +151,26 @@ func (m *ModelNode) DeleteClusterNode(ctx context.Context, clusterID, nodeID str
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		nodeClusterIDKey: clusterID,
 		nodeIDKeyName:    nodeID,
+	})
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteClusterNodeByName delete node by name
+func (m *ModelNode) DeleteClusterNodeByName(ctx context.Context, clusterID, nodeName string) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+	if len(nodeName) == 0 {
+		return nil
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		nodeClusterIDKey: clusterID,
+		nodeNameKey:      nodeName,
 	})
 	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
 	if err != nil {
@@ -295,6 +315,22 @@ func (m *ModelNode) GetNodeByIP(ctx context.Context, ip string) (*types.Node, er
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		nodeIPKeyName: ip,
+	})
+	retNode := &types.Node{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retNode); err != nil {
+		return nil, err
+	}
+	return retNode, nil
+}
+
+// GetNodeByName get node by name
+func (m *ModelNode) GetNodeByName(ctx context.Context, clusterID, name string) (*types.Node, error) {
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		nodeClusterIDKey: clusterID,
+		nodeNameKey:      name,
 	})
 	retNode := &types.Node{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retNode); err != nil {

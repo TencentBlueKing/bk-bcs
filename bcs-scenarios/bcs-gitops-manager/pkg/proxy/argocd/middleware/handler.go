@@ -156,6 +156,9 @@ func (h *handler) CheckMultiClustersPermission(ctx context.Context, projectID st
 // CheckProjectPermission 检查登录态用户对于项目的权限
 func (h *handler) CheckProjectPermission(ctx context.Context, projectName string,
 	action iam.ActionID) (*v1alpha1.AppProject, int, error) {
+	if projectName == "" {
+		return nil, http.StatusBadRequest, errors.Errorf("project name cannot be empty")
+	}
 	// get project info and validate projectPermission
 	argoProject, err := h.option.Storage.GetProject(ctx, projectName)
 	if err != nil {

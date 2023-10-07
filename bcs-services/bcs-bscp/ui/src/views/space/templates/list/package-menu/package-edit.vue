@@ -3,8 +3,8 @@
   import { storeToRefs } from 'pinia'
   import { Message } from 'bkui-vue/lib'
   import { useGlobalStore } from '../../../../../store/global'
-  import { ITemplatePackageEditParams, ITemplatePackageItem, IPackageCitedByApps } from '../../../../../../types/template'
-  import { updateTemplatePackage, getUnNamedVersionAppsBoundByPackage } from '../../../../../api/template'
+  import { ITemplatePackageEditParams, ITemplatePackageItem } from '../../../../../../types/template'
+  import { updateTemplatePackage } from '../../../../../api/template'
   import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation'
   import PackageForm from './package-form.vue'
 
@@ -27,7 +27,6 @@
     bound_apps: []
   })
   const apps = ref<number[]>([])
-  const appsLoading = ref(false)
   const isFormChange = ref(false)
   const pending = ref(false)
 
@@ -41,20 +40,9 @@
         public: isPublic,
         bound_apps } = props.pkg.spec
       data.value = { name, memo, public: isPublic, bound_apps }
-      getRelatedApps()
+      apps.value = bound_apps.slice()
     }
   })
-
-  const getRelatedApps = async () => {
-    appsLoading.value = true
-    const params = {
-      start: 0,
-      all: true
-    }
-    const res = await getUnNamedVersionAppsBoundByPackage(spaceId.value, props.templateSpaceId, props.pkg.id, params)
-    apps.value = res.details.map((item: IPackageCitedByApps) => item.app_id)
-    appsLoading.value = false
-  }
 
   const handleChange = (formData: ITemplatePackageEditParams) => {
     isFormChange.value = true
@@ -104,7 +92,7 @@
     :is-show="isShow"
     :before-close="handleBeforeClose"
     @closed="close">
-    <div v-bkloading="{ loading: appsLoading }" class="package-form">
+    <div class="package-form">
       <PackageForm ref="formRef" :space-id="spaceId" :data="data" :apps="apps" @change="handleChange" />
     </div>
     <div class="action-btns">

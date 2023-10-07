@@ -71,7 +71,7 @@ func init() {
 		&flagCluster, "cluster", "c", "", "release cluster id")
 	rollbackCMD.PersistentFlags().StringVarP(
 		&flagNamespace, "namespace", "n", "", "release namespace")
-	rollbackCMD.MarkPersistentFlagRequired("project")
-	rollbackCMD.MarkPersistentFlagRequired("cluster")
-	rollbackCMD.MarkPersistentFlagRequired("namespace")
+	_ = rollbackCMD.MarkPersistentFlagRequired("project")
+	_ = rollbackCMD.MarkPersistentFlagRequired("cluster")
+	_ = rollbackCMD.MarkPersistentFlagRequired("namespace")
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package resthdrs
@@ -16,16 +15,17 @@ package resthdrs
 import (
 	"fmt"
 	"reflect"
+	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/emicklei/go-restful"
+	"github.com/iancoleman/strcase"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
-	"github.com/emicklei/go-restful"
-	"github.com/iancoleman/strcase"
-	"strconv"
-	"time"
 )
 
 const (
@@ -46,14 +46,14 @@ func CreateUser(request *restful.Request, response *restful.Response) {
 
 	blog.Debug("CreateBCSUser begin")
 	form := BCSUserForm{}
-	request.ReadEntity(&form)
+	_ = request.ReadEntity(&form)
 
 	err := validate.Struct(&form)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Debug(fmt.Sprintf("CreateBCSUser form validate failed, %s", err))
-		response.WriteEntity(FormatValidationError(err))
+		_ = response.WriteEntity(FormatValidationError(err))
 		return
 	}
 
@@ -82,7 +82,7 @@ func CreateUser(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	response.WriteEntity(*user)
+	_ = response.WriteEntity(*user)
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -106,7 +106,7 @@ func QueryBCSUserByName(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	response.WriteEntity(*user)
+	_ = response.WriteEntity(*user)
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -149,7 +149,7 @@ func CreateUserToken(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	response.WriteEntity(*userToken)
+	_ = response.WriteEntity(*userToken)
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())

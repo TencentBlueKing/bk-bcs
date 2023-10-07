@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package resthdrs
@@ -16,9 +15,12 @@ package resthdrs
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke"
@@ -26,8 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
-	"github.com/emicklei/go-restful"
-	"time"
 )
 
 var mutex sync.Mutex
@@ -118,7 +118,7 @@ func BindLb(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	response.WriteEntity(types.EmptyResponse{})
+	_ = response.WriteEntity(types.EmptyResponse{})
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -169,7 +169,7 @@ func GetLbStatus(request *restful.Request, response *restful.Response) {
 		Status:    status,
 	}
 
-	response.WriteEntity(*lbStatus)
+	_ = response.WriteEntity(*lbStatus)
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -181,16 +181,16 @@ func UpdateTkeLbSubnet(request *restful.Request, response *restful.Response) {
 	// support prometheus metrics
 	start := time.Now()
 
-	blog.Debug(fmt.Sprintf("Create or Update tke lb subnet"))
+	blog.Debug("Create or Update tke lb subnet")
 	form := UpdateTkeLbForm{}
-	request.ReadEntity(&form)
+	_ = request.ReadEntity(&form)
 
 	// validate request data
 	err := validate.Struct(&form)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
-		response.WriteEntity(FormatValidationError(err))
+		_ = response.WriteEntity(FormatValidationError(err))
 		return
 	}
 
@@ -205,7 +205,7 @@ func UpdateTkeLbSubnet(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	response.WriteEntity(types.EmptyResponse{})
+	_ = response.WriteEntity(types.EmptyResponse{})
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -217,14 +217,14 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 	// support prometheus metrics
 	start := time.Now()
 
-	blog.Info(fmt.Sprintf("Insert cidr"))
+	blog.Info("Insert cidr")
 	form := AddTkeCidrForm{}
-	request.ReadEntity(&form)
+	_ = request.ReadEntity(&form)
 
 	// validate request data
 	err := validate.Struct(&form)
 	if err != nil {
-		response.WriteEntity(FormatValidationError(err))
+		_ = response.WriteEntity(FormatValidationError(err))
 		return
 	}
 
@@ -255,7 +255,7 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 		}
 	}
 
-	response.WriteEntity(types.EmptyResponse{})
+	_ = response.WriteEntity(types.EmptyResponse{})
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -268,14 +268,14 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
 	form := ApplyTkeCidrForm{}
-	request.ReadEntity(&form)
+	_ = request.ReadEntity(&form)
 
 	// validate request data
 	err := validate.Struct(&form)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
-		response.WriteEntity(FormatValidationError(err))
+		_ = response.WriteEntity(FormatValidationError(err))
 		return
 	}
 
@@ -318,7 +318,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 		IpNumber: tkeCidr.IpNumber,
 		Status:   sqlstore.CidrStatusUsed,
 	}
-	response.WriteEntity(cidr)
+	_ = response.WriteEntity(cidr)
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -331,12 +331,12 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
 	form := ReleaseTkeCidrForm{}
-	request.ReadEntity(&form)
+	_ = request.ReadEntity(&form)
 
 	// validate request data
 	err := validate.Struct(&form)
 	if err != nil {
-		response.WriteEntity(FormatValidationError(err))
+		_ = response.WriteEntity(FormatValidationError(err))
 		return
 	}
 
@@ -373,7 +373,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 
 	blog.Info("release cidr successful, vpc %s, cidr: %s, ipNumber: %d, cluster: %s", tkeCidr.Vpc, tkeCidr.Cidr,
 		tkeCidr.IpNumber, tkeCidr.Cluster)
-	response.WriteEntity(types.EmptyResponse{})
+	_ = response.WriteEntity(types.EmptyResponse{})
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -385,7 +385,7 @@ func ListTkeCidr(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
 	cidrCounts := sqlstore.CountTkeCidr()
-	response.WriteEntity(cidrCounts)
+	_ = response.WriteEntity(cidrCounts)
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package filters xxx
@@ -17,10 +16,10 @@ package filters
 import (
 	"fmt"
 
-	"github.com/emicklei/go-restful"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/auth"
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
@@ -90,8 +89,6 @@ func SuperTokenAuthenticate(request *restful.Request, response *restful.Response
 	message := fmt.Sprintf("errcode：%d,  anonymous requests is forbidden, please provide a valid token",
 		common.BcsErrApiUnauthorized)
 	utils.WriteUnauthorizedError(response, "UNAUTHORIZED", message)
-	return
-
 }
 
 // AccessTokenAuthenticate authenticates the user using access_token parameter in query string.

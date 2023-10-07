@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cloudprovider
@@ -19,10 +18,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // GetTaskStateAndCurrentStep get task and task current step
@@ -147,7 +146,7 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 				step.Message = "step ready to run"
 				step.LastUpdate = time.Now().Format(time.RFC3339)
 				stat.Task.Steps[name] = step
-				GetStorageModel().UpdateTask(context.Background(), stat.Task)
+				_ = GetStorageModel().UpdateTask(context.Background(), stat.Task)
 				return step, nil
 			}
 			// skip step if failed
@@ -177,7 +176,7 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 	stat.Task.Message = fmt.Sprintf("step %s is running", stepName)
 	stat.Task.LastUpdate = curStep.LastUpdate
 
-	//update state in storage
+	// update state in storage
 	if err := GetStorageModel().UpdateTask(context.Background(), stat.Task); err != nil {
 		blog.Errorf("task %s fatal, update task status failed, %s. required admin intervetion",
 			stat.Task.TaskID, err.Error())
@@ -210,7 +209,7 @@ func (stat *TaskState) UpdateStepSucc(start time.Time, stepName string) error {
 		stat.Task.End = end.Format(time.RFC3339)
 		stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
 		stat.Task.Status = TaskStatusSuccess
-		stat.Task.Message = fmt.Sprintf("whole task is done")
+		stat.Task.Message = "whole task is done"
 
 		metrics.ReportMasterTaskMetric(stat.Task.TaskType, stat.Task.Status, "", taskStart)
 
@@ -260,7 +259,7 @@ func (stat *TaskState) UpdateStepFailure(start time.Time, stepName string, err e
 	stat.Task.Status = TaskStatusFailure
 	stat.Task.Message = fmt.Sprintf("step %s running failed, %s", step.Name, err.Error())
 	stat.Task.LastUpdate = step.End
-	if err := GetStorageModel().UpdateTask(context.Background(), stat.Task); err != nil {
+	if err = GetStorageModel().UpdateTask(context.Background(), stat.Task); err != nil {
 		blog.Errorf("task %s fatal, update task step %s failure status failed, %s. required admin intervetion",
 			stat.Task.TaskID, stepName, err.Error())
 		return err
@@ -312,7 +311,7 @@ func (stat *TaskState) SkipFailure(start time.Time, stepName string, err error) 
 		stat.Task.End = end.Format(time.RFC3339)
 		stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
 		stat.Task.Status = TaskStatusSuccess
-		stat.Task.Message = fmt.Sprintf("whole task is done")
+		stat.Task.Message = "whole task is done"
 
 		metrics.ReportMasterTaskMetric(stat.Task.TaskType, stat.Task.Status, "", taskStart)
 

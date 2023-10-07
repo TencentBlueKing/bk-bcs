@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package nodetemplate xxx
 package nodetemplate
 
 import (
@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
@@ -34,7 +35,7 @@ import (
 type CreateAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
-	cloud *cmproto.Cloud
+	cloud *cmproto.Cloud // nolint
 	req   *cmproto.CreateNodeTemplateRequest
 	resp  *cmproto.CreateNodeTemplateResponse
 }
@@ -139,7 +140,6 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	}
 
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (ca *CreateAction) validate() error {
@@ -187,7 +187,7 @@ func (ca *CreateAction) checkNodeTemplateAction() error {
 
 func checkExtraActionAddons(action *cmproto.Action) error {
 	for _, pre := range action.PreActions {
-		if plugin, ok := action.Plugins[pre]; ok {
+		if plugin, ok := action.Plugins[pre]; ok { // nolint
 			err := actionMustExistParas(pre, plugin.Params)
 			if err != nil {
 				return err
@@ -198,7 +198,7 @@ func checkExtraActionAddons(action *cmproto.Action) error {
 	}
 
 	for _, post := range action.PostActions {
-		if plugin, ok := action.Plugins[post]; ok {
+		if plugin, ok := action.Plugins[post]; ok { // nolint
 			err := actionMustExistParas(post, plugin.Params)
 			if err != nil {
 				return err

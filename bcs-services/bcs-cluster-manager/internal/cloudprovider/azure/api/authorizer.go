@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -27,7 +26,8 @@ func getAuthorizer(tenantID, clientID, clientSecret string) (autorest.Authorizer
 	if err != nil {
 		return nil, err
 	}
-	spToken, err := adal.NewServicePrincipalToken(*oauthConfig, clientID, clientSecret, azure.PublicCloud.ResourceManagerEndpoint)
+	spToken, err := adal.NewServicePrincipalToken(*oauthConfig, clientID, clientSecret,
+		azure.PublicCloud.ResourceManagerEndpoint)
 	if err != nil {
 		return nil, err
 	}

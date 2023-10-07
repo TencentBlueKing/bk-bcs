@@ -285,6 +285,9 @@ func createAutoscalingOptions() scalingconfig.Options {
 	if err != nil {
 		klog.Fatalf("Failed to parse flags: %v", err)
 	}
+	if *maxBulkSoftTaintCount == 10 {
+		*maxBulkSoftTaintCount = *maxEmptyBulkDeleteFlag
+	}
 	return scalingconfig.Options{
 		AutoscalingOptions: config.AutoscalingOptions{
 			CloudConfig:                         *cloudConfig,

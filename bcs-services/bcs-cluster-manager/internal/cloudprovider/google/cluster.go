@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package google
@@ -18,19 +17,19 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
-
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var clusterMgr sync.Once
@@ -165,7 +164,12 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 
 // ListOsImage get osi  mage list
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	if opt == nil || opt.Account == nil || len(opt.Account.ServiceAccountSecret) == 0 ||
+		len(opt.Account.GkeProjectID) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("google ListOsImage lost authoration")
+	}
+
+	return utils.GkeImageOsList, nil
 }
 
 // CheckClusterEndpointStatus check cluster endpoint status

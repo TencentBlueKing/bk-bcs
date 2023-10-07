@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -26,11 +26,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/discovery"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/tunnel"
-
 	gClient "github.com/asim/go-micro/plugins/client/grpc/v4"
 	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
 	gServer "github.com/asim/go-micro/plugins/server/grpc/v4"
@@ -38,6 +33,11 @@ import (
 	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microSvc "go-micro.dev/v4"
 	microRgt "go-micro.dev/v4/registry"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-proxy/tunnel"
 )
 
 // ArgocdProxy describe the main proxy server
@@ -52,7 +52,7 @@ type ArgocdProxy struct {
 	httpServer *http.Server
 
 	// metric service
-	metricServer *http.Server
+	metricServer *http.Server // nolint
 
 	// tls config for helm manager service and client side
 	tlsConfig       *tls.Config

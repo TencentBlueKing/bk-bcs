@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package util
@@ -18,15 +17,15 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-
 	"github.com/spf13/pflag"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 )
 
 // WordSepNormalizeFunc changes all flags that contain "_" separators
 func WordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
 	if strings.Contains(name, "_") {
-		return pflag.NormalizedName(strings.Replace(name, "_", "-", -1))
+		return pflag.NormalizedName(strings.ReplaceAll(name, "_", "-"))
 	}
 	return pflag.NormalizedName(name)
 }
@@ -34,7 +33,7 @@ func WordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
 // WarnWordSepNormalizeFunc changes and warns for flags that contain "_" separators
 func WarnWordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
 	if strings.Contains(name, "_") {
-		nname := strings.Replace(name, "_", "-", -1)
+		nname := strings.ReplaceAll(name, "_", "-")
 		// glog.Warningf("%s is DEPRECATED and will be removed in a future version. Use %s instead.", name, nname)
 
 		return pflag.NormalizedName(nname)

@@ -448,8 +448,8 @@ func (io InOp) SQLExpr(field string, value interface{}) (string, []interface{}, 
 	for i := 0; i < length; i++ {
 		ele := valOf.Index(i).Interface()
 		if !tools.IsBasicValue(ele) {
-			return "", []interface{}{}, fmt.Errorf("invalid in operator's value: %v, each element's value should be a basic type",
-				ele)
+			return "", []interface{}{},
+				fmt.Errorf("invalid in operator's value: %v, each element's value should be a basic type", ele)
 		}
 
 		joined = fmt.Sprintf("%s, ?", joined)
@@ -533,8 +533,8 @@ func (nio NotInOp) SQLExpr(field string, value interface{}) (string, []interface
 	for i := 0; i < length; i++ {
 		ele := valOf.Index(i).Interface()
 		if !tools.IsBasicValue(ele) {
-			return "", []interface{}{}, fmt.Errorf("invalid nin operator's value: %v, each element's value should be a basic type",
-				ele)
+			return "", []interface{}{},
+				fmt.Errorf("invalid nin operator's value: %v, each element's value should be a basic type", ele)
 		}
 
 		joined = fmt.Sprintf("%s, ?", joined)

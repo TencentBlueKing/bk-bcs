@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -20,9 +20,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
 const (
@@ -47,16 +46,27 @@ const (
 		"-sum(node_memory_Buffers_bytes{cluster_id=\"%s\",job=\"%s\"})" +
 		"-sum(node_memory_Cached_bytes{cluster_id=\"%s\",job=\"%s\"})" +
 		"+sum(node_memory_Shmem_bytes{cluster_id=\"%s\",job=\"%s\"})"
-	K8sMemoryRequest         = "sum(kube_pod_container_resource_requests_memory_bytes{%s})"
-	K8sMemoryLimit           = "sum(kube_pod_container_resource_limits_memory_bytes{%s})"
-	WorkloadInstance         = "count(sum(container_memory_rss{%s}) by (%s))"
-	NamespaceResourceQuota   = "kube_resourcequota{%s, type=\"hard\", %s}"
-	PromMasterIP             = "sum(kube_node_role{cluster_id=\"%s\"})by(node)"
-	PromNodeIP               = "sum(kube_node_created{cluster_id=\"%s\",%s})by(node)"
-	NodeCount                = "count(sum(kube_node_created{cluster_id=\"%s\",%s})by(node))"
-	ClusterTotalCPU          = "sum(kube_node_status_capacity_cpu_cores{cluster_id=\"%s\"})by(cluster_id)"
-	ClusterTotalMemory       = "sum(kube_node_status_capacity_memory_bytes{cluster_id=\"%s\"})by(cluster_id)"
-	NodeUsageQuantile        = "quantile(%s,%s)"
+	// K8sMemoryRequest memory request
+	K8sMemoryRequest = "sum(kube_pod_container_resource_requests_memory_bytes{%s})"
+	// K8sMemoryLimit xxx
+	K8sMemoryLimit = "sum(kube_pod_container_resource_limits_memory_bytes{%s})"
+	// WorkloadInstance xxx
+	WorkloadInstance = "count(sum(container_memory_rss{%s}) by (%s))"
+	// NamespaceResourceQuota xxx
+	NamespaceResourceQuota = "kube_resourcequota{%s, type=\"hard\", %s}"
+	// PromMasterIP xxx
+	PromMasterIP = "sum(kube_node_role{cluster_id=\"%s\"})by(node)"
+	// PromNodeIP xxx
+	PromNodeIP = "sum(kube_node_created{cluster_id=\"%s\",%s})by(node)"
+	// NodeCount xxx
+	NodeCount = "count(sum(kube_node_created{cluster_id=\"%s\",%s})by(node))"
+	// ClusterTotalCPU xxx
+	ClusterTotalCPU = "sum(kube_node_status_capacity_cpu_cores{cluster_id=\"%s\"})by(cluster_id)"
+	// ClusterTotalMemory xxx
+	ClusterTotalMemory = "sum(kube_node_status_capacity_memory_bytes{cluster_id=\"%s\"})by(cluster_id)"
+	// NodeUsageQuantile xxx
+	NodeUsageQuantile = "quantile(%s,%s)"
+	// MesosWorkloadMemoryLimit xxx
 	MesosWorkloadMemoryLimit = "sum(sum(container_spec_memory_limit_bytes{%s})by(%s))"
 	// MesosWorkloadCPULimit mesos cpu limit
 	MesosWorkloadCPULimit = "sum(sum(container_spec_cpu_quota{%s})by(%s)/100000)"
@@ -91,13 +101,14 @@ const (
 	// BKMonitorNodeExporterLabelJob bkMonitor node-exporter label name
 	BKMonitorNodeExporterLabelJob = "bkmonitor-operator-stack-prometheus-node-exporter"
 
+	// PrometheusNodeExporterLabelJob node exporter
 	PrometheusNodeExporterLabelJob = "node-exporter"
 )
 
 const (
 	// DeploymentPodCondition deployment pod condition
 	DeploymentPodCondition = "cluster_id=\"%s\", namespace=\"%s\",pod=~\"%s-[0-9a-z]*-[0-9a-z]*$\"," +
-		"container_name!=\"POD\""
+		"container_name!=\"POD\"" // nolint
 	// OtherPodCondition other pod condition
 	OtherPodCondition = "cluster_id=\"%s\", namespace=\"%s\",pod=~\"%s-[0-9a-z]*$\"," +
 		"container_name!=\"POD\""
@@ -246,7 +257,7 @@ func getIncreasingIntervalDifference(initialNums []int) int {
 }
 
 // fillMetrics 时间不连续的地方用0填充
-func fillMetrics(firstTime float64, initialSlice [][]interface{}, step float64) []int {
+func fillMetrics(firstTime float64, initialSlice [][]interface{}, step float64) []int { // nolint
 	fillSlice := make([]int, 0)
 	lastTime := initialSlice[0][0].(float64)
 	if lastTime != firstTime {

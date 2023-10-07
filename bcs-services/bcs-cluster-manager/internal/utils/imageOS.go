@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -29,7 +28,7 @@ var (
 	ConnectPort = 36000
 )
 
-// market images
+// ImageOsList market images
 // ImageOsList image list
 var ImageOsList = []*proto.OsImage{
 	{
@@ -154,5 +153,19 @@ var ImageOsList = []*proto.OsImage{
 		SeriesName:      "TencentOS Server 3.2 (Final)",
 		Status:          "NORMAL",
 		Provider:        common.MarketImageProvider,
+	},
+}
+
+// GkeImageOsList gke default images
+var GkeImageOsList = []*proto.OsImage{
+	{
+		Alias:           "",
+		Arch:            "x86_64",
+		ImageID:         "UBUNTU_CONTAINERD",
+		OsCustomizeType: "GENERAL",
+		OsName:          "UBUNTU_CONTAINERD",
+		SeriesName:      "带有 containerd 的 Ubuntu (ubuntu_containerd)",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
 	},
 }

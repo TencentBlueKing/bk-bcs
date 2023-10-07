@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
@@ -20,12 +19,12 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
-
-	"github.com/avast/retry-go"
 )
 
 // RegisterCommonActions register common actions
@@ -46,12 +45,14 @@ func RegisterCommonActions() map[string]interface{} {
 		cloudprovider.CreateNamespaceAction:         CreateNamespaceTask,
 		cloudprovider.DeleteNamespaceAction:         DeleteNamespaceTask,
 		cloudprovider.SetNodeLabelsAction:           SetNodeLabelsTask,
+		cloudprovider.SetNodeTaintsAction:           SetNodeTaintsTask,
 		cloudprovider.SetNodeAnnotationsAction:      SetNodeAnnotationsTask,
 		cloudprovider.CheckKubeAgentStatusAction:    CheckKubeAgentStatusTask,
 		cloudprovider.CreateResourceQuotaAction:     CreateResourceQuotaTask,
 		cloudprovider.DeleteResourceQuotaAction:     DeleteResourceQuotaTask,
 		cloudprovider.ResourcePoolLabelAction:       SetResourcePoolDeviceLabels,
 		cloudprovider.LadderResourcePoolLabelAction: EmptyAction,
+		cloudprovider.CheckClusterCleanNodesAction:  CheckClusterCleanNodsTask,
 	}
 }
 
@@ -60,8 +61,8 @@ const (
 	injectTaskID = "${task_id}"
 )
 
-//* here are common tasks that for backgroup running
-//* backgroup task running depends on machinery framework
+// * here are common tasks that for backgroup running
+// * backgroup task running depends on machinery framework
 
 // RunBKsopsJob running bksops job and wait for results
 func RunBKsopsJob(taskID string, stepName string) error {
@@ -182,7 +183,8 @@ func execBkSopsTask(ctx context.Context, paras createBkSopsTaskParas) (string, e
 	blog.Infof("execBkSopsTask[%s] createBkSopsTask successful: taskID[%v]", taskID, taskResp.TaskID)
 
 	// update bksops taskUrl to task
-	cloudprovider.SetTaskStepParas(taskID, paras.stepName, cloudprovider.BkSopsTaskUrlKey.String(), taskResp.TaskURL)
+	_ = cloudprovider.SetTaskStepParas(taskID, paras.stepName, cloudprovider.BkSopsTaskUrlKey.String(),
+		taskResp.TaskURL)
 
 	startTaskReq := startBkSopsTaskParas{
 		bizID:    paras.bizID,
@@ -302,10 +304,7 @@ func startBkSopsTask(ctx context.Context, paras startBkSopsTaskParas) error {
 		Operator: paras.operator,
 	}
 
-	var (
-		err error
-	)
-	err = retry.Do(func() error {
+	var err = retry.Do(func() error {
 		_, errStart := BKOpsClient.StartBkOpsTask("", startTaskReq, &StartTaskRequest{})
 		if errStart != nil {
 			return errStart

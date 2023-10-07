@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package metric xxx
 package metric
 
 import (
@@ -18,9 +18,10 @@ import (
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 )
 
 // TimeBuckets is based on Prometheus client_golang prometheus.DefBuckets
@@ -65,7 +66,7 @@ func RunMetric(conf *config.ApiServConfig, err error) {
 	prometheus.MustRegister(RequestErrorLatency)
 	http.Handle("/metrics", promhttp.Handler())
 	addr := conf.Address + ":" + strconv.Itoa(int(conf.MetricPort))
-	go http.ListenAndServe(addr, nil)
+	go http.ListenAndServe(addr, nil) // nolint
 
 	blog.Infof("run metric ok")
 }

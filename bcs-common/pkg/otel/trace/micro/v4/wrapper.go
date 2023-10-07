@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package micro xxx
 package micro
 
 import (
@@ -51,7 +51,7 @@ func NewTracingWrapper() server.HandlerWrapper {
 			} else {
 				m = m.Copy()
 			}
-			if len(m.Get(traceParent)) <= 0 {
+			if len(m.Get(traceParent)) == 0 {
 				// 获取或生成 request id 注入到 context
 				requestID := utils.GetOrCreateReqID(ctx)
 				ctx = context.WithValue(ctx, constants.RequestIDKey, requestID)

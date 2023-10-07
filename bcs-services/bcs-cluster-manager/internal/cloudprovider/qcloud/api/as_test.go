@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -22,13 +21,13 @@ import (
 	"testing"
 	"time"
 
+	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
-	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 const (
@@ -105,7 +104,7 @@ func TestDescribeAutoScalingActivities(t *testing.T) {
 }
 
 // ResourceUnavailable.AutoScalingGroupInActivity 伸缩组正在活动中
-func TestASClient_ScaleOutInstances(t *testing.T) {
+func TestASClient_ScaleOutInstances(t *testing.T) { // nolint
 	cli := getASClient("ap-guangzhou")
 	activityID, err := cli.ScaleOutInstances("asg-xxx", 3)
 	if err != nil {
@@ -130,7 +129,7 @@ func TestASClient_ScaleOutInstances(t *testing.T) {
 			t.Fatal(err)
 		}
 		t.Log(*activity.StatusCode)
-		if *activity.StatusCode == "SUCCESSFUL" {
+		if *activity.StatusCode == "SUCCESSFUL" { // nolint
 			break
 		}
 	}
@@ -214,7 +213,7 @@ func TestASClient_ScaleOutInstances2(t *testing.T) {
 		err        error
 	)
 
-	loop.LoopDoFunc(context.Background(), func() error {
+	loop.LoopDoFunc(context.Background(), func() error { // nolint
 		activityID, err = cli.ScaleOutInstances("asg-xxx", 2)
 		if err != nil {
 			if strings.Contains(err.Error(), as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY) {

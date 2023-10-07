@@ -8,6 +8,7 @@
   import { IAppItem } from '../../../../../../types/app'
   import { IPermissionQueryResourceItem } from '../../../../../../types/index'
   import { deleteApp } from "../../../../../api";
+  import { datetimeFormat } from '../../../../../utils/index'
 
   const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore())
 
@@ -27,6 +28,7 @@
         title: `确认是否删除服务 ${props.service.spec.name}?`,
         headerAlign: "center" as const,
         footerAlign: "center" as const,
+        extCls: 'center-top-infobox',
         onConfirm: async () => {
           await deleteApp(<number>props.service.id, props.service.biz_id);
           emits('update')
@@ -85,7 +87,10 @@
         </div>
         <div class="time-info">
           <span class="bk-bscp-icon icon-time-2"></span>
-          {{ props.service.config?.update_at || '未更新' }}
+          <template v-if="props.service.config && props.service.config.update_at">
+            {{ datetimeFormat(props.service.config.update_at) }}
+          </template>
+          <template v-else>未更新</template>
         </div>
       </div>
       <div class="card-footer">
@@ -232,4 +237,9 @@
       }
     }
   }
+
+</style>
+
+<style lang="scss">
+
 </style>

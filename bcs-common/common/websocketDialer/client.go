@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package websocketDialer
@@ -20,8 +19,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/websocket"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // ConnectAuthorizer is function form for authorize connect
@@ -69,7 +69,9 @@ func connectToProxy(
 		blog.Errorf("Failed to connect, err %s", err.Error())
 		return err
 	}
-	defer ws.Close()
+	defer func(ws *websocket.Conn) {
+		_ = ws.Close()
+	}(ws)
 
 	result := make(chan error, 2)
 

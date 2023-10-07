@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package auth xxx
@@ -170,6 +169,7 @@ func AdminAuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
 }
 
 // AuthFunc token filter
+// nolint
 func AuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	rb.Filter(TokenAuthenticate)
 	return rb
@@ -282,7 +282,6 @@ func ManagerAuth(request *restful.Request, response *restful.Response, chain *re
 	}
 	request.SetAttribute(constant.CurrentUserAttr, user)
 	chain.ProcessFilter(request, response)
-	return
 }
 
 // AdminTokenAuthenticate admin token verification
@@ -300,7 +299,6 @@ func AdminTokenAuthenticate(request *restful.Request, response *restful.Response
 	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token",
 		common.BcsErrApiUnauthorized)
 	utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
-	return
 }
 
 // TokenAuthenticate uesr token verification
@@ -317,7 +315,6 @@ func TokenAuthenticate(request *restful.Request, response *restful.Response, cha
 	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token",
 		common.BcsErrApiUnauthorized)
 	utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
-	return
 }
 
 // TokenAuthAuthenticate verify user token permission, when user is admin, it will bypass this filter.
@@ -397,5 +394,4 @@ func BKIAMAuthenticate(request *restful.Request, response *restful.Response, cha
 	}
 
 	chain.ProcessFilter(request, response)
-	return
 }

@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -23,6 +23,7 @@ import (
 )
 
 func TestClient_ListClusterNodes(t *testing.T) {
+	// nolint
 	rawNodeList := []byte("{\"items\":[{\"metadata\":{\"name\":\"1.1.1.1\",\"labels\":{\"beta.kubernetes.io/arch\":\"amd64\"}},\"spec\":{\"podCIDR\":\"1.1.1.1/27\",\"podCIDRs\":[\"1.1.1.1/27\"],\"providerID\":\"qcloud:///330001/ins-d3cwxd6w\"},\"status\":{\"capacity\":{\"cpu\":\"4\",\"ephemeral-storage\":\"103079844Ki\",\"hugepages-1Gi\":\"0\",\"hugepages-2Mi\":\"0\",\"memory\":\"16128872Ki\",\"pods\":\"29\"},\"conditions\":[],\"addresses\":[{\"type\":\"InternalIP\",\"address\":\"1.1.1.1\"},{\"type\":\"Hostname\",\"address\":\"1.1.1.1\"}],\"nodeInfo\":{},\"images\":[]}},{\"metadata\":{\"name\":\"2.2.2.2\",\"labels\":{\"beta.kubernetes.io/arch\":\"amd64\"}},\"status\":{\"capacity\":{\"cpu\":\"8\",\"ephemeral-storage\":\"103079844Ki\",\"hugepages-1Gi\":\"0\",\"hugepages-2Mi\":\"0\",\"memory\":\"64567304Ki\",\"pods\":\"29\"},\"conditions\":[],\"addresses\":[{\"type\":\"InternalIP\",\"address\":\"2.2.2.2\"},{\"type\":\"Hostname\",\"address\":\"2.2.2.2\"}],\"daemonEndpoints\":{\"kubeletEndpoint\":{\"Port\":10250}},\"nodeInfo\":{},\"images\":[]}}]}\n")
 	tests := []struct {
 		name      string
@@ -38,7 +39,8 @@ func TestClient_ListClusterNodes(t *testing.T) {
 			wantErr:   false,
 			on: func(f *MockFields) {
 				f.requester.On("DoGetRequest",
-					fmt.Sprintf("/clusters/%s/api/v1/nodes?labelSelector=node-role.kubernetes.io/master!=true", "BCS-K8S-15202"), mock.Anything).Return(rawNodeList, nil)
+					fmt.Sprintf("/clusters/%s/api/v1/nodes?labelSelector=node-role.kubernetes.io/master!=true", "BCS-K8S-15202"),
+					mock.Anything).Return(rawNodeList, nil)
 			},
 		},
 		{
@@ -48,7 +50,8 @@ func TestClient_ListClusterNodes(t *testing.T) {
 			wantErr:   true,
 			on: func(f *MockFields) {
 				f.requester.On("DoGetRequest",
-					fmt.Sprintf("/clusters/%s/api/v1/nodes?labelSelector=node-role.kubernetes.io/master!=true", "BCS-K8S-15202"), mock.Anything).
+					fmt.Sprintf("/clusters/%s/api/v1/nodes?labelSelector=node-role.kubernetes.io/master!=true", "BCS-K8S-15202"),
+					mock.Anything).
 					Return(nil, fmt.Errorf("request err"))
 			},
 		},
@@ -125,6 +128,7 @@ func TestClient_UpdateNodeLabels(t *testing.T) {
 }
 
 func TestClient_ListNodesByLabel(t *testing.T) {
+	// nolint
 	rawNodeList := []byte("{\"items\":[{\"metadata\":{\"name\":\"1.1.1.1\",\"labels\":{\"beta.kubernetes.io/arch\":\"amd64\"}},\"spec\":{\"podCIDR\":\"1.1.1.1/27\",\"podCIDRs\":[\"1.1.1.1/27\"],\"providerID\":\"qcloud:///330001/ins-d3cwxd6w\"},\"status\":{\"capacity\":{\"cpu\":\"4\",\"ephemeral-storage\":\"103079844Ki\",\"hugepages-1Gi\":\"0\",\"hugepages-2Mi\":\"0\",\"memory\":\"16128872Ki\",\"pods\":\"29\"},\"conditions\":[],\"addresses\":[{\"type\":\"InternalIP\",\"address\":\"1.1.1.1\"},{\"type\":\"Hostname\",\"address\":\"1.1.1.1\"}],\"nodeInfo\":{},\"images\":[]}},{\"metadata\":{\"name\":\"2.2.2.2\",\"labels\":{\"beta.kubernetes.io/arch\":\"amd64\"}},\"status\":{\"capacity\":{\"cpu\":\"8\",\"ephemeral-storage\":\"103079844Ki\",\"hugepages-1Gi\":\"0\",\"hugepages-2Mi\":\"0\",\"memory\":\"64567304Ki\",\"pods\":\"29\"},\"conditions\":[],\"addresses\":[{\"type\":\"InternalIP\",\"address\":\"2.2.2.2\"},{\"type\":\"Hostname\",\"address\":\"2.2.2.2\"}],\"daemonEndpoints\":{\"kubeletEndpoint\":{\"Port\":10250}},\"nodeInfo\":{},\"images\":[]}}]}\n")
 	tests := []struct {
 		name      string
@@ -142,7 +146,9 @@ func TestClient_ListNodesByLabel(t *testing.T) {
 			wantErr:   false,
 			on: func(f *MockFields) {
 				f.requester.On("DoGetRequest",
-					fmt.Sprintf("/clusters/%s/api/v1/nodes?labelSelector=node-role.kubernetes.io/master!=true,test=test", "BCS-K8S-15202"), mock.Anything).Return(rawNodeList, nil)
+					// nolint
+					fmt.Sprintf("/clusters/%s/api/v1/nodes?labelSelector=node-role.kubernetes.io/master!=true,test=test", "BCS-K8S-15202"),
+					mock.Anything).Return(rawNodeList, nil)
 			},
 		},
 		{
@@ -153,6 +159,7 @@ func TestClient_ListNodesByLabel(t *testing.T) {
 			wantErr:   true,
 			on: func(f *MockFields) {
 				f.requester.On("DoGetRequest",
+					// nolint
 					fmt.Sprintf("/clusters/%s/api/v1/nodes?labelSelector=node-role.kubernetes.io/master!=true,test=test", "BCS-K8S-15202"), mock.Anything).
 					Return(nil, fmt.Errorf("request err"))
 			},

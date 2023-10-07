@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package registry
@@ -20,12 +19,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/google/uuid"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
 	"github.com/micro/go-micro/v2/util/backoff"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 // NewEtcdRegistry create etcd registry instance
@@ -75,7 +75,7 @@ func NewEtcdRegistry(option *Options) Registry {
 		e.localModules = make(map[string]bool)
 		for _, name := range option.Modules {
 			e.localModules[name] = true
-			e.innerGet(name)
+			_, _ = e.innerGet(name)
 		}
 		// start to watch all event
 		go e.innerWatch(e.ctx)

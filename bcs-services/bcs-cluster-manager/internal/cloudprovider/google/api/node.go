@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -22,12 +21,12 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"google.golang.org/api/compute/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"google.golang.org/api/compute/v1"
 )
 
 const (
@@ -93,6 +92,7 @@ func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt 
 	[]*proto.InstanceType, error) {
 	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
 		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
+
 	client, err := NewComputeServiceClient(opt)
 	if err != nil {
 		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
@@ -106,7 +106,10 @@ func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt 
 	if err != nil {
 		return nil, err
 	}
+
 	result := convertToInstanceType(list.Items, info.NodeFamily)
+
+	var instanceTypes = make([]*proto.InstanceType, 0)
 	for _, item := range result {
 		if info.Cpu > 0 {
 			if item.Cpu != info.Cpu {
@@ -118,28 +121,32 @@ func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt 
 				continue
 			}
 		}
-		result = append(result, item)
+		instanceTypes = append(instanceTypes, item)
 	}
 
-	return result, nil
+	return instanceTypes, nil
 }
 
 func convertToInstanceType(mt []*compute.MachineType, family string) []*proto.InstanceType {
-	result := make([]*proto.InstanceType, len(mt))
+	result := make([]*proto.InstanceType, 0)
+
 	for _, m := range mt {
-		mlist := strings.Split(m.Name, "-")
-		memGb := math.Ceil(float64(m.MemoryMb / 1024))
+		nameList := strings.Split(m.Name, "-")
+		memGb := math.Ceil(float64(m.MemoryMb / 1024)) // nolint
+
 		insType := &proto.InstanceType{}
 		insType.Status = common.InstanceSell
 		if m.Deprecated != nil {
 			insType.Status = common.InstanceSoldOut
 		}
-		insType.NodeType = mlist[1]
-		insType.TypeName = m.Name
+		insType.NodeType = m.Name
+		insType.TypeName = nameList[1]
 		insType.NodeFamily = family
+
 		insType.Cpu = uint32(m.GuestCpus)
 		insType.Memory = uint32(memGb)
 		insType.Zones = []string{m.Zone}
+
 		result = append(result, insType)
 	}
 
@@ -230,12 +237,9 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 		if _, ok := nodeMap[node.NodeID]; ok {
 			continue
 		}
+
 		nodeMap[node.NodeID] = node
 		node.InnerIP = inst.NetworkInterfaces[0].NetworkIP
-		// check node vpc and cluster vpc
-		if node.VPC != opt.ClusterVPCID {
-			return nil, fmt.Errorf(cloudprovider.ErrCloudNodeVPCDiffWithClusterResponse, node.InnerIP)
-		}
 		nodes = append(nodes, node)
 	}
 
@@ -248,19 +252,24 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 func InstanceToNode(cli *ComputeServiceClient, ins *compute.Instance) *proto.Node {
 	zoneInfo, _ := GetGCEResourceInfo(ins.Zone)
 	zone, _ := cli.GetZone(context.Background(), zoneInfo[len(zoneInfo)-1])
+
 	node := &proto.Node{}
 	node.NodeID = strconv.Itoa(int(ins.Id))
 	node.NodeName = ins.Name
+
 	if zoneInfo != nil {
 		node.ZoneID = zone.Zone
 		zoneID, _ := strconv.Atoi(zone.ZoneID)
 		node.Zone = uint32(zoneID)
 		node.ZoneName = zone.ZoneName
 	}
+
 	machineInfo, _ := GetGCEResourceInfo(ins.MachineType)
 	node.InstanceType = machineInfo[len(machineInfo)-1]
+
 	networkInfo := strings.Split(ins.NetworkInterfaces[0].Subnetwork, "/")
 	node.VPC = networkInfo[len(networkInfo)-1]
 	node.Status = common.StatusRunning
+
 	return node
 }

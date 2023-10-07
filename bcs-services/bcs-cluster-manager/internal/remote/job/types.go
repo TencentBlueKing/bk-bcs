@@ -8,13 +8,13 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package job
 
 import (
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 )
 
@@ -29,9 +29,9 @@ type Options struct {
 
 // query parameters
 const (
-	bkScopeType   = "bk_scope_type"
-	bkScopeID     = "bk_scope_id"
-	jobInstanceID = "job_instance_id"
+	bkScopeType   = "bk_scope_type"   // nolint
+	bkScopeID     = "bk_scope_id"     // nolint
+	jobInstanceID = "job_instance_id" // nolint
 )
 
 // ScopeType bizScope
@@ -91,10 +91,7 @@ func transToBkJobExecuteScriptReq(paras ExecuteScriptParas) *FastExecuteScriptRe
 	}
 	// append target server
 	for _, server := range paras.Servers {
-		req.TargetServer.IpList = append(req.TargetServer.IpList, IpInfo{
-			BkCloudID: server.BkCloudID,
-			Ip:        server.Ip,
-		})
+		req.TargetServer.IpList = append(req.TargetServer.IpList, IpInfo(server))
 	}
 
 	return req
@@ -137,7 +134,7 @@ type GetJobInstanceStatusData struct {
 }
 
 // JobInstanceStatus status
-type JobInstanceStatus struct {
+type JobInstanceStatus struct { // nolint
 	Name string `json:"name"`
 	// 作业状态码: 1.未执行; 2.正在执行; 3.执行成功; 4.执行失败; 5.跳过;
 	//  6.忽略错误; 7.等待用户; 8.手动结束; 9.状态异常; 10.步骤强制终止中; 11.步骤强制终止成功

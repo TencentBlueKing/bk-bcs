@@ -8,16 +8,16 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package streams
 
 import (
-	"github.com/moby/term"
-	"github.com/sirupsen/logrus"
 	"io"
 	"os"
+
+	"github.com/moby/term"
+	"github.com/sirupsen/logrus"
 )
 
 // Out is an output stream used by the DockerCli to write normal program

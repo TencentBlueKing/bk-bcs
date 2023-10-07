@@ -8,19 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package clusterconfig xxx
 package clusterconfig
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
-	"github.com/emicklei/go-restful"
 )
 
 const (
@@ -41,8 +42,6 @@ const (
 
 // Use Mongodb for storage.
 const dbConfig = "mongodb/clusterConfig"
-
-var indexKeys = []string{clusterIdTag}
 
 // GetClusterConfig get cluster config
 func GetClusterConfig(req *restful.Request, resp *restful.Response) {

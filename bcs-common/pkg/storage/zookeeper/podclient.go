@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package zookeeper
@@ -19,13 +18,13 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
-
-	"golang.org/x/net/context"
 )
 
 func convertToAppData(pushFunc PushWatchEventFn) map[int]*Layer {
@@ -155,7 +154,7 @@ type PodClient struct {
 }
 
 // Create implements storage interface
-func (s *PodClient) Create(cxt context.Context, key string, obj meta.Object, ttl int) (out meta.Object, err error) {
+func (s *PodClient) Create(_ context.Context, key string, obj meta.Object, _ int) (out meta.Object, err error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("zk podclient lost object key")
 	}
@@ -201,7 +200,7 @@ func (s *PodClient) Create(cxt context.Context, key string, obj meta.Object, ttl
 // * if key likes apis/v1/dns/namespace/bmsf-system, delete all data under namespace
 // * if key likes apis/v1/dns/namespace/bmsf-system/data, delete detail data
 // in this version, no delete objects reply
-func (s *PodClient) Delete(ctx context.Context, key string) (obj meta.Object, err error) {
+func (s *PodClient) Delete(_ context.Context, key string) (obj meta.Object, err error) {
 	if len(key) != 0 {
 		return nil, fmt.Errorf("empty key")
 	}
@@ -254,7 +253,7 @@ func (s *PodClient) recursiveDelete(p string) error {
 // return:
 //
 //	watch: watch implementation for changing event, need to Stop manually
-func (s *PodClient) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface,
+func (s *PodClient) Watch(_ context.Context, key, _ string, selector storage.Selector) (watch.Interface,
 	error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key formate")
@@ -296,7 +295,7 @@ func (s *PodClient) WatchList(ctx context.Context, key, version string, selector
 // get exactly data object from http event storage. so key must be resource fullpath
 // param cxt: not used
 // param version: reserved for future
-func (s *PodClient) Get(cxt context.Context, key, version string, ignoreNotFound bool) (meta.Object, error) {
+func (s *PodClient) Get(_ context.Context, key, _ string, ignoreNotFound bool) (meta.Object, error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("lost object key")
 	}
@@ -331,7 +330,7 @@ func (s *PodClient) Get(cxt context.Context, key, version string, ignoreNotFound
 // param cxt: context for cancel, not used now
 // param key: key only can be empty, namespace or namespace/{name}
 // param selector: data filter
-func (s *PodClient) List(cxt context.Context, key string, selector storage.Selector) ([]meta.Object, error) {
+func (s *PodClient) List(_ context.Context, key string, _ storage.Selector) ([]meta.Object, error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key format")
 	}
@@ -431,7 +430,7 @@ func (s *PodClient) getDataNode(node string, now, target int) ([]string, error) 
 }
 
 // newPodWatch create zookeeper watch
-func newPodWatch(basic string, config *ZkConfig, c *zkclient.ZkClient, se storage.Selector) *podWatch {
+func newPodWatch(basic string, config *ZkConfig, _ *zkclient.ZkClient, se storage.Selector) *podWatch {
 	w := &podWatch{
 		selfpath:    basic,
 		config:      config,

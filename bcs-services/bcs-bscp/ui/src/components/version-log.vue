@@ -13,7 +13,7 @@
 </script>
 
 <template>
-  <bk-dialog 
+  <bk-dialog
   :is-show="props.isShow"
   :theme="'primary'"
   :show-mask="true"
@@ -47,6 +47,8 @@
 <style scoped lang="scss">
 .log-version {
   display: flex;
+  max-height: calc(100vh - 300px);
+  overflow: auto;
   &-left {
     flex: 0 0 180px;
     background-color: #fafbfd;

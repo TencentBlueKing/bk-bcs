@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -18,6 +18,8 @@ import (
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/urfave/cli"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/add"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/agent"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/application"
@@ -38,7 +40,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/transaction"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/update"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"github.com/urfave/cli"
 )
 
 func main() {

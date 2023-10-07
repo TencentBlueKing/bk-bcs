@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package handler xxx
 package handler
 
 import (
@@ -19,6 +19,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/pkg/errors"
+	"google.golang.org/protobuf/types/known/structpb"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/alarm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/clusterconfig"
@@ -34,8 +37,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	dynamic2 "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
-	"github.com/pkg/errors"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // Storage storage struct, which include operations of alarm,
@@ -290,7 +291,7 @@ func (s *Storage) PutStableVersion(ctx context.Context, req *storage.PutStableVe
 }
 
 // **** dynamic(动态) *****
-//k8s namespace resources
+// k8s namespace resources
 
 // GetK8SNamespaceResources 获取k8s命名空间资源 get k8s namespace resources
 func (s *Storage) GetK8SNamespaceResources(ctx context.Context, req *storage.GetNamespaceResourcesRequest,
@@ -324,7 +325,8 @@ func (s *Storage) GetK8SNamespaceResources(ctx context.Context, req *storage.Get
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageReturnDataIsNotJson
 		rsp.Message = common.BcsErrStorageReturnDataIsNotJsonStr
-		blog.Errorf("GetK8SNamespaceResources %s | data to json failed.err: %v", common.BcsErrStorageReturnDataIsNotJsonStr, err)
+		blog.Errorf("GetK8SNamespaceResources %s | data to json failed.err: %v",
+			common.BcsErrStorageReturnDataIsNotJsonStr, err)
 		return nil
 	}
 
@@ -440,7 +442,8 @@ func (s *Storage) ListK8SNamespaceResources(ctx context.Context, req *storage.Li
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageReturnDataIsNotJson
 		rsp.Message = common.BcsErrStorageReturnDataIsNotJsonStr
-		blog.Errorf("ListK8SNamespaceResources %s | data to json failed.err: %v", common.BcsErrStorageReturnDataIsNotJsonStr, err)
+		blog.Errorf("ListK8SNamespaceResources %s | data to json failed.err: %v",
+			common.BcsErrStorageReturnDataIsNotJsonStr, err)
 		return nil
 	}
 
@@ -472,7 +475,8 @@ func (s *Storage) DeleteBatchK8SNamespaceResource(ctx context.Context, req *stor
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageDeleteResourceFail
 		rsp.Message = common.BcsErrStorageDeleteResourceFailStr
-		blog.Errorf("DeleteBatchK8SNamespaceResource %s | delete failed.err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		blog.Errorf("DeleteBatchK8SNamespaceResource %s | delete failed.err: %v",
+			common.BcsErrStorageDeleteResourceFailStr, err)
 		return nil
 	}
 	dynamic2.PushDeleteBatchResourceToQueue(data)
@@ -522,7 +526,8 @@ func (s *Storage) GetK8SClusterResources(ctx context.Context, req *storage.GetCl
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageReturnDataIsNotJson
 		rsp.Message = common.BcsErrStorageReturnDataIsNotJsonStr
-		blog.Errorf("GetK8SClusterResources %s | data to json failed.err: %v", common.BcsErrStorageReturnDataIsNotJsonStr, err)
+		blog.Errorf("GetK8SClusterResources %s | data to json failed.err: %v",
+			common.BcsErrStorageReturnDataIsNotJsonStr, err)
 		return nil
 	}
 
@@ -628,7 +633,8 @@ func (s *Storage) ListK8SClusterResources(ctx context.Context, req *storage.List
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageReturnDataIsNotJson
 		rsp.Message = common.BcsErrStorageReturnDataIsNotJsonStr
-		blog.Errorf("ListK8SClusterResources %s | data to json failed.err: %v", common.BcsErrStorageReturnDataIsNotJsonStr, err)
+		blog.Errorf("ListK8SClusterResources %s | data to json failed.err: %v",
+			common.BcsErrStorageReturnDataIsNotJsonStr, err)
 		return nil
 	}
 
@@ -666,7 +672,8 @@ func (s *Storage) ListK8SClusterAllResources(ctx context.Context, req *storage.L
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageReturnDataIsNotJson
 		rsp.Message = common.BcsErrStorageReturnDataIsNotJsonStr
-		blog.Errorf("ListK8SClusterAllResources %s | data to json failed.err: %v", common.BcsErrStorageReturnDataIsNotJsonStr, err)
+		blog.Errorf("ListK8SClusterAllResources %s | data to json failed.err: %v",
+			common.BcsErrStorageReturnDataIsNotJsonStr, err)
 		return nil
 	}
 
@@ -697,7 +704,8 @@ func (s *Storage) DeleteBatchK8SClusterResource(ctx context.Context, req *storag
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageDeleteResourceFail
 		rsp.Message = common.BcsErrStorageDeleteResourceFailStr
-		blog.Errorf("DeleteBatchK8SClusterResource %s | delete failed.err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		blog.Errorf("DeleteBatchK8SClusterResource %s | delete failed.err: %v",
+			common.BcsErrStorageDeleteResourceFailStr, err)
 		return nil
 	}
 	dynamic2.PushDeleteBatchClusterToQueue(data)
@@ -730,7 +738,8 @@ func (s *Storage) DeleteBatchK8SClusterAllResource(ctx context.Context, req *sto
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageDeleteResourceFail
 		rsp.Message = common.BcsErrStorageDeleteResourceFailStr
-		blog.Errorf("DeleteBatchK8SClusterAllResource %s | delete failed.err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		blog.Errorf("DeleteBatchK8SClusterAllResource %s | delete failed.err: %v",
+			common.BcsErrStorageDeleteResourceFailStr, err)
 		return nil
 	}
 	dynamic2.PushDeleteBatchClusterToQueue(data)
@@ -1013,7 +1022,8 @@ func (s *Storage) GetK8SIPPoolStaticDetail(ctx context.Context, req *storage.IPP
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageReturnDataIsNotJson
 		rsp.Message = common.BcsErrStorageReturnDataIsNotJsonStr
-		blog.Errorf("GetK8SIPPoolStaticDetail %s | data to json failed.err: %v", common.BcsErrStorageReturnDataIsNotJsonStr, err)
+		blog.Errorf("GetK8SIPPoolStaticDetail %s | data to json failed.err: %v",
+			common.BcsErrStorageReturnDataIsNotJsonStr, err)
 		return nil
 	}
 
@@ -1051,7 +1061,8 @@ func (s *Storage) PostK8SIPPoolStaticDetail(ctx context.Context, req *storage.IP
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageReturnDataIsNotJson
 		rsp.Message = common.BcsErrStorageReturnDataIsNotJsonStr
-		blog.Errorf("PostK8SIPPoolStaticDetail %s | data to json failed.err: %v", common.BcsErrStorageReturnDataIsNotJsonStr, err)
+		blog.Errorf("PostK8SIPPoolStaticDetail %s | data to json failed.err: %v",
+			common.BcsErrStorageReturnDataIsNotJsonStr, err)
 		return nil
 	}
 
@@ -2009,6 +2020,7 @@ func (s *Storage) PostStatefulSet(ctx context.Context, req *storage.StatefulSetR
 // WatchDynamic watch dynamic data
 func (s *Storage) WatchDynamic(ctx context.Context, req *storage.WatchDynamicRequest,
 	stream storage.Storage_WatchDynamicStream) error {
+	// nolint
 	defer stream.Close()
 	// 如果请求合法,则执行函数请求
 	if err := req.Validate(); err != nil {
@@ -2045,14 +2057,14 @@ func (s *Storage) WatchDynamic(ctx context.Context, req *storage.WatchDynamicReq
 			}
 			v := &storage.WatchDynamicResponse{}
 			if err = util.StructToStruct(e, v, "WatchDynamic"); err != nil {
-				return errors.Wrapf(err, "event to json failed.")
+				return errors.Wrapf(err, "event to json failed")
 			}
 			//  note: 无论是使用stream.SendMsg(v)还是使用stream.Send(v)，发送返回值时，都会遇到如下情况：
 			//  当使用http调用v2 server时，由于使用grpc gateway 代理，故gateway会在收到grpc返回值后，会在原来的返回值上再包装一层，
 			//  因此，会导致v1 server返回与v1 server返回值不一致。
 			//  如： 假设grpc返回值为 { "msg" : "hell" }，gateway收到返回值后，会进行包装，如：{"result" : { "msg" : "hell" }}
 			if err = stream.SendMsg(v); err != nil {
-				return errors.Wrapf(err, "WatchDynamic send message failed.")
+				return errors.Wrapf(err, "watchDynamic send message failed")
 			}
 			blog.Infof("WatchDynamic | event: %s", util.PrettyStruct(e))
 		default:
@@ -2064,6 +2076,7 @@ func (s *Storage) WatchDynamic(ctx context.Context, req *storage.WatchDynamicReq
 // WatchContainer watch container data
 func (s *Storage) WatchContainer(ctx context.Context, req *storage.WatchContainerRequest,
 	stream storage.Storage_WatchContainerStream) error {
+	// nolint
 	defer stream.Close()
 	// 如果请求合法,则执行函数请求
 	if err := req.Validate(); err != nil {
@@ -2100,14 +2113,14 @@ func (s *Storage) WatchContainer(ctx context.Context, req *storage.WatchContaine
 			}
 			v := &storage.WatchContainerResponse{}
 			if err = util.StructToStruct(e, v, "WatchContainer"); err != nil {
-				return errors.Wrapf(err, "event to json failed.")
+				return errors.Wrapf(err, "event to json failed")
 			}
 			//  note: 无论是使用stream.SendMsg(v)还是使用stream.Send(v)，发送返回值时，都会遇到如下情况：
 			//  当使用http调用v2 server时，由于使用grpc gateway 代理，故gateway会在收到grpc返回值后，会在原来的返回值上再包装一层，
 			//  因此，会导致v1 server返回与v1 server返回值不一致。
 			//  如： 假设grpc返回值为 { "msg" : "hell" }，gateway收到返回值后，会进行包装，如：{"result" : { "msg" : "hell" }}
 			if err = stream.SendMsg(v); err != nil {
-				return errors.Wrapf(err, "WatchContainer send message failed.")
+				return errors.Wrapf(err, "watchContainer send message failed")
 			}
 			blog.Infof("WatchContainer | event: %s", util.PrettyStruct(e))
 		default:
@@ -2188,6 +2201,7 @@ func (s *Storage) ListEvent(ctx context.Context, req *storage.ListEventRequest, 
 // WatchEvent watch event
 func (s *Storage) WatchEvent(ctx context.Context, req *storage.WatchEventRequest,
 	stream storage.Storage_WatchEventStream) error {
+	// nolint
 	defer stream.Close()
 	// 如果请求合法,则执行函数请求
 	if err := req.Validate(); err != nil {
@@ -2224,14 +2238,14 @@ func (s *Storage) WatchEvent(ctx context.Context, req *storage.WatchEventRequest
 			}
 			v := &storage.WatchEventResponse{}
 			if err = util.StructToStruct(e, v, "WatchEvent"); err != nil {
-				return errors.Wrapf(err, "event to json failed.")
+				return errors.Wrapf(err, "event to json failed")
 			}
 			//  note: 无论是使用stream.SendMsg(v)还是使用stream.Send(v)，发送返回值时，都会遇到如下情况：
 			//  当使用http调用v2 server时，由于使用grpc gateway 代理，故gateway会在收到grpc返回值后，会在原来的返回值上再包装一层，
 			//  因此，会导致v1 server返回与v1 server返回值不一致。
 			//  如： 假设grpc返回值为 { "msg" : "hell" }，gateway收到返回值后，会进行包装，如：{"result" : { "msg" : "hell" }}
 			if err = stream.SendMsg(v); err != nil {
-				return errors.Wrapf(err, "WatchEvent send message failed.")
+				return errors.Wrapf(err, "watchEvent send message failed")
 			}
 			blog.Infof("WatchEvent | event: %s", util.PrettyStruct(e))
 		default:
@@ -2627,11 +2641,12 @@ func (s *Storage) ListMetricTables(ctx context.Context, req *storage.ListMetricT
 	return nil
 }
 
-//**** metric watch ****
+// **** metric watch ****
 
 // WatchMetric watch metric
 func (s *Storage) WatchMetric(ctx context.Context, req *storage.WatchMetricRequest,
 	stream storage.Storage_WatchMetricStream) error {
+	// nolint
 	defer stream.Close()
 	// 如果请求合法,则执行函数请求
 	if err := req.Validate(); err != nil {
@@ -2672,14 +2687,14 @@ func (s *Storage) WatchMetric(ctx context.Context, req *storage.WatchMetricReque
 			}
 			v := &storage.WatchMetricResponse{}
 			if err = util.StructToStruct(e, v, "WatchMetric"); err != nil {
-				return errors.Wrapf(err, "event to json failed.")
+				return errors.Wrapf(err, "event to json failed")
 			}
 			//  note: 无论是使用stream.SendMsg(v)还是使用stream.Send(v)，发送返回值时，都会遇到如下情况：
 			//  当使用http调用v2 server时，由于使用grpc gateway 代理，故gateway会在收到grpc返回值后，会在原来的返回值上再包装一层，
 			//  因此，会导致v1 server返回与v1 server返回值不一致。
 			//  如： 假设grpc返回值为 { "msg" : "hell" }，gateway收到返回值后，会进行包装，如：{"result" : { "msg" : "hell" }}
 			if err = stream.SendMsg(v); err != nil {
-				return errors.Wrapf(err, "WatchMetric send message failed.")
+				return errors.Wrapf(err, "watchMetric send message failed")
 			}
 			blog.Infof("WatchMetric | event: %s", util.PrettyStruct(e))
 		default:

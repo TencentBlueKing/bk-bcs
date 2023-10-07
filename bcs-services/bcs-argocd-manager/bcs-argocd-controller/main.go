@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package main
 package main
 
 import (
@@ -18,11 +19,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	instancecontroller "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/controllers/argocdinstance"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/options"
-	clientset "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned"
-	informers "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/informers/externalversions"
-
 	microCfg "go-micro.dev/v4/config"
 	microFile "go-micro.dev/v4/config/source/file"
 	microFlg "go-micro.dev/v4/config/source/flag"
@@ -31,9 +27,14 @@ import (
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+
+	instancecontroller "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/controllers/argocdinstance"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/bcs-argocd-controller/options"
+	clientset "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager/pkg/client/informers/externalversions"
 )
 
-func main() {
+func main() { // nolint
 	// controller config
 	flag.Bool("debug", false, "run in debug mode")
 

@@ -247,6 +247,7 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 		RevisionId: req.RevisionId,
 		Limit:      req.Limit,
 		Start:      req.Start,
+		SearchKey:  req.SearchKey,
 	}
 
 	rp, err := s.client.DS.ListHookRevisionReferences(grpcKit.RpcCtx(), r)

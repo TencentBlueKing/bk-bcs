@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -19,9 +19,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -291,7 +291,6 @@ func (ua *UpdateAction) Handle(ctx context.Context, req *cmproto.UpdateClusterRe
 		return
 	}
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // UpdateNodeAction action for update node
@@ -348,7 +347,7 @@ func (ua *UpdateNodeAction) updateNodeInfo(nodeIP string) error {
 	return nil
 }
 
-func (ua *UpdateNodeAction) updateNodes() error {
+func (ua *UpdateNodeAction) updateNodes() error { // nolint
 	for _, ip := range ua.req.InnerIPs {
 		err := ua.updateNodeInfo(ip)
 		if err != nil {
@@ -395,7 +394,6 @@ func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeR
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // AddNodesAction action for add nodes to cluster
@@ -619,7 +617,7 @@ func (ua *AddNodesAction) checkNodeInCluster() error {
 	// get all masterIPs
 	masterIPs := getAllMasterIPs(ua.model)
 
-	//check if nodes are already in cluster
+	// check if nodes are already in cluster
 	nodeStatus := []string{common.StatusRunning, common.StatusInitialization, common.StatusDeleting}
 	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": ua.cluster.ClusterID})
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{"status": nodeStatus})
@@ -926,5 +924,4 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 		blog.Errorf("AddNodesToCluster[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)
 	}
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

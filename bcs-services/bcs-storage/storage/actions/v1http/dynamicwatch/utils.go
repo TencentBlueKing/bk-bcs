@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package dynamicwatch
@@ -18,18 +17,16 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
-	"github.com/emicklei/go-restful"
 )
 
 type reqDynamic struct {
 	req   *restful.Request
 	resp  *restful.Response
 	store *lib.Store
-
-	condition *operator.Condition
-	table     string
 }
 
 func newReqDynamic(req *restful.Request, resp *restful.Response) *reqDynamic {
@@ -56,7 +53,7 @@ func (rd *reqDynamic) watch() {
 	ws, err := lib.NewWatchServer(watchOption)
 	if err != nil {
 		blog.Error("dynamic get watch server failed, err %s", err.Error())
-		rd.resp.Write(lib.EventWatchBreakBytes)
+		_, _ = rd.resp.Write(lib.EventWatchBreakBytes)
 		return
 	}
 
@@ -75,20 +72,9 @@ func (rd *reqDynamic) watchContainer() {
 	ws, err := lib.NewWatchServer(watchOption)
 	if err != nil {
 		blog.Error("dynamic get watch server failed, err %s", err.Error())
-		rd.resp.Write(lib.EventWatchBreakBytes)
+		_, _ = rd.resp.Write(lib.EventWatchBreakBytes)
 		return
 	}
 
 	ws.Go(context.Background())
-}
-
-func inList(s string, l []interface{}) bool {
-	for _, ll := range l {
-		if ls, ok := ll.(string); ok {
-			if ls == s {
-				return true
-			}
-		}
-	}
-	return false
 }

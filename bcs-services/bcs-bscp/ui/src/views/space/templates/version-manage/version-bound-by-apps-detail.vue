@@ -42,7 +42,7 @@
       limit: pagination.value.limit
     }
     if (searchStr.value) {
-      params.search_fields = 'name,id'
+      params.search_fields = 'app_name,template_revision_name'
       params.search_value = searchStr.value
     }
     const res = await getUnNamedVersionAppsBoundByTemplateVersion(props.spaceId, props.currentTemplateSpace, props.config.id, props.config.versionId, params)
@@ -87,9 +87,10 @@
       <bk-table
         :border="['outer']"
         :data="appList"
+        :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-change="getList">
+        @page-value-change="getList">
         <bk-table-column label="配置项版本">{{ props.config.name }}</bk-table-column>
         <bk-table-column label="引用此配置项的服务">
           <template #default="{ row }">

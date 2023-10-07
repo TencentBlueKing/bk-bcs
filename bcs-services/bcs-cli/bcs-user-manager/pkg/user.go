@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package pkg
@@ -32,7 +31,7 @@ const (
 
 	getPlainUserUrl      = "/v1/users/plain/%s"
 	createPlainUserUrl   = "/v1/users/plain/%s"
-	refreshPlainTokenUrl = "/v1/users/plain/%s/refresh/%s"
+	refreshPlainTokenUrl = "/v1/users/plain/%s/refresh/%s" // nolint
 
 	timeFormatter = "2006-01-02 15:04:05"
 )
@@ -219,7 +218,8 @@ type RefreshPlainTokenResponse struct {
 func (c *UserManagerClient) RefreshPlainToken(userName, expireTime string) (*RefreshPlainTokenResponse, error) {
 	bs, err := c.do(fmt.Sprintf(refreshPlainTokenUrl, userName, expireTime), http.MethodPut, nil, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "refresh Plain user token with  userName '%s' ,expireTime '%s' failed", userName, expireTime)
+		return nil, errors.Wrapf(err, "refresh Plain user token with  userName '%s' ,expireTime '%s' failed",
+			userName, expireTime)
 	}
 	resp := new(RefreshPlainTokenResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package admin
@@ -171,16 +170,12 @@ func (u *Upstream) NodesEuqal(in *Upstream) bool {
 	nodeMap := UpstreamNodes2UpstreamNodesMap(u.UpstreamNodes)
 	nodeMapIn := UpstreamNodes2UpstreamNodesMap(in.UpstreamNodes)
 	for k, v := range *nodeMap {
-		if vin, ok := (*nodeMapIn)[k]; ok && reflect.DeepEqual(vin, v) {
-			delete(*nodeMapIn, k)
-		} else {
+		if vin, ok := (*nodeMapIn)[k]; !(ok && reflect.DeepEqual(vin, v)) {
 			return false
 		}
+		delete(*nodeMapIn, k)
 	}
-	if len(*nodeMapIn) != 0 {
-		return false
-	}
-	return true
+	return len(*nodeMapIn) == 0
 }
 
 // DeepEqual xxx

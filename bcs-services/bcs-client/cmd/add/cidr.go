@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package add xxx
 package add
 
 import (
@@ -19,9 +19,10 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/tke"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/tke"
 )
 
 func initVpcCidr(c *utils.ClientContext) error {

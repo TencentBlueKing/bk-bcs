@@ -8,18 +8,18 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package activity xxx
 package activity
 
 import (
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/emicklei/go-restful"
 	"github.com/gorilla/schema"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/errors"
 	utils2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
@@ -102,7 +102,7 @@ func SearchActivities(request *restful.Request, response *restful.Response) {
 		"count": count,
 		"items": results,
 	})
-	return
+
 }
 
 // PushActivitiesForm push activities form
@@ -135,6 +135,7 @@ func PushActivities(request *restful.Request, response *restful.Response) {
 
 	activities := make([]*models.Activity, 0)
 	for _, v := range form.Activities {
+		// nolint
 		project, err := component.GetProject(request.Request.Context(), v.ProjectCode)
 		if err != nil {
 			blog.Errorf("get project failed, err %s", err.Error())
@@ -158,5 +159,4 @@ func PushActivities(request *restful.Request, response *restful.Response) {
 		return
 	}
 	utils.ResponseOK(response, nil)
-	return
 }

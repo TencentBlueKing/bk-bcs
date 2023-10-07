@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package tke xxx
@@ -20,6 +19,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/externalcluster/tke"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
@@ -27,8 +28,6 @@ import (
 	cluster2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
-
-	"github.com/emicklei/go-restful"
 )
 
 // AddTkeCidrForm xxx
@@ -38,6 +37,7 @@ type AddTkeCidrForm struct {
 }
 
 // TkeCidr xxx
+// nolint
 type TkeCidr struct {
 	Cidr     string `json:"cidr" validate:"required"`
 	IpNumber uint   `json:"ip_number" validate:"required"`
@@ -70,7 +70,7 @@ type ReleaseTkeCidrForm struct {
 func AddTkeCidr(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
-	blog.Info(fmt.Sprintf("Insert cidr"))
+	blog.Info("Insert cidr")
 	form := AddTkeCidrForm{}
 	_ = request.ReadEntity(&form)
 
@@ -106,7 +106,7 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 	}
 
 	data := utils.CreateResponseData(nil, "success", nil)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("AddTkeCidr", request.Request.Method, metrics.SucStatus, start)
 }
@@ -166,7 +166,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	}
 
 	data := utils.CreateResponseData(nil, "success", cidr)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("ApplyTkeCidr", request.Request.Method, metrics.SucStatus, start)
 }
@@ -219,7 +219,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	blog.Info("release cidr successful, vpc %s, cidr: %s, ipNumber: %d, cluster: %s", tkeCidr.Vpc, tkeCidr.Cidr,
 		tkeCidr.IpNumber, tkeCidr.Cluster)
 	data := utils.CreateResponseData(nil, "success", nil)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("ReleaseTkeCidr", request.Request.Method, metrics.SucStatus, start)
 }
@@ -258,7 +258,7 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 		return
 	}
 	data := utils.CreateResponseData(nil, "success", nil)
-	response.Write([]byte(data))
+	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("SyncTkeClusterCredentials", request.Request.Method, metrics.SucStatus, start)
 }
@@ -267,6 +267,6 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 func ListTkeCidr(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	cidrCounts := sqlstore.CountTkeCidr()
-	response.WriteEntity(cidrCounts)
+	_ = response.WriteEntity(cidrCounts)
 	metrics.ReportRequestAPIMetrics("ListTkeCidr", request.Request.Method, metrics.SucStatus, start)
 }

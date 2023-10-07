@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -145,13 +146,11 @@ func (ga *GetAction) Handle(ctx context.Context, req *cmproto.GetClusterReq, res
 	}
 
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-
-	return
 }
 
 // GetNodeAction action for get cluster
 type GetNodeAction struct {
-	ctx   context.Context
+	ctx   context.Context // nolint
 	model store.ClusterManagerModel
 	resp  *cmproto.GetNodeResponse
 }
@@ -191,8 +190,6 @@ func (ga *GetNodeAction) Handle(ctx context.Context, req *cmproto.GetNodeRequest
 
 	resp.Data = append(resp.Data, node)
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-
-	return
 }
 
 // CheckNodeAction action for check node in cluster
@@ -224,7 +221,7 @@ func (ca *CheckNodeAction) validate() error {
 	return nil
 }
 
-func (ca *CheckNodeAction) checkNodesInCluster() error {
+func (ca *CheckNodeAction) checkNodesInCluster() error { // nolint
 	if ca.nodeResult == nil {
 		ca.nodeResult = make(map[string]*cmproto.NodeResult)
 	}
@@ -366,7 +363,6 @@ func (ca *CheckNodeAction) Handle(ctx context.Context, req *cmproto.CheckNodesRe
 	}
 
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 // GetNodeInfoAction action for get cluster
@@ -458,6 +454,4 @@ func (ga *GetNodeInfoAction) Handle(ctx context.Context, req *cmproto.GetNodeInf
 	}
 
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-
-	return
 }

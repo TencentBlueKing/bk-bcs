@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package thirdparty
@@ -17,11 +16,11 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ListBKCloudAction action for list bk cloud
@@ -87,5 +86,4 @@ func (la *ListBKCloudAction) Handle(ctx context.Context, req *cmproto.ListBKClou
 
 	blog.Infof("list bk cloud successfully")
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

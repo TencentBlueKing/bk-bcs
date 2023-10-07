@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -54,12 +54,13 @@ type WebsocketProxy struct {
 	//  If nil, DefaultDialer is used.
 	Dialer *websocket.Dialer
 
-	clientTLSConfig *tls.Config
+	clientTLSConfig *tls.Config // nolint
 }
 
 // NewWebsocketProxy returns a new Websocket reverse proxy that rewrites the
 // URL's to the scheme, host and base path provider in target.
-func NewWebsocketProxy(clientTLSConfig *tls.Config, backendURL *url.URL, clusterDialer websocketDialer.Dialer) *WebsocketProxy {
+func NewWebsocketProxy(clientTLSConfig *tls.Config, backendURL *url.URL,
+	clusterDialer websocketDialer.Dialer) *WebsocketProxy {
 
 	// DefaultDialer is a dialer with all fields set to the default zero values.
 	defaultDialer := websocket.DefaultDialer
@@ -91,15 +92,16 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		message := fmt.Sprintf("errcode: %d, couldn't dial to remote backend url %s",
 			common.BcsErrApiWebConsoleFailedCode, err.Error())
 		if resp != nil {
-			if err := copyResponse(rw, resp); err != nil {
-				blog.Errorf("websocketproxy: couldn't write response after failed remote backend handshake: %s", err)
+			if copyErr := copyResponse(rw, resp); copyErr != nil {
+				blog.Errorf("websocketproxy: couldn't write response after failed remote backend handshake: %s",
+					copyErr)
 			}
 		} else {
 			http.Error(rw, message, http.StatusServiceUnavailable)
 		}
 		return
 	}
-	defer connBackend.Close()
+	defer connBackend.Close() // nolint
 
 	// Only pass those headers to the upgrader.
 	upgradeHeader := http.Header{}
@@ -121,7 +123,7 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		blog.Errorf("websocketproxy: couldn't upgrade %s", err)
 		return
 	}
-	defer connPub.Close()
+	defer connPub.Close() // nolint
 
 	// begin to replicate websocket conn data
 	errClient := make(chan error, 1)
@@ -191,7 +193,7 @@ func replicateWebsocketConn(dst, src *websocket.Conn, errc chan error) {
 				}
 			}
 			errc <- err1
-			dst.WriteMessage(websocket.CloseMessage, m)
+			dst.WriteMessage(websocket.CloseMessage, m) // nolint
 			break
 		}
 		err := dst.WriteMessage(msgType, msg)
@@ -215,7 +217,7 @@ func copyHeader(dst, src http.Header) {
 func copyResponse(rw http.ResponseWriter, resp *http.Response) error {
 	copyHeader(rw.Header(), resp.Header)
 	rw.WriteHeader(resp.StatusCode)
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint
 
 	_, err := io.Copy(rw, resp.Body)
 	return err

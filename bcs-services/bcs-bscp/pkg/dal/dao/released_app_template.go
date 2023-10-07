@@ -28,6 +28,8 @@ import (
 type ReleasedAppTemplate interface {
 	// BulkCreateWithTx bulk create released template config items.
 	BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedAppTemplate) error
+	// Get released app template.
+	Get(kit *kit.Kit, bizID, appID, releaseID, tmplRevisionID uint32) (*table.ReleasedAppTemplate, error)
 	// List released app templates with options.
 	List(kit *kit.Kit, bizID, appID, releaseID uint32, s search.Searcher, opt *types.BasePage) (
 		[]*table.ReleasedAppTemplate, int64, error)
@@ -81,6 +83,15 @@ func (dao *releasedAppTemplateDao) BulkCreateWithTx(
 	}
 
 	return nil
+}
+
+// Get released app template.
+func (dao *releasedAppTemplateDao) Get(kit *kit.Kit, bizID, appID, releaseID,
+	tmplRevisionID uint32) (*table.ReleasedAppTemplate, error) {
+	m := dao.genQ.ReleasedAppTemplate
+	return m.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID), m.TemplateRevisionID.Eq(tmplRevisionID)).
+		Take()
 }
 
 // List released app templates with options.

@@ -8,20 +8,19 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
 
 import (
 	"crypto/tls"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"net"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	restful "github.com/emicklei/go-restful"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -60,6 +59,7 @@ func reportMetrics(handler, status string, started time.Time) {
 // RegisterMetrics register http metrics for netservice
 func RegisterMetrics(addr string) {
 	http.Handle("/metrics", promhttp.Handler())
+	// nolint
 	go http.ListenAndServe(addr, nil)
 }
 
@@ -113,6 +113,7 @@ func (svr *HTTPService) ListenAndServeTLS(certFile, keyFile, pubFile, passwd str
 		blog.Error("HTTPService load SSL config err, %v", err)
 		return err
 	}
+	// nolint
 	config.BuildNameToCertificate()
 
 	// https listen

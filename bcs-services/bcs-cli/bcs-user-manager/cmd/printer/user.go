@@ -8,16 +8,15 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package printer
 
 import (
-	"github.com/olekukonko/tablewriter"
 	"os"
 	"strconv"
 
+	"github.com/olekukonko/tablewriter"
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"

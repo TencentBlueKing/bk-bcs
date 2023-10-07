@@ -10,7 +10,8 @@
   import { addTemplateToPackage, getTemplatesBySpaceId, getTemplatePackageList } from '../../../../../../../../api/template'
   import PackageTable from './package-table.vue'
   import SearchInput from '../../../../../../../../components/search-input.vue'
-import search from 'bkui-vue/lib/icon/search'
+  import search from 'bkui-vue/lib/icon/search'
+  import TableEmpty from '../../../../../../../../components/table/table-empty.vue'
 
   interface IPackageTableGroup {
     id: number|string;
@@ -36,6 +37,7 @@ import search from 'bkui-vue/lib/icon/search'
   const searchStr = ref('')
   const openedPkgTable = ref<number|string>('')
   const selectedConfigs = ref<{ id: number; name: string; }[]>([])
+  const isSearchEmpty = ref(false)
 
   watch(() => props.show, val => {
     isShow.value = val
@@ -85,6 +87,7 @@ import search from 'bkui-vue/lib/icon/search'
   }
 
   const handleSearch = () => {
+    searchStr.value ? isSearchEmpty.value = true : isSearchEmpty.value = false
     if (searchStr.value) {
       const list: IPackageTableGroup[] = []
       packageGroups.value.forEach(pkg => {
@@ -147,6 +150,10 @@ import search from 'bkui-vue/lib/icon/search'
     emits('update:show', false)
   }
 
+  const clearSearchStr = () => {
+    searchStr.value = ''
+    handleSearch()
+  }
 </script>
 <template>
   <bk-sideslider
@@ -162,6 +169,7 @@ import search from 'bkui-vue/lib/icon/search'
         </div>
         <div class="package-tables">
           <PackageTable
+            v-if="packageGroupsOnShow.length"
             v-for="pkg in packageGroupsOnShow"
             v-model:selected-configs="selectedConfigs"
             :key="pkg.id"
@@ -170,6 +178,7 @@ import search from 'bkui-vue/lib/icon/search'
             :config-list="pkg.configs"
             @change="isFormChange = true"
             @toggleOpen="handleToggleOpenTable" />
+            <TableEmpty v-else :isSearchEmpty="isSearchEmpty" @clear="clearSearchStr"></TableEmpty>
         </div>
       </div>
       <div class="selected-panel">

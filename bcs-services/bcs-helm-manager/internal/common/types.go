@@ -156,7 +156,7 @@ func InterfaceToValue(v interface{}) *spb.Value {
 }
 
 // NOCC:golint/fnsize(设计如此：无法拆分代码行数),CCN_threshold(设计如此)
-func toValue(v reflect.Value) *spb.Value {
+func toValue(v reflect.Value) *spb.Value { // nolint
 	switch v.Kind() {
 	case reflect.Bool:
 		return &spb.Value{

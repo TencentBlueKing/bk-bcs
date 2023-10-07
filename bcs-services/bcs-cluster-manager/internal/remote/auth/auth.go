@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package auth xxx
@@ -17,14 +16,14 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"net/http"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
-
 	"github.com/parnurzeal/gorequest"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 )
 
 var (

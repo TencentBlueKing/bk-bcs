@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package apiserver
@@ -28,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
@@ -68,7 +68,7 @@ func GetAPIResource() *APIResource {
 }
 
 // SetConfig Set storageConfig to APIResource
-func (a *APIResource) SetConfig(op *options.StorageOptions) {
+func (a *APIResource) SetConfig(op *options.StorageOptions) error {
 	a.Conf = op
 	// parse config-map from file
 	dbConfig := a.ParseDBConfig()
@@ -125,8 +125,10 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 		switch key {
 		case queueConfigKey:
 			if err = a.parseQueueInit(key, queueConfig); err != nil {
-				blog.Errorf("parse queue config failed, err %s", err.Error())
-				SetUnhealthy(queueConfigKey, err.Error())
+				queueErr := fmt.Errorf("parse queue config failed, err %s", err.Error())
+				blog.Errorf(queueErr.Error())
+				SetUnhealthy(queueConfigKey, queueErr.Error())
+				return queueErr
 			}
 		default:
 			err = storageErr.QueueConfigUnknown
@@ -138,6 +140,7 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 		}
 	}
 	blog.Infof("MsgQueue parsing completed.")
+	return nil
 }
 
 // InitActions init actions

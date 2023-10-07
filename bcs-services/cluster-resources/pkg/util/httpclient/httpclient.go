@@ -152,9 +152,7 @@ func GetClient() *resty.Client {
 				SetCookieJar(nil). // 后台API去掉 cookie 记录
 				SetDebugBodyLimit(1024).
 				OnAfterResponse(restyAfterResponseHook).
-				OnError(restyErrHook).
-				// NOCC:gas/tls(设计如此)
-				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+				OnError(restyErrHook)
 			globalClient.SetTransport(otelhttp.NewTransport(globalClient.GetClient().Transport))
 		})
 	}

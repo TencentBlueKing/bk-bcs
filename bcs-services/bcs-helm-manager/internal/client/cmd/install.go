@@ -16,10 +16,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -48,9 +48,9 @@ func init() {
 		&flagValueFile, "file", "f", nil, "value file for installation, -f values.yaml")
 	installCMD.PersistentFlags().StringSliceVarP(
 		&flagArgs, "args", "", nil, "--args=--wait=true --args=--timeout=600s")
-	installCMD.MarkPersistentFlagRequired("project")
-	installCMD.MarkPersistentFlagRequired("cluster")
-	installCMD.MarkPersistentFlagRequired("namespace")
+	_ = installCMD.MarkPersistentFlagRequired("project")
+	_ = installCMD.MarkPersistentFlagRequired("cluster")
+	_ = installCMD.MarkPersistentFlagRequired("namespace")
 }
 
 // Install provide the actions to do installCMD

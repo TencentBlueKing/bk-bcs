@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package events
@@ -21,15 +20,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
-	"github.com/emicklei/go-restful"
 )
 
 const (
+	// TablePrefix prefix
 	TablePrefix   = "event_"
 	tableName     = "event"
 	dataTag       = "data"
@@ -51,7 +52,6 @@ const (
 	timeEndTag    = "timeEnd"
 	createTimeTag = "createTime"
 	eventTimeTag  = "eventTime"
-	timeLayout    = "2006-01-02 15:04:05"
 
 	nameSpaceTag    = "namespace"
 	resourceTypeTag = "resourceType"
@@ -63,7 +63,6 @@ const (
 	eventResource = "Event"
 )
 
-var needTimeFormatList = [...]string{createTimeTag, eventTimeTag}
 var conditionTagList = [...]string{
 	idTag, envTag, kindTag, levelTag, componentTag, typeTag, clusterIDTag,
 	"extraInfo.name", "extraInfo.namespace", "extraInfo.kind"}
@@ -72,6 +71,7 @@ var eventFeatTags = []string{idTag, envTag, kindTag, levelTag, componentTag, typ
 
 var nsFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag, resourceNameTag}
 
+// EventIndexKeys event index
 var EventIndexKeys = []string{"data.metadata.name", "data.metadata.resourceVersion"}
 
 var eventQueryIndexKeys = []string{"extraInfo.name", "extraInfo.namespace", "extraInfo.kind", "kind"}
@@ -185,8 +185,9 @@ func CleanEvents() {
 		}
 	}
 
-	//create cleaners at begin
+	// create cleaners at begin
 	createCleaners()
+	// nolint
 	for {
 		select {
 		case <-ticker.C:

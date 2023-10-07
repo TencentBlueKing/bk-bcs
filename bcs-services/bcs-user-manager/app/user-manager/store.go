@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package usermanager xxx
 package usermanager
 
 import (
@@ -18,12 +18,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
-	jwt2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
+	jwt2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
@@ -144,6 +144,7 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 		if err != nil {
 			return fmt.Errorf("error creating jwt for user [%s]: %s", user.Name, err.Error())
 		}
+		// nolint
 		_, err = cache.RDB.SetNX(context.TODO(), constant.TokenKeyPrefix+user.UserToken, jwtString, user.ExpiresAt.Sub(time.Now()))
 		if err != nil {
 			return fmt.Errorf("error storing user [%s] jwt: %s", user.Name, err.Error())

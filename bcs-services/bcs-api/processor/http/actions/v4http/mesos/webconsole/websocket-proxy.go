@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package webconsole
@@ -20,14 +19,15 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/gorilla/websocket"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
-	"github.com/gorilla/websocket"
-	"time"
 )
 
 var (
@@ -89,7 +89,7 @@ func NewWebsocketProxy(certConfig *config.CertConfig, backendUrl *url.URL) *Webs
 }
 
 // ServeHTTP implements the http.Handler that proxies WebSocket connections.
-func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) { // nolint
 	start := time.Now()
 
 	backendURL := w.BackendUrl
@@ -133,15 +133,16 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		message := fmt.Sprintf("errcode: %d, couldn't dial to remote backend url %s", common.BcsErrApiWebConsoleFailedCode,
 			err.Error())
 		if resp != nil {
-			if err := copyResponse(rw, resp); err != nil {
-				blog.Errorf("websocketproxy: couldn't write response after failed remote backend handshake: %s", err)
+			if copyErr := copyResponse(rw, resp); copyErr != nil {
+				blog.Errorf("websocketproxy: couldn't write response after failed remote backend handshake: %s",
+					copyErr)
 			}
 		} else {
 			http.Error(rw, message, http.StatusServiceUnavailable)
 		}
 		return
 	}
-	defer connBackend.Close()
+	defer connBackend.Close() // nolint
 
 	// Only pass those headers to the upgrader.
 	upgradeHeader := http.Header{}
@@ -165,7 +166,7 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		blog.Errorf("websocketproxy: couldn't upgrade %s", err)
 		return
 	}
-	defer connPub.Close()
+	defer connPub.Close() // nolint
 
 	errClient := make(chan error, 1)
 	errBackend := make(chan error, 1)
@@ -200,7 +201,7 @@ func replicateWebsocketConn(dst, src *websocket.Conn, errc chan error) {
 				}
 			}
 			errc <- err1
-			dst.WriteMessage(websocket.CloseMessage, m)
+			_ = dst.WriteMessage(websocket.CloseMessage, m)
 			break
 		}
 		err := dst.WriteMessage(msgType, msg)

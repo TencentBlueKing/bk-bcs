@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package metric
@@ -19,11 +18,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
-	"github.com/emicklei/go-restful"
 )
 
 const (
@@ -38,14 +38,11 @@ const (
 	limitTag      = "limit"
 	updateTimeTag = "updateTime"
 	createTimeTag = "createTime"
-	timeLayout    = "2006-01-02 15:04:05"
 )
 
-var needTimeFormatList = [...]string{updateTimeTag, createTimeTag}
 var metricFeatTags = []string{clusterIDTag, namespaceTag, typeTag, nameTag}
 var queryFeatTags = []string{clusterIDTag}
 var queryExtraTags = []string{namespaceTag, typeTag, nameTag}
-var indexKeys = []string{clusterIDTag, namespaceTag, typeTag, nameTag}
 
 // Use Mongodb for storage.
 const dbConfig = "mongodb/metric"

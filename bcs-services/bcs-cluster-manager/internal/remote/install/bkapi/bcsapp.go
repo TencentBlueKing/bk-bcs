@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package bkapi xxx
 package bkapi
 
 import (
@@ -19,11 +19,11 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	"github.com/avast/retry-go"
 	"github.com/parnurzeal/gorequest"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var (

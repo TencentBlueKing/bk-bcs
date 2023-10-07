@@ -156,9 +156,9 @@
     InfoBox({
       title: `确认是否删除版本【${version.hook_revision.spec.name}?】`,
       subTitle: `${version.confirm_delete ? '当前脚本有被服务未命名版本引用，删除后，未命名版本里的引用将会被删除，是否确认删除？' : ''}`,
-      infoType: "warning",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
+      extCls: 'center-top-infobox',
       onConfirm: async () => {
         await deleteScriptVersion(spaceId.value, scriptId.value, version.hook_revision.id)
         if (versionList.value.length === 1 && pagination.value.current > 1) {
@@ -378,4 +378,5 @@
       height: 100%;
     }
   }
+
 </style>

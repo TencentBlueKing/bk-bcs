@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package space provides bscp space manager.
 package space
 
 import (
@@ -25,25 +26,25 @@ import (
 	esbcli "bscp.io/pkg/thirdparty/esb/client"
 )
 
-// SpaceType 空间类型
-type SpaceType struct {
+// Type 空间类型
+type Type struct {
 	ID   string
 	Name string
 }
 
 var (
 	// BCS 项目类型
-	BCS = SpaceType{ID: "bcs", Name: "容器项目"}
+	BCS = Type{ID: "bcs", Name: "容器项目"}
 	// BK_CMDB cmdb 业务类型
-	BK_CMDB = SpaceType{ID: "bkcmdb", Name: "业务"}
+	BK_CMDB = Type{ID: "bkcmdb", Name: "业务"}
 )
 
-// SpaceStatus 空间状态, 预留
-type SpaceStatus string
+// Status 空间状态, 预留
+type Status string
 
 const (
 	// SpaceNormal 正常状态
-	SpaceNormal SpaceStatus = "normal"
+	SpaceNormal Status = "normal"
 )
 
 // Space 空间
@@ -55,16 +56,16 @@ type Space struct {
 	SpaceUid      string
 }
 
-// SpaceMgr Space定时拉取
-type SpaceMgr struct {
+// Manager Space定时拉取
+type Manager struct {
 	mtx         sync.Mutex
 	client      esbcli.Client
 	cachedSpace []*Space
 }
 
 // NewSpaceMgr 新增Space定时拉取, 注: 每个实例一个 goroutine
-func NewSpaceMgr(ctx context.Context, client esbcli.Client) (*SpaceMgr, error) {
-	mgr := &SpaceMgr{client: client}
+func NewSpaceMgr(ctx context.Context, client esbcli.Client) (*Manager, error) {
+	mgr := &Manager{client: client}
 
 	initCtx, initCancel := context.WithTimeout(ctx, time.Second*10)
 	defer initCancel()
@@ -81,7 +82,7 @@ func NewSpaceMgr(ctx context.Context, client esbcli.Client) (*SpaceMgr, error) {
 }
 
 // run 定时刷新全量业务信息
-func (s *SpaceMgr) run(ctx context.Context) error {
+func (s *Manager) run(ctx context.Context) {
 	ticker := time.NewTicker(10 * time.Minute)
 
 	go func() {
@@ -98,12 +99,10 @@ func (s *SpaceMgr) run(ctx context.Context) error {
 			}
 		}
 	}()
-
-	return nil
 }
 
 // AllSpaces 返回全量业务
-func (s *SpaceMgr) AllSpaces() []*Space {
+func (s *Manager) AllSpaces() []*Space {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 
@@ -111,7 +110,7 @@ func (s *SpaceMgr) AllSpaces() []*Space {
 }
 
 // QuerySpace 按uid查询业务
-func (s *SpaceMgr) QuerySpace(spaceUidList []string) ([]*Space, error) {
+func (s *Manager) QuerySpace(spaceUidList []string) ([]*Space, error) {
 	spaceList := []*Space{}
 	spaceUidMap := map[string]struct{}{}
 
@@ -127,7 +126,7 @@ func (s *SpaceMgr) QuerySpace(spaceUidList []string) ([]*Space, error) {
 }
 
 // fetchAllSpace 获取全量业务列表
-func (s *SpaceMgr) fetchAllSpace(ctx context.Context) error {
+func (s *Manager) fetchAllSpace(ctx context.Context) error {
 	bizList, err := s.client.Cmdb().ListAllBusiness(ctx)
 	if err != nil {
 		return err
@@ -172,6 +171,6 @@ func buildSpaceMap(spaceUidList []string) (map[string][]string, error) {
 }
 
 // BuildSpaceUid 组装 space_uid
-func BuildSpaceUid(t SpaceType, id string) string {
+func BuildSpaceUid(t Type, id string) string {
 	return fmt.Sprintf("%s__%s", t.ID, id)
 }

@@ -330,19 +330,22 @@ func DivideSamples(samples1, samples2 []prompb.Sample) []prompb.Sample {
 	if len(samples1) == 0 || len(samples2) == 0 {
 		return nil
 	}
+	var samples []prompb.Sample
 	for i := range samples1 {
 		for j := range samples2 {
 			if samples1[i].Timestamp == samples2[j].Timestamp {
+				s := samples1
 				if samples2[j].Value == 0 {
-					samples1[i].Value = 0
+					s[i].Value = 0
 				} else {
-					samples1[i].Value = samples1[i].Value / samples2[j].Value * 100
+					s[i].Value = samples1[i].Value / samples2[j].Value * 100
 				}
+				samples = append(samples, s[i])
 				break
 			}
 		}
 	}
-	return samples1
+	return samples
 }
 
 // GetSameSeries divide same metrics series, series1 divide series2, series must only have one element

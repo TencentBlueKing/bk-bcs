@@ -8,19 +8,22 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package common
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -28,9 +31,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -64,6 +64,12 @@ var (
 		StepName:   "节点设置通用标签",
 	}
 
+	// NodeSetTaintsActionStep 节点设置污点任务
+	NodeSetTaintsActionStep = cloudprovider.StepInfo{
+		StepMethod: cloudprovider.SetNodeTaintsAction,
+		StepName:   "节点设置通用污点",
+	}
+
 	// CheckKubeAgentStatusStep 检测kubeAgent状态
 	CheckKubeAgentStatusStep = cloudprovider.StepInfo{
 		StepMethod: cloudprovider.CheckKubeAgentStatusAction,
@@ -74,6 +80,12 @@ var (
 	NodeSetAnnotationsActionStep = cloudprovider.StepInfo{
 		StepMethod: cloudprovider.SetNodeAnnotationsAction,
 		StepName:   "节点设置注解",
+	}
+
+	// CheckClusterCleanNodesActionStep 检测下架节点状态
+	CheckClusterCleanNodesActionStep = cloudprovider.StepInfo{
+		StepMethod: cloudprovider.CheckClusterCleanNodesAction,
+		StepName:   "检测下架节点状态",
 	}
 )
 
@@ -154,7 +166,7 @@ func CheckKubeAgentStatusTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	if len(clusterID) == 0 {
 		errMsg := fmt.Sprintf("CheckKubeAgentStatusTask[%s] validateParameter failed: clusterID or "+
-			"namespace empty", taskID)
+			"namespace empty", taskID) // nolint
 		blog.Errorf(errMsg)
 		retErr := fmt.Errorf("CheckKubeAgentStatusTask err: %s", errMsg)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -421,7 +433,7 @@ func SetNodeAnnotationsTask(taskID string, stepName string) error {
 	})
 	blog.Infof("SetNodeAnnotationsTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
 
-	//update step
+	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
 		return err
@@ -437,7 +449,7 @@ type NodeAnnotationsData struct {
 	annotations map[string]string
 }
 
-func updateClusterNodesAnnotations(ctx context.Context, data NodeAnnotationsData) error {
+func updateClusterNodesAnnotations(ctx context.Context, data NodeAnnotationsData) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	if len(data.annotations) == 0 {
@@ -535,7 +547,7 @@ func SetNodeLabelsTask(taskID string, stepName string) error {
 	})
 	blog.Infof("SetNodeLabelsTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
 
-	//update step
+	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
 		return err
@@ -556,6 +568,7 @@ type NodeInfo struct {
 	NodeName   string
 	NodeIP     string
 	NodeLabels map[string]string
+	NodeTaint  []proto.Taint
 }
 
 // UpdateClusterNodesLabels update cluster labels
@@ -675,7 +688,7 @@ func GetNodeBizRelation(hostIDs []int) (map[int]cmdb.HostBizRelations, error) {
 	return hostTopo, nil
 }
 
-func checkNodeValidatePods(ctx context.Context, clusterID, nodeName string) (bool, error) {
+func checkNodeValidatePods(ctx context.Context, clusterID, nodeName string) (bool, error) { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	k8sCli, err := clusterops.NewK8SOperator(options.GetGlobalCMOptions(),
@@ -697,7 +710,8 @@ func checkNodeValidatePods(ctx context.Context, clusterID, nodeName string) (boo
 	var warnMessages []string
 	for _, item := range podList.Items {
 		if !canDelete(item) {
-			warnMessages = append(warnMessages, fmt.Sprintf("pod: %s/%s status is %v", item.Namespace, item.Name, item.Status.Phase))
+			warnMessages = append(warnMessages, fmt.Sprintf("pod: %s/%s status is %v", item.Namespace,
+				item.Name, item.Status.Phase))
 		}
 	}
 	if len(warnMessages) > 0 {
@@ -707,7 +721,7 @@ func checkNodeValidatePods(ctx context.Context, clusterID, nodeName string) (boo
 	return true, nil
 }
 
-func canDelete(pod v1.Pod) bool {
+func canDelete(pod v1.Pod) bool { // nolint
 	// ignore kube-system pod
 	if pod.Namespace == metav1.NamespaceSystem ||
 		pod.Namespace == utils.BkSystem || pod.Namespace == utils.BCSSystem {
@@ -916,6 +930,289 @@ func DeleteNamespaceResourceQuota(ctx context.Context, clusterID, namespace, nam
 	}
 
 	blog.Infof("DeleteClusterNamespace[%s] success[%s:%s]", taskID, clusterID, name)
+
+	return nil
+}
+
+// BuildCheckClusterCleanNodesTaskStep build check cluster clean nodes task step
+func BuildCheckClusterCleanNodesTaskStep(task *proto.Task, cloudID, clusterID string, nodeNames []string) {
+	checkStep := cloudprovider.InitTaskStep(CheckClusterCleanNodesActionStep)
+
+	if len(nodeNames) == 0 {
+		return
+	}
+
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = cloudID
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = clusterID
+	checkStep.Params[cloudprovider.NodeNamesKey.String()] = strings.Join(nodeNames, ",")
+
+	task.Steps[CheckClusterCleanNodesActionStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, CheckClusterCleanNodesActionStep.StepMethod)
+}
+
+// CheckClusterCleanNodsTask check cluster clean nodes task
+func CheckClusterCleanNodsTask(taskID string, stepName string) error {
+	start := time.Now()
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	// previous step successful when retry task
+	if step == nil {
+		return nil
+	}
+
+	// extract parameter && check validate
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	nodeNames := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeNamesKey.String(), ",")
+
+	if len(clusterID) == 0 || len(cloudID) == 0 || len(nodeNames) == 0 {
+		blog.Errorf("CheckClusterCleanNodsTask[%s]: check parameter validate failed", taskID)
+		retErr := fmt.Errorf("CheckClusterCleanNodsTask check parameters failed")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
+	if err != nil {
+		blog.Errorf("CheckClusterCleanNodsTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
+		retErr := fmt.Errorf("CheckClusterCleanNodsTask GetClusterDependBasicInfo failed")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	// wait check delete component status
+	timeContext, cancel := context.WithTimeout(ctx, time.Minute*5)
+	defer cancel()
+
+	err = loop.LoopDoFunc(timeContext, func() error {
+		exist, notExist, errLocal := FilterClusterNodesByNodeNames(timeContext, dependInfo, nodeNames)
+		if errLocal != nil {
+			blog.Errorf("CheckClusterCleanNodsTask[%s] FilterClusterInstanceFromNodesIDs failed: %v",
+				taskID, errLocal)
+			return nil
+		}
+
+		blog.Infof("CheckClusterCleanNodsTask[%s] nodeIDs[%v] exist[%v] notExist[%v]",
+			taskID, nodeNames, exist, notExist)
+
+		if len(exist) == 0 {
+			return loop.EndLoop
+		}
+
+		return nil
+	}, loop.LoopInterval(30*time.Second))
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		blog.Errorf("CheckClusterCleanNodsTask[%s] cluster[%s] failed: %v", taskID, clusterID, err)
+	}
+
+	// timeout error
+	if errors.Is(err, context.DeadlineExceeded) {
+		blog.Infof("CheckClusterCleanNodsTask[%s] cluster[%s] timeout failed: %v", taskID, clusterID, err)
+	}
+
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("CheckClusterCleanNodsTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		return err
+	}
+	return nil
+}
+
+// FilterClusterNodesByNodeNames filter instanceNames inClusterNodes && notInClusterNodes
+func FilterClusterNodesByNodeNames(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	nodeNames []string) ([]string, []string, error) {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
+
+	nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID)
+	if err != nil {
+		blog.Errorf("FilterClusterNodesByNodeNames[%s] cluster[%s] failed", taskID, info.Cluster.ClusterID, err)
+		return nil, nil, err
+	}
+
+	var nodeNameMap = make(map[string]*v1.Node, 0)
+	for i := range nodes {
+		nodeNameMap[nodes[i].Name] = nodes[i]
+	}
+
+	var (
+		existNodeNames    = make([]string, 0)
+		notExistNodeNames = make([]string, 0)
+	)
+
+	for _, name := range nodeNames {
+		_, ok := nodeNameMap[name]
+		if ok {
+			existNodeNames = append(existNodeNames, name)
+		} else {
+			notExistNodeNames = append(notExistNodeNames, name)
+		}
+	}
+
+	return existNodeNames, notExistNodeNames, nil
+}
+
+// BuildNodeTaintsTaskStep build node taints(user define taints) task step
+func BuildNodeTaintsTaskStep(task *proto.Task, clusterID string, nodeIPs []string, taints []*proto.Taint) {
+	if len(taints) == 0 {
+		return
+	}
+
+	taintStep := cloudprovider.InitTaskStep(NodeSetTaintsActionStep)
+
+	taintStep.Params[cloudprovider.ClusterIDKey.String()] = clusterID
+	taintStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
+
+	taintBytes, _ := json.Marshal(taints)
+	taintStep.Params[cloudprovider.TaintsKey.String()] = string(taintBytes)
+
+	task.Steps[NodeSetTaintsActionStep.StepMethod] = taintStep
+	task.StepSequence = append(task.StepSequence, NodeSetTaintsActionStep.StepMethod)
+}
+
+// SetNodeTaintsTask set cluster nodes taints
+func SetNodeTaintsTask(taskID string, stepName string) error {
+	start := time.Now()
+
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	// previous step successful when retry task
+	if step == nil {
+		blog.Infof("SetNodeTaintsTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		return nil
+	}
+	blog.Infof("SetNodeTaintsTask[%s]: run step %s, system: %s, old state: %s, params %v",
+		taskID, stepName, step.System, step.Status, step.Params)
+
+	// extract parameter
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeIPs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
+		cloudprovider.NodeIPsKey.String(), ",")
+
+	taintBytes := step.Params[cloudprovider.TaintsKey.String()]
+
+	var taints []*proto.Taint
+	err = json.Unmarshal([]byte(taintBytes), &taints)
+	if err != nil {
+		errMsg := fmt.Sprintf("SetNodeTaintsTask[%s] validateParameter failed: taints error", taskID)
+		blog.Errorf(errMsg)
+		retErr := fmt.Errorf("SetNodeTaintsTask err: %v", err)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	if len(clusterID) == 0 || len(nodeIPs) == 0 {
+		errMsg := fmt.Sprintf("SetNodeTaintsTask[%s] validateParameter failed: clusterID or nodeIPs empty", taskID)
+		blog.Errorf(errMsg)
+		retErr := fmt.Errorf("SetNodeTaintsTask err: %s", errMsg)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	_ = UpdateClusterNodesTaints(ctx, NodeTaintData{
+		ClusterID: clusterID,
+		NodeIPs:   nodeIPs,
+		Taints:    taints,
+	})
+	blog.Infof("SetNodeTaintsTask[%s] clusterID[%s] IPs[%v] successful", taskID, clusterID, nodeIPs)
+
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("task %s %s update to storage fatal", taskID, stepName)
+		return err
+	}
+
+	return nil
+}
+
+// NodeTaintData Node data
+type NodeTaintData struct {
+	ClusterID string
+	NodeNames []string
+	NodeIPs   []string
+	Taints    []*proto.Taint
+}
+
+// UpdateClusterNodesTaints update cluster taints
+func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
+
+	// trans nodeIPs to nodeNames: k8s cluster register nodeName not nodeIP
+	nodeNames := make([]NodeInfo, 0)
+	nodes, err := k8sOperator.ListClusterNodesByIPsOrNames(ctx, clusterops.ListNodeOption{
+		ClusterID: data.ClusterID,
+		NodeIPs:   data.NodeIPs,
+		NodeNames: data.NodeNames,
+	})
+	if err != nil {
+		blog.Errorf("UpdateClusterNodesTaints[%s] ListClusterNodesByIPsOrNames failed: %v", taskID, err)
+		return err
+	}
+	for i := range nodes {
+		nodeNames = append(nodeNames, NodeInfo{
+			NodeName: nodes[i].Name,
+			NodeIP: func(n *v1.Node) string {
+				ipv4s, _ := utils.GetNodeIPAddress(n)
+				if len(ipv4s) > 0 {
+					return ipv4s[0]
+				}
+
+				return ""
+			}(nodes[i]),
+			NodeTaint: func() []proto.Taint {
+				var nodeTaints []proto.Taint
+				for _, taint := range nodes[i].Spec.Taints {
+					nodeTaints = append(nodeTaints, proto.Taint{
+						Key:    taint.Key,
+						Value:  taint.Value,
+						Effect: string(taint.Effect),
+					})
+				}
+
+				return nodeTaints
+			}(),
+		})
+	}
+	blog.Infof("UpdateClusterNodesTaints[%s] ListClusterNodesByIPsOrNames successful[%v]", taskID, nodeNames)
+
+	for _, node := range nodeNames {
+		// user defined labels
+		taints := data.Taints
+		if taints == nil {
+			taints = make([]*proto.Taint, 0)
+		}
+
+		// merge source node labels
+		for i := range node.NodeTaint {
+			taints = append(taints, &proto.Taint{
+				Key:    node.NodeTaint[i].Key,
+				Value:  node.NodeTaint[i].Value,
+				Effect: node.NodeTaint[i].Effect,
+			})
+		}
+		err := k8sOperator.UpdateNodeTaints(ctx, data.ClusterID, node.NodeName, utils.TaintToK8sTaint(taints))
+		if err != nil {
+			blog.Errorf("UpdateClusterNodesTaints[%s] ip[%s] failed: %v", taskID, node.NodeName, err)
+			continue
+		}
+		blog.Infof("UpdateClusterNodesTaints[%s] ip[%s] successful", taskID, node.NodeName)
+	}
 
 	return nil
 }

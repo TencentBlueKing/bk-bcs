@@ -1,6 +1,6 @@
 /*
- * Tencent is pleased to support the open source community by making 蓝鲸 available.
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
@@ -38,7 +38,7 @@ func (cli MapStr) Clone() MapStr {
 func (cli MapStr) Merge(second MapStr) {
 	for key, val := range second {
 		if strings.Contains(key, ".") {
-			root := key[:strings.Index(key, ".")]
+			root := key[:strings.Index(key, ".")] // nolint
 			if _, ok := cli[root]; ok && IsNil(cli[root]) {
 				delete(cli, root)
 			}
@@ -161,7 +161,7 @@ func (cli MapStr) Int64(key string) (int64, error) {
 		return int64(t), nil
 	case json.Number:
 		num, err := t.Int64()
-		return int64(num), err
+		return num, err
 	case string:
 		return strconv.ParseInt(t, 10, 64)
 	}
@@ -199,7 +199,7 @@ func (cli MapStr) String(key string) (string, error) {
 	case float32:
 		return strconv.FormatFloat(float64(t), 'f', -1, 32), nil
 	case float64:
-		return strconv.FormatFloat(float64(t), 'f', -1, 64), nil
+		return strconv.FormatFloat(t, 'f', -1, 64), nil
 	case map[string]interface{}, []interface{}:
 		rest, err := json.Marshal(t)
 		if nil != err {
@@ -368,7 +368,7 @@ func (cli MapStr) Different(target MapStr) (more MapStr, less MapStr, changes Ma
 	changes = make(MapStr)
 
 	// check more
-	cli.ForEach(func(key string, val interface{}) error {
+	_ = cli.ForEach(func(key string, val interface{}) error {
 		if targetVal, ok := target[key]; ok {
 
 			if !reflect.DeepEqual(val, targetVal) {
@@ -382,7 +382,7 @@ func (cli MapStr) Different(target MapStr) (more MapStr, less MapStr, changes Ma
 	})
 
 	// check less
-	target.ForEach(func(key string, val interface{}) error {
+	_ = target.ForEach(func(key string, val interface{}) error {
 		if !cli.Exists(key) {
 			less[key] = val
 		}

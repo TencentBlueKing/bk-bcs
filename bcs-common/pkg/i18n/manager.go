@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package i18n
@@ -18,6 +17,7 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"io/fs"
 	"sync"
 
 	log "k8s.io/klog/v2"
@@ -219,7 +219,9 @@ func (m *Manager) getBytes(file embed.FS, filePath string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func(f fs.File) {
+		_ = f.Close()
+	}(f)
 
 	var size int
 	if info, err := f.Stat(); err == nil {
@@ -241,7 +243,7 @@ func (m *Manager) getBytes(file embed.FS, filePath string) ([]byte, error) {
 	data := make([]byte, 0, size)
 	for {
 		if len(data) >= cap(data) {
-			d := append(data[:cap(data)], 0)
+			d := append(data[:cap(data)], 0) // nolint
 			data = d[:len(data)]
 		}
 		n, err := f.Read(data[len(data):cap(data)])

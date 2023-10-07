@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package proxier
@@ -71,10 +70,8 @@ func (s *UpstreamServer) startPeriodicChecker() {
 			case <-t.C:
 				if len(s.servers) == 0 {
 					stop <- struct{}{}
-				} else {
-					if CheckTcpConn(s.availableServer) != nil {
-						s.reload()
-					}
+				} else if CheckTcpConn(s.availableServer) != nil {
+					s.reload()
 				}
 			case <-stop:
 				blog.Infof("stop PeriodicChecker of cluster %s", s.clusterId)

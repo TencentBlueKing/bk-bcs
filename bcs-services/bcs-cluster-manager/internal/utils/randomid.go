@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -63,7 +62,7 @@ func getLenRandomString(str string, length int) string {
 	bytes := []byte(str)
 
 	result := []byte{}
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r := rand.New(rand.NewSource(time.Now().UnixNano())) // nolint
 	for i := 0; i < length; i++ {
 		result = append(result, bytes[r.Intn(len(str))])
 	}
@@ -80,7 +79,7 @@ func BuildInstancePwd() string {
 	}
 
 	byteRandom := []byte(totalRandomList)
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().Unix()) // nolint
 	rand.Shuffle(len(byteRandom), func(i, j int) { byteRandom[i], byteRandom[j] = byteRandom[j], byteRandom[i] })
 
 	return "Bcs#" + string(byteRandom)
@@ -93,11 +92,11 @@ func GenUUID() string {
 
 // RandomHexString returns a random hexadecimal string of length n.
 // implementation comes from
-// https://stackoverflow.com/questions/46904588/efficient-way-to-to-generate-a-random-hex-string-of-a-fixed-length-in-golang
+// nolint // https://stackoverflow.com/questions/46904588/efficient-way-to-to-generate-a-random-hex-string-of-a-fixed-length-in-golang
 func RandomHexString(n int) string {
 	b := make([]byte, (n+1)/2)
 
-	if _, err := rand.New(src).Read(b); err != nil {
+	if _, err := rand.New(src).Read(b); err != nil { // nolint
 		panic(err)
 	}
 

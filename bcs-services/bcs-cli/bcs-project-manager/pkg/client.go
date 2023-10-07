@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package pkg xxx
 package pkg
 
 import (
@@ -152,10 +152,8 @@ func truncateBody(body string) string {
 	switch {
 	case klog.V(0).Enabled():
 		return body
-	case klog.V(0).Enabled():
+	case klog.V(0).Enabled(): // nolint
 		max = 10240
-	case klog.V(0).Enabled():
-		max = 1024
 	}
 
 	if len(body) <= max {

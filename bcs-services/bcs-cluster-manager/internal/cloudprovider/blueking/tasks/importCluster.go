@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -23,6 +22,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking/api"
@@ -30,9 +32,6 @@ import (
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
-
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ImportClusterNodesTask call tkeInterface or kubeConfig import cluster nodes
@@ -78,7 +77,10 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	}
 
 	// update cluster info
-	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	if err != nil {
+		return err
+	}
 	// import cluster clusterCredential
 	err = importClusterCredential(basicInfo)
 	if err != nil {
@@ -101,7 +103,7 @@ func importClusterCredential(data *cloudprovider.CloudDependBasicInfo) error {
 	}
 
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
-		YamlContent: string(kubeRet),
+		YamlContent: kubeRet,
 	})
 	if err != nil {
 		return err

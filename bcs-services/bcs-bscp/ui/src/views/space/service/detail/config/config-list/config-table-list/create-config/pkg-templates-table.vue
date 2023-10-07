@@ -156,6 +156,7 @@
             <td class="select-version">
               <bk-select
                 :clearable="false"
+                :popover-options="{theme:'light bk-select-popover add-config-selector-popover'}"
                 :model-value="getVersionSelectVal(tpl.id)"
                 @change="handleSelectVersion(tpl.id, tpl.versions, $event)">
                 <bk-option
@@ -288,5 +289,12 @@
       font-size: 12px;
       color: #3a84ff;
     }
+  }
+
+</style>
+
+<style lang="scss">
+  .add-config-selector-popover {
+    width: auto !important;
   }
 </style>

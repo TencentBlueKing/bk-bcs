@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tresource
@@ -22,13 +21,13 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/avast/retry-go"
 )
 
 // ResourceClient global resource client
@@ -301,7 +300,7 @@ func (rm *ResManClient) CheckInstanceStatus(ctx context.Context, instanceIDs []s
 }
 
 // GetInstanceTypesV2 get instance types
-func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, spec resource.InstanceSpec) (
+func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, spec resource.InstanceSpec) ( // nolint
 	[]resource.InstanceType, error) {
 	if rm == nil {
 		return nil, ErrNotInited
@@ -524,13 +523,13 @@ func (rm *ResManClient) GetInstanceTypesV1(ctx context.Context, region string, s
 }
 
 // GetInstanceTypes get region instance types
-func (rm *ResManClient) GetInstanceTypes(ctx context.Context, region string, spec resource.InstanceSpec) (
+func (rm *ResManClient) GetInstanceTypes(ctx context.Context, region string, spec resource.InstanceSpec) ( // nolint
 	[]resource.InstanceType, error) {
 	if rm == nil {
 		return nil, ErrNotInited
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60) // nolint
 	defer cancel()
 
 	if spec.Version == "" {
@@ -622,10 +621,7 @@ func (rm *ResManClient) DeleteResourcePool(ctx context.Context, poolID string) e
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	var (
-		err error
-	)
-	err = retry.Do(func() error {
+	var err = retry.Do(func() error {
 		cli, closeCon, errGet := rm.getResourceManagerClient()
 		if errGet != nil {
 			blog.Errorf("DeleteResourcePool[%s] GetResourceManagerClient failed: %v", traceID, errGet)

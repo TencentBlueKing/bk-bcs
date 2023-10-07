@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package exec
@@ -20,10 +19,10 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/docker/docker/pkg/ioutils"
 	"github.com/moby/term"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 )
 
@@ -46,7 +45,7 @@ type hijackedIOStreamer struct {
 // stream handles setting up the IO and then begins streaming stdin/stdout
 // to/from the hijacked connection, blocking until it is either done reading
 // output, the user inputs the detach key sequence when in TTY mode, or when
-// the given context is cancelled.
+// the given context is canceled.
 func (h *hijackedIOStreamer) stream(ctx context.Context) error {
 	restoreInput, err := h.setupInput()
 	if err != nil {
@@ -97,7 +96,7 @@ func (h *hijackedIOStreamer) setupInput() (restore func(), err error) {
 	var restoreOnce sync.Once
 	restore = func() {
 		restoreOnce.Do(func() {
-			restoreTerminal(h.streams, h.inputStream)
+			_ = restoreTerminal(h.streams, h.inputStream)
 		})
 	}
 
@@ -110,7 +109,7 @@ func (h *hijackedIOStreamer) setupInput() (restore func(), err error) {
 	return restore, nil
 }
 
-func (h *hijackedIOStreamer) beginOutputStream(restoreInput func()) <-chan error {
+func (h *hijackedIOStreamer) beginOutputStream(restoreInput func()) <-chan error { // nolint
 	if h.outputStream == nil && h.errorStream == nil {
 		// There is no need to copy output.
 		return nil
@@ -127,7 +126,7 @@ func (h *hijackedIOStreamer) beginOutputStream(restoreInput func()) <-chan error
 				err = nil
 				break
 			}
-			h.outputStream.Write(buf)
+			_, _ = h.outputStream.Write(buf)
 		}
 
 		outputDone <- err

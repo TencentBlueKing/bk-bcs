@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package view provides a simple way to create HTTP handlers that implement the http.Handler interface.
 package view
 
 import (

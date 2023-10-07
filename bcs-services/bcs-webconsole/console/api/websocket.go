@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -59,7 +58,8 @@ func (q *wsQuery) GetTerminalSize() *types.TerminalSize {
 }
 
 // BCSWebSocketHandler WebSocket 连接处理函数
-func (s *service) BCSWebSocketHandler(c *gin.Context) {
+// NOCC:golint/fnsize(设计如此:)
+func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 	// 还未建立 WebSocket 连接, 使用 Json 返回
 	if !websocket.IsWebSocketUpgrade(c.Request) {
 		rest.AbortWithBadRequestError(c, errors.New("invalid websocket connection"))
@@ -71,7 +71,7 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		rest.AbortWithBadRequestError(c, errors.Wrap(err, "upgrade websocket connection"))
 		return
 	}
-	defer ws.Close()
+	defer ws.Close() // nolint
 
 	// 已经建立 WebSocket 连接, 下面所有的错误返回, 需要使用 GracefulCloseWebSocket 返回
 	ctx, stop := context.WithCancel(c.Request.Context())

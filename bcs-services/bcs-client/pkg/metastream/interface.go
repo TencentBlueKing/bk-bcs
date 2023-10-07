@@ -8,12 +8,13 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package metastream xxx
 package metastream
 
 // Stream json stream interface for CLI reading multiple string lines
+//
 //	and parse them into specified json objects
 type Stream interface {
 	// Length get object number from stream

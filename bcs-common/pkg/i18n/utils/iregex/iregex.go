@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package iregex xxx
 package iregex
 
 import (
@@ -28,11 +28,12 @@ func Quote(s string) string {
 
 // MatchString return strings that matched `pattern`.
 func MatchString(pattern string, src string) ([]string, error) {
-	if r, err := getRegexp(pattern); err == nil {
+	r, err := getRegexp(pattern)
+	if err == nil {
 		return r.FindStringSubmatch(src), nil
-	} else {
-		return nil, err
 	}
+	return nil, err
+
 }
 
 // ReplaceStringFuncMatch replace all matched `pattern` in string `src`
@@ -40,14 +41,14 @@ func MatchString(pattern string, src string) ([]string, error) {
 // The parameter `match` type for `replaceFunc` is []string,
 // which is the result contains all sub-patterns of `pattern` using MatchString function.
 func ReplaceStringFuncMatch(pattern string, src string, replaceFunc func(match []string) string) (string, error) {
-	if r, err := getRegexp(pattern); err == nil {
+	r, err := getRegexp(pattern)
+	if err == nil {
 		return string(r.ReplaceAllFunc([]byte(src), func(bytes []byte) []byte {
 			match, _ := MatchString(pattern, string(bytes))
 			return []byte(replaceFunc(match))
 		})), nil
-	} else {
-		return "", err
 	}
+	return "", err
 }
 
 // IsMatch checks whether given bytes `src` matches `pattern`.
@@ -65,9 +66,9 @@ func IsMatchString(pattern string, src string) bool {
 
 // Replace replaces all matched `pattern` in bytes `src` with bytes `replace`.
 func Replace(pattern string, replace, src []byte) ([]byte, error) {
-	if r, err := getRegexp(pattern); err == nil {
+	r, err := getRegexp(pattern)
+	if err == nil {
 		return r.ReplaceAll(src, replace), nil
-	} else {
-		return nil, err
 	}
+	return nil, err
 }

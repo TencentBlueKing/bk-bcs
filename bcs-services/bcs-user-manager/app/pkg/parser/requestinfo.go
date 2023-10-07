@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package parser
@@ -19,7 +18,6 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"k8s.io/apimachinery/pkg/api/validation/path"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -118,6 +116,7 @@ type RequestInfoFactory struct {
 // /healthz
 // /
 // NOCC:CCN_thresholde(设计如此),golint/fnsize(设计如此)
+// nolint
 func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, error) {
 	// start with a non-resource request until proven otherwise
 	requestInfo := RequestInfo{

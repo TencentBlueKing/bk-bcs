@@ -36,7 +36,7 @@ func (s *Server) portAllocate(portEntryList []*portEntry) ([]*networkextensionv1
 		// for TCP_UDP protocol, one container port needs both TCP listener port and UDP listener port
 		if portEntry.protocol == constant.PortPoolPortProtocolTCPUDP {
 			var cachePortItemMap map[string]portpoolcache.AllocatedPortItem
-			portPoolItemStatus, cachePortItemMap, err = s.poolCache.AllocateAllProtocolPortBinding(poolKey)
+			portPoolItemStatus, cachePortItemMap, err = s.poolCache.AllocateAllProtocolPortBinding(poolKey, portEntry.itemName)
 			if err != nil {
 				s.cleanAllocatedResource(portItemListArr)
 				return nil, nil, errors.Errorf("allocate protocol %s port from pool %s failed, err %s",
@@ -51,7 +51,8 @@ func (s *Server) portAllocate(portEntryList []*portEntry) ([]*networkextensionv1
 		} else {
 			// deal with TCP protocol and UDP protocol
 			var cachePortItem portpoolcache.AllocatedPortItem
-			portPoolItemStatus, cachePortItem, err = s.poolCache.AllocatePortBinding(poolKey, portEntry.protocol)
+			portPoolItemStatus, cachePortItem, err = s.poolCache.AllocatePortBinding(poolKey, portEntry.protocol,
+				portEntry.itemName)
 			if err != nil {
 				s.cleanAllocatedResource(portItemListArr)
 				return nil, nil, errors.Errorf("allocate protocol %s port from pool %s failed, err %s",

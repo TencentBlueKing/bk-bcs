@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package k8s
@@ -22,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/util"
@@ -91,12 +91,12 @@ func (m *LogManager) getLogCollectionTaskByFilter(ctx context.Context,
 		respCh <- "termination"
 	}()
 	// construct resp data
-	for {
+	for { // nolint
 		select {
 		case resp := <-respCh:
 			switch data := resp.(type) {
 			case string:
-				if data == "termination" {
+				if data == "termination" { // nolint
 					close(respCh)
 					return ret
 				}
@@ -170,7 +170,7 @@ distributeAddTasksExit:
 		respCh <- "termination"
 	}()
 	// construct resp message
-	for {
+	for { // nolint
 		select {
 		case resp := <-respCh:
 			switch data := resp.(type) {
@@ -232,7 +232,7 @@ func (m *LogManager) distributeDeleteTasks(ctx context.Context,
 		respCh <- "termination"
 	}()
 	// construct resp message
-	for {
+	for { // nolint
 		select {
 		case resp := <-respCh:
 			switch data := resp.(type) {
@@ -301,7 +301,7 @@ func (m *LogManager) addTaskToCluster(client *LogClient, wg *sync.WaitGroup, msg
 
 // getTaskFromCluster xxx
 // msg.Data is *config.CollectionFilterConfig, msg.RespCh is error return channel
-func (m *LogManager) getTaskFromCluster(ctx context.Context, client *LogClient, wg *sync.WaitGroup,
+func (m *LogManager) getTaskFromCluster(ctx context.Context, client *LogClient, wg *sync.WaitGroup, // nolint
 	msg *RequestMessage) {
 	defer wg.Done()
 	filter, ok := msg.Data.(*config.CollectionFilterConfig)
