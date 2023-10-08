@@ -25,7 +25,7 @@ class VariableReplace {
   public currentReplacedList: IReplacedVariableItem[] = [];
   public baseReplacedList: IReplacedVariableItem[] = [];
 
-  private  constructor(
+  public  constructor(
     editor: monaco.editor.IStandaloneDiffEditor,
     currentVariables: IVariableEditParams[],
     baseVariables: IVariableEditParams[],

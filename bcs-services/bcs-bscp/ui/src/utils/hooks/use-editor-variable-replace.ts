@@ -17,7 +17,7 @@ class VariableReplace {
   public variables: IVariableEditParams[];
   public replacedList: { range: monaco.IRange; key: string }[] = [];
 
-  private constructor(editor: monaco.editor.IStandaloneCodeEditor, variables: IVariableEditParams[]) {
+  public constructor(editor: monaco.editor.IStandaloneCodeEditor, variables: IVariableEditParams[]) {
     this.editor = editor;
     this.model = editor.getModel() as monaco.editor.ITextModel;
     this.variables = variables;

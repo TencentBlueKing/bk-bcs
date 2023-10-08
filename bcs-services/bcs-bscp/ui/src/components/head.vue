@@ -218,6 +218,7 @@ const isShowDropdown = ref(false);
 // 版本日志
 const logList = ref<IVersionLogItem[]>([]);
 const isShowVersionLog = ref(false);
+// @ts-ignore
 const modules = import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
   as: 'raw',
   eager: true,
@@ -233,6 +234,7 @@ Object.keys(modules).forEach((path) => {
 // 功能特性
 const featuresContent = ref('');
 const isShowFeatures = ref(false);
+// @ts-ignore
 const module = import.meta.glob('../../../docs/features/features.md', { as: 'raw', eager: true });
 Object.keys(module).forEach((path) => {
   featuresContent.value = md.render(module[path]);
