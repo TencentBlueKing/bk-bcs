@@ -27,7 +27,6 @@ import (
 // CreateGroup create a group
 func (s *Service) CreateGroup(ctx context.Context, req *pbcs.CreateGroupReq) (*pbcs.CreateGroupResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateGroupResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -55,7 +54,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbcs.CreateGroupReq) (*p
 		return nil, err
 	}
 
-	resp = &pbcs.CreateGroupResp{
+	resp := &pbcs.CreateGroupResp{
 		Id: rp.Id,
 	}
 	return resp, nil

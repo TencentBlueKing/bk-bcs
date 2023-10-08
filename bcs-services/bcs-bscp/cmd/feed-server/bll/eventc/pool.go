@@ -78,6 +78,7 @@ func (ap *appPool) PushEvent(appID uint32, es []*types.EventMeta) {
 
 // gc NOTES
 // Note: GC
+// nolint: unused
 func (ap *appPool) gc() {
 	panic("implement this")
 }

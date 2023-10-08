@@ -193,16 +193,13 @@ func (cs *cacheService) listenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			logs.Infof("start shutdown cache service grpc server gracefully...")
+		<-notifier.Signal
+		logs.Infof("start shutdown cache service grpc server gracefully...")
 
-			cs.serve.GracefulStop()
-			notifier.Done()
+		cs.serve.GracefulStop()
+		notifier.Done()
 
-			logs.Infof("shutdown cache service grpc server success...")
-
-		}
+		logs.Infof("shutdown cache service grpc server success...")
 	}()
 
 	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))
@@ -237,15 +234,13 @@ func (cs *cacheService) gwListenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			logs.Infof("start shutdown cache service http server gracefully...")
+		<-notifier.Signal
+		logs.Infof("start shutdown cache service http server gracefully...")
 
-			cs.gwServe.Close()
-			notifier.Done()
+		_ = cs.gwServe.Close()
+		notifier.Done()
 
-			logs.Infof("shutdown cache service http server success...")
-		}
+		logs.Infof("shutdown cache service http server success...")
 	}()
 
 	if network.TLS.Enable() {

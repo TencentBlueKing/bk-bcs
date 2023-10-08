@@ -33,7 +33,6 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 	*pbcs.CreateConfigItemResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateConfigItemResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -77,14 +76,14 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 		return nil, err
 	}
 
-	resp = &pbcs.CreateConfigItemResp{
+	resp := &pbcs.CreateConfigItemResp{
 		Id: cciResp.Id,
 	}
 
 	return resp, nil
 }
 
-func (s *Service) validateContentExist(kt *kit.Kit, bizID uint32, sign string) error {
+func (s *Service) validateContentExist(kt *kit.Kit, _ uint32, sign string) error {
 	// build version is debug mode, not need to validate repo node if exist.
 	if version.Debug() {
 		return nil
@@ -162,6 +161,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 }
 
 // UpdateConfigItem update config item with option
+// nolint: funlen
 func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigItemReq) (
 	*pbcs.UpdateConfigItemResp, error) {
 
@@ -394,7 +394,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	*pbcs.ListConfigItemsResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListConfigItemsResp)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -421,7 +420,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		return nil, err
 	}
 
-	resp = &pbcs.ListConfigItemsResp{
+	resp := &pbcs.ListConfigItemsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -433,7 +432,6 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context,
 	req *pbcs.ListReleasedConfigItemsReq) (
 	*pbcs.ListReleasedConfigItemsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListReleasedConfigItemsResp)
 
 	if req.ReleaseId <= 0 {
 		return nil, fmt.Errorf("invalid release id %d, it must bigger than 0", req.ReleaseId)
@@ -464,7 +462,7 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context,
 		return nil, err
 	}
 
-	resp = &pbcs.ListReleasedConfigItemsResp{
+	resp := &pbcs.ListReleasedConfigItemsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -475,7 +473,6 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context,
 func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigItemCountReq) (
 	*pbcs.ListConfigItemCountResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListConfigItemCountResp)
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
@@ -494,7 +491,7 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigI
 		return nil, err
 	}
 
-	resp = &pbcs.ListConfigItemCountResp{
+	resp := &pbcs.ListConfigItemCountResp{
 		Details: rp.Details,
 	}
 	return resp, nil

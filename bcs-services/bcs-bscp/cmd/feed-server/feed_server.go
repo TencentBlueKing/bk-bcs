@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package main is the entry point of the application and contains the main logic of the application.
 package main
 
 import (

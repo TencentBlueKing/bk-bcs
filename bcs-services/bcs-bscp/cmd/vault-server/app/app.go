@@ -159,16 +159,14 @@ func (as *vaultService) listenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			logs.Infof("start shutdown vault server grpc server gracefully...")
+		<-notifier.Signal
+		logs.Infof("start shutdown vault server grpc server gracefully...")
 
-			as.serve.GracefulStop()
-			notifier.Done()
+		as.serve.GracefulStop()
+		notifier.Done()
 
-			logs.Infof("shutdown vault server grpc server success...")
+		logs.Infof("shutdown vault server grpc server success...")
 
-		}
 	}()
 
 	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))
@@ -202,15 +200,13 @@ func (as *vaultService) gwListenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			logs.Infof("start shutdown vault server http server gracefully...")
+		<-notifier.Signal
+		logs.Infof("start shutdown vault server http server gracefully...")
 
-			as.gwServe.Close()
-			notifier.Done()
+		_ = as.gwServe.Close()
+		notifier.Done()
 
-			logs.Infof("shutdown vault server http server success...")
-		}
+		logs.Infof("shutdown vault server http server success...")
 	}()
 
 	if network.TLS.Enable() {

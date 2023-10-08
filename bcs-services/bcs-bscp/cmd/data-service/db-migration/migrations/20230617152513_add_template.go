@@ -32,7 +32,7 @@ func init() {
 }
 
 // mig20230617152513Up for up migration
-func mig20230617152513Up(tx *gorm.DB) error {
+func mig20230617152513Up(tx *gorm.DB) error { //nolint:funlen
 	// TemplateSpaces ：模版空间
 	type TemplateSpaces struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`

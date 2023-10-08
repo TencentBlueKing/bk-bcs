@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// main ...
 package main
 
 import (
@@ -29,6 +30,7 @@ const (
 	secretThreshold = 3 // Number of key shares required to reconstruct the root key
 )
 
+// #nosec G101
 var secretTmpl = `global:
   vault:
     unsealKeys:

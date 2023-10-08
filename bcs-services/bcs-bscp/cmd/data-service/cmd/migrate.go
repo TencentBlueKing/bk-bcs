@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package cmd provides command-line operations for upgrading and rolling back database table structures.
 package cmd
 
 import (
@@ -82,7 +83,8 @@ var migrateUpCmd = &cobra.Command{
 			return
 		}
 
-		if err := cc.LoadSettings(SysOpt); err != nil {
+		err = cc.LoadSettings(SysOpt)
+		if err != nil {
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
@@ -197,7 +199,6 @@ var migrateStatusCmd = &cobra.Command{
 			return
 		}
 
-		return
 	},
 }
 

@@ -37,7 +37,8 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 		return nil, err
 	}
 
-	if _, err := s.dao.HookRevision().GetByName(kt, req.Attachment.BizId, req.Attachment.HookId, req.Spec.Name); err == nil {
+	if _, err := s.dao.HookRevision().GetByName(kt, req.Attachment.BizId, req.Attachment.HookId,
+		req.Spec.Name); err == nil {
 		return nil, fmt.Errorf("hook name %s already exists", req.Spec.Name)
 	}
 
@@ -136,21 +137,27 @@ func (s *Service) DeleteHookRevision(ctx context.Context,
 	count, err := s.dao.ReleasedHook().CountByHookRevisionIDAndReleaseID(kt, req.BizId, req.HookId, req.RevisionId, 0)
 	if err != nil {
 		logs.Errorf("count hook revision bound editing releases failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
 		return nil, err
 	}
 	if count > 0 && !req.Force {
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
 		return nil, fmt.Errorf("hook revision was bound to %d editing releases, "+
 			"set force=true to delete hook revision with references, rid: %s", count, kt.Rid)
 	}
 
 	// 2. delete released hook that release_id = 0
-	if err := s.dao.ReleasedHook().DeleteByHookRevisionIDAndReleaseIDWithTx(kt, tx,
-		req.BizId, req.HookId, req.RevisionId, 0); err != nil {
-		logs.Errorf("delete released hook failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	if e := s.dao.ReleasedHook().DeleteByHookRevisionIDAndReleaseIDWithTx(kt, tx,
+		req.BizId, req.HookId, req.RevisionId, 0); e != nil {
+		logs.Errorf("delete released hook failed, err: %v, rid: %s", e, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, e
 	}
 	// 3. delete hook revision
 	HookRevision := &table.HookRevision{
@@ -161,15 +168,17 @@ func (s *Service) DeleteHookRevision(ctx context.Context,
 		},
 	}
 
-	if err := s.dao.HookRevision().DeleteWithTx(kt, tx, HookRevision); err != nil {
-		logs.Errorf("delete HookRevision failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	if e := s.dao.HookRevision().DeleteWithTx(kt, tx, HookRevision); e != nil {
+		logs.Errorf("delete HookRevision failed, err: %v, rid: %s", e, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, e
 	}
 
-	if err := tx.Commit(); err != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	return new(pbbase.EmptyResp), nil
@@ -193,7 +202,9 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 		old.Spec.State = table.HookRevisionStatusShutdown
 		if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, old); e != nil {
 			logs.Errorf("update HookRevision State failed, err: %v, rid: %s", err, kt.Rid)
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
 			return nil, e
 		}
 	}
@@ -202,23 +213,29 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 	hr, err := s.dao.HookRevision().Get(kt, req.BizId, req.HookId, req.Id)
 	if err != nil {
 		logs.Errorf("get HookRevision failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
 		return nil, err
 	}
 	hr.Revision.Reviser = kt.User
 	hr.Spec.State = table.HookRevisionStatusDeployed
 	if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, hr); e != nil {
 		logs.Errorf("update HookRevision State failed, err: %v, rid: %s", e, kt.Rid)
-		tx.Rollback()
-		return nil, err
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, e
 	}
 
 	// 3. 修改未命名版本绑定的脚本版本为上线版本
-	if err := s.dao.ReleasedHook().UpdateHookRevisionByReleaseIDWithTx(kt, tx,
-		req.BizId, 0, req.HookId, hr); err != nil {
-		logs.Errorf("update released hook failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	if e := s.dao.ReleasedHook().UpdateHookRevisionByReleaseIDWithTx(kt, tx,
+		req.BizId, 0, req.HookId, hr); e != nil {
+		logs.Errorf("update released hook failed, err: %v, rid: %s", e, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, e
 	}
 
 	if err := tx.Commit(); err != nil {

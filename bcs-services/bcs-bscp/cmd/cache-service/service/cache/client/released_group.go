@@ -106,7 +106,8 @@ func (c *client) refreshAppReleasedGroupCache(kt *kit.Kit, bizID uint32, appID u
 	}
 
 	// refresh app released groups cache.
-	if err := c.bds.Set(kt.Ctx, keys.Key.ReleasedGroup(bizID, appID), list, keys.Key.ReleasedGroupTtlSec(false)); err != nil {
+	if e := c.bds.Set(kt.Ctx, keys.Key.ReleasedGroup(bizID, appID), list, keys.Key.ReleasedGroupTtlSec(
+		false)); e != nil {
 		return "", fmt.Errorf("set biz: %d, app: %d, released group cache failed, err: %v", bizID, appID, err)
 	}
 

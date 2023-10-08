@@ -182,16 +182,13 @@ func (as *authService) listenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			logs.Infof("start shutdown auth server grpc server gracefully...")
+		<-notifier.Signal
+		logs.Infof("start shutdown auth server grpc server gracefully...")
 
-			as.serve.GracefulStop()
-			notifier.Done()
+		as.serve.GracefulStop()
+		notifier.Done()
 
-			logs.Infof("shutdown auth server grpc server success...")
-
-		}
+		logs.Infof("shutdown auth server grpc server success...")
 	}()
 
 	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))
@@ -225,15 +222,13 @@ func (as *authService) gwListenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			logs.Infof("start shutdown auth server http server gracefully...")
+		<-notifier.Signal
+		logs.Infof("start shutdown auth server http server gracefully...")
 
-			as.gwServe.Close()
-			notifier.Done()
+		_ = as.gwServe.Close()
+		notifier.Done()
 
-			logs.Infof("shutdown auth server http server success...")
-		}
+		logs.Infof("shutdown auth server http server success...")
 	}()
 
 	if network.TLS.Enable() {

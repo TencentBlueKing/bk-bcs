@@ -76,7 +76,8 @@ func (b *backend) pathKeys() *framework.Path {
 	}
 }
 
-func (b *backend) pathPkiExistenceCheck(ctx context.Context, req *logical.Request, d *framework.FieldData) (bool, error) {
+func (b *backend) pathPkiExistenceCheck(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (bool, error) {
 
 	appID := d.Get("app_id").(string)
 	name := d.Get("name").(string)
@@ -99,7 +100,7 @@ const DefaultKeySize = 2048
 type PKIEncryptionAlgorithm string
 
 const (
-	//RSAEncryption 非对称加密算法 rsa
+	// RSAEncryption 非对称加密算法 rsa
 	RSAEncryption PKIEncryptionAlgorithm = "rsa"
 	// SM2Encryption 非对称加密算法 sm2
 	SM2Encryption PKIEncryptionAlgorithm = "sm2"
@@ -124,7 +125,8 @@ func (b *backend) verifyPkiPublicKey(algorithm PKIEncryptionAlgorithm, pubKey st
 }
 
 // GetPkiStorage Get pki store
-func (b *backend) GetPkiStorage(ctx context.Context, s logical.Storage, appID, name, algorithm string) (*pkiStorage, error) {
+func (b *backend) GetPkiStorage(ctx context.Context, s logical.Storage, appID, name,
+	algorithm string) (*pkiStorage, error) {
 
 	path := fmt.Sprintf("apps/%s/pkis/%s/%s", appID, name, algorithm)
 	entry, err := s.Get(ctx, path)
@@ -208,7 +210,8 @@ func (b *backend) generatePkiKeyByAlgorithm(algorithm PKIEncryptionAlgorithm, le
 	return privateKeyPEM, publicKeyPEM, nil
 }
 
-func (b *backend) pathPkiWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathPkiWrite(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
 	if err := b.ValidateAppID(appID); err != nil {
@@ -259,7 +262,8 @@ func (b *backend) pathPkiWrite(ctx context.Context, req *logical.Request, d *fra
 	return resp, nil
 }
 
-func (b *backend) pathPkiRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathPkiRead(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
 	if err := b.ValidateAppID(appID); err != nil {
@@ -290,7 +294,8 @@ func (b *backend) pathPkiRead(ctx context.Context, req *logical.Request, d *fram
 
 }
 
-func (b *backend) pathPkiDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathPkiDelete(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
 	if err := b.ValidateAppID(appID); err != nil {
