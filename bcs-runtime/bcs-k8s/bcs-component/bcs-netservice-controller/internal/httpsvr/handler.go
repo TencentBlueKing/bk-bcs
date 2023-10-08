@@ -74,6 +74,7 @@ type NetIPResponse struct {
 	RequestID string      `json:"request_id"`
 }
 
+// get allocate response data object from request, BCSNetIP and BCSNetPool
 func getAllocateResponseData(
 	req *NetIPAllocateRequest, bcsip *v1.BCSNetIP, bcspool *v1.BCSNetPool) *NetIPAllocateReponseData {
 	return &NetIPAllocateReponseData{
@@ -87,6 +88,7 @@ func getAllocateResponseData(
 	}
 }
 
+// get common response data
 func responseData(code uint, m string, result bool, reqID string, data interface{}) *NetIPResponse {
 	return &NetIPResponse{
 		Code:      code,
