@@ -5,10 +5,7 @@
     "parser": "@typescript-eslint/parser",
     "ecmaVersion": "latest",
     "sourceType": "module",
-    "project": [
-      "./tsconfig.json",
-      "./tsconfig.node.json"
-    ]
+    "project": ["./tsconfig.json", "./tsconfig.node.json"]
   },
   "extends": [
     "eslint:recommended",
@@ -20,10 +17,7 @@
     /**
      * 不要在中括号中添加空格
      */
-    "array-bracket-spacing": [
-      "error",
-      "never"
-    ],
+    "array-bracket-spacing": ["error", "never"],
     /**
      * 数组的方法除了 forEach 之外，回调函数必须有返回值
      */
@@ -31,10 +25,7 @@
     /**
      * 要求箭头函数体使用大括号
      */
-    "arrow-body-style": [
-      "warn",
-      "as-needed"
-    ],
+    "arrow-body-style": ["warn", "as-needed"],
     /**
      * 要求箭头函数的参数使用圆括号
      */
@@ -70,10 +61,7 @@
     /**
      * 添加尾随逗号
      */
-    "comma-dangle": [
-      "warn",
-      "always-multiline"
-    ],
+    "comma-dangle": ["warn", "always-multiline"],
     /**
      * 强制在逗号前后使用一致的空格
      */
@@ -87,17 +75,11 @@
     /**
      * 强制使用一致的逗号风格
      */
-    "comma-style": [
-      "error",
-      "last"
-    ],
+    "comma-style": ["error", "last"],
     /**
      * 强制在计算的属性的方括号中使用一致的空格
      */
-    "computed-property-spacing": [
-      "warn",
-      "never"
-    ],
+    "computed-property-spacing": ["warn", "never"],
     /**
      * 禁止使用 foo["bar"]，必须写成 foo.bar
      */
@@ -105,38 +87,23 @@
     /**
      * 要求或禁止文件末尾存在空行
      */
-    "eol-last": [
-      "error",
-      "always"
-    ],
+    "eol-last": ["error", "always"],
     /**
      * 必须使用 === 或 !==，禁止使用 == 或 !=
      */
-    "eqeqeq": [
-      "warn",
-      "always"
-    ],
+    "eqeqeq": ["warn", "always"],
     /**
      * 要求或禁止在函数标识符和其调用之间有空格
      */
-    "func-call-spacing": [
-      "error",
-      "never"
-    ],
+    "func-call-spacing": ["error", "never"],
     /**
      * 必须只使用函数声明或只使用函数表达式
      */
-    "func-style": [
-      "off",
-      "expression"
-    ],
+    "func-style": ["off", "expression"],
     /**
      * 强制在函数括号内使用一致的换行
      */
-    "function-paren-newline": [
-      "warn",
-      "multiline"
-    ],
+    "function-paren-newline": ["warn", "multiline"],
     /**
      * 强制 generator 函数中 * 号周围使用一致的空格
      */
@@ -154,10 +121,7 @@
     /**
      * 强制隐式返回的箭头函数体的位置
      */
-    "implicit-arrow-linebreak": [
-      "warn",
-      "beside"
-    ],
+    "implicit-arrow-linebreak": ["warn", "beside"],
     /**
      * 使用 2 个空格缩进
      */
@@ -233,10 +197,7 @@
     /**
      * 只允许使用 unix 的 LF 作为换行符，Windows 的 CRLF 不可以使用
      */
-    "linebreak-style": [
-      "warn",
-      "unix"
-    ],
+    "linebreak-style": ["warn", "unix"],
     /**
      * 强制一行的最大长度，限制单行不能超过100个字符，字符串和正则表达式除外。
      */
@@ -253,12 +214,9 @@
     /**
      * 只有在命名构造器或者类的时候，才用帕斯卡拼命名法（PascalCase），即首字母大写。
      */
-    "new-cap": [
-      "error",
-      {
-        "properties": false
-      }
-    ],
+    "new-cap": "off",
+    "no-param-reassign": "off",
+    "operator-linebreak": "off",
     /**
      * 在编写多个方法链式调用(超过两个方法链式调用)时。 使用前导点，强调这行是一个方法调用，而不是一个语句。
      */
@@ -271,9 +229,7 @@
     /**
      * 使用字面量语法创建数组。
      */
-    "no-array-constructor": [
-      "error"
-    ],
+    "no-array-constructor": ["error"],
     /**
      * 在 case 和 default 的子句中，如果存在声明 (例如. let, const, function, 和 class)，使用大括号来创建块级作用域。
      */
@@ -313,15 +269,6 @@
      */
     "no-loop-func": "error",
     /**
-     * 禁止混合使用不同的操作符
-     */
-    "no-mixed-operators": [
-      "error",
-      {
-        "allowSamePrecedence": true
-      }
-    ],
-    /**
      * 禁止连续赋值，比如 foo = bar = 1
      */
     "no-multi-assign": "error",
@@ -346,15 +293,6 @@
      * 禁止使用 new 来生成 String, Number 或 Boolean
      */
     "no-new-wrappers": "warn",
-    /**
-     * 禁止对函数的参数重新赋值
-     */
-    "no-param-reassign": [
-      "warn",
-      {
-        "props": true
-      }
-    ],
     /**
      * 禁止使用 ++ 或 --
      */
@@ -408,9 +346,7 @@
     /**
      * 变量应先声明再使用，禁止引用任何未声明的变量，除非你明确知道引用的变量存在于当前作用域链上。
      */
-    "no-undef": [
-      "error"
-    ],
+    "no-undef": ["error"],
     /**
      * 禁止变量名出现下划线
      */
@@ -442,17 +378,11 @@
     /**
      * 强制单个语句的位置
      */
-    "nonblock-statement-body-position": [
-      "error",
-      "beside"
-    ],
+    "nonblock-statement-body-position": ["error", "beside"],
     /**
      * 强制在大括号中使用一致的空格
      */
-    "object-curly-spacing": [
-      "warn",
-      "always"
-    ],
+    "object-curly-spacing": ["warn", "always"],
     /**
      * 将对象方法、属性简写，且间歇属性放在前面。
      */
@@ -460,29 +390,12 @@
     /**
      * 禁止变量申明时用逗号一次申明多个
      */
-    "one-var": [
-      "warn",
-      "never"
-    ],
-    /**
-     * 避免在赋值语句 = 前后换行。如果你的代码单行长度超过了 max-len 定义的长度而不得不换行，那么使用括号包裹。
-     */
-    "operator-linebreak": [
-      "error",
-      "before",
-      {
-        "overrides": {
-          "=": "none"
-        }
-      }
-    ],
+    "one-var": ["warn", "never"],
+
     /**
      * 要求或禁止块内填充
      */
-    "padded-blocks": [
-      "error",
-      "never"
-    ],
+    "padded-blocks": ["error", "never"],
     /**
      * 要求回调函数使用箭头函数
      */
@@ -500,13 +413,7 @@
     /**
      * 必须使用解构赋值
      */
-    "prefer-destructuring": [
-      "warn",
-      {
-        "object": true,
-        "array": true
-      }
-    ],
+    "prefer-destructuring": "off",
     /**
      * 必须使用 ...args 而不是 arguments
      */
@@ -546,10 +453,7 @@
     /**
      * 要加分号
      */
-    "semi": [
-      "error",
-      "always"
-    ],
+    "semi": ["error", "always"],
     /**
      * 强制在块之前使用一致的空格
      */
@@ -568,10 +472,7 @@
     /**
      * 强制在圆括号内使用一致的空格
      */
-    "space-in-parens": [
-      "error",
-      "never"
-    ],
+    "space-in-parens": ["error", "never"],
     /**
      * 要求操作符周围有空格
      */
@@ -579,24 +480,15 @@
     /**
      * 注释的斜线或 * 后必须有空格
      */
-    "spaced-comment": [
-      "error",
-      "always"
-    ],
+    "spaced-comment": ["error", "always"],
     /**
      * 要求或禁止模板字符串中的嵌入表达式周围空格的使用
      */
-    "template-curly-spacing": [
-      "error",
-      "never"
-    ],
+    "template-curly-spacing": ["error", "never"],
     /**
      * 要求立即执行的函数使用括号括起来
      */
-    "wrap-iife": [
-      "error",
-      "outside"
-    ],
+    "wrap-iife": ["error", "outside"],
     /**
      * 导入语句前不允许有任何非导入语句
      */
@@ -623,21 +515,18 @@
     "no-magic-numbers": "off",
     "react/sort-comp": "off",
     /**
-      * 重载的函数必须写在一起
-      * @reason 增加可读性
-      */
+     * 重载的函数必须写在一起
+     * @reason 增加可读性
+     */
     "@typescript-eslint/adjacent-overload-signatures": "error",
     /**
-      * 类的只读属性若是一个字面量，则必须使用只读属性而不是 getter
-      */
-    "@typescript-eslint/class-literal-property-style": [
-      "error",
-      "fields"
-    ],
+     * 类的只读属性若是一个字面量，则必须使用只读属性而不是 getter
+     */
+    "@typescript-eslint/class-literal-property-style": ["error", "fields"],
     /**
-      * 类型断言必须使用 as Type，禁止使用 <Type>，禁止对对象字面量进行类型断言（断言成 any 是允许的）
-      * @reason <Type> 容易被理解为 jsx
-      */
+     * 类型断言必须使用 as Type，禁止使用 <Type>，禁止对对象字面量进行类型断言（断言成 any 是允许的）
+     * @reason <Type> 容易被理解为 jsx
+     */
     "@typescript-eslint/consistent-type-assertions": [
       "error",
       {
@@ -646,21 +535,21 @@
       }
     ],
     /**
-      * 优先使用 interface 而不是 type
-      */
+     * 优先使用 interface 而不是 type
+     */
     "@typescript-eslint/consistent-type-definitions": "off",
     /**
-      * 必须设置类的成员的可访问性
-      * @reason 将不需要公开的成员设为私有的，可以增强代码的可理解性，对文档输出也很友好
-      */
+     * 必须设置类的成员的可访问性
+     * @reason 将不需要公开的成员设为私有的，可以增强代码的可理解性，对文档输出也很友好
+     */
     "@typescript-eslint/explicit-member-accessibility": "warn",
     /**
-      * 指定类成员的排序规则
-      * @reason 优先级：
-      * 1. static > instance
-      * 2. field > constructor > method
-      * 3. public > protected > private
-      */
+     * 指定类成员的排序规则
+     * @reason 优先级：
+     * 1. static > instance
+     * 2. field > constructor > method
+     * 3. public > protected > private
+     */
     "@typescript-eslint/member-ordering": [
       "error",
       {
@@ -694,23 +583,23 @@
       }
     ],
     /**
-      * 接口中的方法必须用属性的方式定义
-      */
+     * 接口中的方法必须用属性的方式定义
+     */
     "@typescript-eslint/method-signature-style": "off",
     /**
-      * 禁止定义空的接口
-      */
+     * 禁止定义空的接口
+     */
     "@typescript-eslint/no-empty-interface": "error",
     /**
-      * 禁止给一个初始化时直接赋值为 number, string 的变量显式的声明类型
-      * @reason 可以简化代码
-      */
+     * 禁止给一个初始化时直接赋值为 number, string 的变量显式的声明类型
+     * @reason 可以简化代码
+     */
     "@typescript-eslint/no-inferrable-types": "warn",
     /**
-      * 禁止使用 namespace 来定义命名空间
-      * @reason 使用 es6 引入模块，才是更标准的方式。
-      * 但是允许使用 declare namespace ... {} 来定义外部命名空间
-      */
+     * 禁止使用 namespace 来定义命名空间
+     * @reason 使用 es6 引入模块，才是更标准的方式。
+     * 但是允许使用 declare namespace ... {} 来定义外部命名空间
+     */
     "@typescript-eslint/no-namespace": [
       "error",
       {
@@ -719,31 +608,26 @@
       }
     ],
     /**
-      * 禁止在 optional chaining 之后使用 non-null 断言（感叹号）
-      * @reason optional chaining 后面的属性一定是非空的
-      */
+     * 禁止在 optional chaining 之后使用 non-null 断言（感叹号）
+     * @reason optional chaining 后面的属性一定是非空的
+     */
     "@typescript-eslint/no-non-null-asserted-optional-chain": "error",
     /**
-      * 禁止给类的构造函数的参数添加修饰符
-      */
+     * 禁止给类的构造函数的参数添加修饰符
+     */
     "@typescript-eslint/no-parameter-properties": "off",
     /**
-      * 禁止使用 require
-      * @reason 统一使用 import 来引入模块，特殊情况使用单行注释允许 require 引入
-      */
+     * 禁止使用 require
+     * @reason 统一使用 import 来引入模块，特殊情况使用单行注释允许 require 引入
+     */
     "@typescript-eslint/no-require-imports": "error",
     /**
-      * 禁止将 this 赋值给其他变量，除非是解构赋值
-      */
-    "@typescript-eslint/no-this-alias": [
-      "error",
-      {
-        "allowDestructuring": true
-      }
-    ],
+     * 禁止将 this 赋值给其他变量，除非是解构赋值
+     */
+    "@typescript-eslint/no-this-alias": "off",
     /**
-      * 禁止无用的表达式
-      */
+     * 禁止无用的表达式
+     */
     "@typescript-eslint/no-unused-expressions": [
       "error",
       {
@@ -753,31 +637,31 @@
       }
     ],
     /**
-      * 禁止出现没必要的 constructor
-      */
+     * 禁止出现没必要的 constructor
+     */
     "@typescript-eslint/no-useless-constructor": "warn",
     /**
-      * 使用 for 循环遍历数组时，如果索引仅用于获取成员，则必须使用 for of 循环替代 for 循环
-      * @reason for of 循环更加易读
-      */
+     * 使用 for 循环遍历数组时，如果索引仅用于获取成员，则必须使用 for of 循环替代 for 循环
+     * @reason for of 循环更加易读
+     */
     "@typescript-eslint/prefer-for-of": "warn",
     /**
-      * 使用函数类型别名替代包含函数调用声明的接口
-      */
+     * 使用函数类型别名替代包含函数调用声明的接口
+     */
     "@typescript-eslint/prefer-function-type": "warn",
     /**
-      * 禁止使用 module 来定义命名空间
-      * @reason module 已成为 js 的关键字
-      */
+     * 禁止使用 module 来定义命名空间
+     * @reason module 已成为 js 的关键字
+     */
     "@typescript-eslint/prefer-namespace-keyword": "error",
     /**
-      * 使用 optional chaining 替代 &&
-      */
+     * 使用 optional chaining 替代 &&
+     */
     "@typescript-eslint/prefer-optional-chain": "error",
     /**
-      * 禁止使用三斜杠导入文件
-      * @reason 三斜杠是已废弃的语法，但在类型声明文件中还是可以使用的
-      */
+     * 禁止使用三斜杠导入文件
+     * @reason 三斜杠是已废弃的语法，但在类型声明文件中还是可以使用的
+     */
     "@typescript-eslint/triple-slash-reference": [
       "error",
       {
@@ -787,12 +671,12 @@
       }
     ],
     /**
-      * 在类型注释周围需要一致的间距
-      */
+     * 在类型注释周围需要一致的间距
+     */
     "@typescript-eslint/type-annotation-spacing": "error",
     /**
-      * interface 和 type 定义时必须声明成员的类型
-      */
+     * interface 和 type 定义时必须声明成员的类型
+     */
     "@typescript-eslint/typedef": [
       "error",
       {
@@ -806,26 +690,26 @@
       }
     ],
     /**
-      * 函数重载时，若能通过联合类型将两个函数的类型声明合为一个，则使用联合类型而不是两个函数声明
-      */
+     * 函数重载时，若能通过联合类型将两个函数的类型声明合为一个，则使用联合类型而不是两个函数声明
+     */
     "@typescript-eslint/unified-signatures": "error",
-    "vue/no-confusing-v-for-v-if": "off"
+    "vue/no-confusing-v-for-v-if": "off",
+    "vue/multi-word-component-names": "off",
+    "vue/no-v-html": "off",
+    "vue/no-v-model-argument": "off",
+    "vue/no-multiple-template-root": "off",
+
+    "vue/no-useless-template-attributes": "off",
+    "vue/no-deprecated-slot-attribute": "off"
   },
   "settings": {
     "import/resolver": {
       "node": {
-        "extensions": [
-          ".js",
-          ".jsx",
-          ".ts",
-          ".tsx"
-        ]
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
       }
     },
     "import/parsers": {
-      "vue-eslint-parser": [
-        ".vue"
-      ]
+      "vue-eslint-parser": [".vue"]
     }
   }
 }

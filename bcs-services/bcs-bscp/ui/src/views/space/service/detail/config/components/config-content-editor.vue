@@ -1,56 +1,3 @@
-<script setup lang="ts">
-  import { ref, onBeforeUnmount } from 'vue';
-  import BkMessage from 'bkui-vue/lib/message';
-  import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon'
-  import { IVariableEditParams } from '../../../../../../../types/variable';
-  import ReadFileContent from './read-file-content.vue';
-  import CodeEditor from '../../../../../../components/code-editor/index.vue'
-
-  const props = withDefaults(defineProps<{
-    content: string;
-    variables?: IVariableEditParams[];
-    editable: boolean;
-  }>(), {
-    variables: () => [],
-    editable: true
-  })
-
-  const emits = defineEmits(['change'])
-
-  const isOpenFullScreen = ref(false)
-  const codeEditorRef = ref()
-
-  onBeforeUnmount(() => {
-    codeEditorRef.value.destroy()
-  })
-
-  const handleFileReadComplete = (content: string) => {
-    emits('change', content)
-  }
-
-  // 打开全屏
-  const handleOpenFullScreen = () => {
-    isOpenFullScreen.value = true
-    window.addEventListener('keydown', handleEscClose, { once: true })
-    BkMessage({
-      theme: 'primary',
-      message: '按 Esc 即可退出全屏模式'
-    })
-  }
-
-  const handleCloseFullScreen = () => {
-    isOpenFullScreen.value = false
-    window.removeEventListener('keydown', handleEscClose)
-  }
-
-  // Esc按键事件处理
-  const handleEscClose = (event: KeyboardEvent) => {
-    if (event.code === 'Escape') {
-      isOpenFullScreen.value = false
-    }
-  }
-
-</script>
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
     <div :class="['config-content-editor', { fullscreen: isOpenFullScreen }]">
@@ -96,6 +43,59 @@
     </div>
   </Teleport>
 </template>
+<script setup lang="ts">
+import { ref, onBeforeUnmount } from 'vue';
+import BkMessage from 'bkui-vue/lib/message';
+import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
+import { IVariableEditParams } from '../../../../../../../types/variable';
+import ReadFileContent from './read-file-content.vue';
+import CodeEditor from '../../../../../../components/code-editor/index.vue';
+
+const props = withDefaults(defineProps<{
+    content: string;
+    variables?: IVariableEditParams[];
+    editable: boolean;
+  }>(), {
+  variables: () => [],
+  editable: true,
+});
+
+const emits = defineEmits(['change']);
+
+const isOpenFullScreen = ref(false);
+const codeEditorRef = ref();
+
+onBeforeUnmount(() => {
+  codeEditorRef.value.destroy();
+});
+
+const handleFileReadComplete = (content: string) => {
+  emits('change', content);
+};
+
+// 打开全屏
+const handleOpenFullScreen = () => {
+  isOpenFullScreen.value = true;
+  window.addEventListener('keydown', handleEscClose, { once: true });
+  BkMessage({
+    theme: 'primary',
+    message: '按 Esc 即可退出全屏模式',
+  });
+};
+
+const handleCloseFullScreen = () => {
+  isOpenFullScreen.value = false;
+  window.removeEventListener('keydown', handleEscClose);
+};
+
+// Esc按键事件处理
+const handleEscClose = (event: KeyboardEvent) => {
+  if (event.code === 'Escape') {
+    isOpenFullScreen.value = false;
+  }
+};
+
+</script>
 <style lang="scss" scoped>
 .config-content-editor {
   height: 640px;

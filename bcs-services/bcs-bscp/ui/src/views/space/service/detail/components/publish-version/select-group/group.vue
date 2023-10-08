@@ -1,64 +1,3 @@
-<script setup lang="ts">
-  import { ref, computed } from 'vue'
-  import { IGroupToPublish } from '../../../../../../../../types/group'
-  import { IConfigVersion } from '../../../../../../../../types/config'
-  import GroupTree from './tree.vue'
-
-  const props = withDefaults(defineProps<{
-    groupListLoading: boolean;
-    groupList: IGroupToPublish[];
-    versionListLoading: boolean;
-    versionList: IConfigVersion[];
-    disabled?: number[];
-    groupType: string;
-    value: IGroupToPublish[];
-  }>(), {
-    groupList: () => [],
-    versionList: () => [],
-    disabled: () => [],
-    value: () => []
-  })
-
-  const emits = defineEmits(['groupTypeChange', 'change'])
-
-  const type = ref(props.groupType)
-
-  // 选择上线的分组，排除分组需要做取反操作
-  const selectedGroup = computed(() => {
-    if (type.value === 'exclude') {
-      return props.groupList.filter(group => props.value.findIndex(item => item.id === group.id) === -1)
-    }
-    return props.value
-  })
-
-  // 切换选择分组类型
-  const handleTypeChange = (val: string) => {
-    type.value = val
-    if (val === 'all') {
-      handleSelectGroup(props.groupList)
-    } else if (val === 'select') {
-      const list = props.groupList.filter(group => props.disabled.includes(group.id))
-      handleSelectGroup(list)
-    } else {
-      let list: IGroupToPublish[] = []
-      if (props.disabled.length > 0) {
-        list = props.groupList.filter(group => !props.disabled.includes(group.id))
-      }
-      handleSelectGroup(list)
-    }
-    emits('groupTypeChange', val)
-  }
-
-  const handleSelectGroup = (val: IGroupToPublish[]) => {
-    if (type.value === 'exclude') {
-      const list: IGroupToPublish[] = props.groupList.filter(group => val.findIndex(item => item.id === group.id) === -1)
-      emits('change', list)
-    } else {
-      emits('change', val)
-    }
-  }
-
-</script>
 <template>
   <div class="group-select-wrapper">
     <h3 class="title">选择上线范围</h3>
@@ -97,6 +36,67 @@
     </div>
   </div>
 </template>
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { IGroupToPublish } from '../../../../../../../../types/group';
+import { IConfigVersion } from '../../../../../../../../types/config';
+import GroupTree from './tree.vue';
+
+const props = withDefaults(defineProps<{
+    groupListLoading: boolean;
+    groupList: IGroupToPublish[];
+    versionListLoading: boolean;
+    versionList: IConfigVersion[];
+    disabled?: number[];
+    groupType: string;
+    value: IGroupToPublish[];
+  }>(), {
+  groupList: () => [],
+  versionList: () => [],
+  disabled: () => [],
+  value: () => [],
+});
+
+const emits = defineEmits(['groupTypeChange', 'change']);
+
+const type = ref(props.groupType);
+
+// 选择上线的分组，排除分组需要做取反操作
+const selectedGroup = computed(() => {
+  if (type.value === 'exclude') {
+    return props.groupList.filter(group => props.value.findIndex(item => item.id === group.id) === -1);
+  }
+  return props.value;
+});
+
+// 切换选择分组类型
+const handleTypeChange = (val: string) => {
+  type.value = val;
+  if (val === 'all') {
+    handleSelectGroup(props.groupList);
+  } else if (val === 'select') {
+    const list = props.groupList.filter(group => props.disabled.includes(group.id));
+    handleSelectGroup(list);
+  } else {
+    let list: IGroupToPublish[] = [];
+    if (props.disabled.length > 0) {
+      list = props.groupList.filter(group => !props.disabled.includes(group.id));
+    }
+    handleSelectGroup(list);
+  }
+  emits('groupTypeChange', val);
+};
+
+const handleSelectGroup = (val: IGroupToPublish[]) => {
+  if (type.value === 'exclude') {
+    const list: IGroupToPublish[] = props.groupList.filter(group => val.findIndex(item => item.id === group.id) === -1);
+    emits('change', list);
+  } else {
+    emits('change', val);
+  }
+};
+
+</script>
 <style lang="scss" scoped>
   .group-select-wrapper {
     height: 100%

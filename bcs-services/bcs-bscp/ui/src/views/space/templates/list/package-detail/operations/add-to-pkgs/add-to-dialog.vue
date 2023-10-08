@@ -1,95 +1,3 @@
-<script lang="ts" setup>
-  import { ref, computed, watch } from 'vue'
-  import { storeToRefs } from 'pinia'
-  import { Message } from 'bkui-vue';
-  import { ITemplateConfigItem, IPackagesCitedByApps } from '../../../../../../../../types/template';
-  import { useGlobalStore } from '../../../../../../../store/global'
-  import { useTemplateStore } from '../../../../../../../store/template'
-  import { addTemplateToPackage, getUnNamedVersionAppsBoundByPackages } from '../../../../../../../api/template'
-  import LinkToApp from '../../../components/link-to-app.vue'
-
-  const { spaceId } = storeToRefs(useGlobalStore())
-  const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
-
-  const props = defineProps<{
-    show: boolean;
-    value: ITemplateConfigItem[];
-  }>()
-
-  const emits = defineEmits(['update:show', 'added'])
-
-  const formRef = ref()
-  const selectedPkgs = ref<number[]>([])
-  const loading = ref(false)
-  const citedList = ref<IPackagesCitedByApps[]>([])
-  const pending = ref(false)
-
-  const allPackages = computed(() => {
-    return packageList.value.filter(pkg => pkg.id !== currentPkg.value)
-  })
-
-  const isMultiple = computed(() => {
-    return props.value.length > 1
-  })
-
-  const maxTableHeight = computed(() => {
-    const windowHeight = window.innerHeight
-    return windowHeight * 0.6 - 200
-  })
-
-  watch(() => props.show, val => {
-    if (val) {
-      selectedPkgs.value =[]
-      citedList.value = []
-      pending.value = false
-    }
-  })
-
-  const getCitedData = async() => {
-    loading.value = true
-    const params = {
-      start: 0,
-      all: true
-    }
-    const res = await getUnNamedVersionAppsBoundByPackages(spaceId.value, currentTemplateSpace.value, selectedPkgs.value, params)
-    citedList.value = res.details
-    loading.value = false
-  }
-
-  const handPkgsChange = () => {
-    if (selectedPkgs.value.length > 0) {
-      getCitedData()
-    } else {
-      citedList.value = []
-    }
-  }
-
-  const handleConfirm = async () => {
-    const isValid = await formRef.value.validate()
-    if (!isValid) return
-
-    try {
-      pending.value = true
-      const templateIds = props.value.map(item => item.id)
-      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, templateIds, selectedPkgs.value)
-      emits('added')
-      close()
-      Message({
-        theme: 'success',
-        message: '添加配置项成功'
-      })
-    } catch (e) {
-      console.log(e)
-    } finally {
-      pending.value = false
-    }
-  }
-
-  const close = () => {
-    emits('update:show', false)
-  }
-
-</script>
 <template>
   <bk-dialog
     ext-cls="add-configs-to-pkg-dialog"
@@ -100,28 +8,26 @@
     :quick-close="false"
     :is-loading="pending"
     @confirm="handleConfirm"
-    @closed="close">
+    @closed="close"
+  >
     <template #header>
       <div class="header-wrapper">
         <div class="title">{{ isMultiple ? '批量添加至' : '添加至套餐' }}</div>
         <div v-if="props.value.length === 1" class="config-name">{{ props.value[0].spec.name }}</div>
       </div>
     </template>
-    <div v-if="isMultiple" class="selected-mark">已选 <span class="num">{{ props.value.length }}</span> 个配置项</div>
+    <div v-if="isMultiple" class="selected-mark">
+      已选 <span class="num">{{ props.value.length }}</span> 个配置项
+    </div>
     <bk-form ref="formRef" form-type="vertical" :model="{ pkgs: selectedPkgs }">
       <bk-form-item :label="isMultiple ? '添加至模板套餐' : '模板套餐'" property="pkgs" required>
         <bk-select v-model="selectedPkgs" multiple @change="handPkgsChange">
-          <bk-option
-            v-for="pkg in allPackages"
-            :key="pkg.id"
-            :value="pkg.id"
-            :label="pkg.spec.name">
-          </bk-option>
+          <bk-option v-for="pkg in allPackages" :key="pkg.id" :value="pkg.id" :label="pkg.spec.name"> </bk-option>
         </bk-select>
       </bk-form-item>
     </bk-form>
     <p class="tips">以下服务配置的未命名版本中将添加已选配置项的 <span class="notice">latest 版本</span></p>
-    <bk-loading style="min-height: 100px;" :loading="loading">
+    <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table :data="citedList" :max-height="maxTableHeight">
         <bk-table-column label="目标模板套餐" prop="template_set_name"></bk-table-column>
         <bk-table-column label="使用此套餐的服务">
@@ -136,59 +42,154 @@
     </bk-loading>
   </bk-dialog>
 </template>
+<script lang="ts" setup>
+import { ref, computed, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { Message } from 'bkui-vue';
+import { ITemplateConfigItem, IPackagesCitedByApps } from '../../../../../../../../types/template';
+import useGlobalStore from '../../../../../../../store/global';
+import useTemplateStore from '../../../../../../../store/template';
+import { addTemplateToPackage, getUnNamedVersionAppsBoundByPackages } from '../../../../../../../api/template';
+import LinkToApp from '../../../components/link-to-app.vue';
+
+const { spaceId } = storeToRefs(useGlobalStore());
+const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
+
+const props = defineProps<{
+  show: boolean;
+  value: ITemplateConfigItem[];
+}>();
+
+const emits = defineEmits(['update:show', 'added']);
+
+const formRef = ref();
+const selectedPkgs = ref<number[]>([]);
+const loading = ref(false);
+const citedList = ref<IPackagesCitedByApps[]>([]);
+const pending = ref(false);
+
+const allPackages = computed(() => packageList.value.filter(pkg => pkg.id !== currentPkg.value));
+
+const isMultiple = computed(() => props.value.length > 1);
+
+const maxTableHeight = computed(() => {
+  const windowHeight = window.innerHeight;
+  return windowHeight * 0.6 - 200;
+});
+
+watch(
+  () => props.show,
+  (val) => {
+    if (val) {
+      selectedPkgs.value = [];
+      citedList.value = [];
+      pending.value = false;
+    }
+  },
+);
+
+const getCitedData = async () => {
+  loading.value = true;
+  const params = {
+    start: 0,
+    all: true,
+  };
+  const res = await getUnNamedVersionAppsBoundByPackages(
+    spaceId.value,
+    currentTemplateSpace.value,
+    selectedPkgs.value,
+    params,
+  );
+  citedList.value = res.details;
+  loading.value = false;
+};
+
+const handPkgsChange = () => {
+  if (selectedPkgs.value.length > 0) {
+    getCitedData();
+  } else {
+    citedList.value = [];
+  }
+};
+
+const handleConfirm = async () => {
+  const isValid = await formRef.value.validate();
+  if (!isValid) return;
+
+  try {
+    pending.value = true;
+    const templateIds = props.value.map(item => item.id);
+    await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, templateIds, selectedPkgs.value);
+    emits('added');
+    close();
+    Message({
+      theme: 'success',
+      message: '添加配置项成功',
+    });
+  } catch (e) {
+    console.log(e);
+  } finally {
+    pending.value = false;
+  }
+};
+
+const close = () => {
+  emits('update:show', false);
+};
+</script>
 <style lang="scss" scoped>
-  .header-wrapper {
-    display: flex;
-    align-items: center;
-    .title {
-      line-height: 24px;
-    }
-    .config-name {
-      flex: 1;
-      margin-left: 16px;
-      padding-left: 16px;
-      line-height: 24px;
-      color: #979ba5;
-      border-left: 1px solid #dcdee5;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
+.header-wrapper {
+  display: flex;
+  align-items: center;
+  .title {
+    line-height: 24px;
   }
-  .selected-mark {
-    display: inline-block;
-    margin-bottom: 16px;
-    padding: 0 12px;
-    height: 32px;
-    line-height: 32px;
-    border-radius: 16px;
-    font-size: 12px;
-    color: #63656e;
-    background: #f0f1f5;
-    .num {
-      color: #3a84ff;
-    }
-  }
-  .tips {
-    margin: 0 0 16px;
-    font-size: 12px;
-    color: #63656e;
-    .notice {
-      color: #ff9c01;
-    }
-  }
-  .app-info {
-    display: flex;
-    align-items: center;
+  .config-name {
+    flex: 1;
+    margin-left: 16px;
+    padding-left: 16px;
+    line-height: 24px;
+    color: #979ba5;
+    border-left: 1px solid #dcdee5;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     overflow: hidden;
-    .name-text {
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .link-icon {
-      flex-shrink: 0;
-      margin-left: 10px;
-    }
   }
+}
+.selected-mark {
+  display: inline-block;
+  margin-bottom: 16px;
+  padding: 0 12px;
+  height: 32px;
+  line-height: 32px;
+  border-radius: 16px;
+  font-size: 12px;
+  color: #63656e;
+  background: #f0f1f5;
+  .num {
+    color: #3a84ff;
+  }
+}
+.tips {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: #63656e;
+  .notice {
+    color: #ff9c01;
+  }
+}
+.app-info {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  .name-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .link-icon {
+    flex-shrink: 0;
+    margin-left: 10px;
+  }
+}
 </style>

@@ -1,25 +1,23 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import http from '../request'
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import http from '../request';
 
 interface IUserInfo {
   avatar_url: string;
-  username: string
+  username: string;
 }
 
-export const useUserStore = defineStore('user', () => {
-  const loginUrl = ref('')
-  const showLoginModal = ref(false)
+export default defineStore('user', () => {
+  const loginUrl = ref('');
+  const showLoginModal = ref(false);
   const userInfo = ref<IUserInfo>({
     avatar_url: '',
-    username: ''
-  })
+    username: '',
+  });
 
-  const getUserInfo = () => {
-    return http.get('/auth/user/info').then(res => {
-      userInfo.value = <IUserInfo>res.data
-    })
-  }
+  const getUserInfo = () => http.get('/auth/user/info').then((res) => {
+    userInfo.value = res.data as IUserInfo;
+  });
 
-  return { loginUrl, showLoginModal, userInfo, getUserInfo }
-})
+  return { loginUrl, showLoginModal, userInfo, getUserInfo };
+});
