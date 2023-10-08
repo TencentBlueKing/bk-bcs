@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package blueking
@@ -19,14 +18,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-
-	"github.com/google/uuid"
 )
 
 var taskMgr sync.Once
@@ -395,7 +394,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		nodeIPs = append(nodeIPs, node.InnerIP)
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -421,7 +420,8 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 
 	// step1: build bkops task
 	// validate bkops config
-	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.DeleteNodesFromCluster != nil {
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.DeleteNodesFromCluster != nil {
 		step := &template.BkSopsStepAction{
 			TaskName: template.SystemInit,
 			Actions:  opt.Cloud.ClusterManagement.DeleteNodesFromCluster.PreActions,
@@ -458,7 +458,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 // including remove nodes from NodeGroup, clean data in nodes
 func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
 	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
-	//build task step1: move nodes out of nodegroup
+	// build task step1: move nodes out of nodegroup
 	//step2: delete nodes in cluster
 	//step3: delete nodes record in local storage
 	return nil, cloudprovider.ErrCloudNotImplemented

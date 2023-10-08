@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cloudresource
@@ -18,6 +17,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -165,10 +165,9 @@ func (la *ListNodeTypeAction) Handle(ctx context.Context,
 	}
 
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
-func translate(ctx context.Context, nodeFamily, TypeName string) string {
+func translate(ctx context.Context, nodeFamily, typeName string) string {
 	switch nodeFamily {
 	case "S1", "S2", "S3", "S4", "S5", "S6", "SA1", "SA2", "SA3", "SR1", "BMSA2", "BMS5", "BMS4":
 		return i18n.Tf(ctx, "{{.Standard}}", nodeFamily)
@@ -199,6 +198,6 @@ func translate(ctx context.Context, nodeFamily, TypeName string) string {
 	case "GNV4":
 		return i18n.Tf(ctx, "{{.GRendering}}", nodeFamily)
 	default:
-		return TypeName
+		return typeName
 	}
 }

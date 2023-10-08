@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package api xxx
 package api
 
 import (
@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/container/v1"
@@ -58,7 +57,8 @@ func (g *googleAuthProvider) WrapTransport(rt http.RoundTripper) http.RoundTripp
 // Login implement AuthProvider interface
 func (g *googleAuthProvider) Login() error { return nil }
 
-func newGoogleAuthProvider(_ string, config map[string]string, persister rest.AuthProviderConfigPersister) (rest.AuthProvider, error) {
+func newGoogleAuthProvider(
+	_ string, config map[string]string, persister rest.AuthProviderConfigPersister) (rest.AuthProvider, error) {
 	ts, err := google.CredentialsFromJSON(context.TODO(), []byte(config["credentials"]), container.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("newGoogleAuthProvider failed to create google token source: %+v", err)
@@ -80,7 +80,7 @@ type cachedTokenSource struct {
 }
 
 func newCachedTokenSource(accessToken, expiry string, persister rest.AuthProviderConfigPersister,
-	ts oauth2.TokenSource, cache map[string]string) (*cachedTokenSource, error) {
+	ts oauth2.TokenSource, cache map[string]string) (*cachedTokenSource, error) { // nolint
 	var expiryTime time.Time
 	if parsedTime, err := time.Parse(time.RFC3339Nano, expiry); err == nil {
 		expiryTime = parsedTime

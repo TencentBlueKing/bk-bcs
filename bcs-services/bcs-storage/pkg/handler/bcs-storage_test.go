@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package handler
@@ -68,6 +67,7 @@ func TestMapToStruct(t *testing.T) {
 		var temp = data
 		var result interface{}
 		for _, key := range keys {
+			// nolint
 			switch temp[key].(type) {
 			case map[string]interface{}:
 				temp = temp[key].(map[string]interface{})

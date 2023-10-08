@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package api router
 package api
 
 import (
@@ -45,7 +45,7 @@ import (
 )
 
 // APIServer :
-type APIServer struct {
+type APIServer struct { // nolint
 	ctx      context.Context
 	engine   *gin.Engine
 	srv      *http.Server
@@ -105,9 +105,7 @@ func (a *APIServer) Close() error {
 func (a *APIServer) newRoutes(engine *gin.Engine) {
 	// 添加 X-Request-Id 头部
 	requestIdMiddleware := requestid.New(
-		requestid.WithGenerator(func() string {
-			return tracing.RequestIdGenerator()
-		}),
+		requestid.WithGenerator(tracing.RequestIdGenerator),
 	)
 
 	engine.Use(requestIdMiddleware, cors.Default())
@@ -246,7 +244,7 @@ func RegisterStoreGWRoutes(gw *storegw.StoreGW) *route.Router {
 	router := route.New()
 	router.Get("/api/discovery/targetgroups", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(w).Encode(gw.TargetGroups())
+		_ = json.NewEncoder(w).Encode(gw.TargetGroups())
 	})
 
 	return router

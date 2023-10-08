@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,10 +18,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
-
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 )
 
 // GoMicroAuth is the authentication middleware for go-micro
@@ -46,6 +45,7 @@ func (g *GoMicroAuth) EnableSkipHandler(skipHandler func(ctx context.Context, re
 }
 
 // EnableSkipClient enable skip client, if skip client return true, skip authorization
+// nolint
 func (g *GoMicroAuth) EnableSkipClient(exemptClient func(ctx context.Context, req server.Request, client string) bool) *GoMicroAuth {
 	g.exemptClient = exemptClient
 	return g

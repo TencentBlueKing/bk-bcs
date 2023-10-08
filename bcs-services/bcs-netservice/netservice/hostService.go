@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package netservice
@@ -99,6 +98,7 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 		reportMetrics("deleteHost", stateLogicFailure, started)
 		return fmt.Errorf("create locker %s err, %s", lockpath, lErr.Error())
 	}
+	// nolint
 	defer poolLocker.Unlock()
 	if err := poolLocker.Lock(); err != nil {
 		blog.Errorf("try to lock pool %s/%s err, %s", hostInfo.Cluster, hostInfo.Pool, err.Error())
@@ -138,22 +138,6 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 		reportMetrics("deleteHost", stateStorageFailure, started)
 		return fmt.Errorf("host %s delete node under pool %s failed, %s", hostIP, hostInfo.Pool, err.Error())
 	}
-
-	// if no host in the pool, we will delete the pool automatically
-	/*poolPath := filepath.Join(defaultPoolInfoPath, hostInfo.Cluster, hostInfo.Pool, "hosts")
-	hostList, err := srv.store.List(poolPath)
-	if err != nil {
-		blog.Errorf("list net path %s err, %s", poolPath, err.Error())
-		return fmt.Errorf("list net path %s err, %s", poolPath, err.Error())
-	}
-	if len(hostList) == 0 {
-		blog.Infof("there is no host in pool %s, begin to clean pool", poolPath)
-		err := srv.DeletePool(hostInfo.Cluster + "/" + hostInfo.Pool)
-		if err != nil {
-			blog.Errorf("DeletePool error, %s", err.Error())
-			return fmt.Errorf("DeletePool error, %s", err.Error())
-		}
-	}*/
 	reportMetrics("deleteHost", stateSuccess, started)
 	return nil
 }
@@ -287,7 +271,7 @@ func (srv *NetService) ListHostByKey(ip string) (*types.HostInfo, error) {
 				return nil, fmt.Errorf("get container %s err, %s", containerID, err.Error())
 			}
 			inst := &types.IPInst{}
-			json.Unmarshal(data, inst)
+			_ = json.Unmarshal(data, inst)
 			host.Containers[containerID] = inst
 			blog.Infof("get container %s under host %s success.", containerID, ip)
 		}

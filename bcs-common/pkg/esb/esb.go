@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package esb xxx
@@ -42,7 +41,7 @@ type APIResponse struct {
 }
 
 // EsbClient xxx
-type EsbClient struct {
+type EsbClient struct { // nolint
 	// esb app code
 	AppCode string
 	// esb app secret

@@ -63,5 +63,5 @@ func TestRequest(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, body, retData)
 
-	Request(req, timeout, "", map[string]string{"API-Key": "fookey"})
+	Request(req, timeout, "", map[string]string{"API-Key": "fookey"}) // nolint
 }

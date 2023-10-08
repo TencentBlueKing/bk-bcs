@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package component
@@ -36,10 +35,10 @@ const (
 // CacheClusterList 定时同步 cluster 列表
 func CacheClusterList() {
 	go func() {
-		GetAllCluster()
+		_, _ = GetAllCluster()
 		for range time.Tick(time.Minute) {
 			klog.Infof("list clusters running")
-			GetAllCluster()
+			_, _ = GetAllCluster()
 			klog.Infof("list clusters end")
 		}
 	}()

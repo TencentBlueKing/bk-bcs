@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package rest xxx
 package rest
 
 import (
@@ -20,19 +19,19 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
 
 var (
-	// UnauthorizedError 错误
-	UnauthorizedError = errors.New("用户未登入")
+	// ErrorUnauthorized 错误
+	ErrorUnauthorized = errors.New("用户未登入")
 )
 
 // Result 返回的标准结构
@@ -102,19 +101,19 @@ func InitRestContext(c *gin.Context) *Context {
 func GetRestContext(c *gin.Context) (*Context, error) {
 	ctxObj, ok := c.Get("rest_context")
 	if !ok {
-		return nil, UnauthorizedError
+		return nil, ErrorUnauthorized
 	}
 
 	restContext, ok := ctxObj.(*Context)
 	if !ok {
-		return nil, UnauthorizedError
+		return nil, ErrorUnauthorized
 	}
 
 	return restContext, nil
 }
 
 // RestHandlerFunc rest handler
-func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
+func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc { // nolint
 	return func(c *gin.Context) {
 		startTime := time.Now()
 		// 需要在审计操作记录中对body进行解析
@@ -298,7 +297,7 @@ func addAudit(ctx *Context, b []byte, startTime, endTime time.Time, code int, me
 	if code != 0 {
 		result.Status = audit.ActivityStatusFailed
 	}
-	component.GetAuditClient().R().
+	_ = component.GetAuditClient().R().
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 }
 

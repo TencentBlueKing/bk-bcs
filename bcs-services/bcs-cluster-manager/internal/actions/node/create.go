@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package node
@@ -18,6 +17,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -50,7 +50,7 @@ func (ua *RecordNodeDataAction) validate() error {
 	return nil
 }
 
-func (ua *RecordNodeDataAction) recordNodes() error {
+func (ua *RecordNodeDataAction) recordNodes() error { // nolint
 	for _, node := range ua.req.Nodes {
 		err := ua.model.CreateNode(context.Background(), node)
 		if err != nil {
@@ -90,5 +90,4 @@ func (ua *RecordNodeDataAction) Handle(ctx context.Context, req *cmproto.RecordN
 
 	blog.Infof("RecordNodeDataAction record[%+v] success", req.Nodes)
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

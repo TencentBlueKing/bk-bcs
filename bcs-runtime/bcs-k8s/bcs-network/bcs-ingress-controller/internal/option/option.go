@@ -28,6 +28,9 @@ import (
 
 // ControllerOption options for controller
 type ControllerOption struct {
+	// PodNamespace pod namespace
+	PodNamespace string
+
 	// ImageTag image tag used by controller
 	ImageTag string
 
@@ -90,6 +93,12 @@ type ControllerOption struct {
 
 	// NodeInfoExporterOpen 如果为true，将会记录集群中的节点信息
 	NodeInfoExporterOpen bool
+
+	// NodeExternalWorkerEnable 是否启用NodeExternalWorker插件（该插件在指定节点上启动daemonset pod， 探测节点的公网IP）
+	NodeExternalWorkerEnable bool
+
+	// NodeExternalIPConfigmap 节点公网IP configmap名称
+	NodeExternalIPConfigmap string
 
 	// LBCacheExpiration lb缓存过期时间，单位分钟
 	LBCacheExpiration int
@@ -160,6 +169,8 @@ func (op *ControllerOption) SetFromEnv() {
 		blog.Errorf("empty image tag")
 	}
 	op.ImageTag = imageTag
+
+	op.PodNamespace = os.Getenv(constant.EnvIngressPodNamespace)
 }
 
 // BindFromCommandLine 读取命令行参数并绑定
@@ -198,6 +209,10 @@ func (op *ControllerOption) BindFromCommandLine() {
 		"skip all conflict checking about ingress and port pool")
 	flag.BoolVar(&op.NodeInfoExporterOpen, "node_info_exporter_open", false, "if true, "+
 		"bcs-ingress-controller will record node info in cluster")
+	flag.BoolVar(&op.NodeExternalWorkerEnable, "node_external_worker_enable", false,
+		"enable node_external_worker plugin or not")
+	flag.StringVar(&op.NodeExternalIPConfigmap, "node_external_ip_configmap", "",
+		"name of node public external ip configmap")
 	flag.StringVar(&op.NodePortBindingNs, "node_portbinding_ns", "default",
 		"namespace that node portbinding will be created in ")
 

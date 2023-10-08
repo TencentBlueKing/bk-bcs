@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package hostconfig xxx
 package hostconfig
 
 import (
@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	dbutils "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
@@ -102,7 +103,7 @@ func UpdateIP(ctx context.Context, resourceType string, mList []operator.M, now 
 			})
 		}
 	}
-	if len(insertList) <= 0 {
+	if len(insertList) == 0 {
 		return nil
 	}
 
@@ -113,7 +114,7 @@ func UpdateIP(ctx context.Context, resourceType string, mList []operator.M, now 
 	)
 	// 更新数据库操作
 	_, err = db.GetDB().Table(resourceType).Insert(ctx, []interface{}{insertList})
-	return
+	return err
 }
 
 // DoRelation 处理关系

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -51,5 +50,5 @@ func GetTraceIDFromContext(ctx context.Context) string {
 // WithTraceIDForContext inject traceID to context
 func WithTraceIDForContext(ctx context.Context, traceID string) context.Context {
 	// NOCC:golint/type(设计如此)
-	return context.WithValue(ctx, TraceID, traceID)
+	return context.WithValue(ctx, TraceID, traceID) // nolint
 }

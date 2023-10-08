@@ -15,9 +15,9 @@ package printer
 import (
 	"os"
 
-	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
 	"github.com/olekukonko/tablewriter"
+
+	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 // PrintRepositoryInTable print repository data in table format

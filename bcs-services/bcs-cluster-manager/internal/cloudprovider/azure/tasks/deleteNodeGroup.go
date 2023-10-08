@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -19,9 +18,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 )
@@ -71,10 +70,10 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 
 	//// 默认不保留实例
-	//keepInstance := false
-	//if step.Params["KeepInstance"] == "true" {
+	// keepInstance := false
+	// if step.Params["KeepInstance"] == "true" {
 	//	keepInstance = true
-	//}
+	// }
 
 	// delete agentPool
 	if err = deleteAgentPool(ctx, dependInfo, stepName); err != nil {

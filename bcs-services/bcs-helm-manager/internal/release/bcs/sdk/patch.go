@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	goyaml "github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/parser"
 	cmdtpl "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
@@ -24,7 +25,6 @@ import (
 	"github.com/vmware-tanzu/carvel-ytt/pkg/files"
 	"gopkg.in/yaml.v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"

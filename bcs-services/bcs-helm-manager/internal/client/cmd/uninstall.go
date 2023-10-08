@@ -16,10 +16,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/spf13/cobra"
 )
 
 var uninstallCMD = &cobra.Command{
@@ -60,7 +60,7 @@ func init() {
 		&flagCluster, "cluster", "c", "", "release cluster id")
 	uninstallCMD.PersistentFlags().StringVarP(
 		&flagNamespace, "namespace", "n", "", "release namespace")
-	uninstallCMD.MarkPersistentFlagRequired("project")
-	uninstallCMD.MarkPersistentFlagRequired("cluster")
-	uninstallCMD.MarkPersistentFlagRequired("namespace")
+	_ = uninstallCMD.MarkPersistentFlagRequired("project")
+	_ = uninstallCMD.MarkPersistentFlagRequired("cluster")
+	_ = uninstallCMD.MarkPersistentFlagRequired("namespace")
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package offer xxx
@@ -17,11 +16,11 @@ package offer
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	"github.com/urfave/cli"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-
-	"github.com/urfave/cli"
 )
 
 // NewOfferCommand xxx
@@ -162,9 +161,9 @@ func printListOffer(list []*types.OfferWithDelta) error {
 		}
 
 		if item.DeltaResource != nil {
-			cpus = cpus - item.DeltaResource.Cpus
-			mem = mem - item.DeltaResource.Mem
-			disk = disk - item.DeltaResource.Disk
+			cpus -= item.DeltaResource.Cpus
+			mem -= item.DeltaResource.Mem
+			disk -= item.DeltaResource.Disk
 		}
 
 		fmt.Printf("%-5d  %-17s  %-20s  %-4.2f  %-8.2f  %-10.2f %-10s %-12.0f %-30s\n",

@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+
 	application "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 )
@@ -37,6 +38,8 @@ func main() {
 
 	if err := app.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
+		blog.CloseLogs()
+		// nolint
 		os.Exit(1)
 	}
 }

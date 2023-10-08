@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cmd
@@ -42,10 +41,14 @@ func revokePermissionCmd() *cobra.Command {
 		Aliases: []string{"permission", "ps"},
 		Short:   "revoke permission",
 		Long:    "revoke permissions from user manager",
-		Example: "kubectl-bcs-user-manager delete permission --permission_form '{\n  \"apiVersion\": \"\",\n  \"kind\": \"\",\n  " +
-			"\"metadata\": {\n    \"name\": \"\",\n    \"namespace\": \"\",\n    \"creationTimestamp\": \"0001-01-01T00:00:00Z\",\n    " +
-			"\"labels\": {\n      \"a\": \"a\"\n    },\n    \"annotations\": {\n      \"a\": \"a\"\n    },\n    \"clusterName\": \"\"\n  },\n  " +
-			"\"spec\": {\n    \"permissions\": [\n      {\n        \"user_name\": \"\",\n        \"resource_type\": \"\",\n        \"resource\": \"\",\n        " +
+		Example: "kubectl-bcs-user-manager delete permission --permission_form '{\n  \"apiVersion\": \"\",\n  " +
+			"\"kind\": \"\",\n  " +
+			"\"metadata\": {\n    \"name\": \"\",\n    \"namespace\": \"\",\n    " +
+			"\"creationTimestamp\": \"0001-01-01T00:00:00Z\",\n    " +
+			"\"labels\": {\n      \"a\": \"a\"\n    },\n    \"annotations\": {\n      \"a\": \"a\"\n    },\n    " +
+			"\"clusterName\": \"\"\n  },\n  " +
+			"\"spec\": {\n    \"permissions\": [\n      {\n        \"user_name\": \"\",\n        " +
+			"\"resource_type\": \"\",\n        \"resource\": \"\",\n        " +
 			"\"role\": \"\"\n      }\n    ]\n  }\n}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)

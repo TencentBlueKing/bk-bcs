@@ -2,20 +2,23 @@
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package k8s xxx
 package k8s
 
 import (
 	"fmt"
 	"time"
 
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/capabilities"
 	apiextensionsV1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsV1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -25,8 +28,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/capabilities"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/k8s/resources"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
@@ -37,7 +38,7 @@ import (
 const (
 	// CRDVersionSupportV1 is cluster capabilities for CustomResourceVersion V1
 	CRDVersionSupportV1 = "v1"
-	// CRDVersionSupportV1 is cluster capabilities for CustomResourceVersion V1Beta1
+	// CRDVersionSupportV1Beta1 is cluster capabilities for CustomResourceVersion V1Beta1
 	CRDVersionSupportV1Beta1 = "v1beta1"
 )
 
@@ -68,7 +69,8 @@ type WatcherManager struct {
 }
 
 // NewWatcherManager creates a new WatcherManager instance.
-func NewWatcherManager(clusterID string, watchResource *options.WatchResource, filterConfig *options.FilterConfig, writer *output.Writer,
+func NewWatcherManager(
+	clusterID string, watchResource *options.WatchResource, filterConfig *options.FilterConfig, writer *output.Writer,
 	k8sConfig *options.K8sConfig,
 	storageService, netservice *bcs.InnerService, sc <-chan struct{}) (*WatcherManager, error) {
 
@@ -181,7 +183,7 @@ func (mgr *WatcherManager) capabilities(restConfig *rest.Config) (string, error)
 }
 
 func (mgr *WatcherManager) addCrdInformer(crdVersion string,
-	crdInformerFactory externalversions.SharedInformerFactory, restConfig *rest.Config) cache.InformerSynced {
+	crdInformerFactory externalversions.SharedInformerFactory, restConfig *rest.Config) cache.InformerSynced { // nolint
 	glog.Infof("add crd informer with crd version: %s", crdVersion)
 	// CustomResourceDefinition V1Beta1
 	if crdVersion == CRDVersionSupportV1Beta1 {
@@ -245,7 +247,7 @@ func (mgr *WatcherManager) AddEventV1(obj interface{}) {
 	}
 
 	for _, version := range crdObj.Spec.Versions {
-		if version.Storage == true {
+		if version.Storage {
 			crdObjCore := &CustomResourceDefinitionCore{
 				TypeMeta:   crdObj.TypeMeta,
 				ObjectMeta: crdObj.ObjectMeta,
@@ -290,7 +292,7 @@ func (mgr *WatcherManager) DeleteEventV1(obj interface{}) {
 		return
 	}
 	for _, version := range crdObj.Spec.Versions {
-		if version.Storage == true {
+		if version.Storage {
 			key := mgr.getCrdWatcherKey(crdObj.Spec.Group, version.Name, crdObj.Spec.Names.Kind)
 			mgr.stopCrdWatcher(key)
 		}
@@ -390,7 +392,7 @@ func (mgr *WatcherManager) Run(stopCh <-chan struct{}) {
 		if count >= 5 {
 			panic("synchronizer run failed")
 		}
-		if err := mgr.synchronizer.RunOnce(); err != nil {
+		if err := mgr.synchronizer.RunOnce(); err != nil { // nolint
 			glog.Errorf("synchronizer sync failed: %v", err)
 			time.Sleep(5 * time.Minute)
 		} else {

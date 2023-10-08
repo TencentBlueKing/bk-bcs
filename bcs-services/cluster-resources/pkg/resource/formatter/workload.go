@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -20,12 +18,12 @@ import (
 	"fmt"
 	"strconv"
 
-	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/TencentBlueKing/gopkg/collection/set"
 	"github.com/mitchellh/mapstructure"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -253,7 +251,9 @@ type PodStatusParser struct {
 	totalStatus string
 }
 
-// Parse 状态解析逻辑，参考来源：https://github.com/kubernetes/dashboard/blob/92a8491b99afa2cfb94dbe6f3410cadc42b0dc31/modules/api/pkg/resource/pod/common.go#L40
+// Parse 状态解析逻辑
+// nolint
+// 参考来源：https://github.com/kubernetes/dashboard/blob/92a8491b99afa2cfb94dbe6f3410cadc42b0dc31/modules/api/pkg/resource/pod/common.go#L40
 func (p *PodStatusParser) Parse() string {
 	// 构造轻量化的 PodStatus 用于解析 Pod Status（total）字段
 	podStatus := LightPodStatus{}

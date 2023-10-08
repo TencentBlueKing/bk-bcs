@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package clusterconfig
@@ -23,9 +22,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
-	"github.com/emicklei/go-restful"
 )
 
 func getService(req *restful.Request) string {
@@ -82,7 +82,8 @@ func getMultiCls(req *restful.Request) ([]operator.M, error) {
 	return mList, nil
 }
 
-func getSvcSet(ctx context.Context, resourceType string, opt *lib.StoreGetOption) (svcConfigSet *types.ConfigSet, err error) {
+func getSvcSet(ctx context.Context, resourceType string, opt *lib.StoreGetOption) (
+	svcConfigSet *types.ConfigSet, err error) {
 	var svcConfig []operator.M
 	if svcConfig, err = GetData(ctx, resourceType, opt); err != nil || len(svcConfig) == 0 {
 		if err == nil {
@@ -92,7 +93,7 @@ func getSvcSet(ctx context.Context, resourceType string, opt *lib.StoreGetOption
 	}
 
 	svcConfigRaw := svcConfig[0]
-	svcConfigRawData, _ := svcConfigRaw[dataTag]
+	svcConfigRawData := svcConfigRaw[dataTag]
 	if svcConfigSet, err = types.ParseConfigSet(svcConfigRawData); err != nil {
 		blog.Errorf("Failed to parse service configSet. err: %v", err)
 		return
@@ -104,8 +105,8 @@ func getClsSet(clsConfig []operator.M) (clusterSet []types.ClusterSet, err error
 	var clsConfigSet *types.ConfigSet
 	clusterSet = make([]types.ClusterSet, 0, len(clsConfig))
 	for _, clusterRaw := range clsConfig {
-		clsConfigRawID, _ := clusterRaw[clusterIdTag]
-		clsConfigRawData, _ := clusterRaw[dataTag]
+		clsConfigRawID := clusterRaw[clusterIdTag]
+		clsConfigRawData := clusterRaw[dataTag]
 
 		if clsConfigSet, err = types.ParseConfigSet(clsConfigRawData); err != nil {
 			return nil, err
@@ -117,9 +118,10 @@ func getClsSet(clsConfig []operator.M) (clusterSet []types.ClusterSet, err error
 	return clusterSet, err
 }
 
-func generateData(req *restful.Request, clsFunc func(req *restful.Request) ([]operator.M, error)) (config *types.DeployConfig, err error) {
+func generateData(req *restful.Request, clsFunc func(req *restful.Request) ([]operator.M, error)) (
+	config *types.DeployConfig, err error) {
 	var clsConfig []operator.M
-	//service name
+	// service name
 	service := getService(req)
 	// option
 	opt := &lib.StoreGetOption{

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package helm
@@ -27,37 +26,37 @@ const (
 
 var (
 	// operator default operator
-	operator = "bcs-cluster-manager"
+	operator = "bcs-cluster-manager" // nolint
 
 	// FailedState failed
 	FailedState = "failed"
 
-	// Install status
 	// PendingInstall xxx
+	// Install status
 	PendingInstall = "pending-install"
 	// FailedInstall xxx
 	FailedInstall = "failed-install"
 	// DeployedInstall xxx
 	DeployedInstall = "deployed"
 
-	// upgrade status
 	// PendingUpgrade xxx
+	// upgrade status
 	PendingUpgrade = "pending-upgrade"
 	// FailedUpgrade xxx
 	FailedUpgrade = "failed-upgrade"
 	// DeployedUpgrade xxx
 	DeployedUpgrade = "deployed"
 
-	// rollback status
 	// PendingRollback xxx
+	// rollback status
 	PendingRollback = "pending-rollback"
 	// FailedRollback xxx
 	FailedRollback = "failed-rollback"
 	// DeployedRollback xxx
 	DeployedRollback = "deployed"
 
-	// UnInstall status
 	// UnInstalling xxx
+	// UnInstall status
 	UnInstalling = "uninstalling"
 	// FailedUninstall xxx
 	FailedUninstall = "failed-uninstall"

@@ -13,10 +13,10 @@
 package runtimex
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // CustomHeaderMatcher for http header

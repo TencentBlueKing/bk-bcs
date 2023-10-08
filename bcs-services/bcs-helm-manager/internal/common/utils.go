@@ -20,8 +20,8 @@ import (
 
 // SplitAddrString split address string
 func SplitAddrString(address string) []string {
-	address = strings.Replace(address, ";", ",", -1)
-	address = strings.Replace(address, " ", ",", -1)
+	address = strings.ReplaceAll(address, ";", ",")
+	address = strings.ReplaceAll(address, " ", ",")
 	return strings.Split(address, ",")
 }
 
@@ -86,16 +86,16 @@ var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 func RandomString(length int) string {
 	b := make([]rune, length)
 	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+		b[i] = letterRunes[rand.Intn(len(letterRunes))] // nolint
 	}
 	return string(b)
 }
 
 // RandomInt get a random int less than limit
 func RandomInt(limit int) int {
-	return rand.Intn(limit)
+	return rand.Intn(limit) // nolint
 }
 
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) // nolint
 }

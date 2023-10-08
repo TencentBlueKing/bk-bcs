@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -18,10 +18,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"runtime/debug"
 	"strings"
@@ -29,12 +29,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-
 	"github.com/kirito41dd/xslice"
 	"github.com/micro/go-micro/v2/registry"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
 const (
@@ -51,7 +51,7 @@ const (
 
 // SplitAddrString split address string
 func SplitAddrString(addrs string) []string {
-	addrs = strings.Replace(addrs, ";", ",", -1)
+	addrs = strings.ReplaceAll(addrs, ";", ",")
 	addrArray := strings.Split(addrs, ",")
 	return addrArray
 }
@@ -70,8 +70,6 @@ func RecoverPrintStack(proc string) {
 		blog.Errorf("[%s][recover] panic: %v, stack %v\n", proc, r, string(debug.Stack()))
 		return
 	}
-
-	return
 }
 
 // StringInSlice returns true if given string in slice
@@ -179,10 +177,7 @@ func JudgeBase64(str string) bool {
 		return false
 	}
 	tranStr := base64.StdEncoding.EncodeToString(unCodeStr)
-	if str == tranStr {
-		return true
-	}
-	return false
+	return str == tranStr
 }
 
 // MergeMap merge map
@@ -210,7 +205,7 @@ func GetServerEndpointsFromRegistryNode(nodeServer *registry.Node) []string {
 
 // GetFileContent get file content
 func GetFileContent(file string) (string, error) {
-	body, err := ioutil.ReadFile(file)
+	body, err := os.ReadFile(file)
 	if err != nil {
 		return "", err
 	}
@@ -242,9 +237,7 @@ func SliceToString(slice []string) string {
 	}
 
 	sList := make([]string, 0)
-	for _, s := range slice {
-		sList = append(sList, s)
-	}
+	sList = append(sList, slice...)
 
 	return strings.Join(sList, ",")
 }
@@ -310,6 +303,7 @@ func GetNodeIPAddress(node *corev1.Node) ([]string, []string) {
 	return ipv4Address, ipv6Address
 }
 
+// CheckNodeIfReady redy check node
 func CheckNodeIfReady(n *corev1.Node) bool {
 	if n == nil {
 		return false
@@ -377,9 +371,9 @@ func MapToStrings(m map[string]string) string {
 // FakeIPV4Addr generate ipv4 address
 func FakeIPV4Addr() string {
 	buf := make([]byte, 4)
-	ip := rand.Uint32()
+	ip := rand.Uint32() // nolint
 	binary.LittleEndian.PutUint32(buf, ip)
-	return fmt.Sprintf("%s", net.IP(buf))
+	return string(buf)
 }
 
 // GetCpuModuleType get cpuType label
@@ -468,4 +462,3 @@ func K8sTaintToTaint(taint []corev1.Taint) []*proto.Taint {
 	}
 	return taints
 }
-

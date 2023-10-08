@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package reflector xxx
@@ -86,7 +85,7 @@ func (r *Reflector) Run() {
 		case <-syncTick.C:
 			// fully resync all datas in period
 			blog.Infof("%s trigger all data synchronization", r.name)
-			r.ListAllData()
+			_ = r.ListAllData()
 		case <-watchTick.C:
 			// check watch is running
 			if r.underWatch {
@@ -132,13 +131,13 @@ func (r *Reflector) ListAllData() error {
 			continue
 		}
 		if exist {
-			r.store.Update(obj)
+			_ = r.store.Update(obj)
 			if r.handler != nil {
 				r.handler.OnUpdate(oldObj, obj)
 			}
 			blog.V(5).Infof("%s update %s/%s notify succes in Lister.", r.name, obj.GetNamespace(), obj.GetName())
 		} else {
-			r.store.Add(obj)
+			_ = r.store.Add(obj)
 			if r.handler != nil {
 				r.handler.OnAdd(obj)
 			}
@@ -151,7 +150,7 @@ func (r *Reflector) ListAllData() error {
 		for _, key := range cacheObjKeys {
 			if _, ok := objMap[key]; !ok {
 				obj, _, _ := r.store.GetByKey(key)
-				r.store.Delete(obj)
+				_ = r.store.Delete(obj)
 				r.handler.OnDelete(obj)
 			}
 		}
@@ -208,12 +207,12 @@ func (r *Reflector) processAddUpdate(event *watch.Event) {
 		return
 	}
 	if exist {
-		r.store.Update(event.Data)
+		_ = r.store.Update(event.Data)
 		if r.handler != nil {
 			r.handler.OnUpdate(oldObj, event.Data)
 		}
 	} else {
-		r.store.Add(event.Data)
+		_ = r.store.Add(event.Data)
 		if r.handler != nil {
 			r.handler.OnAdd(event.Data)
 		}
@@ -230,7 +229,7 @@ func (r *Reflector) processDeletion(event *watch.Event) {
 		return
 	}
 	if exist {
-		r.store.Delete(event.Data)
+		_ = r.store.Delete(event.Data)
 		if event.Data.GetAnnotations() != nil &&
 			event.Data.GetAnnotations()["bk-bcs-inner-storage"] == "bkbcs-zookeeper" {
 

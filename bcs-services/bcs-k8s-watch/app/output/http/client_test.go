@@ -4,11 +4,10 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package http
@@ -32,7 +31,8 @@ func TestGetURL(t *testing.T) {
 	}
 
 	url1, _ := client1.GetURL()
-	if url1 != "http://www.test.com/bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/12121/namespaces/test/Pod/test-data-watch-pod-1" {
+	if url1 != "http://www.test.com/bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/12121/"+
+		"namespaces/test/Pod/test-data-watch-pod-1" {
 		t.Errorf("GetURL with Namespace not null fail, got: %s", url1)
 	}
 
@@ -48,7 +48,8 @@ func TestGetURL(t *testing.T) {
 	}
 
 	url2, _ := client2.GetURL()
-	if url2 != "http://www.test.com/bcsstorage/v1/k8s/dynamic/cluster_resources/clusters/12121/Node/test-data-watch-node-1" {
+	if url2 != "http://www.test.com/bcsstorage/v1/k8s/dynamic/cluster_resources/"+
+		"clusters/12121/Node/test-data-watch-node-1" {
 		t.Errorf("GetURL with no Namespace not null fail, got: %s", url2)
 	}
 

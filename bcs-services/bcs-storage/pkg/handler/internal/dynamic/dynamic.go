@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package dynamic xxx
 package dynamic
 
 import (
@@ -22,12 +22,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	storage "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/proto"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 var (
@@ -65,7 +66,7 @@ func (g *general) getExtra() operator.M {
 		return nil
 	}
 	extra := make(operator.M)
-	lib.NewExtra(g.extra).Unmarshal(&extra)
+	_ = lib.NewExtra(g.extra).Unmarshal(&extra)
 	return extra
 }
 
@@ -178,25 +179,23 @@ func (g *general) getResources() ([]operator.M, error) {
 }
 
 // getData 获取任意类型
-func (g *general) getData(features operator.M) (operator.M, error) {
+func (g *general) getData(features operator.M) operator.M {
 	tmp := util.StructToMap(g.data)
 
 	data := lib.CopyMap(features)
 	data[constants.DataTag] = tmp
-	return data, nil
+	return data
 }
 
 func (g *general) putResources() (operator.M, error) {
 	features := g.getFeatures()
 	extras := g.getExtra()
 	features.Merge(extras)
-	data, err := g.getData(features)
-	if err != nil {
-		return nil, err
-	}
+	data := g.getData(features)
+
 	resourceType := g.resource.ResourceType
 
-	if err = dynamic.PutData(g.ctx, data, features, g.resourceFeatList, resourceType); err != nil {
+	if err := dynamic.PutData(g.ctx, data, features, g.resourceFeatList, resourceType); err != nil {
 		return nil, err
 	}
 	return data, nil
@@ -300,8 +299,8 @@ func (g *general) deleteCustomResourcesIndex() error {
 	return dynamic.DeleteCustomResourceIndex(g.ctx, g.resource.ResourceType, g.indexName)
 }
 
-//k8s namespace resources
-//mesos namespace resources
+// k8s namespace resources
+// mesos namespace resources
 
 // HandlerGetNsResourcesReq  GetNamespaceResourcesRequest业务方法
 func HandlerGetNsResourcesReq(ctx context.Context, req *storage.GetNamespaceResourcesRequest) ([]operator.M,

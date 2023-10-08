@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package cmdb xxx
 package cmdb
 
 import (
@@ -17,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/cmdbv3"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 

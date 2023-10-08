@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package RegisterDiscover xxx
 package RegisterDiscover
 
 // RegDiscvServer define the register and discover function interface
@@ -21,7 +21,8 @@ type RegDiscvServer interface {
 	Stop() error
 	// Register server info into registe-discover service platform
 	Register(key string, data []byte) error
-	// RegisterAndWatch register server info into registe-discover service platform, and watch the info, if not exist, then register again
+	// RegisterAndWatch register server info into registe-discover service platform,
+	// and watch the info, if not exist, then register again
 	RegisterAndWatch(key string, data []byte) error
 	// Discover server from the registe-discover service platform
 	Discover(key string) (<-chan *DiscoverEvent, error)

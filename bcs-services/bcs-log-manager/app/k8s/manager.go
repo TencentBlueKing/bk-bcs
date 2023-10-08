@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package k8s xxx
 package k8s
 
 import (
@@ -21,15 +21,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
 	bkdatav1 "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/apis/bkbcs.tencent.com/v1"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned"
@@ -64,7 +64,7 @@ var (
 	SystemNamspaces = []string{"kube-system", "bcs-system", "kube-public"}
 	// BKDataAPIConfigKind is resource name of BkDataAPIConfig
 	BKDataAPIConfigKind string
-	// BKDataAPIConfigGroupVersion is resouce name of BkDataAPIConfig
+	// BKDataAPIConfigGroupVersion is resource name of BkDataAPIConfig
 	BKDataAPIConfigGroupVersion string
 	// LogConfigKind is crd name of bcslogconfigs
 	LogConfigKind string
@@ -227,7 +227,7 @@ func (m *LogManager) run() {
 				return
 			}
 		default:
-			break
+			break // nolint
 		}
 		// sync cluster infos
 		blog.Infof("Begin to sync clusers info")
@@ -315,7 +315,7 @@ func (m *LogManager) handleUpdatedBKDataAPIConfig(oldobj, newobj interface{}) {
 		blog.Warnf("No dataid channel named %s, ignore", name)
 		return
 	}
-	if config.Spec.Response.Result {
+	if config.Spec.Response.Result { // nolint
 		var obj map[string]interface{}
 		err := json.Unmarshal([]byte(config.Spec.Response.Data), &obj)
 		if err != nil {

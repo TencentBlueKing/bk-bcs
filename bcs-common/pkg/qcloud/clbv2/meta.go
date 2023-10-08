@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package qcloud
@@ -79,7 +78,8 @@ func (l GroupList) EncodeValues(key string, urlv *url.Values) error {
 // param url: qcloud request url
 // param obj: object to encode,
 // example data before hamcSHA1 : "GETcvm.api.qcloud.com/v2/index.php?Action=DescribeInstances&InstanceIds.0=ins-09dx
-//				96dg&Nonce=11886&Region=ap-guangzhou&SecretId=xxxxxxxxxx&SignatureMethod=HmacSHA1&Timestamp=1465185768"
+//
+//	96dg&Nonce=11886&Region=ap-guangzhou&SecretId=xxxxxxxxxx&SignatureMethod=HmacSHA1&Timestamp=1465185768"
 func Signature(key, method, url string, obj interface{}) (string, error) {
 	if obj == nil {
 		return "", fmt.Errorf("Can not signature nil object")

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package google
@@ -31,9 +30,9 @@ const (
 	// deleteClusterTaskTemplate bk-sops add task template
 	deleteClusterTaskTemplate = "gke-delete cluster: %s"
 	// gkeAddNodeTaskTemplate bk-sops add task template
-	gkeAddNodeTaskTemplate = "gke-add node: %s"
+	gkeAddNodeTaskTemplate = "gke-add node: %s" // nolint
 	// gkeCleanNodeTaskTemplate bk-sops add task template
-	gkeCleanNodeTaskTemplate = "gke-remove node: %s"
+	gkeCleanNodeTaskTemplate = "gke-remove node: %s" // nolint
 	// createNodeGroupTaskTemplate bk-sops add task template
 	createNodeGroupTaskTemplate = "gke-create node group: %s/%s"
 	// deleteNodeGroupTaskTemplate bk-sops add task template
@@ -45,7 +44,7 @@ const (
 	// cleanNodeGroupNodesTaskTemplate bk-sops add task template
 	cleanNodeGroupNodesTaskTemplate = "gke-remove node group nodes: %s/%s"
 	// moveNodesToNodeGroupTaskTemplate bk-sops add task template
-	moveNodesToNodeGroupTaskTemplate = "gke-move nodes to node group: %s/%s"
+	moveNodesToNodeGroupTaskTemplate = "gke-move nodes to node group: %s/%s" // nolint
 	// switchNodeGroupAutoScalingTaskTemplate bk-sops add task template
 	switchNodeGroupAutoScalingTaskTemplate = "gke-switch node group auto scaling: %s/%s"
 	// updateAutoScalingOptionTemplate bk-sops add task template
@@ -105,7 +104,7 @@ var (
 		StepMethod: fmt.Sprintf("%s-RemoveClusterNodesTaintTask", cloudName),
 		StepName:   "删除预置的污点",
 	}
-	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{
+	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName),
 		StepName:   "更新节点数据",
 	}
@@ -115,11 +114,11 @@ var (
 		StepMethod: fmt.Sprintf("%s-CleanNodeGroupNodesTask", cloudName),
 		StepName:   "下架节点组节点",
 	}
-	checkCleanNodeGroupNodesStatusStep = cloudprovider.StepInfo{
+	checkCleanNodeGroupNodesStatusStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-CheckCleanNodeGroupNodesStatusTask", cloudName),
 		StepName:   "检查节点组状态",
 	}
-	updateCleanNodeGroupNodesDBInfoStep = cloudprovider.StepInfo{
+	updateCleanNodeGroupNodesDBInfoStep = cloudprovider.StepInfo{ // nolint
 		StepMethod: fmt.Sprintf("%s-UpdateCleanNodeGroupNodesDBInfoTask", cloudName),
 		StepName:   "更新节点组数据",
 	}

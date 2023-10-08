@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -23,17 +23,18 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
 const (
 	// Module http tunnel header
-	Module = "BCS-API-Tunnel-Module"
+	Module = "BCS-API-Tunnel-Module" // nolint
 	// Params http tunnel header
-	Params = "BCS-API-Tunnel-Params"
+	Params = "BCS-API-Tunnel-Params" // nolint
 	// Cluster http tunnel header
-	Cluster = "BCS-API-Tunnel-ClusterId"
+	Cluster = "BCS-API-Tunnel-ClusterId" // nolint
 	// KubeAgentModule http tunnel header
 	KubeAgentModule = "kubeagent"
 	// MesosDriverModule http tunnel header
@@ -133,7 +134,7 @@ func (wts *WsTunnelServerCallback) authorizeTunnel(req *http.Request) (string, b
 			UserToken:     registerCluster.UserToken,
 			ConnectMode:   modules.BCSConnectModeTunnel,
 		}
-		if err := wts.model.PutClusterCredential(context.TODO(), newCredential); err != nil {
+		if err := wts.model.PutClusterCredential(context.TODO(), newCredential); err != nil { // nolint
 			blog.Errorf("error when put cluster credential, err %s", err.Error())
 			return "", false, err
 		}

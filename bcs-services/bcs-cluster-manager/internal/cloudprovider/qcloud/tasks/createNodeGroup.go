@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -21,6 +20,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
@@ -28,9 +31,6 @@ import (
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 // CreateCloudNodeGroupTask create cloud node group task
@@ -57,7 +57,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("CheckCleanNodeGroupNodesStatusTask[%s]: GetClusterDependBasicInfo for nodegroup %s "+
-			"in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
+			"in task %s step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error()) // nolint
 		retErr := fmt.Errorf("get cloud/cluster information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -155,7 +155,7 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 }
 
 // CheckCloudNodeGroupStatusTask check cloud node group status task
-func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
+func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -309,7 +309,7 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 }
 
 // generateNodeGroupFromAsg trans nodeGroup from asg
-func generateNodeGroupFromAsg(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool,
+func generateNodeGroupFromAsg(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, // nolint
 	asg *as.AutoScalingGroup) *proto.NodeGroup {
 	// asg
 	if asg.AutoScalingGroupId != nil {
@@ -429,7 +429,7 @@ func generateInternetAccessible(asc *as.LaunchConfiguration) *proto.InternetAcce
 }
 
 // generateImageInfo image info
-func generateImageInfo(cloudNodeGroup *tke.NodePool, group *proto.NodeGroup, imageID string) *proto.ImageInfo {
+func generateImageInfo(cloudNodeGroup *tke.NodePool, group *proto.NodeGroup, imageID string) *proto.ImageInfo { // nolint
 	imageInfo := &proto.ImageInfo{ImageID: imageID}
 	if cloudNodeGroup != nil && cloudNodeGroup.NodePoolOs != nil {
 		for _, v := range utils.ImageOsList {
@@ -517,7 +517,7 @@ func generateAutoScalingGroupPara(as *proto.AutoScalingGroup) *api.AutoScalingGr
 
 // generateLaunchConfigurePara launch template paras
 func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
-	nodeTemplate *proto.NodeTemplate) *api.LaunchConfiguration {
+	nodeTemplate *proto.NodeTemplate) *api.LaunchConfiguration { // nolint
 	if template == nil {
 		return nil
 	}

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package moduleflag
@@ -40,18 +39,21 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 	}
 }
 
-func (ua *UpdateAction) updateModuleFlagList() error {
+func (ua *UpdateAction) updateModuleFlagList() error { // nolint
 	for i := range ua.req.FlagList {
 		// try to get original cloud module flag for return
-		flag, err := ua.model.GetCloudModuleFlag(ua.ctx, ua.req.CloudID, ua.req.Version, ua.req.ModuleID, ua.req.FlagList[i].FlagName)
+		flag, err := ua.model.GetCloudModuleFlag(ua.ctx, ua.req.CloudID, ua.req.Version, ua.req.ModuleID,
+			ua.req.FlagList[i].FlagName)
 		if err != nil {
-			blog.Errorf("Get CloudModuleFlag %s:%s in pre-update failed, err %s", ua.req.CloudID, ua.req.ModuleID, err.Error())
+			blog.Errorf("Get CloudModuleFlag %s:%s in pre-update failed, err %s", ua.req.CloudID,
+				ua.req.ModuleID, err.Error())
 			continue
 		}
 
 		err = ua.updateCloudModuleFlag(flag, ua.req.FlagList[i])
 		if err != nil {
-			blog.Errorf("updateCloudModuleFlag %s:%s failed, err %s", ua.req.CloudID, ua.req.ModuleID, err.Error())
+			blog.Errorf("updateCloudModuleFlag %s:%s failed, err %s", ua.req.CloudID, ua.req.ModuleID,
+				err.Error())
 			continue
 		}
 	}
@@ -59,7 +61,8 @@ func (ua *UpdateAction) updateModuleFlagList() error {
 	return nil
 }
 
-func (ua *UpdateAction) updateCloudModuleFlag(destModuleFlag *cmproto.CloudModuleFlag, flagInfo *cmproto.FlagInfo) error {
+func (ua *UpdateAction) updateCloudModuleFlag(
+	destModuleFlag *cmproto.CloudModuleFlag, flagInfo *cmproto.FlagInfo) error {
 	timeStr := time.Now().Format(time.RFC3339)
 	destModuleFlag.UpdateTime = timeStr
 	destModuleFlag.Updater = ua.req.Operator
@@ -133,5 +136,4 @@ func (ua *UpdateAction) Handle(
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

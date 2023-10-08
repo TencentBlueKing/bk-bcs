@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -66,8 +66,14 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 
 	// sync clean cluster dependency(pass-cc/token/credential)
 	utils.SyncDeletePassCCCluster(taskID, cluster)
-	utils.DeleteBcsAgentToken(cluster.ClusterID)
-	utils.DeleteClusterCredentialInfo(cluster.ClusterID)
+	err = utils.DeleteBcsAgentToken(cluster.ClusterID)
+	if err != nil {
+		return err
+	}
+	err = utils.DeleteClusterCredentialInfo(cluster.ClusterID)
+	if err != nil {
+		return err
+	}
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)

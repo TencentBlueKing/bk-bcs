@@ -8,16 +8,16 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package actions xxx
 package actions
 
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	corev1 "k8s.io/api/core/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -34,7 +34,7 @@ type PermInfo struct {
 // GetCloudAndCluster get relative cloud & cluster information
 func GetCloudAndCluster(model store.ClusterManagerModel,
 	cloudID string, clusterID string) (*proto.Cloud, *proto.Cluster, error) {
-	//get relative Cluster for information injection
+	// get relative Cluster for information injection
 	cluster, err := model.GetCluster(context.Background(), clusterID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cluster %s err, %s", clusterID, err.Error())
@@ -83,7 +83,8 @@ func GetNodeTemplateByTemplateID(model store.ClusterManagerModel, templateID str
 }
 
 // GetAsOptionByClusterID get asOption info
-func GetAsOptionByClusterID(model store.ClusterManagerModel, clusterID string) (*proto.ClusterAutoScalingOption, error) {
+func GetAsOptionByClusterID(
+	model store.ClusterManagerModel, clusterID string) (*proto.ClusterAutoScalingOption, error) {
 	clsAsOption, err := model.GetAutoScalingOption(context.Background(), clusterID)
 	if err != nil {
 		return nil, fmt.Errorf("clusterAOption %s err, %s", clusterID, err.Error())
@@ -138,14 +139,14 @@ func UpdateNodeGroupDesiredSize(model store.ClusterManagerModel, groupID string,
 
 	if out {
 		if group.AutoScaling.DesiredSize >= uint32(nodeNum) {
-			group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize - uint32(nodeNum)
+			group.AutoScaling.DesiredSize -= uint32(nodeNum)
 		} else {
 			group.AutoScaling.DesiredSize = 0
 			blog.Warnf("updateNodeGroupDesiredSize abnormal, desiredSize[%v] scaleNodesNum[%v]",
 				group.AutoScaling.DesiredSize, nodeNum)
 		}
 	} else {
-		group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize + uint32(nodeNum)
+		group.AutoScaling.DesiredSize += uint32(nodeNum)
 	}
 
 	err = model.UpdateNodeGroup(context.Background(), group)

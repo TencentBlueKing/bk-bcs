@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package modulediscovery xxx
 package modulediscovery
 
 import (
@@ -22,11 +22,11 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-
-	"golang.org/x/net/context"
 )
 
 // DiscoveryV2  discover bcs module, examples: bcs-api、bcs-scheduler、bcs-mesos-driver
@@ -36,7 +36,7 @@ type DiscoveryV2 struct {
 
 	// discover bcs endpoints client
 	rd     *RegisterDiscover.RegDiscover
-	cliTLS *tls.Config
+	cliTLS *tls.Config // nolint
 
 	// context
 	rootCxt context.Context
@@ -112,7 +112,7 @@ func (r *DiscoveryV2) GetRandModuleServer(moduleName string) (interface{}, error
 
 	// rand
 	rand.Seed(int64(time.Now().Nanosecond()))
-	serv := servs[rand.Intn(len(servs))]
+	serv := servs[rand.Intn(len(servs))] // nolint
 	return serv, nil
 }
 
@@ -186,7 +186,7 @@ func (r *DiscoveryV2) discoverEndpoints(path string) error {
 	// discovery path's children node
 	if len(zvs.Server) == 0 {
 		for _, v := range zvs.Nodes {
-			r.discoverEndpoints(fmt.Sprintf("%s/%s", path, v))
+			_ = r.discoverEndpoints(fmt.Sprintf("%s/%s", path, v))
 		}
 	}
 
@@ -219,7 +219,7 @@ func (r *DiscoveryV2) discoverModules(key string, init bool) {
 			if index == 1 && init {
 				blog.V(3).Infof("the init watch key %s event, then ignore", key)
 			} else {
-				r.discoverEndpoints(eve.Key)
+				_ = r.discoverEndpoints(eve.Key)
 			}
 
 		case <-r.rootCxt.Done():
@@ -232,5 +232,5 @@ func (r *DiscoveryV2) discoverModules(key string, init bool) {
 // Stop the DiscoveryV2
 func (r *DiscoveryV2) Stop() {
 	r.cancel()
-	r.rd.Stop()
+	_ = r.rd.Stop()
 }

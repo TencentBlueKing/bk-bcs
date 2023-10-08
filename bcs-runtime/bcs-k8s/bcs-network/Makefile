@@ -83,6 +83,11 @@ ingress-controller:
 	cp -R ${BCS_CONF_NETWORK_PATH}/bcs-ingress-controller/* ${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller
 	GOOS=linux go build ${LDFLAG} -o ${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller/bcs-ingress-controller ./bcs-ingress-controller/main.go
 
+node-external-worker:
+	mkdir -p ${INNER_PACKAGEPATH}/bcs-network/bcs-node-external-worker
+	cp -R ${BCS_CONF_NETWORK_PATH}/bcs-node-external-worker/* ${INNER_PACKAGEPATH}/bcs-network/bcs-node-external-worker
+	GOOS=linux go build ${LDFLAG} -o ${INNER_PACKAGEPATH}/bcs-network/bcs-node-external-worker/bcs-node-external-worker ./bcs-node-external-worker/main.go
+
 # ipmasq-cidrsync bcs ipmasq cidrsync
 ipmasq-cidrsync:
 	mkdir -p ${INNER_PACKAGEPATH}/bcs-network/bcs-ipmasq-cidrsync

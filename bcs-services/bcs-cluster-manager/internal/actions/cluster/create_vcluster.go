@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cluster
@@ -18,16 +17,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -132,7 +132,7 @@ func (ca *CreateVirtualClusterAction) constructCluster(cloud *cmproto.Cloud) (*c
 }
 
 // checkClusterMasterNodes for check cloud node
-func (ca *CreateVirtualClusterAction) checkClusterMasterNodes(cls *cmproto.Cluster) error {
+func (ca *CreateVirtualClusterAction) checkClusterMasterNodes(cls *cmproto.Cluster) error { // nolint
 	// vcluster not init master ip
 	cls.Master = make(map[string]*cmproto.Node)
 	return nil
@@ -281,8 +281,8 @@ func (ca *CreateVirtualClusterAction) Handle(ctx context.Context, req *cmproto.C
 		return
 	}
 
-	ca.locker.Lock(createClusterIDLockKey, []lock.LockOption{lock.LockTTL(time.Second * 10)}...)
-	defer ca.locker.Unlock(createClusterIDLockKey)
+	ca.locker.Lock(createClusterIDLockKey, []lock.LockOption{lock.LockTTL(time.Second * 10)}...) // nolint
+	defer ca.locker.Unlock(createClusterIDLockKey)                                               // nolint
 
 	// create cluster save to mongoDB
 	// generate cluster task and dispatch it
@@ -311,7 +311,6 @@ func (ca *CreateVirtualClusterAction) Handle(ctx context.Context, req *cmproto.C
 	ca.resp.Data = cls
 	ca.resp.Task = ca.task
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }
 
 func (ca *CreateVirtualClusterAction) createVirtualClusterTask(ctx context.Context, cls *cmproto.Cluster) error {

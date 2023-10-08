@@ -58,7 +58,7 @@ func (m *BKMonitor) GetContainerCPUUsage(ctx context.Context, projectID, cluster
 func (m *BKMonitor) GetContainerMemoryUsed(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `max by(container_name) (container_memory_working_set_bytes{cluster_id="%<clusterID>s", ` +
-		`namespace="%<namespace>s", pod_name="%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
+		`namespace="%<namespace>s", pod_name="%<podname>s", container_name=~"%<containerName>s", %<provider>s})` // nolint
 
 	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList, promql, start, end,
 		step)

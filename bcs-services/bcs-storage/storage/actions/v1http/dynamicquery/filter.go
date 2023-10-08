@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package dynamicquery
@@ -27,6 +26,8 @@ type qFilter interface {
 	GetCondition() *operator.Condition
 }
 
+// NOCC:golint/unparam(设计如此:)
+// nolint
 func qGenerate(q qFilter, timeLayout string) *operator.Condition {
 	typeOf := reflect.TypeOf(q)
 	n := typeOf.NumField()
@@ -37,6 +38,8 @@ func qGenerate(q qFilter, timeLayout string) *operator.Condition {
 
 		var tag, op, value string
 		var allowNoExists bool
+		// NOCC:revive/early-return(设计如此:)
+		// nolint
 		if tagRaw := field.Tag.Get("filter"); tagRaw != "" {
 			tagList := strings.Split(tagRaw, ",")
 			tag = tagList[0]
@@ -50,6 +53,8 @@ func qGenerate(q qFilter, timeLayout string) *operator.Condition {
 			continue
 		}
 
+		// NOCC:revive/early-return(设计如此:)
+		// nolint
 		if valueRaw := reflect.ValueOf(q).FieldByName(field.Name); valueRaw.Type().Kind() == reflect.String {
 			if value = valueRaw.String(); value == "" {
 				continue
@@ -62,12 +67,16 @@ func qGenerate(q qFilter, timeLayout string) *operator.Condition {
 		// extra filter
 		switch op {
 		case "timeL":
+			// NOCC:revive/early-return(设计如此:)
+			// nolint
 			if t, err := getTime(value, timeLayout); err == nil {
 				sub = operator.NewLeafCondition(operator.Gt, operator.M{tag: t})
 			} else {
 				continue
 			}
 		case "timeR":
+			// NOCC:revive/early-return(设计如此:)
+			// nolint
 			if t, err := getTime(value, timeLayout); err == nil {
 				sub = operator.NewLeafCondition(operator.Lt, operator.M{tag: t})
 			} else {

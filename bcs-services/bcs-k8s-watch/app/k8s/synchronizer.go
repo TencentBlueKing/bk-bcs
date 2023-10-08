@@ -4,11 +4,10 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package k8s
@@ -19,11 +18,11 @@ import (
 	"strings"
 	"time"
 
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	jsoniter "github.com/json-iterator/go"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
 
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/k8s/resources"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output/action"
@@ -319,14 +318,14 @@ func (sync *Synchronizer) doRequest(namespace, selector, kind string) (data []in
 		// the process get address from zk not finished yet or there is no storage server on zk.
 		err = fmt.Errorf("storage server list is empty, got no address yet")
 		glog.Errorf(err.Error())
-		return
+		return data, err
 	}
 
 	var httpClientConfig *bcs.HTTPClientConfig
 	if serversCount == 1 {
 		httpClientConfig = targets[0]
 	} else {
-		index := rand.Intn(serversCount)
+		index := rand.Intn(serversCount) // nolint
 		httpClientConfig = targets[index]
 	}
 
@@ -346,5 +345,5 @@ func (sync *Synchronizer) doRequest(namespace, selector, kind string) (data []in
 		data, err = client.ListClusterResourceWithLabelSelector(selector)
 	}
 	// NOCC:nakedret/ret(设计如此:允许空返回值)
-	return
+	return data, err
 }

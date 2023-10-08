@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package cache xxx
@@ -66,11 +65,11 @@ func (c *Cache) Delete(obj interface{}) error {
 	}
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	if _, found := c.dataMap[key]; found {
-		delete(c.dataMap, key)
-	} else {
+	_, found := c.dataMap[key]
+	if !found {
 		return DataNoExist{obj}
 	}
+	delete(c.dataMap, key)
 	return nil
 }
 

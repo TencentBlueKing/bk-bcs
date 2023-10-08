@@ -23,10 +23,11 @@ const (
 )
 
 // New return a new Auth instance
-//   authType: Basic or Platform
-//   uid: user id
-//   username: auth username
-//   password: auth password
+//
+//	authType: Basic or Platform
+//	uid: user id
+//	username: auth username
+//	password: auth password
 func New(authType, uid, username, password string) *Auth {
 	if authType == "" {
 		authType = "Basic"
@@ -44,7 +45,7 @@ func New(authType, uid, username, password string) *Auth {
 type Auth struct {
 	authType string
 	uid      string
-	upwd     string
+	upwd     string // nolint
 	username string
 	password string
 
@@ -65,8 +66,9 @@ func (a *Auth) GetAuthToken() string {
 
 // SetHeader set the auth-relative http headers before request to bk-repo
 // by default we need:
-//   Authorization: token
-//   X-BKREPO-UID: uid
+//
+//	Authorization: token
+//	X-BKREPO-UID: uid
 func (a *Auth) SetHeader(header http.Header) {
 	header.Set("Authorization", a.GetAuthToken())
 	header.Set(headerUID, a.uid)

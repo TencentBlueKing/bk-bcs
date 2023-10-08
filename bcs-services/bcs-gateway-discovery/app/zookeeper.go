@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package app
@@ -25,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	bcsapicm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 )
 
@@ -69,14 +69,15 @@ func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service,
 	for _, info := range originals {
 		data := info.(string)
 		svc := new(types.ServerInfo)
-		if err := json.Unmarshal([]byte(data), svc); err != nil {
-			blog.Errorf("handle module %s json %s unmarshal failed, %s", module, data, err.Error())
+		if jsonErr := json.Unmarshal([]byte(data), svc); jsonErr != nil {
+			blog.Errorf("handle module %s json %s unmarshal failed, %s", module, data, jsonErr.Error())
 			continue
 		}
 		// ! compatible code here, when mesos driver already start etcd registry feature
 		// ! discovery stop adopt zookeeper registry information
 		if s.isClusterRestriction(svc.Cluster) {
-			blog.Warnf("discovery check that cluster %s[%s] mesosdriver change to etcd registry, skip", svc.Cluster, svc.IP)
+			blog.Warnf("discovery check that cluster %s[%s] mesosdriver change to etcd registry, skip",
+				svc.Cluster, svc.IP)
 			skip = true
 			continue
 		}
@@ -148,7 +149,7 @@ func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Ser
 	return localSvcs, nil
 }
 
-func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Service, error) {
+func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Service, error) { // nolint
 	// get api-server information from bcs-cluster-manager etcd registry
 	node, err := s.microDiscovery.GetRandomServerInstance(modules.BCSModuleClusterManager)
 	if err != nil {
@@ -167,8 +168,8 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 	}
 	config.TLSConfig, _ = s.option.GetClientTLS()
 	if s.clusterCli == nil {
-		blog.Infof(
-			"No cluster manager client, get random cluster-manager instance [%s] from etcd registry for query kube-apiserver", node.Address)
+		blog.Infof("No cluster manager client, get random cluster-manager instance [%s] "+
+			"from etcd registry for query kube-apiserver", node.Address)
 		s.clusterCli = bcsapi.NewClusterManager(config)
 	}
 	req := &bcsapicm.ListClusterCredentialReq{
@@ -225,10 +226,8 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 			if len(hostport) == 2 {
 				port, _ := strconv.Atoi(hostport[1])
 				svc.Port = uint(port)
-			} else {
-				if svc.Scheme == "http" {
-					svc.Port = 80
-				}
+			} else if svc.Scheme == "http" {
+				svc.Port = 80
 			}
 			svcs = append(svcs, svc)
 		}
@@ -247,7 +246,7 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 	return localSvcs, nil
 }
 
-func (s *DiscoveryServer) formatMultiServerInfo(smodules []string) ([]*register.Service, error) {
+func (s *DiscoveryServer) formatMultiServerInfo(smodules []string) ([]*register.Service, error) { // nolint
 	var regSvcs []*register.Service
 	for _, m := range smodules {
 		if m == modules.BCSModuleMesosdriver {

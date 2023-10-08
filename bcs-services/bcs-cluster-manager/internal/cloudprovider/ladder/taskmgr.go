@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package ladder
@@ -20,14 +19,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/ladder/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/google/uuid"
 )
 
 var taskMgr sync.Once
@@ -152,7 +151,7 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 
 // BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
 // including remove nodes from NodeGroup, clean data in nodes
-func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
+func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, // nolint
 	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
 
 	// clean nodes in yunti only has two steps:
@@ -280,7 +279,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 }
 
 // BuildUpdateDesiredNodesTask scale cluster nodes
-func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
+func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, // nolint
 	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
 	// validate request params
 	if desired == 0 {
@@ -336,7 +335,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	updateDesiredNodes.BuildCheckClusterNodeStatusStep(task)
 
 	// platform define sops task
-	if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil && opt.Cloud.NodeGroupManagement.UpdateDesiredNodes != nil {
+	if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil &&
+		opt.Cloud.NodeGroupManagement.UpdateDesiredNodes != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.SystemInit,
 			Cluster:  opt.Cluster,
@@ -344,8 +344,9 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 				InstancePasswd: passwd,
 				NodeIPList:     "",
 				NodeOperator:   opt.Operator,
-				ModuleID:       cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate, true),
-				BusinessID:     cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, true),
+				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate,
+					true),
+				BusinessID: cloudprovider.GetBusinessID(opt.AsOption, group.NodeTemplate, true),
 			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.UpdateDesiredNodes, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask platform BuildBkSopsStepAction failed: %v", err)
@@ -405,7 +406,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 }
 
 // BuildDeleteNodeGroupTask delete nodegroup
-func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
+func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node, // nolint
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
 	// validate request params
 	if group == nil {
@@ -425,7 +426,7 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 		deviceIDs = append(deviceIDs, node.DeviceID)
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -489,7 +490,8 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 		}
 
 		// platform clean sops task
-		if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil && opt.Cloud.NodeGroupManagement.CleanNodesInGroup != nil {
+		if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil &&
+			opt.Cloud.NodeGroupManagement.CleanNodesInGroup != nil {
 			err := template.BuildSopsFactory{
 				StepName: template.SystemInit,
 				Cluster:  opt.Cluster,

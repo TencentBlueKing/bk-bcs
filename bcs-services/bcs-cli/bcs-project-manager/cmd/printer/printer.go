@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package printer defines the table writer
@@ -25,7 +24,7 @@ import (
 )
 
 // defaultTableWriter create the tablewriter instance
-func defaultTableWriter() *tablewriter.Table {
+func defaultTableWriter() *tablewriter.Table { // nolint
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeaderLine(false)
 	table.SetRowLine(false)

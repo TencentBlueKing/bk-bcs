@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package printer xxx
 package printer
 
 import (
@@ -151,7 +151,7 @@ func PrintListCredentialsCmdResult(flagOutput string, resp *pkg.ListCredentialsR
 	// 添加页脚
 	tw.SetFooter([]string{"", "", "", "Total", strconv.Itoa(len(resp.Data))})
 	// 合并相同值的列
-	//tw.SetAutoMergeCells(true)
+	// tw.SetAutoMergeCells(true)
 	for key, item := range resp.Data {
 		tw.Append(func() []string {
 			return []string{

@@ -4,13 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package http xxx
 package http
 
 import (
@@ -20,15 +20,15 @@ import (
 	"strings"
 	"time"
 
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/pkg/metrics"
 )
@@ -52,7 +52,8 @@ const (
 	// ResourceTypeEvent is resource type of event.
 	ResourceTypeEvent = "Event"
 	// NamespaceScopeURLFmt xxx
-	// bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}
+	// bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/{clusterId}/
+	// namespaces/{namespace}/{resourceType}/{resourceName}
 	NamespaceScopeURLFmt = "%s/bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/%s/namespaces/%s/%s/%s"
 	// HandlerGetNamespaceName xxx
 	// handler namespace type name resource
@@ -148,8 +149,8 @@ func (client *StorageClient) GetURL() (string, string) {
 	// namespace resource
 	if client.Namespace != "" {
 		return fmt.Sprintf(
-				NamespaceScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.Namespace, client.ResourceType,
-				client.ResourceName),
+				NamespaceScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.Namespace,
+				client.ResourceType, client.ResourceName),
 			HandlerGetNamespaceName
 	}
 
@@ -185,7 +186,7 @@ func (client *StorageClient) GetBody(data interface{}) (interface{}, error) {
 
 	eventTime := time.Time{}
 
-	if !event.LastTimestamp.IsZero() {
+	if !event.LastTimestamp.IsZero() { // nolint
 		eventTime = event.LastTimestamp.Time
 	} else if !event.FirstTimestamp.IsZero() {
 		eventTime = event.FirstTimestamp.Time
@@ -248,7 +249,7 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 		status = metrics.ErrStatus
 		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodGet, status, start)
-		return
+		return storageResp, err
 	}
 	resp, _, errs := request.
 		Timeout(StorageRequestTimeoutSeconds*time.Second).
@@ -270,7 +271,7 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodGet, status, start)
 	// NOCC:nakedret/ret(设计如此:允许空返回值)
-	return
+	return storageResp, err
 }
 
 // DELETE delete
@@ -285,7 +286,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 		status = metrics.ErrStatus
 		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodDelete, status, start)
-		return
+		return storageResp, err
 	}
 	resp, _, errs := request.
 		Timeout(StorageRequestTimeoutSeconds*time.Second).
@@ -307,7 +308,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodDelete, status, start)
 	// NOCC:nakedret/ret(设计如此:允许空返回值)
-	return
+	return storageResp, err
 }
 
 // PUT put
@@ -318,7 +319,7 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 
 	request, err := client.NewRequest()
 	if err != nil {
-		return
+		return storageResp, err
 	}
 
 	body, err := client.GetBody(data)
@@ -326,7 +327,7 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 		status = metrics.ErrStatus
 		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodPut, status, start)
-		return
+		return storageResp, err
 	}
 
 	resp, _, errs := request.
@@ -337,12 +338,13 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 		EndStruct(&storageResp)
 
 	if !storageResp.Result || errs != nil {
-		debugBody, err := jsoniter.Marshal(body)
+		debugBody, err := jsoniter.Marshal(body) // nolint
 		if err != nil {
-			glog.Errorf("method=PUT url=%s, body=%v, errors=%s, resp=%v, storageResp=%v", url, body, errs, resp, storageResp)
+			glog.Errorf("method=PUT url=%s, body=%v, errors=%s, resp=%v, storageResp=%v", url, body, errs,
+				resp, storageResp)
 		} else {
-			glog.Debug(fmt.Sprintf("method=PUT url=%s, body=%s, errors=%s, resp=%v, storageResp=%v", url, string(debugBody),
-				errs, resp, storageResp))
+			glog.Debug(fmt.Sprintf("method=PUT url=%s, body=%s, errors=%s, resp=%v, storageResp=%v", url,
+				string(debugBody), errs, resp, storageResp))
 		}
 		status = metrics.ErrStatus
 	}
@@ -356,7 +358,7 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodPut, status, start)
 	// NOCC:nakedret/ret(设计如此:允许空返回值)
-	return
+	return storageResp, err
 }
 
 func (client *StorageClient) listResource(url string, handlerName string) (data []interface{}, err error) {
@@ -374,7 +376,7 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 	request, err := client.NewRequest()
 	if err != nil {
 		status = metrics.ErrStatus
-		return
+		return data, err
 	}
 
 	resp, _, errs := request.
@@ -385,13 +387,13 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 	if !storageResp.Result {
 		status = metrics.ErrStatus
 		err = fmt.Errorf("listResource result=false [url=%s, resp=%v, storageResp=%v]", url, resp, storageResp)
-		return
+		return data, err
 	}
 
 	if errs != nil {
 		status = metrics.ErrStatus
 		err = fmt.Errorf("listResource do GET fail! [url=%s, resp=%v, errs=%s]", url, resp, errs)
-		return
+		return data, err
 	}
 
 	if storageResp.Data != nil {
@@ -399,12 +401,12 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 		if !ok {
 			status = metrics.ErrStatus
 			err = fmt.Errorf("listResource interface conversion error! [url=%s, resp=%v, errs=%s]", url, resp, errs)
-			return
+			return data, err
 		}
 		data = d
 	}
 	// NOCC:nakedret/ret(设计如此:允许空返回值)
-	return
+	return data, err
 }
 
 // ListNamespaceResource list namespace resource
@@ -472,7 +474,7 @@ func (client *StorageClient) ListNsResourceWithLabelSelector(labelSelector strin
 	if client.ResourceType == ResourceTypeEvent {
 		for i := range data {
 			data[i].(map[string]interface{})["resourceName"] =
-				data[i].(map[string]interface{})["data"].(map[string]interface{})["metadata"].(map[string]interface{})["name"]
+				data[i].(map[string]interface{})["data"].(map[string]interface{})["metadata"].(map[string]interface{})["name"] // nolint
 			delete(data[i].(map[string]interface{}), "data")
 		}
 	}

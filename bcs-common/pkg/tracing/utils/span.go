@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -45,8 +44,6 @@ func SetSpanKindTag(span opentracing.Span, kind ext.SpanKindEnum) {
 		ext.SpanKindConsumer.Set(span)
 	default:
 	}
-
-	return
 }
 
 // SetSpanComponentTag is a identifier of the module, library, or package that is generating a span.
@@ -104,8 +101,6 @@ func SetSpanPeerTag(span opentracing.Span, kind PeerKind, value string) {
 		PeerTagHandler.Set(span, value)
 	default:
 	}
-
-	return
 }
 
 // ////////////////////////////////////////////////////////////////////
@@ -117,7 +112,7 @@ type HTTPKind string
 
 var (
 	// HTTPTagHandler is handler name tag for span
-	HTTPTagHandler = ext.StringTagName("handler")
+	HTTPTagHandler = ext.StringTagName("handler") // nolint
 )
 
 const (
@@ -145,8 +140,6 @@ func SetSpanHTTPTag(span opentracing.Span, kind HTTPKind, value string) {
 		ext.HTTPStatusCode.Set(span, uint16(port))
 	default:
 	}
-
-	return
 }
 
 // ////////////////////////////////////////////////////////////////////
@@ -201,8 +194,6 @@ func SetSpanDBTag(span opentracing.Span, kind DBKind, value string) {
 		DBTagOperation.Set(span, value)
 	default:
 	}
-
-	return
 }
 
 // ////////////////////////////////////////////////////////////////////

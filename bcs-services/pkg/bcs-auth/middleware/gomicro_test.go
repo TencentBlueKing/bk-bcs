@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -23,6 +23,7 @@ import (
 	"github.com/micro/go-micro/v2/server"
 )
 
+// nolint
 func TestGoMicroAuth(t *testing.T) {
 	jwtClient, err := jwt.NewJWTClient(jwt.JWTOptions{VerifyKeyFile: "./testdata/app.rsa.pub",
 		SignKeyFile: "./testdata/app.rsa"})
@@ -140,10 +141,10 @@ type Request struct {
 	endpoint    string
 	contentType string
 	header      map[string]string
-	body        []byte
+	body        []byte // nolint
 	rawBody     interface{}
 	stream      bool
-	first       bool
+	first       bool // nolint
 }
 
 func (r Request) Service() string {

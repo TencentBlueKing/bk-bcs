@@ -32,7 +32,8 @@ func (h *HttpServerClient) listNode(request *restful.Request, response *restful.
 	nodeName := request.QueryParameter("node_name")
 	nodeInternalIP := request.QueryParameter("node_ip")
 	if nodeName == "" && nodeInternalIP == "" {
-		_, _ = response.Write(CreateResponseData(errors.New("empty parameter: node_name and node_ip"), "", nil))
+		_, _ = response.Write(CreateResponseData(errors.New("empty parameter: both node_name and node_ip are empty"),
+			"", nil))
 		mf(strconv.Itoa(http.StatusInternalServerError))
 		return
 	}

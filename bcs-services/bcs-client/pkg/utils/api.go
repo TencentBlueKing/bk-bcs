@@ -8,15 +8,16 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package utils xxx
 package utils
 
 import (
 	"bufio"
 	"context"
 	"crypto/rand"
+	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -26,14 +27,12 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
-	"github.com/pkg/errors"
-
-	"crypto/tls"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 )
 
 // ApiRequester http interface for bcs-client
@@ -64,7 +63,7 @@ func (b *bcsApiRequester) Do(uri, method string, data []byte, header ...*http.He
 	httpCli.SetHeader("Content-Type", "application/json")
 	httpCli.SetHeader("Accept", "application/json")
 	if b.bcsToken != "" {
-		httpCli.SetHeader("Authorization", "Bearer "+b.bcsToken)
+		httpCli.SetHeader("Authorization", "Bearer "+b.bcsToken) // nolint
 	}
 	// httpCli.SetHeader("X-Bcs-User-Token", b.bcsToken)
 
@@ -125,10 +124,8 @@ func (b *bcsApiRequester) DoWebsocket(uri string, header ...*http.HeaderSet) (ty
 	if b.bcsToken != "" {
 		wsHeader.Set("Authorization", "Bearer "+b.bcsToken)
 	}
-	if header != nil {
-		for _, h := range header {
-			wsHeader.Set(h.Key, h.Value)
-		}
+	for _, h := range header {
+		wsHeader.Set(h.Key, h.Value)
 	}
 
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), wsHeader)
@@ -150,10 +147,8 @@ func (b *bcsApiRequester) PostHijacked(ctx context.Context, uri string, header .
 	if err != nil {
 		return types.HijackedResponse{}, err
 	}
-	if header != nil {
-		for _, h := range header {
-			req.Header.Set(h.Key, h.Value)
-		}
+	for _, h := range header {
+		req.Header.Set(h.Key, h.Value)
 	}
 	if b.bcsToken != "" {
 		req.Header.Set("Authorization", "Bearer "+b.bcsToken)
@@ -191,12 +186,18 @@ func (b *bcsApiRequester) setupHijackConn(ctx context.Context, uri string, req *
 	}
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
-		tcpConn.SetKeepAlive(true)
-		tcpConn.SetKeepAlivePeriod(30 * time.Second)
+		err = tcpConn.SetKeepAlive(true)
+		if err != nil {
+			return nil, err
+		}
+		err = tcpConn.SetKeepAlivePeriod(30 * time.Second)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	clientconn := httputil.NewClientConn(conn, nil)
-	defer clientconn.Close()
+	clientconn := httputil.NewClientConn(conn, nil) // nolint
+	defer clientconn.Close()                        // nolint
 
 	// Server hijacks the connection, error 'connection closed' expected
 	resp, err := clientconn.Do(req)

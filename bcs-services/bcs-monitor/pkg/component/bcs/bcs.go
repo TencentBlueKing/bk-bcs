@@ -8,10 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-// Package bcs xxx
+// Package bcs 集群操作
 package bcs
 
 import (
@@ -129,7 +128,6 @@ func ListClusters() {
 	}
 
 	storage.LocalCache.Slot.Set(listClustersCacheKey, clusterMap, -1)
-	return
 }
 
 func parseVClusterInfo(s string) (VclusterInfo, error) {

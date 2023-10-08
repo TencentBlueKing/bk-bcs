@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -114,6 +114,8 @@ func (c *control) controllerLoops() {
 
 // handleStrategy handle one strategy for specified ResourcePool
 // make decision that elasticNodeGroup need to ScaleUp or ScaleDown
+// NOCC:golint/funlen(设计如此)
+// nolint
 func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 	var msg, status string
 	var globalErr error
@@ -280,6 +282,8 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 }
 
 // tracingScaleDownAction track exist nodegroup scaledown action
+// NOCC:golint/funlen(设计如此)
+// nolint
 func (c *control) tracingScaleDownAction(strategy *storage.NodeGroupMgrStrategy,
 	scaleDownNum int, actions []*storage.NodeGroupAction) error {
 	// check exist nodegroup action is suitable for tracing
@@ -385,6 +389,8 @@ func (c *control) tracingScaleDownAction(strategy *storage.NodeGroupMgrStrategy,
 }
 
 // tracingScaleUpAction track
+// NOCC:golint/funlen(设计如此)
+// nolint
 func (c *control) tracingScaleUpAction(strategy *storage.NodeGroupMgrStrategy,
 	scaleUpNum int, actions []*storage.NodeGroupAction) error {
 	// check exist nodegroup action is suitable for tracing
@@ -489,8 +495,9 @@ func (c *control) tracingScaleUpAction(strategy *storage.NodeGroupMgrStrategy,
 
 // cleanUnexpectedNodeGroupActions 清理掉操作方向不一致的记录.
 // return:
-//   bool, true if nodegroupAction was delete， otherwise false
-//   error, if any error happened
+//
+//	bool, true if nodegroupAction was delete， otherwise false
+//	error, if any error happened
 func (c *control) cleanUnexpectedNodeGroupActions(action *storage.NodeGroupAction, expectedState string) (bool, error) {
 	if action.Event != expectedState {
 		blog.Infof("[nodegroupController] exist %s/%s nodegroup action is not %s, clean outdated action. details: %+v",
@@ -549,7 +556,7 @@ func (c *control) handleElasticNodeGroupScaleUp(strategy *storage.NodeGroupMgrSt
 	// for next tick to confirm progress.
 	for _, ng := range nodegrps {
 		nodegroup := nodegroups[ng.NodeGroupID]
-		//original := nodegroup.DesiredSize
+		// original := nodegroup.DesiredSize
 		original := nodegroup.CmDesiredSize
 		nodegroup.DesiredSize = original + ng.partition
 		nodegroup.LastScaleUpTime = time.Now()

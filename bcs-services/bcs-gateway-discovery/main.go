@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package main xxx
 package main
 
 import (
@@ -25,13 +25,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/service"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/app"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
-
 	"github.com/google/uuid"
 	"github.com/micro/go-micro/v2/sync"
 	"github.com/micro/go-micro/v2/sync/etcd"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/app"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 )
 
 // discovery now is designed for stage that bkbcs routes http/https traffics.
@@ -98,7 +98,7 @@ func leaderTracing(cxt context.Context, leader sync.Leader, svc *app.DiscoverySe
 	lost := leader.Status()
 	select {
 	case <-cxt.Done():
-		leader.Resign()
+		_ = leader.Resign()
 		blog.Infof("catch signal, ready to exit leader tracing")
 		return
 	case <-lost:
@@ -115,5 +115,5 @@ func leaderTracing(cxt context.Context, leader sync.Leader, svc *app.DiscoverySe
 func runPrometheusServer(opt *app.ServerOptions) {
 	http.Handle("/metrics", promhttp.Handler())
 	addr := opt.Address + ":" + strconv.Itoa(int(opt.MetricPort))
-	go http.ListenAndServe(addr, nil)
+	go http.ListenAndServe(addr, nil) // nolint
 }

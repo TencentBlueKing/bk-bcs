@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package events
@@ -21,16 +20,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emicklei/go-restful"
-	"go-micro.dev/v4/broker"
-	mopt "go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/emicklei/go-restful"
+	"go-micro.dev/v4/broker"
+	mopt "go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
@@ -371,7 +370,7 @@ func watch(req *restful.Request, resp *restful.Response) {
 	clusterID := req.QueryParameter(clusterIDTag)
 	if clusterID == "" {
 		blog.Errorf("request clusterID is empty")
-		resp.WriteError(http.StatusBadRequest, fmt.Errorf("request clusterID is empty"))
+		_ = resp.WriteError(http.StatusBadRequest, fmt.Errorf("request clusterID is empty"))
 		return
 	}
 	newWatchOption := &lib.WatchServerOption{
@@ -383,7 +382,7 @@ func watch(req *restful.Request, resp *restful.Response) {
 	ws, err := lib.NewWatchServer(newWatchOption)
 	if err != nil {
 		blog.Errorf("event get watch server failed, err %s", err.Error())
-		resp.Write(lib.EventWatchBreakBytes)
+		_, _ = resp.Write(lib.EventWatchBreakBytes)
 		return
 	}
 
@@ -434,6 +433,8 @@ func publishEventResourceToQueue(data operator.M, featTags []string, event msgqu
 		return nil
 	}
 
+	// NOCC:revive/early-return(设计如此:)
+	// nolint
 	if v, ok := data[dataTag]; ok {
 		codec.EncJson(v, &message.Body)
 	} else {

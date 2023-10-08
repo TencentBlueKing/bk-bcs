@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package delete
@@ -53,7 +52,7 @@ func deleteClustersNamespace() *cobra.Command {
 			request.ProjectCode = projectCode
 			resp, err := pkg.NewClientWithConfiguration(context.Background()).DeleteNamespace(request)
 			if err != nil {
-				klog.Infoln("delete project namespace failed: %v", err)
+				klog.Infof("delete project namespace failed: %v", err)
 				return
 			}
 			printer.PrintInJSON(resp)

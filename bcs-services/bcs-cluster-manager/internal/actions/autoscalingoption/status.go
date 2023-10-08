@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package autoscalingoption
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -52,7 +52,7 @@ func (ua *UpdateAutoScalingStatusAction) setResp(code uint32, msg string) {
 }
 
 func (ua *UpdateAutoScalingStatusAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	asOption, err := ua.model.GetAutoScalingOption(ua.ctx, ua.req.ClusterID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -197,5 +197,4 @@ func (ua *UpdateAutoScalingStatusAction) Handle(
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

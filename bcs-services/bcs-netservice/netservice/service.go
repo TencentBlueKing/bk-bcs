@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package netservice
@@ -23,9 +22,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
-
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
 )
 
 const (
@@ -139,7 +138,10 @@ func (srv *NetService) createSelfNode() error {
 	// clean self node first and then create new one
 	if exist, _ := srv.store.Exist(key); exist {
 		blog.Warn("server node %s exist, clean first", key)
-		srv.store.Delete(key)
+		if _, err := srv.store.Delete(key); err != nil {
+			blog.Errorf("server node %s clean failed: %v", key, err)
+		}
+
 	}
 	err := srv.store.RegisterAndWatch(key, data)
 	if err != nil {

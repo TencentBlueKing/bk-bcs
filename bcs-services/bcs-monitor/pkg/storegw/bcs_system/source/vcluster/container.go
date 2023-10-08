@@ -60,7 +60,7 @@ func (m *VCluster) GetContainerMemoryUsed(ctx context.Context, projectID, cluste
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
 		`max by(container_name) (container_memory_working_set_bytes{cluster_id="%<clusterID>s", ` +
-			`namespace="%<namespace>s", pod_name="%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
+			`namespace="%<namespace>s", pod_name="%<podname>s", container_name=~"%<containerName>s", %<provider>s})` // nolint
 
 	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList, promql, start, end,
 		step)

@@ -1,15 +1,16 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package handler xxx
 package handler
 
 import (
@@ -17,12 +18,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
-
 	bcsCommon "github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
@@ -78,7 +78,7 @@ func (e *BcsDataManager) GetProjectInfo(ctx context.Context,
 		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	if req.GetProject() == "" && req.GetProjectCode() == "" && req.GetBusiness() == "" {
-		rsp.Message = fmt.Sprintf("get project info error, projectId, businessID or projectCode is required")
+		rsp.Message = "get project info error, projectId, businessID or projectCode is required"
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetProjectInfo", "grpc", prom.StatusErr, start)
@@ -154,12 +154,12 @@ func (e *BcsDataManager) GetAllClusterList(ctx context.Context, req *bcsdatamana
 func (e *BcsDataManager) GetClusterListByProject(ctx context.Context, req *bcsdatamanager.GetClusterListRequest,
 	rsp *bcsdatamanager.GetClusterListResponse) error {
 	blog.Infof("Received GetClusterListByProject.Call request. Project id: %s, dimension:%s, page:%s, size:%s, "+
-		"startTime=%s, endTime=%s",
+		"startTime=%s, endTime=%s", // nolint
 		req.GetProject(), req.GetDimension(), req.GetPage(), req.GetSize(), time.Unix(req.GetStartTime(), 0),
 		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	if req.GetProject() == "" && req.GetBusiness() == "" && req.GetProjectCode() == "" {
-		rsp.Message = fmt.Sprintf("get cluster list info error, projectId, projectCode or businessID is required")
+		rsp.Message = "get cluster list info error, projectId, projectCode or businessID is required"
 		rsp.Code = bcsCommon.AdditionErrorCode + 500
 		blog.Errorf(rsp.Message)
 		prom.ReportAPIRequestMetric("GetClusterListByProject", "grpc", prom.StatusErr, start)

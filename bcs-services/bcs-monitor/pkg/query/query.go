@@ -8,10 +8,8 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-// Package query xxx
 package query
 
 import (
@@ -42,7 +40,7 @@ import (
 )
 
 // QueryAPI promql api 服务, 封装 thaons 的API使用
-type QueryAPI struct {
+type QueryAPI struct { // nolint
 	StoresList   []string
 	endpoints    *query.EndpointSet
 	srv          *httpserver.Server
@@ -57,18 +55,9 @@ type QueryAPI struct {
 // 使用配置文件配置
 // 启动 query 模块，暴露http
 // query模块对应我们的store
-func NewQueryAPI(
-	ctx context.Context,
-	reg *prometheus.Registry,
-	tracer opentracing.Tracer,
-	kitLogger gokit.Logger,
-	httpAddr string,
-	httpPort string,
-	addrIPv6 string,
-	strictStoreList []string,
-	storeList []string,
-	httpSDURLs []string,
-	g *run.Group,
+func NewQueryAPI(ctx context.Context, reg *prometheus.Registry, tracer opentracing.Tracer, kitLogger gokit.Logger,
+	httpAddr string, httpPort string, addrIPv6 string, strictStoreList []string, storeList []string,
+	httpSDURLs []string, g *run.Group,
 ) (*QueryAPI, error) {
 	discoveryClient, err := NewDiscoveryClient(ctx, reg, tracer, kitLogger, strictStoreList, storeList, httpSDURLs, g)
 	if err != nil {

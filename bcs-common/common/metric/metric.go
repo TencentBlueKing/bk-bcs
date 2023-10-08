@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package metric xxx
@@ -18,15 +17,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 func newMetricController(conf Config, metrics ...*MetricContructor) (*MetricController, error) {
 	metricController := new(MetricController)
 	meta := MetaData{
-		Module:     strings.Replace(conf.ModuleName, "-", "_", -1),
+		Module:     strings.ReplaceAll(conf.ModuleName, "-", "_"),
 		IP:         conf.IP,
 		MetricPort: conf.MetricPort,
 		ClusterID:  conf.ClusterID,
@@ -38,15 +37,13 @@ func newMetricController(conf Config, metrics ...*MetricContructor) (*MetricCont
 
 	// initial metrics
 	var ms []*MetricContructor
-	for _, metric := range metrics {
-		ms = append(ms, metric)
-	}
+	ms = append(ms, metrics...)
 	metricController.Metrics = ms
 	return metricController, nil
 }
 
 // MetricController controller implementation
-type MetricController struct {
+type MetricController struct { // nolint
 	Meta    MetaData
 	Metrics []*MetricContructor
 }

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -27,7 +27,7 @@ import (
 // DeleteCloudNodeGroupTask delete cloud node group task
 func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -70,26 +70,30 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 	found := true
 	if dependInfo.NodeGroup.CloudNodeGroupID != "" {
-		_, errPool := tkeCli.DescribeClusterNodePoolDetail(dependInfo.Cluster.SystemID, dependInfo.NodeGroup.CloudNodeGroupID)
+		_, errPool := tkeCli.DescribeClusterNodePoolDetail(dependInfo.Cluster.SystemID,
+			dependInfo.NodeGroup.CloudNodeGroupID)
 		if errPool != nil {
-			if strings.Contains(errPool.Error(), "NotFound") || strings.Contains(errPool.Error(), "not found") {
-				blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
-					taskID, nodeGroupID, dependInfo.NodeGroup.CloudNodeGroupID, stepName, stepName)
-				found = false
-			} else {
-				blog.Errorf(
-					"DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] api in task %s step %s failed, %s",
+			if !(strings.Contains(errPool.Error(), "NotFound") ||
+				strings.Contains(errPool.Error(), "not found")) {
+				blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] "+
+					"api in task %s step %s failed, %s",
 					taskID, nodeGroupID, taskID, stepName, errPool.Error())
-				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID, errPool.Error())
+				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID,
+					errPool.Error())
 				_ = state.UpdateStepFailure(start, stepName, retErr)
 				return retErr
 			}
+			blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
+				taskID, nodeGroupID, dependInfo.NodeGroup.CloudNodeGroupID, stepName, stepName)
+			found = false
 		}
 	}
 	if found && dependInfo.NodeGroup.CloudNodeGroupID != "" {
-		err = tkeCli.DeleteClusterNodePool(dependInfo.Cluster.SystemID, []string{dependInfo.NodeGroup.CloudNodeGroupID}, keepInstance)
+		err = tkeCli.DeleteClusterNodePool(dependInfo.Cluster.SystemID, []string{dependInfo.NodeGroup.CloudNodeGroupID},
+			keepInstance)
 		if err != nil {
-			blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool[%s] api in task %s step %s failed, %s",
+			blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DeleteClusterNodePool[%s] api in "+
+				"task %s step %s failed, %s",
 				taskID, nodeGroupID, taskID, stepName, err.Error())
 			retErr := fmt.Errorf("call DeleteClusterNodePool[%s] api err, %s", nodeGroupID, err.Error())
 			_ = state.UpdateStepFailure(start, stepName, retErr)

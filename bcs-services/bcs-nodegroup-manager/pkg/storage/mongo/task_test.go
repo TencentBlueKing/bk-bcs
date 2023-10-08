@@ -1,12 +1,12 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- *  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- *  Licensed under the MIT License (the "License"); you may not use this file except
- *  in compliance with the License. You may obtain a copy of the License at
- *  http://opensource.org/licenses/MIT
- *  Unless required by applicable law or agreed to in writing, software distributed under
- *  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *  either express or implied. See the License for the specific language governing permissions and
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -32,11 +32,11 @@ func TestModelTask_CreateTask(t *testing.T) {
 		TotalNum:          2,
 		NodeGroupStrategy: "nodegroup1",
 		ScaleDownGroups:   []*storage.ScaleDownDetail{},
-		DrainDelayDays:    2,
+		DrainDelay:        "2",
 		Deadline:          time.Now().Add(48 * time.Hour),
 		CreatedTime:       time.Now(),
 		UpdatedTime:       time.Now(),
-		IsDelete:          false,
+		IsDeleted:         false,
 		IsExecuted:        false,
 		Status:            "preparing",
 	}
@@ -113,17 +113,18 @@ func TestModelTask_CreateTask(t *testing.T) {
 	}
 }
 
+// nolint
 func TestModelTask_DeleteTask(t *testing.T) {
 	task := &storage.ScaleDownTask{
 		TaskID:            "taskID1",
 		TotalNum:          2,
 		NodeGroupStrategy: "nodegroup1",
 		ScaleDownGroups:   []*storage.ScaleDownDetail{},
-		DrainDelayDays:    2,
+		DrainDelay:        "2",
 		Deadline:          time.Now().Add(48 * time.Hour),
 		CreatedTime:       time.Now(),
 		UpdatedTime:       time.Now(),
-		IsDelete:          false,
+		IsDeleted:         false,
 		IsExecuted:        false,
 		Status:            "preparing",
 	}
@@ -213,17 +214,18 @@ func TestModelTask_DeleteTask(t *testing.T) {
 	}
 }
 
+// nolint
 func TestModelTask_GetTask(t *testing.T) {
 	task := &storage.ScaleDownTask{
 		TaskID:            "taskID1",
 		TotalNum:          2,
 		NodeGroupStrategy: "nodegroup1",
 		ScaleDownGroups:   []*storage.ScaleDownDetail{},
-		DrainDelayDays:    2,
+		DrainDelay:        "2",
 		Deadline:          time.Now().Add(48 * time.Hour),
 		CreatedTime:       time.Now(),
 		UpdatedTime:       time.Now(),
-		IsDelete:          false,
+		IsDeleted:         false,
 		IsExecuted:        false,
 		Status:            "preparing",
 	}
@@ -315,11 +317,11 @@ func TestModelTask_ListTasks(t *testing.T) {
 		TotalNum:          2,
 		NodeGroupStrategy: "nodegroup1",
 		ScaleDownGroups:   []*storage.ScaleDownDetail{},
-		DrainDelayDays:    2,
+		DrainDelay:        "2",
 		Deadline:          time.Now().Add(48 * time.Hour),
 		CreatedTime:       time.Now(),
 		UpdatedTime:       time.Now(),
-		IsDelete:          false,
+		IsDeleted:         false,
 		IsExecuted:        false,
 		Status:            "preparing",
 	}
@@ -348,6 +350,7 @@ func TestModelTask_ListTasks(t *testing.T) {
 				mockFields.find.On("WithSort", mock.Anything).Return(mockFields.find)
 				mockFields.find.On("WithStart", mock.Anything).Return(mockFields.find)
 				mockFields.find.On("WithLimit", mock.Anything).Return(mockFields.find)
+				// nolint
 				mockFields.find.On("All", context.Background(), mock.Anything).Return(func(ctx context.Context, result interface{}) error {
 					return reflectInterface(result, []*storage.ScaleDownTask{task})
 				})
@@ -396,11 +399,11 @@ func TestModelTask_ListTasksByStrategy(t *testing.T) {
 		TotalNum:          2,
 		NodeGroupStrategy: "nodegroup1",
 		ScaleDownGroups:   []*storage.ScaleDownDetail{},
-		DrainDelayDays:    2,
+		DrainDelay:        "2",
 		Deadline:          time.Now().Add(48 * time.Hour),
 		CreatedTime:       time.Now(),
 		UpdatedTime:       time.Now(),
-		IsDelete:          false,
+		IsDeleted:         false,
 		IsExecuted:        false,
 		Status:            "preparing",
 	}
@@ -431,6 +434,7 @@ func TestModelTask_ListTasksByStrategy(t *testing.T) {
 				mockFields.find.On("WithSort", mock.Anything).Return(mockFields.find)
 				mockFields.find.On("WithStart", mock.Anything).Return(mockFields.find)
 				mockFields.find.On("WithLimit", mock.Anything).Return(mockFields.find)
+				// nolint
 				mockFields.find.On("All", context.Background(), mock.Anything).Return(func(ctx context.Context, result interface{}) error {
 					return reflectInterface(result, []*storage.ScaleDownTask{task})
 				})
@@ -474,17 +478,18 @@ func TestModelTask_ListTasksByStrategy(t *testing.T) {
 	}
 }
 
+// nolint
 func TestModelTask_UpdateTask(t *testing.T) {
 	task := &storage.ScaleDownTask{
 		TaskID:            "taskID1",
 		TotalNum:          2,
 		NodeGroupStrategy: "nodegroup1",
 		ScaleDownGroups:   []*storage.ScaleDownDetail{},
-		DrainDelayDays:    2,
+		DrainDelay:        "2",
 		Deadline:          time.Now().Add(48 * time.Hour),
 		CreatedTime:       time.Now(),
 		UpdatedTime:       time.Now(),
-		IsDelete:          false,
+		IsDeleted:         false,
 		IsExecuted:        false,
 		Status:            "preparing",
 	}

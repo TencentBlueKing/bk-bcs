@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package component get client
 package component
 
 import (
@@ -25,13 +25,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/dustin/go-humanize"
 	resty "github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 	tracingTransport "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/tracing"
@@ -153,7 +153,7 @@ var defaultTransport http.RoundTripper = &http.Transport{
 	TLSHandshakeTimeout:   10 * time.Second,
 	ExpectContinueTimeout: 1 * time.Second,
 	// NOCC:gas/tls(设计如此)
-	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
 }
 
 // GetClient : 新建Client, 设置公共参数，每次新建，cookies不复用
@@ -163,14 +163,14 @@ func GetClient() *resty.Client {
 			globalClient = resty.New().
 				SetTransport(tracingTransport.NewTracingTransport(defaultTransport)).
 				SetTimeout(timeout).
-				SetDebug(false).   // 更多详情, 可以开启为 true
+				SetDebug(false).   // nolint 更多详情, 可以开启为 true
 				SetCookieJar(nil). // 后台API去掉 cookie 记录
 				SetDebugBodyLimit(1024).
 				OnAfterResponse(restyAfterResponseHook).
 				SetPreRequestHook(restyBeforeRequestHook).
 				OnError(restyErrHook).
 				// NOCC:gas/tls(设计如此)
-				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
+				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}). // nolint
 				SetHeader("User-Agent", userAgent)
 		})
 	}

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package metric
@@ -19,20 +18,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/emicklei/go-restful"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 )
 
 // getTable xxx
 // metric data table is clusterId
 func getTable(req *restful.Request) string {
 	return req.PathParameter(clusterIDTag)
-}
-
-// getSelector return a slice of string contains select key for db query.
-// rm.selector will be save since first call, so reset() should be called if doing another op.
-func getSelector(req *restful.Request) []string {
-	return lib.GetQueryParamStringArray(req, fieldTag, ",")
 }
 
 func getExtra(req *restful.Request) operator.M {
@@ -42,7 +36,7 @@ func getExtra(req *restful.Request) operator.M {
 		return extra
 	}
 
-	lib.NewExtra(raw).Unmarshal(&extra)
+	_ = lib.NewExtra(raw).Unmarshal(&extra)
 	return extra
 }
 

@@ -4,12 +4,23 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */ /*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package clusterops xxx
 package clusterops
 
 import (
@@ -19,20 +30,20 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	k8scorecliset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
 var (
@@ -121,8 +132,8 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 			return nil, fmt.Errorf("error credential server addresses %s of cluster %s", cred.ServerAddress, clusterID)
 		}
 		// get a random server
-		rand.Seed(time.Now().Unix())
-		cfg.Host = addressList[rand.Intn(len(addressList))]
+		rand.Seed(time.Now().Unix())                        // nolint
+		cfg.Host = addressList[rand.Intn(len(addressList))] // nolint
 
 		if len(cred.CaCertData) != 0 && len(cred.ClientCert) != 0 && len(cred.ClientKey) != 0 {
 			cfg.TLSClientConfig = rest.TLSClientConfig{
@@ -147,18 +158,22 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 	return nil, fmt.Errorf("invalid credential mode %s of cluster %s", cred.ConnectMode, clusterID)
 }
 
-func loadClusterClientCert(clusterID, clientCa, clientCert, clientKey string, passwd string) ([]byte, []byte, []byte, error) {
+func loadClusterClientCert(
+	clusterID, clientCa, clientCert, clientKey string, passwd string) ([]byte, []byte, []byte, error) {
 	caData, err := loadCertificates(clientCa, "")
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("cluster[%s] websocketTunnel LoadCertificates(clientCA) failed: %v", clusterID, err)
+		return nil, nil, nil, fmt.Errorf("cluster[%s] websocketTunnel LoadCertificates(clientCA) failed: %v",
+			clusterID, err)
 	}
 	certData, err := loadCertificates(clientCert, "")
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("cluster[%s] websocketTunnel LoadCertificates(clientCert) failed: %v", clusterID, err)
+		return nil, nil, nil, fmt.Errorf("cluster[%s] websocketTunnel LoadCertificates(clientCert) failed: %v",
+			clusterID, err)
 	}
 	keyData, err := loadCertificates(clientKey, passwd)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("cluster[%s] websocketTunnel LoadCertificates(clientKey) failed: %v", clusterID, err)
+		return nil, nil, nil, fmt.Errorf("cluster[%s] websocketTunnel LoadCertificates(clientKey) failed: %v",
+			clusterID, err)
 	}
 
 	return []byte(caData), []byte(certData), []byte(keyData), nil
@@ -166,7 +181,7 @@ func loadClusterClientCert(clusterID, clientCa, clientCert, clientKey string, pa
 
 // loadCertificates parse cert
 func loadCertificates(keyFile, passwd string) (string, error) {
-	priKey, err := ioutil.ReadFile(keyFile)
+	priKey, err := os.ReadFile(keyFile)
 	if err != nil {
 		return "", err
 	}
@@ -177,7 +192,7 @@ func loadCertificates(keyFile, passwd string) (string, error) {
 			return "", fmt.Errorf("decode private key failed")
 		}
 
-		priDecrPem, err := x509.DecryptPEMBlock(priPem, []byte(passwd))
+		priDecrPem, err := x509.DecryptPEMBlock(priPem, []byte(passwd)) // nolint
 		if err != nil {
 			return "", err
 		}

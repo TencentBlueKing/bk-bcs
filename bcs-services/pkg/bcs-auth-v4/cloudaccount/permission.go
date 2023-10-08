@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cloudaccount
@@ -18,9 +17,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	blog "k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
 )

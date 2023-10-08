@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -16,12 +15,13 @@ package api
 import (
 	"fmt"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 const (
@@ -424,7 +424,7 @@ func generateInstanceAdvancedSet(request *InstanceAdvancedSettings) *tke.Instanc
 }
 
 // generateEnhancedService enhanced service
-func generateEnhancedService(service *EnhancedService) *tke.EnhancedService {
+func generateEnhancedService(service *EnhancedService) *tke.EnhancedService { // nolint
 	if service == nil {
 		return nil
 	}
@@ -523,7 +523,7 @@ func convertSubnet(subnet []*vpc.Subnet) []*Subnet {
 	return result
 }
 
-func convertModifyNodePool(nodePool *ModifyClusterNodePoolInput) *tke.ModifyClusterNodePoolRequest {
+func convertModifyNodePool(nodePool *ModifyClusterNodePoolInput) *tke.ModifyClusterNodePoolRequest { // nolint
 	req := tke.NewModifyClusterNodePoolRequest()
 	req.ClusterId = nodePool.ClusterID
 	req.NodePoolId = nodePool.NodePoolID

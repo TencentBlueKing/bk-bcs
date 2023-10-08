@@ -20,6 +20,6 @@ import (
 // MaxMsgSize of the max msg size
 func MaxMsgSize(s int) microSvc.Option {
 	return func(o *microSvc.Options) {
-		o.Server.Init(grpc.MaxMsgSize(s))
+		_ = o.Server.Init(grpc.MaxMsgSize(s))
 	}
 }

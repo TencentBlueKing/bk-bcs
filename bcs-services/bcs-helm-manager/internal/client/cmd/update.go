@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"os"
 
-	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
 	"github.com/spf13/cobra"
+
+	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 var (

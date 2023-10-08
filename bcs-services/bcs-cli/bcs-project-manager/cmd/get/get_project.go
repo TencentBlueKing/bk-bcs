@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package get
@@ -55,7 +54,7 @@ func listProject() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := pkg.NewClientWithConfiguration(context.Background()).ListProjects(request)
 			if err != nil {
-				klog.Infoln("list variable definitions failed: %v", err)
+				klog.Infof("list variable definitions failed: %v", err)
 				return
 			}
 			printer.PrintProjectsListInTable(flagOutput, resp)
@@ -92,7 +91,7 @@ func MyProject() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := pkg.NewClientWithConfiguration(context.Background()).ListAuthorizedProjects()
 			if err != nil {
-				klog.Infoln("list authorized projects failed: %v", err)
+				klog.Infof("list authorized projects failed: %v", err)
 				return
 			}
 			printer.PrinListAuthorizedProjectsInTable(flagOutput, resp)

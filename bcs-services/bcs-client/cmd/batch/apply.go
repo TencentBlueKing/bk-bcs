@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package batch xxx
 package batch
 
 import (
@@ -23,13 +23,13 @@ import (
 	"strings"
 
 	mesostype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/urfave/cli"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/metastream"
 	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 	userV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
-
-	"github.com/urfave/cli"
 )
 
 // NewApplyCommand sub command apply registration
@@ -79,7 +79,7 @@ type metaInfo struct {
 }
 
 // apply multiple mesos json resources to bcs-scheduler
-func apply(cxt *utils.ClientContext) error {
+func apply(cxt *utils.ClientContext) error { // nolint
 	// step: check parameter from command line
 	if err := cxt.MustSpecified(utils.OptionClusterID); err != nil {
 		return err

@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -21,14 +20,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
-
-	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 func getClient(region string) *TkeClient {
@@ -136,7 +135,7 @@ func TestTkeClient_CreateTKECluster(t *testing.T) {
 	req := &CreateClusterRequest{
 		AddNodeMode:      false,
 		Region:           "ap-xxx",
-		ClusterType:      "MANAGED_CLUSTER", //"INDEPENDENT_CLUSTER",
+		ClusterType:      "MANAGED_CLUSTER", // "INDEPENDENT_CLUSTER",
 		ClusterCIDR:      generateClusterCIDRInfo(),
 		ClusterBasic:     generateClusterBasicInfo(),
 		ClusterAdvanced:  generateClusterAdvancedInfo(),
@@ -176,7 +175,7 @@ func TestTkeClient_GetTKECluster(t *testing.T) {
 	fmt.Println(*cluster.EnableExternalNode)
 	fmt.Println(*cluster.ImageId)
 
-	//t.Logf("%+v", *cluster.ClusterNetworkSettings.Subnets[0])
+	// t.Logf("%+v", *cluster.ClusterNetworkSettings.Subnets[0])
 	fmt.Println(*cluster.ClusterNetworkSettings.ServiceCIDR)
 	fmt.Println(*cluster.ClusterNetworkSettings.ClusterCIDR)
 	fmt.Println(*cluster.ClusterNetworkSettings.Cni)

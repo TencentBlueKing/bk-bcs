@@ -8,21 +8,22 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package grpc
 
 import (
 	"context"
+	"io"
 	"log"
 	"os"
 	"testing"
 	"time"
 
-	pb "github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/otgrpc/hello"
-	"github.com/opentracing/opentracing-go"
+	opentrace "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
+
+	pb "github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/otgrpc/hello"
 )
 
 const (
@@ -38,7 +39,9 @@ func TestOpenTracingClientInterceptor(t *testing.T) {
 	}
 
 	if closer != nil {
-		defer closer.Close()
+		defer func(closer io.Closer) {
+			_ = closer.Close()
+		}(closer)
 	}
 
 	runHelloClient()
@@ -49,12 +52,14 @@ func runHelloClient() {
 	conn, err := grpc.Dial(address,
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
-		grpc.WithUnaryInterceptor(OpenTracingClientInterceptor(opentracing.GlobalTracer())),
+		grpc.WithUnaryInterceptor(OpenTracingClientInterceptor(opentrace.GlobalTracer())),
 	)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	defer conn.Close()
+	defer func(conn *grpc.ClientConn) {
+		_ = conn.Close()
+	}(conn)
 	c := pb.NewGreeterClient(conn)
 
 	// Contact the server and print out its response.

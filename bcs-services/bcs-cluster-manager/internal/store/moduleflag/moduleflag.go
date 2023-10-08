@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package moduleflag xxx
 package moduleflag
 
 import (
@@ -20,11 +20,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
-
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -166,7 +166,8 @@ func (m *ModelCloudModuleFlag) GetCloudModuleFlag(ctx context.Context, cloudID, 
 }
 
 // ListCloudModuleFlag list cloud moduleFlag
-func (m *ModelCloudModuleFlag) ListCloudModuleFlag(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+func (m *ModelCloudModuleFlag) ListCloudModuleFlag(ctx context.Context, cond *operator.Condition,
+	opt *options.ListOption) (
 	[]types.CloudModuleFlag, error) {
 	retFlagList := make([]types.CloudModuleFlag, 0)
 	finder := m.db.Table(m.tableName).Find(cond)

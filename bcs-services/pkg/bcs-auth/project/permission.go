@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package project
@@ -16,6 +15,7 @@ package project
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
@@ -105,7 +105,7 @@ func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, 
 	projectApp := BuildProjectSameInstanceApplication(false,
 		[]string{ProjectEdit.String(), ProjectView.String()}, []string{projectID})
 
-	url, _ := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(projectApp))
+	url, _ := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, projectApp)
 	return allow, url, resources, nil
 }
 
@@ -153,7 +153,7 @@ func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool
 	// generate apply url
 	projectApp := BuildProjectSameInstanceApplication(false,
 		[]string{ProjectDelete.String(), ProjectView.String()}, []string{projectID})
-	url, _ := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(projectApp))
+	url, _ := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, projectApp)
 	return allow, url, resources, nil
 }
 

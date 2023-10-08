@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package metric
@@ -80,7 +79,7 @@ type HealthMeta struct {
 }
 
 // MetricMeta xxx
-type MetricMeta struct {
+type MetricMeta struct { // nolint
 	// metric's name
 	Name string
 	// metric's help info, which should be short and briefly.
@@ -96,13 +95,13 @@ type GetMetaFunc func() *MetricMeta
 type GetResultFunc func() (*MetricResult, error)
 
 // MetricContructor xxx
-type MetricContructor struct {
+type MetricContructor struct { // nolint
 	GetMeta   GetMetaFunc
 	GetResult GetResultFunc
 }
 
 // MetricResult xxx
-type MetricResult struct {
+type MetricResult struct { // nolint
 	Value *FloatOrString
 	// variable labels means that this labels value can be changed with each call.
 	VariableLabels map[string]string

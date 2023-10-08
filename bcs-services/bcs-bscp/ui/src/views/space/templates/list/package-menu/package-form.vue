@@ -43,13 +43,13 @@
 
   watch(() => props.data, (val) => {
     localVal.value = cloneDeep(val)
-    localVal.value.name = ''
   }, {
     immediate: true
   })
 
   onMounted(() => {
     getServiceList()
+    localVal.value.name = ''
   })
 
   const getServiceList = async () => {

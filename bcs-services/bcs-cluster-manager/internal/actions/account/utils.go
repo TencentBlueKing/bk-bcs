@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package account
@@ -19,15 +18,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
+	spb "google.golang.org/protobuf/types/known/structpb"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/account"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
-
-	spb "google.golang.org/protobuf/types/known/structpb"
 )
 
 // CloudAccount cloudID and accountID
@@ -37,7 +36,8 @@ type CloudAccount struct {
 }
 
 // getAllAccountsByCloudID list all accounts by cloud
-func getAllAccountsByCloudID(ctx context.Context, model store.ClusterManagerModel, cloudID string) ([]proto.CloudAccount, error) {
+func getAllAccountsByCloudID(
+	ctx context.Context, model store.ClusterManagerModel, cloudID string) ([]proto.CloudAccount, error) {
 	condM := make(operator.M)
 	condM[account.CloudKey] = cloudID
 	cond := operator.NewLeafCondition(operator.Eq, condM)
@@ -45,7 +45,8 @@ func getAllAccountsByCloudID(ctx context.Context, model store.ClusterManagerMode
 	return model.ListCloudAccount(ctx, cond, &options.ListOption{})
 }
 
-func getRelativeClustersByAccountID(ctx context.Context, model store.ClusterManagerModel, account CloudAccount) ([]string, error) {
+func getRelativeClustersByAccountID(
+	ctx context.Context, model store.ClusterManagerModel, account CloudAccount) ([]string, error) {
 	condM := make(operator.M)
 	condM["provider"] = account.CloudID
 	condM["status"] = common.StatusRunning
@@ -66,7 +67,8 @@ func getRelativeClustersByAccountID(ctx context.Context, model store.ClusterMana
 }
 
 // GetProjectAccountsV3Perm get iam v3 perm
-func GetProjectAccountsV3Perm(iam iam.PermClient, user actions.PermInfo, accountList []string) (map[string]*spb.Struct, error) {
+func GetProjectAccountsV3Perm(
+	iam iam.PermClient, user actions.PermInfo, accountList []string) (map[string]*spb.Struct, error) {
 	var (
 		v3Perm map[string]map[string]interface{}
 		err    error
@@ -92,7 +94,8 @@ func GetProjectAccountsV3Perm(iam iam.PermClient, user actions.PermInfo, account
 	return v3ResultPerm, nil
 }
 
-func getUserAccountPermList(iam iam.PermClient, user actions.PermInfo, accountList []string) (map[string]map[string]interface{}, error) {
+func getUserAccountPermList(
+	iam iam.PermClient, user actions.PermInfo, accountList []string) (map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{})
 	accountPerm := cloudaccount.NewBCSAccountPermClient(iam)
 

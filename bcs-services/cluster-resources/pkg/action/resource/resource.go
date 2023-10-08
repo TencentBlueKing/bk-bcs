@@ -1,12 +1,10 @@
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2022 THL A29 Limited, a Tencent company. All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- * 	http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -74,7 +72,8 @@ func (m *ResMgr) List(
 		return nil, err
 	}
 	return resp.BuildListAPIResp(ctx, resp.ListParams{
-		m.ClusterID, m.Kind, m.GroupVersion, namespace, format, scene,
+		ClusterID: m.ClusterID, ResKind: m.Kind, GroupVersion: m.GroupVersion, Namespace: namespace,
+		Format: format, Scene: scene,
 	}, opts)
 }
 
@@ -86,7 +85,8 @@ func (m *ResMgr) Get(
 		return nil, err
 	}
 	return resp.BuildRetrieveAPIResp(ctx, resp.GetParams{
-		m.ClusterID, m.Kind, m.GroupVersion, namespace, name, format,
+		ClusterID: m.ClusterID, ResKind: m.Kind, GroupVersion: m.GroupVersion, Namespace: namespace,
+		Name: name, Format: format,
 	}, opts)
 }
 

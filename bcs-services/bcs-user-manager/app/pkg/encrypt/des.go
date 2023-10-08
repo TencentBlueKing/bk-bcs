@@ -8,16 +8,14 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package encrypt xxx
 package encrypt
 
 import (
 	"bytes"
 	"crypto/cipher"
-
-	// NOCC:gas/crypto(设计如此)
 	"crypto/des"
 	"encoding/base64"
 )
@@ -40,6 +38,7 @@ func PKCS5UnPadding(origData []byte) []byte {
 func DesEncryptToBase(src []byte, priKey string) ([]byte, error) {
 	if len(priKey) != 0 {
 		// NOCC:gas/crypto(设计如此)
+		// nolint
 		block, err := des.NewTripleDESCipher([]byte(priKey))
 		if err != nil {
 			return nil, err
@@ -63,6 +62,7 @@ func DesDecryptFromBase(src []byte, priKey string) ([]byte, error) {
 		}
 		var block cipher.Block
 		// NOCC:gas/crypto(设计如此)
+		// nolint
 		block, err = des.NewTripleDESCipher([]byte(priKey))
 		if err != nil {
 			return nil, err

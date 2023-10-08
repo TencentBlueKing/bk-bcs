@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package app
@@ -21,12 +20,12 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/pkg/errors"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
@@ -54,6 +53,7 @@ func Run(cfg *Config) error {
 		hosts := strings.Split(cfg.Registry.Endpoints, ",")
 		blog.Infof("init etcd tls config for '%v' started", hosts)
 		if cfg.Registry.CA != "" && cfg.Registry.Key != "" && cfg.Registry.Cert != "" {
+			// nolint
 			tlsConfig, err := ssl.ClientTslConfVerity(cfg.Registry.CA, cfg.Registry.Cert,
 				cfg.Registry.Key, static.ServerCertPwd)
 			if err != nil {

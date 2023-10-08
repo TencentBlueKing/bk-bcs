@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package middleware
@@ -55,6 +54,8 @@ func TracingFilter(request *restful.Request, response *restful.Response, chain *
 		// get http X-Request-Id
 		requestID := request.Request.Header.Get(constant.RequestIDHeaderKey)
 		// 使用requestID当作TraceID
+		// NOCC:golint/staticcheck(设计如此:)
+		// nolint
 		ctx = context.WithValue(ctx, constant.RequestIDKey, requestID)
 		ctx = traceUtil.ContextWithRequestID(ctx, requestID)
 	}
@@ -91,7 +92,7 @@ func TracingFilter(request *restful.Request, response *restful.Response, chain *
 	}
 	span.SetAttributes(attribute.Key("query").String(query))
 
-	//记录body
+	// 记录body
 	body := string(getRequestBody(request.Request))
 	if len(body) > 1024 {
 		body = fmt.Sprintf("%s...(Total %s)", body[:1024], humanize.Bytes(uint64(len(body))))

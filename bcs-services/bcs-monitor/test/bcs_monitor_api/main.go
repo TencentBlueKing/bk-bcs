@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package main
 package main
 
 import (
@@ -29,7 +30,8 @@ import (
 func main() {
 	ctx := context.Background()
 
-	rawURL := config.G.BCS.Host + fmt.Sprintf("/bcsapi/v4/monitor/api/metrics/projects/%s/clusters/%s/overview", bcstesting.GetTestProjectId(), bcstesting.GetTestClusterId())
+	rawURL := config.G.BCS.Host + fmt.Sprintf("/bcsapi/v4/monitor/api/metrics/projects/%s/clusters/%s/overview",
+		bcstesting.GetTestProjectId(), bcstesting.GetTestClusterId())
 
 	var (
 		count             int64

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package stringx xxx
 package stringx
 
 // RemoveDuplicateValues 删除重复的值

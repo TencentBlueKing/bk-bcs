@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package dynamic xxx
@@ -22,12 +21,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
-	"github.com/emicklei/go-restful"
 )
 
 // GetNamespaceResources 获取命名空间域资源 get namespaced resources
@@ -396,6 +396,8 @@ func CleanDynamic() {
 	}
 }
 
+// NOCC: golint/funlen(设计如此:)
+// nolint
 func init() {
 	// for k8s
 	// Namespace resources.

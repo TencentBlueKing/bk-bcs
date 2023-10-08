@@ -118,11 +118,10 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName string) 
 	create := false
 	old, err := u.model.GetRelease(ctx, u.req.GetClusterID(), ns, u.req.GetName())
 	if err != nil {
-		if errors.Is(err, drivers.ErrTableRecordNotFound) {
-			create = true
-		} else {
+		if !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			return err
 		}
+		create = true
 	}
 
 	createBy := auth.GetUserFromCtx(ctx)

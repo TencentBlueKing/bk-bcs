@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package manager
@@ -21,9 +20,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-
 	tiam "github.com/TencentBlueKing/iam-go-sdk"
+
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // PermManager manage active grant user permission
@@ -113,7 +112,7 @@ func (pm *PermManager) CreateClusterGradeManager(ctx context.Context, users []st
 	req := iam.GradeManagerRequest{
 		System:              iam.SystemIDBKBCS,
 		Name:                fmt.Sprintf("集群[%s]分级管理员", cls.ClusterName),
-		Description:         fmt.Sprintf("容器管理平台集群维度默认分级管理员"),
+		Description:         "容器管理平台集群维度默认分级管理员",
 		Members:             users,
 		AuthorizationScopes: authScopes,
 		SubjectScopes:       []tiam.Subject{iam.GlobalSubjectUser},
@@ -227,15 +226,14 @@ func (pm *PermManager) createProjectUserGroupPolicy(ctx context.Context, groupID
 				blog.Errorf("createProjectUserGroupPolicy CreateUserGroupPolicies failed: %v", err)
 				return
 			}
-			return
 		}(scopeFuncs[i]())
 	}
 	wg.Wait()
 
 	blog.Infof("createProjectUserGroupPolicy[%v] successful", groupID)
-	return
 }
 
+// nolint
 func (pm *PermManager) createClusterUserGroupPolicy(ctx context.Context, groupID uint64, pType PolicyType, c *Cluster) {
 	scopeFuncs := make([]AuthorizationScopeFunc, 0)
 
@@ -261,11 +259,9 @@ func (pm *PermManager) createClusterUserGroupPolicy(ctx context.Context, groupID
 				blog.Errorf("createClusterUserGroupPolicy CreateUserGroupPolicies failed: %v", err)
 				return
 			}
-			return
 		}(scopeFuncs[i]())
 	}
 	wg.Wait()
 
 	blog.Infof("createClusterUserGroupPolicy[%v] successful", groupID)
-	return
 }

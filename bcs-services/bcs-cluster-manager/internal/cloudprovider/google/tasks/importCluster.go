@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -22,6 +21,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	k8scorev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
@@ -30,9 +32,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	k8scorev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ImportClusterNodesTask call gkeInterface or kubeConfig import cluster nodes
@@ -72,7 +71,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	}
 
 	// update cluster masterNodes info
-	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	_ = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
@@ -127,7 +126,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	return nil
 }
 
-func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error {
+func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error { // nolint
 	configByte, err := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
 	if err != nil {
 		return fmt.Errorf("failed to decode kubeconfig, %v", err)
@@ -188,7 +187,8 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 }
 
 // ImportClusterNodesToCM writes cluster nodes to DB
-func importClusterNodesToCM(ctx context.Context, gceCli *api.ComputeServiceClient, nodes []k8scorev1.Node, clusterID string) error {
+func importClusterNodesToCM(
+	ctx context.Context, gceCli *api.ComputeServiceClient, nodes []k8scorev1.Node, clusterID string) error {
 
 	for _, v := range nodes {
 		nodeZone := ""

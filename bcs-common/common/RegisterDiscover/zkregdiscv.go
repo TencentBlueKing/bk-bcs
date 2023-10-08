@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package RegisterDiscover
@@ -20,10 +19,10 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
-
-	"golang.org/x/net/context"
 )
 
 // ZkRegDiscv do register and discover by zookeeper
@@ -82,7 +81,7 @@ func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
 		if err != nil {
 			blog.V(3).Infof("fail to register server node(%s). err:%s", path, err.Error())
 			time.Sleep(5 * time.Second)
-			zkRD.RegisterAndWatch(path, data)
+			_ = zkRD.RegisterAndWatch(path, data)
 			return
 		}
 
@@ -92,8 +91,8 @@ func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
 		if err != nil {
 			blog.V(3).Infof("fail to watch register node(%s), err:%s", newPath, err.Error())
 			time.Sleep(5 * time.Second)
-			zkRD.zkcli.Del(newPath, -1)
-			zkRD.RegisterAndWatch(path, data)
+			_ = zkRD.zkcli.Del(newPath, -1)
+			_ = zkRD.RegisterAndWatch(path, data)
 			return
 		}
 
@@ -103,7 +102,7 @@ func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
 			return
 		case <-watchEvn:
 			blog.V(3).Infof("watch register node(%s) exist changed, event(%v)", path, watchEvn)
-			zkRD.RegisterAndWatch(path, data)
+			_ = zkRD.RegisterAndWatch(path, data)
 		}
 	}()
 

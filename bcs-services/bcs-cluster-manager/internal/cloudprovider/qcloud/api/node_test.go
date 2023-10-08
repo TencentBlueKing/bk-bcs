@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -17,10 +16,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
 )
 
 var nodeManager = &NodeManager{}

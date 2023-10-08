@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 // Package options xxx
@@ -16,6 +15,7 @@ package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+
 	logmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
 )
 
@@ -30,7 +30,7 @@ type LogManagerOption struct {
 	conf.LogConfig
 	conf.ProcessConfig
 
-	CollectionConfigs []logmanager.CollectionConfig `json:"collection_configs" usage:"Custom configs of log collections"`
+	CollectionConfigs []logmanager.CollectionConfig `json:"collection_configs" usage:"Custom configs of log collections"` // nolint
 	BKDataAPIHost     string                        `json:"bkdata_api_host" value:"" usage:"bk-data api gateway host"`
 	BcsAPIHost        string                        `json:"bcs_api_host" value:"" usage:"BcsApi Host"`
 
@@ -42,7 +42,7 @@ type LogManagerOption struct {
 	AuthToken    string `json:"api_auth_token" value:"" usage:"BcsApi authentication token"`
 	Gateway      bool   `json:"use_gateway" value:"true" usage:"whether use api gateway"`
 	KubeConfig   string `json:"kubeconfig" value:"" usage:"k8s config file path"`
-	SystemDataID string `json:"system_dataid" value:"" usage:"DataID used to upload logs of k8s and bcs system modules with standard output"`
+	SystemDataID string `json:"system_dataid" value:"" usage:"DataID used to upload logs of k8s and bcs system modules with standard output"` // nolint
 	BkUsername   string `json:"bk_username" value:"" usage:"User to request bkdata api"`
 	BkAppCode    string `json:"bk_appcode" value:"" usage:"BK app code"`
 	BkAppSecret  string `json:"bk_appsecret" value:"" usage:"BK app secret"`

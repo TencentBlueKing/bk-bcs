@@ -126,11 +126,10 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 	create := false
 	old, err := u.model.GetRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(), u.req.GetName())
 	if err != nil {
-		if errors.Is(err, drivers.ErrTableRecordNotFound) {
-			create = true
-		} else {
+		if !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			return err
 		}
+		create = true
 	}
 
 	createBy := auth.GetUserFromCtx(u.ctx)
@@ -140,7 +139,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 	if create {
 		u.createBy = createBy
 		u.updateBy = createBy
-		if err := u.model.CreateRelease(u.ctx, &entity.Release{
+		if err = u.model.CreateRelease(u.ctx, &entity.Release{
 			Name:         u.req.GetName(),
 			ProjectCode:  contextx.GetProjectCodeFromCtx(u.ctx),
 			Namespace:    u.req.GetNamespace(),
@@ -179,9 +178,9 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
 			entity.FieldKeyMessage:      "",
 		}
-		if err := u.model.UpdateRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(),
+		if err = u.model.UpdateRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(),
 			u.req.GetName(), rl); err != nil {
-
+			return err
 		}
 	}
 	return nil

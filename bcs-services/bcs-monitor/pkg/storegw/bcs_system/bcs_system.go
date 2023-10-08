@@ -8,10 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-// Package bcssystem xxx
+// Package bcssystem bcs system
 package bcssystem
 
 import (
@@ -39,13 +38,13 @@ type Config struct {
 }
 
 // BCSSystemStore implements the store node API on top of the Prometheus remote read API.
-type BCSSystemStore struct {
+type BCSSystemStore struct { // nolint
 	config   *Config
 	dispatch map[string]clientutil.DispatchConf
 }
 
 // NewBCSSystemStore :
-func NewBCSSystemStore(conf []byte) (*BCSSystemStore, error) {
+func NewBCSSystemStore(conf []byte) (*BCSSystemStore, error) { // nolint
 	var config Config
 	if err := yaml.UnmarshalStrict(conf, &config); err != nil {
 		return nil, errors.Wrap(err, "parsing bcs_system store config")
@@ -101,11 +100,10 @@ func (s *BCSSystemStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 
 // Series 返回时序数据
 // NOCC:golint/fnsize(设计如此)
-func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
+func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error { // nolint
 	ctx := srv.Context()
-
-	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime=", r.MinTime, "maxTime",
-		r.MaxTime, "step", r.QueryHints.StepMillis)
+	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime=",
+		r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
 
 	// series 数据, 这里只查询最近 SeriesStepDeltaSeconds
 	if r.SkipChunks {

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package promclient xxx
+// Package promclient prom client
 package promclient
 
 import (
@@ -208,7 +208,8 @@ func QueryRangeMatrix(ctx context.Context, rawURL string, header http.Header, pr
 }
 
 // QueryLabels query labels
-func QueryLabels(ctx context.Context, rawURL string, header http.Header, r *storepb.LabelNamesRequest) ([]string, error) {
+func QueryLabels(ctx context.Context, rawURL string, header http.Header,
+	r *storepb.LabelNamesRequest) ([]string, error) {
 	rawURL = fmt.Sprintf("%s/api/v1/labels", strings.TrimSuffix(rawURL, "/"))
 
 	query := make(map[string]string, 0)
@@ -247,7 +248,8 @@ func QueryLabels(ctx context.Context, rawURL string, header http.Header, r *stor
 }
 
 // QueryLabelValues query label values
-func QueryLabelValues(ctx context.Context, rawURL string, header http.Header, r *storepb.LabelValuesRequest) ([]string, error) {
+func QueryLabelValues(ctx context.Context, rawURL string, header http.Header,
+	r *storepb.LabelValuesRequest) ([]string, error) {
 	rawURL = fmt.Sprintf("%s/api/v1/label/%s/values", strings.TrimSuffix(rawURL, "/"), r.Label)
 
 	query := make(map[string]string, 0)

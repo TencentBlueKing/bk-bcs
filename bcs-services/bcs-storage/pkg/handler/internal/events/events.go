@@ -8,9 +8,9 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package events xxx
 package events
 
 import (
@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	storage "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/proto"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/util"
@@ -28,6 +29,7 @@ import (
 )
 
 const (
+	// KindTag kind
 	KindTag = "kind"
 )
 
@@ -156,6 +158,7 @@ func (g *general) getCommonCondition() []*operator.Condition {
 		}
 
 		for _, key := range keys {
+			// nolint
 			switch temp[key].(type) {
 			case map[string]interface{}:
 				temp = temp[key].(map[string]interface{})

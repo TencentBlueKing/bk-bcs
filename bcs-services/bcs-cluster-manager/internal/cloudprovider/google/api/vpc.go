@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -27,7 +26,7 @@ var vpcMgr sync.Once
 
 func init() {
 	vpcMgr.Do(func() {
-		//init VPC manager
+		// init VPC manager
 		cloudprovider.InitVPCManager("google", &VPCManager{})
 	})
 }
@@ -36,7 +35,7 @@ func init() {
 type VPCManager struct{}
 
 // ListSubnets list vpc subnets
-func (V VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
+func (vm VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) ([]*proto.Subnet, error) {
 	locationList := strings.Split(opt.Region, "-")
 	if len(locationList) == 3 {
 		opt.Region = strings.Join(locationList[:2], "-")
@@ -71,16 +70,16 @@ func (V VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) (
 }
 
 // ListSecurityGroups list security groups
-func (V VPCManager) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
+func (vm VPCManager) ListSecurityGroups(opt *cloudprovider.CommonOption) ([]*proto.SecurityGroup, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // GetCloudNetworkAccountType 查询用户网络类型
-func (V VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
+func (vm VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*proto.CloudAccountType, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // ListBandwidthPacks list bandWidthPacks
-func (V VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*proto.BandwidthPackageInfo, error) {
+func (vm VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*proto.BandwidthPackageInfo, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

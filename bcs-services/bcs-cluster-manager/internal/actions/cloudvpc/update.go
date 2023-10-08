@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package cloudvpc
@@ -19,10 +18,11 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/golang/protobuf/ptypes/wrappers"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/golang/protobuf/ptypes/wrappers"
 )
 
 // UpdateAction update action for cluster vpc
@@ -109,7 +109,7 @@ func (ua *UpdateAction) Handle(
 		blog.Errorf("find cloudVPC %s failed when pre-update checking, err %s", req.VpcID, err.Error())
 		return
 	}
-	if err := ua.updateCloudVPC(destCloudVPC); err != nil {
+	if err = ua.updateCloudVPC(destCloudVPC); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
@@ -128,5 +128,4 @@ func (ua *UpdateAction) Handle(
 
 	ua.resp.Data = destCloudVPC
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
-	return
 }

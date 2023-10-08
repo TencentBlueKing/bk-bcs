@@ -4,12 +4,13 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
+// Package lock xxx
 package lock
 
 import (
@@ -28,15 +29,15 @@ type Options struct {
 }
 
 // LockOptions options for lock
-type LockOptions struct {
+type LockOptions struct { // nolint
 	TTL time.Duration
 }
 
 // LockOption option function for lock
-type LockOption func(o *LockOptions)
+type LockOption func(o *LockOptions) // nolint
 
 // LockTTL sets the lock ttl
-func LockTTL(t time.Duration) LockOption {
+func LockTTL(t time.Duration) LockOption { // nolint
 	return func(o *LockOptions) {
 		o.TTL = t
 	}
