@@ -1,16 +1,3 @@
-<script lang="ts" setup>
-  import { Ellipsis } from 'bkui-vue/lib/icon'
-  import { IPackageMenuItem } from '../../../../../../types/template'
-
-  const props = defineProps<{
-    currentPkg: number|string;
-    pkg: IPackageMenuItem;
-    hideActions?: boolean;
-  }>()
-
-  const emits = defineEmits(['edit', 'clone', 'delete', 'select'])
-
-</script>
 <template>
   <div :class="['package-item', { active: props.pkg.id === props.currentPkg }]" @click="emits('select', props.pkg.id)">
     <div class="pkg-wrapper">
@@ -27,7 +14,7 @@
         v-if="typeof props.pkg.id === 'number'"
         theme="light template-package-actions-popover"
         placement="bottom-end"
-        :popoverDelay="[0,100]"
+        :popover-delay="[0,100]"
         :arrow="false">
         <Ellipsis class="action-more-icon" @click.stop />
         <template #content>
@@ -41,6 +28,19 @@
     </div>
   </div>
 </template>
+<script lang="ts" setup>
+import { Ellipsis } from 'bkui-vue/lib/icon';
+import { IPackageMenuItem } from '../../../../../../types/template';
+
+const props = defineProps<{
+    currentPkg: number|string;
+    pkg: IPackageMenuItem;
+    hideActions?: boolean;
+  }>();
+
+const emits = defineEmits(['edit', 'clone', 'delete', 'select']);
+
+</script>
 <style lang="scss" scoped>
   .package-item {
     padding: 8px 16px;

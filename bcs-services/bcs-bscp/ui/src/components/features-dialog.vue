@@ -1,14 +1,3 @@
-<script lang="ts" setup>
-  const props = withDefaults(
-    defineProps<{
-      detail: string
-      isShow: boolean
-    }>(),
-    {}
-  )
-  const emits = defineEmits(['update:isShow'])
-</script>
-
 <template>
   <bk-dialog
   :is-show="props.isShow"
@@ -23,6 +12,17 @@
     <div v-html="props.detail" class="markdown-theme-style detail-content"></div>
   </bk-dialog>
 </template>
+
+<script lang="ts" setup>
+const props = withDefaults(
+  defineProps<{
+      detail: string
+      isShow: boolean
+    }>(),
+  {},
+);
+const emits = defineEmits(['update:isShow']);
+</script>
 
 <style scoped lang="scss">
 .detail-content {

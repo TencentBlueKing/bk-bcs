@@ -1,55 +1,3 @@
-<script lang="ts" setup>
-  import { ref, watch } from 'vue'
-  import { storeToRefs } from 'pinia'
-  import { Message } from 'bkui-vue/lib'
-  import { useGlobalStore } from '../../../../../store/global'
-  import { updateTemplateSpace } from '../../../../../api/template'
-
-  const { spaceId } = storeToRefs(useGlobalStore())
-
-  const props = defineProps<{
-    show: boolean,
-    data: { id: number; name: string; memo: string }
-  }>()
-
-  const emits = defineEmits(['update:show', 'edited'])
-
-  const isShow = ref(false)
-  const formRef = ref()
-  const pending = ref(false)
-  const memo = ref('')
-
-  watch(() => props.show, val => {
-    isShow.value = val
-    if (val) {
-      memo.value = props.data.memo
-    }
-  })
-
-  const handleEdit = () => {
-    formRef.value.validate().then(async () => {
-      try {
-        pending.value = true
-        await updateTemplateSpace(spaceId.value, props.data.id, { memo: memo.value })
-        handleClose()
-        emits('edited')
-        Message({
-          theme: 'success',
-          message: '编辑成功'
-        })
-      } catch (e) {
-        console.error(e)
-      } finally {
-        pending.value = false
-      }
-    })
-  }
-
-  const handleClose = () => {
-    emits('update:show', false)
-  }
-
-</script>
 <template>
   <bk-dialog
     ext-cls="edit-template-space-dialog"
@@ -74,6 +22,58 @@
     </bk-form>
   </bk-dialog>
 </template>
+<script lang="ts" setup>
+import { ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { Message } from 'bkui-vue/lib';
+import { useGlobalStore } from '../../../../../store/global';
+import { updateTemplateSpace } from '../../../../../api/template';
+
+const { spaceId } = storeToRefs(useGlobalStore());
+
+const props = defineProps<{
+    show: boolean,
+    data: { id: number; name: string; memo: string }
+  }>();
+
+const emits = defineEmits(['update:show', 'edited']);
+
+const isShow = ref(false);
+const formRef = ref();
+const pending = ref(false);
+const memo = ref('');
+
+watch(() => props.show, (val) => {
+  isShow.value = val;
+  if (val) {
+    memo.value = props.data.memo;
+  }
+});
+
+const handleEdit = () => {
+  formRef.value.validate().then(async () => {
+    try {
+      pending.value = true;
+      await updateTemplateSpace(spaceId.value, props.data.id, { memo: memo.value });
+      handleClose();
+      emits('edited');
+      Message({
+        theme: 'success',
+        message: '编辑成功',
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      pending.value = false;
+    }
+  });
+};
+
+const handleClose = () => {
+  emits('update:show', false);
+};
+
+</script>
 <style lang="postcss" scoped>
   .header-wrapper {
     display: flex;

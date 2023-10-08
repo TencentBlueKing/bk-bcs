@@ -1,55 +1,3 @@
-<script lang="ts" setup>
-  import { onMounted, ref } from 'vue'
-  import { useRoute } from 'vue-router'
-  import { AngleDown } from 'bkui-vue/lib/icon'
-  import { storeToRefs } from 'pinia';
-  import { useServiceStore } from '../../../../../../../../store/service'
-  import ManualCreate from './manual-create.vue';
-  import ImportFromTemplate from './import-from-templates.vue'
-
-  const route = useRoute()
-
-  const serviceStore = useServiceStore()
-  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
-  const { checkPermBeforeOperate } = serviceStore
-
-  const props = defineProps<{
-    bkBizId: string,
-    appId: number
-  }>()
-
-  const emits = defineEmits(['created', 'imported'])
-
-  const buttonRef = ref()
-  const isPopoverOpen = ref(false)
-  const isManualCreateSliderOpen = ref(false)
-  const isImportTemplatesDialogOpen = ref(false)
-
-  onMounted(() => {
-    if (route.query.pkg_id) {
-      isImportTemplatesDialogOpen.value = true
-    }
-  })
-
-  const handleManualCreateSlideOpen = () => {
-    buttonRef.value.hide()
-    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
-      return
-    }
-    isManualCreateSliderOpen.value = true
-  }
-
-  const handleImportTemplateDialogOpen = () => {
-    buttonRef.value.hide()
-    if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
-      return
-    }
-    isImportTemplatesDialogOpen.value = true
-  }
-
-  const handleImported = () => {}
-
-</script>
 <template>
   <bk-popover
     ref="buttonRef"
@@ -59,10 +7,9 @@
     width="122"
     :arrow="false"
     @after-show="isPopoverOpen = true"
-    @after-hidden="isPopoverOpen = false">
-    <div
-      theme="primary"
-      :class="['create-config-btn', { 'popover-open': isPopoverOpen }]">
+    @after-hidden="isPopoverOpen = false"
+  >
+    <div theme="primary" :class="['create-config-btn', { 'popover-open': isPopoverOpen }]">
       新增配置文件
       <AngleDown class="angle-icon" />
     </div>
@@ -71,13 +18,15 @@
         <div
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleManualCreateSlideOpen">
+          @click="handleManualCreateSlideOpen"
+        >
           手动新增
         </div>
         <div
           v-cursor="{ active: !hasEditServicePerm }"
           :class="['operation-item', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-          @click="handleImportTemplateDialogOpen">
+          @click="handleImportTemplateDialogOpen"
+        >
           从配置模板导入
         </div>
       </div>
@@ -87,54 +36,107 @@
     v-model:show="isManualCreateSliderOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @confirm="emits('created')" />
+    @confirm="emits('created')"
+  />
   <ImportFromTemplate
     v-model:show="isImportTemplatesDialogOpen"
     :bk-biz-id="props.bkBizId"
     :app-id="props.appId"
-    @imported="emits('imported')" />
+    @imported="emits('imported')"
+  />
 </template>
+<script lang="ts" setup>
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { AngleDown } from 'bkui-vue/lib/icon';
+import { storeToRefs } from 'pinia';
+import { useServiceStore } from '../../../../../../../../store/service';
+import ManualCreate from './manual-create.vue';
+import ImportFromTemplate from './import-from-templates.vue';
+
+const route = useRoute();
+
+const serviceStore = useServiceStore();
+const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
+const { checkPermBeforeOperate } = serviceStore;
+
+const props = defineProps<{
+  bkBizId: string;
+  appId: number;
+}>();
+
+const emits = defineEmits(['created', 'imported']);
+
+const buttonRef = ref();
+const isPopoverOpen = ref(false);
+const isManualCreateSliderOpen = ref(false);
+const isImportTemplatesDialogOpen = ref(false);
+
+onMounted(() => {
+  if (route.query.pkg_id) {
+    isImportTemplatesDialogOpen.value = true;
+  }
+});
+
+const handleManualCreateSlideOpen = () => {
+  buttonRef.value.hide();
+  if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+    return;
+  }
+  isManualCreateSliderOpen.value = true;
+};
+
+const handleImportTemplateDialogOpen = () => {
+  buttonRef.value.hide();
+  if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
+    return;
+  }
+  isImportTemplatesDialogOpen.value = true;
+};
+
+// const handleImported = () => {};
+</script>
 <style lang="scss" scoped>
-  .create-config-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 122px;
-    height: 32px;
-    line-height: 32px;
-    color: #3a84ff;
-    border: 1px solid #3a84ff;
-    border-radius: 2px;
-    cursor: pointer;
-    &.popover-open {
-      .angle-icon {
-        transform: rotate(-180deg);
-      }
-    }
+.create-config-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 122px;
+  height: 32px;
+  line-height: 32px;
+  color: #3a84ff;
+  border: 1px solid #3a84ff;
+  border-radius: 2px;
+  cursor: pointer;
+  &.popover-open {
     .angle-icon {
-      font-size: 20px;
-      transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+      transform: rotate(-180deg);
     }
   }
+  .angle-icon {
+    font-size: 20px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
 </style>
 <style lang="scss">
-  .create-config-button-popover.bk-popover.bk-pop2-content {
-    padding: 4px 0;
-    border: 1px solid #dcdee5;
-    box-shadow: 0 2px 6px 0 #0000001a;
-    .add-config-operations {
-      .operation-item {
-        padding: 0 12px;
-        min-width: 58px;
-        height: 32px;
-        line-height: 32px;
-        color: #63656e;
-        font-size: 12px;
-        cursor: pointer;
-        &:hover {
-          background: #f5f7fa;
-        }
+.create-config-button-popover.bk-popover.bk-pop2-content {
+  padding: 4px 0;
+  border: 1px solid #dcdee5;
+  box-shadow: 0 2px 6px 0 #0000001a;
+  .add-config-operations {
+    .operation-item {
+      padding: 0 12px;
+      min-width: 58px;
+      height: 32px;
+      line-height: 32px;
+      color: #63656e;
+      font-size: 12px;
+      cursor: pointer;
+      &:hover {
+        background: #f5f7fa;
       }
     }
   }
+}
 </style>

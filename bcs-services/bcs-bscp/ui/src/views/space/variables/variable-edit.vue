@@ -1,86 +1,3 @@
-<script lang="ts" setup>
-  import { ref, watch } from 'vue'
-  import { storeToRefs } from 'pinia'
-  import { Message } from 'bkui-vue';
-  import useModalCloseConfirmation from '../../../utils/hooks/use-modal-close-confirmation'
-  import { useGlobalStore } from '../../../store/global'
-  import { updateVariable} from '../../../api/variable';
-  import { IVariableEditParams } from '../../../../types/variable';
-  import EditingForm from './editing-form.vue';
-
-  const { spaceId } = storeToRefs(useGlobalStore())
-
-  const props = defineProps<{
-    show: boolean;
-    id: number;
-    data: IVariableEditParams;
-  }>()
-
-  const emits = defineEmits(['update:show', 'edited'])
-
-  const isShow = ref(false)
-  const isFormChanged = ref(false)
-  const formRef = ref()
-  const prefix = ref()
-  const pending = ref(false)
-  const variableConfig = ref<IVariableEditParams>({
-    name: '',
-    type: '',
-    default_val: '',
-    memo: ''
-  })
-
-  watch(() => props.show, val => {
-    isShow.value = val
-    if (val) {
-      isFormChanged.value = false
-      const name = props.data.name.replace(/(^bk_bscp_)|(^BK_BSCP_)/, '')
-      let currentPrefix = 'bk_bscp_'
-      if (/^BK_BSCP_/.test(props.data.name)) {
-        currentPrefix = 'BK_BSCP_'
-      }
-      prefix.value = currentPrefix
-      variableConfig.value = { ...props.data, name }
-    }
-  })
-
-  const handleFormChange = (val: IVariableEditParams, localPrefix: string) => {
-    isFormChanged.value = true
-    prefix.value = localPrefix
-    variableConfig.value = { ...val }
-  }
-
-  const handleEditSubmit = async() => {
-    await formRef.value.validate()
-    try {
-      pending.value = true
-      const { default_val, memo } = variableConfig.value
-      await updateVariable(spaceId.value, props.id, { default_val, memo })
-      close()
-      emits('edited')
-      Message({
-        theme: 'success',
-        message: '编辑变量成功'
-      })
-    } catch (e) {
-      console.log(e)
-    } finally {
-      pending.value = false
-    }
-  }
-
-  const handleBeforeClose = async() => {
-    if (isFormChanged.value) {
-      const result = await useModalCloseConfirmation()
-      return result
-    }
-    return true
-  }
-
-  const close = () => {
-    emits('update:show', false)
-  }
-</script>
 <template>
   <bk-sideslider
     title="编辑变量"
@@ -97,6 +14,89 @@
     </div>
   </bk-sideslider>
 </template>
+<script lang="ts" setup>
+import { ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { Message } from 'bkui-vue';
+import useModalCloseConfirmation from '../../../utils/hooks/use-modal-close-confirmation';
+import { useGlobalStore } from '../../../store/global';
+import { updateVariable } from '../../../api/variable';
+import { IVariableEditParams } from '../../../../types/variable';
+import EditingForm from './editing-form.vue';
+
+const { spaceId } = storeToRefs(useGlobalStore());
+
+const props = defineProps<{
+    show: boolean;
+    id: number;
+    data: IVariableEditParams;
+  }>();
+
+const emits = defineEmits(['update:show', 'edited']);
+
+const isShow = ref(false);
+const isFormChanged = ref(false);
+const formRef = ref();
+const prefix = ref();
+const pending = ref(false);
+const variableConfig = ref<IVariableEditParams>({
+  name: '',
+  type: '',
+  default_val: '',
+  memo: '',
+});
+
+watch(() => props.show, (val) => {
+  isShow.value = val;
+  if (val) {
+    isFormChanged.value = false;
+    const name = props.data.name.replace(/(^bk_bscp_)|(^BK_BSCP_)/, '');
+    let currentPrefix = 'bk_bscp_';
+    if (/^BK_BSCP_/.test(props.data.name)) {
+      currentPrefix = 'BK_BSCP_';
+    }
+    prefix.value = currentPrefix;
+    variableConfig.value = { ...props.data, name };
+  }
+});
+
+const handleFormChange = (val: IVariableEditParams, localPrefix: string) => {
+  isFormChanged.value = true;
+  prefix.value = localPrefix;
+  variableConfig.value = { ...val };
+};
+
+const handleEditSubmit = async () => {
+  await formRef.value.validate();
+  try {
+    pending.value = true;
+    const { default_val, memo } = variableConfig.value;
+    await updateVariable(spaceId.value, props.id, { default_val, memo });
+    close();
+    emits('edited');
+    Message({
+      theme: 'success',
+      message: '编辑变量成功',
+    });
+  } catch (e) {
+    console.log(e);
+  } finally {
+    pending.value = false;
+  }
+};
+
+const handleBeforeClose = async () => {
+  if (isFormChanged.value) {
+    const result = await useModalCloseConfirmation();
+    return result;
+  }
+  return true;
+};
+
+const close = () => {
+  emits('update:show', false);
+};
+</script>
 <style lang="scss" scoped>
   .variable-form {
     padding: 20px 40px;

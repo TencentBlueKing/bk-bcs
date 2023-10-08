@@ -1,69 +1,3 @@
-<script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue'
-  import { storeToRefs } from 'pinia'
-  import { useConfigStore } from '../../../../../../../store/config'
-  import { ICommonQuery } from '../../../../../../../../types/index'
-  import { IConfigItem } from '../../../../../../../../types/config'
-  import { getConfigList, getReleasedConfigList } from '../../../../../../../api/config'
-  import { getConfigTypeName } from '../../../../../../../utils/config'
-  import EditConfig from '../config-table-list/edit-config.vue'
-
-  const store = useConfigStore()
-  const { versionData } = storeToRefs(store)
-
-  const props = defineProps<{
-    bkBizId: string,
-    appId: number,
-  }>()
-
-  const loading = ref(false)
-  const configList = ref<Array<IConfigItem>>([])
-  const configId = ref(0)
-  const editDialogShow = ref(false)
-
-  watch(() => versionData.value.id, () => {
-    getListData()
-  })
-
-  onMounted(() => {
-    getListData()
-  })
-
-  const getListData = async () => {
-    // 拉取到版本列表之前不加在列表数据
-    if (typeof versionData.value.id !== 'number') {
-      return
-    }
-
-    loading.value = true
-    try {
-      const params: ICommonQuery = {
-        start: 0,
-        all: true
-      }
-
-      let res
-      if (versionData.value.id === 0) {
-        res = await getConfigList(props.bkBizId, props.appId, params)
-      } else {
-        res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params)
-      }
-    } catch (e) {
-      console.error(e)
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const handleEditConfigOpen = (config: IConfigItem) => {
-    if (config.file_state === 'DELETE') {
-      return
-    }
-    editDialogShow.value = true
-    configId.value = config.id
-  }
-
-</script>
 <template>
   <section class="current-config-list">
     <bk-loading :loading="loading">
@@ -86,6 +20,72 @@
       :config-id="configId" />
   </section>
 </template>
+<script setup lang="ts">
+import { ref, watch, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useConfigStore } from '../../../../../../../store/config';
+import { ICommonQuery } from '../../../../../../../../types/index';
+import { IConfigItem } from '../../../../../../../../types/config';
+import { getConfigList, getReleasedConfigList } from '../../../../../../../api/config';
+import { getConfigTypeName } from '../../../../../../../utils/config';
+import EditConfig from '../config-table-list/edit-config.vue';
+
+const store = useConfigStore();
+const { versionData } = storeToRefs(store);
+
+const props = defineProps<{
+    bkBizId: string,
+    appId: number,
+  }>();
+
+const loading = ref(false);
+const configList = ref<Array<IConfigItem>>([]);
+const configId = ref(0);
+const editDialogShow = ref(false);
+
+watch(() => versionData.value.id, () => {
+  getListData();
+});
+
+onMounted(() => {
+  getListData();
+});
+
+const getListData = async () => {
+  // 拉取到版本列表之前不加在列表数据
+  if (typeof versionData.value.id !== 'number') {
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const params: ICommonQuery = {
+      start: 0,
+      all: true,
+    };
+
+    let res;
+    if (versionData.value.id === 0) {
+      res = await getConfigList(props.bkBizId, props.appId, params);
+    } else {
+      res = await getReleasedConfigList(props.bkBizId, props.appId, versionData.value.id, params);
+    }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleEditConfigOpen = (config: IConfigItem) => {
+  if (config.file_state === 'DELETE') {
+    return;
+  }
+  editDialogShow.value = true;
+  configId.value = config.id;
+};
+
+</script>
 <style lang="scss" scoped>
   .current-config-list {
     padding: 24px;

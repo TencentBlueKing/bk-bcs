@@ -1,99 +1,3 @@
-<script setup lang="ts">
-import { ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useGlobalStore } from '../../../../store/global'
-import { getCredentialScopes, updateCredentialScopes } from '../../../../api/credentials'
-import { ICredentialRule, IRuleUpdateParams } from '../../../../../types/credential'
-import useModalCloseConfirmation from '../../../../utils/hooks/use-modal-close-confirmation'
-// import MatchingResult from './matching-result.vue'
-import RuleView from './rule-view.vue'
-import RuleEdit from './rule-edit.vue'
-
-const { spaceId } = storeToRefs(useGlobalStore())
-
-const props = defineProps<{
-  show: boolean;
-  id: number;
-  permCheckLoading: boolean;
-  hasManagePerm: boolean;
-}>()
-
-const emits = defineEmits(['close', 'refresh', 'applyPerm'])
-
-const loading = ref(true)
-const rules = ref<ICredentialRule[]>([])
-const ruleChangeParams = ref<IRuleUpdateParams>({
-  add_scope: [],
-  del_id: [],
-  alter_scope: []
-})
-const isRuleEdit = ref(false)
-const isFormChange = ref(false)
-const pending = ref(false)
-
-watch(() => props.show, (val) => {
-  if (val) {
-    loadRules()
-    ruleChangeParams.value = {
-      add_scope: [],
-      del_id: [],
-      alter_scope: []
-    }
-  }
-})
-
-const loadRules = async () => {
-  loading.value = true
-  const res = await getCredentialScopes(spaceId.value, props.id)
-  rules.value = res.details
-  loading.value = false
-}
-
-const handleOpenEdit = () => {
-  if (props.permCheckLoading || !props.hasManagePerm) {
-    emits('applyPerm')
-  }
-  isRuleEdit.value = true
-}
-
-const handleRuleChange = (val: IRuleUpdateParams) => {
-  isFormChange.value = true
-  ruleChangeParams.value = Object.assign({}, ruleChangeParams.value, val)
-}
-
-const handleSave = async() => {
-  pending.value = true
-  try {
-    await updateCredentialScopes(spaceId.value, props.id, ruleChangeParams.value)
-    ruleChangeParams.value = {
-      add_scope: [],
-      del_id: [],
-      alter_scope: []
-    }
-    handleClose()
-    emits('refresh')
-  } catch (e) {
-    console.error(e)
-  } finally {
-    pending.value = false
-  }
-}
-
-const handleBeforeClose = async () => {
-  if (isRuleEdit.value && isFormChange.value) {
-    const result = await useModalCloseConfirmation()
-    return result
-  }
-  return true
-}
-
-const handleClose = () => {
-  isRuleEdit.value = false
-  pending.value = false
-  emits('close')
-}
-
-</script>
 <template>
   <bk-sideslider
     title="关联配置项"
@@ -130,6 +34,102 @@ const handleClose = () => {
     </div>
   </bk-sideslider>
 </template>
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useGlobalStore } from '../../../../store/global';
+import { getCredentialScopes, updateCredentialScopes } from '../../../../api/credentials';
+import { ICredentialRule, IRuleUpdateParams } from '../../../../../types/credential';
+import useModalCloseConfirmation from '../../../../utils/hooks/use-modal-close-confirmation';
+// import MatchingResult from './matching-result.vue'
+import RuleView from './rule-view.vue';
+import RuleEdit from './rule-edit.vue';
+
+const { spaceId } = storeToRefs(useGlobalStore());
+
+const props = defineProps<{
+  show: boolean;
+  id: number;
+  permCheckLoading: boolean;
+  hasManagePerm: boolean;
+}>();
+
+const emits = defineEmits(['close', 'refresh', 'applyPerm']);
+
+const loading = ref(true);
+const rules = ref<ICredentialRule[]>([]);
+const ruleChangeParams = ref<IRuleUpdateParams>({
+  add_scope: [],
+  del_id: [],
+  alter_scope: [],
+});
+const isRuleEdit = ref(false);
+const isFormChange = ref(false);
+const pending = ref(false);
+
+watch(() => props.show, (val) => {
+  if (val) {
+    loadRules();
+    ruleChangeParams.value = {
+      add_scope: [],
+      del_id: [],
+      alter_scope: [],
+    };
+  }
+});
+
+const loadRules = async () => {
+  loading.value = true;
+  const res = await getCredentialScopes(spaceId.value, props.id);
+  rules.value = res.details;
+  loading.value = false;
+};
+
+const handleOpenEdit = () => {
+  if (props.permCheckLoading || !props.hasManagePerm) {
+    emits('applyPerm');
+  }
+  isRuleEdit.value = true;
+};
+
+const handleRuleChange = (val: IRuleUpdateParams) => {
+  isFormChange.value = true;
+  ruleChangeParams.value = Object.assign({}, ruleChangeParams.value, val);
+};
+
+const handleSave = async () => {
+  pending.value = true;
+  try {
+    await updateCredentialScopes(spaceId.value, props.id, ruleChangeParams.value);
+    ruleChangeParams.value = {
+      add_scope: [],
+      del_id: [],
+      alter_scope: [],
+    };
+    handleClose();
+    emits('refresh');
+  } catch (e) {
+    console.error(e);
+  } finally {
+    pending.value = false;
+  }
+};
+
+const handleBeforeClose = async () => {
+  if (isRuleEdit.value && isFormChange.value) {
+    const result = await useModalCloseConfirmation();
+    return result;
+  }
+  return true;
+};
+
+const handleClose = () => {
+  isRuleEdit.value = false;
+  pending.value = false;
+  emits('close');
+};
+
+</script>
 <style lang="scss" scoped>
   .associate-config-items {
     display: flex;

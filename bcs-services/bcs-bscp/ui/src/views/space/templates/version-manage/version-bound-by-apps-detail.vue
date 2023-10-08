@@ -1,84 +1,5 @@
-<script lang="ts" setup>
-  import { ref, watch } from 'vue';
-  import { useRouter } from 'vue-router';
-  import { getUnNamedVersionAppsBoundByTemplateVersion } from '../../../../api/template';
-  import { ICommonQuery } from '../../../../../types/index';
-  import { IAppBoundByTemplateDetailItem } from '../../../../../types/template'
-  import SearchInput from '../../../../components/search-input.vue';
-
-  const router = useRouter()
-
-  const props = defineProps<{
-    show: boolean;
-    spaceId: string;
-    currentTemplateSpace: number;
-    config: { id: number; versionId: number; name: string; };
-  }>()
-
-  const emits = defineEmits(['update:show'])
-
-  const isShow = ref(false)
-  const appList = ref<IAppBoundByTemplateDetailItem[]>([])
-  const searchStr = ref('')
-  const loading = ref(false)
-  const pagination = ref({
-    current: 1,
-    limit: 10,
-    count: 0
-  })
-
-  watch(() => props.show, val => {
-    isShow.value = val
-    if (val) {
-      searchStr.value = ''
-      getList()
-    }
-  })
-
-  const getList = async() => {
-    loading.value = true
-    const params: ICommonQuery = {
-      start: (pagination.value.current - 1) * pagination.value.limit,
-      limit: pagination.value.limit
-    }
-    if (searchStr.value) {
-      params.search_fields = 'app_name,template_revision_name'
-      params.search_value = searchStr.value
-    }
-    const res = await getUnNamedVersionAppsBoundByTemplateVersion(props.spaceId, props.currentTemplateSpace, props.config.id, props.config.versionId, params)
-    appList.value = res.details
-    pagination.value.count = res.count
-    loading.value = false
-  }
-
-  const getHref = (id: number) => {
-    const { href } = router.resolve({ name: 'service-config', params: { spaceId: props.spaceId, appId: id } })
-    return href
-  }
-
-  const handleSearch = (val: string) => {
-    searchStr.value = val
-    pagination.value.current = 1
-    getList()
-  }
-
-  const handlePageLimitChange = (val: number) => {
-    pagination.value.current = 1
-    pagination.value.limit = val
-    getList()
-  }
-
-  const close = () => {
-    emits('update:show', false)
-  }
-</script>
 <template>
-  <bk-sideslider
-    title="被引用"
-    :width="640"
-    :quick-close="true"
-    :is-show="isShow"
-    @closed="close">
+  <bk-sideslider title="被引用" :width="640" :quick-close="true" :is-show="isShow" @closed="close">
     <div class="top-area">
       <div class="config-name">{{ props.config.name }}</div>
       <SearchInput v-model="searchStr" placeholder="服务名称/配置项版本" :width="320" @search="handleSearch" />
@@ -90,16 +11,12 @@
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="getList">
+        @page-value-change="getList"
+      >
         <bk-table-column label="配置项版本">{{ props.config.name }}</bk-table-column>
         <bk-table-column label="引用此配置项的服务">
           <template #default="{ row }">
-            <bk-link
-              v-if="row.app_id"
-              class="link-btn"
-              theme="primary"
-              target="_blank"
-              :href="getHref(row.app_id)">
+            <bk-link v-if="row.app_id" class="link-btn" theme="primary" target="_blank" :href="getHref(row.app_id)">
               {{ row.app_name }}
             </bk-link>
           </template>
@@ -111,42 +28,125 @@
     </div>
   </bk-sideslider>
 </template>
+<script lang="ts" setup>
+import { ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { getUnNamedVersionAppsBoundByTemplateVersion } from '../../../../api/template';
+import { ICommonQuery } from '../../../../../types/index';
+import { IAppBoundByTemplateDetailItem } from '../../../../../types/template';
+import SearchInput from '../../../../components/search-input.vue';
+
+const router = useRouter();
+
+const props = defineProps<{
+  show: boolean;
+  spaceId: string;
+  currentTemplateSpace: number;
+  config: { id: number; versionId: number; name: string };
+}>();
+
+const emits = defineEmits(['update:show']);
+
+const isShow = ref(false);
+const appList = ref<IAppBoundByTemplateDetailItem[]>([]);
+const searchStr = ref('');
+const loading = ref(false);
+const pagination = ref({
+  current: 1,
+  limit: 10,
+  count: 0,
+});
+
+watch(
+  () => props.show,
+  (val) => {
+    isShow.value = val;
+    if (val) {
+      searchStr.value = '';
+      getList();
+    }
+  }
+);
+
+const getList = async () => {
+  loading.value = true;
+  const params: ICommonQuery = {
+    start: (pagination.value.current - 1) * pagination.value.limit,
+    limit: pagination.value.limit,
+  };
+  if (searchStr.value) {
+    params.search_fields = 'app_name,template_revision_name';
+    params.search_value = searchStr.value;
+  }
+  const res = await getUnNamedVersionAppsBoundByTemplateVersion(
+    props.spaceId,
+    props.currentTemplateSpace,
+    props.config.id,
+    props.config.versionId,
+    params
+  );
+  appList.value = res.details;
+  pagination.value.count = res.count;
+  loading.value = false;
+};
+
+const getHref = (id: number) => {
+  const { href } = router.resolve({ name: 'service-config', params: { spaceId: props.spaceId, appId: id } });
+  return href;
+};
+
+const handleSearch = (val: string) => {
+  searchStr.value = val;
+  pagination.value.current = 1;
+  getList();
+};
+
+const handlePageLimitChange = (val: number) => {
+  pagination.value.current = 1;
+  pagination.value.limit = val;
+  getList();
+};
+
+const close = () => {
+  emits('update:show', false);
+};
+</script>
 <style lang="scss" scoped>
-  .top-area {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 24px 0;
-    padding: 0 24px;
-    height: 32px;
-    .config-name {
-      margin-right: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      color: #63656e;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .search-input {
-      flex-shrink: 0;
-    }
+.top-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0;
+  padding: 0 24px;
+  height: 32px;
+  .config-name {
+    margin-right: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #63656e;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
-  .apps-table {
-    padding: 0 24px;
-    height: calc(100vh - 180px);
-    overflow: auto;
+  .search-input {
+    flex-shrink: 0;
   }
-  .link-btn {
-    font-size: 12px;
-    color: #3a84ff;
+}
+.apps-table {
+  padding: 0 24px;
+  height: calc(100vh - 180px);
+  overflow: auto;
+}
+.link-btn {
+  font-size: 12px;
+  color: #3a84ff;
+}
+.action-btn {
+  padding: 8px 24px;
+  background: #fafbfd;
+  box-shadow: 0 -1px 0 0 #dcdee5;
+  .bk-button {
+    min-width: 88px;
   }
-  .action-btn {
-    padding: 8px 24px;
-    background: #fafbfd;
-    box-shadow: 0 -1px 0 0 #dcdee5;
-    .bk-button {
-      min-width: 88px;
-    }
-  }
+}
 </style>

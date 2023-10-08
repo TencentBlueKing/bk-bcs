@@ -1,16 +1,3 @@
-<script setup lang="ts">
-  import { IDiffDetail } from '../../../types/service';
-  import { IFileConfigContentSummary } from '../../../types/config';
-  import File from './file.vue'
-  import Text from './text.vue'
-
-  const props = defineProps<{
-    panelName?: String;
-    diff: IDiffDetail;
-    id: number; // 服务ID或模板空间ID
-    loading: boolean
-  }>()
-</script>
 <template>
     <section class="diff-comp-panel">
         <div class="top-area">
@@ -42,6 +29,19 @@
         </bk-loading>
     </section>
 </template>
+<script setup lang="ts">
+import { IDiffDetail } from '../../../types/service';
+import { IFileConfigContentSummary } from '../../../types/config';
+import File from './file.vue';
+import Text from './text.vue';
+
+const props = defineProps<{
+    panelName?: String;
+    diff: IDiffDetail;
+    id: number; // 服务ID或模板空间ID
+    loading: boolean
+  }>();
+</script>
 <style lang="scss" scoped>
     .diff-comp-panel {
         height: 100%;

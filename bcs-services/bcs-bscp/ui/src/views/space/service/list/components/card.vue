@@ -1,80 +1,3 @@
-<script setup lang="ts">
-  import { useI18n } from "vue-i18n"
-  import { useRoute, useRouter } from 'vue-router'
-  import { storeToRefs } from 'pinia'
-  import { Del } from 'bkui-vue/lib/icon'
-  import { InfoBox } from 'bkui-vue/lib'
-  import { useGlobalStore } from '../../../../../store/global'
-  import { IAppItem } from '../../../../../../types/app'
-  import { IPermissionQueryResourceItem } from '../../../../../../types/index'
-  import { deleteApp } from "../../../../../api";
-  import { datetimeFormat } from '../../../../../utils/index'
-
-  const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore())
-
-  const { t } = useI18n()
-  const route = useRoute()
-  const router = useRouter()
-
-  const props = defineProps<{
-    service: IAppItem;
-  }>()
-
-  const emits = defineEmits(['edit', 'update'])
-
-  const handleDeleteItem = () => {
-    if (props.service.permissions.delete) {
-      InfoBox({
-        title: `确认是否删除服务 ${props.service.spec.name}?`,
-        headerAlign: "center" as const,
-        footerAlign: "center" as const,
-        extCls: 'center-top-infobox',
-        onConfirm: async () => {
-          await deleteApp(<number>props.service.id, props.service.biz_id);
-          emits('update')
-        },
-      } as any);
-    } else {
-      const query = {
-        resources: [{
-          biz_id: props.service.biz_id,
-          basic: {
-            type: 'app',
-            action: 'delete',
-            resource_id: props.service.id
-          }
-        }]
-      }
-      openPermApplyDialog(query)
-    }
-  }
-
-  const handleCardClick = () => {
-    if (props.service.permissions.view) {
-      return
-    }
-    const query = {
-      resources: [{
-        biz_id: props.service.biz_id,
-        basic: {
-          type: 'app',
-          action: 'view',
-          resource_id: props.service.id
-        }
-      }]
-    }
-    openPermApplyDialog(query)
-  }
-
-  const openPermApplyDialog = (query: { resources: IPermissionQueryResourceItem[] }) => {
-    permissionQuery.value = query
-    showApplyPermDialog.value = true
-  }
-
-  const goToDetail = () => {
-    router.push({ name: 'service-config', params: { spaceId: route.params.spaceId, appId: props.service.id } })
-  }
-</script>
 <template>
   <section :class="['service-card', { 'no-view-perm': !props.service.permissions.view }]" @click="handleCardClick">
     <div class="card-content-wrapper">
@@ -111,6 +34,83 @@
     </div>
   </section>
 </template>
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { Del } from 'bkui-vue/lib/icon';
+import { InfoBox } from 'bkui-vue/lib';
+import { useGlobalStore } from '../../../../../store/global';
+import { IAppItem } from '../../../../../../types/app';
+import { IPermissionQueryResourceItem } from '../../../../../../types/index';
+import { deleteApp } from '../../../../../api';
+import { datetimeFormat } from '../../../../../utils/index';
+
+const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
+
+const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
+
+const props = defineProps<{
+    service: IAppItem;
+  }>();
+
+const emits = defineEmits(['edit', 'update']);
+
+const handleDeleteItem = () => {
+  if (props.service.permissions.delete) {
+    InfoBox({
+      title: `确认是否删除服务 ${props.service.spec.name}?`,
+      headerAlign: 'center' as const,
+      footerAlign: 'center' as const,
+      extCls: 'center-top-infobox',
+      onConfirm: async () => {
+        await deleteApp((props.service.id as number), props.service.biz_id);
+        emits('update');
+      },
+    } as any);
+  } else {
+    const query = {
+      resources: [{
+        biz_id: props.service.biz_id,
+        basic: {
+          type: 'app',
+          action: 'delete',
+          resource_id: props.service.id,
+        },
+      }],
+    };
+    openPermApplyDialog(query);
+  }
+};
+
+const handleCardClick = () => {
+  if (props.service.permissions.view) {
+    return;
+  }
+  const query = {
+    resources: [{
+      biz_id: props.service.biz_id,
+      basic: {
+        type: 'app',
+        action: 'view',
+        resource_id: props.service.id,
+      },
+    }],
+  };
+  openPermApplyDialog(query);
+};
+
+const openPermApplyDialog = (query: { resources: IPermissionQueryResourceItem[] }) => {
+  permissionQuery.value = query;
+  showApplyPermDialog.value = true;
+};
+
+const goToDetail = () => {
+  router.push({ name: 'service-config', params: { spaceId: route.params.spaceId, appId: props.service.id } });
+};
+</script>
 <style lang="scss" scoped>
   .service-card {
     position: relative;

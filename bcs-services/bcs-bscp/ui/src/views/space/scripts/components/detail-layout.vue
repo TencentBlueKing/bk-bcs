@@ -1,15 +1,3 @@
-<script setup lang="ts">
-  import { ArrowsLeft } from 'bkui-vue/lib/icon'
-
-  const props = withDefaults(defineProps<{
-    name: string;
-    showFooter?: boolean;
-  }>(), {
-    showFooter: true
-  })
-
-  const emits = defineEmits(['close'])
-</script>
 <template>
   <section class="script-detail-layout">
     <header>
@@ -26,6 +14,18 @@
     </footer>
   </section>
 </template>
+<script setup lang="ts">
+import { ArrowsLeft } from 'bkui-vue/lib/icon';
+
+const props = withDefaults(defineProps<{
+    name: string;
+    showFooter?: boolean;
+  }>(), {
+  showFooter: true,
+});
+
+const emits = defineEmits(['close']);
+</script>
 <style lang="scss" scoped>
   .script-detail-layout {
     position: fixed;

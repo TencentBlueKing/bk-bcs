@@ -1,160 +1,3 @@
-<script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { storeToRefs } from 'pinia'
-  import { AngleDown, HelpFill, DownShape } from 'bkui-vue/lib/icon'
-  import { useGlobalStore } from '../store/global'
-  import { useUserStore } from '../store/user'
-  import { useTemplateStore } from '../store/template'
-  import { ISpaceDetail } from '../../types/index'
-  import { loginOut } from '../api/index'
-  import type { IVersionLogItem } from '../../types/version-log'
-  import VersionLog from './version-log.vue'
-  import features from './features-dialog.vue'
-  import MarkdownIt from 'markdown-it'
-
-  const route = useRoute()
-  const router = useRouter()
-  const { spaceId, spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore())
-  const { userInfo } = storeToRefs(useUserStore())
-  const templateStore = useTemplateStore()
-  const md = new MarkdownIt({
-    html: true,
-    linkify: true,
-    typographer: true,
-  })
-  const navList = [
-    { id: 'service-mine', module: 'service', name: '服务管理'},
-    { id: 'groups-management', module: 'groups', name: '分组管理'},
-    { id: 'variables-management', module: 'variables', name: '变量管理'},
-    { id: 'templates-list', module: 'templates', name: '配置模板'},
-    { id: 'script-list', module: 'scripts', name: '脚本管理'},
-    { id: 'credentials-management', module: 'credentials', name: '服务密钥'}
-  ]
-
-  const optionList = ref<ISpaceDetail[]>([])
-
-  const crtSpaceText = computed(() => {
-    const space = spaceList.value.find(item => item.space_id === spaceId.value)
-    if (space) {
-      return `${space.space_name}(${spaceId.value})`
-    }
-    return ''
-  })
-
-  watch(spaceList, (val) => {
-    optionList.value = val.slice()
-  }, {
-    immediate: true
-  })
-
-  const handleSpaceSearch = (searchStr: string) => {
-    if (searchStr) {
-      optionList.value = spaceList.value.filter(item => {
-        return item.space_name.toLowerCase().includes(searchStr.toLowerCase()) || String(item.space_id).includes(searchStr)
-    })
-    } else {
-      optionList.value = spaceList.value.slice()
-    }
-  }
-
-  const handleSelectSpace = (id: string) => {
-    const space = spaceList.value.find((item: ISpaceDetail) => item.space_id === id)
-    if (space) {
-      if (!space.permission) {
-        permissionQuery.value = {
-          resources: [
-            {
-              biz_id: id,
-              basic: {
-                type: "biz",
-                action: "find_business_resource",
-                resource_id: id
-              }
-            }
-          ]
-        }
-
-        showApplyPermDialog.value = true
-        return
-      }
-      templateStore.$patch((state) => {
-        state.templateSpaceList = []
-        state.currentTemplateSpace = 0
-        state.currentPkg = ''
-      })
-      const nav = navList.find(item => item.module === route.meta.navModule)
-      if (nav) {
-        router.push({ name: nav.id, params: { spaceId: id } })
-      } else {
-        router.push({ name: 'service-mine', params: { spaceId: id } })
-      }
-    }
-  }
-
-
-  // 下拉菜单
-  const dropdownList = [
-    {
-      title: '产品文档',
-      click () {
-        // @ts-ignore
-        window.open(BSCP_CONFIG.help)
-      },
-    },
-    {
-      title: '版本日志',
-      click () {
-        isShowVersionLog.value = true
-      },
-    },
-    {
-      title: '功能特性',
-      click () {
-        isShowFeatures.value = true
-      },
-    },
-    {
-      title: '问题反馈',
-      click () {
-        window.open('https://bk.tencent.com/s-mart/community/question')
-      }
-    }
-  ]
-
-  const isShowDropdown = ref(false)
-
-// 版本日志
-  const logList = ref<IVersionLogItem[]>([])
-  const isShowVersionLog = ref(false)
-  const modules = import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
-    as: 'raw',
-    eager: true,
-  })
-  for (const path in modules) {
-    logList.value!.push({
-      title: path.split('CN/')[1].split('_')[0],
-      date: path.split('CN/')[1].split('_')[1].slice(0, -3),
-      detail: md.render(modules[path]),
-    })
-  }
-
-// 功能特性
-  const featuresContent = ref('')
-  const isShowFeatures = ref(false)
-  const module = import.meta.glob(
-    '../../../docs/features/features.md',
-    { as: 'raw', eager: true }
-  )
-  for (const path in module) {
-    featuresContent.value = md.render(module[path])
-  }
-  const handleLoginOut = () => {
-    loginOut()
-  }
-
-</script>
-
 <template>
   <div class="header">
     <div class="head-left">
@@ -167,7 +10,8 @@
           v-for="nav in navList"
           :class="['nav-item', { actived: route.meta.navModule === nav.module }]"
           :key="nav.id"
-          :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }">
+          :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }"
+        >
           {{ nav.name }}
         </router-link>
       </div>
@@ -183,20 +27,23 @@
         :clearable="false"
         :input-search="false"
         :remote-method="handleSpaceSearch"
-        @change="handleSelectSpace">
+        @change="handleSelectSpace"
+      >
         <template #trigger>
           <div class="space-name">
-            <input readonly :value="crtSpaceText">
+            <input readonly :value="crtSpaceText" />
             <AngleDown class="arrow-icon" />
           </div>
         </template>
         <bk-option v-for="item in optionList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
           <div
-          v-cursor="{ active: !item.permission }"
-          :class="['biz-option-item', { 'no-perm': !item.permission }]"
-          v-bk-tooltips="{
-            content: `项目名称: ${item.space_name}\n业务ID: ${item.space_id}`,
-            placement: 'left'}">
+            v-cursor="{ active: !item.permission }"
+            :class="['biz-option-item', { 'no-perm': !item.permission }]"
+            v-bk-tooltips="{
+              content: `项目名称: ${item.space_name}\n业务ID: ${item.space_id}`,
+              placement: 'left',
+            }"
+          >
             <div class="name-wrapper">
               <span class="text">{{ item.space_name }}</span>
               <span class="id">({{ item.space_id }})</span>
@@ -205,31 +52,27 @@
           </div>
         </bk-option>
       </bk-select>
-      <bk-dropdown
-        trigger="hover"
-        ext-cls="dropdown"
-        :is-show="isShowDropdown"
-        @hide="isShowDropdown = false">
-        <bk-button text
-          :class="['dropdown-trigger', isShowDropdown ? 'active' : '']">
+      <bk-dropdown trigger="hover" ext-cls="dropdown" :is-show="isShowDropdown" @hide="isShowDropdown = false">
+        <bk-button text :class="['dropdown-trigger', isShowDropdown ? 'active' : '']">
           <help-fill width="16" height="16" :fill="isShowDropdown ? '#fff' : '#96a2b9'" />
         </bk-button>
         <template #content>
           <bk-dropdown-menu ext-cls="dropdown-menu">
-            <bk-dropdown-item v-for="item in dropdownList" :key="item.title" ext-cls="dropdown-item" @click="item.click">
+            <bk-dropdown-item
+              v-for="item in dropdownList"
+              :key="item.title"
+              ext-cls="dropdown-item"
+              @click="item.click"
+            >
               {{ item.title }}
             </bk-dropdown-item>
           </bk-dropdown-menu>
         </template>
       </bk-dropdown>
-      <bk-popover
-        ext-cls="login-out-popover"
-        placement="bottom-center"
-        theme="light"
-        :arrow="false">
+      <bk-popover ext-cls="login-out-popover" placement="bottom-center" theme="light" :arrow="false">
         <div class="username-wrapper">
           <span class="text">{{ userInfo.username }}</span>
-          <DownShape class="arrow-icon"/>
+          <DownShape class="arrow-icon" />
         </div>
         <template #content>
           <div class="login-out-btn" @click="handleLoginOut">退出登录</div>
@@ -240,6 +83,164 @@
   <version-log :log-list="logList" v-model:is-show="isShowVersionLog"></version-log>
   <features :detail="featuresContent" v-model:is-show="isShowFeatures"></features>
 </template>
+
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { AngleDown, HelpFill, DownShape } from 'bkui-vue/lib/icon';
+import { useGlobalStore } from '../store/global';
+import { useUserStore } from '../store/user';
+import { useTemplateStore } from '../store/template';
+import { ISpaceDetail } from '../../types/index';
+import { loginOut } from '../api/index';
+import type { IVersionLogItem } from '../../types/version-log';
+import VersionLog from './version-log.vue';
+import features from './features-dialog.vue';
+import MarkdownIt from 'markdown-it';
+
+const route = useRoute();
+const router = useRouter();
+const { spaceId, spaceList, showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
+const { userInfo } = storeToRefs(useUserStore());
+const templateStore = useTemplateStore();
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true,
+});
+const navList = [
+  { id: 'service-mine', module: 'service', name: '服务管理' },
+  { id: 'groups-management', module: 'groups', name: '分组管理' },
+  { id: 'variables-management', module: 'variables', name: '变量管理' },
+  { id: 'templates-list', module: 'templates', name: '配置模板' },
+  { id: 'script-list', module: 'scripts', name: '脚本管理' },
+  { id: 'credentials-management', module: 'credentials', name: '服务密钥' },
+];
+
+const optionList = ref<ISpaceDetail[]>([]);
+
+const crtSpaceText = computed(() => {
+  const space = spaceList.value.find((item) => item.space_id === spaceId.value);
+  if (space) {
+    return `${space.space_name}(${spaceId.value})`;
+  }
+  return '';
+});
+
+watch(
+  spaceList,
+  (val) => {
+    optionList.value = val.slice();
+  },
+  {
+    immediate: true,
+  }
+);
+
+const handleSpaceSearch = (searchStr: string) => {
+  if (searchStr) {
+    optionList.value = spaceList.value.filter(
+      (item) =>
+        item.space_name.toLowerCase().includes(searchStr.toLowerCase()) || String(item.space_id).includes(searchStr)
+    );
+  } else {
+    optionList.value = spaceList.value.slice();
+  }
+};
+
+const handleSelectSpace = (id: string) => {
+  const space = spaceList.value.find((item: ISpaceDetail) => item.space_id === id);
+  if (space) {
+    if (!space.permission) {
+      permissionQuery.value = {
+        resources: [
+          {
+            biz_id: id,
+            basic: {
+              type: 'biz',
+              action: 'find_business_resource',
+              resource_id: id,
+            },
+          },
+        ],
+      };
+
+      showApplyPermDialog.value = true;
+      return;
+    }
+    templateStore.$patch((state) => {
+      state.templateSpaceList = [];
+      state.currentTemplateSpace = 0;
+      state.currentPkg = '';
+    });
+    const nav = navList.find((item) => item.module === route.meta.navModule);
+    if (nav) {
+      router.push({ name: nav.id, params: { spaceId: id } });
+    } else {
+      router.push({ name: 'service-mine', params: { spaceId: id } });
+    }
+  }
+};
+
+// 下拉菜单
+const dropdownList = [
+  {
+    title: '产品文档',
+    click() {
+      // @ts-ignore
+      // eslint-disable-next-line
+      window.open(BSCP_CONFIG.help);
+    },
+  },
+  {
+    title: '版本日志',
+    click() {
+      isShowVersionLog.value = true;
+    },
+  },
+  {
+    title: '功能特性',
+    click() {
+      isShowFeatures.value = true;
+    },
+  },
+  {
+    title: '问题反馈',
+    click() {
+      window.open('https://bk.tencent.com/s-mart/community/question');
+    },
+  },
+];
+
+const isShowDropdown = ref(false);
+
+// 版本日志
+const logList = ref<IVersionLogItem[]>([]);
+const isShowVersionLog = ref(false);
+const modules = import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
+  as: 'raw',
+  eager: true,
+});
+for (const path in modules) {
+  logList.value!.push({
+    title: path.split('CN/')[1].split('_')[0],
+    date: path.split('CN/')[1].split('_')[1].slice(0, -3),
+    detail: md.render(modules[path]),
+  });
+}
+
+// 功能特性
+const featuresContent = ref('');
+const isShowFeatures = ref(false);
+const module = import.meta.glob('../../../docs/features/features.md', { as: 'raw', eager: true });
+for (const path in module) {
+  featuresContent.value = md.render(module[path]);
+}
+const handleLoginOut = () => {
+  loginOut();
+};
+</script>
 
 <style lang="scss" scoped>
 .header {
@@ -317,7 +318,7 @@
       height: 100%;
       font-size: 20px;
       color: #979ba5;
-      transition: transform .3s cubic-bezier(.4,0,.2,1);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
   }
 }
@@ -367,7 +368,7 @@
   &:hover {
     color: #3a84ff;
   }
-  .arrow-icon{
+  .arrow-icon {
     font-size: 14px;
     margin-left: 4px;
   }

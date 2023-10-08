@@ -1,27 +1,26 @@
 // 服务实例的pinia数据
-import { ref } from 'vue'
-import { defineStore, storeToRefs } from "pinia";
+import { ref } from 'vue';
+import { defineStore, storeToRefs } from 'pinia';
 import { useGlobalStore } from './global';
 
-
 interface IAppData {
-  id: number|string;
+  id: number | string;
   spec: {
-      name: string;
-  }
+    name: string;
+  };
 }
-const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore())
+const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 
 export const useServiceStore = defineStore('service', () => {
   // 服务详情数据
   const appData = ref<IAppData>({
     id: '',
     spec: {
-      name: ''
-    }
-  })
-  const permCheckLoading = ref(false)
-  const hasEditServicePerm = ref(false)
+      name: '',
+    },
+  });
+  const permCheckLoading = ref(false);
+  const hasEditServicePerm = ref(false);
 
   const checkPermBeforeOperate = (perm: string) => {
     if (perm === 'update' && !hasEditServicePerm.value) {
@@ -32,16 +31,16 @@ export const useServiceStore = defineStore('service', () => {
             basic: {
               type: 'app',
               action: 'update',
-              resource_id: appData.value.id
-            }
-          }
-        ]
-      }
-      showApplyPermDialog.value = true
-      return false
+              resource_id: appData.value.id,
+            },
+          },
+        ],
+      };
+      showApplyPermDialog.value = true;
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
-  return { appData, permCheckLoading, hasEditServicePerm, checkPermBeforeOperate }
-})
+  return { appData, permCheckLoading, hasEditServicePerm, checkPermBeforeOperate };
+});

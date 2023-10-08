@@ -1,7 +1,5 @@
-import * as axios from 'axios'
+import * as axios from 'axios';
 
 declare module 'axios' {
-  interface AxiosInstance {
-    (config: AxiosRequestConfig): Promise<any>
-  }
+  type AxiosInstance = (config: AxiosRequestConfig) => Promise<any>
 }

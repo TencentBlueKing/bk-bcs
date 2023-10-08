@@ -1,89 +1,3 @@
-<script setup lang="ts">
-  import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { storeToRefs } from 'pinia';
-  import { AngleDoubleRight } from 'bkui-vue/lib/icon'
-  import { useServiceStore } from '../../../../store/service'
-  import { useConfigStore } from '../../../../store/config'
-  import { GET_UNNAMED_VERSION_DATE } from '../../../../constants/config'
-  import { permissionCheck, getAppDetail } from '../../../../api';
-  import ServiceSelector from './components/service-selector.vue'
-  import DetailHeader from "./components/detail-header.vue"
-  import VersionListAside from './config/version-list-aside/index.vue'
-
-  const route = useRoute()
-  const router = useRouter()
-  const serviceStore = useServiceStore()
-  const configStore = useConfigStore()
-
-  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore)
-  const { versionData, versionDetailView } = storeToRefs(configStore)
-
-  const bkBizId = ref(String(route.params.spaceId))
-  const appId = ref(Number(route.params.appId))
-  const appDataLoading = ref(true)
-
-  watch(() => route.params.appId, val => {
-    if (val) {
-      appId.value = Number(val)
-      bkBizId.value = String(route.params.spaceId)
-      versionData.value = GET_UNNAMED_VERSION_DATE()
-      getPermData()
-      getAppData()
-    }
-  })
-
-  onMounted(() => {
-    getPermData()
-    getAppData()
-  })
-
-  onBeforeUnmount(() => {
-    serviceStore.$reset()
-    configStore.$reset()
-  })
-
-  const getPermData = async () => {
-    permCheckLoading.value = true
-    const res = await permissionCheck({
-      resources: [
-        {
-          biz_id: bkBizId.value,
-          basic: {
-            type: 'app',
-            action: 'update',
-            resource_id: appId.value
-          }
-        }
-      ]
-    })
-    hasEditServicePerm.value = res.is_allowed
-    permCheckLoading.value = false
-  }
-
-  // 加载服务详情数据
-  const getAppData = async() => {
-    appDataLoading.value = true
-    try {
-      const res = await getAppDetail(bkBizId.value, appId.value)
-      serviceStore.$patch(state => {
-        state.appData = res
-      })
-      appDataLoading.value = false
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  // 切换视图
-  const handleToggleView = () => {
-    if (!versionDetailView.value && route.name !== 'service-config') {
-      router.push({ name: 'service-config', params: { spaceId: bkBizId.value, appId: appId.value } })
-    }
-    versionDetailView.value = !versionDetailView.value
-  }
-
-</script>
 <template>
   <div class="service-detail-page">
     <div :class="['page-detail-content', { 'version-detail-view': versionDetailView }]">
@@ -109,6 +23,92 @@
     </div>
   </div>
 </template>
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { AngleDoubleRight } from 'bkui-vue/lib/icon';
+import { useServiceStore } from '../../../../store/service';
+import { useConfigStore } from '../../../../store/config';
+import { GET_UNNAMED_VERSION_DATE } from '../../../../constants/config';
+import { permissionCheck, getAppDetail } from '../../../../api';
+import ServiceSelector from './components/service-selector.vue';
+import DetailHeader from './components/detail-header.vue';
+import VersionListAside from './config/version-list-aside/index.vue';
+
+const route = useRoute();
+const router = useRouter();
+const serviceStore = useServiceStore();
+const configStore = useConfigStore();
+
+const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
+const { versionData, versionDetailView } = storeToRefs(configStore);
+
+const bkBizId = ref(String(route.params.spaceId));
+const appId = ref(Number(route.params.appId));
+const appDataLoading = ref(true);
+
+watch(() => route.params.appId, (val) => {
+  if (val) {
+    appId.value = Number(val);
+    bkBizId.value = String(route.params.spaceId);
+    versionData.value = GET_UNNAMED_VERSION_DATE();
+    getPermData();
+    getAppData();
+  }
+});
+
+onMounted(() => {
+  getPermData();
+  getAppData();
+});
+
+onBeforeUnmount(() => {
+  serviceStore.$reset();
+  configStore.$reset();
+});
+
+const getPermData = async () => {
+  permCheckLoading.value = true;
+  const res = await permissionCheck({
+    resources: [
+      {
+        biz_id: bkBizId.value,
+        basic: {
+          type: 'app',
+          action: 'update',
+          resource_id: appId.value,
+        },
+      },
+    ],
+  });
+  hasEditServicePerm.value = res.is_allowed;
+  permCheckLoading.value = false;
+};
+
+// 加载服务详情数据
+const getAppData = async () => {
+  appDataLoading.value = true;
+  try {
+    const res = await getAppDetail(bkBizId.value, appId.value);
+    serviceStore.$patch((state) => {
+      state.appData = res;
+    });
+    appDataLoading.value = false;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+// 切换视图
+const handleToggleView = () => {
+  if (!versionDetailView.value && route.name !== 'service-config') {
+    router.push({ name: 'service-config', params: { spaceId: bkBizId.value, appId: appId.value } });
+  }
+  versionDetailView.value = !versionDetailView.value;
+};
+
+</script>
 <style lang="scss" scoped>
   .service-detail-page {
     height: 100%;

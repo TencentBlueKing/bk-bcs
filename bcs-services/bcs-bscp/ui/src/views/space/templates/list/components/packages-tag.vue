@@ -1,40 +1,3 @@
-<script lang="ts" setup>
-  import { computed } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { useTemplateStore } from '../../../../../store/template'
-
-  const route = useRoute()
-  const router = useRouter()
-
-  const templateStore = useTemplateStore()
-
-  const props = defineProps<{
-    pkgs: {template_set_id: number; template_set_name: string;}[];
-  }>()
-
-  const extPkgs = computed(() => {
-    if (props.pkgs.length > 0) {
-      return props.pkgs.slice(1)
-    }
-    return []
-  })
-
-  const goToPkg = (id: number ) => {
-    const { params } = route
-    router.push({
-      name: 'templates-list',
-      params: {
-        ...params,
-        packageId: id
-      }
-    })
-
-    templateStore.$patch((state) => {
-      state.currentPkg = id
-    })
-  }
-
-</script>
 <template>
   <div class="packages-tag">
     <template v-if="props.pkgs.length > 0">
@@ -62,6 +25,43 @@
     </div>
   </div>
 </template>
+<script lang="ts" setup>
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useTemplateStore } from '../../../../../store/template';
+
+const route = useRoute();
+const router = useRouter();
+
+const templateStore = useTemplateStore();
+
+const props = defineProps<{
+    pkgs: {template_set_id: number; template_set_name: string;}[];
+  }>();
+
+const extPkgs = computed(() => {
+  if (props.pkgs.length > 0) {
+    return props.pkgs.slice(1);
+  }
+  return [];
+});
+
+const goToPkg = (id: number) => {
+  const { params } = route;
+  router.push({
+    name: 'templates-list',
+    params: {
+      ...params,
+      packageId: id,
+    },
+  });
+
+  templateStore.$patch((state) => {
+    state.currentPkg = id;
+  });
+};
+
+</script>
 <style lang="scss" scoped>
   .packages-tag {
     display: flex;

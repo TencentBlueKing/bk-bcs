@@ -1,102 +1,3 @@
-<script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue'
-  import { storeToRefs } from 'pinia'
-  import { Plus, Search } from 'bkui-vue/lib/icon'
-  import { InfoBox } from 'bkui-vue/lib'
-  import { useGlobalStore } from '../../../store/global'
-  import { ICommonQuery, IPagination } from '../../../../types/index';
-  import { IVariableEditParams, IVariableItem } from '../../../../types/variable'
-  import { getVariableList, deleteVariable } from '../../../api/variable'
-  import VariableCreate from './variable-create.vue';
-  import VariableEdit from './variable-edit.vue';
-  import SearchInput from '../../../components/search-input.vue'
-  import TableEmpty from '../../../components/table/table-empty.vue'
-
-  const { spaceId } = storeToRefs(useGlobalStore())
-
-  const loading = ref(false)
-  const list = ref<IVariableItem[]>([])
-  const searchStr = ref('')
-  const pagination = ref<IPagination>({
-    current: 1,
-    count: 0,
-    limit: 10,
-  })
-  const isCreateSliderShow = ref(false)
-  const editSliderData = ref<{ open: boolean; id: number; data: IVariableEditParams; }>({
-    open: false,
-    id: 0,
-    data: {
-      name: '',
-      type: '',
-      default_val: '',
-      memo: ''
-    }
-  })
-  const isSearchEmpty = ref(false)
-  watch(() => spaceId.value, () => {
-    refreshList()
-  })
-
-  onMounted(() => {
-    getVariables()
-  })
-
-  const getVariables = async() => {
-    loading.value = true
-    const params: ICommonQuery = {
-      start: (pagination.value.current - 1) * pagination.value.limit,
-      limit: pagination.value.limit
-    }
-    if (searchStr.value) {
-      params.search_fields = 'name'
-      params.search_value = searchStr.value
-    }
-    const res = await getVariableList(spaceId.value, params)
-    list.value = res.details
-    pagination.value.count = res.count
-    loading.value = false
-  }
-
-  const handleEditVar = (variable: IVariableItem) => {
-    const { id, spec} = variable
-    editSliderData.value = {
-      open: true,
-      id: id,
-      data: { ...spec }
-    }
-  }
-
-  const handleDeleteVar = (variable: IVariableItem) => {
-    InfoBox({
-      title: `确定删除变量[${variable.spec.name}]?`,
-      confirmText: '删除',
-      onConfirm: async () => {
-        await deleteVariable(spaceId.value, variable.id)
-        if (list.value.length === 1 && pagination.value.current > 1) {
-          pagination.value.current = pagination.value.current - 1
-        }
-        getVariables()
-      },
-    } as any)
-  }
-
-  const handlePageLimitChange = (val: number) => {
-    pagination.value.limit = val
-    refreshList()
-  }
-
-  const refreshList = (current: number = 1) => {
-    searchStr.value ? isSearchEmpty.value = true : isSearchEmpty.value = false
-    pagination.value.current = current
-    getVariables()
-  }
-
-  const clearSearchStr = () => {
-    searchStr.value = ''
-    refreshList()
-  }
-</script>
 <template>
   <section class="variables-management-page">
     <bk-alert theme="info">
@@ -113,7 +14,8 @@
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="refreshList">
+        @page-value-change="refreshList"
+      >
         <bk-table-column label="变量名称">
           <template #default="{ row }">
             <bk-button v-if="row.spec" text theme="primary" @click="handleEditVar(row)">{{ row.spec.name }}</bk-button>
@@ -135,7 +37,7 @@
           </template>
         </bk-table-column>
         <template #empty>
-          <TableEmpty :isSearchEmpty="isSearchEmpty" @clear="clearSearchStr"></TableEmpty>
+          <TableEmpty :is-search-empty="isSearchEmpty" @clear="clearSearchStr"></TableEmpty>
         </template>
       </bk-table>
     </div>
@@ -144,38 +46,141 @@
       v-model:show="editSliderData.open"
       :id="editSliderData.id"
       :data="editSliderData.data"
-      @edited="refreshList" />
+      @edited="refreshList"
+    />
   </section>
 </template>
+<script lang="ts" setup>
+import { onMounted, ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { Plus } from 'bkui-vue/lib/icon';
+import { InfoBox } from 'bkui-vue/lib';
+import { useGlobalStore } from '../../../store/global';
+import { ICommonQuery, IPagination } from '../../../../types/index';
+import { IVariableEditParams, IVariableItem } from '../../../../types/variable';
+import { getVariableList, deleteVariable } from '../../../api/variable';
+import VariableCreate from './variable-create.vue';
+import VariableEdit from './variable-edit.vue';
+import SearchInput from '../../../components/search-input.vue';
+import TableEmpty from '../../../components/table/table-empty.vue';
+
+const { spaceId } = storeToRefs(useGlobalStore());
+
+const loading = ref(false);
+const list = ref<IVariableItem[]>([]);
+const searchStr = ref('');
+const pagination = ref<IPagination>({
+  current: 1,
+  count: 0,
+  limit: 10,
+});
+const isCreateSliderShow = ref(false);
+const editSliderData = ref<{ open: boolean; id: number; data: IVariableEditParams }>({
+  open: false,
+  id: 0,
+  data: {
+    name: '',
+    type: '',
+    default_val: '',
+    memo: '',
+  },
+});
+const isSearchEmpty = ref(false);
+watch(
+  () => spaceId.value,
+  () => {
+    refreshList();
+  },
+);
+
+onMounted(() => {
+  getVariables();
+});
+
+const getVariables = async () => {
+  loading.value = true;
+  const params: ICommonQuery = {
+    start: (pagination.value.current - 1) * pagination.value.limit,
+    limit: pagination.value.limit,
+  };
+  if (searchStr.value) {
+    params.search_fields = 'name';
+    params.search_value = searchStr.value;
+  }
+  const res = await getVariableList(spaceId.value, params);
+  list.value = res.details;
+  pagination.value.count = res.count;
+  loading.value = false;
+};
+
+const handleEditVar = (variable: IVariableItem) => {
+  const { id, spec } = variable;
+  editSliderData.value = {
+    open: true,
+    id,
+    data: { ...spec },
+  };
+};
+
+const handleDeleteVar = (variable: IVariableItem) => {
+  InfoBox({
+    title: `确定删除变量[${variable.spec.name}]?`,
+    confirmText: '删除',
+    onConfirm: async () => {
+      await deleteVariable(spaceId.value, variable.id);
+      if (list.value.length === 1 && pagination.value.current > 1) {
+        pagination.value.current = pagination.value.current - 1;
+      }
+      getVariables();
+    },
+  } as any);
+};
+
+const handlePageLimitChange = (val: number) => {
+  pagination.value.limit = val;
+  refreshList();
+};
+
+const refreshList = (current = 1) => {
+  searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
+  pagination.value.current = current;
+  getVariables();
+};
+
+const clearSearchStr = () => {
+  searchStr.value = '';
+  refreshList();
+};
+</script>
 <style lang="scss" scoped>
-  .variables-management-page {
-    height: 100%;
-    background: #f5f7fa;
+.variables-management-page {
+  height: 100%;
+  background: #f5f7fa;
+}
+.operation-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding: 0 24px;
+  .button-icon {
+    font-size: 18px;
   }
-  .operation-area {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 24px;
-    padding: 0 24px;
-    .button-icon {
-      font-size: 18px;
-    }
-    .search-input {
-      width: 320px;
-    }
-    .search-input-icon {
-      padding-right: 10px;
-      color: #979ba5;
-      background: #ffffff;
-    }
+  .search-input {
+    width: 320px;
   }
-  .variable-table {
-    padding: 16px 24px 24px;
+  .search-input-icon {
+    padding-right: 10px;
+    color: #979ba5;
+    background: #ffffff;
   }
-  .action-btns {
-    .bk-button:not(:last-of-type) {
-      margin-right: 8px;
-    }
+}
+.variable-table {
+  padding: 16px 24px 24px;
+}
+.action-btns {
+  .bk-button:not(:last-of-type) {
+    margin-right: 8px;
   }
+}
 </style>

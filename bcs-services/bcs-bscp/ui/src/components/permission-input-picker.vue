@@ -1,85 +1,3 @@
-<script lang="ts" setup>
-  import { ref, computed, watch } from 'vue'
-
-  const PRIVILEGE_GROUPS = ['属主（own）', '属组（group）', '其他人（other）']
-  const PRIVILEGE_VALUE_MAP = {
-    0: [],
-    1: [1],
-    2: [2],
-    3: [1, 2],
-    4: [4],
-    5: [1,4],
-    6: [2, 4],
-    7: [1, 2, 4]
-  }
-
-  const props = defineProps<{
-    disabled?: boolean;
-    modelValue: string;
-  }>()
-
-  const emits = defineEmits(['update:modelValue', 'change'])
-
-  const localVal = ref('')
-  const privilegeInputVal = ref('')
-  const showPrivilegeErrorTips = ref(false)
-
-  watch(() => props.modelValue, val => {
-    privilegeInputVal.value = val
-    localVal.value = val
-  }, { immediate: true })
-
-    // 将权限数字拆分成三个分组配置
-  const privilegeGroupsValue = computed(() => {
-    let data: { [index: string]: number[] } = { '0': [], '1': [], '2': [] }
-    if (typeof localVal.value === 'string' && localVal.value.length > 0) {
-      const valArr = localVal.value.split('').map(i => parseInt(i))
-      valArr.forEach((item, index) => {
-        data[index as keyof typeof data] = PRIVILEGE_VALUE_MAP[item as keyof typeof PRIVILEGE_VALUE_MAP]
-      })
-    }
-    return data
-  })
-
-  // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
-  const handleInputBlur = () => {
-    const val = String(privilegeInputVal.value)
-    if (/^[0-7]{3}$/.test(val)) {
-      localVal.value = val
-      showPrivilegeErrorTips.value = false
-      change()
-    } else {
-      privilegeInputVal.value = <string>localVal.value
-      showPrivilegeErrorTips.value = true
-    }
-  }
-
-  const handleSelect = (index: number, val: number[]) => {
-    const groupsValue = { ...privilegeGroupsValue.value }
-    groupsValue[index] = val
-    const digits = []
-    for(let i = 0; i < 3; i++) {
-      let sum = 0
-      if (groupsValue[i].length > 0) {
-        sum = groupsValue[i].reduce((acc, crt) => {
-          return acc + crt
-        }, 0)
-      }
-      digits.push(sum)
-    }
-    const newVal = digits.join('')
-    privilegeInputVal.value = newVal
-    localVal.value = newVal
-    showPrivilegeErrorTips.value = false
-    change()
-  }
-
-  const change = () => {
-    emits('update:modelValue', localVal.value)
-    emits('change', localVal.value)
-  }
-
-</script>
 <template>
   <div class="permission-input-picker">
     <bk-popover
@@ -128,6 +46,86 @@
     </bk-popover>
   </div>
 </template>
+<script lang="ts" setup>
+import { ref, computed, watch } from 'vue';
+
+const PRIVILEGE_GROUPS = ['属主（own）', '属组（group）', '其他人（other）'];
+const PRIVILEGE_VALUE_MAP = {
+  0: [],
+  1: [1],
+  2: [2],
+  3: [1, 2],
+  4: [4],
+  5: [1, 4],
+  6: [2, 4],
+  7: [1, 2, 4],
+};
+
+const props = defineProps<{
+    disabled?: boolean;
+    modelValue: string;
+  }>();
+
+const emits = defineEmits(['update:modelValue', 'change']);
+
+const localVal = ref('');
+const privilegeInputVal = ref('');
+const showPrivilegeErrorTips = ref(false);
+
+watch(() => props.modelValue, (val) => {
+  privilegeInputVal.value = val;
+  localVal.value = val;
+}, { immediate: true });
+
+// 将权限数字拆分成三个分组配置
+const privilegeGroupsValue = computed(() => {
+  const data: { [index: string]: number[] } = { 0: [], 1: [], 2: [] };
+  if (typeof localVal.value === 'string' && localVal.value.length > 0) {
+    const valArr = localVal.value.split('').map(i => parseInt(i));
+    valArr.forEach((item, index) => {
+      data[index as keyof typeof data] = PRIVILEGE_VALUE_MAP[item as keyof typeof PRIVILEGE_VALUE_MAP];
+    });
+  }
+  return data;
+});
+
+// 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
+const handleInputBlur = () => {
+  const val = String(privilegeInputVal.value);
+  if (/^[0-7]{3}$/.test(val)) {
+    localVal.value = val;
+    showPrivilegeErrorTips.value = false;
+    change();
+  } else {
+    privilegeInputVal.value = localVal.value as string;
+    showPrivilegeErrorTips.value = true;
+  }
+};
+
+const handleSelect = (index: number, val: number[]) => {
+  const groupsValue = { ...privilegeGroupsValue.value };
+  groupsValue[index] = val;
+  const digits = [];
+  for (let i = 0; i < 3; i++) {
+    let sum = 0;
+    if (groupsValue[i].length > 0) {
+      sum = groupsValue[i].reduce((acc, crt) => acc + crt, 0);
+    }
+    digits.push(sum);
+  }
+  const newVal = digits.join('');
+  privilegeInputVal.value = newVal;
+  localVal.value = newVal;
+  showPrivilegeErrorTips.value = false;
+  change();
+};
+
+const change = () => {
+  emits('update:modelValue', localVal.value);
+  emits('change', localVal.value);
+};
+
+</script>
 <style lang="scss" scoped>
   .permission-input-picker {
     display: flex;

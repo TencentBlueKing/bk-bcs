@@ -1,36 +1,3 @@
-<script lang="ts" setup>
-  import { ref, watch } from 'vue';
-  import { Search } from 'bkui-vue/lib/icon';
-
-  const props = withDefaults(defineProps<{
-    modelValue: string;
-    placeholder?: string;
-    width?: number;
-  }>(), {
-    placeholder: '请输入'
-  })
-
-  const emits = defineEmits(['update:modelValue', 'search'])
-
-  const inputVal = ref('')
-
-  watch(() => props.modelValue, val => {
-    inputVal.value = val
-  })
-
-  const handleInputChange = () => {
-    emits('update:modelValue', inputVal.value)
-    if (inputVal.value === '') {
-      triggerSearch()
-    }
-  }
-
-  const triggerSearch = () => {
-    emits('update:modelValue', inputVal.value)
-    emits('search', inputVal.value)
-  }
-
-</script>
 <template>
   <div class="search-input" :style="`width: ${props.width ? props.width + 'px' : '100%'}`">
     <bk-input
@@ -45,6 +12,39 @@
     </bk-input>
   </div>
 </template>
+<script lang="ts" setup>
+import { ref, watch } from 'vue';
+import { Search } from 'bkui-vue/lib/icon';
+
+const props = withDefaults(defineProps<{
+    modelValue: string;
+    placeholder?: string;
+    width?: number;
+  }>(), {
+  placeholder: '请输入',
+});
+
+const emits = defineEmits(['update:modelValue', 'search']);
+
+const inputVal = ref('');
+
+watch(() => props.modelValue, (val) => {
+  inputVal.value = val;
+});
+
+const handleInputChange = () => {
+  emits('update:modelValue', inputVal.value);
+  if (inputVal.value === '') {
+    triggerSearch();
+  }
+};
+
+const triggerSearch = () => {
+  emits('update:modelValue', inputVal.value);
+  emits('search', inputVal.value);
+};
+
+</script>
 <style lang="scss" scoped>
   .search-input-icon {
     padding-right: 10px;

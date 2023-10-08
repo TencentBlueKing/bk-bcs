@@ -1,35 +1,3 @@
-<script lang="ts" setup>
-  import { useRouter } from 'vue-router'
-  import { storeToRefs } from 'pinia'
-  import { RightTurnLine } from 'bkui-vue/lib/icon';
-  import { useGlobalStore } from '../../../../../store/global'
-
-  const router = useRouter()
-  const { spaceId } = storeToRefs(useGlobalStore())
-
-  const props = defineProps<{
-    id: number;
-    type: 'pre'|'post';
-    disabled: boolean;
-    loading: boolean;
-    list: { id: number; versionId: number; name: string; type: string; }[]; // 脚本列表
-  }>()
-
-  const emits = defineEmits(['change', 'refresh'])
-
-  // 处理option中disabled状态的点击事件
-  const handleScriptOptionClick = (id: number, versionId: number, e: Event) => {
-    if (id && !versionId) {
-      e.stopPropagation()
-    }
-  }
-
-  const goToScriptList = () => {
-    const { href } = router.resolve({ name: 'script-list', params: { spaceId: spaceId.value } })
-    window.open(href, '_blank')
-  }
-
-</script>
 <template>
   <bk-select
     :model-value="props.id"
@@ -62,6 +30,38 @@
     </template>
   </bk-select>
 </template>
+<script lang="ts" setup>
+import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { RightTurnLine } from 'bkui-vue/lib/icon';
+import { useGlobalStore } from '../../../../../store/global';
+
+const router = useRouter();
+const { spaceId } = storeToRefs(useGlobalStore());
+
+const props = defineProps<{
+    id: number;
+    type: 'pre'|'post';
+    disabled: boolean;
+    loading: boolean;
+    list: { id: number; versionId: number; name: string; type: string; }[]; // 脚本列表
+  }>();
+
+const emits = defineEmits(['change', 'refresh']);
+
+// 处理option中disabled状态的点击事件
+const handleScriptOptionClick = (id: number, versionId: number, e: Event) => {
+  if (id && !versionId) {
+    e.stopPropagation();
+  }
+};
+
+const goToScriptList = () => {
+  const { href } = router.resolve({ name: 'script-list', params: { spaceId: spaceId.value } });
+  window.open(href, '_blank');
+};
+
+</script>
 <style lang="scss" scoped>
   .selector-extension {
     position: relative;
