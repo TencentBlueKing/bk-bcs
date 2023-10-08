@@ -225,7 +225,7 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
-		return nil, err
+		return nil, e
 	}
 
 	// 3. 修改未命名版本绑定的脚本版本为上线版本
