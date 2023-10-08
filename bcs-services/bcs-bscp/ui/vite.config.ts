@@ -74,7 +74,6 @@ export default defineConfig(({ command, mode }) => {
     },
     server: {
       https: false,
-      host: 'dev.bscp.site.bktencent.com',
       port: 5174,
       proxy: {
         '/api/v1/': {
