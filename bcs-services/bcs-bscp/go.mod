@@ -177,3 +177,4 @@ require (
 	gorm.io/hints v1.1.2 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 )
+
