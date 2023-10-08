@@ -65,7 +65,7 @@ func Run(opt *options.Option) error {
 
 type feedServer struct {
 	serve   *grpc.Server
-	gwServe *http.Server //nolint: unused
+	gwServe *http.Server //nolint:unused
 	sd      serviced.ServiceDiscover
 	service *service.Service
 }
