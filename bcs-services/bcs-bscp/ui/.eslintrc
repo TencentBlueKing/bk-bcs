@@ -211,7 +211,12 @@
         "ignoreTemplateLiterals": true
       }
     ],
-
+    /**
+     * 只有在命名构造器或者类的时候，才用帕斯卡拼命名法（PascalCase），即首字母大写。
+     */
+    "new-cap": "off",
+    "no-param-reassign": "off",
+    "operator-linebreak": "off",
     /**
      * 在编写多个方法链式调用(超过两个方法链式调用)时。 使用前导点，强调这行是一个方法调用，而不是一个语句。
      */
@@ -408,13 +413,7 @@
     /**
      * 必须使用解构赋值
      */
-    "prefer-destructuring": [
-      "warn",
-      {
-        "object": true,
-        "array": true
-      }
-    ],
+    "prefer-destructuring": "off",
     /**
      * 必须使用 ...args 而不是 arguments
      */
@@ -697,11 +696,9 @@
     "vue/no-confusing-v-for-v-if": "off",
     "vue/multi-word-component-names": "off",
     "vue/no-v-html": "off",
-    "new-cap": "off",
     "vue/no-v-model-argument": "off",
     "vue/no-multiple-template-root": "off",
-    "no-param-reassign": "off",
-    "operator-linebreak": "off",
+
     "vue/no-useless-template-attributes": "off",
     "vue/no-deprecated-slot-attribute": "off"
   },
