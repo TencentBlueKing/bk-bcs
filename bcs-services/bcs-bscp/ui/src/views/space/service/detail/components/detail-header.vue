@@ -53,7 +53,7 @@ import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { InfoLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
-import { useConfigStore } from '../../../../../store/config';
+import useConfigStore from '../../../../../store/config';
 import { VERSION_STATUS_MAP } from '../../../../../constants/config';
 import { IConfigVersion } from '../../../../../../types/config';
 import { permissionCheck } from '../../../../../api/index';
@@ -84,7 +84,7 @@ const tabs = ref([
 ]);
 
 const getDefaultTab = () => {
-  const tab = tabs.value.find((item) => item.routeName === route.name);
+  const tab = tabs.value.find(item => item.routeName === route.name);
   return tab ? tab.name : 'config';
 };
 const activeTab = ref(getDefaultTab());
@@ -94,14 +94,14 @@ watch(
   () => route.name,
   () => {
     activeTab.value = getDefaultTab();
-  }
+  },
 );
 
 watch(
   () => props.bkBizId,
   () => {
     getVersionPerms();
-  }
+  },
 );
 
 onMounted(() => {
@@ -157,7 +157,7 @@ const refreshVesionList = () => {
 };
 
 const handleTabChange = (val: string) => {
-  const tab = tabs.value.find((item) => item.name === val);
+  const tab = tabs.value.find(item => item.name === val);
   if (tab) {
     router.push({ name: tab.routeName });
   }

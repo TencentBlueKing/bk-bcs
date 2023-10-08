@@ -66,7 +66,7 @@
     <EditService
       v-model:show="isEditServiceOpen"
       :service="editingService"
-      @editMemo="editingService.spec.memo = $event"
+      @edit-memo="editingService.spec.memo = $event"
     />
   </div>
 </template>
@@ -75,8 +75,8 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 import { Plus } from 'bkui-vue/lib/icon';
-import { useGlobalStore } from '../../../../../store/global';
-import { useUserStore } from '../../../../../store/user';
+import useGlobalStore from '../../../../../store/global';
+import useUserStore from '../../../../../store/user';
 import { getAppList, getAppsConfigData } from '../../../../../api/index';
 import { IAppItem, IAppListQuery } from '../../../../../../types/app';
 import Card from './card.vue';

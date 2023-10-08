@@ -1,7 +1,7 @@
-import { pinia } from '../store/index';
+import  pinia  from '../store/index';
 import { getSpaceList } from '../api';
-import { useGlobalStore } from '../store/global';
-import { useUserStore } from '../store/user';
+import useGlobalStore from '../store/global';
+import useUserStore from '../store/user';
 
 const loadSpaceList = async () => {
   const globalStore = useGlobalStore(pinia);

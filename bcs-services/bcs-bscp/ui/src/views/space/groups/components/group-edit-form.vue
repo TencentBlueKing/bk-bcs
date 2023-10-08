@@ -81,9 +81,9 @@ import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { cloneDeep } from 'lodash';
-import { useUserStore } from '../../../../store/user';
+import useUserStore from '../../../../store/user';
 import { IGroupEditing, EGroupRuleType, IGroupRuleItem } from '../../../../../types/group';
-import { GROUP_RULE_OPS } from '../../../../constants/group';
+import GROUP_RULE_OPS from '../../../../constants/group';
 import { getAppList } from '../../../../api/index';
 import { IAppItem } from '../../../../../types/app';
 

@@ -44,7 +44,7 @@ const props = withDefaults(
     currentVariables: () => [],
     currentLanguage: '',
     baseVariables: () => [],
-  }
+  },
 );
 
 const textDiffRef = ref();
@@ -56,7 +56,7 @@ watch(
   () => {
     updateModel();
     replaceDiffVariables();
-  }
+  },
 );
 
 watch(
@@ -64,7 +64,7 @@ watch(
   () => {
     updateModel();
     replaceDiffVariables();
-  }
+  },
 );
 
 onMounted(() => {

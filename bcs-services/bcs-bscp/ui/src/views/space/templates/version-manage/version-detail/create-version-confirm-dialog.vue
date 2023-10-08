@@ -63,7 +63,7 @@ watch(
     if (val) {
       getCitedData();
     }
-  }
+  },
 );
 
 const getCitedData = async () => {
@@ -76,7 +76,7 @@ const getCitedData = async () => {
     props.spaceId,
     props.templateSpaceId,
     props.templateId,
-    params
+    params,
   );
   citedList.value = res.details;
   loading.value = false;

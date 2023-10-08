@@ -26,8 +26,8 @@
           :group-type="groupType"
           :groups="groups"
           :disabled="currentSelectedGroups"
-          @openPreviewVersionDiff="openPreviewVersionDiff"
-          @groupTypeChange="groupType = $event"
+          @open-preview-version-diff="openPreviewVersionDiff"
+          @group-type-change="groupType = $event"
           @change="groups = $event"
         >
         </select-group>
@@ -63,9 +63,9 @@ import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
 import InfoBox from 'bkui-vue/lib/info-box';
 import BkMessage from 'bkui-vue/lib/message';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../../store/global';
-import { useServiceStore } from '../../../../../store/service';
-import { useConfigStore } from '../../../../../store/config';
+import useGlobalStore from '../../../../../store/global';
+import useServiceStore from '../../../../../store/service';
+import useConfigStore from '../../../../../store/config';
 import { IGroupToPublish } from '../../../../../../types/group';
 import VersionLayout from '../config/components/version-layout.vue';
 import ConfirmDialog from './publish-version/confirm-dialog.vue';
@@ -94,7 +94,7 @@ const groupType = ref('select');
 const groups = ref<IGroupToPublish[]>([]);
 const baseVersionId = ref(0);
 
-const currentSelectedGroups = computed(() => versionData.value.status.released_groups.map((group) => group.id));
+const currentSelectedGroups = computed(() => versionData.value.status.released_groups.map(group => group.id));
 
 const permissionQueryResource = computed(() => [
   {

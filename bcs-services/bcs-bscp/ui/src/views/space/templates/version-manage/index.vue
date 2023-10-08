@@ -66,7 +66,7 @@ import { ref, computed, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowsLeft, Plus } from 'bkui-vue/lib/icon';
-import { useGlobalStore } from '../../../../store/global';
+import useGlobalStore from '../../../../store/global';
 import { ITemplateConfigItem, ITemplateVersionItem } from '../../../../../types/template';
 import { IPagination, ICommonQuery } from '../../../../../types/index';
 import {
@@ -145,7 +145,7 @@ const getVersionList = async () => {
   versionList.value = res.details;
   pagination.value.count = res.count;
   versionListLoading.value = false;
-  const ids = versionList.value.map((item) => item.id);
+  const ids = versionList.value.map(item => item.id);
   boundByAppsCountList.value = [];
   if (ids.length > 0) {
     loadBoundByAppsList(ids);

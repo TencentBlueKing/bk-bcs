@@ -32,7 +32,7 @@
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         :search-str="searchStr"
-        @clearStr="clearStr"
+        @clear-str="clearStr"
       />
       <TableWithPagination
         v-else
@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useConfigStore } from '../../../../../../../store/config';
+import useConfigStore from '../../../../../../../store/config';
 import SearchInput from '../../../../../../../components/search-input.vue';
 import CreateConfig from './create-config/index.vue';
 import EditVariables from './variables/edit-variables.vue';

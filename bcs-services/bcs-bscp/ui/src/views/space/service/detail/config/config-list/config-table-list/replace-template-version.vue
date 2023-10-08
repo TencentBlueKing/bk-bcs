@@ -77,7 +77,7 @@ watch(
       selected.value = props.versionId;
       getTemplateVersions();
     }
-  }
+  },
 );
 
 const getTemplateVersions = async () => {
@@ -94,9 +94,10 @@ const getTemplateVersions = async () => {
       isLatest: false,
     });
   });
-  const latestVersion = templateVersion.template_revisions.find(
-    (version) => version.template_revision_id === templateVersion.latest_template_revision_id
-  );
+  const latestVersion = templateVersion.template_revisions.find((version) => {
+    const res =  version.template_revision_id === templateVersion.latest_template_revision_id;
+    return res;
+  });
   if (latestVersion) {
     list.unshift({
       id: latestVersion.template_revision_id,
@@ -117,7 +118,7 @@ const handleReplaceConfirm = async () => {
   const isLatest = selected.value === 0;
   let versionId = selected.value;
   if (isLatest) {
-    const id = versionList.value.find((item) => item.isLatest)?.id;
+    const id = versionList.value.find(item => item.isLatest)?.id;
     if (id) {
       versionId = id;
     }

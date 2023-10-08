@@ -41,7 +41,7 @@ import {
 } from '../../../../../../../api/config';
 import { getConfigEditParams } from '../../../../../../../utils/config';
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
-import { useConfigStore } from '../../../../../../../store/config';
+import useConfigStore from '../../../../../../../store/config';
 import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
 
 const { versionData } = storeToRefs(useConfigStore());
@@ -70,7 +70,7 @@ watch(
       isFormChange.value = false;
       getConfigDetail();
     }
-  }
+  },
 );
 
 // 获取配置项详情配置及配置内容

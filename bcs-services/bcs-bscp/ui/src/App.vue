@@ -11,8 +11,8 @@
 <script setup lang="ts">
 import { watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from './store/global';
-import { useUserStore } from './store/user';
+import useGlobalStore from './store/global';
+import useUserStore from './store/user';
 import isCrossOriginIFrame from './utils/is-cross-origin-iframe';
 import Header from './components/head.vue';
 import PermissionDialog from './components/permission/apply-dialog.vue';
@@ -21,14 +21,16 @@ const userStore = useUserStore();
 const globalStore = useGlobalStore();
 const { showApplyPermDialog } = storeToRefs(globalStore);
 
-watch(() => userStore.showLoginModal, (val) => {
-  if (val) {
-    const topWindow = isCrossOriginIFrame() ? window : window.top;
-    // @ts-ignore
-    topWindow.BLUEKING.corefunc.open_login_dialog(userStore.loginUrl);
-  }
-});
-
+watch(
+  () => userStore.showLoginModal,
+  (val) => {
+    if (val) {
+      const topWindow = isCrossOriginIFrame() ? window : window.top;
+      // @ts-ignore
+      topWindow.BLUEKING.corefunc.open_login_dialog(userStore.loginUrl);
+    }
+  },
+);
 </script>
 
 <style scoped>

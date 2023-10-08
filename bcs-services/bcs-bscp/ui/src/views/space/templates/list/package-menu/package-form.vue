@@ -40,7 +40,7 @@
 import { onMounted, ref, watch } from 'vue';
 import { cloneDeep } from 'lodash';
 import { storeToRefs } from 'pinia';
-import { useUserStore } from '../../../../../store/user';
+import useUserStore from '../../../../../store/user';
 import { ITemplatePackageEditParams } from '../../../../../../types/template';
 import { getAppList } from '../../../../../api/index';
 import { IAppItem } from '../../../../../../types/app';

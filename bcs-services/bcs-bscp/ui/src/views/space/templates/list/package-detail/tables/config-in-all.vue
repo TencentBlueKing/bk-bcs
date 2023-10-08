@@ -6,7 +6,8 @@
     :show-cited-by-pkgs-col="true"
     :show-bound-by-apps-col="true"
     :current-template-space="currentTemplateSpace"
-    :get-config-list="getConfigList">
+    :get-config-list="getConfigList"
+  >
     <template #tableOperations>
       <AddConfigs @refresh="refreshConfigList" />
       <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
@@ -16,8 +17,8 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
-import { useGlobalStore } from '../../../../../../store/global';
-import { useTemplateStore } from '../../../../../../store/template';
+import useGlobalStore from '../../../../../../store/global';
+import useTemplateStore from '../../../../../../store/template';
 import { ICommonQuery } from '../../../../../../../types/index';
 import { ITemplateConfigItem } from '../../../../../../../types/template';
 import { getTemplatesBySpaceId } from '../../../../../../api/template';
@@ -47,8 +48,5 @@ const updateRefreshFlag = () => {
     state.needRefreshMenuFlag = true;
   });
 };
-
 </script>
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

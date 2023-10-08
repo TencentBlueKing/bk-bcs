@@ -9,7 +9,8 @@
     :esc-close="false"
     :quick-close="false"
     @confirm="handleCreate"
-    @closed="handleClose">
+    @closed="handleClose"
+  >
     <bk-form ref="formRef" form-type="vertical" :model="localVal">
       <bk-form-item label="模板空间名称" required property="name">
         <bk-input v-model="localVal.name" />
@@ -24,14 +25,14 @@
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue/lib';
-import { useGlobalStore } from '../../../../../store/global';
+import useGlobalStore from '../../../../../store/global';
 import { createTemplateSpace } from '../../../../../api/template';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
 const props = defineProps<{
-    show: boolean;
-  }>();
+  show: boolean;
+}>();
 
 const emits = defineEmits(['update:show', 'created']);
 
@@ -43,12 +44,15 @@ const localVal = ref({
 });
 const pending = ref(false);
 
-watch(() => props.show, (val) => {
-  isShow.value = val;
-  if (val) {
-    localVal.value = { name: '', memo: '' };
-  }
-});
+watch(
+  () => props.show,
+  (val) => {
+    isShow.value = val;
+    if (val) {
+      localVal.value = { name: '', memo: '' };
+    }
+  },
+);
 
 const handleCreate = () => {
   formRef.value.validate().then(async () => {
@@ -72,7 +76,6 @@ const handleCreate = () => {
 const handleClose = () => {
   emits('update:show', false);
 };
-
 </script>
 
 <style lang="scss" scoped>

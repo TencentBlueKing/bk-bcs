@@ -79,7 +79,7 @@
 import { ref, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { InfoBox } from 'bkui-vue/lib';
-import { useConfigStore } from '../../../../../../../../store/config';
+import useConfigStore from '../../../../../../../../store/config';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import { IConfigItem } from '../../../../../../../../../types/config';
 import { getConfigList, deleteServiceConfigItem } from '../../../../../../../../api/config';
@@ -114,14 +114,14 @@ watch(
   () => versionData.value.id,
   () => {
     getListData();
-  }
+  },
 );
 
 watch(
   () => props.searchStr,
   () => {
     refresh();
-  }
+  },
 );
 
 onMounted(() => {

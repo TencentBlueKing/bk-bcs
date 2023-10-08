@@ -109,7 +109,7 @@ import { useRouter } from 'vue-router';
 import { InfoBox, Message } from 'bkui-vue';
 import { Plus, Search } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../store/global';
+import useGlobalStore from '../../../../store/global';
 import { getScriptList, getScriptTagList, deleteScript } from '../../../../api/script';
 import { IScriptItem, IScriptTagItem, IScriptListQuery } from '../../../../../types/script';
 import { datetimeFormat } from '../../../../utils/index';

@@ -109,14 +109,15 @@
     :script-id="scriptId"
   />
 </template>
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { InfoBox } from 'bkui-vue';
 import { Search, AngleDoubleRightLine } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../store/global';
-import { useScriptStore } from '../../../../store/script';
+import useGlobalStore from '../../../../store/global';
+import useScriptStore from '../../../../store/script';
 import { IScriptVersion, IScriptVersionListItem } from '../../../../../types/script';
 import {
   getScriptDetail,

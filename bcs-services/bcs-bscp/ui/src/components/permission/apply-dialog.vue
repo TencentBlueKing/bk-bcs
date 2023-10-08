@@ -6,7 +6,8 @@
     :is-show="show"
     :esc-close="false"
     :quick-close="false"
-    @closed="handleClose">
+    @closed="handleClose"
+  >
     <div class="permission-modal">
       <div class="permission-header">
         <span class="title-icon">
@@ -27,7 +28,7 @@
           <tbody>
             <template v-if="resources.length > 0">
               <tr v-for="(resource, index) in resources" :key="index">
-                <td width="40%">{{resource.action_name}}</td>
+                <td width="40%">{{ resource.action_name }}</td>
                 <td width="60%">
                   <p class="resource-type-item">
                     {{ resource.resource_name }}
@@ -44,10 +45,7 @@
     </div>
     <template #footer>
       <div class="button-group">
-        <bk-button
-          theme="primary"
-          :disabled="loading"
-          @click="handleSubmitClick">
+        <bk-button theme="primary" :disabled="loading" @click="handleSubmitClick">
           {{ clicked ? '已申请' : '去申请' }}
         </bk-button>
         <bk-button @click="handleClose">取消</bk-button>
@@ -58,7 +56,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../store/global';
+import useGlobalStore from '../../store/global';
 import { IPermissionResource } from '../../../types/index';
 import { permissionCheck } from '../../api/index';
 import LockIcon from '../../assets/lock-radius.svg';
@@ -72,13 +70,16 @@ const url = ref('');
 const resources = ref<IPermissionResource[]>([]);
 const clicked = ref(false);
 
-watch(() => showApplyPermDialog.value, (val) => {
-  clicked.value = false;
-  show.value = val;
-  if (val) {
-    getPermUrl();
-  }
-});
+watch(
+  () => showApplyPermDialog.value,
+  (val) => {
+    clicked.value = false;
+    show.value = val;
+    if (val) {
+      getPermUrl();
+    }
+  },
+);
 
 const getPermUrl = async () => {
   loading.value = true;
@@ -106,7 +107,6 @@ const handleClose = () => {
     resources: [],
   };
 };
-
 </script>
 <style lang="scss" scoped>
 .permission-modal {
@@ -174,7 +174,7 @@ const handleClose = () => {
 }
 .button-group {
   .bk-button {
-      margin-left: 7px;
+    margin-left: 7px;
   }
 }
 </style>

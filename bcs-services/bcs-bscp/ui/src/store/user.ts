@@ -7,7 +7,7 @@ interface IUserInfo {
   username: string;
 }
 
-export const useUserStore = defineStore('user', () => {
+export default defineStore('user', () => {
   const loginUrl = ref('');
   const showLoginModal = ref(false);
   const userInfo = ref<IUserInfo>({

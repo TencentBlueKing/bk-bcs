@@ -35,8 +35,8 @@
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue';
-import { useGlobalStore } from '../../../../../../store/global';
-import { useConfigStore } from '../../../../../../store/config';
+import useGlobalStore from '../../../../../../store/global';
+import useConfigStore from '../../../../../../store/config';
 import { IConfigVersion } from '../../../../../../../types/config';
 import { IVariableEditParams } from '../../../../../../../types/variable';
 import CreateVersionSlider from './create-version-slider.vue';

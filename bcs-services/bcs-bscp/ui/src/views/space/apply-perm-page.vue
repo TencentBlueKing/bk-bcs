@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../store/global';
+import useGlobalStore from '../../store/global';
 
 const { applyPermUrl, applyPermResource } = storeToRefs(useGlobalStore());
 

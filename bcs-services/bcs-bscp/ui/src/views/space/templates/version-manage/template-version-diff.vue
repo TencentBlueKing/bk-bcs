@@ -83,7 +83,7 @@ watch(
       configDiffData.value.contentType = detail.spec.file_type === 'binary' ? 'file' : 'text';
       configDiffData.value.current.content = await getConfigContent(detail);
     }
-  }
+  },
 );
 
 // 获取版本列表
@@ -98,8 +98,10 @@ const getVersionList = async () => {
   versionListLoading.value = false;
 };
 
-const getTemplateVersionDetail = async (versionId: number) =>
-  getTemplateVersionsDetailByIds(props.spaceId, [versionId]).then((res) => res.details[0]);
+const getTemplateVersionDetail = async (versionId: number) => {
+  const res = getTemplateVersionsDetailByIds(props.spaceId, [versionId]).then(res => res.details[0]);
+  return res;
+};
 
 const getConfigContent = async (config: ITemplateVersionItem) => {
   const { id, spec, revision } = config;
@@ -115,7 +117,7 @@ const getConfigContent = async (config: ITemplateVersionItem) => {
 };
 
 const handleSelectVersion = async (id: number) => {
-  const version = versionList.value.find((item) => item.id === id);
+  const version = versionList.value.find(item => item.id === id);
   if (version) {
     configDiffData.value.base.content = await getConfigContent(version);
   }

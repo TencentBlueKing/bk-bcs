@@ -4,7 +4,8 @@
     width="400"
     :is-show="props.show"
     :before-close="handleBeforeClose"
-    @closed="handleClose">
+    @closed="handleClose"
+  >
     <section class="associate-config-items">
       <div :class="['rules-wrapper', { 'edit-mode': isRuleEdit }]">
         <RuleEdit v-if="isRuleEdit" :id="props.id" :rules="rules" @change="handleRuleChange" />
@@ -15,19 +16,14 @@
       </div> -->
     </section>
     <div class="action-btns">
-      <bk-button
-        v-if="isRuleEdit"
-        theme="primary"
-        :loading="pending"
-        @click="handleSave">
-        保存
-      </bk-button>
+      <bk-button v-if="isRuleEdit" theme="primary" :loading="pending" @click="handleSave"> 保存 </bk-button>
       <bk-button
         v-else
         v-cursor="{ active: !props.hasManagePerm }"
         :class="{ 'bk-button-with-no-perm': !props.hasManagePerm }"
         theme="primary"
-        @click="handleOpenEdit">
+        @click="handleOpenEdit"
+      >
         编辑规则
       </bk-button>
       <bk-button @click="handleClose">{{ isRuleEdit ? '取消' : '关闭' }}</bk-button>
@@ -37,7 +33,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../store/global';
+import useGlobalStore from '../../../../store/global';
 import { getCredentialScopes, updateCredentialScopes } from '../../../../api/credentials';
 import { ICredentialRule, IRuleUpdateParams } from '../../../../../types/credential';
 import useModalCloseConfirmation from '../../../../utils/hooks/use-modal-close-confirmation';
@@ -67,16 +63,19 @@ const isRuleEdit = ref(false);
 const isFormChange = ref(false);
 const pending = ref(false);
 
-watch(() => props.show, (val) => {
-  if (val) {
-    loadRules();
-    ruleChangeParams.value = {
-      add_scope: [],
-      del_id: [],
-      alter_scope: [],
-    };
-  }
-});
+watch(
+  () => props.show,
+  (val) => {
+    if (val) {
+      loadRules();
+      ruleChangeParams.value = {
+        add_scope: [],
+        del_id: [],
+        alter_scope: [],
+      };
+    }
+  },
+);
 
 const loadRules = async () => {
   loading.value = true;
@@ -128,37 +127,36 @@ const handleClose = () => {
   pending.value = false;
   emits('close');
 };
-
 </script>
 <style lang="scss" scoped>
-  .associate-config-items {
-    display: flex;
-    align-items: flex-start;
-    height: calc(100vh - 101px);
+.associate-config-items {
+  display: flex;
+  align-items: flex-start;
+  height: calc(100vh - 101px);
+}
+.rules-wrapper {
+  padding: 16px 24px;
+  width: 400px;
+  height: 100%;
+  background: #ffffff;
+  overflow: auto;
+  &.edit-mode {
+    padding-right: 16px;
   }
-  .rules-wrapper {
-    padding: 16px 24px;
-    width: 400px;
-    height: 100%;
-    background: #ffffff;
-    overflow: auto;
-    &.edit-mode {
-      padding-right: 16px;
-    }
+}
+.results-wrapper {
+  padding: 16px 24px;
+  width: 560px;
+  height: 100%;
+  background: #f5f7fa;
+  overflow: auto;
+}
+.action-btns {
+  border-top: 1px solid #dcdee5;
+  padding: 8px 24px;
+  .bk-button {
+    margin-right: 8px;
+    min-width: 88px;
   }
-  .results-wrapper {
-    padding: 16px 24px;
-    width: 560px;
-    height: 100%;
-    background: #f5f7fa;
-    overflow: auto;
-  }
-  .action-btns {
-    border-top: 1px solid #dcdee5;
-    padding: 8px 24px;
-    .bk-button {
-      margin-right: 8px;
-      min-width: 88px;
-    }
-  }
+}
 </style>

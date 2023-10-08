@@ -29,7 +29,7 @@
 import { ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import BkMessage from 'bkui-vue/lib/message';
-import { useGlobalStore } from '../../../../store/global';
+import useGlobalStore from '../../../../store/global';
 import { IScriptVersionForm } from '../../../../../types/script';
 import { createScriptVersion, updateScriptVersion } from '../../../../api/script';
 import ScriptEditor from '../components/script-editor.vue';

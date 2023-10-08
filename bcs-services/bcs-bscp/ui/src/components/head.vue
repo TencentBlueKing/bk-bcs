@@ -89,9 +89,9 @@ import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { AngleDown, HelpFill, DownShape } from 'bkui-vue/lib/icon';
-import { useGlobalStore } from '../store/global';
-import { useUserStore } from '../store/user';
-import { useTemplateStore } from '../store/template';
+import useGlobalStore from '../store/global';
+import useUserStore from '../store/user';
+import useTemplateStore from '../store/template';
 import { ISpaceDetail } from '../../types/index';
 import { loginOut } from '../api/index';
 import type { IVersionLogItem } from '../../types/version-log';
@@ -121,7 +121,7 @@ const navList = [
 const optionList = ref<ISpaceDetail[]>([]);
 
 const crtSpaceText = computed(() => {
-  const space = spaceList.value.find((item) => item.space_id === spaceId.value);
+  const space = spaceList.value.find(item => item.space_id === spaceId.value);
   if (space) {
     return `${space.space_name}(${spaceId.value})`;
   }
@@ -135,15 +135,15 @@ watch(
   },
   {
     immediate: true,
-  }
+  },
 );
 
 const handleSpaceSearch = (searchStr: string) => {
   if (searchStr) {
-    optionList.value = spaceList.value.filter(
-      (item) =>
-        item.space_name.toLowerCase().includes(searchStr.toLowerCase()) || String(item.space_id).includes(searchStr)
-    );
+    optionList.value = spaceList.value.filter((item) => {
+      const spaceName = item.space_name.toLowerCase();
+      return spaceName.includes(searchStr.toLowerCase()) || String(item.space_id).includes(searchStr);
+    });
   } else {
     optionList.value = spaceList.value.slice();
   }
@@ -174,7 +174,7 @@ const handleSelectSpace = (id: string) => {
       state.currentTemplateSpace = 0;
       state.currentPkg = '';
     });
-    const nav = navList.find((item) => item.module === route.meta.navModule);
+    const nav = navList.find(item => item.module === route.meta.navModule);
     if (nav) {
       router.push({ name: nav.id, params: { spaceId: id } });
     } else {
@@ -222,21 +222,21 @@ const modules = import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
   as: 'raw',
   eager: true,
 });
-for (const path in modules) {
+Object.keys(modules).forEach((path) => {
   logList.value!.push({
     title: path.split('CN/')[1].split('_')[0],
     date: path.split('CN/')[1].split('_')[1].slice(0, -3),
     detail: md.render(modules[path]),
   });
-}
+});
 
 // 功能特性
 const featuresContent = ref('');
 const isShowFeatures = ref(false);
 const module = import.meta.glob('../../../docs/features/features.md', { as: 'raw', eager: true });
-for (const path in module) {
+Object.keys(module).forEach((path) => {
   featuresContent.value = md.render(module[path]);
-}
+});
 const handleLoginOut = () => {
   loginOut();
 };

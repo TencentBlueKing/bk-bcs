@@ -54,7 +54,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Search, RightShape } from 'bkui-vue/lib/icon';
-import { useServiceStore } from '../../../../../../../../store/service';
+import useServiceStore from '../../../../../../../../store/service';
 import { ICommonQuery } from '../../../../../../../../../types/index';
 import {
   IConfigItem,
@@ -116,7 +116,7 @@ const props = withDefaults(
   {
     unNamedVersionVariables: () => [],
     selectedConfig: () => ({ pkgId: 0, id: 0, version: 0 }),
-  }
+  },
 );
 
 const emits = defineEmits(['selected']);
@@ -150,7 +150,7 @@ watch(
     aggregatedList.value = calcDiff();
     groupedConfigListOnShow.value = aggregatedList.value.slice();
     setDefaultSelected();
-  }
+  },
 );
 
 // 当前版本默认选中的配置项
@@ -163,7 +163,7 @@ watch(
   },
   {
     immediate: true,
-  }
+  },
 );
 
 onMounted(async () => {
@@ -324,6 +324,7 @@ const calcDiff = () => {
               baseItem = config;
               return true;
             }
+            return false;
           });
         }
         return false;
@@ -359,7 +360,7 @@ const calcDiff = () => {
   // 计算当前版本删除项
   baseGroupList.value.forEach((baseGroupItem) => {
     const { template_space_id, id, name, expand, configs } = baseGroupItem;
-    const groupIndex = list.findIndex((item) => item.id === baseGroupItem.id);
+    const groupIndex = list.findIndex(item => item.id === baseGroupItem.id);
     const diffGroup: IDiffGroupData =
       groupIndex > -1 ? list[groupIndex] : { template_space_id, id, name, expand, configs: [] };
 
@@ -372,6 +373,7 @@ const calcDiff = () => {
               currentItem = config;
               return true;
             }
+            return undefined;
           });
         }
         return false;
@@ -399,13 +401,13 @@ const calcDiff = () => {
 // 否则取第一个非空分组的第一个配置项
 const setDefaultSelected = () => {
   if (props.selectedConfig.id) {
-    const pkg = aggregatedList.value.find((group) => group.id === props.selectedConfig.pkgId);
+    const pkg = aggregatedList.value.find(group => group.id === props.selectedConfig.pkgId);
     if (pkg) {
       pkg.expand = true;
     }
     handleSelectItem(props.selectedConfig);
   } else {
-    const group = aggregatedList.value.find((group) => group.configs.length > 0);
+    const group = aggregatedList.value.find(group => group.configs.length > 0);
     if (group) {
       handleSelectItem({ pkgId: group.id, id: group.configs[0].id, version: group.configs[0].template_revision_id });
     }
@@ -449,11 +451,12 @@ const getItemSelectedStatus = (pkgId: number, config: IConfigDiffItem) => {
 
 // 选择对比配置项后，加载配置项详情，组装对比数据
 const handleSelectItem = async (selectedConfig: IConfigDiffSelected) => {
-  const pkg = aggregatedList.value.find((item) => item.id === selectedConfig.pkgId);
+  const pkg = aggregatedList.value.find(item => item.id === selectedConfig.pkgId);
   if (pkg) {
-    const config = pkg.configs.find(
-      (item) => item.id === selectedConfig.id && item.template_revision_id === selectedConfig.version
-    );
+    const config = pkg.configs.find((item) => {
+      const res = item.id === selectedConfig.id && item.template_revision_id === selectedConfig.version;
+      return res;
+    });
     if (config) {
       selected.value = selectedConfig;
       const data = await getConfigDiffDetail(config);

@@ -22,7 +22,7 @@ watch(
   () => props.list,
   () => {
     initialList.value = cloneDeep(props.list);
-  }
+  },
 );
 
 const triggerReset = () => {

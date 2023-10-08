@@ -21,7 +21,7 @@
             :open="openedPkgTable === pkg.id"
             :config-list="pkg.configs"
             @change="isFormChange = true"
-            @toggleOpen="handleToggleOpenTable"
+            @toggle-open="handleToggleOpenTable"
           />
           <TableEmpty v-else :is-search-empty="isSearchEmpty" @clear="clearSearchStr"></TableEmpty>
         </div>
@@ -56,8 +56,8 @@
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue';
-import { useGlobalStore } from '../../../../../../../../store/global';
-import { useTemplateStore } from '../../../../../../../../store/template';
+import useGlobalStore from '../../../../../../../../store/global';
+import useTemplateStore from '../../../../../../../../store/template';
 import { ITemplatePackageItem, ITemplateConfigItem } from '../../../../../../../../../types/template';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
 import {

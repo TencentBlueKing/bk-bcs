@@ -36,8 +36,8 @@
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue';
-import { useGlobalStore } from '../../../../../../../../store/global';
-import { useTemplateStore } from '../../../../../../../../store/template';
+import useGlobalStore from '../../../../../../../../store/global';
+import useTemplateStore from '../../../../../../../../store/template';
 import { updateTemplateContent, createTemplate, addTemplateToPackage } from '../../../../../../../../api/template';
 
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../../types/config';

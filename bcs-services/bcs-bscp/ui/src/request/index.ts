@@ -1,8 +1,8 @@
 import axios from 'axios';
 import BkMessage from 'bkui-vue/lib/message';
-import { pinia } from '../store/index';
-import { useUserStore } from '../store/user';
-import { useGlobalStore } from '../store/global';
+import  pinia  from '../store/index';
+import useUserStore from '../store/user';
+import useGlobalStore from '../store/global';
 
 
 const http = axios.create({

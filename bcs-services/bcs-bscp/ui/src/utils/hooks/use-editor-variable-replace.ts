@@ -3,7 +3,7 @@ import { IVariableEditParams } from '../../../types/variable';
 
 const useEditorVariableReplace = (
   model: monaco.editor.IStandaloneCodeEditor,
-  variables: IVariableEditParams[]
+  variables: IVariableEditParams[],
 ): monaco.IDisposable => {
   const ins = new VariableReplace(model, variables);
   ins.replace();
@@ -11,14 +11,13 @@ const useEditorVariableReplace = (
 };
 
 class VariableReplace {
-  static hoverProvider: monaco.IDisposable;
+  public static hoverProvider: monaco.IDisposable;
+  public editor: monaco.editor.IStandaloneCodeEditor;
+  public model: monaco.editor.ITextModel;
+  public variables: IVariableEditParams[];
+  public replacedList: { range: monaco.IRange; key: string }[] = [];
 
-  editor: monaco.editor.IStandaloneCodeEditor;
-  model: monaco.editor.ITextModel;
-  variables: IVariableEditParams[];
-  replacedList: { range: monaco.IRange; key: string }[] = [];
-
-  constructor(editor: monaco.editor.IStandaloneCodeEditor, variables: IVariableEditParams[]) {
+  private constructor(editor: monaco.editor.IStandaloneCodeEditor, variables: IVariableEditParams[]) {
     this.editor = editor;
     this.model = editor.getModel() as monaco.editor.ITextModel;
     this.variables = variables;
@@ -29,7 +28,7 @@ class VariableReplace {
    * 找到monaco编辑器中文本内容中的变量，替换为变量值，鼠标hover到变量值时，显示变量名
    * 将配置内容按照行分割，遍历变量列表，将每行中的所有变量名替换为变量值，并记录替换后内容的行、列位置
    */
-  replace() {
+  public replace() {
     const variablesMap: { [key: string]: string } = {};
     this.variables.forEach((v) => {
       variablesMap[v.name] = v.default_val;
@@ -55,7 +54,7 @@ class VariableReplace {
   }
 
   // 递归匹配文本中变量名，逐一替换为变量值，并计算文本替换后的变量值所在新内容的行、列位置以及替换后的文本
-  getReplacedData(text: string, variablesMap: { [key: string]: string }) {
+  public getReplacedData(text: string, variablesMap: { [key: string]: string }) {
     let replacedText = text;
     const reg = new RegExp('{{\\s*\\.([bB][kK]_[bB][sS][cC][pP]_[A-Za-z0-9_]*)\\s*}}');
     const variablePos: { name: string; start: number; end: number }[] = [];
@@ -73,8 +72,8 @@ class VariableReplace {
     return { replacedText, variablePos };
   }
 
-  highlightVariables() {
-    const configs = this.replacedList.map((variable) => ({
+  public highlightVariables() {
+    const configs = this.replacedList.map(variable => ({
       range: variable.range,
       options: {
         inlineClassName: 'template-variable-item',
@@ -83,7 +82,7 @@ class VariableReplace {
     this.editor.createDecorationsCollection(configs);
   }
 
-  registerHoverProvider() {
+  public registerHoverProvider() {
     const self = this;
     if (VariableReplace.hoverProvider) {
       VariableReplace.hoverProvider.dispose();
@@ -91,9 +90,8 @@ class VariableReplace {
     VariableReplace.hoverProvider = monaco.languages.registerHoverProvider('plaintext', {
       provideHover(model, position) {
         const { lineNumber, column } = position;
-        const variable = self.replacedList.find(
-          (v) => v.range.startLineNumber === lineNumber && v.range.startColumn <= column && column <= v.range.endColumn
-        );
+        const variable = self.replacedList.find(v => v.range.startLineNumber === lineNumber
+          && v.range.startColumn <= column && column <= v.range.endColumn);
         if (variable) {
           return {
             range: variable.range,

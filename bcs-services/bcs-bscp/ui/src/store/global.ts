@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { ISpaceDetail, IPermissionResource, IPermissionQueryResourceItem } from '../../types/index';
 
-export const useGlobalStore = defineStore('global', () => {
+export default defineStore('global', () => {
   const spaceId = ref(''); // 空间id
   const spaceList = ref<ISpaceDetail[]>([]);
   const showApplyPermDialog = ref(false); // 资源无权限申请弹窗

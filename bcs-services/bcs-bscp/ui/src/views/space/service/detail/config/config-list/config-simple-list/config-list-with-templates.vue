@@ -50,7 +50,7 @@
 import { ref, watch, computed, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { DownShape } from 'bkui-vue/lib/icon';
-import { useConfigStore } from '../../../../../../../store/config';
+import useConfigStore from '../../../../../../../store/config';
 import { IConfigItem, IBoundTemplateGroup } from '../../../../../../../../types/config';
 import { ICommonQuery } from '../../../../../../../../types/index';
 import {
@@ -112,7 +112,7 @@ watch(
   () => versionData.value.id,
   () => {
     getListData();
-  }
+  },
 );
 
 // 是否为未命名版本
@@ -197,13 +197,12 @@ const transListToTableData = () => {
 };
 
 // 将非模板配置项数据转为表格数据
-const transConfigsToTableItemData = (list: IConfigItem[]) =>
-  list.map((item: IConfigItem) => {
-    const { id, spec, revision, file_state } = item;
-    const { name, file_type, path } = spec;
-    const { creator, reviser, update_at } = revision;
-    return { id, name, versionId: 0, versionName: '--', path, creator, reviser, update_at, file_type, file_state };
-  });
+const transConfigsToTableItemData = (list: IConfigItem[]) => list.map((item: IConfigItem) => {
+  const { id, spec, revision, file_state } = item;
+  const { name, file_type, path } = spec;
+  const { creator, reviser, update_at } = revision;
+  return { id, name, versionId: 0, versionName: '--', path, creator, reviser, update_at, file_type, file_state };
+});
 
 // 将模板按套餐分组，并将模板数据格式转为表格数据
 const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {

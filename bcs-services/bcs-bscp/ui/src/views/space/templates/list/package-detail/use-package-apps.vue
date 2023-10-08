@@ -35,9 +35,9 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Plus } from 'bkui-vue/lib/icon';
-import { useGlobalStore } from '../../../../../store/global';
-import { useUserStore } from '../../../../../store/user';
-import { useTemplateStore } from '../../../../../store/template';
+import useGlobalStore from '../../../../../store/global';
+import useUserStore from '../../../../../store/user';
+import useTemplateStore from '../../../../../store/template';
 import { getAppList } from '../../../../../api/index';
 import { getUnNamedVersionAppsBoundByPackage } from '../../../../../api/template';
 import { IAppItem } from '../../../../../../types/app';
@@ -58,16 +58,17 @@ const userAppListLoading = ref(false);
 const boundApps = ref<IPackageCitedByApps[]>([]);
 const boundAppsLoading = ref(false);
 
-const unBoundApps = computed(() =>
-  userApps.value.filter((app) => boundApps.value.findIndex((item) => item.app_id === app.id) === -1)
-);
+const unBoundApps = computed(() => {
+  const res = userApps.value.filter(app => boundApps.value.findIndex(item => item.app_id === app.id) === -1);
+  return res;
+});
 
 watch(
   () => currentPkg.value,
   () => {
     boundApps.value = [];
     getBoundApps();
-  }
+  },
 );
 
 onMounted(() => {
@@ -98,7 +99,7 @@ const getBoundApps = async () => {
     spaceId.value,
     currentTemplateSpace.value,
     currentPkg.value as number,
-    params
+    params,
   );
   boundApps.value = res.details;
   boundAppsLoading.value = false;

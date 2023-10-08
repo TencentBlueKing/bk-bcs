@@ -5,10 +5,7 @@
         <div class="service-list-wrapper">
           <ServiceSelector :value="appId" />
         </div>
-        <VersionListAside
-          :version-detail-view="versionDetailView"
-          :bk-biz-id="bkBizId"
-          :app-id="appId"/>
+        <VersionListAside :version-detail-view="versionDetailView" :bk-biz-id="bkBizId" :app-id="appId" />
         <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="handleToggleView">
           <AngleDoubleRight class="arrow-icon" />
           <span class="text">版本详情</span>
@@ -28,8 +25,8 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { AngleDoubleRight } from 'bkui-vue/lib/icon';
-import { useServiceStore } from '../../../../store/service';
-import { useConfigStore } from '../../../../store/config';
+import useServiceStore from '../../../../store/service';
+import useConfigStore from '../../../../store/config';
 import { GET_UNNAMED_VERSION_DATE } from '../../../../constants/config';
 import { permissionCheck, getAppDetail } from '../../../../api';
 import ServiceSelector from './components/service-selector.vue';
@@ -48,15 +45,18 @@ const bkBizId = ref(String(route.params.spaceId));
 const appId = ref(Number(route.params.appId));
 const appDataLoading = ref(true);
 
-watch(() => route.params.appId, (val) => {
-  if (val) {
-    appId.value = Number(val);
-    bkBizId.value = String(route.params.spaceId);
-    versionData.value = GET_UNNAMED_VERSION_DATE();
-    getPermData();
-    getAppData();
-  }
-});
+watch(
+  () => route.params.appId,
+  (val) => {
+    if (val) {
+      appId.value = Number(val);
+      bkBizId.value = String(route.params.spaceId);
+      versionData.value = GET_UNNAMED_VERSION_DATE();
+      getPermData();
+      getAppData();
+    }
+  },
+);
 
 onMounted(() => {
   getPermData();
@@ -107,72 +107,71 @@ const handleToggleView = () => {
   }
   versionDetailView.value = !versionDetailView.value;
 };
-
 </script>
 <style lang="scss" scoped>
-  .service-detail-page {
-    height: 100%;
-  }
-  .page-detail-content {
-    display: flex;
-    align-items: top;
-    height: 100%;
-    &.version-detail-view {
-      .version-list-area {
-        width: calc(100% - 366px);
-      }
-      .config-setting-area {
-        width: 366px;
-      }
+.service-detail-page {
+  height: 100%;
+}
+.page-detail-content {
+  display: flex;
+  align-items: top;
+  height: 100%;
+  &.version-detail-view {
+    .version-list-area {
+      width: calc(100% - 366px);
+    }
+    .config-setting-area {
+      width: 366px;
     }
   }
-  .version-list-area {
-    position: relative;
+}
+.version-list-area {
+  position: relative;
+  width: 280px;
+  height: 100%;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
+  z-index: 1;
+  transition: width 0.3 ease-in-out;
+  .service-list-wrapper {
+    padding: 10px 8px 9px;
     width: 280px;
-    height: 100%;
-    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
-    z-index: 1;
-    transition: width 0.3 ease-in-out;
-    .service-list-wrapper {
-      padding: 10px 8px 9px;
-      width: 280px;
-      border-bottom: 1px solid #eaebf0;
-    }
+    border-bottom: 1px solid #eaebf0;
   }
-  .config-setting-area {
-    height: 100%;
-    width: calc(100% - 280px);
-    .setting-content-container {
-      height: calc(100% - 41px);
-    }
+}
+.config-setting-area {
+  height: 100%;
+  width: calc(100% - 280px);
+  .setting-content-container {
+    height: calc(100% - 41px);
   }
-  .view-change-trigger {
-    position: absolute;
-    top: 37%;
-    right: -16px;
-    padding-top: 8px;
-    width: 16px;
-    color: #ffffff;
-    background: #c4c6cc;
-    border-radius: 0 4px 4px 0;
-    text-align: center;
-    cursor: pointer;
-    &:hover {
-      background: #a3c5fd;
-    }
-    &.extend {
-      .arrow-icon {
-        transform: rotate(180deg);
-      }
-    }
-    .text {
-      display: inline-block;
-      margin-top: -8px;
-      font-size: 12px;
-      transform: scale(0.833);
-    }
+}
+.view-change-trigger {
+  position: absolute;
+  top: 37%;
+  right: -16px;
+  padding-top: 8px;
+  width: 16px;
+  color: #ffffff;
+  background: #c4c6cc;
+  border-radius: 0 4px 4px 0;
+  text-align: center;
+  cursor: pointer;
+  &:hover {
+    background: #a3c5fd;
+  }
+  &.extend {
     .arrow-icon {
-      font-size: 14px;
+      transform: rotate(180deg);
     }
   }
+  .text {
+    display: inline-block;
+    margin-top: -8px;
+    font-size: 12px;
+    transform: scale(0.833);
+  }
+  .arrow-icon {
+    font-size: 14px;
+  }
+}
 </style>

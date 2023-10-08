@@ -50,7 +50,7 @@ import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { AngleDown } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
-import { useServiceStore } from '../../../../../../../../store/service';
+import useServiceStore from '../../../../../../../../store/service';
 import ManualCreate from './manual-create.vue';
 import ImportFromTemplate from './import-from-templates.vue';
 

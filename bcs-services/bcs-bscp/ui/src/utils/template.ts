@@ -1,4 +1,4 @@
-export function getDefaultPackageConfig() {
+export default function () {
   return {
     id: 0,
     spec: {

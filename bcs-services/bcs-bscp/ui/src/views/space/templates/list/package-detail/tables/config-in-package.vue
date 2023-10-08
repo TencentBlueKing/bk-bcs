@@ -12,15 +12,15 @@
     <template #tableOperations>
       <AddConfigs :show-add-existing-config-option="true" @refresh="refreshConfigList" />
       <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
-      <BatchMoveOutFromPkg :configs="selectedConfigs" :current-pkg="currentPkg as number" @movedOut="handleMovedOut" />
+      <BatchMoveOutFromPkg :configs="selectedConfigs" :current-pkg="currentPkg as number" @moved-out="handleMovedOut" />
     </template>
   </CommonConfigTable>
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../../../store/global';
-import { useTemplateStore } from '../../../../../../store/template';
+import useGlobalStore from '../../../../../../store/global';
+import useTemplateStore from '../../../../../../store/template';
 import { ICommonQuery } from '../../../../../../../types/index';
 import { ITemplateConfigItem } from '../../../../../../../types/template';
 import { getTemplatesByPackageId } from '../../../../../../api/template';

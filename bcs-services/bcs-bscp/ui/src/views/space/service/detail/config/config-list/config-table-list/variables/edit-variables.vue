@@ -1,28 +1,22 @@
 <template>
   <bk-button
     v-cursor="{ active: !hasEditServicePerm }"
-    :class="{'bk-button-with-no-perm': !hasEditServicePerm}"
-    @click="handleOpenSlider">
+    :class="{ 'bk-button-with-no-perm': !hasEditServicePerm }"
+    @click="handleOpenSlider"
+  >
     设置变量
   </bk-button>
-  <bk-sideslider
-    width="960"
-    title="设置变量"
-    :is-show="isSliderShow"
-    :before-close="handleBeforeClose"
-    @closed="close">
+  <bk-sideslider width="960" title="设置变量" :is-show="isSliderShow" :before-close="handleBeforeClose" @closed="close">
     <div v-bkloading="{ loading: loading }" class="variables-table-content">
-      <ResetDefaultValue
-        class="reset-default"
-        :list="initialVariables"
-        @reset="handleResetDefault" />
+      <ResetDefaultValue class="reset-default" :list="initialVariables" @reset="handleResetDefault" />
       <VariablesTable
         ref="tableRef"
         :list="variableList"
         :cited-list="citedList"
         :editable="true"
         :show-cited="true"
-        @change="handleVariablesChange" />
+        @change="handleVariablesChange"
+      />
     </div>
     <section class="action-btns">
       <bk-button theme="primary" :loading="pending" @click="handleSubmit">保存</bk-button>
@@ -34,10 +28,14 @@
 import { ref } from 'vue';
 import { Message } from 'bkui-vue';
 import { storeToRefs } from 'pinia';
-import { useServiceStore } from '../../../../../../../../store/service';
+import useServiceStore from '../../../../../../../../store/service';
 import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
 import { IVariableEditParams, IVariableCitedByConfigDetailItem } from '../../../../../../../../../types/variable';
-import { getUnReleasedAppVariables, getUnReleasedAppVariablesCitedDetail, updateUnReleasedAppVariables } from '../../../../../../../../api/variable';
+import {
+  getUnReleasedAppVariables,
+  getUnReleasedAppVariablesCitedDetail,
+  updateUnReleasedAppVariables,
+} from '../../../../../../../../api/variable';
 import VariablesTable from './variables-table.vue';
 import ResetDefaultValue from './reset-default-value.vue';
 
@@ -46,9 +44,9 @@ const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
 const { checkPermBeforeOperate } = serviceStore;
 
 const props = defineProps<{
-    bkBizId: string;
-    appId: number;
-  }>();
+  bkBizId: string;
+  appId: number;
+}>();
 
 const isSliderShow = ref(false);
 const loading = ref(false);
@@ -120,26 +118,25 @@ const close = () => {
   isFormChange.value = false;
   variableList.value = [];
 };
-
 </script>
 <style lang="scss" scoped>
-  .variables-table-content {
-    position: relative;
-    padding: 48px 24px;
-    height: calc(100vh - 101px);
-    overflow: auto;
+.variables-table-content {
+  position: relative;
+  padding: 48px 24px;
+  height: calc(100vh - 101px);
+  overflow: auto;
+}
+.reset-default {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+}
+.action-btns {
+  border-top: 1px solid #dcdee5;
+  padding: 8px 24px;
+  .bk-button {
+    margin-right: 8px;
+    min-width: 88px;
   }
-  .reset-default {
-    position: absolute;
-    top: 20px;
-    right: 24px;
-  }
-  .action-btns {
-    border-top: 1px solid #dcdee5;
-    padding: 8px 24px;
-    .bk-button {
-      margin-right: 8px;
-      min-width: 88px;
-    }
-  }
+}
 </style>

@@ -32,8 +32,8 @@ import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { AngleDown } from 'bkui-vue/lib/icon';
-import { useUserStore } from '../../../../../store/user';
-import { useServiceStore } from '../../../../../store/service';
+import useUserStore from '../../../../../store/user';
+import useServiceStore from '../../../../../store/service';
 import { IAppItem } from '../../../../../../types/app';
 import { getAppList } from '../../../../../api';
 
@@ -59,7 +59,7 @@ watch(
   () => props.value,
   (val) => {
     localVal.value = val;
-  }
+  },
 );
 
 onMounted(() => {
@@ -84,7 +84,7 @@ const loadServiceList = async () => {
 };
 
 const handleAppChange = (id: number) => {
-  const service = serviceList.value.find((service) => service.id === id);
+  const service = serviceList.value.find(service => service.id === id);
   if (service) {
     router.push({ name: route.name as string, params: { spaceId: service.space_id, appId: id } });
   }

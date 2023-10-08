@@ -7,7 +7,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { useServiceStore } from '../../../../../../../../store/service';
+import useServiceStore from '../../../../../../../../store/service';
 import { getConfigScript } from '../../../../../../../../api/config';
 import { getDiffType } from '../../../../../../../../utils/index';
 import MenuList from './menu-list.vue';
@@ -61,7 +61,7 @@ watch(
     if (typeof selected.value === 'string') {
       selectScript(selected.value);
     }
-  }
+  },
 );
 
 watch(
@@ -73,7 +73,7 @@ watch(
   },
   {
     immediate: true,
-  }
+  },
 );
 
 onMounted(() => {
@@ -96,11 +96,11 @@ const updateDiff = async (id: number, type: 'current' | 'base') => {
   if (props.baseVersionId) {
     scriptDetailList.value[0].type = getDiffType(
       scriptDetailList.value[0].base.content,
-      scriptDetailList.value[0].current.content
+      scriptDetailList.value[0].current.content,
     );
     scriptDetailList.value[1].type = getDiffType(
       scriptDetailList.value[1].base.content,
-      scriptDetailList.value[1].current.content
+      scriptDetailList.value[1].current.content,
     );
   }
 };

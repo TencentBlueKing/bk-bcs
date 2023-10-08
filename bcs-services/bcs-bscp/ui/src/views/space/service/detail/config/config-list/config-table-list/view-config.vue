@@ -1,54 +1,59 @@
 <template>
-    <bk-sideslider
-      width="640"
-      :title="'查看配置项'"
-      :is-show="props.show"
-      @closed="close">
-        <bk-loading :loading="detailLoading" class="config-loading-container">
-          <ConfigForm
-            v-if="props.show && !detailLoading"
-            class="config-form-wrapper"
-            :editable="false"
-            :config="configForm"
-            :content="content"
-            :variables="variables"
-            :bk-biz-id="props.bkBizId"
-            :is-tpl="props.type === 'template'"
-            :id="props.type === 'template' ? tplSpaceId : props.appId"/>
-        </bk-loading>
-        <section class="action-btns">
-          <bk-button @click="close">关闭</bk-button>
-      </section>
-    </bk-sideslider>
+  <bk-sideslider width="640" :title="'查看配置项'" :is-show="props.show" @closed="close">
+    <bk-loading :loading="detailLoading" class="config-loading-container">
+      <ConfigForm
+        v-if="props.show && !detailLoading"
+        class="config-form-wrapper"
+        :editable="false"
+        :config="configForm"
+        :content="content"
+        :variables="variables"
+        :bk-biz-id="props.bkBizId"
+        :is-tpl="props.type === 'template'"
+        :id="props.type === 'template' ? tplSpaceId : props.appId"
+      />
+    </bk-loading>
+    <section class="action-btns">
+      <bk-button @click="close">关闭</bk-button>
+    </section>
+  </bk-sideslider>
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import ConfigForm from './config-form.vue';
-import { getConfigItemDetail, getReleasedConfigItemDetail, downloadConfigContent } from '../../../../../../../api/config';
-import { getTemplateVersionsDetailByIds, getTemplateVersionDetail, downloadTemplateContent } from '../../../../../../../api/template';
+import {
+  getConfigItemDetail,
+  getReleasedConfigItemDetail,
+  downloadConfigContent,
+} from '../../../../../../../api/config';
+import {
+  getTemplateVersionsDetailByIds,
+  getTemplateVersionDetail,
+  downloadTemplateContent,
+} from '../../../../../../../api/template';
 import { getConfigEditParams } from '../../../../../../../utils/config';
 import { IVariableEditParams } from '../../../../../../../../types/variable';
 import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
 import { getReleasedAppVariables } from '../../../../../../../api/variable';
-import { useConfigStore } from '../../../../../../../store/config';
+import useConfigStore from '../../../../../../../store/config';
 
 const { versionData } = storeToRefs(useConfigStore());
 
 const props = defineProps<{
-    bkBizId: string;
-    appId: number;
-    id: number;
-    versionId: number;
-    type: string; // 取值为config/template，分别表示非模板套餐下配置项和模板套餐下配置项
-    show: Boolean;
-  }>();
+  bkBizId: string;
+  appId: number;
+  id: number;
+  versionId: number;
+  type: string; // 取值为config/template，分别表示非模板套餐下配置项和模板套餐下配置项
+  show: Boolean;
+}>();
 
 const emits = defineEmits(['update:show']);
 
 const detailLoading = ref(true);
 const configForm = ref<IConfigEditParams>(getConfigEditParams());
-const content = ref<string|IFileConfigContentSummary>('');
+const content = ref<string | IFileConfigContentSummary>('');
 const variables = ref<IVariableEditParams[]>([]);
 const variablesLoading = ref(false);
 const tplSpaceId = ref(0);
@@ -113,7 +118,13 @@ const getTemplateDetail = async () => {
     detailLoading.value = true;
     let detail;
     let name;
-    let revision_memo; let file_type; let path; let template_space_id; let byte_size; let signature; let permission;
+    let revision_memo;
+    let file_type;
+    let path;
+    let template_space_id;
+    let byte_size;
+    let signature;
+    let permission;
     if (versionData.value.id) {
       const res = await getTemplateVersionDetail(props.bkBizId, props.appId, versionData.value.id, props.id);
       detail = res.detail;
@@ -166,20 +177,20 @@ const close = () => {
 };
 </script>
 <style lang="scss" scoped>
-  .config-loading-container {
-    height: calc(100vh - 101px);
-    overflow: auto;
-    .config-form-wrapper {
-      padding: 20px 40px;
-      height: 100%;
-    }
+.config-loading-container {
+  height: calc(100vh - 101px);
+  overflow: auto;
+  .config-form-wrapper {
+    padding: 20px 40px;
+    height: 100%;
   }
-  .action-btns {
-    border-top: 1px solid #dcdee5;
-    padding: 8px 24px;
-    .bk-button {
-      margin-right: 8px;
-      min-width: 88px;
-    }
+}
+.action-btns {
+  border-top: 1px solid #dcdee5;
+  padding: 8px 24px;
+  .bk-button {
+    margin-right: 8px;
+    min-width: 88px;
   }
+}
 </style>

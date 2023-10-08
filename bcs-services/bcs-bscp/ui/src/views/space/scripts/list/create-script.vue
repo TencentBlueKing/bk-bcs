@@ -59,7 +59,7 @@
 import { ref, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import BkMessage from 'bkui-vue/lib/message';
-import { useGlobalStore } from '../../../../store/global';
+import useGlobalStore from '../../../../store/global';
 import { EScriptType, IScriptEditingForm, IScriptTagItem } from '../../../../../types/script';
 import { createScript, getScriptTagList } from '../../../../api/script';
 import DetailLayout from '../components/detail-layout.vue';

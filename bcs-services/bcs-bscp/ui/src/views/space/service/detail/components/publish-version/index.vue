@@ -25,8 +25,8 @@
         <select-group
           :group-type="groupType"
           :groups="groups"
-          @openPreviewVersionDiff="openPreviewVersionDiff"
-          @groupTypeChange="groupType = $event"
+          @open-preview-version-diff="openPreviewVersionDiff"
+          @group-type-change="groupType = $event"
           @change="groups = $event"
         />
         <template #footer>
@@ -61,10 +61,10 @@ import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon';
 import InfoBox from 'bkui-vue/lib/info-box';
 import BkMessage from 'bkui-vue/lib/message';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../../../store/global';
+import useGlobalStore from '../../../../../../store/global';
 import { IGroupToPublish } from '../../../../../../../types/group';
-import { useServiceStore } from '../../../../../../store/service';
-import { useConfigStore } from '../../../../../../store/config';
+import useServiceStore from '../../../../../../store/service';
+import useConfigStore from '../../../../../../store/config';
 // import { permissionCheck } from '../../../../../../api/index';
 import VersionLayout from '../../config/components/version-layout.vue';
 import ConfirmDialog from './confirm-dialog.vue';

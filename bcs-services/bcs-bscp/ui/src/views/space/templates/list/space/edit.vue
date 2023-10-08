@@ -8,7 +8,8 @@
     :esc-close="false"
     :quick-close="false"
     @confirm="handleEdit"
-    @closed="handleClose">
+    @closed="handleClose"
+  >
     <template #header>
       <div class="header-wrapper">
         <div class="title">编辑空间</div>
@@ -26,15 +27,15 @@
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue/lib';
-import { useGlobalStore } from '../../../../../store/global';
+import useGlobalStore from '../../../../../store/global';
 import { updateTemplateSpace } from '../../../../../api/template';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
 const props = defineProps<{
-    show: boolean,
-    data: { id: number; name: string; memo: string }
-  }>();
+  show: boolean;
+  data: { id: number; name: string; memo: string };
+}>();
 
 const emits = defineEmits(['update:show', 'edited']);
 
@@ -43,12 +44,15 @@ const formRef = ref();
 const pending = ref(false);
 const memo = ref('');
 
-watch(() => props.show, (val) => {
-  isShow.value = val;
-  if (val) {
-    memo.value = props.data.memo;
-  }
-});
+watch(
+  () => props.show,
+  (val) => {
+    isShow.value = val;
+    if (val) {
+      memo.value = props.data.memo;
+    }
+  },
+);
 
 const handleEdit = () => {
   formRef.value.validate().then(async () => {
@@ -72,24 +76,23 @@ const handleEdit = () => {
 const handleClose = () => {
   emits('update:show', false);
 };
-
 </script>
 <style lang="postcss" scoped>
-  .header-wrapper {
-    display: flex;
-    align-items: center;
-    .title {
-      margin-right: 16px;
-      padding-right: 16px;
-      line-height: 26px;
-      border-right: 1px solid #dcdee5;
-    }
-    .space-name {
-      flex: 1;
-      line-height: 26px;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
+.header-wrapper {
+  display: flex;
+  align-items: center;
+  .title {
+    margin-right: 16px;
+    padding-right: 16px;
+    line-height: 26px;
+    border-right: 1px solid #dcdee5;
   }
+  .space-name {
+    flex: 1;
+    line-height: 26px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}
 </style>

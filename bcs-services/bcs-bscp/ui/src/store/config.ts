@@ -4,7 +4,7 @@ import { defineStore } from 'pinia';
 import { IConfigVersion } from '../../types/config';
 import { GET_UNNAMED_VERSION_DATE } from '../constants/config';
 
-export const useConfigStore = defineStore('config', () => {
+export default defineStore('config', () => {
   // 非套餐配置和模板配置项总数量
   const allConfigCount = ref(0);
 

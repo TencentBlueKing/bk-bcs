@@ -44,7 +44,7 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../store/global';
+import useGlobalStore from '../../../../store/global';
 import { IScriptCiteQuery, IScriptCitedItem } from '../../../../../types/script';
 import { getScriptCiteList, getScriptVersionCiteList } from '../../../../api/script';
 import SearchInput from '../../../../components/search-input.vue';

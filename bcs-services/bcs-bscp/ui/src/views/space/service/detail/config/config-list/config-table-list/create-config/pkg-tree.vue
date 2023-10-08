@@ -53,9 +53,10 @@ const pkgTreeData = computed(() => {
   let list: IAllPkgsGroupBySpaceInBiz[] = [];
   if (searchStr.value) {
     props.pkgList.forEach((item) => {
-      const pkgs = item.template_sets.filter((pkg) =>
-        pkg.template_set_name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase())
-      );
+      const pkgs = item.template_sets.filter((pkg) => {
+        const res = pkg.template_set_name.toLocaleLowerCase().includes(searchStr.value.toLocaleLowerCase());
+        return res;
+      });
       if (pkgs.length > 0) {
         list.push({ ...item, template_sets: pkgs });
       }
@@ -70,9 +71,9 @@ const pkgTreeData = computed(() => {
     let indeterminate = false;
 
     if (template_sets.length > 0) {
-      checked = template_sets.every((pkgItem) => isPkgNodeChecked(pkgItem.template_set_id));
+      checked = template_sets.every(pkgItem => isPkgNodeChecked(pkgItem.template_set_id));
       if (!checked) {
-        indeterminate = template_sets.some((pkgItem) => isPkgNodeChecked(pkgItem.template_set_id));
+        indeterminate = template_sets.some(pkgItem => isPkgNodeChecked(pkgItem.template_set_id));
       }
     }
 
@@ -121,7 +122,7 @@ const handleNodeCheckChange = (node: ISpaceTreeItem, val: boolean) => {
     } else {
       pkgNodes.forEach((pkg) => {
         if (isPkgImported(pkg.id)) return;
-        const index = list.findIndex((item) => item.template_set_id === pkg.id);
+        const index = list.findIndex(item => item.template_set_id === pkg.id);
         if (index > -1) {
           list.splice(index, 1);
         }
@@ -138,7 +139,7 @@ const handleNodeCheckChange = (node: ISpaceTreeItem, val: boolean) => {
         });
       }
     } else {
-      const index = list.findIndex((item) => item.template_set_id === node.id);
+      const index = list.findIndex(item => item.template_set_id === node.id);
       if (index > -1) {
         list.splice(index, 1);
       }
@@ -147,9 +148,9 @@ const handleNodeCheckChange = (node: ISpaceTreeItem, val: boolean) => {
   emits('change', list);
 };
 
-const isPkgImported = (id: number) => props.imported.some((pkg) => pkg.template_set_id === id);
+const isPkgImported = (id: number) => props.imported.some(pkg => pkg.template_set_id === id);
 
-const isPkgNodeChecked = (id: number) => isPkgImported(id) || props.value.some((pkg) => pkg.template_set_id === id);
+const isPkgNodeChecked = (id: number) => isPkgImported(id) || props.value.some(pkg => pkg.template_set_id === id);
 
 const clearSearchStr = () => {
   isSearchEmpty.value = false;

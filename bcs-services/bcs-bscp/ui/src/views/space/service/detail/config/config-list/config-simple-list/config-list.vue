@@ -6,24 +6,21 @@
           v-for="config in configList"
           :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
           :key="config.id"
-          @click="handleEditConfigOpen(config)">
+          @click="handleEditConfigOpen(config)"
+        >
           <div class="config-name">{{ config.spec.name }}</div>
           <div class="config-type">{{ getConfigTypeName(config.spec.file_type) }}</div>
         </div>
       </div>
       <bk-exception v-else scene="part" type="empty" description="暂无数据"></bk-exception>
     </bk-loading>
-    <EditConfig
-      v-model:show="editDialogShow"
-      :bk-biz-id="props.bkBizId"
-      :app-id="props.appId"
-      :config-id="configId" />
+    <EditConfig v-model:show="editDialogShow" :bk-biz-id="props.bkBizId" :app-id="props.appId" :config-id="configId" />
   </section>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useConfigStore } from '../../../../../../../store/config';
+import useConfigStore from '../../../../../../../store/config';
 import { ICommonQuery } from '../../../../../../../../types/index';
 import { IConfigItem } from '../../../../../../../../types/config';
 import { getConfigList, getReleasedConfigList } from '../../../../../../../api/config';
@@ -34,18 +31,21 @@ const store = useConfigStore();
 const { versionData } = storeToRefs(store);
 
 const props = defineProps<{
-    bkBizId: string,
-    appId: number,
-  }>();
+  bkBizId: string;
+  appId: number;
+}>();
 
 const loading = ref(false);
 const configList = ref<Array<IConfigItem>>([]);
 const configId = ref(0);
 const editDialogShow = ref(false);
 
-watch(() => versionData.value.id, () => {
-  getListData();
-});
+watch(
+  () => versionData.value.id,
+  () => {
+    getListData();
+  },
+);
 
 onMounted(() => {
   getListData();
@@ -84,46 +84,45 @@ const handleEditConfigOpen = (config: IConfigItem) => {
   editDialogShow.value = true;
   configId.value = config.id;
 };
-
 </script>
 <style lang="scss" scoped>
-  .current-config-list {
-    padding: 24px;
-    height: 100%;
-    background: #fafbfd;
-    overflow: auto;
-  }
-  .config-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-    font-size: 12px;
-    background: #ffffff;
-    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.06);
-    border-radius: 2px;
-    cursor: pointer;
-    &.disabled {
-      cursor: not-allowed;
-      .config-type,
-      .config-name {
-        color: #dcdee5;
-      }
-    }
-    &:not(.disabled):hover {
-      background: #e1ecff;
-    }
+.current-config-list {
+  padding: 24px;
+  height: 100%;
+  background: #fafbfd;
+  overflow: auto;
+}
+.config-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.06);
+  border-radius: 2px;
+  cursor: pointer;
+  &.disabled {
+    cursor: not-allowed;
+    .config-type,
     .config-name {
-      padding: 0 16px;
-      width: 242px;
-      height: 40px;
-      line-height: 40px;
-      color: #313238;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-    .config-type {
-      color: #979ba5;
+      color: #dcdee5;
     }
   }
+  &:not(.disabled):hover {
+    background: #e1ecff;
+  }
+  .config-name {
+    padding: 0 16px;
+    width: 242px;
+    height: 40px;
+    line-height: 40px;
+    color: #313238;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  .config-type {
+    color: #979ba5;
+  }
+}
 </style>

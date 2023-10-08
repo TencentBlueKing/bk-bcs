@@ -5,7 +5,8 @@
         v-overflow-title
         class="pkg-tag tag-in-table"
         :key="props.pkgs[0].template_set_id"
-        @click="goToPkg(props.pkgs[0].template_set_id)">
+        @click="goToPkg(props.pkgs[0].template_set_id)"
+      >
         {{ props.pkgs[0].template_set_name }}
       </div>
     </template>
@@ -13,11 +14,7 @@
       <bk-popover theme="light" placement="top-center">
         <div class="pkg-tag">+{{ extPkgs.length }}</div>
         <template #content>
-          <div
-            v-for="pkg in extPkgs"
-            class="pkg-tag"
-            :key="pkg.template_set_id"
-            @click="goToPkg(pkg.template_set_id)">
+          <div v-for="pkg in extPkgs" class="pkg-tag" :key="pkg.template_set_id" @click="goToPkg(pkg.template_set_id)">
             {{ pkg.template_set_name }}
           </div>
         </template>
@@ -28,7 +25,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useTemplateStore } from '../../../../../store/template';
+import useTemplateStore from '../../../../../store/template';
 
 const route = useRoute();
 const router = useRouter();
@@ -36,8 +33,8 @@ const router = useRouter();
 const templateStore = useTemplateStore();
 
 const props = defineProps<{
-    pkgs: {template_set_id: number; template_set_name: string;}[];
-  }>();
+  pkgs: { template_set_id: number; template_set_name: string }[];
+}>();
 
 const extPkgs = computed(() => {
   if (props.pkgs.length > 0) {
@@ -60,33 +57,32 @@ const goToPkg = (id: number) => {
     state.currentPkg = id;
   });
 };
-
 </script>
 <style lang="scss" scoped>
-  .packages-tag {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 100%;
+.packages-tag {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+.pkg-tag {
+  display: inline-block;
+  padding: 0 8px;
+  height: 22px;
+  line-height: 22px;
+  font-size: 12px;
+  color: #63656e;
+  background: #f0f1f5;
+  border-radius: 2px;
+  cursor: pointer;
+  &:not(:last-of-type) {
+    margin-right: 8px;
   }
-  .pkg-tag {
-    display: inline-block;
-    padding: 0 8px;
-    height: 22px;
-    line-height: 22px;
-    font-size: 12px;
-    color: #63656e;
-    background: #f0f1f5;
-    border-radius: 2px;
-    cursor: pointer;
-    &:not(:last-of-type) {
-      margin-right: 8px;
-    }
-  }
-  .tag-in-table {
-    max-width: 125px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+}
+.tag-in-table {
+  max-width: 125px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>

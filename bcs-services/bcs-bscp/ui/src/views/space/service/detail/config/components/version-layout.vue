@@ -18,7 +18,7 @@ withDefaults(
   }>(),
   {
     showFooter: true,
-  }
+  },
 );
 </script>
 <style lang="scss" scoped>

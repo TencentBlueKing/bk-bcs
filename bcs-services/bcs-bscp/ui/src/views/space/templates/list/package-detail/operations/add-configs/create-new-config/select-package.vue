@@ -54,8 +54,8 @@
 import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Done } from 'bkui-vue/lib/icon';
-import { useGlobalStore } from '../../../../../../../../store/global';
-import { useTemplateStore } from '../../../../../../../../store/template';
+import useGlobalStore from '../../../../../../../../store/global';
+import useTemplateStore from '../../../../../../../../store/template';
 import { IConfigEditParams } from '../../../../../../../../../types/config';
 import { IPackagesCitedByApps } from '../../../../../../../../../types/template';
 import { getUnNamedVersionAppsBoundByPackages } from '../../../../../../../../api/template';

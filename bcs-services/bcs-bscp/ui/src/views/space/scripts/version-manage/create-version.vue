@@ -57,7 +57,7 @@
 import { ref } from 'vue';
 import { Plus } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../store/global';
+import useGlobalStore from '../../../../store/global';
 import { IScriptVersionListItem, IScriptMapItem } from '../../../../../types/script';
 import { getScriptVersionList } from '../../../../api/script';
 

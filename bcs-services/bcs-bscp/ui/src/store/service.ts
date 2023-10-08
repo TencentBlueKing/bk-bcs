@@ -1,7 +1,7 @@
 // 服务实例的pinia数据
 import { ref } from 'vue';
 import { defineStore, storeToRefs } from 'pinia';
-import { useGlobalStore } from './global';
+import useGlobalStore from './global';
 
 interface IAppData {
   id: number | string;
@@ -11,7 +11,7 @@ interface IAppData {
 }
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 
-export const useServiceStore = defineStore('service', () => {
+export default defineStore('service', () => {
   // 服务详情数据
   const appData = ref<IAppData>({
     id: '',

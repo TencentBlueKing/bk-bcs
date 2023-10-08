@@ -8,4 +8,4 @@ pinia.use(({ store }) => {
   store.$reset = () => store.$patch(cloneDeep(initialState));
 });
 
-export { pinia };
+export default pinia;

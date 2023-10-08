@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useConfigStore } from '../../../../../../store/config';
+import useConfigStore from '../../../../../../store/config';
 import { Ellipsis } from 'bkui-vue/lib/icon';
 // import { InfoBox } from 'bkui-vue/lib';
 import { getConfigVersionList } from '../../../../../../api/config';
@@ -88,7 +88,7 @@ watch(
   () => props.appId,
   () => {
     getVersionList();
-  }
+  },
 );
 
 onMounted(async () => {

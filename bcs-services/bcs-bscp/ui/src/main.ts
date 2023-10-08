@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import { pinia } from './store/index';
+import pinia from './store/index';
 import bkui, { bkTooltips, bkEllipsis, overflowTitle } from 'bkui-vue';
 import 'bkui-vue/dist/style.css';
 import './css/style.css';

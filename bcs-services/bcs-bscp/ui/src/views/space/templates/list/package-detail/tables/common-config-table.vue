@@ -129,8 +129,8 @@ import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Ellipsis, Search, Spinner } from 'bkui-vue/lib/icon';
-import { useGlobalStore } from '../../../../../../store/global';
-import { useTemplateStore } from '../../../../../../store/template';
+import useGlobalStore from '../../../../../../store/global';
+import useTemplateStore from '../../../../../../store/template';
 import { ICommonQuery } from '../../../../../../../types/index';
 import {
   ITemplateConfigItem,

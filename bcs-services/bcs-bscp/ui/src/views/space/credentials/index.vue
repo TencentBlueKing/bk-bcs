@@ -127,14 +127,14 @@
       :has-manage-perm="hasManagePerm"
       @close="handleAssociateSliderClose"
       @refresh="refreshListWithLoading(pagination.current)"
-      @applyPerm="checkPermBeforeOperate"
+      @apply-perm="checkPermBeforeOperate"
     />
   </section>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../store/global';
+import useGlobalStore from '../../../store/global';
 import { Plus, Search, Eye, Unvisible, Copy, EditLine } from 'bkui-vue/lib/icon';
 import BkMessage from 'bkui-vue/lib/message';
 import { InfoBox } from 'bkui-vue/lib';

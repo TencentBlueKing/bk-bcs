@@ -70,8 +70,8 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Plus } from 'bkui-vue/lib/icon';
-import { useGlobalStore } from '../../../../../store/global';
-import { useTemplateStore } from '../../../../../store/template';
+import useGlobalStore from '../../../../../store/global';
+import useTemplateStore from '../../../../../store/template';
 import {
   getTemplatePackageList,
   getTemplatesWithNoSpecifiedPackage,

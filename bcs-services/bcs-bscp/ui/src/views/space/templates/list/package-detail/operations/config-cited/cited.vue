@@ -18,7 +18,7 @@ const emits = defineEmits(['update:show']);
 
 const isShow = ref(false);
 const isFormChange = ref(false);
-const pending = ref(false);
+// const pending = ref(false);
 
 watch(
   () => props.show,

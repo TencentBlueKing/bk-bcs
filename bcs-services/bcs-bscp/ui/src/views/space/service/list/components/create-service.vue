@@ -36,7 +36,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { InfoBox } from 'bkui-vue/lib';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../../store/global';
+import useGlobalStore from '../../../../../store/global';
 import { createApp } from '../../../../../api';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
 

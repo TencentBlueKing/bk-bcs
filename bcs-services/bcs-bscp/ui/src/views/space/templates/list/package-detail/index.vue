@@ -26,8 +26,8 @@
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { AngleDoubleRightLine, AngleDoubleLeftLine } from 'bkui-vue/lib/icon';
-import { useTemplateStore } from '../../../../../store/template';
-import { PACKAGE_MENU_OTHER_TYPE_MAP } from '../../../../../constants/template';
+import useTemplateStore from '../../../../../store/template';
+import PACKAGE_MENU_OTHER_TYPE_MAP from '../../../../../constants/template';
 import UsePackageApps from './use-package-apps.vue';
 import ConfigInPackageTable from './tables/config-in-package.vue';
 import ConfigInAllTable from './tables/config-in-all.vue';

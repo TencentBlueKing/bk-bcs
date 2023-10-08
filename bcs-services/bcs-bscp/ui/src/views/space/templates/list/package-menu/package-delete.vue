@@ -37,7 +37,7 @@
 import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue/lib';
-import { useGlobalStore } from '../../../../../store/global';
+import useGlobalStore from '../../../../../store/global';
 import { getUnNamedVersionAppsBoundByPackage, deleteTemplatePackage } from '../../../../../api/template';
 import { ITemplatePackageItem, IPackageCitedByApps } from '../../../../../../types/template';
 import LinkToApp from '../components/link-to-app.vue';

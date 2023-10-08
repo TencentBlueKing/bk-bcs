@@ -36,8 +36,8 @@ import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Warn } from 'bkui-vue/lib/icon';
 import { Message } from 'bkui-vue';
-import { useGlobalStore } from '../../../../../../../store/global';
-import { useTemplateStore } from '../../../../../../../store/template';
+import useGlobalStore from '../../../../../../../store/global';
+import useTemplateStore from '../../../../../../../store/template';
 import { ITemplateConfigItem } from '../../../../../../../../types/template';
 import { deleteTemplate } from '../../../../../../../api/template';
 

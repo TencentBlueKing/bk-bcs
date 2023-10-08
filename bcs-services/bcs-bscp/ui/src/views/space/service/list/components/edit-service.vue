@@ -53,7 +53,7 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../../store/global';
+import useGlobalStore from '../../../../../store/global';
 import { updateApp } from '../../../../../api/index';
 import { datetimeFormat } from '../../../../../utils/index';
 import { IAppItem } from '../../../../../../types/app';

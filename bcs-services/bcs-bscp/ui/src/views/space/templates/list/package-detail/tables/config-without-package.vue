@@ -31,8 +31,8 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../../../../store/global';
-import { useTemplateStore } from '../../../../../../store/template';
+import useGlobalStore from '../../../../../../store/global';
+import useTemplateStore from '../../../../../../store/template';
 import { ICommonQuery } from '../../../../../../../types/index';
 import { ITemplateConfigItem } from '../../../../../../../types/template';
 import { getTemplatesWithNoSpecifiedPackage } from '../../../../../../api/template';
@@ -51,8 +51,10 @@ const selectedConfigs = ref<ITemplateConfigItem[]>([]);
 const isAddToPkgsDialogShow = ref(false);
 const isDeleteConfigDialogShow = ref(false);
 
-const getConfigList = (params: ICommonQuery) =>
-  getTemplatesWithNoSpecifiedPackage(spaceId.value, currentTemplateSpace.value, params);
+const getConfigList = (params: ICommonQuery) => {
+  const res =  getTemplatesWithNoSpecifiedPackage(spaceId.value, currentTemplateSpace.value, params);
+  return res;
+};
 
 const refreshConfigList = () => {
   configTable.value.refreshList();

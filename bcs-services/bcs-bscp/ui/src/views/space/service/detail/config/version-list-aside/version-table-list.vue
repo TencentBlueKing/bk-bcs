@@ -95,7 +95,7 @@ import { ref, computed, onMounted } from 'vue';
 import { Search } from 'bkui-vue/lib/icon';
 // import { InfoBox } from 'bkui-vue/lib';
 import { storeToRefs } from 'pinia';
-import { useConfigStore } from '../../../../../../store/config';
+import useConfigStore from '../../../../../../store/config';
 import { getConfigVersionList } from '../../../../../../api/config';
 import { datetimeFormat } from '../../../../../../utils/index';
 import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config';
@@ -163,8 +163,7 @@ const getRowCls = (data: IConfigVersion) => {
   return '';
 };
 
-const getGroupNames = (data: IConfigVersion) =>
-  data.status?.released_groups.length ? data.status.released_groups.map((item) => item.name).join('; ') : '--';
+const getGroupNames = (data: IConfigVersion) => (data.status?.released_groups.length ? data.status.released_groups.map(item => item.name).join('; ') : '--');
 
 const handleTabChange = (tab: string) => {
   currentTab.value = tab;

@@ -55,7 +55,7 @@ import { onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Plus } from 'bkui-vue/lib/icon';
 import { InfoBox } from 'bkui-vue/lib';
-import { useGlobalStore } from '../../../store/global';
+import useGlobalStore from '../../../store/global';
 import { ICommonQuery, IPagination } from '../../../../types/index';
 import { IVariableEditParams, IVariableItem } from '../../../../types/variable';
 import { getVariableList, deleteVariable } from '../../../api/variable';

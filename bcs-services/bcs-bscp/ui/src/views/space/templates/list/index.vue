@@ -23,7 +23,7 @@
 </template>
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { useTemplateStore } from '../../../../store/template';
+import useTemplateStore from '../../../../store/template';
 import SpaceSelector from './space/selector.vue';
 import PackageMenu from './package-menu/menu.vue';
 import PackageDetail from './package-detail/index.vue';

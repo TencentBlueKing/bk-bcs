@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '../../../store/global';
+import useGlobalStore from '../../../store/global';
 import { IGroupEditing, IGroupRuleItem, IGroupItem } from '../../../../types/group';
 import { updateGroup } from '../../../api/group';
 import groupEditForm from './components/group-edit-form.vue';

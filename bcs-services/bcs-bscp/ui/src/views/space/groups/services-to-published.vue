@@ -38,7 +38,7 @@ import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Search } from 'bkui-vue/lib/icon';
-import { useGlobalStore } from '../../../store/global';
+import useGlobalStore from '../../../store/global';
 import { IGroupBindService } from '../../../../types/group';
 import { getGroupReleasedApps } from '../../../api/group';
 

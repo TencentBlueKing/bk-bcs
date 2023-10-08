@@ -1,10 +1,5 @@
 <template>
-  <bk-sideslider
-    title="编辑变量"
-    :width="640"
-    :is-show="isShow"
-    :before-close="handleBeforeClose"
-    @closed="close">
+  <bk-sideslider title="编辑变量" :width="640" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="variable-form">
       <EditingForm ref="formRef" type="edit" :prefix="prefix" :value="variableConfig" @change="handleFormChange" />
     </div>
@@ -19,7 +14,7 @@ import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue';
 import useModalCloseConfirmation from '../../../utils/hooks/use-modal-close-confirmation';
-import { useGlobalStore } from '../../../store/global';
+import useGlobalStore from '../../../store/global';
 import { updateVariable } from '../../../api/variable';
 import { IVariableEditParams } from '../../../../types/variable';
 import EditingForm from './editing-form.vue';
@@ -27,10 +22,10 @@ import EditingForm from './editing-form.vue';
 const { spaceId } = storeToRefs(useGlobalStore());
 
 const props = defineProps<{
-    show: boolean;
-    id: number;
-    data: IVariableEditParams;
-  }>();
+  show: boolean;
+  id: number;
+  data: IVariableEditParams;
+}>();
 
 const emits = defineEmits(['update:show', 'edited']);
 
@@ -46,19 +41,22 @@ const variableConfig = ref<IVariableEditParams>({
   memo: '',
 });
 
-watch(() => props.show, (val) => {
-  isShow.value = val;
-  if (val) {
-    isFormChanged.value = false;
-    const name = props.data.name.replace(/(^bk_bscp_)|(^BK_BSCP_)/, '');
-    let currentPrefix = 'bk_bscp_';
-    if (/^BK_BSCP_/.test(props.data.name)) {
-      currentPrefix = 'BK_BSCP_';
+watch(
+  () => props.show,
+  (val) => {
+    isShow.value = val;
+    if (val) {
+      isFormChanged.value = false;
+      const name = props.data.name.replace(/(^bk_bscp_)|(^BK_BSCP_)/, '');
+      let currentPrefix = 'bk_bscp_';
+      if (/^BK_BSCP_/.test(props.data.name)) {
+        currentPrefix = 'BK_BSCP_';
+      }
+      prefix.value = currentPrefix;
+      variableConfig.value = { ...props.data, name };
     }
-    prefix.value = currentPrefix;
-    variableConfig.value = { ...props.data, name };
-  }
-});
+  },
+);
 
 const handleFormChange = (val: IVariableEditParams, localPrefix: string) => {
   isFormChanged.value = true;
@@ -98,17 +96,17 @@ const close = () => {
 };
 </script>
 <style lang="scss" scoped>
-  .variable-form {
-    padding: 20px 40px;
-    height: calc(100vh - 101px);
-    overflow: auto;
+.variable-form {
+  padding: 20px 40px;
+  height: calc(100vh - 101px);
+  overflow: auto;
+}
+.action-btns {
+  border-top: 1px solid #dcdee5;
+  padding: 8px 24px;
+  .bk-button {
+    margin-right: 8px;
+    min-width: 88px;
   }
-  .action-btns {
-    border-top: 1px solid #dcdee5;
-    padding: 8px 24px;
-    .bk-button {
-      margin-right: 8px;
-      min-width: 88px;
-    }
-  }
+}
 </style>

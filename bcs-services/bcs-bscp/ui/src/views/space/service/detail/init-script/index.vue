@@ -11,13 +11,15 @@
               :loading="scriptsLoading"
               :list="scriptsData"
               @change="handleSelectScript"
-              @refresh="getScripts" />
+              @refresh="getScripts"
+            />
             <bk-button
               class="preview-button"
               text
               theme="primary"
               :disabled="typeof formData.pre.id !== 'number' || formData.pre.id === 0"
-              @click="handleOpenPreview('pre')">
+              @click="handleOpenPreview('pre')"
+            >
               预览
             </bk-button>
           </div>
@@ -31,13 +33,15 @@
               :loading="scriptsLoading"
               :list="scriptsData"
               @change="handleSelectScript"
-              @refresh="getScripts" />
+              @refresh="getScripts"
+            />
             <bk-button
               class="preview-button"
               text
               theme="primary"
               :disabled="typeof formData.post.id !== 'number' || formData.post.id === 0"
-              @click="handleOpenPreview('post')">
+              @click="handleOpenPreview('post')"
+            >
               预览
             </bk-button>
           </div>
@@ -46,16 +50,22 @@
       <bk-button
         v-if="!viewMode"
         v-cursor="{ active: !hasEditServicePerm }"
-        :class="['submit-button', {'bk-button-with-no-perm': !hasEditServicePerm}]"
+        :class="['submit-button', { 'bk-button-with-no-perm': !hasEditServicePerm }]"
         theme="primary"
         :disabled="hasEditServicePerm && !dataChanged"
         :loading="pending"
-        @click="handleSubmit">
+        @click="handleSubmit"
+      >
         保存设置
       </bk-button>
     </div>
     <bk-loading v-if="previewConfig.open" class="preview-area" :loading="contentLoading">
-      <ScriptEditor :model-value="previewConfig.content" :editable="false" :upload-icon="false" :language="previewConfig.type">
+      <ScriptEditor
+        :model-value="previewConfig.content"
+        :editable="false"
+        :upload-icon="false"
+        :language="previewConfig.type"
+      >
         <template #header>
           <div class="script-preview-title">
             <div class="close-area" @click="previewConfig.open = false">
@@ -74,9 +84,9 @@ import { storeToRefs } from 'pinia';
 import BkMessage from 'bkui-vue/lib/message';
 import { AngleRight } from 'bkui-vue/lib/icon';
 import { IScriptItem } from '../../../../../../types/script';
-import { useGlobalStore } from '../../../../../store/global';
-import { useServiceStore } from '../../../../../store/service';
-import { useConfigStore } from '../../../../../store/config';
+import useGlobalStore from '../../../../../store/global';
+import useServiceStore from '../../../../../store/service';
+import useConfigStore from '../../../../../store/config';
 import { getScriptList, getScriptVersionDetail } from '../../../../../api/script';
 import { getConfigScript, getDefaultConfigScriptData, updateConfigInitScript } from '../../../../../api/config';
 import ScriptEditor from '../../../scripts/components/script-editor.vue';
@@ -89,11 +99,11 @@ const { checkPermBeforeOperate } = serviceStore;
 const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
 
 const props = defineProps<{
-    appId: number;
-  }>();
+  appId: number;
+}>();
 
 const scriptsLoading = ref(false);
-const scriptsData = ref<{ id: number; versionId: number; name: string; type: string; }[]>([]);
+const scriptsData = ref<{ id: number; versionId: number; name: string; type: string }[]>([]);
 const previewConfig = ref({
   open: false,
   type: '',
@@ -128,10 +138,13 @@ const dataChanged = computed(() => {
   return pre_hook.hook_id !== pre.id || post_hook.hook_id !== post.id;
 });
 
-watch(() => versionData.value.id, () => {
-  getScriptSetting();
-  previewConfig.value.open = false;
-});
+watch(
+  () => versionData.value.id,
+  () => {
+    getScriptSetting();
+    previewConfig.value.open = false;
+  },
+);
 
 onMounted(() => {
   getScripts();
@@ -145,7 +158,12 @@ const getScripts = async () => {
     all: true,
   };
   const res = await getScriptList(spaceId.value, params);
-  const list = (res.details as IScriptItem[]).map(item => ({ id: item.hook.id, versionId: item.published_revision_id, name: item.hook.spec.name, type: item.hook.spec.type }));
+  const list = (res.details as IScriptItem[]).map(item => ({
+    id: item.hook.id,
+    versionId: item.published_revision_id,
+    name: item.hook.spec.name,
+    type: item.hook.spec.type,
+  }));
   scriptsData.value = [{ id: 0, versionId: 0, name: '<不使用脚本>', type: '' }, ...list];
   scriptsLoading.value = false;
 };
@@ -234,61 +252,60 @@ const handleSubmit = async () => {
     pending.value = false;
   }
 };
-
 </script>
 <style lang="scss" scoped>
-  .init-script-page {
-    display: flex;
-    align-items: top;
-    height: 100%;
-  }
-  .script-select-area {
-    padding: 24px 32px 24px 24px;
-    width: 528px;
-    height: 100%;
-    .select-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      .bk-select {
-        width: 426px;
-      }
-    }
-  }
-  .preview-area {
-    width: calc(100% - 528px);
-    height: 100%;
-  }
-  .script-preview-title {
+.init-script-page {
+  display: flex;
+  align-items: top;
+  height: 100%;
+}
+.script-select-area {
+  padding: 24px 32px 24px 24px;
+  width: 528px;
+  height: 100%;
+  .select-wrapper {
     display: flex;
     align-items: center;
-    padding-right: 24px;
-    width: 100%;
-    height: 40px;
-    .close-area {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 20px;
-      height: 100%;
-      background: #63656e;
-      color: #ffffff;
-      font-size: 20px;
-      cursor: pointer;
-    }
-    .title {
-      padding: 0 5px;
-      line-height: 40px;
-      color: #c4c6cc;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    justify-content: space-between;
+    .bk-select {
+      width: 426px;
     }
   }
-  :deep(.script-editor) {
+}
+.preview-area {
+  width: calc(100% - 528px);
+  height: 100%;
+}
+.script-preview-title {
+  display: flex;
+  align-items: center;
+  padding-right: 24px;
+  width: 100%;
+  height: 40px;
+  .close-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
     height: 100%;
-    .content-wrapper {
-      height: calc(100% - 40px);
-    }
+    background: #63656e;
+    color: #ffffff;
+    font-size: 20px;
+    cursor: pointer;
   }
+  .title {
+    padding: 0 5px;
+    line-height: 40px;
+    color: #c4c6cc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+:deep(.script-editor) {
+  height: 100%;
+  .content-wrapper {
+    height: calc(100% - 40px);
+  }
+}
 </style>

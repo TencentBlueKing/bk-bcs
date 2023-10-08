@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useGlobalStore } from './store/global';
+import useGlobalStore from './store/global';
 import { ISpaceDetail } from '../types/index';
 
 const routes = [

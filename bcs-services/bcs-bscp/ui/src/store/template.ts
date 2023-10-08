@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { ITemplatePackageItem, ITemplateSpaceItem } from '../../types/template';
 
-export const useTemplateStore = defineStore('template', () => {
+export default defineStore('template', () => {
   // 模板空间列表
   const templateSpaceList = ref<ITemplateSpaceItem[]>([]);
   // 当前模板空间

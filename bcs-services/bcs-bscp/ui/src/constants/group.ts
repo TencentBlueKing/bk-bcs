@@ -1,4 +1,4 @@
-export const GROUP_RULE_OPS = [
+export default  [
   { id: 'eq', name: '=' },
   { id: 'ne', name: '!=' },
   { id: 'gt', name: '>' },

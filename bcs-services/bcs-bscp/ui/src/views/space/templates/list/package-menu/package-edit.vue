@@ -1,10 +1,5 @@
 <template>
-  <bk-sideslider
-    title="编辑模板套餐"
-    :width="640"
-    :is-show="isShow"
-    :before-close="handleBeforeClose"
-    @closed="close">
+  <bk-sideslider title="编辑模板套餐" :width="640" :is-show="isShow" :before-close="handleBeforeClose" @closed="close">
     <div class="package-form">
       <PackageForm ref="formRef" :space-id="spaceId" :data="data" :apps="apps" @change="handleChange" />
     </div>
@@ -18,7 +13,7 @@
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Message } from 'bkui-vue/lib';
-import { useGlobalStore } from '../../../../../store/global';
+import useGlobalStore from '../../../../../store/global';
 import { ITemplatePackageEditParams, ITemplatePackageItem } from '../../../../../../types/template';
 import { updateTemplatePackage } from '../../../../../api/template';
 import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
@@ -27,10 +22,10 @@ import PackageForm from './package-form.vue';
 const { spaceId } = storeToRefs(useGlobalStore());
 
 const props = defineProps<{
-    show: boolean;
-    templateSpaceId: number;
-    pkg: ITemplatePackageItem;
-  }>();
+  show: boolean;
+  templateSpaceId: number;
+  pkg: ITemplatePackageItem;
+}>();
 
 const emits = defineEmits(['update:show', 'edited']);
 
@@ -46,19 +41,18 @@ const apps = ref<number[]>([]);
 const isFormChange = ref(false);
 const pending = ref(false);
 
-watch(() => props.show, (val) => {
-  isShow.value = val;
-  if (val) {
-    isFormChange.value = false;
-    const {
-      name,
-      memo,
-      public: isPublic,
-      bound_apps } = props.pkg.spec;
-    data.value = { name, memo, public: isPublic, bound_apps };
-    apps.value = bound_apps.slice();
-  }
-});
+watch(
+  () => props.show,
+  (val) => {
+    isShow.value = val;
+    if (val) {
+      isFormChange.value = false;
+      const { name, memo, public: isPublic, bound_apps } = props.pkg.spec;
+      data.value = { name, memo, public: isPublic, bound_apps };
+      apps.value = bound_apps.slice();
+    }
+  },
+);
 
 const handleChange = (formData: ITemplatePackageEditParams) => {
   isFormChange.value = true;
@@ -99,19 +93,18 @@ const handleBeforeClose = async () => {
 const close = () => {
   emits('update:show', false);
 };
-
 </script>
 <style lang="scss" scoped>
-  .package-form {
-    padding: 20px 40px;
-    height: calc(100vh - 101px);
+.package-form {
+  padding: 20px 40px;
+  height: calc(100vh - 101px);
+}
+.action-btns {
+  border-top: 1px solid #dcdee5;
+  padding: 8px 24px;
+  .bk-button {
+    margin-right: 8px;
+    min-width: 88px;
   }
-  .action-btns {
-    border-top: 1px solid #dcdee5;
-    padding: 8px 24px;
-    .bk-button {
-      margin-right: 8px;
-      min-width: 88px;
-    }
-  }
+}
 </style>

@@ -106,11 +106,12 @@ const selectedPkgs = ref<ITemplateBoundByAppData[]>([]);
 const pending = ref(false);
 const conflictDetail = ref<{ [key: number]: number[] }>([]);
 
-const hasConflict = computed(() => selectedPkgs.value.some((pkg) => conflictDetail.value[pkg.template_set_id]));
+const hasConflict = computed(() => selectedPkgs.value.some(pkg => conflictDetail.value[pkg.template_set_id]));
 
-const isImportBtnDisabled = computed(
-  () => hasConflict.value || pkgListLoading.value || importedPkgs.value.length + selectedPkgs.value.length === 0
-);
+const isImportBtnDisabled = computed(() => {
+  const res = hasConflict.value || pkgListLoading.value || importedPkgs.value.length + selectedPkgs.value.length === 0;
+  return res;
+});
 
 watch(
   () => props.show,
@@ -124,23 +125,22 @@ watch(
       await getPkgList();
       if (route.query.pkg_id && /\d+/.test(route.query.pkg_id as string)) {
         const id = Number(route.query.pkg_id);
-        pkgList.value.some((spaceGroup) =>
-          spaceGroup.template_sets.some((pkg) => {
-            if (
-              pkg.template_set_id === id &&
-              importedPkgs.value.findIndex((item) => item.template_set_id === id) === -1
-            ) {
-              selectedPkgs.value.push({
-                template_set_id: id,
-                template_revisions: [],
-              });
-              return true;
-            }
-          })
-        );
+        pkgList.value.some(spaceGroup => spaceGroup.template_sets.some((pkg) => {
+          if (
+            pkg.template_set_id === id &&
+              importedPkgs.value.findIndex(item => item.template_set_id === id) === -1
+          ) {
+            selectedPkgs.value.push({
+              template_set_id: id,
+              template_revisions: [],
+            });
+            return true;
+          }
+          return undefined;
+        }));
       }
     }
-  }
+  },
 );
 
 const getPkgList = async () => {
@@ -168,7 +168,7 @@ const handlePkgsChange = (pkgs: ITemplateBoundByAppData[]) => {
 };
 
 const handleDeletePkg = (id: number) => {
-  const index = selectedPkgs.value.findIndex((item) => item.template_set_id === id);
+  const index = selectedPkgs.value.findIndex(item => item.template_set_id === id);
   if (index > -1) {
     selectedPkgs.value.splice(index, 1);
   }
@@ -178,12 +178,12 @@ const handleDeletePkg = (id: number) => {
 const handleSelectTplVersion = (
   pkgId: number,
   version: { template_id: number; template_revision_id: number; is_latest: boolean },
-  type: string
+  type: string,
 ) => {
   const pkgs = type === 'imported' ? importedPkgs.value : selectedPkgs.value;
-  const pkgData = pkgs.find((item) => item.template_set_id === pkgId);
+  const pkgData = pkgs.find(item => item.template_set_id === pkgId);
   if (pkgData) {
-    const index = pkgData.template_revisions.findIndex((item) => item.template_id === version.template_id);
+    const index = pkgData.template_revisions.findIndex(item => item.template_id === version.template_id);
     if (index > -1) {
       pkgData.template_revisions.splice(index, 1, version);
     } else {
@@ -196,10 +196,10 @@ const handleSelectTplVersion = (
 const handleUpdateTplsVersions = (
   pkgId: number,
   versionsData: { template_id: number; template_revision_id: number; is_latest: boolean }[],
-  type: string
+  type: string,
 ) => {
   const pkgs = type === 'imported' ? importedPkgs.value : selectedPkgs.value;
-  const pkgData = pkgs.find((item) => item.template_set_id === pkgId);
+  const pkgData = pkgs.find(item => item.template_set_id === pkgId);
   if (pkgData) {
     pkgData.template_revisions = versionsData;
   }

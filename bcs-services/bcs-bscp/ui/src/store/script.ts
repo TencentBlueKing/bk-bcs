@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 
-export const useScriptStore = defineStore('script', () => {
+export default defineStore('script', () => {
   // 脚本配置页面是否需要打开编辑版本面板
   const versionListPageShouldOpenEdit = ref(false);
 
