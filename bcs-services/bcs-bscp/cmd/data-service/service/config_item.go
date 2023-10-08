@@ -164,14 +164,14 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
-		return nil, err
+		return nil, e
 	}
 	if e := s.doBatchUpdateConfigItemContent(grpcKit, tx, toUpdateContent, now,
 		req.BizId, req.AppId, editingCIMap); e != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
-		return nil, err
+		return nil, e
 	}
 	if req.ReplaceAll {
 		// if replace all,delete config items not in batch upsert request.
