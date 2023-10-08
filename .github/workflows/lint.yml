@@ -59,5 +59,5 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
-          args: --timeout=30m --issues-exit-code=0
+          args: --timeout=30m --issues-exit-code=0 --skip-dirs=test --skip-dirs=pkg/logs/glog
           working-directory: bcs-services/bcs-bscp
