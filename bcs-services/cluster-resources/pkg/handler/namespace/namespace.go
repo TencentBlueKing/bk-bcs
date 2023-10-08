@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package namespace xxx
+// Package namespace 包提供了一些命名空间相关的工具函数
 package namespace
 
 import (

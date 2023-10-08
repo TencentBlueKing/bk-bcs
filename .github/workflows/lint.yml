@@ -61,3 +61,103 @@ jobs:
           version: v1.54.2
           args: --timeout=30m --issues-exit-code=0
           working-directory: bcs-services/bcs-bscp
+  bcs-cluster-manager:
+    name: bcs-cluster-manager
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: bcs-services/bcs-cluster-manager/go.mod
+      - name: go mod tidy check
+        uses: katexochen/go-tidy-check@v2
+        with:
+          modules: bcs-services/bcs-cluster-manager
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54.2
+          args: --timeout=30m --issues-exit-code=0
+          working-directory: bcs-services/bcs-cluster-manager
+  bcs-helm-manager:
+    name: bcs-helm-manager
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: bcs-services/bcs-helm-manager/go.mod
+      - name: go mod tidy check
+        uses: katexochen/go-tidy-check@v2
+        with:
+          modules: bcs-services/bcs-helm-manager
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54.2
+          args: --timeout=30m --issues-exit-code=0
+          working-directory: bcs-services/bcs-helm-manager
+  bcs-project-manager:
+    name: bcs-project-manager
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: bcs-services/bcs-project-manager/go.mod
+      - name: go mod tidy check
+        uses: katexochen/go-tidy-check@v2
+        with:
+          modules: bcs-services/bcs-project-manager
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54.2
+          args: --timeout=30m --issues-exit-code=0
+          working-directory: bcs-services/bcs-project-manager
+  bcs-user-manager:
+    name: bcs-user-manager
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: bcs-services/bcs-user-manager/go.mod
+      - name: go mod tidy check
+        uses: katexochen/go-tidy-check@v2
+        with:
+          modules: bcs-services/bcs-user-manager
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54.2
+          args: --timeout=30m --issues-exit-code=0
+          working-directory: bcs-services/bcs-user-manager
+  bcs-cluster-resources:
+    name: bcs-cluster-resources
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: bcs-services/cluster-resources/go.mod
+      - name: go mod tidy check
+        uses: katexochen/go-tidy-check@v2
+        with:
+          modules: bcs-services/cluster-resources
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54.2
+          args: --timeout=30m --issues-exit-code=0
+          working-directory: bcs-services/cluster-resources

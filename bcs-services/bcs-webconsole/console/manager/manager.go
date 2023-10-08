@@ -189,7 +189,7 @@ func (c *ConsoleManager) auditCmd(outputMsg []byte) {
 		return
 	}
 
-	//TODO:历史命令问题,可能解析问题导致
+	// DOTO:历史命令问题,可能解析问题导致
 	if strings.ReplaceAll(string(ss.Code), "\b", "") == "" {
 		rex := regexp.MustCompile("\\x1b\\[\\d+P") // nolint
 		l := rex.Split(string(out), -1)

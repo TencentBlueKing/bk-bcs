@@ -58,6 +58,8 @@ func RenderResponse(rsp interface{}, requestID string, err error) error {
 	if err == nil {
 		return nil
 	}
+
+	// handle error
 	switch e := err.(type) {
 	case *authutils.PermDeniedError:
 		if v.Elem().FieldByName("WebAnnotations").IsValid() {
@@ -266,6 +268,7 @@ var auditFuncMap = map[string]func(req server.Request, rsp interface{}) (audit.R
 	},
 }
 
+// addAudit 添加审计
 func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTime, endTime time.Time) {
 	// get method audit func
 	fn, ok := auditFuncMap[req.Method()]
@@ -275,6 +278,7 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 
 	res, act := fn(req, rsp)
 
+	// get audit context
 	auditCtx := audit.RecorderContext{
 		Username:  auth.GetUserFromCtx(ctx),
 		SourceIP:  contextx.GetSourceIPFromCtx(ctx),
@@ -283,6 +287,7 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 		StartTime: startTime,
 		EndTime:   endTime,
 	}
+	// get resource & action
 	resource := audit.Resource{
 		ProjectCode:  res.ProjectCode,
 		ResourceType: res.ResourceType,
@@ -295,6 +300,7 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 		ActivityType: act.ActivityType,
 	}
 
+	// get action result
 	result := audit.ActionResult{
 		Status: audit.ActivityStatusSuccess,
 	}
@@ -314,6 +320,8 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	if result.ResultCode != errorx.Success {
 		result.Status = audit.ActivityStatusFailed
 	}
+
+	// add audit
 	_ = component.GetAuditClient().R().
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 }

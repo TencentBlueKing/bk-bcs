@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package basic 包提供了一些基础的工具函数
 package basic_test
 
 import (

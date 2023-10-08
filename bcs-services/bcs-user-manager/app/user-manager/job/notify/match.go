@@ -25,33 +25,33 @@ var month = 30 * day
 
 // match ensure the notified condition is matched, and return the matched level.
 // the remaining is the time left to expire token, all the time unit is second.
-func match(remain, expiration time.Duration) (matched bool, phase models.NotifyPhase) {
-	phase = models.NonePhase
-	matched = false
+func match(remain, expiration time.Duration) (bool, models.NotifyPhase) {
+	phase := models.NonePhase
+	var matched bool
 	// match 7 days to 30 days
 	if remain > week && remain <= month {
 		if expiration >= month {
 			return true, models.MonthPhase
 		}
-		return
+		return matched, phase
 	}
 	// match 1 day to 7 days
 	if remain > day && remain <= week {
 		if expiration >= week {
 			return true, models.WeekPhase
 		}
-		return
+		return matched, phase
 	}
 	// match 0 to 1 day
 	if remain > overdue && remain <= day {
 		if expiration >= day {
 			return true, models.DayPhase
 		}
-		return
+		return matched, phase
 	}
 	// match overdue
 	if remain <= overdue {
 		return true, models.OverduePhase
 	}
-	return
+	return matched, phase
 }

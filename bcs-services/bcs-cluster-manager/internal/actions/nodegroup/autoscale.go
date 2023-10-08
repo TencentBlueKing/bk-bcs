@@ -117,7 +117,7 @@ func (ua *EnableNodeGroupAutoScaleAction) handleNodeGroupVirtualNodes() error {
 			err = ua.model.DeleteClusterNode(ua.ctx, ua.cluster.ClusterID, nodes[i].NodeID)
 			if err != nil {
 				blog.Errorf("EnableNodeGroupAutoScaleAction[%s:%s] DeleteClusterNode[%s] failed: %v",
-					ua.cluster.ClusterID, ua.req.NodeGroupID, nodes[i].GetNodeID())
+					ua.cluster.ClusterID, ua.req.NodeGroupID, nodes[i].GetNodeID(), err)
 			}
 		}
 	}
@@ -126,7 +126,7 @@ func (ua *EnableNodeGroupAutoScaleAction) handleNodeGroupVirtualNodes() error {
 		err = actions.UpdateNodeGroupDesiredSize(ua.model, ua.req.NodeGroupID, virtualNodeNum, true)
 		if err != nil {
 			blog.Errorf("EnableNodeGroupAutoScaleAction[%s:%s] UpdateNodeGroupDesiredSize[%v] failed: %v",
-				ua.cluster.ClusterID, ua.req.NodeGroupID, virtualNodeNum)
+				ua.cluster.ClusterID, ua.req.NodeGroupID, virtualNodeNum, err)
 		}
 	}
 

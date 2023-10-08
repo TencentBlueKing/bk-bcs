@@ -90,7 +90,7 @@ func TestGetBizHostDetailedData(t *testing.T) {
 	t.Log(hostInfo)
 }
 
-func TestIpSelectorClient_GetBizModuleTopoData(t *testing.T) {
+func TestGetBizModuleTopoData2(t *testing.T) {
 	cli := NewIpSelector(cmdb, gseCli)
 
 	topo, err := cli.GetBizModuleTopoData(2)
@@ -101,14 +101,14 @@ func TestIpSelectorClient_GetBizModuleTopoData(t *testing.T) {
 	t.Log(topo)
 }
 
-func TestIpSelectorClient_GetCustomSettingModuleList(t *testing.T) {
+func TestGetCustomSettingModuleList(t *testing.T) {
 	cli := NewIpSelector(cmdb, gseCli)
 
 	setting := cli.GetCustomSettingModuleList([]string{IpSelectorHostList.String()})
 	t.Log(setting)
 }
 
-func TestGetBizTopoHostDataTopoNodeFilter(t *testing.T) {
+func TestGetBizTopoHostFilter(t *testing.T) {
 	cli := NewIpSelector(cmdb, gseCli)
 
 	var b = 1
@@ -134,7 +134,7 @@ func TestGetBizTopoHostDataTopoNodeFilter(t *testing.T) {
 	t.Log(len(ips), ips)
 }
 
-func TestGetBizTopoHostDataCheckNodesFilter(t *testing.T) {
+func TestGetCheckNodesFilter(t *testing.T) {
 	cli := NewIpSelector(cmdb, gseCli)
 
 	filter := &HostFilterCheckNodes{

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package feature 包提供了一些特性门控相关的工具函数
 package feature
 
 import (

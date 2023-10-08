@@ -125,6 +125,7 @@ func (t *Task) GetAllTask() map[string]interface{} {
 }
 
 // BuildCreateClusterTask build create cluster task
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) ( // nolint
 	*proto.Task, error) {
 	// create cluster currently only has three steps:
@@ -542,6 +543,7 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 }
 
 // BuildAddNodesToClusterTask build addNodes task
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node, // nolint
 	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	// addNodesToCluster has three steps:
@@ -689,6 +691,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 }
 
 // BuildRemoveNodesFromClusterTask build removeNodes task
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node, // nolint
 	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	// removeNodesFromCluster has two steps:
@@ -868,6 +871,7 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 
 // BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
 // including remove nodes from NodeGroup, clean data in nodes
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, // nolint
 	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
 
@@ -1103,6 +1107,7 @@ func getTransModuleInfo(asOption *proto.ClusterAutoScalingOption, group *proto.N
 }
 
 // BuildUpdateDesiredNodesTask build update desired nodes task
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, // nolint
 	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
 	// validate request params
@@ -1417,6 +1422,7 @@ func (t *Task) BuildSwitchAsOptionStatusTask(scalingOption *proto.ClusterAutoSca
 }
 
 // BuildAddExternalNodeToCluster add external to cluster
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node, // nolint
 	opt *cloudprovider.AddExternalNodesOption) (*proto.Task, error) {
 	// AddExternalNodeToCluster has three steps:

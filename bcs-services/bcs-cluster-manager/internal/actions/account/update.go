@@ -142,7 +142,7 @@ func (ma *MigrateAction) migrateCloudAccount() error {
 		for i := range ma.accountIDs {
 			err := ma.migrateSingleAccountByID(ma.req.CloudID, ma.accountIDs[i])
 			if err != nil {
-				blog.Errorf("migrateCloudAccount[%s:%s] failed: %v", ma.req.CloudID, ma.accountIDs[i])
+				blog.Errorf("migrateCloudAccount[%s:%s] failed: %v", ma.req.CloudID, ma.accountIDs[i], err)
 			}
 		}
 
@@ -164,7 +164,7 @@ func (ma *MigrateAction) migrateCloudAccount() error {
 		for i := range cloudAccounts {
 			err = ma.migrateSingleAccountByID(ma.req.CloudID, cloudAccounts[i].AccountID)
 			if err != nil {
-				blog.Errorf("migrateCloudAccount[%s:%s] failed: %v", ma.req.CloudID, cloudAccounts[i].AccountID)
+				blog.Errorf("migrateCloudAccount[%s:%s] failed: %v", ma.req.CloudID, cloudAccounts[i].AccountID, err)
 			}
 		}
 	}

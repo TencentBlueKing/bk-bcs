@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package httpclient xxx
+// Package httpclient 包提供了一些基础的工具函数
 package httpclient
 
 import (

@@ -176,7 +176,7 @@ func ResolveInOut(c *CmdParse) string {
 	readyParseIn := make([]*ansi.S, 0)
 	readyParseMap := make(map[*ansi.S]*ansi.S)
 	for _, v := range c.InputSlice {
-		//TODO:输入输出循序不一致,导致nil存在
+		// DOTO:输入输出循序不一致,导致nil存在
 		if c.CmdResult[v] != nil {
 			// in vim
 			if v.Code == "\r" && c.CmdResult[v].Code != "\r\n" {

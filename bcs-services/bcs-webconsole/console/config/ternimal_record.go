@@ -24,6 +24,7 @@ type AuditConf struct {
 }
 
 func (t *AuditConf) defaultPath() string {
+	// NOCC:gas/error(设计如此)
 	pwd, _ := os.Getwd()
 	return filepath.Join(pwd, "data")
 }

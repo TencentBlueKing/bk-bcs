@@ -12,6 +12,7 @@
 
 // +k8s:openapi-gen=true
 
+// Package generalpodautoscaler xxx
 package generalpodautoscaler
 
 import (

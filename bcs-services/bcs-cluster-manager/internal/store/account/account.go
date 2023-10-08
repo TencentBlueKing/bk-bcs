@@ -165,7 +165,7 @@ func (m *ModelCloudAccount) GetCloudAccount(ctx context.Context,
 	if cloudAccount.Account != nil && !skipDecrypt {
 		if err := util.DecryptCloudAccountData(nil, cloudAccount.Account); err != nil {
 			// Compatible with older versions and only output error
-			blog.Errorf("decrypt cloudAccount % credential info failed: %v", accountID, err)
+			blog.Errorf("decrypt cloudAccount %s credential info failed: %v", accountID, err)
 			return nil, err
 		}
 	}

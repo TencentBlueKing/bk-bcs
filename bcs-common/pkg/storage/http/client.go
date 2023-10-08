@@ -134,8 +134,8 @@ func (s *Client) Create(_ context.Context, key string, obj meta.Object, _ int) (
 			obj.GetName(), err)
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	if response.StatusCode != syshttp.StatusOK {
 		blog.V(3).Infof("http storage %s with %s failed, http response code: %d, status: %s", method, fullPath,
@@ -200,8 +200,8 @@ func (s *Client) Delete(_ context.Context, key string) (obj meta.Object, err err
 		blog.V(3).Infof("http storage client DELETE request to %s failed, %s", fullPath, err)
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	if response.StatusCode < syshttp.StatusOK || response.StatusCode >= syshttp.StatusMultipleChoices {
 		blog.V(3).Infof("http storage client delete to %s failed, code: %d, message: %s", fullPath, response.StatusCode,
@@ -307,8 +307,8 @@ func (s *Client) Get(_ context.Context, key, _ string, ignoreNotFound bool) (met
 		blog.V(3).Infof("http storage Do %s request failed, %s", fullPath, err)
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	if response.StatusCode < syshttp.StatusOK || response.StatusCode >= syshttp.StatusMultipleChoices {
 		blog.V(3).Infof("http storage get %s failed, code: %d, message: %s", fullPath, response.StatusCode, response.Status)
@@ -369,8 +369,8 @@ func (s *Client) List(_ context.Context, key string, selector storage.Selector) 
 		blog.V(3).Infof("http storage get %s failed, %s", fullPath, err)
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	rawData, err := io.ReadAll(response.Body)
 	if err != nil {

@@ -498,7 +498,9 @@ func generateInstanceAdvanceInfoFromNg(cluster *proto.Cluster, group *proto.Node
 }
 
 // nodeGroupID for nodePool label
-func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.NodeTemplate, labels map[string]string, // nolint
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
+// nolint
+func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.NodeTemplate, labels map[string]string,
 	nodeGroupID string, vars template.RenderVars, options *NodeAdvancedOptions) *api.InstanceAdvancedSettings {
 	var (
 		mountTarget     = nodeTemplate.GetMountTarget()
@@ -515,6 +517,7 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		MountTarget:     mountTarget,
 		DockerGraphPath: dockerGraphPath,
 		// 默认值是0 表示参与调度, 节点池的由用户决定是否立即加入调度; 若需要各个流程执行完毕可调度,则需设置为 不可调度
+		// NOCC:CCN_threshold(工具误报:)
 		Unschedulable: func() *int64 {
 			if options != nil && options.NodeScheduler {
 				return qcommon.Int64Ptr(0)

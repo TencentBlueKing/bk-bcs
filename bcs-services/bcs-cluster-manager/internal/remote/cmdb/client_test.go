@@ -187,7 +187,7 @@ func TestClient_FindHostTopoRelation(t *testing.T) {
 	t.Log(data)
 }
 
-func TestClient_FetchAllHostTopoRelationsByBizID(t *testing.T) {
+func TestFetchAllHostTopoRelByBizID(t *testing.T) {
 	cli := getNewClient()
 
 	data, err := cli.FetchAllHostTopoRelationsByBizID(100148)

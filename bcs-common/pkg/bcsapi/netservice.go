@@ -233,8 +233,8 @@ func (nc *NetserviceCli) RegisterPool(pool *types.NetPool) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("register pool Got err response: %s", response.Status)
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	resDatas, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -284,8 +284,8 @@ func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("udpate pool Got err response: %s", response.Status)
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	resDatas, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -325,8 +325,8 @@ func (nc *NetserviceCli) GetPool(cluster, net string) ([]*types.NetPool, error) 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("get pool http response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	datas, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -370,8 +370,8 @@ func (nc *NetserviceCli) ListAllPool() ([]*types.NetPool, error) {
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("list all pool http response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	datas, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -417,8 +417,8 @@ func (nc *NetserviceCli) ListAllPoolWithCluster(cluster string) ([]*types.NetPoo
 		return nil, fmt.Errorf("list all pool with cluster http response %s from %s",
 			response.Status, nc.netSvrs[seq[0]])
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	datas, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -462,8 +462,8 @@ func (nc *NetserviceCli) DeletePool(cluster, net string) error {
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("delete pool http response %s from %s", response.Status, nc.netSvrs[seq[0]])
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	datas, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -504,8 +504,8 @@ func (nc *NetserviceCli) RegisterHost(host *types.HostInfo) error {
 	if err != nil {
 		return fmt.Errorf("send request failed, %s", err)
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("register host got response %s from %s", response.Status, nc.netSvrs[seq[0]])
@@ -557,8 +557,8 @@ func (nc *NetserviceCli) DeleteHost(host string, ips []string) error {
 	if err != nil {
 		return fmt.Errorf("delete host send request to net service failed, %s", err)
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("delete host got response %s from %s", response.Status, nc.netSvrs[seq[0]])
@@ -789,8 +789,8 @@ func (nc *NetserviceCli) UpdateIPInstance(inst *types.IPInst) error {
 	if err != nil {
 		return fmt.Errorf("send request failed, %s", err)
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("update instance got response %s from %s", response.Status, nc.netSvrs[seq[0]])
@@ -835,8 +835,8 @@ func (nc *NetserviceCli) TransferIPAttr(input *types.TranIPAttrInput) error {
 	if err != nil {
 		return fmt.Errorf("tranfer ip attr send request failed, %s", err)
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 	}(response.Body)
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("tranfer ip attr got response %s from %s", response.Status, nc.netSvrs[seq[0]])

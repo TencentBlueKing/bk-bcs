@@ -39,6 +39,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 	}
 }
 
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 func (ua *UpdateAction) updateNodeTemplate(destNodeTemplate *cmproto.NodeTemplate) error {
 	timeStr := time.Now().Format(time.RFC3339)
 	destNodeTemplate.UpdateTime = timeStr

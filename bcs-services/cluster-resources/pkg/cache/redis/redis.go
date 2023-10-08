@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package redis 包提供了一些基础的工具函数
 package redis
 
 import (

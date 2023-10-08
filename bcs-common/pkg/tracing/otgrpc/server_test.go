@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// NOCC:gofmt/notformat(误报)
 package grpc
 
 import (
@@ -23,7 +24,7 @@ import (
 	opentrace "github.com/opentracing/opentracing-go"
 	tracinglog "github.com/opentracing/opentracing-go/log"
 	"google.golang.org/grpc"
-	
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/jaeger"
 	pb "github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/otgrpc/hello"
