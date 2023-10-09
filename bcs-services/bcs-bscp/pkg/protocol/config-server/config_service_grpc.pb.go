@@ -134,6 +134,10 @@ const (
 	Config_UpdateCredential_FullMethodName                  = "/pbcs.Config/UpdateCredential"
 	Config_ListCredentialScopes_FullMethodName              = "/pbcs.Config/ListCredentialScopes"
 	Config_UpdateCredentialScope_FullMethodName             = "/pbcs.Config/UpdateCredentialScope"
+	Config_CreateKv_FullMethodName                          = "/pbcs.Config/CreateKv"
+	Config_UpdateKv_FullMethodName                          = "/pbcs.Config/UpdateKv"
+	Config_ListKv_FullMethodName                            = "/pbcs.Config/ListKv"
+	Config_DeleteKv_FullMethodName                          = "/pbcs.Config/DeleteKv"
 )
 
 // ConfigClient is the client API for Config service.
@@ -198,11 +202,11 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -260,6 +264,10 @@ type ConfigClient interface {
 	UpdateCredential(ctx context.Context, in *UpdateCredentialsReq, opts ...grpc.CallOption) (*UpdateCredentialsResp, error)
 	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
 	UpdateCredentialScope(ctx context.Context, in *UpdateCredentialScopeReq, opts ...grpc.CallOption) (*UpdateCredentialScopeResp, error)
+	CreateKv(ctx context.Context, in *CreateKvReq, opts ...grpc.CallOption) (*CreateKvResp, error)
+	UpdateKv(ctx context.Context, in *UpdateKvReq, opts ...grpc.CallOption) (*UpdateKvResp, error)
+	ListKv(ctx context.Context, in *ListKvReq, opts ...grpc.CallOption) (*ListKvResp, error)
+	DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*DeleteKvResp, error)
 }
 
 type configClient struct {
@@ -1260,6 +1268,42 @@ func (c *configClient) UpdateCredentialScope(ctx context.Context, in *UpdateCred
 	return out, nil
 }
 
+func (c *configClient) CreateKv(ctx context.Context, in *CreateKvReq, opts ...grpc.CallOption) (*CreateKvResp, error) {
+	out := new(CreateKvResp)
+	err := c.cc.Invoke(ctx, Config_CreateKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateKv(ctx context.Context, in *UpdateKvReq, opts ...grpc.CallOption) (*UpdateKvResp, error) {
+	out := new(UpdateKvResp)
+	err := c.cc.Invoke(ctx, Config_UpdateKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListKv(ctx context.Context, in *ListKvReq, opts ...grpc.CallOption) (*ListKvResp, error) {
+	out := new(ListKvResp)
+	err := c.cc.Invoke(ctx, Config_ListKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*DeleteKvResp, error) {
+	out := new(DeleteKvResp)
+	err := c.cc.Invoke(ctx, Config_DeleteKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -1322,11 +1366,11 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1384,6 +1428,10 @@ type ConfigServer interface {
 	UpdateCredential(context.Context, *UpdateCredentialsReq) (*UpdateCredentialsResp, error)
 	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
 	UpdateCredentialScope(context.Context, *UpdateCredentialScopeReq) (*UpdateCredentialScopeResp, error)
+	CreateKv(context.Context, *CreateKvReq) (*CreateKvResp, error)
+	UpdateKv(context.Context, *UpdateKvReq) (*UpdateKvResp, error)
+	ListKv(context.Context, *ListKvReq) (*ListKvResp, error)
+	DeleteKv(context.Context, *DeleteKvReq) (*DeleteKvResp, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -1719,6 +1767,18 @@ func (UnimplementedConfigServer) ListCredentialScopes(context.Context, *ListCred
 }
 func (UnimplementedConfigServer) UpdateCredentialScope(context.Context, *UpdateCredentialScopeReq) (*UpdateCredentialScopeResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredentialScope not implemented")
+}
+func (UnimplementedConfigServer) CreateKv(context.Context, *CreateKvReq) (*CreateKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateKv not implemented")
+}
+func (UnimplementedConfigServer) UpdateKv(context.Context, *UpdateKvReq) (*UpdateKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateKv not implemented")
+}
+func (UnimplementedConfigServer) ListKv(context.Context, *ListKvReq) (*ListKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListKv not implemented")
+}
+func (UnimplementedConfigServer) DeleteKv(context.Context, *DeleteKvReq) (*DeleteKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteKv not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -3712,6 +3772,78 @@ func _Config_UpdateCredentialScope_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CreateKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CreateKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateKv(ctx, req.(*CreateKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateKv(ctx, req.(*UpdateKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListKv(ctx, req.(*ListKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeleteKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteKv(ctx, req.(*DeleteKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -4158,6 +4290,22 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateCredentialScope",
 			Handler:    _Config_UpdateCredentialScope_Handler,
+		},
+		{
+			MethodName: "CreateKv",
+			Handler:    _Config_CreateKv_Handler,
+		},
+		{
+			MethodName: "UpdateKv",
+			Handler:    _Config_UpdateKv_Handler,
+		},
+		{
+			MethodName: "ListKv",
+			Handler:    _Config_ListKv_Handler,
+		},
+		{
+			MethodName: "DeleteKv",
+			Handler:    _Config_DeleteKv_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

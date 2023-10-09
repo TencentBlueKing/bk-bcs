@@ -145,6 +145,10 @@ const (
 	Data_UpdateCredential_FullMethodName                  = "/pbds.Data/UpdateCredential"
 	Data_ListCredentialScopes_FullMethodName              = "/pbds.Data/ListCredentialScopes"
 	Data_UpdateCredentialScopes_FullMethodName            = "/pbds.Data/UpdateCredentialScopes"
+	Data_CreateKv_FullMethodName                          = "/pbds.Data/CreateKv"
+	Data_UpdateKv_FullMethodName                          = "/pbds.Data/UpdateKv"
+	Data_ListKv_FullMethodName                            = "/pbds.Data/ListKv"
+	Data_DeleteKv_FullMethodName                          = "/pbds.Data/DeleteKv"
 	Data_ListInstances_FullMethodName                     = "/pbds.Data/ListInstances"
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
@@ -293,6 +297,10 @@ type DataClient interface {
 	// credential scope related interface
 	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
 	UpdateCredentialScopes(ctx context.Context, in *UpdateCredentialScopesReq, opts ...grpc.CallOption) (*UpdateCredentialScopesResp, error)
+	CreateKv(ctx context.Context, in *CreateKvReq, opts ...grpc.CallOption) (*CreateResp, error)
+	UpdateKv(ctx context.Context, in *UpdateKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	ListKv(ctx context.Context, in *ListKvReq, opts ...grpc.CallOption) (*ListKvResp, error)
+	DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
 	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
@@ -1361,6 +1369,42 @@ func (c *dataClient) UpdateCredentialScopes(ctx context.Context, in *UpdateCrede
 	return out, nil
 }
 
+func (c *dataClient) CreateKv(ctx context.Context, in *CreateKvReq, opts ...grpc.CallOption) (*CreateResp, error) {
+	out := new(CreateResp)
+	err := c.cc.Invoke(ctx, Data_CreateKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UpdateKv(ctx context.Context, in *UpdateKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UpdateKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListKv(ctx context.Context, in *ListKvReq, opts ...grpc.CallOption) (*ListKvResp, error) {
+	out := new(ListKvResp)
+	err := c.cc.Invoke(ctx, Data_ListKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) DeleteKv(ctx context.Context, in *DeleteKvReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_DeleteKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error) {
 	out := new(ListInstancesResp)
 	err := c.cc.Invoke(ctx, Data_ListInstances_FullMethodName, in, out, opts...)
@@ -1531,6 +1575,10 @@ type DataServer interface {
 	// credential scope related interface
 	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
 	UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error)
+	CreateKv(context.Context, *CreateKvReq) (*CreateResp, error)
+	UpdateKv(context.Context, *UpdateKvReq) (*base.EmptyResp, error)
+	ListKv(context.Context, *ListKvReq) (*ListKvResp, error)
+	DeleteKv(context.Context, *DeleteKvReq) (*base.EmptyResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
 	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
@@ -1892,6 +1940,18 @@ func (UnimplementedDataServer) ListCredentialScopes(context.Context, *ListCreden
 }
 func (UnimplementedDataServer) UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredentialScopes not implemented")
+}
+func (UnimplementedDataServer) CreateKv(context.Context, *CreateKvReq) (*CreateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateKv not implemented")
+}
+func (UnimplementedDataServer) UpdateKv(context.Context, *UpdateKvReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateKv not implemented")
+}
+func (UnimplementedDataServer) ListKv(context.Context, *ListKvReq) (*ListKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListKv not implemented")
+}
+func (UnimplementedDataServer) DeleteKv(context.Context, *DeleteKvReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteKv not implemented")
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -4020,6 +4080,78 @@ func _Data_UpdateCredentialScopes_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CreateKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CreateKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CreateKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CreateKv(ctx, req.(*CreateKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UpdateKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateKv(ctx, req.(*UpdateKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListKv(ctx, req.(*ListKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_DeleteKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).DeleteKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_DeleteKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).DeleteKv(ctx, req.(*DeleteKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListInstancesReq)
 	if err := dec(in); err != nil {
@@ -4548,6 +4680,22 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateCredentialScopes",
 			Handler:    _Data_UpdateCredentialScopes_Handler,
+		},
+		{
+			MethodName: "CreateKv",
+			Handler:    _Data_CreateKv_Handler,
+		},
+		{
+			MethodName: "UpdateKv",
+			Handler:    _Data_UpdateKv_Handler,
+		},
+		{
+			MethodName: "ListKv",
+			Handler:    _Data_ListKv_Handler,
+		},
+		{
+			MethodName: "DeleteKv",
+			Handler:    _Data_DeleteKv_Handler,
 		},
 		{
 			MethodName: "ListInstances",
