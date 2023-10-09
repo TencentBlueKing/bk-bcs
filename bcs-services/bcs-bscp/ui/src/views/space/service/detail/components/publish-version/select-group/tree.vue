@@ -44,7 +44,6 @@
         :data="treeData"
         :expand-all="false"
         :show-node-type-icon="false"
-        empty-text="搜索结果为空"
         :search="searchOption"
       >
         <template #node="node">
@@ -72,6 +71,9 @@
             </div>
           </div>
         </template>
+        <template #empty>
+          <tableEmpty :is-search-empty="isSearchEmpty" @clear="handleClearSearch"></tableEmpty>
+        </template>
       </bk-tree>
     </div>
   </div>
@@ -82,6 +84,7 @@ import { Search, AngleDown, AngleUp } from 'bkui-vue/lib/icon';
 import { IGroupToPublish } from '../../../../../../../../types/group';
 import { IConfigVersion } from '../../../../../../../../types/config';
 import RuleTag from '../../../../../groups/components/rule-tag.vue';
+import tableEmpty from '../../../../../../../components/table/table-empty.vue';
 
 interface ITreeParentNodeData {
   parent: boolean;
@@ -108,11 +111,11 @@ const categorizingData = (groupList: IGroupToPublish[]) => {
       // id为0表示默认分组，在分组节点树中不可选
       return;
     }
-    const checked = props.value.findIndex(item => item.id === group.id) > -1;
+    const checked = props.value.findIndex((item) => item.id === group.id) > -1;
     const disabled = props.disabled.includes(group.id);
     group.rules.forEach((rule) => {
       const nodeId = `${rule.key}_${group.id}`; // 用在节点树上做唯一标识
-      const parentNode = treeNodeData.find(item => item.node_id === rule.key);
+      const parentNode = treeNodeData.find((item) => item.node_id === rule.key);
       const nodeData = { ...group, node_id: nodeId, checked, disabled };
       if (parentNode) {
         parentNode.count += 1;
@@ -141,14 +144,15 @@ const categorizingData = (groupList: IGroupToPublish[]) => {
 
 // 父级分类节点是否选中
 const isParentNodeChecked = (node: ITreeParentNodeData) => {
-  const res =  node.children.length > 0 && node.children.every(group => group.checked);
+  const res = node.children.length > 0 && node.children.every((group) => group.checked);
   return res;
 };
 
 // 父级分类节点是否半选
-const isParentNodeIndeterminate = (node: ITreeParentNodeData) => node.children.length > 0 &&
-  !node.children.every(group => group.checked) &&
-  node.children.some(group => group.checked);
+const isParentNodeIndeterminate = (node: ITreeParentNodeData) =>
+  node.children.length > 0 &&
+  !node.children.every((group) => group.checked) &&
+  node.children.some((group) => group.checked);
 
 const props = defineProps<{
   groupListLoading: boolean;
@@ -166,6 +170,7 @@ const allGroupNode = ref<IGroupNodeData[]>([]); // 树中所有的分组叶子�
 const versionSelectorOpen = ref(false);
 const searchStr = ref('');
 const treeRef = ref();
+const isSearchEmpty = ref(false);
 
 const searchOption = computed(() => ({
   value: searchStr.value,
@@ -178,14 +183,14 @@ watch(
   (val) => {
     categorizingData(val);
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 // 选中小组变更
 watch(
   () => props.value,
   (val) => {
-    const ids = val.map(item => item.id);
+    const ids = val.map((item) => item.id);
     treeData.value.forEach((parentNode) => {
       parentNode.children.forEach((node) => {
         node.checked = ids.includes(node.id);
@@ -193,15 +198,15 @@ watch(
       parentNode.checked = isParentNodeChecked(parentNode);
       parentNode.indeterminate = isParentNodeIndeterminate(parentNode);
     });
-  },
+  }
 );
 
 // 全选
 const handleSelectAll = () => {
   const groupList: IGroupToPublish[] = [];
   props.groupList.forEach((group) => {
-    const hasGroupChecked = props.value.findIndex(item => item.id === group.id) > -1; // 分组在编辑前是否选中
-    const hasAdded = groupList.findIndex(item => item.id === group.id) > -1; // 分组已添加
+    const hasGroupChecked = props.value.findIndex((item) => item.id === group.id) > -1; // 分组在编辑前是否选中
+    const hasAdded = groupList.findIndex((item) => item.id === group.id) > -1; // 分组已添加
     const isDisabled = props.disabled.includes(group.id);
     if (group.id !== 0 && !hasAdded && (!isDisabled || hasGroupChecked)) {
       groupList.push(group);
@@ -213,7 +218,7 @@ const handleSelectAll = () => {
 // 全不选
 const handleClearAll = () => {
   const hasCheckedGroups = props.groupList.filter((group) => {
-    const res = props.disabled.includes(group.id) && props.value.findIndex(item => item.id === group.id) > -1;
+    const res = props.disabled.includes(group.id) && props.value.findIndex((item) => item.id === group.id) > -1;
     return res;
   });
   emits('change', hasCheckedGroups);
@@ -229,7 +234,7 @@ const handleSelectVersion = (versions: number[]) => {
   } else {
     // 选择部分
     versions.forEach((id) => {
-      const version = props.versionList.find(item => item.id === id);
+      const version = props.versionList.find((item) => item.id === id);
       if (version) {
         selectedVersion.push(version);
       }
@@ -237,8 +242,8 @@ const handleSelectVersion = (versions: number[]) => {
   }
   selectedVersion.forEach((version) => {
     version.status.released_groups.forEach((releaseItem) => {
-      if (!list.find(item => releaseItem.id === item.id)) {
-        const group = allGroupNode.value.find(groupItem => groupItem.id === releaseItem.id);
+      if (!list.find((item) => releaseItem.id === item.id)) {
+        const group = allGroupNode.value.find((groupItem) => groupItem.id === releaseItem.id);
         if (group) {
           list.push(group);
         }
@@ -249,28 +254,31 @@ const handleSelectVersion = (versions: number[]) => {
 };
 
 // 节点搜索
-const handleSearch = (val: string, itemValue: string) => itemValue.toLowerCase().includes(val.toLowerCase());
+const handleSearch = (val: string, itemValue: string) => {
+  isSearchEmpty.value = true;
+  return itemValue.toLowerCase().includes(val.toLowerCase());
+};
 
 // 选中/取消选中节点
 const handleNodeCheckChange = (node: IGroupNodeData | ITreeParentNodeData, checked: boolean) => {
   const list = props.value.slice();
   if (Object.prototype.hasOwnProperty.call(node, 'parent')) {
     // 分类节点
-    const treeParentNode = treeData.value.find(parentNode => parentNode.node_id === node.node_id);
+    const treeParentNode = treeData.value.find((parentNode) => parentNode.node_id === node.node_id);
     if (treeParentNode) {
       if (checked) {
         treeParentNode.children
-          .filter(group => !group.disabled)
+          .filter((group) => !group.disabled)
           .forEach((group) => {
-            if (!list.find(item => item.id === group.id)) {
+            if (!list.find((item) => item.id === group.id)) {
               list.push(group);
             }
           });
       } else {
         treeParentNode.children
-          .filter(group => !group.disabled)
+          .filter((group) => !group.disabled)
           .forEach((group) => {
-            const index = list.findIndex(item => item.id === group.id);
+            const index = list.findIndex((item) => item.id === group.id);
             if (index > -1) {
               list.splice(index, 1);
             }
@@ -279,17 +287,23 @@ const handleNodeCheckChange = (node: IGroupNodeData | ITreeParentNodeData, check
     }
   } else {
     // 叶子节点
-    const group = props.groupList.find(group => group.id === (node as IGroupNodeData).id);
+    const group = props.groupList.find((group) => group.id === (node as IGroupNodeData).id);
     if (group) {
       if (checked) {
         list.push(group);
       } else {
-        const index = list.findIndex(item => item.id === group.id);
+        const index = list.findIndex((item) => item.id === group.id);
         list.splice(index, 1);
       }
     }
   }
   emits('change', list);
+};
+
+// 清空筛选条件
+const handleClearSearch = () => {
+  searchStr.value = '';
+  isSearchEmpty.value = false;
 };
 </script>
 <style lang="scss" scoped>
