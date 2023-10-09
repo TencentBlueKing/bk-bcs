@@ -31,9 +31,11 @@
               :script-id="scriptId"
               :list="versionList"
               :pagination="pagination"
+              :is-search-empty="isSearchEmpty"
               @view="handleViewVersionClick"
               @page-change="refreshList"
               @page-limit-change="handlePageLimitChange"
+              @clear-str="clearStr"
             >
               <template #operations="{ data }">
                 <div v-if="data.hook_revision" class="action-btns">
@@ -148,6 +150,7 @@ const unPublishVersion = ref<IScriptVersion | null>(null); // 未发布版本
 const createBtnDisabled = ref(false);
 const showVersionDiff = ref(false);
 const crtVersion = ref<IScriptVersion | null>(null);
+const isSearchEmpty = ref(false);
 const versionEditData = ref({
   panelOpen: false,
   editable: true,
@@ -174,7 +177,7 @@ onMounted(async () => {
     unPublishVersion.value = await getScriptVersionDetail(
       spaceId.value,
       scriptId.value,
-      scriptDetail.value.not_release_id,
+      scriptDetail.value.not_release_id
     );
   }
   initLoading.value = false;
@@ -315,7 +318,7 @@ const handleSelectVersion = (version: IScriptVersion) => {
 // 新建、编辑脚本后回调
 const handleVersionEditSubmitted = async (
   data: { id: number; name: string; memo: string; content: string },
-  type: string,
+  type: string
 ) => {
   versionEditData.value.form = { ...data };
   refreshList();
@@ -326,7 +329,7 @@ const handleVersionEditSubmitted = async (
     unPublishVersion.value = await getScriptVersionDetail(
       spaceId.value,
       scriptId.value,
-      scriptDetail.value.not_release_id,
+      scriptDetail.value.not_release_id
     );
     createBtnDisabled.value = false;
   } else {
@@ -350,6 +353,7 @@ const handleSearchInputChange = (val: string) => {
 };
 
 const refreshList = () => {
+  searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
   pagination.value.current = 1;
   getVersionList();
 };
@@ -361,6 +365,11 @@ const handlePageLimitChange = (val: number) => {
 
 const handleClose = () => {
   router.push({ name: 'script-list', params: { spaceId: spaceId.value } });
+};
+
+const clearStr = () => {
+  searchStr.value = '';
+  refreshList();
 };
 </script>
 <style lang="scss" scoped>
