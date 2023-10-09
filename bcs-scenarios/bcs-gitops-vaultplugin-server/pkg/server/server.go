@@ -65,6 +65,7 @@ func (s *Server) Init() error {
 		Service: s.op.Argo.Service,
 		User:    s.op.Argo.User,
 		Pass:    s.op.Argo.Pass,
+		Cache:   true,
 	})
 	if err := s.argoStore.Init(); err != nil {
 		return errors.Wrapf(err, "init argo store failed")

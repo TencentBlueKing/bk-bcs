@@ -144,7 +144,7 @@ func (s *Server) initStorage() error {
 		Service: s.option.GitOps.Service,
 		User:    s.option.GitOps.User,
 		Pass:    s.option.GitOps.Pass,
-		Cache:   false,
+		Cache:   true,
 	}
 	s.storage = store.NewStore(opt)
 	if err := s.storage.Init(); err != nil {
