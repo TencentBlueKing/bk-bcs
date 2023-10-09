@@ -106,6 +106,9 @@
                 </div>
               </template>
             </bk-table-column>
+            <template #empty>
+              <tableEmpty :is-search-empty="isSearchEmpty" @clear="clearSearchInfo"/>
+            </template>
           </bk-table>
           <bk-pagination
             v-if="!isCategorizedView"
@@ -119,12 +122,6 @@
             @limit-change="handlePageLimitChange"
           />
         </template>
-        <bk-exception v-if="groupList.length === 0 && !listLoading" class="group-data-empty" type="empty" scene="part">
-          当前暂无数据
-          <div class="create-group-text-btn">
-            <bk-button text theme="primary" @click="openCreateGroupDialog">立即创建</bk-button>
-          </div>
-        </bk-exception>
       </bk-loading>
     </div>
     <create-group v-model:show="isCreateGroupShow" @reload="loadGroupList"></create-group>
@@ -149,6 +146,7 @@ import CreateGroup from './create-group.vue';
 import EditGroup from './edit-group.vue';
 import RuleTag from './components/rule-tag.vue';
 import ServicesToPublished from './services-to-published.vue';
+import tableEmpty from '../../../components/table/table-empty.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -178,6 +176,7 @@ const editingGroup = ref<IGroupItem>({
   },
 });
 const isPublishedSliderShow = ref(false);
+const isSearchEmpty = ref(false);
 
 watch(
   () => spaceId.value,
@@ -291,6 +290,7 @@ const handleChangeView = () => {
 const handleSearch = () => {
   if (!searchInfo.value) {
     searchGroupList.value = groupList.value;
+    isSearchEmpty.value = false;
   } else {
     const lowercaseSearchStr = searchInfo.value.toLowerCase().replace(/\s/g, '');
     // 分组名称过滤出来的数据
@@ -309,6 +309,7 @@ const handleSearch = () => {
       return ruleList.includes(lowercaseSearchStr);
     });
     searchGroupList.value = [...groupNameList, ...groupRuleList];
+    isSearchEmpty.value = true;
   }
   refreshTableData();
 };
@@ -364,6 +365,12 @@ const handleTooltip = (flag: boolean, info: string) => {
     };
   }
   return { disabled: true };
+};
+
+// 清空搜索框
+const clearSearchInfo = () => {
+  searchInfo.value = '';
+  handleSearch();
 };
 </script>
 <style lang="scss" scoped>

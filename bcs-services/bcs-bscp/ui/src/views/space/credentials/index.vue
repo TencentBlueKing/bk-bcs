@@ -117,6 +117,9 @@
               </template>
             </template>
           </bk-table-column>
+          <template #empty>
+            <table-empty :is-search-empty="isSearchEmpty" @clear="clearSearchStr"/>
+          </template>
         </bk-table>
       </bk-loading>
     </div>
@@ -143,6 +146,7 @@ import { getCredentialList, createCredential, updateCredential, deleteCredential
 import { copyToClipBoard, datetimeFormat } from '../../../utils/index';
 import { ICredentialItem } from '../../../../types/credential';
 import AssociateConfigItems from './associate-config-items/index.vue';
+import tableEmpty from '../../../components/table/table-empty.vue';
 
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 
@@ -157,6 +161,7 @@ const editingMemoId = ref(0); // 记录当前正在编辑说明的密钥id
 const memoInputRef = ref();
 const isAssociateSliderShow = ref(false);
 const currentCredential = ref(0);
+const isSearchEmpty = ref(false);
 const pagination = ref({
   current: 1,
   count: 0,
@@ -234,6 +239,7 @@ const refreshListWithLoading = async (current = 1) => {
   if (createPending.value) {
     return;
   }
+  searchStr.value ? isSearchEmpty.value = true : isSearchEmpty.value = false;
   listLoading.value = true;
   pagination.value.current = current;
   await loadCredentialList();
@@ -403,6 +409,12 @@ const deleteTooltip = (isShowTooltip: boolean) => {
 // 更改每页条数
 const handlePageLimitChange = (val: number) => {
   pagination.value.limit = val;
+  refreshListWithLoading();
+};
+
+// 清空搜索框
+const clearSearchStr = () => {
+  searchStr.value = '';
   refreshListWithLoading();
 };
 

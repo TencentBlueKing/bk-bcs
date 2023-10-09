@@ -14,7 +14,7 @@
         </tr>
       </thead>
       <tbody>
-        <div v-for="group in tableGroupsData" :key="group.id">
+        <template v-for="group in tableGroupsData" :key="group.id" v-if="allConfigCount !== 0">
           <tr class="config-groups-table-tr group-title-row" v-if="group.configs.length > 0">
             <td colspan="8" class="config-groups-table-td">
               <div class="configs-group">
@@ -150,15 +150,15 @@
                     </tbody>
                   </table>
                 </div>
-                <TableEmpty
-                  v-if="allConfigCount === 0"
-                  :is-search-empty="isSearchEmpty"
-                  @clear="emits('clearStr')"
-                ></TableEmpty>
               </td>
             </tr>
           </template>
-        </div>
+        </template>
+        <tr v-else>
+          <td colspan="8">
+            <TableEmpty :is-search-empty="isSearchEmpty" @clear="emits('clearStr')" style="width: 100%" />
+          </td>
+        </tr>
       </tbody>
     </table>
   </bk-loading>
@@ -285,7 +285,7 @@ watch(
   async () => {
     await getBindingId();
     getAllConfigList();
-  },
+  }
 );
 
 watch(
@@ -293,7 +293,7 @@ watch(
   () => {
     props.searchStr ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
     getAllConfigList();
-  },
+  }
 );
 
 watch([() => configsCount.value, () => templatesCount.value], () => {
@@ -371,7 +371,7 @@ const getBoundTemplateList = async () => {
     templateGroupList.value = res.details;
     templatesCount.value = res.details.reduce(
       (acc: number, crt: IBoundTemplateGroup) => acc + crt.template_revisions.length,
-      0,
+      0
     );
   } catch (e) {
     console.error(e);
@@ -389,22 +389,23 @@ const transListToTableData = () => {
 };
 
 // 将非模板配置项数据转为表格数据
-const transConfigsToTableItemData = (list: IConfigItem[]) => list.map((item: IConfigItem) => {
-  const { id, spec, revision, file_state } = item;
-  const { name, path } = spec;
-  const { creator, reviser, update_at } = revision;
-  return {
-    id,
-    name,
-    versionId: 0,
-    versionName: '--',
-    path,
-    creator,
-    reviser,
-    update_at: datetimeFormat(update_at),
-    file_state,
-  };
-});
+const transConfigsToTableItemData = (list: IConfigItem[]) =>
+  list.map((item: IConfigItem) => {
+    const { id, spec, revision, file_state } = item;
+    const { name, path } = spec;
+    const { creator, reviser, update_at } = revision;
+    return {
+      id,
+      name,
+      versionId: 0,
+      versionName: '--',
+      path,
+      creator,
+      reviser,
+      update_at: datetimeFormat(update_at),
+      file_state,
+    };
+  });
 
 // 将模板按套餐分组，并将模板数据格式转为表格数据
 const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
