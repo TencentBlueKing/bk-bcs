@@ -30,13 +30,42 @@
       </div>
     </div>
   </section>
+  <bk-dialog
+      ext-cls="delete-service-dialog"
+      v-model:is-show="isShowDeleteDialog"
+      :theme="'primary'"
+      :dialog-type="'operation'"
+      header-align="center"
+      footer-align="center"
+    >
+      <div class="dialog-content">
+        <div class="dialog-title">确认删除此服务？</div>
+        <div>删除的服务<span>无法找回</span>,请谨慎操作！</div>
+        <div class="dialog-input">
+          <div class="dialog-info">
+            请输入服务名<span>{{ service.spec.name }}</span> 已确认删除
+          </div>
+          <bk-input v-model="dialogInputStr"/>
+        </div>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <bk-button
+            theme="danger"
+            style="margin-right: 20px;"
+            :disabled="dialogInputStr !== service.spec.name"
+            @click="handleDeleteService">删除</bk-button>
+          <bk-button @click="isShowDeleteDialog = false">取消</bk-button>
+        </div>
+      </template>
+    </bk-dialog>
 </template>
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Del } from 'bkui-vue/lib/icon';
-import { InfoBox } from 'bkui-vue/lib';
 import useGlobalStore from '../../../../../store/global';
 import { IAppItem } from '../../../../../../types/app';
 import { IPermissionQueryResourceItem } from '../../../../../../types/index';
@@ -48,6 +77,8 @@ const { showApplyPermDialog, permissionQuery } = storeToRefs(useGlobalStore());
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const isShowDeleteDialog = ref(false);
+const dialogInputStr = ref('');
 
 const props = defineProps<{
   service: IAppItem;
@@ -57,16 +88,7 @@ const emits = defineEmits(['edit', 'update']);
 
 const handleDeleteItem = () => {
   if (props.service.permissions.delete) {
-    InfoBox({
-      title: `确认是否删除服务 ${props.service.spec.name}?`,
-      headerAlign: 'center' as const,
-      footerAlign: 'center' as const,
-      extCls: 'center-top-infobox',
-      onConfirm: async () => {
-        await deleteApp(props.service.id as number, props.service.biz_id);
-        emits('update');
-      },
-    } as any);
+    isShowDeleteDialog.value = true;
   } else {
     const query = {
       resources: [
@@ -110,6 +132,12 @@ const openPermApplyDialog = (query: { resources: IPermissionQueryResourceItem[] 
 
 const goToDetail = () => {
   router.push({ name: 'service-config', params: { spaceId: route.params.spaceId, appId: props.service.id } });
+};
+
+const handleDeleteService = async () => {
+  await deleteApp(props.service.id as number, props.service.biz_id);
+  emits('update');
+  isShowDeleteDialog.value = false;
 };
 </script>
 <style lang="scss" scoped>
@@ -238,6 +266,42 @@ const goToDetail = () => {
     }
   }
 }
+.dialog-content {
+  text-align: center;
+  margin: 10px 0 20px;
+  span {
+    color: red;
+  }
+  .dialog-title {
+    margin: 10px;
+    font-size: 24px;
+    color: #121213;
+  }
+  .dialog-input {
+    margin-top: 10px;
+    text-align: start;
+    padding: 20px;
+    background-color: #F4F7FA;
+    .dialog-info {
+      margin-bottom: 5px;
+      span {
+        color: #121213;
+        font-weight: 600;
+      }
+    }
+  }
+}
+.dialog-footer {
+  .bk-button {
+    width: 100px;
+  }
+}
 </style>
 
-<style lang="scss"></style>
+<style lang="scss">
+.delete-service-dialog {
+  .bk-modal-header {
+    display: none;
+  }
+}
+</style>

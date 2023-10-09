@@ -2,7 +2,7 @@
   <bk-sideslider title="被引用" :width="640" :quick-close="true" :is-show="isShow" @closed="close">
     <div class="top-area">
       <div class="config-name">{{ props.config.name }}</div>
-      <SearchInput v-model="searchStr" placeholder="服务名称/配置项版本" :width="320" @search="handleSearch" />
+      <SearchInput v-model="searchStr" placeholder="服务名称" :width="320" @search="handleSearch" />
     </div>
     <div class="apps-table">
       <bk-table
@@ -75,7 +75,7 @@ const getList = async () => {
     limit: pagination.value.limit,
   };
   if (searchStr.value) {
-    params.search_fields = 'app_name,template_revision_name';
+    params.search_fields = 'app_name';
     params.search_value = searchStr.value;
   }
   const res = await getUnNamedVersionAppsBoundByTemplateVersion(
