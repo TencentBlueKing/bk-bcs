@@ -145,7 +145,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 6.创建已生成版本服务的模版变量
 7.将当前使用变量更新到未命名版本的服务模版变量
 */
-//nolint: funlen
+//nolint:funlen
 func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.TemplateVariableSpec,
 	tx *gen.QueryTx, releaseID uint32, tmplRevisions []*table.TemplateRevision, cis []*pbci.ConfigItem) error {
 	// validate input variables and get the map

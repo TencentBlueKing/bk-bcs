@@ -31,7 +31,7 @@ type Service struct {
 	dao     dao.Set
 	op      client.Interface
 	gateway *gateway
-	//nolint: unused
+	//nolint:unused
 	state serviced.State
 }
 
