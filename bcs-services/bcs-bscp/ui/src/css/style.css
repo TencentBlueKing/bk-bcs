@@ -70,7 +70,3 @@ a {
 .center-top-infobox {
   top: 35% !important;
 }
-
-.bk-textarea.resizable {
-  resize: none !important;
-}

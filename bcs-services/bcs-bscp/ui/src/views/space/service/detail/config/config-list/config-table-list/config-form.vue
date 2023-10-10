@@ -17,7 +17,7 @@
       />
     </bk-form-item>
     <bk-form-item label="配置项描述" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change"></bk-input>
+      <bk-input v-model="localVal.memo" type="textarea" :disabled="!editable" @change="change" :resize="false"/>
     </bk-form-item>
     <bk-form-item label="配置项格式">
       <bk-radio-group v-model="localVal.file_type" :required="true" @change="change">

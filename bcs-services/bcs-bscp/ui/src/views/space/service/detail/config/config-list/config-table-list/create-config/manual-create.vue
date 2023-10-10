@@ -49,13 +49,14 @@ watch(() => props.show, (val) => {
   console.log(val);
   if (val) {
     configForm.value = getConfigEditParams();
-    isFormChange.value = true;
+    isFormChange.value = false;
   }
 });
 
 const handleFormChange = (data: IConfigEditParams, configContent: IFileConfigContentSummary|string) => {
   configForm.value = data;
   content.value = configContent;
+  isFormChange.value = true;
 };
 
 const handleBeforeClose = async () => {
