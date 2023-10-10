@@ -37,13 +37,14 @@
       :dialog-type="'operation'"
       header-align="center"
       footer-align="center"
+      @value-change="dialogInputStr = ''"
     >
       <div class="dialog-content">
         <div class="dialog-title">确认删除此服务？</div>
         <div>删除的服务<span>无法找回</span>,请谨慎操作！</div>
         <div class="dialog-input">
           <div class="dialog-info">
-            请输入服务名<span>{{ service.spec.name }}</span> 已确认删除
+            请输入服务名<span>{{ service.spec.name }}</span>已确认删除
           </div>
           <bk-input v-model="dialogInputStr"/>
         </div>

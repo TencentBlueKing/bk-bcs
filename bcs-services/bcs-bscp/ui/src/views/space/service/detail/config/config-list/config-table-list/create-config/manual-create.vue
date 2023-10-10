@@ -49,6 +49,7 @@ watch(() => props.show, (val) => {
   console.log(val);
   if (val) {
     configForm.value = getConfigEditParams();
+    isFormChange.value = true;
   }
 });
 
