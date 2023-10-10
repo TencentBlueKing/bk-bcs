@@ -1,92 +1,3 @@
-<script setup lang="ts">
-  import { ref, watch } from 'vue'
-  import { ICredentialRule, IRuleEditing, IRuleUpdateParams } from '../../../../../types/credential'
-
-  const props = defineProps<{
-    rules: ICredentialRule[]
-  }>()
-
-  const emits = defineEmits(['change'])
-
-  const RULE_TYPE_MAP: { [key: string]: string } = {
-    'new': '新增',
-    'del': '删除',
-    'modify': '修改'
-  }
-
-  const localRules = ref<IRuleEditing[]>([])
-
-  const transformRulesToEditing = (rules: ICredentialRule[]) => {
-    const rulesEditing: IRuleEditing[] = []
-    rules.forEach(item => {
-      const { id, spec } = item
-      rulesEditing.push({ id, type: '', content: spec.credential_scope, original: spec.credential_scope })
-    })
-    return rulesEditing
-  }
-
-  watch(() => props.rules, (val) => {
-    if (val.length === 0) {
-      localRules.value = [{ id: 0, type: 'new', content: '', original: '' }]
-    } else {
-      localRules.value = transformRulesToEditing(val)
-    }
-  }, { immediate: true })
-
-  const handleAddRule = (index: number) => {
-    localRules.value.splice(index + 1, 0, { id: 0, type: 'new', content: '', original: '' })
-  }
-
-  const handleDeleteRule = (index: number) => {
-    const rule = localRules.value[index]
-    if (rule.id) {
-      rule.type = 'del'
-    } else {
-      localRules.value.splice(index, 1)
-    }
-    updateRuleParams()
-  }
-
-  const handleRevoke = (index: number) => {
-    const rule = localRules.value[index]
-    const { content, original } = rule
-    rule.type = content === original ? '' : 'modify'
-    updateRuleParams()
-  }
-
-  const handleRuleContentChange = (index: number) => {
-    const rule = localRules.value[index]
-    if (rule.id) {
-      rule.type = rule.content === rule.original ? '' : 'modify'
-    }
-    updateRuleParams()
-  }
-
-  const updateRuleParams = () => {
-    const params: IRuleUpdateParams = {
-      add_scope: [],
-      del_id: [],
-      alter_scope: []
-    }
-    localRules.value.forEach(item => {
-      const { id, type, content } = item
-      switch (type) {
-        case 'new':
-          if (content) {
-            params.add_scope.push(content)
-          }
-          break;
-        case 'del':
-          params.del_id.push(id)
-          break;
-        case 'modify': 
-          params.alter_scope.push({ id, scope: content })
-          break;
-      }
-    })
-    emits('change', params)
-  }
-</script>
 <template>
   <div class="rule-edit">
     <p class="title">配置关联规则</p>
@@ -128,6 +39,95 @@
     <!-- <div class="preview-btn">预览匹配结果</div> -->
   </div>
 </template>
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import { ICredentialRule, IRuleEditing, IRuleUpdateParams } from '../../../../../types/credential';
+
+const props = defineProps<{
+    rules: ICredentialRule[]
+  }>();
+
+const emits = defineEmits(['change']);
+
+const RULE_TYPE_MAP: { [key: string]: string } = {
+  new: '新增',
+  del: '删除',
+  modify: '修改',
+};
+
+const localRules = ref<IRuleEditing[]>([]);
+
+const transformRulesToEditing = (rules: ICredentialRule[]) => {
+  const rulesEditing: IRuleEditing[] = [];
+  rules.forEach((item) => {
+    const { id, spec } = item;
+    rulesEditing.push({ id, type: '', content: spec.credential_scope, original: spec.credential_scope });
+  });
+  return rulesEditing;
+};
+
+watch(() => props.rules, (val) => {
+  if (val.length === 0) {
+    localRules.value = [{ id: 0, type: 'new', content: '', original: '' }];
+  } else {
+    localRules.value = transformRulesToEditing(val);
+  }
+}, { immediate: true });
+
+const handleAddRule = (index: number) => {
+  localRules.value.splice(index + 1, 0, { id: 0, type: 'new', content: '', original: '' });
+};
+
+const handleDeleteRule = (index: number) => {
+  const rule = localRules.value[index];
+  if (rule.id) {
+    rule.type = 'del';
+  } else {
+    localRules.value.splice(index, 1);
+  }
+  updateRuleParams();
+};
+
+const handleRevoke = (index: number) => {
+  const rule = localRules.value[index];
+  const { content, original } = rule;
+  rule.type = content === original ? '' : 'modify';
+  updateRuleParams();
+};
+
+const handleRuleContentChange = (index: number) => {
+  const rule = localRules.value[index];
+  if (rule.id) {
+    rule.type = rule.content === rule.original ? '' : 'modify';
+  }
+  updateRuleParams();
+};
+
+const updateRuleParams = () => {
+  const params: IRuleUpdateParams = {
+    add_scope: [],
+    del_id: [],
+    alter_scope: [],
+  };
+  localRules.value.forEach((item) => {
+    const { id, type, content } = item;
+    switch (type) {
+      case 'new':
+        if (content) {
+          params.add_scope.push(content);
+        }
+        break;
+      case 'del':
+        params.del_id.push(id);
+        break;
+      case 'modify':
+        params.alter_scope.push({ id, scope: content });
+        break;
+    }
+  });
+  emits('change', params);
+};
+</script>
 <style lang="scss" scoped>
   .title {
     position: relative;

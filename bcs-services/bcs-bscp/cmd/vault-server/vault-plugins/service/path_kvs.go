@@ -81,7 +81,8 @@ func (b *backend) ValidateName(name string) error {
 	return nil
 }
 
-func (b *backend) pathKvExistenceCheck(ctx context.Context, req *logical.Request, d *framework.FieldData) (bool, error) {
+func (b *backend) pathKvExistenceCheck(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (bool, error) {
 
 	appID := d.Get("app_id").(string)
 	name := d.Get("name").(string)
@@ -94,7 +95,9 @@ func (b *backend) pathKvExistenceCheck(ctx context.Context, req *logical.Request
 	return entry != nil, nil
 }
 
-func (b *backend) pathKvList(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathKvList(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (*logical.Response, error) {
+
 	appID := d.Get("app_id").(string)
 	if err := b.ValidateAppID(appID); err != nil {
 		return nil, err
@@ -120,7 +123,8 @@ func (b *backend) pathKvList(ctx context.Context, req *logical.Request, d *frame
 	}, nil
 }
 
-func (b *backend) pathKvWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathKvWrite(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
 	if err := b.ValidateAppID(appID); err != nil {
@@ -146,7 +150,8 @@ func (b *backend) pathKvWrite(ctx context.Context, req *logical.Request, d *fram
 
 }
 
-func (b *backend) pathKvRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathKvRead(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
 	if err := b.ValidateAppID(appID); err != nil {
@@ -217,7 +222,8 @@ func (b *backend) SaveKvStorage(ctx context.Context, s logical.Storage, kv *kvSt
 
 }
 
-func (b *backend) pathKvDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathKvDelete(ctx context.Context, req *logical.Request,
+	d *framework.FieldData) (*logical.Response, error) {
 
 	appID := d.Get("app_id").(string)
 	if err := b.ValidateAppID(appID); err != nil {

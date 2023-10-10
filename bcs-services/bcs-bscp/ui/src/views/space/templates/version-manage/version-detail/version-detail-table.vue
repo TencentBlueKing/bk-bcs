@@ -1,62 +1,3 @@
-<script lang="ts" setup>
-  import { ref, computed, watch } from 'vue'
-  import { AngleDoubleRightLine } from 'bkui-vue/lib/icon'
-  import dayjs from 'dayjs';
-  import { IPagination } from '../../../../../../types/index';
-  import { ITemplateVersionItem } from '../../../../../../types/template'
-  import List from './list.vue'
-  import VersionEditor from './version-editor.vue'
-
-  const props = defineProps<{
-    spaceId: string;
-    templateSpaceId: number;
-    templateId: number;
-    list: ITemplateVersionItem[];
-    pagination: IPagination;
-    type: string;
-    versionId: number;
-  }>()
-
-  const emits = defineEmits(['close', 'select', 'created'])
-
-  const versionName = ref('')
-  const templateName = ref('')
-
-  const versionEditingData = computed(() => {
-    let data = {
-      revision_name: '',
-      revision_memo: '',
-      file_type: '',
-      file_mode: "unix",
-      user: '',
-      user_group: '',
-      privilege: '',
-      sign: '',
-      byte_size: 0
-    }
-    if (props.versionId) {
-      const version = props.list.find(item => item.id === props.versionId)
-      if (version) {
-        const { revision_memo, file_type, file_mode, content_spec, permission } = version.spec
-        const { signature: sign, byte_size } = content_spec
-        const { user, user_group, privilege } = permission
-        data = { revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`, revision_memo, file_type, file_mode, user, user_group, privilege, sign, byte_size }
-      }
-    }
-    return data
-  })
-
-  watch(() => props.versionId, val => {
-    if (val) {
-      const version = props.list.find(item => item.id === val)
-      if (version) {
-        versionName.value = version.spec.revision_name
-        templateName.value = version.spec.name
-      }
-    }
-  }, { immediate: true })
-
-</script>
 <template>
   <div class="version-detail-table">
     <div class="version-list-container">
@@ -76,9 +17,9 @@
     </div>
     <div class="version-detail-content">
       <VersionEditor
-        :spaceId="props.spaceId"
+        :space-id="props.spaceId"
         :template-space-id="props.templateSpaceId"
-        :templateId="props.templateId"
+        :template-id="props.templateId"
         :version-id="props.versionId"
         :version-name="versionName"
         :template-name="templateName"
@@ -89,6 +30,65 @@
     </div>
   </div>
 </template>
+<script lang="ts" setup>
+import { ref, computed, watch } from 'vue';
+import { AngleDoubleRightLine } from 'bkui-vue/lib/icon';
+import dayjs from 'dayjs';
+import { IPagination } from '../../../../../../types/index';
+import { ITemplateVersionItem } from '../../../../../../types/template';
+import List from './list.vue';
+import VersionEditor from './version-editor.vue';
+
+const props = defineProps<{
+    spaceId: string;
+    templateSpaceId: number;
+    templateId: number;
+    list: ITemplateVersionItem[];
+    pagination: IPagination;
+    type: string;
+    versionId: number;
+  }>();
+
+const emits = defineEmits(['close', 'select', 'created']);
+
+const versionName = ref('');
+const templateName = ref('');
+
+const versionEditingData = computed(() => {
+  let data = {
+    revision_name: '',
+    revision_memo: '',
+    file_type: '',
+    file_mode: 'unix',
+    user: '',
+    user_group: '',
+    privilege: '',
+    sign: '',
+    byte_size: 0,
+  };
+  if (props.versionId) {
+    const version = props.list.find(item => item.id === props.versionId);
+    if (version) {
+      const { revision_memo, file_type, file_mode, content_spec, permission } = version.spec;
+      const { signature: sign, byte_size } = content_spec;
+      const { user, user_group, privilege } = permission;
+      data = { revision_name: `v${dayjs().format('YYYYMMDDHHmmss')}`, revision_memo, file_type, file_mode, user, user_group, privilege, sign, byte_size };
+    }
+  }
+  return data;
+});
+
+watch(() => props.versionId, (val) => {
+  if (val) {
+    const version = props.list.find(item => item.id === val);
+    if (version) {
+      versionName.value = version.spec.revision_name;
+      templateName.value = version.spec.name;
+    }
+  }
+}, { immediate: true });
+
+</script>
 <style lang="scss" scoped>
   .version-detail-table {
     display: flex;

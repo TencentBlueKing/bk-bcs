@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package service encapsulates Vault secret plugins and provides key-value storage and PKI storage functionality.
 package service
 
 import (
@@ -20,16 +21,14 @@ import (
 )
 
 const backendHelp = `
-bcs-bscp-vault-plugin provides secure kv storage, key storage; Support multiple encryption algorithms for secure credential acquisition
+bcs-bscp-vault-plugin provides secure kv storage, key storage;
+Support multiple encryption algorithms for secure credential acquisition
 `
 
 // Factory factory for backend
 func Factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend, error) {
-	b, err := Backend(ctx, conf)
-	if err != nil {
-		return nil, err
-	}
-	if e := b.Setup(ctx, conf); e != nil {
+	b := Backend(ctx, conf)
+	if err := b.Setup(ctx, conf); err != nil {
 		return nil, err
 	}
 	return b, nil
@@ -41,7 +40,7 @@ type backend struct {
 }
 
 // Backend new backend
-func Backend(ctx context.Context, conf *logical.BackendConfig) (*backend, error) {
+func Backend(ctx context.Context, conf *logical.BackendConfig) *backend {
 
 	b := &backend{}
 	b.Backend = &framework.Backend{
@@ -55,5 +54,5 @@ func Backend(ctx context.Context, conf *logical.BackendConfig) (*backend, error)
 		BackendType: logical.TypeLogical,
 	}
 
-	return b, nil
+	return b
 }

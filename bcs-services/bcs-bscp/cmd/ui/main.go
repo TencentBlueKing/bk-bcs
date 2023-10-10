@@ -10,8 +10,9 @@
  * limitations under the License.
  */
 
+// main ...
 package main
 
 func main() {
-	rootCmd.Execute()
+	_ = rootCmd.Execute()
 }

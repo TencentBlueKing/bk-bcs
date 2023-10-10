@@ -1,50 +1,3 @@
-<script setup lang="ts">
-  import { ref } from 'vue'
-  import { FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon'
-  import BkMessage from 'bkui-vue/lib/message';
-  import ReadFileContent from '../../service/detail/config/components/read-file-content.vue';
-  import CodeEditor from '../../../../components/code-editor/index.vue'
-
-  const props = withDefaults(defineProps<{
-    modelValue: string;
-    language?: string;
-    editable?: boolean;
-    uploadIcon?: boolean;
-  }>(), {
-    editable: true,
-    uploadIcon: true
-  })
-
-  const emits = defineEmits(['update:modelValue'])
-
-  const isOpenFullScreen = ref(false)
-
-  const handleFileReadComplete = (content: string) => {
-    emits('update:modelValue', content)
-  }
-    // 打开全屏
-  const handleOpenFullScreen = () => {
-    isOpenFullScreen.value = true
-    window.addEventListener('keydown', handleEscClose, { once: true })
-    BkMessage({
-      theme: 'primary',
-      message: '按 Esc 即可退出全屏模式'
-    })
-  }
-
-  const handleCloseFullScreen = () => {
-    isOpenFullScreen.value = false
-    window.removeEventListener('keydown', handleEscClose)
-  }
-
-  // Esc按键事件处理
-  const handleEscClose = (event: KeyboardEvent) => {
-    if (event.code === 'Escape') {
-      isOpenFullScreen.value = false
-    }
-  }
-
-</script>
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
     <div :class="['script-editor', { fullscreen: isOpenFullScreen }]">
@@ -94,6 +47,53 @@
     </div>
   </Teleport>
 </template>
+<script setup lang="ts">
+import { ref } from 'vue';
+import { FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
+import BkMessage from 'bkui-vue/lib/message';
+import ReadFileContent from '../../service/detail/config/components/read-file-content.vue';
+import CodeEditor from '../../../../components/code-editor/index.vue';
+
+const props = withDefaults(defineProps<{
+    modelValue: string;
+    language?: string;
+    editable?: boolean;
+    uploadIcon?: boolean;
+  }>(), {
+  editable: true,
+  uploadIcon: true,
+});
+
+const emits = defineEmits(['update:modelValue']);
+
+const isOpenFullScreen = ref(false);
+
+const handleFileReadComplete = (content: string) => {
+  emits('update:modelValue', content);
+};
+// 打开全屏
+const handleOpenFullScreen = () => {
+  isOpenFullScreen.value = true;
+  window.addEventListener('keydown', handleEscClose, { once: true });
+  BkMessage({
+    theme: 'primary',
+    message: '按 Esc 即可退出全屏模式',
+  });
+};
+
+const handleCloseFullScreen = () => {
+  isOpenFullScreen.value = false;
+  window.removeEventListener('keydown', handleEscClose);
+};
+
+// Esc按键事件处理
+const handleEscClose = (event: KeyboardEvent) => {
+  if (event.code === 'Escape') {
+    isOpenFullScreen.value = false;
+  }
+};
+
+</script>
 <style lang="scss" scoped>
   .script-editor {
     &.fullscreen {

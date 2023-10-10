@@ -1,73 +1,3 @@
-<script lang="ts" setup>
-  import { ref, computed, watch } from 'vue'
-  import { storeToRefs } from 'pinia'
-  import { Message } from 'bkui-vue';
-  import { useGlobalStore } from '../../../../../../../store/global'
-  import { useTemplateStore } from '../../../../../../../store/template'
-  import { ITemplateConfigItem, IPackagesCitedByApps } from '../../../../../../../../types/template';
-  import { moveOutTemplateFromPackage, getUnNamedVersionAppsBoundByPackages } from '../../../../../../../api/template'
-  import LinkToApp from '../../../components/link-to-app.vue'
-
-  const { spaceId } = storeToRefs(useGlobalStore())
-  const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore())
-
-  const props = defineProps<{
-    show: boolean;
-    currentPkg: number;
-    value: ITemplateConfigItem[];
-  }>()
-
-  const emits = defineEmits(['update:show', 'movedOut'])
-
-  const loading = ref(false)
-  const citedList = ref<IPackagesCitedByApps[]>([])
-  const pending = ref(false)
-
-  const maxTableHeight = computed(() => {
-    const windowHeight = window.innerHeight
-    return windowHeight * 0.6 - 200
-  })
-
-  watch(() => props.show, () => {
-    getCitedData()
-  })
-
-  const getCitedData = async() => {
-    loading.value = true
-    const params = {
-      start: 0,
-      all: true
-    }
-    const res = await getUnNamedVersionAppsBoundByPackages(spaceId.value, currentTemplateSpace.value, [props.currentPkg], params)
-    citedList.value = res.details
-    loading.value = false
-  }
-
-  const handleConfirm = async() => {
-    const pkg = packageList.value.find(item => item.id === currentPkg.value)
-    if (!pkg) return
-
-    try {
-      pending.value = true
-      const ids = props.value.map(item => item.id)
-      await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, ids, [<number>currentPkg.value])
-      emits('movedOut')
-      close()
-      Message({
-        theme: 'success',
-        message: '配置项移出套餐成功'
-      })
-    } catch (e) {
-      console.log(e)
-    } finally {
-      pending.value = false
-    }
-  }
-
-  const close = () => {
-    emits('update:show', false)
-  }
-</script>
 <template>
   <bk-dialog
     ext-cls="move-out-configs-dialog"
@@ -79,10 +9,13 @@
     :quick-close="false"
     :is-loading="pending"
     @confirm="handleConfirm"
-    @closed="close">
-    <div class="selected-mark">已选 <span class="num">{{ props.value.length }}</span> 个配置项</div>
+    @closed="close"
+  >
+    <div class="selected-mark">
+      已选 <span class="num">{{ props.value.length }}</span> 个配置项
+    </div>
     <p class="tips">以下服务配置的未命名版本中引用此套餐的内容也将更新</p>
-    <bk-loading style="min-height: 100px;" :loading="loading">
+    <bk-loading style="min-height: 100px" :loading="loading">
       <bk-table :data="citedList" :max-height="maxTableHeight">
         <bk-table-column label="所在模板套餐" prop="template_set_name"></bk-table-column>
         <bk-table-column label="使用此套餐的服务">
@@ -97,33 +30,111 @@
     </bk-loading>
   </bk-dialog>
 </template>
+<script lang="ts" setup>
+import { ref, computed, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { Message } from 'bkui-vue';
+import useGlobalStore from '../../../../../../../store/global';
+import useTemplateStore from '../../../../../../../store/template';
+import { ITemplateConfigItem, IPackagesCitedByApps } from '../../../../../../../../types/template';
+import { moveOutTemplateFromPackage, getUnNamedVersionAppsBoundByPackages } from '../../../../../../../api/template';
+import LinkToApp from '../../../components/link-to-app.vue';
+
+const { spaceId } = storeToRefs(useGlobalStore());
+const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
+
+const props = defineProps<{
+  show: boolean;
+  currentPkg: number;
+  value: ITemplateConfigItem[];
+}>();
+
+const emits = defineEmits(['update:show', 'movedOut']);
+
+const loading = ref(false);
+const citedList = ref<IPackagesCitedByApps[]>([]);
+const pending = ref(false);
+
+const maxTableHeight = computed(() => {
+  const windowHeight = window.innerHeight;
+  return windowHeight * 0.6 - 200;
+});
+
+watch(
+  () => props.show,
+  () => {
+    getCitedData();
+  },
+);
+
+const getCitedData = async () => {
+  loading.value = true;
+  const params = {
+    start: 0,
+    all: true,
+  };
+  const res = await getUnNamedVersionAppsBoundByPackages(
+    spaceId.value,
+    currentTemplateSpace.value,
+    [props.currentPkg],
+    params,
+  );
+  citedList.value = res.details;
+  loading.value = false;
+};
+
+const handleConfirm = async () => {
+  const pkg = packageList.value.find(item => item.id === currentPkg.value);
+  if (!pkg) return;
+
+  try {
+    pending.value = true;
+    const ids = props.value.map(item => item.id);
+    await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, ids, [currentPkg.value as number]);
+    emits('movedOut');
+    close();
+    Message({
+      theme: 'success',
+      message: '配置项移出套餐成功',
+    });
+  } catch (e) {
+    console.log(e);
+  } finally {
+    pending.value = false;
+  }
+};
+
+const close = () => {
+  emits('update:show', false);
+};
+</script>
 <style lang="scss" scoped>
-  .selected-mark {
-    display: inline-block;
-    margin-bottom: 16px;
-    padding: 0 12px;
-    height: 32px;
-    line-height: 32px;
-    border-radius: 16px;
-    font-size: 12px;
-    color: #63656e;
-    background: #f0f1f5;
-    .num {
-      color: #3a84ff;
-    }
+.selected-mark {
+  display: inline-block;
+  margin-bottom: 16px;
+  padding: 0 12px;
+  height: 32px;
+  line-height: 32px;
+  border-radius: 16px;
+  font-size: 12px;
+  color: #63656e;
+  background: #f0f1f5;
+  .num {
+    color: #3a84ff;
   }
-  .app-info {
-    display: flex;
-    align-items: center;
+}
+.app-info {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  .name-text {
     overflow: hidden;
-    .name-text {
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .link-icon {
-      flex-shrink: 0;
-      margin-left: 10px;
-    }
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
+  .link-icon {
+    flex-shrink: 0;
+    margin-left: 10px;
+  }
+}
 </style>

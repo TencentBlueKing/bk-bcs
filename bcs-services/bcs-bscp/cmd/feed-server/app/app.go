@@ -65,7 +65,7 @@ func Run(opt *options.Option) error {
 
 type feedServer struct {
 	serve   *grpc.Server
-	gwServe *http.Server
+	gwServe *http.Server //nolint:unused
 	sd      serviced.ServiceDiscover
 	service *service.Service
 }
@@ -168,16 +168,13 @@ func (fs *feedServer) listenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			logs.Infof("start shutdown feed server grpc server gracefully...")
+		<-notifier.Signal
+		logs.Infof("start shutdown feed server grpc server gracefully...")
 
-			fs.serve.GracefulStop()
-			notifier.Done()
+		fs.serve.GracefulStop()
+		notifier.Done()
 
-			logs.Infof("shutdown feed server grpc server success...")
-
-		}
+		logs.Infof("shutdown feed server grpc server success...")
 	}()
 
 	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))

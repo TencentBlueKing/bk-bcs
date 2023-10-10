@@ -1,67 +1,3 @@
-<script lang="ts" setup>
-  import { computed, ref, watch } from 'vue'
-  import { storeToRefs } from 'pinia'
-  import { Message } from 'bkui-vue/lib'
-  import { useGlobalStore } from '../../../../../store/global'
-  import { getUnNamedVersionAppsBoundByPackage, deleteTemplatePackage } from '../../../../../api/template'
-  import { ITemplatePackageItem, IPackageCitedByApps } from '../../../../../../types/template'
-  import LinkToApp from '../components/link-to-app.vue'
-
-  const { spaceId } = storeToRefs(useGlobalStore())
-
-  const props = defineProps<{
-    show: boolean,
-    templateSpaceId: number;
-    pkg: ITemplatePackageItem
-  }>()
-
-  const emits = defineEmits(['update:show', 'deleted'])
-
-  const isShow = ref(false)
-  const appsLoading = ref(false)
-  const appList = ref<IPackageCitedByApps[]>([])
-  const pending = ref(false)
-
-  const maxTableHeight = computed(() => {
-    const windowHeight = window.innerHeight
-    return windowHeight * 0.6 - 200
-  })
-
-  watch(() => props.show, val => {
-    isShow.value = val
-    if (val) {
-      getRelatedApps()
-    }
-  })
-
-  const getRelatedApps = async () => {
-    appsLoading.value = true
-    const params = {
-      start: 0,
-      all: true
-    }
-    const res = await getUnNamedVersionAppsBoundByPackage(spaceId.value, props.templateSpaceId, props.pkg.id, params)
-    appList.value = res.details
-    appsLoading.value = false
-  }
-
-  const handleDelete = async () => {
-    pending.value = true
-    await deleteTemplatePackage(spaceId.value, props.templateSpaceId, props.pkg.id)
-    close()
-    emits('deleted', props.pkg.id)
-    Message({
-      theme: 'success',
-      message: '删除成功'
-    })
-    pending.value = false
-  }
-
-  const close = () => {
-    emits('update:show', false)
-  }
-
-</script>
 <template>
   <bk-dialog
     :title="`确认删除【${props.pkg ? props.pkg.spec.name : ''}】?`"
@@ -72,10 +8,11 @@
     :is-show="isShow"
     :esc-close="false"
     :quick-close="false"
-    @closed="close">
+    @closed="close"
+  >
     <p v-if="appList.length > 0" class="tips">以下服务的未命名版本中引用此套餐的内容也将删除</p>
     <div class="service-table">
-      <bk-loading style="min-height: 200px;" :loading="appsLoading">
+      <bk-loading style="min-height: 200px" :loading="appsLoading">
         <bk-table :data="appList" :max-height="maxTableHeight" empty-text="暂无未命名版本引用此套餐">
           <bk-table-column label="引用此套餐的服务">
             <template #default="{ row }">
@@ -89,39 +26,107 @@
       </bk-loading>
     </div>
     <div class="action-btns">
-      <bk-button theme="primary" class="delete-btn" :disabled="appsLoading" :loading="pending" @click="handleDelete">删除套餐</bk-button>
+      <bk-button theme="primary" class="delete-btn" :disabled="appsLoading" :loading="pending" @click="handleDelete"
+        >删除套餐</bk-button
+      >
       <bk-button @click="close">取消</bk-button>
     </div>
   </bk-dialog>
 </template>
+<script lang="ts" setup>
+import { computed, ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { Message } from 'bkui-vue/lib';
+import useGlobalStore from '../../../../../store/global';
+import { getUnNamedVersionAppsBoundByPackage, deleteTemplatePackage } from '../../../../../api/template';
+import { ITemplatePackageItem, IPackageCitedByApps } from '../../../../../../types/template';
+import LinkToApp from '../components/link-to-app.vue';
+
+const { spaceId } = storeToRefs(useGlobalStore());
+
+const props = defineProps<{
+  show: boolean;
+  templateSpaceId: number;
+  pkg: ITemplatePackageItem;
+}>();
+
+const emits = defineEmits(['update:show', 'deleted']);
+
+const isShow = ref(false);
+const appsLoading = ref(false);
+const appList = ref<IPackageCitedByApps[]>([]);
+const pending = ref(false);
+
+const maxTableHeight = computed(() => {
+  const windowHeight = window.innerHeight;
+  return windowHeight * 0.6 - 200;
+});
+
+watch(
+  () => props.show,
+  (val) => {
+    isShow.value = val;
+    if (val) {
+      getRelatedApps();
+    }
+  },
+);
+
+const getRelatedApps = async () => {
+  appsLoading.value = true;
+  const params = {
+    start: 0,
+    all: true,
+  };
+  const res = await getUnNamedVersionAppsBoundByPackage(spaceId.value, props.templateSpaceId, props.pkg.id, params);
+  appList.value = res.details;
+  appsLoading.value = false;
+};
+
+const handleDelete = async () => {
+  pending.value = true;
+  await deleteTemplatePackage(spaceId.value, props.templateSpaceId, props.pkg.id);
+  close();
+  emits('deleted', props.pkg.id);
+  Message({
+    theme: 'success',
+    message: '删除成功',
+  });
+  pending.value = false;
+};
+
+const close = () => {
+  emits('update:show', false);
+};
+</script>
 <style lang="postcss" scoped>
-  .tips {
-    margin: 0 0 16px;
-    font-size: 14px;
-    line-height: 22px;
-    color: #63656e;
-    text-align: center;
-  }
-  .app-info {
-    display: flex;
-    align-items: center;
+.tips {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 22px;
+  color: #63656e;
+  text-align: center;
+}
+.app-info {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  .name-text {
     overflow: hidden;
-    .name-text {
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .link-icon {
-      flex-shrink: 0;
-      margin-left: 10px;
-    }
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
-  .action-btns {
-    padding-top: 32px;
-    text-align: center;
-    /* border-top: 1px solid #dcdee5; */
-    .delete-btn {
-      margin-right: 8px;
-    }
+  .link-icon {
+    flex-shrink: 0;
+    margin-left: 10px;
   }
+}
+.action-btns {
+  padding-top: 32px;
+  text-align: center;
+  /* border-top: 1px solid #dcdee5; */
+  .delete-btn {
+    margin-right: 8px;
+  }
+}
 </style>

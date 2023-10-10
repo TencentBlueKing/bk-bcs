@@ -32,29 +32,38 @@ import (
 )
 
 // moduleType auth logic module type.
+// nolint: unused
 type moduleType string
 
 const (
-	authModule    moduleType = "auth" // auth module.
-	initialModule moduleType = "init" // initial bscp auth model in iam module.
-	iamModule     moduleType = "iam"  // iam callback module.
-	userModule    moduleType = "user"
-	spaceModule   moduleType = "space"
+	// auth module.
+	//nolint:unused
+	authModule moduleType = "auth"
+	// initial bscp auth model in iam module.
+	//nolint:unused
+	initialModule moduleType = "init"
+	// iam callback module.
+	//nolint:unused
+	iamModule moduleType = "iam"
+	//nolint:unused
+	userModule moduleType = "user"
+	//nolint:unused
+	spaceModule moduleType = "space"
 )
 
 // setFilter set mux request filter.
+// nolint: unused
 func (g *gateway) setFilter(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		var module string
 		// path format: /api/{api_version}/{service}/{module}/other
 		paths := strings.Split(r.URL.Path, "/")
-		if len(paths) > 4 {
-			module = paths[4]
-		} else {
+		if len(paths) <= 4 {
 			logs.Errorf("received url path length not conform to the regulations, path: %s", r.URL.Path)
 			fmt.Fprint(w, errf.New(http.StatusNotFound, "Not Found").Error())
 			return
 		}
+		module = paths[4]
 
 		switch moduleType(module) {
 		case iamModule:
@@ -112,6 +121,7 @@ func (g *gateway) Healthz(w http.ResponseWriter, r *http.Request) {
 }
 
 // iamRequestFilter setups all api filters here. All request would cross here, and we filter request base on URL.
+// nolint: unused
 func iamRequestFilter(sysCli *sys.Sys, w http.ResponseWriter, req *http.Request) error {
 	isAuthorized, err := checkRequestAuthorization(sysCli, req)
 	if err != nil {
@@ -144,6 +154,8 @@ func iamRequestFilter(sysCli *sys.Sys, w http.ResponseWriter, req *http.Request)
 }
 
 // getRid get request id from header. if rid is empty, generate a rid to return.
+//
+//lint:ignore U1000 getRid is unused
 func getRid(h http.Header) string {
 	if rid := h.Get(client.RequestIDHeader); len(rid) != 0 {
 		return rid
@@ -157,17 +169,20 @@ func getRid(h http.Header) string {
 }
 
 // authRequestFilter set auth request filter.
+// nolint: unused
 func authRequestFilter(w http.ResponseWriter, req *http.Request) error {
 	// Note: set auth request filter.
 
 	return nil
 }
 
+// nolint: unused
 var iamToken = struct {
 	token            string
 	tokenRefreshTime time.Time
 }{}
 
+// nolint: unused
 func checkRequestAuthorization(cli *sys.Sys, req *http.Request) (bool, error) {
 	rid := req.Header.Get(client.RequestIDHeader)
 	name, pwd, ok := req.BasicAuth()

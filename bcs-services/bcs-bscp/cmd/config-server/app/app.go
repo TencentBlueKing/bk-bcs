@@ -164,16 +164,14 @@ func (ds *configServer) listenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			logs.Infof("start shutdown config server grpc server gracefully...")
+		<-notifier.Signal
+		logs.Infof("start shutdown config server grpc server gracefully...")
 
-			ds.serve.GracefulStop()
-			notifier.Done()
+		ds.serve.GracefulStop()
+		notifier.Done()
 
-			logs.Infof("shutdown config server grpc server success...")
+		logs.Infof("shutdown config server grpc server success...")
 
-		}
 	}()
 
 	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))
@@ -208,15 +206,13 @@ func (ds *configServer) gwListenAndServe() error {
 
 	go func() {
 		notifier := shutdown.AddNotifier()
-		select {
-		case <-notifier.Signal:
-			logs.Infof("start shutdown config server http server gracefully...")
+		<-notifier.Signal
+		logs.Infof("start shutdown config server http server gracefully...")
 
-			ds.gwServe.Close()
-			notifier.Done()
+		_ = ds.gwServe.Close()
+		notifier.Done()
 
-			logs.Infof("shutdown config server http server success...")
-		}
+		logs.Infof("shutdown config server http server success...")
 	}()
 
 	if network.TLS.Enable() {

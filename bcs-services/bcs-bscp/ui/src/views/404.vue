@@ -1,5 +1,3 @@
-<script setup lang="ts">
-</script>
 <template>
   <bk-exception
     class="exception-wrap-item"
@@ -7,3 +5,5 @@
     title="页面不存在">
   </bk-exception>
 </template>
+<script setup lang="ts">
+</script>

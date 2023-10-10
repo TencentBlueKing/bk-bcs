@@ -129,8 +129,11 @@ func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbds.Delete
 }
 
 // ListAppBoundTmplRevisions list app bound template revisions.
-func (s *Service) ListAppBoundTmplRevisions(ctx context.Context, req *pbds.ListAppBoundTmplRevisionsReq) (
-	*pbds.ListAppBoundTmplRevisionsResp, error) {
+//
+//nolint:funlen,gocyclo
+func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
+	req *pbds.ListAppBoundTmplRevisionsReq) (*pbds.ListAppBoundTmplRevisionsResp, error) {
+
 	kt := kit.FromGrpcContext(ctx)
 
 	// validate the page params
@@ -335,6 +338,7 @@ func (s *Service) setFileState(kt *kit.Kit, unreleased []*pbatb.AppBoundTmplRevi
 		for _, d := range deleted {
 			d.FileState = constant.FileStateDelete
 		}
+		//nolint:gocritic
 		result = append(unreleased, deleted...)
 
 	}
@@ -524,11 +528,13 @@ func (s *Service) genFinalATBForCascade(kt *kit.Kit, tx *gen.QueryTx, atb *table
 		return err
 	}
 
-	if err := s.validateATBUniqueKey(kt, tmplRevisions); err != nil {
-		return err
+	if e := s.validateATBUniqueKey(kt, tmplRevisions); e != nil {
+		return e
 	}
 
-	s.fillATBTmplSpace(kt, atb, tmplRevisions)
+	if e := s.fillATBTmplSpace(kt, atb, tmplRevisions); e != nil {
+		return e
+	}
 	s.fillATBModel(kt, atb, pbs)
 
 	return nil
@@ -588,9 +594,9 @@ func (s *Service) getPBSForCascade(kt *kit.Kit, tx *gen.QueryTx, bindings []*tab
 			}
 		}
 	}
-	if err := s.validateTmplForATBWithTx(kt, tx, pbs.TemplateIDs); err != nil {
-		logs.Errorf("validate template for app template binding failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := s.validateTmplForATBWithTx(kt, tx, pbs.TemplateIDs); e != nil {
+		logs.Errorf("validate template for app template binding failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	// get all latest revisions of latest templates
@@ -724,11 +730,13 @@ func (s *Service) genFinalATB(kt *kit.Kit, atb *table.AppTemplateBinding) error 
 		return err
 	}
 
-	if err := s.validateATBUniqueKey(kt, tmplRevisions); err != nil {
-		return err
+	if e := s.validateATBUniqueKey(kt, tmplRevisions); e != nil {
+		return e
 	}
 
-	s.fillATBTmplSpace(kt, atb, tmplRevisions)
+	if e := s.fillATBTmplSpace(kt, atb, tmplRevisions); e != nil {
+		return e
+	}
 	s.fillATBModel(kt, atb, pbs)
 
 	return nil
@@ -764,7 +772,7 @@ func (s *Service) ValidateAppTemplateBindingUniqueKey(kt *kit.Kit, bizID, appID 
 }
 
 // fillATBModel fill model AppTemplateBinding's template space ids field
-func (s *Service) fillATBTmplSpace(kit *kit.Kit, g *table.AppTemplateBinding,
+func (s *Service) fillATBTmplSpace(_ *kit.Kit, g *table.AppTemplateBinding,
 	tmplRevisions []*table.TemplateRevision) error {
 	tmplSpaceIDs := make([]uint32, 0)
 	for _, tr := range tmplRevisions {
@@ -775,7 +783,7 @@ func (s *Service) fillATBTmplSpace(kit *kit.Kit, g *table.AppTemplateBinding,
 }
 
 // fillATBModel fill model AppTemplateBinding's fields
-func (s *Service) fillATBModel(kit *kit.Kit, g *table.AppTemplateBinding, pbs *parsedBindings) {
+func (s *Service) fillATBModel(_ *kit.Kit, g *table.AppTemplateBinding, pbs *parsedBindings) {
 	g.Spec.TemplateSetIDs = pbs.TemplateSetIDs
 	g.Spec.TemplateRevisionIDs = pbs.TemplateRevisionIDs
 	g.Spec.LatestTemplateIDs = pbs.LatestTemplateIDs
@@ -984,6 +992,7 @@ func (s *Service) getDuplicatedCIs(kt *kit.Kit, tmplRevisions []*table.TemplateR
 		return nil, nil, err
 	}
 
+	//nolint:gocritic
 	allKeys := append(existKeys, addKeys...)
 	uKeys = findRepeatedElements(allKeys)
 	for _, k := range uKeys {

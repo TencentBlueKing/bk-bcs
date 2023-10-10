@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package clientset provides a collection of clients for communication with external services.
 package clientset
 
 import (

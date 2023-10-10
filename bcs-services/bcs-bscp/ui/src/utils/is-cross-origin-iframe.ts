@@ -1,8 +1,8 @@
-export default function isCrossOriginIFrame () {
+export default function isCrossOriginIFrame() {
   try {
     // @ts-ignore
-    return !window.top.location.hostname
+    return !window.top.location.hostname;
   } catch (e) {
-    return true
+    return true;
   }
 }

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package The main package serves as the entry point for the configuration server.
 package main
 
 import (

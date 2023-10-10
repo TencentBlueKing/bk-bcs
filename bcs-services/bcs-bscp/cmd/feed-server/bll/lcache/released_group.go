@@ -93,17 +93,18 @@ func (s *ReleasedGroup) Get(kt *kit.Kit, bizID uint32, appID uint32) (
 		return groupList[i].StrategyID > groupList[j].StrategyID
 	})
 
-	if err := s.client.Set(appID, groupList); err != nil {
+	if e := s.client.Set(appID, groupList); e != nil {
 		logs.Errorf("refresh biz: %d, app: %d, client released group cache failed, err: %v",
-			bizID, appID, err)
+			bizID, appID, e)
 	}
 
-	s.mc.refreshLagMS.With(prm.Labels{"resource": "released_group", "biz": tools.Itoa(bizID)}).Observe(tools.SinceMS(start))
+	s.mc.refreshLagMS.With(prm.Labels{"resource": "released_group", "biz": tools.Itoa(bizID)}).
+		Observe(tools.SinceMS(start))
 
 	return groupList, nil
 }
 
-func (s *ReleasedGroup) getReleasedGroupFromCache(kt *kit.Kit, bizID uint32, appID uint32) (
+func (s *ReleasedGroup) getReleasedGroupFromCache(_ *kit.Kit, _ uint32, appID uint32) (
 	[]*types.ReleasedGroupCache, bool, error) {
 
 	val, err := s.client.GetIFPresent(appID)

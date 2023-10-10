@@ -1,17 +1,3 @@
-<script lang="ts" setup>
-  import { ref } from 'vue'
-  import type { IVersionLogItem } from '../../types/version-log'
-  const props = withDefaults(
-    defineProps<{
-      logList: IVersionLogItem[]
-      isShow: boolean
-    }>(),
-    {}
-  )
-  const emits = defineEmits(['update:isShow'])
-  const active = ref(0)
-</script>
-
 <template>
   <bk-dialog
   :is-show="props.isShow"
@@ -25,7 +11,8 @@
     <div class="log-version">
       <div class="log-version-left">
         <ul class="left-list">
-          <li class="left-list-item" v-for="(item, index) in props.logList" :class="{ 'item-active': index === active }"
+          <li
+class="left-list-item" v-for="(item, index) in props.logList" :class="{ 'item-active': index === active }"
             :key="index" @click="active = index">
             <slot>
               <span class="item-title">{{ item.title }}</span>
@@ -43,6 +30,20 @@
     </div>
   </bk-dialog>
 </template>
+
+<script lang="ts" setup>
+import { ref } from 'vue';
+import type { IVersionLogItem } from '../../types/version-log';
+const props = withDefaults(
+  defineProps<{
+      logList: IVersionLogItem[]
+      isShow: boolean
+    }>(),
+  {},
+);
+const emits = defineEmits(['update:isShow']);
+const active = ref(0);
+</script>
 
 <style scoped lang="scss">
 .log-version {

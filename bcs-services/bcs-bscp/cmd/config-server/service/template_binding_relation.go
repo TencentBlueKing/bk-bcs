@@ -274,8 +274,8 @@ func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context, req *pbcs.List
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
-		return nil, err
+	if e := s.authorizer.Authorize(grpcKit, res...); e != nil {
+		return nil, e
 	}
 
 	r := &pbds.ListMultiTmplBoundTmplSetsReq{
@@ -427,8 +427,8 @@ func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context, req *pbc
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
-	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
-		return nil, err
+	if e := s.authorizer.Authorize(grpcKit, res...); e != nil {
+		return nil, e
 	}
 
 	r := &pbds.ListMultiTmplSetBoundUnnamedAppsReq{

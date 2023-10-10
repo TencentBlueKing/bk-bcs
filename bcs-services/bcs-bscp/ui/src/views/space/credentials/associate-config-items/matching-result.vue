@@ -1,13 +1,3 @@
-<script setup lang="ts">
-  import { ref } from 'vue'
-
-  const pagination = ref({
-    count: 0,
-    current: 1,
-    limit: 10
-  })
-
-</script>
 <template>
   <div class="matching-result">
     <div class="head-area">
@@ -21,6 +11,16 @@
     </bk-table>
   </div>
 </template>
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const pagination = ref({
+  count: 0,
+  current: 1,
+  limit: 10,
+});
+
+</script>
 <style lang="scss" scoped>
   .head-area {
     display: flex;

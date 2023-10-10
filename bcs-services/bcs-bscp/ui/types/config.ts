@@ -1,4 +1,4 @@
-import { IGroupRuleItem } from "./group";
+import { IGroupRuleItem } from './group';
 
 // 单个版本详情
 export interface IConfigVersion {

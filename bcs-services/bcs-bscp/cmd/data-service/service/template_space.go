@@ -53,7 +53,9 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbds.CreateTempl
 }
 
 // ListTemplateSpaces list template space.
-func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplateSpacesReq) (*pbds.ListTemplateSpacesResp, error) {
+func (s *Service) ListTemplateSpaces(ctx context.Context,
+	req *pbds.ListTemplateSpacesReq) (*pbds.ListTemplateSpacesResp, error) {
+
 	kt := kit.FromGrpcContext(ctx)
 
 	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
@@ -80,7 +82,9 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplate
 }
 
 // UpdateTemplateSpace update template space.
-func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTemplateSpaceReq) (*pbbase.EmptyResp, error) {
+func (s *Service) UpdateTemplateSpace(ctx context.Context,
+	req *pbds.UpdateTemplateSpaceReq) (*pbbase.EmptyResp, error) {
+
 	kt := kit.FromGrpcContext(ctx)
 
 	templateSpace := &table.TemplateSpace{
@@ -100,7 +104,9 @@ func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTempl
 }
 
 // DeleteTemplateSpace delete template space.
-func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbds.DeleteTemplateSpaceReq) (*pbbase.EmptyResp, error) {
+func (s *Service) DeleteTemplateSpace(ctx context.Context,
+	req *pbds.DeleteTemplateSpaceReq) (*pbbase.EmptyResp, error) {
+
 	kt := kit.FromGrpcContext(ctx)
 
 	if err := s.dao.Validator().ValidateTmplSpaceNoSubRes(kt, req.Id); err != nil {

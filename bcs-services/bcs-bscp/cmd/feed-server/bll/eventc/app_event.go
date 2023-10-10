@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package eventc eventc ...
 package eventc
 
 import (
@@ -91,7 +92,7 @@ func (ae *appEvent) Stop() {
 }
 
 // doFirstMatch do the first release match when the sidecar is added to this app at first.
-func (ae *appEvent) doFirstMatch(kt *kit.Kit, subSpec *SubscribeSpec) (uint32, uint32, error) {
+func (ae *appEvent) doFirstMatch(kt *kit.Kit, subSpec *SubscribeSpec) (uint32, uint32, error) { //nolint:unparam
 
 	cursor := ae.cursor.ID()
 
@@ -180,6 +181,7 @@ func (ae *appEvent) notifyWithApp(kt *kit.Kit, cursorID uint32) {
 	ae.sch.notifyEvent(kt, cursorID, ae.csm.Members())
 }
 
+// nolint: unused
 func (ae *appEvent) notifyWithInstance(kt *kit.Kit, cursorID uint32, uid string) {
 
 	one := ae.csm.MemberWithUid(uid)

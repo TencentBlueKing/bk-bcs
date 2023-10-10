@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package service provides functionality for displaying the UI interface.
 package service
 
 import (
@@ -169,11 +170,14 @@ func (s *WebServer) subRouter() http.Handler {
 		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", config.G.Web.Host))
 	}
 
-	r.With(metrics.RequestCollect("no_permission")).Get("/403.html", s.embedWebServer.Render403Handler(conf).ServeHTTP)
+	r.With(metrics.RequestCollect("no_permission")).Get("/403.html",
+		s.embedWebServer.Render403Handler(conf).ServeHTTP)
 
 	// vue 模版渲染
-	r.With(metrics.RequestCollect("index"), s.webAuthentication).Get("/", s.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
-	r.With(metrics.RequestCollect("index"), s.webAuthentication).NotFound(s.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
+	r.With(metrics.RequestCollect("index"),
+		s.webAuthentication).Get("/", s.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
+	r.With(metrics.RequestCollect("index"),
+		s.webAuthentication).NotFound(s.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
 
 	return r
 }

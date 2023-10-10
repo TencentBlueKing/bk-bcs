@@ -1,12 +1,12 @@
-import { CONFIG_FILE_TYPE } from '../constants/config'
+import { CONFIG_FILE_TYPE } from '../constants/config';
 
 // 查询配置文件类型名称
 export const getConfigTypeName = (type: string) => {
-  const fileType = CONFIG_FILE_TYPE.find(item => item.id === type)
-  return fileType ? fileType.name : '未知格式'
-}
+  const fileType = CONFIG_FILE_TYPE.find(item => item.id === type);
+  return fileType ? fileType.name : '未知格式';
+};
 
-export function getDefaultConfigItem () {
+export function getDefaultConfigItem() {
   return {
     id: 0,
     spec: {
@@ -19,7 +19,7 @@ export function getDefaultConfigItem () {
         privilege: '',
         user: '',
         user_group: '',
-      }
+      },
     },
     attachment: {
       biz_id: 0,
@@ -29,13 +29,13 @@ export function getDefaultConfigItem () {
       creator: '',
       create_at: '',
       reviser: '',
-      update_at: ''
-    }
-  }
+      update_at: '',
+    },
+  };
 }
 
 // 配置项编辑参数
-export function getConfigEditParams () {
+export function getConfigEditParams() {
   return {
     name: '',
     memo: '',
@@ -45,5 +45,5 @@ export function getConfigEditParams () {
     user: '',
     user_group: '',
     privilege: '',
-  }
+  };
 }

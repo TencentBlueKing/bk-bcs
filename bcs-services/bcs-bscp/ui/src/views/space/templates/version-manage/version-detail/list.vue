@@ -1,40 +1,3 @@
-<script lang="ts" setup>
-  import { computed } from 'vue';
-  import { RightShape } from 'bkui-vue/lib/icon';
-  import { IPagination } from '../../../../../../types/index';
-  import { ITemplateVersionItem } from '../../../../../../types/template';
-
-  const props = defineProps<{
-    list: ITemplateVersionItem[];
-    pagination: IPagination;
-    id: number;
-  }>()
-
-  const emits = defineEmits(['pageChange', 'select'])
-
-  const tableList = computed(() => {
-    const simpleList = props.list.map(item => {
-      const { id, spec } = item
-      return { id, name: spec.revision_name }
-    })
-    if (props.id === 0) {
-      simpleList.unshift({ id: 0, name: '新建版本' })
-    }
-    return simpleList
-  })
-
-  const getRowCls = (data: { id: number; name: string; }) => {
-    if (data.id === props.id) {
-      return 'selected'
-    }
-    return ''
-  }
-
-  const handleSelectVersion = (event: Event|undefined, data: { id: number; name: string; }) => {
-    emits('select', data.id)
-  }
-
-</script>
 <template>
   <bk-table
     :border="['row']"
@@ -61,6 +24,43 @@
     :show-total-count="false"
     @change="emits('pageChange', $event)" />
 </template>
+<script lang="ts" setup>
+import { computed } from 'vue';
+import { RightShape } from 'bkui-vue/lib/icon';
+import { IPagination } from '../../../../../../types/index';
+import { ITemplateVersionItem } from '../../../../../../types/template';
+
+const props = defineProps<{
+    list: ITemplateVersionItem[];
+    pagination: IPagination;
+    id: number;
+  }>();
+
+const emits = defineEmits(['pageChange', 'select']);
+
+const tableList = computed(() => {
+  const simpleList = props.list.map((item) => {
+    const { id, spec } = item;
+    return { id, name: spec.revision_name };
+  });
+  if (props.id === 0) {
+    simpleList.unshift({ id: 0, name: '新建版本' });
+  }
+  return simpleList;
+});
+
+const getRowCls = (data: { id: number; name: string; }) => {
+  if (data.id === props.id) {
+    return 'selected';
+  }
+  return '';
+};
+
+const handleSelectVersion = (event: Event|undefined, data: { id: number; name: string; }) => {
+  emits('select', data.id);
+};
+
+</script>
 <style scoped lang="scss">
   .version-name-wrapper {
     position: relative;

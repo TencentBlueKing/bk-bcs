@@ -31,6 +31,7 @@ type gateway struct {
 }
 
 // newGateway create new auth server's grpc-gateway.
+// nolint: unparam
 func newGateway(st serviced.State, iamSys *sys.Sys) (*gateway, error) {
 	g := &gateway{
 		state: st,

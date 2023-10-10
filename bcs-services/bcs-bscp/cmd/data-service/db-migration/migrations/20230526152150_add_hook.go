@@ -77,16 +77,18 @@ func mig20230526152150Up(tx *gorm.DB) error {
 
 	// ReleasedHook : 已随配置项版本发布的配置脚本
 	type ReleasedHook struct {
-		ID               uint      `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
-		APPID            uint      `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_appID_releaseID_hookType,priority:1"`
-		ReleaseID        uint      `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_appID_releaseID_hookType,priority:2"`
+		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
+
+		APPID     uint   `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_appID_releaseID_hookType,priority:1"`
+		ReleaseID uint   `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_appID_releaseID_hookType,priority:2"`
+		HookType  string `gorm:"type:varchar(64) not null;uniqueIndex:idx_appID_releaseID_hookType,priority:3"`
+
 		HookID           uint      `gorm:"type:bigint(1) unsigned not null"`
 		HookRevisionID   uint      `gorm:"type:bigint(1) unsigned not null"`
 		HookName         string    `gorm:"type:varchar(64) not null"`
 		HookRevisionName string    `gorm:"type:varchar(64) not null"`
 		Content          string    `gorm:"type:longtext"`
 		ScriptType       string    `gorm:"type:varchar(64) not null"`
-		HookType         string    `gorm:"type:varchar(64) not null;uniqueIndex:idx_appID_releaseID_hookType,priority:3"`
 		BizID            uint      `gorm:"type:bigint(1) unsigned not null"`
 		Reviser          string    `gorm:"type:varchar(64) not null"`
 		UpdatedAt        time.Time `gorm:"type:datetime(6) not null"`

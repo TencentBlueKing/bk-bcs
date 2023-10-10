@@ -24,14 +24,18 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gorm.io/gorm"
 
-	"bscp.io/cmd/data-service/db-migration"
+	"bscp.io/cmd/data-service/db-migration" //nolint:goimports
 )
 
 const (
+	// GormMode gorm mode
 	GormMode string = "gorm"
-	SqlMode  string = "sql"
+	// SqlMode sql mode
+	SqlMode string = "sql"
 )
 
 var allSQLFiles []string
@@ -100,7 +104,9 @@ func Init(db *gorm.DB) (*Migrator, error) {
 	if err != nil {
 		return migrator, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	// Mark the migrations as Done if it is already executed
 	for rows.Next() {
@@ -337,7 +343,8 @@ func (m *Migrator) checkSQLFiles() {
 // eg: test-mig-001 ==> (test_mig_001, TestMig001)
 func getName(name string) (fileName string, funcName string) {
 	fileName = strings.ReplaceAll(name, "-", "_")
-	funcName = strings.ReplaceAll(strings.Title(strings.ReplaceAll(name, "_", "-")), "-", "")
+	funcName = strings.ReplaceAll(cases.Title(language.English).String(strings.ReplaceAll(name, "_", "-")),
+		"-", "")
 	return
 }
 
@@ -345,7 +352,9 @@ func getName(name string) (fileName string, funcName string) {
 func getMigrationSQLs() (map[string]string, error) {
 	migrationSQLs := make(map[string]string)
 	dir := "migrations/sql"
-	getAllSQLFiles(dir)
+	if err := getAllSQLFiles(dir); err != nil {
+		fmt.Printf("get all sql fiiles(%s) err: %s", dir, err)
+	}
 	for _, file := range allSQLFiles {
 		content, err := dbmigration.SQLFiles.ReadFile(file)
 		if err != nil {
@@ -367,11 +376,11 @@ func getAllSQLFiles(dir string) error {
 	for _, e := range entries {
 		file := filepath.Join(dir, e.Name())
 		if e.IsDir() {
-			getAllSQLFiles(file)
-		} else {
-			if filepath.Ext(file) == ".sql" {
-				allSQLFiles = append(allSQLFiles, file)
+			if err = getAllSQLFiles(file); err != nil {
+				return err
 			}
+		} else if filepath.Ext(file) == ".sql" {
+			allSQLFiles = append(allSQLFiles, file)
 		}
 	}
 	return nil

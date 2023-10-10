@@ -6,6 +6,6 @@ export default createI18n({
   legacy: false,
   messages: {
     'zh-cn': zhCn,
-    'en-us': enUs
-  }
+    'en-us': enUs,
+  },
 });

@@ -1,6 +1,3 @@
-<script setup lang="ts">
-</script>
-
 <template>
   <div class="layout-top-bar">
     <section class="layout-top-section">
@@ -13,6 +10,9 @@
     </section>
   </div>
 </template>
+
+<script setup lang="ts">
+</script>
 
 
 <style lang="scss" scoped>

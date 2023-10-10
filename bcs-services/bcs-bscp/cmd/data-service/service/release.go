@@ -34,6 +34,8 @@ import (
 )
 
 // CreateRelease create release.
+//
+//nolint:funlen
 func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq) (*pbds.CreateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	// Note: need to change batch operator to query config item and its commit.
@@ -71,8 +73,10 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 	}
 	id, err := s.dao.Release().CreateWithTx(grpcKit, tx, release)
 	if err != nil {
-		tx.Rollback()
 		logs.Errorf("create release failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
 		return nil, err
 	}
 
@@ -83,12 +87,16 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		pre.ReleaseID = release.ID
 		if _, e := s.dao.ReleasedHook().CreateWithTx(grpcKit, tx, pre); e != nil {
 			logs.Errorf("create released pre-hook failed, err: %v, rid: %s", e, grpcKit.Rid)
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
 			return nil, e
 		}
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		logs.Errorf("query released pre-hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
 		return nil, err
 	}
 	post, err := s.dao.ReleasedHook().Get(grpcKit, req.Attachment.BizId, req.Attachment.AppId, 0, table.PostHook)
@@ -97,18 +105,24 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		post.ReleaseID = release.ID
 		if _, e := s.dao.ReleasedHook().CreateWithTx(grpcKit, tx, post); e != nil {
 			logs.Errorf("create released post-hook failed, err: %v, rid: %s", e, grpcKit.Rid)
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
 			return nil, e
 		}
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		logs.Errorf("query released post-hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
 		return nil, err
 	}
 
 	// 3: do template and non-template config item related operations for create release.
 	if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cis); err != nil {
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
 		logs.Errorf("do template action for create release failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
@@ -131,6 +145,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 6.创建已生成版本服务的模版变量
 7.将当前使用变量更新到未命名版本的服务模版变量
 */
+//nolint:funlen
 func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.TemplateVariableSpec,
 	tx *gen.QueryTx, releaseID uint32, tmplRevisions []*table.TemplateRevision, cis []*pbci.ConfigItem) error {
 	// validate input variables and get the map
@@ -218,40 +233,42 @@ func (s *Service) doConfigItemOperations(kt *kit.Kit, variables []*pbtv.Template
 	}
 
 	// upload rendered template content
-	if err := s.uploadRenderedTmplContent(kt, renderedContentMap, signatureMap, revisionMap); err != nil {
-		logs.Errorf("upload rendered template failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+	if e := s.uploadRenderedTmplContent(kt, renderedContentMap, signatureMap, revisionMap); e != nil {
+		logs.Errorf("upload rendered template failed, err: %v, rid: %s", e, kt.Rid)
+		return e
 	}
 	// upload rendered config item content
-	if err := s.uploadRenderedCIContent(kt, ciRenderedContentMap, ciSignatureMap, ciMap); err != nil {
-		logs.Errorf("upload rendered config item failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+	if e := s.uploadRenderedCIContent(kt, ciRenderedContentMap, ciSignatureMap, ciMap); e != nil {
+		logs.Errorf("upload rendered config item failed, err: %v, rid: %s", e, kt.Rid)
+		return e
 	}
 
-	if err := s.createReleasedRenderedTemplateCIs(kt, tx, releaseID, tmplRevisions, byteSizeMap, signatureMap); err != nil {
-		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+	if e := s.createReleasedRenderedTemplateCIs(kt, tx, releaseID, tmplRevisions, byteSizeMap, signatureMap); e != nil {
+		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", e, kt.Rid)
+		return e
 	}
 
 	if err = s.createReleasedRenderedCIs(kt, tx, releaseID, cis, ciByteSizeMap, ciSignatureMap); err != nil {
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
 		logs.Errorf("create released config items failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
 
-	if err := s.createReleasedAppTemplates(kt, tx, releaseID, byteSizeMap, signatureMap); err != nil {
-		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+	if e := s.createReleasedAppTemplates(kt, tx, releaseID, byteSizeMap, signatureMap); e != nil {
+		logs.Errorf("create released rendered template config items failed, err: %v, rid: %s", e, kt.Rid)
+		return e
 	}
 
-	if err := s.createReleasedAppTemplateVariable(kt, tx, releaseID, usedVars); err != nil {
-		logs.Errorf("create released app template variable failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+	if e := s.createReleasedAppTemplateVariable(kt, tx, releaseID, usedVars); e != nil {
+		logs.Errorf("create released app template variable failed, err: %v, rid: %s", e, kt.Rid)
+		return e
 	}
 
-	if err := s.updateAppTemplateVariable(kt, tx, usedVars); err != nil {
-		logs.Errorf("update app template variable failed, err: %v, rid: %s", err, kt.Rid)
-		return err
+	if e := s.updateAppTemplateVariable(kt, tx, usedVars); e != nil {
+		logs.Errorf("update app template variable failed, err: %v, rid: %s", e, kt.Rid)
+		return e
 	}
 
 	return nil
@@ -480,7 +497,9 @@ func (s *Service) createReleasedAppTemplateVariable(kt *kit.Kit, tx *gen.QueryTx
 }
 
 // updateAppTemplateVariable update app template variable.
-func (s *Service) updateAppTemplateVariable(kt *kit.Kit, tx *gen.QueryTx, usedVars []*table.TemplateVariableSpec) error {
+func (s *Service) updateAppTemplateVariable(kt *kit.Kit, tx *gen.QueryTx,
+	usedVars []*table.TemplateVariableSpec) error {
+
 	appVar := &table.AppTemplateVariable{
 		Spec: &table.AppTemplateVariableSpec{
 			Variables: usedVars,

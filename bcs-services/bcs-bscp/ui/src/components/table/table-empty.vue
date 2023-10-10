@@ -1,15 +1,3 @@
-<script lang="ts" setup>
-  const props = withDefaults(
-    defineProps<{
-      isSearchEmpty: boolean;
-    }>(),
-    {
-      isSearchEmpty: false,
-    }
-  )
-  const emits = defineEmits(['clear'])
-</script>
-
 <template>
    <bk-exception
       v-if="!props.isSearchEmpty"
@@ -28,6 +16,18 @@
       <div>可以尝试 调整关键词 或 <span class="clear-button" @click="emits('clear')">清空筛选条件</span></div>
     </bk-exception>
 </template>
+
+<script lang="ts" setup>
+const props = withDefaults(
+  defineProps<{
+      isSearchEmpty: boolean;
+    }>(),
+  {
+    isSearchEmpty: false,
+  },
+);
+const emits = defineEmits(['clear']);
+</script>
 
 <style scoped lang="scss">
 .clear-button {

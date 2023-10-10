@@ -37,7 +37,7 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbds.CreateTemplat
 		return nil, fmt.Errorf("template set's same name %s already exists", req.Spec.Name)
 	}
 
-	if req.Spec.Public == true {
+	if req.Spec.Public {
 		req.Spec.BoundApps = []uint32{}
 	}
 
@@ -89,6 +89,7 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSe
 }
 
 // UpdateTemplateSet update template set.
+// nolint: funlen
 func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplateSetReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 	// set for empty slice to ensure the data in db is not `null` but `[]`
@@ -101,7 +102,7 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 
 	var invisibleATBs []*table.AppTemplateBinding
 	var err error
-	if req.Spec.Public == false {
+	if !req.Spec.Public {
 		invisibleATBs, err = s.dao.TemplateBindingRelation().ListTemplateSetInvisibleATBs(kt, req.Attachment.BizId,
 			req.Id, req.Spec.BoundApps)
 		if err != nil {
@@ -116,13 +117,13 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 	}
 
 	if len(req.Spec.TemplateIds) > 0 {
-		if err := s.dao.Validator().ValidateTemplatesExist(kt, req.Spec.TemplateIds); err != nil {
-			return nil, err
+		if e := s.dao.Validator().ValidateTemplatesExist(kt, req.Spec.TemplateIds); e != nil {
+			return nil, e
 		}
 	}
 
-	if _, err := s.dao.TemplateSet().GetByUniqueKeyForUpdate(
-		kt, req.Attachment.BizId, req.Attachment.TemplateSpaceId, req.Id, req.Spec.Name); err == nil {
+	if _, e := s.dao.TemplateSet().GetByUniqueKeyForUpdate(
+		kt, req.Attachment.BizId, req.Attachment.TemplateSpaceId, req.Id, req.Spec.Name); e == nil {
 		return nil, fmt.Errorf("template set's same name %s already exists", req.Spec.Name)
 	}
 
@@ -134,7 +135,7 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 			Reviser: kt.User,
 		},
 	}
-	if req.Spec.Public == true {
+	if req.Spec.Public {
 		templateSet.Spec.BoundApps = []uint32{}
 	}
 
@@ -143,7 +144,9 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 	// 1. update template set
 	if err = s.dao.TemplateSet().UpdateWithTx(kt, tx, templateSet); err != nil {
 		logs.Errorf("update template set failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
 		return nil, err
 	}
 
@@ -164,7 +167,9 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 			}
 			if err = s.CascadeUpdateATB(kt, tx, atb); err != nil {
 				logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
-				tx.Rollback()
+				if rErr := tx.Rollback(); rErr != nil {
+					logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+				}
 				return nil, err
 			}
 		}
@@ -190,7 +195,9 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 			for _, atb := range atbs {
 				if err = s.CascadeUpdateATB(kt, tx, atb); err != nil {
 					logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
-					tx.Rollback()
+					if rErr := tx.Rollback(); rErr != nil {
+						logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+					}
 					return nil, err
 				}
 			}
@@ -242,7 +249,9 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplat
 	}
 	if err = s.dao.TemplateSet().DeleteWithTx(kt, tx, templateSet); err != nil {
 		logs.Errorf("delete template set failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
 		return nil, err
 	}
 
@@ -270,18 +279,19 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplat
 				}
 				if err := s.CascadeUpdateATB(kt, tx, atb); err != nil {
 					logs.Errorf("cascade update app template binding failed, err: %v, rid: %s", err, kt.Rid)
-					tx.Rollback()
+					if rErr := tx.Rollback(); rErr != nil {
+						logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+					}
 					return nil, err
 				}
 			}
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
-
 	return new(pbbase.EmptyResp), nil
 }
 
@@ -366,11 +376,7 @@ func (s *Service) ListTemplateSetBriefInfoByIDs(ctx context.Context, req *pbds.L
 			TemplateSetName:   tmplSetMap[t.ID].Spec.Name,
 		}
 	}
-
-	resp := &pbds.ListTemplateSetBriefInfoByIDsResp{
-		Details: details,
-	}
-	return resp, nil
+	return &pbds.ListTemplateSetBriefInfoByIDsResp{Details: details}, nil
 }
 
 // ListTmplSetsOfBiz list template sets of one biz.
