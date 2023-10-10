@@ -86,6 +86,7 @@ type CredentialSpec struct {
 	CredentialType CredentialType `json:"credential_type" gorm:"column:credential_type"`
 	EncCredential  string         `json:"enc_credential" gorm:"column:enc_credential"`
 	EncAlgorithm   string         `json:"enc_algorithm" gorm:"column:enc_algorithm"`
+	Name           string         `json:"name" gorm:"column:name"`
 	Memo           string         `json:"memo" gorm:"column:memo"`
 	Enable         bool           `json:"enable" gorm:"column:enable"`
 	ExpiredAt      time.Time      `json:"expired_at" gorm:"column:expired_at"`
@@ -123,6 +124,9 @@ func (c *CredentialSpec) ValidateCreate() error {
 	if err := c.CredentialType.Validate(); err != nil {
 		return err
 	}
+	if c.Name == "" {
+		return errors.New("credential name should be set")
+	}
 	return nil
 }
 
@@ -136,6 +140,9 @@ func (c *CredentialSpec) ValidateUpdate() error {
 	}
 	if c.EncCredential != "" {
 		return errors.New("enc credential cannot be updated once created")
+	}
+	if c.Name == "" {
+		return errors.New("credential name should be set")
 	}
 	return nil
 }

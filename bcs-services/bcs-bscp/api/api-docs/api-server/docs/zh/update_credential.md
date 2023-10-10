@@ -6,12 +6,13 @@
 
 #### 输入参数
 
-| 参数名称     | 参数类型     | 必选   | 描述             |
-| ------------ | ------------ | ------ | ---------------- |
-| biz_id    | uint32       | 是     | 业务ID |
-| id | uint32 | 是 | credential的ID |
-| memo | string | 是 | credential的描述 |
-| enable | bool | 是 | credential的是否启用 |
+| 参数名称   | 参数类型     | 必选 | 描述                  |
+|--------| ------------ |----|---------------------|
+| biz_id | uint32       | 是  | 业务ID                |
+| id     | uint32 | 是  | credential的ID       |
+| name   | string | 是  | credential的名称，业务下唯一 |
+| memo   | string | 否  | credential的描述       |
+| enable | bool | 是  | credential的是否启用     |
 
 #### 调用示例
 
@@ -20,6 +21,7 @@
   "id": 6,
   "biz_id":5,
   "enable":false,
+  "name": "XXXXXX",
   "memo": "XXXXXX"
 }
 ```

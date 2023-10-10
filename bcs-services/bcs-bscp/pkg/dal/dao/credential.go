@@ -43,6 +43,8 @@ type Credential interface {
 	Update(kit *kit.Kit, credential *table.Credential) error
 	// UpdateRevisionWithTx update credential revision with transaction
 	UpdateRevisionWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error
+	// GetByName get Credential by name.
+	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Credential, error)
 }
 
 var _ Credential = new(credentialDao)
@@ -145,7 +147,8 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 
 	var conds []rawgen.Condition
 	if searchKey != "" {
-		conds = append(conds, q.Where(m.Memo.Regexp("(?i)"+searchKey)).Or(m.Reviser.Regexp("(?i)"+searchKey)))
+		conds = append(conds, q.Where(m.Memo.Regexp("(?i)"+searchKey)).Or(m.Reviser.Regexp("(?i)"+searchKey)).
+			Or(m.Name.Like(searchKey)))
 	}
 
 	result, count, err := q.Where(m.BizID.Eq(bizID)).
@@ -214,7 +217,7 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Credential.WithContext(kit.Ctx)
 		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-			Select(m.Memo, m.Enable, m.Reviser).Updates(g); err != nil {
+			Select(m.Memo, m.Name, m.Enable, m.Reviser).Updates(g); err != nil {
 			return err
 		}
 
@@ -244,4 +247,18 @@ func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *gen.QueryTx, bi
 	}
 
 	return nil
+}
+
+// GetByName get Credential by name.
+func (dao *credentialDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Credential, error) {
+
+	m := dao.genQ.Credential
+	q := dao.genQ.Credential.WithContext(kit.Ctx)
+
+	credential, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
+	if err != nil {
+		return nil, fmt.Errorf("get credential failed, err: %v", err)
+	}
+
+	return credential, nil
 }

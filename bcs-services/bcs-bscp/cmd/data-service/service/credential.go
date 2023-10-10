@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"bscp.io/pkg/dal/table"
@@ -29,6 +30,10 @@ import (
 // CreateCredential Create Credential
 func (s *Service) CreateCredential(ctx context.Context, req *pbds.CreateCredentialReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+
+	if _, err := s.dao.Credential().GetByName(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
+		return nil, fmt.Errorf("credential name %s already exists", req.Spec.Name)
+	}
 
 	credential := &table.Credential{
 		Spec:       req.Spec.CredentialSpec(),
