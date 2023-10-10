@@ -318,6 +318,7 @@ generic:
     query: 查询
     create: 创建
     submit: 提交
+    podDelete: 重新调度
   label:
     key: 键
     value: 值

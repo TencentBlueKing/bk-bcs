@@ -138,6 +138,7 @@
       </FormGroup>
     </bk-form>
     <div class="mt25">
+      <!-- 添加节点 -->
       <bk-button
         class="mw88"
         theme="primary"
@@ -145,9 +146,11 @@
         v-if="nodeSource === 'ip'">
         {{$t('generic.button.confirm')}}
       </bk-button>
+      <!-- 从节点池添加节点 -->
       <bk-button
         class="mw88"
         theme="primary"
+        :loading="saving"
         @click="handleAddDesiredSize"
         v-else-if="nodeSource === 'nodePool'">
         {{$t('generic.button.confirm')}}
@@ -188,6 +191,7 @@ import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import StatusIcon from '@/components/status-icon';
+import { useConfig } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -343,38 +347,70 @@ export default defineComponent({
       nodeGroupLoading.value = false;
     };
     const user = computed(() => $store.state.user);
+    const { _INTERNAL_ } = useConfig();
+    const saving = ref(false);
+    // 从节点池添加节点
     const handleAddDesiredSize = async () => {
       const result = await formRef.value?.validate().catch(() => false);
       if (!result) return;
-      $bkInfo({
-        type: 'warning',
-        clsName: 'custom-info-confirm',
-        title: curNodePool.value?.enableAutoscale ? $i18n.t('manualNode.msg.confirmText1') : $i18n.t('manualNode.msg.confirmText'),
-        defaultInfo: true,
-        confirmFn: async () => {
-          const result = await desirednode({
-            $id: nodePoolID.value,
-            desiredNode: Number(desiredSize.value) + Number(curNodePool.value?.autoScaling?.desiredSize || 0),
-            manual: true,
-            operator: user.value.username,
-          });
-          if (result) {
-            $bkMessage({
-              theme: 'success',
-              message: $i18n.t('generic.msg.success.deliveryTask'),
-            });
-            $router.push({
-              name: 'clusterDetail',
+
+      // 判断是否配置了扩容转移模块
+      saving.value = true;
+      const autoscalerData = await $store.dispatch('clustermanager/clusterAutoScaling', {
+        $clusterId: props.clusterId,
+        provider: _INTERNAL_.value ? 'selfProvisionCloud' : '',
+      });
+      saving.value = false;
+      if (!autoscalerData.module?.scaleOutModuleID || !autoscalerData.module?.scaleOutBizID) {
+        $bkInfo({
+          type: 'warning',
+          clsName: 'custom-info-confirm',
+          title: $i18n.t('cluster.ca.tips.noModule'),
+          defaultInfo: true,
+          okText: $i18n.t('cluster.ca.button.edit'),
+          confirmFn: () => {
+            const { href } = $router.resolve({
+              name: 'autoScalerConfig',
               params: {
                 clusterId: props.clusterId,
               },
-              query: {
-                active: 'node',
-              },
             });
-          }
-        },
-      });
+            window.open(href);
+          },
+        });
+      } else {
+        $bkInfo({
+          type: 'warning',
+          clsName: 'custom-info-confirm',
+          title: curNodePool.value?.enableAutoscale ? $i18n.t('manualNode.msg.confirmText1') : $i18n.t('manualNode.msg.confirmText'),
+          defaultInfo: true,
+          confirmFn: async () => {
+            saving.value = true;
+            const result = await desirednode({
+              $id: nodePoolID.value,
+              desiredNode: Number(desiredSize.value) + Number(curNodePool.value?.autoScaling?.desiredSize || 0),
+              manual: true,
+              operator: user.value.username,
+            });
+            saving.value = false;
+            if (result) {
+              $bkMessage({
+                theme: 'success',
+                message: $i18n.t('generic.msg.success.deliveryTask'),
+              });
+              $router.push({
+                name: 'clusterDetail',
+                params: {
+                  clusterId: props.clusterId,
+                },
+                query: {
+                  active: 'node',
+                },
+              });
+            }
+          },
+        });
+      }
     };
     const handleGotoNodePool = (id?: string) => {
       if (id) {
@@ -407,6 +443,7 @@ export default defineComponent({
     });
 
     return {
+      saving,
       isImportCluster,
       formRef,
       formRules,

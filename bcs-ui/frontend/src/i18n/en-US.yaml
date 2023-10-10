@@ -340,6 +340,7 @@ generic:
     query: Search
     create: Create
     submit: SUBMIT
+    podDelete: Del-Pods
   label:
     key: Key
     value: Value

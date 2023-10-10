@@ -688,7 +688,7 @@ export default defineComponent({
         $clusterId: props.clusterId,
         provider: _INTERNAL_.value ? 'selfProvisionCloud' : '',
       });
-      // 方便展示（会污染数据）
+      // 设置模块名称 -- 方便展示（会污染数据）
       autoscalerData.value.scaleOutModuleName = autoscalerData.value.module?.scaleOutModuleName || '--';
       if (autoscalerData.value.status !== 'UPDATING') {
         stop();
