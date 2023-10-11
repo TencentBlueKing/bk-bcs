@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -255,36 +256,26 @@ func (ca *CreateAction) validate() error {
 	if err := ca.req.Validate(); err != nil {
 		return err
 	}
-	// kubernetes version
-	if len(ca.req.ClusterBasicSettings.Version) == 0 {
-		return fmt.Errorf("lost kubernetes version in request")
+	// cloud validate
+	cloudValidate, err := cloudprovider.GetCloudValidateMgr(ca.cloud.CloudProvider)
+	if err != nil {
+		return err
 	}
-
-	// check masterIP
-	if ca.req.ManageType == common.ClusterManageTypeIndependent && len(ca.req.Master) == 0 {
-		return fmt.Errorf("lost kubernetes cluster masterIP")
+	// first, get cloud credentialInfo from project; second, get from cloud provider when failed to obtain
+	cOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ca.cloud,
+		AccountID: ca.req.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("Get Credential failed from Cloud %s: %s",
+			ca.cloud.CloudID, err.Error())
+		return err
 	}
+	cOption.Region = ca.req.Region
 
-	// default not handle systemReinstall
-	ca.req.SystemReinstall = true
-
-	// auto generate master nodes
-	if ca.req.AutoGenerateMasterNodes && len(ca.req.Instances) == 0 {
-		return fmt.Errorf("invalid instanceTemplate config when AutoGenerateMasterNodes=true")
-	}
-
-	// use existed instances
-	if !ca.req.AutoGenerateMasterNodes {
-		switch ca.req.ManageType {
-		case common.ClusterManageTypeManaged:
-			if len(ca.req.Nodes) == 0 {
-				return fmt.Errorf("invalid node config when AutoGenerateMasterNodes false in MANAGED_CLUSTER")
-			}
-		default:
-			if len(ca.req.Master) == 0 {
-				return fmt.Errorf("invalid master config when AutoGenerateMasterNodes false in INDEPENDENT_CLUSTER")
-			}
-		}
+	err = cloudValidate.CreateClusterValidate(ca.req, cOption)
+	if err != nil {
+		return err
 	}
 
 	// masterIP check
@@ -379,6 +370,50 @@ func (ca *CreateAction) generateClusterID(cls *cmproto.Cluster) error {
 	return nil
 }
 
+func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
+	timeStr := time.Now().Format(time.RFC3339)
+	if ca.req.NodeGroups != nil {
+		for _, ng := range ca.req.NodeGroups {
+			ng.NodeGroupID = fmt.Sprintf("BCS-ng-%s", utils.RandomString(8))
+			ng.Region = cls.Region
+			ng.ClusterID = cls.ClusterID
+			ng.ProjectID = cls.ProjectID
+			ng.Provider = cls.Provider
+			ng.Status = common.StatusCreateNodeGroupCreating
+			ng.CreateTime = timeStr
+			ng.UpdateTime = timeStr
+
+			if ng.LaunchTemplate == nil {
+				return fmt.Errorf("createNodegroup[%s] empty LaunchTemplate", ng.Name)
+			}
+
+			if ng.LaunchTemplate.InitLoginPassword != "" {
+				enPasswd, err := encrypt.Encrypt(nil, ng.LaunchTemplate.InitLoginPassword)
+				if err != nil {
+					return fmt.Errorf("createNodegroup[%s] Encrypt InitLoginPassword failed", ng.Name)
+				}
+				ng.LaunchTemplate.InitLoginPassword = enPasswd
+			}
+
+			err := ca.model.CreateNodeGroup(context.Background(), ng)
+			if err != nil {
+				blog.Errorf("save NodeGroup %s information to store failed, %s", ng.NodeGroupID, err.Error())
+				if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
+					ca.resp.Data = cls
+					ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
+					return err
+				}
+				//other db operation error
+				ca.resp.Data = cls
+				ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // Handle create cluster request
 func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterReq, resp *cmproto.CreateClusterResp) {
 	if req == nil || resp == nil {
@@ -431,6 +466,12 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 		return
 	}
 
+	err = ca.createNodegroup(cls)
+	if err != nil {
+		blog.Errorf("createNodegroup failed: %v", err)
+		return
+	}
+
 	// import cluster nodes
 	_ = ca.checkClusterWorkerNodes(cls)
 
@@ -472,6 +513,20 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 }
 
 func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Cluster) error {
+	// encrypt password
+	if len(cls.Template) != 0 {
+		for _, t := range cls.Template {
+			if t.InitLoginPassword != "" {
+				enPasswd, err := encrypt.Encrypt(nil, t.InitLoginPassword)
+				if err != nil {
+					blog.Errorf("createClusterTask encrypt template password failed, %v", err)
+					return err
+				}
+				t.InitLoginPassword = enPasswd
+			}
+		}
+	}
+
 	// step1: create cluster to save mongo
 	// step2: call cloud provider cluster_manager feature to create cluster task
 	err := ca.model.CreateCluster(ctx, cls)
@@ -513,6 +568,13 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 	}
 	coption.Region = ca.req.Region
 
+	var nodeGroupIDs []string
+	if ca.req.NodeGroups != nil {
+		for _, ng := range ca.req.NodeGroups {
+			nodeGroupIDs = append(nodeGroupIDs, ng.NodeGroupID)
+		}
+	}
+
 	// create cluster task by task manager
 	task, err := provider.CreateCluster(cls, &cloudprovider.CreateClusterOption{
 		CommonOption: *coption,
@@ -521,6 +583,7 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 		Operator:     ca.req.Creator,
 		Cloud:        ca.cloud,
 		Nodes:        ca.req.Nodes,
+		NodeGroupIDs: nodeGroupIDs,
 		NodeTemplate: func() *cmproto.NodeTemplate {
 			if ca.req.NodeTemplateID == "" {
 				return nil

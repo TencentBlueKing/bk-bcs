@@ -233,6 +233,8 @@ type NodeManager interface {
 
 // CloudValidateManager validate interface for check cloud resourceInfo
 type CloudValidateManager interface {
+	// CreateClusterValidate create cluster validate
+	CreateClusterValidate(req *proto.CreateClusterReq, opt *CommonOption) error
 	// ImportClusterValidate import cluster validate
 	ImportClusterValidate(req *proto.ImportClusterReq, opt *CommonOption) error
 	// AddNodesToClusterValidate validate

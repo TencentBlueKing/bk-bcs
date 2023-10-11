@@ -38,6 +38,11 @@ func init() {
 type CloudValidate struct {
 }
 
+// CreateClusterValidate create cluster validate
+func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
 // CreateCloudAccountValidate create cloud account validate
 func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error {
 	return cloudprovider.ErrCloudNotImplemented

@@ -8527,6 +8527,14 @@
           "type": "string",
           "description": "创建集群上架节点时的节点模板",
           "title": "nodeTemplateID"
+        },
+        "nodeGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeGroup"
+          },
+          "description": "创建集群时的节点池信息",
+          "title": "nodeGroups"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",
@@ -11407,6 +11415,16 @@
           "$ref": "#/definitions/clustermanagerImageInfo",
           "description": "新实例启动时的配置镜像信息",
           "title": "imageInfo"
+        },
+        "nodeRole": {
+          "type": "string",
+          "description": "新实例节点角色，取值:MASTER_ETCD, WORKER",
+          "title": "nodeRole"
+        },
+        "initLoginUsername": {
+          "type": "string",
+          "description": "新实例登录用户名",
+          "title": "initLoginUsername"
         },
         "initLoginPassword": {
           "type": "string",

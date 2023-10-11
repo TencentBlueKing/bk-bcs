@@ -168,6 +168,7 @@ type CreateClusterOption struct {
 	// cloud is used for cloudprovider template
 	Cloud        *proto.Cloud
 	Nodes        []string
+	NodeGroupIDs []string
 	NodeTemplate *proto.NodeTemplate
 }
 
