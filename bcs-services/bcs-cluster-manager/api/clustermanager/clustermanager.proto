@@ -4905,6 +4905,10 @@ message CreateClusterReq {
     title: "nodeTemplateID",
     description: "创建集群上架节点时的节点模板"
   }];
+  repeated NodeGroup nodeGroups = 41[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeGroups",
+    description: "创建集群时的节点池信息"
+  }];
 }
 
 message CreateClusterResp {
