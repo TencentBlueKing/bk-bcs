@@ -110,6 +110,13 @@ func (s *Service) DeleteCredential(ctx context.Context, req *pbds.DeleteCredenti
 func (s *Service) UpdateCredential(ctx context.Context, req *pbds.UpdateCredentialReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	old, err := s.dao.Credential().GetByName(kt, req.Attachment.BizId, req.Spec.Name)
+	if err == nil {
+		if old.ID != req.Id {
+			return nil, fmt.Errorf("credential name %s already exists", req.Spec.Name)
+		}
+	}
+
 	credential := &table.Credential{
 		ID:         req.Id,
 		Spec:       req.Spec.CredentialSpec(),
@@ -118,9 +125,9 @@ func (s *Service) UpdateCredential(ctx context.Context, req *pbds.UpdateCredenti
 			Reviser: kt.User,
 		},
 	}
-	if err := s.dao.Credential().Update(kt, credential); err != nil {
-		logs.Errorf("update credential failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	if e := s.dao.Credential().Update(kt, credential); e != nil {
+		logs.Errorf("update credential failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	return new(pbbase.EmptyResp), nil

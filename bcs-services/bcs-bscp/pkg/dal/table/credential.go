@@ -16,6 +16,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"bscp.io/pkg/criteria/validator"
 )
 
 // Credential defines a credential's detail information
@@ -124,8 +126,8 @@ func (c *CredentialSpec) ValidateCreate() error {
 	if err := c.CredentialType.Validate(); err != nil {
 		return err
 	}
-	if c.Name == "" {
-		return errors.New("credential name should be set")
+	if err := validator.ValidateName(c.Name); err != nil {
+		return err
 	}
 	return nil
 }
@@ -141,8 +143,8 @@ func (c *CredentialSpec) ValidateUpdate() error {
 	if c.EncCredential != "" {
 		return errors.New("enc credential cannot be updated once created")
 	}
-	if c.Name == "" {
-		return errors.New("credential name should be set")
+	if err := validator.ValidateName(c.Name); err != nil {
+		return err
 	}
 	return nil
 }

@@ -13,9 +13,13 @@
 package migrations
 
 import (
+	"fmt"
+	"time"
+
 	"gorm.io/gorm"
 
 	"bscp.io/cmd/data-service/db-migration/migrator"
+	"bscp.io/pkg/dal/table"
 )
 
 func init() {
@@ -45,6 +49,17 @@ func mig20231010143023Up(tx *gorm.DB) error {
 		}
 	}
 
+	// set default value
+	var credentials []table.Credential
+	tx.Model(&table.Credential{}).Find(&credentials)
+	for _, credential := range credentials {
+		if credential.Spec.Name == "" {
+			currentTime := time.Now().UnixNano() / 1000
+			credential.Spec.Name = fmt.Sprintf("token_%d", currentTime)
+			tx.Save(&credentials)
+		}
+	}
+
 	// create new index
 	if !tx.Migrator().HasIndex(&Credentials{}, "idx_bizID_name") {
 		if err := tx.Migrator().CreateIndex(&Credentials{}, "idx_bizID_name"); err != nil {
@@ -65,16 +80,16 @@ func mig20231010143023Down(tx *gorm.DB) error {
 		Name  string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_name,priority:2"`
 	}
 
-	// delete column
-	if tx.Migrator().HasColumn(&Credentials{}, "name") {
-		if err := tx.Migrator().DropColumn(&Credentials{}, "name"); err != nil {
+	// delete old index
+	if tx.Migrator().HasIndex(&Credentials{}, "idx_bizID_name") {
+		if err := tx.Migrator().DropIndex(&Credentials{}, "idx_bizID_name"); err != nil {
 			return err
 		}
 	}
 
-	// delete old index
-	if tx.Migrator().HasIndex(&Credentials{}, "idx_bizID_name") {
-		if err := tx.Migrator().DropIndex(&Credentials{}, "idx_bizID_name"); err != nil {
+	// delete column
+	if tx.Migrator().HasColumn(&Credentials{}, "name") {
+		if err := tx.Migrator().DropColumn(&Credentials{}, "name"); err != nil {
 			return err
 		}
 	}
