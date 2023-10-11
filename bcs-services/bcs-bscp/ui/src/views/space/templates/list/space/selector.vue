@@ -26,11 +26,11 @@
               class="bk-bscp-icon icon-edit-small"
               @click.stop="handleEditOpen(item)"
             ></i>
-            <!-- <Del
-              v-if="templateSpaceDetail.name !== 'default_space'"
+            <Del
+              v-if="item.spec.name !== 'default_space'"
               class="delete-icon"
               @click.stop="handleDelete(item)"
-            /> -->
+            />
           </div>
         </div>
       </bk-option>
@@ -49,12 +49,13 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { DownShape } from 'bkui-vue/lib/icon';
+import { DownShape, Del } from 'bkui-vue/lib/icon';
+import { InfoBox, Message } from 'bkui-vue';
 import useGlobalStore from '../../../../../store/global';
 import useTemplateStore from '../../../../../store/template';
 import { ITemplateSpaceItem } from '../../../../../../types/template';
 import { ICommonQuery } from '../../../../../../types/index';
-import { getTemplateSpaceList } from '../../../../../api/template';
+import { getTemplateSpaceList, getTemplatesBySpaceId, deleteTemplateSpace } from '../../../../../api/template';
 
 import Create from './create.vue';
 import Edit from './edit.vue';
@@ -69,6 +70,7 @@ const spaceList = ref<ITemplateSpaceItem[]>([]);
 const selectorOpen = ref(false);
 const selectorRef = ref();
 const isShowCreateDialog = ref(false);
+const templatesLoading = ref(false);
 const editingData = ref({
   open: false,
   data: { id: 0, name: '', memo: '' },
@@ -152,45 +154,45 @@ const handleCreated = (id: number) => {
   window.location.href = href;
 };
 
-// const handleDelete = async (space: ITemplateSpaceItem) => {
-//   templatesLoading.value = true;
-//   const params = {
-//     start: 0,
-//     limit: 1,
-//     // all: true
-//   };
-//   const res = await getTemplatesBySpaceId(spaceId.value, space.id, params);
-//   if (res.count > 0) {
-//     InfoBox({
-//       title: `未能删除【${space.spec.name}】`,
-//       subTitle: '请先确认删除此空间下所有配置项',
-//       dialogType: 'confirm',
-//       confirmText: '我知道了',
-//     } as any);
-//   } else {
-//     InfoBox({
-//       title: `确认删除【${space.spec.name}】`,
-//       extCls: 'delete-space-infobox',
-//       onConfirm: async () => {
-//         await deleteTemplateSpace(spaceId.value, space.id);
-//         if (space.id === currentTemplateSpace.value) {
-//           templateStore.$patch((state) => {
-//             state.currentTemplateSpace = '';
-//           });
-//           initData();
-//         } else {
-//           loadList();
-//         }
-//         Message({
-//           theme: 'success',
-//           message: '删除成功',
-//         });
-//       },
-//     } as any);
-//   }
+const handleDelete = async (space: ITemplateSpaceItem) => {
+  templatesLoading.value = true;
+  const params = {
+    start: 0,
+    limit: 1,
+    // all: true
+  };
+  const res = await getTemplatesBySpaceId(spaceId.value, space.id, params);
+  if (res.count > 0) {
+    InfoBox({
+      title: `未能删除【${space.spec.name}】`,
+      subTitle: '请先确认删除此空间下所有配置项',
+      dialogType: 'confirm',
+      confirmText: '我知道了',
+    } as any);
+  } else {
+    InfoBox({
+      title: `确认删除【${space.spec.name}】`,
+      extCls: 'delete-space-infobox',
+      onConfirm: async () => {
+        await deleteTemplateSpace(spaceId.value, space.id);
+        if (space.id === currentTemplateSpace.value) {
+          templateStore.$patch((state) => {
+            state.currentTemplateSpace = '';
+          });
+          initData();
+        } else {
+          loadList();
+        }
+        Message({
+          theme: 'success',
+          message: '删除成功',
+        });
+      },
+    } as any);
+  }
 
-//   selectorRef.value.hidePopover();
-// };
+  selectorRef.value.hidePopover();
+};
 
 const handleSelect = (id: number) => {
   setTemplateSpace(id);

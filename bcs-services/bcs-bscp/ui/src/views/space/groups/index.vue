@@ -141,7 +141,6 @@ import { InfoBox } from 'bkui-vue/lib';
 import useGlobalStore from '../../../store/global';
 import { getSpaceGroupList, deleteGroup } from '../../../api/group';
 import { IGroupItem, IGroupCategory, IGroupCategoryItem } from '../../../../types/group';
-import GROUP_RULE_OPS from '../../../constants/group';
 import CreateGroup from './create-group.vue';
 import EditGroup from './edit-group.vue';
 import RuleTag from './components/rule-tag.vue';
@@ -297,18 +296,26 @@ const handleSearch = () => {
     const groupNameList = groupList.value.filter(item => item.name.includes(lowercaseSearchStr));
     // 分组规则过滤出来的数据
     const groupRuleList = groupList.value.filter((item) => {
-      const ruleList: string[] = [];
+      let groupRuleMatch = false;
       item.selector?.labels_and?.forEach((labels) => {
-        const op = GROUP_RULE_OPS.find(item => item.id === labels.op)?.name;
-        ruleList.push(`${labels.key}${op}${labels.value}`);
+        if (typeof labels.value === 'string') {
+          const valueStr = labels.value as string;
+          if (labels.key.includes(lowercaseSearchStr) || valueStr.includes(lowercaseSearchStr)) {
+            groupRuleMatch = true;
+          }
+        }
       });
-      item.selector?.labels_or?.forEach((labels) => {
-        const op = GROUP_RULE_OPS.find(item => item.id === labels.op)?.name;
-        ruleList.push(`${labels.key}${op}${labels.value}`);
-      });
-      return ruleList.includes(lowercaseSearchStr);
+      return groupRuleMatch;
     });
-    searchGroupList.value = [...groupNameList, ...groupRuleList];
+    const searchArr = [...groupNameList, ...groupRuleList];
+    const uniqueIds = new Set(); // 用于记录已经出现过的id
+    searchGroupList.value = searchArr.filter((obj) => {
+    if (uniqueIds.has(obj.id)) {
+      return false;
+    }
+    uniqueIds.add(obj.id);
+    return true;
+  });
     isSearchEmpty.value = true;
   }
   refreshTableData();
