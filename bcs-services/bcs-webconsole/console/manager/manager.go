@@ -71,7 +71,7 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext,
 	// 初始化 terminal record
 	recorder, err := record.NewReplayRecord(ctx, mgr.podCtx, terminalSize)
 	if err != nil {
-		klog.Errorf("init ReplayRecord failed: %s", err)
+		klog.Errorf("init ReplayRecord failed, err %s", err)
 		return nil, err
 	}
 	mgr.recorder = recorder
@@ -152,7 +152,6 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 	for {
 		select {
 		case <-c.ctx.Done():
-			c.recorder.GracefulShutdownRecorder()
 			logger.Infof("close %s ConsoleManager done", c.podCtx.PodName)
 			return nil
 		case <-interval.C:
@@ -166,10 +165,8 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 				}
 			}
 
-			// 未开启或文件初始化失败都不记录
-			if c.recorder != nil && c.recorder.Writer != nil {
-				c.recorder.Writer.WriteBuff.Flush() // nolint
-			}
+			// 定时写入文件
+			c.recorder.Flush()
 		}
 	}
 }

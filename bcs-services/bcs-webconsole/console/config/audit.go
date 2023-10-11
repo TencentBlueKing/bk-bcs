@@ -20,7 +20,7 @@ import (
 // AuditConf 终端session记录配置
 type AuditConf struct {
 	Enabled bool   `yaml:"enabled"`
-	DataDir string `yaml:"data_dir"`
+	DataDir string `yaml:"data_dir"` // 格式如 ./data
 }
 
 func (t *AuditConf) defaultPath() string {

@@ -91,12 +91,12 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 func (s *service) ReplayFoldersPageHandler(c *gin.Context) {
 	storage, err := repository.NewProvider(config.G.Repository.StorageType)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v\n", err))
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("Init storage err: %v", err))
 		return
 	}
 	folderNames, err := storage.ListFolders(c, "")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, fmt.Sprintf("List storage folder err: %v\n", err))
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("List storage folder err: %v", err))
 		return
 	}
 	data := gin.H{

@@ -156,14 +156,6 @@ func (c *WebConsoleManager) Init() error {
 		return err
 	}
 
-	done := make(chan struct{})
-	go record.UploadRecordFile(c.ctx, done)
-	microService.Init(micro.AfterStop(func() error {
-		<-done
-		logger.Info("upload record file gracefully shutdown")
-		return nil
-	}))
-
 	return nil
 }
 
@@ -421,6 +413,12 @@ func (c *WebConsoleManager) Run() error {
 	podCleanUpMgr := podmanager.NewCleanUpManager(ctx)
 	eg.Go(func() error {
 		return podCleanUpMgr.Run()
+	})
+
+	// 定时上报 cast
+	uploader := record.GetGlobalUploader()
+	eg.Go(func() error {
+		return uploader.IntervalUpload(ctx)
 	})
 
 	if c.multiCredConf != nil {

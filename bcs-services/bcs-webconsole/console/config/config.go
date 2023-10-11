@@ -14,6 +14,8 @@
 package config
 
 import (
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -198,12 +200,20 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
 	}
 
-	if err := c.init(); err != nil {
+	if e := c.init(); e != nil {
 		return err
 	}
+
 	if c.Audit.DataDir == "" {
 		c.Audit.DataDir = c.Audit.defaultPath()
 	}
+
+	c.Audit.DataDir, err = filepath.Abs(c.Audit.DataDir)
+	if err != nil {
+		return err
+	}
+	// 右边的目录去除
+	c.Audit.DataDir = strings.TrimRight(c.Audit.DataDir, "/")
 
 	if err := c.Logging.InitBlog(); err != nil {
 		return err
