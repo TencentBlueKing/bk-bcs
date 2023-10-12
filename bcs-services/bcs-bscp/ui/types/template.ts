@@ -193,3 +193,15 @@ export interface ITemplateVersionsName {
     template_revision_memo: string;
   }[]
 }
+
+// 版本对比
+export interface DiffSliderDataType {
+  id: number;
+  versionId: number;
+  name: string;
+  permission?: {
+    privilege: string;
+    user: string;
+    user_group: string;
+  };
+};

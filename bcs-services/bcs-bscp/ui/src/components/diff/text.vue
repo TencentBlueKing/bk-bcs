@@ -1,8 +1,20 @@
 <template>
-  <section ref="textDiffRef" class="text-diff-wrapper"></section>
+  <div class="diff-wrapper">
+    <div class="permission-diff" v-show="isShowPermissionDiff">
+      <div class="left-header">文件属性</div>
+      <section ref="permissionDiffRef" class="fill-diff-wrapper"></section>
+    </div>
+    <div class="text-diff">
+      <div class="left-header">文件内容</div>
+      <section ref="textDiffRef" class="text-diff-wrapper"></section>
+    </div>
+    <div class="footer">
+      <navigator :diff-editor="diffEditor" :permission-editor="permissionEditor"></navigator>
+    </div>
+  </div>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker.js?worker';
@@ -11,6 +23,7 @@ import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker.js?worker
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker.js?worker';
 import { IVariableEditParams } from '../../../types/variable';
 import useDiffEditorVariableReplace from '../../utils/hooks/use-diff-editor-variable-replace';
+import navigator from './navigator.vue';
 
 self.MonacoEnvironment = {
   getWorker(_, label) {
@@ -35,28 +48,35 @@ const props = withDefaults(
     base: string;
     baseLanguage?: string;
     baseVariables?: IVariableEditParams[];
+    basePermission?: string;
     current: string;
     currentLanguage?: string;
     currentVariables?: IVariableEditParams[];
+    currentPermission?: string;
   }>(),
   {
     baseLanguage: '',
     currentVariables: () => [],
     currentLanguage: '',
     baseVariables: () => [],
-  },
+  }
 );
 
 const textDiffRef = ref();
+const permissionDiffRef = ref();
 let diffEditor: monaco.editor.IStandaloneDiffEditor;
 let diffEditorHoverProvider: monaco.IDisposable;
+let permissionEditor: monaco.editor.IStandaloneDiffEditor;
+let permissionDiffEditorHoverProvider: monaco.IDisposable;
+
+const isShowPermissionDiff = computed(() => props.basePermission !== props.currentPermission);
 
 watch(
   () => [props.base, props.current],
   () => {
     updateModel();
     replaceDiffVariables();
-  },
+  }
 );
 
 watch(
@@ -64,7 +84,15 @@ watch(
   () => {
     updateModel();
     replaceDiffVariables();
-  },
+  }
+);
+
+watch(
+  () => [props.basePermission, props.currentPermission],
+  () => {
+    updateModel();
+    replaceDiffVariables();
+  }
 );
 
 onMounted(() => {
@@ -74,17 +102,23 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   diffEditor.dispose();
+  permissionEditor.dispose();
   if (diffEditorHoverProvider) {
     diffEditorHoverProvider.dispose();
+    permissionDiffEditorHoverProvider.dispose();
   }
 });
 
 const createDiffEditor = () => {
   if (diffEditor) {
     diffEditor.dispose();
+    permissionEditor.dispose();
   }
   const originalModel = monaco.editor.createModel(props.base, props.baseLanguage);
   const modifiedModel = monaco.editor.createModel(props.current, props.currentLanguage);
+  const originaPermissionModel = monaco.editor.createModel(props.basePermission as string, props.baseLanguage);
+  const modifieFilldModel = monaco.editor.createModel(props.currentPermission as string, props.currentLanguage);
+
   diffEditor = monaco.editor.createDiffEditor(textDiffRef.value, {
     theme: 'vs-dark',
     automaticLayout: true,
@@ -94,14 +128,47 @@ const createDiffEditor = () => {
     original: originalModel,
     modified: modifiedModel,
   });
+  permissionEditor = monaco.editor.createDiffEditor(permissionDiffRef.value, {
+    theme: 'vs-dark',
+    automaticLayout: true,
+    readOnly: true,
+    scrollBeyondLastLine: false,
+    lineNumbers: () => '',
+  });
+  permissionEditor.setModel({
+    original: originaPermissionModel,
+    modified: modifieFilldModel,
+  });
+  const leftDiffEditor = diffEditor.getOriginalEditor();
+  const rightDiffEditor = diffEditor.getModifiedEditor();
+  const leftPermissionEditor = permissionEditor.getOriginalEditor();
+  const rightPermissionEditor = permissionEditor.getModifiedEditor();
+  leftDiffEditor.onDidChangeCursorPosition(() => {
+    syncCursor(leftDiffEditor, rightDiffEditor);
+  });
+  rightDiffEditor.onDidChangeCursorPosition(() => {
+    syncCursor(rightDiffEditor, leftDiffEditor);
+  });
+  leftPermissionEditor.onDidChangeCursorPosition(() => {
+    syncCursor(leftPermissionEditor, rightPermissionEditor);
+  });
+  rightPermissionEditor.onDidChangeCursorPosition(() => {
+    syncCursor(rightPermissionEditor, leftPermissionEditor);
+  });
 };
 
 const updateModel = () => {
   const originalModel = monaco.editor.createModel(props.base, props.baseLanguage);
   const modifiedModel = monaco.editor.createModel(props.current, props.currentLanguage);
+  const originaPermissionModel = monaco.editor.createModel(props.basePermission as string, props.baseLanguage);
+  const modifiedPermissionModel = monaco.editor.createModel(props.currentPermission as string, props.currentLanguage);
   diffEditor.setModel({
     original: originalModel,
     modified: modifiedModel,
+  });
+  permissionEditor.setModel({
+    original: originaPermissionModel,
+    modified: modifiedPermissionModel,
   });
 };
 
@@ -111,12 +178,48 @@ const replaceDiffVariables = () => {
     (props.currentVariables && props.currentVariables.length > 0)
   ) {
     diffEditorHoverProvider = useDiffEditorVariableReplace(diffEditor, props.currentVariables, props.baseVariables);
+    permissionDiffEditorHoverProvider = useDiffEditorVariableReplace(
+      permissionEditor,
+      props.currentVariables,
+      props.baseVariables
+    );
+  }
+};
+
+// 实现两边的编辑器光标统一移动
+const syncCursor = (editorA: any, editorB: any) => {
+  const positionA = editorA.getPosition();
+  const positionB = editorB.getPosition();
+  if (
+    positionA &&
+    positionB &&
+    (positionA.lineNumber !== positionB.lineNumber || positionA.column !== positionB.column)
+  ) {
+    editorB.setPosition(positionA);
   }
 };
 </script>
 <style lang="scss" scoped>
-.text-diff-wrapper {
-  height: 100%;
+.text-diff {
+  flex: 1;
+  overflow: auto;
+  border-top: 2px solid #2c2c2c;
+  .text-diff-wrapper {
+    height: calc(100% - 20px);
+    :deep(.monaco-editor) {
+      .template-variable-item {
+        color: #1768ef;
+        border: 1px solid #1768ef;
+        cursor: pointer;
+      }
+    }
+  }
+}
+.permission-diff {
+  height: 100px;
+}
+.fill-diff-wrapper {
+  height: 80px;
   :deep(.monaco-editor) {
     .template-variable-item {
       color: #1768ef;
@@ -127,5 +230,23 @@ const replaceDiffVariables = () => {
 }
 :deep(.d2h-file-wrapper) {
   border: none;
+}
+
+.left-header {
+  height: 20px;
+  line-height: 20px;
+  padding-left: 5px;
+  color: #5a5a5b;
+  background-color: #1e1e1e;
+}
+
+.footer {
+  position: sticky;
+  bottom: 0px;
+}
+.diff-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 </style>

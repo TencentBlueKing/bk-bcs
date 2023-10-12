@@ -41,7 +41,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { ITemplateVersionItem } from '../../../../../types/template';
+import { ITemplateVersionItem, DiffSliderDataType } from '../../../../../types/template';
 import { IDiffDetail } from '../../../../../types/service';
 import {
   getTemplateVersionsDetailByIds,
@@ -56,7 +56,7 @@ const props = defineProps<{
   show: boolean;
   spaceId: string;
   templateSpaceId: number;
-  crtVersion: { id: number; versionId: number; name: string };
+  crtVersion: DiffSliderDataType;
 }>();
 
 const emits = defineEmits(['update:show']);
@@ -82,6 +82,7 @@ watch(
       const detail: ITemplateVersionItem = await getTemplateVersionDetail(props.crtVersion.versionId);
       configDiffData.value.contentType = detail.spec.file_type === 'binary' ? 'file' : 'text';
       configDiffData.value.current.content = await getConfigContent(detail);
+      configDiffData.value.current.permission = props.crtVersion.permission;
     }
   },
 );
@@ -120,6 +121,7 @@ const handleSelectVersion = async (id: number) => {
   const version = versionList.value.find(item => item.id === id);
   if (version) {
     configDiffData.value.base.content = await getConfigContent(version);
+    configDiffData.value.base.permission = version.spec.permission;
   }
 };
 
