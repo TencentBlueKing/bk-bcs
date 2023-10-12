@@ -89,8 +89,8 @@ func (u *Uploader) setState(filePath string, s state) {
 
 // IntervalUpload 定时上传
 func (u *Uploader) IntervalUpload(ctx context.Context) error {
-	if u.storage == nil {
-		klog.Info("storage type not set, just ignore")
+	if !config.G.Audit.Enabled || u.storage == nil {
+		klog.Info("audit not enabled or storage type not set, uploader just ignore")
 		return nil
 	}
 

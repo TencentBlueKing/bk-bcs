@@ -173,6 +173,10 @@ func (r *ReplyRecorder) Flush() {
 
 // End 正常退出: 关闭缓存和文件
 func (r *ReplyRecorder) End() {
+	if r == nil {
+		return
+	}
+
 	r.once.Do(func() {
 		// 关闭前将剩余缓冲区数据写入
 		r.Writer.WriteBuff.Flush() // nolint

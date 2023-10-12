@@ -84,14 +84,6 @@ func (c *ConsoleManager) AddMgrFunc(mgrFunc ManagerFunc) {
 	c.managerFuncs = append(c.managerFuncs, mgrFunc)
 }
 
-// HandleBannerMsg 处理 banner
-func (c *ConsoleManager) HandleBannerMsg(msg []byte) error {
-	// replay 记录 banner
-	record.RecordOutputEvent(c.recorder, msg)
-
-	return nil
-}
-
 // HandleResizeMsg 处理 resize 数据
 func (c *ConsoleManager) HandleResizeMsg(resizeMsg *types.TerminalSize) error {
 	// replay 记录终端大小变化
@@ -127,6 +119,11 @@ func (c *ConsoleManager) HandleInputMsg(msg []byte) ([]byte, error) {
 
 // HandleOutputMsg : 处理输出数据流
 func (c *ConsoleManager) HandleOutputMsg(msg []byte) ([]byte, error) {
+	return msg, nil
+}
+
+// HandlePostOutputMsg : 后置输出数据流处理，在HandleOutputMsg之后, 发送给websocket之前, 不能修改数据，没有错误返回
+func (c *ConsoleManager) HandlePostOutputMsg(msg []byte) {
 	// 命令行解析与审计
 	c.auditCmd(msg)
 
@@ -137,8 +134,6 @@ func (c *ConsoleManager) HandleOutputMsg(msg []byte) ([]byte, error) {
 	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
 		klog.InfoS("tracing key output", "key", msg, "waiting", time.Since(c.keyWaitingTime))
 	}
-
-	return msg, nil
 }
 
 // Run : Manager 后台任务等
