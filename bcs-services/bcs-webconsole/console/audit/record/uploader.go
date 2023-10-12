@@ -73,6 +73,10 @@ func newUploader() (*Uploader, error) {
 		u.storage = storage
 	}
 
+	if err := ensureDirExist(config.G.Audit.DataDir); err != nil {
+		return nil, err
+	}
+
 	return u, nil
 }
 
@@ -150,6 +154,11 @@ func (u *Uploader) batchUpload(ignoreState bool) (*batchUploadResult, error) {
 	result := &batchUploadResult{}
 
 	err := filepath.Walk(u.dataDir, func(path string, info fs.FileInfo, err error) error {
+		// 目录/文件不存在等
+		if err != nil {
+			return err
+		}
+
 		filePath := path[len(u.dataDir):]
 
 		if info.IsDir() {
