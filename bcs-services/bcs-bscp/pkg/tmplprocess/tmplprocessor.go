@@ -16,6 +16,7 @@ package tmplprocess
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -52,6 +53,9 @@ func (p *processor) ExtractVariables(template []byte) []string {
 	for name := range nameMap {
 		varNames = append(varNames, name)
 	}
+
+	// Sort in ascending order
+	sort.Strings(varNames)
 
 	return varNames
 }
