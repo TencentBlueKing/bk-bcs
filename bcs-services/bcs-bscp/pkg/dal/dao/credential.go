@@ -257,7 +257,7 @@ func (dao *credentialDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*t
 
 	credential, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get credential failed, err: %v", err)
+		return nil, err
 	}
 
 	return credential, nil

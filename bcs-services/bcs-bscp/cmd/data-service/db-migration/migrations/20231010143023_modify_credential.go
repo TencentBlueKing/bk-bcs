@@ -14,7 +14,6 @@ package migrations
 
 import (
 	"fmt"
-	"time"
 
 	"gorm.io/gorm"
 
@@ -54,8 +53,8 @@ func mig20231010143023Up(tx *gorm.DB) error {
 	tx.Model(&table.Credential{}).Find(&credentials)
 	for _, credential := range credentials {
 		if credential.Spec.Name == "" {
-			currentTime := time.Now().UnixNano() / 1000
-			credential.Spec.Name = fmt.Sprintf("token_%d", currentTime)
+			timeStr := credential.Revision.CreatedAt.Format("20060102150405.000")
+			credential.Spec.Name = fmt.Sprintf("token_%s", timeStr)
 			tx.Save(&credentials)
 		}
 	}

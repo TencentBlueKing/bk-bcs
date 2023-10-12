@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"time"
 
+	"gorm.io/gorm"
+
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -111,10 +113,12 @@ func (s *Service) UpdateCredential(ctx context.Context, req *pbds.UpdateCredenti
 	kt := kit.FromGrpcContext(ctx)
 
 	old, err := s.dao.Credential().GetByName(kt, req.Attachment.BizId, req.Spec.Name)
-	if err == nil {
-		if old.ID != req.Id {
-			return nil, fmt.Errorf("credential name %s already exists", req.Spec.Name)
-		}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("get credential failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	if !errors.Is(gorm.ErrRecordNotFound, err) && old.ID != req.Id {
+		return nil, fmt.Errorf("credential name %s already exists", req.Spec.Name)
 	}
 
 	credential := &table.Credential{
