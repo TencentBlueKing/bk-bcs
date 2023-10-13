@@ -34,6 +34,10 @@ type TemplateVariable interface {
 	List(kit *kit.Kit, bizID uint32, s search.Searcher, opt *types.BasePage) ([]*table.TemplateVariable, int64, error)
 	// Delete one template variable instance.
 	Delete(kit *kit.Kit, templateVariable *table.TemplateVariable) error
+	// BatchCreateWithTx batch create variable instances with transaction.
+	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplVars []*table.TemplateVariable) error
+	// BatchUpdateWithTx batch update variable instances with transaction.
+	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplVars []*table.TemplateVariable) error
 	// GetByUniqueKey get template variable by unique key.
 	GetByUniqueKey(kit *kit.Kit, bizID uint32, name string) (*table.TemplateVariable, error)
 }
@@ -181,6 +185,41 @@ func (dao *templateVariableDao) Delete(kit *kit.Kit, g *table.TemplateVariable) 
 	}
 
 	return nil
+}
+
+// BatchCreateWithTx batch create variable instances with transaction.
+// Note: batch operation won't audit.
+func (dao *templateVariableDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	tmplVars []*table.TemplateVariable) error {
+	if len(tmplVars) == 0 {
+		return nil
+	}
+	ids, err := dao.idGen.Batch(kit, table.Name(tmplVars[0].TableName()), len(tmplVars))
+	if err != nil {
+		return err
+	}
+	for i, v := range tmplVars {
+		if err := v.ValidateCreate(); err != nil {
+			return err
+		}
+		v.ID = ids[i]
+	}
+	return tx.TemplateVariable.WithContext(kit.Ctx).Save(tmplVars...)
+}
+
+// BatchUpdateWithTx batch update variable instances with transaction.
+// Note: batch operation won't audit.
+func (dao *templateVariableDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	tmplVars []*table.TemplateVariable) error {
+	if len(tmplVars) == 0 {
+		return nil
+	}
+	for _, v := range tmplVars {
+		if err := v.ValidateUpdate(); err != nil {
+			return err
+		}
+	}
+	return tx.TemplateVariable.WithContext(kit.Ctx).Save(tmplVars...)
 }
 
 // GetByUniqueKey get template variable by unique key

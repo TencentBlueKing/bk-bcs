@@ -113,6 +113,7 @@ const (
 	Config_DeleteTemplateVariable_FullMethodName            = "/pbcs.Config/DeleteTemplateVariable"
 	Config_UpdateTemplateVariable_FullMethodName            = "/pbcs.Config/UpdateTemplateVariable"
 	Config_ListTemplateVariables_FullMethodName             = "/pbcs.Config/ListTemplateVariables"
+	Config_ImportTemplateVariables_FullMethodName           = "/pbcs.Config/ImportTemplateVariables"
 	Config_ExtractAppTmplVariables_FullMethodName           = "/pbcs.Config/ExtractAppTmplVariables"
 	Config_GetAppTmplVariableRefs_FullMethodName            = "/pbcs.Config/GetAppTmplVariableRefs"
 	Config_GetReleasedAppTmplVariableRefs_FullMethodName    = "/pbcs.Config/GetReleasedAppTmplVariableRefs"
@@ -198,11 +199,11 @@ type ConfigClient interface {
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(ctx context.Context, in *ListTemplateRevisionsByIDsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(ctx context.Context, in *ListTmplRevisionNamesByTmplIDsReq, opts ...grpc.CallOption) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(ctx context.Context, in *CreateTemplateSetReq, opts ...grpc.CallOption) (*CreateTemplateSetResp, error)
@@ -239,6 +240,7 @@ type ConfigClient interface {
 	DeleteTemplateVariable(ctx context.Context, in *DeleteTemplateVariableReq, opts ...grpc.CallOption) (*DeleteTemplateVariableResp, error)
 	UpdateTemplateVariable(ctx context.Context, in *UpdateTemplateVariableReq, opts ...grpc.CallOption) (*UpdateTemplateVariableResp, error)
 	ListTemplateVariables(ctx context.Context, in *ListTemplateVariablesReq, opts ...grpc.CallOption) (*ListTemplateVariablesResp, error)
+	ImportTemplateVariables(ctx context.Context, in *ImportTemplateVariablesReq, opts ...grpc.CallOption) (*ImportTemplateVariablesResp, error)
 	ExtractAppTmplVariables(ctx context.Context, in *ExtractAppTmplVariablesReq, opts ...grpc.CallOption) (*ExtractAppTmplVariablesResp, error)
 	GetAppTmplVariableRefs(ctx context.Context, in *GetAppTmplVariableRefsReq, opts ...grpc.CallOption) (*GetAppTmplVariableRefsResp, error)
 	GetReleasedAppTmplVariableRefs(ctx context.Context, in *GetReleasedAppTmplVariableRefsReq, opts ...grpc.CallOption) (*GetReleasedAppTmplVariableRefsResp, error)
@@ -1071,6 +1073,15 @@ func (c *configClient) ListTemplateVariables(ctx context.Context, in *ListTempla
 	return out, nil
 }
 
+func (c *configClient) ImportTemplateVariables(ctx context.Context, in *ImportTemplateVariablesReq, opts ...grpc.CallOption) (*ImportTemplateVariablesResp, error) {
+	out := new(ImportTemplateVariablesResp)
+	err := c.cc.Invoke(ctx, Config_ImportTemplateVariables_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ExtractAppTmplVariables(ctx context.Context, in *ExtractAppTmplVariablesReq, opts ...grpc.CallOption) (*ExtractAppTmplVariablesResp, error) {
 	out := new(ExtractAppTmplVariablesResp)
 	err := c.cc.Invoke(ctx, Config_ExtractAppTmplVariables_FullMethodName, in, out, opts...)
@@ -1322,11 +1333,11 @@ type ConfigServer interface {
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
-	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
-	// option (google.api.http) = {
-	// delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
-	// };
-	// }
+	//rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
+	//option (google.api.http) = {
+	//delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
+	//};
+	//}
 	ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error)
 	ListTmplRevisionNamesByTmplIDs(context.Context, *ListTmplRevisionNamesByTmplIDsReq) (*ListTmplRevisionNamesByTmplIDsResp, error)
 	CreateTemplateSet(context.Context, *CreateTemplateSetReq) (*CreateTemplateSetResp, error)
@@ -1363,6 +1374,7 @@ type ConfigServer interface {
 	DeleteTemplateVariable(context.Context, *DeleteTemplateVariableReq) (*DeleteTemplateVariableResp, error)
 	UpdateTemplateVariable(context.Context, *UpdateTemplateVariableReq) (*UpdateTemplateVariableResp, error)
 	ListTemplateVariables(context.Context, *ListTemplateVariablesReq) (*ListTemplateVariablesResp, error)
+	ImportTemplateVariables(context.Context, *ImportTemplateVariablesReq) (*ImportTemplateVariablesResp, error)
 	ExtractAppTmplVariables(context.Context, *ExtractAppTmplVariablesReq) (*ExtractAppTmplVariablesResp, error)
 	GetAppTmplVariableRefs(context.Context, *GetAppTmplVariableRefsReq) (*GetAppTmplVariableRefsResp, error)
 	GetReleasedAppTmplVariableRefs(context.Context, *GetReleasedAppTmplVariableRefsReq) (*GetReleasedAppTmplVariableRefsResp, error)
@@ -1656,6 +1668,9 @@ func (UnimplementedConfigServer) UpdateTemplateVariable(context.Context, *Update
 }
 func (UnimplementedConfigServer) ListTemplateVariables(context.Context, *ListTemplateVariablesReq) (*ListTemplateVariablesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateVariables not implemented")
+}
+func (UnimplementedConfigServer) ImportTemplateVariables(context.Context, *ImportTemplateVariablesReq) (*ImportTemplateVariablesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ImportTemplateVariables not implemented")
 }
 func (UnimplementedConfigServer) ExtractAppTmplVariables(context.Context, *ExtractAppTmplVariablesReq) (*ExtractAppTmplVariablesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExtractAppTmplVariables not implemented")
@@ -3334,6 +3349,24 @@ func _Config_ListTemplateVariables_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ImportTemplateVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImportTemplateVariablesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ImportTemplateVariables(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ImportTemplateVariables_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ImportTemplateVariables(ctx, req.(*ImportTemplateVariablesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ExtractAppTmplVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ExtractAppTmplVariablesReq)
 	if err := dec(in); err != nil {
@@ -4074,6 +4107,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateVariables",
 			Handler:    _Config_ListTemplateVariables_Handler,
+		},
+		{
+			MethodName: "ImportTemplateVariables",
+			Handler:    _Config_ImportTemplateVariables_Handler,
 		},
 		{
 			MethodName: "ExtractAppTmplVariables",

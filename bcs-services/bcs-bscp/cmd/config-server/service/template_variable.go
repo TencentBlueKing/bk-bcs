@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -151,6 +152,76 @@ func (s *Service) ListTemplateVariables(ctx context.Context, req *pbcs.ListTempl
 	resp := &pbcs.ListTemplateVariablesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ImportTemplateVariables import template variables
+func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbcs.ImportTemplateVariablesReq) (
+	*pbcs.ImportTemplateVariablesResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	// validate params
+	const whiteSpace string = "white-space"
+	if req.Variables == "" {
+		return nil, errors.New("variables can't be empty")
+	}
+	if req.Separator == "\n" {
+		return nil, errors.New("char \n can't be used as separator")
+	}
+	if req.Separator == "" {
+		req.Separator = whiteSpace
+	}
+
+	vars := make([]*pbtv.TemplateVariableSpec, 0)
+	lines := strings.Split(req.Variables, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+
+		var fields []string
+		if req.Separator == whiteSpace {
+			fields = strings.Fields(line)
+		} else {
+			fields = strings.Split(line, req.Separator)
+		}
+		// validate variables content
+		if len(fields) != 3 && len(fields) != 4 {
+			return nil, fmt.Errorf("the line [%s] is not valid, which must be 3 or 4 fields", line)
+		}
+		if !strings.HasPrefix(strings.ToLower(fields[0]), constant.TemplateVariablePrefix) {
+			return nil, fmt.Errorf("template variable name must start with %s", constant.TemplateVariablePrefix)
+		}
+
+		v := &pbtv.TemplateVariableSpec{
+			Name:       strings.TrimSpace(fields[0]),
+			Type:       strings.TrimSpace(fields[1]),
+			DefaultVal: strings.TrimSpace(fields[2]),
+		}
+		if len(fields) == 4 {
+			v.Memo = strings.TrimSpace(fields[3])
+		}
+		vars = append(vars, v)
+	}
+
+	r := &pbds.ImportTemplateVariablesReq{
+		BizId: req.BizId,
+		Specs: vars,
+	}
+	rp, err := s.client.DS.ImportTemplateVariables(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("create template variable failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.ImportTemplateVariablesResp{
+		VariableCount: rp.VariableCount,
 	}
 	return resp, nil
 }
