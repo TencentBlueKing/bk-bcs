@@ -165,10 +165,6 @@ func (t *TemplateVariableSpec) ValidateUpdate() error {
 		return err
 	}
 
-	if err := t.Type.Validate(); err != nil {
-		return err
-	}
-
 	return nil
 }
 

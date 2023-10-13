@@ -218,6 +218,9 @@ func (dao *templateVariableDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		if err := v.ValidateUpdate(); err != nil {
 			return err
 		}
+		if err := v.Spec.Type.Validate(); err != nil {
+			return err
+		}
 	}
 	return tx.TemplateVariable.WithContext(kit.Ctx).Save(tmplVars...)
 }
