@@ -36,6 +36,8 @@ type AppTemplateBinding interface {
 	List(kit *kit.Kit, bizID, appID uint32, opt *types.BasePage) ([]*table.AppTemplateBinding, int64, error)
 	// Delete one app template binding instance.
 	Delete(kit *kit.Kit, atb *table.AppTemplateBinding) error
+	// DeleteByAppIDWithTx delete one app template binding instance by app id with transaction.
+	DeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID uint32) error
 }
 
 var _ AppTemplateBinding = new(appTemplateBindingDao)
@@ -208,6 +210,14 @@ func (dao *appTemplateBindingDao) Delete(kit *kit.Kit, g *table.AppTemplateBindi
 	}
 
 	return nil
+}
+
+// DeleteByAppIDWithTx delete one app template binding instance by app id with transaction.
+func (dao *appTemplateBindingDao) DeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID uint32) error {
+	m := tx.AppTemplateBinding
+	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
+	_, err := q.Where(m.AppID.Eq(appID)).Delete()
+	return err
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template

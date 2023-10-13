@@ -96,8 +96,29 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 		ID:    req.Id,
 		BizID: req.BizId,
 	}
-	if err := s.dao.App().Delete(grpcKit, app); err != nil {
+
+	tx := s.dao.GenQuery().Begin()
+
+	// 1. delete app
+	if err := s.dao.App().DeleteWithTx(grpcKit, tx, app); err != nil {
 		logs.Errorf("delete app failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	// 2. delete app template binding
+	if err := s.dao.AppTemplateBinding().DeleteByAppIDWithTx(grpcKit, tx, req.Id); err != nil {
+		logs.Errorf("delete app template binding failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
