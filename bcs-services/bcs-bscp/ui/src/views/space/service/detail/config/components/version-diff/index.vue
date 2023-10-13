@@ -112,7 +112,7 @@ watch(
     if (val) {
       getVersionList();
     }
-  },
+  }
 );
 
 watch(
@@ -122,7 +122,7 @@ watch(
       selectedBaseVersion.value = val;
     }
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 // 获取所有对比基准版本

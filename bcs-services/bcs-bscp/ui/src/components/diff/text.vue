@@ -5,7 +5,7 @@
       <section ref="permissionDiffRef" class="fill-diff-wrapper"></section>
     </div>
     <div class="text-diff">
-      <div class="left-header">文件内容</div>
+      <div class="left-header" v-show="isShowPermissionDiff">文件内容</div>
       <section ref="textDiffRef" class="text-diff-wrapper"></section>
     </div>
     <div class="footer">
@@ -202,10 +202,10 @@ const syncCursor = (editorA: any, editorB: any) => {
 <style lang="scss" scoped>
 .text-diff {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   border-top: 2px solid #2c2c2c;
   .text-diff-wrapper {
-    height: calc(100% - 20px);
+    height: 100%;
     :deep(.monaco-editor) {
       .template-variable-item {
         color: #1768ef;
@@ -243,6 +243,7 @@ const syncCursor = (editorA: any, editorB: any) => {
 .footer {
   position: sticky;
   bottom: 0px;
+  overflow: hidden;
 }
 .diff-wrapper {
   display: flex;

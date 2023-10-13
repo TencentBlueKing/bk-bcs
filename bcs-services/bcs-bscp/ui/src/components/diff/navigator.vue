@@ -56,7 +56,9 @@ watch(
 
 onBeforeUnmount(() => {
   contentNavigator.dispose();
-  permissionNavigator.dispose();
+  if (permissionNavigator) {
+    permissionNavigator.dispose();
+  }
 });
 
 // 设置差异导航
@@ -83,6 +85,7 @@ const getCurrentDiffIndex = () => {
   contentLineChange.value.forEach((item: any, index: number) => {
     if (item.modifiedStartLineNumber <= position.lineNumber && item.modifiedEndLineNumber >= position.lineNumber) {
       currentDiffNumber.value = index + 1;
+      console.log(currentDiffNumber.value);
     }
   });
 };
@@ -90,11 +93,13 @@ const getCurrentDiffIndex = () => {
 const previous = () => {
   contentNavigator.previous();
   getCurrentDiffIndex();
+  console.log('aaaaa', contentNavigator);
 };
 
 const next = () => {
   contentNavigator.next();
   getCurrentDiffIndex();
+  console.log('aaaaa');
 };
 </script>
 
