@@ -167,7 +167,7 @@ kube-scheduler"
 for pod in ${pods};do
   case "${CRI_TYPE,,}" in
     "docker")
-      if ! docker ps |grep -v pause|grep ${pod}|grep -i running;then
+      if ! docker ps |grep -v pause|grep ${pod}|grep -i Up;then
         utils::log "ERROR" "${pod} fail to run "
       fi
       ;;
