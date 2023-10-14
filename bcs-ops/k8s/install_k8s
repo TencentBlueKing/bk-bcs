@@ -61,6 +61,7 @@ else
           utils::log "ERROR" "containerd fail to run ${yq_image}"
         fi
         cp /tmp/yq /usr/bin/yq
+        rm /tmp/yq
       else
         utils::log "ERROR" "pull yq image failed"
       fi
