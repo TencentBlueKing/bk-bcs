@@ -69,6 +69,7 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   "${ROOT_DIR}"/k8s/install_cni.sh
   "${ROOT_DIR}"/k8s/operate_metrics_server apply
   "${ROOT_DIR}"/k8s/install_helm
+  "${ROOT_DIR}"/k8s/install_k8s
   "${ROOT_DIR}"/k8s/render_k8s_joincmd
   if [[ ${ENABLE_APISERVER_HA} == "true" ]]; then
     [[ -z ${VIP} ]] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
