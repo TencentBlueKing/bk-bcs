@@ -16,6 +16,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"bscp.io/pkg/criteria/validator"
 )
 
 // Credential defines a credential's detail information
@@ -86,6 +88,7 @@ type CredentialSpec struct {
 	CredentialType CredentialType `json:"credential_type" gorm:"column:credential_type"`
 	EncCredential  string         `json:"enc_credential" gorm:"column:enc_credential"`
 	EncAlgorithm   string         `json:"enc_algorithm" gorm:"column:enc_algorithm"`
+	Name           string         `json:"name" gorm:"column:name"`
 	Memo           string         `json:"memo" gorm:"column:memo"`
 	Enable         bool           `json:"enable" gorm:"column:enable"`
 	ExpiredAt      time.Time      `json:"expired_at" gorm:"column:expired_at"`
@@ -123,6 +126,9 @@ func (c *CredentialSpec) ValidateCreate() error {
 	if err := c.CredentialType.Validate(); err != nil {
 		return err
 	}
+	if err := validator.ValidateName(c.Name); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -136,6 +142,9 @@ func (c *CredentialSpec) ValidateUpdate() error {
 	}
 	if c.EncCredential != "" {
 		return errors.New("enc credential cannot be updated once created")
+	}
+	if err := validator.ValidateName(c.Name); err != nil {
+		return err
 	}
 	return nil
 }

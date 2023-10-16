@@ -29,6 +29,7 @@ func (c *CredentialSpec) CredentialSpec() *table.CredentialSpec {
 		EncCredential:  c.EncCredential,
 		EncAlgorithm:   c.EncAlgorithm,
 		Memo:           c.Memo,
+		Name:           c.Name,
 		Enable:         c.Enable,
 	}
 }
@@ -84,6 +85,7 @@ func PbCredentialSpec(spec *table.CredentialSpec) *CredentialSpec { //nolint:rev
 		EncAlgorithm:   spec.EncAlgorithm,
 		Enable:         spec.Enable,
 		Memo:           spec.Memo,
+		Name:           spec.Name,
 	}
 }
 

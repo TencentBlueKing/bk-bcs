@@ -365,7 +365,7 @@ export default defineComponent({
         $bkInfo({
           type: 'warning',
           clsName: 'custom-info-confirm',
-          title: $i18n.t('cluster.ca.tips.noModule'),
+          title: $i18n.t('cluster.ca.tips.noModule2'),
           defaultInfo: true,
           okText: $i18n.t('cluster.ca.button.edit'),
           confirmFn: () => {
