@@ -31,6 +31,7 @@ func newCredential(db *gorm.DB, opts ...gen.DOOption) credential {
 	_credential.CredentialType = field.NewString(tableName, "credential_type")
 	_credential.EncCredential = field.NewString(tableName, "enc_credential")
 	_credential.EncAlgorithm = field.NewString(tableName, "enc_algorithm")
+	_credential.Name = field.NewString(tableName, "name")
 	_credential.Memo = field.NewString(tableName, "memo")
 	_credential.Enable = field.NewBool(tableName, "enable")
 	_credential.ExpiredAt = field.NewTime(tableName, "expired_at")
@@ -53,6 +54,7 @@ type credential struct {
 	CredentialType field.String
 	EncCredential  field.String
 	EncAlgorithm   field.String
+	Name           field.String
 	Memo           field.String
 	Enable         field.Bool
 	ExpiredAt      field.Time
@@ -81,6 +83,7 @@ func (c *credential) updateTableName(table string) *credential {
 	c.CredentialType = field.NewString(table, "credential_type")
 	c.EncCredential = field.NewString(table, "enc_credential")
 	c.EncAlgorithm = field.NewString(table, "enc_algorithm")
+	c.Name = field.NewString(table, "name")
 	c.Memo = field.NewString(table, "memo")
 	c.Enable = field.NewBool(table, "enable")
 	c.ExpiredAt = field.NewTime(table, "expired_at")
@@ -115,11 +118,12 @@ func (c *credential) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *credential) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 12)
+	c.fieldMap = make(map[string]field.Expr, 13)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["credential_type"] = c.CredentialType
 	c.fieldMap["enc_credential"] = c.EncCredential
 	c.fieldMap["enc_algorithm"] = c.EncAlgorithm
+	c.fieldMap["name"] = c.Name
 	c.fieldMap["memo"] = c.Memo
 	c.fieldMap["enable"] = c.Enable
 	c.fieldMap["expired_at"] = c.ExpiredAt

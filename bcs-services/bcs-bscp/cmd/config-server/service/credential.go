@@ -58,6 +58,7 @@ func (s *Service) CreateCredentials(ctx context.Context,
 		},
 		Spec: &pbcredential.CredentialSpec{
 			Memo:           req.Memo,
+			Name:           req.Name,
 			CredentialType: table.BearToken.String(),
 			Enable:         true,
 			EncAlgorithm:   encryptionAlgorithm,
@@ -176,6 +177,7 @@ func (s *Service) UpdateCredential(ctx context.Context,
 		},
 		Spec: &pbcredential.CredentialSpec{
 			Enable: req.Enable,
+			Name:   req.Name,
 			Memo:   req.Memo,
 		},
 	}
