@@ -17,11 +17,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
 
@@ -30,19 +30,19 @@ func (s *service) UserPermRequestRedirect(c *gin.Context) {
 	projectId := c.Query("project_id")
 	clusterId := c.Query("cluster_id")
 	if projectId == "" {
-		api.APIError(c, i18n.GetMessage(c, "project_id is required"))
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "project_id is required"), "")
 		return
 	}
 	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
-		api.APIError(c, i18n.GetMessage(c, "项目不正确"))
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "项目不正确"), "")
 		return
 	}
 
 	redirectUrl, err := iam.MakeResourceApplyUrl(c.Request.Context(),
 		project.ProjectId, clusterId, route.GetNamespace(c), "")
 	if err != nil {
-		api.APIError(c, i18n.GetMessage(c, err.Error()))
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, err.Error()), "")
 		return
 	}
 

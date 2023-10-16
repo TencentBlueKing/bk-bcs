@@ -17,6 +17,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 // Result 返回的标准结构
@@ -27,8 +29,14 @@ type Result struct {
 	Data      interface{} `json:"data"`
 }
 
-// AbortWithBadRequestError 错误返回
-func AbortWithBadRequestError(c *gin.Context, err error) {
-	result := Result{Code: 1400, Message: err.Error(), RequestId: ""}
+// AbortWithBadRequestError 错误返回，兼容国际化
+func AbortWithBadRequestError(c *gin.Context, err string, requestId string) {
+	result := Result{Code: types.ApiErrorCode, Message: err, RequestId: requestId}
+	c.AbortWithStatusJSON(http.StatusBadRequest, result)
+}
+
+// AbortWithRequestSuccess 正常返回
+func AbortWithRequestSuccess(c *gin.Context, message, requestId string, data interface{}) {
+	result := Result{Code: types.NoError, Message: message, RequestId: requestId, Data: data}
 	c.AbortWithStatusJSON(http.StatusBadRequest, result)
 }

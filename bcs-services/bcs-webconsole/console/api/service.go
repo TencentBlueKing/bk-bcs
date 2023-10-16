@@ -93,22 +93,16 @@ func (s *service) ListClusters(c *gin.Context) {
 	projectId := c.Param("projectId")
 	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
-		APIError(c, i18n.GetMessage(c, "项目不正确"))
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "项目不正确"), authCtx.RequestId)
 		return
 	}
 
 	clusters, err := bcs.ListClusters(c.Request.Context(), project.ProjectId)
 	if err != nil {
-		APIError(c, i18n.GetMessage(c, err.Error()))
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, err.Error()), authCtx.RequestId)
 		return
 	}
-	data := types.APIResponse{
-		Data:      clusters,
-		Code:      types.NoError,
-		Message:   i18n.GetMessage(c, "获取集群成功"),
-		RequestID: authCtx.RequestId,
-	}
-	c.JSON(http.StatusOK, data)
+	rest.AbortWithRequestSuccess(c, i18n.GetMessage(c, "获取集群成功"), authCtx.RequestId, clusters)
 }
 
 // CreateWebConsoleSession 创建websocket session
@@ -143,7 +137,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}()
 	if err != nil {
-		APIError(c, i18n.GetMessage(c, err.Error()))
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, err.Error()), authCtx.RequestId)
 		return
 	}
 
@@ -153,21 +147,15 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 
 	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
-		msg := i18n.GetMessage(c, "获取session失败{}", err)
-		APIError(c, msg)
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "获取session失败{}", err), authCtx.RequestId)
 		return
 	}
 
-	data := types.APIResponse{
-		Data: map[string]string{
-			"session_id": sessionId,
-			"ws_url":     makeWebSocketURL(sessionId, consoleQuery.Lang, false),
-		},
-		Code:      types.NoError,
-		Message:   i18n.GetMessage(c, "获取session成功"),
-		RequestID: authCtx.RequestId,
+	data := map[string]string{
+		"session_id": sessionId,
+		"ws_url":     makeWebSocketURL(sessionId, consoleQuery.Lang, false),
 	}
-	c.JSON(http.StatusOK, data)
+	rest.AbortWithRequestSuccess(c, i18n.GetMessage(c, "获取session成功"), authCtx.RequestId, data)
 }
 
 // UploadHandler 上传文件
@@ -179,30 +167,30 @@ func (s *service) UploadHandler(c *gin.Context) {
 	sessionId := c.Param("sessionId")
 	data := types.APIResponse{RequestID: authCtx.RequestId}
 	if uploadPath == "" {
-		uploadErrorHandler(c, authCtx, "请先输入上传路径")
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "请先输入上传路径"), authCtx.RequestId)
 		return
 	}
 	err := checkFileExists(uploadPath, sessionId)
 	if err != nil {
-		uploadErrorHandler(c, authCtx, "目标路径不存在")
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "目标路径不存在"), authCtx.RequestId)
 		return
 	}
 	err = checkPathIsDir(uploadPath, sessionId)
 	if err != nil {
-		uploadErrorHandler(c, authCtx, "目标路径不存在")
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "目标路径不存在"), authCtx.RequestId)
 		return
 	}
 	file, err := c.FormFile("file")
 	if err != nil {
 		logger.Errorf("get file from request failed, err: %s", err.Error())
-		uploadErrorHandler(c, authCtx, "解析上传文件失败")
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "解析上传文件失败"), authCtx.RequestId)
 		return
 	}
 
 	opened, err := file.Open()
 	if err != nil {
 		logger.Errorf("open file from request failed, err: %s", err.Error())
-		uploadErrorHandler(c, authCtx, "解析上传文件失败")
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "解析上传文件失败"), authCtx.RequestId)
 		return
 	}
 	defer opened.Close()
@@ -210,14 +198,14 @@ func (s *service) UploadHandler(c *gin.Context) {
 	podCtx, err := sessions.NewStore().WebSocketScope().Get(c.Request.Context(), sessionId)
 	if err != nil {
 		logger.Errorf("get pod context by session %s failed, err: %s", sessionId, err.Error())
-		uploadErrorHandler(c, authCtx, "获取pod信息失败")
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "获取pod信息失败"), authCtx.RequestId)
 		return
 	}
 	reader, writer := io.Pipe()
 	pe, err := podCtx.NewPodExec()
 	if err != nil {
 		logger.Errorf("new pod exec failed, err: %s", err.Error())
-		uploadErrorHandler(c, authCtx, "执行上传命令失败")
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "执行上传命令失败"), authCtx.RequestId)
 		return
 	}
 	errChan := make(chan error, 1)
@@ -258,33 +246,23 @@ func (s *service) UploadHandler(c *gin.Context) {
 
 	if err = pe.Exec(); err != nil {
 		logger.Errorf("pod exec failed, err: %s", err.Error())
-		uploadErrorHandler(c, authCtx, "执行上传命令失败")
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "执行上传命令失败"), authCtx.RequestId)
 		return
 	}
 
 	err, ok := <-errChan
 	if ok && err != nil {
 		logger.Errorf("writer to tar failed, err: %s", err.Error())
-		uploadErrorHandler(c, authCtx, "文件上传失败")
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "文件上传失败"), authCtx.RequestId)
 		return
 	}
-	data.Code = types.NoError
-	data.Message = i18n.GetMessage(c, "文件上传成功")
-	c.JSON(http.StatusOK, data)
-}
 
-// uploadErrorHandler 上传文件时,错误信息处理
-func uploadErrorHandler(c *gin.Context, authCtx *route.AuthContext, msg string) {
-	data := types.APIResponse{RequestID: authCtx.RequestId}
-	data.Code = types.ApiErrorCode
-	data.Message = i18n.GetMessage(c, msg)
-	c.JSON(http.StatusOK, data)
+	rest.AbortWithRequestSuccess(c, i18n.GetMessage(c, "文件上传成功"), authCtx.RequestId, data)
 }
 
 // DownloadHandler 下载文件
 func (s *service) DownloadHandler(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
-	data := types.APIResponse{RequestID: authCtx.RequestId}
 	downloadPath := c.Query("download_path")
 	sessionId := c.Param("sessionId")
 	reader, writer := io.Pipe()
@@ -321,9 +299,7 @@ func (s *service) DownloadHandler(c *gin.Context) {
 	tarReader := tar.NewReader(reader)
 	_, err := tarReader.Next()
 	if err != nil {
-		data.Code = types.ApiErrorCode
-		data.Message = i18n.GetMessage(c, "复制文件流失败")
-		c.JSON(http.StatusOK, data)
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "复制文件流失败"), authCtx.RequestId)
 		return
 	}
 	fileName := downloadPath[strings.LastIndex(downloadPath, "/")+1:]
@@ -344,26 +320,23 @@ func (s *service) CheckDownloadHandler(c *gin.Context) {
 	sessionId := c.Param("sessionId")
 
 	if err := checkFileExists(downloadPath, sessionId); err != nil {
-		data.Message = i18n.GetMessage(c, "目标文件不存在")
-		c.JSON(http.StatusOK, data)
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "目标文件不存在"), authCtx.RequestId)
 		return
 	}
 
 	if err := checkPathIsDir(downloadPath, sessionId); err == nil {
-		data.Message = i18n.GetMessage(c, "暂不支持文件夹下载")
-		c.JSON(http.StatusOK, data)
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "暂不支持文件夹下载"), authCtx.RequestId)
 		return
 	}
 
 	if err := checkFileSize(downloadPath, sessionId, FileSizeLimits*FileSizeUnitMb); err != nil {
-		data.Message = i18n.GetMessage(c, "文件不能超过{}MB", map[string]int{"fileLimit": FileSizeLimits})
-		c.JSON(http.StatusOK, data)
+		rest.AbortWithBadRequestError(c,
+			i18n.GetMessage(c, "文件不能超过{}MB", map[string]int{"fileLimit": FileSizeLimits}),
+			authCtx.RequestId)
 		return
 	}
 
-	data.Code = types.NoError
-	data.Message = i18n.GetMessage(c, "文件可以下载")
-	c.JSON(http.StatusOK, data)
+	rest.AbortWithRequestSuccess(c, i18n.GetMessage(c, "文件可以下载"), authCtx.RequestId, data)
 }
 
 func checkPathIsDir(path, sessionID string) error {
@@ -444,8 +417,7 @@ func checkFileSize(path, sessionID string, sizeLimit int) error {
 func (s *service) CreatePortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 	if authCtx.BindSession == nil {
-		msg := i18n.GetMessage(c, "session_id不合法或已经过期")
-		APIError(c, msg)
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "session_id不合法或已经过期"), authCtx.RequestId)
 		return
 	}
 
@@ -453,23 +425,17 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 
 	sessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
-		msg := i18n.GetMessage(c, "获取session失败{}", err)
-		APIError(c, msg)
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "获取session失败{}", err), authCtx.RequestId)
 		return
 	}
 
 	lang := c.Query("lang")
 	lang = strings.TrimSuffix(lang, "/")
-	data := types.APIResponse{
-		Data: map[string]string{
-			"session_id": sessionId,
-			"ws_url":     makeWebSocketURL(sessionId, lang, false),
-		},
-		Code:      types.NoError,
-		Message:   i18n.GetMessage(c, "获取session成功"),
-		RequestID: authCtx.RequestId,
+	data := map[string]string{
+		"session_id": sessionId,
+		"ws_url":     makeWebSocketURL(sessionId, lang, false),
 	}
-	c.JSON(http.StatusOK, data)
+	rest.AbortWithRequestSuccess(c, i18n.GetMessage(c, "获取session成功"), authCtx.RequestId, data)
 }
 
 // CreateContainerPortalSession 创建 webconsole url api
@@ -480,29 +446,26 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 
 	err := c.BindJSON(consoleQuery)
 	if err != nil {
-		msg := i18n.GetMessage(c, "请求参数错误{}", err)
-		APIError(c, msg)
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "请求参数错误{}", err), authCtx.RequestId)
 		return
 	}
 
 	if e := consoleQuery.Validate(); e != nil {
-		msg := i18n.GetMessage(c, "请求参数错误{}", e)
-		APIError(c, msg)
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "请求参数错误{}", e), authCtx.RequestId)
 		return
 	}
 
 	// 自定义命令行
 	commands, err := consoleQuery.SplitCommand()
 	if err != nil {
-		msg := i18n.GetMessage(c, "请求参数错误, command not valid{}", err)
-		APIError(c, msg)
+		rest.AbortWithBadRequestError(
+			c, i18n.GetMessage(c, "请求参数错误, command not valid{}", err), authCtx.RequestId)
 		return
 	}
 
 	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
 	if err != nil {
-		msg := i18n.GetMessage(c, "请求参数错误{}", err)
-		APIError(c, msg)
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "请求参数错误{}", err), authCtx.RequestId)
 		return
 	}
 
@@ -519,8 +482,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 
 	sessionId, err := sessions.NewStore().OpenAPIScope().Set(c.Request.Context(), podCtx)
 	if err != nil {
-		msg := i18n.GetMessage(c, "获取session失败{}", err)
-		APIError(c, msg)
+		rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "获取session失败{}", err), authCtx.RequestId)
 		return
 	}
 
@@ -533,22 +495,14 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	if consoleQuery.WSAcquire {
 		wsSessionId, err := sessions.NewStore().WebSocketScope().Set(c.Request.Context(), podCtx)
 		if err != nil {
-			msg := i18n.GetMessage(c, "获取session失败{}", err)
-			APIError(c, msg)
+			rest.AbortWithBadRequestError(c, i18n.GetMessage(c, "获取session失败{}", err), authCtx.RequestId)
 			return
 		}
 
 		data["ws_url"] = makeWebSocketURL(wsSessionId, "", true)
 	}
 
-	respData := types.APIResponse{
-		Data:      data,
-		Code:      types.NoError,
-		Message:   i18n.GetMessage(c, "获取session成功"),
-		RequestID: authCtx.RequestId,
-	}
-
-	c.JSON(http.StatusOK, respData)
+	rest.AbortWithRequestSuccess(c, i18n.GetMessage(c, "获取session成功"), authCtx.RequestId, data)
 }
 
 // makeWebConsoleURL webconsole 页面访问地址
@@ -595,7 +549,7 @@ func makeWebSocketURL(sessionId, lang string, withScheme bool) string {
 
 // CreateClusterPortalSession 集群级别的 webconsole openapi
 func (s *service) CreateClusterPortalSession(c *gin.Context) {
-	rest.AbortWithBadRequestError(c, errors.New("Not implemented"))
+	rest.AbortWithBadRequestError(c, "Not implemented", "")
 }
 
 // APIError 简易的错误返回
