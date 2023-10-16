@@ -14,8 +14,8 @@ package migrations
 
 import (
 	"fmt"
-
 	"gorm.io/gorm"
+	"strings"
 
 	"bscp.io/cmd/data-service/db-migration/migrator"
 	"bscp.io/pkg/dal/table"
@@ -53,7 +53,11 @@ func mig20231010143023Up(tx *gorm.DB) error {
 	tx.Model(&table.Credential{}).Find(&credentials)
 	for _, credential := range credentials {
 		if credential.Spec.Name == "" {
+			// https://pkg.go.dev/time
+			// 在 Go 的时间格式化规则中，一个逗号或小数点后跟一个或多个零表示一个小数秒，它将以给定的小数位数打印出来。
+			// 即精确到毫秒级Format("20060102150405.000")
 			timeStr := credential.Revision.CreatedAt.Format("20060102150405.000")
+			timeStr = strings.ReplaceAll(timeStr, ".", "")
 			credential.Spec.Name = fmt.Sprintf("token_%s", timeStr)
 			tx.Save(&credentials)
 		}
