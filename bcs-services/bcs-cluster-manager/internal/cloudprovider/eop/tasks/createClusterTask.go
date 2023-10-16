@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
@@ -22,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -70,8 +70,8 @@ func CreateECKClusterTask(taskID string, stepName string) error {
 
 	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range strings.Split(nodeGroupIDs, ",") {
-		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
-		if err != nil {
+		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
+		if errGet != nil {
 			blog.Errorf("CreateECKClusterTask[%s]: GetNodeGroupByGroupID for cluster %s in task %s "+
 				"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
 			retErr := fmt.Errorf("get nodegroup information failed, %s", err.Error())
@@ -230,7 +230,7 @@ func generateKubeProxyMode(cls *proto.Cluster) string {
 func generateLabels(cls *proto.Cluster) []*api.Label {
 	labels := make([]*api.Label, 0)
 	for k, v := range cls.Labels {
-		labels = append(labels, &api.Label{k, v})
+		labels = append(labels, &api.Label{Key: k, Value: v})
 	}
 
 	return labels
@@ -714,7 +714,7 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			}
 		}
 	}
-	nodeGroups := make([]*proto.NodeGroup, 0)
+
 	for _, ngID := range addSuccessNodeGroupIDs {
 		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if err != nil {
@@ -743,8 +743,6 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		if err != nil {
 			return fmt.Errorf("updateNodeGroups UpdateNodeGroup failed, %s", err.Error())
 		}
-
-		nodeGroups = append(nodeGroups, nodeGroup)
 	}
 
 	return nil
@@ -832,14 +830,12 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	nodePoolList := make([]string, 0)
-	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("get nodegroup information failed, %s", err.Error())
 		}
 		totalNodesNum += nodeGroup.AutoScaling.DesiredSize
-		nodeGroups = append(nodeGroups, nodeGroup)
 		nodePoolList = append(nodePoolList, nodeGroup.CloudNodeGroupID)
 	}
 

@@ -8,13 +8,13 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package tasks
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
@@ -29,24 +29,6 @@ func updateClusterSystemID(clusterID string, systemID string) error {
 	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cluster)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// updateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
-func updateNodeGroupCloudNodeGroupID(nodeGroupID, cloudNodeGroupID string) error {
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
-	if err != nil {
-		return err
-	}
-
-	if group.CloudNodeGroupID == "" {
-		group.CloudNodeGroupID = cloudNodeGroupID
-		err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

@@ -8,19 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package eop
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	putils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"sync"
 )
 
 var cloudInfoMgr sync.Once
@@ -36,6 +37,7 @@ func init() {
 type CloudInfoManager struct {
 }
 
+// InitCloudClusterDefaultInfo init cloud cluster default configInfo
 func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster, opt *cloudprovider.InitClusterConfigOption) error {
 	if c == nil || cls == nil {
 		return fmt.Errorf("%s InitCloudClusterDefaultInfo request is empty", cloudName)
@@ -61,6 +63,7 @@ func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster, opt
 	return nil
 }
 
+// SyncClusterCloudInfo sync cluster metadata
 func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster, opt *cloudprovider.SyncClusterCloudInfoOption) error {
 	return cloudprovider.ErrCloudNotImplemented
 }

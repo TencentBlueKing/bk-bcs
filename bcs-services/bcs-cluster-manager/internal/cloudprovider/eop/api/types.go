@@ -8,7 +8,6 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package api
@@ -169,13 +168,14 @@ type ContainerRuntime struct {
 	Version string `json:"version"`
 }
 
+// CommonResponse common response
 type CommonResponse struct {
 	StatusCode string `json:"statusCode,omitempty"`
 	Message    string `json:"message,omitempty"`
 	Error      string `json:"error,omitempty"`
 }
 
-// GetClusterResponse xxx
+// GetClusterResponse response for GetCluster
 type GetClusterResponse struct {
 	CommonResponse
 	ReturnObj *GetClusterReObj `json:"returnObj,omitempty"`
@@ -227,7 +227,7 @@ type KubeConfig struct {
 	ExpireTime     string `json:"expireTime"`
 }
 
-// CreateClusterResponse xxx
+// CreateClusterResponse response for CreateCluster
 type CreateClusterResponse struct {
 	CommonResponse
 	ReturnObj *CreateClusterReObj `json:"returnObj,omitempty"`
@@ -240,6 +240,7 @@ type CreateClusterReObj struct {
 	TaskId    string `json:"taskId"`
 }
 
+// DeleteClusterReq request info for DeleteCluster
 type DeleteClusterReq struct {
 	ClusterId      string   `json:"clusterId"`
 	ReservedLbIds  []string `json:"reservedLbIds"`
@@ -247,27 +248,32 @@ type DeleteClusterReq struct {
 	ReservedSgId   string   `json:"reservedSgId"`
 }
 
+// DeleteClusterResponse response for DeleteCluster
 type DeleteClusterResponse struct {
 	CommonResponse
 	ReturnObj *DeleteClusterReObj `json:"returnObj,omitempty"`
 }
 
+// DeleteClusterReObj xxx
 type DeleteClusterReObj struct {
 	RequestId string `json:"requestId"`
 	TaskId    string `json:"taskId"`
 }
 
+// GetKubeConfigResponse response for GetKubeConfig
 type GetKubeConfigResponse struct {
 	CommonResponse
 	ReturnObj *GetKubeConfigReObj `json:"returnObj,omitempty"`
 }
 
+// GetKubeConfigReObj xxx
 type GetKubeConfigReObj struct {
 	RequestId          string      `json:"requestId"`
 	InternalKubeConfig *KubeConfig `json:"internalKubeConfig"`
 	ExternalKubeConfig *KubeConfig `json:"externalKubeConfig"`
 }
 
+// ListNodeReq request for ListNode
 type ListNodeReq struct {
 	ClusterID  string `json:"clusterID"`
 	NodeNames  string `json:"nodeNames,omitempty"`
@@ -276,17 +282,20 @@ type ListNodeReq struct {
 	PerPage    uint32 `json:"perPage,omitempty"`
 }
 
+// ListNodeResponse response for ListNode
 type ListNodeResponse struct {
 	CommonResponse
 	ReturnObj *ListNodeReObj `json:"returnObj,omitempty"`
 }
 
+// ListNodeReObj xxx
 type ListNodeReObj struct {
 	RequestId string  `json:"requestId"`
 	Nodes     []*Node `json:"nodes"`
 	Paging    *Paging `json:"paging"`
 }
 
+// Node ECK node info
 type Node struct {
 	NodePoolId     string `json:"nodePoolId"`
 	NodeName       string `json:"nodeName"`
@@ -301,16 +310,19 @@ type Node struct {
 	CreateTime     string `json:"createTime"`
 }
 
+// GetNodePoolResponse response for GetNodePool
 type GetNodePoolResponse struct {
 	CommonResponse
 	ReturnObj *GetNodePoolReObj `json:"returnObj"`
 }
 
+// GetNodePoolReObj xxx
 type GetNodePoolReObj struct {
 	RequestId string    `json:"requestId"`
 	NodePool  *NodePool `json:"nodePool"`
 }
 
+// NodePool ECK GetNodePool info
 type NodePool struct {
 	ClusterId         string       `json:"clusterId"`
 	NodePoolId        string       `json:"nodePoolId"`
@@ -323,6 +335,7 @@ type NodePool struct {
 	ContainerRuntime  string       `json:"containerRuntime"`
 }
 
+// NodePoolConf ECK nodepool config
 type NodePoolConf struct {
 	NodeCode       string       `json:"nodeCode"`
 	ImageName      string       `json:"imageName"`
@@ -334,6 +347,7 @@ type NodePoolConf struct {
 	DataDisks      []*Disk      `json:"dataDisks"`
 }
 
+// Paging info for paging
 type Paging struct {
 	TotalPage   uint32 `json:"totalPage"`
 	Page        uint32 `json:"page"`
@@ -341,6 +355,7 @@ type Paging struct {
 	TotalRecord uint32 `json:"totalRecord"`
 }
 
+// ListNodePoolReq request for ListNodePool
 type ListNodePoolReq struct {
 	ClusterID            string `json:"clusterID"`
 	EnableAutoScaling    string `json:"enableAutoScaling,omitempty"`
@@ -350,18 +365,20 @@ type ListNodePoolReq struct {
 	RetainSystemNodePool bool   `json:"retainSystemNodePool,omitempty"`
 }
 
+// ListNodePoolResponse response for ListNodePool
 type ListNodePoolResponse struct {
 	CommonResponse
 	ReturnObj *ListNodePoolReObj `json:"returnObj"`
 }
 
+// ListNodePoolReObj xxx
 type ListNodePoolReObj struct {
 	RequestId string        `json:"requestId"`
 	Paging    *Paging       `json:"paging"`
 	NodePools []*NodePoolV2 `json:"nodePools"`
 }
 
-// NodePoolV2 List nodepool
+// NodePoolV2 ECK ListNodePool info
 type NodePoolV2 struct {
 	NodePoolId        string   `json:"nodePoolId"`
 	Name              string   `json:"name"`
@@ -382,27 +399,32 @@ type NodePoolV2 struct {
 	CycleType         string   `json:"cycleType"`
 }
 
+// VmInfo nodepool VM info
 type VmInfo struct {
 	InstanceName string `json:"instanceName"`
 	Mem          uint32 `json:"mem"`
 	VCpu         uint32 `json:"vCpu"`
 }
 
+// NodeNum node num for different node states
 type NodeNum struct {
 	All    uint32 `json:"all"`
 	Normal uint32 `json:"normal"`
 }
 
+// ListVpcResponse response for ListVpc
 type ListVpcResponse struct {
 	CommonResponse
 	ReturnObj *ListVpcReObj `json:"returnObj,omitempty"`
 }
 
+// ListVpcReObj xxx
 type ListVpcReObj struct {
 	RequestId string `json:"requestId"`
 	Vpcs      []*Vpc `json:"vpcs"`
 }
 
+// Vpc info for Vpc
 type Vpc struct {
 	VpcId     uint32    `json:"vpcId"`
 	Name      string    `json:"name"`
@@ -410,6 +432,7 @@ type Vpc struct {
 	Subnets   []*Subnet `json:"subnets"`
 }
 
+// Subnet info for Subnet
 type Subnet struct {
 	SubnetId         uint32 `json:"subnetId"`
 	Name             string `json:"name"`

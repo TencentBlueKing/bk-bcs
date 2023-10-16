@@ -8,17 +8,17 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package eop
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -59,25 +59,30 @@ type Task struct {
 	works map[string]interface{}
 }
 
-func (t Task) Name() string {
+// Name get cloudName
+func (t *Task) Name() string {
 	return cloudName
 }
 
-func (t Task) GetAllTask() map[string]interface{} {
+// GetAllTask register all backgroup task for worker running
+func (t *Task) GetAllTask() map[string]interface{} {
 	return t.works
 }
 
-func (t Task) BuildCreateVirtualClusterTask(
-	cls *proto.Cluster, opt *cloudprovider.CreateVirtualClusterOption) (*proto.Task, error) {
+// BuildCreateVirtualClusterTask build create virtual cluster task
+func (t *Task) BuildCreateVirtualClusterTask(cls *proto.Cluster,
+	opt *cloudprovider.CreateVirtualClusterOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildDeleteVirtualClusterTask(
-	cls *proto.Cluster, opt *cloudprovider.DeleteVirtualClusterOption) (*proto.Task, error) {
+// BuildDeleteVirtualClusterTask build delete virtual cluster task
+func (t *Task) BuildDeleteVirtualClusterTask(cls *proto.Cluster,
+	opt *cloudprovider.DeleteVirtualClusterOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildCreateClusterTask(
+// BuildCreateClusterTask build create cluster task
+func (t *Task) BuildCreateClusterTask(
 	cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
 	// validate request params
 	if cls == nil {
@@ -141,12 +146,14 @@ func (t Task) BuildCreateClusterTask(
 	return task, nil
 }
 
-func (t Task) BuildImportClusterTask(
+// BuildImportClusterTask build import cluster task
+func (t *Task) BuildImportClusterTask(
 	cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildDeleteClusterTask(
+// BuildDeleteClusterTask build deleteCluster task
+func (t *Task) BuildDeleteClusterTask(
 	cls *proto.Cluster, opt *cloudprovider.DeleteClusterOption) (*proto.Task, error) {
 	// validate request params
 	if cls == nil {
@@ -198,66 +205,83 @@ func (t Task) BuildDeleteClusterTask(
 	return task, nil
 }
 
-func (t Task) BuildAddNodesToClusterTask(
-	cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+// BuildAddNodesToClusterTask build addNodes task
+func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildRemoveNodesFromClusterTask(
-	cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+// BuildRemoveNodesFromClusterTask build removeNodes task
+func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildAddExternalNodeToCluster(
-	group *proto.NodeGroup, nodes []*proto.Node, opt *cloudprovider.AddExternalNodesOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
-}
-
-func (t Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup,
-	nodes []*proto.Node, opt *cloudprovider.DeleteExternalNodesOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
-}
-
-func (t Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (
+// BuildCreateNodeGroupTask build create node group task
+func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (
 	*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node, opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
+// BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
+// including remove nodes from NodeGroup, clean data in nodes
+func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
+	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildMoveNodesToGroupTask(
-	nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
+// BuildUpdateNodeGroupTask when update nodegroup, we need to create background task,
+func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildCleanNodesInGroupTask(
-	nodes []*proto.Node, group *proto.NodeGroup, opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
+// BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
+// task to clean all nodes in nodegroup, release all resource in cloudprovider,
+// finnally delete nodes information in local storage.
+// @param group: need to delete
+func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildUpdateDesiredNodesTask(
-	desired uint32, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
+// BuildMoveNodesToGroupTask build move nodes to group task
+func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
+	opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildSwitchNodeGroupAutoScalingTask(
-	group *proto.NodeGroup, enable bool, opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
+// BuildUpdateDesiredNodesTask build update desired nodes task
+func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
+	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildUpdateAutoScalingOptionTask(
-	scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
+// BuildSwitchNodeGroupAutoScalingTask ensure auto scaler status and update nodegroup status to normal
+func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool,
+	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildSwitchAsOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption,
-	enable bool, opt *cloudprovider.CommonOption) (*proto.Task, error) {
+// BuildUpdateAutoScalingOptionTask update auto scaling option
+func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption,
+	opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-func (t Task) BuildUpdateNodeGroupTask(
-	group *proto.NodeGroup, opt *cloudprovider.CommonOption) (*proto.Task, error) {
+// BuildSwitchAsOptionStatusTask switch auto scaling option status
+func (t *Task) BuildSwitchAsOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+	opt *cloudprovider.CommonOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildAddExternalNodeToCluster add external to cluster
+func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.AddExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildDeleteExternalNodeFromCluster remove external node from cluster
+func (t *Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.DeleteExternalNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
