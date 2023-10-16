@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package logrule log rule
 package logrule
 
 import (

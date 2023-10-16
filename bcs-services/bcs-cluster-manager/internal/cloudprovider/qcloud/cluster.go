@@ -303,6 +303,7 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 		return false
 	}
 
+	// NOCC:ineffassign/assign(误报)
 	osName := ""
 	if opt.Group.NodeTemplate != nil && opt.Group.NodeTemplate.NodeOS != "" {
 		osName = opt.Group.NodeTemplate.NodeOS

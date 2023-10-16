@@ -344,7 +344,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 		nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID)
 		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed", taskID, info.Cluster.ClusterID, err)
+			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
 			return nil
 		}
 
@@ -381,7 +381,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 		nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID) // nolint
 		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed", taskID, info.Cluster.ClusterID, err)
+			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
 			return nil, nil, err
 		}
 
@@ -597,7 +597,7 @@ func removeClusterNodesTaint(ctx context.Context, clusterID string, successInsta
 			continue
 		}
 
-		blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] success", taskID, ins, err)
+		blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] success", taskID, ins)
 	}
 
 	return nil

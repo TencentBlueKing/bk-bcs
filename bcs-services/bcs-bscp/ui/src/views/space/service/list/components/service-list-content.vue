@@ -261,7 +261,7 @@ const handleLimitChange = (limit: number) => {
 .content-body {
   margin: 0 auto;
   padding-bottom: 24px;
-  width: 1216px;
+  width: 1233px;
   height: calc(100% - 64px);
   overflow: auto;
   .serving-list {

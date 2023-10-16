@@ -22,7 +22,8 @@ import (
 )
 
 // makeAcceptLanguage : 合法的语言列表
-func makeAcceptLanguage() (acceptLanguage []language.Tag) {
+func makeAcceptLanguage() []language.Tag {
+	var acceptLanguage []language.Tag
 	langMap := map[string]language.Tag{}
 	for _, v := range availableLanguage {
 		langMap[v.String()] = v
@@ -30,7 +31,7 @@ func makeAcceptLanguage() (acceptLanguage []language.Tag) {
 	for _, v := range langMap {
 		acceptLanguage = append(acceptLanguage, v)
 	}
-	return
+	return acceptLanguage
 }
 
 // getLangHandler xxx

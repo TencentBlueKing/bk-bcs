@@ -20,6 +20,7 @@
                 :maxlength="255"
                 :rows="5"
                 @blur="handleUpdateMemo"
+                :resize="false"
               >
               </bk-input>
             </template>

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package basic xxx
+// Package basic 包提供了一些基础的工具函数
 package basic
 
 // MaxInt 获取两个整数中较大的一个

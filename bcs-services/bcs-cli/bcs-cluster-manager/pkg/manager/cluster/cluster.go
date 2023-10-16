@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package cluster 包含集群管理相关的接口
 package cluster
 
 import (

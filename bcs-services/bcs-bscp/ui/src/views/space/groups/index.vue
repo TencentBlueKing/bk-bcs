@@ -106,6 +106,9 @@
                 </div>
               </template>
             </bk-table-column>
+            <template #empty>
+              <tableEmpty :is-search-empty="isSearchEmpty" @clear="clearSearchInfo"/>
+            </template>
           </bk-table>
           <bk-pagination
             v-if="!isCategorizedView"
@@ -119,12 +122,6 @@
             @limit-change="handlePageLimitChange"
           />
         </template>
-        <bk-exception v-if="groupList.length === 0 && !listLoading" class="group-data-empty" type="empty" scene="part">
-          当前暂无数据
-          <div class="create-group-text-btn">
-            <bk-button text theme="primary" @click="openCreateGroupDialog">立即创建</bk-button>
-          </div>
-        </bk-exception>
       </bk-loading>
     </div>
     <create-group v-model:show="isCreateGroupShow" @reload="loadGroupList"></create-group>
@@ -144,11 +141,11 @@ import { InfoBox } from 'bkui-vue/lib';
 import useGlobalStore from '../../../store/global';
 import { getSpaceGroupList, deleteGroup } from '../../../api/group';
 import { IGroupItem, IGroupCategory, IGroupCategoryItem } from '../../../../types/group';
-import GROUP_RULE_OPS from '../../../constants/group';
 import CreateGroup from './create-group.vue';
 import EditGroup from './edit-group.vue';
 import RuleTag from './components/rule-tag.vue';
 import ServicesToPublished from './services-to-published.vue';
+import tableEmpty from '../../../components/table/table-empty.vue';
 
 const { spaceId } = storeToRefs(useGlobalStore());
 
@@ -178,6 +175,7 @@ const editingGroup = ref<IGroupItem>({
   },
 });
 const isPublishedSliderShow = ref(false);
+const isSearchEmpty = ref(false);
 
 watch(
   () => spaceId.value,
@@ -291,24 +289,34 @@ const handleChangeView = () => {
 const handleSearch = () => {
   if (!searchInfo.value) {
     searchGroupList.value = groupList.value;
+    isSearchEmpty.value = false;
   } else {
     const lowercaseSearchStr = searchInfo.value.toLowerCase().replace(/\s/g, '');
     // 分组名称过滤出来的数据
     const groupNameList = groupList.value.filter(item => item.name.includes(lowercaseSearchStr));
     // 分组规则过滤出来的数据
     const groupRuleList = groupList.value.filter((item) => {
-      const ruleList: string[] = [];
+      let groupRuleMatch = false;
       item.selector?.labels_and?.forEach((labels) => {
-        const op = GROUP_RULE_OPS.find(item => item.id === labels.op)?.name;
-        ruleList.push(`${labels.key}${op}${labels.value}`);
+        if (typeof labels.value === 'string') {
+          const valueStr = labels.value as string;
+          if (labels.key.includes(lowercaseSearchStr) || valueStr.includes(lowercaseSearchStr)) {
+            groupRuleMatch = true;
+          }
+        }
       });
-      item.selector?.labels_or?.forEach((labels) => {
-        const op = GROUP_RULE_OPS.find(item => item.id === labels.op)?.name;
-        ruleList.push(`${labels.key}${op}${labels.value}`);
-      });
-      return ruleList.includes(lowercaseSearchStr);
+      return groupRuleMatch;
     });
-    searchGroupList.value = [...groupNameList, ...groupRuleList];
+    const searchArr = [...groupNameList, ...groupRuleList];
+    const uniqueIds = new Set(); // 用于记录已经出现过的id
+    searchGroupList.value = searchArr.filter((obj) => {
+    if (uniqueIds.has(obj.id)) {
+      return false;
+    }
+    uniqueIds.add(obj.id);
+    return true;
+  });
+    isSearchEmpty.value = true;
   }
   refreshTableData();
 };
@@ -364,6 +372,12 @@ const handleTooltip = (flag: boolean, info: string) => {
     };
   }
   return { disabled: true };
+};
+
+// 清空搜索框
+const clearSearchInfo = () => {
+  searchInfo.value = '';
+  handleSearch();
 };
 </script>
 <style lang="scss" scoped>

@@ -81,8 +81,8 @@ func makeRequest(ctx context.Context) {
 		fmt.Printf("get failed, err:%v\n", err)
 		return
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
 
 	}(resp.Body)
 	if err != nil {

@@ -134,9 +134,8 @@ func GetApplyURL(applications []iam.ApplicationAction) (string, error) {
 }
 
 // GetResourceTypeFromAction get resource type from action
-// NOCC:CCN_thresholde(设计如此),golint/fnsize(设计如此)
-// nolint
-func GetResourceTypeFromAction(action string) string {
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
+func GetResourceTypeFromAction(action string) string { // nolint
 	switch action {
 	case project.ProjectCreate.String():
 		return ""

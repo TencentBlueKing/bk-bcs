@@ -66,6 +66,11 @@ var (
 		Version:  "v1",
 		Resource: "pods",
 	}
+	nodeGVR = schema.GroupVersionResource{
+		Group:    "",
+		Version:  "v1",
+		Resource: "nodes",
+	}
 )
 
 // IpScheduler k8s scheduler extender api for bcs netservice
@@ -77,6 +82,7 @@ type IpScheduler struct {
 	IPLister             dynamiclister.Lister
 	ClaimLister          dynamiclister.Lister
 	PodLister            dynamiclister.Lister
+	NodeLister           dynamiclister.Lister
 	FixedIpAnnotationKey string
 
 	cache  *PoolCache
@@ -108,10 +114,12 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 	ipInformer := informerFactory.ForResource(bcsNetIPGVR).Informer()
 	claimInformer := informerFactory.ForResource(bcsNetIPClaimGVR).Informer()
 	podInformer := informerFactory.ForResource(podGVR).Informer()
+	nodeInformer := informerFactory.ForResource(nodeGVR).Informer()
 	poolLister := dynamiclister.New(poolInformer.GetIndexer(), bcsNetPoolGVR)
 	ipLister := dynamiclister.New(ipInformer.GetIndexer(), bcsNetIPGVR)
 	claimLister := dynamiclister.New(claimInformer.GetIndexer(), bcsNetIPClaimGVR)
 	podLister := dynamiclister.New(podInformer.GetIndexer(), podGVR)
+	nodeLister := dynamiclister.New(nodeInformer.GetIndexer(), nodeGVR)
 
 	cache := NewPoolCache()
 	ipScheduler := &IpScheduler{
@@ -122,6 +130,7 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 		IPInformer:      ipInformer,
 		ClaimLister:     claimLister,
 		PodLister:       podLister,
+		NodeLister:      nodeLister,
 		cache:           cache,
 		StopCh:          make(chan struct{}),
 	}
@@ -267,7 +276,14 @@ func getPool(poolName string) (*BCSNetPool, error) {
 	return pool, nil
 }
 
-func getPoolByName(hostName string) (*BCSNetPool, error) {
+func getPoolByHostname(hostName string) (*BCSNetPool, error) {
+	node, err := getNode(hostName)
+	if err != nil {
+		return nil, err
+	}
+	if node == nil {
+		return nil, fmt.Errorf("node is empty")
+	}
 	poolListUnstruct, err := DefaultIpScheduler.PoolLister.List(labels.Everything())
 	if err != nil {
 		blog.Warnf("get all BCSNetPoolList failed, err %s", err.Error())
@@ -280,7 +296,7 @@ func getPoolByName(hostName string) (*BCSNetPool, error) {
 			blog.Warnf("failed to convert unstructured net pool %s", pool.Name)
 			return nil, fmt.Errorf("failed to convert unstructured net pool %s", pool.Name)
 		}
-		if stringInSlice(pool.Spec.Hosts, hostName) {
+		if err := checkNodeInHosts(*node, pool.Spec.Hosts); err == nil {
 			return pool, nil
 		}
 	}
@@ -300,6 +316,21 @@ func getPod(ns, name string) (*v1.Pod, error) {
 		return nil, fmt.Errorf("failed to convert unstructured Pod %s/%s", ns, name)
 	}
 	return pod, nil
+}
+
+func getNode(name string) (*v1.Node, error) {
+	nodeUnstruct, err := DefaultIpScheduler.NodeLister.Get(name)
+	if err != nil {
+		blog.Warnf("get Node %s failed, err %s", name, err.Error())
+		return nil, fmt.Errorf("get Node %s failed, err %s", name, err.Error())
+	}
+	node := &v1.Node{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
+		nodeUnstruct.UnstructuredContent(), node); err != nil {
+		blog.Warnf("failed to convert unstructured Node %s", name)
+		return nil, fmt.Errorf("failed to convert unstructured Node %s", name)
+	}
+	return node, nil
 }
 
 // HandleIpSchedulerPreBind handle ip scheduler prebind
@@ -326,7 +357,7 @@ func HandleIpSchedulerPreBind(extenderBindingArgs schedulerapi.ExtenderBindingAr
 		}
 	}
 	// assume ip in pool cache
-	pool, err := getPoolByName(extenderBindingArgs.Node)
+	pool, err := getPoolByHostname(extenderBindingArgs.Node)
 	if err != nil {
 		return err
 	}

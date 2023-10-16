@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package query for query
 package query
 
 import (

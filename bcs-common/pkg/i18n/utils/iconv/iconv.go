@@ -32,7 +32,7 @@ type iError interface {
 }
 
 // String converts `any` to string.
-// It's most commonly used converting function.
+// NOCC:CCN_threshold(设计如此:),golint/fnsize(设计如此:)
 func String(any interface{}) string {
 	if any == nil {
 		return ""

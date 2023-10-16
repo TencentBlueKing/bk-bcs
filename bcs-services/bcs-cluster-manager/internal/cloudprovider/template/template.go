@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package template for template
 package template
 
 import (
@@ -192,6 +193,7 @@ func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *pr
 	return step, nil
 }
 
+// NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 func getTemplateParameterByName(name string, cluster *proto.Cluster, extra ExtraInfo) (string, error) { // nolint
 	if cluster == nil {
 		errMsg := fmt.Errorf("cluster is empty when getTemplateParameterByName")

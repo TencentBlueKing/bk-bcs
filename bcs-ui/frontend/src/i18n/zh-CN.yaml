@@ -318,6 +318,7 @@ generic:
     query: 查询
     create: 创建
     submit: 提交
+    podDelete: 重新调度
   label:
     key: 键
     value: 值
@@ -739,6 +740,7 @@ cluster:
       cannotEnableScalerDownConfig: 集群自动扩缩容已关闭，无法单独开启自动缩容配置
       cannotEnablePodsPriorityConfig: 集群自动扩缩容已关闭，无法单独开启低优先级 Pod 配置
       noModule: 弹性伸缩需要配置扩容后转移模块
+      noModule2: 从节点池添加节点需要配置扩容后转移模块
       notEmptyNodes: 请删除节点后再删除节点池
       noEnableNodePool: Cluster Autoscaler 需要至少一个节点池开启，请停用 Cluster Autoscaler 后再关闭
       needMoreThanOneNodePoolOn: Cluster Autoscaler 需要至少一个节点池，请停用 Cluster Autoscaler 后再删除

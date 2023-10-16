@@ -65,9 +65,9 @@ repository:
   bkrepo:
     endpoint: ""
     project: ""
-    user_name: ""
-    password: ""
     repo: ""
+    username: ""
+    password: ""
   cos:
     bucket_name: ""
     endpoint: ""

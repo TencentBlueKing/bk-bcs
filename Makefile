@@ -497,6 +497,10 @@ gitops-vaultplugin-server:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-vaultplugin-server
 	cd bcs-scenarios/bcs-gitops-vaultplugin-server && make vaultplugin && cd -
 
+gitops-gitgenerator-webhook:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-gitgenerator-webhook
+	cd bcs-scenarios/bcs-gitops-manager && make gitgenerator-webhook && cd -
+
 test: test-bcs-runtime
 
 test-bcs-runtime: test-bcs-k8s

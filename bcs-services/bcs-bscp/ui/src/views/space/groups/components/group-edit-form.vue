@@ -137,7 +137,7 @@ watch(
   () => props.group,
   (val) => {
     formData.value = cloneDeep(val);
-  },
+  }
 );
 
 onMounted(() => {
@@ -206,7 +206,6 @@ const handleLogicChange = (index: number, val: EGroupRuleType) => {
 };
 
 const ruleChange = () => {
-  validateRules();
   change();
 };
 

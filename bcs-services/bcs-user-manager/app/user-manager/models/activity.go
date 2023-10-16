@@ -77,5 +77,7 @@ type Activity struct {
 	Username     string         `json:"username" gorm:"not null"`
 	CreatedAt    time.Time      `json:"created_at" gorm:"index:union_search;type:timestamp not null"`
 	Description  string         `json:"description"`
+	SourceIP     string         `json:"source_ip"`
+	UserAgent    string         `json:"user_agent"`
 	Extra        string         `json:"extra"`
 }

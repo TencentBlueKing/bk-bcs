@@ -198,6 +198,8 @@ func (r *Recorder) Do() error {
 			Status:       r.result.Status,
 			Username:     r.ctx.Username,
 			Description:  r.result.ResultContent,
+			SourceIP:     r.ctx.SourceIP,
+			UserAgent:    r.ctx.UserAgent,
 			Extra:        extra,
 		})
 	}

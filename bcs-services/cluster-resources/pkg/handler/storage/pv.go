@@ -20,6 +20,7 @@ import (
 
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -37,12 +38,20 @@ func New() *Handler {
 func (h *Handler) ListPV(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.PV).List(
-		ctx, "", req.Format, req.Scene, metav1.ListOptions{LabelSelector: req.LabelSelector},
-	)
+	clusterInfo, err := cluster.GetClusterInfo(ctx, req.ClusterID)
 	if err != nil {
 		return err
 	}
+	// 共享集群 PV 返回空列表
+	if !clusterInfo.IsShared {
+		resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.PV).List(
+			ctx, "", req.Format, req.Scene, metav1.ListOptions{LabelSelector: req.LabelSelector},
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	resp.WebAnnotations, err = web.NewAnnos(
 		web.NewFeatureFlag(featureflag.FormCreate, false),
 	).ToPbStruct()

@@ -37,9 +37,6 @@ func New() *Handler {
 func (h *Handler) ListHPA(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if req.ApiVersion == "" {
-		req.ApiVersion = resCsts.DefaultHPAGroupVersion
-	}
 	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.HPA).List(
 		ctx, req.Namespace, req.Format, req.Scene, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
@@ -56,9 +53,6 @@ func (h *Handler) ListHPA(
 func (h *Handler) GetHPA(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if req.ApiVersion == "" {
-		req.ApiVersion = resCsts.DefaultHPAGroupVersion
-	}
 	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.HPA).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)

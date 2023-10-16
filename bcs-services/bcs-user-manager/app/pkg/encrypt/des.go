@@ -16,7 +16,7 @@ package encrypt
 import (
 	"bytes"
 	"crypto/cipher"
-	"crypto/des"
+	"crypto/des" // NOCC:gas/crypto(设计如此)
 	"encoding/base64"
 )
 

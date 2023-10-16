@@ -72,20 +72,24 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context, appset *v1alpha
 	if appset.Spec.Template.Annotations == nil {
 		appset.Spec.Template.Annotations = make(map[string]string)
 	}
-	appset.Spec.Template.Annotations[common.ProjectIDKey] =
-		common.GetBCSProjectID(argoProject.Annotations)
+	appset.Spec.Template.Annotations[common.ProjectIDKey] = common.GetBCSProjectID(argoProject.Annotations)
 	appset.Spec.Template.Annotations[common.ProjectBusinessIDKey] =
 		common.GetBCSProjectBusinessKey(argoProject.Annotations)
 
 	var errs []string
-	// NOTE: 仅允许 List Generator
+	var repoUrls []string
+	// NOTE: 仅允许 List/Git Generator
 	for i := range appset.Spec.Generators {
 		generator := appset.Spec.Generators[i]
-		if generator.Clusters != nil || generator.Git != nil || generator.SCMProvider != nil ||
+		if generator.Clusters != nil || generator.SCMProvider != nil ||
 			generator.ClusterDecisionResource != nil || generator.PullRequest != nil ||
 			generator.Matrix != nil || generator.Merge != nil {
 			errs = append(errs, fmt.Sprintf("generator[%d] has not allowed generator type", i))
 			continue
+		}
+		if generator.Git != nil {
+			generator.Git.Template = v1alpha1.ApplicationSetTemplate{}
+			repoUrls = append(repoUrls, generator.Git.RepoURL)
 		}
 		if generator.List != nil {
 			// rewrite generator.List.Template to empty value
@@ -94,13 +98,28 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context, appset *v1alpha
 	}
 	if len(errs) != 0 {
 		return http.StatusBadRequest,
-			errors.Errorf("gitops only allowed [list] generator: %s", strings.Join(errs, "; "))
+			errors.Errorf("gitops only allowed [list,git] generator: %s", strings.Join(errs, "; "))
+	}
+	for _, repoUrl := range repoUrls {
+		var repo *v1alpha1.Repository
+		repo, err = h.option.Storage.GetRepository(ctx, repoUrl)
+		if err != nil {
+			return http.StatusInternalServerError,
+				errors.Wrapf(err, "get repo '%s' failed with git-generator", repoUrl)
+		}
+		if repo == nil {
+			return http.StatusNotFound, fmt.Errorf("repo '%s' not found with git-generator", repoUrl)
+		}
 	}
 	// this will render the Applications by ApplicationSet's generators
 	// refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
 	for i := range appset.Spec.Generators {
 		generator := appset.Spec.Generators[i]
-		tsResult, err := generators.Transform(generator, map[string]generators.Generator{
+		if generator.List == nil {
+			continue
+		}
+		var tsResult []generators.TransformResult
+		tsResult, err = generators.Transform(generator, map[string]generators.Generator{
 			"List": generators.NewListGenerator(),
 		}, appset.Spec.Template, appset, map[string]interface{}{})
 		if err != nil {
@@ -113,7 +132,9 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context, appset *v1alpha
 				tmplApplication.Labels = make(map[string]string)
 			}
 			for _, p := range ts.Params {
-				app, err := render.RenderTemplateParams(tmplApplication, appset.Spec.SyncPolicy, p, appset.Spec.GoTemplate)
+				var app *v1alpha1.Application
+				app, err = render.RenderTemplateParams(tmplApplication, appset.Spec.SyncPolicy,
+					p, appset.Spec.GoTemplate)
 				if err != nil {
 					return http.StatusBadRequest, errors.Wrap(err, "error generating application from params")
 				}

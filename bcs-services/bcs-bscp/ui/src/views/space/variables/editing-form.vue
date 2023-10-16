@@ -26,7 +26,7 @@
       <bk-input v-model="localVal.default_val" @change="change" />
     </bk-form-item>
     <bk-form-item label="描述" property="memo">
-      <bk-input v-model="localVal.memo" type="textarea" :maxlength="100" :rows="5" @change="change" />
+      <bk-input v-model="localVal.memo" type="textarea" :maxlength="100" :rows="5" @change="change" :resize="false" />
     </bk-form-item>
   </bk-form>
 </template>

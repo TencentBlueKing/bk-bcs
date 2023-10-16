@@ -340,6 +340,7 @@ generic:
     query: Search
     create: Create
     submit: SUBMIT
+    podDelete: Del-Pods
   label:
     key: Key
     value: Value
@@ -864,6 +865,7 @@ cluster:
       noModule: >-
         Enabling the Autoscaler component requires configuration of the CMDB
         topology module
+      noModule2: To add a node from a node pool, configure a transfer module
       notEmptyNodes: Please delete the nodes before removing the node pool.
       noEnableNodePool: >-
         Cluster Autoscaler requires at least one node pool to be enabled. 

@@ -13,7 +13,7 @@
         <div v-show="!fullscreen" class="version-config-form">
           <bk-form ref="formRef" form-type="vertical" :model="localVal">
             <bk-form-item label="版本说明" propperty="memo">
-              <bk-input v-model="localVal.memo" type="textarea" :rows="8" />
+              <bk-input v-model="localVal.memo" type="textarea" :rows="8" :resize="false"/>
             </bk-form-item>
           </bk-form>
         </div>

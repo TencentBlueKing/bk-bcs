@@ -93,6 +93,8 @@ type Activity struct {
 	Status       ActivityStatus `json:"status"`
 	Username     string         `json:"username"`
 	Description  string         `json:"description"`
+	SourceIP     string         `json:"source_ip"`
+	UserAgent    string         `json:"user_agent"`
 	Extra        string         `json:"extra"`
 }
 

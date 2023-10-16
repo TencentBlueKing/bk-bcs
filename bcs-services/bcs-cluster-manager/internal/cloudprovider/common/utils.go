@@ -1035,7 +1035,7 @@ func FilterClusterNodesByNodeNames(ctx context.Context, info *cloudprovider.Clou
 
 	nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID)
 	if err != nil {
-		blog.Errorf("FilterClusterNodesByNodeNames[%s] cluster[%s] failed", taskID, info.Cluster.ClusterID, err)
+		blog.Errorf("FilterClusterNodesByNodeNames[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
 		return nil, nil, err
 	}
 

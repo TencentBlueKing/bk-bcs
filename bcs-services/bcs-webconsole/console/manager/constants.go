@@ -22,8 +22,6 @@ const (
 	// WebsocketPingInterval ping/pong时间间隔
 	WebsocketPingInterval = 10
 
-	// TickTimeout 链接自动断开时间, 30分钟
-	TickTimeout = 60 * 30
 	// LoginTimeout 自动登出时间
 	LoginTimeout = 60 * 60 * 24
 

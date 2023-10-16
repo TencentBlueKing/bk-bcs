@@ -98,6 +98,12 @@ docker: manager proxy
 	cd ${OUTPUT}/bcs-gitops-manager/ && docker build -t bcs-gitops-manager:${imagetag} . && cd -
 	cd ${OUTPUT}/bcs-gitops-proxy/ && docker build -t bcs-gitops-proxy:${imagetag} . && cd -
 
+.PHONY: gitgenerator-webhook
+gitgenerator-webhook: tidy
+	mkdir -p ${OUTPUT}/bcs-gitops-gitgenerator-webhook
+	cp -r images/gitgenerator-webhook/* ${OUTPUT}/bcs-gitops-gitgenerator-webhook/
+	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-gitgenerator-webhook/bcs-gitops-gitgenerator-webhook cmd/gitgenerator-webhook/main.go
+
 .PHONY: build
 build: manager proxy
 

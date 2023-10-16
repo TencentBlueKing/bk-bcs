@@ -24,6 +24,7 @@ type Provider interface {
 	UploadFile(ctx context.Context, localFile, filePath string) error
 	ListFile(ctx context.Context, folderName string) ([]string, error)
 	ListFolders(ctx context.Context, folderName string) ([]string, error)
+	IsExist(ctx context.Context, filePath string) (bool, error)
 	DownloadFile(ctx context.Context, filePath string) (io.ReadCloser, error)
 }
 
@@ -32,7 +33,7 @@ func NewProvider(providerType string) (Provider, error) {
 	switch providerType {
 	case "cos":
 		return newCosStorage()
-	case "bkRepo":
+	case "bkrepo":
 		return newBkRepoStorage()
 	default:
 		return nil, fmt.Errorf("%s is not supported", providerType)

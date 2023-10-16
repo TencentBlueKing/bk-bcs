@@ -18,6 +18,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"k8s.io/klog/v2"
@@ -45,7 +46,10 @@ func main() {
 	}
 	if shutdown != nil {
 		defer func() {
-			if err := shutdown(context.Background()); err != nil {
+			timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			if err := shutdown(timeoutCtx); err != nil {
 				klog.Infof("failed to shutdown TracerProvider: %s", err.Error())
 			}
 		}()

@@ -18,7 +18,6 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -61,7 +60,7 @@ func (o optionFunc) apply(c *Config) {
 func NewConfig(opts ...Option) *Config {
 	c := &Config{
 		Propagators:    otel.GetTextMapPropagator(),
-		MeterProvider:  global.GetMeterProvider(),
+		MeterProvider:  otel.GetMeterProvider(),
 		Filters:        []Filter{},
 		TracerProvider: otel.GetTracerProvider(),
 	}

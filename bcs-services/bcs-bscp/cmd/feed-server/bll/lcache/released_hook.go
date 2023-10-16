@@ -50,7 +50,7 @@ func newReleasedHook(mc *metric, cs *clientset.ClientSet) *ReleasedHook {
 
 const (
 	// maxReleasedHookSize defines the max size of the released hook's cache.
-	//nolint: unused
+	//nolint:unused
 	maxReleasedHookSize = 1024 * 1024 // 1MB
 )
 

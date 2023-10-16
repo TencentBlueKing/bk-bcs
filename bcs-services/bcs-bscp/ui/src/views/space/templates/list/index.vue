@@ -66,12 +66,12 @@ onMounted(() => {
   align-items: flex-start;
   justify-content: space-between;
   height: calc(100% - 38px);
+  border: none;
 }
 .side-menu-area {
   padding: 16px 0;
   height: 100%;
   background: #ffffff;
-  border-right: 1px solid #dcdee5;
 }
 .package-detail-area {
   height: 100%;

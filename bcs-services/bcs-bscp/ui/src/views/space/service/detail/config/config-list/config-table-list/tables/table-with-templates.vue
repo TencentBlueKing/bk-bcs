@@ -14,7 +14,7 @@
         </tr>
       </thead>
       <tbody>
-        <div v-for="group in tableGroupsData" :key="group.id">
+        <template v-for="group in tableGroupsData" :key="group.id" v-if="allConfigCount !== 0">
           <tr class="config-groups-table-tr group-title-row" v-if="group.configs.length > 0">
             <td colspan="8" class="config-groups-table-td">
               <div class="configs-group">
@@ -150,15 +150,15 @@
                     </tbody>
                   </table>
                 </div>
-                <TableEmpty
-                  v-if="allConfigCount === 0"
-                  :is-search-empty="isSearchEmpty"
-                  @clear="emits('clearStr')"
-                ></TableEmpty>
               </td>
             </tr>
           </template>
-        </div>
+        </template>
+        <tr v-else>
+          <td colspan="8">
+            <TableEmpty :is-search-empty="isSearchEmpty" @clear="emits('clearStr')" style="width: 100%" />
+          </td>
+        </tr>
       </tbody>
     </table>
   </bk-loading>

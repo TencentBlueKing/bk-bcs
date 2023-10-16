@@ -71,15 +71,20 @@ type argo struct {
 // Init control interface
 func (cd *argo) Init() error {
 	initializer := []func() error{
-		cd.initToken, cd.initBasicClient, cd.initCache,
+		cd.initToken, cd.initBasicClient,
+	}
+	if cd.option.Cache {
+		initializer = append(initializer, cd.initCache)
 	}
 	for _, init := range initializer {
 		if err := init(); err != nil {
 			return err
 		}
 	}
-	if err := cd.handleApplicationWatch(); err != nil {
-		return errors.Wrapf(err, "handle application watch failed")
+	if cd.option.Cache {
+		if err := cd.handleApplicationWatch(); err != nil {
+			return errors.Wrapf(err, "handle application watch failed")
+		}
 	}
 	return nil
 }
@@ -295,18 +300,34 @@ func (cd *argo) ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, e
 
 // GetApplication will return application by name
 func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error) {
-	app, err := cd.appClient.Get(ctx, &appclient.ApplicationQuery{Name: &name})
-	if err != nil {
-		if utils.IsArgoResourceNotFound(err) {
-			blog.Warnf("argocd get application %s not found: %s", name, err.Error())
-			return nil, nil
+	if !cd.cacheSynced.Load() {
+		app, err := cd.appClient.Get(ctx, &appclient.ApplicationQuery{Name: &name})
+		if err != nil {
+			if utils.IsArgoResourceNotFound(err) {
+				blog.Warnf("argocd get application %s not found: %s", name, err.Error())
+				return nil, nil
+			}
+			if !utils.IsContextCanceled(err) {
+				metric.ManagerArgoOperateFailed.WithLabelValues("GetApplication").Inc()
+			}
+			return nil, errors.Wrapf(err, "argocd get application '%s' failed", name)
 		}
-		if !utils.IsContextCanceled(err) {
-			metric.ManagerArgoOperateFailed.WithLabelValues("GetApplication").Inc()
-		}
-		return nil, errors.Wrapf(err, "argocd get application '%s' failed", name)
+		return app, nil
 	}
-	return app, nil
+	var result *v1alpha1.Application
+	cd.cacheApplication.Range(func(key, value any) bool {
+		apps := value.(map[string]*v1alpha1.Application)
+		app, ok := apps[name]
+		if ok {
+			result = app
+			return false
+		}
+		return true
+	})
+	if result == nil {
+		blog.Warnf("argocd get application %s not found", name)
+	}
+	return result, nil
 }
 
 // ListApplications interface
@@ -380,18 +401,25 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 			ResourceName: &resource.Name,
 		})
 		if err != nil {
+			if resource.Status != v1alpha1.SyncStatusCodeSynced {
+				blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
+					"with status '%s', noneed care: %s",
+					utils.RequestID(ctx), resource.Group, resource.Kind, resource.Name,
+					server, application.Name, resource.Status, err.Error())
+				continue
+			}
 			if utils.IsArgoResourceNotFound(err) {
 				blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
 					"got 'Not Found': %s",
 					utils.RequestID(ctx), resource.Group, resource.Kind, resource.Name,
 					server, application.Name, err.Error())
-			} else {
-				if !utils.IsContextCanceled(err) {
-					metric.ManagerArgoOperateFailed.WithLabelValues("DeleteApplicationResource").Inc()
-				}
-				errs = append(errs, fmt.Sprintf("argocd delete resource '%s/%s/%s' failed for cluster '%s': %s",
-					resource.Group, resource.Kind, resource.Name, server, err.Error()))
+				continue
 			}
+			if !utils.IsContextCanceled(err) {
+				metric.ManagerArgoOperateFailed.WithLabelValues("DeleteApplicationResource").Inc()
+			}
+			errs = append(errs, fmt.Sprintf("argocd delete resource '%s/%s/%s' failed for cluster '%s': %s",
+				resource.Group, resource.Kind, resource.Name, server, err.Error()))
 		} else {
 			blog.Infof("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' success",
 				utils.RequestID(ctx), resource.Group, resource.Kind, resource.Name, server, application.Name)

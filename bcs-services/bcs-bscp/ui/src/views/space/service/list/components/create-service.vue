@@ -16,7 +16,13 @@
           />
         </bk-form-item>
         <bk-form-item :label="t('服务描述')" property="memo">
-          <bk-input placeholder="请输入" type="textarea" v-model="formData.memo" @change="isFormChange = true" />
+          <bk-input
+            placeholder="请输入"
+            type="textarea"
+            v-model="formData.memo"
+            @change="isFormChange = true"
+            :resize="false"
+          />
         </bk-form-item>
       </bk-form>
     </div>
@@ -97,7 +103,7 @@ watch(
       formData.value.name = '';
       formData.value.memo = '';
     }
-  },
+  }
 );
 
 const handleCreateConfirm = async () => {

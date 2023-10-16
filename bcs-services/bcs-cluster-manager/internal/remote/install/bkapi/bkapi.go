@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bkapi defines the bk-api installer
 package bkapi
 
 import (

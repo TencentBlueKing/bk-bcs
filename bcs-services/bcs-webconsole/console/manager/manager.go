@@ -71,7 +71,7 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext,
 	// 初始化 terminal record
 	recorder, err := record.NewReplayRecord(ctx, mgr.podCtx, terminalSize)
 	if err != nil {
-		klog.Errorf("init ReplayRecord failed: %s", err)
+		klog.Errorf("init ReplayRecord failed, err %s", err)
 		return nil, err
 	}
 	mgr.recorder = recorder
@@ -82,14 +82,6 @@ func NewConsoleManager(ctx context.Context, podCtx *types.PodContext,
 // AddMgrFunc 添加自定义函数
 func (c *ConsoleManager) AddMgrFunc(mgrFunc ManagerFunc) {
 	c.managerFuncs = append(c.managerFuncs, mgrFunc)
-}
-
-// HandleBannerMsg 处理 banner
-func (c *ConsoleManager) HandleBannerMsg(msg []byte) error {
-	// replay 记录 banner
-	record.RecordOutputEvent(c.recorder, msg)
-
-	return nil
 }
 
 // HandleResizeMsg 处理 resize 数据
@@ -127,6 +119,11 @@ func (c *ConsoleManager) HandleInputMsg(msg []byte) ([]byte, error) {
 
 // HandleOutputMsg : 处理输出数据流
 func (c *ConsoleManager) HandleOutputMsg(msg []byte) ([]byte, error) {
+	return msg, nil
+}
+
+// HandlePostOutputMsg : 后置输出数据流处理，在HandleOutputMsg之后, 发送给websocket之前, 不能修改数据，没有错误返回
+func (c *ConsoleManager) HandlePostOutputMsg(msg []byte) {
 	// 命令行解析与审计
 	c.auditCmd(msg)
 
@@ -137,8 +134,6 @@ func (c *ConsoleManager) HandleOutputMsg(msg []byte) ([]byte, error) {
 	if len(msg) > 0 && c.keyDec > 0 && msg[0] == c.keyDec {
 		klog.InfoS("tracing key output", "key", msg, "waiting", time.Since(c.keyWaitingTime))
 	}
-
-	return msg, nil
 }
 
 // Run : Manager 后台任务等
@@ -152,7 +147,6 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 	for {
 		select {
 		case <-c.ctx.Done():
-			c.recorder.GracefulShutdownRecorder()
 			logger.Infof("close %s ConsoleManager done", c.podCtx.PodName)
 			return nil
 		case <-interval.C:
@@ -166,10 +160,8 @@ func (c *ConsoleManager) Run(ctx *gin.Context) error {
 				}
 			}
 
-			// 未开启或文件初始化失败都不记录
-			if c.recorder != nil && c.recorder.Writer != nil {
-				c.recorder.Writer.WriteBuff.Flush() // nolint
-			}
+			// 定时写入文件
+			c.recorder.Flush()
 		}
 	}
 }
@@ -189,7 +181,7 @@ func (c *ConsoleManager) auditCmd(outputMsg []byte) {
 		return
 	}
 
-	//TODO:历史命令问题,可能解析问题导致
+	// DOTO:历史命令问题,可能解析问题导致
 	if strings.ReplaceAll(string(ss.Code), "\b", "") == "" {
 		rex := regexp.MustCompile("\\x1b\\[\\d+P") // nolint
 		l := rex.Split(string(out), -1)

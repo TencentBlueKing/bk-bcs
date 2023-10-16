@@ -10,23 +10,21 @@
  * limitations under the License.
  */
 
-package auth
+package config
 
 import (
-	"testing"
+	"os"
+	"path/filepath"
 )
 
-var server = &ClientAuth{
-	server:    "xxx",
-	appCode:   "xxx",
-	appSecret: "xxx",
+// AuditConf 终端session记录配置
+type AuditConf struct {
+	Enabled bool   `yaml:"enabled"`
+	DataDir string `yaml:"data_dir"` // 格式如 ./data
 }
 
-func TestClientAuth_GetAccessToken(t *testing.T) {
-	token, err := server.GetAccessToken()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(token)
+func (t *AuditConf) defaultPath() string {
+	// NOCC:gas/error(设计如此)
+	pwd, _ := os.Getwd()
+	return filepath.Join(pwd, "data")
 }

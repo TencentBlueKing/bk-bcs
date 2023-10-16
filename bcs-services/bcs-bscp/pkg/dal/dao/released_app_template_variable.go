@@ -13,6 +13,8 @@
 package dao
 
 import (
+	"sort"
+
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -74,5 +76,13 @@ func (dao *releasedAppTemplateVariableDao) ListVariables(kit *kit.Kit, bizID, ap
 	if len(appVars) == 0 {
 		return []*table.TemplateVariableSpec{}, nil
 	}
-	return appVars[0].Spec.Variables, nil
+	vars := appVars[0].Spec.Variables
+
+	// Define a custom sorting function that sorts by the name field in ascending order.
+	sortByName := func(i, j int) bool {
+		return vars[i].Name < vars[j].Name
+	}
+	sort.Slice(vars, sortByName)
+
+	return vars, nil
 }

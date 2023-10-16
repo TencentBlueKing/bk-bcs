@@ -70,7 +70,7 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="220">
+        <bk-table-column :label="$t('generic.label.action')" :resizable="false" width="240">
           <template #default="{ row }">
             <bk-button
               text
@@ -80,7 +80,7 @@
               @click="handleEnlargeCapacity(row)">{{ $t('deploy.templateset.scale') }}</bk-button>
             <bk-button
               class="ml10" text
-              @click="gotoDetail(row)">{{ $t('dashboard.workload.pods.delete') }}</bk-button>
+              @click="gotoDetail(row)">{{ $t('generic.button.podDelete') }}</bk-button>
             <bk-button
               class="ml10" text
               v-authority="{

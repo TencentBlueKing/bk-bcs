@@ -46,6 +46,9 @@
         <slot name="operations" :data="row"></slot>
       </template>
     </bk-table-column>
+    <template #empty>
+      <tableEmpty :is-search-empty="isSearchEmpty" @clear="emits('clearStr')"></tableEmpty>
+    </template>
   </bk-table>
   <ScriptCited v-model:show="showCiteSlider" :id="props.scriptId" :version-id="versionId" />
 </template>
@@ -55,6 +58,7 @@ import { IScriptVersionListItem } from '../../../../../types/script';
 import { IPagination } from '../../../../../types/index';
 import { datetimeFormat } from '../../../../utils/index';
 import ScriptCited from '../list/script-cited.vue';
+import tableEmpty from '../../../../components/table/table-empty.vue';
 
 const STATUS_MAP = {
   not_deployed: '未上线',
@@ -66,12 +70,13 @@ const props = defineProps<{
   scriptId: number;
   list: IScriptVersionListItem[];
   pagination: IPagination;
+  isSearchEmpty: boolean;
 }>();
 
 const showCiteSlider = ref(false);
 const versionId = ref(0);
 
-const emits = defineEmits(['view', 'pageChange', 'pageLimitChange']);
+const emits = defineEmits(['view', 'pageChange', 'pageLimitChange', 'clearStr']);
 
 const handleOpenCitedSlider = (version: IScriptVersionListItem) => {
   versionId.value = version.hook_revision.id;
