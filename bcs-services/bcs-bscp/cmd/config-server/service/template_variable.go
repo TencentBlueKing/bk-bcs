@@ -173,8 +173,8 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbcs.ImportT
 	if req.Variables == "" {
 		return nil, errors.New("variables can't be empty")
 	}
-	if req.Separator == "\n" {
-		return nil, errors.New("char \n can't be used as separator")
+	if strings.Contains(req.Separator, "\n") {
+		return nil, errors.New("separator can't contain char \n")
 	}
 	if req.Separator == "" {
 		req.Separator = whiteSpace
@@ -184,6 +184,9 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbcs.ImportT
 	lines := strings.Split(req.Variables, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
 
 		var fields []string
 		if req.Separator == whiteSpace {

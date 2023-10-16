@@ -149,7 +149,7 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbds.ImportT
 						BizID: req.BizId,
 					},
 					Revision: &table.Revision{
-						Creator: kt.User,
+						Creator: oldVarMap[spec.Name].Revision.Creator,
 						Reviser: kt.User,
 					},
 				})
