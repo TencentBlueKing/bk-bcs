@@ -1,0 +1,126 @@
+<template>
+  <div class="wrap">
+    <div class="title">分隔符</div>
+    <div class="select">
+      <div
+        v-for="item in allSelect"
+        :key="item.id"
+        class="item"
+        @click="handleSelectSeparator(item.id)"
+        :class="{ 'select-item': selectSeparatorId === item.id }"
+      >
+        {{ item.text }}
+      </div>
+    </div>
+    <bk-form ref="formRef" v-if="selectSeparatorId === 5" :rules="rules" :model="formData">
+      <bk-form-item required property="separator">
+        <bk-input class="custom-input" v-model="formData.separator" placeholder="未输入" />
+      </bk-form-item>
+    </bk-form>
+    <div class="footer">
+      <bk-button theme="primary" size="small" @click="handleConfirm">确定</bk-button>
+      <bk-button size="small" @click="emits('closed')">取消</bk-button>
+    </div>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { ref } from 'vue';
+
+const emits = defineEmits(['closed', 'confirm']);
+const allSelect = [
+  { id: 1, text: '空字符', value: 'white-space' },
+  { id: 2, text: ',', value: ',' },
+  { id: 3, text: ';', value: ';' },
+  { id: 4, text: '|', value: '|' },
+  { id: 5, text: '自定义' },
+];
+const selectSeparatorId = ref(1);
+const formData = ref({
+  separator: '',
+});
+const formRef = ref();
+const regex = /^[\x20-\x7E]*$/;
+const rules = {
+  separator: [
+    {
+      validator: (val: string) => {
+        return regex.test(val);
+      },
+      message: '您输入的分隔符错误,请重新输入',
+    },
+    {
+      validator: (val: string) => {
+        return val.length === 1;
+      },
+      message: '您输入的分隔符过长,请重新输入',
+    },
+  ],
+};
+const handleSelectSeparator = (id: number) => {
+  selectSeparatorId.value = id;
+};
+const handleConfirm = async () => {
+  if (selectSeparatorId.value === 5) {
+    await formRef.value.validate();
+    emits('confirm', formData.value.separator);
+  } else {
+    emits('confirm', allSelect[selectSeparatorId.value].value);
+  }
+};
+</script>
+
+<style scoped lang="scss">
+.wrap {
+  width: 276px;
+  background: #2e2e2e;
+  border: 1px solid #63656e;
+  box-shadow: 0 2px 6px 0 #0000001a;
+  border-radius: 2px;
+  padding: 16px;
+  padding-bottom: 24px;
+  font-size: 12px;
+  .title {
+    color: #c4c6cc;
+    line-height: 20px;
+  }
+  .select {
+    display: flex;
+    margin: 12px 0 20px;
+    .item {
+      width: 52px;
+      height: 26px;
+      border: 1px solid #8e8e8e;
+      border-radius: 2px 0 0 2px;
+      border-radius: 2px 0 0 2px;
+      color: #e0e0e0;
+      text-align: center;
+      line-height: 26px;
+      background-color: #2f2f2f;
+      cursor: pointer;
+      &:hover {
+        color: #488eff;
+        border-color: #488eff;
+      }
+    }
+    .select-item {
+      color: #488eff;
+      border-color: #488eff;
+    }
+  }
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    margin-left: 132px;
+  }
+}
+</style>
+
+<style lang="scss">
+.custom-input {
+  .bk-input--text {
+    background-color: rgba($color: #000000, $alpha: 0);
+    color: #c4c6cc;
+  }
+}
+</style>

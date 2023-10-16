@@ -42,10 +42,10 @@ const props = withDefaults(
     variables: () => [],
     editable: true,
     language: '',
-  },
+  }
 );
 
-const emit = defineEmits(['update:modelValue', 'change']);
+const emit = defineEmits(['update:modelValue', 'change', 'enter']);
 
 const codeEditorRef = ref();
 let editor: monaco.editor.IStandaloneCodeEditor;
@@ -58,21 +58,21 @@ watch(
     if (val !== localVal.value) {
       editor.setValue(val);
     }
-  },
+  }
 );
 
 watch(
   () => props.language,
   (val) => {
     monaco.editor.setModelLanguage(editor.getModel() as monaco.editor.ITextModel, val);
-  },
+  }
 );
 
 watch(
   () => props.editable,
   (val) => {
     editor.updateOptions({ readOnly: !val });
-  },
+  }
 );
 
 watch(
@@ -81,7 +81,7 @@ watch(
     if (Array.isArray(val) && val.length > 0) {
       editorHoverProvider = useEditorVariableReplace(editor, val);
     }
-  },
+  }
 );
 
 onMounted(() => {
@@ -105,6 +105,14 @@ onMounted(() => {
     localVal.value = editor.getValue();
     emit('update:modelValue', localVal.value);
     emit('change', localVal.value);
+  });
+  // 监听第一次回车事件
+  const listener = editor.onKeyDown(function (event) {
+    if (event.keyCode === monaco.KeyCode.Enter) {
+      emit('enter');
+      // 取消监听键盘事件
+      listener.dispose();
+    }
   });
 });
 
