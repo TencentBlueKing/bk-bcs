@@ -219,6 +219,12 @@ interface IConfigsGroupData {
   configs: IConfigTableItem[];
 }
 
+interface IPermissionType {
+  privilege: string;
+  user: string;
+  user_group: string;
+}
+
 interface IConfigTableItem {
   id: number;
   name: string;
@@ -229,6 +235,7 @@ interface IConfigTableItem {
   reviser: string;
   update_at: string;
   file_state: string;
+  permission?: IPermissionType;
 }
 
 const configStore = useConfigStore();
@@ -392,7 +399,7 @@ const transListToTableData = () => {
 const transConfigsToTableItemData = (list: IConfigItem[]) =>
   list.map((item: IConfigItem) => {
     const { id, spec, revision, file_state } = item;
-    const { name, path } = spec;
+    const { name, path, permission } = spec;
     const { creator, reviser, update_at } = revision;
     return {
       id,
@@ -404,6 +411,7 @@ const transConfigsToTableItemData = (list: IConfigItem[]) =>
       reviser,
       update_at: datetimeFormat(update_at),
       file_state,
+      permission,
     };
   });
 
@@ -505,6 +513,7 @@ const handleConfigDiff = (groupId: number, config: IConfigTableItem) => {
     pkgId: groupId,
     id: config.id,
     version: config.versionId,
+    permission: config.permission,
   };
   isDiffPanelShow.value = true;
 };

@@ -31,7 +31,14 @@
             v-overflow-title
             :key="config.id"
             :class="['config-item', { actived: getItemSelectedStatus(group.id, config) }]"
-            @click="handleSelectItem({ pkgId: group.id, id: config.id, version: config.template_revision_id })"
+            @click="
+              handleSelectItem({
+                pkgId: group.id,
+                id: config.id,
+                version: config.template_revision_id,
+                permission: config.permission,
+              })
+            "
           >
             <i v-if="config.diff_type" :class="['status-icon', config.diff_type]"></i>
             {{ config.name }}
@@ -85,12 +92,21 @@ interface IConfigMenuItem {
   byte_size: string;
   signature: string;
   template_revision_id: number;
+  permission?: IPermissionType;
+}
+
+interface IPermissionType {
+  privilege: string;
+  user: string;
+  user_group: string;
 }
 
 interface IConfigDiffItem extends IConfigMenuItem {
   diff_type: string;
   current: string;
   base: string;
+  currentPermission?: IPermissionType;
+  basePermission?: IPermissionType;
 }
 
 interface IConfigsGroupData {
@@ -116,7 +132,7 @@ const props = withDefaults(
   {
     unNamedVersionVariables: () => [],
     selectedConfig: () => ({ pkgId: 0, id: 0, version: 0 }),
-  },
+  }
 );
 
 const emits = defineEmits(['selected']);
@@ -150,7 +166,7 @@ watch(
     aggregatedList.value = calcDiff();
     groupedConfigListOnShow.value = aggregatedList.value.slice();
     setDefaultSelected();
-  },
+  }
 );
 
 // 当前版本默认选中的配置项
@@ -163,7 +179,7 @@ watch(
   },
   {
     immediate: true,
-  },
+  }
 );
 
 onMounted(async () => {
@@ -229,7 +245,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
       expand: true,
       configs: configs.map((config) => {
         const { id, spec, commit_spec, revision, file_state } = config;
-        const { name, file_type } = spec;
+        const { name, file_type, permission } = spec;
         const { origin_byte_size, byte_size, origin_signature, signature } = commit_spec.content;
         return {
           type: 'config',
@@ -241,6 +257,7 @@ const getCommonConfigList = async (id: number): Promise<IConfigsGroupData[]> => 
           byte_size: unNamedVersion ? byte_size : origin_byte_size,
           signature: unNamedVersion ? signature : origin_signature,
           template_revision_id: 0,
+          permission,
         };
       }),
     },
@@ -336,6 +353,8 @@ const calcDiff = () => {
           diff_type: '',
           current: crtItem.signature,
           base: baseItem.signature,
+          basePermission: baseItem.permission,
+          currentPermission: crtItem.permission,
         };
         if (crtItem.template_revision_id !== baseItem.template_revision_id || diffConfig.current !== diffConfig.base) {
           diffCount.value += 1;
@@ -350,6 +369,7 @@ const calcDiff = () => {
           diff_type: isBaseVersionExist.value ? 'add' : '',
           current: crtItem.signature,
           base: '',
+          currentPermission: crtItem.permission,
         });
       }
     });
@@ -360,7 +380,7 @@ const calcDiff = () => {
   // 计算当前版本删除项
   baseGroupList.value.forEach((baseGroupItem) => {
     const { template_space_id, id, name, expand, configs } = baseGroupItem;
-    const groupIndex = list.findIndex(item => item.id === baseGroupItem.id);
+    const groupIndex = list.findIndex((item) => item.id === baseGroupItem.id);
     const diffGroup: IDiffGroupData =
       groupIndex > -1 ? list[groupIndex] : { template_space_id, id, name, expand, configs: [] };
 
@@ -385,6 +405,7 @@ const calcDiff = () => {
           diff_type: isBaseVersionExist.value ? 'delete' : '',
           current: '',
           base: baseItem.signature,
+          basePermission: baseItem.permission,
         });
       }
     });
@@ -401,13 +422,13 @@ const calcDiff = () => {
 // 否则取第一个非空分组的第一个配置项
 const setDefaultSelected = () => {
   if (props.selectedConfig.id) {
-    const pkg = aggregatedList.value.find(group => group.id === props.selectedConfig.pkgId);
+    const pkg = aggregatedList.value.find((group) => group.id === props.selectedConfig.pkgId);
     if (pkg) {
       pkg.expand = true;
     }
     handleSelectItem(props.selectedConfig);
   } else {
-    const group = aggregatedList.value.find(group => group.configs.length > 0);
+    const group = aggregatedList.value.find((group) => group.configs.length > 0);
     if (group) {
       handleSelectItem({ pkgId: group.id, id: group.configs[0].id, version: group.configs[0].template_revision_id });
     }
@@ -451,7 +472,7 @@ const getItemSelectedStatus = (pkgId: number, config: IConfigDiffItem) => {
 
 // 选择对比配置项后，加载配置项详情，组装对比数据
 const handleSelectItem = async (selectedConfig: IConfigDiffSelected) => {
-  const pkg = aggregatedList.value.find(item => item.id === selectedConfig.pkgId);
+  const pkg = aggregatedList.value.find((item) => item.id === selectedConfig.pkgId);
   if (pkg) {
     const config = pkg.configs.find((item) => {
       const res = item.id === selectedConfig.id && item.template_revision_id === selectedConfig.version;
@@ -468,7 +489,17 @@ const handleSelectItem = async (selectedConfig: IConfigDiffSelected) => {
 const getConfigDiffDetail = async (config: IConfigDiffItem) => {
   let currentConfigContent: string | IFileConfigContentSummary = '';
   let baseConfigContent: string | IFileConfigContentSummary = '';
-  const { id, name, file_type, update_at, byte_size, current: currentSignature, base: baseSignature } = config;
+  const {
+    id,
+    name,
+    file_type,
+    update_at,
+    byte_size,
+    current: currentSignature,
+    base: baseSignature,
+    currentPermission,
+    basePermission,
+  } = config;
 
   if (config.current) {
     currentConfigContent = await loadConfigContent({
@@ -497,10 +528,12 @@ const getConfigDiffDetail = async (config: IConfigDiffItem) => {
     base: {
       content: baseConfigContent,
       variables: baseVariables.value,
+      permission: basePermission,
     },
     current: {
       content: currentConfigContent,
       variables: currentVariables.value,
+      permission: currentPermission,
     },
   };
 };
