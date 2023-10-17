@@ -23,13 +23,16 @@
                     :language="props.diff.current.language"
                     :current="(props.diff.current.content as string)"
                     :current-variables="props.diff.current.variables"
+                    :current-permission="currentPermission"
                     :base="(props.diff.base.content as string)"
-                    :base-variables="props.diff.base.variables" />
+                    :base-variables="props.diff.base.variables"
+                    :base-permission="basePermission"/>
             </div>
         </bk-loading>
     </section>
 </template>
 <script setup lang="ts">
+import { computed } from 'vue';
 import { IDiffDetail } from '../../../types/service';
 import { IFileConfigContentSummary } from '../../../types/config';
 import File from './file.vue';
@@ -41,6 +44,18 @@ const props = defineProps<{
     id: number; // 服务ID或模板空间ID
     loading: boolean
   }>();
+
+const currentPermission = computed(() => {
+  return `权限:${props.diff.current.permission?.privilege}
+用户:${props.diff.current.permission?.user}
+用户组:${props.diff.current.permission?.user_group}`;
+});
+const basePermission = computed(() => {
+  if (!props.diff.base.permission) return;
+  return `权限:${props.diff.base.permission?.privilege}
+用户:${props.diff.base.permission?.user}
+用户组:${props.diff.base.permission?.user_group}`;
+});
 </script>
 <style lang="scss" scoped>
     .diff-comp-panel {

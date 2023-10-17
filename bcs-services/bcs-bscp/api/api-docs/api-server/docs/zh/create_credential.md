@@ -6,11 +6,12 @@
 
 #### 输入参数
 
-| 参数名称     | 参数类型     | 必选   | 描述                                  |
-| ------------ | ------------ | ------ |-------------------------------------|
-| biz_id    | uint32       | 是     | 业务ID                                |
-| memo | string | 是 | credential的描述                            |
-| scope | []string | 否 | credential的匹配规则        |
+| 参数名称   | 参数类型     | 必选 | 描述                  |
+|--------| ------------ |----|---------------------|
+| biz_id | uint32       | 是  | 业务ID                |
+| name   | string | 是  | credential的名称，业务下唯一 |
+| memo   | string | 否  | credential的描述       |
+| scope  | []string | 否  | credential的匹配规则     |
 
 #### 调用示例
 
@@ -21,6 +22,7 @@
     "mysql",
     "origin/*"
   ],
+  "name":"test_name",
   "memo":"test"
 }
 ```

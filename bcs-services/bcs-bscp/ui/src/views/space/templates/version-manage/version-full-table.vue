@@ -71,7 +71,7 @@
 import { ref } from 'vue';
 import { Spinner } from 'bkui-vue/lib/icon';
 import { IPagination } from '../../../../../types/index';
-import { ITemplateVersionItem, ITemplateCitedCountDetailItem } from '../../../../../types/template';
+import { ITemplateVersionItem, ITemplateCitedCountDetailItem, DiffSliderDataType } from '../../../../../types/template';
 import { datetimeFormat } from '../../../../utils/index';
 import VersionBoundByAppsDetail from './version-bound-by-apps-detail.vue';
 import TemplateVersionDiff from './template-version-diff.vue';
@@ -92,7 +92,7 @@ const boundDetailSliderData = ref<{ open: boolean; data: { id: number; versionId
   open: false,
   data: { id: 0, versionId: 0, name: '' },
 });
-const diffSliderData = ref<{ open: boolean; data: { id: number; versionId: number; name: string } }>({
+const diffSliderData = ref<{ open: boolean; data: DiffSliderDataType }>({
   open: false,
   data: { id: 0, versionId: 0, name: '' },
 });
@@ -109,7 +109,7 @@ const handleOpenDiffSlider = (version: ITemplateVersionItem) => {
   const { id, spec } = version;
   diffSliderData.value = {
     open: true,
-    data: { id: props.templateId, versionId: id, name: spec.revision_name },
+    data: { id: props.templateId, versionId: id, name: spec.revision_name, permission: spec.permission },
   };
 };
 

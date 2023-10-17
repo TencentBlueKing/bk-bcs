@@ -8,10 +8,20 @@ export interface IDiffDetail {
     content: string|IFileConfigContentSummary;
     language?: string;
     variables?: IVariableEditParams[];
+    permission?: {
+      privilege: string;
+      user: string;
+      user_group: string;
+    };
   },
   current: {
     content: string|IFileConfigContentSummary;
     language?: string;
     variables?: IVariableEditParams[];
+    permission?: {
+      privilege: string;
+      user: string;
+      user_group: string;
+    };
   }
 }

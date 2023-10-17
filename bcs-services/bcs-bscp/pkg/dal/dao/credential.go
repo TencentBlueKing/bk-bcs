@@ -37,12 +37,14 @@ type Credential interface {
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
 	// List get credentials
 	List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage) ([]*table.Credential, int64, error)
-	// Delete delete credential
-	Delete(kit *kit.Kit, strategy *table.Credential) error
+	// DeleteWithTx delete credential with transaction
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error
 	// Update update credential
 	Update(kit *kit.Kit, credential *table.Credential) error
 	// UpdateRevisionWithTx update credential revision with transaction
 	UpdateRevisionWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error
+	// GetByName get Credential by name.
+	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Credential, error)
 }
 
 var _ Credential = new(credentialDao)
@@ -145,7 +147,8 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 
 	var conds []rawgen.Condition
 	if searchKey != "" {
-		conds = append(conds, q.Where(m.Memo.Regexp("(?i)"+searchKey)).Or(m.Reviser.Regexp("(?i)"+searchKey)))
+		conds = append(conds, q.Where(m.Memo.Regexp("(?i)"+searchKey)).Or(m.Reviser.Regexp("(?i)"+searchKey)).
+			Or(m.Name.Like(searchKey)))
 	}
 
 	result, count, err := q.Where(m.BizID.Eq(bizID)).
@@ -160,38 +163,29 @@ func (dao *credentialDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt
 }
 
 // Delete delete credential
-func (dao *credentialDao) Delete(kit *kit.Kit, g *table.Credential) error {
+func (dao *credentialDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error {
 	// 参数校验
-	if err := g.ValidateDelete(); err != nil {
-		return err
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	if id == 0 {
+		return errf.New(errf.InvalidParameter, "id is 0")
 	}
 
 	// 删除操作, 获取当前记录做审计
-	m := dao.genQ.Credential
-	q := dao.genQ.Credential.WithContext(kit.Ctx)
-	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	m := tx.Credential
+	q := tx.Credential.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(id), m.BizID.Eq(bizID)).Take()
 	if err != nil {
 		return err
 	}
-	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
+	ad := dao.auditDao.DecoratorV2(kit, bizID).PrepareDelete(oldOne)
 
-	// 多个使用事务处理
-	deleteTx := func(tx *gen.Query) error {
-		q = tx.Credential.WithContext(kit.Ctx)
-		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
-			return err
-		}
-
-		if err := ad.Do(tx); err != nil {
-			return err
-		}
-		return nil
-	}
-	if err := dao.genQ.Transaction(deleteTx); err != nil {
+	if _, err := q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).Delete(); err != nil {
 		return err
 	}
 
-	return nil
+	return ad.Do(tx.Query)
 }
 
 // Update update credential
@@ -214,7 +208,7 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Credential.WithContext(kit.Ctx)
 		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-			Select(m.Memo, m.Enable, m.Reviser).Updates(g); err != nil {
+			Select(m.Memo, m.Name, m.Enable, m.Reviser).Updates(g); err != nil {
 			return err
 		}
 
@@ -244,4 +238,18 @@ func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *gen.QueryTx, bi
 	}
 
 	return nil
+}
+
+// GetByName get Credential by name.
+func (dao *credentialDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Credential, error) {
+
+	m := dao.genQ.Credential
+	q := dao.genQ.Credential.WithContext(kit.Ctx)
+
+	credential, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
+	if err != nil {
+		return nil, err
+	}
+
+	return credential, nil
 }

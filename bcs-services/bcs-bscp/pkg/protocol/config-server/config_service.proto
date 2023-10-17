@@ -694,7 +694,8 @@ message UpdateCredentialsReq {
     uint32 id     = 1;
     uint32 biz_id = 2;
     bool   enable = 3;
-    string memo   = 4;
+    string name   = 4;
+    string memo   = 5;
 }
 
 message UpdateCredentialsResp {}
@@ -713,8 +714,9 @@ message ListCredentialsResp {
 
 message CreateCredentialReq {
     string          memo   = 1;
-    uint32          biz_id = 2;
-    repeated string scope  = 3;
+    string          name   = 2;
+    uint32          biz_id = 3;
+    repeated string scope  = 4;
 }
 
 message CreateCredentialResp {
