@@ -120,3 +120,88 @@ func (s *Service) DeleteTemplateVariable(ctx context.Context, req *pbds.DeleteTe
 
 	return new(pbbase.EmptyResp), nil
 }
+
+// ImportTemplateVariables import template variables.
+func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbds.ImportTemplateVariablesReq) (
+	*pbds.ImportTemplateVariablesResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	oldVars, _, err := s.dao.TemplateVariable().List(kt, req.BizId, nil, &types.BasePage{All: true})
+	if err != nil {
+		logs.Errorf("list all existent template variables failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	// oldNameMap is map: variableName => variableType
+	oldVarMap := make(map[string]*table.TemplateVariable)
+	for _, v := range oldVars {
+		oldVarMap[v.Spec.Name] = v
+	}
+
+	var toCreate, toUpdate []*table.TemplateVariable
+	var diffTypes []string
+	for _, spec := range req.Specs {
+		if _, ok := oldVarMap[spec.Name]; ok {
+			if spec.Type == string(oldVarMap[spec.Name].Spec.Type) {
+				toUpdate = append(toUpdate, &table.TemplateVariable{
+					ID:   oldVarMap[spec.Name].ID,
+					Spec: spec.TemplateVariableSpec(),
+					Attachment: &table.TemplateVariableAttachment{
+						BizID: req.BizId,
+					},
+					Revision: &table.Revision{
+						Creator: oldVarMap[spec.Name].Revision.Creator,
+						Reviser: kt.User,
+					},
+				})
+			} else {
+				diffTypes = append(diffTypes, spec.Name)
+			}
+		} else {
+			toCreate = append(toCreate, &table.TemplateVariable{
+				Spec: spec.TemplateVariableSpec(),
+				Attachment: &table.TemplateVariableAttachment{
+					BizID: req.BizId,
+				},
+				Revision: &table.Revision{
+					Creator: kt.User,
+					Reviser: kt.User,
+				},
+			})
+		}
+	}
+
+	// not allow variables' type is different from the existent variables
+	if len(diffTypes) > 0 {
+		return nil, fmt.Errorf("the variables in %v have different type with existent variables", diffTypes)
+	}
+
+	tx := s.dao.GenQuery().Begin()
+	// 1. batch create template variables
+	if len(toCreate) > 0 {
+		if err = s.dao.TemplateVariable().BatchCreateWithTx(kt, tx, toCreate); err != nil {
+			logs.Errorf("batch create template variables failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, err
+		}
+	}
+
+	// 2. batch update template variables
+	if len(toUpdate) > 0 {
+		if err = s.dao.TemplateVariable().BatchUpdateWithTx(kt, tx, toUpdate); err != nil {
+			logs.Errorf("batch update template variables failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+			return nil, err
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return &pbds.ImportTemplateVariablesResp{VariableCount: uint32(len(req.Specs))}, nil
+}
