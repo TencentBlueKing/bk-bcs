@@ -107,3 +107,5 @@ else
     fi
   fi
 fi
+
+"${ROOT_DIR}"/k8s/install_k8s
