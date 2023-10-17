@@ -345,7 +345,7 @@ const getCredentialName = async () => {
 
 // 创建密钥
 const handleCreateCredential = async () => {
-  if (!checkPermBeforeOperate()) {
+  if (!checkPermBeforeOperate() || !createCredentialName.value) {
     return;
   }
   try {
