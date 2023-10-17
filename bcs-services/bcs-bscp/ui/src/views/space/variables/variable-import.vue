@@ -30,7 +30,7 @@ watch(
   () => props.show,
   (val) => {
     isShow.value = val;
-  }
+  },
 );
 
 const handleClose = () => {

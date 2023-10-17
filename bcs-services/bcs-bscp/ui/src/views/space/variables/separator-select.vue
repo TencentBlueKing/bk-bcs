@@ -44,15 +44,11 @@ const regex = /^[\x20-\x7E]*$/;
 const rules = {
   separator: [
     {
-      validator: (val: string) => {
-        return regex.test(val);
-      },
+      validator: (val: string) => regex.test(val),
       message: '您输入的分隔符错误,请重新输入',
     },
     {
-      validator: (val: string) => {
-        return val.length === 1;
-      },
+      validator: (val: string) => val.length === 1,
       message: '您输入的分隔符过长,请重新输入',
     },
   ],
@@ -67,6 +63,7 @@ const handleConfirm = async () => {
   } else {
     emits('confirm', allSelect[selectSeparatorId.value].value);
   }
+  emits('closed');
 };
 </script>
 

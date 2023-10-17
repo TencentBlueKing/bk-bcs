@@ -9,7 +9,7 @@ declare module 'monaco-editor/esm/vs/language/json/json.worker.js?worker'
 declare module 'monaco-editor/esm/vs/language/css/css.worker.js?worker'
 declare module 'monaco-editor/esm/vs/language/html/html.worker.js?worker'
 declare module 'monaco-editor/esm/vs/language/typescript/ts.worker.js?worker'
-declare module "*.svg" {
+declare module '*.svg' {
   const content: string;
   export default content;
 }

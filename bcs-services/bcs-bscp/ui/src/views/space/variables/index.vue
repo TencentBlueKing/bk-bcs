@@ -96,7 +96,7 @@ watch(
   () => spaceId.value,
   () => {
     refreshList();
-  }
+  },
 );
 
 onMounted(() => {

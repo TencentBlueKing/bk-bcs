@@ -37,12 +37,13 @@ const props = withDefaults(
     variables?: IVariableEditParams[];
     editable?: boolean;
     language?: string;
+    errorLine?: number[];
   }>(),
   {
     variables: () => [],
     editable: true,
     language: '',
-  }
+  },
 );
 
 const emit = defineEmits(['update:modelValue', 'change', 'enter']);
@@ -58,21 +59,21 @@ watch(
     if (val !== localVal.value) {
       editor.setValue(val);
     }
-  }
+  },
 );
 
 watch(
   () => props.language,
   (val) => {
     monaco.editor.setModelLanguage(editor.getModel() as monaco.editor.ITextModel, val);
-  }
+  },
 );
 
 watch(
   () => props.editable,
   (val) => {
     editor.updateOptions({ readOnly: !val });
-  }
+  },
 );
 
 watch(
@@ -81,7 +82,7 @@ watch(
     if (Array.isArray(val) && val.length > 0) {
       editorHoverProvider = useEditorVariableReplace(editor, val);
     }
-  }
+  },
 );
 
 onMounted(() => {
@@ -107,7 +108,7 @@ onMounted(() => {
     emit('change', localVal.value);
   });
   // 监听第一次回车事件
-  const listener = editor.onKeyDown(function (event) {
+  const listener = editor.onKeyDown((event) => {
     if (event.keyCode === monaco.KeyCode.Enter) {
       emit('enter');
       // 取消监听键盘事件
@@ -115,6 +116,28 @@ onMounted(() => {
     }
   });
 });
+
+// const errorLine = () => {
+//   if (props.errorLine && props.errorLine.length > 0) {
+//     // 获取错误的范围
+//     const errorRange = new monaco.Range(props.errorLine[0], 1, props.errorLine[1], 1);
+//     // 创建装饰项数组
+//     const decorations = errorLineNumbers.map((lineNumber) => {
+//       const errorRange = new monaco.Range(lineNumber, 1, lineNumber, 1);
+//       return {
+//         range: errorRange,
+//         options: {
+//           isWholeLine: true,
+//           className: 'error-underline',
+//           hoverMessage: { value: '这里是错误的描述信息' },
+//         },
+//       };
+//     });
+//     // 其他处理逻辑
+//   } else {
+//     // 处理 props.errorLine 未定义的情况
+//   }
+// };
 
 // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
 // onBeforeUnmount(() => {

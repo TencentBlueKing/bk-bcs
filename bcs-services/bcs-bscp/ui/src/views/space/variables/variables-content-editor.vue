@@ -6,14 +6,14 @@
           <InfoLine class="info-icon" />
           仅支持大小不超过 100M
         </div>
-        <div v-if="editable" class="btns">
+        <div class="btns">
           <Transfer
             v-bk-tooltips="{
               content: '分隔符',
               placement: 'top',
               distance: 20,
             }"
-            @click="handleSeparatorShow"
+            @click="separatorShow = !separatorShow"
           />
           <Search
             v-bk-tooltips="{
@@ -46,13 +46,11 @@
       <div class="editor-content">
         <CodeEditor
           ref="codeEditorRef"
-          :variables="props.variables"
-          :editable="editable"
-          :model-value="variableContent"
-          @update:model-value="variableContent = $event"
+          :model-value="variables"
+          @update:model-value="variables = $event"
           @enter="separatorShow = true"
         />
-        <div class="separator" v-if="separatorShow">
+        <div class="separator" v-show="separatorShow">
           <SeparatorSelect @closed="separatorShow = false" @confirm="separator = $event" />
         </div>
       </div>
@@ -63,23 +61,14 @@
 import { ref, onBeforeUnmount } from 'vue';
 import BkMessage from 'bkui-vue/lib/message';
 import { InfoLine, FilliscreenLine, UnfullScreen, Search, Transfer } from 'bkui-vue/lib/icon';
+// import { batchImportTemplateVariables } from '../../../api/variable';
 import CodeEditor from '../../../components/code-editor/index.vue';
 import SeparatorSelect from './separator-select.vue';
-
-const props = withDefaults(
-  defineProps<{
-    editable: boolean;
-  }>(),
-  {
-    variables: () => [],
-    editable: true,
-  }
-);
 
 const isOpenFullScreen = ref(false);
 const codeEditorRef = ref();
 const separatorShow = ref(false);
-const variableContent = ref('');
+const variables = ref('');
 const separator = ref(' ');
 onBeforeUnmount(() => {
   codeEditorRef.value.destroy();
@@ -107,11 +96,12 @@ const handleEscClose = (event: KeyboardEvent) => {
   }
 };
 
-const handleSearch = () => {};
-
-const handleSeparatorShow = () => {
-  separatorShow.value = !separatorShow.value;
+const handleSearch = () => {
+  const variablesList = variables.value.split('\r\n');
 };
+
+// 导入之前 校验编辑器内容
+// const handleValidateEditor = () => {};
 </script>
 <style lang="scss" scoped>
 .config-content-editor {
