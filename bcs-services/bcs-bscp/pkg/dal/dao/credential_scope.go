@@ -30,6 +30,8 @@ type CredentialScope interface {
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error
 	// UpdateWithTx update credential scope with transaction
 	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, credentialScope *table.CredentialScope) error
+	// DeleteByCredentialIDWithTx delete credential scope by credential id with transaction
+	DeleteByCredentialIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, credentialID uint32) error
 }
 
 var _ CredentialScope = new(credentialScopeDao)
@@ -134,4 +136,18 @@ func (dao *credentialScopeDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *ta
 	}
 
 	return nil
+}
+
+// DeleteByCredentialIDWithTx delete credential scope by credential id with transaction
+func (dao *credentialScopeDao) DeleteByCredentialIDWithTx(kit *kit.Kit, tx *gen.QueryTx,
+	bizID, credentialID uint32) error {
+	if bizID == 0 {
+		return errors.New("biz id is 0")
+	}
+	if credentialID == 0 {
+		return errors.New("credential id is 0")
+	}
+	m := tx.CredentialScope
+	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.CredentialId.Eq(credentialID)).Delete()
+	return err
 }
