@@ -106,7 +106,9 @@ type Config struct {
 
 // NewClusterManager create ResourceManager SDK implementation
 func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
-	rand.Seed(time.Now().UnixNano())
+	// NOCC: gosec/crypto(没有特殊的安全需求)
+	//nolint:gosec
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	if len(config.Hosts) == 0 {
 		// ! pay more attention for nil return
 		return nil, nil
@@ -133,9 +135,7 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
-		// NOCC: gosec/crypto(设计如此:)
-		// nolint
-		selected := rand.Intn(1024) % len(config.Hosts)
+		selected := r.Intn(1024) % len(config.Hosts)
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
