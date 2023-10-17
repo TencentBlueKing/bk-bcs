@@ -176,6 +176,7 @@ service Data {
     rpc ListTemplateVariables(ListTemplateVariablesReq) returns (ListTemplateVariablesResp) {}
     rpc UpdateTemplateVariable(UpdateTemplateVariableReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplateVariable(DeleteTemplateVariableReq) returns (pbbase.EmptyResp) {}
+    rpc ImportTemplateVariables(ImportTemplateVariablesReq) returns (ImportTemplateVariablesResp) {}
 
     // group related interface.
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
@@ -1232,6 +1233,15 @@ message ListLatestTmplBoundUnnamedAppsResp {
 message CreateTemplateVariableReq {
     pbtv.TemplateVariableAttachment attachment = 1;
     pbtv.TemplateVariableSpec       spec       = 2;
+}
+
+message ImportTemplateVariablesReq {
+    uint32                             biz_id = 1;
+    repeated pbtv.TemplateVariableSpec specs  = 2;
+}
+
+message ImportTemplateVariablesResp {
+    uint32 variable_count = 1;
 }
 
 message ListTemplateVariablesReq {
