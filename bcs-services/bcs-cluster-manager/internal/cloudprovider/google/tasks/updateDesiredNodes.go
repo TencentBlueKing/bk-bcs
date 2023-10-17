@@ -275,7 +275,6 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 func transInstancesToNode(ctx context.Context, instanceNames []string, info *cloudprovider.CloudDependBasicInfo) (
 	[]string, error) {
 	var (
-		nodeCli = api.NodeManager{}
 		nodes   = make([]*proto.Node, 0)
 		nodeIPs = make([]string, 0)
 		err     error
@@ -283,7 +282,7 @@ func transInstancesToNode(ctx context.Context, instanceNames []string, info *clo
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	err = retry.Do(func() error {
-		nodes, err = nodeCli.ListNodesByInstanceID(instanceNames, &cloudprovider.ListNodesOption{
+		nodes, err = api.ListNodesByInstanceID(instanceNames, &cloudprovider.ListNodesOption{
 			Common:       info.CmOption,
 			ClusterVPCID: info.Cluster.VpcID,
 		})

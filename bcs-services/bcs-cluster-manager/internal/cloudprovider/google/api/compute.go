@@ -25,6 +25,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 const (
@@ -663,4 +664,30 @@ func (c *ComputeServiceClient) ListOSImages(ctx context.Context, gkeProjectID st
 	blog.Infof("gce client ListSubnetworks successful")
 
 	return subnetsList, nil
+}
+
+// InstanceToNode parse Instance information in gcloud to Node in clustermanager
+func (c *ComputeServiceClient) InstanceToNode(ins *compute.Instance) *proto.Node {
+	zoneInfo, _ := GetGCEResourceInfo(ins.Zone)
+	zone, _ := c.GetZone(context.Background(), zoneInfo[len(zoneInfo)-1])
+
+	node := &proto.Node{}
+	node.NodeID = strconv.Itoa(int(ins.Id))
+	node.NodeName = ins.Name
+
+	if zoneInfo != nil {
+		node.ZoneID = zone.Zone
+		zoneID, _ := strconv.Atoi(zone.ZoneID)
+		node.Zone = uint32(zoneID)
+		node.ZoneName = zone.ZoneName
+	}
+
+	machineInfo, _ := GetGCEResourceInfo(ins.MachineType)
+	node.InstanceType = machineInfo[len(machineInfo)-1]
+
+	networkInfo := strings.Split(ins.NetworkInterfaces[0].Subnetwork, "/")
+	node.VPC = networkInfo[len(networkInfo)-1]
+	node.Status = common.StatusRunning
+
+	return node
 }

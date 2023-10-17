@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package api
+package google
 
 import (
 	"context"
@@ -20,6 +20,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 )
 
 var vpcMgr sync.Once
@@ -27,7 +28,7 @@ var vpcMgr sync.Once
 func init() {
 	vpcMgr.Do(func() {
 		// init VPC manager
-		cloudprovider.InitVPCManager("google", &VPCManager{})
+		cloudprovider.InitVPCManager(cloudName, &VPCManager{})
 	})
 }
 
@@ -41,7 +42,7 @@ func (vm VPCManager) ListSubnets(vpcID string, opt *cloudprovider.CommonOption) 
 		opt.Region = strings.Join(locationList[:2], "-")
 	}
 
-	client, err := NewComputeServiceClient(opt)
+	client, err := api.NewComputeServiceClient(opt)
 	if err != nil {
 		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
 	}
