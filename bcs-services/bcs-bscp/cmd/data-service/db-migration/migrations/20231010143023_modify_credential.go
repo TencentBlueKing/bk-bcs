@@ -14,8 +14,9 @@ package migrations
 
 import (
 	"fmt"
-	"gorm.io/gorm"
 	"strings"
+
+	"gorm.io/gorm"
 
 	"bscp.io/cmd/data-service/db-migration/migrator"
 	"bscp.io/pkg/dal/table"

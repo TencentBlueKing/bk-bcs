@@ -21,6 +21,7 @@ import (
 
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -108,9 +109,9 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 		return nil, err
 	}
 
-	// 2. delete app template binding
-	if err := s.dao.AppTemplateBinding().DeleteByAppIDWithTx(grpcKit, tx, req.Id); err != nil {
-		logs.Errorf("delete app template binding failed, err: %v, rid: %s", err, grpcKit.Rid)
+	// 2. delete app related resources
+	if err := s.deleteAppRelatedResources(grpcKit, req, tx); err != nil {
+		logs.Errorf("delete app related resources failed, err: %v, rid: %s", err, grpcKit.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
@@ -123,6 +124,46 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 	}
 
 	return new(pbbase.EmptyResp), nil
+}
+
+func (s *Service) deleteAppRelatedResources(grpcKit *kit.Kit, req *pbds.DeleteAppReq, tx *gen.QueryTx) error {
+	// delete app template binding
+	if err := s.dao.AppTemplateBinding().DeleteByAppIDWithTx(grpcKit, tx, req.Id); err != nil {
+		logs.Errorf("delete app template binding failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return err
+	}
+
+	// delete group app binding
+	if err := s.dao.GroupAppBind().BatchDeleteByAppIDWithTx(grpcKit, tx, req.Id, req.BizId); err != nil {
+		logs.Errorf("delete group app binding failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return err
+	}
+
+	// delete released group
+	if err := s.dao.ReleasedGroup().BatchDeleteByAppIDWithTx(grpcKit, tx, req.Id, req.BizId); err != nil {
+		logs.Errorf("delete group app binding failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return err
+	}
+
+	// delete app template binding
+	if err := s.dao.ReleasedAppTemplate().BatchDeleteByAppIDWithTx(grpcKit, tx, req.Id, req.BizId); err != nil {
+		logs.Errorf("delete released app template failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return err
+	}
+
+	// delete released app template binding
+	if err := s.dao.ReleasedAppTemplate().BatchDeleteByAppIDWithTx(grpcKit, tx, req.Id, req.BizId); err != nil {
+		logs.Errorf("delete released app template failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return err
+	}
+
+	// delete released app template variables
+	if err := s.dao.ReleasedAppTemplateVariable().BatchDeleteByAppIDWithTx(grpcKit, tx, req.Id, req.BizId); err != nil {
+		logs.Errorf("delete released app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return err
+	}
+
+	return nil
 }
 
 // GetApp get apps by app id.

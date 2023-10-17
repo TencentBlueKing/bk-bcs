@@ -33,6 +33,8 @@ type ReleasedGroup interface {
 		[]*types.GroupPublishedAppsCount, error)
 	// UpdateEditedStatusWithTx update edited status with transaction
 	UpdateEditedStatusWithTx(kit *kit.Kit, tx *gen.QueryTx, edited bool, groupID, bizID uint32) error
+	// BatchDeleteByAppIDWithTx batch delete by app id with transaction.
+	BatchDeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error
 }
 
 var _ ReleasedGroup = new(releasedGroupDao)
@@ -122,4 +124,18 @@ func (dao *releasedGroupDao) UpdateEditedStatusWithTx(kit *kit.Kit,
 		return err
 	}
 	return nil
+}
+
+// BatchDeleteByAppIDWithTx batch delete by app id with transaction.
+func (dao *releasedGroupDao) BatchDeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error {
+	if bizID == 0 {
+		return errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	if appID == 0 {
+		return errf.New(errf.InvalidParameter, "appID is 0")
+	}
+
+	m := tx.ReleasedGroup
+	_, err := m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Delete()
+	return err
 }
