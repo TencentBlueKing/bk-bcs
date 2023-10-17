@@ -13,6 +13,7 @@
       :perm-check-loading="permCheckLoading"
       :has-create-service-perm="hasCreateServicePerm"
     />
+    <AppFooter />
   </LayoutTopBar>
 </template>
 <script setup lang="ts">
@@ -24,6 +25,7 @@ import useGlobalStore from '../../../../store/global';
 import { permissionCheck } from '../../../../api/index';
 import LayoutTopBar from '../../../../components/layout-top-bar.vue';
 import ServiceListContent from './components/service-list-content.vue';
+import AppFooter from '../../../../components/footer.vue'
 
 const { t } = useI18n();
 const router = useRouter();

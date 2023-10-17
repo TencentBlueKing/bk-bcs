@@ -5,7 +5,7 @@ const isCrossOrigin = isCrossOriginIFrame();
 const topWindow: Window = isCrossOrigin ? window : window.top;
 const topDocument = topWindow.document;
 
-const openLoginDialog = (src, width = 460, height = 490) => {
+const openLoginDialog = (src, width = 460, height = 560) => {
   if (!src) return;
   const isWraperExit = topDocument.querySelector('#bk-gloabal-login-iframe');
   if (isWraperExit) return;

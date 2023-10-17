@@ -239,7 +239,7 @@ const handleLimitChange = (limit: number) => {
 </script>
 <style lang="scss" scoped>
 .service-list-content {
-  height: 100%;
+  height: calc(100% - 90px);
 }
 .head-section {
   display: flex;
