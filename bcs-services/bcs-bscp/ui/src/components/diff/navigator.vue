@@ -51,7 +51,7 @@ watch(
   () => props.permissionEditor,
   () => {
     createNavigator();
-  }
+  },
 );
 
 onBeforeUnmount(() => {

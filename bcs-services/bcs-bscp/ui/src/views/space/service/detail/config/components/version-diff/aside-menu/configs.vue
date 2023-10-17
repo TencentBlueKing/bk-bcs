@@ -45,14 +45,13 @@
           </div>
         </div>
       </div>
-      <bk-exception
-        v-if="(isOnlyShowDiff || !searchStr) && groupedConfigListOnShow.length === 0"
+      <tableEmpty
+        v-if="(isOnlyShowDiff || searchStr) && groupedConfigListOnShow.length === 0"
         class="empty-tips"
-        scene="part"
-        type="search-empty"
+        :is-search-empty="true"
+        @clear="clearStr"
       >
-        搜索结果为空
-      </bk-exception>
+      </tableEmpty>
     </div>
   </div>
 </template>
@@ -81,6 +80,7 @@ import {
 import { getReleasedAppVariables } from '../../../../../../../../api/variable';
 import { byteUnitConverse } from '../../../../../../../../utils';
 import SearchInput from '../../../../../../../../components/search-input.vue';
+import tableEmpty from '../../../../../../../../components/table/table-empty.vue';
 
 interface IConfigMenuItem {
   type: string;
@@ -567,6 +567,12 @@ const loadConfigContent = async ({
   }
   const configContent = await downloadConfigContent(bkBizId.value, appData.value.id as number, signature);
   return String(configContent);
+};
+
+// 清空筛选条件
+const clearStr = () => {
+  searchStr.value = '';
+  handleSearch();
 };
 </script>
 <style lang="scss" scoped>
