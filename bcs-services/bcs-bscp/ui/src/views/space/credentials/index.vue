@@ -177,7 +177,7 @@
       <div class="dialog-input">
         <div class="dialog-info">
           请输入密钥名称<span>{{ deleteCredentialInfo?.spec.name }}</span
-          >已确认删除
+          >以确认删除
         </div>
         <bk-input v-model="dialogInputStr" />
       </div>
@@ -689,6 +689,7 @@ const goToIAM = () => {
 
 <style lang="scss">
 .delete-service-dialog {
+  top: 40% !important;
   .bk-modal-header {
     display: none;
   }
