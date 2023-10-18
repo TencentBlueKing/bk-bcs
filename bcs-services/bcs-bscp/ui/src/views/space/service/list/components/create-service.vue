@@ -103,7 +103,7 @@ watch(
       formData.value.name = '';
       formData.value.memo = '';
     }
-  }
+  },
 );
 
 const handleCreateConfirm = async () => {

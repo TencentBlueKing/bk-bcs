@@ -45,11 +45,9 @@ const props = defineProps<{
     loading: boolean
   }>();
 
-const currentPermission = computed(() => {
-  return `权限:${props.diff.current.permission?.privilege}
+const currentPermission = computed(() => `权限:${props.diff.current.permission?.privilege}
 用户:${props.diff.current.permission?.user}
-用户组:${props.diff.current.permission?.user_group}`;
-});
+用户组:${props.diff.current.permission?.user_group}`);
 const basePermission = computed(() => {
   if (!props.diff.base.permission) return;
   return `权限:${props.diff.base.permission?.privilege}
