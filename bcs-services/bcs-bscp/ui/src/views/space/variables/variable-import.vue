@@ -12,31 +12,36 @@
   >
     <bk-form>
       <bk-form-item label="变量内容" required>
-        <VariableContentEditor />
+        <VariableContentEditor ref="editorRef" />
       </bk-form-item>
     </bk-form>
   </bk-dialog>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import VariableContentEditor from './variables-content-editor.vue';
 const isShow = ref(false);
 const props = defineProps<{
   show: boolean;
 }>();
-const emits = defineEmits(['update:show']);
+const editorRef = ref();
+const emits = defineEmits(['update:show', 'edited']);
 watch(
   () => props.show,
   (val) => {
     isShow.value = val;
-  },
+  }
 );
-
+onMounted(() => {});
 const handleClose = () => {
   emits('update:show', false);
 };
-const handleConfirm = () => {};
+const handleConfirm = async () => {
+  await editorRef.value.handleImport();
+  emits('update:show', false);
+  emits('edited');
+};
 </script>
 
 <style scoped lang="scss"></style>

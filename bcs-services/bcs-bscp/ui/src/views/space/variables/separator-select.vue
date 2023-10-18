@@ -6,13 +6,13 @@
         v-for="item in allSelect"
         :key="item.id"
         class="item"
-        @click="handleSelectSeparator(item.id)"
+        @click="selectSeparatorId = item.id"
         :class="{ 'select-item': selectSeparatorId === item.id }"
       >
         {{ item.text }}
       </div>
     </div>
-    <bk-form ref="formRef" v-if="selectSeparatorId === 5" :rules="rules" :model="formData">
+    <bk-form ref="formRef" v-if="selectSeparatorId === 4" :rules="rules" :model="formData">
       <bk-form-item required property="separator">
         <bk-input class="custom-input" v-model="formData.separator" placeholder="未输入" />
       </bk-form-item>
@@ -29,13 +29,13 @@ import { ref } from 'vue';
 
 const emits = defineEmits(['closed', 'confirm']);
 const allSelect = [
-  { id: 1, text: '空字符', value: 'white-space' },
-  { id: 2, text: ',', value: ',' },
-  { id: 3, text: ';', value: ';' },
-  { id: 4, text: '|', value: '|' },
-  { id: 5, text: '自定义' },
+  { id: 0, text: '空字符', value: ' ' },
+  { id: 1, text: ',', value: ',' },
+  { id: 2, text: ';', value: ';' },
+  { id: 3, text: '|', value: '|' },
+  { id: 4, text: '自定义' },
 ];
-const selectSeparatorId = ref(1);
+const selectSeparatorId = ref(0);
 const formData = ref({
   separator: '',
 });
@@ -53,11 +53,9 @@ const rules = {
     },
   ],
 };
-const handleSelectSeparator = (id: number) => {
-  selectSeparatorId.value = id;
-};
+
 const handleConfirm = async () => {
-  if (selectSeparatorId.value === 5) {
+  if (selectSeparatorId.value === 4) {
     await formRef.value.validate();
     emits('confirm', formData.value.separator);
   } else {

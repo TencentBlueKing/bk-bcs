@@ -51,7 +51,7 @@
       :data="editSliderData.data"
       @edited="refreshList"
     />
-    <VariableImport v-model:show="isImportVariableShow" />
+    <VariableImport v-model:show="isImportVariableShow" @edited="refreshList" />
   </section>
 </template>
 <script lang="ts" setup>
@@ -96,7 +96,7 @@ watch(
   () => spaceId.value,
   () => {
     refreshList();
-  },
+  }
 );
 
 onMounted(() => {
