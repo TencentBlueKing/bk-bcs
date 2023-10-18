@@ -19,15 +19,15 @@
           :placeholder="t('服务名称')"
           :clearable="true"
           @change="handleNameInputChange"
-          @enter="refreshSeviceList"
-          @clear="refreshSeviceList"
+          @enter="handleSearch"
+          @clear="handleClearSearchStr"
         >
         </bk-input>
       </div>
     </div>
     <div class="content-body">
       <bk-loading style="height: 100%" :loading="isLoading">
-        <template v-if="!isLoading && isEmpty">
+        <template v-if="!isLoading && isEmpty && !isSearchEmpty">
           <bk-exception class="exception-wrap-item" type="empty" :description="t('你尚未创建或加入任何服务')">
             <div class="exception-actions">
               <bk-button text theme="primary" @click="isCreateServiceOpen = true">
@@ -37,6 +37,9 @@
               <!-- <bk-button text theme="primary">{{ t("申请权限") }}</bk-button> -->
             </div>
           </bk-exception>
+        </template>
+        <template v-else-if="!isLoading && isEmpty && isSearchEmpty">
+          <tableEmpty :is-search-empty="true" @clear="handleClearSearchStr" />
         </template>
         <template v-else>
           <div class="serving-list">
@@ -82,6 +85,7 @@ import { IAppItem, IAppListQuery } from '../../../../../../types/app';
 import Card from './card.vue';
 import CreateService from './create-service.vue';
 import EditService from './edit-service.vue';
+import tableEmpty from '../../../../../components/table/table-empty.vue';
 
 const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
 const { userInfo } = storeToRefs(useUserStore());
@@ -129,6 +133,7 @@ const pagination = ref({
   limit: 50,
   count: 0,
 });
+const isSearchEmpty = ref(false);
 
 // 查询条件
 const filters = computed(() => {
@@ -154,7 +159,7 @@ watch(
     searchStr.value = '';
     pagination.value.limit = 50;
     refreshSeviceList();
-  },
+  }
 );
 
 onMounted(() => {
@@ -236,10 +241,20 @@ const handleLimitChange = (limit: number) => {
   pagination.value.limit = limit;
   loadAppList();
 };
+
+const handleSearch = () => {
+  isSearchEmpty.value = true;
+  refreshSeviceList();
+};
+const handleClearSearchStr = () => {
+  searchStr.value = '';
+  isSearchEmpty.value = false;
+  refreshSeviceList();
+};
 </script>
 <style lang="scss" scoped>
 .service-list-content {
-  height: 100%;
+  height: calc(100% - 90px);
 }
 .head-section {
   display: flex;

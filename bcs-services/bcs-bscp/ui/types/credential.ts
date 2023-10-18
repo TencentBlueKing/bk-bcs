@@ -16,6 +16,7 @@ export interface ICredentialItem {
     enc_algorithm: string;
     enc_credential: string;
     memo: string;
+    name: string;
   },
   visible?: boolean; // 另外增加，用于在标识是否在界面上展示明文
 }

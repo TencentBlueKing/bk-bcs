@@ -310,12 +310,12 @@ const handleSearch = () => {
     const searchArr = [...groupNameList, ...groupRuleList];
     const uniqueIds = new Set(); // 用于记录已经出现过的id
     searchGroupList.value = searchArr.filter((obj) => {
-    if (uniqueIds.has(obj.id)) {
-      return false;
-    }
-    uniqueIds.add(obj.id);
-    return true;
-  });
+      if (uniqueIds.has(obj.id)) {
+        return false;
+      }
+      uniqueIds.add(obj.id);
+      return true;
+    });
     isSearchEmpty.value = true;
   }
   refreshTableData();

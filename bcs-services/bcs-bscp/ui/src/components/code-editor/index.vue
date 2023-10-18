@@ -41,6 +41,7 @@ const props = withDefaults(
   {
     variables: () => [],
     editable: true,
+    lfEol: true,
     language: '',
   },
 );

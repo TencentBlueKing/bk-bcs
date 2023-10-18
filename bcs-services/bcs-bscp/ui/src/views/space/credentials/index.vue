@@ -14,7 +14,7 @@
           :class="{ 'bk-button-with-no-perm': !hasManagePerm }"
           :disabled="permCheckLoading"
           :loading="createPending"
-          @click="handleCreateCredential"
+          @click="getCredentialName"
         >
           <Plus class="button-icon" />
           新建密钥
@@ -38,7 +38,7 @@
       <bk-loading style="min-height: 100px" :loading="listLoading">
         <bk-table
           class="credential-table"
-          :data="credentialList"
+          :data="tableData"
           :border="['outer']"
           :row-class="getRowCls"
           :remote-pagination="true"
@@ -46,8 +46,19 @@
           @page-limit-change="handlePageLimitChange"
           @page-value-change="refreshListWithLoading"
         >
-          <bk-table-column label="密钥" width="340">
-            <template #default="{ row }">
+          <bk-table-column label="密钥名称" width="188">
+            <template #default="{ row, index }">
+              <bk-input
+                v-if="index === 0 && isCreateCredential"
+                placeholder="密钥名称支持中英文"
+                v-model="createCredentialName"
+              ></bk-input>
+              <span v-if="row.spec">{{ row.spec.name }}</span>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="密钥" width="296">
+            <template #default="{ row, index }">
+              <span v-if="index === 0 && isCreateCredential" style="color: #c4c6cc">待确认</span>
               <div v-if="row.spec" class="credential-text">
                 <div class="text">{{ row.visible ? row.spec.enc_credential : '********************************' }}</div>
                 <div class="actions">
@@ -59,7 +70,12 @@
             </template>
           </bk-table-column>
           <bk-table-column label="说明" prop="memo">
-            <template #default="{ row }">
+            <template #default="{ row, index }">
+              <bk-input
+                v-if="index === 0 && isCreateCredential"
+                placeholder="请输入密钥说明"
+                v-model="createCredentialMemo"
+              ></bk-input>
               <div v-if="row.spec" class="credential-memo">
                 <div v-if="editingMemoId !== row.id" class="memo-content" :title="row.spec.memo || '--'">
                   {{ row.spec.memo || '--' }}
@@ -75,8 +91,13 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column label="更新人" width="160" prop="revision.reviser"></bk-table-column>
-          <bk-table-column label="更新时间" width="220">
+          <bk-table-column label="更新人" width="88" prop="revision.reviser"></bk-table-column>
+          <bk-table-column label="更新时间" width="154">
+            <template #default="{ row }">
+              <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="最近使用时间" width="154">
             <template #default="{ row }">
               <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
             </template>
@@ -98,10 +119,18 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column label="操作" width="140">
-            <template #default="{ row }">
+          <bk-table-column label="操作" width="128">
+            <template #default="{ row, index }">
+              <template v-if="index === 0 && isCreateCredential">
+                <bk-button text theme="primary" @click="handleCreateCredential">创建</bk-button>
+                <bk-button text theme="primary" style="margin-left: 8px" @click="handleCancelCreateCredential"
+                  >取消</bk-button
+                >
+              </template>
               <template v-if="row.spec">
-                <bk-button text theme="primary" @click="handleOpenAssociate(row)">关联配置项</bk-button>
+                <bk-button text theme="primary" @click="handleOpenAssociate(row)">
+                  <span :class="{ redPoint: newCredentials[0] === row.id }">关联配置项</span>
+                </bk-button>
                 <bk-button
                   v-cursor="{ active: !hasManagePerm }"
                   style="margin-left: 8px"
@@ -110,7 +139,7 @@
                   :class="{ 'bk-text-with-no-perm': !hasManagePerm }"
                   :disabled="hasManagePerm && row.spec.enable"
                   v-bk-tooltips="deleteTooltip(hasManagePerm && row.spec.enable)"
-                  @click="handleDelete(row)"
+                  @click="handleDeleteConfirm(row)"
                 >
                   删除
                 </bk-button>
@@ -118,7 +147,7 @@
             </template>
           </bk-table-column>
           <template #empty>
-            <table-empty :is-search-empty="isSearchEmpty" @clear="clearSearchStr"/>
+            <table-empty :is-search-empty="isSearchEmpty" @clear="clearSearchStr" />
           </template>
         </bk-table>
       </bk-loading>
@@ -133,6 +162,39 @@
       @apply-perm="checkPermBeforeOperate"
     />
   </section>
+  <bk-dialog
+    ext-cls="delete-service-dialog"
+    v-model:is-show="isShowDeleteDialog"
+    :theme="'primary'"
+    :dialog-type="'operation'"
+    header-align="center"
+    footer-align="center"
+    @value-change="dialogInputStr = ''"
+  >
+    <div class="dialog-content">
+      <div class="dialog-title">确认删除此密钥？</div>
+      <div>删除的密钥<span>无法找回</span>,请谨慎操作！</div>
+      <div class="dialog-input">
+        <div class="dialog-info">
+          请输入密钥名称<span>{{ deleteCredentialInfo?.spec.name }}</span
+          >以确认删除
+        </div>
+        <bk-input v-model="dialogInputStr" />
+      </div>
+    </div>
+    <template #footer>
+      <div class="dialog-footer">
+        <bk-button
+          theme="danger"
+          style="margin-right: 20px"
+          :disabled="dialogInputStr !== deleteCredentialInfo?.spec.name"
+          @click="handleDelete"
+          >删除</bk-button
+        >
+        <bk-button @click="isShowDeleteDialog = false">取消</bk-button>
+      </div>
+    </template>
+  </bk-dialog>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick } from 'vue';
@@ -155,6 +217,9 @@ const hasManagePerm = ref(false);
 const credentialList = ref<ICredentialItem[]>([]);
 const listLoading = ref(false);
 const createPending = ref(false);
+const createCredentialName = ref('');
+const createCredentialMemo = ref('');
+const isCreateCredential = ref(false);
 const newCredentials = ref<number[]>([]); // 记录新增加的密钥id，实现表格标记效果
 const searchStr = ref('');
 const editingMemoId = ref(0); // 记录当前正在编辑说明的密钥id
@@ -167,6 +232,10 @@ const pagination = ref({
   count: 0,
   limit: 10,
 });
+const tableData = ref<any>([]);
+const isShowDeleteDialog = ref(false);
+const dialogInputStr = ref('');
+const deleteCredentialInfo = ref<ICredentialItem>();
 
 watch(
   () => spaceId.value,
@@ -174,7 +243,7 @@ watch(
     createPending.value = false;
     getPermData();
     refreshListWithLoading();
-  },
+  }
 );
 
 onMounted(() => {
@@ -230,6 +299,7 @@ const loadCredentialList = async () => {
   const res = await getCredentialList(spaceId.value, query);
   res.details.forEach((item: ICredentialItem) => (item.visible = false));
   credentialList.value = res.details;
+  tableData.value = res.details;
   pagination.value.count = res.count;
 };
 
@@ -239,7 +309,7 @@ const refreshListWithLoading = async (current = 1) => {
   if (createPending.value) {
     return;
   }
-  searchStr.value ? isSearchEmpty.value = true : isSearchEmpty.value = false;
+  searchStr.value ? (isSearchEmpty.value = true) : (isSearchEmpty.value = false);
   listLoading.value = true;
   pagination.value.current = current;
   await loadCredentialList();
@@ -266,14 +336,21 @@ const handleCopyText = (text: string) => {
   });
 };
 
+// 创建密钥之前获取密钥名称
+const getCredentialName = async () => {
+  if (isCreateCredential.value) return;
+  isCreateCredential.value = true;
+  tableData.value.unshift({});
+};
+
 // 创建密钥
 const handleCreateCredential = async () => {
-  if (!checkPermBeforeOperate()) {
+  if (!checkPermBeforeOperate() || !createCredentialName.value) {
     return;
   }
   try {
     createPending.value = true;
-    const params = { memo: '' };
+    const params = { memo: createCredentialMemo.value, name: createCredentialName.value };
     const res = await createCredential(spaceId.value, params);
     pagination.value.current = 1;
     await loadCredentialList();
@@ -283,10 +360,22 @@ const handleCreateCredential = async () => {
       newCredentials.value.splice(index, 1);
     }, 3000);
   } catch (e) {
+    console.log(e);
     console.error(e);
   } finally {
     createPending.value = false;
+    handleCancelCreateCredential();
   }
+};
+
+// 取消创建密钥
+const handleCancelCreateCredential = () => {
+  if (!tableData.value[0].id) {
+    tableData.value.shift();
+  }
+  isCreateCredential.value = false;
+  createCredentialMemo.value = '';
+  createCredentialName.value = '';
 };
 
 // 搜索框输入事件处理，内容为空时触发一次搜索
@@ -343,6 +432,7 @@ const handelToggleEnable = async (credential: ICredentialItem) => {
           id: credential.id,
           memo: credential.spec.memo,
           enable: false,
+          name: credential.spec.name,
         };
         await updateCredential(spaceId.value, params);
         credential.spec.enable = false;
@@ -375,23 +465,22 @@ const handleAssociateSliderClose = () => {
   currentCredential.value = 0;
 };
 
+// 删除配置项二次确认
+const handleDeleteConfirm = async (credential: ICredentialItem) => {
+  isShowDeleteDialog.value = true;
+  deleteCredentialInfo.value = credential;
+};
 // 删除配置项
-const handleDelete = (credential: ICredentialItem) => {
+const handleDelete = async () => {
   if (!checkPermBeforeOperate()) {
     return;
   }
-  InfoBox({
-    title: '确定删除此密钥',
-    subTitle: '删除密钥后，使用此密钥的应用将无法正常使用 SDK/API 拉取配置，且密钥无法恢复',
-    confirmText: '删除',
-    onConfirm: async () => {
-      await deleteCredential(spaceId.value, credential.id);
-      if (credentialList.value.length === 1 && pagination.value.current > 1) {
-        pagination.value.current = pagination.value.current - 1;
-      }
-      loadCredentialList();
-    },
-  } as any);
+  await deleteCredential(spaceId.value, deleteCredentialInfo.value?.id as number);
+  if (credentialList.value.length === 1 && pagination.value.current > 1) {
+    pagination.value.current = pagination.value.current - 1;
+  }
+  isShowDeleteDialog.value = false;
+  loadCredentialList();
 };
 // 删除配置项提示文字
 const deleteTooltip = (isShowTooltip: boolean) => {
@@ -564,6 +653,45 @@ const goToIAM = () => {
   align-items: center;
   .text {
     margin-left: 9px;
+  }
+}
+.dialog-content {
+  text-align: center;
+  margin: 10px 0 20px;
+  span {
+    color: red;
+  }
+  .dialog-title {
+    margin: 10px;
+    font-size: 24px;
+    color: #121213;
+  }
+  .dialog-input {
+    margin-top: 10px;
+    text-align: start;
+    padding: 20px;
+    background-color: #f4f7fa;
+    .dialog-info {
+      margin-bottom: 5px;
+      span {
+        color: #121213;
+        font-weight: 600;
+      }
+    }
+  }
+}
+.dialog-footer {
+  .bk-button {
+    width: 100px;
+  }
+}
+</style>
+
+<style lang="scss">
+.delete-service-dialog {
+  top: 40% !important;
+  .bk-modal-header {
+    display: none;
   }
 }
 </style>
