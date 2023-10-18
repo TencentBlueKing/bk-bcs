@@ -332,6 +332,7 @@ const handleVersionEditSubmitted = async (
       scriptDetail.value.not_release_id
     );
     createBtnDisabled.value = false;
+    handleEditVersionClick()
   } else {
     // 如果是编辑旧版本，则直接修改版本数据
     const { memo, content } = data;
