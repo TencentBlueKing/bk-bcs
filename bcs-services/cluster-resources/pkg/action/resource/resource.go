@@ -227,6 +227,13 @@ func (m *ResMgr) Restart(
 		resCsts.UpdaterAnnoKey, username,
 		formatter.WorkloadRestartAnnotationKey, metav1.Now().Format(time.RFC3339),
 		formatter.WorkloadRestartVersionAnnotationKey, generation)
+	// 自定义资源的调度(patchType diff)
+	if m.GroupVersion == "tkex.tencent.com/v1alpha1" {
+		return resp.BuildPatchAPIResp(
+			ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.MergePatchType, []byte(patchByte),
+			opts,
+		)
+	}
 	return resp.BuildPatchAPIResp(
 		ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, types.StrategicMergePatchType, []byte(patchByte),
 		opts,

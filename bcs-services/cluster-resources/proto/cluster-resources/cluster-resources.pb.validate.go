@@ -4013,6 +4013,527 @@ var _CObjGetReq_Format_InLookup = map[string]struct{}{
 	"formData": {},
 }
 
+// Validate checks the field values on CObjHistoryReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjHistoryReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjHistoryReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjHistoryReqMultiError,
+// or nil if none found.
+func (m *CObjHistoryReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjHistoryReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjHistoryReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjHistoryReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjHistoryReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjHistoryReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjHistoryReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjHistoryReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjHistoryReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjHistoryReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjHistoryReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CObjHistoryReqMultiError is an error wrapping multiple validation errors
+// returned by CObjHistoryReq.ValidateAll() if the designated constraints
+// aren't met.
+type CObjHistoryReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjHistoryReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjHistoryReqMultiError) AllErrors() []error { return m }
+
+// CObjHistoryReqValidationError is the validation error returned by
+// CObjHistoryReq.Validate if the designated constraints aren't met.
+type CObjHistoryReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjHistoryReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjHistoryReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjHistoryReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjHistoryReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjHistoryReqValidationError) ErrorName() string { return "CObjHistoryReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjHistoryReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjHistoryReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjHistoryReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjHistoryReqValidationError{}
+
+var _CObjHistoryReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjHistoryReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+// Validate checks the field values on CObjRestartReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjRestartReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjRestartReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjRestartReqMultiError,
+// or nil if none found.
+func (m *CObjRestartReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjRestartReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjRestartReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjRestartReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjRestartReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjRestartReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjRestartReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjRestartReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjRestartReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjRestartReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjRestartReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CObjRestartReqMultiError is an error wrapping multiple validation errors
+// returned by CObjRestartReq.ValidateAll() if the designated constraints
+// aren't met.
+type CObjRestartReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjRestartReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjRestartReqMultiError) AllErrors() []error { return m }
+
+// CObjRestartReqValidationError is the validation error returned by
+// CObjRestartReq.Validate if the designated constraints aren't met.
+type CObjRestartReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjRestartReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjRestartReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjRestartReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjRestartReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjRestartReqValidationError) ErrorName() string { return "CObjRestartReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjRestartReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjRestartReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjRestartReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjRestartReqValidationError{}
+
+var _CObjRestartReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjRestartReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+// Validate checks the field values on CObjRolloutReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjRolloutReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjRolloutReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjRolloutReqMultiError,
+// or nil if none found.
+func (m *CObjRolloutReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjRolloutReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjRolloutReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjRolloutReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjRolloutReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjRolloutReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjRolloutReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjRolloutReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjRolloutReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjRolloutReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetRevision() < 0 {
+		err := CObjRolloutReqValidationError{
+			field:  "Revision",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjRolloutReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CObjRolloutReqMultiError is an error wrapping multiple validation errors
+// returned by CObjRolloutReq.ValidateAll() if the designated constraints
+// aren't met.
+type CObjRolloutReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjRolloutReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjRolloutReqMultiError) AllErrors() []error { return m }
+
+// CObjRolloutReqValidationError is the validation error returned by
+// CObjRolloutReq.Validate if the designated constraints aren't met.
+type CObjRolloutReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjRolloutReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjRolloutReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjRolloutReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjRolloutReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjRolloutReqValidationError) ErrorName() string { return "CObjRolloutReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjRolloutReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjRolloutReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjRolloutReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjRolloutReqValidationError{}
+
+var _CObjRolloutReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjRolloutReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
 // Validate checks the field values on CObjCreateReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.

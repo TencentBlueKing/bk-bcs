@@ -17,8 +17,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sort"
 	"text/tabwriter"
 
+	gameAppsv1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/typed/tkex/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -86,6 +90,26 @@ func (v *HistoryVisitor) VisitReplicationController(kind apps.GroupKindElement) 
 // VisitCronJob visits a cronjob
 func (v *HistoryVisitor) VisitCronJob(kind apps.GroupKindElement) {}
 
+// CustomHistoryViewerFor returns an implementation of HistoryViewer interface for the given schema kind
+func CustomHistoryViewerFor(kind schema.GroupKind, c kubernetes.Interface, g versioned.Interface) (
+	HistoryViewer, error) {
+	elem := apps.GroupKindElement(kind)
+	var historyViwer HistoryViewer
+	switch {
+	case elem.GroupMatch("apiextensions.k8s.io") && elem.Kind == "GameDeployment":
+		historyViwer = &GameDeploymentHistoryViewer{c: c, g: g.TkexV1alpha1()}
+	case elem.GroupMatch("apiextensions.k8s.io") && elem.Kind == "GameStatefulSet":
+		historyViwer = &GameStatefulSetHistoryViewer{c: c, g: g.TkexV1alpha1()}
+	default:
+		historyViwer = nil
+	}
+
+	if historyViwer == nil {
+		return nil, fmt.Errorf("%q is not custom resource, has no history view", kind.String())
+	}
+	return historyViwer, nil
+}
+
 // HistoryViewerFor returns an implementation of HistoryViewer interface for the given schema kind
 func HistoryViewerFor(kind schema.GroupKind, c kubernetes.Interface) (HistoryViewer, error) {
 	elem := apps.GroupKindElement(kind)
@@ -105,6 +129,87 @@ func HistoryViewerFor(kind schema.GroupKind, c kubernetes.Interface) (HistoryVie
 	}
 
 	return visitor.result, nil
+}
+
+// GameStatefulSetHistoryViewer is an implementation of HistoryViewer for GameStatefulSet
+type GameStatefulSetHistoryViewer struct {
+	c kubernetes.Interface
+	g v1alpha1.TkexV1alpha1Interface
+}
+
+// ViewHistory returns a list of the revision history of a statefulset
+// DOTO: this should be a describer
+func (h *GameStatefulSetHistoryViewer) ViewHistory(namespace, name string, revision int64) (string, error) {
+	sts, history, err := gameStatefulSetHistory(h.c.AppsV1(), h.g, namespace, name)
+	if err != nil {
+		return "", err
+	}
+	return printHistory(history, revision, func(history *appsv1.ControllerRevision) (*corev1.PodTemplateSpec, error) {
+		stsOfHistory, err := applyGameStatefulSetHistory(sts, history)
+		if err != nil {
+			return nil, err
+		}
+		return &stsOfHistory.Spec.Template, err
+	})
+}
+
+// GetHistory returns the revisions associated with a StatefulSet
+func (h *GameStatefulSetHistoryViewer) GetHistory(namespace, name string) (map[int64]runtime.Object, error) {
+	sts, history, err := gameStatefulSetHistory(h.c.AppsV1(), h.g, namespace, name)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[int64]runtime.Object)
+	for _, h := range history {
+		applied, err := applyGameStatefulSetHistory(sts, h)
+		if err != nil {
+			return nil, err
+		}
+		result[h.Revision] = applied
+	}
+
+	return result, nil
+}
+
+// GameDeploymentHistoryViewer is an implementation of HistoryViewer for GameDeployment
+type GameDeploymentHistoryViewer struct {
+	c kubernetes.Interface
+	g v1alpha1.TkexV1alpha1Interface
+}
+
+// ViewHistory returns a list of the revision history of a GameDeployment
+func (h *GameDeploymentHistoryViewer) ViewHistory(namespace, name string, revision int64) (string, error) {
+	ds, history, err := gameDeploymentHistory(h.c.AppsV1(), h.g, namespace, name)
+	if err != nil {
+		return "", err
+	}
+	return printHistory(history, revision, func(history *appsv1.ControllerRevision) (*corev1.PodTemplateSpec, error) {
+		dsOfHistory, err := applyGameDeploymentHistory(ds, history)
+		if err != nil {
+			return nil, err
+		}
+		return &dsOfHistory.Spec.Template, err
+	})
+}
+
+// GetHistory returns the revisions associated with a GameDeployment
+func (h *GameDeploymentHistoryViewer) GetHistory(namespace, name string) (map[int64]runtime.Object, error) {
+	ds, history, err := gameDeploymentHistory(h.c.AppsV1(), h.g, namespace, name)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[int64]runtime.Object)
+	for _, h := range history {
+		applied, err := applyGameDeploymentHistory(ds, h)
+		if err != nil {
+			return nil, err
+		}
+		result[h.Revision] = applied
+	}
+
+	return result, nil
 }
 
 // DeploymentHistoryViewer is an implementation of HistoryViewer for deployments
@@ -444,6 +549,53 @@ func statefulSetHistory(
 	return sts, history, nil
 }
 
+// statefulSetHistory returns the StatefulSet named name in namespace and all ControllerRevisions in its history.
+func gameStatefulSetHistory(
+	apps clientappsv1.AppsV1Interface,
+	gapps v1alpha1.TkexV1alpha1Interface,
+	namespace, name string) (*gameAppsv1.GameStatefulSet, []*appsv1.ControllerRevision, error) {
+	sts, err := gapps.GameStatefulSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to retrieve gameStatefulSet %s: %s", name, err.Error())
+	}
+	selector, err := metav1.LabelSelectorAsSelector(sts.Spec.Selector)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create selector for gameStatefulSet %s: %s", name, err.Error())
+	}
+	accessor, err := meta.Accessor(sts)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to obtain accessor for gameStatefulSet %s: %s", name, err.Error())
+	}
+	history, err := controlledHistoryV1(apps, namespace, selector, accessor)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to find history controlled by gameStatefulSet %s: %v", name, err)
+	}
+	return sts, history, nil
+}
+
+func gameDeploymentHistory(
+	apps clientappsv1.AppsV1Interface,
+	gapps v1alpha1.TkexV1alpha1Interface,
+	namespace, name string) (*gameAppsv1.GameDeployment, []*appsv1.ControllerRevision, error) {
+	ds, err := gapps.GameDeployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to retrieve gameDeployment %s: %s", name, err.Error())
+	}
+	selector, err := metav1.LabelSelectorAsSelector(ds.Spec.Selector)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create selector for gameDeployment %s: %s", name, err.Error())
+	}
+	accessor, err := meta.Accessor(ds)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to obtain accessor for gameDeployment %s: %s", name, err.Error())
+	}
+	history, err := controlledHistoryV1(apps, namespace, selector, accessor)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to find history controlled by gameDeployment %s: %v", name, err)
+	}
+	return ds, history, nil
+}
+
 // applyDaemonSetHistory returns a specific revision of DaemonSet by applying the given history to a copy of
 // the given DaemonSet
 func applyDaemonSetHistory(ds *appsv1.DaemonSet, history *appsv1.ControllerRevision) (*appsv1.DaemonSet, error) {
@@ -480,6 +632,78 @@ func applyStatefulSetHistory(sts *appsv1.StatefulSet, history *appsv1.Controller
 		return nil, err
 	}
 	return result, nil
+}
+
+// applyGameStatefulSetHistory returns a specific revision by applying the given history to a copy of the given workload
+func applyGameStatefulSetHistory(sts interface{}, history *appsv1.ControllerRevision) (*gameAppsv1.GameStatefulSet,
+	error) {
+	stsBytes, err := json.Marshal(sts)
+	if err != nil {
+		return nil, err
+	}
+	patched, err := strategicpatch.StrategicMergePatch(stsBytes, history.Data.Raw, sts)
+	if err != nil {
+		return nil, err
+	}
+	result := &gameAppsv1.GameStatefulSet{}
+	err = json.Unmarshal(patched, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// applyGameStatefulSetHistory returns a specific revision by applying the given history to a copy of the given workload
+func applyGameDeploymentHistory(sts interface{}, history *appsv1.ControllerRevision) (*gameAppsv1.GameDeployment,
+	error) {
+	stsBytes, err := json.Marshal(sts)
+	if err != nil {
+		return nil, err
+	}
+	patched, err := strategicpatch.StrategicMergePatch(stsBytes, history.Data.Raw, sts)
+	if err != nil {
+		return nil, err
+	}
+	result := &gameAppsv1.GameDeployment{}
+	err = json.Unmarshal(patched, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type historiesByRevision []*appsv1.ControllerRevision
+
+func (h historiesByRevision) Len() int      { return len(h) }
+func (h historiesByRevision) Swap(i, j int) { h[i], h[j] = h[j], h[i] }
+func (h historiesByRevision) Less(i, j int) bool {
+	return h[i].Revision < h[j].Revision
+}
+
+// findHistory returns a controllerrevision of a specific revision from the given controllerrevisions.
+// It returns nil if no such controllerrevision exists.
+// If toRevision is 0, the last previously used history is returned.
+func findHistory(toRevision int64, allHistory []*appsv1.ControllerRevision) *appsv1.ControllerRevision {
+	if toRevision == 0 && len(allHistory) <= 1 {
+		return nil
+	}
+
+	// Find the history to rollback to
+	var toHistory *appsv1.ControllerRevision
+	if toRevision == 0 {
+		// If toRevision == 0, find the latest revision (2nd max)
+		sort.Sort(historiesByRevision(allHistory))
+		toHistory = allHistory[len(allHistory)-2]
+	} else {
+		for _, h := range allHistory {
+			if h.Revision == toRevision {
+				// If toRevision != 0, find the history with matching revision
+				return h
+			}
+		}
+	}
+
+	return toHistory
 }
 
 // DOTO: copied here until this becomes a describer
