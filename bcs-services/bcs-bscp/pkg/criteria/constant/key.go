@@ -56,6 +56,7 @@ const (
 	// AppIDHeaderKey is app id.
 	AppIDHeaderKey = "X-Bscp-App-Id"
 	// TmplSpaceIDHeaderKey is template space id.
+	//nolint:gosec
 	TmplSpaceIDHeaderKey = "X-Bscp-Template-Space-Id"
 
 	// TemplateVariablePrefix is the prefix for template variable name
