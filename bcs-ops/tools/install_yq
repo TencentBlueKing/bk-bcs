@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #######################################
 # Tencent is pleased to support the open source community by making Blueking Container Service available.
 # Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -12,11 +11,11 @@
 # limitations under the License.
 #######################################
 
-# config O&M-related configuration
 set -euo pipefail
 
+# install yq
 SELF_DIR=$(dirname "$(readlink -f "$0")")
-ROOT_DIR=${SELF_DIR}
+ROOT_DIR="${SELF_DIR}/.."
 readonly SELF_DIR ROOT_DIR
 
 safe_source() {
@@ -30,22 +29,45 @@ safe_source() {
   fi
 }
 
-source_files=("${ROOT_DIR}/functions/utils.sh")
-for file in "${source_files[@]}"; do
-  safe_source "$file"
-done
-
-"${ROOT_DIR}"/k8s/operate_completion kubeadm kubectl helm ctr yq
-
-if [[ -n "${BKREPO_URL:-}" ]]; then
-  if command -v helm &>/dev/null; then
-    utils::log "INFO" "Add repo blueking: ${BKREPO_URL}"
-    k8s::safe_add_helmrepo blueking "${BKREPO_URL}"
-    utils::log "OK" "blueking community helm chart repo added"
+_curl_yq() {
+  local url save_file version
+  version=$1
+  url="${REPO_URL}/yq-${version}.xz"
+  save_file="/tmp/yq.xz"
+  if curl -sSfL "${url}" -o "${save_file}" -m "360"; then
+    # rm -f /tmp/yq
+    unxz -dc ${save_file} >/tmp/yq
+    chmod +x /tmp/yq
+    mv /tmp/yq /usr/local/bin/yq
+    rm -f ${save_file}
   else
-    warning "helm command not found, skipping"
-    return 0
+    utils::log "ERROR" "fail to download yq: $url"
   fi
-else
-  utils::log "WARN" "BKREPO_URL is null, skipping"
-fi
+}
+
+_offline_yq() {
+  # ToDo
+  true
+}
+
+main() {
+  local source_files
+  source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+  for file in "${source_files[@]}"; do
+    safe_source "$file"
+  done
+  yq_ver=$(awk '/yq/{gsub("\"","",$2);print $2;exit}' \
+    "${ROOT_DIR}"/env/offline-manifest.yaml)
+
+  if ! command -v yq >/dev/null; then
+    if [[ -n ${BCS_OFFLINE:-} ]]; then
+      _offline_yq
+    else
+      _curl_yq "$yq_ver"
+    fi
+  fi
+  utils::log "OK" "installed $(yq -V)"
+  "$ROOT_DIR"/k8s/operate_completion yq
+}
+
+main
