@@ -59,7 +59,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
-          args: --timeout=30m --skip-dirs=test --skip-dirs=pkg/logs/glog
+          args: --timeout=30m --skip-dirs=test --skip-dirs=pkg/logs/glog --out-format=colored-line-number
           working-directory: bcs-services/bcs-bscp
   bcs-cluster-manager:
     name: bcs-cluster-manager
@@ -119,7 +119,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
-          args: --timeout=30m
+          args: --timeout=30m --out-format=colored-line-number
           working-directory: bcs-services/bcs-project-manager
   bcs-user-manager:
     name: bcs-user-manager
