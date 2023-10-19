@@ -29,6 +29,8 @@ import (
 	"bscp.io/pkg/config"
 )
 
+// nolint:typecheck
+//
 //go:embed ui/dist
 var frontendAssets embed.FS
 

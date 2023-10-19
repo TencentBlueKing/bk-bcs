@@ -174,7 +174,7 @@ func (s *Service) ImportTemplateVariables(ctx context.Context, req *pbcs.ImportT
 		return nil, errors.New("variables can't be empty")
 	}
 	if strings.Contains(req.Separator, "\n") {
-		return nil, errors.New("separator can't contain char \n")
+		return nil, errors.New("separator can't contain char '\\n'")
 	}
 	if req.Separator == "" {
 		req.Separator = whiteSpace

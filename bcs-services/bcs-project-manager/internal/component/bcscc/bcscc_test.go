@@ -14,7 +14,7 @@ package bcscc
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -76,7 +76,7 @@ type FakeProject struct {
 func TestCreateProject(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 校验获取到的数据
-		body, _ := ioutil.ReadAll(r.Body)
+		body, _ := io.ReadAll(r.Body)
 		var p FakeProject
 		err := json.Unmarshal(body, &p)
 		assert.Nil(t, err)
@@ -98,7 +98,7 @@ func TestCreateProject(t *testing.T) {
 func TestUpdateProject(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 校验获取到的数据
-		body, _ := ioutil.ReadAll(r.Body)
+		body, _ := io.ReadAll(r.Body)
 		var p FakeProject
 		err := json.Unmarshal(body, &p)
 		assert.Nil(t, err)
